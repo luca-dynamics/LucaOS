@@ -1,0 +1,1600 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Luca OS — Large Universal Control Agents</title>
+    <meta
+      content="A personal AI operating system. Total digital autonomy. Zero compromise."
+    />
+    <link rel="canonical" href="https://lucaos.space/" />
+    <meta property="og:url" content="https://lucaos.space/" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="nav">
+      <a href="#" class="nav-brand">
+        <img class="brand-icon" src="icon.png" alt="Luca OS Logo" />
+        <span>L.U.C.A OS</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#neural" class="nav-link">Neural Stack</a>
+        <a href="#voice" class="nav-link">Voice & Vision</a>
+        <a href="#waitlist" class="nav-link">Download</a>
+      </div>
+      <div style="display: flex; align-items: center">
+        <button class="theme-toggle" aria-label="Toggle Theme">
+          <!-- Sun Icon -->
+          <svg
+            class="sun-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            style="display: none"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <path d="M12 1v2" />
+            <path d="M12 21v2" />
+            <path d="M4.22 4.22l1.42 1.42" />
+            <path d="M18.36 18.36l1.42 1.42" />
+            <path d="M1 12h2" />
+            <path d="M21 12h2" />
+            <path d="M4.22 19.78l1.42-1.42" />
+            <path d="M18.36 5.64l1.42-1.42" />
+          </svg>
+          <!-- Moon Icon -->
+          <svg
+            class="moon-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+        <a href="#waitlist" class="nav-cta">Get Early Access</a>
+        <!-- Hamburger (mobile only) -->
+        <button class="hamburger" aria-label="Open Menu" onclick="document.getElementById('mobileNav').classList.toggle('open')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Nav Overlay -->
+    <div id="mobileNav" class="mobile-nav-overlay">
+      <button class="mobile-nav-close" aria-label="Close Menu" onclick="document.getElementById('mobileNav').classList.remove('open')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="mobile-nav-links">
+        <a href="#features" onclick="document.getElementById('mobileNav').classList.remove('open')">Features</a>
+        <a href="#neural" onclick="document.getElementById('mobileNav').classList.remove('open')">Neural Stack</a>
+        <a href="#voice" onclick="document.getElementById('mobileNav').classList.remove('open')">Voice & Vision</a>
+        <a href="#waitlist" onclick="document.getElementById('mobileNav').classList.remove('open')">Download</a>
+      </div>
+      <a href="#waitlist" class="mobile-nav-cta" onclick="document.getElementById('mobileNav').classList.remove('open')">Get Early Access</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div id="hologram-hero">
+        <img src="hologram.png" alt="Luca Hologram" class="static-hologram" />
+      </div>
+      <div class="bottom-fade"></div>
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        L.U.C.A — LARGE UNIVERSAL CONTROL AGENTS
+      </div>
+
+      <h1 class="hero-title">
+        Your Intelligence.<br />
+        Your Hardware. Your Rules.
+      </h1>
+
+      <p class="hero-subtitle">
+        L.U.C.A — The first AI Operating System that speaks, sees, acts, and
+        <strong>evolves</strong>. Running on <strong>YOUR</strong> machine,
+        loyal to <strong>YOU</strong> alone. <br /><span
+          style="
+            opacity: 0.6;
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.9em;
+          "
+          >v1.0 • macOS · Windows · Linux · Mobile</span
+        >
+      </p>
+
+      <div class="download-group">
+        <a href="download/mac.html" class="download-btn mac">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.8-1.31.05-2.3-1.23-3.14-2.47-1.73-2.5-3.09-7.14-1.29-10.27 1.29-2.22 3.65-2.58 4.96-2.58 1.27 0 2.45.85 3.22.85.73 0 2.13-.91 3.59-.77 2.43.18 3.55 1.76 3.55 1.76-2.02 1.25-2.26 4.31-.06 5.67.63.4 1.11.47 1.11.47v.06a12.16 12.16 0 0 1-2.33 4.71zM13 3.5c.57-1.46.22-3.5-1.55-5.21-1.63 1.57-1.8 3.28-1.54 4.75 1.55 1.01 3.29.61 3.09.46z"
+            />
+          </svg>
+          <span>Download for macOS</span>
+        </a>
+
+        <div class="download-sub-group">
+          <a
+            href="download/windows.html"
+            class="download-btn secondary"
+            title="Download for Windows"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M0 3.449L9.75 2.1v9.451H0V3.449zm10.949-1.651L24 0v11.551H10.949V1.798zm-10.949 10.66L9.75 12.5v9.451H0V12.458zm10.949.05L24 24V12.508H10.949V12.508z"
+              />
+            </svg>
+          </a>
+          <a
+            href="download/linux.html"
+            class="download-btn secondary"
+            title="Download for Linux"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12.005 0C5.39 0 0 5.378 0 11.983c0 6.604 5.39 11.982 12.005 11.982 6.616 0 12.006-5.378 12.006-11.982C24.01 5.378 18.621 0 12.005 0zm2.747 16.7c-2.36.195-2.053-1.687-2.053-1.687h-1.44s.308 1.882-2.053 1.687c-1.444-.12-1.39-1.685-1.39-1.685s-.545.244-.545-1.4c0-1.64 1.408-2.616 1.408-2.616S8.2 10.35 8.2 8.78c0-1.57.876-2.585 2.226-2.733.91-.1 1.63.456 1.63.456s.672-.555 1.583-.456c1.35.148 2.225 1.163 2.225 2.733 0 1.57-.48 2.217-.48 2.217s1.408.976 1.408 2.616c0 1.644-.545 1.4-.545 1.4s.053 1.564-1.39 1.685z"
+              />
+            </svg>
+          </a>
+          <a
+            href="download/mobile.html"
+            class="download-btn secondary"
+            title="Mobile App"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.152-.5676.416.416 0 00-.5676.152l-2.0223 3.503C15.5902 8.2439 13.8533 7.8449 12 7.8449c-1.8532 0-3.5891.3989-5.138 1.1247L4.8397 5.4666a.4171.4171 0 00-.5688-.1508.416.416 0 00-.1508.5663l1.9973 3.4592C2.6889 11.1867.344 14.6589 0 18.761h24c-.344-4.1021-2.6889-7.5743-6.1185-9.4396"
+              />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="integrations-strip">
+        <span class="strip-label">INTEGRATES WITH</span>
+        <div class="strip-logos">
+          <!-- First set of logos -->
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.291L4.815 5.61l.556.556.003.003.004.002.597.312a7.12 7.12 0 0 0 2.223.692l8.89 1.833-8.854 1.839a7.035 7.035 0 0 0-2.31.79L4.85 18.39l11.69 10.635a1.5 1.5 0 0 0 1.708.29l4.903-2.376a1.5 1.5 0 0 0 .85-1.353V3.94a1.5 1.5 0 0 0-.85-1.353z"
+              />
+            </svg>
+            <span>VS Code</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.083.185.186.185m-2.954-5.43h2.119a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.119a.186.186 0 00-.186.185v1.888c0 .102.083.186.186.186m-2.955 2.713h2.119a.186.186 0 00.186-.186V6.29a.186.186 0 00-.186-.185H8.074a.186.186 0 00-.186.185v1.888c0 .102.083.186.186.186m-2.955 2.717h2.118a.186.186 0 00.186-.186V9.006a.186.186 0 00-.186-.186H5.119a.186.186 0 00-.186.186v1.888c0 .102.083.185.186.185m2.955 0h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186H8.074a.186.186 0 00-.186.186v1.888c0 .102.083.185.186.185m2.955 5.432h2.119a.186.186 0 00.186-.186v-1.888a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.083.186.186.186m5.228-2.529a.186.186 0 00.186-.186v-1.888a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.083.186.186.186h2.119zm-8.183 2.529h2.119a.186.186 0 00.186-.186v-1.888a.186.186 0 00-.186-.186H8.074a.186.186 0 00-.186.186v1.888c0 .102.083.186.186.186m2.955-2.715h2.119a.186.186 0 00.186-.186v-1.888a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.083.186.186.186m-2.955 10.605c-1.393.07-2.71-.347-3.649-1.077-.92-.714-1.353-1.688-1.288-2.67.247-4.116 3.612-5.464 6.945-5.464h1.025c.19 0 .141-.188.141-.33 0-1.63 1.057-2.617 2.618-2.834 1.258-.2 2.392.37 2.923 1.343.14.249.49.263.66.026.377-.514.86-1.156 1.21-1.637.26-.353-.053-.888-.474-.888H2.155a.863.863 0 00-.86.862v14.542c0 .487.394.86.86.86h21.082c.465 0 .86-.373.86-.86V14.52a.853.853 0 00-.332-.693c-.808-.604-1.657-.96-2.524-.95h-5.26c-3.132 0-3.626 2.053-3.003 3.652.61 1.626 2.766 2.302 4.975 1.764 1.1-.286 2.227-.893 2.955-1.78.277-.323.774-.216.924.168l.583 1.58c.135.347-.076.732-.416.896-.757.377-1.57.658-2.428.823-2.19.42-4.99-.044-6.495-2.127z"
+              />
+            </svg>
+            <span>Docker</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            <span>GitHub</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 19h20L12 2z" />
+            </svg>
+            <span>Linear</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.52v-6.315zm8.834-5.042a2.528 2.528 0 0 1-2.521-2.52A2.529 2.529 0 0 1 15.147 5.08a2.528 2.528 0 0 1 2.521 2.523v2.52h-2.521zM8.834 8.853a2.528 2.528 0 0 1 2.521 2.522v6.314a2.529 2.529 0 0 1-2.521 2.521 2.528 2.528 0 0 1-2.521-2.521V8.853zm8.834 8.834a2.528 2.528 0 0 1-2.521-2.521 2.528 2.528 0 0 1 2.521-2.522h2.521v2.522a2.528 2.528 0 0 1-2.521 2.521zM18.916 8.853a2.528 2.528 0 0 1 2.522 2.522 2.528 2.528 0 0 1-2.522 2.521v-6.312a2.528 2.528 0 0 1 2.522-2.521 2.528 2.528 0 0 1-2.522 2.521v1.269zM8.834 6.33a2.528 2.528 0 0 1-2.521-2.522A2.528 2.528 0 0 1 8.834 1.29a2.527 2.527 0 0 1 2.521 2.522v2.52h-2.521z"
+              />
+            </svg>
+            <span>Slack</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M4.22 0A1.23 1.23 0 0 0 3 1.24v21.52A1.23 1.23 0 0 0 4.22 24h15.56A1.23 1.23 0 0 0 21 22.76V1.24A1.23 1.23 0 0 0 19.78 0H4.22zm2.18 5.46h2.24l5.48 7.42V5.46h2.86v13.08h-2.22l-5.5-7.42v7.42H6.4V5.46z"
+              />
+            </svg>
+            <span>Notion</span>
+          </span>
+          <!-- Duplicate set for seamless looping -->
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.291L4.815 5.61l.556.556.003.003.004.002.597.312a7.12 7.12 0 0 0 2.223.692l8.89 1.833-8.854 1.839a7.035 7.035 0 0 0-2.31.79L4.85 18.39l11.69 10.635a1.5 1.5 0 0 0 1.708.29l4.903-2.376a1.5 1.5 0 0 0 .85-1.353V3.94a1.5 1.5 0 0 0-.85-1.353z"
+              />
+            </svg>
+            <span>VS Code</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.083.185.186.185m-2.954-5.43h2.119a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.119a.186.186 0 00-.186.185v1.888c0 .102.083.186.186.186m-2.955 2.713h2.119a.186.186 0 00.186-.186V6.29a.186.186 0 00-.186-.185H8.074a.186.186 0 00-.186.185v1.888c0 .102.083.186.186.186m-2.955 2.717h2.118a.186.186 0 00.186-.186V9.006a.186.186 0 00-.186-.186H5.119a.186.186 0 00-.186.186v1.888c0 .102.083.185.186.185m2.955 0h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186H8.074a.186.186 0 00-.186.186v1.888c0 .102.083.185.186.185m2.955 5.432h2.119a.186.186 0 00.186-.186v-1.888a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.083.186.186.186m5.228-2.529a.186.186 0 00.186-.186v-1.888a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.083.186.186.186h2.119zm-8.183 2.529h2.119a.186.186 0 00.186-.186v-1.888a.186.186 0 00-.186-.186H8.074a.186.186 0 00-.186.186v1.888c0 .102.083.186.186.186m2.955-2.715h2.119a.186.186 0 00.186-.186v-1.888a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.083.186.186.186m-2.955 10.605c-1.393.07-2.71-.347-3.649-1.077-.92-.714-1.353-1.688-1.288-2.67.247-4.116 3.612-5.464 6.945-5.464h1.025c.19 0 .141-.188.141-.33 0-1.63 1.057-2.617 2.618-2.834 1.258-.2 2.392.37 2.923 1.343.14.249.49.263.66.026.377-.514.86-1.156 1.21-1.637.26-.353-.053-.888-.474-.888H2.155a.863.863 0 00-.86.862v14.542c0 .487.394.86.86.86h21.082c.465 0 .86-.373.86-.86V14.52a.853.853 0 00-.332-.693c-.808-.604-1.657-.96-2.524-.95h-5.26c-3.132 0-3.626 2.053-3.003 3.652.61 1.626 2.766 2.302 4.975 1.764 1.1-.286 2.227-.893 2.955-1.78.277-.323.774-.216.924.168l.583 1.58c.135.347-.076.732-.416.896-.757.377-1.57.658-2.428.823-2.19.42-4.99-.044-6.495-2.127z"
+              />
+            </svg>
+            <span>Docker</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            <span>GitHub</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 19h20L12 2z" />
+            </svg>
+            <span>Linear</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.52v-6.315zm8.834-5.042a2.528 2.528 0 0 1-2.521-2.52A2.529 2.529 0 0 1 15.147 5.08a2.528 2.528 0 0 1 2.521 2.523v2.52h-2.521zM8.834 8.853a2.528 2.528 0 0 1 2.521 2.522v6.314a2.529 2.529 0 0 1-2.521 2.521 2.528 2.528 0 0 1-2.521-2.521V8.853zm8.834 8.834a2.528 2.528 0 0 1-2.521-2.521 2.528 2.528 0 0 1 2.521-2.522h2.521v2.522a2.528 2.528 0 0 1-2.521 2.521zM18.916 8.853a2.528 2.528 0 0 1 2.522 2.522 2.528 2.528 0 0 1-2.522 2.521v-6.312a2.528 2.528 0 0 1 2.522-2.521 2.528 2.528 0 0 1-2.522 2.521v1.269zM8.834 6.33a2.528 2.528 0 0 1-2.521-2.522A2.528 2.528 0 0 1 8.834 1.29a2.527 2.527 0 0 1 2.521 2.522v2.52h-2.521z"
+              />
+            </svg>
+            <span>Slack</span>
+          </span>
+          <span class="strip-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M4.22 0A1.23 1.23 0 0 0 3 1.24v21.52A1.23 1.23 0 0 0 4.22 24h15.56A1.23 1.23 0 0 0 21 22.76V1.24A1.23 1.23 0 0 0 19.78 0H4.22zm2.18 5.46h2.24l5.48 7.42V5.46h2.86v13.08h-2.22l-5.5-7.42v7.42H6.4V5.46z"
+              />
+            </svg>
+            <span>Notion</span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Feature: Operating System Paradigm -->
+    <section class="feature-section" id="features">
+      <div class="feature-header">
+        <span class="feature-badge">THE L.U.C.A STANDARD</span>
+        <h2 class="feature-title">Not a Chatbot.<br />An Operating System.</h2>
+        <p style="color: var(--text-secondary); line-height: 1.6; font-size: 0.9rem; margin-top: 1rem; max-width: 420px; text-align: justify; hyphens: auto;">
+          Luca OS is a sovereign AI environment — a full operating system layer
+          that bridges cloud intelligence with local hardware control. It listens
+          through your mic, sees through your screen, acts through your keyboard,
+          and remembers everything.
+        </p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="card-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <h3>Sovereign & Local</h3>
+          <p>
+            Your data never leaves your machine. Run fully offline with local
+            LLMs, speech-to-text, and text-to-speech. Zero telemetry.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+              ></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <h3>Evolving Memory</h3>
+          <p>
+            Hybrid memory with vector embeddings, LightRAG knowledge graphs,
+            and Mem0-style categorization. Luca remembers everything.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <h3>Universal Runtime</h3>
+          <p>
+            macOS, Windows, Linux, Android, iOS, and Apple Watch. One AI across
+            every device you own via Luca Link.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature: Orchestration (Chat) -->
+    <section class="showcase-section" id="chat">
+      <div class="showcase-grid">
+        <div class="showcase-text">
+          <div class="showcase-badge">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="7" height="7" x="3" y="3" rx="1" />
+              <rect width="7" height="7" x="14" y="3" rx="1" />
+              <rect width="7" height="7" x="14" y="14" rx="1" />
+              <rect width="7" height="7" x="3" y="14" rx="1" />
+            </svg>
+            COMMAND CENTER
+          </div>
+          <h2 class="showcase-title">220+ Tools.<br />Every Domain.</h2>
+          <p class="showcase-desc">
+            System control, web intelligence, trading, communications, IoT,
+            security — Luca orchestrates 220+ tools across 11 categories. Missing
+            one? It generates new tools autonomously.
+          </p>
+          <a href="#" class="showcase-cta">Open Terminal</a>
+
+          <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+              <span style="color: var(--text-primary); margin-top: 0.2rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M2 12h20"/><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10 10 10 0 0 1-10-10 10 10 0 0 1 10-10z"/></svg>
+              </span>
+              <div>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.85rem; margin-bottom: 0.1rem;">System Control</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">Direct kernel-level access for processes and network.</div>
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+              <span style="color: var(--text-primary); margin-top: 0.2rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+              </span>
+              <div>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.85rem; margin-bottom: 0.1rem;">Extensions Marketplace</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">Install Skills and MCP Integrations built by the community.</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+              <span style="color: var(--text-primary); margin-top: 0.2rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              </span>
+              <div>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.85rem; margin-bottom: 0.1rem;">Context Retention</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">Luca remembers project history, git diffs, and sessions.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase-visual">
+          <div class="animated-presentation dashboard-vfx">
+            <div class="scanning-line"></div>
+            <div class="presentation-glow"></div>
+            <img src="dashboard_preview.png" alt="Luca Dashboard Interface" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature: Autonomous Workforce (Swarm) -->
+    <section class="showcase-section alt" id="agents">
+      <div class="showcase-grid">
+        <div class="showcase-visual">
+          <img src="agent_swarm.png" alt="Luca Agent Swarm UI" />
+        </div>
+        <div class="showcase-text">
+          <div class="showcase-badge" style="color: #c084fc">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            MULTI-AGENT SWARM
+          </div>
+          <h2 class="showcase-title">The Autonomous<br />Workforce.</h2>
+          <p class="showcase-desc">
+            Luca isn't just one bot — it's an expandable multi-agent workforce
+            with goal decomposition, quality gates, and execution tracing.
+            Deploy specialized Personas to collaborate autonomously.
+          </p>
+
+          <div class="showcase-divider"></div>
+
+          <div class="showcase-steps">
+            <div class="showcase-step active" style="margin-bottom: 0.75rem;">
+              <h4>The Goal Scheduler (Fire-and-Forget)</h4>
+              <p style="display: block; margin-top: 0.2rem; text-align: justify; hyphens: auto;">
+                Assign a 5-day research task. Luca minimizes to the background,
+                autonomously wakes up, scrapes the web, and compiles reports
+                without human hand-holding.
+              </p>
+            </div>
+            <div class="showcase-step">
+              <h4>Custom Toolchains</h4>
+              <p style="display: block; margin-top: 0.2rem; text-align: justify; hyphens: auto;">
+                Equip individual agents with bespoke Python scripts or API keys
+                to extend their isolated capabilities.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature: Neural Center (Local Model Manger) -->
+    <section class="showcase-section" id="neural">
+      <div class="showcase-grid">
+        <div class="showcase-text">
+          <div class="showcase-badge" style="color: #4ade80">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+              <line x1="6" y1="6" x2="6.01" y2="6" />
+              <line x1="6" y1="18" x2="6.01" y2="18" />
+            </svg>
+            NEURAL ENGINE
+          </div>
+          <h2 class="showcase-title">Offline & Local<br />Inference.</h2>
+          <p class="showcase-desc">
+            20+ downloadable models: Gemma 2B, Phi-3, Qwen 2.5, DeepSeek R1
+            for reasoning. SmolVLM and UI-TARS for vision. Whisper and Moonshine
+            for speech. Swap models in one click. 100% offline.
+          </p>
+          <a
+            href="resources/models.html"
+            class="showcase-cta"
+            style="margin-bottom: 1.5rem"
+            >View Model Zoo</a
+          >
+
+          <h3
+            style="
+              font-family: var(--font-serif);
+              font-size: 1.5rem;
+              margin-bottom: 1.5rem;
+            "
+          >
+            Hardware-Aware Optimization.
+          </h3>
+          <div class="pill-grid">
+            <div class="feature-pill">
+              <span class="pill-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                  />
+                </svg>
+              </span>
+              <span>Apple Silicon Optimized</span>
+            </div>
+            <div class="feature-pill">
+              <span class="pill-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4l3 3" />
+                </svg>
+              </span>
+              <span>Real-time Telemetry</span>
+            </div>
+            <div
+              class="feature-pill"
+              style="border-color: #3b82f6; color: #60a5fa"
+            >
+              <span class="pill-icon" style="color: #60a5fa">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M2 12A10 10 0 0 1 22 12A10 10 0 0 1 2 12"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </span>
+              <span>UI-TARS Vision Integration</span>
+            </div>
+          </div>
+          <p
+            style="
+              font-size: 0.75rem; /* Further reduced from 0.8rem */
+              color: var(--text-secondary);
+              margin-top: 0.75rem; /* Reduced from 1rem */
+            "
+          >
+            *Using <strong>SmolVLM</strong> and <strong>UI-TARS</strong>, Luca
+            can parse screenshots and natively control visual desktop
+            applications that lack APIs.
+          </p>
+        </div>
+
+        <div class="showcase-visual">
+          <img src="neural_center.png" alt="Luca Neural Center Provisioning" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature: VoiceHUD -->
+    <section class="showcase-section alt" id="voice">
+      <div class="showcase-grid">
+        <div class="showcase-visual">
+          <div class="animated-presentation voicehud-vfx">
+            <div class="pulse-ring"></div>
+            <div class="scanning-line"></div>
+            <img src="voicehud_preview.png" alt="Luca VoiceHUD Overlay" />
+          </div>
+        </div>
+        <div class="showcase-text">
+          <div class="showcase-badge" style="color: #60a5fa">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+            VOICE HUD
+          </div>
+          <h2 class="showcase-title">Full-Duplex<br />Voice.</h2>
+          <p class="showcase-desc">
+            Talk naturally via Gemini Live — interrupt anytime, call tools
+            mid-conversation. 4 TTS engines. “Hey Luca” wake word. Ambient
+            vision loop for screen awareness.
+          </p>
+          <a
+            href="#"
+            class="showcase-cta"
+            style="width: 100%; text-align: center; margin-bottom: 1.5rem"
+            >Activate Sentry</a
+          >
+
+          <div class="showcase-steps">
+            <div
+              class="showcase-step active"
+              style="
+                border-left: 2px solid var(--border-light);
+                padding-left: 1.5rem;
+                margin-bottom: 1.5rem;
+              "
+            >
+              <h4
+                style="
+                  margin-bottom: 0.5rem;
+                  font-size: 1rem;
+                  color: var(--text-primary);
+                "
+              >
+                Sentry Mode
+              </h4>
+              <p
+                style="
+                  font-size: 0.9rem;
+                  color: var(--text-secondary);
+                  margin: 0;
+                  display: block;
+                "
+              >
+                Background listening for wake-word "Hey Luca" with privacy
+                filters.
+              </p>
+            </div>
+          </div>
+
+          <h3
+            class=""
+            style="
+              font-family: var(--font-serif);
+              font-size: 1.1rem; /* Reduced from 1.3rem */
+              margin-bottom: 0.75rem; /* Reduced from 1rem */
+            "
+          >
+            Sonic Latency.
+          </h3>
+          <div class="pill-grid">
+            <div class="feature-pill">
+              <span class="pill-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                  />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+              </span>
+              <span>Whisper.cpp</span>
+            </div>
+            <div class="feature-pill">
+              <span class="pill-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path
+                    d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"
+                  />
+                </svg>
+              </span>
+              <span>Piper TTS</span>
+            </div>
+            <div class="feature-pill">
+              <span class="pill-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </span>
+              <span>No Cloud Audio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Persona Modes -->
+    <section class="showcase-section" id="personas">
+      <div class="showcase-grid">
+        <div class="showcase-text">
+          <div class="showcase-badge" style="color: #a78bfa">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" /></svg>
+            PERSONA ENGINE
+          </div>
+          <h2 class="showcase-title">One Mind.<br />Many Modes.</h2>
+          <p class="showcase-desc">
+            Each persona changes how Luca thinks, speaks, and which tools it
+            prioritizes. An evolving personality that adapts to every mission.
+          </p>
+          <p class="showcase-desc" style="margin-bottom: 0; font-size: 0.85rem; font-style: italic; opacity: 0.7;">
+            "Switch personas mid-conversation. Luca remembers who it was — and who it becomes."
+          </p>
+        </div>
+
+        <div class="showcase-visual" style="background: var(--bg-secondary); display: flex; align-items: center; justify-content: center;">
+          <svg width="360" height="360" viewBox="0 0 360 360" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.9;">
+            <!-- Connecting lines from center to nodes -->
+            <line x1="180" y1="180" x2="180" y2="55" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite" /></line>
+            <line x1="180" y1="180" x2="288" y2="118" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="3s" begin="0.5s" repeatCount="indefinite" /></line>
+            <line x1="180" y1="180" x2="288" y2="242" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="3s" begin="1s" repeatCount="indefinite" /></line>
+            <line x1="180" y1="180" x2="180" y2="305" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="3s" begin="1.5s" repeatCount="indefinite" /></line>
+            <line x1="180" y1="180" x2="72" y2="242" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="3s" begin="2s" repeatCount="indefinite" /></line>
+            <line x1="180" y1="180" x2="72" y2="118" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="3s" begin="2.5s" repeatCount="indefinite" /></line>
+            
+            <!-- Orbital rings -->
+            <circle cx="180" cy="180" r="125" stroke="var(--border-subtle)" stroke-width="0.5" fill="none" stroke-dasharray="3 6" />
+            <circle cx="180" cy="180" r="85" stroke="var(--border-subtle)" stroke-width="0.5" fill="none" stroke-dasharray="2 4" opacity="0.3" />
+            <!-- Central core -->
+            <circle cx="180" cy="180" r="32" fill="var(--bg-primary)" stroke="var(--text-primary)" stroke-width="1" opacity="0.3" />
+            <circle cx="180" cy="180" r="14" fill="none" stroke="var(--text-primary)" stroke-width="0.5" opacity="0.5" />
+            <circle cx="180" cy="180" r="5" fill="#fff">
+              <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <text x="180" y="228" text-anchor="middle" fill="var(--text-secondary)" font-family="Inter, sans-serif" font-size="10" letter-spacing="0.15em" font-weight="500">CORE</text>
+
+            <!-- Ruthless (top) -->
+            <g transform="translate(158, 30)">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </g>
+            <text x="180" y="92" text-anchor="middle" fill="#60a5fa" font-family="Inter, sans-serif" font-size="11" letter-spacing="0.12em" font-weight="600">RUTHLESS</text>
+            <text x="180" y="104" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Max efficiency. Zero pleasentries.</text>
+
+            <!-- Engineer (top-right) -->
+            <g transform="translate(268, 98)">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 5 5"/>
+              </svg>
+            </g>
+            <text x="290" y="158" text-anchor="middle" fill="#f59e0b" font-family="Inter, sans-serif" font-size="11" letter-spacing="0.12em" font-weight="600">ENGINEER</text>
+            <text x="290" y="170" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Senior design. Technical precision.</text>
+
+            <!-- Hacker (bottom-right) -->
+            <g transform="translate(268, 222)">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M8 10s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r=".5" fill="currentColor"/><circle cx="15" cy="9" r=".5" fill="currentColor"/><path d="M12 13v2"/>
+              </svg>
+            </g>
+            <text x="290" y="282" text-anchor="middle" fill="#4ade80" font-family="Inter, sans-serif" font-size="11" letter-spacing="0.12em" font-weight="600">HACKER</text>
+            <text x="290" y="294" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Anonymous. Tactical security.</text>
+
+            <!-- Dictator (bottom) -->
+            <g transform="translate(158, 285)">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12v-2m4 6V8m4 10V6m4 12v-8m4 6v-2" />
+              </svg>
+            </g>
+            <text x="180" y="348" text-anchor="middle" fill="#f87171" font-family="Inter, sans-serif" font-size="11" letter-spacing="0.12em" font-weight="600">DICTATOR</text>
+            <text x="180" y="360" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Voice of authority. Final command.</text>
+
+            <!-- Assistant (bottom-left) -->
+            <g transform="translate(48, 222)">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#e2e2e2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/><path d="M12 7v10"/><path d="M8 11h8"/><path d="M7 11c0-2 2-4 5-4s5 2 5 4-2 4-5 4-5-2-5-4z"/>
+              </svg>
+            </g>
+            <text x="70" y="282" text-anchor="middle" fill="#e2e2e2" font-family="Inter, sans-serif" font-size="11" letter-spacing="0.12em" font-weight="600">ASSISTANT</text>
+            <text x="70" y="294" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Polite, thorough, helpful.</text>
+
+            <!-- LucAgent (top-left) -->
+            <g transform="translate(48, 98)">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="19" cy="11" r="4"/>
+              </svg>
+            </g>
+            <text x="70" y="158" text-anchor="middle" fill="#a78bfa" font-family="Inter, sans-serif" font-size="11" letter-spacing="0.12em" font-weight="600">LUCAGENT</text>
+            <text x="70" y="170" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Twin Minds. Goal-driven AI.</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature: Hardware (Prism) -->
+    <section class="showcase-section" id="hardware">
+      <div class="showcase-grid">
+        <div class="showcase-text">
+          <div class="showcase-badge" style="color: #f87171">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <path d="M9 3v18" />
+              <path d="M15 3v18" />
+              <path d="M3 9h18" />
+              <path d="M3 15h18" />
+            </svg>
+            PRISM HARDWARE
+          </div>
+          <h2 class="showcase-title">Prism V1.<br />The Physical Link.</h2>
+          <p class="showcase-desc">
+            The first dedicated neural processor for your desk. Prism offloads
+            agent latency through a dedicated 128GB unified memory bus.
+          </p>
+
+          <div class="hardware-specs">
+            <div class="h-spec">
+              <span>MEM</span>
+              <span>128GB LPDDR5X</span>
+            </div>
+            <div class="h-spec">
+              <span>OPS</span>
+              <span>320 TOPS (Neural)</span>
+            </div>
+            <div class="h-spec">
+              <span>LINK</span>
+              <span>Thunderbolt 5</span>
+            </div>
+          </div>
+          <a href="#" class="showcase-cta">Pre-order Prism</a>
+        </div>
+
+        <div class="showcase-visual">
+          <img
+            src="prism.png"
+            alt="Luca Prism Neural Hardware Rendering"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Platform Support -->
+    <section class="showcase-section" id="platforms">
+      <div class="showcase-grid">
+        <div class="showcase-text">
+          <div class="showcase-badge" style="color: #38bdf8">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+            CROSS-PLATFORM
+          </div>
+          <h2 class="showcase-title">One AI.<br />Every Device.</h2>
+          <p class="showcase-desc">
+            Luca runs natively across all major platforms with hardware-optimized
+            bridges for each environment. One memory, one personality, everywhere.
+          </p>
+          <p class="showcase-desc" style="margin-bottom: 0; font-size: 0.85rem; font-style: italic; opacity: 0.7;">
+            "Start a task on your Mac. Finish it on your phone. Luca follows you."
+          </p>
+        </div>
+
+        <div class="showcase-visual" style="background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; color: var(--text-primary);">
+          <svg width="400" height="380" viewBox="0 0 400 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Positions: macOS:200,55  Windows:345,145  Linux:345,265  Android:200,340  iOS:55,265  Watch:55,145 -->
+
+            <!-- All connections (every node linked to every other) -->
+            <line x1="55" y1="145" x2="200" y2="55" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" repeatCount="indefinite" /></line>
+            <line x1="200" y1="55" x2="345" y2="145" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="0.2s" repeatCount="indefinite" /></line>
+            <line x1="200" y1="55" x2="345" y2="265" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="0.4s" repeatCount="indefinite" /></line>
+            <line x1="200" y1="55" x2="200" y2="340" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="0.6s" repeatCount="indefinite" /></line>
+            <line x1="200" y1="55" x2="55" y2="265" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="0.8s" repeatCount="indefinite" /></line>
+            <line x1="345" y1="145" x2="345" y2="265" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="1s" repeatCount="indefinite" /></line>
+            <line x1="345" y1="145" x2="200" y2="340" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="1.2s" repeatCount="indefinite" /></line>
+            <line x1="345" y1="145" x2="55" y2="265" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="1.4s" repeatCount="indefinite" /></line>
+            <line x1="345" y1="145" x2="55" y2="145" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="1.6s" repeatCount="indefinite" /></line>
+            <line x1="345" y1="265" x2="200" y2="340" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="1.8s" repeatCount="indefinite" /></line>
+            <line x1="345" y1="265" x2="55" y2="265" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="2s" repeatCount="indefinite" /></line>
+            <line x1="345" y1="265" x2="55" y2="145" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="2.2s" repeatCount="indefinite" /></line>
+            <line x1="200" y1="340" x2="55" y2="265" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="2.4s" repeatCount="indefinite" /></line>
+            <line x1="200" y1="340" x2="55" y2="145" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="2.6s" repeatCount="indefinite" /></line>
+            <line x1="55" y1="265" x2="55" y2="145" stroke="var(--border-light)" stroke-width="1" stroke-dasharray="4 4"><animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" begin="2.8s" repeatCount="indefinite" /></line>
+
+            <!-- macOS (top center) -->
+            <g transform="translate(184, 39)"><svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.8-1.31.05-2.3-1.23-3.14-2.47C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83z"/></svg></g>
+            <text x="200" y="86" text-anchor="middle" fill="var(--text-secondary)" font-family="Inter, sans-serif" font-size="9" letter-spacing="0.1em" font-weight="500">macOS</text>
+            <text x="200" y="98" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="7">AppleScript + robotjs</text>
+
+            <!-- Windows (right-top) -->
+            <g transform="translate(329, 129)"><svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0V3.449zm10.949-1.651L24 0v11.551H10.949V1.798zm-10.949 10.66L9.75 12.5v9.451H0V12.458zm10.949.05L24 24V12.508H10.949V12.508z"/></svg></g>
+            <text x="345" y="176" text-anchor="middle" fill="var(--text-secondary)" font-family="Inter, sans-serif" font-size="9" letter-spacing="0.1em" font-weight="500">WINDOWS</text>
+            <text x="345" y="188" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="7">PowerShell + UIA</text>
+
+            <!-- Linux (right-bottom) -->
+            <g transform="translate(329, 249)"><svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12.005 0C5.39 0 0 5.378 0 11.983c0 6.604 5.39 11.982 12.005 11.982 6.616 0 12.006-5.378 12.006-11.982C24.01 5.378 18.621 0 12.005 0z"/></svg></g>
+            <text x="345" y="296" text-anchor="middle" fill="var(--text-secondary)" font-family="Inter, sans-serif" font-size="9" letter-spacing="0.1em" font-weight="500">LINUX</text>
+            <text x="345" y="308" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="7">xdotool + D-Bus</text>
+
+            <!-- Android (bottom center) -->
+            <g transform="translate(184, 324)"><svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.34c-.551 0-.999-.449-.999-1s.448-.999.999-.999c.551 0 .999.448.999.999 0 .551-.448 1-.999 1m-11.046 0c-.551 0-.999-.449-.999-1s.448-.999.999-.999c.551 0 .999.448.999.999 0 .551-.448 1-.999 1m11.405-6.02l1.997-3.459a.416.416 0 00-.152-.568.416.416 0 00-.568.152l-2.022 3.503C15.59 8.244 13.853 7.845 12 7.845c-1.853 0-3.589.399-5.138 1.125L4.84 5.467a.417.417 0 00-.569-.151.416.416 0 00-.151.566l1.997 3.46C2.689 11.187.344 14.659 0 18.761h24c-.344-4.102-2.689-7.574-6.118-9.44z"/></svg></g>
+            <text x="200" y="370" text-anchor="middle" fill="var(--text-secondary)" font-family="Inter, sans-serif" font-size="9" letter-spacing="0.1em" font-weight="500">ANDROID</text>
+
+            <!-- iOS (left-bottom) -->
+            <g transform="translate(39, 249)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12.01" y2="18" /></svg></g>
+            <text x="55" y="296" text-anchor="middle" fill="var(--text-secondary)" font-family="Inter, sans-serif" font-size="9" letter-spacing="0.1em" font-weight="500">iOS</text>
+            <text x="55" y="308" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="7">Shortcuts + Mirroring</text>
+
+            <!-- Apple Watch (left-top) -->
+            <g transform="translate(39, 129)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7" /><polyline points="12 9 12 12 13.5 13.5" /><path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83" /></svg></g>
+            <text x="55" y="176" text-anchor="middle" fill="var(--text-secondary)" font-family="Inter, sans-serif" font-size="9" letter-spacing="0.1em" font-weight="500">WATCH</text>
+            <text x="55" y="188" text-anchor="middle" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="7">Wrist command center</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security -->
+    <section class="showcase-section" id="security">
+      <div class="showcase-grid">
+        <div class="showcase-text">
+          <div class="showcase-badge" style="color: #f87171">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+            SECURITY FRAMEWORK
+          </div>
+          <h2 class="showcase-title">Power Demands<br />Responsibility.</h2>
+          <p class="showcase-desc">
+            Four layers of security — from instant access to dual biometric
+            confirmation. No telemetry. Zero data leaves your machine unless
+            YOU choose cloud.
+          </p>
+          <p class="showcase-desc" style="margin-bottom: 0; font-size: 0.85rem; font-style: italic; opacity: 0.7;">
+            "Your AI should never act without your permission level."
+          </p>
+        </div>
+
+        <!-- Desktop: SVG visual (hidden on mobile) -->
+        <div class="showcase-visual security-svg-desktop" style="background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; color: var(--text-primary);">
+          <svg width="300" height="340" viewBox="0 0 300 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="40" y1="40" x2="40" y2="300" stroke="var(--border-light)" stroke-width="1.5" />
+            <circle cx="40" cy="45" r="18" fill="var(--bg-primary)" stroke="var(--text-secondary)" stroke-width="1.5" />
+            <g transform="translate(30, 35)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" /></svg></g>
+            <line x1="60" y1="45" x2="72" y2="45" stroke="var(--border-light)" stroke-width="1" />
+            <text x="80" y="38" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="8" letter-spacing="0.14em" font-weight="500">TIER 0</text>
+            <text x="80" y="52" fill="var(--text-primary)" font-family="Inter, sans-serif" font-size="12" font-weight="600">No-Auth</text>
+            <text x="80" y="66" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Instant access, no confirmation</text>
+            <circle cx="40" cy="130" r="18" fill="var(--bg-primary)" stroke="var(--text-secondary)" stroke-width="1.5" />
+            <g transform="translate(30, 120)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9l-4 4" /><path d="M18 6l-1.5 1.5" /><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></svg></g>
+            <line x1="60" y1="130" x2="72" y2="130" stroke="var(--border-light)" stroke-width="1" />
+            <text x="80" y="123" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="8" letter-spacing="0.14em" font-weight="500">TIER 1</text>
+            <text x="80" y="137" fill="var(--text-primary)" font-family="Inter, sans-serif" font-size="12" font-weight="600">Standard Confirm</text>
+            <text x="80" y="151" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Click-to-approve actions</text>
+            <circle cx="40" cy="215" r="18" fill="var(--bg-primary)" stroke="var(--text-secondary)" stroke-width="1.5" />
+            <g transform="translate(30, 205)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg></g>
+            <line x1="60" y1="215" x2="72" y2="215" stroke="var(--border-light)" stroke-width="1" />
+            <text x="80" y="208" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="8" letter-spacing="0.14em" font-weight="500">TIER 2</text>
+            <text x="80" y="222" fill="var(--text-primary)" font-family="Inter, sans-serif" font-size="12" font-weight="600">Password Gate</text>
+            <text x="80" y="236" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Credential-locked operations</text>
+            <circle cx="40" cy="300" r="18" fill="var(--bg-primary)" stroke="var(--text-secondary)" stroke-width="1.5" />
+            <g transform="translate(30, 290)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2H2v5M17 2h5v5M7 22H2v-5M17 22h5v-5" /><circle cx="12" cy="10" r="3" /><path d="M17 17c0-2.76-2.24-4-5-4s-5 1.24-5 4" /></svg></g>
+            <line x1="60" y1="300" x2="72" y2="300" stroke="var(--border-light)" stroke-width="1" />
+            <text x="80" y="293" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="8" letter-spacing="0.14em" font-weight="500">TIER 3</text>
+            <text x="80" y="307" fill="var(--text-primary)" font-family="Inter, sans-serif" font-size="12" font-weight="600">Biometric + Face</text>
+            <text x="80" y="321" fill="var(--text-muted)" font-family="Inter, sans-serif" font-size="9">Dual verification for critical ops</text>
+          </svg>
+        </div>
+        <!-- Mobile: HTML grid (hidden on desktop) -->
+        <div class="showcase-visual security-grid-mobile" style="background: var(--bg-secondary); display: none; grid-template-columns: 1fr 1fr; gap: 0.75rem; padding: 1.5rem; align-content: center; color: var(--text-primary);">
+          <div style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" /></svg>
+              </span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">TIER 0</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">No-Auth</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Instant access, no confirmation</p>
+          </div>
+          <div style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></svg>
+              </span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">TIER 1</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">Standard Confirm</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Click-to-approve actions</p>
+          </div>
+          <div style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+              </span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">TIER 2</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">Password Gate</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Credential-locked operations</p>
+          </div>
+          <div style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2H2v5M17 2h5v5M7 22H2v-5M17 22h5v-5" /><circle cx="12" cy="10" r="3" /><path d="M17 17c0-2.76-2.24-4-5-4s-5 1.24-5 4" /></svg>
+              </span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">TIER 3</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">Biometric + Face</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Dual verification for critical ops</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-features">
+        <div class="showcase-feature">
+          <span class="sf-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2H2v5M17 2h5v5M7 22H2v-5M17 22h5v-5" /><circle cx="12" cy="10" r="3" /><path d="M17 17c0-2.76-2.24-4-5-4s-5 1.24-5 4" /></svg>
+          </span>
+          <h4>Face Enrollment</h4>
+          <p>Biometric identity verification via MediaPipe face detection.</p>
+        </div>
+        <div class="showcase-feature">
+          <span class="sf-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+          </span>
+          <h4>Credential Vault</h4>
+          <p>AES-encrypted local key storage. No cloud sync.</p>
+        </div>
+        <div class="showcase-feature">
+          <span class="sf-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" /></svg>
+          </span>
+          <h4>Guard Service</h4>
+          <p>Runtime safety enforcement and action-level audit trail.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Onboarding -->
+    <section class="showcase-section" id="onboarding">
+      <div class="showcase-grid">
+        <div class="showcase-text">
+          <div class="showcase-badge" style="color: var(--text-secondary)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></svg>
+            FIRST RUN
+          </div>
+          <h2 class="showcase-title">Boot Up in<br />60 Seconds.</h2>
+          <p class="showcase-desc">
+            A cinematic onboarding experience that provisions Luca to YOUR
+            identity, voice, and operating style. Six steps from cold start
+            to fully personalized AI.
+          </p>
+          <p class="showcase-desc" style="margin-bottom: 0; font-size: 0.85rem; font-style: italic; opacity: 0.7;">
+            "You don't configure Luca. You introduce yourself."
+          </p>
+        </div>
+
+        <div class="showcase-visual" style="background: var(--bg-secondary); display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; padding: 2rem; align-content: center;">
+          <style>
+            @keyframes step-glow {
+              0%, 100% { border-color: var(--border-light); }
+              50% { border-color: var(--text-primary); }
+            }
+            .ob-card { animation: step-glow 8s infinite; }
+            .ob-card:nth-child(2) { animation-delay: 1.3s; }
+            .ob-card:nth-child(3) { animation-delay: 2.6s; }
+            .ob-card:nth-child(4) { animation-delay: 3.9s; }
+            .ob-card:nth-child(5) { animation-delay: 5.2s; }
+            .ob-card:nth-child(6) { animation-delay: 6.5s; }
+          </style>
+          <!-- Step 1 -->
+          <div class="ob-card" style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); flex-shrink: 0;">1</span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">STEP 01</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">BIOS Init</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Core engine boot &amp; system check</p>
+          </div>
+          <!-- Step 2 -->
+          <div class="ob-card" style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); flex-shrink: 0;">2</span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">STEP 02</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">Identity</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Name, voice &amp; owner profile</p>
+          </div>
+          <!-- Step 3 -->
+          <div class="ob-card" style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); flex-shrink: 0;">3</span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">STEP 03</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">Face Scan</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Biometric enrollment via webcam</p>
+          </div>
+          <!-- Step 4 -->
+          <div class="ob-card" style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); flex-shrink: 0;">4</span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">STEP 04</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">Persona</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Choose default personality mode</p>
+          </div>
+          <!-- Step 5 -->
+          <div class="ob-card" style="border: 1px solid var(--border-light); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); flex-shrink: 0;">5</span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">STEP 05</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">Neural Config</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Model selection &amp; memory setup</p>
+          </div>
+          <!-- Step 6: Ready -->
+          <div class="ob-card" style="border: 1.5px solid var(--text-primary); border-radius: 10px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--text-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 500;">COMPLETE</span>
+            </div>
+            <h4 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.2rem;">Ready</h4>
+            <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">Fully provisioned &amp; personalized</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="stats-section" id="comparison">
+      <div class="logo-label" style="margin-bottom: 1rem">HOW WE COMPARE</div>
+      <h2 style="font-family: var(--font-serif); font-size: clamp(2rem, 4vw, 3rem); text-align: center; line-height: 1.1; margin-bottom: 2rem;">Beyond the Competition.</h2>
+      <div style="width: 100%; max-width: 800px; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: center;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <th style="text-align: left; padding: 1rem 0.75rem; font-weight: 600; font-size: 0.85rem;">Feature</th>
+              <th style="padding: 1rem 0.75rem; font-weight: 600; color: var(--text-secondary);"><span style="display: inline-flex; align-items: center; gap: 0.4rem;"><img src="favicon.png" alt="Luca" width="20" height="20" style="border-radius: 4px;"> Luca OS</span></th>
+              <th style="padding: 1rem 0.75rem; font-weight: 500; color: var(--text-secondary);"><span style="display: inline-flex; align-items: center; gap: 0.4rem;"><img src="openai.svg" alt="ChatGPT" width="20" height="20" style="border-radius: 4px; filter: var(--icon-invert, invert(1)); opacity: 0.7;"> ChatGPT</span></th>
+              <th style="padding: 1rem 0.75rem; font-weight: 500; color: var(--text-secondary);"><span style="display: inline-flex; align-items: center; gap: 0.4rem;"><img src="claude.svg" alt="Claude" width="20" height="20" style="border-radius: 4px; opacity: 0.7;"> Claude</span></th>
+              <th style="padding: 1rem 0.75rem; font-weight: 500; color: var(--text-secondary);"><span style="display: inline-flex; align-items: center; gap: 0.4rem;"><svg role="img" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="opacity: 0.7;"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg> Siri</span></th>
+              <th style="padding: 1rem 0.75rem; font-weight: 500; color: var(--text-secondary);"><span style="display: inline-flex; align-items: center; gap: 0.4rem;"><svg role="img" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="opacity: 0.7;"><path d="M12 0C5.37 0 0 5.37 0 12C0 18.09 4.53 23.11 10.4 23.9V21.5A1.59 1.59 0 0 0 9.32 19.97A8.41 8.41 0 0 1 3.6 11.8A8.37 8.37 0 0 1 12.09 3.6A8.4 8.4 0 0 1 20.4 12.31L20.39 12.38A8.68 8.68 0 0 1 20.36 12.76C20.36 12.83 20.35 12.9 20.34 12.96C20.34 13.04 20.33 13.12 20.32 13.19L20.3 13.29C19.27 20.07 10.45 23.87 10.4 23.9C10.92 23.97 11.46 24 12 24C18.63 24 24 18.63 24 12S18.63 0 12 0Z"/></svg> Alexa</span></th>
+            </tr>
+          </thead>
+          <tbody style="color: var(--text-secondary);">
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="text-align: left; padding: 0.75rem; font-weight: 500; color: var(--text-primary);">Runs locally</td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-secondary)" stroke-width="2"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="text-align: left; padding: 0.75rem; font-weight: 500; color: var(--text-primary);">220+ tools</td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-secondary)" stroke-width="2"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td>
+              <td style="padding: 0.75rem;">~20</td>
+              <td style="padding: 0.75rem;">~10</td>
+              <td style="padding: 0.75rem;">~15</td>
+              <td style="padding: 0.75rem;">~30</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="text-align: left; padding: 0.75rem; font-weight: 500; color: var(--text-primary);">Computer use (vision)</td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-secondary)" stroke-width="2"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-secondary)" stroke-width="2"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="text-align: left; padding: 0.75rem; font-weight: 500; color: var(--text-primary);">Multi-platform</td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-secondary)" stroke-width="2"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td>
+              <td style="padding: 0.75rem;">Web only</td>
+              <td style="padding: 0.75rem;">Web only</td>
+              <td style="padding: 0.75rem;">Apple only</td>
+              <td style="padding: 0.75rem;">Amazon only</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="text-align: left; padding: 0.75rem; font-weight: 500; color: var(--text-primary);">Evolving personality</td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-secondary)" stroke-width="2"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+              <td style="text-align: left; padding: 0.75rem; font-weight: 500; color: var(--text-primary);">Autonomous goals</td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-secondary)" stroke-width="2"/><path d="M7 12.5l3.5 3.5 6.5-7" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+            </tr>
+            <tr>
+              <td style="text-align: left; padding: 0.75rem; font-weight: 500; color: var(--text-primary);">Open source</td>
+              <td style="padding: 0.75rem;"><span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px;">MIT</span></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+              <td style="padding: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.4"/><path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Skill Toolbox Section -->
+    <section class="showcase-section" id="skill-toolbox">
+      <div class="showcase-grid">
+        <div class="showcase-visual" style="background: #111; padding: 0.5rem; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; border: 1px solid #333;">
+          <div style="background: #1a1a1a; padding: 0.75rem 1rem; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; gap: 6px;">
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f56;"></div>
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: #ffbd2e;"></div>
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: #27c93f;"></div>
+            </div>
+            <div style="margin-left: 1rem; color: #888; font-size: 0.75rem; font-family: monospace;">skill_definition.py</div>
+          </div>
+          <pre style="margin: 0; padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #d1d1d1; overflow-x: auto;"><code><span style="color: #c678dd;">from</span> luca <span style="color: #c678dd;">import</span> Skill
+
+<span style="color: #5c6370;"># Import tools from any provider or write your own.</span>
+<span style="color: #abb2bf;">@Skill.register(</span><span style="color: #98c379;">"custom_analyzer"</span><span style="color: #abb2bf;">)</span>
+<span style="color: #c678dd;">def</span> <span style="color: #61afef;">analyze_task</span><span style="color: #abb2bf;">(input_data):</span>
+    <span style="color: #5c6370;">"""Runs locally with secure WASM sandboxing."""</span>
+    <span style="color: #c678dd;">return</span> <span style="color: #abb2bf;">Skill.exec(</span><span style="color: #98c379;">"local_worker"</span><span style="color: #abb2bf;">, input_data)</span>
+
+<span style="color: #5c6370;"># Link MCP Servers. Own your logic. 100% Privacy.</span></code></pre>
+        </div>
+        <div class="showcase-text">
+          <div class="showcase-badge">EXTENSIBLE ARCHITECTURE</div>
+          <h2 class="showcase-title">Your Infinite<br />Skill Toolbox.</h2>
+          <p class="showcase-desc">
+            Luca OS isn't just a shell—it's a platform. Build your own tools, import skills from other AI providers, or link your existing MCP servers to create a truly sovereign workspace.
+          </p>
+          <ul style="list-style: none; padding: 0; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Link MCP Servers:</strong> Industry-standard protocol support.</span>
+            </li>
+            <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Import Anything:</strong> Skills from any provider, running locally.</span>
+            </li>
+            <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Custom Skill SDK:</strong> Build autonomous logic in Python.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open Source Section (Roadmap) -->
+    <section class="showcase-section" id="opensource">
+      <div class="showcase-grid" style="align-items: center;">
+        <div class="showcase-text">
+          <div class="showcase-badge">ROADMAP</div>
+          <h2 class="showcase-title">The Path to<br />Sovereign AI.</h2>
+          <p class="showcase-desc">
+            We're building the first local-first operating system for agents. Our mission is to put powerful, private AI in everyone's hands, starting with the desktop and expanding to mobile and the global community.
+          </p>
+          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <a href="#waitlist" class="showcase-cta" style="gap: 0.5rem; background: var(--text-primary); color: var(--bg-primary);">
+              Join Waitlist
+            </a>
+            <a href="#" class="showcase-cta" style="gap: 0.5rem; background: var(--bg-elevated); border: 1px solid var(--border-subtle);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+              GitHub Coming Soon
+            </a>
+          </div>
+        </div>
+        <div class="showcase-visual" style="background: var(--bg-secondary); padding: 2.5rem; display: flex; flex-direction: column; gap: 2rem; justify-content: center; min-height: 320px; text-align: left;">
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+              <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Current Focus</span>
+              <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">Desktop Release (92%)</span>
+            </div>
+            <div style="height: 4px; background: var(--border-subtle); border-radius: 2px; overflow: hidden;">
+              <div style="width: 92%; height: 100%; background: var(--text-primary); border-radius: 2px;"></div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--text-primary); color: var(--bg-primary); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">1</div>
+              <div>
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Desktop Rollout</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">Mac, Windows, and Linux local engine release. Optimized for high-performance agentic tasks.</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: flex-start; opacity: 0.6;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--text-muted); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">2</div>
+              <div>
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Mobile Companion</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">Native iOS and Android apps for sovereign AI on the go. Seamless sync with your desktop node.</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: flex-start; opacity: 0.4;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--text-muted); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">3</div>
+              <div>
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Open Source Core</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">Releasing the core engine under MIT. Building a global community for private, local-first AI.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Correct Enterprise Footer -->
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-brand-col">
+          <a href="index.html" class="footer-brand">
+            <img src="icon.png" alt="Luca Logo" width="32" />
+            <span>L.U.C.A OS</span>
+          </a>
+          <p class="footer-tagline">
+            The world's first sovereign operating system for synthetic
+            intelligence.
+          </p>
+          <div class="social-links">
+            <a href="#" aria-label="Twitter">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                />
+              </svg>
+            </a>
+            <a href="#" aria-label="GitHub">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Product</h4>
+          <a href="download/mac.html">macOS</a>
+          <a href="download/windows.html">Windows</a>
+          <a href="download/linux.html">Linux</a>
+          <a href="download/mobile.html">Mobile</a>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Resources</h4>
+          <a href="resources/index.html">Documentation</a>
+          <a href="resources/api.html">API Reference</a>
+          <a href="resources/models.html">Model Zoo</a>
+          <a href="community/index.html">Community</a>
+          <a href="pitch/index.html">Pitch Deck</a>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Legal</h4>
+          <a href="legal/privacy.html">Privacy</a>
+          <a href="legal/terms.html">Terms</a>
+          <a href="legal/security.html">Security</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 LucaOS Inc. All rights reserved.</span>
+        <span class="system-status"
+          ><span class="status-dot"></span> Systems Operational</span
+        >
+      </div>
+    </footer>
+    <script src="script.js"></script>
+    <!-- Waitlist Modal -->
+    <div id="waitlist-modal" class="modal-overlay">
+      <div class="modal-content">
+        <button class="modal-close" onclick="closeWaitlistModal()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="showcase-badge" style="margin-bottom: 1.5rem;">Sovereign AI</div>
+        <h2 class="waitlist-title" style="margin-bottom: 1.5rem; text-align: left; font-size: 2rem;">Join the Waitlist</h2>
+        <p class="waitlist-subtitle" style="text-align: left; margin-bottom: 2.5rem;">Secure your spot in the local-first age. Choose your preferred kernel versions.</p>
+        
+        <form id="waitlist-form" onsubmit="handleWaitlistSubmit(event)">
+          <div class="input-group" style="margin-bottom: 2rem;">
+            <input type="email" placeholder="Enter your email" required style="width: 100%; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem; color: var(--text-primary); font-family: inherit; font-size: 1rem;">
+          </div>
+          
+          <div style="margin-bottom: 2.5rem;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">Target Kernels (Select Multiple)</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+              <label class="platform-option">
+                <input type="checkbox" name="platform" value="macos">
+                <span>macOS</span>
+              </label>
+              <label class="platform-option">
+                <input type="checkbox" name="platform" value="windows">
+                <span>Windows</span>
+              </label>
+              <label class="platform-option">
+                <input type="checkbox" name="platform" value="android">
+                <span>Android (Mobile)</span>
+              </label>
+              <label class="platform-option">
+                <input type="checkbox" name="platform" value="linux">
+                <span>Linux</span>
+              </label>
+            </div>
+          </div>
+          
+          <button type="submit" class="waitlist-submit" style="width: 100%; background: var(--text-primary); color: var(--bg-primary); padding: 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.2s;">
+            Reserve Spot
+          </button>
+        </form>
+
+        <!-- Success State (Hidden) -->
+        <div id="waitlist-success" style="display: none; text-align: center; padding: 2rem 0;">
+          <div style="width: 64px; height: 64px; background: #4ade80; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">You're on the list!</h3>
+          <p style="color: var(--text-secondary);">We'll notify you as soon as the kernel for your selected platforms is ready for testing.</p>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center; justify-content: center;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .modal-overlay.active { display: flex; opacity: 1; }
+      .modal-content {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-subtle);
+        width: 100%; max-width: 500px;
+        padding: 3rem;
+        border-radius: 20px;
+        position: relative;
+        transform: translateY(20px);
+        transition: transform 0.3s ease;
+      }
+      .modal-overlay.active .modal-content { transform: translateY(0); }
+      .modal-close {
+        position: absolute; top: 1.5rem; right: 1.5rem;
+        background: none; border: none; color: var(--text-muted);
+        cursor: pointer; padding: 0.5rem; transition: color 0.2s;
+      }
+      .modal-close:hover { color: var(--text-primary); }
+      
+      .platform-option {
+        display: flex; align-items: center; gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+      }
+      .platform-option:has(input:checked) {
+        border-color: var(--text-primary);
+        background: var(--bg-elevated);
+      }
+      .platform-option input { display: none; }
+      
+      .waitlist-submit:hover { transform: scale(0.98); }
+    </style>
+
+    <script>
+      function openWaitlistModal() {
+        const modal = document.getElementById('waitlist-modal');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeWaitlistModal() {
+        const modal = document.getElementById('waitlist-modal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        setTimeout(() => {
+          document.getElementById('waitlist-form').style.display = 'block';
+          document.getElementById('waitlist-success').style.display = 'none';
+        }, 300);
+      }
+      function handleWaitlistSubmit(e) {
+        e.preventDefault();
+        const checked = document.querySelectorAll('input[name="platform"]:checked');
+        if (checked.length === 0) {
+          alert('Please select at least one kernel version.');
+          return;
+        }
+        document.getElementById('waitlist-form').style.display = 'none';
+        document.getElementById('waitlist-success').style.display = 'block';
+      }
+      // Link all buttons
+      document.addEventListener('DOMContentLoaded', () => {
+        const buttons = document.querySelectorAll('a[href="#waitlist"], .waitlist-btn, .showcase-cta[href="#waitlist"]');
+        buttons.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            if (btn.tagName === 'A') e.preventDefault();
+            openWaitlistModal();
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
