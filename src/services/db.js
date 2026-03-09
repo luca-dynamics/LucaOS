@@ -1,152 +1,57 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
-// import { fileURLToPath } from 'url';
+// Browser-safe Database Service
+// Detect environment
+const isElectron = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
+const isNode = typeof process !== 'undefined' && process.versions && !!process.versions.node;
 
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+let db;
 
+if (isNode || isElectron) {
+    // Dynamic import to prevent build-time crashes in web environments
+    try {
+        const Database = (await import('better-sqlite3')).default;
+        const path = (await import('path')).default;
+        const fs = (await import('fs')).default;
+        
+        // Standardized Storage Root
+        const { DATA_DIR } = await import('../../cortex/server/config/constants.js');
 
-// Standardized Storage Root
-import { DATA_DIR } from '../../cortex/server/config/constants.js';
+        if (!fs.existsSync(DATA_DIR)) {
+            fs.mkdirSync(DATA_DIR, { recursive: true });
+        }
 
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+        const DB_PATH = path.join(DATA_DIR, 'luca.db');
+        db = new Database(DB_PATH);
+        db.pragma('journal_mode = WAL');
+
+        // Initialize Schema logic here
+        const initSchema = (database) => {
+            console.log('[DB] Initializing Node/Electron Schema...');
+            database.exec(`CREATE TABLE IF NOT EXISTS memories (id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT NOT NULL, embedding_json TEXT, type TEXT DEFAULT 'episodic', created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), metadata_json TEXT)`);
+            database.exec(`CREATE TABLE IF NOT EXISTS entities (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, type TEXT, description TEXT, last_updated INTEGER DEFAULT (strftime('%s', 'now') * 1000))`);
+            database.exec(`CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, source_id INTEGER NOT NULL, target_id INTEGER NOT NULL, relation TEXT NOT NULL, strength REAL DEFAULT 1.0, created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), valid_until INTEGER, context_event_id TEXT, weight REAL DEFAULT 1.0, FOREIGN KEY(source_id) REFERENCES entities(id), FOREIGN KEY(target_id) REFERENCES entities(id), UNIQUE(source_id, target_id, relation))`);
+            database.exec(`CREATE TABLE IF NOT EXISTS user_profile (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, face_reference_path TEXT, voice_settings_json TEXT, voice_reference_path TEXT, created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000))`);
+            database.exec(`CREATE TABLE IF NOT EXISTS credentials (site TEXT PRIMARY KEY, username TEXT NOT NULL, encrypted_password TEXT NOT NULL, iv TEXT NOT NULL, auth_tag TEXT NOT NULL, metadata_json TEXT, created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000))`);
+            database.exec(`CREATE TABLE IF NOT EXISTS pentest_sessions (id TEXT PRIMARY KEY, project_name TEXT, target_url TEXT, status TEXT DEFAULT 'running', current_phase TEXT, start_time INTEGER DEFAULT (strftime('%s', 'now') * 1000), end_time INTEGER, summary_json TEXT)`);
+            database.exec(`CREATE TABLE IF NOT EXISTS pentest_findings (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, vulnerability_type TEXT, severity TEXT, confidence REAL, sink_path TEXT, proof_of_concept TEXT, evidence_json TEXT, status TEXT DEFAULT 'potential', created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), FOREIGN KEY(session_id) REFERENCES pentest_sessions(id))`);
+        };
+        initSchema(db);
+    } catch (e) {
+        console.warn('[DB] Native database initialization failed, falling back to mock.', e);
+    }
 }
 
-const DB_PATH = path.join(DATA_DIR, 'luca.db');
-
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL'); // Better performance
-
-// Initialize Schema
-const initSchema = () => {
-    console.log('[DB] Initializing Schema...');
-
-    // Memories Table: Stores episodic and semantic memories
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS memories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT NOT NULL,
-            embedding_json TEXT, -- JSON string of vector array
-            type TEXT DEFAULT 'episodic', -- 'episodic', 'semantic', 'fact'
-            created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-            metadata_json TEXT -- JSON string for extra context (source, tags, etc.)
-        )
-    `);
-
-    // Entities Table: Knowledge Graph Nodes
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS entities (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL,
-            type TEXT, -- 'person', 'location', 'project', 'concept'
-            description TEXT,
-            last_updated INTEGER DEFAULT (strftime('%s', 'now') * 1000)
-        )
-    `);
-
-    // Relationships Table: Knowledge Graph Edges
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS relationships (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            source_id INTEGER NOT NULL,
-            target_id INTEGER NOT NULL,
-            relation TEXT NOT NULL, -- 'knows', 'owns', 'located_in'
-            strength REAL DEFAULT 1.0,
-            created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-            valid_until INTEGER, -- Null = Forever
-            context_event_id TEXT, -- Link to the "Event" that caused this
-            weight REAL DEFAULT 1.0,
-            FOREIGN KEY(source_id) REFERENCES entities(id),
-            FOREIGN KEY(target_id) REFERENCES entities(id),
-            UNIQUE(source_id, target_id, relation)
-        )
-    `);
-
-    // Migration: Add Temporal Columns to relationships if missing
-    const migrations = [
-        'ALTER TABLE relationships ADD COLUMN created_at INTEGER DEFAULT (strftime(\'%s\', \'now\') * 1000)',
-        'ALTER TABLE relationships ADD COLUMN valid_until INTEGER',
-        'ALTER TABLE relationships ADD COLUMN context_event_id TEXT',
-        'ALTER TABLE relationships ADD COLUMN weight REAL DEFAULT 1.0'
-    ];
-
-    migrations.forEach(query => {
-        try {
-            db.prepare(query).run();
-        } catch {
-            // Ignore error if column already exists (common in SQLite migrations)
-        }
-    });
-
-    // User Profile Table: Admin Identity
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS user_profile (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            face_reference_path TEXT, -- Path to the master photo
-            voice_settings_json TEXT, -- JSON for voice preferences
-            voice_reference_path TEXT, -- Path to the master voice recording
-            created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
-        )
-    `);
-
-    // Migration: Add voice_reference_path if it doesn't exist (for existing DBs)
-    try {
-        db.prepare('ALTER TABLE user_profile ADD COLUMN voice_reference_path TEXT').run();
-    } catch {
-        // Ignore error if column already exists
-    }
-
-    // Credentials Table (Encrypted Vault)
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS credentials (
-            site TEXT PRIMARY KEY,
-            username TEXT NOT NULL,
-            encrypted_password TEXT NOT NULL,
-            iv TEXT NOT NULL,
-            auth_tag TEXT NOT NULL,
-            metadata_json TEXT, 
-            created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-            updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
-        )
-    `);
-
-    // Pentest Sessions
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS pentest_sessions (
-            id TEXT PRIMARY KEY, -- Workflow ID
-            project_name TEXT,
-            target_url TEXT,
-            status TEXT DEFAULT 'running', -- 'running', 'completed', 'failed'
-            current_phase TEXT, -- 'recon', 'analysis', 'verification', 'reporting'
-            start_time INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-            end_time INTEGER,
-            summary_json TEXT -- JSON metadata
-        )
-    `);
-
-    // Pentest Findings
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS pentest_findings (
-            id TEXT PRIMARY KEY,
-            session_id TEXT NOT NULL,
-            vulnerability_type TEXT, -- 'SQLi', 'XSS', etc.
-            severity TEXT, -- 'critical', 'high', etc.
-            confidence REAL,
-            sink_path TEXT,
-            proof_of_concept TEXT,
-            evidence_json TEXT, -- Screenshots, logs
-            status TEXT DEFAULT 'potential', -- 'potential', 'verified', 'false_positive'
-            created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-            FOREIGN KEY(session_id) REFERENCES pentest_sessions(id)
-        )
-    `);
-
-    console.log('[DB] Schema Initialized.');
-};
-
-initSchema();
+// Fallback / Web implementation
+if (!db) {
+    console.log('[DB] Using Web Mock Database (InMemory/LocalStorage)');
+    db = {
+        exec: () => {},
+        prepare: () => ({
+            run: () => ({ changes: 0, lastInsertRowid: 0 }),
+            get: () => null,
+            all: () => []
+        }),
+        pragma: () => {}
+    };
+}
 
 export default db;

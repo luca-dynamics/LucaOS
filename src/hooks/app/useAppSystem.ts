@@ -154,22 +154,35 @@ export const useAppSystem = ({
         ) => {
           setBiosStatus((p: any) => ({ ...p, [key]: "PENDING" }));
           console.log(`[BIOS] Starting check for: ${name}`);
-          for (let i = 0; i < 10; i++) {
+
+          // Determine retries based on environment
+          // If we are on a public URL (Vercel) and not Electron, default to 1 try to avoid 20 second hang
+          const isPublicHosted =
+            typeof window !== "undefined" &&
+            !window.location.hostname.includes("localhost") &&
+            !window.location.hostname.includes("127.0.0.1") &&
+            !isElectron;
+
+          const maxRetries = isPublicHosted ? 1 : 10;
+
+          for (let i = 0; i < maxRetries; i++) {
             try {
               if (await fn()) {
                 console.log(`[BIOS] Check PASSED for: ${name}`);
                 setBiosStatus((p: any) => ({ ...p, [key]: "OK" }));
                 return true;
               }
-              console.log(
-                `[BIOS] Check attempt ${i + 1} failed for ${name}... retrying`,
-              );
+              if (maxRetries > 1) {
+                console.log(
+                  `[BIOS] Check attempt ${i + 1} failed for ${name}... retrying`,
+                );
+                await new Promise((r) => setTimeout(r, 1000));
+              }
             } catch (e: any) {
               console.warn(`[BIOS] Check error for ${name}:`, e.message || e);
             }
-            await new Promise((r) => setTimeout(r, 1000));
           }
-          console.error(`[BIOS] Check PERMANENTLY FAILED for: ${name}`);
+          console.warn(`[BIOS] Check PERMANENTLY FAILED for: ${name}`);
           setBiosStatus((p: any) => ({ ...p, [key]: "FAIL" }));
           return false;
         };
@@ -402,6 +415,10 @@ export const useAppSystem = ({
         const res = await fetch(apiUrl("/api/status"), {
           signal: AbortSignal.timeout(2000),
         });
+        if (!res.ok) {
+          setIsLocalCoreConnected(false);
+          return;
+        }
         const data = await res.json();
         setIsLocalCoreConnected(true);
         if (data.cwd) setCurrentCwd(data.cwd);

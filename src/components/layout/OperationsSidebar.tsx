@@ -105,7 +105,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             : "hidden"
           : "flex"
       } flex-col h-full overflow-hidden ${
-        theme.themeName === "lucagent"
+        theme.themeName?.toLowerCase() === "lucagent"
           ? "glass-panel-light tech-border-light"
           : "glass-panel tech-border"
       } ${theme.primary} z-10`}
@@ -114,7 +114,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           ? {
               borderRight: `1px solid ${setHexAlpha(theme.hex, 0.2)}`,
               background:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "rgba(255, 255, 255, 0.5)"
                   : "rgba(0, 0, 0, var(--app-bg-opacity, 0.4))",
             }
@@ -152,7 +152,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           style={{
             ...getGlassStyle(theme, false),
             background:
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.3))" // maintain relative dimming
                 : "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.25) * 0.3))", // maintain relative dimming
           }}
@@ -179,7 +179,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.3)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -188,7 +188,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 e.currentTarget.style.borderColor = style.borderColor;
                 e.currentTarget.style.boxShadow = style.boxShadow;
                 e.currentTarget.style.color =
-                  theme.themeName === "lucagent" ? theme.hex : "#ffffff";
+                  theme.themeName?.toLowerCase() === "lucagent" ? theme.hex : "#ffffff";
               }}
               onMouseLeave={(e) => {
                 const style = getGlassStyle(theme, false);
@@ -201,7 +201,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 WIRELESS
               </span>
               <span
-                className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-gray-900" : "text-white"}`}
+                className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"}`}
               >
                 INTERCEPT
               </span>
@@ -223,7 +223,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.3)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -232,7 +232,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 e.currentTarget.style.borderColor = style.borderColor;
                 e.currentTarget.style.boxShadow = style.boxShadow;
                 e.currentTarget.style.color =
-                  theme.themeName === "lucagent" ? theme.hex : "#ffffff";
+                  theme.themeName?.toLowerCase() === "lucagent" ? theme.hex : "#ffffff";
               }}
               onMouseLeave={(e) => {
                 const style = getGlassStyle(theme, false);
@@ -245,7 +245,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 TOPOLOGY
               </span>
               <span
-                className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-gray-900" : "text-white"}`}
+                className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"}`}
               >
                 NET MAP
               </span>
@@ -266,7 +266,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false, true),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.3)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -338,7 +338,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -375,7 +375,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -415,7 +415,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -444,7 +444,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -487,7 +487,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -517,7 +517,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -547,7 +547,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -575,7 +575,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -603,7 +603,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -632,7 +632,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -661,7 +661,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -690,7 +690,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -719,7 +719,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.15)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -748,7 +748,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.7)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -777,7 +777,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.7)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -806,7 +806,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.7)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -835,7 +835,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.7)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -844,7 +844,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 e.currentTarget.style.borderColor = style.borderColor;
                 e.currentTarget.style.boxShadow = style.boxShadow;
                 e.currentTarget.style.color =
-                  theme.themeName === "lucagent" ? theme.hex : "#ffffff";
+                  theme.themeName?.toLowerCase() === "lucagent" ? theme.hex : "#ffffff";
               }}
               onMouseLeave={(e) => {
                 const style = getGlassStyle(theme, false);
@@ -865,7 +865,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
               style={{
                 ...getGlassStyle(theme, false),
                 background:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.7)"
                     : "rgba(0, 0, 0, 0.25)",
               }}
@@ -890,7 +890,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 style={{
                   ...getGlassStyle(theme, false),
                   background:
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(255, 255, 255, 0.7)"
                       : "rgba(0, 0, 0, 0.25)",
                 }}

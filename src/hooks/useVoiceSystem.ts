@@ -2,8 +2,14 @@ import { useState } from "react";
 import { settingsService } from "../services/settingsService";
 
 export function useVoiceSystem() {
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
-  const [showVoiceHud, setShowVoiceHud] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(() => {
+    const settings = settingsService.getSettings();
+    return settings.general?.preferredMode === "voice";
+  });
+  const [showVoiceHud, setShowVoiceHud] = useState(() => {
+    const settings = settingsService.getSettings();
+    return settings.general?.preferredMode === "voice";
+  });
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceTranscriptSource, setVoiceTranscriptSource] = useState<

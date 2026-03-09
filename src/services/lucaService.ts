@@ -95,6 +95,13 @@ class LucaService {
   private sessionDirty = false;
   private personaSwitchPending = false; // Flag to track pending persona switch during tool execution
   private conversationHistory: any[] = []; // Store conversation history to preserve across persona switches
+  private userProfile: any = null;
+
+  // UI Control Properties (Electron/Overlay) - Required by App.tsx
+  public setActiveWebview?: (view: string) => void;
+  public setShowGhostBrowser?: (show: boolean) => void;
+  public setGhostBrowserUrl?: (url: string) => void;
+  public setIsRebooting?: (reboot: boolean) => void;
 
   // DYNAMIC TOOLING STATE
   private activeTools: FunctionDeclaration[] = [];
@@ -125,12 +132,25 @@ class LucaService {
         }
 
         // 2. SYNC: If sync is ON, ensure the theme follows the persona
-        if (gen.syncThemeWithPersona && gen.theme !== gen.persona) {
+        // SKIP during onboarding (setupComplete = false) to allow theme preview
+        const personaToThemeMap: Record<string, string> = {
+          RUTHLESS: "MASTER_SYSTEM",
+          ENGINEER: "BUILDER",
+          ASSISTANT: "PROFESSIONAL",
+          HACKER: "TERMINAL",
+        };
+        const syncedThemeId = personaToThemeMap[gen.persona] || "PROFESSIONAL";
+
+        if (
+          gen.syncThemeWithPersona &&
+          gen.theme !== syncedThemeId &&
+          gen.setupComplete
+        ) {
           console.log(
-            `[LUCA] Syncing Theme aesthetic with Persona: ${gen.persona}`,
+            `[LUCA] Syncing Theme aesthetic with Persona: ${gen.persona} -> ${syncedThemeId}`,
           );
           settingsService.saveSettings({
-            general: { ...gen, theme: gen.persona },
+            general: { ...gen, theme: syncedThemeId },
           });
         }
       }
@@ -909,14 +929,6 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     return result.text || "No analysis generated.";
   }
 
-  // The following properties are likely intended for an interface, not a class.
-  // Adding them as optional properties to the class for syntactic correctness based on the request.
-  public setActiveWebview?: (view: string) => void; // "visualizer" | "dashboard"
-  // Ghost Browser Integration
-  setShowGhostBrowser?: (show: boolean) => void;
-  setGhostBrowserUrl?: (url: string) => void;
-  setIsRebooting?: (reboot: boolean) => void;
-
   public async runGoogleSearch(query: string) {
     let finalQuery = query;
     const lower = query.toLowerCase();
@@ -1079,7 +1091,8 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
   }
 
   public setUserProfile(profile: any) {
-    console.log("[LUCA] User profile updated", profile);
+    this.userProfile = profile;
+    console.log(`[LUCA] User profile synced: ${profile?.name || "Operator"}`);
     this.sessionDirty = true; // Re-init chat with new profile
   }
 
@@ -1153,7 +1166,7 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
         : `Proofread and correct the following text. Return ONLY the corrected text:\n\n${text}`;
 
       const result = await this.ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: BRAIN_CONFIG.defaults.brain,
         contents: prompt,
       });
       return result.text || text;
@@ -2282,7 +2295,7 @@ USER: ${message}`;
 
       // 2. Compare with Gemini
       const result = await this.ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: BRAIN_CONFIG.defaults.brain,
         contents: {
           parts: [
             {
@@ -2329,7 +2342,7 @@ USER: ${message}`;
 
       // 2. Compare with Gemini
       const result = await this.ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: BRAIN_CONFIG.defaults.brain,
         contents: {
           parts: [
             {

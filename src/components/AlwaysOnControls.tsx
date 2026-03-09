@@ -128,7 +128,7 @@ const AlwaysOnControls: React.FC<Props> = ({
             ? {
                 background:
                   theme.primary === "lucagent" ||
-                  (theme as any).themeName === "lucagent"
+                  (theme as any).themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.3)"
                     : "rgba(0, 0, 0, 0.25)",
               }
@@ -152,7 +152,7 @@ const AlwaysOnControls: React.FC<Props> = ({
       {/* Wake Word indicator (Sense) */}
       <div
         className={`flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono
-          ${isWakeWordActive ? "bg-green-500/10 text-green-400 border border-green-500/30" : (theme as any).themeName === "lucagent" ? "bg-white/30 text-slate-800 border border-black/5" : "bg-black/20 text-slate-500 border border-white/5"}
+          ${isWakeWordActive ? "bg-green-500/10 text-green-400 border border-green-500/30" : (theme as any).themeName?.toLowerCase() === "lucagent" ? "bg-white/30 text-slate-800 border border-black/5" : "bg-black/20 text-slate-500 border border-white/5"}
         `}
         title={
           isWakeWordActive ? "Wake Word Listening Active" : "Wake Word Disabled"

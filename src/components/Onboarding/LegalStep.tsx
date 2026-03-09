@@ -44,9 +44,9 @@ const LegalStep: React.FC<LegalStepProps> = ({
   return (
     <div className="flex flex-col h-full animate-fade-in-up">
       {/* Header */}
-      <div className="text-center space-y-2 mb-8">
+      <div className="text-center space-y-2 mb-4">
         <ShieldCheck
-          className="w-12 h-12 mx-auto mb-4"
+          className="w-10 h-10 mx-auto mb-2"
           style={{ color: themeHex }}
         />
         <h1
@@ -73,7 +73,7 @@ const LegalStep: React.FC<LegalStepProps> = ({
           </div>
 
           <div
-            className={`border rounded-xl p-4 text-xs ${textBody} leading-relaxed font-mono backdrop-blur-md transition-all duration-300`}
+            className={`border rounded-xl p-3 text-[11px] ${textBody} leading-relaxed font-mono backdrop-blur-md transition-all duration-300`}
             style={{
               borderColor: isLightTheme
                 ? "rgba(0,0,0,0.15)"
@@ -161,7 +161,7 @@ const LegalStep: React.FC<LegalStepProps> = ({
       </div>
 
       {/* Footer Actions */}
-      <div className={`mt-8 pt-4 pb-4 ${borderColor} border-t px-4`}>
+      <div className={`mt-4 pt-4 pb-4 ${borderColor} border-t px-4`}>
         <button
           onClick={handleSubmit}
           disabled={!agreed}

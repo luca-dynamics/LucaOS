@@ -18,7 +18,7 @@ const AmbientVisionIndicator: React.FC<AmbientVisionIndicatorProps> = ({
   theme,
   isMobile = false,
 }) => {
-  const isLight = theme?.themeName === "lucagent";
+  const isLight = theme?.themeName?.toLowerCase() === "lucagent";
   const themeHex = theme?.hex || "#3b82f6";
 
   if (!active) return null;

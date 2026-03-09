@@ -71,7 +71,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header
       className={`${isMobile ? "h-24 pl-3 pr-2 pt-2" : "h-20 pl-6 pr-6"} ${
-        theme.themeName === "lucagent"
+        theme.themeName?.toLowerCase() === "lucagent"
           ? "glass-panel-light tech-border-light"
           : "glass-panel tech-border"
       } ${theme.primary} flex items-center ${
@@ -80,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({
       style={{
         borderBottom: `1px solid ${setHexAlpha(theme.hex, 0.2)}`,
         background:
-          theme.themeName === "lucagent"
+          theme.themeName?.toLowerCase() === "lucagent"
             ? "rgba(255, 255, 255, 0.5)"
             : "rgba(0, 0, 0, var(--app-bg-opacity, 0.4))",
       }}

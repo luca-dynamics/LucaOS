@@ -84,15 +84,15 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className={`w-20 h-20 mx-auto rounded-[22%] border flex items-center justify-center relative group overflow-hidden ${theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel tech-border"}`}
+          className={`w-20 h-20 mx-auto rounded-[22%] border flex items-center justify-center relative group overflow-hidden ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel tech-border"}`}
           style={{
             color: theme.hex,
             boxShadow:
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "0 10px 40px rgba(0,0,0,0.1)"
                 : `0 0 20px ${theme.hex}33`,
             border:
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "1px solid rgba(0,0,0,0.1)"
                 : undefined,
           }}
@@ -119,13 +119,13 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
 
         <div>
           <h2
-            className={`text-xl font-bold tracking-[0.2em] uppercase ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"}`}
+            className={`text-xl font-bold tracking-[0.2em] uppercase ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
           >
             Luca OS
           </h2>
           <div className="flex items-center justify-center gap-2 mt-1">
             <span
-              className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${theme.themeName === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 text-gray-400 border-white/10"}`}
+              className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 text-gray-400 border-white/10"}`}
             >
               v{version}
             </span>
@@ -147,27 +147,27 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Core Intelligence */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
         >
           <div className="flex items-center justify-between">
             <Cpu className="w-4 h-4" style={{ color: theme.hex }} />
             <Zap
-              className={`w-3 h-3 ${theme.themeName === "lucagent" ? "text-amber-500" : "text-yellow-500/50"}`}
+              className={`w-3 h-3 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-amber-500" : "text-yellow-500/50"}`}
             />
           </div>
           <div>
             <div
-              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
             >
               Luca Architecture
             </div>
             <div
-              className={`text-xs font-medium truncate ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"}`}
+              className={`text-xs font-medium truncate ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
             >
               {architecture}
             </div>
             <div
-              className={`text-[10px] mt-1 flex items-center gap-1 ${theme.themeName === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] mt-1 flex items-center gap-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
             >
               <ShieldCheck className="w-3 h-3" />
               {archBadge}
@@ -178,29 +178,29 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Voice Engine */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
         >
           <div className="flex items-center justify-between">
             <Mic className="w-4 h-4" style={{ color: theme.hex }} />
             <div
-              className={`text-[8px] px-1.5 py-0.5 rounded font-mono ${theme.themeName === "lucagent" ? "bg-black/5 border border-black/10 text-slate-500" : "bg-white/5 border border-white/10 text-gray-500"}`}
+              className={`text-[8px] px-1.5 py-0.5 rounded font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border border-black/10 text-slate-500" : "bg-white/5 border border-white/10 text-gray-500"}`}
             >
               {settings.voice.provider.toUpperCase()}
             </div>
           </div>
           <div>
             <div
-              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
             >
               Voice Synthesis
             </div>
             <div
-              className={`text-xs font-medium truncate ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"}`}
+              className={`text-xs font-medium truncate ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
             >
               {settings.voice.voiceId.split("-").pop() || "Standard"}
             </div>
             <div
-              className={`text-[10px] mt-1 ${theme.themeName === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] mt-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
             >
               Pacing: {settings.voice.pacing}
             </div>
@@ -210,12 +210,12 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Neural Memory */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
         >
           <div className="flex items-center justify-between">
             <Database className="w-4 h-4" style={{ color: theme.hex }} />
             <div
-              className={`text-[8px] flex items-center gap-1 font-mono ${cortexOnline ? (theme.themeName === "lucagent" ? "text-green-600 font-bold" : "text-green-500") : "text-orange-500"}`}
+              className={`text-[8px] flex items-center gap-1 font-mono ${cortexOnline ? (theme.themeName?.toLowerCase() === "lucagent" ? "text-green-600 font-bold" : "text-green-500") : "text-orange-500"}`}
             >
               <span
                 className={`w-1 h-1 rounded-full ${cortexOnline ? "bg-green-500 animate-pulse" : "bg-orange-500"}`}
@@ -225,17 +225,17 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
           </div>
           <div>
             <div
-              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
             >
               Semantic Memory
             </div>
             <div
-              className={`text-xs font-medium ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"}`}
+              className={`text-xs font-medium ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
             >
               {memoryCount} Vectors
             </div>
             <div
-              className={`text-[10px] mt-1 ${theme.themeName === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] mt-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
             >
               Knowledge Graph Active
             </div>
@@ -245,22 +245,22 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Environmental Awareness */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
         >
           <div className="flex items-center justify-between">
             <Eye className="w-4 h-4" style={{ color: theme.hex }} />
             <Globe
-              className={`w-3 h-3 ${theme.themeName === "lucagent" ? "text-indigo-500" : "text-blue-500/50"}`}
+              className={`w-3 h-3 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-indigo-500" : "text-blue-500/50"}`}
             />
           </div>
           <div>
             <div
-              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
             >
               Vision
             </div>
             <div
-              className={`text-xs font-medium truncate ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"}`}
+              className={`text-xs font-medium truncate ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
             >
               {(settings.brain.visionModel || "Gemini 3 Flash")
                 .split("/")
@@ -269,10 +269,10 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
                 .replace(/\b\w/g, (l) => l.toUpperCase())}
             </div>
             <div
-              className={`text-[10px] mt-1 flex items-center gap-1 ${theme.themeName === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] mt-1 flex items-center gap-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
             >
               <Zap
-                className={`w-2.5 h-2.5 ${theme.themeName === "lucagent" ? "text-amber-500" : "text-yellow-500/60"}`}
+                className={`w-2.5 h-2.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-amber-500" : "text-yellow-500/60"}`}
               />
               Spatial Awareness Active
             </div>
@@ -302,7 +302,7 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
               window.luca?.openScreenPermissions &&
               window.luca.openScreenPermissions()
             }
-            className={`flex items-center gap-1.5 text-[10px] transition-colors group ${theme.themeName === "lucagent" ? "text-slate-500 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}
+            className={`flex items-center gap-1.5 text-[10px] transition-colors group ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}
           >
             <ShieldCheck className="w-3 h-3 group-hover:scale-110 transition-transform" />
             Permissions
@@ -310,11 +310,11 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         </div>
 
         <div
-          className={`text-[9px] font-mono tracking-widest flex items-center gap-2 ${theme.themeName === "lucagent" ? "text-slate-400" : "text-gray-600"}`}
+          className={`text-[9px] font-mono tracking-widest flex items-center gap-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-400" : "text-gray-600"}`}
         >
           <span>{electronVersion}</span>
           <span
-            className={`w-1 h-1 rounded-full ${theme.themeName === "lucagent" ? "bg-slate-300" : "bg-gray-700"}`}
+            className={`w-1 h-1 rounded-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-slate-300" : "bg-gray-700"}`}
           />
           <span>LUCAOS LABS</span>
         </div>

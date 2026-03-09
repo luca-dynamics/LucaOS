@@ -12,33 +12,33 @@ import { UIThemeId } from "../../types/lucaPersonality";
 
 const THEMES = [
   {
-    id: "ASSISTANT",
-    label: "Assistant",
-    hex: THEME_PALETTE.ASSISTANT.primary,
-    desc: "Cyan / Professional",
+    id: "PROFESSIONAL",
+    label: "Professional",
+    hex: THEME_PALETTE.PROFESSIONAL.primary,
+    desc: "Light Grey / Minimal",
   },
   {
-    id: "RUTHLESS",
-    label: "Architect",
-    hex: THEME_PALETTE.RUTHLESS.primary,
-    desc: "Blue / Master System",
+    id: "MASTER_SYSTEM",
+    label: "Master System",
+    hex: THEME_PALETTE.MASTER_SYSTEM.primary,
+    desc: "Blue / High-Tech",
   },
   {
-    id: "ENGINEER",
-    label: "Developer",
-    hex: THEME_PALETTE.ENGINEER.primary,
-    desc: "Orange / Builder",
+    id: "BUILDER",
+    label: "Builder",
+    hex: THEME_PALETTE.BUILDER.primary,
+    desc: "Peach / Workspace",
   },
   {
-    id: "HACKER",
-    label: "Hacker",
-    hex: THEME_PALETTE.HACKER.primary,
-    desc: "Green / Terminal",
+    id: "TERMINAL",
+    label: "Terminal",
+    hex: THEME_PALETTE.TERMINAL.primary,
+    desc: "Green / CLI",
   },
   {
-    id: "LUCAGENT",
-    label: "Lucagent",
-    hex: THEME_PALETTE.LUCAGENT.primary,
+    id: "AGENTIC_SLATE",
+    label: "Agentic Slate",
+    hex: THEME_PALETTE.AGENTIC_SLATE.primary,
     desc: "Slate / Professional",
   },
   {
@@ -193,7 +193,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                     style={{
                       color:
                         selectedTheme === t.id
-                          ? t.id === "LUCAGENT"
+                          ? t.id === "AGENTIC_SLATE"
                             ? "#ffffff"
                             : t.hex
                           : "rgba(255,255,255,0.85)",
@@ -268,7 +268,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                     style={{
                       color:
                         selectedTheme === t.id
-                          ? t.id === "LUCAGENT"
+                          ? t.id === "AGENTIC_SLATE"
                             ? "#ffffff"
                             : t.hex
                           : "rgba(255,255,255,0.85)",

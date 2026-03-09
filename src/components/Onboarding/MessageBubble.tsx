@@ -12,7 +12,7 @@ interface MessageBubbleProps {
  */
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, theme }) => {
   const isLuca = message.role === "luca";
-  const isLight = theme?.hex === "#111827" || theme?.themeName === "lucagent";
+  const isLight = theme?.hex === "#111827" || theme?.themeName?.toLowerCase() === "lucagent";
 
   // Format timestamp
   const getTimeAgo = (date: Date) => {

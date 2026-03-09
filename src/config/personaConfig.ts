@@ -1,6 +1,5 @@
 // import { UserProfile } from "../types";
-import { THEME_PALETTE } from "./themeColors";
-
+// import { THEME_PALETTE } from "./themeColors";
 // NOTE: This file is used by Frontend, so it CANNOT import PersonaManager (Node.js/FS).
 // The Frontend should fetch config from API via personaService.ts.
 

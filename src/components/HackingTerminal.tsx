@@ -196,14 +196,14 @@ const HackingTerminal: React.FC<Props> = ({
     switch (phase?.toUpperCase()) {
       case "RECON":
       case "DISCOVERY":
-        return THEME_PALETTE.ASSISTANT.primary;
+        return THEME_PALETTE.AGENTIC_SLATE.primary;
       case "ANALYSIS":
       case "STRATEGY":
-        return THEME_PALETTE.ENGINEER.primary;
+        return THEME_PALETTE.BUILDER.primary;
       case "EXPLOITATION":
       case "ATTACK":
       case "EXECUTION":
-        return THEME_PALETTE.HACKER.primary;
+        return THEME_PALETTE.TERMINAL.primary;
       case "SUCCESS":
       case "COMPLETE":
         return THEME_PALETTE.RUTHLESS.primary;

@@ -88,7 +88,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
       {/* Overview Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "bg-white/5 border-white/10 backdrop-blur-sm"} p-4 rounded-xl flex items-center justify-between border`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "bg-white/5 border-white/10 backdrop-blur-sm"} p-4 rounded-xl flex items-center justify-between border`}
         >
           <div>
             <h3 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">
@@ -105,7 +105,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         </div>
 
         <div
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light border-black/10" : "bg-white/5 border-white/10"} p-4 rounded-xl space-y-2 border`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "bg-white/5 border-white/10"} p-4 rounded-xl space-y-2 border`}
         >
           <button
             onClick={() => {
@@ -118,7 +118,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
               a.download = `luca_memory_dump_${Date.now()}.json`;
               a.click();
             }}
-            className={`w-full flex items-center gap-2 text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-gray-500 hover:text-gray-800" : "text-gray-400 hover:text-white"} transition-colors`}
+            className={`w-full flex items-center gap-2 text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500 hover:text-gray-800" : "text-gray-400 hover:text-white"} transition-colors`}
           >
             <Download className="w-3 h-3" /> Export JSON
           </button>
@@ -142,10 +142,10 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
 
       {/* Memory Explorer */}
       <div
-        className={`flex-1 flex flex-col min-h-0 ${theme.themeName === "lucagent" ? "bg-white border-black/10" : "bg-black/20 border-white/10"} border rounded-xl overflow-hidden`}
+        className={`flex-1 flex flex-col min-h-0 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10" : "bg-black/20 border-white/10"} border rounded-xl overflow-hidden`}
       >
         <div
-          className={`p-3 border-b ${theme.themeName === "lucagent" ? "border-black/5 bg-black/[0.02]" : "border-white/10 bg-white/5"} flex flex-wrap gap-2 items-center justify-between`}
+          className={`p-3 border-b ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/[0.02]" : "border-white/10 bg-white/5"} flex flex-wrap gap-2 items-center justify-between`}
         >
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
@@ -154,7 +154,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
               placeholder="Search facts, concepts, entities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/40 border-white/10 text-gray-300"} border rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none transition-all shadow-inner`}
+              className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/40 border-white/10 text-gray-300"} border rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none transition-all shadow-inner`}
             />
           </div>
 
@@ -163,7 +163,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className={`${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-700" : "bg-black/40 border-white/10 text-gray-400"} border rounded-lg px-2 py-1.5 text-[10px] focus:outline-none transition-all`}
+              className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-700" : "bg-black/40 border-white/10 text-gray-400"} border rounded-lg px-2 py-1.5 text-[10px] focus:outline-none transition-all`}
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -173,7 +173,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             </select>
             <button
               onClick={loadAllMemories}
-              className={`p-1.5 rounded-lg ${theme.themeName === "lucagent" ? "hover:bg-black/5 text-gray-400" : "hover:bg-white/10 text-gray-500"} hover:text-white transition-all outline-none`}
+              className={`p-1.5 rounded-lg ${theme.themeName?.toLowerCase() === "lucagent" ? "hover:bg-black/5 text-gray-400" : "hover:bg-white/10 text-gray-500"} hover:text-white transition-all outline-none`}
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}
@@ -194,7 +194,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             filteredMemories.map((m) => (
               <div
                 key={m.id}
-                className={`group p-3 rounded-lg ${theme.themeName === "lucagent" ? "bg-black/[0.02] border-black/5 hover:border-black/10 hover:bg-black/[0.04]" : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/[0.08]"} transition-all border relative overflow-hidden`}
+                className={`group p-3 rounded-lg ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5 hover:border-black/10 hover:bg-black/[0.04]" : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/[0.08]"} transition-all border relative overflow-hidden`}
               >
                 {/* Delete Button */}
                 <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -221,19 +221,19 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
                   />
                   <div className="flex-1 min-w-0">
                     <div
-                      className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-gray-700" : "text-gray-200"} mb-1 flex flex-wrap items-center gap-2`}
+                      className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700" : "text-gray-200"} mb-1 flex flex-wrap items-center gap-2`}
                     >
                       <span className="truncate">{m.key}</span>
                       {m.metadata?.source && (
                         <span
-                          className={`px-1.5 py-0.5 rounded ${theme.themeName === "lucagent" ? "bg-black/5 text-gray-500" : "bg-white/10 text-gray-500"} text-[8px] font-normal uppercase tracking-tighter`}
+                          className={`px-1.5 py-0.5 rounded ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 text-gray-500" : "bg-white/10 text-gray-500"} text-[8px] font-normal uppercase tracking-tighter`}
                         >
                           {m.metadata.source}
                         </span>
                       )}
                     </div>
                     <p
-                      className={`text-[11px] ${theme.themeName === "lucagent" ? "text-slate-800" : "text-gray-400"} leading-relaxed break-words`}
+                      className={`text-[11px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-400"} leading-relaxed break-words`}
                     >
                       {m.value}
                     </p>
@@ -264,18 +264,18 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
 
       {/* Session Cleanup */}
       <div
-        className={`p-3 rounded-xl ${theme.themeName === "lucagent" ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-500/5 border-amber-500/10"} border flex items-center justify-between mt-auto`}
+        className={`p-3 rounded-xl ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-amber-500/10 border-amber-500/20" : "bg-amber-500/5 border-amber-500/10"} border flex items-center justify-between mt-auto`}
       >
         <div className="flex items-center gap-3">
           <LogOut className="w-4 h-4 text-amber-500/70" />
           <div>
             <div
-              className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-300"} uppercase tracking-wider`}
+              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-300"} uppercase tracking-wider`}
             >
               Active Session
             </div>
             <div
-              className={`text-[9px] ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"} italic`}
+              className={`text-[9px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"} italic`}
             >
               Clear chat history and active short-term state
             </div>
@@ -292,7 +292,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
               window.location.reload();
             }
           }}
-          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold ${theme.themeName === "lucagent" ? "bg-black/5 hover:bg-black/10 text-gray-500 hover:text-gray-800 border-black/10" : "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border-white/5"} transition-all border`}
+          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 hover:bg-black/10 text-gray-500 hover:text-gray-800 border-black/10" : "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border-white/5"} transition-all border`}
         >
           Reset Session
         </button>

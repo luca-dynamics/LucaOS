@@ -11,9 +11,9 @@ export const BRAIN_CONFIG = {
 
   // Global Default Models (Stable IDs)
   defaults: {
-    brain: "gemini-2.5-flash", // Default for chat and reasoning
-    vision: "gemini-2.5-flash", // Default for visual understanding
-    voice: "models/gemini-2.5-flash-native-audio-latest", // Default for Live audio (Live API requires models/ prefix)
+    brain: "gemini-3-flash", // Default for chat and reasoning
+    vision: "gemini-3-flash", // Default for visual understanding
+    voice: "models/gemini-3-flash", // Default for Live audio (Live API requires models/ prefix)
     memory: "mxbai-embed-xsmall", // Default for local memory indexing
     embedding: "mxbai-embed-xsmall", // Default for local vector indexing
   },

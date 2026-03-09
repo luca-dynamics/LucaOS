@@ -1,8 +1,11 @@
-import activeWin from "active-win";
-import robot from "robotjs";
-import { desktopCapturer } from "electron";
-import fs from "fs";
-import path from "path";
+// Browser-safe Reflection Service
+// Detect environment
+const isElectron =
+  typeof process !== "undefined" &&
+  process.versions &&
+  !!process.versions.electron;
+const isNode =
+  typeof process !== "undefined" && process.versions && !!process.versions.node;
 
 /**
  * REFLECTION SERVICE (God Mode for iOS)
@@ -11,8 +14,25 @@ import path from "path";
 export class ReflectionService {
   private static instance: ReflectionService;
   private isScanning = false;
+  private activeWin: any = null;
+  private robot: any = null;
 
-  private constructor() {}
+  private constructor() {
+    this.initNativeModules();
+  }
+
+  private async initNativeModules() {
+    if (isNode || isElectron) {
+      try {
+        const aw = "active-win";
+        const rjs = "robotjs";
+        this.activeWin = (await import(aw)).default;
+        this.robot = (await import(rjs)).default;
+      } catch (e) {
+        console.warn("[REFLECTION] Native modules could not be loaded.", e);
+      }
+    }
+  }
 
   static getInstance(): ReflectionService {
     if (!ReflectionService.instance) {
@@ -24,9 +44,10 @@ export class ReflectionService {
   /**
    * 1. Find the iPhone Mirroring Window
    */
-  async findMirroringWindow(): Promise<activeWin.Result | null> {
+  async findMirroringWindow(): Promise<any | null> {
+    if (!this.activeWin) return null;
     try {
-      const window = await activeWin();
+      const window = await this.activeWin();
       if (window && window.owner.name === "iPhone Mirroring") {
         return window;
       }
@@ -41,8 +62,6 @@ export class ReflectionService {
    * 2. Capture the Mirroring Window for Vision Analysis
    */
   async captureMirroringScreen(): Promise<string | null> {
-    // In a real implementation, we would use desktopCapturer to grab just the window ID found above
-    // For now, we simulate the capture logic
     const window = await this.findMirroringWindow();
     if (!window) return null;
 
@@ -57,6 +76,7 @@ export class ReflectionService {
    * Coordinates are 0.0 - 1.0 (Percentage of iPhone screen)
    */
   async clickRelative(xPct: number, yPct: number) {
+    if (!this.robot) return false;
     const window = await this.findMirroringWindow();
     if (!window) {
       console.warn("[REFLECTION] iPhone Mirroring not found. Cannot click.");
@@ -67,8 +87,8 @@ export class ReflectionService {
     const absY = window.bounds.y + window.bounds.height * yPct;
 
     console.log(`[REFLECTION] Clicking at ${absX}, ${absY}`);
-    robot.moveMouse(absX, absY);
-    robot.mouseClick();
+    this.robot.moveMouse(absX, absY);
+    this.robot.mouseClick();
     return true;
   }
 
@@ -76,15 +96,16 @@ export class ReflectionService {
    * 4. Type text into the iPhone
    */
   async typeText(text: string) {
+    if (!this.robot) return false;
     const window = await this.findMirroringWindow();
     if (!window) return false;
 
     // Focus the window first
-    robot.moveMouse(window.bounds.x + 50, window.bounds.y + 50);
-    robot.mouseClick();
+    this.robot.moveMouse(window.bounds.x + 50, window.bounds.y + 50);
+    this.robot.mouseClick();
 
     // Type
-    robot.typeString(text);
+    this.robot.typeString(text);
     return true;
   }
 }

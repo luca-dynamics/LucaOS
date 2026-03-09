@@ -105,7 +105,24 @@ if (typeof window !== "undefined") {
       };
     }
 
-    return originalFetch(resource, config);
+    try {
+      const response = await originalFetch(resource, config);
+      return response;
+    } catch (error) {
+      // Suppress network errors (like ERR_CONNECTION_REFUSED) for polling endpoints
+      // to prevent massive console flooding in Cloud-Only mode when the server isn't there.
+      if (
+        url.includes("/api/luca-link/status") ||
+        url.includes("/api/status")
+      ) {
+        // Return a fake 404 response so the app's `res.ok` checks fail silently
+        return new Response(null, {
+          status: 404,
+          statusText: "Not Found (Suppressed)",
+        });
+      }
+      throw error;
+    }
   };
 }
 
@@ -167,7 +184,7 @@ const resolveBaseUrl = (
     RELAY_SERVER_URL &&
     RELAY_SERVER_URL.startsWith("http")
   ) {
-    if (type === "CORTEX") {
+    if (type === "CORTEX" || type === "API") {
       return RELAY_SERVER_URL;
     }
   }

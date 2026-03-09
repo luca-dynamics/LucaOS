@@ -19,10 +19,7 @@ import {
 } from "lucide-react";
 import { soundService } from "../../services/soundService";
 import { settingsService } from "../../services/settingsService";
-import {
-  requestVoicePermission,
-  requestAllWebPermissions,
-} from "../../utils/voicePermissions";
+import { requestVoicePermission } from "../../utils/voicePermissions";
 import { personalityService } from "../../services/personalityService";
 import { OperatorProfile } from "../../types/operatorProfile";
 import { useMobile } from "../../hooks/useMobile";
@@ -46,7 +43,6 @@ type Step =
 
 interface OnboardingFlowProps {
   theme: { primary: string; hex: string };
-  persona: string;
   onComplete: (
     profile?: Partial<OperatorProfile>,
     mode?: ConversationMode,
@@ -64,7 +60,6 @@ const hexToRgba = (hex: string, alpha: number): string => {
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   theme,
-  persona,
   onComplete,
 }) => {
   const [step, setStep] = useState<Step>("BOOT");
@@ -92,8 +87,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   // Boot Sequence Animation
   const [bootText, setBootText] = useState<string[]>([]);
 
-  // Theme Detection: Only LUCAGENT is light mode
-  const isLightTheme = currentThemeName === "LUCAGENT";
+  const isLightTheme =
+    currentThemeName?.toUpperCase() === "LUCAGENT" ||
+    currentThemeName?.toUpperCase() === "AGENTIC_SLATE";
 
   // Sync theme with parent props when changed from tray menu
   useEffect(() => {
@@ -103,17 +99,21 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   }, [theme.hex, currentThemeHex]);
 
   // Sync theme hex with parent props when theme is changed externally (e.g., tray menu)
-  // NOTE: Persona changes should NOT affect the theme skin — they are independent systems.
+  // NOTE: During onboarding, we priority local state over parent props to avoid reset race conditions.
   useEffect(() => {
-    const savedTheme = settingsService.get("general").theme as string;
-    if (savedTheme && savedTheme !== currentThemeName) {
-      setCurrentThemeName(savedTheme);
-      const hex =
-        THEME_PALETTE[savedTheme as keyof typeof THEME_PALETTE]?.primary ||
-        theme.hex;
-      setCurrentThemeHex(hex);
+    // Only allow parent prop sync if we are in a step that doesn't manage its own theme state
+    // or if the onboarding is already completed.
+    if (step === "BOOT" || step === "LEGAL") {
+      const savedTheme = settingsService.get("general").theme as string;
+      if (savedTheme && savedTheme !== currentThemeName) {
+        setCurrentThemeName(savedTheme);
+        const hex =
+          THEME_PALETTE[savedTheme as keyof typeof THEME_PALETTE]?.primary ||
+          theme.hex;
+        setCurrentThemeHex(hex);
+      }
     }
-  }, [theme.hex]);
+  }, [theme.hex, step]);
 
   useEffect(() => {
     if (step === "BOOT") {
@@ -419,16 +419,18 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
     if (!isElectron) {
       // PROACTIVE PERMISSION GATING (Web Version)
-      // On web, we want to request everything at once so Luca is fully "Aware"
-      // of the screen, camera, and voice environment.
-      console.log("[Onboarding] Web Detected: Requesting All Permissions...");
-      const permissions = await requestAllWebPermissions();
-
-      if (mode === "voice" && !permissions.audio) {
-        alert(
-          "Microphone access is required for voice mode. Falling back to text.",
-        );
-        setConversationMode("text");
+      // We only request what is strictly necessary for the selected mode
+      if (mode === "voice") {
+        console.log("[Onboarding] Voice Mode: Requesting Microphone...");
+        const granted = await requestVoicePermission();
+        if (!granted) {
+          alert(
+            "Microphone access is required for voice mode. Falling back to text.",
+          );
+          setConversationMode("text");
+        }
+      } else {
+        console.log("[Onboarding] Text Mode: No proactive permissions needed.");
       }
     } else {
       // Desktop Version (Lazy Permissions)
@@ -493,7 +495,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             ? "max-w-5xl h-[85vh] flex flex-col px-4"
             : step === "THEME"
               ? "max-w-2xl p-4"
-              : "max-w-md p-8"
+              : "max-w-md p-4 sm:p-6"
         }`}
       >
         {step === "BOOT" && (
@@ -744,7 +746,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             onComplete={handleFaceScanComplete}
             onSkip={() => handleFaceScanComplete(null)}
             isLightTheme={isLightTheme}
-            theme={{ primary: theme.primary, hex: currentThemeHex }}
+            theme={{ primary: currentThemeName, hex: currentThemeHex }}
           />
         )}
 

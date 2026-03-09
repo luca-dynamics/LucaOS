@@ -35,7 +35,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
       <div className="flex flex-col gap-1 md:gap-2 pointer-events-auto max-w-[60%]">
         <h2
           className={`font-display text-xl md:text-3xl ${
-            theme.themeName === "lucagent" ? "text-gray-900" : "text-white"
+            theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"
           } tracking-[0.1em] md:tracking-[0.2em] font-bold flex items-center gap-2 md:gap-3`}
         >
           <Activity
@@ -68,7 +68,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             <button
               onClick={onSettingsClick}
               className={`cursor-pointer group p-3 md:p-4 rounded-full border ${
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "border-slate-900/10 bg-white/60 text-slate-900 hover:bg-white/80"
                   : "border-white/10 bg-black/60 text-slate-400 hover:text-white"
               } transition-all backdrop-blur-sm`}
@@ -81,7 +81,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
               className={`cursor-pointer group p-3 md:p-4 rounded-full border transition-all ${
                 isVideoActive
                   ? `${theme.bg} ${theme.border} ${theme.primary}`
-                  : theme.themeName === "lucagent"
+                  : theme.themeName?.toLowerCase() === "lucagent"
                     ? "border-sky-900/10 bg-white/40 text-sky-900 hover:bg-white/60"
                     : "bg-black/40 border-white/10 hover:bg-white/10 text-slate-400"
               }`}
@@ -102,7 +102,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
         <button
           onClick={onClose}
           className={`cursor-pointer group p-3 md:p-4 rounded-full border ${
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? "border-red-900/10 bg-white/60 text-red-600 hover:bg-red-50 hover:border-red-500"
               : "border-white/10 bg-black/60 text-slate-400 hover:bg-red-900/50 hover:border-red-500 hover:text-white"
           } transition-all z-[110] backdrop-blur-sm`}

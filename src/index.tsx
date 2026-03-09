@@ -15,6 +15,15 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
+// Web mode: Force opaque background on body/html to prevent browser white bleed-through.
+// On Electron, body stays transparent (needed for native window transparency).
+const isElectron = !!(window as any).electron;
+if (!isElectron) {
+  // We set a neutral dark background initially. React components will overlay their specific theme colors.
+  document.documentElement.style.backgroundColor = "#1c1c1c";
+  document.body.style.backgroundColor = "#1c1c1c";
+}
+
 const params = new URLSearchParams(window.location.search);
 const isWidgetMode = params.get("mode") === "widget";
 const isChatMode = params.get("mode") === "chat";

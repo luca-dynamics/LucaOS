@@ -136,7 +136,7 @@ const GuestAccessSection: React.FC<{
           width: 180,
           margin: 2,
           color: {
-            dark: theme.themeName === "lucagent" ? "#000000" : "#ffffff",
+            dark: theme.themeName?.toLowerCase() === "lucagent" ? "#000000" : "#ffffff",
             light: "#00000000",
           },
         });
@@ -163,16 +163,16 @@ const GuestAccessSection: React.FC<{
       className="rounded-xl p-4 text-center space-y-3 mt-4"
       style={{
         backgroundColor:
-          theme.themeName === "lucagent"
+          theme.themeName?.toLowerCase() === "lucagent"
             ? "rgba(102,126,234,0.08)"
             : "rgba(102,126,234,0.05)",
-        border: `1px solid ${theme.themeName === "lucagent" ? "rgba(0,0,0,0.15)" : theme.hex + "40"}`,
+        border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.15)" : theme.hex + "40"}`,
       }}
     >
       <div
         className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest"
         style={{
-          color: theme.themeName === "lucagent" ? "#1d4ed8" : theme.hex,
+          color: theme.themeName?.toLowerCase() === "lucagent" ? "#1d4ed8" : theme.hex,
         }}
       >
         <Globe className="w-4 h-4" />
@@ -180,7 +180,7 @@ const GuestAccessSection: React.FC<{
       </div>
 
       <p
-        className={`text-xs ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-500"}`}
+        className={`text-xs ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-500"}`}
       >
         Access your personal Luca assistant from any device in the world • Works
         over internet
@@ -190,12 +190,12 @@ const GuestAccessSection: React.FC<{
         <button
           onClick={generateGuestAccess}
           disabled={!connected || loading}
-          className={`w-full py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-50 ${theme.themeName === "lucagent" ? "bg-black/[0.03] hover:bg-black/[0.06]" : ""}`}
+          className={`w-full py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-50 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] hover:bg-black/[0.06]" : ""}`}
           style={{
             backgroundColor:
-              theme.themeName === "lucagent" ? undefined : `${theme.hex}20`,
-            border: `1px solid ${theme.themeName === "lucagent" ? "rgba(0,0,0,0.2)" : theme.hex}`,
-            color: theme.themeName === "lucagent" ? "#111827" : theme.hex,
+              theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}20`,
+            border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.2)" : theme.hex}`,
+            color: theme.themeName?.toLowerCase() === "lucagent" ? "#111827" : theme.hex,
           }}
         >
           {loading ? "Generating..." : "Generate Access Link"}
@@ -206,7 +206,7 @@ const GuestAccessSection: React.FC<{
           {guestQR && (
             <div className="flex justify-center">
               <div
-                className={`p-3 rounded-lg ${theme.themeName === "lucagent" ? "bg-white border border-black/10" : "bg-white/5"}`}
+                className={`p-3 rounded-lg ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border border-black/10" : "bg-white/5"}`}
               >
                 <img
                   src={guestQR}
@@ -225,10 +225,10 @@ const GuestAccessSection: React.FC<{
                 className="px-3 py-1 rounded text-xs font-mono max-w-[200px] truncate"
                 style={{
                   backgroundColor:
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.05)"
                       : "rgba(255,255,255,0.1)",
-                  color: theme.themeName === "lucagent" ? "#1e293b" : theme.hex,
+                  color: theme.themeName?.toLowerCase() === "lucagent" ? "#1e293b" : theme.hex,
                 }}
               >
                 {guestUrl}
@@ -263,10 +263,10 @@ const GuestAccessSection: React.FC<{
       {showSecurityModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div
-            className={`${theme.themeName === "lucagent" ? "bg-white" : "bg-[#1a1a2e]"} border ${theme.themeName === "lucagent" ? "border-black/10" : "border-white/10"} rounded-xl p-6 max-w-sm w-full space-y-4`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white" : "bg-[#1a1a2e]"} border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/10" : "border-white/10"} rounded-xl p-6 max-w-sm w-full space-y-4`}
             style={{
               boxShadow:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "0 10px 40px rgba(0,0,0,0.1)"
                   : "0 0 50px rgba(0,0,0,0.5)",
             }}
@@ -280,12 +280,12 @@ const GuestAccessSection: React.FC<{
               </div>
               <div className="text-left">
                 <h3
-                  className={`font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"}`}
+                  className={`font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
                 >
                   Link Security
                 </h3>
                 <p
-                  className={`text-xs ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-400"}`}
+                  className={`text-xs ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-400"}`}
                 >
                   Protect this public link
                 </p>
@@ -348,7 +348,7 @@ const GuestAccessSection: React.FC<{
                           e.target.value.replace(/\D/g, "").slice(0, 6),
                         )
                       }
-                      className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 outline-none font-mono text-sm`}
+                      className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 outline-none font-mono text-sm`}
                     />
                   </div>
                 ) : (
@@ -363,7 +363,7 @@ const GuestAccessSection: React.FC<{
                       onChange={(e) =>
                         setNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))
                       }
-                      className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 outline-none font-mono text-sm`}
+                      className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 outline-none font-mono text-sm`}
                     />
                   </div>
                 )}
@@ -493,7 +493,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             width: 200,
             margin: 2,
             color: {
-              dark: theme.themeName === "lucagent" ? "#000000" : "#ffffff",
+              dark: theme.themeName?.toLowerCase() === "lucagent" ? "#000000" : "#ffffff",
               light: "#00000000",
             },
           });
@@ -564,9 +564,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       >
         <div className="flex items-center justify-between mb-3">
           <label
-            className={`text-xs font-bold uppercase tracking-widest ${theme.themeName === "lucagent" ? "text-slate-900" : ""}`}
+            className={`text-xs font-bold uppercase tracking-widest ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : ""}`}
             style={{
-              color: theme.themeName === "lucagent" ? undefined : theme.hex,
+              color: theme.themeName?.toLowerCase() === "lucagent" ? undefined : theme.hex,
             }}
           >
             {isMobile ? "Desktop Connection" : "Connection Status"}
@@ -594,11 +594,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               onChange={(e) =>
                 onUpdate("lucaLink", "connectionMode", e.target.value)
               }
-              className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-3 text-sm outline-none transition-all`}
+              className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-3 text-sm outline-none transition-all`}
               onFocus={(e) => (e.target.style.borderColor = theme.hex)}
               onBlur={(e) =>
                 (e.target.style.borderColor =
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(0,0,0,0.1)"
                     : "rgba(255,255,255,0.1)")
               }
@@ -640,11 +640,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     ? "e.g., 100.x.x.x:8765 (Tailscale IP)"
                     : "e.g., 192.168.1.100:8765"
                 }
-                className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/20 border-white/10 text-white"} rounded-lg p-3 outline-none font-mono text-sm transition-all`}
+                className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/20 border-white/10 text-white"} rounded-lg p-3 outline-none font-mono text-sm transition-all`}
                 onFocus={(e) => (e.target.style.borderColor = theme.hex)}
                 onBlur={(e) =>
                   (e.target.style.borderColor =
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.1)"
                       : "rgba(255,255,255,0.1)")
                 }
@@ -667,11 +667,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   onUpdate("lucaLink", "relayServerUrl", e.target.value)
                 }
                 placeholder="https://lucaos.onrender.com"
-                className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/20 border-white/10 text-white"} rounded-lg p-3 outline-none font-mono text-sm transition-all`}
+                className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/20 border-white/10 text-white"} rounded-lg p-3 outline-none font-mono text-sm transition-all`}
                 onFocus={(e) => (e.target.style.borderColor = theme.hex)}
                 onBlur={(e) =>
                   (e.target.style.borderColor =
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.1)"
                       : "rgba(255,255,255,0.1)")
                 }
@@ -693,7 +693,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   console.log("[LucaLink] Connected via QR scan");
                 }
               }}
-              className={`w-full py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 hover:bg-black/[0.08]" : "bg-white/5 border-white/10 text-white hover:bg-white/10"}`}
+              className={`w-full py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 hover:bg-black/[0.08]" : "bg-white/5 border-white/10 text-white hover:bg-white/10"}`}
               style={{
                 border: "1px solid",
               }}
@@ -758,14 +758,14 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
 
           {/* Privacy Note */}
           <div
-            className={`p-3 rounded-lg text-xs backdrop-blur-sm ${theme.themeName === "lucagent" ? "" : "opacity-80"}`}
+            className={`p-3 rounded-lg text-xs backdrop-blur-sm ${theme.themeName?.toLowerCase() === "lucagent" ? "" : "opacity-80"}`}
             style={{
               backgroundColor:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "rgba(102,126,234,0.08)"
                   : `${theme.hex}1a`,
-              border: `1px solid ${theme.themeName === "lucagent" ? "rgba(102,126,234,0.3)" : theme.hex + "4d"}`,
-              color: theme.themeName === "lucagent" ? "#1e40af" : theme.hex,
+              border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(102,126,234,0.3)" : theme.hex + "4d"}`,
+              color: theme.themeName?.toLowerCase() === "lucagent" ? "#1e40af" : theme.hex,
             }}
           >
             <div className="flex items-start gap-2">
@@ -773,7 +773,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               <div>
                 <div className="font-bold mb-1">End-to-End Encrypted</div>
                 <p
-                  className={`${theme.themeName === "lucagent" ? "text-slate-600" : "opacity-80"}`}
+                  className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "opacity-80"}`}
                 >
                   Your connection to Desktop is encrypted. Messages are never
                   stored on any server.
@@ -841,27 +841,27 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           {/* QR Code Pairing Section - Show when enabled */}
           {settings.lucaLink.enabled && (
             <div
-              className={`rounded-xl p-4 text-center space-y-3 ${theme.themeName === "lucagent" ? "glass-panel-light" : ""}`}
+              className={`rounded-xl p-4 text-center space-y-3 ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : ""}`}
               style={{
                 backgroundColor:
-                  theme.themeName === "lucagent" ? undefined : `${theme.hex}0d`,
+                  theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}0d`,
                 border:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? undefined
                     : `1px solid ${theme.hex}33`,
               }}
             >
               <div
-                className={`text-xs font-bold uppercase tracking-widest ${theme.themeName === "lucagent" ? "text-slate-900" : ""}`}
+                className={`text-xs font-bold uppercase tracking-widest ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : ""}`}
                 style={{
-                  color: theme.themeName === "lucagent" ? undefined : theme.hex,
+                  color: theme.themeName?.toLowerCase() === "lucagent" ? undefined : theme.hex,
                 }}
               >
                 Device Pairing (App-to-App)
               </div>
 
               <p
-                className={`text-xs ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-500"} mb-2`}
+                className={`text-xs ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-500"} mb-2`}
               >
                 Link multiple Luca apps (Desktop ↔ Mobile ↔ Tablet) into a
                 unified ecosystem.
@@ -871,7 +871,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               {qrCodeUrl ? (
                 <div className="flex justify-center">
                   <div
-                    className={`p-3 rounded-lg ${theme.themeName === "lucagent" ? "bg-white border border-black/10" : "bg-white/5"}`}
+                    className={`p-3 rounded-lg ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border border-black/10" : "bg-white/5"}`}
                   >
                     <img
                       src={qrCodeUrl}
@@ -890,7 +890,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               {linkState.pairingToken && (
                 <div className="space-y-1">
                   <p
-                    className={`text-xs ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-500"}`}
+                    className={`text-xs ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-500"}`}
                   >
                     Or enter this Pairing Token:
                   </p>
@@ -899,11 +899,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       className="px-3 py-1 rounded text-sm font-mono"
                       style={{
                         backgroundColor:
-                          theme.themeName === "lucagent"
+                          theme.themeName?.toLowerCase() === "lucagent"
                             ? "rgba(0,0,0,0.05)"
                             : "rgba(255,255,255,0.1)",
                         color:
-                          theme.themeName === "lucagent"
+                          theme.themeName?.toLowerCase() === "lucagent"
                             ? "#1e293b"
                             : theme.hex,
                       }}
@@ -944,11 +944,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 }
                 disabled={!settings.lucaLink.enabled}
                 placeholder="https://lucaos.onrender.com"
-                className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/20 border-white/10 text-white"} rounded-lg p-2 outline-none font-mono text-xs disabled:opacity-50 transition-all`}
+                className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/20 border-white/10 text-white"} rounded-lg p-2 outline-none font-mono text-xs disabled:opacity-50 transition-all`}
                 onFocus={(e) => (e.target.style.borderColor = theme.hex)}
                 onBlur={(e) =>
                   (e.target.style.borderColor =
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.1)"
                       : "rgba(255,255,255,0.1)")
                 }
@@ -974,11 +974,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 }
                 disabled={!settings.lucaLink.enabled}
                 placeholder={`http://100.x.x.x:${WS_PORT} (Tailscale IP)`}
-                className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/20 border-white/10 text-white"} rounded-lg p-2 outline-none font-mono text-xs disabled:opacity-50 transition-all`}
+                className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/20 border-white/10 text-white"} rounded-lg p-2 outline-none font-mono text-xs disabled:opacity-50 transition-all`}
                 onFocus={(e) => (e.target.style.borderColor = theme.hex)}
                 onBlur={(e) =>
                   (e.target.style.borderColor =
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.1)"
                       : "rgba(255,255,255,0.1)")
                 }
@@ -992,14 +992,14 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
 
           {/* Info Box */}
           <div
-            className={`p-3 rounded-lg text-xs ${theme.themeName === "lucagent" ? "" : "backdrop-blur-sm opacity-80"}`}
+            className={`p-3 rounded-lg text-xs ${theme.themeName?.toLowerCase() === "lucagent" ? "" : "backdrop-blur-sm opacity-80"}`}
             style={{
               backgroundColor:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "rgba(102,126,234,0.08)"
                   : `${theme.hex}1a`,
-              border: `1px solid ${theme.themeName === "lucagent" ? "rgba(102,126,234,0.3)" : theme.hex + "4d"}`,
-              color: theme.themeName === "lucagent" ? "#1e40af" : theme.hex,
+              border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(102,126,234,0.3)" : theme.hex + "4d"}`,
+              color: theme.themeName?.toLowerCase() === "lucagent" ? "#1e40af" : theme.hex,
             }}
           >
             <div className="flex items-start gap-2">
@@ -1018,7 +1018,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       className="w-3 h-3 mt-0.5 flex-shrink-0"
                       style={{
                         color:
-                          theme.themeName === "lucagent"
+                          theme.themeName?.toLowerCase() === "lucagent"
                             ? "#1e40af"
                             : theme.hex,
                       }}
@@ -1030,7 +1030,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       className="w-3 h-3 mt-0.5 flex-shrink-0"
                       style={{
                         color:
-                          theme.themeName === "lucagent"
+                          theme.themeName?.toLowerCase() === "lucagent"
                             ? "#1e40af"
                             : theme.hex,
                       }}
@@ -1045,7 +1045,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       className="w-3 h-3 mt-0.5 flex-shrink-0"
                       style={{
                         color:
-                          theme.themeName === "lucagent"
+                          theme.themeName?.toLowerCase() === "lucagent"
                             ? "#1e40af"
                             : theme.hex,
                       }}

@@ -170,7 +170,8 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       style={{
         backgroundColor: transparentBackground
           ? "transparent"
-          : theme.themeName === "lucagent"
+          : theme.themeName?.toLowerCase() === "lucagent" ||
+              theme.themeName?.toLowerCase() === "agentic-slate"
             ? `rgba(255, 255, 255, var(--app-bg-opacity, 0.9))`
             : `rgba(10, 10, 10, var(--app-bg-opacity, 0.9))`,
         backdropFilter: transparentBackground
@@ -255,7 +256,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             className="w-[90%] md:w-[600px] h-48 md:h-64 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden rounded-xl border border-white/10"
             style={{
               backgroundColor:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? `rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.75) * 0.4))`
                   : `rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.75) * 0.6))`,
               backdropFilter: `blur(var(--app-bg-blur, 12px))`,
@@ -272,7 +273,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
                   THEME_PALETTE.RUTHLESS
                 ).primary
               }
-              isLight={theme.themeName === "lucagent"}
+              isLight={theme.themeName?.toLowerCase() === "lucagent"}
             />
           </div>
         </div>
@@ -311,7 +312,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
                 ${
                   transcriptSource === "model"
                     ? theme.primary
-                    : theme.themeName === "lucagent"
+                    : theme.themeName?.toLowerCase() === "lucagent"
                       ? "text-gray-900"
                       : "text-white"
                 }
@@ -326,7 +327,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
           ) : (
             <div
               className={`${
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "text-slate-600/60"
                   : "text-slate-600"
               } font-mono text-[10px] sm:text-xs animate-pulse`}
@@ -368,7 +369,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
           </div>
           <div
             className={`space-y-3 ${
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "text-gray-600"
                 : "text-slate-400"
             }`}
@@ -413,7 +414,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
 
           <div
             className={`flex justify-end items-center gap-2 ${
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "text-gray-600"
                 : "text-slate-400"
             }`}
@@ -421,7 +422,9 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             <span>ACTIVE_MODEL</span>
             <span
               className={`${
-                theme.themeName === "lucagent" ? "text-gray-900" : "text-white"
+                theme.themeName?.toLowerCase() === "lucagent"
+                  ? "text-gray-900"
+                  : "text-white"
               } font-bold`}
             >
               {modelName.toUpperCase()}
@@ -430,7 +433,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
 
           <div
             className={`flex justify-end items-center gap-2 ${
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "text-gray-600"
                 : "text-slate-400"
             }`}
@@ -438,7 +441,9 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             <span>LATENCY</span>
             <span
               className={`${
-                theme.themeName === "lucagent" ? "text-gray-900" : "text-white"
+                theme.themeName?.toLowerCase() === "lucagent"
+                  ? "text-gray-900"
+                  : "text-white"
               } font-bold`}
             >
               {latency.toFixed(0)}ms
@@ -447,7 +452,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
 
           <div
             className={`flex justify-end items-center gap-2 ${
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "text-gray-600"
                 : "text-slate-400"
             }`}
@@ -455,7 +460,9 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             <span>AUDIO_INPUT_DB</span>
             <span
               className={`${
-                theme.themeName === "lucagent" ? "text-gray-900" : "text-white"
+                theme.themeName?.toLowerCase() === "lucagent"
+                  ? "text-gray-900"
+                  : "text-white"
               } font-bold`}
             >
               {realDB.toFixed(0)} dB
@@ -490,7 +497,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
 
           <div
             className={`flex justify-end items-center gap-2 ${
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "text-gray-600"
                 : "text-slate-400"
             }`}
@@ -498,7 +505,9 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             <span>DOMINANT_FREQ</span>
             <span
               className={`${
-                theme.themeName === "lucagent" ? "text-gray-900" : "text-white"
+                theme.themeName?.toLowerCase() === "lucagent"
+                  ? "text-gray-900"
+                  : "text-white"
               } font-bold`}
             >
               {dominantFrequency} Hz

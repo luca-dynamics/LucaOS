@@ -104,7 +104,9 @@ export class PersonalityService {
     this.personality.metadata.created = new Date();
 
     // Explicitly ensure ASSISTANT mode (default, most helpful)
-    this.personality.currentMode = "ASSISTANT";
+    if (this.personality.currentMode !== "ASSISTANT") {
+      this.personality.currentMode = "ASSISTANT";
+    }
 
     // Add first milestone
     this.addMilestone(

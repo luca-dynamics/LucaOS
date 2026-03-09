@@ -108,13 +108,13 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         {/* IDENTITY & AESTHETIC (Decoupled) */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-4 lg:col-span-2`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-4 lg:col-span-2`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Palette className="w-4 h-4" style={{ color: theme.hex }} />
               <span
-                className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+                className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
               >
                 Brain & Skin Configuration
               </span>
@@ -192,11 +192,11 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               <div className="grid grid-cols-3 gap-2">
                 {(
                   [
-                    "RUTHLESS",
-                    "ENGINEER",
-                    "ASSISTANT",
-                    "HACKER",
-                    "LUCAGENT",
+                    "MASTER_SYSTEM",
+                    "BUILDER",
+                    "PROFESSIONAL",
+                    "TERMINAL",
+                    "AGENTIC_SLATE",
                     "MIDNIGHT",
                     "VAPORWAVE",
                     "FROST",
@@ -239,13 +239,13 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         {/* Tone Styles Card */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-4`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-4`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" style={{ color: theme.hex }} />
               <span
-                className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+                className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
               >
                 Tone & Delivery
               </span>
@@ -261,19 +261,19 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             onStyleChange={(id) => onUpdate("general", "toneStyle", id)}
             onCustomChange={(dims) => onUpdate("general", "customTone", dims)}
             themeHex={theme.hex}
-            isLightMode={theme.themeName === "lucagent"}
+            isLightMode={theme.themeName?.toLowerCase() === "lucagent"}
           />
         </motion.div>
 
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-4`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-4`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Chrome className="w-4 h-4" style={{ color: theme.hex }} />
               <span
-                className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+                className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
               >
                 Browser Sessions
               </span>
@@ -289,7 +289,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               <div className="space-y-1.5 p-2 rounded bg-white/5 border border-white/5">
                 {profileStatus.profileName && (
                   <div
-                    className={`text-[9px] ${theme.themeName === "lucagent" ? "text-gray-900" : "text-white"} font-mono flex items-center gap-2`}
+                    className={`text-[9px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"} font-mono flex items-center gap-2`}
                   >
                     <span
                       className="w-1.5 h-1.5 rounded-full"
@@ -307,14 +307,14 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             )}
             {profileStatus?.chromeRunning && (
               <div
-                className={`text-[8px] font-mono flex items-center gap-1.5 p-2 rounded border animate-pulse ${theme.themeName === "lucagent" ? "bg-orange-500/15 border-orange-500/40 text-orange-900 font-bold" : "bg-orange-500/5 border-orange-500/10 text-orange-400"}`}
+                className={`text-[8px] font-mono flex items-center gap-1.5 p-2 rounded border animate-pulse ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-orange-500/15 border-orange-500/40 text-orange-900 font-bold" : "bg-orange-500/5 border-orange-500/10 text-orange-400"}`}
               >
                 <ShieldAlert className="w-3 h-3" />
                 CHROME DETECTED: CLOSE TO RE-IMPORT
               </div>
             )}
             <p
-              className={`text-[9px] ${theme.themeName === "lucagent" ? "text-gray-600" : "text-gray-500"} leading-relaxed`}
+              className={`text-[9px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-500"} leading-relaxed`}
             >
               Link Chrome to synchronize your active sessions and credentials
               directly with the Ghost Browser.
@@ -327,11 +327,14 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   method: "POST",
                 }).then(() => fetchProfileStatus())
               }
-              className={`flex-1 py-1.5 rounded border ${theme.themeName === "lucagent" ? "border-black/10 bg-black/[0.03] hover:bg-black/[0.08]" : "border-white/5 bg-white/5 hover:bg-white/10"} text-[9px] font-bold flex items-center justify-center gap-2 transition-all`}
+              className={`flex-1 py-1.5 rounded border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/10 bg-black/[0.03] hover:bg-black/[0.08]" : "border-white/5 bg-white/5 hover:bg-white/10"} text-[9px] font-bold flex items-center justify-center gap-2 transition-all`}
               style={{
-                color: theme.themeName === "lucagent" ? "#111827" : theme.hex,
+                color:
+                  theme.themeName?.toLowerCase() === "lucagent"
+                    ? "#111827"
+                    : theme.hex,
                 borderColor:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(0,0,0,0.1)"
                     : setHexAlpha(theme.hex, 0.2),
               }}
@@ -357,13 +360,13 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         {/* Global UI Preferences Card */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-4`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-4`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Settings2 className="w-4 h-4" style={{ color: theme.hex }} />
               <span
-                className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+                className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
               >
                 SYSTEM UI CONFIG
               </span>
@@ -390,7 +393,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     className={`flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors`}
                   >
                     <span
-                      className={`text-[9px] font-mono ${theme.themeName === "lucagent" ? "text-slate-800" : "text-gray-400"}`}
+                      className={`text-[9px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-400"}`}
                     >
                       {beh.label}
                     </span>
@@ -404,7 +407,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                       onChange={(e) =>
                         onUpdate("general", beh.key, e.target.checked)
                       }
-                      className={`w-4 h-4 rounded appearance-none border transition-all cursor-pointer ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/20" : "bg-black/40 border-white/10"}`}
+                      className={`w-4 h-4 rounded appearance-none border transition-all cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/20" : "bg-black/40 border-white/10"}`}
                       style={{ accentColor: theme.hex }}
                     />
                   </div>
@@ -423,12 +426,12 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <span
-                      className={`text-[8px] font-bold ${theme.themeName === "lucagent" ? "text-slate-800" : "text-gray-500"} tracking-widest`}
+                      className={`text-[8px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-500"} tracking-widest`}
                     >
                       OPACITY
                     </span>
                     <span
-                      className={`text-[9px] font-mono ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"}`}
+                      className={`text-[9px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
                     >
                       {Math.round(
                         (settings.general.backgroundOpacity ?? 0.75) * 100,
@@ -459,12 +462,12 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <span
-                      className={`text-[8px] font-bold ${theme.themeName === "lucagent" ? "text-slate-800" : "text-gray-500"} tracking-widest`}
+                      className={`text-[8px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-500"} tracking-widest`}
                     >
                       BLUR
                     </span>
                     <span
-                      className={`text-[9px] font-mono ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"}`}
+                      className={`text-[9px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
                     >
                       {settings.general.backgroundBlur ?? 12}px
                     </span>
@@ -494,13 +497,13 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
 
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-3`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-3`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4" style={{ color: theme.hex }} />
               <span
-                className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+                className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
               >
                 Privacy & Awareness
               </span>
@@ -510,7 +513,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             </div>
           </div>
           <p
-            className={`text-[9px] ${theme.themeName === "lucagent" ? "text-gray-600" : "text-gray-500"} leading-tight`}
+            className={`text-[9px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-500"} leading-tight`}
           >
             Control what Luca can observe. Disabling a sensor stops it
             immediately, even mid-loop.
@@ -544,7 +547,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               return (
                 <div
                   key={privItem.key}
-                  className={`flex items-center justify-between py-2.5 border-b ${theme.themeName === "lucagent" ? "border-black/5 hover:bg-black/5" : "border-white/5 hover:bg-white/5"} transition-colors px-2 rounded last:border-0`}
+                  className={`flex items-center justify-between py-2.5 border-b ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 hover:bg-black/5" : "border-white/5 hover:bg-white/5"} transition-colors px-2 rounded last:border-0`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon
@@ -555,7 +558,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     />
                     <div>
                       <span
-                        className={`text-[9px] font-mono block ${theme.themeName === "lucagent" ? "text-slate-800" : "text-gray-400"}`}
+                        className={`text-[9px] font-mono block ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-400"}`}
                       >
                         {privItem.label}
                       </span>
@@ -571,7 +574,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     className={`relative w-9 h-5 rounded-full transition-all duration-300 ${
                       isEnabled
                         ? ""
-                        : theme.themeName === "lucagent"
+                        : theme.themeName?.toLowerCase() === "lucagent"
                           ? "bg-gray-300"
                           : "bg-gray-700"
                     }`}
@@ -583,7 +586,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                       className={`absolute top-0.5 w-4 h-4 rounded-full transition-all duration-300 shadow-sm ${
                         isEnabled ? "left-[18px]" : "left-0.5"
                       } ${
-                        theme.themeName === "lucagent"
+                        theme.themeName?.toLowerCase() === "lucagent"
                           ? "bg-white"
                           : "bg-gray-200"
                       }`}
@@ -597,13 +600,13 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
 
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-3`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-card-stable-light" : "glass-card-stable"} tech-border p-4 space-y-3`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-4 h-4" style={{ color: theme.hex }} />
               <span
-                className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+                className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
               >
                 System Permissions
               </span>
@@ -618,7 +621,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                 const res = await checkPermissions();
                 alert(res.success ? "Neural Link Secured." : "Access Denied.");
               }}
-              className={`py-1.5 rounded-lg border ${theme.themeName === "lucagent" ? "border-black/10 bg-black/[0.03] text-slate-800" : "border-white/10 bg-white/5 text-gray-400"} text-[9px] font-bold hover:bg-white/10 transition-all`}
+              className={`py-1.5 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/10 bg-black/[0.03] text-slate-800" : "border-white/10 bg-white/5 text-gray-400"} text-[9px] font-bold hover:bg-white/10 transition-all`}
             >
               CHECK STATUS
             </button>
@@ -629,23 +632,23 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                 await requestPermissions();
               }}
               className={`py-1.5 rounded-lg border ${
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "border-black/5 bg-black/5"
                   : "border-white/10 bg-white/5"
               } text-[9px] font-bold transition-all`}
               style={{
                 backgroundColor:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(0,0,0,0.02)"
                     : `${theme.hex}22`,
                 color:
-                  theme.themeName === "lucagent"
-                    ? settings.general.theme === "ASSISTANT"
+                  theme.themeName?.toLowerCase() === "lucagent"
+                    ? settings.general.theme === "PROFESSIONAL"
                       ? "#6b7280"
                       : theme.hex
                     : theme.hex,
                 borderColor:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(0,0,0,0.1)"
                     : `${theme.hex}66`,
               }}

@@ -393,18 +393,18 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
   return (
     <div className="space-y-6">
       <div
-        className={`p-4 rounded-xl border space-y-4 ${theme.themeName === "lucagent" ? "glass-panel-light border-black/10 shadow-xl shadow-black/5" : "bg-white/5 border-white/10"}`}
+        className={`p-4 rounded-xl border space-y-4 ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10 shadow-xl shadow-black/5" : "bg-white/5 border-white/10"}`}
       >
         <div className="flex items-center gap-3">
           <Share2 className="w-5 h-5" style={{ color: theme.hex }} />
           <div>
             <h3
-              className={`text-sm font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+              className={`text-sm font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
             >
               Knowledge Bridge
             </h3>
             <p
-              className={`text-[10px] ${theme.themeName === "lucagent" ? "text-slate-600 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600 font-bold" : "text-gray-400"}`}
             >
               Import and distill your intelligence from other AI platforms into
               Luca&apos;s local mind.
@@ -421,10 +421,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                 key={cat.id}
                 className={`w-full overflow-hidden rounded-xl border transition-all duration-300 ${
                   isSelected
-                    ? theme.themeName === "lucagent"
+                    ? theme.themeName?.toLowerCase() === "lucagent"
                       ? "bg-black/5 border-black/20 shadow-xl"
                       : "bg-white/10 border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.05)]"
-                    : theme.themeName === "lucagent"
+                    : theme.themeName?.toLowerCase() === "lucagent"
                       ? "bg-transparent border-black/5 hover:bg-black/[0.03]"
                       : "bg-transparent border-white/5 hover:bg-white/5"
                 }`}
@@ -437,22 +437,22 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                   className="w-full flex items-center gap-3 p-4 text-left transition-all relative"
                 >
                   <div
-                    className={`p-2 rounded flex items-center justify-center border ${theme.themeName === "lucagent" ? "bg-black/5 border-black/10" : "bg-white/5 border-white/10"}`}
+                    className={`p-2 rounded flex items-center justify-center border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10" : "bg-white/5 border-white/10"}`}
                     style={{
                       color:
-                        theme.themeName === "lucagent" ? "#4f46e5" : theme.hex,
+                        theme.themeName?.toLowerCase() === "lucagent" ? "#4f46e5" : theme.hex,
                     }}
                   >
                     <FileJson size={18} />
                   </div>
                   <div className="flex-1">
                     <div
-                      className={`text-xs font-bold uppercase tracking-widest ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+                      className={`text-xs font-bold uppercase tracking-widest ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
                     >
                       {cat.name}
                     </div>
                     <div
-                      className={`text-[10px] font-mono ${theme.themeName === "lucagent" ? "text-slate-400 font-bold" : "text-gray-500"}`}
+                      className={`text-[10px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-400 font-bold" : "text-gray-500"}`}
                     >
                       Ext: {cat.extension}
                     </div>
@@ -475,7 +475,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                     >
                       <div className="p-4 pt-0 border-t border-white/5 space-y-4">
                         <p
-                          className={`text-[10px] italic ${theme.themeName === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+                          className={`text-[10px] italic ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
                         >
                           {cat.description}
                         </p>
@@ -492,10 +492,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                               }}
                               className={`flex items-center gap-2 p-2 rounded-lg border text-[10px] transition-all ${
                                 platform === p.id
-                                  ? theme.themeName === "lucagent"
+                                  ? theme.themeName?.toLowerCase() === "lucagent"
                                     ? "bg-white border-black/20 shadow-md"
                                     : "bg-white/10 border-white/20"
-                                  : theme.themeName === "lucagent"
+                                  : theme.themeName?.toLowerCase() === "lucagent"
                                     ? "border-transparent bg-black/[0.03] hover:bg-black/[0.05]"
                                     : "border-transparent bg-white/5 hover:bg-white/10"
                               }`}
@@ -515,10 +515,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                               <span
                                 className={
                                   platform === p.id
-                                    ? theme.themeName === "lucagent"
+                                    ? theme.themeName?.toLowerCase() === "lucagent"
                                       ? "text-slate-900 font-bold"
                                       : "text-white font-bold"
-                                    : theme.themeName === "lucagent"
+                                    : theme.themeName?.toLowerCase() === "lucagent"
                                       ? "text-slate-500 font-bold"
                                       : "text-gray-400"
                                 }
@@ -538,13 +538,13 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                               className="space-y-4"
                             >
                               <label
-                                className={`text-[9px] font-bold uppercase tracking-widest block ${theme.themeName === "lucagent" ? "text-slate-700" : "text-gray-500"}`}
+                                className={`text-[9px] font-bold uppercase tracking-widest block ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-500"}`}
                               >
                                 Source Transmission ({platform.toUpperCase()})
                               </label>
 
                               <div
-                                className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 group transition-colors cursor-pointer ${theme.themeName === "lucagent" ? "bg-black/[0.02] border-black/10 hover:border-black/20" : "bg-black/10 border-white/10 hover:border-white/20"}`}
+                                className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 group transition-colors cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/10 hover:border-black/20" : "bg-black/10 border-white/10 hover:border-white/20"}`}
                                 onClick={() =>
                                   document
                                     .getElementById(`file-upload-${cat.id}`)
@@ -567,12 +567,12 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                                     />
                                     <div className="text-center">
                                       <div
-                                        className={`text-xs font-bold truncate max-w-[200px] ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+                                        className={`text-xs font-bold truncate max-w-[200px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
                                       >
                                         {file.name}
                                       </div>
                                       <div
-                                        className={`text-[9px] uppercase tracking-tighter ${theme.themeName === "lucagent" ? "text-slate-500 font-bold" : "text-gray-500"}`}
+                                        className={`text-[9px] uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-500"}`}
                                       >
                                         {(file.size / 1024 / 1024).toFixed(2)}{" "}
                                         MB
@@ -582,10 +582,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                                 ) : (
                                   <>
                                     <Upload
-                                      className={`w-6 h-6 transition-colors ${theme.themeName === "lucagent" ? "text-slate-400 group-hover:text-slate-600" : "text-gray-600 group-hover:text-gray-400"}`}
+                                      className={`w-6 h-6 transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-400 group-hover:text-slate-600" : "text-gray-600 group-hover:text-gray-400"}`}
                                     />
                                     <div
-                                      className={`text-center text-[9px] uppercase tracking-widest font-bold ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+                                      className={`text-center text-[9px] uppercase tracking-widest font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
                                     >
                                       Inject {cat.extension} Data
                                     </div>
@@ -680,23 +680,23 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
 
       {/* === SAAS SYNC SECTION === */}
       <div
-        className={`p-4 rounded-xl border space-y-4 mt-6 ${theme.themeName === "lucagent" ? "glass-panel-light border-black/10 shadow-xl shadow-black/5" : "bg-white/5 border-white/10"}`}
+        className={`p-4 rounded-xl border space-y-4 mt-6 ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10 shadow-xl shadow-black/5" : "bg-white/5 border-white/10"}`}
       >
         <div className="flex items-center gap-3">
           <Link
             className="w-5 h-5"
             style={{
-              color: theme.themeName === "lucagent" ? "#4f46e5" : theme.hex,
+              color: theme.themeName?.toLowerCase() === "lucagent" ? "#4f46e5" : theme.hex,
             }}
           />
           <div>
             <h3
-              className={`text-sm font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+              className={`text-sm font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
             >
               SaaS Sync
             </h3>
             <p
-              className={`text-[10px] ${theme.themeName === "lucagent" ? "text-slate-600 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600 font-bold" : "text-gray-400"}`}
             >
               Connect your apps to sync knowledge automatically
             </p>
@@ -705,7 +705,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
 
         {/* Notion Connector */}
         <div
-          className={`p-3 rounded-lg border ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/20 border-white/10"}`}
+          className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/20 border-white/10"}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -716,12 +716,12 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               />
               <div>
                 <div
-                  className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+                  className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
                 >
                   Notion
                 </div>
                 <div
-                  className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
                 >
                   {notionConnected ? "Connected" : "Not connected"}
                 </div>
@@ -731,7 +731,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               <button
                 onClick={loadNotionPages}
                 disabled={notionLoading}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${theme.themeName === "lucagent" ? "bg-black/5 text-slate-700 hover:bg-black/10" : "bg-white/10 text-gray-300 hover:bg-white/20"}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 text-slate-700 hover:bg-black/10" : "bg-white/10 text-gray-300 hover:bg-white/20"}`}
               >
                 <RefreshCw
                   className={`w-3 h-3 ${notionLoading ? "animate-spin" : ""}`}
@@ -759,7 +759,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                   className="flex items-center justify-between p-2 rounded bg-white/5 hover:bg-white/10 transition-all"
                 >
                   <span
-                    className={`text-[10px] truncate flex-1 ${theme.themeName === "lucagent" ? "text-slate-700 font-bold" : "text-gray-300"}`}
+                    className={`text-[10px] truncate flex-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700 font-bold" : "text-gray-300"}`}
                   >
                     {page.title}
                   </span>
@@ -768,7 +768,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                       <button
                         onClick={() => syncNotionPage(page.id)}
                         disabled={syncingPageId === page.id}
-                        className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName === "lucagent" ? "bg-green-500/10 text-green-700 border border-green-500/20" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"}`}
+                        className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-green-500/10 text-green-700 border border-green-500/20" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"}`}
                         title="Click to re-sync"
                       >
                         {syncingPageId === page.id ? (
@@ -782,7 +782,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                       <button
                         onClick={() => syncNotionPage(page.id)}
                         disabled={syncingPageId === page.id}
-                        className={`text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName === "lucagent" ? "bg-amber-500/10 text-amber-700 border border-amber-500/20" : "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"}`}
+                        className={`text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-amber-500/10 text-amber-700 border border-amber-500/20" : "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"}`}
                         title="Click to re-sync"
                       >
                         {syncingPageId === page.id ? "Syncing..." : "Empty"}
@@ -823,13 +823,13 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                 setSyncingPageId(null);
               }}
               disabled={syncingPageId === "all"}
-              className={`w-full mt-2 p-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-2 ${theme.themeName === "lucagent" ? "bg-black/[0.05] border border-black/10 text-slate-900" : ""}`}
+              className={`w-full mt-2 p-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.05] border border-black/10 text-slate-900" : ""}`}
               style={{
                 backgroundColor:
-                  theme.themeName === "lucagent" ? undefined : `${theme.hex}20`,
-                color: theme.themeName === "lucagent" ? undefined : theme.hex,
+                  theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}20`,
+                color: theme.themeName?.toLowerCase() === "lucagent" ? undefined : theme.hex,
                 border:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? undefined
                     : `1px solid ${theme.hex}40`,
               }}
@@ -851,7 +851,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
 
         {/* Google Drive Connector */}
         <div
-          className={`p-3 rounded-lg border ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/20 border-white/10"}`}
+          className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/20 border-white/10"}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -862,12 +862,12 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               />
               <div>
                 <div
-                  className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+                  className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
                 >
                   Google Drive
                 </div>
                 <div
-                  className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
                 >
                   {googleConnected ? "Connected" : "Not connected"}
                 </div>
@@ -877,7 +877,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               <button
                 onClick={loadGoogleFiles}
                 disabled={googleLoading}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${theme.themeName === "lucagent" ? "bg-black/5 text-slate-700 hover:bg-black/10" : "bg-white/10 text-gray-300 hover:bg-white/20"}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 text-slate-700 hover:bg-black/10" : "bg-white/10 text-gray-300 hover:bg-white/20"}`}
               >
                 <RefreshCw
                   className={`w-3 h-3 ${googleLoading ? "animate-spin" : ""}`}
@@ -902,10 +902,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               {googleFiles.map((file) => (
                 <div
                   key={file.id}
-                  className={`flex items-center justify-between p-2 rounded transition-all ${theme.themeName === "lucagent" ? "bg-black/[0.03] hover:bg-black/10" : "bg-white/5 hover:bg-white/10"}`}
+                  className={`flex items-center justify-between p-2 rounded transition-all ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] hover:bg-black/10" : "bg-white/5 hover:bg-white/10"}`}
                 >
                   <span
-                    className={`text-[10px] truncate flex-1 ${theme.themeName === "lucagent" ? "text-slate-700 font-bold" : "text-gray-300"}`}
+                    className={`text-[10px] truncate flex-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700 font-bold" : "text-gray-300"}`}
                   >
                     {file.title}
                   </span>
@@ -914,7 +914,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                       <button
                         onClick={() => syncGoogleFile(file.id)}
                         disabled={syncingPageId === file.id}
-                        className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName === "lucagent" ? "bg-green-500/10 text-green-700 border border-green-500/20" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"}`}
+                        className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-green-500/10 text-green-700 border border-green-500/20" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"}`}
                         title="Click to re-sync"
                       >
                         {syncingPageId === file.id ? (
@@ -928,7 +928,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                       <button
                         onClick={() => syncGoogleFile(file.id)}
                         disabled={syncingPageId === file.id}
-                        className={`text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName === "lucagent" ? "bg-amber-500/10 text-amber-700 border border-amber-500/20" : "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"}`}
+                        className={`text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-amber-500/10 text-amber-700 border border-amber-500/20" : "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"}`}
                         title="Click to re-sync"
                       >
                         {syncingPageId === file.id ? "Syncing..." : "Empty"}
@@ -951,7 +951,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
 
         {/* Obsidian Connector */}
         <div
-          className={`p-3 rounded-lg border ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/20 border-white/10"}`}
+          className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/20 border-white/10"}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -962,12 +962,12 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               />
               <div>
                 <div
-                  className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+                  className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
                 >
                   Obsidian
                 </div>
                 <div
-                  className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
                 >
                   {obsidianConnected ? "Connected" : "Local Vault"}
                 </div>
@@ -977,7 +977,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               <button
                 onClick={loadObsidianFiles}
                 disabled={obsidianLoading}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${theme.themeName === "lucagent" ? "bg-black/5 text-slate-700 hover:bg-black/10" : "bg-white/10 text-gray-300 hover:bg-white/20"}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 text-slate-700 hover:bg-black/10" : "bg-white/10 text-gray-300 hover:bg-white/20"}`}
               >
                 <RefreshCw
                   className={`w-3 h-3 ${obsidianLoading ? "animate-spin" : ""}`}
@@ -1013,10 +1013,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               {obsidianFiles.map((file) => (
                 <div
                   key={file.id}
-                  className={`flex items-center justify-between p-2 rounded transition-all ${theme.themeName === "lucagent" ? "bg-black/[0.03] hover:bg-black/10" : "bg-white/5 hover:bg-white/10"}`}
+                  className={`flex items-center justify-between p-2 rounded transition-all ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] hover:bg-black/10" : "bg-white/5 hover:bg-white/10"}`}
                 >
                   <span
-                    className={`text-[10px] truncate flex-1 ${theme.themeName === "lucagent" ? "text-slate-700 font-bold" : "text-gray-300"}`}
+                    className={`text-[10px] truncate flex-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700 font-bold" : "text-gray-300"}`}
                   >
                     {file.title}
                   </span>
@@ -1024,7 +1024,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                     <button
                       onClick={() => syncObsidianFile(file.id)}
                       disabled={syncingPageId === file.id}
-                      className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName === "lucagent" ? "bg-green-500/10 text-green-700 border border-green-500/20" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"}`}
+                      className={`flex items-center gap-1 text-[9px] px-2 py-1 rounded transition-all cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-green-500/10 text-green-700 border border-green-500/20" : "bg-green-500/20 text-green-400 hover:bg-green-500/30"}`}
                     >
                       {syncingPageId === file.id ? (
                         <RefreshCw className="w-3 h-3 animate-spin" />
@@ -1053,10 +1053,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
           {["Slack"].map((name) => (
             <div
               key={name}
-              className={`p-2 rounded border border-dashed text-center ${theme.themeName === "lucagent" ? "bg-black/[0.02] border-black/10" : "bg-white/[0.02] border-white/10"}`}
+              className={`p-2 rounded border border-dashed text-center ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/10" : "bg-white/[0.02] border-white/10"}`}
             >
               <div
-                className={`text-[9px] ${theme.themeName === "lucagent" ? "text-slate-500 font-bold" : "text-gray-500"}`}
+                className={`text-[9px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-500"}`}
               >
                 {name}
               </div>
@@ -1067,13 +1067,13 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
       </div>
 
       <div
-        className={`flex items-start gap-3 p-3 rounded-lg border ${theme.themeName === "lucagent" ? "bg-amber-500/[0.05] border-amber-500/20 shadow-inner" : "bg-yellow-500/5 border-yellow-500/20"}`}
+        className={`flex items-start gap-3 p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-amber-500/[0.05] border-amber-500/20 shadow-inner" : "bg-yellow-500/5 border-yellow-500/20"}`}
       >
         <AlertCircle
-          className={`w-4 h-4 shrink-0 mt-0.5 ${theme.themeName === "lucagent" ? "text-amber-600 font-bold" : "text-yellow-500"}`}
+          className={`w-4 h-4 shrink-0 mt-0.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-amber-600 font-bold" : "text-yellow-500"}`}
         />
         <p
-          className={`text-[9px] leading-relaxed ${theme.themeName === "lucagent" ? "text-slate-600 font-bold" : "text-yellow-500/80"}`}
+          className={`text-[9px] leading-relaxed ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600 font-bold" : "text-yellow-500/80"}`}
         >
           <strong>Privacy Note:</strong> Luca distills your logs locally. Raw
           chat history from imports is NOT stored permanently&mdash;only the

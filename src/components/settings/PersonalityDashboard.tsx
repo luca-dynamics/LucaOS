@@ -177,7 +177,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             className="text-sm font-bold flex items-center gap-2"
             style={{
               color:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "#1e1b4b"
                   : theme.hex === "#111827"
                     ? "#ffffff"
@@ -188,20 +188,20 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             CORE SYSTEM RULES
           </h3>
           <span
-            className={`text-[9px] px-2 py-0.5 rounded border uppercase tracking-tighter ${theme.themeName === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 border-white/10 text-gray-500"}`}
+            className={`text-[9px] px-2 py-0.5 rounded border uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 border-white/10 text-gray-500"}`}
           >
             Primary Directives
           </span>
         </div>
 
         <div
-          className={`relative group rounded-xl border overflow-hidden focus-within:ring-1 transition-all shadow-2xl ${theme.themeName === "lucagent" ? "bg-white border-black/10 focus-within:ring-black/5" : "bg-black/40 border-white/10 focus-within:ring-white/20"}`}
+          className={`relative group rounded-xl border overflow-hidden focus-within:ring-1 transition-all shadow-2xl ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10 focus-within:ring-black/5" : "bg-black/40 border-white/10 focus-within:ring-white/20"}`}
         >
           <div
             className="absolute top-0 left-0 w-1 h-full"
             style={{
               backgroundColor:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "#4f46e5"
                   : theme.hex === "#111827"
                     ? "#ffffff"
@@ -211,7 +211,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
           <textarea
             value={globalInstructions}
             onChange={(e) => syncConsciousness(e.target.value)}
-            className={`w-full h-[100px] bg-transparent p-3 text-xs font-mono outline-none resize-none leading-relaxed custom-scrollbar placeholder-gray-500 ${theme.themeName === "lucagent" ? "text-slate-800" : "text-gray-200"}`}
+            className={`w-full h-[100px] bg-transparent p-3 text-xs font-mono outline-none resize-none leading-relaxed custom-scrollbar placeholder-gray-500 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-200"}`}
             spellCheck={false}
             placeholder="Enter the core system rules and behavioral logic that Luca must ALWAYS follow. (e.g. 'Always be concise', 'Never mention the word technical')..."
           />
@@ -226,8 +226,8 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
       {/* 2. SPECIALIST FOCUS (The Lenses) */}
       <div className="flex-1 flex flex-col min-h-0 space-y-3">
         <div
-          className={`flex flex-col md:flex-row justify-between items-start md:items-center p-2 px-3 rounded-lg border shrink-0 ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/5" : "border-white/5 bg-white/5"}`}
-          style={theme.themeName === "lucagent" ? undefined : glassCardStyle}
+          className={`flex flex-col md:flex-row justify-between items-start md:items-center p-2 px-3 rounded-lg border shrink-0 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/5" : "border-white/5 bg-white/5"}`}
+          style={theme.themeName?.toLowerCase() === "lucagent" ? undefined : glassCardStyle}
         >
           <div className="mb-2 md:mb-0">
             <label className="text-[9px] font-bold text-gray-500 uppercase flex items-center gap-1">
@@ -239,10 +239,10 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             <select
               value={selectedPersona}
               onChange={(e) => setSelectedPersona(e.target.value)}
-              className={`w-full appearance-none rounded-lg px-4 py-1 text-xs outline-none transition-colors pr-8 cursor-pointer ${theme.themeName === "lucagent" ? "bg-white border-black/10 text-slate-900 hover:bg-black/[0.02]" : "bg-black/60 border-white/10 text-white hover:bg-white/5"}`}
+              className={`w-full appearance-none rounded-lg px-4 py-1 text-xs outline-none transition-colors pr-8 cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10 text-slate-900 hover:bg-black/[0.02]" : "bg-black/60 border-white/10 text-white hover:bg-white/5"}`}
               style={{
                 borderColor:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(0,0,0,0.15)"
                     : theme.hex === "#111827"
                       ? "rgba(255,255,255,0.4)"
@@ -267,7 +267,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             <div className="flex justify-center pt-2">
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className={`text-[8px] uppercase tracking-[0.2em] transition-colors flex items-center gap-2 px-3 py-1 rounded-full border ${theme.themeName === "lucagent" ? "bg-black/5 border-black/5 text-slate-500 hover:text-slate-900" : "text-gray-700 hover:text-gray-400 border-white/5 bg-white/5"}`}
+                className={`text-[8px] uppercase tracking-[0.2em] transition-colors flex items-center gap-2 px-3 py-1 rounded-full border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5 text-slate-500 hover:text-slate-900" : "text-gray-700 hover:text-gray-400 border-white/5 bg-white/5"}`}
               >
                 {showAdvanced ? (
                   <Lock className="w-2 h-2" />
@@ -294,11 +294,11 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                   </div>
 
                   <div
-                    className={`relative group/blueprint rounded-xl border overflow-hidden ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/60 border-white/5"}`}
+                    className={`relative group/blueprint rounded-xl border overflow-hidden ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/60 border-white/5"}`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-transparent pointer-events-none" />
                     <div
-                      className={`w-full min-h-[100px] p-4 text-[10px] font-mono whitespace-pre-wrap leading-relaxed ${resolvedBase ? (theme.themeName === "lucagent" ? "text-slate-700" : "text-gray-400") : "text-gray-700 italic"}`}
+                      className={`w-full min-h-[100px] p-4 text-[10px] font-mono whitespace-pre-wrap leading-relaxed ${resolvedBase ? (theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-400") : "text-gray-700 italic"}`}
                     >
                       {resolvedBase ||
                         "System identity for this lens is currently loading or encrypted..."}
@@ -317,7 +317,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                     <div className="flex items-center gap-2 flex-1">
                       <Mic className="w-3 h-3 text-gray-600" />
                       <input
-                        className={`bg-transparent border-none p-0 text-[10px] w-full focus:ring-0 placeholder-gray-800 transition-colors ${theme.themeName === "lucagent" ? "text-slate-600 focus:text-slate-900" : "text-gray-400 focus:text-white"}`}
+                        className={`bg-transparent border-none p-0 text-[10px] w-full focus:ring-0 placeholder-gray-800 transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600 focus:text-slate-900" : "text-gray-400 focus:text-white"}`}
                         value={currentPersona.voiceName}
                         onChange={(e) =>
                           updateArchetypeField("voiceName", e.target.value)

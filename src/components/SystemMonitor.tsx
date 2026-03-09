@@ -182,7 +182,7 @@ const SystemMonitor: React.FC<Props> = ({
       color: string,
       label: string,
     ) => {
-      const isLight = theme?.themeName === "lucagent";
+      const isLight = theme?.themeName?.toLowerCase() === "lucagent";
       // Background Ring
       ctx.beginPath();
       ctx.arc(x, y, radius, 0.75 * Math.PI, 2.25 * Math.PI);
@@ -245,7 +245,7 @@ const SystemMonitor: React.FC<Props> = ({
         : `${themeColor}1A`; // 10% opacity
       ctx.fill();
 
-      const isLight = theme?.themeName === "lucagent";
+      const isLight = theme?.themeName?.toLowerCase() === "lucagent";
       // Grid lines
       ctx.beginPath();
       ctx.moveTo(x, y + h / 2);
@@ -292,7 +292,7 @@ const SystemMonitor: React.FC<Props> = ({
         `MODE: ACTIVE (ADMIN)`,
       ];
 
-      const isLight = theme?.themeName === "lucagent";
+      const isLight = theme?.themeName?.toLowerCase() === "lucagent";
       logs.forEach((l, i) => {
         ctx.fillStyle = isLight
           ? "rgba(17, 24, 39, 0.9)"
@@ -348,7 +348,7 @@ const SystemMonitor: React.FC<Props> = ({
     };
   }, [metrics, audioListenMode, connected, themeColor]);
 
-  const isLight = theme?.themeName === "lucagent";
+  const isLight = theme?.themeName?.toLowerCase() === "lucagent";
   return (
     <div className="h-full w-full flex flex-col gap-2">
       <div

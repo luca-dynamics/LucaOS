@@ -2,6 +2,7 @@ import { settingsService } from "./settingsService";
 import { getGenClient } from "./genAIClient"; // Import from shared client logic
 import { eventBus } from "./eventBus";
 import { cortexUrl } from "../config/api";
+import { BRAIN_CONFIG } from "../config/brain.config.ts";
 
 let activeAudio: HTMLAudioElement | null = null;
 let sharedAudioCtx: AudioContext | null = null;
@@ -315,8 +316,7 @@ Accent: Neutral, Global English (Transatlantic).
   // We need to fetch the full settings object to access 'brain' section
   const fullSettings = settingsService.getSettings();
   const targetModel =
-    fullSettings.brain.voiceModel ||
-    "models/gemini-2.5-flash-native-audio-latest";
+    fullSettings.brain.voiceModel || BRAIN_CONFIG.defaults.voice;
 
   const result = await genAI.models.generateContent({
     model: targetModel,

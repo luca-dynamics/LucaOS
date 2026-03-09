@@ -49,7 +49,7 @@ const SmartDeviceCard: React.FC<Props> = ({
     }
   };
 
-  const isLight = themeName === "lucagent";
+  const isLight = themeName?.toLowerCase() === "lucagent";
 
   const activeColor =
     device.status === "error"

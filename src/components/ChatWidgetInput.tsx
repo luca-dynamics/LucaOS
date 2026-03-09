@@ -117,7 +117,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
     // Shift + Enter = New line (default behavior, do nothing)
   };
 
-  const isLight = themeName === "lucagent";
+  const isLight = themeName?.toLowerCase() === "lucagent";
 
   return (
     <div

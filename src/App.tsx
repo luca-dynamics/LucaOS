@@ -168,7 +168,7 @@ function AppContent() {
 
   const [activeThemeId, setActiveThemeId] = useState<UIThemeId>(() => {
     const settings = settingsService.getSettings();
-    return (settings.general?.theme as UIThemeId) || "ASSISTANT";
+    return (settings.general?.theme as UIThemeId) || "PROFESSIONAL";
   });
 
   // Watch Settings changes outside of voice subsystem to guarantee UI renders
@@ -183,6 +183,13 @@ function AppContent() {
       }
       if (newTheme) {
         setActiveThemeId(newTheme as UIThemeId);
+      }
+
+      // Interaction Mode (Text vs Voice)
+      const preferredMode = settings?.general?.preferredMode;
+      if (preferredMode) {
+        setIsVoiceMode(preferredMode === "voice");
+        setShowVoiceHud(preferredMode === "voice");
       }
 
       // Transparency Control
@@ -1753,9 +1760,9 @@ function AppContent() {
         primary: "text-rq-amber",
         border: "border-rq-amber",
         bg: "bg-rq-amber-dim",
-        glow: `shadow-[0_0_20px_${THEME_PALETTE.ENGINEER.primary}]`,
+        glow: `shadow-[0_0_20px_${THEME_PALETTE.BUILDER.primary}]`,
         coreColor: "text-amber-500",
-        hex: THEME_PALETTE.ENGINEER.primary,
+        hex: THEME_PALETTE.BUILDER.primary,
       };
     }
 
@@ -1771,6 +1778,23 @@ function AppContent() {
   };
 
   const theme = getThemeColors();
+
+  // --- WEB BACKGROUND SYNC ---
+  // Ensure the outer HTML/Body perfectly matches the active theme to prevent edge haze
+  useEffect(() => {
+    const isElectron =
+      typeof window !== "undefined" && !!(window as any).electron;
+    if (!isElectron) {
+      const isLightTheme =
+        theme.themeName?.toLowerCase() === "lucagent" ||
+        theme.themeName?.toLowerCase() === "agentic-slate" ||
+        theme.themeName?.toLowerCase() === "light";
+
+      const bgColor = isLightTheme ? "#f0f0f5" : "#1c1c1c";
+      document.documentElement.style.backgroundColor = bgColor;
+      document.body.style.backgroundColor = bgColor;
+    }
+  }, [theme.themeName]);
 
   // --- THEME SYNC (LUCA LINK) ---
   useEffect(() => {
@@ -1930,9 +1954,17 @@ function AppContent() {
 
   // --- BOOT SEQUENCE RENDER ---
   if (bootSequence !== "READY") {
+    const isWeb =
+      typeof window !== "undefined" &&
+      !(window as any).electron &&
+      !(window as any).Capacitor;
+    const isLightTheme =
+      theme.themeName?.toLowerCase() === "lucagent" ||
+      theme.themeName?.toLowerCase() === "light";
+
     return (
       <div
-        className={`h-screen w-full bg-transparent flex flex-col items-center justify-center font-mono cursor-default select-none draggable transition-all duration-700 relative overflow-hidden`}
+        className={`h-screen w-full ${isWeb ? (isLightTheme ? "bg-[#f0f0f5]" : "bg-[#1c1c1c]") : "bg-transparent"} flex flex-col items-center justify-center font-mono cursor-default select-none draggable transition-all duration-700 relative overflow-hidden`}
         style={{ color: theme.hex || "#3b82f6" }}
         onContextMenu={(e) => e.preventDefault()}
       >
@@ -2077,14 +2109,20 @@ function AppContent() {
           <div className="absolute inset-0 z-10">
             <OnboardingFlow
               theme={theme}
-              persona={persona}
-              onComplete={() => {
+              onComplete={(profile, mode) => {
+                console.log("[App] Onboarding Complete:", { profile, mode });
                 settingsService.saveSettings({
                   general: {
                     ...settingsService.get("general"),
                     setupComplete: true,
+                    preferredMode: mode || "text",
                   },
                 });
+                if (mode) {
+                  const isVoice = mode === "voice";
+                  setIsVoiceMode(isVoice);
+                  setShowVoiceHud(isVoice);
+                }
                 setBootSequence("READY");
               }}
             />
@@ -2493,14 +2531,14 @@ function AppContent() {
               />
               <section
                 className={`flex-none h-full border-l border-white/10 relative overflow-hidden flex flex-col ${
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "glass-panel-light"
                     : "glass-panel"
                 }`}
                 style={{
                   width: `${panelWidths.right}px`,
                   background:
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(255, 255, 255, 0.5)"
                       : "rgba(0, 0, 0, var(--app-bg-opacity, 0.4))",
                 }}
@@ -2715,13 +2753,13 @@ function AppContent() {
           {isMobile && activeMobileTab === "DATA" && (
             <section
               className={`flex-1 flex-col h-full border-l border-white/10 relative overflow-hidden flex ${
-                getThemeColors().themeName === "lucagent"
+                getThemeColors().themeName?.toLowerCase() === "lucagent"
                   ? "glass-panel-light"
                   : "glass-panel"
               }`}
               style={{
                 background:
-                  getThemeColors().themeName === "lucagent"
+                  getThemeColors().themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.5)"
                     : "rgba(0, 0, 0, 0.4)",
               }}
@@ -2927,7 +2965,7 @@ function AppContent() {
         {isMobile && (
           <nav
             className={`flex-none h-16 ${
-              getThemeColors().themeName === "lucagent"
+              getThemeColors().themeName?.toLowerCase() === "lucagent"
                 ? "bg-white border-t border-slate-200"
                 : "bg-black border-t border-white/10"
             } grid grid-cols-3 items-center z-50`}

@@ -172,17 +172,17 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
 
     return (
       <div
-        className={`mb-3 overflow-hidden rounded-xl border ${theme.themeName === "lucagent" ? "border-black/5 bg-black/[0.02]" : "border-white/5 bg-black/20"} backdrop-blur-sm transition-all hover:border-white/10`}
+        className={`mb-3 overflow-hidden rounded-xl border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/[0.02]" : "border-white/5 bg-black/20"} backdrop-blur-sm transition-all hover:border-white/10`}
       >
         {/* Accordion Header */}
         <button
           onClick={() => toggleSection(title)}
           className={`w-full flex items-center justify-between p-4 transition-all group ${
             isExpanded
-              ? theme.themeName === "lucagent"
+              ? theme.themeName?.toLowerCase() === "lucagent"
                 ? "bg-black/[0.03]"
                 : "bg-white/[0.03]"
-              : theme.themeName === "lucagent"
+              : theme.themeName?.toLowerCase() === "lucagent"
                 ? "hover:bg-black/[0.02]"
                 : "hover:bg-white/[0.02]"
           }`}
@@ -191,10 +191,10 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
             <div
               className={`p-2 rounded-lg transition-all ${
                 isExpanded
-                  ? theme.themeName === "lucagent"
+                  ? theme.themeName?.toLowerCase() === "lucagent"
                     ? "bg-black/5 text-slate-900 shadow-[0_0_15px_rgba(0,0,0,0.05)]"
                     : "bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-                  : theme.themeName === "lucagent"
+                  : theme.themeName?.toLowerCase() === "lucagent"
                     ? "bg-black/[0.02] text-slate-400 group-hover:text-slate-600"
                     : "bg-white/5 text-gray-500 group-hover:text-gray-300"
               }`}
@@ -206,10 +206,10 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
               <span
                 className={`text-[11px] font-bold uppercase tracking-[0.2em] transition-colors ${
                   isExpanded
-                    ? theme.themeName === "lucagent"
+                    ? theme.themeName?.toLowerCase() === "lucagent"
                       ? "text-slate-900"
                       : "text-gray-100"
-                    : theme.themeName === "lucagent"
+                    : theme.themeName?.toLowerCase() === "lucagent"
                       ? "text-slate-500"
                       : "text-gray-500"
                 }`}
@@ -241,9 +241,9 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
               {items.map((model) => (
                 <div
                   key={model.id}
-                  className={`${theme.themeName === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-black/20 border-white/5"} border rounded-lg overflow-hidden hover:border-white/10 transition-all group relative ${
+                  className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-black/20 border-white/5"} border rounded-lg overflow-hidden hover:border-white/10 transition-all group relative ${
                     model.status === "ready"
-                      ? theme.themeName === "lucagent"
+                      ? theme.themeName?.toLowerCase() === "lucagent"
                         ? "border-green-500/30 bg-green-500/[0.02]"
                         : "border-green-500/20"
                       : ""
@@ -279,12 +279,12 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                           </div>
                           <div>
                             <div
-                              className={`text-xs font-bold leading-tight ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+                              className={`text-xs font-bold leading-tight ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
                             >
                               {model.name}
                             </div>
                             <div
-                              className={`text-[9px] font-mono ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-600"}`}
+                              className={`text-[9px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-600"}`}
                             >
                               {model.sizeFormatted}
                             </div>
@@ -315,7 +315,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
 
                       {!compact && (
                         <p
-                          className={`text-[9px] line-clamp-2 leading-relaxed mb-1 ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-500"}`}
+                          className={`text-[9px] line-clamp-2 leading-relaxed mb-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-500"}`}
                         >
                           {model.description}
                         </p>
@@ -326,10 +326,10 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                         <div
                           className={`flex items-center gap-1.5 px-1.5 py-1 rounded-md text-[8px] font-mono mt-0.5 ${
                             model.canary.passed
-                              ? theme.themeName === "lucagent"
+                              ? theme.themeName?.toLowerCase() === "lucagent"
                                 ? "bg-emerald-500/5 text-emerald-700"
                                 : "bg-emerald-500/10 text-emerald-400"
-                              : theme.themeName === "lucagent"
+                              : theme.themeName?.toLowerCase() === "lucagent"
                                 ? "bg-yellow-500/5 text-yellow-700"
                                 : "bg-yellow-500/10 text-yellow-400"
                           }`}
@@ -368,7 +368,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                       {/* Action Buttons */}
                       {model.status === "unsupported" ? (
                         <div
-                          className={`flex-1 text-center text-[9px] py-1 ${theme.themeName === "lucagent" ? "text-yellow-600" : "text-yellow-500/80"}`}
+                          className={`flex-1 text-center text-[9px] py-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-yellow-600" : "text-yellow-500/80"}`}
                         >
                           ⚠️ {model.unsupportedReason || "Not supported"}
                         </div>
@@ -376,7 +376,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                         <button
                           onClick={() => handleDownload(model.id)}
                           disabled={downloadingId !== null}
-                          className={`flex-1 ${theme.themeName === "lucagent" ? "bg-black/5 hover:bg-black/10 text-slate-700" : "bg-white/5 hover:bg-white/10 text-gray-300"} active:scale-95 transition-all text-[9px] font-medium py-1 rounded flex items-center justify-center gap-1.5`}
+                          className={`flex-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 hover:bg-black/10 text-slate-700" : "bg-white/5 hover:bg-white/10 text-gray-300"} active:scale-95 transition-all text-[9px] font-medium py-1 rounded flex items-center justify-center gap-1.5`}
                         >
                           <Download size={10} />
                           Get
@@ -388,10 +388,10 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                               onClick={() => handleSetActive(model.id)}
                               className={`flex-1 transition-all text-[9px] font-medium py-1 rounded flex items-center justify-center gap-1.5 border ${
                                 activeModelId === model.id
-                                  ? theme.themeName === "lucagent"
+                                  ? theme.themeName?.toLowerCase() === "lucagent"
                                     ? "bg-black/10 text-slate-900 border-black/20"
                                     : "bg-white/10 text-white border-white/20"
-                                  : theme.themeName === "lucagent"
+                                  : theme.themeName?.toLowerCase() === "lucagent"
                                     ? "bg-transparent text-slate-500 border-transparent hover:bg-black/5"
                                     : "bg-transparent text-gray-400 border-transparent hover:bg-white/5"
                               }`}
@@ -522,7 +522,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     return (
       <div
         className={`mb-3 overflow-hidden rounded-xl border ${
-          theme.themeName === "lucagent"
+          theme.themeName?.toLowerCase() === "lucagent"
             ? "border-black/5 bg-black/[0.02]"
             : "border-white/5 bg-black/20"
         } backdrop-blur-sm transition-all hover:border-white/10`}
@@ -531,7 +531,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
         <button
           onClick={() => toggleSection("Ollama (External Runtime)")}
           className={`w-full flex items-center justify-between p-4 transition-all group ${
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? "hover:bg-black/[0.03]"
               : "hover:bg-white/[0.03]"
           }`}
@@ -539,7 +539,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
           <div className="flex items-center gap-3">
             <div
               className={`p-2 rounded-lg ${
-                theme.themeName === "lucagent" ? "bg-black/5" : "bg-white/5"
+                theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-white/5"
               }`}
             >
               <Zap size={16} style={{ color: theme.hex }} />
@@ -548,7 +548,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
               <div className="flex items-center gap-2">
                 <span
                   className={`text-sm font-semibold ${
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "text-slate-800"
                       : "text-gray-200"
                   }`}
@@ -571,7 +571,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
               </div>
               <span
                 className={`text-[10px] ${
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "text-slate-500"
                     : "text-gray-500"
                 }`}
@@ -582,7 +582,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
           </div>
           <span
             className={`text-xs transition-transform ${isExpanded ? "rotate-180" : ""} ${
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "text-slate-400"
                 : "text-gray-500"
             }`}
@@ -598,7 +598,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
               /* Scanning */
               <div
                 className={`text-center py-6 text-xs ${
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "text-slate-400"
                     : "text-gray-500"
                 } animate-pulse`}
@@ -609,7 +609,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
               /* Not Installed — Show Download Card */
               <div
                 className={`rounded-lg p-4 border ${
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "border-black/5 bg-black/[0.02]"
                     : "border-white/5 bg-white/[0.02]"
                 }`}
@@ -621,7 +621,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                   <div className="flex-1 min-w-0">
                     <p
                       className={`text-xs font-semibold mb-1 ${
-                        theme.themeName === "lucagent"
+                        theme.themeName?.toLowerCase() === "lucagent"
                           ? "text-slate-800"
                           : "text-gray-200"
                       }`}
@@ -630,7 +630,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                     </p>
                     <p
                       className={`text-[10px] mb-3 leading-relaxed ${
-                        theme.themeName === "lucagent"
+                        theme.themeName?.toLowerCase() === "lucagent"
                           ? "text-slate-500"
                           : "text-gray-500"
                       }`}
@@ -693,7 +693,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                           }
                         }}
                         className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] transition-all ${
-                          theme.themeName === "lucagent"
+                          theme.themeName?.toLowerCase() === "lucagent"
                             ? "bg-black/5 text-slate-500 hover:bg-black/10"
                             : "bg-white/5 text-gray-500 hover:bg-white/10"
                         }`}
@@ -712,7 +712,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                   <div
                     key={model.name}
                     className={`flex items-center justify-between p-3 rounded-lg border ${
-                      theme.themeName === "lucagent"
+                      theme.themeName?.toLowerCase() === "lucagent"
                         ? "border-black/5 bg-black/[0.02]"
                         : "border-white/5 bg-white/[0.02]"
                     }`}
@@ -724,7 +724,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                       />
                       <span
                         className={`text-xs font-mono ${
-                          theme.themeName === "lucagent"
+                          theme.themeName?.toLowerCase() === "lucagent"
                             ? "text-slate-700"
                             : "text-gray-300"
                         }`}
@@ -734,7 +734,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                     </div>
                     <span
                       className={`text-[10px] font-mono ${
-                        theme.themeName === "lucagent"
+                        theme.themeName?.toLowerCase() === "lucagent"
                           ? "text-slate-400"
                           : "text-gray-500"
                       }`}
@@ -745,7 +745,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                 ))}
                 <p
                   className={`text-[9px] mt-2 ${
-                    theme.themeName === "lucagent"
+                    theme.themeName?.toLowerCase() === "lucagent"
                       ? "text-slate-400"
                       : "text-gray-600"
                   }`}
@@ -754,7 +754,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                   Pull more models with:{" "}
                   <code
                     className={`px-1 py-0.5 rounded text-[9px] ${
-                      theme.themeName === "lucagent"
+                      theme.themeName?.toLowerCase() === "lucagent"
                         ? "bg-black/5"
                         : "bg-white/5"
                     }`}
@@ -772,16 +772,16 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
 
   return (
     <div
-      className={`${theme.themeName === "lucagent" ? "bg-black/[0.02]" : "bg-black/20"} rounded-xl border border-white/5 p-4 max-w-3xl mx-auto backdrop-blur-md`}
+      className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02]" : "bg-black/20"} rounded-xl border border-white/5 p-4 max-w-3xl mx-auto backdrop-blur-md`}
     >
       <div className="flex justify-between items-center mb-6">
         <h2
-          className={`flex items-center gap-2 text-lg font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+          className={`flex items-center gap-2 text-lg font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
         >
           <Database
             size={18}
             className={
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "text-slate-400"
                 : "text-gray-400"
             }
@@ -790,10 +790,10 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
         </h2>
         <div className="flex items-center gap-4">
           <div
-            className={`flex items-center gap-2 ${theme.themeName === "lucagent" ? "bg-black/5" : "bg-black/40"} px-3 py-1.5 rounded-full border border-white/5`}
+            className={`flex items-center gap-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-black/40"} px-3 py-1.5 rounded-full border border-white/5`}
           >
             <span
-              className={`text-[10px] ${theme.themeName === "lucagent" ? "text-slate-500" : "text-gray-500"} uppercase tracking-wider`}
+              className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"} uppercase tracking-wider`}
             >
               Storage
             </span>
@@ -816,7 +816,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <p
-        className={`text-xs ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-500"} mb-6 max-w-lg`}
+        className={`text-xs ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-500"} mb-6 max-w-lg`}
       >
         Download specialized AI models to give Luca offline capabilities. These
         run entirely on your device (Local Privacy).

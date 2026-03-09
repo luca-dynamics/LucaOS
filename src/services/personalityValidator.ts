@@ -23,7 +23,7 @@ class PersonalityValidator {
    */
   validateResponse(
     response: string,
-    persona: PersonaType
+    persona: PersonaType,
   ): PersonalityValidation {
     const violations: string[] = [];
 
@@ -75,14 +75,14 @@ class PersonalityValidator {
     // Check for military acknowledgment (should be present for commands)
     const hasMilitaryAck =
       /^(Roger|Affirmative|Copy|Negative|Understood|Acknowledged|Executing)/im.test(
-        response
+        response,
       );
 
     // If response is longer than 50 chars and has no military language, flag it
     if (response.length > 50 && !hasMilitaryAck) {
       const hasMilitaryAnywhere =
         /(Roger|Affirmative|Copy|Negative|Understood|Acknowledged|Executing|Standing by|Ready)/i.test(
-          response
+          response,
         );
       if (!hasMilitaryAnywhere) {
         violations.push("Missing military acknowledgment");
@@ -93,8 +93,8 @@ class PersonalityValidator {
       violations.length >= 3
         ? "high"
         : violations.length >= 1
-        ? "medium"
-        : "low";
+          ? "medium"
+          : "low";
 
     return {
       isValid: violations.length === 0,
@@ -194,13 +194,13 @@ class PersonalityValidator {
     fixed = fixed.replace(/Happy to help/gi, "Standing by");
     fixed = fixed.replace(
       /Is there anything else/gi,
-      "Awaiting further orders"
+      "Awaiting further orders",
     );
 
     // Add military confirmation if completely missing
     const hasMilitaryLanguage =
       /(Roger|Affirmative|Copy|Negative|Understood|Acknowledged|Executing)/i.test(
-        fixed
+        fixed,
       );
     if (!hasMilitaryLanguage && fixed.length > 50) {
       // Determine appropriate acknowledgment based on content

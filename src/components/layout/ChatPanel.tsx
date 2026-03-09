@@ -120,7 +120,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       } flex flex-col ${isMobile ? "h-full" : "h-full"} relative ${
         isMobile ? "z-10" : "z-20"
       } transition-all duration-500 ${
-        theme.themeName === "lucagent"
+        theme.themeName?.toLowerCase() === "lucagent"
           ? "glass-panel-light tech-border-light"
           : "glass-panel tech-border"
       } ${theme.primary} ${isMobile ? "" : ""}`}
@@ -128,7 +128,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         borderTop: !isMobile ? `1px solid ${theme.hex}33` : "none",
         borderBottom: !isMobile ? `1px solid ${theme.hex}33` : "none",
         background:
-          theme.themeName === "lucagent"
+          theme.themeName?.toLowerCase() === "lucagent"
             ? "rgba(255, 255, 255, 0.5)"
             : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
       }}
@@ -137,7 +137,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         className="absolute inset-0 pointer-events-none z-30"
         style={{
           background:
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? `linear-gradient(rgba(255,255,255,0)_2px, rgba(255,255,255,0.05)_2px)`
               : `linear-gradient(rgba(0,0,0,0)_2px, rgba(0,0,0,0.1)_2px)`,
           backgroundSize: "100% 4px",
@@ -220,7 +220,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       </React.Suspense>
 
       <div
-        className={`${isMobile ? (theme.themeName === "lucagent" ? "bg-white/85" : "bg-black/95") : "bg-transparent"} z-40 px-1.5 pb-2 pt-0`}
+        className={`${isMobile ? (theme.themeName?.toLowerCase() === "lucagent" ? "bg-white/85" : "bg-black/95") : "bg-transparent"} z-40 px-1.5 pb-2 pt-0`}
       >
         {attachedImage && (
           <div

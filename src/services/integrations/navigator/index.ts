@@ -1,11 +1,14 @@
 import { Type } from "@google/genai";
 import type { FunctionDeclaration } from "@google/genai";
-import { chromium } from "playwright";
-import type { Browser, Page } from "playwright";
-import fs from "fs";
-import path from "path";
-
 import { authService } from "../../auth/authService.ts";
+
+// Detect environment
+const isElectron =
+  typeof process !== "undefined" &&
+  process.versions &&
+  !!process.versions.electron;
+const isNode =
+  typeof process !== "undefined" && process.versions && !!process.versions.node;
 
 // --- TOOLS DEFINITION ---
 export const tools: FunctionDeclaration[] = [
@@ -52,16 +55,19 @@ export const tools: FunctionDeclaration[] = [
 ];
 
 // --- HANDLER ---
-let browserInstance: Browser | null = null;
+let browserInstance: any = null;
 
 async function getBrowser(headless: boolean = true) {
+  if (!isNode && !isElectron) {
+    throw new Error(
+      "Navigator tools are only available in Desktop/Node environments.",
+    );
+  }
+
+  const playwright = "playwright";
+  const { chromium } = await import(playwright);
+
   if (browserInstance) {
-    // If we need headful but have headless (or vice versa), we might need to restart.
-    // For now, simplicity: if it's open, use it. But Login NEEDS headful.
-    // If current is headless and we need headful, close and relaunch.
-    // Checking if we can inspect process... simpler to just close if mode mismatch,
-    // but 'isConnected' doesn't tell us mode.
-    // Let's force close if we request headful (Login) to ensure visibility.
     if (!headless) {
       await browserInstance.close();
       browserInstance = null;
@@ -75,17 +81,21 @@ async function getBrowser(headless: boolean = true) {
 }
 
 export async function handler(name: string, args: any): Promise<any> {
+  if (!isNode && !isElectron) {
+    return {
+      success: false,
+      error:
+        "Native navigator tools are disabled in the web version. Please use the Electron app for browser automation.",
+    };
+  }
+
   if (name === "visual_scrape_github") {
     const { repoUrl, maxDepth = 3 } = args;
     console.log(`[NAVIGATOR] Visual Scrape Initiated: ${repoUrl}`);
 
-    // Try to load auth if available (e.g. for private repos if user logged in to github)
     const storedSession = await authService.getSession("github");
-
-    // Launch browser (Headless)
     const browser = await getBrowser(true);
 
-    // Context with Auth
     const context = await browser.newContext({
       userAgent:
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -93,36 +103,25 @@ export async function handler(name: string, args: any): Promise<any> {
     });
 
     const page = await context.newPage();
-
-    // Result Storage
-    let collectedFiles: { path: string; content: string }[] = [];
+    const collectedFiles: { path: string; content: string }[] = [];
     const visitedUrls = new Set<string>();
 
     try {
       await page.goto(repoUrl, { timeout: 30000 });
 
-      // 1. Get List of Files (BFS or simple crawl)
-      // For simplicity in V1: We will grab the file tree if possible, or scrape the visible file list
-      // GitHub has a "Go to file" button which opens a search/tree view.
-      // Let's rely on the file list table on the main page and click directories.
-
-      // RECURSIVE CRAWLER FUNCTION
-      async function crawl(currentUrl: string, currentDepth: number) {
+      const crawl = async (currentUrl: string, currentDepth: number) => {
         if (currentDepth > maxDepth) return;
         if (visitedUrls.has(currentUrl)) return;
         visitedUrls.add(currentUrl);
 
         console.log(
-          `[NAVIGATOR] Crawling: ${currentUrl} (Depth ${currentDepth})`
+          `[NAVIGATOR] Crawling: ${currentUrl} (Depth ${currentDepth})`,
         );
         await page.goto(currentUrl);
 
-        // Get all file row links
-        // GitHub selectors are tricky, but generally: .react-directory-row
-        // We want links that look like file paths.
         const links = await page.evaluate(() => {
           const rows = Array.from(
-            document.querySelectorAll('a[href*="/blob/"], a[href*="/tree/"]')
+            document.querySelectorAll('a[href*="/blob/"], a[href*="/tree/"]'),
           );
           return rows.map((a) => ({
             href: (a as HTMLAnchorElement).href,
@@ -133,13 +132,11 @@ export async function handler(name: string, args: any): Promise<any> {
           }));
         });
 
-        // Deduplicate
         const uniqueLinks = Array.from(
-          new Set(links.map((l) => JSON.stringify(l)))
-        ).map((s) => JSON.parse(s));
+          new Set(links.map((l: any) => JSON.stringify(l))),
+        ).map((s: any) => JSON.parse(s));
 
         for (const link of uniqueLinks) {
-          // Heuristic: Skip noisy files
           if (link.type === "file") {
             const ext = link.text.split(".").pop() || "";
             if (!["ts", "js", "json", "md", "py", "go", "rs"].includes(ext))
@@ -147,17 +144,13 @@ export async function handler(name: string, args: any): Promise<any> {
             if (link.text.includes("test") || link.text.includes("lock"))
               continue;
 
-            // Scrape File Content
             console.log(`[NAVIGATOR] Scraping File: ${link.text}`);
             const filePage = await context.newPage();
-            await filePage.goto(link.href);
-
-            // Click "Raw" button or get text content
-            // Raw button usually has text "Raw"
             try {
+              await filePage.goto(link.href);
               const rawUrl = await filePage.evaluate(() => {
                 const btn = Array.from(document.querySelectorAll("a")).find(
-                  (a) => a.innerText === "Raw"
+                  (a) => a.innerText === "Raw",
                 );
                 return btn ? (btn as HTMLAnchorElement).href : null;
               });
@@ -165,35 +158,30 @@ export async function handler(name: string, args: any): Promise<any> {
               if (rawUrl) {
                 await filePage.goto(rawUrl);
                 const content = await filePage.evaluate(
-                  () => document.body.innerText
+                  () => document.body.innerText,
                 );
                 collectedFiles.push({ path: link.text, content });
               }
-            } catch (e) {
+            } catch {
               console.error(`[NAVIGATOR] Failed to scrape ${link.text}`);
+            } finally {
+              await filePage.close();
             }
-            await filePage.close();
           } else if (link.type === "dir") {
-            // Recurse
-            // Ensure we stay within the repo
             if (link.href.startsWith(repoUrl)) {
               await crawl(link.href, currentDepth + 1);
             }
           }
         }
-      }
+      };
 
       await crawl(repoUrl, 0);
 
-      // Format Output for The Alchemist
       let output = "";
       for (const file of collectedFiles) {
         output += `--- FILE: ${file.path} ---\n${file.content}\n\n`;
       }
 
-      console.log(
-        `[NAVIGATOR] Scrape Complete. Found ${collectedFiles.length} files.`
-      );
       return {
         success: true,
         fileCount: collectedFiles.length,
@@ -204,37 +192,26 @@ export async function handler(name: string, args: any): Promise<any> {
       return { success: false, error: e.message };
     } finally {
       await context.close();
-      // Keep browser open for perf? Or close? Let's close context but keep browser.
     }
   }
 
   if (name === "navigator_login") {
     const { url, serviceName } = args;
     console.log(
-      `[NAVIGATOR] Initiating Login Sequence for: ${serviceName} at ${url}`
+      `[NAVIGATOR] Initiating Login Sequence for: ${serviceName} at ${url}`,
     );
 
-    // 1. Launch VISIBLE Browser
-    const browser = await getBrowser(false); // Headful
+    const browser = await getBrowser(false);
     const context = await browser.newContext();
     const page = await context.newPage();
 
     try {
       await page.goto(url);
-
-      // 2. Wait for User Action
       console.log(
-        `[NAVIGATOR] Login Window Open. Waiting for ${serviceName} session...`
+        `[NAVIGATOR] Login Window Open. Waiting for ${serviceName} session...`,
       );
-      // We wait for a "Signal" or just a timeout?
-      // Let's give them 60 seconds to scan QR or login.
-      // Better: Wait until they close the window? Or a specific cookie presence?
-      // Simple V1: Wait 45 seconds.
-
-      // Notify user via console logic (Agent will tell them)
       await page.waitForTimeout(45000);
 
-      // 3. Capture State
       const state = await context.storageState();
       await authService.saveSession(serviceName, state);
 
@@ -247,7 +224,7 @@ export async function handler(name: string, args: any): Promise<any> {
       return { success: false, error: e.message };
     } finally {
       await context.close();
-      await browser.close(); // Close full browser after login to reset state
+      await browser.close();
       browserInstance = null;
     }
   }

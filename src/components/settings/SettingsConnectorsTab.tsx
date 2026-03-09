@@ -152,14 +152,14 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
   return (
     <div className="space-y-6">
       <div
-        className={`text-xs p-3 rounded-lg border backdrop-blur-sm ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-400"}`}
+        className={`text-xs p-3 rounded-lg border backdrop-blur-sm ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-400"}`}
         style={{
           backgroundColor:
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? "rgba(0,0,0,0.03)"
               : `${theme.hex}0d`,
           borderColor:
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? "rgba(0,0,0,0.1)"
               : `${theme.hex}33`,
         }}
@@ -191,16 +191,16 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
           return (
             <div
               key={app.id}
-              className={`relative group overflow-hidden border rounded-2xl p-4 transition-all duration-500 backdrop-blur-2xl shadow-2xl hover:-translate-y-1 ${theme.themeName === "lucagent" ? "glass-panel-light" : ""}`}
+              className={`relative group overflow-hidden border rounded-2xl p-4 transition-all duration-500 backdrop-blur-2xl shadow-2xl hover:-translate-y-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : ""}`}
               style={{
                 borderColor:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(0,0,0,0.1)"
                     : `${theme.hex}22`,
                 backgroundColor:
-                  theme.themeName === "lucagent" ? undefined : `${theme.hex}08`,
+                  theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}08`,
                 boxShadow:
-                  theme.themeName === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "0 10px 30px rgba(0,0,0,0.05)"
                     : `0 20px 40px -20px rgba(0,0,0,0.5), inset 0 0 0 1px ${theme.hex}11`,
               }}
@@ -247,7 +247,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                 <div className="flex-1 min-w-0 pr-1">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
                     <h4
-                      className={`text-[13px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white/90"} tracking-tight truncate`}
+                      className={`text-[13px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white/90"} tracking-tight truncate`}
                     >
                       {app.name}
                     </h4>
@@ -268,7 +268,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                     </div>
                   </div>
                   <p
-                    className={`text-[11px] ${theme.themeName === "lucagent" ? "text-slate-600" : "text-white/40"} leading-tight mb-2 line-clamp-1`}
+                    className={`text-[11px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-white/40"} leading-tight mb-2 line-clamp-1`}
                   >
                     {app.desc}
                   </p>
@@ -301,7 +301,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                         className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter transition-all duration-300 ${
                           isAlwaysOn
                             ? "text-white"
-                            : theme.themeName === "lucagent"
+                            : theme.themeName?.toLowerCase() === "lucagent"
                               ? "bg-black/[0.03] text-slate-400 border border-black/10"
                               : "bg-white/5 text-white/30 border border-white/10"
                         }`}
@@ -325,10 +325,10 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                 <div className="space-y-2">
                   {isChromeSynced && (
                     <div
-                      className={`text-[10px] ${theme.themeName === "lucagent" ? "text-blue-700 bg-blue-50 border-blue-200" : "text-blue-400/80 bg-blue-500/5 border-blue-500/10"} px-3 py-2 rounded-xl border leading-snug`}
+                      className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-blue-700 bg-blue-50 border-blue-200" : "text-blue-400/80 bg-blue-500/5 border-blue-500/10"} px-3 py-2 rounded-xl border leading-snug`}
                     >
                       <strong
-                        className={`${theme.themeName === "lucagent" ? "text-blue-800" : "text-blue-400"} block mb-0.5`}
+                        className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-blue-800" : "text-blue-400"} block mb-0.5`}
                       >
                         {app.id === "google"
                           ? "Chrome Sync Active"
@@ -349,19 +349,19 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                         handleStartAuth(app.id);
                       }
                     }}
-                    className={`w-full py-2 rounded-xl text-[11px] font-black border transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5 backdrop-blur-md ${theme.themeName === "lucagent" ? "bg-black/[0.03] hover:bg-black/[0.06]" : ""}`}
+                    className={`w-full py-2 rounded-xl text-[11px] font-black border transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5 backdrop-blur-md ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] hover:bg-black/[0.06]" : ""}`}
                     style={{
                       borderColor: isChromeSynced
-                        ? theme.themeName === "lucagent"
+                        ? theme.themeName?.toLowerCase() === "lucagent"
                           ? "rgba(0,0,0,0.2)"
                           : `${theme.hex}66`
-                        : theme.themeName === "lucagent"
+                        : theme.themeName?.toLowerCase() === "lucagent"
                           ? "rgba(0,0,0,0.1)"
                           : `${theme.hex}44`,
                       color:
-                        theme.themeName === "lucagent" ? "#111827" : theme.hex,
+                        theme.themeName?.toLowerCase() === "lucagent" ? "#111827" : theme.hex,
                       backgroundColor: isChromeSynced
-                        ? theme.themeName === "lucagent"
+                        ? theme.themeName?.toLowerCase() === "lucagent"
                           ? "rgba(0,0,0,0.05)"
                           : `${theme.hex}11`
                         : "transparent",
@@ -376,15 +376,15 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                     className="text-[10px] px-3 py-2 rounded-xl border leading-snug"
                     style={{
                       borderColor:
-                        theme.themeName === "lucagent"
+                        theme.themeName?.toLowerCase() === "lucagent"
                           ? "rgba(0,0,0,0.1)"
                           : `${theme.hex}22`,
                       color:
-                        theme.themeName === "lucagent"
+                        theme.themeName?.toLowerCase() === "lucagent"
                           ? "#1e293b"
                           : `${theme.hex}cc`,
                       backgroundColor:
-                        theme.themeName === "lucagent"
+                        theme.themeName?.toLowerCase() === "lucagent"
                           ? "rgba(0,0,0,0.02)"
                           : `${theme.hex}05`,
                     }}
@@ -409,10 +409,10 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
         <div className="absolute inset-0 z-[50] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
           <div
-            className={`relative border p-6 rounded-2xl max-w-[280px] text-center shadow-2xl animate-in zoom-in duration-300 ${theme.themeName === "lucagent" ? "bg-white" : "bg-[#0d0d0d]"}`}
+            className={`relative border p-6 rounded-2xl max-w-[280px] text-center shadow-2xl animate-in zoom-in duration-300 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white" : "bg-[#0d0d0d]"}`}
             style={{
               borderColor:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "rgba(0,0,0,0.1)"
                   : `${theme.hex}44`,
             }}
@@ -442,7 +442,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
               PRO-TIP: INSTANT ACCESS
             </h5>
             <p
-              className={`text-[11px] ${theme.themeName === "lucagent" ? "text-slate-600" : "text-white/70"} mb-6 leading-relaxed`}
+              className={`text-[11px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-white/70"} mb-6 leading-relaxed`}
             >
               Luca detected no imported Chrome profile. Import your profile
               first to enable <strong>instant one-click login</strong> and
@@ -451,7 +451,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
             <div className="flex gap-2">
               <button
                 onClick={() => setProTipModal(null)}
-                className={`flex-1 py-2.5 rounded-xl ${theme.themeName === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 text-white/50 border-white/10"} text-[10px] font-black hover:bg-white/10 transition-all border`}
+                className={`flex-1 py-2.5 rounded-xl ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 text-white/50 border-white/10"} text-[10px] font-black hover:bg-white/10 transition-all border`}
               >
                 I&apos;ll Import First
               </button>

@@ -148,9 +148,9 @@ export async function test3_AccessControl() {
         shouldSucceed: true,
       },
       {
-        persona: "RUTHLESS",
+        persona: "MASTER_SYSTEM",
         tool: "osintDarkWebScan",
-        shouldSucceed: true, // RUTHLESS has everything
+        shouldSucceed: true, // MASTER_SYSTEM has everything
       },
     ];
 
@@ -275,13 +275,13 @@ export async function test6_ToolStats() {
     console.log(`  ENGINEER: ${stats.toolsByPersona.ENGINEER}`);
     console.log(`  HACKER: ${stats.toolsByPersona.HACKER}`);
     console.log(`  ASSISTANT: ${stats.toolsByPersona.ASSISTANT}`);
-    console.log(`  RUTHLESS: ${stats.toolsByPersona.RUTHLESS}`);
+    console.log(`  MASTER_SYSTEM: ${stats.toolsByPersona.MASTER_SYSTEM}`);
 
-    // Verify RUTHLESS has most tools
+    // Verify MASTER_SYSTEM has most tools
     const ruthlessHasAll =
-      stats.toolsByPersona.RUTHLESS >= stats.totalTools * 0.9;
+      stats.toolsByPersona.MASTER_SYSTEM >= stats.totalTools * 0.9;
 
-    console.log(`\nRUTHLESS has full access: ${ruthlessHasAll ? "✅" : "❌"}`);
+    console.log(`\nMASTER_SYSTEM has full access: ${ruthlessHasAll ? "✅" : "❌"}`);
 
     console.log("\n✅ TEST 6 PASSED\n");
     return true;

@@ -43,12 +43,12 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
         className={`fixed z-[100] flex flex-col overflow-hidden border shadow-2xl ${
-          theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"
+          theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"
         }`}
         style={{
           borderColor: `${theme.hex}44`,
           background:
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? "rgba(255, 255, 255, 0.5)"
               : "rgba(0, 0, 0, 0.4)",
           resize: "both",

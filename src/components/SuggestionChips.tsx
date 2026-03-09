@@ -64,7 +64,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
 
   if (!visible || suggestions.length === 0) return null;
 
-  const isLight = theme?.themeName === "lucagent";
+  const isLight = theme?.themeName?.toLowerCase() === "lucagent";
   const themeHex = theme?.hex || "#3b82f6";
 
   return (

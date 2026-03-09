@@ -5,7 +5,7 @@ export const getGlassStyle = (
   isActive: boolean = false,
   isDanger: boolean = false,
 ) => {
-  const isLight = theme.themeName === "lucagent";
+  const isLight = theme.themeName?.toLowerCase() === "lucagent";
   const baseColor = isDanger ? "#ef4444" : theme.hex;
 
   if (isLight) {

@@ -400,7 +400,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
           className={`absolute inset-0 z-[2000] flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto transition-all duration-700 backdrop-blur-[20px]`}
           style={{
             background:
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "rgba(255, 255, 255, 0.9)"
                 : "rgba(0, 0, 0, 0.85)",
           }}

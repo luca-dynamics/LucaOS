@@ -15,6 +15,7 @@ export interface LucaSettings {
     minimizeToTray: boolean;
     debugMode: boolean;
     userName: string;
+    preferredMode: "text" | "voice";
     setupComplete: boolean;
     agencyLevel: "PASSIVE" | "PROACTIVE" | "EXECUTIVE";
     autonomousDomains: string[];
@@ -159,7 +160,8 @@ const DEFAULT_SETTINGS: LucaSettings = {
     agencyLevel: "PROACTIVE",
     autonomousDomains: ["SYSTEM", "TASKS", "ENVIRONMENT"],
     persona: "ASSISTANT",
-    theme: "ASSISTANT",
+    theme: "PROFESSIONAL",
+    preferredMode: "text",
     syncThemeWithPersona: true,
     toneStyle: "CHILL",
   },
@@ -436,6 +438,27 @@ class SettingsService extends EventEmitter {
           }
 
           merged.v1betaMigrationComplete = true;
+        }
+
+        // --- DEPRECATED MODEL HOTFIX (March 2026) ---
+        // Ensure users are not stuck on deprecated 2.0 or 2.5 models
+        const isDeprecated = (m: string) =>
+          m?.includes("2.5") || m?.includes("2.0");
+        if (
+          isDeprecated(merged.brain.model) ||
+          isDeprecated(merged.brain.voiceModel) ||
+          isDeprecated(merged.brain.visionModel)
+        ) {
+          console.log(
+            "[SETTINGS] Correcting deprecated model references to Gemini 3...",
+          );
+          if (isDeprecated(merged.brain.model))
+            merged.brain.model = BRAIN_CONFIG.defaults.brain;
+          if (isDeprecated(merged.brain.visionModel))
+            merged.brain.visionModel = BRAIN_CONFIG.defaults.vision;
+          if (isDeprecated(merged.brain.voiceModel))
+            merged.brain.voiceModel = BRAIN_CONFIG.defaults.voice;
+          this.saveSettings(merged);
         }
 
         return merged;

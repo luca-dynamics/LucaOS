@@ -5,11 +5,19 @@
  * with continuous memory and evolving traits across all modes
  */
 
-export type PersonaMode = "RUTHLESS" | "ENGINEER" | "ASSISTANT" | "HACKER";
+export type PersonaMode =
+  | "RUTHLESS"
+  | "ENGINEER"
+  | "ASSISTANT"
+  | "HACKER"
+  | "LUCAGENT";
 
 export type UIThemeId =
-  | PersonaMode
-  | "LUCAGENT"
+  | "PROFESSIONAL"
+  | "MASTER_SYSTEM"
+  | "BUILDER"
+  | "TERMINAL"
+  | "AGENTIC_SLATE"
   | "DICTATION"
   | "MIDNIGHT"
   | "VAPORWAVE"

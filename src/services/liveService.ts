@@ -48,9 +48,9 @@ class LucaLiveService {
   // --- ADVANCED VAD SETTINGS (TUNED VIA LIVEKIT PATTERNS) ---
   private noiseFloor = 0.002;
   private readonly NOISE_ALPHA = 0.01; // Slower adaptation
-  private readonly SNR_THRESHOLD = 1.6; // Slightly more conservative SNR
-  private readonly ABSOLUTE_THRESHOLD = 0.004; // Lower floor for better quiet speech detection
-  private readonly HANGOVER_FRAMES = 3; // ~380ms hangover (tuned for snappiness)
+  private readonly SNR_THRESHOLD = 2.0; // More robust signal-to-noise ratio
+  private readonly ABSOLUTE_THRESHOLD = 0.008; // Filter out low-level ambient noise
+  private readonly HANGOVER_FRAMES = 8; // ~512ms hangover (64ms per frame * 8) - more natural for pauses between words
   private vadHangover = 0;
   private isSpeaking = false;
   private retryCount = 0;
@@ -986,7 +986,7 @@ class LucaLiveService {
 
     // Reset state
     this.nextStartTime = 0;
-    this.noiseFloor = 0.005; // Reset noise floor
+    this.noiseFloor = 0.002; // Reset noise floor to original initialization value
     this.vadHangover = 0;
   }
 

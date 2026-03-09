@@ -35,9 +35,7 @@ const VisionCameraModal: React.FC<Props> = ({
   const [analyzing, setAnalyzing] = useState(false);
   const [isLiveScanning, setIsLiveScanning] = useState(false);
   const [scanLog, setScanLog] = useState<string[]>([]);
-  const [, setScanTargets] = useState<{ x: number; y: number }[]>(
-    [],
-  );
+  const [, setScanTargets] = useState<{ x: number; y: number }[]>([]);
   const isMobile = useMobile();
 
   const [cameraReady, setCameraReady] = useState(false);
@@ -328,7 +326,10 @@ const VisionCameraModal: React.FC<Props> = ({
               style={isLiveScanning ? { color: theme?.hex } : undefined}
             >
               <Target size={isMobile ? 18 : 24} />
-              <span className="text-[10px] md:text-xs font-bold tracking-[0.3em]">
+              <span
+                className="text-[10px] md:text-xs font-bold tracking-[0.3em]"
+                style={theme ? { color: theme.hex } : undefined}
+              >
                 {isLiveScanning
                   ? "ASTRA_PROTOCOL: ONLINE"
                   : "VISION UPLINK ACTIVE"}
@@ -353,14 +354,47 @@ const VisionCameraModal: React.FC<Props> = ({
               isMobile ? "w-48 h-48" : "w-80 h-80"
             } border-2 border-white/10 rounded-2xl flex items-center justify-center`}
           >
-            <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-white/80 rounded-tl-sm"></div>
-            <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-white/80 rounded-tr-sm"></div>
-            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-white/80 rounded-bl-sm"></div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-white/80 rounded-br-sm"></div>
+            <div
+              className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 rounded-tl-sm"
+              style={{
+                borderColor: theme
+                  ? setHexAlpha(theme.hex, 0.8)
+                  : "rgba(255,255,255,0.8)",
+              }}
+            ></div>
+            <div
+              className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 rounded-tr-sm"
+              style={{
+                borderColor: theme
+                  ? setHexAlpha(theme.hex, 0.8)
+                  : "rgba(255,255,255,0.8)",
+              }}
+            ></div>
+            <div
+              className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 rounded-bl-sm"
+              style={{
+                borderColor: theme
+                  ? setHexAlpha(theme.hex, 0.8)
+                  : "rgba(255,255,255,0.8)",
+              }}
+            ></div>
+            <div
+              className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 rounded-br-sm"
+              style={{
+                borderColor: theme
+                  ? setHexAlpha(theme.hex, 0.8)
+                  : "rgba(255,255,255,0.8)",
+              }}
+            ></div>
 
             <Crosshair
-              className="text-white/20 animate-spin-slow"
+              className="animate-spin-slow"
               size={isMobile ? 32 : 48}
+              style={{
+                color: theme
+                  ? setHexAlpha(theme.hex, 0.3)
+                  : "rgba(255,255,255,0.2)",
+              }}
             />
 
             {analyzing && (
@@ -420,11 +454,16 @@ const VisionCameraModal: React.FC<Props> = ({
             } ${!cameraReady ? "opacity-50" : ""}`}
           >
             <div
-              className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 ${cameraReady ? "border-white" : "border-white/40"} group-hover:scale-105 transition-transform duration-300 shadow-2xl`}
+              className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 ${cameraReady ? "" : "opacity-40"} group-hover:scale-105 transition-transform duration-300 shadow-2xl`}
+              style={{ borderColor: theme?.hex || "#fff" }}
             ></div>
             <div className="absolute w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors"></div>
             <div
-              className={`absolute w-16 h-16 md:w-20 md:h-20 rounded-full ${cameraReady ? "bg-white" : "bg-white/60"} transition-all shadow-inner shadow-black/20`}
+              className={`absolute w-16 h-16 md:w-20 md:h-20 rounded-full transition-all shadow-inner shadow-black/20`}
+              style={{
+                backgroundColor: theme?.hex || "#fff",
+                opacity: cameraReady ? 1 : 0.6,
+              }}
             ></div>
 
             {!cameraReady ? (

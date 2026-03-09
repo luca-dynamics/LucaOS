@@ -131,10 +131,10 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className={`flex items-center gap-2 p-1.5 rounded border ${theme?.themeName === "lucagent" ? "border-black/5" : "border-slate-800/50"}`}
+                  className={`flex items-center gap-2 p-1.5 rounded border ${theme?.themeName?.toLowerCase() === "lucagent" ? "border-black/5" : "border-slate-800/50"}`}
                 >
                   <div
-                    className={`flex flex-col items-center justify-center w-10 h-10 ${theme?.themeName === "lucagent" ? "bg-white/60" : "bg-slate-900"} rounded text-[10px] font-mono border ${theme?.themeName === "lucagent" ? "border-black/10" : "border-slate-700"}`}
+                    className={`flex flex-col items-center justify-center w-10 h-10 ${theme?.themeName?.toLowerCase() === "lucagent" ? "bg-white/60" : "bg-slate-900"} rounded text-[10px] font-mono border ${theme?.themeName?.toLowerCase() === "lucagent" ? "border-black/10" : "border-slate-700"}`}
                   >
                     <span style={{ color: theme?.hex || "#06b6d4" }}>
                       {new Date(event.startTime).getDate()}
@@ -194,7 +194,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                       className={`text-xs font-bold ${
                         task.status === TaskStatus.COMPLETED
                           ? "line-through text-slate-500"
-                          : theme?.themeName === "lucagent"
+                          : theme?.themeName?.toLowerCase() === "lucagent"
                             ? "text-gray-900"
                             : "text-white"
                       }`}
@@ -276,7 +276,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                       className={`text-xs font-bold ${
                         goal.status === "COMPLETED"
                           ? "line-through text-slate-500"
-                          : theme?.themeName === "lucagent"
+                          : theme?.themeName?.toLowerCase() === "lucagent"
                             ? "text-gray-900"
                             : "text-white"
                       }`}

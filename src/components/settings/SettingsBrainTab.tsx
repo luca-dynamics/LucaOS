@@ -155,22 +155,22 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className={`${theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-3 flex items-center justify-between`}
+        className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-3 flex items-center justify-between`}
         style={{
           borderColor:
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? "rgba(0,0,0,0.1)"
               : `${theme.hex}33`,
         }}
       >
         <div className="flex items-center gap-3">
           <div
-            className={`p-1.5 rounded-lg ${theme.themeName === "lucagent" ? "bg-black/5" : "bg-white/5"}`}
+            className={`p-1.5 rounded-lg ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-white/5"}`}
           >
             <Shield className="w-4 h-4" style={{ color: statusColor }} />
           </div>
           <div
-            className={`text-[10px] uppercase tracking-wider font-mono ${theme.themeName === "lucagent" ? "text-gray-500" : "text-gray-400"}`}
+            className={`text-[10px] uppercase tracking-wider font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"}`}
           >
             INTELLIGENCE MODE
           </div>
@@ -199,7 +199,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         <div className="flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5" style={{ color: theme.hex }} />
           <h4
-            className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-widest`}
+            className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-widest`}
           >
             Intelligence Presets
           </h4>
@@ -228,7 +228,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             <button
               key={preset.id}
               onClick={() => applyPreset(preset.id as any)}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl border ${theme.themeName === "lucagent" ? "border-black/5 bg-black/5 hover:bg-black/10" : "border-white/5 bg-white/5 hover:bg-white/10"} transition-all text-center group`}
+              className={`flex flex-col items-center justify-center p-3 rounded-xl border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/5 hover:bg-black/10" : "border-white/5 bg-white/5 hover:bg-white/10"} transition-all text-center group`}
               style={{
                 borderColor:
                   (preset.id === "performance" &&
@@ -241,7 +241,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     !settings.brain.model.includes("gpt") &&
                     !settings.brain.model.includes("claude"))
                     ? `${theme.hex}aa`
-                    : theme.themeName === "lucagent"
+                    : theme.themeName?.toLowerCase() === "lucagent"
                       ? "transparent"
                       : "rgba(255,255,255,0.05)",
               }}
@@ -264,12 +264,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 }}
               />
               <span
-                className={`text-[9px] font-bold ${theme.themeName === "lucagent" ? "text-gray-900" : "text-gray-300"}`}
+                className={`text-[9px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-gray-300"}`}
               >
                 {preset.label}
               </span>
               <span
-                className={`text-[7px] ${theme.themeName === "lucagent" ? "text-gray-600" : "text-gray-500"} uppercase mt-1`}
+                className={`text-[7px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-500"} uppercase mt-1`}
               >
                 {preset.desc}
               </span>
@@ -287,7 +287,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Intelligence Card */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
         >
           <div className="flex items-center justify-between">
             <Cpu className="w-4 h-4" style={{ color: theme.hex }} />
@@ -297,7 +297,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           </div>
           <div className="space-y-1">
             <div
-              className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-tighter`}
+              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-tighter`}
             >
               Core Intelligence
             </div>
@@ -327,7 +327,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 return isKnown ? settings.brain.model : "custom";
               })()}
               onChange={(e) => onUpdate("brain", "model", e.target.value)}
-              className={`w-full ${theme.themeName === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
+              className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
             >
               <optgroup label="Cloud Intelligence (Managed)">
                 <option value="gemini-3.1-pro-high">
@@ -406,7 +406,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                         : settings.brain.model
                     }
                     onChange={(e) => onUpdate("brain", "model", e.target.value)}
-                    className={`w-full ${theme.themeName === "lucagent" ? "bg-black/5 border-yellow-500/50 text-yellow-700 placeholder-black/20" : "bg-black/40 border-yellow-500/30 text-yellow-500 placeholder-white/20"} rounded-lg p-2 text-xs outline-none focus:border-yellow-500/60 transition-colors`}
+                    className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-yellow-500/50 text-yellow-700 placeholder-black/20" : "bg-black/40 border-yellow-500/30 text-yellow-500 placeholder-white/20"} rounded-lg p-2 text-xs outline-none focus:border-yellow-500/60 transition-colors`}
                   />
                   <div className="text-[8px] text-gray-600 mt-1">
                     Runs on standard Ollama port 11434
@@ -420,7 +420,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Vision Card */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
         >
           <div className="flex items-center justify-between">
             <Eye className="w-4 h-4" style={{ color: theme.hex }} />
@@ -430,7 +430,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           </div>
           <div className="space-y-1">
             <div
-              className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-tighter`}
+              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-tighter`}
             >
               Vision Engine
             </div>
@@ -440,7 +440,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             <select
               value={settings.brain.visionModel || "gemini-3-flash-preview"}
               onChange={(e) => onUpdate("brain", "visionModel", e.target.value)}
-              className={`w-full ${theme.themeName === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
+              className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
             >
               <optgroup label="Cloud Vision (Managed)">
                 <option value="gemini-3-flash-preview">
@@ -474,18 +474,18 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Memory Gateway */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
         >
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-purple-500" />
             <div
-              className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
             >
               Memory Gateway (RAG)
             </div>
           </div>
           <p
-            className={`text-[9px] ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-500"} leading-tight`}
+            className={`text-[9px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-500"} leading-tight`}
           >
             Self-evolving neural memory architecture that optimizes retrieval
             based on your session history.
@@ -493,7 +493,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <select
             value={settings.brain.memoryModel || "gemini-1.5-pro"}
             onChange={(e) => onUpdate("brain", "memoryModel", e.target.value)}
-            className={`w-full ${theme.themeName === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
+            className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
           >
             <optgroup label="Cloud Embedding (Fast)">
               <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
@@ -523,7 +523,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Quota Intelligence Card */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
         >
           <div className="flex items-center justify-between">
             <Activity className="w-4 h-4" style={{ color: theme.hex }} />
@@ -534,7 +534,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           </div>
           <div className="space-y-2">
             <div
-              className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
             >
               Load Balancer
             </div>
@@ -551,7 +551,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               <span style={{ color: theme.hex }}>240ms</span>
             </div>
             <div
-              className={`text-[8px] ${theme.themeName === "lucagent" ? "text-black/60" : "text-gray-600"} font-mono leading-tight`}
+              className={`text-[8px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-black/60" : "text-gray-600"} font-mono leading-tight`}
             >
               Auto-balancing traffic between cloud and local agents for optimum
               response time.
@@ -562,7 +562,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Ollama Service Card */}
         <motion.div
           variants={item}
-          className={`${theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -573,7 +573,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 }}
               />
               <div
-                className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+                className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
               >
                 Ollama Service
               </div>
@@ -632,10 +632,10 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
       {/* Creativity / Heat Pool */}
       <motion.div
         variants={item}
-        className={`${theme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+        className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
       >
         <div
-          className={`flex justify-between items-center text-[10px] font-bold uppercase tracking-tighter ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-400"}`}
+          className={`flex justify-between items-center text-[10px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"}`}
         >
           <div className="flex items-center gap-2">
             <Zap className="w-3 h-3 text-yellow-500" />
@@ -644,7 +644,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <span
             className="font-mono"
             style={{
-              color: theme.themeName === "lucagent" ? "#000" : theme.hex,
+              color: theme.themeName?.toLowerCase() === "lucagent" ? "#000" : theme.hex,
             }}
           >
             {settings.brain.temperature}
@@ -659,7 +659,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           onChange={(e) =>
             onUpdate("brain", "temperature", parseFloat(e.target.value))
           }
-          className={`w-full h-1 ${theme.themeName === "lucagent" ? "bg-black/10" : "bg-white/10"} rounded-lg appearance-none cursor-pointer`}
+          className={`w-full h-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/10" : "bg-white/10"} rounded-lg appearance-none cursor-pointer`}
           style={{ accentColor: theme.hex }}
         />
       </motion.div>

@@ -60,3 +60,5 @@ __pycache__/
 *$py.class
 cortex/python/venv/
 cortex/python/__pycache__/
+.vercel
+.env*.local

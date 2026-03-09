@@ -206,8 +206,8 @@ export class LucaWorkforce {
       return "ASSISTANT";
     }
 
-    // Default to RUTHLESS for general tasks
-    return "RUTHLESS";
+    // Default to MASTER_SYSTEM for general tasks
+    return "MASTER_SYSTEM";
   }
 
   /**

@@ -204,21 +204,21 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
     <div className="space-y-6">
       {/* Header Info Box */}
       <div
-        className={`text-xs p-3 rounded-lg border ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-700 font-bold" : "backdrop-blur-sm text-gray-400"}`}
+        className={`text-xs p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-700 font-bold" : "backdrop-blur-sm text-gray-400"}`}
         style={{
           backgroundColor:
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? "rgba(0,0,0,0.03)"
               : `${theme.hex}0d`,
           borderColor:
-            theme.themeName === "lucagent"
+            theme.themeName?.toLowerCase() === "lucagent"
               ? "rgba(0,0,0,0.1)"
               : `${theme.hex}33`,
         }}
       >
         <strong
           style={{
-            color: theme.themeName === "lucagent" ? "#4f46e5" : theme.hex,
+            color: theme.themeName?.toLowerCase() === "lucagent" ? "#4f46e5" : theme.hex,
           }}
         >
           MCP Integration:
@@ -231,11 +231,11 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold border transition-all ${theme.themeName === "lucagent" ? "hover:bg-black/[0.03]" : "hover:bg-white/10"}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold border transition-all ${theme.themeName?.toLowerCase() === "lucagent" ? "hover:bg-black/[0.03]" : "hover:bg-white/10"}`}
           style={{
             borderColor:
-              theme.themeName === "lucagent" ? "rgba(0,0,0,0.15)" : theme.hex,
-            color: theme.themeName === "lucagent" ? "#111827" : theme.hex,
+              theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.15)" : theme.hex,
+            color: theme.themeName?.toLowerCase() === "lucagent" ? "#111827" : theme.hex,
           }}
         >
           <Plus className="w-4 h-4" />
@@ -244,7 +244,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
         <button
           onClick={handleSync}
           disabled={loading}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold border transition-all disabled:opacity-50 ${theme.themeName === "lucagent" ? "border-black/10 text-slate-500 hover:bg-black/5" : "border-white/20 text-gray-400 hover:text-white hover:bg-white/10"}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold border transition-all disabled:opacity-50 ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/10 text-slate-500 hover:bg-black/5" : "border-white/20 text-gray-400 hover:text-white hover:bg-white/10"}`}
         >
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           Reconnect All
@@ -254,12 +254,12 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       {/* Add Server Form */}
       {showAddForm && (
         <div
-          className={`p-4 rounded-xl border space-y-4 ${theme.themeName === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "backdrop-blur-sm bg-white/5 border-white/10"}`}
+          className={`p-4 rounded-xl border space-y-4 ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "backdrop-blur-sm bg-white/5 border-white/10"}`}
           style={{
             backgroundColor:
-              theme.themeName === "lucagent" ? undefined : `${theme.hex}0a`,
+              theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}0a`,
             borderColor:
-              theme.themeName === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "rgba(0,0,0,0.1)"
                 : `${theme.hex}33`,
           }}
@@ -284,7 +284,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 setFormData((p) => ({ ...p, name: e.target.value }))
               }
               placeholder="e.g. filesystem, github"
-              className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/30 border-white/10 text-white"} rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none focus:ring-1 transition-all`}
+              className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/30 border-white/10 text-white"} rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none focus:ring-1 transition-all`}
               style={{ focusRing: theme.hex } as any}
             />
           </div>
@@ -304,7 +304,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 }`}
                 style={
                   formData.type === "stdio"
-                    ? theme.themeName === "lucagent"
+                    ? theme.themeName?.toLowerCase() === "lucagent"
                       ? { borderColor: "rgba(0,0,0,0.3)", color: "#1e1b4b" }
                       : { borderColor: theme.hex, color: theme.hex }
                     : {}
@@ -322,7 +322,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 }`}
                 style={
                   formData.type === "sse"
-                    ? theme.themeName === "lucagent"
+                    ? theme.themeName?.toLowerCase() === "lucagent"
                       ? { borderColor: "rgba(0,0,0,0.3)", color: "#1e1b4b" }
                       : { borderColor: theme.hex, color: theme.hex }
                     : {}
@@ -348,7 +348,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     setFormData((p) => ({ ...p, command: e.target.value }))
                   }
                   placeholder="e.g. npx, python3, node"
-                  className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/30 border-white/10 text-white"} rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all`}
+                  className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/30 border-white/10 text-white"} rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all`}
                 />
               </div>
               <div>
@@ -362,7 +362,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     setFormData((p) => ({ ...p, args: e.target.value }))
                   }
                   placeholder="e.g. -y @modelcontextprotocol/server-filesystem /tmp"
-                  className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/30 border-white/10 text-white"} rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all`}
+                  className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/30 border-white/10 text-white"} rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all`}
                 />
               </div>
             </>
@@ -381,7 +381,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                   setFormData((p) => ({ ...p, url: e.target.value }))
                 }
                 placeholder="e.g. https://mcp-server.example.com"
-                className={`w-full ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/30 border-white/10 text-white"} rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all`}
+                className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900" : "bg-black/30 border-white/10 text-white"} rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all`}
               />
             </div>
           )}
@@ -455,7 +455,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           setEnvVars(updated);
                         }}
                         placeholder="KEY"
-                        className={`flex-1 ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 font-bold" : "bg-black/30 border-white/10 text-white"} rounded-lg px-2 py-1.5 text-xs placeholder-gray-600 focus:outline-none font-mono transition-all`}
+                        className={`flex-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 font-bold" : "bg-black/30 border-white/10 text-white"} rounded-lg px-2 py-1.5 text-xs placeholder-gray-600 focus:outline-none font-mono transition-all`}
                       />
                       <input
                         type="password"
@@ -466,7 +466,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           setEnvVars(updated);
                         }}
                         placeholder="value"
-                        className={`flex-1 ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 font-bold" : "bg-black/30 border-white/10 text-white"} rounded-lg px-2 py-1.5 text-xs placeholder-gray-600 focus:outline-none font-mono transition-all`}
+                        className={`flex-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 font-bold" : "bg-black/30 border-white/10 text-white"} rounded-lg px-2 py-1.5 text-xs placeholder-gray-600 focus:outline-none font-mono transition-all`}
                       />
                       <button
                         type="button"
@@ -535,20 +535,20 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             return (
               <div
                 key={server.id}
-                className={`border rounded-xl overflow-hidden transition-all ${theme.themeName === "lucagent" ? "glass-panel-light" : ""}`}
+                className={`border rounded-xl overflow-hidden transition-all ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : ""}`}
                 style={{
                   borderColor: isConnected
-                    ? theme.themeName === "lucagent"
+                    ? theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.15)"
                       : `${theme.hex}40`
-                    : theme.themeName === "lucagent"
+                    : theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.05)"
                       : "rgba(255,255,255,0.1)",
                   backgroundColor: isConnected
-                    ? theme.themeName === "lucagent"
+                    ? theme.themeName?.toLowerCase() === "lucagent"
                       ? undefined
                       : `${theme.hex}08`
-                    : theme.themeName === "lucagent"
+                    : theme.themeName?.toLowerCase() === "lucagent"
                       ? undefined
                       : "rgba(255,255,255,0.02)",
                 }}
@@ -574,12 +574,12 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     </div>
                     <div className="min-w-0">
                       <h4
-                        className={`text-sm font-bold truncate ${theme.themeName === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
+                        className={`text-sm font-bold truncate ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"}`}
                       >
                         {server.name}
                       </h4>
                       <p
-                        className={`text-[10px] truncate ${theme.themeName === "lucagent" ? "text-slate-500 font-bold" : "text-gray-500"}`}
+                        className={`text-[10px] truncate ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-500"}`}
                       >
                         {server.type === "stdio"
                           ? `${server.command} ${(server.args || []).join(" ")}`
@@ -639,7 +639,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                             {serverTools[server.id].map((tool: any) => (
                               <span
                                 key={tool.name}
-                                className={`px-2 py-1 rounded-md text-[10px] border ${theme.themeName === "lucagent" ? "bg-black/[0.03] text-slate-700 border-black/10" : "bg-white/5 text-gray-400 border-white/10"}`}
+                                className={`px-2 py-1 rounded-md text-[10px] border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] text-slate-700 border-black/10" : "bg-white/5 text-gray-400 border-white/10"}`}
                               >
                                 {tool.name}
                               </span>

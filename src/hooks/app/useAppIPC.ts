@@ -440,6 +440,8 @@ export const useAppIPC = ({
         const { waitForAuth } = await import("../../config/api");
         await waitForAuth();
         const res = await fetch(apiUrl("/api/luca-link/status"));
+        // Silently ignore 404s or network errors to prevent console flooding
+        if (!res.ok) return;
         const data = await res.json();
         if (data.status === "running" && !socket) connectSocket();
       } catch {

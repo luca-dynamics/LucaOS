@@ -227,7 +227,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
         <div>
           <h3
-            className={`text-xl font-bold ${theme.themeName === "lucagent" ? "text-gray-900" : "text-white"} tracking-tight uppercase`}
+            className={`text-xl font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"} tracking-tight uppercase`}
           >
             Identity Records
           </h3>
@@ -240,12 +240,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         <div className="flex gap-2">
           <button
             onClick={handleRefresh}
-            className={`px-3 py-1.5 ${theme.themeName === "lucagent" ? "bg-black/5 hover:bg-black/10 border-black/10" : "bg-white/5 hover:bg-white/10 border-white/10"} rounded border flex items-center gap-2 transition-all opacity-80 hover:opacity-100`}
+            className={`px-3 py-1.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 hover:bg-black/10 border-black/10" : "bg-white/5 hover:bg-white/10 border-white/10"} rounded border flex items-center gap-2 transition-all opacity-80 hover:opacity-100`}
             title="Re-sync data"
           >
             <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
             <span
-              className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-gray-600" : "text-gray-300"} uppercase tracking-wider`}
+              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-300"} uppercase tracking-wider`}
             >
               Sync
             </span>
@@ -257,16 +257,16 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 1: Identity Card - Full Width */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "bg-[#0b0606]/40 border-white/10 backdrop-blur-xl"} border rounded-xl p-4 lg:p-5 relative group overflow-hidden h-full shadow-2xl shadow-black/40`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "bg-[#0b0606]/40 border-white/10 backdrop-blur-xl"} border rounded-xl p-4 lg:p-5 relative group overflow-hidden h-full shadow-2xl shadow-black/40`}
           >
             <div className="absolute top-0 right-0 p-4 z-10">
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className={`p-2 rounded-lg transition-all opacity-40 group-hover:opacity-100 ${theme.themeName === "lucagent" ? "hover:bg-black/5 bg-black/[0.02]" : "hover:bg-white/10 bg-white/5"}`}
+                  className={`p-2 rounded-lg transition-all opacity-40 group-hover:opacity-100 ${theme.themeName?.toLowerCase() === "lucagent" ? "hover:bg-black/5 bg-black/[0.02]" : "hover:bg-white/10 bg-white/5"}`}
                 >
                   <Edit3
-                    className={`w-4 h-4 ${theme.themeName === "lucagent" ? "text-slate-600" : "text-gray-300"}`}
+                    className={`w-4 h-4 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-300"}`}
                   />
                 </button>
               ) : (
@@ -300,7 +300,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   />
                 ) : (
                   <User
-                    className={`w-10 h-10 transition-colors ${theme.themeName === "lucagent" ? "text-slate-400 group-hover/photo:text-slate-600" : "text-gray-400 group-hover/photo:text-white"}`}
+                    className={`w-10 h-10 transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-400 group-hover/photo:text-slate-600" : "text-gray-400 group-hover/photo:text-white"}`}
                   />
                 )}
 
@@ -324,11 +324,11 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                         type="text"
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
-                        className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-all shadow-inner ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 focus:ring-black/5" : "bg-white/5 border-white/10 text-white focus:ring-white/20"} border focus:ring-1`}
+                        className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-all shadow-inner ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 focus:ring-black/5" : "bg-white/5 border-white/10 text-white focus:ring-white/20"} border focus:ring-1`}
                       />
                     ) : (
                       <div
-                        className={`text-xl font-bold ${theme.themeName === "lucagent" ? "text-gray-900" : "text-white"} leading-none tracking-tight`}
+                        className={`text-xl font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"} leading-none tracking-tight`}
                       >
                         {profile.identity.name}
                       </div>
@@ -343,11 +343,11 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                         type="text"
                         value={editedDesignation}
                         onChange={(e) => setEditedDesignation(e.target.value)}
-                        className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-all shadow-inner ${theme.themeName === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 focus:ring-black/5" : "bg-white/5 border-white/10 text-white focus:ring-white/20"} border focus:ring-1`}
+                        className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-all shadow-inner ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 focus:ring-black/5" : "bg-white/5 border-white/10 text-white focus:ring-white/20"} border focus:ring-1`}
                       />
                     ) : (
                       <div
-                        className={`text-sm font-medium ${theme.themeName === "lucagent" ? "text-slate-600 font-bold" : "text-gray-400"}`}
+                        className={`text-sm font-medium ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600 font-bold" : "text-gray-400"}`}
                       >
                         {profile.identity.designation || "Not Assigned"}
                       </div>
@@ -361,7 +361,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       Profession
                     </span>
                     <span
-                      className={`text-[11px] font-bold ${theme.themeName === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border inline-block`}
+                      className={`text-[11px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border inline-block`}
                     >
                       {profile.workContext?.profession || "Unknown"}
                     </span>
@@ -371,7 +371,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       Experience
                     </span>
                     <span
-                      className={`text-[11px] font-bold ${theme.themeName === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border inline-block`}
+                      className={`text-[11px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border inline-block`}
                     >
                       {profile.workContext?.skillLevel || "Veteran"}
                     </span>
@@ -381,7 +381,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       Tone
                     </span>
                     <span
-                      className={`text-[11px] font-bold ${theme.themeName === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border capitalize inline-block`}
+                      className={`text-[11px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border capitalize inline-block`}
                     >
                       {profile.personality?.tone || "Natural"}
                     </span>
@@ -395,7 +395,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 2: Partnership Status - Horizontal Layout */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName === "lucagent" ? "glass-panel-light border-black/10" : "bg-white/5 border-white/10"} border rounded-xl p-3 lg:p-4 relative overflow-hidden shadow-xl`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "bg-white/5 border-white/10"} border rounded-xl p-3 lg:p-4 relative overflow-hidden shadow-xl`}
           >
             <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
               {/* Header & Stage */}
@@ -411,7 +411,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   </div>
                   {personality && (
                     <h4
-                      className={`text-lg font-bold ${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"} tracking-tight capitalize leading-none whitespace-nowrap`}
+                      className={`text-lg font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"} tracking-tight capitalize leading-none whitespace-nowrap`}
                     >
                       {personality.relationship.relationshipStage.replace(
                         "_",
@@ -431,7 +431,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   className="text-sm font-bold uppercase whitespace-nowrap"
                   style={{
                     color:
-                      theme.themeName === "lucagent" ? "#4f46e5" : theme.hex,
+                      theme.themeName?.toLowerCase() === "lucagent" ? "#4f46e5" : theme.hex,
                   }}
                 >
                   {personality
@@ -448,10 +448,10 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                     Growth Progress
                   </span>
                   <span
-                    className={`text-xs font-bold font-mono whitespace-nowrap ${theme.themeName === "lucagent" ? "text-gray-700" : ""}`}
+                    className={`text-xs font-bold font-mono whitespace-nowrap ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700" : ""}`}
                     style={{
                       color:
-                        theme.themeName === "lucagent" ? undefined : theme.hex,
+                        theme.themeName?.toLowerCase() === "lucagent" ? undefined : theme.hex,
                     }}
                   >
                     {personality
@@ -464,7 +464,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   </span>
                 </div>
                 <div
-                  className={`h-1.5 ${theme.themeName === "lucagent" ? "bg-black/5" : "bg-white/5"} rounded-full overflow-hidden border border-white/5`}
+                  className={`h-1.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-white/5"} rounded-full overflow-hidden border border-white/5`}
                 >
                   <div
                     className="h-full transition-all duration-1000 ease-out"
@@ -483,7 +483,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                     Confidence
                   </span>
                   <span
-                    className={`text-base font-bold ${theme.themeName === "lucagent" ? "text-gray-900" : "text-white"} font-mono whitespace-nowrap`}
+                    className={`text-base font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"} font-mono whitespace-nowrap`}
                   >
                     {profile.metadata.confidence}%
                   </span>
@@ -493,7 +493,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                     Interactions
                   </span>
                   <span
-                    className={`text-base font-bold ${theme.themeName === "lucagent" ? "text-gray-900" : "text-white"} font-mono whitespace-nowrap`}
+                    className={`text-base font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"} font-mono whitespace-nowrap`}
                   >
                     {personality?.relationship.totalInteractions || 0}
                   </span>
@@ -506,13 +506,13 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 3: Matrix - Standalone */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <Brain className="w-4 h-4 text-gray-400" />
                 <h4
-                  className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-slate-800" : "text-white"} uppercase tracking-widest`}
+                  className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-white"} uppercase tracking-widest`}
                 >
                   Evolution Matrix
                 </h4>
@@ -520,7 +520,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               <div className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
                 System Calibration:{" "}
                 <span
-                  className={`${theme.themeName === "lucagent" ? "text-slate-600 font-bold" : "text-gray-300"}`}
+                  className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600 font-bold" : "text-gray-300"}`}
                 >
                   {personalityService.getCurrentMode()}
                 </span>
@@ -528,7 +528,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
             </div>
 
             <div
-              className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-12 ${theme.themeName === "lucagent" ? "opacity-90" : ""}`}
+              className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-12 ${theme.themeName?.toLowerCase() === "lucagent" ? "opacity-90" : ""}`}
             >
               {personality &&
                 [
@@ -547,22 +547,22 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       <div className="flex justify-between items-end text-[11px] font-mono">
                         <div className="flex items-center gap-2">
                           <Icon
-                            className={`w-3.5 h-3.5 ${theme.themeName === "lucagent" ? "text-gray-400" : "text-gray-500"}`}
+                            className={`w-3.5 h-3.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-400" : "text-gray-500"}`}
                           />
                           <span
-                            className={`${theme.themeName === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-wider`}
+                            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-wider`}
                           >
                             {label}
                           </span>
                         </div>
                         <span
-                          className={`${theme.themeName === "lucagent" ? "text-slate-900" : "text-white"} font-bold text-xs`}
+                          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"} font-bold text-xs`}
                         >
                           {value}
                         </span>
                       </div>
                       <div
-                        className={`h-1.5 ${theme.themeName === "lucagent" ? "bg-black/5" : "bg-white/5"} rounded-full overflow-hidden border ${theme.themeName === "lucagent" ? "border-black/5" : "border-white/5"}`}
+                        className={`h-1.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-white/5"} rounded-full overflow-hidden border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5" : "border-white/5"}`}
                       >
                         <div
                           className="h-full transition-all duration-700 ease-out"
@@ -570,7 +570,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                             width: `${value}%`,
                             backgroundColor: theme.hex,
                             boxShadow:
-                              theme.themeName === "lucagent"
+                              theme.themeName?.toLowerCase() === "lucagent"
                                 ? undefined
                                 : `0 0 10px ${theme.hex}40`,
                           }}
@@ -586,12 +586,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 4: Recent Insights - Standalone List */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
           >
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-4 h-4 text-gray-400" />
               <h4
-                className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
+                className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
               >
                 Recent Insights
               </h4>
@@ -601,18 +601,18 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                 insights.map((insight) => (
                   <div
                     key={insight.id}
-                    className={`group flex gap-3 p-2 ${theme.themeName === "lucagent" ? "bg-black/5 border-black/10 hover:border-black/20" : "bg-white/[0.02] border-white/5 hover:border-white/10"} rounded-md transition-all border`}
+                    className={`group flex gap-3 p-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 hover:border-black/20" : "bg-white/[0.02] border-white/5 hover:border-white/10"} rounded-md transition-all border`}
                   >
                     <div className="min-w-[120px] shrink-0">
                       <div
-                        className={`text-[9px] font-bold ${theme.themeName === "lucagent" ? "text-indigo-600" : "text-white"} uppercase tracking-wider font-mono ${theme.themeName === "lucagent" ? "" : "opacity-50"}`}
+                        className={`text-[9px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-indigo-600" : "text-white"} uppercase tracking-wider font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "" : "opacity-50"}`}
                       >
                         {insight.key.replace(/_/g, " ")}
                       </div>
                     </div>
                     <div className="h-3 w-px bg-white/10 self-center hidden sm:block" />
                     <p
-                      className={`text-[10px] ${theme.themeName === "lucagent" ? "text-gray-800" : "text-gray-400"} leading-relaxed font-mono flex-1 text-justify`}
+                      className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-800" : "text-gray-400"} leading-relaxed font-mono flex-1 text-justify`}
                     >
                       {insight.value}
                     </p>
@@ -630,12 +630,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 5: Development Timeline - Standalone */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
           >
             <div className="flex items-center gap-2 mb-4">
               <Award className="w-4 h-4 text-gray-400" />
               <h4
-                className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
+                className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
               >
                 Development Timeline
               </h4>
@@ -647,7 +647,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                 .map((milestone) => (
                   <div
                     key={milestone.id}
-                    className={`flex items-center gap-4 p-2 ${theme.themeName === "lucagent" ? "bg-black/5 border-black/10" : "bg-white/[0.02] border-white/5"} rounded-lg border`}
+                    className={`flex items-center gap-4 p-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10" : "bg-white/[0.02] border-white/5"} rounded-lg border`}
                   >
                     <div className="min-w-[100px] shrink-0">
                       <div className="text-[9px] font-mono text-gray-500 text-center border-r border-white/10 pr-4">
@@ -655,7 +655,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       </div>
                     </div>
                     <div
-                      className={`text-[10px] ${theme.themeName === "lucagent" ? "text-gray-800" : "text-gray-300"} font-mono leading-normal flex-1`}
+                      className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-800" : "text-gray-300"} font-mono leading-normal flex-1`}
                     >
                       {milestone.description}
                     </div>
@@ -668,43 +668,43 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 6: Assistant Directives - Standalone */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
           >
             <div className="flex items-center gap-2 mb-6">
               <Settings className="w-4 h-4 text-gray-400" />
               <h4
-                className={`text-xs font-bold ${theme.themeName === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
+                className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
               >
                 Assistant Directives
               </h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
               <div
-                className={`${theme.themeName === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
+                className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
               >
                 <span className="block text-[9px] text-gray-500 uppercase tracking-widest mb-2 font-mono">
                   Preferred Persona
                 </span>
                 <span
-                  className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-gray-700 bg-black/10 border-black/10" : "text-white bg-white/10 border-white/5"} px-2 py-1 rounded block border truncate font-mono uppercase`}
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/10 border-black/10" : "text-white bg-white/10 border-white/5"} px-2 py-1 rounded block border truncate font-mono uppercase`}
                 >
                   {profile.assistantPreferences?.preferredPersona || "NEUTRAL"}
                 </span>
               </div>
               <div
-                className={`${theme.themeName === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
+                className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
               >
                 <span className="block text-[9px] text-gray-500 uppercase tracking-widest mb-2 font-mono">
                   Detail Level
                 </span>
                 <span
-                  className={`text-[10px] font-bold ${theme.themeName === "lucagent" ? "text-gray-700 bg-black/10 border-black/10" : "text-white bg-white/10 border-white/5"} px-2 py-1 rounded block border capitalize truncate font-mono uppercase`}
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/10 border-black/10" : "text-white bg-white/10 border-white/5"} px-2 py-1 rounded block border capitalize truncate font-mono uppercase`}
                 >
                   {profile.assistantPreferences?.detailLevel || "CONCISE"}
                 </span>
               </div>
               <div
-                className={`${theme.themeName === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
+                className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
               >
                 <span className="block text-[9px] text-gray-500 uppercase tracking-widest mb-2 font-mono">
                   Interests Observed
@@ -739,14 +739,14 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
       {showEnrollModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div
-            className={`${theme.themeName === "lucagent" ? "bg-white shadow-2xl" : "bg-[#0b0606] shadow-2xl"} border rounded-2xl w-full max-w-lg overflow-hidden flex flex-col`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white shadow-2xl" : "bg-[#0b0606] shadow-2xl"} border rounded-2xl w-full max-w-lg overflow-hidden flex flex-col`}
             style={{
               borderColor:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "rgba(0,0,0,0.1)"
                   : `${theme.hex}33`,
               boxShadow:
-                theme.themeName === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? undefined
                   : `0 0 40px -10px ${theme.hex}22`,
             }}

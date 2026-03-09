@@ -263,23 +263,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           isMobile
             ? "max-w-[95vw] h-[60vh] rounded-2xl"
             : "max-w-3xl h-[500px] rounded-xl"
-        } ${liveTheme.themeName === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border ${
+        } ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border ${
           liveTheme.primary
         } flex flex-row overflow-hidden transition-colors duration-300 shadow-[0_0_50px_-20px_rgba(0,0,0,0.5)]`}
         style={{
           boxShadow: `0 0 50px -20px rgba(0,0,0,0.5)`,
           border:
-            liveTheme.themeName === "lucagent"
+            liveTheme.themeName?.toLowerCase() === "lucagent"
               ? "1px solid rgba(0,0,0,0.1)"
               : `1px solid ${liveTheme.hex}33`,
         }}
       >
         {/* Unified Sidebar Navigation */}
         <div
-          className={`${liveTheme.themeName === "lucagent" ? "bg-white/80" : "bg-black/20"} flex flex-col shrink-0 ${isMobile ? "w-20" : "w-56"}`}
+          className={`${liveTheme.themeName?.toLowerCase() === "lucagent" ? "bg-white/80" : "bg-black/20"} flex flex-col shrink-0 ${isMobile ? "w-20" : "w-56"}`}
           style={{
             borderRight:
-              liveTheme.themeName === "lucagent"
+              liveTheme.themeName?.toLowerCase() === "lucagent"
                 ? "1px solid rgba(0,0,0,0.05)"
                 : `1px solid ${liveTheme.hex}33`,
           }}
@@ -289,7 +289,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             className={`flex items-center gap-2 ${isMobile ? "p-4 justify-center" : "p-5"}`}
             style={{
               borderBottom:
-                liveTheme.themeName === "lucagent"
+                liveTheme.themeName?.toLowerCase() === "lucagent"
                   ? "1px solid rgba(0,0,0,0.05)"
                   : `1px solid ${liveTheme.hex}33`,
             }}
@@ -320,25 +320,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => setActiveTab(tab.id)}
                   style={{
                     color: isActive
-                      ? liveTheme.themeName === "lucagent"
+                      ? liveTheme.themeName?.toLowerCase() === "lucagent"
                         ? "#0f172a"
                         : liveTheme.hex
-                      : liveTheme.themeName === "lucagent"
+                      : liveTheme.themeName?.toLowerCase() === "lucagent"
                         ? "#475569"
                         : "#9ca3af",
                     backgroundColor: isActive
-                      ? liveTheme.themeName === "lucagent"
+                      ? liveTheme.themeName?.toLowerCase() === "lucagent"
                         ? "rgba(0,0,0,0.05)"
                         : "rgba(255,255,255,0.05)"
                       : "transparent",
                     borderColor: isActive
-                      ? liveTheme.themeName === "lucagent"
+                      ? liveTheme.themeName?.toLowerCase() === "lucagent"
                         ? "rgba(0,0,0,0.1)"
                         : liveTheme.hex
                       : "transparent",
                   }}
                   title={tab.label}
-                  className={`w-full flex items-center rounded-lg border border-transparent transition-all ${liveTheme.themeName === "lucagent" ? "hover:bg-black/5" : "hover:bg-white/5"} ${
+                  className={`w-full flex items-center rounded-lg border border-transparent transition-all ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "hover:bg-black/5" : "hover:bg-white/5"} ${
                     isMobile
                       ? "flex-col justify-center py-3 px-1 gap-1"
                       : "flex-row gap-3 p-2.5"
@@ -373,17 +373,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Content Header (Desktop Only) */}
           {!isMobile && (
             <div
-              className={`p-5 flex justify-between items-center ${liveTheme.themeName === "lucagent" ? "bg-black/[0.02]" : "bg-white/5"}`}
+              className={`p-5 flex justify-between items-center ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02]" : "bg-white/5"}`}
               style={{ borderBottom: `1px solid ${liveTheme.hex}33` }}
             >
               <h3
-                className={`text-lg font-bold ${liveTheme.themeName === "lucagent" ? "text-gray-900" : "text-gray-200"}`}
+                className={`text-lg font-bold ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-gray-200"}`}
               >
                 {TABS.find((t) => t.id === activeTab)?.label}
               </h3>
               <button
                 onClick={onClose}
-                className={`${liveTheme.themeName === "lucagent" ? "text-gray-400 hover:text-gray-900" : "text-gray-500 hover:text-white"} transition-colors`}
+                className={`${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-gray-400 hover:text-gray-900" : "text-gray-500 hover:text-white"} transition-colors`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -479,12 +479,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Footer Actions */}
           <div
-            className={`p-4 ${liveTheme.themeName === "lucagent" ? "bg-black/5" : "bg-black/40"} flex justify-between items-center ${
+            className={`p-4 ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-black/40"} flex justify-between items-center ${
               isMobile ? "pb-8" : ""
             }`}
             style={{
               borderTop:
-                liveTheme.themeName === "lucagent"
+                liveTheme.themeName?.toLowerCase() === "lucagent"
                   ? "1px solid rgba(0,0,0,0.05)"
                   : `1px solid ${liveTheme.hex}33`,
             }}
@@ -499,7 +499,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="flex gap-2 md:gap-3">
               <button
                 onClick={onClose}
-                className={`px-4 py-2 rounded text-xs ${liveTheme.themeName === "lucagent" ? "text-gray-500 hover:text-gray-900 hover:bg-black/5" : "text-gray-400 hover:text-white hover:bg-white/10"} transition-colors`}
+                className={`px-4 py-2 rounded text-xs ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500 hover:text-gray-900 hover:bg-black/5" : "text-gray-400 hover:text-white hover:bg-white/10"} transition-colors`}
               >
                 {/* On Personality tab, 'Cancel' is just 'Close' since it saves internally */}
                 {/* Reverted: Unified Save uses Cancel for all tabs */}
@@ -510,11 +510,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 disabled={loading}
                 style={{
                   borderColor:
-                    liveTheme.themeName === "lucagent"
+                    liveTheme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.1)"
                       : liveTheme.hex,
                   backgroundColor:
-                    liveTheme.themeName === "lucagent"
+                    liveTheme.themeName?.toLowerCase() === "lucagent"
                       ? "#0f172a"
                       : `${liveTheme.hex}20`,
                   color: "#ffffff",
