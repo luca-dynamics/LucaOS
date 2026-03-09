@@ -80,20 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Smooth Scroll for Anchor Links ---
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
-            if (this.classList.contains('coming-soon-btn')) return; // handled below
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-        });
-    });
-
-    // --- Coming Soon Buttons ---
-    document.querySelectorAll('.coming-soon-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            alert("Coming Soon..");
         });
     });
 
