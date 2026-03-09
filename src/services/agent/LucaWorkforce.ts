@@ -206,8 +206,8 @@ export class LucaWorkforce {
       return "ASSISTANT";
     }
 
-    // Default to MASTER_SYSTEM for general tasks
-    return "MASTER_SYSTEM";
+    // Default to LUCAGENT for general tasks
+    return "LUCAGENT";
   }
 
   /**

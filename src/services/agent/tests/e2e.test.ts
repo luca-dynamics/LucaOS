@@ -16,7 +16,7 @@ export async function test1_SimpleFileWorkflow() {
   try {
     const workflowId = await lucaWorkforce.startWorkflow(
       "Read package.json file and list its dependencies",
-      "."
+      ".",
     );
 
     console.log(`✅ Workflow started: ${workflowId}`);
@@ -82,7 +82,7 @@ export async function test2_ToolSelection() {
 
       const workflowId = await lucaWorkforce.startWorkflow(
         test.description,
-        "."
+        ".",
       );
 
       await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -94,19 +94,19 @@ export async function test2_ToolSelection() {
       }
 
       const hasExpectedPersona = status.tasks.some(
-        (t) => t.persona === test.expectedPersona
+        (t) => t.persona === test.expectedPersona,
       );
 
       console.log(
         `  Expected persona (${test.expectedPersona}): ${
           hasExpectedPersona ? "✅" : "❌"
-        }`
+        }`,
       );
 
       if (!hasExpectedPersona) {
         console.warn(
           `  Warning: Expected ${test.expectedPersona}, got:`,
-          status.tasks.map((t) => t.persona)
+          status.tasks.map((t) => t.persona),
         );
       }
     }
@@ -148,9 +148,9 @@ export async function test3_AccessControl() {
         shouldSucceed: true,
       },
       {
-        persona: "MASTER_SYSTEM",
+        persona: "LUCAGENT",
         tool: "osintDarkWebScan",
-        shouldSucceed: true, // MASTER_SYSTEM has everything
+        shouldSucceed: true, // LUCAGENT has everything
       },
     ];
 
@@ -158,7 +158,7 @@ export async function test3_AccessControl() {
       const result = await agentToolBridge.executeTool(
         test.tool,
         {},
-        test.persona as any
+        test.persona as any,
       );
 
       const actualSuccess = result.success;
@@ -171,7 +171,7 @@ export async function test3_AccessControl() {
       console.log(
         `${passed ? "✅" : "❌"} ${test.persona} + ${test.tool}: ` +
           `expected ${test.shouldSucceed ? "allowed" : "denied"}, ` +
-          `got ${accessGranted ? "allowed" : "denied"}`
+          `got ${accessGranted ? "allowed" : "denied"}`,
       );
 
       if (!passed) {
@@ -198,7 +198,7 @@ export async function test4_ParallelExecution() {
 
     const workflowId = await lucaWorkforce.startWorkflow(
       "Read package.json, check security, and create documentation",
-      "."
+      ".",
     );
 
     // Wait for completion
@@ -218,7 +218,7 @@ export async function test4_ParallelExecution() {
     const hasParallelGroups = status.parallelGroups.length > 1;
 
     console.log(
-      `Parallel execution detected: ${hasParallelGroups ? "✅" : "⚠️"}`
+      `Parallel execution detected: ${hasParallelGroups ? "✅" : "⚠️"}`,
     );
 
     console.log("\n✅ TEST 4 PASSED\n");
@@ -240,7 +240,7 @@ export async function test5_ErrorHandling() {
     const result = await agentToolBridge.executeTool(
       "readFile",
       { path: "../../../etc/passwd" }, // Should be blocked
-      "ENGINEER"
+      "ENGINEER",
     );
 
     const blocked =
@@ -275,13 +275,13 @@ export async function test6_ToolStats() {
     console.log(`  ENGINEER: ${stats.toolsByPersona.ENGINEER}`);
     console.log(`  HACKER: ${stats.toolsByPersona.HACKER}`);
     console.log(`  ASSISTANT: ${stats.toolsByPersona.ASSISTANT}`);
-    console.log(`  MASTER_SYSTEM: ${stats.toolsByPersona.MASTER_SYSTEM}`);
+    console.log(`  LUCAGENT: ${stats.toolsByPersona.LUCAGENT}`);
 
-    // Verify MASTER_SYSTEM has most tools
-    const ruthlessHasAll =
-      stats.toolsByPersona.MASTER_SYSTEM >= stats.totalTools * 0.9;
+    // Verify LUCAGENT has most tools
+    const lucagentHasAll =
+      stats.toolsByPersona.LUCAGENT >= stats.totalTools * 0.9;
 
-    console.log(`\nMASTER_SYSTEM has full access: ${ruthlessHasAll ? "✅" : "❌"}`);
+    console.log(`\nLUCAGENT has full access: ${lucagentHasAll ? "✅" : "❌"}`);
 
     console.log("\n✅ TEST 6 PASSED\n");
     return true;
@@ -315,12 +315,12 @@ export async function runAllTests() {
 
   Object.entries(results).forEach(([name, result]) => {
     console.log(
-      `${result ? "✅" : "❌"} ${name}: ${result ? "PASSED" : "FAILED"}`
+      `${result ? "✅" : "❌"} ${name}: ${result ? "PASSED" : "FAILED"}`,
     );
   });
 
   console.log(
-    `\n${passed}/${total} tests passed (${Math.round((passed / total) * 100)}%)`
+    `\n${passed}/${total} tests passed (${Math.round((passed / total) * 100)}%)`,
   );
 
   if (passed === total) {
