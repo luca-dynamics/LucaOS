@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { apiUrl } from "../config/api";
 import { settingsService } from "../services/settingsService";
 
@@ -128,7 +128,7 @@ export const CameraSentry: React.FC<CameraSentryProps> = ({
     // Also, handling "instruction" which is now passed in.
 
     const visionModel =
-      settingsService.get("brain")?.visionModel || "gemini-2.0-flash";
+      settingsService.get("brain")?.visionModel || "gemini-3-flash-preview";
 
     fetch(`${apiUrl}/api/vision/sentry-analyze`, {
       method: "POST",

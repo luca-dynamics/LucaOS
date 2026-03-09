@@ -42,7 +42,7 @@ export class VisionManager {
       },
       insight: {
         provider: "gemini",
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         apiKey: geminiApiKey,
         baseUrl: "https://generativelanguage.googleapis.com/v1beta",
       },
@@ -52,7 +52,7 @@ export class VisionManager {
         baseUrl: CORTEX_URL,
         fallback: {
           provider: "gemini",
-          model: "gemini-2.0-flash",
+          model: "gemini-3-flash-preview",
           apiKey: geminiApiKey,
           baseUrl: "https://generativelanguage.googleapis.com/v1beta",
         },

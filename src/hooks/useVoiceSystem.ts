@@ -16,7 +16,7 @@ export function useVoiceSystem() {
     "user" | "model"
   >("user");
   const [voiceModel, setVoiceModel] = useState<string>(
-    settingsService.get("voice")?.sttModel || "gemini-2.0-flash",
+    settingsService.get("voice")?.sttModel || "gemini-3-flash-preview",
   );
   const [isVadActive, setIsVadActive] = useState(false);
   const [voiceSearchResults, setVoiceSearchResults] = useState<any | null>(

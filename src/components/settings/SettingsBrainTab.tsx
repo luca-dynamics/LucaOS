@@ -73,11 +73,11 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
 
   const applyPreset = async (type: "performance" | "balanced" | "privacy") => {
     if (type === "performance") {
-      onUpdate("brain", "model", "gemini-3.1-pro-high");
-      onUpdate("brain", "visionModel", "gemini-3.1-pro-low");
-      onUpdate("brain", "memoryModel", "gemini-2.0-flash");
+      onUpdate("brain", "model", "gemini-3.1-pro-preview");
+      onUpdate("brain", "visionModel", "gemini-3.1-pro-preview");
+      onUpdate("brain", "memoryModel", "gemini-2.5-flash");
     } else if (type === "balanced") {
-      onUpdate("brain", "model", "gemini-3-flash");
+      onUpdate("brain", "model", "gemini-3-flash-preview");
 
       const bestVision = await modelManager.getOptimalModel(
         "vision",
@@ -232,7 +232,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               style={{
                 borderColor:
                   (preset.id === "performance" &&
-                    settings.brain.model === "gemini-3-pro-preview") ||
+                    settings.brain.model === "gemini-3.1-pro-preview") ||
                   (preset.id === "balanced" &&
                     settings.brain.model === "gemini-3-flash-preview" &&
                     !settings.brain.visionModel.startsWith("gemini")) ||
@@ -251,7 +251,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 style={{
                   color:
                     (preset.id === "performance" &&
-                      settings.brain.model === "gemini-3-pro-preview") ||
+                      settings.brain.model === "gemini-3.1-pro-preview") ||
                     (preset.id === "balanced" &&
                       settings.brain.model === "gemini-3-flash-preview" &&
                       !settings.brain.visionModel.startsWith("gemini")) ||
@@ -310,11 +310,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             <select
               value={(() => {
                 const knownModels = [
-                  "gemini-3.1-pro-high",
-                  "gemini-3.1-pro-low",
-                  "gemini-3-pro-high",
-                  "gemini-3-pro-low",
-                  "gemini-3-flash",
+                  "gemini-3.1-pro-preview",
+                  "gemini-3.1-flash-lite-preview",
+                  "gemini-3-flash-preview",
+                  "gemini-2.5-pro",
+                  "gemini-2.5-flash",
+                  "gemini-2.5-flash-lite",
                   "claude-4.5-sonnet",
                   "claude-4.5-sonnet-thinking",
                   "claude-4.6-sonnet-thinking",
@@ -330,15 +331,20 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
             >
               <optgroup label="Cloud Intelligence (Managed)">
-                <option value="gemini-3.1-pro-high">
-                  Gemini 3.1 Pro (High) New
+                <option value="gemini-3.1-pro-preview">
+                  Gemini 3.1 Pro (Preview)
                 </option>
-                <option value="gemini-3.1-pro-low">
-                  Gemini 3.1 Pro (Low) New
+                <option value="gemini-3.1-flash-lite-preview">
+                  Gemini 3.1 Flash-Lite (Preview)
                 </option>
-                <option value="gemini-3-pro-high">Gemini 3 Pro (High)</option>
-                <option value="gemini-3-pro-low">Gemini 3 Pro (Low)</option>
-                <option value="gemini-3-flash">Gemini 3 Flash</option>
+                <option value="gemini-3-flash-preview">
+                  Gemini 3 Flash (Preview)
+                </option>
+                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-2.5-flash-lite">
+                  Gemini 2.5 Flash-Lite
+                </option>
                 <option value="claude-4.5-sonnet">Claude Sonnet 4.5</option>
                 <option value="claude-4.5-sonnet-thinking">
                   Claude Sonnet 4.5 (Thinking)
@@ -367,11 +373,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             {/* Custom Model Input Logic */}
             {(() => {
               const knownModels = [
-                "gemini-3.1-pro-high",
-                "gemini-3.1-pro-low",
-                "gemini-3-pro-high",
-                "gemini-3-pro-low",
-                "gemini-3-flash",
+                "gemini-3.1-pro-preview",
+                "gemini-3.1-flash-lite-preview",
+                "gemini-3-flash-preview",
+                "gemini-2.5-pro",
+                "gemini-2.5-flash",
+                "gemini-2.5-flash-lite",
                 "claude-4.5-sonnet",
                 "claude-4.5-sonnet-thinking",
                 "claude-4.6-sonnet-thinking",
@@ -446,7 +453,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 <option value="gemini-3-flash-preview">
                   Gemini 3 Flash (RECOMMENDED)
                 </option>
-                <option value="gemini-3-pro-preview">Gemini 3 Pro</option>
+                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
               </optgroup>
               {localVisionModels.length > 0 && (
                 <optgroup label="Local Vision (Offline)">
@@ -491,14 +498,14 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             based on your session history.
           </p>
           <select
-            value={settings.brain.memoryModel || "gemini-1.5-pro"}
+            value={settings.brain.memoryModel || "gemini-2.5-flash"}
             onChange={(e) => onUpdate("brain", "memoryModel", e.target.value)}
             className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
           >
             <optgroup label="Cloud Embedding (Fast)">
               <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-              <option value="gemini-2.0-flash">
-                Gemini 2.0 Flash (RECOMMENDED)
+              <option value="gemini-2.5-flash">
+                Gemini 2.5 Flash (RECOMMENDED)
               </option>
             </optgroup>
             {localEmbeddingModels.length > 0 && (
@@ -644,7 +651,10 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <span
             className="font-mono"
             style={{
-              color: theme.themeName?.toLowerCase() === "lucagent" ? "#000" : theme.hex,
+              color:
+                theme.themeName?.toLowerCase() === "lucagent"
+                  ? "#000"
+                  : theme.hex,
             }}
           >
             {settings.brain.temperature}

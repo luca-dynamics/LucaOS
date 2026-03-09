@@ -63,7 +63,7 @@ export interface ToolExecutionContext {
   // Context
   displayId?: number; // Origin Display ID (for Widget interactions)
   sessionId?: string; // Active conversation session ID
-  visionModel?: string; // e.g. "gemini-3-flash" or "ui-tars"
+  visionModel?: string; // e.g. "gemini-3-flash-preview" or "ui-tars"
 }
 
 export interface ToolHandler {

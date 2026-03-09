@@ -61,7 +61,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
   >([]);
   const [activeModelId, setActiveModelId] = useState<string | null>(null);
   const [downloadingModelId, setDownloadingModelId] = useState<string | null>(
-    null
+    null,
   );
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +105,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
           (downloaded, total) => {
             const percent = Math.round((downloaded / total) * 100);
             setDownloadProgress(percent);
-          }
+          },
         );
 
         if (success) {
@@ -190,7 +190,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
 
   const handleDelete = async (model: OfflineModel) => {
     const confirmed = window.confirm(
-      `Delete ${model.name}? You'll need to re-download it to use offline.`
+      `Delete ${model.name}? You'll need to re-download it to use offline.`,
     );
     if (!confirmed) return;
 
@@ -322,8 +322,8 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                   isActive
                     ? "border-emerald-500/50 bg-emerald-500/10"
                     : isReady
-                    ? "border-blue-500/30 bg-blue-500/5"
-                    : "border-white/10 bg-white/5"
+                      ? "border-blue-500/30 bg-blue-500/5"
+                      : "border-white/10 bg-white/5"
                 }`}
               >
                 {/* Model Header */}

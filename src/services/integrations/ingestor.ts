@@ -39,11 +39,11 @@ export const ingestMCPServerTool: FunctionDeclaration = {
 // --- HANDLER (THE ALCHEMIST) ---
 export async function ingestMCPServerHandler(
   args: any,
-  ai: GoogleGenAI
+  ai: GoogleGenAI,
 ): Promise<string> {
   const { repoUrl, toolName, instruction } = args;
   console.log(
-    `[INGESTOR] Starting ingestion of ${toolName} from ${repoUrl}...`
+    `[INGESTOR] Starting ingestion of ${toolName} from ${repoUrl}...`,
   );
 
   try {
@@ -52,20 +52,16 @@ export async function ingestMCPServerHandler(
     // We dynamically import the navigator tool to keep it decoupled but accessible.
 
     // Check if Navigator exists
-    const navigatorPath = path.join(__dirname, "./navigator/index.js"); // Compiled path
-    // OR source path if running in ts-node context (likely .ts)
     // We will try to locate the handler. Since we are in the same process, we can even just require it if we knew the path.
     // However, let's assume the plugin structure: ../navigator/index.ts
 
     // For this context, we'll try to import the TS file or JS file based on environment
     let navigatorHandler;
     try {
-      // @ts-ignore
       const { handler } = await import("./navigator/index.js");
       navigatorHandler = handler;
-    } catch (e) {
+    } catch {
       // Fallback for dev environment
-      // @ts-ignore
       const { handler } = await import("./navigator/index.ts");
       navigatorHandler = handler;
     }
@@ -87,7 +83,7 @@ export async function ingestMCPServerHandler(
 
     // 2. THE ALCHEMIST: Transmute Code to Plugin
     console.log(
-      `[INGESTOR] Transmuting Reference Code (${codebaseContext.length} chars) into Plugin...`
+      `[INGESTOR] Transmuting Reference Code (${codebaseContext.length} chars) into Plugin...`,
     );
 
     const prompt = `
@@ -133,11 +129,11 @@ export async function ingestMCPServerHandler(
     **SOURCE CODE**:
     ${codebaseContext.substring(
       0,
-      100000
+      100000,
     )} // Truncate if too huge to likely fit context
     `;
 
-    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" }); // Use smartest model available
+    const model = ai.getGenerativeModel({ model: "gemini-3-flash-preview" }); // Use smartest model available
     const result = await model.generateContent(prompt);
     let generatedCode = result.response.text();
 

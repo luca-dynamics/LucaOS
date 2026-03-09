@@ -440,24 +440,68 @@ class SettingsService extends EventEmitter {
           merged.v1betaMigrationComplete = true;
         }
 
-        // --- DEPRECATED MODEL HOTFIX (March 2026) ---
-        // Ensure users are not stuck on deprecated 2.0 or 2.5 models
-        const isDeprecated = (m: string) =>
-          m?.includes("2.5") || m?.includes("2.0");
+        // --- DEPRECATED MODEL HOTFIX (March 2026 Update) ---
+        // Ensure users are not stuck on deprecated 1.5, 2.0, or 2.5 models.
+        const isDeprecatedOrBroken = (modelId: string) => {
+          if (!modelId) return true; // Empty string is broken
+          const brokenIds = [
+            "gemini-2.0-flash", // Deprecated per Google docs mapping
+            "gemini-2.0-flash-lite", // Deprecated
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-3.1-pro-high", // Unofficial IDs
+            "gemini-3.1-pro-low",
+            "gemini-3-pro-high",
+            "gemini-3-pro-low",
+            "gemini-2.0-flash-exp",
+            "gemini-2.5-flash-native-audio-preview-12-2025", // Should be 'models/...'
+            "models/gemini-live-2.5-flash-native-audio", // Legacy incorrect format
+          ];
+
+          // DO NOT wipe local models!
+          const localModels = [
+            "gemma-2b",
+            "phi-3-mini",
+            "llama-3.2-1b",
+            "smollm2-1.7b",
+            "qwen-2.5-7b",
+            "deepseek-r1-distill-7b",
+            "smolvlm-500m",
+            "ui-tars-2b",
+            "piper-amy",
+            "supertonic-2",
+            "kokoro-82m",
+            "pocket-tts",
+            "whisper-tiny",
+            "moonshine-tiny",
+            "sensevoice-small",
+            "distil-whisper-medium-en",
+            "whisper-v3-turbo",
+            "model2vec-potion",
+            "mxbai-embed-xsmall",
+            "bge-small-en",
+            "mxbai-embed-large",
+            "nomic-embed-text",
+          ];
+          if (localModels.includes(modelId)) return false;
+
+          return brokenIds.includes(modelId);
+        };
         if (
-          isDeprecated(merged.brain.model) ||
-          isDeprecated(merged.brain.voiceModel) ||
-          isDeprecated(merged.brain.visionModel)
+          isDeprecatedOrBroken(merged.brain.model) ||
+          isDeprecatedOrBroken(merged.brain.voiceModel) ||
+          isDeprecatedOrBroken(merged.brain.visionModel)
         ) {
           console.log(
-            "[SETTINGS] Correcting deprecated model references to Gemini 3...",
+            "[SETTINGS] Migrating deprecated model references to stable 2026 Gemini Suite...",
           );
-          if (isDeprecated(merged.brain.model))
+          if (isDeprecatedOrBroken(merged.brain.model))
             merged.brain.model = BRAIN_CONFIG.defaults.brain;
-          if (isDeprecated(merged.brain.visionModel))
+          if (isDeprecatedOrBroken(merged.brain.visionModel))
             merged.brain.visionModel = BRAIN_CONFIG.defaults.vision;
-          if (isDeprecated(merged.brain.voiceModel))
+          if (isDeprecatedOrBroken(merged.brain.voiceModel))
             merged.brain.voiceModel = BRAIN_CONFIG.defaults.voice;
+
           this.saveSettings(merged);
         }
 

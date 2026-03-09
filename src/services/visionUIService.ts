@@ -22,7 +22,7 @@ class VisionUIService {
   async findElement(
     screenshot: string, // base64 image
     uiTree: UINode[],
-    description: string
+    description: string,
   ): Promise<ElementSearchResult> {
     try {
       const ai = getGenClient();
@@ -64,7 +64,7 @@ INSTRUCTIONS:
 CRITICAL: Return ONLY the JSON object, no other text.`;
 
       const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: [
           {
             role: "user",
@@ -122,7 +122,7 @@ CRITICAL: Return ONLY the JSON object, no other text.`;
     screenshot: string,
     uiTree: UINode[],
     description: string,
-    limit: number = 3
+    limit: number = 3,
   ): Promise<ElementSearchResult[]> {
     try {
       const ai = getGenClient();
@@ -151,7 +151,7 @@ Return JSON array of matches:
 ]`;
 
       const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: [
           {
             role: "user",
@@ -198,7 +198,7 @@ Return JSON array of matches:
   async verifyElement(
     screenshot: string,
     nodeId: string,
-    expectedDescription: string
+    expectedDescription: string,
   ): Promise<boolean> {
     try {
       const ai = getGenClient();
@@ -206,7 +206,7 @@ Return JSON array of matches:
       const prompt = `Is there a "${expectedDescription}" visible in this screenshot? Answer only: YES or NO`;
 
       const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: [
           {
             role: "user",

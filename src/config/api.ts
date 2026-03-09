@@ -105,24 +105,18 @@ if (typeof window !== "undefined") {
       };
     }
 
-    try {
-      const response = await originalFetch(resource, config);
-      return response;
-    } catch (error) {
-      // Suppress network errors (like ERR_CONNECTION_REFUSED) for polling endpoints
-      // to prevent massive console flooding in Cloud-Only mode when the server isn't there.
-      if (
-        url.includes("/api/luca-link/status") ||
-        url.includes("/api/status")
-      ) {
-        // Return a fake 404 response so the app's `res.ok` checks fail silently
-        return new Response(null, {
-          status: 404,
-          statusText: "Not Found (Suppressed)",
-        });
-      }
-      throw error;
+    // 2. Suppress console noise for polling endpoints in Cloud-Only mode
+    if (url.includes("/api/luca-link/status") || url.includes("/api/status")) {
+      // In Cloud mode (no linked desktop), we know the local backend isn't there.
+      // We return a fake 404 immediately WITHOUT calling originalFetch.
+      // This prevents the browser from logging a red network error to the console.
+      return new Response(null, {
+        status: 404,
+        statusText: "Not Found (Suppressed)",
+      });
     }
+
+    return originalFetch(resource, config);
   };
 }
 

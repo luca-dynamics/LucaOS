@@ -119,7 +119,7 @@ Return JSON:
       }
 
       const intent = "insight";
-      const targetModel = options.model || "gemini-2.0-flash";
+      const targetModel = options.model || "gemini-3-flash-preview";
 
       // Standardizing Gemini config for analysis
       (visionManager as any).updateConfig({

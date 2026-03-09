@@ -11,11 +11,11 @@ export const BRAIN_CONFIG = {
 
   // Global Default Models (Stable IDs)
   defaults: {
-    brain: "gemini-3-flash", // Default for chat and reasoning
-    vision: "gemini-3-flash", // Default for visual understanding
-    voice: "models/gemini-3-flash", // Default for Live audio (Live API requires models/ prefix)
-    memory: "mxbai-embed-xsmall", // Default for local memory indexing
-    embedding: "mxbai-embed-xsmall", // Default for local vector indexing
+    brain: "gemini-3-flash-preview", // Stable Gemini 3 for reasoning and chat
+    vision: "gemini-3-flash-preview", // Stable Gemini 3 for visual understanding
+    voice: "models/gemini-2.5-flash-native-audio-preview-12-2025", // Flagship Live API model
+    memory: "mxbai-embed-xsmall",
+    embedding: "mxbai-embed-xsmall",
   },
 
   // Managed Cloud Discovery (Stable mapping for UI Labels)
@@ -24,11 +24,13 @@ export const BRAIN_CONFIG = {
       name: "Google Gemini",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta",
       models: {
-        "3.1-pro-high": "gemini-3.1-pro-high",
-        "3.1-pro-low": "gemini-3.1-pro-low",
-        "3-pro-high": "gemini-3-pro-high",
-        "3-pro-low": "gemini-3-pro-low",
-        "3-flash": "gemini-3-flash",
+        "3.1-pro-preview": "gemini-3.1-pro-preview",
+        "3.1-flash-lite": "gemini-3.1-flash-lite-preview",
+        "3-flash-preview": "gemini-3-flash-preview",
+        "3-flash": "gemini-3-flash-preview",
+        "2.5-pro": "gemini-2.5-pro",
+        "2.5-flash": "gemini-2.5-flash",
+        "2.5-flash-lite": "gemini-2.5-flash-lite",
       },
     },
     anthropic: {

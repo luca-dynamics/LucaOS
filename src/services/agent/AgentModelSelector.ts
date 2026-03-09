@@ -84,63 +84,63 @@ export class AgentModelSelector {
 
     // CLOUD BRAIN MODELS (Paid, Slower, Higher Quality)
     this.registerModel({
-      name: "Gemini 3.1 Pro (High)",
+      name: "Gemini 3.1 Pro",
       type: "cloud",
       category: "brain",
-      cost: 0.0015,
+      cost: 0.002,
       speed: 6,
       quality: 10,
       complexity: 10,
       available: !!settings.brain.geminiApiKey,
-      modelId: "gemini-3.1-pro-high",
+      modelId: "gemini-3.1-pro-preview",
     });
 
     this.registerModel({
-      name: "Gemini 3.1 Pro (Low)",
+      name: "Gemini 3.1 Flash-Lite",
       type: "cloud",
       category: "brain",
-      cost: 0.0005,
-      speed: 7,
-      quality: 9,
-      complexity: 10,
-      available: !!settings.brain.geminiApiKey,
-      modelId: "gemini-3.1-pro-low",
-    });
-
-    this.registerModel({
-      name: "Gemini 3 Pro (High)",
-      type: "cloud",
-      category: "brain",
-      cost: 0.001,
-      speed: 6,
-      quality: 9,
-      complexity: 10,
-      available: !!settings.brain.geminiApiKey,
-      modelId: "gemini-3-pro-high",
-    });
-
-    this.registerModel({
-      name: "Gemini 3 Pro (Low)",
-      type: "cloud",
-      category: "brain",
-      cost: 0.0005,
-      speed: 7,
+      cost: 0.00025,
+      speed: 9,
       quality: 8,
       complexity: 8,
       available: !!settings.brain.geminiApiKey,
-      modelId: "gemini-3-pro-low",
+      modelId: "gemini-3.1-flash-lite-preview",
     });
 
     this.registerModel({
       name: "Gemini 3 Flash",
       type: "cloud",
       category: "brain",
-      cost: 0.00015, // Per 1k tokens
+      cost: 0.0005,
       speed: 8,
       quality: 9,
-      complexity: 10, // Can handle anything
+      complexity: 10,
       available: !!settings.brain.geminiApiKey,
-      modelId: "gemini-3-flash",
+      modelId: "gemini-3-flash-preview",
+    });
+
+    this.registerModel({
+      name: "Gemini 2.5 Pro",
+      type: "cloud",
+      category: "brain",
+      cost: 0.002,
+      speed: 6,
+      quality: 9,
+      complexity: 9,
+      available: !!settings.brain.geminiApiKey,
+      modelId: "gemini-2.5-pro",
+    });
+
+    this.registerModel({
+      name: "Gemini 2.5 Flash",
+      type: "cloud",
+      category: "brain",
+      cost: 0.00015,
+      speed: 8,
+      quality: 8,
+      complexity: 8,
+      available: !!settings.brain.geminiApiKey,
+      modelId: "gemini-2.5-flash",
     });
 
     this.registerModel({
