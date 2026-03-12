@@ -13,7 +13,7 @@ const isValidGeminiKey = (key: string | null | undefined): key is string => {
   );
 };
 
-const getApiKey = () => {
+export const getApiKey = () => {
   // 1. Check Settings Service
   const brainSettings = settingsService.get("brain");
   const settingsKey = brainSettings?.geminiApiKey;

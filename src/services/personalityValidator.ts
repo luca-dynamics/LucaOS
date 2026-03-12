@@ -25,8 +25,6 @@ class PersonalityValidator {
     response: string,
     persona: PersonaType,
   ): PersonalityValidation {
-    const violations: string[] = [];
-
     switch (persona) {
       case "RUTHLESS":
         return this.validateRuthless(response);
@@ -36,6 +34,8 @@ class PersonalityValidator {
         return this.validateAssistant(response);
       case "HACKER":
         return this.validateHacker(response);
+      case "LOCALCORE":
+        return this.validateLocalCore(response);
       case "DICTATION":
         return { isValid: true, violations: [], severity: "low" }; // No validation for dictation
       default:
@@ -161,6 +161,29 @@ class PersonalityValidator {
   }
 
   /**
+   * Validate LOCALCORE persona
+   * Local-only, privacy-focused, technical
+   */
+  private validateLocalCore(response: string): PersonalityValidation {
+    const violations: string[] = [];
+
+    // Should NOT mention cloud or external services positively
+    if (/cloud|external|online|server-side|streaming/i.test(response)) {
+      if (!/offline|local-only|disconnected/i.test(response)) {
+        violations.push(
+          "Mentions external/cloud services (violation of local-only core)",
+        );
+      }
+    }
+
+    return {
+      isValid: violations.length === 0,
+      violations,
+      severity: violations.length > 0 ? "high" : "low",
+    };
+  }
+
+  /**
    * Fix response to match persona
    */
   fixResponse(response: string, persona: PersonaType): string {
@@ -171,6 +194,8 @@ class PersonalityValidator {
         return this.fixEngineer(response);
       case "HACKER":
         return this.fixHacker(response);
+      case "LOCALCORE":
+        return this.fixLocalCore(response);
       default:
         return response;
     }
@@ -237,6 +262,20 @@ class PersonalityValidator {
     fixed = fixed.replace(/Certainly/gi, "fs");
     fixed = fixed.replace(/I understand/gi, "bet");
     fixed = fixed.replace(/Affirmative/gi, "alr");
+
+    return fixed;
+  }
+
+  /**
+   * Fix LOCALCORE response
+   */
+  private fixLocalCore(response: string): string {
+    let fixed = response;
+
+    // Ensure it mentions local/privacy mission if suspicious
+    if (!/local|privacy|secure|offline/i.test(fixed)) {
+      fixed = `[LOCAL_CORE_SECURE]: ${fixed}`;
+    }
 
     return fixed;
   }

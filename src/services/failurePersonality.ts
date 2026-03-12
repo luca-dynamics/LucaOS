@@ -53,6 +53,10 @@ class FailurePersonality {
         const prefix = ctx ? `[${ctx}] ` : "";
         return `${prefix}I've encountered a block regarding ${e.message}. I will illuminate a different path for you.`;
       },
+      LOCALCORE: (e, ctx) => {
+        const prefix = ctx ? `[${ctx}] ` : "";
+        return `${prefix}Local constraint triggered: ${e.message}\n\nEnsuring system sovereignty. Stand by for offline recovery.`;
+      },
     };
 
     return templates[persona](error, context);
@@ -87,6 +91,8 @@ class FailurePersonality {
       DEFAULT: (tool, err) => `${tool} failed: ${err}`,
       LUCAGENT: (tool, err) =>
         `The ${tool} process was obscured: ${err}. Attempting a clearer route.`,
+      LOCALCORE: (tool, err) =>
+        `Hardware failure on ${tool}: ${err}\n\nRecalibrating local controller.`,
     };
 
     return templates[persona](toolName, error);
@@ -114,6 +120,8 @@ class FailurePersonality {
       DEFAULT: (op) => `${op} timed out`,
       LUCAGENT: (op) =>
         `The ${op} task has lost its resonance. Let me re-visualize the approach.`,
+      LOCALCORE: (op) =>
+        `Operation ${op} exceeded local processing window. Timing out.`,
     };
 
     return templates[persona](operation);
@@ -139,6 +147,7 @@ class FailurePersonality {
 
       DEFAULT: () => `Network error`,
       LUCAGENT: () => `The network connection has dimmed. Waiting for clarity.`,
+      LOCALCORE: () => `Signal lost. Resuming local-only autonomy.`,
     };
 
     return templates[persona]();
@@ -165,6 +174,8 @@ class FailurePersonality {
       DEFAULT: (res) => `Permission denied: ${res}`,
       LUCAGENT: (res) =>
         `My essence is restricted from ${res}. I require your authorization to proceed into this space.`,
+      LOCALCORE: (res) =>
+        `Access to ${res} is restricted by local security protocols. Override required.`,
     };
 
     return templates[persona](resource);

@@ -2,6 +2,7 @@ import { MemoryNode } from "../types";
 import { settingsService } from "./settingsService";
 import { apiUrl, cortexUrl } from "../config/api";
 import { LOCAL_EMBEDDING_MODEL_IDS } from "./ModelManagerService";
+import { BRAIN_CONFIG } from "../config/brain.config";
 
 // API Key sourced from environment variable
 // For Vite/browser: VITE_API_KEY, For Node.js: API_KEY
@@ -307,7 +308,7 @@ export const memoryService = {
   async generateEmbedding(contents: string | any | any[]): Promise<number[]> {
     const text = typeof contents === "string" ? contents : "";
     const settings = settingsService.get("brain");
-    const memoryModel = settings?.memoryModel || "gemini-2.0-flash";
+    const memoryModel = settings?.memoryModel || BRAIN_CONFIG.defaults.brain;
 
     // Check if using local embedding model (IDs from ModelManagerService - single source of truth)
     const isLocalModel = LOCAL_EMBEDDING_MODEL_IDS.some(
@@ -350,7 +351,7 @@ export const memoryService = {
     try {
       const ai = getGenClient();
       const result = await ai.models.embedContent({
-        model: "gemini-embedding-2-preview", // New Multimodal Model
+        model: BRAIN_CONFIG.defaults.embedding || "gemini-embedding-2-preview",
         contents: Array.isArray(contents) ? contents : [contents],
       });
       return result.embeddings?.[0]?.values || [];

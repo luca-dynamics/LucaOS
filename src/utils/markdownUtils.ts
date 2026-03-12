@@ -47,6 +47,11 @@ export function getBoldBoxColors(persona: PersonaType): {
       border: "rgba(17, 24, 39, 0.2)",
       text: "#111827",
     },
+    LOCALCORE: {
+      bg: "rgba(15, 23, 42, 0.3)",
+      border: "rgba(15, 23, 42, 0.6)",
+      text: "#94a3b8",
+    },
   };
 
   return colorMap[persona] || colorMap.RUTHLESS;
@@ -58,7 +63,7 @@ export function getBoldBoxColors(persona: PersonaType): {
  */
 export function renderMarkdown(
   text: string,
-  persona: PersonaType = "RUTHLESS",
+  _persona: PersonaType = "RUTHLESS",
 ): string {
   if (!text) return "";
 

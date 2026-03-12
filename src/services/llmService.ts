@@ -10,7 +10,8 @@
  */
 
 import { FunctionDeclaration } from "@google/genai";
-import { HARDCODED_API_KEY } from "./lucaService";
+import { BRAIN_CONFIG } from "../config/brain.config";
+import { getApiKey } from "./genAIClient";
 
 // --- LLM PROVIDER INTERFACE ---
 export interface LLMProvider {
@@ -43,9 +44,9 @@ class GeminiProvider implements LLMProvider {
   model: string;
   private apiKey: string;
 
-  constructor(model: string = "gemini-pro") {
+  constructor(model: string = BRAIN_CONFIG.defaults.brain) {
     this.model = model;
-    this.apiKey = HARDCODED_API_KEY;
+    this.apiKey = getApiKey();
   }
 
   supportsFunctions = true;
@@ -59,8 +60,9 @@ class GeminiProvider implements LLMProvider {
   ): Promise<string> {
     try {
       // Use fetch API directly for now (simpler than SDK)
+      const apiKey = getApiKey();
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`,
+        `${BRAIN_CONFIG.providers.gemini.baseUrl}/models/${this.model}:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -93,8 +95,9 @@ class GeminiProvider implements LLMProvider {
     options?: LLMGenerateOptions,
   ): AsyncGenerator<string> {
     try {
+      const apiKey = getApiKey();
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:streamGenerateContent?key=${this.apiKey}`,
+        `${BRAIN_CONFIG.providers.gemini.baseUrl}/models/${this.model}:streamGenerateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

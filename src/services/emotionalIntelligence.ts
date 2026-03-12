@@ -179,6 +179,8 @@ class EmotionalIntelligence {
       DEFAULT: "** USER IS FRUSTRATED - BE CONCISE AND SOLUTION-FOCUSED **",
       LUCAGENT:
         "** USER FRUSTRATION DETECTED - REMAIN CLEAR AND ENLIGHTENING **",
+      LOCALCORE:
+        "** USER FRUSTRATION DETECTED - PRIORITIZE SECURITY AND LOCAL STABILITY **",
     };
 
     return addenda[persona];
@@ -212,6 +214,7 @@ class EmotionalIntelligence {
       DICTATION: "",
       DEFAULT: "** URGENT REQUEST - PRIORITIZE SPEED **",
       LUCAGENT: "** URGENT REQUEST - PRIORITIZE SPEED AND CLARITY **",
+      LOCALCORE: "** URGENT REQUEST - PRIORITIZE SPEED AND DATA SOVEREIGNTY **",
     };
 
     return addenda[persona];
@@ -240,6 +243,7 @@ class EmotionalIntelligence {
       DICTATION: "",
       DEFAULT: "** USER NEEDS HELP - BE SUPPORTIVE **",
       LUCAGENT: "** USER STUCK - PROVIDE CLARIFYING GUIDANCE **",
+      LOCALCORE: "** USER STUCK - PROVIDE STABLE LOCAL ALTERNATIVES **",
     };
 
     return addenda[persona];

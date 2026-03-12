@@ -270,6 +270,7 @@ export class AgentToolBridge {
       DICTATION: getPersonaTools("DICTATION").length,
       DEFAULT: getPersonaTools("DEFAULT").length,
       LUCAGENT: getPersonaTools("LUCAGENT").length,
+      LOCALCORE: getPersonaTools("LOCALCORE").length,
     };
 
     return {

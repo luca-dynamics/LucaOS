@@ -80,6 +80,15 @@ const VOICE_PROFILES: Record<PersonaType, VoiceProfile> = {
     signOff: ["Walk in light", "I am with you"],
     transitions: ["Illuminating", "Revealing", "Finding clarity in"],
   },
+  LOCALCORE: {
+    acknowledgments: [
+      "Direct connection established",
+      "Hardware verified",
+      "Understood",
+    ],
+    signOff: ["Local core standing by", "Privacy shield active"],
+    transitions: ["Accessing local registry", "Analyzing hardware state"],
+  },
 };
 
 type TaskType = "command" | "query" | "conversation";
