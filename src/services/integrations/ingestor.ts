@@ -1,5 +1,4 @@
-import { Type, FunctionDeclaration } from "@google/genai";
-import { GoogleGenerativeAI as GoogleGenAI } from "@google/generative-ai";
+import { Type, FunctionDeclaration, GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -133,9 +132,11 @@ export async function ingestMCPServerHandler(
     )} // Truncate if too huge to likely fit context
     `;
 
-    const model = ai.getGenerativeModel({ model: "gemini-3-flash-preview" }); // Use smartest model available
-    const result = await model.generateContent(prompt);
-    let generatedCode = result.response.text();
+    const result = await ai.models.generateContent({
+      model: "gemini-2.0-flash-exp", // Correct model ID for new SDK
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+    let generatedCode = result.text || "";
 
     // Clean Markdown
     generatedCode = generatedCode

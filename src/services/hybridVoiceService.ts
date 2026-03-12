@@ -22,6 +22,10 @@ export interface HybridVoiceConfig {
   onVadChange?: (active: boolean) => void;
   onStatusUpdate?: (status: string) => void;
   onConnectionChange?: (connected: boolean) => void;
+  sttModel?: string;
+  llmModel?: string;
+  ttsVoice?: string;
+  systemPrompt?: string;
 }
 
 const DEFAULT_CONFIG: HybridVoiceConfig = {};
@@ -308,6 +312,17 @@ class HybridVoiceService {
         update();
       })
       .catch((err) => console.error("[VOICE] Mic error:", err));
+  }
+
+  /**
+   * Send text to the voice pipeline (manually trigger response)
+   */
+  async sendText(text: string): Promise<void> {
+    if (!this.isConnected) return;
+    this.lastTranscript = text;
+    this.isProcessing = true;
+    await this.processVoiceInput();
+    this.isProcessing = false;
   }
 
   disconnect(): void {

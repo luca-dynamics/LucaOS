@@ -78,12 +78,6 @@ class TranslationService {
     text: string,
     speaker: "user" | "model",
   ): Promise<string> {
-    const model = this.ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    // In INTERPRETER mode, we need to decide the target language based on speaker
-    // For simplicity in MVP, we assume user speaks sourceLanguage and model speaks targetLanguage
-    // or vice versa if they are the other person.
-
     const target = this.state.targetLanguage;
     const source =
       this.state.sourceLanguage === "auto"
@@ -98,8 +92,12 @@ class TranslationService {
     Return ONLY the translated text.
     Text: "${text}"`;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
+    const result = await this.ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+
+    return (result.text || "").trim();
   }
 
   private broadcastResult(
