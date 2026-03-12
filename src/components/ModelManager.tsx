@@ -23,12 +23,14 @@ import {
   Brain,
   Zap,
   FlaskConical,
+  Shield,
 } from "lucide-react";
 import {
   modelManager,
   LocalModel,
   ModelManagerService,
 } from "../services/ModelManagerService";
+import { settingsService } from "../services/settingsService";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -388,10 +390,12 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                               onClick={() => handleSetActive(model.id)}
                               className={`flex-1 transition-all text-[9px] font-medium py-1 rounded flex items-center justify-center gap-1.5 border ${
                                 activeModelId === model.id
-                                  ? theme.themeName?.toLowerCase() === "lucagent"
+                                  ? theme.themeName?.toLowerCase() ===
+                                    "lucagent"
                                     ? "bg-black/10 text-slate-900 border-black/20"
                                     : "bg-white/10 text-white border-white/20"
-                                  : theme.themeName?.toLowerCase() === "lucagent"
+                                  : theme.themeName?.toLowerCase() ===
+                                      "lucagent"
                                     ? "bg-transparent text-slate-500 border-transparent hover:bg-black/5"
                                     : "bg-transparent text-gray-400 border-transparent hover:bg-white/5"
                               }`}
@@ -456,6 +460,13 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
   useEffect(() => {
     // Only check on desktop
     if (platform !== "desktop") return;
+
+    // Global Guard
+    if (!settingsService.isLocalDiscoveryEnabled()) {
+      setOllamaStatus({ available: false, models: [], checked: true });
+      return;
+    }
+
     const checkOllama = async () => {
       try {
         const resp = await fetch("http://127.0.0.1:11434/api/tags", {
@@ -539,7 +550,9 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
           <div className="flex items-center gap-3">
             <div
               className={`p-2 rounded-lg ${
-                theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-white/5"
+                theme.themeName?.toLowerCase() === "lucagent"
+                  ? "bg-black/5"
+                  : "bg-white/5"
               }`}
             >
               <Zap size={16} style={{ color: theme.hex }} />
@@ -604,6 +617,51 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                 } animate-pulse`}
               >
                 Scanning for Ollama...
+              </div>
+            ) : !settingsService.isLocalDiscoveryEnabled() ? (
+              /* Discovery Disabled */
+              <div
+                className={`rounded-lg p-4 border text-center ${
+                  theme.themeName?.toLowerCase() === "lucagent"
+                    ? "border-black/5 bg-black/[0.02]"
+                    : "border-white/5 bg-white/[0.02]"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <Shield size={18} className="text-gray-500" />
+                  <div>
+                    <p
+                      className={`text-xs font-semibold mb-1 ${
+                        theme.themeName?.toLowerCase() === "lucagent"
+                          ? "text-slate-800"
+                          : "text-gray-200"
+                      }`}
+                    >
+                      Local Discovery Disabled
+                    </p>
+                    <p
+                      className={`text-[9px] mb-3 ${
+                        theme.themeName?.toLowerCase() === "lucagent"
+                          ? "text-slate-500"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      Background pings are disabled for privacy. Click below to
+                      scan your hardware for local models.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      settingsService.setLocalDiscoveryOverride(true);
+                      window.location.reload(); // Refresh to trigger mount effects
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-[10px] font-bold shadow-lg shadow-blue-500/20"
+                    style={{ backgroundColor: theme.hex }}
+                  >
+                    <RefreshCw size={12} />
+                    Scan Hardware
+                  </button>
+                </div>
               </div>
             ) : !ollamaStatus.available ? (
               /* Not Installed — Show Download Card */

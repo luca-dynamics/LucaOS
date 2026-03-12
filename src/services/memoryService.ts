@@ -301,10 +301,11 @@ export const memoryService = {
   },
 
   /**
-   * Generate Embedding Vector for text using configured model (Cloud or Local)
+   * Generate Embedding Vector for text/multimodal content using configured model (Cloud or Local)
    * HYBRID: Routes to Cortex for local models, Gemini API for cloud models
    */
-  async generateEmbedding(text: string): Promise<number[]> {
+  async generateEmbedding(contents: string | any | any[]): Promise<number[]> {
+    const text = typeof contents === "string" ? contents : "";
     const settings = settingsService.get("brain");
     const memoryModel = settings?.memoryModel || "gemini-2.0-flash";
 
@@ -349,8 +350,8 @@ export const memoryService = {
     try {
       const ai = getGenClient();
       const result = await ai.models.embedContent({
-        model: "gemini-embedding-001", // Unified stable cloud model
-        contents: text,
+        model: "gemini-embedding-2-preview", // New Multimodal Model
+        contents: Array.isArray(contents) ? contents : [contents],
       });
       return result.embeddings?.[0]?.values || [];
     } catch (e: any) {
@@ -1581,7 +1582,9 @@ export const memoryService = {
    * MEM0: Manually trigger a memory synapse (Reconciliation)
    */
   async runSynapse() {
-    console.log("[MEMORY] Synapsing intelligence matrix...");
+    console.log("--------------------------------------------------");
+    console.log("[MEMORY] ⚡ SYNAPSE TRIGGERED: Reconciling Intelligence...");
+    console.log("--------------------------------------------------");
 
     // 1. Clean expired sessions
     this.cleanExpiredSessions();
@@ -1599,6 +1602,10 @@ export const memoryService = {
       // Cortex (Python) handles its own sync via sync_master_to_rag
       // but we can poke it if needed via a health check which triggers logic.
     }
+
+    console.log("--------------------------------------------------");
+    console.log("[MEMORY] ✅ SYNAPSE COMPLETE: Intelligence Matrix Balanced.");
+    console.log("--------------------------------------------------");
 
     return true;
   },

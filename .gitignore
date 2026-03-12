@@ -37,7 +37,7 @@ coverage/
 *.lcov
 
 # Large model files (use Git LFS if needed)
-models/
+!public/models/**
 *.onnx
 *.onnx.json
 

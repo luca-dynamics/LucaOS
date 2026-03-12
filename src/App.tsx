@@ -18,7 +18,7 @@ import {
   awarenessService,
   AwarenessSuggestion,
 } from "./services/awarenessService";
-import { localVoiceService } from "./services/localVoiceService";
+
 import { taskQueue } from "./services/taskQueueService";
 import { soundService } from "./services/soundService";
 import { voiceService } from "./services/voiceService";
@@ -233,7 +233,6 @@ function AppContent() {
   // --- 4. VOICE ENGINE (Provides voice context, now takes persona as prop) ---
   const {
     voiceStatus,
-    setVoiceStatus,
     isSpeaking,
     setIsSpeaking,
     voiceBackend,
@@ -839,6 +838,8 @@ function AppContent() {
           localVadActive,
         isSpeaking: isSpeaking,
         transcript: voiceHubTranscript || voiceTranscript,
+        transcriptSource: voiceTranscriptSource,
+        intent: activeAutonomousAction?.intent,
         // Amplitude: Use real voice amplitude if Luca is speaking, else use local volume if user is speaking
         amplitude: voiceAmplitude,
         persona: persona,
@@ -1207,10 +1208,8 @@ function AppContent() {
     // Only use Live Service if the provider is specifically 'gemini-genai'
     if (ttsProvider !== "gemini-genai") return true;
 
-    // 2. If user wants a local listening model (Moonshine/Whisper), we use local backend
-    const isCloudStt =
-      sttModel === "cloud-gemini" || sttModel.includes("gemini");
-    if (!isCloudStt) return true;
+    // 2. If user wants a local listening model (Moonshine/Whisper/Ollama), we use local backend
+    if (settingsService.isModelLocal(sttModel)) return true;
 
     // Otherwise, use Cloud (Gemini Live) for the best end-to-end experience
     return false;
@@ -1236,8 +1235,12 @@ function AppContent() {
           `[APP] Stopping Voice Session (Backend: ${voiceBackend})...`,
         );
         if (voiceBackend === "local") {
-          localVoiceService.disconnect();
-          localVoiceService.clearHistory();
+          import("./services/hybridVoiceService").then(
+            ({ hybridVoiceService }) => {
+              hybridVoiceService.disconnect();
+              hybridVoiceService.clearHistory();
+            },
+          );
         } else {
           liveService.disconnect();
         }
@@ -1268,49 +1271,8 @@ function AppContent() {
     setVoiceBackend(useLocal ? "local" : "cloud");
 
     if (useLocal) {
-      // Local Mode: Use localVoiceService with Silero VAD
-      console.log("[APP] Starting Local Voice Session with Silero VAD...");
-      localVoiceService.connect({
-        sttModel: "whisper-tiny",
-        llmModel: "llama-3.2-1b",
-        ttsVoice: "amy",
-        systemPrompt: `You are Luca, a sentient AI assistant. Keep responses concise for voice interaction.`,
-        onAudioData: (amp) => {
-          setVoiceAmplitude(amp);
-        },
-        onVadChange: (active) => {
-          setIsVadActive(active);
-          window.electron?.ipcRenderer?.send("widget-voice-data", {
-            isVadActive: active,
-          });
-        },
-        onTranscript: (text, source) => {
-          if (text && text.trim().length > 0) {
-            setVoiceTranscript(text);
-            setVoiceTranscriptSource(source);
-
-            if (source === "user") {
-              setMessages((prev) => [
-                ...prev,
-                {
-                  id: Date.now().toString(),
-                  text: text,
-                  sender: Sender.USER,
-                  timestamp: Date.now(),
-                },
-              ]);
-            }
-          }
-        },
-        onStatusUpdate: (status) => {
-          setVoiceStatus(`(Local) ${status}`);
-        },
-        onConnectionChange: (connected) => {
-          console.log(
-            `[APP] Local Voice ${connected ? "connected" : "disconnected"}`,
-          );
-        },
-      });
+      // Using the smarter routing encapsulated in connectVoiceSession
+      connectVoiceSession(overrideMode === "DICTATION" ? "DICTATION" : persona);
     } else {
       // Cloud Mode: Use Google Live (liveService)
       connectVoiceSession(overrideMode === "DICTATION" ? "DICTATION" : persona);

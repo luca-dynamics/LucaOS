@@ -16,6 +16,7 @@ import { DeviceType } from "./deviceCapabilityService";
 import { ToolRegistry } from "./toolRegistry";
 import { resolveContentSource } from "./contentSourceService";
 import { settingsService } from "./settingsService";
+import { screenCaptureService } from "./screenCaptureService";
 import { BRAIN_CONFIG } from "../config/brain.config.ts";
 import { personalityService } from "./personalityService";
 import {
@@ -110,15 +111,28 @@ class LucaService {
     this.ai = getGenClient();
     this.provider = ProviderFactory.createProvider(
       settingsService.get("brain"),
+      settingsService.get("general")?.persona,
     );
 
     // Listen for setting changes (API Key, Model, Temperature, Theme/Persona)
-    settingsService.on("settings-changed", (newSettings) => {
+    settingsService.on("settings-changed", async (newSettings) => {
       // Re-get client to ensure we have the latest one if key changed
       this.ai = getGenClient();
 
-      // Update Provider
-      this.provider = ProviderFactory.createProvider(newSettings.brain);
+      // Update Provider with Smart Fallback health checks
+      try {
+        this.provider = await ProviderFactory.createHealthyProvider(
+          newSettings.brain,
+          newSettings.general?.persona,
+        );
+      } catch (error) {
+        console.error("[LUCA] Failed to re-negotiate healthy provider:", error);
+        // Fallback to sync version if async fails
+        this.provider = ProviderFactory.createProvider(
+          newSettings.brain,
+          newSettings.general?.persona,
+        );
+      }
 
       // --- Decoupled Persona & Theme Logic ---
       const gen = newSettings.general;
@@ -1262,6 +1276,7 @@ RETURN ONLY THE REPLACED CODE FOR THE SELECTION. DO NOT RETURN MARKDOWN BLOCKS O
     onChunk: (chunk: string) => void,
     onToolCall: (name: string, args: any) => Promise<any>,
     currentCwd?: string,
+    abortSignal?: AbortSignal,
   ): Promise<any> {
     // Force re-init if session is marked dirty
     if (this.sessionDirty || this.localHistory.length === 0) {
@@ -1280,6 +1295,24 @@ RETURN ONLY THE REPLACED CODE FOR THE SELECTION. DO NOT RETURN MARKDOWN BLOCKS O
     }
 
     // Update context if new image provided
+    if (imageBase64 === "CAPTURED") {
+      try {
+        console.log("[LUCA] Triggering Proactive Screen Capture...");
+        const capture = await screenCaptureService.capture();
+        if (capture.success && capture.imageBuffer) {
+          imageBase64 = screenCaptureService.imageBufferToBase64(
+            capture.imageBuffer,
+          );
+        } else {
+          console.warn("[LUCA] Proactive capture failed:", capture.error);
+          imageBase64 = null;
+        }
+      } catch (e) {
+        console.error("[LUCA] Screen capture crash:", e);
+        imageBase64 = null;
+      }
+    }
+
     if (imageBase64) {
       this.currentImageContext = imageBase64;
     }
@@ -1425,6 +1458,10 @@ USER: ${message}`;
 
     try {
       while (keepGenerating && turnCount < MAX_TURNS) {
+        if (abortSignal?.aborted) {
+          console.log("[STREAM] Generation aborted by signal");
+          break;
+        }
         keepGenerating = false;
         turnCount++;
 
@@ -1505,6 +1542,7 @@ USER: ${message}`;
           });
 
           for await (const chunk of streamResult) {
+            if (abortSignal?.aborted) break;
             // Check for function calls FIRST
             const calls = chunk.functionCalls;
             if (calls && calls.length > 0) {

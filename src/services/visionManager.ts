@@ -1,4 +1,5 @@
 import { CORTEX_URL } from "../config/api";
+import { settingsService } from "./settingsService";
 
 export type VisionIntent = "planning" | "insight" | "action";
 
@@ -31,7 +32,21 @@ export class VisionManager {
   }
 
   private getDefaultConfig(): VisionManagerConfig {
-    const geminiApiKey = (process.env as any).GEMINI_API_KEY;
+    const { brain } = settingsService.getSettings();
+    const geminiApiKey = brain.geminiApiKey || "";
+
+    // Industrial Vision Routing:
+    // We prioritize the specific vision model setting.
+    // If it's a local model (e.g. ui-tars), we use CORTEX_URL.
+    const selectedVisionModel = brain.visionModel || "gemini-3-flash-preview";
+    const isLocal = settingsService.isModelLocal(selectedVisionModel);
+
+    const defaultCloud: VisionProviderConfig = {
+      provider: "gemini",
+      model: "gemini-3-flash-preview",
+      apiKey: geminiApiKey,
+      baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+    };
 
     return {
       planning: {
@@ -39,23 +54,23 @@ export class VisionManager {
         model: "gemini-2.0-flash-thinking-exp",
         apiKey: geminiApiKey,
         baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        fallback: defaultCloud,
       },
       insight: {
         provider: "gemini",
         model: "gemini-3-flash-preview",
         apiKey: geminiApiKey,
         baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        fallback: defaultCloud,
       },
       action: {
-        provider: "ui-tars",
-        model: "ui-tars",
-        baseUrl: CORTEX_URL,
-        fallback: {
-          provider: "gemini",
-          model: "gemini-3-flash-preview",
-          apiKey: geminiApiKey,
-          baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-        },
+        provider: isLocal ? "ui-tars" : "gemini",
+        model: selectedVisionModel,
+        apiKey: isLocal ? undefined : geminiApiKey,
+        baseUrl: isLocal
+          ? CORTEX_URL
+          : "https://generativelanguage.googleapis.com/v1beta",
+        fallback: defaultCloud,
       },
     };
   }
@@ -111,8 +126,16 @@ export class VisionManager {
     const prompt = this.buildPrompt(instruction, intent);
 
     if (config.provider === "gemini") {
+      const apiKey = config.apiKey || (process.env as any).GEMINI_API_KEY;
+
+      if (!apiKey) {
+        throw new Error(
+          "Gemini API key missing for vision analysis. Please configure in settings.",
+        );
+      }
+
       const resp = await fetch(
-        `${config.baseUrl}/models/${config.model}:generateContent?key=${config.apiKey}`,
+        `${config.baseUrl}/models/${config.model}:generateContent?key=${apiKey}`,
         {
           method: "POST",
           body: JSON.stringify({

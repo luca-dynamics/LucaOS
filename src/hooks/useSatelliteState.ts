@@ -5,12 +5,14 @@ import { settingsService } from "../services/settingsService";
 
 export interface SatelliteState {
   transcript: string;
+  transcriptSource: "user" | "model";
   isListening: boolean;
   isSpeaking: boolean;
   amplitude: number;
   persona: PersonaType;
   status?: string;
   themeHex?: string;
+  intent?: string | null;
 }
 
 /**
@@ -37,6 +39,7 @@ export const useSatelliteState = (
 
     return {
       transcript: "",
+      transcriptSource: "user",
       isListening: false,
       isSpeaking: false,
       amplitude: 0,
@@ -69,6 +72,7 @@ export const useSatelliteState = (
             ({
               ...prev,
               transcript: data.transcript ?? prev.transcript,
+              transcriptSource: data.transcriptSource ?? prev.transcriptSource,
               isListening:
                 data.isVadActive ?? data.isListening ?? prev.isListening,
               isSpeaking: data.isSpeaking ?? prev.isSpeaking,
@@ -76,6 +80,7 @@ export const useSatelliteState = (
               persona: (data.persona as PersonaType) ?? prev.persona,
               status: data.status ?? prev.status,
               themeHex: data.themeHex ?? prev.themeHex,
+              intent: data.intent ?? prev.intent,
             }) as SatelliteState,
         );
       };

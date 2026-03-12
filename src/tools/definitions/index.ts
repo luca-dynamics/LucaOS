@@ -22,3 +22,4 @@ export * from "./iot.tools";
 export * from "./vision.tools";
 export * from "./sentry.tools";
 export * from "./education.tools";
+export * from "./configuration.tools";

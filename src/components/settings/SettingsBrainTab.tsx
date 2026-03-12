@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   Shield,
   Cpu,
-  Eye,
   Database,
   Activity,
   Zap,
@@ -11,7 +10,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { LucaSettings } from "../../services/settingsService";
-import { ModelManager } from "../ModelManager";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 
 interface SettingsBrainTabProps {
@@ -31,7 +29,6 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
 }) => {
   // Load local models
   const [localBrainModels, setLocalBrainModels] = useState<LocalModel[]>([]);
-  const [localVisionModels, setLocalVisionModels] = useState<LocalModel[]>([]);
   const [localEmbeddingModels, setLocalEmbeddingModels] = useState<
     LocalModel[]
   >([]);
@@ -41,9 +38,6 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
       const models = await modelManager.getModels();
       setLocalBrainModels(
         models.filter((m) => m.category === "brain" && m.status === "ready"),
-      );
-      setLocalVisionModels(
-        models.filter((m) => m.category === "vision" && m.status === "ready"),
       );
       setLocalEmbeddingModels(
         models.filter(
@@ -56,11 +50,6 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
     const unsubscribe = modelManager.subscribe((allModels) => {
       setLocalBrainModels(
         allModels.filter((m) => m.category === "brain" && m.status === "ready"),
-      );
-      setLocalVisionModels(
-        allModels.filter(
-          (m) => m.category === "vision" && m.status === "ready",
-        ),
       );
       setLocalEmbeddingModels(
         allModels.filter(
@@ -340,7 +329,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 <option value="gemini-3-flash-preview">
                   Gemini 3 Flash (Preview)
                 </option>
-                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                 <option value="gemini-2.5-flash-lite">
                   Gemini 2.5 Flash-Lite
@@ -421,60 +410,6 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 </motion.div>
               ) : null;
             })()}
-          </div>
-        </motion.div>
-
-        {/* Vision Card */}
-        <motion.div
-          variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
-        >
-          <div className="flex items-center justify-between">
-            <Eye className="w-4 h-4" style={{ color: theme.hex }} />
-            <div className="text-[9px] font-mono text-gray-500 uppercase">
-              Vision & Multimodal
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div
-              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-tighter`}
-            >
-              Vision Engine
-            </div>
-            <p className="text-[9px] text-gray-500 leading-tight">
-              Controls screenshots, screen analysis, and spatial reasoning.
-            </p>
-            <select
-              value={settings.brain.visionModel || "gemini-3-flash-preview"}
-              onChange={(e) => onUpdate("brain", "visionModel", e.target.value)}
-              className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
-            >
-              <optgroup label="Cloud Vision (Managed)">
-                <option value="gemini-3-flash-preview">
-                  Gemini 3 Flash (RECOMMENDED)
-                </option>
-                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-              </optgroup>
-              {localVisionModels.length > 0 && (
-                <optgroup label="Local Vision (Offline)">
-                  {localVisionModels.map((m) => {
-                    const isIntelMac = (window as any).luca?.isIntelMac;
-                    const isWindows = (window as any).luca?.isWindows;
-                    const isRestricted =
-                      (isIntelMac || isWindows) && m.id === "ui-tars-2b";
-
-                    return (
-                      <option key={m.id} value={m.id} disabled={isRestricted}>
-                        {m.name}{" "}
-                        {isRestricted
-                          ? "(Restricted on CPU)"
-                          : `- ${m.sizeFormatted}`}
-                      </option>
-                    );
-                  })}
-                </optgroup>
-              )}
-            </select>
           </div>
         </motion.div>
 
@@ -674,10 +609,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         />
       </motion.div>
 
-      {/* Model Manager Manager */}
-      <motion.div variants={item} className="pt-2">
-        <ModelManager theme={theme} />
-      </motion.div>
+      {/* Removed ModelManager - Moved to dedicated tab */}
     </div>
   );
 };

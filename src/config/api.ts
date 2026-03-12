@@ -35,6 +35,9 @@ export const FRONTEND_PORT = getEnvVar("VITE_FRONTEND_PORT", "3000");
 // Cloud Relay Server for Mobile Connectivity (Deployment URL)
 export const RELAY_SERVER_URL = getEnvVar("VITE_RELAY_SERVER_URL", "");
 
+// Streaming STT API Key
+export const DEEPGRAM_API_KEY = getEnvVar("VITE_DEEPGRAM_API_KEY", "");
+
 // --- SECURITY PROTOCOL ---
 let lucaSecretToken: string | null = null;
 let _authWaiters: (() => void)[] = [];

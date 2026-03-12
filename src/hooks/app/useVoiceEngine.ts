@@ -93,14 +93,63 @@ export function useVoiceEngine({
 
   // 3. Connect Voice Session
   const connectVoiceSession = useCallback(
-    (targetPersona: PersonaType) => {
+    async (targetPersona: PersonaType) => {
       console.log(`[VOICE ENGINE] Connecting Session: ${targetPersona}...`);
       liveService.disconnect();
 
+      // Dynamic import to avoid circular dependency if it exists
+      const { hybridVoiceService } =
+        await import("../../services/hybridVoiceService");
+
       const voiceSettings = settingsService.get("voice");
-      const isHybridMode =
-        (voiceSettings?.provider || "cloud") !== "gemini-genai" &&
-        targetPersona !== "DICTATION";
+      const brainSettings = settingsService.get("brain");
+
+      // Check if we have the Gemini key required for liveService
+      const hasGeminiKey = !!brainSettings?.geminiApiKey;
+      const isNativeVoice = voiceSettings?.provider === "gemini-genai";
+
+      const useHybridFallback = !hasGeminiKey || !isNativeVoice;
+
+      if (useHybridFallback && targetPersona !== "DICTATION") {
+        console.log("[VOICE ENGINE] Using Hybrid Voice Fallback pipeline...");
+
+        setVoiceStatus("INITIALIZING HYBRID UPLINK...");
+        try {
+          await hybridVoiceService.connect({
+            sttModel: voiceSettings?.sttModel || "whisper-tiny",
+            // Route LLM generation through the global handleSendMessage
+            onTranscript: (text, source) => {
+              setVoiceTranscript(text);
+              setVoiceTranscriptSource(source as "user" | "model");
+
+              if (source === "user" && !dictationActive) {
+                handleSendMessage(text, undefined).catch(console.error);
+              }
+            },
+            onAudioData: (amp) => {
+              setRemoteAmplitude(amp);
+            },
+            onVadChange: (active) => setIsVadActive(active),
+            onStatusUpdate: (status) => setVoiceStatus(status.toUpperCase()),
+            onConnectionChange: (connected) => {
+              if (connected) {
+                setVoiceStatus("HYBRID UPLINK ACTIVE");
+                soundService.play("SUCCESS");
+              } else {
+                soundService.play("ALERT");
+              }
+            },
+          });
+        } catch (err) {
+          console.error("Hybrid Voice Connection Failed:", err);
+          setVoiceStatus("CONNECTION FAILED");
+          soundService.play("ALERT");
+        }
+        return;
+      }
+
+      console.log("[VOICE ENGINE] Using Native Gemini Live API...");
+      const isHybridMode = false; // LiveService handling only native now
 
       liveService
         .connect({
@@ -127,7 +176,14 @@ export function useVoiceEngine({
           soundService.play("ALERT");
         });
     },
-    [executeTool, setIsVadActive, setVoiceTranscript, setVoiceTranscriptSource],
+    [
+      executeTool,
+      setIsVadActive,
+      setVoiceTranscript,
+      setVoiceTranscriptSource,
+      dictationActive,
+      handleSendMessage,
+    ],
   );
 
   // 4. Watch for Watch/Wearable Events

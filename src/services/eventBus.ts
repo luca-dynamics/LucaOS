@@ -25,6 +25,22 @@ export interface AudioAmplitudeEvent {
   source: "user" | "model";
 }
 
+export interface TranslationResultEvent {
+  originalText: string;
+  translatedText: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  mode: string;
+  speaker: "user" | "model";
+}
+
+export interface TranslationStateEvent {
+  mode: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  isActive: boolean;
+}
+
 interface EventHistoryEntry {
   event: VisionEvent;
   timestamp: number;
@@ -103,7 +119,7 @@ class EventBus extends EventEmitter {
         if (event) {
           // Event already emitted in emitEvent, just log
           console.log(
-            `[EVENT_BUS] Processing ${event.priority} priority event: ${event.message}`
+            `[EVENT_BUS] Processing ${event.priority} priority event: ${event.message}`,
           );
 
           // Small delay between events to avoid flooding
@@ -187,7 +203,7 @@ class EventBus extends EventEmitter {
   } {
     const recentThreshold = Date.now() - 60 * 60 * 1000; // Last hour
     const recentEvents = this.eventHistory.filter(
-      (entry) => entry.timestamp > recentThreshold
+      (entry) => entry.timestamp > recentThreshold,
     ).length;
 
     return {

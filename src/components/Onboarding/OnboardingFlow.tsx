@@ -75,6 +75,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const [conversationMode, setConversationMode] =
     useState<ConversationMode | null>(null);
   const [isActivating, setIsActivating] = useState(false);
+  const [showByok, setShowByok] = useState(false);
+  const [byokProvider, setByokProvider] = useState<
+    "gemini" | "openai" | "anthropic" | "xai"
+  >("gemini");
+  const [byokKeys, setByokKeys] = useState<Record<string, string>>({
+    gemini: "",
+    openai: "",
+    anthropic: "",
+    xai: "",
+  });
 
   // Hardware & Provisioning State
   const [targetBrainModel, setTargetBrainModel] = useState<string | null>(null);
@@ -290,6 +300,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       },
     });
 
+    settingsService.setLocalDiscoveryOverride(true);
     setStep("PROVISION_LOCAL");
   };
 
@@ -377,13 +388,32 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     setTimeout(() => {
       const currentBrain = settingsService.get("brain");
       const currentVoice = settingsService.get("voice");
+      const activeKey = showByok ? byokKeys[byokProvider] : "";
+      const brainSettings: any = {
+        ...currentBrain,
+        useCustomApiKey: showByok && !!activeKey,
+      };
+
+      if (showByok && activeKey) {
+        if (byokProvider === "gemini") {
+          brainSettings.geminiApiKey = activeKey;
+          brainSettings.model = "gemini-3-flash-preview";
+        } else if (byokProvider === "openai") {
+          brainSettings.openaiApiKey = activeKey;
+          brainSettings.model = "gpt-4.1-mini";
+        } else if (byokProvider === "anthropic") {
+          brainSettings.anthropicApiKey = activeKey;
+          brainSettings.model = "claude-sonnet-4-5";
+        } else if (byokProvider === "xai") {
+          brainSettings.xaiApiKey = activeKey;
+          brainSettings.model = "grok-beta";
+        }
+      } else {
+        brainSettings.model = "gemini-3-flash-preview";
+      }
 
       settingsService.saveSettings({
-        brain: {
-          ...currentBrain,
-          model: "gemini-3-flash-preview",
-          useCustomApiKey: false,
-        },
+        brain: brainSettings,
         voice: {
           ...currentVoice,
           provider: "gemini-genai", // Cloud voice (not local-luca)
@@ -399,6 +429,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const handleGoLocal = () => {
     soundService.play("SUCCESS");
+    settingsService.setLocalDiscoveryOverride(true);
     setStep("HARDWARE_SCAN");
   };
 
@@ -657,64 +688,214 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             </div>
 
             <div
-              className="border rounded-xl p-6 gap-6 flex flex-col backdrop-blur-md transition-all shadow-2xl"
+              className={`border rounded-2xl p-6 gap-6 flex flex-col backdrop-blur-xl transition-all duration-500 shadow-2xl ${showByok ? "max-w-lg" : "max-w-md"}`}
               style={{
-                borderColor: `${currentThemeHex}40`,
-                background: `linear-gradient(135deg, ${currentThemeHex}12 0%, ${currentThemeHex}05 100%)`,
+                borderColor: "rgba(255, 255, 255, 0.12)",
+                background: `linear-gradient(135deg, ${hexToRgba(currentThemeHex, 0.08)} 0%, rgba(255, 255, 255, 0.02) 100%)`,
+                boxShadow: `0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 0 0 1px rgba(255, 255, 255, 0.05)`,
               }}
             >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Shield size={12} style={{ color: currentThemeHex }} />
-                  <span
-                    className={`text-[10px] font-bold ${isLightTheme ? "text-slate-900" : "text-white/80"} uppercase tracking-widest`}
-                  >
-                    Managed Connection
-                  </span>
-                </div>
-                <p
-                  className={`text-[9px] ${isLightTheme ? "text-slate-800" : "text-gray-300"} font-medium`}
-                >
-                  Professional cloud intelligence managed directly by Luca OS.
-                </p>
-              </div>
+              {!showByok ? (
+                <>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Shield size={12} style={{ color: currentThemeHex }} />
+                      <span
+                        className={`text-[10px] font-bold ${isLightTheme ? "text-slate-900" : "text-white/80"} uppercase tracking-widest`}
+                      >
+                        Managed Connection
+                      </span>
+                    </div>
+                    <p
+                      className={`text-[9px] ${isLightTheme ? "text-slate-800" : "text-gray-300"} font-medium`}
+                    >
+                      Professional cloud intelligence managed directly by Luca
+                      OS.
+                    </p>
+                  </div>
 
-              <button
-                type="button"
-                onClick={handleActivateCloud}
-                disabled={isActivating}
-                className="w-full border rounded-xl py-5 uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group backdrop-blur-md"
-                style={{
-                  borderColor: isLightTheme
-                    ? "rgba(0,0,0,0.2)"
-                    : "rgba(255,255,255,0.3)",
-                  backgroundColor: hexToRgba(currentThemeHex, 0.25),
-                  backgroundImage: `linear-gradient(135deg, ${hexToRgba(
-                    currentThemeHex,
-                    0.35,
-                  )} 0%, ${hexToRgba(currentThemeHex, 0.15)} 100%)`,
-                  boxShadow: `0 8px 32px ${hexToRgba(
-                    currentThemeHex,
-                    0.2,
-                  )}, inset 0 1px 0 ${hexToRgba(currentThemeHex, 0.3)}`,
-                  color: "#fff",
-                }}
-              >
-                {isActivating ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Establishing Link...
-                  </>
-                ) : (
-                  <>
-                    Activate Luca Prime
-                    <Sparkles
-                      size={18}
-                      className="group-hover:rotate-12 transition-all duration-500 text-yellow-400"
-                    />
-                  </>
-                )}
-              </button>
+                  <button
+                    type="button"
+                    onClick={handleActivateCloud}
+                    disabled={isActivating}
+                    className="w-full border rounded-xl py-5 uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group backdrop-blur-md"
+                    style={{
+                      borderColor: "rgba(255, 255, 255, 0.15)",
+                      backgroundColor: hexToRgba(currentThemeHex, 0.25),
+                      backgroundImage: `linear-gradient(135deg, ${hexToRgba(
+                        currentThemeHex,
+                        0.35,
+                      )} 0%, ${hexToRgba(currentThemeHex, 0.15)} 100%)`,
+                      boxShadow: `0 8px 32px ${hexToRgba(
+                        currentThemeHex,
+                        0.2,
+                      )}, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
+                      color: "#fff",
+                    }}
+                  >
+                    {isActivating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Establishing Link...
+                      </>
+                    ) : (
+                      <>
+                        Activate Luca Prime
+                        <Sparkles
+                          size={18}
+                          className="group-hover:rotate-12 transition-all duration-500 text-yellow-400"
+                        />
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundService.play("KEYSTROKE");
+                      setShowByok(true);
+                    }}
+                    className={`text-[10px] py-4 rounded-xl border border-white/10 hover:border-white/20 transition-all uppercase tracking-widest font-bold flex items-center justify-center gap-2`}
+                    style={{
+                      backgroundColor: "rgba(255, 255, 255, 0.05)",
+                      color: isLightTheme ? "#000" : "#fff",
+                    }}
+                  >
+                    <Key size={14} style={{ color: currentThemeHex }} />
+                    Bring Your Own Key (BYOK)
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setShowByok(false)}
+                      className="text-[9px] uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity"
+                    >
+                      ← Back
+                    </button>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                      Provider Selection
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      {
+                        id: "gemini",
+                        name: "Gemini",
+                        color: "#4285F4",
+                        logo: "/icons/brands/gemini-color.svg",
+                        placeholder: "AIza...",
+                      },
+                      {
+                        id: "openai",
+                        name: "OpenAI",
+                        color: "#10a37f",
+                        logo: "/icons/brands/openai.svg",
+                        placeholder: "sk-proj-...",
+                      },
+                      {
+                        id: "anthropic",
+                        name: "Claude",
+                        color: "#d97757",
+                        logo: "/icons/brands/claude-color.svg",
+                        placeholder: "sk-ant-...",
+                      },
+                      {
+                        id: "xai",
+                        name: "xAI",
+                        color: "#fff",
+                        logo: "/icons/brands/grok.svg",
+                        placeholder: "xai-...",
+                      },
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          setByokProvider(p.id as any);
+                          soundService.play("HOVER");
+                        }}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                          byokProvider === p.id
+                            ? "scale-105 border-white/40 bg-white/10 shadow-lg"
+                            : "border-white/5 bg-black/20 opacity-50 hover:opacity-100"
+                        }`}
+                        style={{
+                          borderColor:
+                            byokProvider === p.id
+                              ? p.color + "40"
+                              : "rgba(255,255,255,0.05)",
+                        }}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center p-1.5"
+                          style={{
+                            backgroundColor:
+                              byokProvider === p.id
+                                ? p.color + "20"
+                                : "rgba(255,255,255,0.05)",
+                          }}
+                        >
+                          <img
+                            src={p.logo}
+                            alt={p.name}
+                            className={`w-full h-full object-contain ${
+                              p.id === "xai" && !isLightTheme ? "invert" : ""
+                            }`}
+                          />
+                        </div>
+                        <span className="text-[8px] uppercase tracking-tighter">
+                          {p.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase tracking-widest opacity-60 px-1">
+                      {byokProvider.toUpperCase()} API KEY
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        value={byokKeys[byokProvider]}
+                        onChange={(e) =>
+                          setByokKeys((prev) => ({
+                            ...prev,
+                            [byokProvider]: e.target.value,
+                          }))
+                        }
+                        placeholder={
+                          byokProvider === "gemini"
+                            ? "AIza..."
+                            : byokProvider === "openai"
+                              ? "sk-proj-..."
+                              : byokProvider === "anthropic"
+                                ? "sk-ant-..."
+                                : "xai-..."
+                        }
+                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs outline-none focus:border-white/30 transition-all font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleActivateCloud}
+                    disabled={!byokKeys[byokProvider] || isActivating}
+                    className="w-full border rounded-xl py-4 uppercase tracking-widest text-[11px] font-bold transition-all flex items-center justify-center gap-2 group disabled:opacity-30"
+                    style={{
+                      borderColor: "rgba(255, 255, 255, 0.2)",
+                      backgroundColor: hexToRgba(currentThemeHex, 0.3),
+                      color: "#fff",
+                    }}
+                  >
+                    {isActivating ? "Verifying..." : "Link My Cloud Brain"}
+                    {!isActivating && <ArrowRight size={14} />}
+                  </button>
+                </div>
+              )}
 
               <div className="flex flex-col items-center gap-4">
                 <button
@@ -727,12 +908,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   Stay Local (Privacy Mode)
                 </button>
 
-                <p
-                  className={`text-[9px] ${isLightTheme ? "text-slate-800" : "text-gray-300"} text-center uppercase tracking-widest leading-relaxed font-bold opacity-90`}
-                >
-                  Managed Professional Gateway. <br />
-                  Secure. Private. Intelligent.
-                </p>
+                {!showByok && (
+                  <p
+                    className={`text-[9px] ${isLightTheme ? "text-slate-800" : "text-gray-300"} text-center uppercase tracking-widest leading-relaxed font-bold opacity-90`}
+                  >
+                    Managed Professional Gateway. <br />
+                    Secure. Private. Intelligent.
+                  </p>
+                )}
               </div>
             </div>
           </div>

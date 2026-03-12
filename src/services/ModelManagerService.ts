@@ -10,6 +10,7 @@
  */
 
 import { CORTEX_URL } from "../config/api";
+import { settingsService } from "./settingsService";
 
 export interface LocalModel {
   id: string;
@@ -353,6 +354,7 @@ class ModelManagerService {
   private _isConfigured: boolean = false;
   private models: Map<string, LocalModel> = new Map();
   private listeners: Set<(models: LocalModel[]) => void> = new Set();
+  private _systemSpecs: any = null;
 
   constructor() {
     // Initialize models with unknown status
@@ -452,6 +454,11 @@ class ModelManagerService {
    * Check which models are downloaded by querying Cortex
    */
   async refreshStatus(): Promise<void> {
+    // Global Guard: Prevent pings if local discovery is disabled (Setup/Cloud Mode)
+    if (!settingsService.isLocalDiscoveryEnabled()) {
+      return;
+    }
+
     try {
       const url = await this.getUrl("/models/status");
       const response = await fetch(url);
@@ -461,6 +468,21 @@ class ModelManagerService {
       }
 
       const data = await response.json();
+
+      // Get accurate system specs via Electron IPC if available
+      if (
+        typeof window !== "undefined" &&
+        (window as any).electron &&
+        !this._systemSpecs
+      ) {
+        try {
+          this._systemSpecs = await (window as any).electron.ipcRenderer.invoke(
+            "get-system-specs",
+          );
+        } catch (e) {
+          console.warn("[ModelManager] Failed to get system specs:", e);
+        }
+      }
 
       // Update each model's status
       for (const [modelId, status] of Object.entries(data.models || {})) {
@@ -489,12 +511,10 @@ class ModelManagerService {
               modelStatus.unsupported_reason ||
               "Not supported on this platform";
           } else {
-            // --- COMPREHENSIVE COMPATIBILITY CHECKS ---
-            const luca = (window as any).luca || {};
-            const isIntelMac = luca.isIntelMac;
-            const isWindows = luca.isWindows;
-            const arch = luca.arch;
+            const specs = this._systemSpecs || {};
+            const isIntelMac = specs.isIntelMac;
             const currentPlatform = ModelManagerService.getCurrentPlatform();
+            const totalRAM = specs.memory?.total || 8_000_000_000;
 
             const HEAVY_MODELS = [
               "qwen-2.5-7b",
@@ -502,32 +522,42 @@ class ModelManagerService {
               "whisper-v3-turbo",
             ];
 
+            const EXTREME_MODELS = ["deepseek-r1-distill-7b"];
+
             // 0. SOURCE DEFINITION: Check if model explicitly supports this platform
             if (!model.platforms.includes(currentPlatform)) {
               model.status = "unsupported";
               model.unsupportedReason = `Not designed for ${currentPlatform}`;
             }
-            // 1. INTEL MAC: Restrict 7B+ for downloads only (already downloaded is allowed but slow)
+            // 1. MEMORY CHECK: Stricter RAM check
             else if (
-              isIntelMac &&
-              HEAVY_MODELS.includes(model.id) &&
-              !modelStatus.downloaded
+              model.memoryRequirement &&
+              totalRAM < model.memoryRequirement * 0.9
             ) {
               model.status = "unsupported";
-              model.unsupportedReason = "Requires Apple Silicon (M1/M2/M3)";
+              model.unsupportedReason = `Requires ${Math.round(model.memoryRequirement / 1e9)}GB RAM (System has ${Math.round(totalRAM / 1e9)}GB)`;
             }
-            // 2. WINDOWS ARM: Block until binaries are verified
-            else if (isWindows && arch === "arm64") {
+            // 2. INTEL MAC: Restrict EXTREME models
+            else if (isIntelMac && EXTREME_MODELS.includes(model.id)) {
               model.status = "unsupported";
-              model.unsupportedReason = "Windows on ARM not supported yet";
+              model.unsupportedReason =
+                "Requires Apple Silicon or high-end NVIDIA GPU (Intel Mac constraint)";
             }
-            // 3. MOBILE: Block > 2.5GB (RAM Safety)
+            // 3. HEAVY MODELS ON LOW RAM
+            else if (
+              HEAVY_MODELS.includes(model.id) &&
+              totalRAM < 8_000_000_000
+            ) {
+              model.status = "unsupported";
+              model.unsupportedReason = "Heavy model requires at least 8GB RAM";
+            }
+            // 4. MOBILE: Block > 2.5GB (RAM Safety)
             else if (
               currentPlatform === "mobile" &&
               model.size > 2_500_000_000
             ) {
               model.status = "unsupported";
-              model.unsupportedReason = "Too large for mobile device";
+              model.unsupportedReason = "Exceeds mobile size limit (2.5GB)";
             } else {
               model.status = modelStatus.downloaded
                 ? "ready"
@@ -804,6 +834,11 @@ class ModelManagerService {
     models: { name: string; size: number }[];
     count: number;
   }> {
+    // Global Guard: Prevent pings if local discovery is disabled (Setup/Cloud Mode)
+    if (!settingsService.isLocalDiscoveryEnabled()) {
+      return { available: false, models: [], count: 0 };
+    }
+
     try {
       const resp = await fetch("http://127.0.0.1:11434/api/tags", {
         signal: AbortSignal.timeout(3_000),

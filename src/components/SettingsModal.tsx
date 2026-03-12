@@ -28,6 +28,8 @@ import { PersonaConfig } from "../types";
 import SettingsGeneralTab from "./settings/SettingsGeneralTab";
 import SettingsBrainTab from "./settings/SettingsBrainTab";
 import SettingsVoiceTab from "./settings/SettingsVoiceTab";
+import SettingsVisionTab from "./settings/SettingsVisionTab";
+import SettingsModelManagerTab from "./settings/SettingsModelManagerTab";
 import SettingsIoTTab from "./settings/SettingsIoTTab";
 import SettingsConnectorsTab from "./settings/SettingsConnectorsTab";
 import SettingsLucaLinkTab from "./settings/SettingsLucaLinkTab";
@@ -61,17 +63,29 @@ const TABS = [
     platforms: ["desktop", "mobile"],
   },
   { id: "brain", label: "Brain", icon: Cpu, platforms: ["desktop", "mobile"] },
+  { id: "voice", label: "Voice", icon: Mic, platforms: ["desktop", "mobile"] },
+  {
+    id: "vision",
+    label: "Vision",
+    icon: Share2,
+    platforms: ["desktop", "mobile"],
+  },
+  {
+    id: "model-manager",
+    label: "Model Manager",
+    icon: Database,
+    platforms: ["desktop", "mobile"],
+  },
   {
     id: "personality",
     label: "Personality",
-    icon: Settings, // Or User, Smile, etc.
+    icon: Settings,
     platforms: ["desktop", "mobile"],
   },
-  { id: "voice", label: "Voice", icon: Mic, platforms: ["desktop", "mobile"] },
   {
     id: "profile",
     label: "Profile",
-    icon: Settings,
+    icon: Info,
     platforms: ["desktop", "mobile"],
   },
   {
@@ -79,8 +93,8 @@ const TABS = [
     label: "Luca Link",
     icon: Wifi,
     platforms: ["desktop", "mobile"],
-  }, // Both - Desktop hosts, Mobile connects
-  { id: "mcp", label: "MCP Skills", icon: Plug, platforms: ["desktop"] }, // Desktop only - requires local processes
+  },
+  { id: "mcp", label: "MCP Skills", icon: Plug, platforms: ["desktop"] },
   {
     id: "iot",
     label: "Smart Home",
@@ -427,6 +441,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onUpdate={updateSetting}
                 theme={liveTheme}
               />
+            )}
+            {activeTab === "vision" && (
+              <SettingsVisionTab
+                settings={settings}
+                onUpdate={updateSetting}
+                theme={liveTheme}
+              />
+            )}
+            {activeTab === "model-manager" && (
+              <SettingsModelManagerTab theme={liveTheme} />
             )}
             {activeTab === "profile" && (
               <OperatorProfilePanel theme={liveTheme} />

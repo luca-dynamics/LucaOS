@@ -98,10 +98,13 @@ const HologramMode: React.FC = () => {
         isVoiceActive={true} // Always visible in Hologram Mode
         isMicOpen={state.isListening} // Visual Feedback for Mic Status
         transcript={state.transcript}
+        transcriptSource={state.transcriptSource}
         isSpeaking={state.isSpeaking || state.amplitude > 0.05}
         audioLevel={state.amplitude}
         primaryColor={primaryColor} // Use dynamic theme color
+        persona={state.persona as string}
         onClick={handleToggleVoice}
+        intent={state.intent}
       />
     </div>
   );

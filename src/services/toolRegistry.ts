@@ -413,39 +413,73 @@ export const ToolRegistry = {
     }
 
     // 4. NATIVE AUTOMATION (IPC FIRST, FALLBACK TO NETWORK)
-    if (name === "typeText" || name === "pressKey") {
-      // Try IPC via Electron first (Faster, Offline)
-      // window.electron is injected via preload
+    if (
+      name === "typeText" ||
+      name === "pressKey" ||
+      name === "controlSystemInput"
+    ) {
       if ((window as any).electron && (window as any).electron.ipcRenderer) {
         try {
-          const type = name === "typeText" ? "type" : "key";
-          const payload =
-            name === "typeText"
-              ? { type, text: args.text, delay: args.delay }
-              : {
-                  type,
-                  key: args.key,
-                  modifiers: args.modifiers,
-                  delay: args.delay,
-                };
+          if (name === "typeText" || name === "pressKey") {
+            const type = name === "typeText" ? "type" : "key";
+            const payload =
+              name === "typeText"
+                ? { type, text: args.text, delay: args.delay }
+                : {
+                    type,
+                    key: args.key,
+                    modifiers: args.modifiers,
+                    delay: args.delay,
+                  };
 
-          // ipcRenderer.invoke is standard Electron
-          const result = await (window as any).electron.ipcRenderer.invoke(
-            "simulate-keyboard",
-            payload,
-          );
-          if (result.success) return "Input Simulated via IPC.";
+            const result = await (window as any).electron.ipcRenderer.invoke(
+              "simulate-keyboard",
+              payload,
+            );
+            if (result.success) return "Input Simulated via IPC.";
+          } else if (name === "controlSystemInput") {
+            const { type, key, x, y, button, double, amount, delay } = args;
+
+            if (type === "TYPE" || type === "PRESS") {
+              const res = await (window as any).electron.ipcRenderer.invoke(
+                "simulate-keyboard",
+                {
+                  type: type === "TYPE" ? "type" : "key",
+                  text: key,
+                  key: key,
+                  delay,
+                },
+              );
+              return res.success ? "Input Simulated." : `Error: ${res.error}`;
+            } else {
+              // Mouse actions
+              const res = await (window as any).electron.ipcRenderer.invoke(
+                "simulate-mouse",
+                {
+                  action: type.toLowerCase(),
+                  x,
+                  y,
+                  button,
+                  double,
+                  amount,
+                  delay,
+                },
+              );
+              return res.success
+                ? "Mouse Action Simulated."
+                : `Error: ${res.error}`;
+            }
+          }
         } catch (e) {
           console.warn("IPC Input failed, falling back to Network", e);
         }
       }
 
-      // Fallback to Network (ComputerService)
+      // Fallback to Network (ComputerService) for legacy compatibility
       if (name === "typeText") {
         const success = await computerService.typeText(args.text);
         return success ? "Typed text (Network)." : "Type failed.";
-      } else {
-        // Handle modifiers for network service if needed, currently it takes string[]
+      } else if (name === "pressKey") {
         const keys = [args.key, ...(args.modifiers || [])];
         const success = await computerService.pressKey(keys);
         return success ? "Pressed key (Network)." : "Key press failed.";
@@ -638,7 +672,7 @@ export const ToolRegistry = {
           try {
             const parsed = parsePracticeResponse(response);
             return JSON.stringify(parsed, null, 2);
-          } catch (error) {
+          } catch {
             // If parsing fails, return raw response
             return response;
           }

@@ -4,24 +4,35 @@ import { AnthropicAdapter } from "./AnthropicAdapter";
 import { OpenAIAdapter } from "./OpenAIAdapter";
 import { LocalLLMAdapter } from "./LocalLLMAdapter";
 import { GrokAdapter } from "./GrokAdapter";
-import { LucaSettings } from "../settingsService";
+import { LucaSettings, settingsService } from "../settingsService";
 import { LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
 import { BRAIN_CONFIG } from "../../config/brain.config.ts";
+import { ollamaUrl } from "../../config/api";
 
 /**
  * ProviderFactory - Unified LLM Provider Routing
  *
  * DESIGN: Cloud-first with opt-in local
- * - Luca ships with embedded dev API key (always available)
- * - Cloud models work out of the box
- * - Local models are explicitly selected by user in Settings > Brain
- *
- * Local model IDs are imported from ModelManagerService (single source of truth)
+ * Smart Fallback Hierarchy: Choice -> User Cloud -> Luca Prime
  */
 export class ProviderFactory {
-  static createProvider(settings: LucaSettings["brain"]): LLMProvider {
+  /**
+   * Synchronous creation of provider based on settings.
+   * Useful for initial boot.
+   */
+  static createProvider(
+    settings: LucaSettings["brain"],
+    persona?: string,
+  ): LLMProvider {
     const { model, geminiApiKey, anthropicApiKey, openaiApiKey, xaiApiKey } =
       settings;
+
+    // 0. LOCAL CORE: Force Local logic
+    if (persona === "LOCALCORE") {
+      return new LocalLLMAdapter(
+        model.includes("/") ? model.split("/")[1] : model,
+      );
+    }
 
     // 1. Check for explicit LOCAL model selection
     const isExplicitLocal =
@@ -31,7 +42,6 @@ export class ProviderFactory {
       const adapterModelId = model.startsWith("local/")
         ? model.split("/")[1]
         : model;
-      console.log(`[ProviderFactory] Using LOCAL model: ${adapterModelId}`);
       return new LocalLLMAdapter(adapterModelId);
     }
 
@@ -53,9 +63,69 @@ export class ProviderFactory {
     }
 
     // 3. Default: Gemini with embedded key (always works)
-    console.log(
-      `[ProviderFactory] Defaulting to Gemini: ${BRAIN_CONFIG.defaults.brain}`,
-    );
     return new GeminiAdapter(geminiApiKey || "", BRAIN_CONFIG.defaults.brain);
+  }
+
+  /**
+   * Async creation of provider with Smart Fallback health checks.
+   * Hierarchy: Selected -> User Peer Cloud -> Luca Prime
+   */
+  static async createHealthyProvider(
+    settings: LucaSettings["brain"],
+    persona?: string,
+  ): Promise<LLMProvider> {
+    const { model } = settings;
+
+    // 1. Check if user choice is Local and Healthy
+    const isLocal =
+      persona === "LOCALCORE" ||
+      model.startsWith("local/") ||
+      LOCAL_BRAIN_MODEL_IDS.includes(model);
+
+    if (isLocal) {
+      const isHealthy = await this.checkLocalHealth();
+      if (isHealthy) {
+        return this.createProvider(settings, persona);
+      }
+      console.warn(
+        `[ProviderFactory] Local model ${model} unreachable. Triggering Smart Fallback...`,
+      );
+    }
+
+    // 2. SMART FALLBACK - Try User Peer Cloud
+    const bestCloud = settingsService.getBestAvailableCloudProvider();
+    if (bestCloud === "gemini") {
+      // Fallback to Gemini (Luca Prime)
+      return new GeminiAdapter(
+        settings.geminiApiKey || "",
+        BRAIN_CONFIG.defaults.brain,
+      );
+    }
+
+    // Generate fallback settings for the best cloud
+    const fallbackSettings = { ...settings };
+    if (bestCloud === "openai") {
+      fallbackSettings.model = "gpt-4o"; // Industrial standard fallback
+    } else if (bestCloud === "anthropic") {
+      fallbackSettings.model = "claude-3-5-sonnet-latest";
+    } else if (bestCloud === "xai") {
+      fallbackSettings.model = "grok-2-1212";
+    }
+
+    return this.createProvider(fallbackSettings, persona);
+  }
+
+  /**
+   * Quick health check for Ollama loopback
+   */
+  private static async checkLocalHealth(): Promise<boolean> {
+    try {
+      const resp = await fetch(ollamaUrl(""), {
+        signal: AbortSignal.timeout(1500),
+      });
+      return resp.ok;
+    } catch {
+      return false;
+    }
   }
 }

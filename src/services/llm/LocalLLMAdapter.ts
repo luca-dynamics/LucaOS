@@ -1,5 +1,6 @@
 import { LLMProvider, ChatMessage, LLMResponse } from "./LLMProvider";
 import { CORTEX_SERVER_URL, OLLAMA_SERVER_URL } from "../../config/api";
+import { settingsService } from "../settingsService";
 
 // Define locally to avoid dependency issues if not exported
 interface ToolFunction {
@@ -72,6 +73,16 @@ export class LocalLLMAdapter implements LLMProvider {
     ];
     const isInternal =
       internalModels.includes(this.name) || this.name.startsWith("local-gemma");
+
+    const settings = settingsService.getSettings();
+    const preferOllama = settings.brain.preferOllama;
+
+    if (preferOllama) {
+      console.log(
+        `[Local Adapter] Global Preference: Priority Routing ${this.name} → Ollama`,
+      );
+      return `${OLLAMA_SERVER_URL}/v1/chat/completions`;
+    }
 
     if (isInternal) {
       // For internal models, check if Ollama has a matching model loaded
@@ -249,10 +260,10 @@ export class LocalLLMAdapter implements LLMProvider {
         text: content, // ALWAYS return content, even if tools are present (Ollama often explains tools)
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       };
-    } catch (e: any) {
-      console.error("[Local Adapter] Chat Failed:", e);
+    } catch (err: any) {
+      console.error("[Local Adapter] Chat Failed:", err);
       return {
-        text: `Error connecting to Local Brain (${this.name}): ${e.message}. Is Ollama running?`,
+        text: `Error connecting to Local Brain (${this.name}): ${err.message}. Is Ollama running?`,
       };
     }
   }
@@ -373,10 +384,10 @@ export class LocalLLMAdapter implements LLMProvider {
       }
 
       return { text: fullText };
-    } catch (e: any) {
-      console.error("[Local Adapter] Chat Stream Failed:", e);
+    } catch (err: any) {
+      console.error("[Local Adapter] Chat Stream Failed:", err);
       return {
-        text: `Error connecting to Local Brain (${this.name}): ${e.message}`,
+        text: `Error connecting to Local Brain (${this.name}): ${err.message}`,
       };
     }
   }

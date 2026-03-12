@@ -1,5 +1,6 @@
 import { visionManager } from "./visionManager";
 import { screenCaptureService } from "./screenCaptureService";
+import { settingsService } from "./settingsService";
 
 export interface VisionEvent {
   type:
@@ -122,11 +123,13 @@ Return JSON:
       const targetModel = options.model || "gemini-3-flash-preview";
 
       // Standardizing Gemini config for analysis
+      const brainSettings = settingsService.get("brain");
       (visionManager as any).updateConfig({
         insight: {
           ...(visionManager as any).config?.insight,
           provider: "gemini",
           model: targetModel,
+          apiKey: brainSettings?.geminiApiKey,
           baseUrl: "https://generativelanguage.googleapis.com/v1beta",
         },
       });

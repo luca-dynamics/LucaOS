@@ -9,6 +9,7 @@ import { TradingProvider } from "../tools/providers/TradingProvider";
 import { IntelligenceProvider } from "../tools/providers/IntelligenceProvider";
 import { AutonomousProvider } from "../tools/providers/AutonomousProvider";
 import { IoTProvider } from "../tools/providers/IoTProvider";
+import { ConfigurationProvider } from "../tools/providers/ConfigurationProvider";
 
 /**
  * Universal Tool Initializer
@@ -64,6 +65,7 @@ export const initializeToolRegistry = () => {
   IntelligenceProvider.register();
   AutonomousProvider.register();
   IoTProvider.register();
+  ConfigurationProvider.register();
 
   console.log(
     `[REGISTRY] ✅ ${count} capabilities discovered and initialized.`,

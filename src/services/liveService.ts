@@ -15,6 +15,8 @@ import { SystemHealth } from "./introspectionService";
 import { eventBus } from "./eventBus";
 import { CORE_VOICE_TOOLS } from "../config/voiceTools";
 import { BRAIN_CONFIG } from "../config/brain.config.ts";
+import { contextCardService } from "./ContextCardService";
+import { translationService } from "./TranslationService";
 
 interface LiveConfig {
   onToolCall: (name: string, args: any) => Promise<any>;
@@ -763,6 +765,9 @@ class LucaLiveService {
             const rerouteType =
               config.persona === "DICTATION" ? "user" : "model";
             config.onTranscript(cleanText, rerouteType);
+
+            // NEW: Process translation/transcription for HUD
+            translationService.processTranscript(cleanText, rerouteType);
           }
 
           // Usually we want the first valid text part as the transcript
@@ -770,6 +775,15 @@ class LucaLiveService {
           // For Gemini Live, it's typically one text part per response message.
           break;
         }
+      }
+
+      // NEW: Trigger Context Card Analysis
+      const modelSpeech = modelTurn.parts
+        .map((p) => p.text)
+        .filter(Boolean)
+        .join(" ");
+      if (modelSpeech) {
+        contextCardService.processTranscript(modelSpeech, "model");
       }
     }
 

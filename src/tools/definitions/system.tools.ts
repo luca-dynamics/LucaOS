@@ -609,20 +609,45 @@ export const toggleWidgetTool: FunctionDeclaration = {
 export const controlSystemInputTool: FunctionDeclaration = {
   name: "controlSystemInput",
   description:
-    'Control Host Input Devices (Mouse/Keyboard). Use this for basic app navigation OR as a UNIVERSAL FALLBACK when API/Scripting tools fail. If "runNativeAutomation" fails, use this to click the UI elements manually.',
+    "Control Host Input Devices (Mouse/Keyboard). Use this for move, click, type, press, scroll and drag. This is the UNIVERSAL J.A.R.V.I.S. interface for manual UI interaction.",
   parameters: {
     type: Type.OBJECT,
     properties: {
       type: {
         type: Type.STRING,
-        enum: ["CLICK", "TYPE", "PRESS"],
+        enum: ["CLICK", "TYPE", "PRESS", "MOVE", "SCROLL", "DRAG"],
         description:
-          "Input Type: CLICK for mouse click, TYPE for text, PRESS for hotkeys (e.g. 'command+n').",
+          "Input Type: CLICK for mouse click, TYPE for text, PRESS for hotkeys (e.g. 'command+n'), MOVE for mouse movement, SCROLL for mouse wheel, DRAG for mouse dragging.",
       },
       key: {
         type: Type.STRING,
         description:
           'Key to press or text to type. Supports "Ctrl+L", "Enter", "Tab", "Command+Space" etc.',
+      },
+      x: {
+        type: Type.NUMBER,
+        description: "X coordinate for mouse move/click (optional).",
+      },
+      y: {
+        type: Type.NUMBER,
+        description: "Y coordinate for mouse move/click (optional).",
+      },
+      button: {
+        type: Type.STRING,
+        enum: ["left", "right", "middle"],
+        description: "Mouse button for clicks (default: left).",
+      },
+      amount: {
+        type: Type.NUMBER,
+        description: "Scroll amount (positive for down, negative for up).",
+      },
+      double: {
+        type: Type.BOOLEAN,
+        description: "Set to true for double click.",
+      },
+      delay: {
+        type: Type.NUMBER,
+        description: "Delay in ms before execution.",
       },
     },
     required: ["type"],

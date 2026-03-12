@@ -150,7 +150,7 @@ async function provisionEnvironment(log) {
             child = spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', setupScript, '--full']);
         } else {
             // Ensure script is executable
-            try { fs.chmodSync(setupScript, '755'); } catch (err) { /** ignore permission errors on some systems */ }
+            try { fs.chmodSync(setupScript, '755'); } catch { /** ignore permission errors on some systems */ }
             child = spawn('/bin/bash', [setupScript, '--full']);
         }
 
@@ -779,6 +779,7 @@ function createHologramWindow() {
         resizable: false,
         show: false,
         hasShadow: false,
+        focusable: false,
         backgroundColor: '#00000000', // Transparent Hex
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
@@ -1700,6 +1701,13 @@ ipcMain.on('open-browser', (event, { url }) => {
     createGhostBrowserWindow(url);
 });
 
+// IPC: Hologram HUD Intent Forwarding
+ipcMain.on('hologram-intent', (event, intent) => {
+    if (hologramWindow) {
+        hologramWindow.webContents.send('hologram-intent', intent);
+    }
+});
+
 // --- KEYBOARD & ACCESSIBILITY IPC ---
 
 ipcMain.handle('check-accessibility-permissions', () => {
@@ -1728,6 +1736,28 @@ ipcMain.handle('simulate-keyboard', async (event, { type, text, key, modifiers, 
             robot.typeString(text);
         } else if (type === 'key') {
             robot.keyTap(key, modifiers || []);
+        }
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+});
+
+ipcMain.handle('simulate-mouse', async (event, { action, x, y, button, double, amount, delay }) => {
+    if (!robot) return { success: false, error: "RobotJS not loaded (native module error)" };
+    
+    try {
+        if (delay) await new Promise(r => setTimeout(r, delay));
+
+        if (action === 'move') {
+            robot.moveMouse(x, y);
+        } else if (action === 'click') {
+            robot.mouseClick(button || 'left', double || false);
+        } else if (action === 'scroll') {
+            // robotjs scrollMouse takes (x, y) where y is vertical scroll
+            robot.scrollMouse(0, amount || 0);
+        } else if (action === 'drag') {
+            robot.dragMouse(x, y);
         }
         return { success: true };
     } catch (e) {
@@ -2273,5 +2303,109 @@ ipcMain.handle('initiate-lockdown', async () => {
   } catch (error) {
     console.error('[TACTICAL_OPS] Lockdown error:', error.message);
     return { success: false, error: error.message };
+  }
+});
+
+// ========================================
+// HARDWARE & OLLAMA IPC HANDLERS (Phase 8)
+// ========================================
+
+ipcMain.handle('get-system-specs', async () => {
+  const os = require('os');
+  try {
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
+    const cpuInfo = os.cpus();
+    const platform = process.platform;
+    const arch = process.arch;
+    
+    // Check for M-Series (Apple Silicon) vs Intel
+    const isAppleSilicon = platform === 'darwin' && arch === 'arm64';
+    const isIntelMac = platform === 'darwin' && arch === 'x64';
+    
+    // Detect GPU via system_profiler on Mac
+    let gpuInfo = "Unknown";
+    if (platform === 'darwin') {
+      try {
+        await execP("system_profiler SPDisplaysDataType | grep Chipset");
+      } catch {
+        // Fallback
+      }
+    }
+
+    // Re-evaluating the GPU check logic for main.cjs context
+    const execP = require('util').promisify(require('child_process').exec);
+    
+    if (platform === 'darwin') {
+      try {
+        const { stdout } = await execP("system_profiler SPDisplaysDataType | grep Chipset");
+        gpuInfo = stdout.split(":")[1]?.trim() || (isAppleSilicon ? "Apple GPU" : "Intel GPU");
+      } catch {
+        gpuInfo = isAppleSilicon ? "Apple GPU" : "Intel Built-in";
+      }
+    }
+
+    return {
+      memory: {
+        total: totalMemory,
+        free: freeMemory,
+        totalGB: Math.round(totalMemory / (1024 ** 3))
+      },
+      cpu: {
+        model: cpuInfo[0]?.model,
+        cores: cpuInfo.length,
+        arch: arch
+      },
+      gpu: gpuInfo,
+      platform: platform,
+      isAppleSilicon,
+      isIntelMac
+    };
+  } catch (error) {
+    console.error('[MAIN] Failed to get system specs:', error);
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle('is-ollama-installed', async () => {
+  const execP = require('util').promisify(require('child_process').exec);
+  try {
+    const cmd = process.platform === 'win32' ? 'where ollama' : 'which ollama';
+    await execP(cmd);
+    return true;
+  } catch {
+    if (process.platform === 'darwin') {
+      const fs = require('fs');
+      return fs.existsSync('/usr/local/bin/ollama') || fs.existsSync('/Applications/Ollama.app');
+    }
+    return false;
+  }
+});
+
+ipcMain.handle('start-ollama', async () => {
+  const execP = require('util').promisify(require('child_process').exec);
+  try {
+    if (process.platform === 'darwin') {
+      await execP('open -a Ollama');
+    } else if (process.platform === 'win32') {
+      await execP('start "" "ollama app"');
+    }
+    return true;
+  } catch (error) {
+    console.error('[MAIN] Failed to start Ollama:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('install-ollama', async () => {
+  try {
+    if (process.platform === 'darwin') {
+      await shell.openExternal('https://ollama.com/download/mac');
+    } else if (process.platform === 'win32') {
+      await shell.openExternal('https://ollama.com/download/windows');
+    }
+    return { success: true, message: "Opened download page" };
+  } catch (error) {
+    return { success: false, message: error.message };
   }
 });

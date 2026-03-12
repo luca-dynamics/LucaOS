@@ -40,6 +40,7 @@ export interface LucaSettings {
     memoryModel: string;
     temperature: number;
     autoContextWindow: boolean;
+    preferOllama: boolean; // Global local routing priority
   };
   voice: {
     provider: "native" | "google" | "local-luca" | "gemini-genai";
@@ -190,6 +191,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     memoryModel: BRAIN_CONFIG.defaults.memory,
     temperature: 0.7,
     autoContextWindow: true,
+    preferOllama: false, // Default to Luca-native routing
   },
   voice: {
     provider: "local-luca", // Default to Local Luca
@@ -269,6 +271,7 @@ const STORAGE_KEY = "LUCA_SETTINGS_V1";
 
 class SettingsService extends EventEmitter {
   private settings: LucaSettings;
+  private localDiscoveryOverride: boolean = false;
 
   constructor() {
     super();
@@ -722,6 +725,117 @@ class SettingsService extends EventEmitter {
     };
 
     this.saveOperatorProfile(updated);
+  }
+
+  /**
+   * Global guard for local service discovery (Ollama pings, Cortex checks, etc.)
+   * returns true if local models are selected OR we are in a 'go local' onboarding override.
+   */
+  public isLocalDiscoveryEnabled(): boolean {
+    const settings = this.getSettings();
+
+    // 1. Explicit onboarding override (User clicked 'Go Local')
+    if (this.localDiscoveryOverride) return true;
+
+    // 2. Setup not complete - stay silent by default
+    if (!settings.general.setupComplete) return false;
+
+    // 3. Check model selections
+    const isLocalBrain =
+      settings.brain.model.startsWith("local/") ||
+      [
+        "gemma-2b",
+        "phi-3-mini",
+        "llama-3.2-1b",
+        "smollm2-1.7b",
+        "qwen-2.5-7b",
+        "deepseek-r1-distill-7b",
+      ].includes(settings.brain.model);
+
+    const isLocalVision =
+      settings.brain.visionModel.startsWith("local/") ||
+      ["smolvlm-500m", "ui-tars-2b"].includes(settings.brain.visionModel);
+
+    const isLocalVoice = settings.voice.provider === "local-luca";
+
+    return (
+      isLocalBrain ||
+      isLocalVision ||
+      isLocalVoice ||
+      settings.brain.preferOllama
+    );
+  }
+
+  /**
+   * Set a temporary override to allow local discovery during onboarding
+   */
+  public setLocalDiscoveryOverride(enabled: boolean) {
+    this.localDiscoveryOverride = enabled;
+    this.emit("settings-changed", this.settings);
+  }
+
+  /**
+   * Check if a specific model ID refers to a local service
+   */
+  public isModelLocal(modelId: string): boolean {
+    if (!modelId) return false;
+    return (
+      modelId.startsWith("local/") ||
+      [
+        "gemma-2b",
+        "phi-3-mini",
+        "llama-3.2-1b",
+        "smollm2-1.7b",
+        "qwen-2.5-7b",
+        "deepseek-r1-distill-7b",
+        "smolvlm-500m",
+        "ui-tars-2b",
+      ].includes(modelId)
+    );
+  }
+
+  /**
+   * Check if the user has configured valid API keys for peer cloud providers
+   */
+  public hasValidCloudKeys(
+    provider?: "openai" | "anthropic" | "gemini" | "xai",
+  ): boolean {
+    const { brain } = this.settings;
+    if (provider) {
+      switch (provider) {
+        case "openai":
+          return !!brain.openaiApiKey && brain.openaiApiKey !== "[SECURED]";
+        case "anthropic":
+          return (
+            !!brain.anthropicApiKey && brain.anthropicApiKey !== "[SECURED]"
+          );
+        case "gemini":
+          return !!brain.geminiApiKey && brain.geminiApiKey !== "[SECURED]";
+        case "xai":
+          return !!brain.xaiApiKey && brain.xaiApiKey !== "[SECURED]";
+      }
+    }
+    return (
+      this.hasValidCloudKeys("openai") ||
+      this.hasValidCloudKeys("anthropic") ||
+      this.hasValidCloudKeys("gemini") ||
+      this.hasValidCloudKeys("xai")
+    );
+  }
+
+  /**
+   * Get the first available (configured) cloud provider for fallback
+   */
+  public getBestAvailableCloudProvider():
+    | "gemini"
+    | "openai"
+    | "anthropic"
+    | "xai" {
+    if (this.hasValidCloudKeys("gemini")) return "gemini";
+    if (this.hasValidCloudKeys("anthropic")) return "anthropic";
+    if (this.hasValidCloudKeys("openai")) return "openai";
+    if (this.hasValidCloudKeys("xai")) return "xai";
+    return "gemini"; // Ultimate fallback to Luca Prime (Gemini)
   }
 }
 

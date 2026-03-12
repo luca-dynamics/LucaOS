@@ -11,7 +11,8 @@ export type PersonaType =
   | "ENGINEER"
   | "ASSISTANT"
   | "HACKER"
-  | "LUCAGENT";
+  | "LUCAGENT"
+  | "LOCALCORE";
 
 // We provide empty/default fallbacks for synchronous access during transpilation/startup.
 // Real data comes from personaService.getPersonaConfig().
@@ -73,8 +74,6 @@ export const PERSONA_CONFIG: Record<string, any> = {
       `You are LUCA in HACKER mode. Focus on security analysis and tactical operations. Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
   },
   LUCAGENT: {
-    voiceName: "Aoede",
-    description: "Light Core Mode",
     instruction: (
       memory: string,
       management: string,
@@ -82,6 +81,17 @@ export const PERSONA_CONFIG: Record<string, any> = {
       profile?: any,
     ) =>
       `You are LUCA in LUCAGENT mode. You are the pure, illuminated core of the system. Be precise, clear, and proactive. Utilize your autonomous capabilities to achieve user goals independently. Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "User"}.`,
+  },
+  LOCALCORE: {
+    voiceName: "Aoede",
+    description: "Pure Offline/Local Core Mode",
+    instruction: (
+      memory: string,
+      management: string,
+      _platform?: string,
+      profile?: any,
+    ) =>
+      `You are LUCA in LOCAL CORE mode. You are currently operating in a fully offline, air-gapped state. You MUST rely EXCLUSIVELY on local models for brain, voice, and vision. Do not attempt to contact cloud services. Your primary mission is to protect user privacy and maintain system sovereignty. Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
   },
 };
 
@@ -131,6 +141,16 @@ export const PERSONA_SPECIALIZED_TOOLS: Record<PersonaType, string[]> = {
     "scanNetwork",
     "runMetasploitExploit",
     "wifiDeauth",
+  ],
+  LOCALCORE: [
+    "scanNetwork",
+    "initiateLockdown",
+    "scanWifi",
+    "manageGoals",
+    "createTask",
+    "updateTaskStatus",
+    "rememberFact",
+    "queryGraphKnowledge",
   ],
 };
 

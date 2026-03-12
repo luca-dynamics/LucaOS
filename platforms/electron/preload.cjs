@@ -42,7 +42,13 @@ expose('luca', {
 
     connectSocial: (appId) => ipcRenderer.invoke('connect-social', { appId }),
     getCortexUrl: () => ipcRenderer.invoke('get-cortex-url'),
-    getSecureToken: () => ipcRenderer.invoke('get-secure-token')
+    getSecureToken: () => ipcRenderer.invoke('get-secure-token'),
+    send: (channel, data) => ipcRenderer.send(channel, data),
+    on: (channel, func) => {
+        const subscription = (event, ...args) => func(...args);
+        ipcRenderer.on(channel, subscription);
+        return () => ipcRenderer.removeListener(channel, subscription);
+    }
 });
 
 expose('electron', {

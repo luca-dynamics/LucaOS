@@ -10,7 +10,8 @@ export type PersonaMode =
   | "ENGINEER"
   | "ASSISTANT"
   | "HACKER"
-  | "LUCAGENT";
+  | "LUCAGENT"
+  | "LOCALCORE";
 
 export type UIThemeId =
   | "PROFESSIONAL"

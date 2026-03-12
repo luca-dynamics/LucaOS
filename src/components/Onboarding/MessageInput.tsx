@@ -3,7 +3,7 @@ import { Send } from "lucide-react";
 import { ConversationMode } from "./ModeSelect";
 import VoiceHud from "../VoiceHud";
 import { liveService } from "../../services/liveService";
-import { localVoiceService } from "../../services/localVoiceService";
+import { hybridVoiceService } from "../../services/hybridVoiceService";
 // Note: voiceService not needed - Gemini/Local TTS handles speech natively
 
 interface MessageInputProps {
@@ -107,7 +107,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         );
 
         // Connect with liveService-compatible API
-        localVoiceService.connect({
+        hybridVoiceService.connect({
           sttModel: "whisper-tiny",
           llmModel: "llama-3.2-1b",
           ttsVoice: "amy",
@@ -155,7 +155,7 @@ When you have gathered enough info, summarize and say "ONBOARDING_COMPLETE".`,
               if (isComplete && !isCompletingRef.current) {
                 isCompletingRef.current = true;
                 setTimeout(() => {
-                  localVoiceService.disconnect();
+                  hybridVoiceService.disconnect();
                   isConnectedRef.current = false;
                   onVoiceCompleteRef.current?.();
                 }, 1500);
@@ -177,7 +177,7 @@ When you have gathered enough info, summarize and say "ONBOARDING_COMPLETE".`,
               // Kickstart with greeting
               setTimeout(() => {
                 if (isConnectedRef.current) {
-                  localVoiceService.sendText(
+                  hybridVoiceService.sendText(
                     "Hi! I'm ready to begin the onboarding.",
                   );
                 }
@@ -188,8 +188,8 @@ When you have gathered enough info, summarize and say "ONBOARDING_COMPLETE".`,
 
         // Cleanup for local mode
         return () => {
-          localVoiceService.disconnect();
-          localVoiceService.clearHistory();
+          hybridVoiceService.disconnect();
+          hybridVoiceService.clearHistory();
         };
       }
 
