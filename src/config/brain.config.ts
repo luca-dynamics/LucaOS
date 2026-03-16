@@ -11,11 +11,10 @@ export const BRAIN_CONFIG = {
 
   // Global Default Models (Stable IDs)
   defaults: {
-    brain: "gemini-3-flash-preview", // Stable Gemini 3 for reasoning and chat
-    vision: "gemini-3-flash-preview", // Stable Gemini 3 for visual understanding
+    brain: "gemini-2.0-flash-exp",
+    vision: "gemini-2.0-flash-exp",
     voice: "models/gemini-2.5-flash-native-audio-preview-12-2025", // Flagship Live API model
-    memory: "mxbai-embed-xsmall",
-    embedding: "mxbai-embed-xsmall",
+    embedding: "text-embedding-004", // Canonical cloud model
   },
 
   // Managed Cloud Discovery (Stable mapping for UI Labels)

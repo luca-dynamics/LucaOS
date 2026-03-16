@@ -3,6 +3,11 @@ import { agenticVisionService } from "../../services/agenticVisionService";
 import { screenCaptureService } from "../../services/screenCaptureService.js";
 import { settingsService } from "../../services/settingsService";
 import { apiUrl } from "../../config/api";
+import { PROTECTED_FILES } from "../../config/constitution";
+import { thoughtStreamService } from "../../services/thoughtStreamService";
+import { permissionGateService } from "../../services/permissionGateService";
+import { skillIngestionService } from "../../services/skillIngestionService";
+import { eventBus } from "../../services/eventBus";
 
 const SERVER_TOOLS = [
   "executeTerminalCommand",
@@ -143,6 +148,7 @@ const SERVER_TOOLS = [
   "broadcastGlobalDirective",
   "controlAlwaysOnVision",
   "controlAlwaysOnAudio",
+  "ingestSkillFromURL",
 ];
 
 export class ServerToolDispatcher {
@@ -160,6 +166,99 @@ export class ServerToolDispatcher {
   ): Promise<string> {
     if (!context.isLocalCoreConnected) {
       return `ERROR: Tool ${name} requires Local Core connection.`;
+    }
+
+    // --- CONSTITUTIONAL GUARDRAIL (PHASE 8.2 ABSOLUTE HARDENING) ---
+    // Protect core files from AI modification without Operator Level 10 Authorization
+    const targetPath = (args.path || args.filePath || args.filename || args.fileName || args.targetPath || "").replace(/^\.\//, "");
+    
+    // 1. Identify if the action targets a protected file directly OR its parent directories
+    let isProtectedAction = PROTECTED_FILES.some((file: string) => 
+      targetPath === file || 
+      targetPath.endsWith(`/${file}`) || 
+      targetPath.includes(`/src/config/${file}`) ||
+      (targetPath !== "" && file.startsWith(targetPath + "/")) // Block operations on parent folders
+    );
+
+    // 2. Expand protection to indirect or recursive tools
+    const highRiskTools = ["writeProjectFile", "createOrUpdateFile", "executeTerminalCommand", "evolveCodeSafe", "installFromRecipe", "startSubsystem", "batchAnalyzeAndOrganizeDirectory"];
+    
+    if (!isProtectedAction && highRiskTools.includes(name)) {
+      // Deep Inspection for Terminal Commands
+      if (name === "executeTerminalCommand") {
+        const cmd = args.command || "";
+        const destructivePatterns = ["rm ", "mv ", "cat >", "> ", "truncate ", "dd ", "chmod ", "chown ", "rmdir "];
+        const isDestructive = destructivePatterns.some(p => cmd.includes(p));
+        
+        if (isDestructive) {
+          const cmdWords = cmd.split(/\s+/);
+          isProtectedAction = PROTECTED_FILES.some((file: string) => {
+            if (cmd.includes(file)) return true;
+            // Recursive Parent Check: Does the command target any parent folder of a protected file?
+            const segments = file.split("/");
+            let currentParent = "";
+            for (let i = 0; i < segments.length - 1; i++) {
+              currentParent = currentParent ? `${currentParent}/${segments[i]}` : segments[i];
+              if (cmdWords.some((word: string) => word === currentParent || word.startsWith(currentParent + "/"))) return true;
+            }
+            return false;
+          });
+        }
+      }
+
+      // Deep Inspection for Forge Recipes (Recursively scan for protected files or parent directories)
+      if (name === "installFromRecipe" && args.recipe) {
+        const recipeStr = JSON.stringify(args.recipe);
+        isProtectedAction = PROTECTED_FILES.some((file: string) => {
+          if (recipeStr.includes(file)) return true;
+          const segments = file.split("/");
+          let currentParent = "";
+          for (let i = 0; i < segments.length - 1; i++) {
+            currentParent = currentParent ? `${currentParent}/${segments[i]}` : segments[i];
+            if (recipeStr.includes(`"${currentParent}"`) || recipeStr.includes(`"${currentParent}/`)) return true;
+          }
+          return false;
+        });
+      }
+
+      // Deep Inspection for Subsystems
+      if (name === "startSubsystem") {
+        const cmdStr = `${args.command} ${args.args?.join(" ")}`;
+        isProtectedAction = PROTECTED_FILES.some((file: string) => cmdStr.includes(file));
+      }
+    }
+
+    if (isProtectedAction && highRiskTools.includes(name)) {
+      // Check for ROOT ADMINISTRATIVE MISSION override in the prompt/context
+      const lastUserMsg = [...context.messages].reverse().find(m => m.role === "user");
+      const hasMissionOverride = lastUserMsg?.content.includes("ROOT ADMINISTRATIVE MISSION");
+
+      if (!hasMissionOverride) {
+        thoughtStreamService.pushThought("WARNING", `Constitutional Guardrail triggered for ${name} on ${targetPath || 'system infrastructure'}. Requesting operator authorization.`);
+        
+        const requestId = permissionGateService.requestPermission(
+          name, 
+          args, 
+          `Authorization required: Modifying protected infrastructure (${targetPath || name}).`
+        );
+
+        // Wait for operator response (10 minute timeout for mission-critical tasks)
+        const authorized = await new Promise<boolean>((resolve) => {
+          const timeout = setTimeout(() => resolve(false), 600000); 
+          eventBus.once(`permission-resolved:${requestId}`, (data: { authorized: boolean }) => {
+            clearTimeout(timeout);
+            resolve(data.authorized);
+          });
+        });
+
+        if (!authorized) {
+          console.error(`[CONSTITUTION] 🛑 Blocked attempt to modify protected infrastructure: ${targetPath || name}`);
+          return `CONSTITUTIONAL VIOLATION: The requested action targets protected LUCA infrastructure (Operator Sovereignty). Permission was NOT granted by the Operator.`;
+        }
+        
+        thoughtStreamService.pushThought("ACTION", `Operator granted explicit authorization for ${name}. Proceeding.`);
+      }
+      console.log(`[CONSTITUTION] 🔓 Authorized modification of protected infrastructure: ${targetPath || name} (Mission Mode Active)`);
     }
 
     const {
@@ -204,6 +303,19 @@ export class ServerToolDispatcher {
     // --- TRIGGER INGESTION UI ---
     if (name === "ingestGithubRepo") {
       setIngestionState({ active: true, files: [], skills: [] });
+    }
+
+    if (name === "ingestSkillFromURL") {
+      try {
+        const result = await skillIngestionService.ingestAndRegister(args.url);
+        if (result.success) {
+          return `SUCCESS: Ingested skill "${result.skillName}" from ${args.url}.\nDescription: ${result.description}`;
+        } else {
+          return `ERROR: ${result.error}`;
+        }
+      } catch (e: any) {
+        return `ERROR: Ingestion failed: ${e.message}`;
+      }
     }
 
     // --- SPECIAL LOGIC: MACRO EXECUTION ---
@@ -1093,7 +1205,6 @@ export class ServerToolDispatcher {
           });
         }
 
-        // --- AUTOMATIC SUBSYSTEMS CASTING ---
         if (
           (name === "startSubsystem" ||
             name === "stopSubsystem" ||
@@ -1103,6 +1214,18 @@ export class ServerToolDispatcher {
           context.setVisualData({
             type: "SUBSYSTEMS",
             topic: "SUBSYSTEM_DASHBOARD",
+            data: data,
+          });
+        }
+
+        // --- AUTOMATIC DIAGNOSTICS CASTING (PHASE 8) ---
+        if (
+          (name === "auditSystem" || name === "repairSystem") &&
+          context.setVisualData
+        ) {
+          context.setVisualData({
+            type: "DIAGNOSTICS",
+            topic: "SYSTEM_HEALTH",
             data: data,
           });
         }

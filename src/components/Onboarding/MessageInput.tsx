@@ -280,7 +280,14 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
             // Remove leading/trailing quotes if Gemini added them
             processedText = processedText.replace(/^["']|["']$/g, "").trim();
 
-            // Skip empty transcripts after cleaning
+            // LOG incoming for debug
+            console.log("[Onboarding Voice] Incoming Model Text:", text, "-> Processed:", processedText);
+
+            // Skip ONLY IF truly empty (don't return early if we have something even if short)
+            if (!processedText && text.trim()) {
+              processedText = text.trim(); // Fallback to raw if logic stripped everything
+            }
+            
             if (!processedText) return;
           }
 
@@ -471,14 +478,13 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
   return (
     <form
       onSubmit={handleSubmit}
-      className={`p-3 sm:p-4 border-t backdrop-blur-xl ${isLight ? "border-black/10" : "border-white/10"}`}
+      className={`border-t backdrop-blur-xl ${isLight ? "border-black/10" : "border-white/10"}`}
+      style={{ padding: "2vmin" }}
     >
       <div
         className={`
-        flex items-center gap-2 sm:gap-3
+        flex items-center
         theme-transition
-        rounded-xl sm:rounded-2xl 
-        px-3 sm:px-4 py-2 sm:py-3
         backdrop-blur-xl
         transition-all
         ${
@@ -487,6 +493,11 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
             : "bg-white/5 border border-white/20 focus-within:border-white/40 focus-within:bg-white/10"
         }
       `}
+      style={{
+        borderRadius: "1.5vmin",
+        padding: "1vmin 2vmin",
+        gap: "1.5vmin"
+      }}
       >
         {/* Text input */}
         <input
@@ -503,10 +514,10 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
           className={`
             flex-1 
             bg-transparent 
-            text-sm
             outline-none
             ${isLight ? "text-gray-900 placeholder-gray-400" : "text-white placeholder-gray-500"}
           `}
+          style={{ fontSize: "clamp(0.7rem, 2vmin, 0.9rem)" }}
         />
 
         {/* Send button */}
@@ -514,7 +525,6 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
           type="submit"
           disabled={disabled || !value.trim()}
           className={`
-            p-2 
             rounded-lg
             disabled:opacity-50
             disabled:cursor-not-allowed
@@ -522,17 +532,19 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
             active:scale-95
             ${isLight ? "bg-black/10 hover:bg-black/20" : "bg-white/10 hover:bg-white/20"}
           `}
+          style={{ padding: "1vmin" }}
         >
           <Send
-            size={18}
             className={isLight ? "text-gray-800" : "text-white"}
+            style={{ width: "2.5vmin", height: "2.5vmin" }}
           />
         </button>
       </div>
 
       {/* Helper text - hidden on very small screens */}
       <div
-        className={`hidden sm:block text-[10px] text-center mt-2 ${isLight ? "text-black/40" : "text-white/60"}`}
+        className={`hidden sm:block text-center mt-2 ${isLight ? "text-black/40" : "text-white/60"}`}
+        style={{ fontSize: "clamp(0.5rem, 1.2vmin, 0.7rem)" }}
       >
         Press Enter to send, Shift+Enter for new line
       </div>

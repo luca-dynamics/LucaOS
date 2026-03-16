@@ -152,7 +152,8 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
           <div className="flex items-center justify-between">
             <Cpu className="w-4 h-4" style={{ color: theme.hex }} />
             <Zap
-              className={`w-3 h-3 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-amber-500" : "text-yellow-500/50"}`}
+              className="w-3 h-3"
+              style={{ color: theme.hex, opacity: 0.6 }}
             />
           </div>
           <div>
@@ -169,7 +170,7 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
             <div
               className={`text-[10px] mt-1 flex items-center gap-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
             >
-              <ShieldCheck className="w-3 h-3" />
+              <ShieldCheck className="w-3 h-3" style={{ color: theme.hex }} />
               {archBadge}
             </div>
           </div>
@@ -250,7 +251,8 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
           <div className="flex items-center justify-between">
             <Eye className="w-4 h-4" style={{ color: theme.hex }} />
             <Globe
-              className={`w-3 h-3 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-indigo-500" : "text-blue-500/50"}`}
+              className="w-3 h-3"
+              style={{ color: theme.hex, opacity: 0.6 }}
             />
           </div>
           <div>
@@ -272,7 +274,8 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
               className={`text-[10px] mt-1 flex items-center gap-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
             >
               <Zap
-                className={`w-2.5 h-2.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-amber-500" : "text-yellow-500/60"}`}
+                className="w-2.5 h-2.5"
+                style={{ color: theme.hex, opacity: 0.6 }}
               />
               Spatial Awareness Active
             </div>
@@ -294,7 +297,7 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
             }
             className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-white transition-colors group"
           >
-            <ExternalLink className="w-3 h-3 group-hover:scale-110 transition-transform" />
+            <ExternalLink className="w-3 h-3 group-hover:scale-110 transition-transform" style={{ color: theme.hex }} />
             Check Updates
           </button>
           <button
@@ -304,7 +307,7 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
             }
             className={`flex items-center gap-1.5 text-[10px] transition-colors group ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}
           >
-            <ShieldCheck className="w-3 h-3 group-hover:scale-110 transition-transform" />
+            <ShieldCheck className="w-3 h-3 group-hover:scale-110 transition-transform" style={{ color: theme.hex }} />
             Permissions
           </button>
         </div>

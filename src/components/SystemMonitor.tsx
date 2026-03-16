@@ -13,12 +13,14 @@ interface Props {
     bg: string;
     themeName?: string;
   };
+  connectionTier?: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
 }
 
 const SystemMonitor: React.FC<Props> = ({
   audioListenMode = false,
   connected = false,
   theme,
+  connectionTier = "LOCAL",
 }) => {
   const themeColor = theme?.hex || "#3b82f6";
   const themePrimary = theme?.primary || "text-sci-cyan";
@@ -312,9 +314,9 @@ const SystemMonitor: React.FC<Props> = ({
       ctx.fillText(
         audioListenMode
           ? "AUDIO ANALYSIS ACTIVE"
-          : connected
-            ? "REALTIME TELEMETRY"
-            : "SIMULATION MODE",
+          : connectionTier === "OFFLINE"
+            ? "SIMULATION MODE"
+            : `REALTIME TELEMETRY (${connectionTier})`,
         20,
         125,
       );

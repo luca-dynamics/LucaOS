@@ -33,6 +33,12 @@ class SocketService {
             this.io.to(`device:${deviceId}`).emit('command:received', command);
         });
 
+        lucaLinkManager.on('state:sync', (packet) => {
+            const { topic, data } = packet;
+            console.log(`[SOCKET] Broadcasting state sync: ${topic}`);
+            this.io.emit('state:sync', { topic, data, timestamp: Date.now() });
+        });
+
         this._setupEventListeners();
     }
 

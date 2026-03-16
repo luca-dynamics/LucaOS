@@ -324,23 +324,8 @@ export const useAppSystem = ({
                 setBootSequence("READY");
 
                 if (messages.length === 0) {
-                  const hour = new Date().getHours();
-                  const greeting =
-                    hour < 12
-                      ? "Good morning"
-                      : hour < 17
-                        ? "Good afternoon"
-                        : "Good evening";
-                  const name =
-                    settingsService.getOperatorProfile()?.name || "Commander";
-                  setMessages(() => [
-                    {
-                      id: "0",
-                      text: `${greeting}, ${name}.\n\nAll systems online. How may I assist?`,
-                      sender: Sender.LUCA,
-                      timestamp: Date.now(),
-                    },
-                  ]);
+                  // Post-system greeting now handled by ChatPanel Omni-Center UI
+                  // to keep history clean for user first interaction.
                 }
               }
             },
@@ -383,23 +368,7 @@ export const useAppSystem = ({
           setBootSequence("READY");
 
           if (messages.length === 0) {
-            const hour = new Date().getHours();
-            const greeting =
-              hour < 12
-                ? "Good morning"
-                : hour < 17
-                  ? "Good afternoon"
-                  : "Good evening";
-            const name =
-              settingsService.getOperatorProfile()?.name || "Operator";
-            setMessages(() => [
-              {
-                id: "0",
-                text: `${greeting}, ${name}.\n\nRunning in Cloud Mode — Chat and Voice are fully operational. Install the Desktop app for full system access.`,
-                sender: Sender.LUCA,
-                timestamp: Date.now(),
-              },
-            ]);
+            // Cloud-mode greeting now handled by ChatPanel Omni-Center UI
           }
         }
       }

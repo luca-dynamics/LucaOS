@@ -1,21 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import {
   X,
-  Camera,
   Aperture,
   Target,
   Crosshair,
-  Eye,
   Activity,
+  Check,
+  ShieldAlert,
 } from "lucide-react";
 import { soundService } from "../services/soundService";
 import { useMobile } from "../hooks/useMobile";
+import { biometricService } from "../services/biometricService";
 import { setHexAlpha } from "../config/themeColors";
 
 interface Props {
   onClose: () => void;
-  onCapture: (base64Image: string) => void;
+  onCapture: (base64Image: string, vector?: number[]) => void;
   onLiveAnalyze?: (base64Image: string) => Promise<string>;
   theme?: {
     primary: string;
@@ -32,14 +34,20 @@ const VisionCameraModal: React.FC<Props> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [, setStream] = useState<MediaStream | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [isLiveScanning, setIsLiveScanning] = useState(false);
-  const [scanLog, setScanLog] = useState<string[]>([]);
-  const [, setScanTargets] = useState<{ x: number; y: number }[]>([]);
+  const [analyzing] = useState(false);
   const isMobile = useMobile();
 
   const [cameraReady, setCameraReady] = useState(false);
   const [, setCameraError] = useState<string | null>(null);
+  const [neuralLock, setNeuralLock] = useState({ x: 50, y: 50, scale: 1 });
+  const [hudGlow, setHudGlow] = useState(false);
+
+  // Apple-style Scan State
+  const [isFaceScanning, setIsFaceScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanStatus, setScanStatus] = useState<"scanning" | "success" | "fail">("scanning");
+  const [detectionFailureCount, setDetectionFailureCount] = useState(0);
+  const lastVectorRef = useRef<number[] | null>(null);
 
   useEffect(() => {
     let activeStream: MediaStream | null = null;
@@ -48,215 +56,153 @@ const VisionCameraModal: React.FC<Props> = ({
       setCameraReady(false);
       setCameraError(null);
 
-      // Cross-platform camera configuration
-      // Face capture always needs front camera ("user"),
-      // while Astra live scan might use environment on mobile for object detection
-      const isFaceCapture = !onLiveAnalyze; // If no live analyze, it's face capture mode
-
-      // Platform detection
+      const isFaceCapture = !onLiveAnalyze;
       const userAgent = navigator.userAgent.toLowerCase();
       const isIOS = /iphone|ipad|ipod/.test(userAgent);
       const isAndroid = /android/.test(userAgent);
       const isMobileDevice = isIOS || isAndroid || isMobile;
 
-      // Face capture: always use front camera on all platforms
-      // Astra scan: use back camera on mobile for object/environment scanning, front on desktop
-      const preferredFacingMode = isFaceCapture
-        ? "user" // Face capture = front camera everywhere
-        : isMobileDevice
-          ? "environment"
-          : "user"; // Astra scan = back on mobile, front on desktop
+      const preferredFacingMode = isFaceCapture ? "user" : isMobileDevice ? "environment" : "user";
 
-      // Try progressive camera access with fallbacks
       const constraints = [
-        // Attempt 1: Preferred configuration with resolution constraints
-        {
-          video: {
-            width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 },
-            facingMode: preferredFacingMode,
-          },
-        },
-        // Attempt 2: Just facingMode, no resolution constraints
-        {
-          video: {
-            facingMode: preferredFacingMode,
-          },
-        },
-        // Attempt 3: Opposite facing mode (in case preferred isn't available)
-        {
-          video: {
-            facingMode: preferredFacingMode === "user" ? "environment" : "user",
-          },
-        },
-        // Attempt 4: Any available camera
-        {
-          video: true,
-        },
+        { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: preferredFacingMode } },
+        { video: { facingMode: preferredFacingMode } },
+        { video: true },
       ];
 
       for (const constraint of constraints) {
         try {
-          console.log(
-            "[CAMERA] Trying constraint:",
-            JSON.stringify(constraint),
-          );
-          const mediaStream =
-            await navigator.mediaDevices.getUserMedia(constraint);
+          const mediaStream = await navigator.mediaDevices.getUserMedia(constraint);
           activeStream = mediaStream;
           setStream(mediaStream);
 
           if (videoRef.current) {
             videoRef.current.srcObject = mediaStream;
-
-            // Wait for video to be ready before allowing capture
             videoRef.current.onloadedmetadata = () => {
-              videoRef.current
-                ?.play()
-                .then(() => {
-                  console.log(
-                    "[CAMERA] Video stream ready:",
-                    videoRef.current?.videoWidth,
-                    "x",
-                    videoRef.current?.videoHeight,
-                  );
-                  setCameraReady(true);
-                })
-                .catch(console.error);
+              videoRef.current?.play().then(() => setCameraReady(true)).catch(console.error);
             };
           }
-
-          console.log(
-            "[CAMERA] Success with constraint:",
-            JSON.stringify(constraint),
-          );
-          return; // Success, stop trying
+          return;
         } catch (err) {
-          console.warn(
-            "[CAMERA] Failed with constraint:",
-            JSON.stringify(constraint),
-            err,
-          );
+          console.warn("[CAMERA] Failed constraint:", constraint, err);
         }
       }
-
-      // All attempts failed
-      console.error("[CAMERA] All camera access attempts failed");
-      setCameraError("Unable to access camera. Please check permissions.");
+      setCameraError("Camera access failed.");
     };
 
     startCamera();
     soundService.play("HOVER");
 
+    const lockTimer = setTimeout(() => {
+      setNeuralLock({ x: 50, y: 42, scale: 1.25 });
+      setHudGlow(true);
+    }, 1200);
+
     return () => {
       if (activeStream) {
         activeStream.getTracks().forEach((track) => track.stop());
       }
+      clearTimeout(lockTimer);
     };
   }, [isMobile, onLiveAnalyze]);
 
-  // --- LIVE SCANNING LOOP (ASTRA MODE) ---
+  // --- Real-time Biometric Tracking Loop ---
   useEffect(() => {
-    let interval: any;
-    if (isLiveScanning && onLiveAnalyze) {
-      setScanLog((prev) => [...prev, "> INITIALIZING ASTRA PROTOCOL..."]);
-      soundService.play("PROCESSING");
+    let frameId: number;
+    let isMounted = true;
 
-      interval = setInterval(async () => {
-        if (!videoRef.current || !canvasRef.current) return;
+    const trackFace = async () => {
+      if (!isFaceScanning || !isMounted) return;
 
-        // 1. Capture Frame silently
-        const ctx = canvasRef.current.getContext("2d");
-        if (ctx) {
-          canvasRef.current.width = 640; // Low res for speed
-          canvasRef.current.height = 480;
-          ctx.drawImage(videoRef.current, 0, 0, 640, 480);
-          const base64 = canvasRef.current
-            .toDataURL("image/jpeg", 0.6)
-            .split(",")[1];
-
-          // 2. Random Targets Visual Effect
-          setScanTargets(
-            Array.from({ length: 3 }).map(() => ({
-              x: Math.random() * 80 + 10,
-              y: Math.random() * 80 + 10,
-            })),
-          );
-
-          // 3. Send to AI
-          try {
-            const analysis = await onLiveAnalyze(base64);
-            setScanLog((prev) => [...prev.slice(-6), `> ${analysis}`]);
-          } catch (e) {
-            console.error("Live Scan Error", e);
+      if (videoRef.current && cameraReady && videoRef.current.readyState >= 2) {
+        try {
+          // Offload detection to the specialized service
+          const vector = await biometricService.extractFaceEmbedding(videoRef.current);
+          
+          if (vector && isMounted) {
+            // Success: Increment progress
+            setScanProgress(prev => Math.min(prev + 1.8, 100)); // ~2% per successful frame
+            setDetectionFailureCount(0);
+            lastVectorRef.current = vector;
+            
+            // Jitter the neural lock for visual tracking effect
+            setNeuralLock(prev => ({
+              ...prev,
+              x: 50 + (Math.random() * 0.8 - 0.4),
+              y: 42 + (Math.random() * 0.8 - 0.4)
+            }));
+          } else if (isMounted) {
+            setDetectionFailureCount(prev => prev + 1);
           }
+        } catch (e) {
+          console.warn("[BIO] Tracking glitch:", e);
         }
-      }, 2000); // Every 2 seconds
-    } else {
-      setScanTargets([]);
-    }
-    return () => clearInterval(interval);
-  }, [isLiveScanning, onLiveAnalyze]);
+      }
 
-  const handleCapture = () => {
-    if (!videoRef.current || !canvasRef.current) {
-      console.error(
-        "[CAPTURE] Missing refs - video:",
-        !!videoRef.current,
-        "canvas:",
-        !!canvasRef.current,
-      );
-      return;
+      // Schedule next frame ONLY after previous one finishes (important for heavy ML)
+      if (isFaceScanning && isMounted) {
+        frameId = requestAnimationFrame(trackFace);
+      }
+    };
+
+    if (isFaceScanning) {
+      console.log("[BIO] Starting biometric tracking sequence...");
+      trackFace();
     }
 
-    if (!cameraReady) {
-      console.error("[CAPTURE] Camera not ready yet");
-      return;
+    return () => {
+      isMounted = false;
+      cancelAnimationFrame(frameId);
+    };
+  }, [isFaceScanning, cameraReady]);
+
+  // Handle Scan Completion
+  useEffect(() => {
+    if (scanProgress >= 100 && isFaceScanning && scanStatus !== "success") {
+      setScanStatus("success");
+      soundService.play("SUCCESS");
+      
+      // Auto-capture after brief delay to show success state
+      const timer = setTimeout(() => {
+        finalizeCapture();
+      }, 800);
+      return () => clearTimeout(timer);
     }
+  }, [scanProgress, isFaceScanning, scanStatus]);
 
-    const videoWidth = videoRef.current.videoWidth;
-    const videoHeight = videoRef.current.videoHeight;
-
-    if (!videoWidth || !videoHeight) {
-      console.error(
-        "[CAPTURE] Video dimensions not available:",
-        videoWidth,
-        "x",
-        videoHeight,
-      );
-      return;
-    }
-
-    console.log(
-      "[CAPTURE] Starting capture, dimensions:",
-      videoWidth,
-      "x",
-      videoHeight,
-    );
-
-    soundService.play("PROCESSING");
-    setAnalyzing(true);
-
-    // Flash effect
-    const flash = document.createElement("div");
-    flash.className =
-      "absolute inset-0 bg-white z-[300] animate-out fade-out duration-500";
-    document.body.appendChild(flash);
-    setTimeout(() => document.body.removeChild(flash), 500);
-
+  const finalizeCapture = () => {
+    if (!videoRef.current || !canvasRef.current) return;
     const context = canvasRef.current.getContext("2d");
     if (context) {
       canvasRef.current.width = videoRef.current.videoWidth;
       canvasRef.current.height = videoRef.current.videoHeight;
       context.drawImage(videoRef.current, 0, 0);
+      const base64 = canvasRef.current.toDataURL("image/jpeg", 0.9).split(",")[1];
+      onCapture(base64, lastVectorRef.current || undefined);
+      onClose();
+    }
+  };
 
-      const base64 = canvasRef.current.toDataURL("image/jpeg", 0.85);
-      const cleanBase64 = base64.split(",")[1];
+  const startScan = () => {
+    if (!cameraReady) return;
+    setIsFaceScanning(true);
+    setScanProgress(0);
+    setScanStatus("scanning");
+    soundService.play("PROCESSING");
+  };
 
-      setTimeout(() => {
-        onCapture(cleanBase64);
-        onClose();
-      }, 800);
+  const handleCaptureClick = () => {
+    if (onLiveAnalyze) {
+      // Direct capture for Astra mode
+      finalizeCapture();
+    } else {
+      // Face Scan mode for Uplink
+      if (isFaceScanning) {
+        // Force capture if scan hangs
+        finalizeCapture();
+      } else {
+        startScan();
+      }
     }
   };
 
@@ -269,224 +215,116 @@ const VisionCameraModal: React.FC<Props> = ({
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover opacity-90 scale-x-[-1]" // Flip for mirror effect
+          className={`w-full h-full object-cover transition-all duration-[2000ms] ease-out ${isFaceScanning ? "brightness-125 saturate-150" : "opacity-90"}`}
+          style={{
+            objectPosition: `${neuralLock.x}% ${neuralLock.y}%`,
+            transform: `scaleX(-1) scale(${neuralLock.scale})`,
+          }}
         />
       </div>
 
-      {/* Live Scan HUD Overlays */}
-      {isLiveScanning && (
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Scrolling Scanline */}
-          <div
-            className="absolute top-0 left-0 w-full h-1 animate-[scan_2s_linear_infinite]"
-            style={{
-              backgroundColor: theme ? setHexAlpha(theme.hex, 0.5) : undefined,
-              boxShadow: theme ? `0 0 15px ${theme.hex}` : undefined,
-            }}
-          ></div>
-
-          {/* Side Data Stream */}
-          {!isMobile && (
-            <div
-              className="absolute right-4 top-20 bottom-32 w-64 flex flex-col items-end gap-2 text-[10px] font-bold tracking-wider opacity-90"
-              style={{ color: theme?.hex }}
-            >
-              <div
-                className="flex items-center gap-2 border-b pb-1 mb-2"
-                style={{
-                  borderColor: theme ? setHexAlpha(theme.hex, 0.3) : undefined,
-                }}
-              >
-                <Activity size={12} className="animate-pulse" />{" "}
-                LIVE_ANALYSIS_STREAM
-              </div>
-              {scanLog.map((log, i) => (
-                <div
-                  key={i}
-                  className="bg-black/60 px-2 py-1 border-r-2 animate-in slide-in-from-right-4 fade-in duration-300 text-right max-w-full break-words"
-                  style={{ borderColor: theme?.hex }}
-                >
-                  {log}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* HUD Overlay Layer */}
-      <div className="absolute inset-0 pointer-events-none p-6 md:p-12 flex flex-col justify-between">
+      <div className="absolute inset-0 pointer-events-none p-6 md:p-12 flex flex-col justify-between z-30">
         {/* Top HUD */}
         <div className="flex justify-between items-start">
           <div className="flex flex-col gap-1 drop-shadow-lg">
             <div
-              className={`flex items-center gap-2 ${
-                isLiveScanning ? "animate-pulse" : "text-slate-200"
-              }`}
-              style={isLiveScanning ? { color: theme?.hex } : undefined}
+              className={`flex items-center gap-2 transition-all duration-500`}
+              style={{
+                color: isFaceScanning ? theme?.hex || "#fff" : (theme ? setHexAlpha(theme.hex, 0.8) : "#ffffff"),
+                textShadow: isFaceScanning ? `0 0 20px ${theme?.hex || "#fff"}` : (theme ? `0 0 10px ${setHexAlpha(theme.hex, 0.3)}` : "0 0 10px rgba(255,255,255,0.8)")
+              }}
             >
               <Target size={isMobile ? 18 : 24} />
-              <span
-                className="text-[10px] md:text-xs font-bold tracking-[0.3em]"
-                style={theme ? { color: theme.hex } : undefined}
-              >
-                {isLiveScanning
-                  ? "ASTRA_PROTOCOL: ONLINE"
-                  : "VISION UPLINK ACTIVE"}
+              <span className="text-[11px] md:text-sm tracking-[0.4em] font-black uppercase">
+                {isFaceScanning ? "SCANNING_IDENTITY_MATRIX" : "VISION UPLINK ACTIVE"}
               </span>
             </div>
-            <div className="text-[8px] md:text-[10px] text-white/40 uppercase tracking-widest">
-              X9-CORE | SYNC: STABLE | LUX: AUTO
-            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="pointer-events-auto p-3 rounded-full border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md active:scale-90"
+          <button 
+            onClick={onClose} 
+            className="pointer-events-auto p-3 rounded-full border text-white/60 hover:text-white hover:bg-white/10 backdrop-blur-md transition-all"
+            style={{ borderColor: theme ? setHexAlpha(theme.hex, 0.3) : "rgba(255,255,255,0.1)" }}
           >
             <X size={isMobile ? 20 : 28} />
           </button>
         </div>
 
-        {/* Center Reticle */}
-        {!isLiveScanning && (
-          <div
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
-              isMobile ? "w-48 h-48" : "w-80 h-80"
-            } border-2 border-white/10 rounded-2xl flex items-center justify-center`}
-          >
-            <div
-              className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 rounded-tl-sm"
-              style={{
-                borderColor: theme
-                  ? setHexAlpha(theme.hex, 0.8)
-                  : "rgba(255,255,255,0.8)",
-              }}
-            ></div>
-            <div
-              className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 rounded-tr-sm"
-              style={{
-                borderColor: theme
-                  ? setHexAlpha(theme.hex, 0.8)
-                  : "rgba(255,255,255,0.8)",
-              }}
-            ></div>
-            <div
-              className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 rounded-bl-sm"
-              style={{
-                borderColor: theme
-                  ? setHexAlpha(theme.hex, 0.8)
-                  : "rgba(255,255,255,0.8)",
-              }}
-            ></div>
-            <div
-              className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 rounded-br-sm"
-              style={{
-                borderColor: theme
-                  ? setHexAlpha(theme.hex, 0.8)
-                  : "rgba(255,255,255,0.8)",
-              }}
-            ></div>
+        {/* Apple-Style Scan Ring */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          {isFaceScanning ? (
+             <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+                {/* Outer Progress Ring */}
+                <svg className="absolute inset-0 w-full h-full -rotate-90">
+                  <circle
+                    cx="50%" cy="50%" r="48%"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.1)"
+                    strokeWidth="4"
+                  />
+                  <motion.circle
+                    cx="50%" cy="50%" r="48%"
+                    fill="none"
+                    stroke={scanStatus === "success" ? "#22c55e" : (theme?.hex || "#fff")}
+                    strokeWidth="6"
+                    pathLength={100}
+                    strokeDasharray="100 100"
+                    initial={{ strokeDashoffset: 100 }}
+                    animate={{ strokeDashoffset: 100 - scanProgress }}
+                    transition={{ type: "spring", damping: 25, stiffness: 60 }}
+                  />
+                </svg>
 
-            <Crosshair
-              className="animate-spin-slow"
-              size={isMobile ? 32 : 48}
-              style={{
-                color: theme
-                  ? setHexAlpha(theme.hex, 0.3)
-                  : "rgba(255,255,255,0.2)",
-              }}
-            />
-
-            {analyzing && (
-              <div className="absolute inset-0 bg-white/5 backdrop-blur-[2px] animate-pulse flex items-center justify-center">
-                <span className="bg-white text-black px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em]">
-                  Analyzing...
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+                {/* Scan HUD Elements */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                   {scanStatus === "success" ? (
+                      <div className="flex flex-col items-center gap-2 text-green-500">
+                        <Check size={48} className="animate-bounce" />
+                        <span className="text-[10px] font-bold tracking-widest">VERIFIED</span>
+                      </div>
+                   ) : (
+                      <div 
+                        className="relative w-full h-full border rounded-full flex items-center justify-center"
+                        style={{ borderColor: theme ? setHexAlpha(theme.hex, 0.2) : "rgba(255,255,255,0.05)" }}
+                      >
+                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 bg-black px-2 text-[8px] text-white/40">BIO_LOCK</div>
+                         {detectionFailureCount > 40 ? ( <div className="flex flex-col items-center gap-1 text-yellow-500 animate-pulse"> <ShieldAlert size={32} /> <span className="text-[8px] font-bold">LOW VISIBILITY</span> </div> ) : ( <Activity className="text-white/20 animate-pulse" size={40} /> )}
+                      </div>
+                   )}
+                </div>
+             </div>
+          ) : (
+            /* Traditional Crosshair Reticle (Idle) */
+            <div 
+              className={`w-48 h-48 md:w-80 md:h-80 border-2 rounded-2xl flex items-center justify-center transition-all duration-1000 ${hudGlow ? 'scale-110 opacity-100' : 'scale-90 opacity-0'}`}
+              style={{ borderColor: theme ? setHexAlpha(theme.hex, 0.3) : "rgba(255,255,255,0.1)" }}
+            >
+               <Crosshair 
+                 className="animate-spin-slow" 
+                 size={48} 
+                 style={{ color: theme ? setHexAlpha(theme.hex, 0.3) : "rgba(255,255,255,0.2)" }} 
+               />
+            </div>
+          )}
+        </div>
 
         {/* Bottom Controls */}
         <div className="flex items-center justify-center relative gap-12 md:gap-20 pointer-events-auto pb-8">
-          {/* Live Scan Toggle */}
-          {onLiveAnalyze && (
-            <button
-              onClick={() => setIsLiveScanning(!isLiveScanning)}
-              className={`flex flex-col items-center gap-2 group transition-all active:scale-95 ${
-                isLiveScanning ? "" : "text-white/40 hover:text-white"
-              }`}
-              style={isLiveScanning ? { color: theme?.hex } : undefined}
-            >
-              <div
-                className={`p-4 rounded-full border-2 transition-all ${
-                  isLiveScanning ? "" : "bg-black/40 border-white/10"
-                }`}
-                style={
-                  isLiveScanning
-                    ? {
-                        backgroundColor: theme
-                          ? setHexAlpha(theme.hex, 0.2)
-                          : "rgba(255,255,255,0.2)",
-                        borderColor: theme?.hex || "#fff",
-                        boxShadow: `0 0 20px ${theme ? setHexAlpha(theme.hex, 0.3) : "rgba(255,255,255,0.3)"}`,
-                      }
-                    : undefined
-                }
-              >
-                <Eye
-                  size={isMobile ? 20 : 24}
-                  className={isLiveScanning ? "animate-pulse" : ""}
-                />
-              </div>
-              <span className="text-[8px] font-black tracking-[0.2em] uppercase">
-                Astra Scan
-              </span>
-            </button>
-          )}
-
-          {/* Capture Button */}
           <button
-            onClick={handleCapture}
+            onClick={handleCaptureClick}
             disabled={analyzing || !cameraReady}
-            className={`group relative flex items-center justify-center transition-all active:scale-90 ${
-              isLiveScanning ? "opacity-20 pointer-events-none" : "opacity-100"
-            } ${!cameraReady ? "opacity-50" : ""}`}
+            className={`group relative flex items-center justify-center transition-all active:scale-90 ${!cameraReady ? "opacity-50" : ""}`}
           >
-            <div
-              className={`w-24 h-24 md:w-32 md:h-32 rounded-full border-4 ${cameraReady ? "" : "opacity-40"} group-hover:scale-105 transition-transform duration-300 shadow-2xl`}
-              style={{ borderColor: theme?.hex || "#fff" }}
-            ></div>
-            <div className="absolute w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors"></div>
-            <div
-              className={`absolute w-16 h-16 md:w-20 md:h-20 rounded-full transition-all shadow-inner shadow-black/20`}
-              style={{
-                backgroundColor: theme?.hex || "#fff",
-                opacity: cameraReady ? 1 : 0.6,
-              }}
-            ></div>
-
-            {!cameraReady ? (
-              <div className="absolute animate-spin">
-                <Camera size={isMobile ? 24 : 32} className="text-black/40" />
-              </div>
-            ) : (
-              <Aperture
-                size={isMobile ? 24 : 32}
-                className="absolute text-black/40 group-hover:text-black group-hover:rotate-180 transition-all duration-700 ease-out"
-              />
-            )}
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 group-hover:scale-105 transition-all duration-300" style={{ borderColor: theme?.hex || "#fff" }}></div>
+            <div className={`absolute w-16 h-16 md:w-20 md:h-20 rounded-full transition-all shadow-inner shadow-black/20 ${isFaceScanning ? 'animate-ping' : ''}`} style={{ backgroundColor: theme?.hex || "#fff" }}></div>
+            <Aperture size={32} className="absolute text-black/40 group-hover:rotate-180 transition-all duration-700" />
           </button>
-
-          {/* Symmetry Spacer */}
-          {onLiveAnalyze && <div className="w-[60px] md:w-[80px]"></div>}
         </div>
       </div>
 
-      {/* Screen Effects */}
-      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[size:100%_3px,3px_100%] z-20"></div>
-
-      {/* Hidden canvas for capture - CRITICAL: this ref must exist for capture to work! */}
+      {/* Post-Processing Effects */}
+      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[size:100%_3px,3px_100%] z-40 opacity-50"></div>
+      
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );

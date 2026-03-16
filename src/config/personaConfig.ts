@@ -111,6 +111,8 @@ export const PERSONA_SPECIALIZED_TOOLS: Record<PersonaType, string[]> = {
     "rememberFact",
     "queryGraphKnowledge",
     "switchPersona",
+    "getSystemSettings",
+    "updateSystemSettings",
   ],
   RUTHLESS: [
     "killProcess",
@@ -127,6 +129,8 @@ export const PERSONA_SPECIALIZED_TOOLS: Record<PersonaType, string[]> = {
     "listSubsystems",
     "startSubsystem",
     "evolveCodeSafeTool",
+    "getSystemSettings",
+    "updateSystemSettings",
   ],
   ASSISTANT: [
     "searchWeb",
@@ -134,6 +138,8 @@ export const PERSONA_SPECIALIZED_TOOLS: Record<PersonaType, string[]> = {
     "scheduleEvent",
     "whatsappSendMessage",
     "gmailSendMessage",
+    "getSystemSettings",
+    "updateSystemSettings",
   ],
   HACKER: [
     "runNmapScan",

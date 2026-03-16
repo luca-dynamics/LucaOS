@@ -27,11 +27,11 @@ export const getGlassStyle = (
   // But we can approximate using color-mix in modern browsers:
   return {
     background: `color-mix(in srgb, ${isActive ? baseColor : isDanger ? "#ef4444" : "#000000"} ${isActive ? "20%" : "35%"}, transparent calc(100% - (var(--app-bg-opacity, 0.75) * 100%)))`,
-    border: `1px solid ${setHexAlpha(baseColor, 0.3)}`,
+    border: `1px solid ${setHexAlpha(baseColor, isActive ? 0.4 : 0.15)}`,
     boxShadow: isActive
       ? `0 0 20px ${setHexAlpha(baseColor, 0.15)}, inset 0 1px 0 rgba(255, 255, 255, 0.05)`
       : `inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 0 rgba(100, 116, 139, 0.1)`,
-    borderColor: setHexAlpha(baseColor, 0.3),
+    borderColor: setHexAlpha(baseColor, isActive ? 0.4 : 0.15),
     glow: `0 0 20px ${setHexAlpha(baseColor, 0.15)}`,
   };
 };

@@ -1,6 +1,7 @@
 import { ToolRegistry } from "../../services/toolRegistry";
 import * as Definitions from "../definitions/configuration.tools";
 import { settingsService } from "../../services/settingsService";
+import { diagnosticsService } from "../../services/diagnosticsService";
 
 export const ConfigurationProvider = {
   register: () => {
@@ -61,6 +62,44 @@ export const ConfigurationProvider = {
           return "✓ System configuration updated successfully. LUCA is adapting to new parameters...";
         } catch (e: any) {
           return `ERROR updating settings: ${e.message}`;
+        }
+      },
+    );
+
+    // 3. Audit System
+    ToolRegistry.register(
+      Definitions.auditSystemTool,
+      "SYSTEM",
+      ["audit", "health", "check", "diagnostics"],
+      async (args, context) => {
+        try {
+          const report = await diagnosticsService.audit();
+          return JSON.stringify(report, null, 2);
+        } catch (e: any) {
+          return `ERROR running system audit: ${e.message}`;
+        }
+      },
+    );
+
+    // 4. Repair System
+    ToolRegistry.register(
+      Definitions.repairSystemTool,
+      "SYSTEM",
+      ["repair", "fix", "self-heal", "recovery"],
+      async (args, context) => {
+        try {
+          const result = await diagnosticsService.repair();
+          return JSON.stringify(
+            {
+              status: "SUCCESS",
+              repairLog: result.log,
+              finalReport: result.report,
+            },
+            null,
+            2,
+          );
+        } catch (e: any) {
+          return `ERROR executing self-repair protocol: ${e.message}`;
         }
       },
     );

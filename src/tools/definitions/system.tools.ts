@@ -347,17 +347,17 @@ export const controlDeviceTool: FunctionDeclaration = {
   },
 };
 
-export const runSystemDiagnosticsTool: FunctionDeclaration = {
-  name: "runDiagnostics",
+export const systemDoctorTool: FunctionDeclaration = {
+  name: "system_doctor",
   description:
-    "Run a full system diagnostic scan. If Local Core is connected, this returns REAL host machine stats (CPU, RAM, Platform). Use this to determine OS (Windows/Mac) before running automation scripts.",
+    "L.U.C.A DOCTOR: Run a comprehensive, production-grade system audit. This checks environmental integrity, hardware status, AI provider connectivity, and resource health. Use this to troubleshoot issues across all sectors (Finance, Gov, Industrial) or for proactive self-healing. Returns a detailed status report with suggested fixes.",
   parameters: {
     type: Type.OBJECT,
     properties: {
       scanLevel: {
         type: Type.STRING,
         description:
-          'Level of scan: "quick" (default) or "deep". Deep scan provides kernel and security details.',
+          'Level of audit: "quick" (default) or "deep". Deep audit includes security and infrastructure verification.',
         enum: ["quick", "deep"],
       },
     },

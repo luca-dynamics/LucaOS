@@ -6,6 +6,8 @@ import { voiceService } from "../../services/voiceService";
 import { soundService } from "../../services/soundService";
 import { memoryService } from "../../services/memoryService";
 import conversationService from "../../services/conversationService";
+import { awarenessService } from "../../services/awarenessService";
+import { lucaWorkforce } from "../../services/agent/LucaWorkforce";
 
 const CHAT_STORAGE_KEY = "LUCA_CHAT_HISTORY_V1";
 const MAX_HISTORY_LIMIT = 50;
@@ -251,6 +253,7 @@ export function useChatController({
       image?: string | null,
       onProgress?: (message: string, progress?: number) => void,
       sendHidden: boolean = false,
+      hideResponse: boolean = false,
     ): Promise<string | undefined> => {
       if (!text.trim() || isProcessing) return;
 
@@ -321,7 +324,7 @@ export function useChatController({
           sender: Sender.LUCA,
           timestamp: Date.now(),
           isStreaming: true,
-          isHidden: sendHidden,
+          isHidden: hideResponse,
         };
 
         setMessages((prev) =>
@@ -382,7 +385,7 @@ export function useChatController({
           ...initialResponse,
           text: agentResponse.text || streamedText,
           isStreaming: false,
-          isHidden: sendHidden,
+          isHidden: hideResponse,
           groundingMetadata: agentResponse.groundingMetadata,
           generatedImage: agentResponse.generatedImage,
           tacticalData:
@@ -527,37 +530,17 @@ export function useChatController({
     if (confirm) {
       setMessages([]);
       localStorage.removeItem(CHAT_STORAGE_KEY);
+      lucaWorkforce.clearAllWorkflows();
+      awarenessService.reset("dashboard");
     }
   }, []);
 
-  // --- INITIAL STARTUP GREETING ---
+  // --- INITIAL STARTUP SOUND (visual greeting now handled by ChatPanel Omni-Center) ---
   useEffect(() => {
-    // Only inject startup messages if history is completely empty
     if (messages.length === 0) {
       const timer = setTimeout(() => {
-        setMessages([
-          {
-            id: "init-1",
-            text: "SYSTEM INITIALIZED",
-            sender: Sender.LUCA,
-            timestamp: Date.now() - 2000,
-          },
-          {
-            id: "init-2",
-            text: "Establishing Encrypted Uplink...",
-            sender: Sender.LUCA,
-            timestamp: Date.now() - 1000,
-          },
-          {
-            id: "init-3",
-            text: "Standing by. What is your directive?",
-            sender: Sender.LUCA,
-            timestamp: Date.now(),
-          },
-        ]);
         soundService.play("SUCCESS");
-      }, 500);
-
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, []);

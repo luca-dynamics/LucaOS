@@ -3,7 +3,6 @@ import {
   getAllTools,
   PERSONA_CONFIG,
   PersonaType,
-  getToolsForPersona,
   getSpecializedToolsForPersona,
   getGenClient,
 } from "./lucaService";
@@ -233,17 +232,20 @@ class LucaLiveService {
 
       // SAFETY GUARD: The Multimodal Live API (bidiGenerateContent) has strict model requirements.
       // 1. Rejects Local Models (Piper/Kokoro) -> Error 1008
-      // 2. Rejects Standard Flash (gemini-2.0-flash) -> Not found for bidi
-      // 3. Requires native-audio series or verified 2.5 series.
+      // 2. Rejects Standard Flash/Pro (gemini-1.5/2.0) -> Not found for bidi
+      // 3. Rejects Gemini 3 (for now) -> Error 1008
+      // 4. Requires native-audio series or verified 2.5 series.
       if (
         voiceModel.includes("piper") ||
         voiceModel.includes("kokoro") ||
         voiceModel.includes("local") ||
-        voiceModel.includes("gemini-2.0-flash") || // EXPLICIT REJECT: Verified 1008 error
+        voiceModel.includes("gemini-2.0-flash") ||
+        voiceModel.includes("gemini-1.5") ||
+        voiceModel.includes("gemini-3") || // EXPLICIT REJECT: Verified 1008 error
         !voiceModel.includes("gemini")
       ) {
         console.warn(
-          `[LIVE] Model "${voiceModel}" is incompatible with Cloud Native Audio. Falling back to "${BRAIN_CONFIG.defaults.voice}"`,
+          `[LIVE] Model "${voiceModel}" is incompatible with Cloud Bidi Uplink. Falling back to "${BRAIN_CONFIG.defaults.voice}"`,
         );
         voiceModel = BRAIN_CONFIG.defaults.voice;
       }

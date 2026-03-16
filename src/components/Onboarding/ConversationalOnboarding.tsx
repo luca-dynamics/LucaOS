@@ -47,6 +47,7 @@ const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
   const lastUserResponseTime = useRef<number>(Date.now());
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasHandledSilence = useRef<boolean>(false);
+  const generationStartedRef = useRef(false);
 
   // Demo Fallback Key (configured via VITE_API_KEY in .env)
   const DEMO_API_KEY = import.meta.env.VITE_API_KEY || "";
@@ -64,6 +65,10 @@ const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
 
   // Generate opening message from Luca (AI-generated in real-time)
   useEffect(() => {
+    // PREVENT RERENDER LOOPS / RATE LIMITING
+    if (generationStartedRef.current) return;
+    generationStartedRef.current = true;
+
     const generateOpening = async () => {
       let openingContent = "";
 
@@ -72,29 +77,14 @@ const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
         try {
           const brainApiKey = getEffectiveApiKey();
           if (brainApiKey || process.env.VITE_API_KEY) {
-            const prompt = `You are Luca, an Autonomous AI Agent meeting ${userName} for the first time in a voice conversation.
-
-Generate a very short (1-2 sentences max), warm, natural greeting that:
-- Introduces yourself briefly as their Autonomous AI Agent ("I'm Luca")
-- Sounds conversational and friendly
-- Asks ONE simple question to start: "What would you like me to call you?" or "What's your preferred name?"
-- Sounds natural when spoken aloud
-
-Good examples:
-"Hey ${userName}! I'm Luca, your Autonomous AI Agent. To start off, what should I call you?"
-"Hi there! I'm Luca. It's great to meet you. What's your preferred name?"
-
-BAD examples:
-"How was your day?" (Too broad for first step)
-"I am an AI robot." (Too robotic)
-
-Keep it SHORT and focused on getting their NAME.
-
+            const prompt = `You are Luca, a friendly AI agent. Greet the operator ${userName} for the first time.
+Keep it warm and very brief (1-2 sentences). 
+Ask them what they would like to be called.
 Greeting:`;
 
             const generated = await llmService.generate(prompt, {
-              temperature: 0.9,
-              maxTokens: 100,
+              temperature: 0.7,
+              maxTokens: 150,
             });
 
             if (generated) {
@@ -128,8 +118,8 @@ Keep it SHORT (2-3 sentences). Ask ONLY about their name/preferred name to start
 Opening message:`;
 
             const generated = await llmService.generate(prompt, {
-              temperature: 0.9,
-              maxTokens: 200,
+              temperature: 0.7,
+              maxTokens: 250,
             });
 
             if (generated) {

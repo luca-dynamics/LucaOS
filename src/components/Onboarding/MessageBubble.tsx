@@ -27,47 +27,49 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, theme }) => {
     <div
       className={`flex ${
         isLuca
-          ? "justify-start lg:justify-center"
-          : "justify-end lg:justify-center"
+          ? "justify-start"
+          : "justify-end"
       } animate-fade-in-up`}
     >
       <div
         className={`
-        max-w-[85%] lg:max-w-none lg:w-full
-        rounded-2xl 
-        p-3 sm:p-4 lg:p-5
-        backdrop-blur-xl
-        ${
-          isLuca
-            ? isLight
-              ? "bg-black/10 border border-black/20"
-              : "bg-white/10 border border-white/20"
-            : isLight
-              ? "bg-blue-600/10 border border-blue-500/20"
-              : "bg-blue-500/20 border border-blue-400/30"
-        }
-      `}
+          flex flex-col
+          backdrop-blur-xl
+          ${
+            isLuca
+              ? isLight
+                ? "bg-black/10 border border-black/20"
+                : "bg-white/10 border border-white/20"
+              : isLight
+                ? "bg-blue-600/10 border border-blue-500/20"
+                : "bg-blue-500/20 border border-blue-400/30"
+          }
+        `}
+        style={{
+          maxWidth: isLuca ? "90%" : "90%",
+          borderRadius: "2vmin",
+          padding: "2vmin",
+          gap: "1vmin"
+        }}
       >
         {/* Role label */}
         <div
-          className={`text-xs font-bold uppercase tracking-wider mb-2 ${
+          className={`font-bold uppercase tracking-wider ${
             isLuca
-              ? isLight
-                ? "text-black/60"
-                : "text-white/80"
-              : isLight
-                ? "text-blue-700/80"
-                : "text-blue-300/80"
+              ? isLight ? "text-black/60" : "text-white/80"
+              : isLight ? "text-blue-700/80" : "text-blue-300/80"
           }`}
+          style={{ fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)" }}
         >
           {isLuca ? "Luca" : "You"}
         </div>
 
         {/* Message content */}
         <div
-          className={`text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
+          className={`leading-relaxed whitespace-pre-wrap ${
             isLight ? "text-gray-900" : "text-white"
           }`}
+          style={{ fontSize: "clamp(0.7rem, 2vmin, 0.9rem)" }}
         >
           {message.content}
         </div>

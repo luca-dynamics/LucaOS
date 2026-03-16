@@ -31,6 +31,10 @@ export interface WorkflowTask {
   status: "pending" | "in-progress" | "complete" | "failed";
   result?: any;
   error?: string;
+  snapshot?: {
+    terminal?: string[];
+    browserScreenshot?: string;
+  };
 }
 
 export interface WorkflowPlan {
@@ -992,10 +996,119 @@ Return only the Python code, no explanations.`;
   }
 
   /**
+   * Clear all active workflows
+   */
+  clearAllWorkflows(): void {
+    console.log("[LucaWorkforce] 🧹 Clearing all workflow data...");
+    this.activeWorkflows.clear();
+  }
+
+  /**
    * Get all active workflows
    */
   getActiveWorkflows(): WorkflowPlan[] {
     return Array.from(this.activeWorkflows.values());
+  }
+
+  /**
+   * Get React Flow compatible data for a workflow
+   */
+  getGraphData(workflowId: string) {
+    const plan = this.activeWorkflows.get(workflowId);
+    if (!plan) return { nodes: [], edges: [] };
+
+    const nodes: any[] = [];
+    const edges: any[] = [];
+
+    // 1. Goal Node
+    nodes.push({
+      id: "goal",
+      type: "goalNode", // Using custom node type
+      position: { x: 0, y: 0 },
+      data: {
+        label: plan.goal,
+        status: plan.tasks.every((t) => t.status === "complete")
+          ? "complete"
+          : "in-progress",
+      },
+    });
+
+    // 2. Persona/Agent Nodes
+    const personas = Array.from(new Set(plan.tasks.map((t) => t.persona)));
+    personas.forEach((persona, index) => {
+      const personaNodeId = `agent_${persona}`;
+
+      // Layout personas in a semi-circle or grid
+      const angle = (index / personas.length) * Math.PI * 2;
+      const radius = 250;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+
+      const personaTasks = plan.tasks.filter((t) => t.persona === persona);
+      const isAnyActive = personaTasks.some((t) => t.status === "in-progress");
+      const isAllDone = personaTasks.every((t) => t.status === "complete");
+
+      nodes.push({
+        id: personaNodeId,
+        type: "agentNode",
+        position: { x, y },
+        data: {
+          persona,
+          status: isAllDone
+            ? "complete"
+            : isAnyActive
+              ? "in-progress"
+              : "pending",
+        },
+      });
+
+      edges.push({
+        id: `goal-${personaNodeId}`,
+        source: "goal",
+        target: personaNodeId,
+        animated: isAnyActive,
+        style: { stroke: isAllDone ? "#22c55e" : "#3b82f6" },
+      });
+
+      // 3. Task Nodes
+      personaTasks.forEach((task, tIndex) => {
+        const tAngle = angle + (tIndex - (personaTasks.length - 1) / 2) * 0.4;
+        const tDist = radius + 200;
+        const tx = Math.cos(tAngle) * tDist;
+        const ty = Math.sin(tAngle) * tDist;
+
+        nodes.push({
+          id: task.id,
+          type: "taskNode",
+          position: { x: tx, y: ty },
+          data: {
+            task,
+            status: task.status,
+            persona: task.persona,
+          },
+        });
+
+        edges.push({
+          id: `${personaNodeId}-${task.id}`,
+          source: personaNodeId,
+          target: task.id,
+          animated: task.status === "in-progress",
+          style: { stroke: task.status === "complete" ? "#22c55e" : "#3b82f6" },
+        });
+
+        // Dependencies
+        task.dependencies.forEach((depId) => {
+          edges.push({
+            id: `dep-${depId}-${task.id}`,
+            source: depId,
+            target: task.id,
+            style: { strokeDasharray: "5,5", opacity: 0.5 },
+          });
+        });
+      });
+    });
+
+    return { nodes, edges };
   }
 }
 

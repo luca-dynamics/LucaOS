@@ -67,6 +67,11 @@
             50% { border-color: #880000; box-shadow: 0 0 2px #880000; }
             100% { border-color: #ff3333; box-shadow: 0 0 5px #ff3333; }
         }
+        @keyframes pulse-magenta {
+            0% { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; }
+            50% { border-color: #440044; box-shadow: 0 0 2px #440044; }
+            100% { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; }
+        }
     </style>
 </head>
 <body>
@@ -79,6 +84,22 @@
         <div class="log-entry system">[SYSTEM] Max reboot attempts exceeded.</div>
         <div class="log-entry system">[SYSTEM] Engaging Level 2 Recovery Protocols...</div>
         <div class="log-entry system">[SYSTEM] Summoning The Medic...</div>
+    </div>
+
+    <!-- APPROVAL OVERLAY -->
+    <div id="approval-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 5, 5, 0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; border: 4px solid #ff00ff; animation: pulse-magenta 2s infinite;">
+        <div style="font-size: 20px; color: #ff00ff; margin-bottom: 20px; font-weight: bold;">[!] LEVEL 3 REPAIR AUTHORIZATION REQUIRED</div>
+        <div style="background: #000; border: 1px solid #ff00ff; padding: 20px; width: 100%; max-width: 600px; margin-bottom: 20px;">
+            <div style="color: #666; font-size: 12px; margin-bottom: 10px;">AI REASONING:</div>
+            <div id="approval-reason" style="color: #ff00ff; font-size: 14px; margin-bottom: 20px;">Analyzing...</div>
+            <div style="color: #666; font-size: 12px; margin-bottom: 10px;">PROPOSED COMMAND:</div>
+            <div id="approval-command" style="background: #1a001a; color: #fff; padding: 10px; font-family: monospace; border: 1px solid #440044;">Loading...</div>
+        </div>
+        <div style="display: flex; gap: 20px;">
+            <button onclick="submitApproval(true)" style="background: #ff00ff; color: #000; border: none; padding: 10px 30px; font-weight: bold; cursor: pointer; font-family: inherit;">[ EXECUTE ]</button>
+            <button onclick="submitApproval(false)" style="background: #333; color: #ff3333; border: 1px solid #ff3333; padding: 10px 30px; font-weight: bold; cursor: pointer; font-family: inherit;">[ ABORT ]</button>
+        </div>
+        <div style="margin-top: 20px; font-size: 10px; color: #666; text-align: center;">CAUTION: THIS COMMAND WILL BE EXECUTED WITH SYSTEM PRIVILEGES.</div>
     </div>
 
     <div class="progress-container">
@@ -110,6 +131,27 @@
         ipcRenderer.on('medic-status', (event, status) => {
             statusBadge.innerText = status;
         });
+
+        // --- APPROVAL LOGIC ---
+        const approvalOverlay = document.getElementById('approval-overlay');
+        const approvalReason = document.getElementById('approval-reason');
+        const approvalCommand = document.getElementById('approval-command');
+
+        ipcRenderer.on('medic-approval-request', (event, plan) => {
+            approvalReason.innerText = plan.reasoning;
+            approvalCommand.innerText = plan.command;
+            approvalOverlay.style.display = 'flex';
+        });
+
+        window.submitApproval = (approved) => {
+            approvalOverlay.style.display = 'none';
+            ipcRenderer.send('medic-approval-response', approved);
+            if (!approved) {
+                addLog("USER ABORTED AUTOMATIC REPAIR.", "error");
+            } else {
+                addLog("USER GRANTED EXECUTION PERMISSION.", "success");
+            }
+        };
 
         // Intro
         setTimeout(() => addLog("Medic: Analyzing Crash Dumps...", "medic"), 500);

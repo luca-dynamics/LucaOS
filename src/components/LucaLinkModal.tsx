@@ -8,11 +8,12 @@ import { ErrorToast } from "./lucaLink/ErrorToast";
 import type { Device, LucaLinkError } from "../services/lucaLink/types";
 import { ConnectionState } from "../services/lucaLink/types";
 import { WS_PORT, RELAY_SERVER_URL } from "../config/api";
+import { setHexAlpha } from "../config/themeColors";
 
 interface LucaLinkModalProps {
   onClose: () => void;
   localIp: string;
-  theme?: { hex: string; primary: string; border: string; bg: string };
+  theme?: { hex: string; primary: string; border: string; bg: string; isLight?: boolean; themeName?: string };
 }
 
 const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
@@ -20,10 +21,12 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
   localIp,
   theme,
 }) => {
-  const themePrimary = theme?.primary || "text-cyan-400";
-  const themeBorder = theme?.border || "border-cyan-500";
-  const themeBg = theme?.bg || "bg-cyan-950/10";
+  const isLight = theme?.isLight || theme?.themeName?.toLowerCase() === "lucagent";
   const themeHex = theme?.hex || "#06b6d4";
+  const themePrimary = theme?.primary || (isLight ? "text-cyan-600" : "text-cyan-400");
+  const themeBorder = theme?.border || (isLight ? "border-cyan-200" : "border-cyan-500");
+  const themeBg = theme?.bg || (isLight ? "bg-cyan-50" : "bg-cyan-950/10");
+
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [devices, setDevices] = useState<Device[]>([]);
   const [connectionState, setConnectionState] = useState<ConnectionState>(
@@ -82,7 +85,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           margin: 2,
           color: {
             dark: themeHex,
-            light: "#00000000",
+            light: isLight ? "#FFFFFFFF" : "#00000000",
           },
         });
 
@@ -185,16 +188,18 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-0 sm:p-4">
       <div
         className={`
-          bg-black/40 backdrop-blur-xl border ${themeBorder}/30 
+          backdrop-blur-xl border 
           rounded-none sm:rounded-lg 
           w-full h-full sm:h-auto sm:max-w-2xl
           p-4 sm:p-6 
           relative overflow-hidden 
           flex flex-col
           max-h-screen
+          ${isLight ? "bg-white/90 shadow-2xl" : "bg-black/40"}
         `}
         style={{
-          boxShadow: `0 0 80px -20px ${themeHex}40`,
+          boxShadow: isLight ? "0 20px 50px rgba(0,0,0,0.1)" : `0 0 80px -20px ${themeHex}40`,
+          borderColor: isLight ? "rgba(0,0,0,0.1)" : setHexAlpha(themeHex, 0.3)
         }}
       >
         {/* Liquid background effect 1 (Center) */}
@@ -215,8 +220,11 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
         />
         {/* Header */}
         <div
-          className={`flex justify-between items-center px-4 py-3 sm:px-6 sm:py-4 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 mb-4 sm:mb-6 border-b ${themeBorder}/30 relative z-30 flex-shrink-0`}
-          style={{ backgroundColor: `${themeHex}1F` }}
+          className={`flex justify-between items-center px-4 py-3 sm:px-6 sm:py-4 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 mb-4 sm:mb-6 border-b relative z-30 flex-shrink-0`}
+          style={{ 
+            backgroundColor: isLight ? "rgba(0,0,0,0.03)" : setHexAlpha(themeHex, 0.12),
+            borderColor: isLight ? "rgba(0,0,0,0.1)" : setHexAlpha(themeHex, 0.3)
+          }}
         >
           <div className="flex items-center gap-2 sm:gap-3">
             <div className={themePrimary}>
@@ -234,7 +242,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="relative z-50 text-gray-500 hover:text-white transition-all p-2 rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0"
+            className={`relative z-50 transition-all p-2 rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0 ${isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}
           >
             <X size={20} className="sm:w-6 sm:h-6" />
           </button>
@@ -260,8 +268,11 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
                 }}
               />
               <div
-                className="relative p-2 sm:p-4 rounded-lg border border-gray-800"
-                style={{ backgroundColor: `${themeHex}1F` }}
+                className="relative p-2 sm:p-4 rounded-lg border"
+                style={{ 
+                  backgroundColor: isLight ? "#FFFFFF" : setHexAlpha(themeHex, 0.1),
+                  borderColor: isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"
+                }}
               >
                 {qrDataUrl ? (
                   <img

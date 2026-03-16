@@ -24,8 +24,8 @@ import { soundService } from "./services/soundService";
 import { voiceService } from "./services/voiceService";
 import { settingsService } from "./services/settingsService";
 import { UIThemeId } from "./types/lucaPersonality";
-import { apiUrl, cortexUrl } from "./config/api";
-import { ToolRegistry } from "./services/toolRegistry";
+import { apiUrl, cortexUrl, getConnectionTier } from "./config/api";
+import { ToolRegistry, MissionScope } from "./services/toolRegistry";
 import {
   Message,
   Sender,
@@ -146,6 +146,9 @@ function AppContent() {
     chat: 430,
     right: 310,
   });
+  const [connectionTier, setConnectionTier] = useState<
+    "LAN" | "LOCAL" | "CLOUD" | "OFFLINE"
+  >("LOCAL");
 
   // Helper refs for hooks to avoid circular dependencies
   const executeToolRef = useRef<any>(null);
@@ -209,8 +212,15 @@ function AppContent() {
       applyAppSettings(newSettings);
     };
     settingsService.on("settings-changed", handleSettingsChange);
+
+    // Connection Tier Polling
+    const tierInterval = setInterval(() => {
+      setConnectionTier(getConnectionTier());
+    }, 5000);
+
     return () => {
       settingsService.off("settings-changed", handleSettingsChange);
+      clearInterval(tierInterval);
     };
   }, []); // No dependencies — listener is stable, React setters handle dedup
 
@@ -460,9 +470,11 @@ function AppContent() {
   const [elevationState, setElevationState] = useState<{
     lastScanTimestamp: number;
     authorizedMissionIds: Set<string>;
+    activeMissionScope: MissionScope; // Scoped Mission Arming
   }>({
     lastScanTimestamp: 0,
     authorizedMissionIds: new Set(),
+    activeMissionScope: MissionScope.NONE,
   });
 
   // isSettingsOpen state removed as it was unused
@@ -637,6 +649,7 @@ function AppContent() {
   const [showLinkedInManager, setShowLinkedInManager] = useState(false);
   const [showDiscordManager, setShowDiscordManager] = useState(false);
   const [showYouTubeManager, setShowYouTubeManager] = useState(false);
+  const [showWeChatManager, setShowWeChatManager] = useState(false);
 
   // Network Map State
   const [showNetworkMap, setShowNetworkMap] = useState(false);
@@ -847,6 +860,7 @@ function AppContent() {
         themeHex:
           THEME_PALETTE[activeThemeId as keyof typeof THEME_PALETTE]?.primary ||
           "#3b82f6",
+        elevationState: elevationState,
       };
 
       window.electron.ipcRenderer.send("sync-widget-state", syncData);
@@ -865,9 +879,9 @@ function AppContent() {
     voiceAmplitude,
     localVolume,
     persona,
-    isVoiceHubListening,
     voiceHubStatus,
     voiceHubTranscript,
+    elevationState,
   ]);
 
   // --- SMART SCREEN SYNC (Option B) ---
@@ -1437,6 +1451,7 @@ function AppContent() {
     setShowLinkedInManager,
     setShowDiscordManager,
     setShowYouTubeManager,
+    setShowWeChatManager,
     setShowRemoteModal,
     setActiveMobileDevice,
     setShowMobileManager,
@@ -2141,6 +2156,8 @@ function AppContent() {
           setShowDiscordManager={setShowDiscordManager}
           showYouTubeManager={showYouTubeManager}
           setShowYouTubeManager={setShowYouTubeManager}
+          showWeChatManager={showWeChatManager}
+          setShowWeChatManager={setShowWeChatManager}
           showLucaLinkModal={showLucaLinkModal}
           setShowLucaLinkModal={setShowLucaLinkModal}
           localIp={localIp}
@@ -2182,6 +2199,7 @@ function AppContent() {
           showCamera={showCamera}
           setShowCamera={setShowCamera}
           setAttachedImage={setAttachedImage}
+          elevationState={elevationState}
           showRemoteModal={showRemoteModal}
           setShowRemoteModal={setShowRemoteModal}
           remoteCode={remoteCode}
@@ -2279,13 +2297,13 @@ function AppContent() {
             setShowSuggestionChips={setShowSuggestionChips}
             hostPlatform={hostPlatform}
             isListeningAmbient={isListeningAmbient}
-            isLocalCoreConnected={isLocalCoreConnected}
             isProcessing={isProcessing}
             audioMonitoringActive={audioMonitoringActive}
             setAudioMonitoringActive={setAudioMonitoringActive}
             setVisionMonitoringActive={setVisionMonitoringActive}
             isWakeWordActive={isWakeWordActive}
             isLockdown={isLockdown}
+            connectionTier={connectionTier}
           />
         </SafeComponent>
 
@@ -2303,8 +2321,6 @@ function AppContent() {
                     isMobile={false}
                     activeMobileTab=""
                     isListeningAmbient={isListeningAmbient}
-                    isLocalCoreConnected={isLocalCoreConnected}
-                    isProcessing={isProcessing}
                     setWirelessTab={setWirelessTab}
                     setShowWirelessManager={setShowWirelessManager}
                     setShowNetworkMap={setShowNetworkMap}
@@ -2333,6 +2349,7 @@ function AppContent() {
                     setShowForexTerminal={setShowForexTerminal}
                     setShowOsintDossier={setShowOsintDossier}
                     setShowHackingTerminal={setShowHackingTerminal}
+                    connectionTier={connectionTier}
                   />
                 </SafeComponent>
               </div>
@@ -2355,8 +2372,6 @@ function AppContent() {
                 isMobile={true}
                 activeMobileTab="SYSTEM"
                 isListeningAmbient={isListeningAmbient}
-                isLocalCoreConnected={isLocalCoreConnected}
-                isProcessing={isProcessing}
                 setWirelessTab={setWirelessTab}
                 setShowWirelessManager={setShowWirelessManager}
                 setShowNetworkMap={setShowNetworkMap}
@@ -2385,6 +2400,7 @@ function AppContent() {
                 setShowForexTerminal={setShowForexTerminal}
                 setShowOsintDossier={setShowOsintDossier}
                 setShowHackingTerminal={setShowHackingTerminal}
+                connectionTier={connectionTier}
               />
             </div>
           )}
@@ -2420,6 +2436,8 @@ function AppContent() {
                     handleSend={() => {
                       if (handleSendMessageRef.current) {
                         handleSendMessageRef.current(input, attachedImage);
+                        setInput("");
+                        setAttachedImage(null);
                       }
                     }}
                     isVoiceMode={isVoiceMode}
@@ -2466,6 +2484,8 @@ function AppContent() {
                 handleSend={() => {
                   if (handleSendMessageRef.current) {
                     handleSendMessageRef.current(input, attachedImage);
+                    setInput("");
+                    setAttachedImage(null);
                   }
                 }}
                 isVoiceMode={isVoiceMode}

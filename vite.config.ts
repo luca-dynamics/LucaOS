@@ -45,32 +45,40 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      // Safely shim process for browser compatibility
-      "process.env": {
-        // Explicitly expose all API keys for browser access
-        GEMINI_API_KEY: JSON.stringify(
-          env.GEMINI_API_KEY || env.VITE_API_KEY || env.API_KEY || "",
-        ),
-        VITE_API_KEY: JSON.stringify(
-          env.VITE_API_KEY || env.GEMINI_API_KEY || env.API_KEY || "",
-        ),
-        API_KEY: JSON.stringify(
-          env.API_KEY || env.GEMINI_API_KEY || env.VITE_API_KEY || "",
-        ),
-        OPENAI_API_KEY: JSON.stringify(
-          env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
-        ),
-        ANTHROPIC_API_KEY: JSON.stringify(
-          env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
-        ),
-        VITE_OPENAI_API_KEY: JSON.stringify(
-          env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
-        ),
-        VITE_ANTHROPIC_API_KEY: JSON.stringify(
-          env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
-        ),
-      },
+      // Safely shim globals and process for browser compatibility
+      global: "window",
       "process.platform": JSON.stringify(process.platform),
+      "process.env": {
+        GEMINI_API_KEY: env.GEMINI_API_KEY || env.VITE_API_KEY || env.API_KEY || "",
+        VITE_API_KEY: env.VITE_API_KEY || env.GEMINI_API_KEY || env.API_KEY || "",
+        API_KEY: env.API_KEY || env.GEMINI_API_KEY || env.VITE_API_KEY || "",
+        OPENAI_API_KEY: env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
+        ANTHROPIC_API_KEY: env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
+        VITE_OPENAI_API_KEY: env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
+        VITE_ANTHROPIC_API_KEY: env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
+      },
+      // Flattened keys for libraries that use direct injection
+      "process.env.GEMINI_API_KEY": JSON.stringify(
+        env.GEMINI_API_KEY || env.VITE_API_KEY || env.API_KEY || "",
+      ),
+      "process.env.VITE_API_KEY": JSON.stringify(
+        env.VITE_API_KEY || env.GEMINI_API_KEY || env.API_KEY || "",
+      ),
+      "process.env.API_KEY": JSON.stringify(
+        env.API_KEY || env.GEMINI_API_KEY || env.VITE_API_KEY || "",
+      ),
+      "process.env.OPENAI_API_KEY": JSON.stringify(
+        env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
+      ),
+      "process.env.ANTHROPIC_API_KEY": JSON.stringify(
+        env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
+      ),
+      "process.env.VITE_OPENAI_API_KEY": JSON.stringify(
+        env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
+      ),
+      "process.env.VITE_ANTHROPIC_API_KEY": JSON.stringify(
+        env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
+      ),
     },
     // Expose environment variables to import.meta.env (Vite's native way)
     envPrefix: ["VITE_", "API_", "GEMINI_"],

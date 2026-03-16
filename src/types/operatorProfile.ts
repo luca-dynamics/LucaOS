@@ -1,4 +1,4 @@
-import { Message } from "./conversation";
+
 
 /**
  * Enhanced Operator Profile
@@ -9,6 +9,7 @@ export interface OperatorProfile {
   identity: {
     name: string;
     designation?: string;
+    avatar?: string; // Base64 encoded operator ID image
   };
 
   // Personality traits (extracted from conversation)

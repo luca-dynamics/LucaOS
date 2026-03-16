@@ -11,10 +11,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { apiUrl } from "../../config/api";
+import { setHexAlpha } from "../../config/themeColors";
 
 interface Props {
   onClose: () => void;
-  theme?: { hex: string; primary: string; border: string; bg: string };
+  theme?: { hex: string; primary: string; border: string; bg: string; isLight?: boolean; themeName?: string };
 }
 
 interface YouTubeStatus {
@@ -27,10 +28,12 @@ interface YouTubeStatus {
 }
 
 const YouTubeManager: React.FC<Props> = ({ onClose, theme }) => {
-  const themePrimary = theme?.primary || "text-red-500";
-  const themeBorder = theme?.border || "border-red-600";
-  const themeBg = theme?.bg || "bg-red-950/10";
+  const isLight = theme?.isLight || theme?.themeName?.toLowerCase() === "lucagent";
   const themeHex = theme?.hex || "#FF0000";
+
+  const borderColor = isLight ? "rgba(0,0,0,0.1)" : setHexAlpha(themeHex, 0.3);
+  const headerBg = isLight ? "rgba(0,0,0,0.03)" : setHexAlpha(themeHex, 0.12);
+  const subCardBg = isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.03)";
 
   const [status, setStatus] = useState<YouTubeStatus>({
     status: "OFFLINE",
@@ -104,26 +107,39 @@ const YouTubeManager: React.FC<Props> = ({ onClose, theme }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4">
       <div
-        className={`w-full max-w-md bg-black/60 backdrop-blur-xl border ${themeBorder}/30 rounded-xl overflow-hidden relative`}
-        style={{ boxShadow: `0 0 50px ${themeHex}1a` }}
+        className={`w-full max-w-md backdrop-blur-xl border rounded-xl overflow-hidden relative ${isLight ? "bg-white/80 shadow-2xl" : "bg-black/60"}`}
+        style={{ 
+          boxShadow: isLight ? "0 20px 40px rgba(0,0,0,0.1)" : `0 0 50px ${themeHex}1a`,
+          borderColor: borderColor
+        }}
       >
         <div
-          className={`h-14 border-b ${themeBorder}/50 ${themeBg} flex items-center justify-between px-5`}
+          className={`h-14 border-b flex items-center justify-between px-5`}
+          style={{ 
+            borderColor: borderColor,
+            backgroundColor: headerBg
+          }}
         >
           <div className="flex items-center gap-3">
             <div
-              className={`p-2 ${themeBg} rounded border ${themeBorder}/50 ${themePrimary}`}
+              className={`p-2 rounded border flex items-center justify-center`}
+              style={{
+                backgroundColor: isLight ? "rgba(0,0,0,0.05)" : setHexAlpha(themeHex, 0.1),
+                borderColor: setHexAlpha(themeHex, 0.3),
+                color: themeHex
+              }}
             >
               <Youtube size={20} />
             </div>
             <div>
-              <h2 className="font-display text-base font-bold text-white tracking-widest">
+              <h2 className={`font-display text-base font-bold tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>
                 YOUTUBE
               </h2>
               <div
-                className={`text-[9px] font-mono ${themePrimary} opacity-60`}
+                className={`text-[9px] font-mono opacity-60`}
+                style={{ color: themeHex }}
               >
-                VIDEO AGENT
+                SOCIAL AGENT LINK
               </div>
             </div>
           </div>
@@ -137,16 +153,21 @@ const YouTubeManager: React.FC<Props> = ({ onClose, theme }) => {
 
         <div className="p-6 space-y-6">
           <div
-            className={`p-5 bg-black border ${themeBorder}/30 rounded-lg flex flex-col items-center justify-center text-center`}
+            className={`p-5 border rounded-xl flex flex-col items-center justify-center text-center`}
+            style={{
+              backgroundColor: subCardBg,
+              borderColor: borderColor
+            }}
           >
             {isConnected ? (
               <>
                 <div
-                  className={`w-16 h-16 rounded-full ${themeBg} flex items-center justify-center mb-3 animate-pulse`}
+                  className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 animate-pulse`}
+                  style={{ backgroundColor: setHexAlpha(themeHex, 0.1) }}
                 >
-                  <Wifi size={32} className={themePrimary} />
+                  <Wifi size={32} style={{ color: themeHex }} />
                 </div>
-                <div className={`${themePrimary} font-bold text-sm`}>
+                <div className="font-bold text-sm" style={{ color: themeHex }}>
                   LINK ESTABLISHED
                 </div>
                 <div className="text-[10px] text-slate-500 mt-1">
@@ -160,11 +181,13 @@ const YouTubeManager: React.FC<Props> = ({ onClose, theme }) => {
             ) : isLoggingIn ? (
               <>
                 <div
-                  className={`w-16 h-16 rounded-full ${themeBg} flex items-center justify-center mb-3`}
+                  className={`w-16 h-16 rounded-full flex items-center justify-center mb-3`}
+                  style={{ backgroundColor: setHexAlpha(themeHex, 0.1) }}
                 >
                   <RefreshCw
                     size={32}
-                    className={`${themePrimary} animate-spin`}
+                    className="animate-spin"
+                    style={{ color: themeHex }}
                   />
                 </div>
                 <div className="text-yellow-400 font-bold text-sm">
@@ -176,10 +199,10 @@ const YouTubeManager: React.FC<Props> = ({ onClose, theme }) => {
               </>
             ) : (
               <>
-                <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center mb-3">
-                  <WifiOff size={32} className="text-slate-600" />
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 ${isLight ? "bg-slate-100" : "bg-slate-900"}`}>
+                  <WifiOff size={32} className={isLight ? "text-slate-400" : "text-slate-600"} />
                 </div>
-                <div className="text-slate-400 font-bold text-sm">
+                <div className={`${isLight ? "text-slate-600" : "text-slate-400"} font-bold text-sm`}>
                   NOT CONNECTED
                 </div>
                 <div className="text-[10px] text-slate-500 mt-1">
@@ -192,15 +215,27 @@ const YouTubeManager: React.FC<Props> = ({ onClose, theme }) => {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className={`p-3 bg-black border ${themeBorder}/20 rounded-lg`}>
+            <div 
+              className={`p-3 border rounded-lg`}
+              style={{
+                backgroundColor: subCardBg,
+                borderColor: setHexAlpha(themeHex, 0.1)
+              }}
+            >
               <div className="flex items-center gap-2 text-[10px] text-slate-500 mb-1">
                 <Clock size={12} /> UPTIME
               </div>
-              <div className={`font-mono text-sm ${themePrimary}`}>
+              <div className="font-mono text-sm" style={{ color: themeHex }}>
                 {formatUptime(status.uptime)}
               </div>
             </div>
-            <div className={`p-3 bg-black border ${themeBorder}/20 rounded-lg`}>
+            <div 
+              className={`p-3 border rounded-lg`}
+              style={{
+                backgroundColor: subCardBg,
+                borderColor: setHexAlpha(themeHex, 0.1)
+              }}
+            >
               <div className="flex items-center gap-2 text-[10px] text-slate-500 mb-1">
                 <Send size={12} /> STATUS
               </div>
@@ -264,10 +299,10 @@ const YouTubeManager: React.FC<Props> = ({ onClose, theme }) => {
           </div>
 
           <div
-            className="text-[10px] p-3 rounded-lg border text-gray-500 backdrop-blur-sm"
+            className={`text-[10px] p-3 rounded-lg border backdrop-blur-sm ${isLight ? "text-slate-500" : "text-gray-500"}`}
             style={{
-              backgroundColor: `${themeHex}0d`,
-              borderColor: `${themeHex}33`,
+              backgroundColor: isLight ? "rgba(0,0,0,0.02)" : setHexAlpha(themeHex, 0.05),
+              borderColor: isLight ? "rgba(0,0,0,0.1)" : setHexAlpha(themeHex, 0.2),
             }}
           >
             {status.hasChromeProfile ? (

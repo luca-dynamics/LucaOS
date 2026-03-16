@@ -57,12 +57,29 @@ export class GeminiAdapter implements LLMProvider {
       );
     }
 
-    const result = await client.models.generateContent({
-      model: this.modelName,
-      contents: [{ role: "user", parts }],
-    });
+    console.log(`[GeminiAdapter] Generating content with model: ${this.modelName}`);
+    try {
+      const result = await (client.models as any).generateContent({
+        model: this.modelName,
+        contents: [{ role: "user", parts }],
+        generationConfig: {
+          maxOutputTokens: 1024,
+          temperature: 0.7,
+        },
+      });
 
-    return result.text || "";
+      // SDK fallback: check both .text and .response.text()
+      const text = result.text || (result.response && typeof result.response.text === 'function' ? result.response.text() : "");
+      
+      console.log(`[GeminiAdapter] Generated response length: ${text.length}`);
+      if (text.length < 20) {
+        console.warn(`[GeminiAdapter] Short/Empty response detected: "${text}"`);
+      }
+      return text;
+    } catch (e: any) {
+      console.error(`[GeminiAdapter] Generation failed: ${e.message}`, e);
+      throw e;
+    }
   }
 
   async streamContent(
@@ -95,25 +112,37 @@ export class GeminiAdapter implements LLMProvider {
     const client = this.client || getGenClient();
 
     // Map history to Google GenAI format (V1 Beta)
-    const contents = messages.map((msg, index) => {
+    // CRITICAL: Group consecutive role: 'tool' messages into a single function role message
+    // to comply with Gemini's strictly alternating role requirements.
+    const contents: any[] = [];
+    let currentGroup: any = null;
+
+    messages.forEach((msg, index) => {
       const isLast = index === messages.length - 1;
 
       if (msg.role === "tool") {
-        return {
-          role: "function",
-          parts: [
-            {
-              functionResponse: {
-                name: msg.name || "unknown",
-                response: { result: msg.content },
-              },
-            },
-          ],
+        const part = {
+          functionResponse: {
+            name: msg.name || "unknown",
+            response: { result: msg.content },
+          },
         };
-      }
 
-      if (msg.role === "model") {
+        if (currentGroup && currentGroup.role === "function") {
+          currentGroup.parts.push(part);
+        } else {
+          currentGroup = { role: "function", parts: [part] };
+          contents.push(currentGroup);
+        }
+      } else if (msg.role === "model") {
         const parts: any[] = [];
+        // Support BOTH property names for transition period
+        if (msg.thought) {
+          parts.push({ thought: msg.thought });
+        }
+        if ((msg as any).thought_signature) {
+          parts.push({ thought_signature: (msg as any).thought_signature });
+        }
         if (msg.content) parts.push({ text: msg.content });
         if (msg.toolCalls) {
           msg.toolCalls.forEach((tc) => {
@@ -127,33 +156,32 @@ export class GeminiAdapter implements LLMProvider {
         }
         // Safeguard: Ensure parts is never empty (causes API error)
         if (parts.length === 0) {
-          console.warn(
-            "[GeminiAdapter] Model message had empty parts, adding empty text",
-          );
           parts.push({ text: "" });
         }
-        return { role: "model", parts };
+        currentGroup = { role: "model", parts };
+        contents.push(currentGroup);
+      } else {
+        // user or system message
+        const parts: any[] = [{ text: msg.content || "" }];
+
+        // Append images to LAST user message
+        if (isLast && images && images.length > 0) {
+          parts.push(
+            ...images.map((img) => ({
+              inlineData: {
+                data: img,
+                mimeType: "image/jpeg",
+              },
+            })),
+          );
+        }
+
+        currentGroup = {
+          role: "user",
+          parts,
+        };
+        contents.push(currentGroup);
       }
-
-      // Role: USER
-      const parts: any[] = [{ text: msg.content || "" }];
-
-      // Append images to LAST user message
-      if (isLast && images && images.length > 0) {
-        parts.push(
-          ...images.map((img) => ({
-            inlineData: {
-              data: img,
-              mimeType: "image/jpeg",
-            },
-          })),
-        );
-      }
-
-      return {
-        role: "user",
-        parts,
-      };
     });
 
     const config: any = {
@@ -179,6 +207,21 @@ export class GeminiAdapter implements LLMProvider {
     // Handle function calls
     const calls = result.functionCalls;
 
+    let thought: string | undefined;
+    let thought_signature: string | undefined;
+
+    // Extract thoughts and signatures from parts
+    if (result.candidates?.[0]?.content?.parts) {
+      for (const part of result.candidates[0].content.parts) {
+        if ("thought" in part && (part as any).thought) {
+          thought = (part as any).thought;
+        }
+        if ("thought_signature" in part || "thoughtSignature" in part) {
+          thought_signature = (part as any).thought_signature || (part as any).thoughtSignature;
+        }
+      }
+    }
+
     let toolCalls: ToolCall[] | undefined;
     if (calls && calls.length > 0) {
       toolCalls = calls.map((c: any) => ({
@@ -187,6 +230,39 @@ export class GeminiAdapter implements LLMProvider {
       }));
     }
 
-    return { text, toolCalls };
+    return { text, toolCalls, thought, thought_signature };
+  }
+
+  async embed(text: string): Promise<number[]> {
+    const client = this.client || getGenClient();
+    try {
+      const result = await (client.models as any).embedContent({
+        model: "text-embedding-004", // Force standard high-quality model
+        content: { parts: [{ text }] },
+        taskType: "RETRIEVAL_QUERY",
+      });
+      return result.embedding?.values || [];
+    } catch (e) {
+      console.error("[GeminiAdapter] Embedding failed:", e);
+      return [];
+    }
+  }
+
+  async embedBatch(texts: string[]): Promise<number[][]> {
+    const client = this.client || getGenClient();
+    try {
+      const requests = texts.map((text) => ({
+        content: { parts: [{ text }] },
+        taskType: "RETRIEVAL_DOCUMENT",
+      }));
+      const result = await (client.models as any).batchEmbedContents({
+        model: "text-embedding-004",
+        requests,
+      });
+      return (result.embeddings || []).map((e: any) => e.values || []);
+    } catch (e) {
+      console.error("[GeminiAdapter] Batch embedding failed:", e);
+      return [];
+    }
   }
 }

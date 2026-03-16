@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import { GOALS_FILE as STORAGE_PATH } from '../config/constants.js';
+import { lucaLinkManager } from '../../../src/services/lucaLinkManager.server.js';
 
 class GoalStore {
     constructor() {
@@ -71,6 +72,9 @@ class GoalStore {
         this.goals.set(goal.id, goal);
         this.save();
         
+        // LUCA_LINK: Sync mission across mesh
+        lucaLinkManager.syncState('goals', this.getAllGoals());
+
         console.log(`[GOAL_STORE] Created goal: ${goal.id} - ${goal.description}`);
         return goal;
     }
@@ -105,6 +109,9 @@ class GoalStore {
         this.goals.set(goalId, goal);
         this.save();
         
+        // LUCA_LINK: Sync mission update across mesh
+        lucaLinkManager.syncState('goals', this.getAllGoals());
+
         return goal;
     }
 
@@ -123,6 +130,9 @@ class GoalStore {
         this.executions.delete(goalId);
         this.state.delete(goalId);
         this.save();
+
+        // LUCA_LINK: Sync removal across mesh
+        lucaLinkManager.syncState('goals', this.getAllGoals());
     }
 
     // --- EXECUTION TRACKING ---

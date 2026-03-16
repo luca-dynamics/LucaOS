@@ -96,7 +96,28 @@ class MedicService {
                 return { success: false, reason: "LOW_CONFIDENCE" };
             }
 
-            this.log(`Sysadmin: Executing: ${plan.command}`, 'sysadmin', 80);
+            // --- USER APPROVAL STEP ---
+            this.log("LEVEL 3: Manual Approval Required for AI Command.", 'warn', 75);
+            if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+                this.mainWindow.webContents.send('medic-approval-request', plan);
+                
+                const { ipcMain } = require('electron');
+                const approved = await new Promise((resolve) => {
+                    ipcMain.once('medic-approval-response', (event, result) => {
+                        resolve(result);
+                    });
+                });
+
+                if (!approved) {
+                    this.log("Execution DENIED by Operator. Halting.", 'error', 100);
+                    return { success: false, reason: "USER_DENIED" };
+                }
+            } else {
+                this.log("CRITICAL: Recovery Window lost. Aborting.", 'error', 100);
+                return { success: false, reason: "NO_WINDOW" };
+            }
+
+            this.log(`Sysadmin: Executing Authorized Command: ${plan.command}`, 'sysadmin', 80);
             const success = await this.execPromise(plan.command);
             
             if (success) {

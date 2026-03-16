@@ -463,9 +463,19 @@ export class MCPClientManager {
         };
 
         // Persist to settings
-        const servers = currentSettings?.mcp?.servers || [];
-        servers.push(server);
-        await saveSettings({ mcp: { servers } });
+        const currentServers = currentSettings?.mcp?.servers || [];
+        
+        // check for duplicates
+        const existingIndex = currentServers.findIndex(s => s.id === server.id || (server.url && s.url === server.url));
+        
+        if (existingIndex >= 0) {
+            console.log(`[MCP] Updating existing server: ${server.id}`);
+            currentServers[existingIndex] = { ...currentServers[existingIndex], ...server };
+        } else {
+            currentServers.push(server);
+        }
+        
+        await saveSettings({ mcp: { servers: currentServers } });
 
         // Connect
         const config = {

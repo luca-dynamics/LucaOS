@@ -117,11 +117,18 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
     // Shift + Enter = New line (default behavior, do nothing)
   };
 
-  const isLight = themeName?.toLowerCase() === "lucagent";
+  const isLight = 
+    themeName?.toLowerCase() === "lucagent" || 
+    themeName?.toLowerCase() === "agentic-slate" ||
+    themeName?.toLowerCase() === "light";
 
   return (
     <div
-      className={`relative z-20 transition-colors duration-500 ${isLight ? "bg-white/10 backdrop-blur-md rounded-b-2xl" : "bg-[#0a0a0a]"}`}
+      className={`relative z-20 transition-colors duration-500 ${
+        isLight 
+          ? "bg-white/10 backdrop-blur-md rounded-b-2xl border-t border-gray-200/50" 
+          : "bg-black/40 backdrop-blur-md"
+      }`}
     >
       {/* Attachment Preview (Above Input) */}
       {attachment && (
@@ -130,7 +137,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
             <img
               src={attachment}
               alt="Attachment"
-              className="h-20 sm:h-24 w-auto rounded-xl border border-white/20 shadow-lg"
+              className={`h-20 sm:h-24 w-auto rounded-xl border ${isLight ? "border-gray-300" : "border-white/20"} shadow-lg`}
             />
             <button
               type="button"
@@ -198,7 +205,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               <button
                 type="button"
                 onClick={onClearChat}
-                className="p-1 sm:p-1.5 hover:text-red-400 transition-all rounded-md border hover:bg-white/5 active:scale-90"
+                className={`p-1 sm:p-1.5 hover:text-red-400 transition-all rounded-md border ${isLight ? "hover:bg-gray-100" : "hover:bg-white/5"} active:scale-90`}
                 style={{
                   borderColor: `${safeColor}60`,
                   color: `${safeColor}cc`,
@@ -212,7 +219,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
             {/* Attachment Button */}
             <button
               type="button"
-              className="p-1 sm:p-1.5 hover:text-slate-300 transition-all rounded-md border hover:bg-white/5 active:scale-90"
+              className={`p-1 sm:p-1.5 transition-all rounded-md border ${isLight ? "hover:bg-gray-100" : "hover:bg-white/5"} active:scale-90`}
               style={{
                 borderColor: `${safeColor}60`,
                 color: `${safeColor}cc`,
@@ -265,7 +272,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               <button
                 type="button"
                 onClick={onScreenShare}
-                className="p-1 sm:p-1.5 hover:text-slate-300 transition-all rounded-md border hover:bg-white/5 active:scale-90"
+                className={`p-1 sm:p-1.5 transition-all rounded-md border ${isLight ? "hover:bg-gray-100" : "hover:bg-white/5"} active:scale-90`}
                 style={{
                   borderColor: `${safeColor}60`,
                   color: `${safeColor}cc`,
@@ -293,7 +300,9 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                   <div
                     className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-mono px-1.5 rounded-md border h-[24px] sm:h-[27px] ${
                       isKernelLocked
-                        ? "text-slate-500 bg-slate-900/40 border-slate-800"
+                        ? isLight 
+                          ? "text-gray-400 bg-gray-100 border-gray-200"
+                          : "text-slate-500 bg-slate-900/40 border-slate-800"
                         : "text-rq-red bg-rq-red-dim/10 border-rq-red/20 animate-pulse"
                     }`}
                   >
@@ -400,7 +409,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                   ? "bg-red-500 border-red-500 text-red-100 shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse hover:bg-red-600 active:scale-95"
                   : input.trim() || attachment
                     ? "text-white hover:text-white/80 hover:bg-white/5 active:scale-90"
-                    : "text-slate-600 cursor-not-allowed"
+                    : `${isLight ? "text-gray-400" : "text-slate-600"} cursor-not-allowed`}
               }
             `}
               style={

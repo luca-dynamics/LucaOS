@@ -21,6 +21,8 @@ export const ErrorCodes = {
   LL_205: "Unauthorized device",
   LL_206: "Key exchange failed",
   LL_207: "Message too old (replay attack)",
+  LL_208: "Missing identity signature",
+  LL_209: "Identity signature verification failed",
 
   // Protocol Errors (LL_3xx)
   LL_301: "Malformed message",
@@ -165,6 +167,8 @@ export class ErrorHandler {
       LL_205: "This device is not authorized.",
       LL_206: "Failed to establish secure connection.",
       LL_207: "Received an outdated message.",
+      LL_208: "Command security signature is missing.",
+      LL_209: "Command security signature is invalid.",
 
       // Protocol
       LL_301: "Received an invalid message.",
@@ -208,6 +212,8 @@ export class ErrorHandler {
       LL_201: "Disconnect and reconnect the device.",
       LL_204: "Scan the QR code again to reconnect.",
       LL_205: "Contact support if you believe this is an error.",
+      LL_208: "Ensure the device is paired correctly.",
+      LL_209: "Re-pair the device to reset security keys.",
       LL_303: "Wait a moment before trying again.",
       LL_401: "Choose a different device or feature.",
       LL_403: "Check device permissions and try again.",

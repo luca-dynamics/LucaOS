@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { apiUrl } from "../../config/api";
+import { setHexAlpha } from "../../config/themeColors";
 
 interface SettingsConnectorsTabProps {
   settings: LucaSettings;
@@ -159,9 +160,9 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
               ? "rgba(0,0,0,0.03)"
               : `${theme.hex}0d`,
           borderColor:
-            theme.themeName?.toLowerCase() === "lucagent"
+            theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
               ? "rgba(0,0,0,0.1)"
-              : `${theme.hex}33`,
+              : setHexAlpha(theme.hex, 0.2),
         }}
       >
         <strong style={{ color: theme.hex }}>
@@ -191,18 +192,18 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
           return (
             <div
               key={app.id}
-              className={`relative group overflow-hidden border rounded-2xl p-4 transition-all duration-500 backdrop-blur-2xl shadow-2xl hover:-translate-y-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : ""}`}
+              className={`relative group overflow-hidden border rounded-2xl p-4 transition-all duration-500 backdrop-blur-2xl shadow-2xl hover:-translate-y-1 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : ""}`}
               style={{
                 borderColor:
-                  theme.themeName?.toLowerCase() === "lucagent"
+                  theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(0,0,0,0.1)"
-                    : `${theme.hex}22`,
+                    : setHexAlpha(theme.hex, 0.15),
                 backgroundColor:
-                  theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}08`,
+                  theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "rgba(255,255,255,0.7)" : setHexAlpha(theme.hex, 0.04),
                 boxShadow:
-                  theme.themeName?.toLowerCase() === "lucagent"
+                  theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
                     ? "0 10px 30px rgba(0,0,0,0.05)"
-                    : `0 20px 40px -20px rgba(0,0,0,0.5), inset 0 0 0 1px ${theme.hex}11`,
+                    : `0 20px 40px -20px rgba(0,0,0,0.5), inset 0 0 0 1px ${setHexAlpha(theme.hex, 0.05)}`,
               }}
             >
               {/* Premium Glassmorphic Overlay: Multi-point Glow */}
@@ -257,8 +258,14 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                           ? "border-green-500/30 text-green-400 bg-green-500/10"
                           : isChromeSynced
                             ? "border-blue-500/30 text-blue-400 bg-blue-500/10"
-                            : "border-white/10 text-white/20"
+                            : theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
+                              ? "text-slate-400 border-slate-200 bg-slate-50"
+                              : `text-white/20`
                       }`}
+                      style={{ 
+                        borderColor: !isConnected && !isChromeSynced && !(theme.isLight || theme.themeName?.toLowerCase() === "lucagent") ? setHexAlpha(theme.hex, 0.1) : undefined,
+                        backgroundColor: !isConnected && !isChromeSynced && !(theme.isLight || theme.themeName?.toLowerCase() === "lucagent") ? setHexAlpha(theme.hex, 0.05) : undefined
+                      }}
                     >
                       {isConnected
                         ? appStatus.email || "ACTIVE"
@@ -301,17 +308,21 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                         className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter transition-all duration-300 ${
                           isAlwaysOn
                             ? "text-white"
-                            : theme.themeName?.toLowerCase() === "lucagent"
+                            : theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
                               ? "bg-black/[0.03] text-slate-400 border border-black/10"
-                              : "bg-white/5 text-white/30 border border-white/10"
+                              : "text-white/20 border border-white/5"
                         }`}
                         style={
                           isAlwaysOn
                             ? {
                                 backgroundColor: theme.hex,
-                                boxShadow: `0 0 15px -2px ${theme.hex}88`,
+                                boxShadow: `0 0 15px -2px ${setHexAlpha(theme.hex, 0.5)}`,
                               }
-                            : {}
+                            : {
+                                backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.03)" : setHexAlpha(theme.hex, 0.05),
+                                color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.4)" : setHexAlpha(theme.hex, 0.3),
+                                borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.1)" : setHexAlpha(theme.hex, 0.1)
+                              }
                         }
                       >
                         {isAlwaysOn ? "Always Online" : "Lazy Mode"}
@@ -339,34 +350,36 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                         : `Session data found. Click below to establish the bridge.`}
                     </div>
                   )}
-                  <button
-                    onClick={() => {
-                      if (app.id === "google") {
-                        handleStartAuth(app.id);
-                      } else if (app.event) {
-                        window.dispatchEvent(new CustomEvent(app.event));
-                      } else {
-                        handleStartAuth(app.id);
-                      }
-                    }}
-                    className={`w-full py-2 rounded-xl text-[11px] font-black border transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5 backdrop-blur-md ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] hover:bg-black/[0.06]" : ""}`}
-                    style={{
-                      borderColor: isChromeSynced
-                        ? theme.themeName?.toLowerCase() === "lucagent"
-                          ? "rgba(0,0,0,0.2)"
-                          : `${theme.hex}66`
-                        : theme.themeName?.toLowerCase() === "lucagent"
-                          ? "rgba(0,0,0,0.1)"
-                          : `${theme.hex}44`,
-                      color:
-                        theme.themeName?.toLowerCase() === "lucagent" ? "#111827" : theme.hex,
-                      backgroundColor: isChromeSynced
-                        ? theme.themeName?.toLowerCase() === "lucagent"
-                          ? "rgba(0,0,0,0.05)"
-                          : `${theme.hex}11`
-                        : "transparent",
-                    }}
-                  >
+                    <button
+                      onClick={() => {
+                        if (app.id === "google") {
+                          handleStartAuth(app.id);
+                        } else if (app.event) {
+                          window.dispatchEvent(new CustomEvent(app.event));
+                        } else {
+                          handleStartAuth(app.id);
+                        }
+                      }}
+                      className={`w-full py-2 rounded-xl text-[11px] font-black border transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5 backdrop-blur-md ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] hover:bg-black/[0.06]" : ""}`}
+                      style={{
+                        borderColor: isChromeSynced
+                          ? theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
+                            ? "rgba(0,0,0,0.2)"
+                            : setHexAlpha(theme.hex, 0.4)
+                          : theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
+                            ? "rgba(0,0,0,0.1)"
+                            : setHexAlpha(theme.hex, 0.2),
+                        color:
+                          isConnected 
+                            ? (theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "#1e293b" : "#ffffff")
+                            : (theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "#111827" : theme.hex),
+                        backgroundColor: isChromeSynced
+                          ? theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
+                            ? "rgba(0,0,0,0.05)"
+                            : setHexAlpha(theme.hex, 0.1)
+                          : "transparent",
+                      }}
+                    >
                     {isChromeSynced ? "ESTABLISH LINK" : "LINK MANUALLY"}
                   </button>
                 </div>
@@ -376,17 +389,17 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                     className="text-[10px] px-3 py-2 rounded-xl border leading-snug"
                     style={{
                       borderColor:
-                        theme.themeName?.toLowerCase() === "lucagent"
+                        theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
                           ? "rgba(0,0,0,0.1)"
-                          : `${theme.hex}22`,
+                          : setHexAlpha(theme.hex, 0.15),
                       color:
-                        theme.themeName?.toLowerCase() === "lucagent"
+                        theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
                           ? "#1e293b"
-                          : `${theme.hex}cc`,
+                          : setHexAlpha(theme.hex, 0.8),
                       backgroundColor:
-                        theme.themeName?.toLowerCase() === "lucagent"
+                        theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
                           ? "rgba(0,0,0,0.02)"
-                          : `${theme.hex}05`,
+                          : setHexAlpha(theme.hex, 0.05),
                     }}
                   >
                     <div className="flex items-center gap-2 mb-0.5">
@@ -409,12 +422,12 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
         <div className="absolute inset-0 z-[50] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
           <div
-            className={`relative border p-6 rounded-2xl max-w-[280px] text-center shadow-2xl animate-in zoom-in duration-300 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white" : "bg-[#0d0d0d]"}`}
+            className={`relative border p-6 rounded-2xl max-w-[280px] text-center shadow-2xl animate-in zoom-in duration-300 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-white" : "bg-[#0d0d0d]"}`}
             style={{
               borderColor:
-                theme.themeName?.toLowerCase() === "lucagent"
+                theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
                   ? "rgba(0,0,0,0.1)"
-                  : `${theme.hex}44`,
+                  : setHexAlpha(theme.hex, 0.3),
             }}
           >
             <div

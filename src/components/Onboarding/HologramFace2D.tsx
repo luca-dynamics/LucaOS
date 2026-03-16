@@ -3,12 +3,12 @@ import { setHexAlpha } from "../../config/themeColors";
 
 interface HologramFace2DProps {
   step:
-    | "BOOT"
-    | "LEGAL"
+    | "KERNEL_AWAKENING"
+    | "DIRECTIVE_ALIGNMENT"
     | "THEME"
-    | "IDENTITY"
+    | "NEURAL_HANDSHAKE"
     | "FACE_SCAN"
-    | "BRIDGE"
+    | "COGNITIVE_CORE_SELECTION"
     | "HARDWARE_SCAN"
     | "OLLAMA_INSTALL"
     | "OLLAMA_WAKE"
@@ -44,7 +44,7 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
           filter: `drop-shadow(0 0 40px ${glow}) drop-shadow(0 0 80px ${glow})`,
         }}
       >
-        <div className="relative w-[400px] h-[400px] animate-pulse">
+        <div className="relative animate-pulse" style={{ width: "clamp(25rem, 90vmin, 50rem)", height: "clamp(25rem, 90vmin, 50rem)" }}>
           {/* Luca Icon */}
           <img
             src="/icon.png"
@@ -90,8 +90,10 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="absolute w-[300px] h-[300px] rounded-full border-2 opacity-20 animate-ping"
+              className="absolute rounded-full border-2 opacity-20 animate-ping"
               style={{
+                width: "min(300px, 50vmin)",
+                height: "min(300px, 50vmin)",
                 borderColor: color,
                 animationDelay: `${i * 0.6}s`,
                 animationDuration: "3s",

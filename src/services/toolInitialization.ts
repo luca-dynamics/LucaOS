@@ -25,29 +25,58 @@ export const initializeToolRegistry = () => {
   // We iterate over the exported tools from the index.
   Object.values(ToolDefinitions).forEach((tool) => {
     if (typeof tool === "object" && "name" in tool && "description" in tool) {
-      // Determine category based on tool name if possible, or use default
-      let category: ToolCategory = "CORE";
+      // --- DYNAMIC TOOL SELECTION SYSTEM (GEMINI OPTIMIZATION) ---
+      // Distinguish between CORE (Permanent Reflexes) and DISCOVERABLE (Registry Skills)
+      let category: ToolCategory = "SYSTEM"; // Default to SYSTEM instead of CORE
 
       const toolName = tool.name?.toLowerCase() || "";
 
-      if (toolName.includes("android") || toolName.includes("mobile"))
+      // 1. WHITELIST CORE TOOLS (The "Nerve Center")
+      // These are ALWAYS loaded into the LLM context (High-Frequency)
+      const CORE_WHITELIST = [
+        "searchweb",
+        "getsystemsettings",
+        "updatesystemsettings",
+        "invokeanytool",
+        "listavailabletools",
+        "retrievememory",
+        "storememory",
+        "readscreen",
+        "aiclick",
+        "captureview",
+      ];
+
+      if (CORE_WHITELIST.includes(toolName)) {
+        category = "CORE";
+      } else if (toolName.includes("android") || toolName.includes("mobile")) {
         category = "MOBILE";
-      else if (
+      } else if (
         toolName.includes("crypto") ||
         toolName.includes("trade") ||
         toolName.includes("forex")
-      )
+      ) {
         category = "CRYPTO";
-      else if (
+      } else if (
+        toolName.includes("whatsapp") ||
+        toolName.includes("message") ||
+        toolName.includes("telegram") ||
+        toolName.includes("linkedin") ||
+        toolName.includes("twitter") ||
+        toolName.includes("instagram")
+      ) {
+        category = "WHATSAPP"; // Group into Communication/Social category
+      } else if (
         toolName.includes("terminal") ||
         toolName.includes("file") ||
-        toolName.includes("system")
-      )
+        toolName.includes("system") ||
+        toolName.includes("os")
+      ) {
         category = "SYSTEM";
-      else if (toolName.includes("osint") || toolName.includes("search"))
+      } else if (toolName.includes("osint") || toolName.includes("search")) {
         category = "OSINT";
-      else if (toolName.includes("whatsapp") || toolName.includes("message"))
-        category = "MOBILE";
+      } else if (toolName.includes("code") || toolName.includes("engineer")) {
+        category = "DEV";
+      }
 
       ToolRegistry.register(tool as any, category);
       count++;

@@ -33,15 +33,90 @@ export enum SecurityLevel {
   LEVEL_3 = 3, // Dual (confirm + bio)
 }
 
+export enum MissionScope {
+  NONE = "NONE",
+  FILE = "FILE MISSION",
+  FINANCE = "FINANCIAL MISSION",
+  SOCIAL = "SOCIAL MISSION",
+  SYSTEM = "SYSTEM SETTINGS",
+  FULL = "FULL ACCESS",
+}
+
 export interface ToolEntry {
   category: ToolCategory;
   tool: FunctionDeclaration;
   keywords: string[];
   securityLevel: SecurityLevel;
+  missionScope: MissionScope; // Scoped Mission Arming
   handler?: (args: any, context: any) => Promise<string>;
 }
 
 const registry: ToolEntry[] = [];
+export const HIGH_SECURITY_TOOLS: Record<
+  string,
+  { level: SecurityLevel; scope: MissionScope }
+> = {
+  // Admin / System
+  run_terminal: { level: SecurityLevel.LEVEL_2, scope: MissionScope.SYSTEM },
+  terminal: { level: SecurityLevel.LEVEL_2, scope: MissionScope.SYSTEM },
+  executeTerminalCommand: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  wipeMemory: { level: SecurityLevel.LEVEL_3, scope: MissionScope.SYSTEM },
+  initiateLockdown: {
+    level: SecurityLevel.LEVEL_3,
+    scope: MissionScope.SYSTEM,
+  },
+  controlAlwaysOnVision: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+
+  // Trading / Financial
+  executeTrade: { level: SecurityLevel.LEVEL_2, scope: MissionScope.FINANCE },
+  executeForexTrade: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.FINANCE,
+  },
+  sendCryptoTransaction: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.FINANCE,
+  },
+
+  // Privacy / OSINT / Social
+  osintIdentitySearch: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SOCIAL,
+  },
+  readAndroidNotifications: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SOCIAL,
+  },
+  whatsapp_message: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SOCIAL,
+  },
+
+  // Files / Dev
+  createOrUpdateFile: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.FILE,
+  },
+  deleteFile: { level: SecurityLevel.LEVEL_2, scope: MissionScope.FILE },
+  moveFile: { level: SecurityLevel.LEVEL_1, scope: MissionScope.FILE },
+
+  // Automation
+  controlAndroidAgent: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  executeMCPTool: { level: SecurityLevel.LEVEL_1, scope: MissionScope.SYSTEM },
+  ingestSkillFromURL: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.FILE,
+  },
+};
 
 export const ToolRegistry = {
   register: (
@@ -50,34 +125,13 @@ export const ToolRegistry = {
     keywords: string[] = [],
     handler?: (args: any, context: any) => Promise<string>,
   ) => {
-    // 🏷️ DEFINE SECURITY LEVELS BY TOOL NAME
-    const HIGH_SECURITY_TOOLS: Record<string, SecurityLevel> = {
-      // Admin / System
-      run_terminal: SecurityLevel.LEVEL_2,
-      terminal: SecurityLevel.LEVEL_2,
-      executeTerminalCommand: SecurityLevel.LEVEL_2,
-      wipeMemory: SecurityLevel.LEVEL_3,
-      initiateLockdown: SecurityLevel.LEVEL_3,
-      controlAlwaysOnVision: SecurityLevel.LEVEL_2,
+    // 🏷️ DEFINE SECURITY LEVELS & MISSION SCOPES BY TOOL NAME
+    const securityConfig = tool.name
+      ? HIGH_SECURITY_TOOLS[tool.name]
+      : { level: SecurityLevel.LEVEL_0, scope: MissionScope.NONE };
 
-      // Trading / Financial
-      executeTrade: SecurityLevel.LEVEL_2,
-      executeForexTrade: SecurityLevel.LEVEL_2,
-      sendCryptoTransaction: SecurityLevel.LEVEL_2,
-
-      // Privacy / OSINT
-      osintIdentitySearch: SecurityLevel.LEVEL_2,
-      readAndroidNotifications: SecurityLevel.LEVEL_2,
-
-      // Automation
-      controlAndroidAgent: SecurityLevel.LEVEL_2,
-      executeMCPTool: SecurityLevel.LEVEL_1,
-      createOrUpdateFile: SecurityLevel.LEVEL_1,
-    };
-
-    const securityLevel =
-      (tool.name ? HIGH_SECURITY_TOOLS[tool.name] : SecurityLevel.LEVEL_0) ||
-      SecurityLevel.LEVEL_0;
+    const securityLevel = securityConfig?.level || SecurityLevel.LEVEL_0;
+    const missionScope = securityConfig?.scope || MissionScope.NONE;
 
     const existing = registry.findIndex((t) => t.tool.name === tool.name);
     if (existing >= 0) {
@@ -86,6 +140,7 @@ export const ToolRegistry = {
         category,
         keywords,
         securityLevel,
+        missionScope,
         handler: handler || registry[existing].handler,
       };
     } else {
@@ -104,6 +159,7 @@ export const ToolRegistry = {
         category,
         keywords: allKeywords,
         securityLevel,
+        missionScope,
         handler,
       });
     }
@@ -130,6 +186,10 @@ export const ToolRegistry = {
   getSecurityLevel: (name: string): SecurityLevel => {
     const entry = registry.find((e) => e.tool.name === name);
     return entry ? entry.securityLevel : SecurityLevel.LEVEL_0;
+  },
+  getMissionScope: (name: string): MissionScope => {
+    const entry = registry.find((e) => e.tool.name === name);
+    return entry ? entry.missionScope : MissionScope.NONE;
   },
 
   // --- EXECUTION CORE ---
@@ -196,6 +256,18 @@ export const ToolRegistry = {
         `[META-TOOL] invokeAnyTool routing to: ${toolName}`,
         toolArgs,
       );
+
+      // --- SECURITY HARDENING ---
+      // Prevent biometric bypass for high-privilege tools
+      if (
+        toolEntry.securityLevel >= SecurityLevel.LEVEL_1 &&
+        !context?.isElevated
+      ) {
+        console.warn(
+          `[SECURITY] 🛡️ invokeAnyTool blocked: ${toolName} requires elevation.`,
+        );
+        return `SECURITY_ERROR: The tool "${toolName}" requires biometric verification. \n\nINSTRUCTION: You MUST call this tool directly (e.g. ${toolName}(...)) instead of using invokeAnyTool to trigger the security gate for the user.`;
+      }
 
       // Recursively call execute with the target tool
       try {

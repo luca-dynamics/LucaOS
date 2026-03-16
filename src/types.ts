@@ -101,6 +101,7 @@ export interface MemoryNode {
   id: string;
   key: string;
   value: string;
+  tenantId?: string; // Phase 9: Profile Isolation
   // Mem0 Memory Categories
   category:
     | "USER_STATE"

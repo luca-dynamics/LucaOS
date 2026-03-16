@@ -104,7 +104,8 @@ const HologramMode: React.FC = () => {
         primaryColor={primaryColor} // Use dynamic theme color
         persona={state.persona as string}
         onClick={handleToggleVoice}
-        intent={state.intent}
+        propIntent={state.intent}
+        elevationState={state.elevationState}
       />
     </div>
   );

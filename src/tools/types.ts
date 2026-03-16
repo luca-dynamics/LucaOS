@@ -64,6 +64,7 @@ export interface ToolExecutionContext {
   displayId?: number; // Origin Display ID (for Widget interactions)
   sessionId?: string; // Active conversation session ID
   visionModel?: string; // e.g. "gemini-3-flash-preview" or "ui-tars"
+  isElevated?: boolean; // Whether the user is currently biometrically verified
 }
 
 export interface ToolHandler {

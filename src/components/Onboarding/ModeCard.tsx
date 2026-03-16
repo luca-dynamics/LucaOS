@@ -53,7 +53,6 @@ const ModeCard: React.FC<ModeCardProps> = ({
         ${bgCard}
         border ${borderCard}
         rounded-2xl 
-        p-6 sm:p-8
         ${hoverBg}
         ${hoverBorder}
         active:scale-95
@@ -61,10 +60,13 @@ const ModeCard: React.FC<ModeCardProps> = ({
         duration-300
         backdrop-blur-xl
         text-center
-        space-y-3 sm:space-y-4
         touch-manipulation
         overflow-hidden
       `}
+      style={{
+        padding: "clamp(1rem, 5vmin, 2.5rem)",
+        gap: "clamp(0.5rem, 2vmin, 1.25rem)",
+      }}
     >
       {/* Glow effect on hover */}
       <div
@@ -84,20 +86,25 @@ const ModeCard: React.FC<ModeCardProps> = ({
       {/* Content */}
       <div className="relative z-10">
         {/* Icon */}
-        <div className="text-4xl sm:text-6xl mb-2 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
+        <div 
+          className="group-hover:scale-110 transition-transform duration-300"
+          style={{ fontSize: "clamp(2rem, 10vmin, 5rem)", marginBottom: "2vmin" }}
+        >
           {icon}
         </div>
 
         {/* Title */}
         <h3
-          className={`text-lg sm:text-xl font-bold uppercase tracking-wider ${textTitle}`}
+          className={`font-bold uppercase tracking-wider ${textTitle}`}
+          style={{ fontSize: "clamp(0.9rem, 3.5vmin, 1.4rem)" }}
         >
           {title}
         </h3>
 
         {/* Description */}
         <p
-          className={`text-xs sm:text-sm ${textDesc} ${textDescHover} transition-colors`}
+          className={`${textDesc} ${textDescHover} transition-colors`}
+          style={{ fontSize: "clamp(0.5rem, 1.6vmin, 0.8rem)", marginTop: "1vmin" }}
         >
           {description}
         </p>
@@ -105,20 +112,22 @@ const ModeCard: React.FC<ModeCardProps> = ({
         {/* Call to action button */}
         <div
           className={`
-          mt-3 sm:mt-4 
-          px-4 sm:px-6 py-2 
+          px-[3vmin] py-[1vmin] 
           ${btnBg}
           border ${btnBorder}
-          rounded-lg 
+          rounded-[1vmin] 
           ${btnHoverBg}
           ${btnHoverBorder}
           transition-all
           inline-block
-          text-xs sm:text-sm
           font-medium
           tracking-wide
           ${textTitle}
         `}
+          style={{ 
+            marginTop: "2.5vmin",
+            fontSize: "clamp(0.55rem, 1.6vmin, 0.8rem)"
+          }}
         >
           Choose
         </div>

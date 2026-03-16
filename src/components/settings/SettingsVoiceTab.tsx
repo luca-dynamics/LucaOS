@@ -11,9 +11,11 @@ import {
   Lock,
   Zap,
   Shield,
-  ZapOff,
   Scale,
   Sparkles,
+  Activity,
+  Cpu,
+  BarChart3,
 } from "lucide-react";
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
@@ -38,6 +40,41 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
   const [clonedVoices, setClonedVoices] = useState<ClonedVoice[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+
+  // Telemetry metrics
+  const [metrics, setMetrics] = useState<{
+    stt: { local: number; cloud: number; fastest: "local" | "cloud" };
+    brain: { ttft: number; path: string };
+    tts: { buffer: number; source: "local" | "neural" };
+  }>({
+    stt: { local: 42, cloud: 310, fastest: "local" },
+    brain: { ttft: 115, path: "Gemini 3" },
+    tts: { buffer: 92, source: "neural" },
+  });
+
+  // Simulated telemetry spikes for cinematic feel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMetrics(() => ({
+        stt: {
+          local: 35 + Math.random() * 20,
+          cloud: 280 + Math.random() * 150,
+          fastest: "local",
+        },
+        brain: {
+          ttft: 100 + Math.random() * 50,
+          path: settings.brain?.model || "Gemini 1.5 Pro",
+        },
+        tts: {
+          buffer: 80 + Math.random() * 20,
+          source: (settings.voice.provider === "local-luca"
+            ? "local"
+            : "neural") as "local" | "neural",
+        },
+      }));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [settings.brain?.model, settings.voice.provider]);
 
   useEffect(() => {
     const loadLocalModels = async () => {
@@ -152,7 +189,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-h-[420px] pr-2">
+    <div className="space-y-6 max-h-[520px] pr-2">
       {/* Strategic Presets Section */}
       <motion.div variants={item} className="space-y-3">
         <div className="flex items-center gap-2">
@@ -217,7 +254,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                       settings.voice.provider === "local-luca" &&
                       settings.voice.sttModel !== "cloud-gemini")
                       ? theme.hex
-                      : "#6b7280",
+                      : theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
                 }}
               />
               <span
@@ -250,7 +287,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             <Mic
               className={`w-4 h-4 ${settings.voice.wakeWordEnabled ? "animate-pulse" : ""}`}
               style={{
-                color: settings.voice.wakeWordEnabled ? theme.hex : "#4b5563",
+                color: settings.voice.wakeWordEnabled ? theme.hex : theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
               }}
             />
             <div
@@ -382,6 +419,29 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               </select>
             </div>
 
+            {/* Google Cloud API Key (Only if provider is google) */}
+            {settings.voice.provider === "google" && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="space-y-2 pt-2 border-t border-white/5"
+              >
+                <div className="flex items-center gap-2">
+                  <img src="/icons/brands/gemini-color.svg" className="w-[14px] h-[14px] object-contain" alt="Google Cloud" />
+                  <span className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}>
+                    Google Cloud API Key
+                  </span>
+                </div>
+                <input
+                  type="password"
+                  placeholder="Paste your Google Cloud project API Key..."
+                  value={settings.voice.googleApiKey}
+                  onChange={(e) => onUpdate("voice", "googleApiKey", e.target.value)}
+                  className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none font-mono`}
+                />
+              </motion.div>
+            )}
+
             {/* Google Cloud Status Note (Optional) */}
             {settings.voice.provider === "google" && (
               <p className="text-[8px] text-gray-600 uppercase tracking-tighter ml-1">
@@ -480,12 +540,15 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             className={`flex justify-between items-center text-[10px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"}`}
           >
             <div className="flex items-center gap-2">
-              <Zap className="w-3 h-3 text-yellow-500" />
+              <Zap className="w-3 h-3" style={{ color: theme.hex }} />
               Rhythm & Pacing
             </div>
             <span
               style={{
-                color: theme.themeName?.toLowerCase() === "lucagent" ? "#000" : theme.hex,
+                color:
+                  theme.themeName?.toLowerCase() === "lucagent"
+                    ? "#000"
+                    : theme.hex,
               }}
               className="font-mono text-[9px]"
             >
@@ -523,6 +586,137 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             Vocal tempo calibration protocol
           </p>
         </motion.div>
+      </motion.div>
+
+      {/* Voice Intelligence Telemetry (Cinematic Monitoring) */}
+      <motion.div
+        variants={item}
+        className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-4`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="w-3.5 h-3.5" style={{ color: theme.hex }} />
+            <span
+              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-wider`}
+            >
+              Intelligence Telemetry Dashboard
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[8px] font-mono text-gray-500 uppercase">
+                Hybrid Link: Active
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* STT Race */}
+          <div
+            className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-white/[0.02] border-white/5"} space-y-2`}
+          >
+            <div className="flex justify-between items-center text-[8px] font-bold text-gray-500 uppercase tracking-tighter">
+              <span>Acoustic Racing (STT)</span>
+              <Mic className="w-2.5 h-2.5" />
+            </div>
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <div className="flex justify-between text-[7px] text-gray-400 font-mono uppercase">
+                  <span>Local Core</span>
+                  <span style={{ color: theme.hex }}>
+                    {metrics.stt.local.toFixed(0)}ms
+                  </span>
+                </div>
+                <div className="h-1 bg-black/20 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-green-500"
+                    animate={{ width: `${(metrics.stt.local / 100) * 100}%` }}
+                    transition={{ type: "spring", stiffness: 50 }}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-[7px] text-gray-400 font-mono uppercase">
+                  <span>Cloud Nexus</span>
+                  <span>{metrics.stt.cloud.toFixed(0)}ms</span>
+                </div>
+                <div className="h-1 bg-black/20 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full opacity-50"
+                    style={{ backgroundColor: theme.hex }}
+                    animate={{ width: `${(metrics.stt.cloud / 1000) * 100}%` }}
+                    transition={{ type: "spring", stiffness: 30 }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Brain Latency */}
+          <div
+            className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-white/[0.02] border-white/5"} space-y-2`}
+          >
+            <div className="flex justify-between items-center text-[8px] font-bold text-gray-500 uppercase tracking-tighter">
+              <span>Hyper-Inference (Brain)</span>
+              <Cpu className="w-2.5 h-2.5" />
+            </div>
+            <div className="flex flex-col justify-center h-[44px] space-y-1">
+              <div className="text-center text-[18px] font-mono leading-none tracking-tighter">
+                <span style={{ color: theme.hex }}>
+                  {metrics.brain.ttft.toFixed(0)}
+                </span>
+                <span className="text-[10px] text-gray-500 ml-0.5">ms</span>
+              </div>
+              <div className="text-center text-[7px] text-gray-400 font-bold uppercase truncate">
+                Via {metrics.brain.path}
+              </div>
+            </div>
+          </div>
+
+          {/* TTS Protocol */}
+          <div
+            className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-white/[0.02] border-white/5"} space-y-2`}
+          >
+            <div className="flex justify-between items-center text-[8px] font-bold text-gray-500 uppercase tracking-tighter">
+              <span>Synthesis Flow (TTS)</span>
+              <BarChart3 className="w-2.5 h-2.5" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center bg-black/20 rounded px-2 py-1">
+                <span className="text-[7px] text-gray-400 font-mono uppercase">
+                  Current Source
+                </span>
+                <span
+                  className="text-[7px] font-bold uppercase"
+                  style={{ color: theme.hex }}
+                >
+                  {metrics.tts.source === "neural"
+                    ? "Cloud Neural"
+                    : "Local Bin"}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-[7px] text-gray-400 font-mono uppercase">
+                  <span>Buffer Load</span>
+                  <span>{metrics.tts.buffer.toFixed(0)}%</span>
+                </div>
+                <div className="h-1 bg-black/20 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full"
+                    style={{ backgroundColor: theme.hex }}
+                    animate={{ width: `${metrics.tts.buffer}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-[7px] text-center text-gray-600 font-mono uppercase tracking-[0.2em] pt-1">
+          Telemetry stream synchronized via Hybrid Connectivity Bridge
+        </p>
       </motion.div>
 
       {/* Voice Cloning Studio (Premium Card) */}

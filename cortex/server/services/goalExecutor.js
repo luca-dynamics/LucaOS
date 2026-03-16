@@ -4,6 +4,7 @@
  */
 
 import { goalStore } from './goalStore.js';
+import { lucaLinkManager } from '../../../src/services/lucaLinkManager.server.js';
 
 class GoalExecutor {
     constructor() {
@@ -245,8 +246,17 @@ Otherwise, respond with JSON:
             const route = toolRoutes[action.tool];
             
             if (!route) {
-                console.warn(`[GOAL_EXECUTOR] Unknown tool: ${action.tool}, simulating...`);
-                return `Simulated execution of ${action.tool}: ${action.reasoning}`;
+                console.log(`[GOAL_EXECUTOR] Tool ${action.tool} not found locally. Checking Luca Link mesh...`);
+                
+                // Try to delegate to remote device
+                try {
+                    const result = await lucaLinkManager.delegateTool(action.tool, action.args);
+                    console.log(`[GOAL_EXECUTOR] Remote execution of ${action.tool} successful.`);
+                    return typeof result === 'string' ? result : JSON.stringify(result);
+                } catch (delegateError) {
+                    console.warn(`[GOAL_EXECUTOR] Remote delegation failed for ${action.tool}:`, delegateError.message);
+                    return `Error: Tool ${action.tool} not available locally or in mesh.`;
+                }
             }
 
             // Execute via Cortex API (Node.js Side = 3002)

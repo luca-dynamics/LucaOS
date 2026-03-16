@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { ToolRegistry, SecurityLevel } from "../../services/toolRegistry";
+import { ToolRegistry, SecurityLevel, MissionScope } from "../../services/toolRegistry";
 import { lucaService, PersonaType } from "../../services/lucaService";
 import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
@@ -73,6 +73,7 @@ interface UseToolOrchestratorProps {
   elevationState: {
     lastScanTimestamp: number;
     authorizedMissionIds: Set<string>;
+    activeMissionScope: MissionScope;
   };
   setElevationState: React.Dispatch<React.SetStateAction<any>>;
   setApprovalRequest: (req: any) => void;
@@ -150,16 +151,24 @@ export function useToolOrchestrator({
 
       // --- BIOMETRIC SECURITY CHECK (Tiered Architecture) ---
       const securityLevel = ToolRegistry.getSecurityLevel(name);
+      const toolMissionScope = ToolRegistry.getMissionScope(name);
       const missionId = taskQueue.getRunningTask()?.id;
 
       const isRecentlyElevated =
         Date.now() - elevationState.lastScanTimestamp < 60000;
-      const isMissionAuthorized =
-        missionId && elevationState.authorizedMissionIds.has(missionId);
+      const isMissionAuthorized = !!(
+        missionId && elevationState.authorizedMissionIds.has(missionId)
+      );
+
+      // SCOPED MISSION CHECK: If we have an active mission, it must match the tool's scope
+      const isScopeAuthorized =
+        elevationState.activeMissionScope === MissionScope.FULL ||
+        elevationState.activeMissionScope === toolMissionScope ||
+        toolMissionScope === MissionScope.NONE;
 
       if (
         securityLevel >= SecurityLevel.LEVEL_1 &&
-        !isRecentlyElevated &&
+        (!isRecentlyElevated || !isScopeAuthorized) &&
         !isMissionAuthorized
       ) {
         console.log(
@@ -171,6 +180,8 @@ export function useToolOrchestrator({
             tool: name,
             args,
             securityLevel,
+            missionScope: toolMissionScope, // Pass scope to UI
+            isSafetyValve: true, // Enable voice-first handshake
             resolve: (val: boolean) => {
               if (val) {
                 setElevationState((prev: any) => {
@@ -181,6 +192,7 @@ export function useToolOrchestrator({
                   return {
                     lastScanTimestamp: Date.now(),
                     authorizedMissionIds: newMissionIds,
+                    activeMissionScope: toolMissionScope, // Lock into mission scope
                   };
                 });
               }
@@ -323,6 +335,12 @@ export function useToolOrchestrator({
         setIsScreenSharing,
         setVisionPerformanceMode,
         setIsRebooting,
+        isElevated:
+          (isRecentlyElevated &&
+            (elevationState.activeMissionScope ===
+              ToolRegistry.getMissionScope(name) ||
+              elevationState.activeMissionScope === MissionScope.FULL)) ||
+          isMissionAuthorized,
       };
 
       // --- SPECIAL UI TRIGGERS ---

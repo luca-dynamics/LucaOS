@@ -268,15 +268,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 ${
+      className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm ${
         isMobile ? "p-2" : "p-4"
       } font-sans select-none`}
     >
       <div
         className={`w-full ${
           isMobile
-            ? "max-w-[95vw] h-[60vh] rounded-2xl"
-            : "max-w-3xl h-[500px] rounded-xl"
+            ? "max-w-[95vw] h-[85vh] rounded-2xl"
+            : "max-w-5xl h-[650px] rounded-xl"
         } ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border ${
           liveTheme.primary
         } flex flex-row overflow-hidden transition-colors duration-300 shadow-[0_0_50px_-20px_rgba(0,0,0,0.5)]`}
@@ -513,12 +513,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   : `1px solid ${liveTheme.hex}33`,
             }}
           >
-            <div
-              className={`text-[10px] md:text-xs ${
-                statusMsg.includes("Error") ? "text-red-500" : "text-green-500"
-              }`}
-            >
-              {statusMsg}
+            <div className="flex items-center gap-4">
+              <div
+                className={`text-[10px] md:text-xs ${
+                  statusMsg.includes("Error") ? "text-red-500" : "text-green-500"
+                }`}
+              >
+                {statusMsg}
+              </div>
             </div>
             <div className="flex gap-2 md:gap-3">
               <button

@@ -32,8 +32,10 @@ export const VisionProvider = {
         soundService?.play("SHUTTER");
 
         try {
-          const data = await screenCaptureService.captureScreen();
-          if (data && data.image) {
+          if (!screenCaptureService) return "Error: Screen capture service unavailable in context.";
+          const data = await screenCaptureService.capture();
+          if (data && data.imageBuffer) {
+            const imageBase64 = screenCaptureService.imageBufferToBase64(data.imageBuffer);
             const instruction = args.focusApp
               ? `I am looking at ${args.focusApp}. Analyze this screen.`
               : "What is on the screen?";
@@ -59,7 +61,7 @@ export const VisionProvider = {
                   "readScreen",
                   {
                     ...args,
-                    screenshot: data.image,
+                    screenshot: imageBase64,
                     instruction,
                   },
                 );
@@ -80,7 +82,7 @@ export const VisionProvider = {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  screenshot: data.image,
+                  screenshot: imageBase64,
                   instruction,
                   model: visionModel,
                 }),
@@ -97,7 +99,7 @@ export const VisionProvider = {
                 error.message,
               );
               const analysis = await lucaService.analyzeImage(
-                data.image,
+                imageBase64,
                 instruction,
               );
               return `SCREEN ANALYSIS COMPLETE (Gemini Fallback):\n${analysis}`;
@@ -124,15 +126,16 @@ export const VisionProvider = {
         );
 
         try {
-          const data = await screenCaptureService.captureScreen();
-          if (!data || !data.image) return "Failed to capture screen.";
+          if (!screenCaptureService) return "Error: Screen capture service unavailable in context.";
+          const data = await screenCaptureService.capture();
+          if (!data || !data.imageBuffer) return "Failed to capture screen.";
 
           const res = await fetch(`${CORTEX_URL}/vision/agent-click`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               target: args.target,
-              screenshot: data.image,
+              screenshot: screenCaptureService.imageBufferToBase64(data.imageBuffer),
             }),
           });
 
@@ -167,15 +170,16 @@ export const VisionProvider = {
         );
 
         try {
-          const data = await screenCaptureService.captureScreen();
-          if (!data || !data.image) return "Failed to capture screen.";
+          if (!screenCaptureService) return "Error: Screen capture service unavailable in context.";
+          const data = await screenCaptureService.capture();
+          if (!data || !data.imageBuffer) return "Failed to capture screen.";
 
           const res = await fetch(`${CORTEX_URL}/vision/agent-locate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               description: args.description,
-              screenshot: data.image,
+              screenshot: screenCaptureService.imageBufferToBase64(data.imageBuffer),
             }),
           });
 
@@ -208,15 +212,16 @@ export const VisionProvider = {
         );
 
         try {
-          const data = await screenCaptureService.captureScreen();
-          if (!data || !data.image) return "Failed to capture screen.";
+          if (!screenCaptureService) return "Error: Screen capture service unavailable in context.";
+          const data = await screenCaptureService.capture();
+          if (!data || !data.imageBuffer) return "Failed to capture screen.";
 
           const res = await fetch(`${CORTEX_URL}/vision/agent-act`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               instruction: args.action,
-              screenshot: data.image,
+              screenshot: screenCaptureService.imageBufferToBase64(data.imageBuffer),
             }),
           });
 
@@ -279,15 +284,16 @@ export const VisionProvider = {
         ["vision", "query", "check"],
         async (args, context) => {
           const { screenCaptureService } = context;
-          const data = await screenCaptureService.captureScreen();
-          if (!data || !data.image) return "Failed to capture screen.";
+          if (!screenCaptureService) return "Error: Screen capture service unavailable in context.";
+          const data = await screenCaptureService.capture();
+          if (!data || !data.imageBuffer) return "Failed to capture screen.";
 
           const res = await fetch(`${CORTEX_URL}/vision/analyze`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               instruction: args.query || args.condition || args.assertion,
-              screenshot: data.image,
+              screenshot: screenCaptureService.imageBufferToBase64(data.imageBuffer),
             }),
           });
           const result = await res.json();

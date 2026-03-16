@@ -35,6 +35,11 @@ export const FRONTEND_PORT = getEnvVar("VITE_FRONTEND_PORT", "3000");
 // Cloud Relay Server for Mobile Connectivity (Deployment URL)
 export const RELAY_SERVER_URL = getEnvVar("VITE_RELAY_SERVER_URL", "");
 
+// NEW: Cloud Cortex Fallback (For unlinked Web users)
+// This is the "Light" mode brain hosted on GCP/Docker
+export const CLOUD_CORTEX_URL = getEnvVar("VITE_CLOUD_CORTEX_URL", "");
+export const CLOUD_API_URL = getEnvVar("VITE_CLOUD_API_URL", "");
+
 // Streaming STT API Key
 export const DEEPGRAM_API_KEY = getEnvVar("VITE_DEEPGRAM_API_KEY", "");
 
@@ -155,6 +160,26 @@ export const setLinkedHostIp = (ip: string | null) => {
   }
 };
 
+export type ConnectionTier = "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
+
+/**
+ * Returns the current active connectivity tier
+ */
+export const getConnectionTier = (): ConnectionTier => {
+  // 1. LAN (Linked Desktop)
+  if (linkedHostIp && linkedHostIp !== "127.0.0.1") return "LAN";
+
+  // 2. LOCAL (Desktop App Loopback)
+  const isElectron = typeof window !== "undefined" && !!(window as any).luca;
+  if (isElectron) return "LOCAL";
+
+  // 3. CLOUD (Web Fallback)
+  const isBrowser = typeof window !== "undefined" && !(window as any).luca;
+  if (isBrowser && (CLOUD_CORTEX_URL || CLOUD_API_URL)) return "CLOUD";
+
+  return "OFFLINE";
+};
+
 /**
  * Internal helper to resolve base URLs based on platform and connection state
  */
@@ -162,31 +187,30 @@ const resolveBaseUrl = (
   type: "API" | "CORTEX" | "OLLAMA",
   defaultUrl: string,
 ): string => {
-  // 1. If we have a linked Desktop LAN IP, prioritize it (Local speed)
+  // --- TIER 1: LAN (Linked Desktop) ---
+  // If we have a linked Desktop LAN IP, prioritize it (Local speed)
   if (linkedHostIp && linkedHostIp !== "127.0.0.1") {
     const port = type === "API" ? "3002" : type === "CORTEX" ? "8000" : "11434";
     return `http://${linkedHostIp}:${port}`;
   }
 
-  // 1b. If in Electron, prioritize 127.0.0.1 for local health (Fastest loopback)
+  // --- TIER 2: LOCAL (Internal Loopback) ---
+  // If in Electron, prioritize 127.0.0.1 for local health (Fastest loopback)
   const isElectron = typeof window !== "undefined" && !!(window as any).luca;
   if (isElectron && !linkedHostIp) {
     const port = type === "API" ? "3002" : type === "CORTEX" ? "8000" : "11434";
     return `http://127.0.0.1:${port}`;
   }
 
-  // 2. If Standalone (no link) and RELAY_SERVER_URL exists, use cloud fallback
-  if (
-    !linkedHostIp &&
-    RELAY_SERVER_URL &&
-    RELAY_SERVER_URL.startsWith("http")
-  ) {
-    if (type === "CORTEX" || type === "API") {
-      return RELAY_SERVER_URL;
-    }
+  // --- TIER 3: CLOUD FALLBACK (Light Mode) ---
+  // If Standalone (no link) and in Browser, use the Cloud Cortex
+  const isBrowser = typeof window !== "undefined" && !(window as any).luca;
+  if (isBrowser && !linkedHostIp) {
+    if (type === "CORTEX" && CLOUD_CORTEX_URL) return CLOUD_CORTEX_URL;
+    if (type === "API" && CLOUD_API_URL) return CLOUD_API_URL;
   }
 
-  // 3. Fallback to defaults (Desktop/Dev mode)
+  // 4. Default Fallback
   return defaultUrl;
 };
 
@@ -197,7 +221,7 @@ const resolveBaseUrl = (
  */
 export const apiUrl = (path: string): string => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const baseUrl = resolveBaseUrl("API", API_BASE_URL);
+  const baseUrl = resolveBaseUrl("API", API_BASE_URL).replace(/\/$/, "");
   return `${baseUrl}${normalizedPath}`;
 };
 
@@ -206,7 +230,7 @@ export const apiUrl = (path: string): string => {
  */
 export const cortexUrl = (path: string): string => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const baseUrl = resolveBaseUrl("CORTEX", CORTEX_SERVER_URL);
+  const baseUrl = resolveBaseUrl("CORTEX", CORTEX_SERVER_URL).replace(/\/$/, "");
   return `${baseUrl}${normalizedPath}`;
 };
 
@@ -215,6 +239,6 @@ export const cortexUrl = (path: string): string => {
  */
 export const ollamaUrl = (path: string): string => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const baseUrl = resolveBaseUrl("OLLAMA", OLLAMA_SERVER_URL);
+  const baseUrl = resolveBaseUrl("OLLAMA", OLLAMA_SERVER_URL).replace(/\/$/, "");
   return `${baseUrl}${normalizedPath}`;
 };

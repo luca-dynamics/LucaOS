@@ -1,8 +1,15 @@
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
 import iotManager from '../../../src/services/iot/IoTManager.js';
+
+// --- SECURITY CONSTANTS ---
+const ADB_COMMAND_WHITELIST = ['input', 'shell', 'am', 'pm', 'screencap', 'ip', 'uiautomator', 'pull', 'push', 'cat', 'rm', 'devices', 'connect', 'pair', 'tcpip', 'install', 'uninstall', 'dumpsys'];
+const SYSTEM_COMMAND_WHITELIST = {
+    darwin: ['osascript', 'top', 'ps', 'df', 'ifconfig', 'pmset', 'screencapture', 'pkill', 'pbpaste', 'pbcopy', 'networksetup', 'blueutil', 'python3'],
+    win32: ['powershell', 'wmic', 'nircmd.exe', 'start', 'taskkill', 'explorer.exe', 'shutdown']
+};
 
 /**
  * SYSTEM CONTROL SERVICE
@@ -60,6 +67,64 @@ class SystemControlService {
             exec(dep.cmd, (err) => {
                 resolve({ id: dep.id, present: !err, fix: dep.fix });
             });
+        });
+    }
+
+    /**
+     * SAFE PROCESS SPAWNING
+     * Uses spawn() instead of exec() to prevent shell injection.
+     */
+    spawnPromise(bin, args = [], options = {}) {
+        return new Promise((resolve, reject) => {
+            const platform = os.platform();
+            
+            // 1. Whitelist Check
+            const isAdb = bin === 'adb';
+            const allowedBins = isAdb ? ['adb'] : (SYSTEM_COMMAND_WHITELIST[platform] || []);
+            
+            if (!allowedBins.includes(bin)) {
+                return reject(new Error(`Security Block: Binary "${bin}" is not whitelisted for execution.`));
+            }
+
+            // 2. Extra ADB Sanitization
+            if (isAdb && args.length > 0) {
+                const subCommand = args[0];
+                if (!ADB_COMMAND_WHITELIST.includes(subCommand)) {
+                    // Check if it's a shell subcommand
+                    if (subCommand === 'shell' && args.length > 1) {
+                        const shellCmd = args[1];
+                        if (!ADB_COMMAND_WHITELIST.includes(shellCmd)) {
+                             return reject(new Error(`Security Block: ADB shell command "${shellCmd}" is not whitelisted.`));
+                        }
+                    } else if (subCommand !== 'shell') {
+                        return reject(new Error(`Security Block: ADB subcommand "${subCommand}" is not whitelisted.`));
+                    }
+                }
+            }
+
+            console.log(`[SPAWN] Executing: ${bin} ${args.join(' ')}`);
+
+            const proc = spawn(bin, args, {
+                ...options,
+                env: { ...process.env, ...options.env },
+                shell: false // CRITICAL: Disable shell to prevent injection
+            });
+
+            let stdout = '';
+            let stderr = '';
+
+            proc.stdout.on('data', (data) => stdout += data.toString());
+            proc.stderr.on('data', (data) => stderr += data.toString());
+
+            proc.on('close', (code) => {
+                if (code === 0) {
+                    resolve(stdout);
+                } else {
+                    reject(new Error(stderr || `Process exited with code ${code}`));
+                }
+            });
+
+            proc.on('error', (err) => reject(err));
         });
     }
 
@@ -156,134 +221,131 @@ class SystemControlService {
         return new Promise((resolve) => {
             // Audio & Media
             if (action === 'VOLUME_MUTE') {
-                exec(`osascript -e "set volume with output muted"`, (err) => resolve({ success: !err, result: err ? err.message : 'Audio muted' }));
+                this.spawnPromise('osascript', ['-e', 'set volume with output muted']).then(() => resolve({ success: true, result: 'Audio muted' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'VOLUME_UNMUTE') {
-                exec(`osascript -e "set volume without output muted"`, (err) => resolve({ success: !err, result: err ? err.message : 'Audio unmuted' }));
+                this.spawnPromise('osascript', ['-e', 'set volume without output muted']).then(() => resolve({ success: true, result: 'Audio unmuted' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'MEDIA_PLAY_PAUSE') {
-                exec(`osascript -e 'tell application "System Events" to keystroke space using {command down}'`, (err) => resolve({ success: !err, result: err ? err.message : 'Play/Pause toggled' }));
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to keystroke space using {command down}']).then(() => resolve({ success: true, result: 'Play/Pause toggled' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'MEDIA_NEXT') {
-                exec(`osascript -e 'tell application "System Events" to keystroke "right" using {command down, shift down}'`, (err) => resolve({ success: !err, result: err ? err.message : 'Next track' }));
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to keystroke "right" using {command down, shift down}']).then(() => resolve({ success: true, result: 'Next track' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'MEDIA_PREV') {
-                exec(`osascript -e 'tell application "System Events" to keystroke "left" using {command down, shift down}'`, (err) => resolve({ success: !err, result: err ? err.message : 'Previous track' }));
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to keystroke "left" using {command down, shift down}']).then(() => resolve({ success: true, result: 'Previous track' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'MEDIA_STOP') {
-                exec(`osascript -e 'tell application "Music" to stop'`, (err) => resolve({ success: !err, result: err ? err.message : 'Media stopped' }));
+                this.spawnPromise('osascript', ['-e', 'tell application "Music" to stop']).then(() => resolve({ success: true, result: 'Media stopped' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
 
             // System Info
             if (action === 'GET_DISK_SPACE') {
-                exec('df -h / | tail -1', (err, stdout) => {
-                    if (err) return resolve({ success: false, result: err.message });
-                    const parts = stdout.trim().split(/\s+/);
+                this.spawnPromise('df', ['-h', '/']).then(stdout => {
+                    const parts = stdout.trim().split('\n').pop().split(/\s+/);
                     resolve({ 
                         success: true, 
                         result: `Disk: ${parts[2]} used of ${parts[1]} (${parts[4]} full)`,
                         data: { total: parts[1], used: parts[2], available: parts[3], percentage: parts[4] }
                     });
-                });
+                }).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'GET_NETWORK_INFO') {
-                exec('ifconfig | grep "inet " | grep -v 127.0.0.1', (err, stdout) => {
-                    if (err) return resolve({ success: false, result: err.message });
-                    resolve({ success: true, result: `Network interfaces:\n${stdout.trim()}` });
-                });
+                this.spawnPromise('ifconfig').then(stdout => {
+                    const filtered = stdout.split('\n').filter(line => line.includes('inet ') && !line.includes('127.0.0.1')).join('\n');
+                    resolve({ success: true, result: `Network interfaces:\n${filtered}` });
+                }).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'GET_SYSTEM_LOAD') {
-                exec('top -l 1 | grep "CPU usage"', (err, stdout) => {
-                    if (err) return resolve({ success: false, result: err.message });
-                    resolve({ success: true, result: `CPU: ${stdout.trim()}` });
-                });
+                this.spawnPromise('top', ['-l', '1']).then(stdout => {
+                    const cpuLine = stdout.split('\n').find(l => l.includes('CPU usage')) || '';
+                    resolve({ success: true, result: `CPU: ${cpuLine.trim()}` });
+                }).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
 
             // Display & Screen
             if (action === 'SET_BRIGHTNESS') {
                 const brightness = (value || level) / 100;
-                exec(`osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to ${brightness}'`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `Brightness set to ${value || level}%` }));
+                this.spawnPromise('osascript', ['-e', `tell application "System Events" to tell appearance preferences to set dark mode to ${brightness}`])
+                    .then(() => resolve({ success: true, result: `Brightness set to ${value || level}%` }))
+                    .catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'TOGGLE_DARK_MODE') {
-                exec(`osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to not dark mode'`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : 'Dark mode toggled' }));
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to tell appearance preferences to set dark mode to not dark mode'])
+                    .then(() => resolve({ success: true, result: 'Dark mode toggled' }))
+                    .catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'LOCK_SCREEN') {
-                exec('/System/Library/CoreServices/Menu\\ Extras/User.menu/Contents/Resources/CGSession -suspend', (err) =>
-                    resolve({ success: !err, result: err ? err.message : 'Screen locked' }));
+                this.spawnPromise('/System/Library/CoreServices/Menu Extras/User.menu/Contents/Resources/CGSession', ['-suspend'])
+                    .then(() => resolve({ success: true, result: 'Screen locked' }))
+                    .catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'SLEEP_DISPLAY') {
-                exec('pmset displaysleepnow', (err) =>
-                    resolve({ success: !err, result: err ? err.message : 'Display sleeping' }));
+                this.spawnPromise('pmset', ['displaysleepnow'])
+                    .then(() => resolve({ success: true, result: 'Display sleeping' }))
+                    .catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'TAKE_SCREENSHOT') {
                 const timestamp = Date.now();
                 const screenshotPath = path.join(os.homedir(), 'Desktop', `screenshot_${timestamp}.png`);
-                exec(`screencapture -x "${screenshotPath}"`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `Screenshot saved to ${screenshotPath}`, path: screenshotPath }));
+                this.spawnPromise('screencapture', ['-x', screenshotPath])
+                    .then(() => resolve({ success: true, result: `Screenshot saved to ${screenshotPath}`, path: screenshotPath }))
+                    .catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
 
             // App Management
             if (action === 'LAUNCH_APP') {
                 if (!appName) return resolve({ success: false, result: 'appName required' });
-                exec(`osascript -e 'tell application "${appName}" to activate'`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `${appName} launched` }));
+                this.spawnPromise('osascript', ['-e', `tell application "${appName}" to activate`]).then(() => resolve({ success: true, result: `${appName} launched` })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'QUIT_APP') {
                 if (!appName) return resolve({ success: false, result: 'appName required' });
-                exec(`osascript -e 'tell application "${appName}" to quit'`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `${appName} quit` }));
+                this.spawnPromise('osascript', ['-e', `tell application "${appName}" to quit`]).then(() => resolve({ success: true, result: `${appName} quit` })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'FORCE_QUIT_APP') {
                 if (!appName) return resolve({ success: false, result: 'appName required' });
-                exec(`pkill -9 "${appName}"`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `${appName} force quit` }));
+                this.spawnPromise('pkill', ['-9', appName]).then(() => resolve({ success: true, result: `${appName} force quit` })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'GET_RUNNING_APPS') {
-                exec(`osascript -e 'tell application "System Events" to get name of every process whose background only is false'`, (err, stdout) => {
-                    if (err) return resolve({ success: false, result: err.message });
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to get name of every process whose background only is false']).then(stdout => {
                     const apps = stdout.trim().split(', ');
                     resolve({ success: true, result: `Running apps: ${apps.join(', ')}`, data: { apps } });
-                });
+                }).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
 
             // App Management (Continued)
             if (action === 'GET_FRONTMOST_APP') {
-                exec(`osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'`, (err, stdout) => {
-                    if (err) return resolve({ success: !err, result: err ? err.message : 'Frontmost app: ' + stdout.trim(), data: { app: stdout.trim() } });
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to get name of first application process whose frontmost is true']).then(stdout => {
                     resolve({ success: true, result: `Frontmost app: ${stdout.trim()}`, data: { app: stdout.trim() } });
-                });
+                }).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
 
             // Window Control
             if (action === 'MINIMIZE_WINDOW') {
-                exec(`osascript -e 'tell application "System Events" to tell (first process whose frontmost is true) to set value of attribute "AXMinimized" of window 1 to true'`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : 'Window minimized' }));
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to tell (first process whose frontmost is true) to set value of attribute "AXMinimized" of window 1 to true']).then(() => resolve({ success: true, result: 'Window minimized' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'CLOSE_WINDOW') {
-                exec(`osascript -e 'tell application "System Events" to keystroke "w" using command down'`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : 'Window closed' }));
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to keystroke "w" using command down']).then(() => resolve({ success: true, result: 'Window closed' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
 
@@ -291,28 +353,30 @@ class SystemControlService {
             if (action === 'SEND_NOTIFICATION') {
                 const notifTitle = title || 'Luca';
                 const notifMessage = message || 'Notification from Luca';
-                exec(`osascript -e 'display notification "${notifMessage}" with title "${notifTitle}"'`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : 'Notification sent' }));
+                this.spawnPromise('osascript', ['-e', `display notification "${notifMessage}" with title "${notifTitle}"`]).then(() => resolve({ success: true, result: 'Notification sent' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'TOGGLE_DND') {
-                exec(`osascript -e 'tell application "System Events" to keystroke "d" using {command down, shift down, option down, control down}'`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : 'Do Not Disturb toggled' }));
+                this.spawnPromise('osascript', ['-e', 'tell application "System Events" to keystroke "d" using {command down, shift down, option down, control down}']).then(() => resolve({ success: true, result: 'Do Not Disturb toggled' })).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
 
             // Clipboard
             if (action === 'GET_CLIPBOARD') {
-                exec('pbpaste', (err, stdout) => {
-                    if (err) return resolve({ success: false, result: err.message });
+                this.spawnPromise('pbpaste').then(stdout => {
                     resolve({ success: true, result: stdout, data: { clipboard: stdout } });
-                });
+                }).catch(err => resolve({ success: false, result: err.message }));
                 return;
             }
             if (action === 'SET_CLIPBOARD') {
                 if (!message) return resolve({ success: false, result: 'message required for clipboard content' });
-                exec(`echo "${message}" | pbcopy`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : 'Clipboard updated' }));
+                // pbcopy doesn't take args, it reads from stdin
+                const proc = spawn('pbcopy');
+                proc.stdin.write(message);
+                proc.stdin.end();
+                proc.on('close', (code) => {
+                    resolve({ success: code === 0, result: code === 0 ? 'Clipboard updated' : 'pbcopy failed' });
+                });
                 return;
             }
 
@@ -477,29 +541,28 @@ post_event(CG.kCGEventLeftMouseUp, (${x2}, ${y2}))
         return new Promise((resolve) => {
             // AUDIO & MEDIA
             if (action === 'VOLUME_MUTE') {
-                exec('nircmd.exe mutesysvolume 1', (err) => 
-                    resolve({ success: !err, result: err ? err.message : 'Audio muted' }));
+                this.spawnPromise('nircmd.exe', ['mutesysvolume', '1']).then(() => 
+                    resolve({ success: true, result: 'Audio muted' })).catch(err => resolve({ success: false, result: err.message }));
             }
             else if (action === 'VOLUME_UNMUTE') {
-                exec('nircmd.exe mutesysvolume 0', (err) => 
-                    resolve({ success: !err, result: err ? err.message : 'Audio unmuted' }));
+                this.spawnPromise('nircmd.exe', ['mutesysvolume', '0']).then(() => 
+                    resolve({ success: true, result: 'Audio unmuted' })).catch(err => resolve({ success: false, result: err.message }));
             }
             else if (action === 'MEDIA_PLAY_PAUSE') {
-                exec('nircmd.exe sendkeypress 0xB3', (err) => 
-                    resolve({ success: !err, result: err ? err.message : 'Play/Pause toggled' }));
+                this.spawnPromise('nircmd.exe', ['sendkeypress', '0xB3']).then(() => 
+                    resolve({ success: true, result: 'Play/Pause toggled' })).catch(err => resolve({ success: false, result: err.message }));
             }
             else if (action === 'MEDIA_NEXT') {
-                exec('nircmd.exe sendkeypress 0xB0', (err) => 
-                    resolve({ success: !err, result: err ? err.message : 'Next track' }));
+                this.spawnPromise('nircmd.exe', ['sendkeypress', '0xB0']).then(() => 
+                    resolve({ success: true, result: 'Next track' })).catch(err => resolve({ success: false, result: err.message }));
             }
             else if (action === 'MEDIA_PREV') {
-                exec('nircmd.exe sendkeypress 0xB1', (err) => 
-                    resolve({ success: !err, result: err ? err.message : 'Previous track' }));
+                this.spawnPromise('nircmd.exe', ['sendkeypress', '0xB1']).then(() => 
+                    resolve({ success: true, result: 'Previous track' })).catch(err => resolve({ success: false, result: err.message }));
             }
             // SYSTEM INFO
             else if (action === 'GET_BATTERY') {
-                exec('WMIC Path Win32_Battery Get EstimatedChargeRemaining,BatteryStatus', (err, stdout) => {
-                    if (err) return resolve({ success: false, result: 'Unable to read battery' });
+                this.spawnPromise('wmic', ['Path', 'Win32_Battery', 'Get', 'EstimatedChargeRemaining,BatteryStatus']).then(stdout => {
                     const lines = stdout.trim().split('\n');
                     if (lines.length > 1) {
                         const data = lines[1].trim().split(/\s+/);
@@ -508,30 +571,34 @@ post_event(CG.kCGEventLeftMouseUp, (${x2}, ${y2}))
                     } else {
                         resolve({ success: false, result: 'Could not parse battery info' });
                     }
-                });
+                }).catch(err => resolve({ success: false, result: err.message }));
             }
             // DISPLAY & SCREEN
             else if (action === 'SET_BRIGHTNESS') {
                 const brightness = value || level;
-                exec(`powershell (Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1,${brightness})`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `Brightness set to ${brightness}%` }));
+                this.spawnPromise('powershell', ['(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1,' + brightness + ')'])
+                    .then(() => resolve({ success: true, result: `Brightness set to ${brightness}%` }))
+                    .catch(err => resolve({ success: false, result: err.message }));
             }
             else if (action === 'TAKE_SCREENSHOT') {
                 const timestamp = Date.now();
                 const screenshotPath = path.join(os.homedir(), 'Desktop', `screenshot_${timestamp}.png`);
-                exec(`nircmd.exe savescreenshot "${screenshotPath}"`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `Screenshot saved to ${screenshotPath}`, path: screenshotPath }));
+                this.spawnPromise('nircmd.exe', ['savescreenshot', screenshotPath])
+                    .then(() => resolve({ success: true, result: `Screenshot saved to ${screenshotPath}`, path: screenshotPath }))
+                    .catch(err => resolve({ success: false, result: err.message }));
             }
             // APP MANAGEMENT
             else if (action === 'LAUNCH_APP') {
                 if (!appName) return resolve({ success: false, result: 'appName required' });
-                exec(`start "" "${appName}"`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `${appName} launched` }));
+                this.spawnPromise('start', ['', appName])
+                    .then(() => resolve({ success: true, result: `${appName} launched` }))
+                    .catch(err => resolve({ success: false, result: err.message }));
             }
             else if (action === 'QUIT_APP') {
                 if (!appName) return resolve({ success: false, result: 'appName required' });
-                exec(`taskkill /IM "${appName}.exe" /F`, (err) =>
-                    resolve({ success: !err, result: err ? err.message : `${appName} quit` }));
+                this.spawnPromise('taskkill', ['/IM', `${appName}.exe`, '/F'])
+                    .then(() => resolve({ success: true, result: `${appName} quit` }))
+                    .catch(err => resolve({ success: false, result: err.message }));
             }
             // NOTIFICATIONS
             else if (action === 'SEND_NOTIFICATION') {
@@ -722,18 +789,71 @@ post_event(CG.kCGEventLeftMouseUp, (${x2}, ${y2}))
 
         // 2. Fallback to ADB (Standard Debugging)
         return new Promise((resolve) => {
-            const deviceFlag = deviceId ? `-s ${deviceId}` : '';
-            const adb = (cmd, cb) => exec(`adb ${deviceFlag} ${cmd}`, cb);
-
             if (isAndroid) {
                 if (action === 'VOLUME_SET') {
                     const vol = Math.round((value || level || 50) / 100 * 15);
-                    adb(`shell media volume --stream 3 --set ${vol}`, (err) => resolve({ 
-                        success: !err, 
-                        result: err ? err.message : 'Volume set', 
-                        method: 'adb',
-                        fix: err ? "Ensure device is connected and 'USB Debugging' is enabled. Run 'adb devices' to check." : null
-                    }));
+                    this.spawnPromise('adb', deviceId ? ['-s', deviceId, 'shell', 'media', 'volume', '--stream', '3', '--set', vol.toString()] : ['shell', 'media', 'volume', '--stream', '3', '--set', vol.toString()])
+                        .then(() => resolve({ 
+                            success: true, 
+                            result: 'Volume set', 
+                            method: 'adb'
+                        }))
+                        .catch(err => resolve({ 
+                            success: false, 
+                            result: err.message, 
+                            method: 'adb',
+                            fix: "Ensure device is connected and 'USB Debugging' is enabled. Run 'adb devices' to check."
+                        }));
+                }
+                else if (action === 'SWIPE') {
+                    const { x1, y1, x2, y2, duration } = params;
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'input', 'swipe', x1.toString(), y1.toString(), x2.toString(), y2.toString(), (duration || 300).toString()])
+                        .then(() => resolve({ 
+                            success: true, 
+                            result: `Swiped from ${x1},${y1} to ${x2},${y2}`, 
+                            method: 'adb' 
+                        }))
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
+                }
+                else if (action === 'TYPE' || action === 'TEXT') {
+                    const text = value || params.text;
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    // ADB input text doesn't like spaces, usually needs to be replaced with %s or quoted
+                    // But with spawn, we can just pass the argument
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'input', 'text', text.toString()])
+                        .then(() => resolve({ 
+                            success: true, 
+                            result: `Typed text: ${text}`, 
+                            method: 'adb' 
+                        }))
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
+                }
+                else if (action === 'OPEN_URL') {
+                    const url = value || params.url;
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url])
+                        .then(() => resolve({ 
+                            success: true, 
+                            result: `Opened URL: ${url}`, 
+                            method: 'adb' 
+                        }))
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
+                }
+                else if (action === 'GET_UI_TREE') {
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    const dumpPath = `/sdcard/view_${Date.now()}.xml`;
+                    const localPath = path.join(os.tmpdir(), `view_${Date.now()}.xml`);
+                    
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'uiautomator', 'dump', dumpPath])
+                        .then(() => this.spawnPromise('adb', [...adbArgs, 'pull', dumpPath, localPath]))
+                        .then(() => {
+                            const xml = fs.readFileSync(localPath, 'utf8');
+                            fs.unlinkSync(localPath);
+                            this.spawnPromise('adb', [...adbArgs, 'shell', 'rm', dumpPath]).catch(() => {});
+                            resolve({ success: true, xml, method: 'adb' });
+                        })
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
                 }
                 else if (action === 'SCREEN_CAPTURE' || action === 'TAKE_SCREENSHOT') {
                     const ts = Date.now();
@@ -741,15 +861,16 @@ post_event(CG.kCGEventLeftMouseUp, (${x2}, ${y2}))
                     // Use a temporary path for the pulled image
                     const lPath = path.join(os.tmpdir(), `mobile_screen_${ts}.png`);
                     
-                    adb(`shell screencap -p ${rPath} && adb ${deviceFlag} pull ${rPath} "${lPath}"`, (err) => {
-                        if (err) return resolve({ success: false, result: err.message, method: 'adb' });
-                        
-                        try {
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'screencap', '-p', rPath])
+                        .then(() => this.spawnPromise('adb', [...adbArgs, 'pull', rPath, lPath]))
+                        .then(() => {
                             const buffer = fs.readFileSync(lPath);
                             const base64 = buffer.toString('base64');
                             // Clean up
                             fs.unlinkSync(lPath);
-                            adb(`shell rm ${rPath}`, () => {}); // Async cleanup on device
+                            this.spawnPromise('adb', [...adbArgs, 'shell', 'rm', rPath]).catch(() => {}); // Async cleanup
                             
                             resolve({ 
                                 success: true, 
@@ -757,46 +878,56 @@ post_event(CG.kCGEventLeftMouseUp, (${x2}, ${y2}))
                                 path: lPath,
                                 method: 'adb' 
                             });
-                        } catch (e) {
-                            resolve({ success: false, result: e.message, method: 'adb' });
-                        }
-                    });
+                        })
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
                 }
                 else if (action === 'TAP') {
                     const { x, y } = params;
-                    adb(`shell input tap ${x} ${y}`, (err) => resolve({ 
-                        success: !err, 
-                        result: err ? err.message : `Tapped at ${x},${y}`, 
-                        method: 'adb' 
-                    }));
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'input', 'tap', x.toString(), y.toString()])
+                        .then(() => resolve({ 
+                            success: true, 
+                            result: `Tapped at ${x},${y}`, 
+                            method: 'adb' 
+                        }))
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
                 }
                 else if (action === 'KEY') {
                     const { keyCode } = params;
-                    adb(`shell input keyevent ${keyCode}`, (err) => resolve({ 
-                        success: !err, 
-                        result: err ? err.message : `Key event ${keyCode} sent`, 
-                        method: 'adb' 
-                    }));
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'input', 'keyevent', keyCode.toString()])
+                        .then(() => resolve({ 
+                            success: true, 
+                            result: `Key event ${keyCode} sent`, 
+                            method: 'adb' 
+                        }))
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
                 }
                 else if (action === 'LIST_PACKAGES') {
-                    adb('shell pm list packages', (err, stdout) => {
-                        if (err) return resolve({ success: false, result: err.message, method: 'adb' });
-                        const packages = stdout.split('\n')
-                            .map(line => line.replace('package:', '').trim())
-                            .filter(p => p.length > 0);
-                        resolve({ success: true, packages, method: 'adb' });
-                    });
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'pm', 'list', 'packages'])
+                        .then(stdout => {
+                            const packages = stdout.split('\n')
+                                .map(line => line.replace('package:', '').trim())
+                                .filter(p => p.length > 0);
+                            resolve({ success: true, packages, method: 'adb' });
+                        })
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
                 }
                 else if (action === 'KILL_PACKAGE') {
                     const pkg = appName || params.package;
-                    adb(`shell am force-stop ${pkg}`, (err) => resolve({ 
-                        success: !err, 
-                        result: err ? err.message : `Force-stopped ${pkg}`, 
-                        method: 'adb' 
-                    }));
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
+                    this.spawnPromise('adb', [...adbArgs, 'shell', 'am', 'force-stop', pkg])
+                        .then(() => resolve({ 
+                            success: true, 
+                            result: `Force-stopped ${pkg}`, 
+                            method: 'adb' 
+                        }))
+                        .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
                 }
                 else if (action === 'EXFILTRATE') {
                     const { type } = params; // SMS, CALLS, etc.
+                    const adbArgs = deviceId ? ['-s', deviceId] : [];
                     // This is highly dependent on device state and root. 
                     // Implementing a "dump" placeholder using content providers.
                     let contentUri = "";
@@ -804,12 +935,11 @@ post_event(CG.kCGEventLeftMouseUp, (${x2}, ${y2}))
                     else if (type === 'CALLS') contentUri = "content://call_log/calls";
                     
                     if (contentUri) {
-                        adb(`shell content query --uri ${contentUri}`, (err, stdout) => {
-                            if (err) return resolve({ success: false, result: err.message, method: 'adb' });
-                            // Crude parsing of "content query" output
-                            // In a real scenario, we'd use a more robust parser or a helper APK
-                            resolve({ success: true, data: stdout, type, method: 'adb' });
-                        });
+                        this.spawnPromise('adb', [...adbArgs, 'shell', 'content', 'query', '--uri', contentUri])
+                            .then(stdout => {
+                                resolve({ success: true, data: stdout, type, method: 'adb' });
+                            })
+                            .catch(err => resolve({ success: false, result: err.message, method: 'adb' }));
                     } else {
                         resolve({ success: false, result: `Exfiltration type ${type} not supported`, method: 'adb' });
                     }

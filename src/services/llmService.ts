@@ -12,6 +12,7 @@
 import { FunctionDeclaration } from "@google/genai";
 import { BRAIN_CONFIG } from "../config/brain.config";
 import { getApiKey } from "./genAIClient";
+import { settingsService } from "./settingsService";
 
 // --- LLM PROVIDER INTERFACE ---
 export interface LLMProvider {
@@ -60,9 +61,13 @@ class GeminiProvider implements LLMProvider {
   ): Promise<string> {
     try {
       // Use fetch API directly for now (simpler than SDK)
+      const brainSettings = settingsService.get("brain");
       const apiKey = getApiKey();
+      const baseUrl =
+        brainSettings?.geminiBaseUrl || BRAIN_CONFIG.providers.gemini.baseUrl;
+
       const response = await fetch(
-        `${BRAIN_CONFIG.providers.gemini.baseUrl}/models/${this.model}:generateContent?key=${apiKey}`,
+        `${baseUrl}/models/${this.model}:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -95,9 +100,13 @@ class GeminiProvider implements LLMProvider {
     options?: LLMGenerateOptions,
   ): AsyncGenerator<string> {
     try {
+      const brainSettings = settingsService.get("brain");
       const apiKey = getApiKey();
+      const baseUrl =
+        brainSettings?.geminiBaseUrl || BRAIN_CONFIG.providers.gemini.baseUrl;
+
       const response = await fetch(
-        `${BRAIN_CONFIG.providers.gemini.baseUrl}/models/${this.model}:streamGenerateContent?key=${apiKey}`,
+        `${baseUrl}/models/${this.model}:streamGenerateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -158,9 +167,14 @@ class GeminiProvider implements LLMProvider {
 
     const systemMessage = messages.find((msg) => msg.role === "system");
 
+    const brainSettings = settingsService.get("brain");
+    const apiKey = getApiKey();
+    const baseUrl =
+      brainSettings?.geminiBaseUrl || BRAIN_CONFIG.providers.gemini.baseUrl;
+
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`,
+        `${baseUrl}/models/${this.model}:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -649,11 +663,11 @@ export class OllamaProvider implements LLMProvider {
 class LLMService {
   private providers: Map<string, LLMProvider> = new Map();
   private defaultProvider: string = "gemini";
-  private defaultModel: string = "gemini-pro";
+  private defaultModel: string = BRAIN_CONFIG.defaults.brain;
 
   constructor() {
     // Initialize Gemini (current default)
-    this.registerProvider(new GeminiProvider("gemini-pro"));
+    this.registerProvider(new GeminiProvider(this.defaultModel));
 
     // Register providers dynamically based on availability
     const openaiKey =
@@ -763,6 +777,14 @@ class LLMService {
     // Fallback if chat is not supported
     const prompt = messages.map((m) => `${m.role}: ${m.content}`).join("\n");
     return provider.generate(prompt, options);
+  }
+
+  setBrainModel(model: string) {
+    const provider = this.providers.get("gemini");
+    if (provider) {
+      provider.model = model;
+      console.log(`[LLM_SERVICE] Brain model set to: ${model}`);
+    }
   }
 }
 

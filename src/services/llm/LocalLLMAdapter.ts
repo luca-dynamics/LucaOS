@@ -24,6 +24,15 @@ export class LocalLLMAdapter implements LLMProvider {
   }
 
   /**
+   * Public getter for system awareness
+   */
+  public static async getOllamaStatus() {
+     // Trigger a check if none exists
+     const adapter = new LocalLLMAdapter();
+     return await adapter.checkOllama();
+  }
+
+  /**
    * Check if Ollama is running and cache the result for 60s.
    * Returns the list of available Ollama model names.
    */
@@ -252,7 +261,7 @@ export class LocalLLMAdapter implements LLMProvider {
             });
           }
         }
-      } catch (e) {
+      } catch {
         // Not a JSON tool call, just text
       }
 
@@ -375,7 +384,7 @@ export class LocalLLMAdapter implements LLMProvider {
                   onToken(delta);
                   fullText += delta;
                 }
-              } catch (e) {
+              } catch {
                 // Ignore parse errors for partial lines
               }
             }

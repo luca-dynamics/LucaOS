@@ -418,6 +418,7 @@ class SettingsService extends EventEmitter {
           // 1. Voice Model Correction (Crucial for 1008 fix)
           if (
             merged.brain.voiceModel.includes("gemini-2.0-flash") ||
+            merged.brain.voiceModel.includes("gemini-3") || // Force migrate away from 3 for Voice
             !merged.brain.voiceModel.includes("gemini")
           ) {
             console.log(
@@ -592,9 +593,40 @@ class SettingsService extends EventEmitter {
         this.syncEmbeddingModel(newSettings.brain.memoryModel);
       }
 
+      // Sync MCP settings with Cortex backend when they change
+      if (newSettings.mcp?.servers) {
+        this.syncMCPSettings(newSettings.mcp.servers);
+      }
+
       this.emit("settings-changed", this.settings);
     } catch (e) {
       console.error("[SETTINGS] Failed to save settings", e);
+    }
+  }
+
+  // Sync MCP settings with Cortex backend
+  private async syncMCPSettings(servers: any[]) {
+    try {
+      const url = getEnvVar("VITE_CORTEX_URL") || "http://127.0.0.1:8000";
+
+      // For each server, try to connect/register it on the backend
+      for (const server of servers) {
+        console.log(`[SETTINGS] Syncing MCP server: ${server.name}`);
+        const response = await fetch(`${url}/api/mcp/connect`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(server),
+        });
+
+        if (response.ok) {
+          console.log(`[SETTINGS] MCP server synced successfully: ${server.name}`);
+        } else {
+          const error = await response.text();
+          console.warn(`[SETTINGS] MCP sync failed for "${server.name}":`, error);
+        }
+      }
+    } catch (e) {
+      console.debug("[SETTINGS] Failed to sync MCP settings to Cortex:", e);
     }
   }
 

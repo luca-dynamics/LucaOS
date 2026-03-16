@@ -100,6 +100,42 @@ export const updateSystemSettingsTool: FunctionDeclaration = {
           screenEnabled: { type: Type.BOOLEAN },
         },
       },
+      mcp: {
+        type: Type.OBJECT,
+        properties: {
+          servers: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                id: { type: Type.STRING },
+                name: { type: Type.STRING },
+                type: { type: Type.STRING, enum: ["stdio", "sse"] },
+                command: { type: Type.STRING },
+                args: { type: Type.ARRAY, items: { type: Type.STRING } },
+                url: { type: Type.STRING },
+                env: { type: Type.OBJECT },
+                autoConnect: { type: Type.BOOLEAN },
+              },
+              required: ["id", "name", "type"],
+            },
+          },
+        },
+      },
     },
   },
+};
+
+export const auditSystemTool: FunctionDeclaration = {
+  name: "auditSystem",
+  description:
+    "Run a comprehensive production-grade system audit of LUCA's core components, infrastructure (Cortex, MCP, IoT), security protocols, and resource health. Use this for 'Survival Awareness' and system health reporting.",
+  parameters: { type: Type.OBJECT, properties: {} },
+};
+
+export const repairSystemTool: FunctionDeclaration = {
+  name: "repairSystem",
+  description:
+    "Execute the LUCA Self-Repair Protocol. This autonomously identifies and attempts to fix degraded system components, reconfigures unhealthy infrastructure, and optimizes resource allocations. Use this for 'Self-Healing' when system health is degraded.",
+  parameters: { type: Type.OBJECT, properties: {} },
 };

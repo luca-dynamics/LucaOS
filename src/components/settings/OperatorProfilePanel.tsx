@@ -13,7 +13,6 @@ import {
   Zap,
   Smile,
   X,
-  Camera,
 } from "lucide-react";
 import { settingsService } from "../../services/settingsService";
 import { memoryService } from "../../services/memoryService";
@@ -27,6 +26,7 @@ import {
   RelationshipStage,
 } from "../../types/lucaPersonality";
 import { MemoryNode } from "../../types";
+import { setHexAlpha } from "../../config/themeColors";
 
 // Helper functions from PersonalityDashboard
 function getVibeSummary(traits: any) {
@@ -88,6 +88,7 @@ interface OperatorProfilePanelProps {
     primary: string;
     hex: string;
     themeName: string;
+    isLight?: boolean;
   };
 }
 
@@ -208,11 +209,21 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
   if (!profile) {
     return (
       <div className="text-center py-12 space-y-4">
-        <div className="w-16 h-16 mx-auto bg-white/10 border border-white/20 rounded-full flex items-center justify-center">
-          <User className="w-8 h-8 text-gray-500" />
+        <div
+          className="w-16 h-16 mx-auto rounded-full flex items-center justify-center border"
+          style={{
+            backgroundColor: setHexAlpha(theme.hex, 0.1),
+            borderColor: setHexAlpha(theme.hex, 0.2),
+          }}
+        >
+          <User className="w-8 h-8 opacity-50" style={{ color: theme.hex }} />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-white mb-2">No Profile Yet</h3>
+          <h3
+            className={`text-lg font-bold mb-2 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
+          >
+            No Profile Yet
+          </h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto">
             Complete the conversational onboarding to let Luca learn about you.
             Your profile will be built automatically as you chat.
@@ -257,7 +268,11 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 1: Identity Card - Full Width */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "bg-[#0b0606]/40 border-white/10 backdrop-blur-xl"} border rounded-xl p-4 lg:p-5 relative group overflow-hidden h-full shadow-2xl shadow-black/40`}
+            className={`border rounded-xl p-4 lg:p-5 relative group overflow-hidden h-full shadow-2xl shadow-black/40 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "backdrop-blur-xl"}`}
+            style={{
+              backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.04),
+              borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.15),
+            }}
           >
             <div className="absolute top-0 right-0 p-4 z-10">
               {!isEditing ? (
@@ -279,7 +294,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   </button>
                   <button
                     onClick={handleSave}
-                    className="px-4 py-1.5 text-[10px] font-bold rounded-lg bg-white text-black hover:bg-gray-200 transition-all shadow-lg shadow-white/10"
+                    className="px-4 py-1.5 text-[10px] font-bold rounded-lg transition-all shadow-lg"
+                    style={{ 
+                      backgroundColor: theme.hex, 
+                      color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "#fff" : "#000",
+                      boxShadow: `0 4px 15px ${setHexAlpha(theme.hex, 0.3)}`
+                    }}
                   >
                     Save Profile
                   </button>
@@ -290,11 +310,15 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
             <div className="flex gap-6 items-start">
               <div
                 onClick={() => setShowEnrollModal(true)}
-                className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center relative shrink-0 shadow-inner group/photo cursor-pointer overflow-hidden transition-transform active:scale-95 translate-y-2"
+                className="w-20 h-20 rounded-2xl flex items-center justify-center relative shrink-0 shadow-inner group/photo cursor-pointer overflow-hidden transition-transform active:scale-95 translate-y-2 border"
+                style={{
+                  backgroundColor: setHexAlpha(theme.hex, 0.1),
+                  borderColor: setHexAlpha(theme.hex, 0.2),
+                }}
               >
-                {referenceImage ? (
+                {profile.identity.avatar || referenceImage ? (
                   <img
-                    src={`data:image/jpeg;base64,${referenceImage}`}
+                    src={`data:image/jpeg;base64,${profile.identity.avatar || referenceImage}`}
                     alt="Operator"
                     className="w-full h-full object-cover transition-opacity group-hover/photo:opacity-60"
                   />
@@ -304,11 +328,13 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   />
                 )}
 
-                <div className="absolute inset-0 bg-black/40 opacity-40 group-hover/photo:opacity-100 flex items-center justify-center transition-opacity">
-                  <Camera className="w-6 h-6 text-white" />
-                </div>
-
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-[#121212] border border-white/10 flex items-center justify-center shadow-lg z-10">
+                <div 
+                  className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg flex items-center justify-center shadow-lg z-10 border"
+                  style={{
+                    backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "#fff" : "#121212",
+                    borderColor: setHexAlpha(theme.hex, 0.2)
+                  }}
+                >
                   <Shield className="w-3 h-3 text-green-500" />
                 </div>
               </div>
@@ -324,7 +350,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                         type="text"
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
-                        className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-all shadow-inner ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 focus:ring-black/5" : "bg-white/5 border-white/10 text-white focus:ring-white/20"} border focus:ring-1`}
+                        className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-all shadow-inner border focus:ring-1 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 focus:ring-black/5" : ""}`}
+                        style={{
+                          backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                          borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                          color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : "#fff",
+                        }}
                       />
                     ) : (
                       <div
@@ -343,7 +374,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                         type="text"
                         value={editedDesignation}
                         onChange={(e) => setEditedDesignation(e.target.value)}
-                        className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-all shadow-inner ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 focus:ring-black/5" : "bg-white/5 border-white/10 text-white focus:ring-white/20"} border focus:ring-1`}
+                        className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-all shadow-inner border focus:ring-1 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10 text-slate-900 focus:ring-black/5" : ""}`}
+                        style={{
+                          backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                          borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                          color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : "#fff",
+                        }}
                       />
                     ) : (
                       <div
@@ -355,13 +391,21 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   </div>
                 </div>
 
-                <div className="flex gap-6 border-t border-white/5 pt-5">
+                <div 
+                  className="flex gap-6 border-t pt-5"
+                  style={{ borderTopColor: setHexAlpha(theme.hex, 0.1) }}
+                >
                   <div>
                     <span className="block text-[9px] text-gray-600 uppercase tracking-widest mb-1">
                       Profession
                     </span>
                     <span
-                      className={`text-[11px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border inline-block`}
+                      className={`text-[11px] font-bold px-3 py-1 rounded-full border inline-block ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : ""}`}
+                      style={{
+                        backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                        borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                        color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.9),
+                      }}
                     >
                       {profile.workContext?.profession || "Unknown"}
                     </span>
@@ -371,7 +415,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       Experience
                     </span>
                     <span
-                      className={`text-[11px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border inline-block`}
+                      className={`text-[11px] font-bold px-3 py-1 rounded-full border inline-block ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : ""}`}
+                      style={{
+                        backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                        borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                        color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.9),
+                      }}
                     >
                       {profile.workContext?.skillLevel || "Veteran"}
                     </span>
@@ -381,7 +430,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       Tone
                     </span>
                     <span
-                      className={`text-[11px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : "text-gray-200 bg-white/5 border-white/10"} px-3 py-1 rounded-full border capitalize inline-block`}
+                      className={`text-[11px] font-bold px-3 py-1 rounded-full border capitalize inline-block ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/5 border-black/10" : ""}`}
+                      style={{
+                        backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                        borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                        color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.9),
+                      }}
                     >
                       {profile.personality?.tone || "Natural"}
                     </span>
@@ -395,7 +449,11 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 2: Partnership Status - Horizontal Layout */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "bg-white/5 border-white/10"} border rounded-xl p-3 lg:p-4 relative overflow-hidden shadow-xl`}
+            className={`border rounded-xl p-3 lg:p-4 relative overflow-hidden shadow-xl ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : ""}`}
+            style={{
+              backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+              borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+            }}
           >
             <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
               {/* Header & Stage */}
@@ -423,7 +481,10 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               </div>
 
               {/* Vibe */}
-              <div className="md:border-l md:border-white/10 md:pl-8 shrink-0">
+              <div 
+                className="md:border-l md:pl-8 shrink-0"
+                style={{ borderLeftColor: setHexAlpha(theme.hex, 0.1) }}
+              >
                 <span className="text-[9px] font-mono text-gray-500 uppercase block mb-1 whitespace-nowrap">
                   Vibe
                 </span>
@@ -442,7 +503,10 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               </div>
 
               {/* Growth Progress */}
-              <div className="flex-1 md:border-l md:border-white/10 md:pl-8 min-w-[140px]">
+              <div 
+                className="flex-1 md:border-l md:pl-8 min-w-[140px]"
+                style={{ borderLeftColor: setHexAlpha(theme.hex, 0.1) }}
+              >
                 <div className="flex justify-between items-center mb-1.5 gap-4">
                   <span className="text-[9px] font-mono text-gray-500 uppercase whitespace-nowrap">
                     Growth Progress
@@ -464,7 +528,11 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   </span>
                 </div>
                 <div
-                  className={`h-1.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-white/5"} rounded-full overflow-hidden border border-white/5`}
+                  className={`h-1.5 rounded-full overflow-hidden border ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : ""}`}
+                  style={{ 
+                    backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                    borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05)
+                  }}
                 >
                   <div
                     className="h-full transition-all duration-1000 ease-out"
@@ -477,7 +545,10 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               </div>
 
               {/* Stats */}
-              <div className="flex gap-10 md:border-l md:border-white/10 md:pl-8 shrink-0">
+              <div 
+                className="flex gap-10 md:border-l md:pl-8 shrink-0"
+                style={{ borderLeftColor: setHexAlpha(theme.hex, 0.1) }}
+              >
                 <div>
                   <span className="block text-[9px] text-gray-500 uppercase tracking-widest mb-1 whitespace-nowrap">
                     Confidence
@@ -506,11 +577,18 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 3: Matrix - Standalone */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
+            className={`border rounded-lg p-4 lg:p-5 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : ""}`}
+            style={{
+              backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.04),
+              borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.15),
+            }}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <Brain className="w-4 h-4 text-gray-400" />
+                <Brain 
+                  className="w-4 h-4" 
+                  style={{ color: setHexAlpha(theme.hex, 0.6) }}
+                />
                 <h4
                   className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-white"} uppercase tracking-widest`}
                 >
@@ -556,13 +634,17 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                           </span>
                         </div>
                         <span
-                          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"} font-bold text-xs`}
+                      className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"} font-bold text-xs`}
                         >
                           {value}
                         </span>
                       </div>
                       <div
-                        className={`h-1.5 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-white/5"} rounded-full overflow-hidden border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5" : "border-white/5"}`}
+                        className={`h-1.5 rounded-full overflow-hidden border ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : ""}`}
+                        style={{
+                          backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                          borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05)
+                        }}
                       >
                         <div
                           className="h-full transition-all duration-700 ease-out"
@@ -586,10 +668,17 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 4: Recent Insights - Standalone List */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
+            className={`border rounded-lg p-4 lg:p-5 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : ""}`}
+            style={{
+              backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.04),
+              borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.15),
+            }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-4 h-4 text-gray-400" />
+              <Sparkles 
+                className="w-4 h-4" 
+                style={{ color: setHexAlpha(theme.hex, 0.6) }}
+              />
               <h4
                 className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
               >
@@ -601,7 +690,11 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                 insights.map((insight) => (
                   <div
                     key={insight.id}
-                    className={`group flex gap-3 p-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 hover:border-black/20" : "bg-white/[0.02] border-white/5 hover:border-white/10"} rounded-md transition-all border`}
+                    className={`group flex gap-3 p-2 rounded-md transition-all border ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 hover:border-black/20" : ""}`}
+                    style={{
+                      backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.02),
+                      borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                    }}
                   >
                     <div className="min-w-[120px] shrink-0">
                       <div
@@ -630,10 +723,17 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 5: Development Timeline - Standalone */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
+            className={`border rounded-lg p-4 lg:p-5 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : ""}`}
+            style={{
+              backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.04),
+              borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.15),
+            }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Award className="w-4 h-4 text-gray-400" />
+              <Award 
+                className="w-4 h-4" 
+                style={{ color: setHexAlpha(theme.hex, 0.6) }}
+              />
               <h4
                 className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
               >
@@ -647,7 +747,11 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                 .map((milestone) => (
                   <div
                     key={milestone.id}
-                    className={`flex items-center gap-4 p-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10" : "bg-white/[0.02] border-white/5"} rounded-lg border`}
+                    className={`flex items-center gap-4 p-2 rounded-lg border ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10" : ""}`}
+                    style={{
+                      backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.02),
+                      borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                    }}
                   >
                     <div className="min-w-[100px] shrink-0">
                       <div className="text-[9px] font-mono text-gray-500 text-center border-r border-white/10 pr-4">
@@ -668,10 +772,17 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         {/* Row 6: Assistant Directives - Standalone */}
         <div className="col-span-12">
           <div
-            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : "bg-white/5 border-white/10"} border rounded-lg p-4 lg:p-5`}
+            className={`border rounded-lg p-4 lg:p-5 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light shadow-xl shadow-black/5" : ""}`}
+            style={{
+              backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.04),
+              borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.15),
+            }}
           >
             <div className="flex items-center gap-2 mb-6">
-              <Settings className="w-4 h-4 text-gray-400" />
+              <Settings 
+                className="w-4 h-4" 
+                style={{ color: setHexAlpha(theme.hex, 0.6) }}
+              />
               <h4
                 className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700" : "text-white"} uppercase tracking-widest`}
               >
@@ -680,31 +791,53 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
               <div
-                className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
+                className={`p-3 rounded-xl flex flex-col items-center justify-center text-center border ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : ""}`}
+                style={{
+                  backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.02),
+                  borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                }}
               >
                 <span className="block text-[9px] text-gray-500 uppercase tracking-widest mb-2 font-mono">
                   Preferred Persona
                 </span>
                 <span
-                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/10 border-black/10" : "text-white bg-white/10 border-white/5"} px-2 py-1 rounded block border truncate font-mono uppercase`}
+                  className={`text-[10px] font-bold px-2 py-1 rounded block border truncate font-mono uppercase ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/10 border-black/10" : ""}`}
+                  style={{
+                    backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                    borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                    color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : "#fff",
+                  }}
                 >
                   {profile.assistantPreferences?.preferredPersona || "NEUTRAL"}
                 </span>
               </div>
               <div
-                className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
+                className={`p-3 rounded-xl flex flex-col items-center justify-center text-center border ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : ""}`}
+                style={{
+                  backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.02),
+                  borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                }}
               >
                 <span className="block text-[9px] text-gray-500 uppercase tracking-widest mb-2 font-mono">
                   Detail Level
                 </span>
                 <span
-                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/10 border-black/10" : "text-white bg-white/10 border-white/5"} px-2 py-1 rounded block border capitalize truncate font-mono uppercase`}
+                  className={`text-[10px] font-bold px-2 py-1 rounded block border capitalize truncate font-mono uppercase ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-700 bg-black/10 border-black/10" : ""}`}
+                  style={{
+                    backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                    borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                    color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : "#fff",
+                  }}
                 >
                   {profile.assistantPreferences?.detailLevel || "CONCISE"}
                 </span>
               </div>
               <div
-                className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : "bg-white/[0.02] border-white/5"} p-3 rounded-xl flex flex-col items-center justify-center text-center border`}
+                className={`p-3 rounded-xl flex flex-col items-center justify-center text-center border ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5" : ""}`}
+                style={{
+                  backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.02),
+                  borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                }}
               >
                 <span className="block text-[9px] text-gray-500 uppercase tracking-widest mb-2 font-mono">
                   Interests Observed
@@ -715,7 +848,12 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                     .map((interest: string, i: number) => (
                       <span
                         key={i}
-                        className="text-[9px] bg-white/5 border border-white/10 rounded px-2 py-0.5 text-gray-400 capitalize font-mono"
+                        className="text-[9px] rounded px-2 py-0.5 capitalize font-mono border"
+                        style={{
+                          backgroundColor: setHexAlpha(theme.hex, 0.05),
+                          borderColor: setHexAlpha(theme.hex, 0.1),
+                          color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.6)",
+                        }}
                       >
                         {interest}
                       </span>
@@ -731,7 +869,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         </div>
       </div>
 
-      <div className="pt-4 border-t border-white/5 text-center">
+      <div className="pt-4 border-t text-center" style={{ borderTopColor: setHexAlpha(theme.hex, 0.1) }}>
         <p className="text-[9px] font-mono text-gray-600 uppercase tracking-[0.2em]">
           Dynamic Profile Analysis Powered by Luca Core // Private Context Layer
         </p>
@@ -739,21 +877,18 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
       {showEnrollModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div
-            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white shadow-2xl" : "bg-[#0b0606] shadow-2xl"} border rounded-2xl w-full max-w-lg overflow-hidden flex flex-col`}
+            className={`border rounded-2xl w-full max-w-lg overflow-hidden flex flex-col ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-white shadow-2xl" : "bg-[#0b0606] shadow-2xl"}`}
             style={{
-              borderColor:
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "rgba(0,0,0,0.1)"
-                  : `${theme.hex}33`,
+              borderColor: setHexAlpha(theme.hex, 0.2),
               boxShadow:
                 theme.themeName?.toLowerCase() === "lucagent"
                   ? undefined
-                  : `0 0 40px -10px ${theme.hex}22`,
+                  : `0 0 40px -10px ${setHexAlpha(theme.hex, 0.13)}`,
             }}
           >
             <div
-              className="p-4 border-b flex items-center justify-between bg-white/[0.02]"
-              style={{ borderBottomColor: `${theme.hex}1a` }}
+              className={`p-4 border-b flex items-center justify-between ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02]" : "bg-white/[0.02]"}`}
+              style={{ borderBottomColor: setHexAlpha(theme.hex, 0.15) }}
             >
               <h3
                 className="text-sm font-bold uppercase tracking-[0.2em]"
@@ -776,7 +911,32 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   setShowEnrollModal(false);
                   fetchReferenceImage();
                 }}
-                onEnrollSuccess={() => {
+                onEnrollSuccess={(image: string | undefined) => {
+                  if (!image) return;
+                  
+                  console.log("[OperatorProfile] Enrollment success, updating identity record...");
+                  // 1. Save to Biometric Storage (Legacy/Hardware Vault Simulation)
+                  settingsService.saveFaceData(image);
+                  
+                  // 2. Update Identity Record (Profile Storage)
+                  const updates = {
+                    identity: {
+                      ...profile.identity,
+                      avatar: image
+                    }
+                  };
+                  settingsService.updateOperatorProfile(updates);
+                  
+                  // 3. Update local state
+                  setProfile({
+                    ...profile,
+                    identity: {
+                      ...profile.identity,
+                      avatar: image
+                    }
+                  });
+                  
+                  // 4. Fallback/Sync with backend
                   fetchReferenceImage();
                 }}
                 onVerify={(image) => lucaService.verifyIdentity(image)}

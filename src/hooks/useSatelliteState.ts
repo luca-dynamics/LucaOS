@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { PersonaType } from "../services/lucaService";
 import { lucaLink, LucaLinkMessage } from "../services/lucaLinkService";
 import { settingsService } from "../services/settingsService";
+import { MissionScope } from "../services/toolRegistry";
 
 export interface SatelliteState {
   transcript: string;
@@ -13,6 +14,11 @@ export interface SatelliteState {
   status?: string;
   themeHex?: string;
   intent?: string | null;
+  elevationState?: {
+    lastScanTimestamp: number;
+    authorizedMissionIds: Set<string>;
+    activeMissionScope: MissionScope;
+  };
 }
 
 /**
@@ -81,6 +87,7 @@ export const useSatelliteState = (
               status: data.status ?? prev.status,
               themeHex: data.themeHex ?? prev.themeHex,
               intent: data.intent ?? prev.intent,
+              elevationState: data.elevationState ?? prev.elevationState,
             }) as SatelliteState,
         );
       };
@@ -118,6 +125,7 @@ export const useSatelliteState = (
               ...prev,
               ...data,
               persona: (data.persona as PersonaType) ?? prev.persona,
+              elevationState: data.elevationState ?? prev.elevationState,
             }) as SatelliteState,
         );
       }

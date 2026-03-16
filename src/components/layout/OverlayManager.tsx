@@ -13,6 +13,7 @@ import InstagramManager from "../social/InstagramManager";
 import LinkedInManager from "../social/LinkedInManager";
 import DiscordManager from "../social/DiscordManager";
 import YouTubeManager from "../social/YouTubeManager";
+import WeChatManager from "../social/WeChatManager";
 import LucaLinkModal from "../LucaLinkModal";
 import ProfileManager from "../ProfileManager";
 import CodeEditor from "../CodeEditor";
@@ -52,6 +53,7 @@ import { voiceCommandService } from "../../services/voiceCommandService";
 import { taskQueue } from "../../services/taskQueueService";
 import { SystemStatus, Sender } from "../../types";
 import { apiUrl } from "../../config/api";
+import { MissionScope } from "../../services/toolRegistry";
 
 interface OverlayManagerProps {
   theme: any;
@@ -92,6 +94,8 @@ interface OverlayManagerProps {
   setShowDiscordManager: (show: boolean) => void;
   showYouTubeManager: boolean;
   setShowYouTubeManager: (show: boolean) => void;
+  showWeChatManager: boolean;
+  setShowWeChatManager: (show: boolean) => void;
   showLucaLinkModal: boolean;
   setShowLucaLinkModal: (show: boolean) => void;
   localIp: string;
@@ -194,6 +198,11 @@ interface OverlayManagerProps {
   humanInputModal: any;
   setHumanInputModal: (modal: any) => void;
   handleHumanInputSubmit: (input: string) => void;
+  elevationState?: {
+    lastScanTimestamp: number;
+    authorizedMissionIds: Set<string>;
+    activeMissionScope: MissionScope;
+  };
 }
 
 const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
@@ -235,6 +244,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     setShowDiscordManager,
     showYouTubeManager,
     setShowYouTubeManager,
+    showWeChatManager,
+    setShowWeChatManager,
     showLucaLinkModal,
     setShowLucaLinkModal,
     localIp,
@@ -337,6 +348,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     humanInputModal,
     setHumanInputModal,
     handleHumanInputSubmit,
+    elevationState,
   } = props;
 
   return (
@@ -543,6 +555,13 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         />
       )}
 
+      {showWeChatManager && (
+        <WeChatManager
+          onClose={() => setShowWeChatManager(false)}
+          theme={theme}
+        />
+      )}
+
       {showLucaLinkModal && (
         <LucaLinkModal
           onClose={() => setShowLucaLinkModal(false)}
@@ -737,6 +756,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
           }
         }}
         isVisionActive={isVisionActive}
+        elevationState={elevationState}
       />
 
       {pendingCommand && (

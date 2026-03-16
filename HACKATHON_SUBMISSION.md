@@ -6,16 +6,31 @@ First off: _"We have achieved AGI."_ The vision for Luca OS traces back to my ch
 
 ## What it does
 
-Luca OS is not just another AI chatbot; it is a **Distributed Cognitive Environment** that acts as the primary command layer for your digital architecture. It is designed to be your Synthetic Partner—orchestrating complex workflows, maintaining security perimeters, and evolving through environmental interaction. It speaks, listens, sees, and acts, turning your digital space into a living, intelligent ecosystem.
+Luca OS is not just another AI chatbot; it is a **Distributed Cognitive Environment** that acts as the primary command layer for your digital architecture. It is designed to be your Synthetic Partner—orchestrating complex workflows, maintaining security perimeters, and evolving through environmental interaction. 
 
-## How we built it
+### The Security Breakthrough: Mission Mode
+Unlike generic agents that require technical commands, Luca introduces **Human-Centric Mission Mode**. This breakthrough transforms technical security gates into a "Verbal Handshake" protocol:
+- **Hands-Free Authorization**: Luca proactively prompts for "Mission Mode" arming for high-risk actions (Finance, System, Files).
+- **Verbal Handshake**: Users authorize missions with natural language ("Proceed," "Do it"), eliminating the need for CLI overrides.
+- **Multimodal Feedback**: Dynamic "Scoped Auras" and floating Mission Cards provide instantaneous visual confirmation across all satellite windows.
 
-Luca OS is built on the **L.U.C.A standard**—a technical framework for the next generation of synthetic intelligence:
-
-- **LARGE** — Represents the high-parameter cognitive scale and the depth of the local neural network workforce.
-- **UNIVERSAL** — A device-agnostic runtime designed to operate with total parity across macOS, Linux, Windows, and Mobile.
-- **CONTROL** — The autonomous orchestration layer that bridges high-level reasoning with native hardware control and self-healing loops.
 - **AGENTS** — A multi-persona autonomous workforce capable of persistent goal-seeking and cross-domain tool execution.
+
+## Built With
+
+L.U.C.A OS leverages a world-class technology stack to achieve JARVIS-level performance:
+
+- **Languages & Core**: TypeScript, JavaScript, Python (Cortex Backend), CSS.
+- **Frontend & 3D**: **React (Vite)**, **Three.js** (@react-three/fiber) for the 3D Hologram, and **Framer Motion** for cinematic UI transitions.
+- **Desktop & Mobile**: **Electron** (Primary Desktop Runtime) and **Capacitor** for seamless mobile parity across iOS and Android.
+- **Core AI Cognition**: Powered extensively by **Google Gemini** (via `@google/generative-ai`), OpenAI, and Anthropic.
+- **On-Device AI/ML**: **TensorFlow.js**, **MediaPipe**, and **mlc-ai/web-llm** for zero-cloud edge reasoning.
+- **Voice & Audio**: **Picovoice** (Porcupine Wake Word), Web VAD, and specialized Audio Segmenters.
+- **Native Control & Automation**: **RobotJS** for native hardware interaction and **Playwright** for autonomous web navigation.
+- **Protocols & Expansion**: **Model Context Protocol (MCP)** for infinite skill ingestion and **Socket.io** for real-time link synchronization.
+- **Financial & Web3**: **CCXT** for cross-exchange trading and **Ethers.js** for secure blockchain interactions.
+- **Communication Links**: **WhatsApp-web.js** and **Telegram** API integrations.
+- **Context & Storage**: **ChromaDB** for vector memory and **IndexedDB** for persistent local state.
 
 ## Challenges we ran into
 
@@ -23,9 +38,7 @@ Building such an advanced AI operating system was an immense challenge. I have w
 
 ## Accomplishments that we're proud of
 
-Achieving that true AGI experience. Currently, there is no company or project close to this level of development in terms of capability, capacity, features, and sheer breadth. What previously kept JARVIS from being real was the lack of access to massive datasets and advanced cognitive models. Today, thanks to the LLMs released by major tech companies, this technology is finally possible.
-
-When we evaluated competitors' tech side-by-side, we were astounded by the gap—Luca sets a new benchmark that beats them all. When we fed Luca's codebase into different LLM models to analyze its context, even the AI was marveling at what we had built together.
+When we evaluated competitors' tech side-by-side, we were astounded by the gap—Luca sets a new benchmark with her **Mission-Driven Agency**. While others struggle with broad permissions or complex sandboxes, Luca manages security through intuitive, scoped sessions that feel like a partner, not a tool. When we fed Luca's codebase into different LLM models to analyze its context, even the AI was marveling at the organic coordination between the Voice HUD, Hologram Face, and the background security layer.
 
 ## What we learned
 

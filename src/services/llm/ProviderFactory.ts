@@ -116,6 +116,34 @@ export class ProviderFactory {
   }
 
   /**
+   * Specifically creates a provider that IS capable of embeddings.
+   * If current brain doesn't support it, falls back to OpenAI or Gemini.
+   */
+  static async createEmbeddingProvider(
+    settings: LucaSettings["brain"],
+  ): Promise<LLMProvider> {
+    const provider = this.createProvider(settings);
+
+    // If provider supports it natively, use it
+    if (provider.embed) return provider;
+
+    // Fallback hierarchy for memory
+    const hasOpenAI = !!settings.openaiApiKey;
+    const hasGemini = !!settings.geminiApiKey;
+
+    if (hasOpenAI) {
+      return new OpenAIAdapter(settings.openaiApiKey!, "gpt-4o");
+    }
+
+    if (hasGemini) {
+      return new GeminiAdapter(settings.geminiApiKey!, BRAIN_CONFIG.defaults.embedding);
+    }
+
+    // Extreme fallback: singleton Gemini
+    return new GeminiAdapter("", BRAIN_CONFIG.defaults.embedding);
+  }
+
+  /**
    * Quick health check for Ollama loopback
    */
   private static async checkLocalHealth(): Promise<boolean> {

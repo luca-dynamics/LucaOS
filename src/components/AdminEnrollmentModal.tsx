@@ -1,23 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
   Camera,
-  Save,
   User,
-  Shield,
-  Check,
-  X,
   Lock,
   Mic,
   Play,
-  Square,
 } from "lucide-react";
 import { soundService } from "../services/soundService";
 import { apiUrl } from "../config/api";
 import FaceScan from "./Onboarding/FaceScan";
+import { setHexAlpha } from "../config/themeColors";
 
 interface Props {
   onClose: () => void;
-  onEnrollSuccess: () => void;
+  onEnrollSuccess: (image?: string) => void;
   onVerify: (image: string) => Promise<boolean>;
   onVerifyVoice: (audio: string) => Promise<boolean>;
   theme: {
@@ -46,7 +42,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
     | "denied"
   >("intro");
   const [mode, setMode] = useState<"enroll" | "verify">("enroll");
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedImage] = useState<string | null>(null);
 
   // Voice State
   const [isRecording, setIsRecording] = useState(false);
@@ -135,7 +131,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
         soundService.play("SUCCESS");
         setStep("success");
         setTimeout(() => {
-          onEnrollSuccess();
+          onEnrollSuccess(capturedImage || undefined);
           if (mode === "enroll") onClose(); // Close only if enrolling
         }, 2000);
       } else {
@@ -184,7 +180,10 @@ const AdminEnrollmentModal: React.FC<Props> = ({
     <div className="w-full h-full flex flex-col gap-3">
       {/* Tabs */}
       {step === "intro" && (
-        <div className="flex border-b border-white/10">
+        <div 
+          className="flex border-b"
+          style={{ borderBottomColor: setHexAlpha(theme.hex, 0.3) }}
+        >
           <button
             onClick={() => setActiveTab("face")}
             className={`flex-1 py-2 text-xs font-bold transition-colors ${
@@ -195,7 +194,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
             style={{
               color: activeTab === "face" ? theme.hex : undefined,
               borderBottom:
-                activeTab === "face" ? `2px solid ${theme.hex}` : undefined,
+                activeTab === "face" ? `2px solid ${theme.hex}` : `1px solid ${setHexAlpha(theme.hex, 0.15)}`,
             }}
           >
             FACE ID
@@ -210,7 +209,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
             style={{
               color: activeTab === "voice" ? theme.hex : undefined,
               borderBottom:
-                activeTab === "voice" ? `2px solid ${theme.hex}` : undefined,
+                activeTab === "voice" ? `2px solid ${theme.hex}` : `1px solid ${setHexAlpha(theme.hex, 0.15)}`,
             }}
           >
             VOICEPRINT
@@ -228,7 +227,13 @@ const AdminEnrollmentModal: React.FC<Props> = ({
       >
         {step === "intro" && (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/10 backdrop-blur-sm">
+              <div 
+                className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto border backdrop-blur-sm shadow-xl"
+                style={{ 
+                  borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
+                  boxShadow: theme ? `0 0 20px ${setHexAlpha(theme.hex, 0.1)}` : "none"
+                }}
+              >
               {activeTab === "face" ? (
                 <User size={32} style={{ color: theme.hex }} />
               ) : (
@@ -249,49 +254,59 @@ const AdminEnrollmentModal: React.FC<Props> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-4">
-              <button
-                onClick={() => {
-                  setMode("enroll");
-                  if (activeTab === "face") {
-                    setStep("camera");
-                  } else {
-                    startRecording();
-                  }
-                }}
-                className="w-full text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all backdrop-blur-sm text-xs"
-                style={{
-                  backgroundColor: `${theme.hex}CC`,
-                  boxShadow: `0 0 15px -5px ${theme.hex}80`,
-                }}
-              >
-                {activeTab === "face" ? (
-                  <Camera size={14} />
-                ) : (
-                  <Mic size={14} />
-                )}
-                ENROLL
-              </button>
+                <button
+                  onClick={() => {
+                    setMode("enroll");
+                    if (activeTab === "face") {
+                      setStep("camera");
+                    } else {
+                      startRecording();
+                    }
+                  }}
+                  className="w-full font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all backdrop-blur-sm text-xs border"
+                  style={{
+                    backgroundColor: theme ? setHexAlpha(theme.hex, 0.2) : "rgba(255,255,255,0.1)",
+                    borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
+                    color: theme ? theme.hex : "white",
+                    boxShadow: theme ? `0 0 15px -5px ${setHexAlpha(theme.hex, 0.3)}` : "none",
+                  }}
+                >
+                  {activeTab === "face" ? (
+                    <Camera size={14} />
+                  ) : (
+                    <Mic size={14} />
+                  )}
+                  ENROLL
+                </button>
 
-              <button
-                onClick={() => {
-                  setMode("verify");
-                  if (activeTab === "face") {
-                    setStep("camera");
-                  } else {
-                    startRecording();
-                  }
-                }}
-                className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border border-white/10 backdrop-blur-sm text-xs"
-              >
-                <Lock size={14} />
-                VERIFY
-              </button>
+                <button
+                  onClick={() => {
+                    setMode("verify");
+                    if (activeTab === "face") {
+                      setStep("camera");
+                    } else {
+                      startRecording();
+                    }
+                  }}
+                  className="w-full font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border backdrop-blur-sm text-xs"
+                  style={{ 
+                    borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
+                    backgroundColor: theme ? setHexAlpha(theme.hex, 0.05) : "transparent",
+                    color: theme ? theme.hex : "white/60"
+                  }}
+                >
+                  <Lock size={14} />
+                  VERIFY
+                </button>
             </div>
           </div>
         )}
 
         {step === "camera" && (
-          <div className="relative bg-black/40 rounded-xl overflow-hidden flex-1 w-full flex items-center justify-center border border-white/10 backdrop-blur-xl">
+          <div 
+            className="relative bg-black/40 rounded-xl overflow-hidden flex-1 w-full flex items-center justify-center border backdrop-blur-xl"
+            style={{ borderColor: setHexAlpha(theme.hex, 0.15) }}
+          >
             {activeTab === "face" ? (
               <FaceScan
                 userName={userName}
@@ -302,7 +317,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                 onComplete={(data) => {
                   if (data) {
                     if (mode === "enroll") {
-                      onEnrollSuccess();
+                      onEnrollSuccess(data);
                       onClose();
                     } else {
                       verifyProfile(data);
@@ -331,10 +346,10 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                 ) : (
                   <>
                     <div
-                      className="w-20 h-20 bg-white/5 border border-white/10 rounded-full flex items-center justify-center"
+                      className="w-20 h-20 bg-white/5 border rounded-full flex items-center justify-center"
                       style={{
-                        backgroundColor: `${theme.hex}1a`,
-                        borderColor: `${theme.hex}4d`,
+                        backgroundColor: setHexAlpha(theme.hex, 0.1),
+                        borderColor: setHexAlpha(theme.hex, 0.3),
                       }}
                     >
                       <Play size={32} style={{ color: theme.hex }} />

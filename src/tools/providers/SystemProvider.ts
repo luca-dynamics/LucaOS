@@ -2,6 +2,7 @@ import { ToolRegistry } from "../../services/toolRegistry";
 import * as Definitions from "../definitions";
 import { apiUrl } from "../../config/api";
 import { nativeControl } from "../../services/nativeControlService";
+import { diagnosticsService } from "../../services/diagnosticsService";
 
 export const SystemProvider = {
   register: () => {
@@ -122,11 +123,11 @@ export const SystemProvider = {
       },
     );
 
-    // 3. System Diagnostics
+    // 3. System Doctor (Consolidated Diagnostics)
     ToolRegistry.register(
-      Definitions.runSystemDiagnosticsTool,
+      Definitions.systemDoctorTool,
       "SYSTEM",
-      ["diagnostics", "status", "health", "specs"],
+      ["doctor", "diagnostics", "status", "health", "audit", "fix"],
       async (args, context) => {
         const { soundService, setVisualData } = context;
         soundService?.play("PROCESSING");
@@ -136,45 +137,46 @@ export const SystemProvider = {
         if (setVisualData) {
           setVisualData({
             type: "SYSTEM",
-            status: "RUNNING_DIAGNOSTICS",
+            status: "LUCA_DOCTOR_RUNNING",
             logs: [
               {
                 id: `init-${diagId}`,
                 timestamp: new Date().toLocaleTimeString(),
-                source: "SYS_BENCH",
-                message: "Querying hardware sensors and load metrics...",
+                source: "DOCTOR_PROT",
+                message: "Initiating multi-sector production audit...",
                 type: "INFO",
               },
             ],
-            title: "SYSTEM_MONITOR",
-            summonHUD: false, // User must request full dashboard
+            title: "L.U.C.A_DOCTOR",
+            summonHUD: true, // Always show the doctor report
           });
         }
 
         try {
-          const stats = await nativeControl.getSystemLoad();
-          const battery = await nativeControl.getBatteryStatus();
+          const report = await diagnosticsService.audit();
 
           if (setVisualData) {
             setVisualData({
               type: "SYSTEM",
-              status: "DIAGNOSTICS_COMPLETE",
-              logs: [
-                {
-                  id: `res-${diagId}`,
-                  timestamp: new Date().toLocaleTimeString(),
-                  source: "SYS_CORE",
-                  message: `Load: ${stats} | Power: ${battery}`,
-                  type: "SUCCESS",
-                },
-              ],
-              title: "SYSTEM_MONITOR",
+              status: `AUDIT_${report.overall.toUpperCase()}`,
+              logs: report.results.map((r) => ({
+                id: r.id,
+                timestamp: new Date().toLocaleTimeString(),
+                source: r.name,
+                message: r.message + (r.fix ? ` (Suggested Fix: ${r.fix})` : ""),
+                type: r.status === "pass" ? "SUCCESS" : (r.status === "warn" ? "WARNING" : "ERROR"),
+              })),
+              title: "L.U.C.A_DOCTOR_REPORT",
             });
           }
 
-          return `SYSTEM DIAGNOSTICS:\n- Load: ${stats}\n- Power: ${battery}\n- Status: STABLE`;
+          const summary = report.results
+            .map((r) => `${r.status === "pass" ? "✓" : (r.status === "warn" ? "⚠" : "✗")} ${r.name}: ${r.message}`)
+            .join("\n");
+
+          return `L.U.C.A DOCTOR REPORT [${report.overall.toUpperCase()}]\n\n${summary}\n\nSYSTEM: ${report.system.platform} (${report.system.arch}) | RAM Free: ${(report.system.freeMem / 1024 / 1024 / 1024).toFixed(2)} GB`;
         } catch (e: any) {
-          return `Diagnostics Failed: ${e.message}`;
+          return `Doctor Audit Failed: ${e.message}`;
         }
       },
     );

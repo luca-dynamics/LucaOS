@@ -15,6 +15,7 @@ type MemoryMode = "LOCAL" | "DELEGATED" | "STANDALONE";
 let _currentMode: MemoryMode = "LOCAL";
 
 import { getGenClient } from "./genAIClient";
+import { ProviderFactory } from "./llm/ProviderFactory";
 
 // Track if we've already logged Cortex unavailability (to avoid spam)
 let _cortexUnavailableLogged = false;
@@ -179,8 +180,11 @@ export const memoryService = {
   },
 
   /**
-   * Try to load memories from the Local Core (File System)
+   * Returns the current operating mode
    */
+  getMode(): MemoryMode {
+    return _currentMode;
+  },
   async syncWithCore(): Promise<MemoryNode[]> {
     try {
       const res = await fetch(`${CORE_URL}/load`, {
@@ -347,14 +351,20 @@ export const memoryService = {
       }
     }
 
-    // --- CLOUD EMBEDDING PATH (Gemini) ---
+    // --- CLOUD EMBEDDING PATH (Provider Agnostic) ---
     try {
+      const provider = await ProviderFactory.createEmbeddingProvider(settings!);
+      if (provider.embed) {
+        return await provider.embed(text);
+      }
+      
+      // Legacy fallback just in case
       const ai = getGenClient();
-      const result = await ai.models.embedContent({
-        model: BRAIN_CONFIG.defaults.embedding || "gemini-embedding-2-preview",
-        contents: Array.isArray(contents) ? contents : [contents],
+      const result = await (ai.models as any).embedContent({
+        model: "text-embedding-004", // Use canonical high-quality model
+        content: { parts: [{ text }] },
       });
-      return result.embeddings?.[0]?.values || [];
+      return result.embedding?.values || [];
     } catch (e: any) {
       if (
         e.message?.includes("Failed to fetch") ||
@@ -382,6 +392,7 @@ export const memoryService = {
     category: MemoryNode["category"] = "SEMANTIC",
     autoConsolidate: boolean = false,
     importance?: number,
+    tenantId?: string,
   ): Promise<MemoryNode | null> {
     // --- SYSTEM FILTER ---
     if (this.isSystemPrompt(value) || this.isSystemPrompt(key)) {
@@ -437,6 +448,7 @@ export const memoryService = {
       key,
       value,
       category,
+      tenantId,
       timestamp: Date.now(),
       confidence: 0.99,
       expiresAt,
@@ -617,7 +629,7 @@ export const memoryService = {
   /**
    * Search memories using Vector Similarity (Semantic Search)
    */
-  async retrieveMemory(query: string): Promise<MemoryNode[]> {
+  async retrieveMemory(query: string, tenantId?: string): Promise<MemoryNode[]> {
     // 1. Try LightRAG Cortex (Level 5)
     try {
       const cortexResults = await this.queryCortex(query);
@@ -703,8 +715,9 @@ export const memoryService = {
     const lowerQuery = query.toLowerCase();
     return memories.filter(
       (m) =>
-        m.key.toLowerCase().includes(lowerQuery) ||
-        m.value.toLowerCase().includes(lowerQuery),
+        (!tenantId || m.tenantId === tenantId) &&
+        (m.key.toLowerCase().includes(lowerQuery) ||
+          m.value.toLowerCase().includes(lowerQuery)),
     );
   },
 
@@ -713,18 +726,25 @@ export const memoryService = {
   /**
    * Check if Cortex (LightRAG) is available
    */
+  /**
+   * Check if Cortex/Gateway is reachable
+   */
   async checkCortexHealth(): Promise<boolean> {
     try {
-      const url = await this.getCortexUrl();
-      console.log(`[MEMORY] Checking Cortex Health at: ${url}`);
-      // Increase timeout and remove AbortSignal.timeout which might be flaky in some electron environments
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 8000);
-
-      const res = await fetch(`${url}/health`, {
-        signal: controller.signal,
+      // 1. Try hitting the API Gateway first (Node server)
+      // This is the most reliable way to check if LUCA's "Hands" are available
+      // The Node server mounts root routes at /api/ (e.g., /api/health)
+      const gatewayUrl = apiUrl("/api/health");
+      const gatewayRes = await fetch(gatewayUrl, {
+        signal: AbortSignal.timeout(3000),
       });
-      clearTimeout(id);
+      if (gatewayRes.ok) return true;
+
+      // 2. Fallback to direct Cortex port if gateway is bypassed
+      const url = await this.getCortexUrl();
+      const res = await fetch(`${url}/health`, {
+        signal: AbortSignal.timeout(2000),
+      });
       return res.ok;
     } catch {
       return false;

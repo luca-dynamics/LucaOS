@@ -39,6 +39,7 @@ interface KnowledgeBridgeTabProps {
   theme: {
     hex: string;
     themeName: string;
+    isLight?: boolean;
   };
 }
 
@@ -507,7 +508,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                               {p.logo ? (
                                 <img
                                   src={p.logo}
-                                  className="w-4 h-4 object-contain opacity-70"
+                                  className={`w-4 h-4 object-contain opacity-70 ${(theme.isLight || theme.themeName?.toLowerCase() === "lucagent") ? "brightness-0" : "brightness-0 invert"}`}
                                 />
                               ) : p.icon ? (
                                 <p.icon className="w-4 h-4 text-gray-500" />
@@ -712,7 +713,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               <img
                 src="/icons/brands/notion.svg"
                 alt="Notion"
-                className="w-8 h-8 object-contain"
+                className={`w-8 h-8 object-contain ${(theme.isLight || theme.themeName?.toLowerCase() === "lucagent") ? "brightness-0" : "brightness-0 invert"}`}
               />
               <div>
                 <div

@@ -2,6 +2,7 @@ import { AndroidXmlParser } from "../utils/androidXmlParser";
 import { getGenClient } from "./genAIClient";
 import { apiUrl } from "../config/api";
 
+import { deviceRegistry } from "./lucaLink/deviceRegistry";
 // Dynamic import for LucaLinkManager to avoid circular dependencies/init issues
 let lucaLinkManager: any = null;
 try {
@@ -112,11 +113,20 @@ export class AndroidAgentService {
   }
 
   public getConnectedMobileDevice() {
+    // Priority: Use the intelligent selector from DeviceRegistry
+    // This finds the best device based on trust, battery, and stability
+    const bestDevice = deviceRegistry.selectBestDevice("controlMobileDevice");
+    if (bestDevice && (bestDevice.platform === "android" || bestDevice.type === "mobile" || bestDevice.type === "tablet")) {
+      // Convert Device to the format expected by Agent (if needed, here we just return the Device object)
+      // The delegateTool expects a deviceId
+      return { ...bestDevice, deviceId: bestDevice.id };
+    }
+
+    // Fallback if registry selector is empty but manager has devices (legacy/direct access)
     if (!lucaLinkManager) return null;
-    // Find the first device that is 'android'
-    for (const [, device] of lucaLinkManager.devices) {
-      if (device.type === "android" || device.type === "mobile") {
-        return device;
+    for (const device of lucaLinkManager.getDevices()) {
+      if (device.status === "online" && (device.platform === "android" || device.type === "mobile" || device.type === "tablet")) {
+        return { ...device, deviceId: device.id };
       }
     }
     return null;
@@ -160,23 +170,33 @@ export class AndroidAgentService {
 
   public async getUiTree() {
     try {
-      const res = await fetch(`${SERVER_URL}/ui-tree`);
+      // Priority 1: Luca Link (Wireless)
+      const mobileDevice = this.getConnectedMobileDevice();
+      if (mobileDevice && lucaLinkManager) {
+        console.log(`[AndroidAgent] Requesting UI Tree via Luca Link (${mobileDevice.deviceId})...`);
+        const response = await lucaLinkManager.delegateTool(
+          mobileDevice.deviceId,
+          "controlMobileDevice",
+          { action: "UI_TREE" }
+        );
+
+        if (response.success && response.xml) {
+          return await AndroidXmlParser.parse(response.xml);
+        }
+        console.warn("[AndroidAgent] Luca Link UI Tree failed, falling back to ADB.");
+      }
+
+      // Priority 2: ADB Fallback
+      const res = await fetch(`${apiUrl("/api/android/ui-tree")}`);
       const data = await res.json();
-      if (data.error) return null;
-
-      const catRes = await fetch(`${SERVER_URL}/command`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: "cat /sdcard/ui.xml" }),
-      });
-      const catData = await catRes.json();
-
-      if (catData.result) {
-        return await AndroidXmlParser.parse(catData.result);
+      if (!data.success) return null;
+      
+      if (data.xml) {
+        return await AndroidXmlParser.parse(data.xml);
       }
       return null;
     } catch (e) {
-      console.error("ADB UI Dump failed:", e);
+      console.error("UI Tree extraction failed:", e);
       return null;
     }
   }
@@ -210,15 +230,13 @@ export class AndroidAgentService {
 
       // Priority 2: ADB Fallback (if USB connected)
       console.log("[AndroidAgent] Falling back to ADB Screenshot...");
-      const cmd = "screencap -p | base64";
-      const res = await fetch(`${SERVER_URL}/command`, {
+      const res = await fetch(`${apiUrl("/api/android/screenshot")}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: cmd }),
+        headers: { "Content-Type": "application/json" }
       });
       const data = await res.json();
-      if (data.result) {
-        return data.result.replace(/\n/g, "").trim();
+      if (data.success && data.image) {
+        return data.image;
       }
       return null;
     } catch (e) {
@@ -370,41 +388,52 @@ export class AndroidAgentService {
     uiElements: any[] | null,
     strategy: string
   ) {
-    // --- HELPER: ADB EXECUTION ---
-    const adbCommand = async (cmd: string) => {
-      await fetch(`${SERVER_URL}/command`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: cmd }),
-      });
-    };
-
     // --- HELPER: LUCA LINK EXECUTION ---
     const lucaCommand = async (action: string, args: any) => {
       const device = this.getConnectedMobileDevice();
       if (device && lucaLinkManager) {
-        console.log(`[AndroidAgent] Sending Luca Command: ${action}`, args);
-        await lucaLinkManager.delegateTool(
-          device.deviceId,
-          "controlMobileDevice",
-          {
-            action,
-            ...args,
-          }
-        );
-      } else {
-        console.warn(
-          "[AndroidAgent] No Luca Link device found for action. Falling back to ADB."
-        );
-        // Fallback to ADB if possible
-        if (action === "TAP" && args.x && args.y)
-          adbCommand(`input tap ${args.x} ${args.y}`);
-        if (action === "TEXT" && args.text)
-          adbCommand(`input text "${args.text.replace(/\s/g, "%s")}"`); // simple implementation
-        if (action === "KEY" && args.keyCode)
-          adbCommand(`input keyevent ${args.keyCode}`);
-        if (action === "SWIPE") adbCommand("input swipe 500 1500 500 500 300");
-      }
+        try {
+          console.log(`[AndroidAgent] Sending Luca Command: ${action}`, args);
+          const result = await lucaLinkManager.delegateTool(
+            device.deviceId,
+            "controlMobileDevice",
+            {
+              action,
+              ...args,
+            }
+          );
+          return result;
+        } catch (error) {
+          console.warn(`[AndroidAgent] Luca Link command failed: ${action}. Falling back to ADB.`, error);
+          // Fall through to manual ADB logic below
+        }
+      } 
+      
+      console.warn(
+          "[AndroidAgent] No Luca Link device available or command failed. Using ADB fallback."
+      );
+        // Fallback to ADB structured endpoints
+        if (action === "TAP" && args.x && args.y) {
+           await fetch(`${apiUrl("/api/android/click")}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ x: args.x, y: args.y })
+           });
+        }
+        if (action === "TEXT" && args.text) {
+           await fetch(`${apiUrl("/api/android/type")}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: args.text })
+           });
+        }
+        if (action === "KEY" && args.keyCode) {
+           await fetch(`${apiUrl("/api/android/intent")}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "KEYCODE", data: args.keyCode })
+           });
+        }
     };
 
     // --- EXECUTE ---
@@ -423,33 +452,48 @@ export class AndroidAgentService {
           if (strategy === "WIRELESS") {
             await lucaCommand("TAP", { x, y });
           } else {
-            await adbCommand(`input tap ${x} ${y}`);
+            await fetch(`${apiUrl("/api/android/click")}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ x, y })
+            });
           }
         }
         break;
       }
-
+ 
       case "TYPE":
         if (step.text) {
           if (strategy === "WIRELESS") {
             await lucaCommand("TEXT", { text: step.text });
           } else {
-            const escaped = step.text.replace(/\s/g, "%s");
-            await adbCommand(`input text "${escaped}"`);
+            await fetch(`${apiUrl("/api/android/type")}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: step.text })
+            });
           }
         }
         break;
 
       case "HOME":
         if (strategy === "WIRELESS") await lucaCommand("KEY", { keyCode: 3 });
-        else await adbCommand("input keyevent KEYCODE_HOME");
+        else await fetch(`${apiUrl("/api/android/intent")}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "KEYCODE", data: "KEYCODE_HOME" })
+           });
         break;
-
+ 
       case "BACK":
         if (strategy === "WIRELESS") await lucaCommand("KEY", { keyCode: 4 });
-        else await adbCommand("input keyevent KEYCODE_BACK");
+        else await fetch(`${apiUrl("/api/android/intent")}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "KEYCODE", data: "KEYCODE_BACK" })
+           });
         break;
-
+ 
       case "SCROLL":
         if (strategy === "WIRELESS")
           await lucaCommand("SWIPE", {
@@ -458,8 +502,12 @@ export class AndroidAgentService {
             x2: 500,
             y2: 500,
           });
-        // Approximate up-swipe
-        else await adbCommand("input swipe 500 1500 500 500 300");
+        // Approximate up-swipe via custom action in future or specialized route
+        else await fetch(`${apiUrl("/api/android/intent")}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "SWIPE", data: "500 1500 500 500 300" })
+           });
         break;
     }
   }

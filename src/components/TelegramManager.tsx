@@ -2,17 +2,25 @@ import React, { useEffect, useState } from "react";
 import { X, Send, ShieldCheck, Smartphone, Lock, Wifi } from "lucide-react";
 import { settingsService } from "../services/settingsService";
 import { apiUrl } from "../config/api";
+import { setHexAlpha } from "../config/themeColors";
 
 interface Props {
   onClose: () => void;
-  theme?: { hex: string; primary: string; border: string; bg: string };
+  theme: {
+    hex: string;
+    primary: string;
+    border: string;
+    bg: string;
+    themeName?: string;
+    isLight?: boolean;
+  };
 }
 
 const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
   const themePrimary = theme?.primary || "text-cyan-400";
-  const themeBorder = theme?.border || "border-cyan-500";
-  const themeBg = theme?.bg || "bg-cyan-950/20";
   const themeHex = theme?.hex || "#06b6d4";
+  const isLight = theme?.isLight || theme?.themeName?.toLowerCase() === "lucagent";
+
   const [step, setStep] = useState("INIT"); // INIT, PHONE, CODE, PASSWORD, READY
   const [status, setStatus] = useState("DISCONNECTED");
   const [phoneNumber, setPhoneNumber] = useState(
@@ -122,21 +130,28 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div
-        className={`w-full max-w-2xl bg-black/80 backdrop-blur-xl border ${themeBorder} rounded-lg overflow-hidden flex flex-col shadow-2xl`}
+        className={`w-full max-w-2xl rounded-lg overflow-hidden flex flex-col transition-all duration-500 ${isLight ? "glass-panel-light" : "bg-black/80 backdrop-blur-xl"}`}
         style={{
-          boxShadow: `0 0 50px ${themeHex}40`,
+          boxShadow: isLight ? `0 20px 50px ${setHexAlpha(themeHex, 0.1)}` : `0 0 50px ${themeHex}40`,
+          borderColor: setHexAlpha(themeHex, isLight ? 0.2 : 0.4),
+          borderWidth: "1px",
+          borderStyle: "solid",
         }}
       >
         {/* Header */}
         <div
-          className={`h-16 border-b ${themeBorder}/50 ${themeBg} flex items-center justify-between px-6`}
+          className={`h-16 flex items-center justify-between px-6 transition-colors`}
+          style={{
+            borderBottom: `1px solid ${setHexAlpha(themeHex, isLight ? 0.15 : 0.3)}`,
+            backgroundColor: isLight ? "rgba(255,255,255,0.8)" : setHexAlpha(themeHex, 0.05),
+          }}
         >
           <div className="flex items-center gap-3">
             <Send className={themePrimary} size={24} />
             <div>
-              <h2 className="font-display text-xl font-bold text-white tracking-widest">
+              <h2 className={`font-display text-xl font-bold tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>
                 TELEGRAM LINK
               </h2>
               <div
@@ -147,8 +162,8 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               </div>
             </div>
           </div>
-          <button onClick={onClose}>
-            <X className="text-slate-500 hover:text-white" />
+          <button onClick={onClose} className={`transition-colors ${isLight ? "text-slate-400 hover:text-slate-900" : "text-slate-500 hover:text-white"}`}>
+            <X size={24} />
           </button>
         </div>
 
@@ -156,16 +171,16 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
         <div className="p-4 sm:p-8 space-y-6">
           {step === "INIT" && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-              <p className="font-bold mb-1 uppercase tracking-tight">
+              <p className={`font-bold mb-1 uppercase tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
                 Linking Mode
               </p>
               {useSystemApi ? (
-                <p>
+                <p className={isLight ? "text-slate-600" : "text-slate-300"}>
                   Luca is using its own <strong>Integrated API Gateway</strong>.
                   Simply enter your phone number to establish the Luca Link.
                 </p>
               ) : (
-                <p>
+                <p className={isLight ? "text-slate-600" : "text-slate-300"}>
                   <strong>Advanced Setup</strong>: You are using custom API
                   credentials from{" "}
                   <a
@@ -180,9 +195,14 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                 </p>
               )}
 
-              <div className="flex items-center justify-between p-3 border border-slate-800 rounded bg-black/40">
+              <div
+                className={`flex items-center justify-between p-3 rounded transition-colors ${isLight ? "bg-black/[0.02]" : "bg-black/40"}`}
+                style={{
+                  border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
+                }}
+              >
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-200">
+                  <span className={`text-xs font-bold ${isLight ? "text-slate-800" : "text-slate-200"}`}>
                     System API Defaults
                   </span>
                   <span className="text-[9px] text-slate-500 font-mono">
@@ -206,26 +226,32 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               {!useSystemApi && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
                   <div>
-                    <label className="text-[10px] text-slate-400 font-mono">
+                    <label className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">
                       API ID
                     </label>
                     <input
                       type="text"
                       value={apiId}
                       onChange={(e) => setApiId(e.target.value)}
-                      className="w-full bg-black/50 border border-slate-700 rounded p-2 text-white text-sm font-mono"
+                      className={`w-full rounded p-2 text-sm font-mono transition-all ${isLight ? "bg-white text-slate-900 shadow-inner" : "bg-black/50 text-white"}`}
+                      style={{
+                        border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
+                      }}
                       placeholder="123456"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-400 font-mono">
+                    <label className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">
                       API HASH
                     </label>
                     <input
                       type="text"
                       value={apiHash}
                       onChange={(e) => setApiHash(e.target.value)}
-                      className="w-full bg-black/50 border border-slate-700 rounded p-2 text-white text-sm font-mono"
+                      className={`w-full rounded p-2 text-sm font-mono transition-all ${isLight ? "bg-white text-slate-900 shadow-inner" : "bg-black/50 text-white"}`}
+                      style={{
+                        border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
+                      }}
                       placeholder="abcdef123456..."
                     />
                   </div>
@@ -233,7 +259,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               )}
 
               <div>
-                <label className="text-[10px] text-slate-400 font-mono">
+                <label className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">
                   PHONE NUMBER (International Format)
                 </label>
                 <div className="relative">
@@ -245,7 +271,10 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                     type="text"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full bg-black/50 border border-slate-700 rounded p-2 pl-10 text-white text-sm font-mono"
+                    className={`w-full rounded p-2 pl-10 text-sm font-mono transition-all ${isLight ? "bg-white text-slate-900 shadow-inner" : "bg-black/50 text-white"}`}
+                    style={{
+                      border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
+                    }}
                     placeholder="+1234567890"
                   />
                 </div>
@@ -254,7 +283,11 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={RequestCode}
                 disabled={loading}
-                className={`w-full py-3 ${themeBg} hover:opacity-80 border ${themeBorder} ${themePrimary} font-bold tracking-widest rounded transition-all`}
+                className={`w-full py-3 font-bold tracking-widest rounded transition-all flex items-center justify-center gap-2 ${isLight ? "hover:bg-black/5" : "hover:opacity-80"} ${themePrimary}`}
+                style={{
+                  border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.3) : setHexAlpha(themeHex, 0.5)}`,
+                  backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
+                }}
               >
                 {loading ? "CONNECTING..." : "SEND CODE"}
               </button>
@@ -262,12 +295,12 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
           )}
 
           {step === "CODE" && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
-              <div className={`${themePrimary} font-mono text-sm text-center`}>
+            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 text-center">
+              <div className={`${themePrimary} font-mono text-sm`}>
                 Code sent to your Telegram app/SMS
               </div>
-              <div>
-                <label className="text-[10px] text-slate-400 font-mono">
+              <div className="text-left">
+                <label className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">
                   AUTH CODE
                 </label>
                 <div className="relative">
@@ -279,7 +312,10 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                     type="text"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="w-full bg-black/50 border border-slate-700 rounded p-2 pl-10 text-white text-sm font-mono tracking-widest"
+                    className={`w-full rounded p-2 pl-10 text-sm font-mono tracking-widest transition-all ${isLight ? "bg-white text-slate-900 shadow-inner" : "bg-black/50 text-white"}`}
+                    style={{
+                      border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
+                    }}
                     placeholder="12345"
                   />
                 </div>
@@ -287,7 +323,11 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={VerifyCode}
                 disabled={loading}
-                className={`w-full py-3 ${themeBg} hover:bg-cyan-500/20 border ${themeBorder} text-cyan-400 font-bold tracking-widest rounded transition-all`}
+                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-black/5" : "hover:bg-cyan-500/20"} ${themePrimary}`}
+                style={{
+                  border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.3) : setHexAlpha(themeHex, 0.5)}`,
+                  backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
+                }}
               >
                 {loading ? "VERIFYING..." : "VERIFY LOGIN"}
               </button>
@@ -295,12 +335,12 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
           )}
 
           {step === "PASSWORD" && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
-              <div className="text-center text-red-400 font-mono text-sm">
+            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 text-center">
+              <div className="text-red-400 font-mono text-sm font-bold">
                 2FA Required
               </div>
-              <div>
-                <label className="text-[10px] text-slate-400 font-mono">
+              <div className="text-left">
+                <label className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">
                   CLOUD PASSWORD
                 </label>
                 <div className="relative">
@@ -312,7 +352,10 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-black/50 border border-slate-700 rounded p-2 pl-10 text-white text-sm font-mono"
+                    className={`w-full rounded p-2 pl-10 text-sm font-mono transition-all ${isLight ? "bg-white text-slate-900 shadow-inner" : "bg-black/50 text-white"}`}
+                    style={{
+                      border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
+                    }}
                     placeholder="********"
                   />
                 </div>
@@ -320,7 +363,11 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={VerifyCode}
                 disabled={loading}
-                className={`w-full py-3 ${themeBg} hover:bg-cyan-500/20 border ${themeBorder} text-cyan-400 font-bold tracking-widest rounded transition-all`}
+                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-black/5" : "hover:bg-cyan-500/20"} ${themePrimary}`}
+                style={{
+                  border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.3) : setHexAlpha(themeHex, 0.5)}`,
+                  backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
+                }}
               >
                 {loading ? "UNLOCKING..." : "UNLOCK"}
               </button>
@@ -330,20 +377,21 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
           {step === "READY" && (
             <div className="space-y-6 animate-in fade-in zoom-in-95">
               <div
-                className={`flex flex-col items-center justify-center p-6 border border-dashed ${themeBorder}/30 rounded`}
+                className={`flex flex-col items-center justify-center p-6 rounded transition-colors`}
                 style={{
-                  backgroundColor: `${themeHex}0d`,
+                  border: `1px dashed ${isLight ? setHexAlpha(themeHex, 0.15) : setHexAlpha(themeHex, 0.3)}`,
+                  backgroundColor: isLight ? setHexAlpha(themeHex, 0.03) : setHexAlpha(themeHex, 0.05),
                 }}
               >
                 <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4 animate-pulse"
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4 animate-pulse transition-colors"
                   style={{
-                    backgroundColor: `${themeHex}33`,
+                    backgroundColor: isLight ? setHexAlpha(themeHex, 0.1) : setHexAlpha(themeHex, 0.15),
                   }}
                 >
                   <Wifi size={32} className={themePrimary} />
                 </div>
-                <h3 className="text-lg font-bold text-white tracking-widest">
+                <h3 className={`text-lg font-bold tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>
                   LUCA LINK ACTIVE
                 </h3>
                 <p className={`text-sm opacity-60 font-mono ${themePrimary}`}>
@@ -352,7 +400,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] text-slate-400 font-mono">
+                <label className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">
                   SEND MESSAGE (TEST)
                 </label>
                 <input
@@ -360,7 +408,10 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                   value={target}
                   onChange={(e) => setTarget(e.target.value)}
                   placeholder="@username or phone"
-                  className="w-full bg-black/50 border border-slate-700 rounded p-2 text-white text-xs font-mono mb-2"
+                  className={`w-full rounded p-2 text-xs font-mono mb-2 transition-all ${isLight ? "bg-white text-slate-900 shadow-inner" : "bg-black/50 text-white"}`}
+                  style={{
+                    border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
+                  }}
                 />
                 <div className="flex gap-2">
                   <input
@@ -368,11 +419,18 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Message..."
-                    className="flex-1 bg-black/50 border border-slate-700 rounded p-2 text-white text-xs font-mono"
+                    className={`flex-1 rounded p-2 text-xs font-mono transition-all ${isLight ? "bg-white text-slate-900 shadow-inner" : "bg-black/50 text-white"}`}
+                    style={{
+                      border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
+                    }}
                   />
                   <button
                     onClick={SendMessage}
-                    className={`p-2 ${themeBg} border ${themeBorder}/30 rounded ${themePrimary} hover:opacity-80`}
+                    className={`p-2 rounded transition-all ${themePrimary} ${isLight ? "hover:bg-black/5" : "hover:opacity-80"}`}
+                    style={{
+                      border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.2) : setHexAlpha(themeHex, 0.3)}`,
+                      backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
+                    }}
                   >
                     <Send size={16} />
                   </button>

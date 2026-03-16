@@ -33,8 +33,6 @@ interface OperationsSidebarProps {
   isMobile: boolean;
   activeMobileTab: string;
   isListeningAmbient: boolean;
-  isLocalCoreConnected: boolean;
-  isProcessing: boolean;
   setWirelessTab: (tab: "BLUETOOTH" | "WIFI") => void;
   setShowWirelessManager: (show: boolean) => void;
   setShowNetworkMap: (show: boolean) => void;
@@ -63,6 +61,7 @@ interface OperationsSidebarProps {
   setShowForexTerminal: (show: boolean) => void;
   setShowOsintDossier: (show: boolean) => void;
   setShowHackingTerminal: (show: boolean) => void;
+  connectionTier?: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
 }
 
 const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
@@ -70,7 +69,6 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
   isMobile,
   activeMobileTab,
   isListeningAmbient,
-  isLocalCoreConnected,
   setWirelessTab,
   setShowWirelessManager,
   setShowNetworkMap,
@@ -95,6 +93,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
   setShowForexTerminal,
   setShowOsintDossier,
   setShowHackingTerminal,
+  connectionTier = "LOCAL",
 }) => {
   return (
     <section
@@ -139,7 +138,8 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
       >
         <SystemMonitor
           audioListenMode={isListeningAmbient}
-          connected={isLocalCoreConnected}
+          connected={connectionTier !== "OFFLINE"}
+          connectionTier={connectionTier}
           theme={theme}
         />
       </div>
@@ -148,13 +148,13 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {/* Agent Operations */}
         <div
-          className={`p-4 rounded-md relative overflow-hidden group`}
+          className={`p-4 rounded-md relative overflow-hidden group border`}
           style={{
             ...getGlassStyle(theme, false),
             background:
               theme.themeName?.toLowerCase() === "lucagent"
-                ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.3))" // maintain relative dimming
-                : "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.25) * 0.3))", // maintain relative dimming
+                ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.3))" 
+                : "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.25) * 0.3))", 
           }}
         >
           <div className={`absolute top-0 right-0 p-1 ${theme.primary}`}>

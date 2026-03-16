@@ -6,12 +6,12 @@ import { THEME_PALETTE, setHexAlpha } from "../../config/themeColors";
 
 interface HologramFaceProps {
   step:
-    | "BOOT"
-    | "LEGAL"
+    | "KERNEL_AWAKENING"
+    | "DIRECTIVE_ALIGNMENT"
     | "THEME"
-    | "IDENTITY"
+    | "NEURAL_HANDSHAKE"
     | "FACE_SCAN"
-    | "BRIDGE"
+    | "COGNITIVE_CORE_SELECTION"
     | "HARDWARE_SCAN"
     | "OLLAMA_INSTALL"
     | "OLLAMA_WAKE"
@@ -65,7 +65,13 @@ const HologramFace: React.FC<HologramFaceProps> = ({ step, themeHex }) => {
           filter: `drop-shadow(0 0 60px ${glow}) drop-shadow(0 0 100px ${glow})`,
         }}
       >
-        <div className="w-full h-full max-w-[800px] max-h-[800px]">
+        <div 
+          className="w-full h-full"
+          style={{
+            maxWidth: "clamp(30rem, 110vmin, 80rem)",
+            maxHeight: "clamp(30rem, 110vmin, 80rem)",
+          }}
+        >
           <HologramScene
             color={color}
             audioLevel={step === "CALIBRATION" ? 150 : 0}
@@ -79,8 +85,10 @@ const HologramFace: React.FC<HologramFaceProps> = ({ step, themeHex }) => {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="absolute w-[400px] h-[400px] rounded-full border-2 opacity-20 animate-ping"
+              className="absolute rounded-full border-2 opacity-20 animate-ping"
               style={{
+                width: "min(400px, 60vmin)",
+                height: "min(400px, 60vmin)",
                 borderColor: color,
                 animationDelay: `${i * 0.6}s`,
                 animationDuration: "3s",

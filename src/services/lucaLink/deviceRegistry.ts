@@ -127,6 +127,7 @@ export class DeviceRegistryService {
       trustLevel: existing?.trustLevel || 50, // Start at 50% trust
       metadata: deviceData.metadata || ({} as DeviceMetadata),
       publicKey: deviceData.publicKey,
+      identityPublicKey: deviceData.identityPublicKey,
     };
 
     this.devices[device.id] = device;
@@ -270,7 +271,7 @@ export class DeviceRegistryService {
     // Score each candidate
     const scored = candidates.map((device) => ({
       device,
-      score: this.scoreDevice(device, requiredCapability),
+      score: this.scoreDevice(device),
     }));
 
     // Sort by score (highest first)
@@ -342,12 +343,18 @@ export class DeviceRegistryService {
     this.emit("device:updated", device);
   }
 
-  private scoreDevice(device: Device, capability: string): number {
+  private scoreDevice(device: Device): number {
     let score = 0;
 
     // Trust level (0-100)
     score += this.calculateTrustScore(device);
-
+ 
+    // --- IDENTITY BOOST (Futuristic Mesh Vision) ---
+    // Prefer devices that participate in the secure identity mesh
+    if (device.identityPublicKey) {
+      score += 25;
+    }
+ 
     // Battery level (if available, 0-30 points)
     if (device.metadata.battery) {
       score += (device.metadata.battery / 100) * 30;

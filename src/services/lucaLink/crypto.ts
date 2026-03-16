@@ -2,7 +2,6 @@ import * as naclModule from "tweetnacl";
 import {
   encodeBase64,
   decodeUTF8,
-  encodeUTF8,
   decodeBase64,
 } from "tweetnacl-util";
 import CryptoJS from "crypto-js";
@@ -119,7 +118,7 @@ export class CryptoService {
   }
 
   /**
-   * Verify a message signature
+   * HMAC Verification
    */
   static verifySignature(
     message: string,
@@ -128,6 +127,44 @@ export class CryptoService {
   ): boolean {
     const expectedSignature = this.sign(message, sharedSecret);
     return signature === expectedSignature;
+  }
+
+  /**
+   * Generate an Ed25519 identity key pair
+   */
+  static generateIdentityKeyPair(): KeyPair {
+    const keyPair = nacl.sign.keyPair();
+    return {
+      publicKey: keyPair.publicKey,
+      secretKey: keyPair.secretKey,
+    };
+  }
+
+  /**
+   * Sign a payload using Ed25519
+   */
+  static signPayload(payload: any, secretKey: Uint8Array): string {
+    const message = decodeUTF8(JSON.stringify(payload));
+    const signature = nacl.sign.detached(message, secretKey);
+    return encodeBase64(signature);
+  }
+
+  /**
+   * Verify an Ed25519 signature
+   */
+  static verifyPayload(
+    payload: any,
+    signature: string,
+    publicKey: Uint8Array
+  ): boolean {
+    try {
+      const message = decodeUTF8(JSON.stringify(payload));
+      const sig = decodeBase64(signature);
+      return nacl.sign.detached.verify(message, sig, publicKey);
+    } catch (e) {
+      console.error("[CryptoService] Signature verification error:", e);
+      return false;
+    }
   }
 
   /**
@@ -189,7 +226,7 @@ export class CryptoService {
     // Parse JSON
     try {
       return JSON.parse(decrypted);
-    } catch (e) {
+    } catch {
       throw new Error("Failed to parse decrypted message");
     }
   }

@@ -120,6 +120,7 @@ export class AnthropicAdapter implements LLMProvider {
       }
       if (msg.role === "model") {
         const content: any[] = [];
+        if (msg.thought) content.push({ type: "thinking", thinking: msg.thought, signature: msg.thought_signature });
         if (msg.content) content.push({ type: "text", text: msg.content });
         if (msg.toolCalls) {
           msg.toolCalls.forEach((tc) => {
@@ -192,6 +193,11 @@ export class AnthropicAdapter implements LLMProvider {
       }));
     }
 
-    return { text, toolCalls };
+    // Handle Thinking Block (Claude-specific)
+    const thinkingBlock = response.content.find((c) => c.type === "thinking");
+    const thought = thinkingBlock && "thinking" in thinkingBlock ? (thinkingBlock as any).thinking : undefined;
+    const thought_signature = thinkingBlock && "signature" in thinkingBlock ? (thinkingBlock as any).signature : undefined;
+
+    return { text, toolCalls, thought, thought_signature };
   }
 }

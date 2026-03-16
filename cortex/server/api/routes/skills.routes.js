@@ -4,6 +4,8 @@ import path from 'path';
 import yaml from 'js-yaml';
 import { spawn } from 'child_process';
 import multer from 'multer';
+import { signatureService } from '../../services/signatureService.js';
+import { logger } from '../../utils/logger.js';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -69,6 +71,14 @@ const findMainScript = (skillPath, language) => {
     return null;
 };
 
+// Helper: Generate skill payload for signing
+const generateSkillPayload = (skillDir, skillMd, language) => {
+    const scriptName = language === 'python' ? 'main.py' : 'main.js';
+    const scriptPath = path.join(skillDir, scriptName);
+    const scriptContent = fs.existsSync(scriptPath) ? fs.readFileSync(scriptPath, 'utf8') : '';
+    return `${skillMd}\n---\n${scriptContent}`;
+};
+
 // Create skill (supports both legacy and Agent Skills format)
 router.post('/create', (req, res) => {
     const { name, code, description, language, inputs, version, format } = req.body;
@@ -128,16 +138,28 @@ See \`main.${language === 'python' ? 'py' : 'js'}\` for the executable code.
             const scriptName = language === 'python' ? 'main.py' : 'main.js';
             fs.writeFileSync(path.join(skillDir, scriptName), code || '# Add your code here');
             
+            // Generate and save signature
+            const payload = generateSkillPayload(skillDir, skillMd, language);
+            const signature = signatureService.signSkill(payload);
+            fs.writeFileSync(path.join(skillDir, 'SIGNATURE.bin'), signature);
+            logger.info('SKILLS', `Signed new skill: ${name}`, { slug: skillSlug });
+
             res.json({ 
                 success: true, 
                 path: skillDir,
-                format: 'agent-skills'
+                format: 'agent-skills',
+                signature: signature
             });
         } else {
             // Legacy format (single file)
             const skillPath = path.join(SKILLS_DIR, `${name}.js`);
             fs.writeFileSync(skillPath, code);
-            res.json({ success: true, path: skillPath, format: 'legacy' });
+
+            // Sign legacy skill
+            const signature = signatureService.signSkill(code);
+            fs.writeFileSync(`${skillPath}.sig`, signature);
+
+            res.json({ success: true, path: skillPath, format: 'legacy', signature: signature });
         }
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -212,6 +234,22 @@ router.post('/execute', async (req, res) => {
             if (!scriptPath) {
                 return res.status(404).json({ error: 'Main script not found' });
             }
+
+            // --- SIGNATURE VERIFICATION ---
+            const signaturePath = path.join(skillDir, 'SIGNATURE.bin');
+            if (!fs.existsSync(signaturePath)) {
+                return res.status(403).json({ error: 'UNAUTHORIZED: Skill is unsigned. Signature verification failed.' });
+            }
+
+            const signature = fs.readFileSync(signaturePath, 'utf8');
+            const skillMd = fs.readFileSync(path.join(skillDir, 'SKILL.md'), 'utf8');
+            const payload = generateSkillPayload(skillDir, skillMd, skill.language);
+            
+            if (!signatureService.verifySkill(payload, signature)) {
+                console.error(`[SKILLS] Blocked execution of tampered skill: ${name}`);
+                return res.status(403).json({ error: 'SECURITY ALERT: Skill signature mismatch. Possible tampering detected.' });
+            }
+            console.log(`[SKILLS] Verified signature for: ${name}`);
             
             // Execute based on language
             const command = skill.language === 'python' ? 'python3' : 'node';
@@ -239,7 +277,7 @@ router.post('/execute', async (req, res) => {
                 try {
                     const result = JSON.parse(output);
                     res.json({ result });
-                } catch (e) {
+                } catch {
                     res.json({ result: output });
                 }
             });
@@ -252,6 +290,17 @@ router.post('/execute', async (req, res) => {
             const skillPath = path.join(SKILLS_DIR, `${name}.js`);
             if (!fs.existsSync(skillPath)) {
                 return res.status(404).json({ error: 'Skill not found' });
+            }
+
+            // Verify Legacy Signature
+            const sigPath = `${skillPath}.sig`;
+            if (!fs.existsSync(sigPath)) {
+                return res.status(403).json({ error: 'UNAUTHORIZED: Legacy skill is unsigned.' });
+            }
+            const signature = fs.readFileSync(sigPath, 'utf8');
+            const code = fs.readFileSync(skillPath, 'utf8');
+            if (!signatureService.verifySkill(code, signature)) {
+                return res.status(403).json({ error: 'SECURITY ALERT: Legacy skill signature mismatch.' });
             }
             
             const skillModule = await import(`file://${skillPath}`);
@@ -319,11 +368,11 @@ Respond ONLY with valid JSON in this exact format:
             inputs: skillData.inputs || [],
             language: language
         });
-    } catch (error) {
-        console.error('[SKILLS] Generation failed:', error);
+    } catch (e) {
+        console.error('[SKILLS] Generation failed:', e);
         res.status(500).json({ 
             error: 'Skill generation failed',
-            details: error.message 
+            details: e.message 
         });
     }
 });
@@ -520,7 +569,7 @@ router.post('/imprint', upload.single('video'), async (req, res) => {
     let events = [];
     try {
         events = JSON.parse(eventsStr || '[]');
-    } catch (e) {
+    } catch {
         console.warn('[SKILLS] Failed to parse events for imprint');
     }
     
@@ -599,12 +648,17 @@ export async function main(args) {
 `;
         fs.writeFileSync(path.join(skillPath, 'main.js'), mainJs);
 
-        console.log(`[SKILLS] Successfully registered luca imprint at: ${skillPath}`);
-        res.json({ success: true, path: skillPath, slug });
+        // Sign Imprint
+        const payload = generateSkillPayload(skillPath, skillMd, 'javascript');
+        const signature = signatureService.signSkill(payload);
+        fs.writeFileSync(path.join(skillPath, 'SIGNATURE.bin'), signature);
 
-    } catch (error) {
-        console.error('[SKILLS] Imprint saving failed:', error);
-        res.status(500).json({ error: error.message });
+        console.log(`[SKILLS] Successfully registered and signed luca imprint at: ${skillPath}`);
+        res.json({ success: true, path: skillPath, slug, signature });
+
+    } catch (e) {
+        console.error('[SKILLS] Imprint saving failed:', e);
+        res.status(500).json({ error: e.message });
     }
 });
 

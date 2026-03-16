@@ -14,6 +14,11 @@ export interface TraceEvent {
   data?: any;
   duration?: number;
   error?: string;
+  snapshot?: {
+    terminal?: string[];
+    browserScreenshot?: string;
+  };
+  metadata?: Record<string, any>;
 }
 
 export interface TraceContext {
@@ -213,6 +218,22 @@ class LucaTracingService {
     this.enabled = enabled;
     console.log(`[Tracing] ${enabled ? "Enabled" : "Disabled"}`);
   }
+
+  /**
+   * Log a snapshot for a task
+   */
+  logSnapshot(traceId: string, agentId: string, snapshot: { terminal?: string[]; browserScreenshot?: string }): void {
+    if (!this.enabled) return;
+
+    const events = this.traces.get(traceId) || [];
+    const lastEvent = events[events.length - 1];
+
+    if (lastEvent) {
+      lastEvent.snapshot = { ...lastEvent.snapshot, ...snapshot };
+    } else {
+      this.log(traceId, agentId, "snapshot_update", { snapshot });
+    }
+  }
 }
 
 // Singleton instance
@@ -249,7 +270,6 @@ export function trace(eventName?: string) {
         );
         return result;
       } catch (error) {
-        const duration = Date.now() - startTime;
         tracingService.logError(
           traceId,
           agentId,

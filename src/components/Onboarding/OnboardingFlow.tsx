@@ -5,7 +5,7 @@ import HologramFace from "./HologramFace";
 import ModeSelect, { ConversationMode } from "./ModeSelect";
 import ConversationalOnboarding from "./ConversationalOnboarding";
 import FaceScan from "./FaceScan";
-import LegalStep from "./LegalStep";
+import ConstitutionalAlignment from "./ConstitutionalAlignment";
 import ThemeSelectionStep from "./ThemeSelectionStep";
 import {
   ArrowRight,
@@ -26,12 +26,12 @@ import { useMobile } from "../../hooks/useMobile";
 import { modelManager } from "../../services/ModelManagerService";
 
 type Step =
-  | "BOOT"
-  | "LEGAL"
+  | "KERNEL_AWAKENING"
+  | "DIRECTIVE_ALIGNMENT"
   | "THEME"
-  | "IDENTITY"
+  | "NEURAL_HANDSHAKE"
   | "FACE_SCAN"
-  | "BRIDGE"
+  | "COGNITIVE_CORE_SELECTION"
   | "HARDWARE_SCAN"
   | "OLLAMA_INSTALL"
   | "OLLAMA_WAKE"
@@ -62,7 +62,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   theme,
   onComplete,
 }) => {
-  const [step, setStep] = useState<Step>("BOOT");
+  const [step, setStep] = useState<Step>("KERNEL_AWAKENING");
   const isMobile = useMobile();
 
   // Form State
@@ -113,7 +113,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   useEffect(() => {
     // Only allow parent prop sync if we are in a step that doesn't manage its own theme state
     // or if the onboarding is already completed.
-    if (step === "BOOT" || step === "LEGAL") {
+    if (step === "KERNEL_AWAKENING" || step === "DIRECTIVE_ALIGNMENT") {
       const savedTheme = settingsService.get("general").theme as string;
       if (savedTheme && savedTheme !== currentThemeName) {
         setCurrentThemeName(savedTheme);
@@ -126,12 +126,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   }, [theme.hex, step]);
 
   useEffect(() => {
-    if (step === "BOOT") {
+    if (step === "KERNEL_AWAKENING") {
       const messages = [
-        "INITIALIZING LUCA INTERFACE...",
-        "ESTABLISHING SECURE CONNECTION...",
-        "LOADING COGNITIVE MODULES...",
-        "SYSTEM ONLINE.",
+        "KERNEL AWAKENING IN PROGRESS...",
+        "STABILIZING NEURAL TENSORS...",
+        "GENERATING IDENTITY KEYPAIR [ED25519]...",
+        "SOVEREIGN AGENT INITIALIZED.",
       ];
 
       let i = 0;
@@ -142,7 +142,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           i++;
         } else {
           clearInterval(interval);
-          setTimeout(() => setStep("LEGAL"), 1000);
+          setTimeout(() => setStep("DIRECTIVE_ALIGNMENT"), 1000);
         }
       }, 800);
 
@@ -437,7 +437,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     if (faceData) {
       settingsService.saveFaceData(faceData);
     }
-    setStep("BRIDGE");
+    setStep("COGNITIVE_CORE_SELECTION");
   };
 
   const handleModeSelect = async (mode: ConversationMode) => {
@@ -514,22 +514,38 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       />
 
       {/* Hologram Face is visible during hardware scanning, downloads, and voice conversation */}
-      {!["BOOT", "LEGAL"].includes(step) &&
+      {!["KERNEL_AWAKENING", "DIRECTIVE_ALIGNMENT"].includes(step) &&
         !(step === "CONVERSATION" && conversationMode === "text") && (
           <HologramFace step={step} themeHex={currentThemeHex} />
         )}
 
       {/* Primary UI Layer */}
       <div
-        className={`z-10 w-full relative transition-all duration-700 ease-in-out ${
+        className={`z-10 relative transition-all duration-700 ease-in-out mx-auto flex flex-col items-center justify-center ${
           step === "CONVERSATION"
-            ? "max-w-5xl h-[85vh] flex flex-col px-4"
+            ? conversationMode === "voice"
+              ? "w-full h-full"
+              : isMobile
+                ? "w-[95vw] h-[90vh] px-4"
+                : "w-[min(120vmin,1200px)] h-[min(90vmin,900px)]"
             : step === "THEME"
-              ? "max-w-2xl p-4"
-              : "max-w-md p-4 sm:p-6"
+              ? isMobile
+                ? "w-[90vw]"
+                : "w-[min(95vw,1100px)]"
+              : isMobile
+                ? "w-[85vw]"
+                : "w-[min(90vw,1000px)]"
         }`}
+        style={{
+          padding:
+            step === "CONVERSATION" ? "0" : "clamp(0.5rem, 2vmin, 1.5rem)",
+          transform:
+            step === "CONVERSATION" && conversationMode === "voice"
+              ? "none"
+              : "translateZ(0)",
+        }}
       >
-        {step === "BOOT" && (
+        {step === "KERNEL_AWAKENING" && (
           <div className="space-y-2">
             {bootText.map((text, i) => (
               <div
@@ -547,8 +563,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           </div>
         )}
 
-        {step === "LEGAL" && (
-          <LegalStep
+        {step === "DIRECTIVE_ALIGNMENT" && (
+          <ConstitutionalAlignment
             themeHex={currentThemeHex}
             isLightTheme={isLightTheme}
             onComplete={() => {
@@ -562,7 +578,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <ThemeSelectionStep
             onComplete={() => {
               soundService.play("SUCCESS");
-              setStep("IDENTITY");
+              setStep("NEURAL_HANDSHAKE");
             }}
             onThemeChange={(newTheme) => {
               soundService.play("HOVER");
@@ -583,26 +599,42 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           />
         )}
 
-        {step === "IDENTITY" && (
+        {step === "NEURAL_HANDSHAKE" && (
           <form
             onSubmit={handleIdentitySubmit}
-            className="space-y-6 animate-fade-in-up"
+            className="animate-fade-in-up w-full max-w-sm mx-auto"
+            style={{ gap: "3vmin", display: "flex", flexDirection: "column" }}
           >
-            <div className="text-center space-y-2">
+            <div
+              className="text-center"
+              style={{
+                gap: "1.5vmin",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <Terminal
-                className="w-12 h-12 mx-auto mb-4"
-                style={{ color: currentThemeHex }}
+                className="mx-auto mb-2"
+                style={{
+                  color: currentThemeHex,
+                  width: "clamp(2rem, 10vmin, 4rem)",
+                  height: "clamp(2rem, 10vmin, 4rem)",
+                }}
               />
               <h1
-                className="text-2xl font-bold tracking-widest uppercase"
-                style={{ color: currentThemeHex }}
+                className="font-bold tracking-widest uppercase"
+                style={{
+                  color: currentThemeHex,
+                  fontSize: "clamp(1.2rem, 4.5vmin, 2rem)",
+                }}
               >
-                Identity Verification
+                Neural Handshake
               </h1>
               <p
-                className={`${isLightTheme ? "text-slate-800" : "text-gray-200"} text-xs text-center font-medium`}
+                className={`${isLightTheme ? "text-slate-800" : "text-gray-200"} text-center font-medium`}
+                style={{ fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)" }}
               >
-                Please identify yourself, Operator.
+                Define your operator designation...
               </p>
             </div>
 
@@ -618,7 +650,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full border rounded-xl p-3 text-white outline-none transition-all text-center text-lg placeholder-gray-500 backdrop-blur-md"
+                className={`w-full border rounded-xl p-3 ${isLightTheme ? "text-slate-900" : "text-white"} outline-none transition-all text-center text-lg placeholder-gray-500 backdrop-blur-md`}
                 placeholder="ENTER DESIGNATION"
                 style={{
                   borderColor: "rgba(255,255,255,0.2)",
@@ -637,8 +669,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
             <button
               type="submit"
-              disabled={!name}
-              className="w-full border rounded-xl py-3 uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md"
+              disabled={!name.trim()}
+              className="w-full max-w-sm mx-auto border rounded-xl py-3 uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md"
               style={{
                 borderColor: "rgba(255,255,255,0.2)",
                 backgroundColor: hexToRgba(currentThemeHex, 0.1),
@@ -651,13 +683,15 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   0.1,
                 )}, inset 0 1px 0 ${hexToRgba(currentThemeHex, 0.15)}`,
                 color: name
-                  ? currentThemeHex
+                  ? isLightTheme
+                    ? "#000"
+                    : currentThemeHex
                   : isLightTheme
                     ? "rgba(0,0,0,0.5)"
                     : "rgba(255,255,255,0.7)",
               }}
             >
-              Confirm Identity{" "}
+              Initialize Protocol{" "}
               <ArrowRight
                 size={16}
                 className="group-hover:translate-x-1 transition-transform"
@@ -666,21 +700,39 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           </form>
         )}
 
-        {step === "BRIDGE" && (
-          <div className="space-y-8 animate-fade-in-up">
-            <div className="text-center space-y-2">
+        {step === "COGNITIVE_CORE_SELECTION" && (
+          <div
+            className="animate-fade-in-up w-full"
+            style={{ gap: "4vmin", display: "flex", flexDirection: "column" }}
+          >
+            <div
+              className="text-center"
+              style={{
+                gap: "1.5vmin",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <Key
-                className="w-12 h-12 mx-auto mb-4"
-                style={{ color: currentThemeHex }}
+                className="mx-auto mb-2"
+                style={{
+                  color: currentThemeHex,
+                  width: "clamp(2rem, 10vmin, 4rem)",
+                  height: "clamp(2rem, 10vmin, 4rem)",
+                }}
               />
               <h1
-                className="text-2xl font-bold tracking-widest uppercase"
-                style={{ color: currentThemeHex }}
+                className="font-bold tracking-widest uppercase"
+                style={{
+                  color: currentThemeHex,
+                  fontSize: "clamp(1.2rem, 4.5vmin, 2rem)",
+                }}
               >
-                Luca Prime
+                Cognitive Core
               </h1>
               <p
-                className={`${isLightTheme ? "text-slate-800" : "text-gray-200"} text-xs max-w-sm mx-auto font-medium`}
+                className={`${isLightTheme ? "text-slate-800" : "text-gray-200"} max-w-sm mx-auto font-medium`}
+                style={{ fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)" }}
               >
                 Luca can operate entirely offline or leverage the managed Luca
                 Cloud for advanced reasoning and multimodal agency.
@@ -688,7 +740,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             </div>
 
             <div
-              className={`border rounded-2xl p-6 gap-6 flex flex-col backdrop-blur-xl transition-all duration-500 shadow-2xl ${showByok ? "max-w-lg" : "max-w-md"}`}
+              className={`border rounded-2xl p-6 gap-6 flex flex-col backdrop-blur-xl transition-all duration-500 shadow-2xl mx-auto w-full max-w-xl`}
               style={{
                 borderColor: "rgba(255, 255, 255, 0.12)",
                 background: `linear-gradient(135deg, ${hexToRgba(currentThemeHex, 0.08)} 0%, rgba(255, 255, 255, 0.02) 100%)`,
@@ -707,7 +759,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       </span>
                     </div>
                     <p
-                      className={`text-[9px] ${isLightTheme ? "text-slate-800" : "text-gray-300"} font-medium`}
+                      className={`text-[9px] ${isLightTheme ? "text-slate-800" : "text-white/80"} font-medium`}
                     >
                       Professional cloud intelligence managed directly by Luca
                       OS.
@@ -718,7 +770,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     type="button"
                     onClick={handleActivateCloud}
                     disabled={isActivating}
-                    className="w-full border rounded-xl py-5 uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group backdrop-blur-md"
+                    className="w-full max-w-md mx-auto border rounded-xl py-5 uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group backdrop-blur-md"
                     style={{
                       borderColor: "rgba(255, 255, 255, 0.15)",
                       backgroundColor: hexToRgba(currentThemeHex, 0.25),
@@ -730,7 +782,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         currentThemeHex,
                         0.2,
                       )}, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
-                      color: "#fff",
+                      color: isLightTheme ? "#000" : "#fff",
                     }}
                   >
                     {isActivating ? (
@@ -755,7 +807,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                       soundService.play("KEYSTROKE");
                       setShowByok(true);
                     }}
-                    className={`text-[10px] py-4 rounded-xl border border-white/10 hover:border-white/20 transition-all uppercase tracking-widest font-bold flex items-center justify-center gap-2`}
+                    className={`w-full max-w-md mx-auto text-[10px] py-4 rounded-xl border border-white/10 hover:border-white/20 transition-all uppercase tracking-widest font-bold flex items-center justify-center gap-2`}
                     style={{
                       backgroundColor: "rgba(255, 255, 255, 0.05)",
                       color: isLightTheme ? "#000" : "#fff",
@@ -829,8 +881,11 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         }}
                       >
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center p-1.5"
+                          className="rounded-full flex items-center justify-center"
                           style={{
+                            width: "clamp(2rem, 8vmin, 3.5rem)",
+                            height: "clamp(2rem, 8vmin, 3.5rem)",
+                            padding: "1.2vmin",
                             backgroundColor:
                               byokProvider === p.id
                                 ? p.color + "20"
@@ -845,7 +900,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                             }`}
                           />
                         </div>
-                        <span className="text-[8px] uppercase tracking-tighter">
+                        <span
+                          className="uppercase tracking-tighter"
+                          style={{
+                            fontSize: "clamp(0.5rem, 1.2vmin, 0.75rem)",
+                          }}
+                        >
                           {p.name}
                         </span>
                       </button>
@@ -884,11 +944,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     type="button"
                     onClick={handleActivateCloud}
                     disabled={!byokKeys[byokProvider] || isActivating}
-                    className="w-full border rounded-xl py-4 uppercase tracking-widest text-[11px] font-bold transition-all flex items-center justify-center gap-2 group disabled:opacity-30"
+                    className="w-full max-w-md mx-auto border rounded-xl py-4 uppercase tracking-widest text-[11px] font-bold transition-all flex items-center justify-center gap-2 group disabled:opacity-30"
                     style={{
                       borderColor: "rgba(255, 255, 255, 0.2)",
-                      backgroundColor: hexToRgba(currentThemeHex, 0.3),
-                      color: "#fff",
+                      backgroundColor: hexToRgba(
+                        currentThemeHex,
+                        isLightTheme ? 0.4 : 0.3,
+                      ),
+                      color: isLightTheme ? "#000" : "#fff",
                     }}
                   >
                     {isActivating ? "Verifying..." : "Link My Cloud Brain"}
@@ -902,7 +965,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   type="button"
                   onClick={handleGoLocal}
                   disabled={isActivating}
-                  className={`text-[9px] ${isLightTheme ? "text-slate-900 hover:text-black" : "text-gray-200 hover:text-white"} font-bold uppercase tracking-widest transition-all opacity-80 hover:opacity-100 flex items-center gap-1`}
+                  className={`w-full max-w-md mx-auto text-[9px] ${isLightTheme ? "text-slate-900 hover:text-black" : "text-gray-200 hover:text-white"} font-bold uppercase tracking-widest transition-all opacity-80 hover:opacity-100 flex items-center gap-1`}
                 >
                   <Shield size={10} />
                   Stay Local (Privacy Mode)
@@ -954,21 +1017,27 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <div className="text-center space-y-6 animate-fade-in-up w-full max-w-sm mx-auto">
             <div className="space-y-6">
               <div
-                className="w-16 h-16 border-4 border-t-transparent rounded-full animate-pulse animate-spin mx-auto mix-blend-screen"
+                className="border-4 border-t-transparent rounded-full animate-pulse animate-spin mx-auto mix-blend-screen"
                 style={{
+                  width: "clamp(2.5rem, 10vmin, 4.5rem)",
+                  height: "clamp(2.5rem, 10vmin, 4.5rem)",
                   borderColor: currentThemeHex,
                   borderTopColor: "transparent",
                 }}
               />
               <div className="space-y-2">
                 <h2
-                  className="text-xl font-bold tracking-widest uppercase"
-                  style={{ color: currentThemeHex }}
+                  className="font-bold tracking-widest uppercase"
+                  style={{
+                    color: currentThemeHex,
+                    fontSize: "clamp(1rem, 3vw, 1.25rem)",
+                  }}
                 >
                   Hardware Scan
                 </h2>
                 <p
-                  className={`text-xs ${isLightTheme ? "text-slate-700" : "text-white/60"}`}
+                  className={`${isLightTheme ? "text-slate-700" : "text-white/60"}`}
+                  style={{ fontSize: "clamp(0.6rem, 1.5vw, 0.75rem)" }}
                 >
                   Analyzing architecture tensors...
                 </p>
@@ -984,10 +1053,20 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               style={{ borderColor: hexToRgba(currentThemeHex, 0.4) }}
             >
               <div
-                className="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center bg-black/30 border-2"
-                style={{ borderColor: hexToRgba(currentThemeHex, 0.3) }}
+                className="rounded-2xl mx-auto flex items-center justify-center bg-black/30 border-2"
+                style={{
+                  borderColor: hexToRgba(currentThemeHex, 0.3),
+                  width: "clamp(3rem, 12vmin, 5rem)",
+                  height: "clamp(3rem, 12vmin, 5rem)",
+                }}
               >
-                <Cpu className="w-10 h-10" style={{ color: currentThemeHex }} />
+                <Cpu
+                  style={{
+                    color: currentThemeHex,
+                    width: "50%",
+                    height: "50%",
+                  }}
+                />
               </div>
 
               <div className="space-y-3">
@@ -1028,7 +1107,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     }
                   }}
                   disabled={isActivating}
-                  className="w-full flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 rounded-2xl py-5 border border-white/20 uppercase tracking-widest text-sm font-bold transition-all relative group overflow-hidden"
+                  className="w-full max-w-md mx-auto flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 rounded-2xl py-5 border border-white/20 uppercase tracking-widest text-sm font-bold transition-all relative group overflow-hidden"
                 >
                   <div
                     className="absolute inset-0 opacity-20 mix-blend-screen transition-opacity group-hover:opacity-40"
@@ -1049,7 +1128,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <button
                   type="button"
                   onClick={handleProceedWithCortex}
-                  className={`text-[10px] ${isLightTheme ? "text-slate-600 hover:text-black" : "text-white/40 hover:text-white"} uppercase tracking-widest font-bold transition-all`}
+                  className={`w-full max-w-md mx-auto text-[10px] ${isLightTheme ? "text-slate-600 hover:text-black" : "text-white/40 hover:text-white"} uppercase tracking-widest font-bold transition-all`}
                 >
                   No thanks, use native models
                 </button>
@@ -1097,7 +1176,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <button
                   type="button"
                   onClick={() => setStep("HARDWARE_SCAN")}
-                  className="w-full flex items-center justify-center gap-2 bg-black/20 hover:bg-black/40 rounded-xl py-3 border border-white/10 uppercase tracking-widest text-[10px] font-bold transition-all relative group overflow-hidden"
+                  className="w-full max-w-md mx-auto flex items-center justify-center gap-2 bg-black/20 hover:bg-black/40 rounded-xl py-3 border border-white/10 uppercase tracking-widest text-[10px] font-bold transition-all relative group overflow-hidden"
                 >
                   <div
                     className="absolute inset-0 opacity-20 mix-blend-screen transition-opacity group-hover:opacity-40"
@@ -1114,7 +1193,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <button
                   type="button"
                   onClick={handleProceedWithCortex}
-                  className={`w-full text-[10px] ${isLightTheme ? "text-slate-600 hover:text-slate-900" : "text-gray-500 hover:text-gray-300"} uppercase tracking-widest font-bold transition-colors`}
+                  className={`w-full max-w-md mx-auto text-[10px] ${isLightTheme ? "text-slate-600 hover:text-slate-900" : "text-gray-500 hover:text-gray-300"} uppercase tracking-widest font-bold transition-colors`}
                 >
                   Proceed with Native Download
                 </button>
@@ -1127,13 +1206,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <div className="space-y-6 animate-fade-in-up w-full max-w-md mx-auto relative z-10">
             <div className="text-center space-y-2 mb-8">
               <h2
-                className="text-2xl font-bold tracking-widest uppercase"
-                style={{ color: currentThemeHex }}
+                className="font-bold tracking-widest uppercase"
+                style={{
+                  color: currentThemeHex,
+                  fontSize: "clamp(1.2rem, 3.5vw, 1.5rem)",
+                }}
               >
-                Provisioning Stack
+                Core Integration
               </h2>
               <p
-                className={`text-xs ${isLightTheme ? "text-slate-700" : "text-white/60"} max-w-sm mx-auto`}
+                className={`${isLightTheme ? "text-slate-700" : "text-white/60"} max-w-sm mx-auto`}
+                style={{ fontSize: "clamp(0.6rem, 1.8vw, 0.75rem)" }}
               >
                 Downloading optimized cognitive modules.
               </p>
@@ -1220,7 +1303,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     "whisper-tiny",
                     "piper-amy",
                   ].filter(Boolean) as string[];
-
+                  // Clear progress and retry
+                  modelsToEnsure.forEach((id) => {
+                    setDownloadStates((prev) => ({
+                      ...prev,
+                      [id]: { progress: 0, status: "not_downloaded" },
+                    }));
+                  });
                   modelsToEnsure.forEach((id) => {
                     const m = modelManager.getModel(id);
                     if (
@@ -1232,9 +1321,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     }
                   });
                 }}
-                className="w-full border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl py-4 uppercase tracking-widest text-sm font-bold transition-all backdrop-blur-md mt-6"
+                className="w-full max-w-sm mx-auto border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl py-4 uppercase tracking-widest text-sm font-bold transition-all backdrop-blur-md mt-6 flex items-center justify-center gap-2"
               >
-                Retry Download
+                <Activity size={16} />
+                Retry Neural Sync
               </button>
             )}
           </div>
@@ -1270,10 +1360,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         {step === "COMPLETE" && (
           <div className="flex flex-col items-center justify-center space-y-6 animate-fade-in-up">
             <div
-              className="w-24 h-24 border-4 rounded-full flex items-center justify-center backdrop-blur-xl"
-              style={{ borderColor: currentThemeHex }}
+              className="border-4 rounded-full flex items-center justify-center backdrop-blur-xl"
+              style={{
+                borderColor: currentThemeHex,
+                width: "clamp(4rem, 15vmin, 7rem)",
+                height: "clamp(4rem, 15vmin, 7rem)",
+              }}
             >
-              <Check size={40} style={{ color: currentThemeHex }} />
+              <Check
+                style={{ color: currentThemeHex, width: "50%", height: "50%" }}
+              />
             </div>
             <div className="text-center space-y-2">
               <h2
@@ -1295,7 +1391,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       {/* OS Info Footer */}
       {!(step === "CONVERSATION" && conversationMode === "voice") && (
         <div
-          className={`absolute bottom-4 text-[10px] ${isLightTheme ? "text-slate-400" : "text-white/40"} font-mono tracking-widest flex items-center gap-2`}
+          className={`absolute bottom-4 text-[10px] ${isLightTheme ? "text-slate-500" : "text-white/60"} font-mono tracking-widest flex items-center gap-2`}
         >
           <div
             className="w-2 h-2 rounded-full animate-pulse"

@@ -7,16 +7,17 @@ import { PersonaConfig } from "../types";
 import { apiUrl } from "../config/api";
 
 /**
- * Get tools for persona - ALL tools are available, but specialized tools are prioritized
- * Returns all tools, but specialized tools are loaded/prioritized for the persona
+ * Get tools for persona - ONLY CORE tools are loaded into active session by default
+ * to optimize token usage. Other tools are discoverable via registry.
  */
 export function getToolsForPersona(
   persona: PersonaType,
   allTools: FunctionDeclaration[],
 ): FunctionDeclaration[] {
-  // ALL tools are available for all personas
-  // Specialized tools are just prioritized/loaded when switching
-  return allTools;
+  // Only return tools explicitly marked as CORE
+  // We filter by looking at the registry metadata if possible, 
+  // but since we only have FunctionDeclaration here, we rely on the registry to have pre-filtered.
+  return allTools; // Note: LucaService now passes only CORE tools to this
 }
 
 /**

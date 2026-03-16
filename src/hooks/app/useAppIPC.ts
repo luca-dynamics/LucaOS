@@ -41,6 +41,7 @@ interface UseAppIPCProps {
   setShowLinkedInManager: (val: boolean) => void;
   setShowDiscordManager: (val: boolean) => void;
   setShowYouTubeManager: (val: boolean) => void;
+  setShowWeChatManager: (val: boolean) => void;
   setShowRemoteModal: (val: boolean) => void;
   setActiveMobileDevice: (val: any) => void;
   setShowMobileManager: (val: boolean) => void;
@@ -77,6 +78,7 @@ export const useAppIPC = ({
   setShowLinkedInManager,
   setShowDiscordManager,
   setShowYouTubeManager,
+  setShowWeChatManager,
   setShowRemoteModal,
   setActiveMobileDevice,
   setShowMobileManager,
@@ -495,6 +497,7 @@ export const useAppIPC = ({
       ["LINKEDIN_LUCA_LINK", setShowLinkedInManager],
       ["DISCORD_LUCA_LINK", setShowDiscordManager],
       ["YOUTUBE_LUCA_LINK", setShowYouTubeManager],
+      ["WECHAT_LUCA_LINK", setShowWeChatManager],
     ];
     const handlers = triggers.map(([evt, setter]) => {
       const h = () => setter(true);

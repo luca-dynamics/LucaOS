@@ -16,11 +16,17 @@ import { apiUrl, WS_PORT, cortexUrl } from "../../config/api";
 import { useMobile } from "../../hooks/useMobile";
 import { lucaLink, LucaLinkState } from "../../services/lucaLinkService";
 import { qrScanner } from "../../services/qrScannerService";
+import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
 
 // Guest Access Section (Long Distance via Relay)
 const GuestAccessSection: React.FC<{
-  theme: { primary: string; hex: string; themeName: string };
+  theme: {
+    primary: string;
+    hex: string;
+    themeName: string;
+    isLight?: boolean;
+  };
   connected: boolean;
 }> = ({ theme, connected }) => {
   const [guestUrl, setGuestUrl] = useState<string | null>(null);
@@ -165,8 +171,8 @@ const GuestAccessSection: React.FC<{
         backgroundColor:
           theme.themeName?.toLowerCase() === "lucagent"
             ? "rgba(102,126,234,0.08)"
-            : "rgba(102,126,234,0.05)",
-        border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.15)" : theme.hex + "40"}`,
+            : setHexAlpha(theme.hex, 0.05),
+        border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.15)" : setHexAlpha(theme.hex, 0.25)}`,
       }}
     >
       <div
@@ -193,7 +199,7 @@ const GuestAccessSection: React.FC<{
           className={`w-full py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-50 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] hover:bg-black/[0.06]" : ""}`}
           style={{
             backgroundColor:
-              theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}20`,
+              theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
             border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.2)" : theme.hex}`,
             color: theme.themeName?.toLowerCase() === "lucagent" ? "#111827" : theme.hex,
           }}
@@ -207,6 +213,10 @@ const GuestAccessSection: React.FC<{
             <div className="flex justify-center">
               <div
                 className={`p-3 rounded-lg ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border border-black/10" : "bg-white/5"}`}
+                style={{
+                  backgroundColor: theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.05),
+                  borderColor: theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+                }}
               >
                 <img
                   src={guestQR}
@@ -227,7 +237,7 @@ const GuestAccessSection: React.FC<{
                   backgroundColor:
                     theme.themeName?.toLowerCase() === "lucagent"
                       ? "rgba(0,0,0,0.05)"
-                      : "rgba(255,255,255,0.1)",
+                      : setHexAlpha(theme.hex, 0.1),
                   color: theme.themeName?.toLowerCase() === "lucagent" ? "#1e293b" : theme.hex,
                 }}
               >
@@ -263,8 +273,16 @@ const GuestAccessSection: React.FC<{
       {showSecurityModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div
-            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white" : "bg-[#1a1a2e]"} border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/10" : "border-white/10"} rounded-xl p-6 max-w-sm w-full space-y-4`}
+            className={`${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white" : "bg-[#1a1a2e]"} border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/10" : ""}`}
             style={{
+              borderColor: theme.themeName?.toLowerCase() === "lucagent" ? undefined : setHexAlpha(theme.hex, 0.1),
+              borderRadius: "0.75rem",
+              padding: "1.5rem",
+              maxWidth: "24rem",
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
               boxShadow:
                 theme.themeName?.toLowerCase() === "lucagent"
                   ? "0 10px 40px rgba(0,0,0,0.1)"
@@ -274,7 +292,7 @@ const GuestAccessSection: React.FC<{
             <div className="flex items-center gap-3 mb-2">
               <div
                 className="p-2 rounded-full"
-                style={{ backgroundColor: `${theme.hex}20` }}
+                style={{ backgroundColor: setHexAlpha(theme.hex, 0.12) }}
               >
                 <Shield className="w-5 h-5" style={{ color: theme.hex }} />
               </div>
@@ -303,10 +321,10 @@ const GuestAccessSection: React.FC<{
                   className="p-3 rounded-lg flex items-center gap-3"
                   style={{
                     backgroundColor: pinEnabled
-                      ? "rgba(74, 222, 128, 0.1)"
-                      : "rgba(248, 113, 113, 0.1)",
+                      ? (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(74, 222, 128, 0.05)" : "rgba(74, 222, 128, 0.1)")
+                      : (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(248, 113, 113, 0.05)" : "rgba(248, 113, 113, 0.1)"),
                     border: `1px solid ${
-                      pinEnabled ? "#4ade8040" : "#f8717140"
+                      pinEnabled ? (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(74, 222, 128, 0.2)" : "rgba(74, 222, 128, 0.25)") : (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(248, 113, 113, 0.2)" : "rgba(248, 113, 113, 0.25)")
                     }`,
                   }}
                 >
@@ -442,9 +460,12 @@ interface SettingsLucaLinkTabProps {
   settings: LucaSettings;
   onUpdate: (section: keyof LucaSettings, key: string, value: any) => void;
   theme: {
-    primary: string;
     hex: string;
-    themeName: string;
+    primary: string;
+    border: string;
+    bg: string;
+    themeName?: string;
+    isLight?: boolean;
   };
   connectionMode?: "local" | "vpn" | "relay" | "disconnected";
 }
@@ -558,8 +579,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       <div
         className="rounded-xl p-4"
         style={{
-          backgroundColor: `${theme.hex}0d`,
-          border: `1px solid ${theme.hex}33`,
+          backgroundColor: theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.03)" : setHexAlpha(theme.hex, 0.05),
+          border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.1)" : setHexAlpha(theme.hex, 0.2)}`,
         }}
       >
         <div className="flex items-center justify-between mb-3">
@@ -723,12 +744,12 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               className="w-full py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-50"
               style={{
                 backgroundColor: linkState.connected
-                  ? "rgba(74,222,128,0.2)"
-                  : `${theme.hex}20`,
+                  ? (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(74,222,128,0.1)" : "rgba(74,222,128,0.2)")
+                  : setHexAlpha(theme.hex, 0.1),
                 border: `1px solid ${
-                  linkState.connected ? "#4ade80" : theme.hex
+                  linkState.connected ? (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(74,222,128,0.3)" : "#4ade80") : theme.hex
                 }`,
-                color: linkState.connected ? "#4ade80" : theme.hex,
+                color: linkState.connected ? (theme.themeName?.toLowerCase() === "lucagent" ? "#15803d" : "#4ade80") : theme.hex,
               }}
             >
               {linkState.connected ? (
@@ -763,8 +784,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               backgroundColor:
                 theme.themeName?.toLowerCase() === "lucagent"
                   ? "rgba(102,126,234,0.08)"
-                  : `${theme.hex}1a`,
-              border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(102,126,234,0.3)" : theme.hex + "4d"}`,
+                  : setHexAlpha(theme.hex, 0.08),
+              border: `1px solid ${theme.themeName?.toLowerCase() === "lucagent" ? "rgba(102,126,234,0.3)" : setHexAlpha(theme.hex, 0.25)}`,
               color: theme.themeName?.toLowerCase() === "lucagent" ? "#1e40af" : theme.hex,
             }}
           >

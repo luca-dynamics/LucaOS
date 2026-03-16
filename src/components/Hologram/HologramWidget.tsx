@@ -8,6 +8,8 @@ import {
   TranslationMode,
   TranslationState,
 } from "../../services/TranslationService";
+import { MissionScope } from "../../services/toolRegistry";
+import { MISSION_COLORS } from "../../config/themeColors";
 
 interface TranslationResult {
   originalText: string;
@@ -26,7 +28,12 @@ interface HologramWidgetProps {
   audioLevel: number;
   primaryColor?: string;
   persona?: string;
-  intent?: string | null;
+  propIntent?: string | null;
+  elevationState?: {
+    lastScanTimestamp: number;
+    authorizedMissionIds: Set<string>;
+    activeMissionScope: MissionScope;
+  };
   onClick?: () => void;
 }
 
@@ -39,7 +46,8 @@ const HologramWidget: React.FC<HologramWidgetProps> = ({
   audioLevel,
   primaryColor: propColor,
   persona = "ASSISTANT",
-  intent: propIntent,
+  propIntent,
+  elevationState,
   onClick,
 }) => {
   const activeConfig = PERSONA_UI_CONFIG[persona] || PERSONA_UI_CONFIG.DEFAULT;
@@ -90,6 +98,7 @@ const HologramWidget: React.FC<HologramWidgetProps> = ({
       onClick={onClick}
       isVisionActive={isVisionActive}
       intent={displayIntent}
+      elevationState={elevationState}
     />
   );
 };
@@ -229,6 +238,7 @@ const HologramWidgetImplementation = ({
   transcript,
   transcriptSource,
   intent,
+  elevationState,
 }: any) => {
   const [cards, setCards] = React.useState<ContextCard[]>([]);
   const [translationState, setTranslationState] =
@@ -261,6 +271,32 @@ const HologramWidgetImplementation = ({
       eventBus.off("context-cards-updated", handleCards);
     };
   }, []);
+
+  const activeScope = elevationState?.activeMissionScope;
+  const hasMission = activeScope && activeScope !== MissionScope.NONE;
+
+  // Map Mission Color
+  let missionColor = primaryColor;
+  if (hasMission) {
+    let colorKey: keyof typeof MISSION_COLORS = "FULL";
+    if (activeScope === MissionScope.FILE) colorKey = "FILE";
+    else if (activeScope === MissionScope.FINANCE) colorKey = "FINANCE";
+    else if (activeScope === MissionScope.SOCIAL) colorKey = "SOCIAL";
+    else if (activeScope === MissionScope.SYSTEM) colorKey = "SYSTEM";
+    else if (activeScope === MissionScope.FULL) colorKey = "FULL";
+    missionColor = MISSION_COLORS[colorKey];
+  }
+
+  // Dynamic Mission Card injection
+  const displayCards = [...cards];
+  if (hasMission) {
+    displayCards.unshift({
+      id: "mission-active-card",
+      type: "MISSION_ACTIVE",
+      label: activeScope,
+      metadata: { mission: activeScope },
+    } as any);
+  }
   const [position, setPosition] = React.useState({
     x: Math.max(20, window.innerWidth - 220),
     y: Math.max(20, window.innerHeight - 300),
@@ -351,10 +387,10 @@ const HologramWidgetImplementation = ({
         <div className="w-full min-h-[100px] flex flex-col items-center justify-end px-4 text-center pointer-events-none relative">
           {intent && !transcript && !translations.length && (
             <div
-              className="text-[10px] font-mono tracking-[0.2em] uppercase animate-pulse mb-1"
-              style={{ color: primaryColor }}
+              className={`text-[10px] font-mono tracking-[0.2em] uppercase ${hasMission ? 'animate-pulse' : ''} mb-1`}
+              style={{ color: missionColor }}
             >
-              [{intent}]
+              [{hasMission ? `ARMED: ${activeScope}` : intent}]
             </div>
           )}
 
@@ -371,7 +407,7 @@ const HologramWidgetImplementation = ({
               >
                 <div
                   className="text-[9px] font-mono uppercase tracking-tighter opacity-50 mb-0.5"
-                  style={{ color: primaryColor }}
+                  style={{ color: missionColor }}
                 >
                   {t.mode === TranslationMode.TRANSCRIBE
                     ? "Live Text"
@@ -400,7 +436,7 @@ const HologramWidgetImplementation = ({
 
         <div className="w-[200px] h-[200px] relative z-10 scale-100 origin-bottom transition-transform duration-300 pointer-events-auto">
           <HologramScene
-            color={primaryColor}
+            color={missionColor}
             audioLevel={audioLevel}
             isVisionActive={isVisionActive}
             onClick={() => {
@@ -412,12 +448,12 @@ const HologramWidgetImplementation = ({
           />
 
           {/* AI Context Cards (Glassmorphic Buttons) */}
-          {cards.map((card, idx) => (
+          {displayCards.map((card, idx) => (
             <ContextButton
               key={card.id}
               card={card}
               index={idx}
-              primaryColor={primaryColor}
+              primaryColor={card.type === "MISSION_ACTIVE" ? missionColor : primaryColor}
               persona={persona}
             />
           ))}
@@ -426,7 +462,7 @@ const HologramWidgetImplementation = ({
         <div className="mt-4 pointer-events-auto transition-all duration-500 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
           <TranslationControlBar
             state={translationState}
-            primaryColor={primaryColor}
+            primaryColor={missionColor}
           />
         </div>
 
@@ -434,7 +470,7 @@ const HologramWidgetImplementation = ({
           className="absolute bottom-16 right-16 w-32 h-32 rounded-full blur-[50px] -z-10 transition-opacity duration-100"
           style={{
             opacity: (audioLevel / 255) * 0.4,
-            backgroundColor: primaryColor,
+            backgroundColor: missionColor,
           }}
         />
       </div>

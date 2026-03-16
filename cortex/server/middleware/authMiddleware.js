@@ -6,7 +6,13 @@ import securityManager from '../services/securityManager.js';
  */
 export const authMiddleware = (req, res, next) => {
     // 1. Skip auth for specific routes if needed (e.g. handshake, health, status checks)
-    if (req.path === '/api/handshake' || req.path === '/api/health' || req.path.endsWith('/status')) {
+    const isPublic = [
+        '/api/health', '/health',
+        '/api/handshake', '/handshake',
+        '/api/status', '/status'
+    ].some(p => req.path === p || req.path.endsWith(p));
+
+    if (isPublic) {
         return next();
     }
 

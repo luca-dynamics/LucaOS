@@ -10,7 +10,8 @@ import VoiceVisualizer from "./voice/VoiceVisualizer";
 import VoiceControls from "./voice/VoiceControls";
 import VoiceStatusOrb from "./voice/VoiceStatusOrb";
 import TacticalStream from "./visual/TacticalStream";
-import { THEME_PALETTE } from "../config/themeColors";
+import { THEME_PALETTE, MISSION_COLORS } from "../config/themeColors";
+import { MissionScope } from "../services/toolRegistry";
 
 // --- HELPER COMPONENT: Typewriter Text ---
 const TypewriterText = ({ text }: { text: string }) => {
@@ -58,6 +59,11 @@ interface VoiceHudProps {
     hex: string;
     themeName: string;
   };
+  elevationState?: {
+    lastScanTimestamp: number;
+    authorizedMissionIds: Set<string>;
+    activeMissionScope: MissionScope;
+  };
   statusMessage?: string | null;
   isVisionActive?: boolean; // New prop for dual-mode optimization
   hideDebugPanels?: boolean; // Hide ACTIVE PROTOCOLS and TELEMETRY panels
@@ -82,6 +88,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
   hideControls = false, // Default to false (show controls in main app)
   transparentBackground = false, // New prop to allow underlying backgrounds to show through
   visualData, // Add visualData to props
+  elevationState,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const captureCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -514,9 +521,49 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             </span>
           </div>
 
-          <div className="mt-4 p-2 border border-red-500/30 bg-red-900/10 text-red-400 flex items-center justify-center gap-2 backdrop-blur-md rounded-sm shadow-[0_0_15px_rgba(239,68,68,0.1)]">
-            <ShieldAlert size={12} className="animate-pulse" /> FIREWALL:
-            SHIELD_ACTIVE
+          <div
+            className="mt-4 p-2 border flex items-center justify-center gap-2 backdrop-blur-md rounded-sm transition-all duration-500"
+            style={(() => {
+              const activeScope = elevationState?.activeMissionScope;
+              const hasMission = activeScope && activeScope !== MissionScope.NONE;
+
+              // Map Enum Value (e.g. "FINANCIAL MISSION") to Color Key (e.g. "FINANCE")
+              let colorKey: keyof typeof MISSION_COLORS = "FULL";
+              if (activeScope === MissionScope.FILE) colorKey = "FILE";
+              else if (activeScope === MissionScope.FINANCE) colorKey = "FINANCE";
+              else if (activeScope === MissionScope.SOCIAL) colorKey = "SOCIAL";
+              else if (activeScope === MissionScope.SYSTEM) colorKey = "SYSTEM";
+              else if (activeScope === MissionScope.FULL) colorKey = "FULL";
+
+              const missionColor = hasMission
+                ? MISSION_COLORS[colorKey]
+                : "rgb(239, 68, 68)";
+              const missionColorDim = hasMission
+                ? `${missionColor}22`
+                : "rgba(127, 29, 29, 0.1)";
+              const missionBorder = hasMission
+                ? `${missionColor}88`
+                : "rgba(239, 68, 68, 0.3)";
+
+              return {
+                borderColor: missionBorder,
+                backgroundColor: missionColorDim,
+                color: missionColor,
+                boxShadow: `0 0 15px ${hasMission ? `${missionColor}44` : "rgba(239, 68, 68, 0.1)"}`,
+              };
+            })()}
+          >
+            <ShieldAlert
+              size={12}
+              className={
+                elevationState?.activeMissionScope !== MissionScope.NONE
+                  ? "animate-pulse"
+                  : ""
+              }
+            />
+            {elevationState?.activeMissionScope !== MissionScope.NONE
+              ? `MISSION ACTIVE: ${elevationState?.activeMissionScope}`
+              : "FIREWALL: SHIELD_ACTIVE"}
           </div>
         </div>
       )}

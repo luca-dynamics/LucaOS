@@ -4,6 +4,7 @@ import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
 import { useVoiceInput } from "../useVoiceInput";
 import { PersonaType } from "../../services/lucaService";
+import { MissionScope } from "../../services/toolRegistry";
 import { useAppContext } from "../../context/AppContext";
 
 interface UseVoiceEngineProps {
@@ -317,8 +318,12 @@ export function useVoiceEngine({
     if (approvalRequest?.isSafetyValve) {
       const requestId = `${approvalRequest.tool}_${approvalRequest.action}`;
       if (lastAnnouncedRef.current !== requestId) {
-        console.log("[VOICE-SAFETY] 🛡️ Announcing Safety Valve via TTS...");
-        const announceMsg = `SYSTEM ALERT: Safety Valve triggered for action ${approvalRequest.action}. ${approvalRequest.message}. Say "ALLOW" to proceed, or "DENY" to block.`;
+        console.log("[VOICE-SAFETY] 🛡️ Announcing Mission Authorization via TTS...");
+        const scope = approvalRequest.missionScope || MissionScope.NONE;
+        const scopeLabel = scope === MissionScope.NONE ? "this action" : scope;
+        
+        const announceMsg = `SECURITY PROTOCOL: I need to enter ${scopeLabel} Mode to proceed with ${approvalRequest.tool}. Shall I authorize this mission?`;
+        
         liveService.sendText(announceMsg);
         lastAnnouncedRef.current = requestId;
       }

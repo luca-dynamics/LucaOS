@@ -38,6 +38,7 @@ export interface Device {
   trustLevel: number; // 0-100
   metadata: DeviceMetadata;
   publicKey?: string;
+  identityPublicKey?: string; // Long-term identity public key (Ed25519)
 }
 
 export interface DeviceRegistry {
@@ -61,6 +62,8 @@ export interface LucaLinkMessage {
   source?: string; // Device ID
   timestamp: number;
   commandId?: string; // For tracking request/response
+  identitySignature?: string; // Ed25519 signature
+  identityPublicKey?: string; // Ed25519 public key of source
 }
 
 export enum ConnectionState {

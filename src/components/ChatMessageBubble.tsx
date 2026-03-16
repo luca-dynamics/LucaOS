@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import { PersonaType } from "../services/lucaService";
 import { TacticalLog } from "../types";
-import TacticalStream from "./visual/TacticalStream";
+import InlineActionFlow from "./chat/InlineActionFlow";
+import ChartRenderer from "./chat/ChartRenderer";
 
 interface ChatMessageBubbleProps {
   text: string;
@@ -39,13 +40,13 @@ interface ChatMessageBubbleProps {
     logs: TacticalLog[];
     title?: string;
   };
+  isLight?: boolean;
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   text,
   sender,
   timestamp,
-  persona,
   primaryColor,
   isProcessing,
   attachment,
@@ -55,12 +56,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   isStreaming,
   onEdit,
   tacticalData,
+  isLight = false,
 }) => {
   const isUser = sender === "user";
   const isSystem = sender === "system";
   const [copiedCodeBlock, setCopiedCodeBlock] = useState<number | null>(null);
-
-  const isLight = persona === "LUCAGENT";
 
   const handleCopyCode = (code: string, index: number) => {
     navigator.clipboard.writeText(code);
@@ -196,7 +196,22 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
 
         {/* Content area - only shown when NOT in loading state */}
         {!isLoadingState && (
-          <div className="flex-1 min-w-0 w-full">
+          <div className="flex-1 min-w-0 w-full px-4 py-3 rounded-2xl rounded-tl-sm transition-all relative overflow-hidden bg-black/5"
+               style={{
+                 backgroundColor: isLight ? "rgba(0, 0, 0, 0.02)" : "rgba(255, 255, 255, 0.02)",
+                 border: isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.05)"
+               }}>
+            
+            {/* INLINE ACTION FLOW - Repositioned to top for immersion */}
+            {tacticalData && (
+              <InlineActionFlow 
+                logs={tacticalData.logs}
+                status={tacticalData.status}
+                themeColor={primaryColor}
+                isLight={isLight}
+              />
+            )}
+
             <div className="rounded-2xl rounded-tl-sm px-0 py-0 transition-all relative overflow-hidden">
               {/* Generated Image inside bubble */}
               {generatedImage && (
@@ -229,51 +244,82 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                       const match = /language-(\w+)/.exec(className || "");
                       const codeString = String(children).replace(/\n$/, "");
 
+                      // CHART DETECTION: Check if it's JSON and looks like a chart
+                      if (!inline && match && (match[1] === "json" || match[1] === "chart")) {
+                        try {
+                          const parsed = JSON.parse(codeString);
+                          if (parsed.type === "chart" && Array.isArray(parsed.data)) {
+                            return (
+                              <ChartRenderer 
+                                data={parsed.data}
+                                type={parsed.chartType || "bar"}
+                                themeColor={primaryColor}
+                                isLight={isLight}
+                              />
+                            );
+                          }
+                        } catch {
+                          // Fallback to regular code block if parsing fails
+                        }
+                      }
+
                       if (!inline && match) {
-                        // Uniquely identify blocks (simple index via random, though better from props if available)
                         const blockIndex = Math.random();
 
                         return (
                           <div
-                            className={`relative group/code my-4 overflow-hidden rounded-lg border ${isLight ? "border-gray-200 bg-gray-50" : "border-slate-700/50 bg-[#1e1e1e] shadow-sm"}`}
+                            className={`relative group/code my-6 overflow-hidden rounded-xl border ${isLight ? "border-gray-200 bg-gray-50/50" : "border-white/10 bg-[#0d0d0d] shadow-2xl"}`}
+                            style={{
+                              boxShadow: isLight ? "none" : `0 0 30px ${primaryColor}08`,
+                            }}
                           >
                             <div
-                              className={`flex items-center justify-between px-3 py-1.5 ${isLight ? "bg-gray-100 border-gray-200" : "bg-[#252526] border-white/5"} border-b`}
+                              className={`flex items-center justify-between px-4 py-2 ${isLight ? "bg-gray-100/80 border-gray-200" : "bg-white/5 border-white/5"} border-b`}
                             >
-                              <span
-                                className={`text-[10px] font-mono uppercase tracking-wider font-bold ${isLight ? "text-gray-600" : "text-slate-400"}`}
-                              >
-                                {match[1]}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-1">
+                                  <div className="w-2 h-2 rounded-full bg-red-500/50" />
+                                  <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
+                                  <div className="w-2 h-2 rounded-full bg-green-500/50" />
+                                </div>
+                                <span
+                                  className={`text-[10px] font-mono uppercase tracking-[0.2em] font-black ${isLight ? "text-gray-500" : "text-slate-400"}`}
+                                >
+                                  {match[1]}
+                                </span>
+                              </div>
                               <button
                                 onClick={() =>
                                   handleCopyCode(codeString, blockIndex)
                                 }
-                                className={`${isLight ? "text-gray-500 hover:text-gray-800" : "text-slate-400 hover:text-white"} transition-colors`}
+                                className={`${isLight ? "text-gray-500 hover:text-gray-800" : "text-slate-400 hover:text-white"} transition-all active:scale-90`}
                                 title="Copy Code"
                               >
                                 {copiedCodeBlock === blockIndex ? (
-                                  <Check size={12} className="text-green-500" />
+                                  <Check size={14} className="text-green-500" />
                                 ) : (
-                                  <Copy size={12} />
+                                  <Copy size={14} />
                                 )}
                               </button>
                             </div>
-                            <SyntaxHighlighter
-                              style={isLight ? vs : vscDarkPlus}
-                              language={match[1]}
-                              PreTag="div"
-                              customStyle={{
-                                margin: 0,
-                                padding: "1rem",
-                                background: "transparent",
-                                fontSize: "13px",
-                                lineHeight: "1.5",
-                              }}
-                              {...props}
-                            >
-                              {codeString}
-                            </SyntaxHighlighter>
+                            <div className="relative">
+                              <SyntaxHighlighter
+                                style={isLight ? vs : vscDarkPlus}
+                                language={match[1]}
+                                PreTag="div"
+                                customStyle={{
+                                  margin: 0,
+                                  padding: "1.25rem",
+                                  background: "transparent",
+                                  fontSize: "13px",
+                                  lineHeight: "1.6",
+                                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                                }}
+                                {...props}
+                              >
+                                {codeString}
+                              </SyntaxHighlighter>
+                            </div>
                           </div>
                         );
                       }
@@ -290,10 +336,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     table({ children }) {
                       return (
                         <div
-                          className={`overflow-x-auto my-4 rounded-lg border ${isLight ? "border-gray-200 shadow-sm" : "border-slate-700/50"}`}
+                          className={`overflow-x-auto my-6 rounded-xl border animate-in fade-in slide-in-from-bottom-2 duration-500 ${isLight ? "border-gray-200 bg-white/40 shadow-sm" : "border-white/10 bg-black/20 shadow-2xl"}`}
+                          style={{
+                            boxShadow: isLight ? "none" : `0 10px 30px rgba(0,0,0,0.3), 0 0 20px ${primaryColor}05`,
+                          }}
                         >
                           <table
-                            className={`min-w-full divide-y ${isLight ? "divide-gray-200" : "divide-slate-700/50"} text-sm`}
+                            className={`min-w-full divide-y ${isLight ? "divide-gray-200" : "divide-white/10"} text-[13px]`}
                           >
                             {children}
                           </table>
@@ -312,7 +361,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     th({ children }) {
                       return (
                         <th
-                          className={`px-4 py-3 text-left text-xs font-semibold ${isLight ? "text-gray-900" : "text-slate-300"} uppercase tracking-wider`}
+                          className={`px-4 py-3 text-left text-[11px] font-black ${isLight ? "text-gray-900" : "text-white/70"} uppercase tracking-[0.15em] font-mono`}
                         >
                           {children}
                         </th>
@@ -339,7 +388,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     td({ children }) {
                       return (
                         <td
-                          className={`px-4 py-3 whitespace-nowrap ${isLight ? "text-gray-800" : "text-slate-300"}`}
+                          className={`px-4 py-3 whitespace-nowrap font-medium ${isLight ? "text-gray-800" : "text-white/90"}`}
                         >
                           {children}
                         </td>
@@ -386,48 +435,16 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     },
                   }}
                 >
-                  {text + (isStreaming ? " ▍" : "")}
+                  {text}
                 </ReactMarkdown>
+                {isStreaming && (
+                  <span
+                    className="inline-block w-2 h-4 ml-1 translate-y-0.5 animate-pulse"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                )}
               </div>
 
-              {/* Tactical Action Block (Inline HUD) */}
-              {tacticalData && (
-                <div className="my-4 h-64 w-full animate-in zoom-in-95 duration-500 overflow-hidden rounded-xl border border-white/10 shadow-xl">
-                  {(() => {
-                    const getContextTheme = (type?: string) => {
-                      switch (type) {
-                        case "FINANCE":
-                        case "CRYPTO":
-                        case "STOCKS":
-                        case "FOREX":
-                          return "#eab308"; // Gold
-                        case "INTELLIGENCE":
-                        case "OSINT":
-                          return "#06b6d4"; // Cyan
-                        case "SECURITY":
-                        case "HACKING":
-                        case "TACTICAL":
-                          return "#ef4444"; // Red
-                        case "SYSTEM":
-                          return "#3b82f6"; // Blue
-                        default:
-                          return primaryColor;
-                      }
-                    };
-                    const blockColor = getContextTheme(tacticalData.type);
-
-                    return (
-                      <TacticalStream
-                        logs={tacticalData.logs}
-                        themeColor={blockColor}
-                        title={tacticalData.title || "INLINE_PROCESS_MONITOR"}
-                        status={tacticalData.status}
-                        isLight={isLight}
-                      />
-                    );
-                  })()}
-                </div>
-              )}
 
               {/* Grounding / Sources inside bubble */}
               {groundingMetadata?.groundingChunks &&
@@ -442,7 +459,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                             href={chunk.web.uri}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex items-center gap-1.5 bg-slate-800/40 border border-slate-700/50 hover:border-slate-500 text-[10px] px-2.5 py-1.5 rounded-full transition-all text-slate-400 hover:text-white hover:bg-slate-800/60"
+                            className={`flex items-center gap-1.5 border transition-all text-[10px] px-2.5 py-1.5 rounded-full ${isLight ? "bg-white/50 border-gray-200 hover:border-gray-300 text-gray-500 hover:text-gray-900 hover:bg-white" : "bg-slate-800/40 border-slate-700/50 hover:border-slate-500 text-slate-400 hover:text-white hover:bg-slate-800/60"}`}
                           >
                             <Globe size={11} />
                             <span className="truncate max-w-[150px]">

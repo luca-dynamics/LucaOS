@@ -7,6 +7,8 @@ export interface ToolCall {
 export interface ChatMessage {
   role: "user" | "model" | "tool" | "system";
   content?: string;
+  thought?: string; // Captures internal reasoning
+  thought_signature?: string; // Captures cryptographic signature for tool calls
   toolCalls?: ToolCall[];
   toolCallId?: string; // For tool responses
   name?: string; // For tool responses
@@ -14,6 +16,8 @@ export interface ChatMessage {
 
 export interface LLMResponse {
   text: string;
+  thought?: string;
+  thought_signature?: string;
   toolCalls?: ToolCall[];
 }
 
@@ -30,4 +34,6 @@ export interface LLMProvider {
     prompt: string,
     onToken: (text: string) => void
   ): Promise<string>;
+  embed?(text: string): Promise<number[]>;
+  embedBatch?(texts: string[]): Promise<number[][]>;
 }

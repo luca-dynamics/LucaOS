@@ -204,7 +204,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({
           <div
             className={`flex items-center gap-2 text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-300"}`}
           >
-            <Terminal className="w-3 h-3" />
+            <Terminal className="w-3 h-3" style={{ color: theme.hex }} />
             Local Command
           </div>
           <p
@@ -220,7 +220,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({
           <div
             className={`flex items-center gap-2 text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-300"}`}
           >
-            <Shield className="w-3 h-3" />
+            <Shield className="w-3 h-3" style={{ color: theme.hex }} />
             Security Mode
           </div>
           <p
@@ -246,7 +246,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({
           }
           className={`flex items-center gap-2 text-[10px] transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 hover:text-slate-900 font-bold" : "text-gray-500 hover:text-white"}`}
         >
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" style={{ color: theme.hex }} />
           View MCP Protocol Docs
         </button>
         <button
@@ -270,7 +270,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({
           }}
           className={`flex items-center gap-2 text-[10px] transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 hover:text-slate-900 font-bold" : "text-gray-500 hover:text-white"}`}
         >
-          <Settings className="w-3 h-3" />
+          <Settings className="w-3 h-3" style={{ color: theme.hex }} />
           Open Claude Config Folder
         </button>
       </div>

@@ -97,6 +97,14 @@ export const THEME_PALETTE = {
   },
 };
 
+export const MISSION_COLORS = {
+  FILE: "#70eaf0ff", // Ice Blue
+  FINANCE: "#48f688ff", // Surgical Green
+  SOCIAL: "#a855f7", // Purple
+  SYSTEM: "#f4a569ff", // Engineering Terracotta
+  FULL: "#ef4444ff", // Dual-Auth Red
+};
+
 /**
  * Utility to safely add alpha to a hex color, handling both 6-digit and 8-digit hex.
  */

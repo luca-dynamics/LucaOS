@@ -259,3 +259,19 @@ export const autonomousWebBrowseTool: FunctionDeclaration = {
     required: ["goal"],
   },
 };
+
+export const ingestSkillFromURLTool: FunctionDeclaration = {
+  name: "ingestSkillFromURL",
+  description:
+    "Autonomously ingest a new skill from a URL (e.g., GitHub repo, documentation, or article). LUCA will scrape the content, analyze the capabilities, generate the execution logic, and register the skill automatically. This enables immediate expansion of capabilities based on external knowledge.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      url: {
+        type: Type.STRING,
+        description: "The URL to ingest (GitHub, documentation, or any technical page).",
+      },
+    },
+    required: ["url"],
+  },
+};

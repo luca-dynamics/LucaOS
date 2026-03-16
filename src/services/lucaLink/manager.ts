@@ -1,4 +1,5 @@
 import { SecureSocket } from "./secureSocket";
+import { CryptoService } from "./crypto";
 import { deviceRegistry, DeviceRegistryService } from "./deviceRegistry";
 import { sessionManager, SessionManager } from "./sessionManager";
 import { errorHandler, ErrorHandler } from "./errorHandler";
@@ -7,6 +8,7 @@ import type {
   LucaLinkMessage,
   LucaLinkEvent,
   ConnectionState,
+  KeyPair,
 } from "./types";
 
 /**
@@ -24,6 +26,7 @@ export class LucaLinkManager {
   private socket: SecureSocket | null = null;
   private isInitialized = false;
   private myDeviceId: string | null = null;
+  private identityKeyPair: KeyPair | null = null;
   private eventHandlers: Map<string, Set<(event: LucaLinkEvent) => void>> =
     new Map();
 
@@ -59,6 +62,34 @@ export class LucaLinkManager {
       // Generate or use provided device ID
       this.myDeviceId =
         options.deviceId || DeviceRegistryService.generateDeviceId();
+
+      // --- IDENTITY KEY MANAGEMENT ---
+      // Load or generate long-term identity key pair (Ed25519)
+      const storedKeys = localStorage.getItem(`luca_link_identity_${this.myDeviceId}`);
+      if (storedKeys) {
+        try {
+          const { publicKey, secretKey } = JSON.parse(storedKeys);
+          this.identityKeyPair = {
+            publicKey: CryptoService.decodeKey(publicKey),
+            secretKey: CryptoService.decodeKey(secretKey),
+          };
+          console.log("[LucaLinkManager] Identity keys loaded");
+        } catch (e) {
+          console.error("[LucaLinkManager] Failed to parse stored identity keys", e);
+        }
+      }
+
+      if (!this.identityKeyPair) {
+        this.identityKeyPair = CryptoService.generateIdentityKeyPair();
+        localStorage.setItem(
+          `luca_link_identity_${this.myDeviceId}`,
+          JSON.stringify({
+            publicKey: CryptoService.encodeKey(this.identityKeyPair.publicKey),
+            secretKey: CryptoService.encodeKey(this.identityKeyPair.secretKey),
+          })
+        );
+        console.log("[LucaLinkManager] New identity keys generated and persisted");
+      }
 
       // Create secure socket
       this.socket = new SecureSocket(url, {
@@ -141,6 +172,7 @@ export class LucaLinkManager {
       type: "luca-link-pairing",
       token,
       deviceId: this.myDeviceId,
+      identityPublicKey: this.identityKeyPair ? CryptoService.encodeKey(this.identityKeyPair.publicKey) : undefined,
       timestamp: Date.now(),
     });
 
@@ -161,6 +193,7 @@ export class LucaLinkManager {
     platform?: Device["platform"];
     capabilities?: string[];
     publicKey: string;
+    identityPublicKey?: string;
   }): Promise<Device> {
     try {
       // Detect capabilities if not provided
@@ -181,6 +214,7 @@ export class LucaLinkManager {
           DeviceRegistryService.detectPlatform(navigator.userAgent),
         capabilities,
         publicKey: deviceData.publicKey,
+        identityPublicKey: (deviceData as any).identityPublicKey,
       });
 
       this.emit("device:added", { device });
@@ -228,6 +262,17 @@ export class LucaLinkManager {
       timestamp: Date.now(),
       commandId: this.generateCommandId(),
     };
+
+    // --- CRYPTOGRAPHIC SIGNING ---
+    if (this.identityKeyPair) {
+      message.identitySignature = CryptoService.signPayload(
+        message.payload,
+        this.identityKeyPair.secretKey
+      );
+      message.identityPublicKey = CryptoService.encodeKey(
+        this.identityKeyPair.publicKey
+      );
+    }
 
     try {
       await this.socket.send(message);
@@ -368,6 +413,17 @@ export class LucaLinkManager {
             timestamp: Date.now(),
             commandId,
           };
+
+          // --- CRYPTOGRAPHIC SIGNING ---
+          if (this.identityKeyPair) {
+            message.identitySignature = CryptoService.signPayload(
+              message.payload,
+              this.identityKeyPair.secretKey
+            );
+            message.identityPublicKey = CryptoService.encodeKey(
+              this.identityKeyPair.publicKey
+            );
+          }
 
           if (!this.socket?.isConnected()) {
             throw new Error("Luca Link not connected");
@@ -547,6 +603,65 @@ export class LucaLinkManager {
   }
 
   private async handleIncomingMessage(message: LucaLinkMessage): Promise<void> {
+    // --- SIGNATURE VERIFICATION ---
+    if (message.type === "command") {
+      const sourceDevice = message.source
+        ? this.deviceRegistry.getDevice(message.source)
+        : null;
+
+      // Ensure command is signed
+      if (!message.identitySignature || !message.identityPublicKey) {
+        console.error(
+          `[SECURITY] 🚨 Unsigned command received from ${
+            message.source || "unknown"
+          }`
+        );
+        this.errorHandler.handleError(
+          this.errorHandler.createError(
+            "LL_208",
+            "Unsigned command rejected"
+          )
+        );
+        return;
+      }
+
+      // Verify signature against pinned public key if we have it, otherwise use the one provided (trust-on-first-use)
+      const publicKeyToVerify = sourceDevice?.identityPublicKey
+        ? CryptoService.decodeKey(sourceDevice.identityPublicKey)
+        : CryptoService.decodeKey(message.identityPublicKey);
+
+      const isValid = CryptoService.verifyPayload(
+        message.payload,
+        message.identitySignature,
+        publicKeyToVerify
+      );
+
+      if (!isValid) {
+        console.error(
+          `[SECURITY] 🚨 Signature mismatch for command from ${
+            message.source || "unknown"
+          }`
+        );
+        this.errorHandler.handleError(
+          this.errorHandler.createError(
+            "LL_209",
+            "Command signature verification failed"
+          )
+        );
+        return;
+      }
+
+      // If this is a new device with identity, pin it in the registry
+      if (sourceDevice && !sourceDevice.identityPublicKey) {
+        this.deviceRegistry.updateDevice(sourceDevice.id, {
+          identityPublicKey: message.identityPublicKey,
+        });
+        console.log(
+          `[SECURITY] 📌 Pinned identity public key for device: ${sourceDevice.id}`
+        );
+      }
+    }
+
     switch (message.type) {
       case "command":
         this.emit("command:received", { message });

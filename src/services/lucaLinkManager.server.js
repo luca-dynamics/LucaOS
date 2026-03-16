@@ -106,9 +106,13 @@ class LucaLinkServerManager extends EventEmitter {
     }
 
     syncState(topic, data) {
-         // Broadcast to all relevant devices
-         // Placeholder for memory sync logic
-         // console.log(`[LUCA_LINK_SERVER] Syncing ${topic}`);
+         // Broadcast to all connected devices
+         console.log(`[LUCA_LINK_SERVER] Syncing state: ${topic}`);
+         this.emit('state:sync', {
+             topic,
+             data,
+             timestamp: Date.now()
+         });
     }
 }
 

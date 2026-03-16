@@ -142,19 +142,43 @@ Luca OS operates through a triple-server triad, unified via the **Electron HUD**
 
 ```mermaid
 graph TD
-    User((User))
-    HUD[Electron HUD / React]
-    Node[Node.js Orchestrator]
-    Cortex[Python Cognitive Engine]
-    Mobile[Capacitor Mobile Node]
-    ModelManager[Neural Center / Model Manager]
+    subgraph "Frontend (React + Vite + Electron)"
+        UI["Voice HUD & UI Overlay"]
+        Face["3D Hologram (Three.js)"]
+        State["User Mission State"]
+    end
 
-    User <--> HUD
-    HUD <--> Node
-    Node <--> Cortex
-    Node <--> Mobile
-    Cortex <--> ModelManager
-    Cortex --> Tools[220+ Unified Tools]
+    subgraph "Sovereignty Layer (Orchestration)"
+        Orch["Mission Orchestrator"]
+        Auth["Security Gate (Mission Mode)"]
+    end
+
+    subgraph "Intelligence Layer"
+        Gemini3["Google Gemini 3 Flash (Primary)"]
+        Ollama["Local Models (Ollama)"]
+        WebLLM["mlc-ai/web-llm (Edge)"]
+        RAG["LightRAG (Memory)"]
+    end
+
+    subgraph "Cortex Backend (Python FastAPI)"
+        Cmd["Command Processor"]
+        Automation["OS Automation (RobotJS/File OS)"]
+        Vision["Ambient Vision Loop"]
+    end
+
+    %% Connections
+    UI <--> State
+    State <--> Orch
+    Orch <--> Auth
+    Auth <--> Gemini3
+    Auth <--> Ollama
+    Auth <--> WebLLM
+    
+    Orch <--> Cmd
+    Cmd <--> Automation
+    Vision <--> UI
+    RAG <--> Gemini3
+    RAG <--> Cmd
 ```
 
 ---

@@ -26,7 +26,6 @@ export default function AdvancedTradingTerminal({
 
   // Theme constants matching Luca/StockTerminal
   const currentThemeBorder = theme?.border || "border-indigo-500";
-  const currentThemePrimary = theme?.primary || "text-indigo-400";
   const currentThemeHex = theme?.hex || "#818cf8";
 
   return (
@@ -69,7 +68,7 @@ export default function AdvancedTradingTerminal({
             </div>
             <div className="overflow-hidden">
               <h2 className="font-bold text-base sm:text-xl tracking-widest text-white uppercase font-display truncate">
-                CORTEX <span style={{ color: currentThemeHex }}>AI</span>
+                AI <span style={{ color: currentThemeHex }}>WORKFORCE</span>
               </h2>
               <div className="flex gap-2 sm:gap-4 text-[9px] sm:text-[10px] text-slate-500 font-bold tracking-wider font-mono mt-0.5 truncate">
                 <span>ONLINE</span>
