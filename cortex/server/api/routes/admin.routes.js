@@ -3,7 +3,7 @@ import db from '../../../../src/services/db.js';
 import SecureVault from '../../services/secureVault.js';
 
 const router = express.Router();
-const vault = new SecureVault();
+const vault = SecureVault;
 
 // --- ADMIN ENROLLMENT ENDPOINT (HARDENED) ---
 router.post('/enroll', async (req, res) => {
@@ -68,7 +68,7 @@ router.post('/verify', async (req, res) => {
 
 // Voice enrollment follows the same vector-only pattern
 router.post('/enroll-voice', async (req, res) => {
-    const { name, vector } = req.body;
+    const { vector } = req.body;
     if (!vector || !Array.isArray(vector)) {
         return res.status(400).json({ error: 'Voice Biometric Vector required' });
     }

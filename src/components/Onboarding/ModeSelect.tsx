@@ -1,6 +1,9 @@
 import React from "react";
 import ModeCard from "./ModeCard";
-import { MessageCircle } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  MessageCircle,
+} = LucideIcons as any;
 
 export type ConversationMode = "text" | "voice";
 
@@ -104,13 +107,16 @@ const ModeSelect: React.FC<ModeSelectProps> = ({
         backdrop-blur-xl
         max-w-lg
         mx-auto
+        flex items-center justify-center
       `}
         style={{ 
           padding: "1.5vmin 3vmin",
-          fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)"
+          fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)",
+          gap: "1vmin"
         }}
       >
-        💡 You can switch between text and voice anytime during our conversation
+        <LucideIcons.Lightbulb size={12} className={iconColor} />
+        <span>You can switch between text and voice anytime during our conversation</span>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Smartphone,
   Tablet,
   Monitor,
@@ -17,7 +18,7 @@ import {
   RefreshCw,
   Zap,
   Clock,
-} from "lucide-react";
+} = LucideIcons as any;
 import type { Device } from "../../services/lucaLink/types";
 
 interface DeviceListProps {

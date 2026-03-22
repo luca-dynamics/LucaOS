@@ -127,10 +127,8 @@ async def google_sync_file(file_id: str):
         entities = distilled.get("entities", [])
         relationships = distilled.get("relationships", [])
         
-        active_rag = await get_rag(state.rag_embedding_func, state.GOOGLE_API_KEY)
-        if active_rag:
-            for fact in facts:
-                await active_rag.ainsert(fact)
+        # Ingest into Master SQLite (Unified Sync Stream)
+        # Background sync_loop in cortex.py now picks these up automatically
         
         conn = sqlite3.connect(connector.db_path)
         cursor = conn.cursor()

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   RefreshCw,
   LogOut,
@@ -9,7 +10,7 @@ import {
   Twitter,
   Clock,
   AlertCircle,
-} from "lucide-react";
+} = LucideIcons as any;
 import { apiUrl } from "../../config/api";
 import { setHexAlpha } from "../../config/themeColors";
 

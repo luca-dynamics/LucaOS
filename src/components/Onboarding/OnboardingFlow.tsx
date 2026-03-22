@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { THEME_PALETTE } from "../../config/themeColors";
 import { motion } from "framer-motion";
 import HologramFace from "./HologramFace";
@@ -7,16 +8,8 @@ import ConversationalOnboarding from "./ConversationalOnboarding";
 import FaceScan from "./FaceScan";
 import ConstitutionalAlignment from "./ConstitutionalAlignment";
 import ThemeSelectionStep from "./ThemeSelectionStep";
-import {
-  ArrowRight,
-  Check,
-  Sparkles,
-  Terminal,
-  Key,
-  Shield,
-  Activity,
-  Cpu,
-} from "lucide-react";
+const { ArrowRight, Check, Sparkles, Terminal, Key, Shield, Activity, Cpu } =
+  LucideIcons as any;
 import { soundService } from "../../services/soundService";
 import { settingsService } from "../../services/settingsService";
 import { requestVoicePermission } from "../../utils/voicePermissions";
@@ -527,7 +520,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               ? "w-full h-full"
               : isMobile
                 ? "w-[95vw] h-[90vh] px-4"
-                : "w-[min(120vmin,1200px)] h-[min(90vmin,900px)]"
+                : "w-[min(80vmin,1000px)] h-[min(75vmin,800px)]"
             : step === "THEME"
               ? isMobile
                 ? "w-[90vw]"

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
 import { LucaSettings } from "../../services/settingsService";
 import { PERSONA_UI_CONFIG } from "../../services/lucaService";
 import { apiUrl } from "../../config/api";
-import {
+const {
   Chrome,
   RefreshCw,
   Trash2,
@@ -15,7 +16,9 @@ import {
   Mic2,
   Shield,
   MessageSquare,
-} from "lucide-react";
+  BrainCircuit,
+  Paintbrush,
+} = LucideIcons as any;
 import { setHexAlpha } from "../../config/themeColors";
 import ToneStyleSelector from "./ToneStyleSelector";
 import {
@@ -23,7 +26,7 @@ import {
   UIThemeId,
   PersonaMode,
 } from "../../types/lucaPersonality";
-import { BrainCircuit, Paintbrush } from "lucide-react";
+
 
 interface ChromeProfileStatus {
   imported: boolean;

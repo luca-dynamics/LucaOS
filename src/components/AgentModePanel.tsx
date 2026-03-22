@@ -6,20 +6,19 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   Bot,
   Play,
   Pause,
   Square,
   CheckCircle2,
-  Circle,
-  Loader2,
   AlertCircle,
   Clock,
   Zap,
   TrendingUp,
-} from "lucide-react";
+} = LucideIcons as any;
 import type { AgentTask, AgentEvent } from "../services/agent/types";
 import { agentService } from "../services/agent/AgentService";
 
@@ -125,10 +124,10 @@ const AgentModePanel: React.FC<Props> = ({
               </div>
               <div>
                 <h2
-                  className="text-xl font-bold"
+                  className="text-xl font-bold flex items-center gap-2"
                   style={{ color: theme?.primary || themeHex }}
                 >
-                  🤖 AGENT MODE
+                  <Bot className="w-5 h-5" /> AGENT MODE
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {task?.status === "executing"

@@ -223,229 +223,220 @@ class UIAutomationService {
   }
 
   /**
-   * Execute multi-step UI automation task
-   * This is where Vision AI integration will happen later
+   * Execute multi-step UI automation task autonomously (Self-Driving)
    */
-  async executeTask(): Promise<AutomationResult> {
-    // TODO: This will integrate with Gemini Vision AI
-    // For now, return a placeholder
-    return {
-      success: false,
-      error:
-        "Multi-step automation not yet implemented. Use individual actions for now.",
-    };
-  }
-
-  /**
-   * Find and click element by description
-   * Uses Vision AI to locate element from natural language + screenshot
-   */
-  async findAndClick(
-    description: string,
-    screenshot?: string
-  ): Promise<AutomationResult> {
-    try {
-      // Step 1: Get UI tree
-      const nodes = await this.getUITree();
-
-      // Step 2: If screenshot provided, use Vision AI
-      if (screenshot) {
-        const { visionUIService } = await import("./visionUIService");
-        const searchResult = await visionUIService.findElement(
-          screenshot,
-          nodes,
-          description
-        );
-
-        if (searchResult.found && searchResult.nodeId) {
-          console.log(
-            `[UIAutomation] Vision AI found element: ${searchResult.nodeId} (confidence: ${searchResult.confidence})`
-          );
-          console.log(`[UIAutomation] Reasoning: ${searchResult.reasoning}`);
-
-          // Click the element
-          return await this.click(searchResult.nodeId);
-        } else {
+  async executeTask(goal: string, maxSteps: number = 10, screenshot?: string): Promise<AutomationResult> {
+    // 0. Ensure Permissions & Service Availability first
+    const isReady = await this.isAvailable();
+    if (!isReady) {
+      console.log("[UIAutomation] Accessibility service not enabled. Requesting permission...");
+      try {
+        await this.requestPermission();
+        // Give the user time to toggle it and the service to bind
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        
+        // Re-check
+        const recheck = await this.isAvailable();
+        if (!recheck) {
           return {
             success: false,
-            error: `Vision AI could not find element matching "${description}". ${
-              searchResult.reasoning || ""
-            }`,
+            error: "Accessibility permission is required to automate tasks. Please enable it in Settings and try again.",
           };
         }
-      }
-
-      // Step 3: Fallback to simple text matching (no screenshot)
-      const element = nodes.find(
-        (node) =>
-          node.clickable &&
-          (node.text?.toLowerCase().includes(description.toLowerCase()) ||
-            node.description?.toLowerCase().includes(description.toLowerCase()))
-      );
-
-      if (!element) {
+      } catch (e: any) {
         return {
           success: false,
-          error: `Could not find clickable element matching "${description}". Try providing a screenshot for Vision AI detection.`,
+          error: `Failed to request Accessibility permissions: ${e.message}`,
         };
       }
-
-      return await this.click(element.id);
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Find and click failed",
-      };
     }
-  }
 
-  /**
-   * Execute complex multi-step UI automation task with Vision AI
-   */
-  async executeVisionTask(
-    task: string,
-    screenshot: string
-  ): Promise<AutomationResult> {
-    try {
-      // Use Gemini to plan the steps
-      const { getGenClient } = await import("./genAIClient");
-      const ai = getGenClient();
-
+    const { getGenClient } = await import("./genAIClient");
+    const ai = getGenClient();
+    
+    const actionHistory: string[] = [];
+    
+    for (let step = 1; step <= maxSteps; step++) {
+      console.log(`[UIAutomation] Executing task step ${step}/${maxSteps} - Goal: ${goal}`);
+      
+      // 1. Observe: Get screen and UI tree
+      let base64Screenshot = screenshot || "";
+      if (!base64Screenshot) {
+        try {
+          const screenResult = await LucaAccessibility.captureScreen();
+          base64Screenshot = screenResult.base64;
+        } catch (e: any) {
+          return { success: false, error: `Failed to capture screen: ${e.message}` };
+        }
+      }
+      
       const nodes = await this.getUITree();
+      
+      // Filter non-interactive elements and limit to save tokens
       const elementsSummary = nodes
-        .filter((n) => n.clickable || n.editable)
+        .filter((n) => n.clickable || n.editable || n.scrollable)
         .map((n) => ({
           id: n.id,
           text: n.text,
           description: n.description,
-          type: n.className?.split(".").pop(),
+          className: n.className?.split(".").pop(),
+          bounds: n.bounds,
         }))
-        .slice(0, 30);
+        .slice(0, 40);
 
-      const prompt = `You are automating an Android UI task: "${task}"
+      // 2. Think: Ask Gemini 2.0 Flash for next single step
+      const prompt = `You are an autonomous Android agent executing this goal: "${goal}"
 
-Available interactive elements:
+CURRENT STATE:
+Step: ${step}/${maxSteps}
+Previous Actions History:
+${actionHistory.length > 0 ? actionHistory.join("\n") : "None"}
+
+INTERACTIVE ELEMENTS ON SCREEN:
 ${JSON.stringify(elementsSummary, null, 2)}
 
-Return a JSON plan:
+INSTRUCTIONS:
+1. Look at the screenshot to understand the current app state.
+2. Determine if the goal is completely achieved. Avoid early completion if intermediate steps are still needed.
+3. If not achieved, determine the SINGLE next action to take to progress. Select the corresponding "nodeId" from the elements list if applicable.
+4. If you are stuck (e.g. an ad, error modal, or unexpected screen), you can use the "back" or "home" actions to recover.
+
+Return ONLY a valid JSON object matching this schema:
 {
-  "steps": [
-    {"action": "click", "target": "element description", "nodeId": "id if obvious"},
-    {"action": "type", "target": "field description", "text": "text to type"},
-    {"action": "scroll", "direction": "up/down"}
-  ]
+  "status": "in_progress" | "success" | "failed",
+  "reasoning": "Explain what you see and why you are choosing the action",
+  "action": {
+    "type": "click" | "type" | "scroll" | "back" | "home" | "none",
+    "nodeId": "the widget id to interact with (required for click, type, scroll)",
+    "text": "text to type (required for type action)",
+    "direction": "up" | "down" (required for scroll action)
+  }
 }`;
 
-      const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                inlineData: {
-                  mimeType: "image/png",
-                  data: screenshot.replace(/^data:image\/\w+;base64,/, ""),
+      try {
+        const result = await ai.models.generateContent({
+          model: "gemini-2.0-flash", // Excellent at multimodal spatial reasoning
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: "image/png",
+                    data: base64Screenshot.replace(/^data:image\/\w+;base64,/, ""),
+                  },
                 },
-              },
-              { text: prompt },
-            ],
+                { text: prompt },
+              ],
+            },
+          ],
+          config: {
+            temperature: 0.1, // Low temp for deterministic logic
           },
-        ],
-        config: {
-          temperature: 0.3,
-          maxOutputTokens: 800,
-        },
-      });
+        });
 
-      const responseText = result.text || "";
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-
-      if (!jsonMatch) {
-        return {
-          success: false,
-          error: "Could not generate automation plan",
-        };
-      }
-
-      const plan = JSON.parse(jsonMatch[0]);
-
-      // Execute steps
-      const results: string[] = [];
-      for (const step of plan.steps) {
-        let stepResult: AutomationResult;
-
-        switch (step.action) {
+        const responseText = result.text || "";
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        
+        if (!jsonMatch) {
+          throw new Error("Invalid response format from Gemini");
+        }
+        
+        const decision = JSON.parse(jsonMatch[0]);
+        console.log(`[UIAutomation] Reasoning: ${decision.reasoning}`);
+        
+        // Check Status
+        if (decision.status === "success") {
+          actionHistory.push(`[${step}] SUCCESS: ${decision.reasoning}`);
+          return {
+            success: true,
+            message: `Goal achieved: ${goal}`,
+            data: { steps: step, history: actionHistory },
+          };
+        } else if (decision.status === "failed") {
+          return {
+            success: false,
+            error: `Task failed: ${decision.reasoning}`,
+            data: { history: actionHistory },
+          };
+        }
+        
+        // 3. Act: Execute the decided action
+        const action = decision.action;
+        let actionResult: AutomationResult = { success: false, error: "Empty action" };
+        
+        switch (action.type) {
           case "click":
-            stepResult = await this.findAndClick(step.target, screenshot);
-            break;
-          case "type": {
-            // Find the input field first
-            const fieldResult = await this.findAndClick(
-              step.target,
-              screenshot
-            );
-            if (fieldResult.success && step.text) {
-              // Type into it (assuming the click focused it)
-              const editableNode = nodes.find((n) => n.editable);
-              if (editableNode) {
-                stepResult = await this.type(editableNode.id, step.text);
-              } else {
-                stepResult = {
-                  success: false,
-                  error: "No editable field found",
-                };
-              }
-            } else {
-              stepResult = fieldResult;
-            }
-            break;
-          }
-          case "scroll": {
-            const scrollableNode = nodes.find((n) => n.scrollable);
-            if (scrollableNode) {
-              stepResult = await this.scroll(scrollableNode.id, step.direction);
-            } else {
-              stepResult = {
-                success: false,
-                error: "No scrollable element found",
-              };
-            }
-            break;
-          }
+             actionResult = await this.click(action.nodeId);
+             actionHistory.push(`[${step}] Clicked node: ${action.nodeId}`);
+             break;
+          case "type":
+             // AccessibilityType requires nodeId and text
+             actionResult = await this.type(action.nodeId, action.text);
+             actionHistory.push(`[${step}] Typed "${action.text}" into node: ${action.nodeId}`);
+             break;
+          case "scroll":
+             actionResult = await this.scroll(action.nodeId, action.direction || "up");
+             actionHistory.push(`[${step}] Scrolled ${action.direction} on node: ${action.nodeId}`);
+             break;
+          case "back":
+             actionResult = await this.goBack();
+             actionHistory.push(`[${step}] Pressed Back button`);
+             break;
+          case "home":
+             actionResult = await this.goHome();
+             actionHistory.push(`[${step}] Pressed Home button`);
+             break;
+          case "none":
+             actionResult = { success: true, message: "Waited" };
+             actionHistory.push(`[${step}] No action taken. Waiting.`);
+             break;
           default:
-            stepResult = {
-              success: false,
-              error: `Unknown action: ${step.action}`,
-            };
-            break;
+             actionResult = { success: false, error: `Unknown action type: ${action.type}` };
         }
-
-        results.push(
-          `${step.action}: ${stepResult.success ? "✓" : "✗"} ${
-            stepResult.message || stepResult.error || ""
-          }`
-        );
-
-        if (!stepResult.success) {
-          break; // Stop on first failure
+        
+        if (!actionResult.success) {
+          console.warn(`[UIAutomation] Action failed: ${actionResult.error}`);
+          actionHistory.push(`[${step}] ACTION ERROR: ${actionResult.error}`);
+          // Don't abort immediately on action fail. Let Gemini recover on the next loop iteration.
         }
-
-        // Small delay between steps
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        
+        // Wait for UI animations/transitions to settle before next observation
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        
+      } catch (e: any) {
+         console.error(`[UIAutomation] Error during task loop:`, e);
+         return {
+           success: false,
+           error: `Crash during loop execution: ${e.message}`,
+           data: { history: actionHistory }
+         };
       }
-
-      return {
-        success: true,
-        message: `Executed ${results.length} steps:\n${results.join("\n")}`,
-        data: { plan, results },
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Vision task execution failed",
-      };
     }
+    
+    return {
+      success: false,
+      error: `Maximum steps (${maxSteps}) reached without achieving goal.`,
+      data: { history: actionHistory }
+    };
+  }
+
+  /**
+   * High-level Vision AI implementation for multi-step tasks (Alias for executeTask)
+   */
+  async executeVisionTask(goal: string, screenshot?: string): Promise<AutomationResult> {
+    return this.executeTask(goal, 10, screenshot);
+  }
+
+  /**
+   * Simple find and click automation
+   */
+  async findAndClick(text: string): Promise<AutomationResult> {
+    const node = await this.findElementByText(text);
+    if (!node) {
+      return { success: false, error: `Could not find element with text: ${text}` };
+    }
+    return this.click(node.id);
   }
 }
 

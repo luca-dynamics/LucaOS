@@ -1,14 +1,16 @@
 import React, { memo } from "react";
-import { Handle, Position } from "@xyflow/react";
+import * as LucideIcons from "lucide-react";
+import { Handle,
+  Position } from "@xyflow/react";
 import { motion } from "framer-motion";
-import { 
-  Cpu, 
-  Shield, 
+const { 
+  Cpu,
+  Shield,
   Target,
   Brain,
   Activity,
   Globe,
-} from "lucide-react";
+} = LucideIcons as any;
 import { setHexAlpha, getThemeColors } from "../../config/themeColors";
 
 // --- GOAL NODE ---

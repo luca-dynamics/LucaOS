@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { settingsService } from "../services/settingsService";
 
 export function useVoiceSystem() {
@@ -32,7 +32,7 @@ export function useVoiceSystem() {
 
   const [approvalRequest, setApprovalRequest] = useState<any | null>(null);
 
-  return {
+  return useMemo(() => ({
     isVoiceMode,
     setIsVoiceMode,
     showVoiceHud,
@@ -57,5 +57,5 @@ export function useVoiceSystem() {
     setIngestionState,
     approvalRequest,
     setApprovalRequest,
-  };
+  }), [isVoiceMode, showVoiceHud, voiceAmplitude, voiceTranscript, voiceTranscriptSource, voiceModel, isVadActive, voiceSearchResults, visualData, isSpeaking, ingestionState, approvalRequest]);
 }

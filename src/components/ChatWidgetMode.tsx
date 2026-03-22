@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+} = LucideIcons as any;
 import ChatWidgetHeader from "./ChatWidgetHeader";
 import ChatWidgetHistory from "./ChatWidgetHistory";
 import ChatWidgetInput from "./ChatWidgetInput";
@@ -17,6 +20,8 @@ import conversationService from "../services/conversationService";
 import { awarenessService } from "../services/awarenessService";
 import { settingsService } from "../services/settingsService";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
+import SecurityGate from "./SecurityGate";
+import ChatMessageBubble from "./ChatMessageBubble";
 
 interface ChatWidgetState {
   history: {
@@ -27,10 +32,12 @@ interface ChatWidgetState {
     generatedImage?: string | null;
     generatedVideo?: string | null;
     isStreaming?: boolean;
+    tacticalData?: any;
   }[];
   isProcessing: boolean;
   persona?: string;
   theme?: string;
+  approvalRequest?: any;
 }
 
 const ChatWidgetMode: React.FC = () => {
@@ -173,7 +180,9 @@ const ChatWidgetMode: React.FC = () => {
         },
       );
       // @ts-ignore
-      return () => remove && remove();
+      return () => {
+        remove();
+      };
     }
   }, [startListening, stopListening]);
 
@@ -338,6 +347,7 @@ const ChatWidgetMode: React.FC = () => {
           isComplete?: boolean;
           generatedImage?: string;
           generatedVideo?: string;
+          tacticalData?: any;
         }) => {
           setState((prev) => {
             const history = [...prev.history];
@@ -357,6 +367,7 @@ const ChatWidgetMode: React.FC = () => {
                     isStreaming: !data.isComplete,
                     generatedImage: data.generatedImage,
                     generatedVideo: data.generatedVideo,
+                    tacticalData: data.tacticalData,
                   },
                 ],
               };
@@ -372,6 +383,7 @@ const ChatWidgetMode: React.FC = () => {
               isStreaming: !data.isComplete,
               generatedImage: data.generatedImage || currentMsg.generatedImage,
               generatedVideo: data.generatedVideo || currentMsg.generatedVideo,
+              tacticalData: data.tacticalData || currentMsg.tacticalData,
             };
 
             return {
@@ -414,6 +426,12 @@ const ChatWidgetMode: React.FC = () => {
           }
           if (data.isVadActive !== undefined) {
             setIsRemoteVadActive(data.isVadActive);
+          }
+          if (data.approvalRequest !== undefined) {
+            setState((prev) => ({
+              ...prev,
+              approvalRequest: data.approvalRequest,
+            }));
           }
         },
       );
@@ -534,11 +552,30 @@ const ChatWidgetMode: React.FC = () => {
   // Attachment Logic
   const [attachment, setAttachment] = useState<string | null>(null);
 
+  const handleApprove = () => {
+    if (state.approvalRequest && (window as any).electron) {
+      (window as any).electron.ipcRenderer.send("resolve-permission", {
+        id: state.approvalRequest.id,
+        action: "approve",
+      });
+      // State will be cleared via IPC sync-widget-state from App.tsx
+    }
+  };
+
+  const handleDeny = () => {
+    if (state.approvalRequest && (window as any).electron) {
+      (window as any).electron.ipcRenderer.send("resolve-permission", {
+        id: state.approvalRequest.id,
+        action: "deny",
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const handleSend = async () => {
-      if (!input.trim() || state.isProcessing) return;
+    if (!input.trim() || state.isProcessing) return;
 
+    const handleSend = async () => {
       const cmd = input.trim();
       const lowerCmd = cmd.toLowerCase();
 
@@ -708,9 +745,6 @@ const ChatWidgetMode: React.FC = () => {
                 setShowChips(false);
               }
             }}
-            onDismiss={(id) =>
-              setSuggestions((prev) => prev.filter((s) => s.id !== id))
-            }
             onDismissAll={() => {
               setSuggestions([]);
               setShowChips(false);
@@ -799,11 +833,32 @@ const ChatWidgetMode: React.FC = () => {
         }`}
       >
         <ChatWidgetHistory
-          history={state.history}
+          history={state.history as any}
           isProcessing={state.isProcessing}
           primaryColor={primaryColor}
           messagesEndRef={messagesEndRef}
+          persona={(state.persona as any) || "ASSISTANT"}
         />
+        {state.approvalRequest && (
+          <div className="p-4 border-t border-white/10 bg-black/40 backdrop-blur-md">
+            <SecurityGate
+              toolName={state.approvalRequest.toolName || "SYSTEM_OVERRIDE"}
+              args={state.approvalRequest.args || {}}
+              userName={state.approvalRequest.userName || "OPERATOR"}
+              persona={(state.persona as any) || "ASSISTANT"}
+              onApprove={handleApprove}
+              onDeny={handleDeny}
+              theme={{
+                hex: primaryColor,
+                bg: "rgba(0,0,0,0.8)",
+                border: primaryColor,
+                primary: primaryColor,
+                glow: `${primaryColor}40`,
+                coreColor: primaryColor,
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* LUCA EYE LOGIC (Hidden UI, controlled by Input Button) */}
@@ -842,6 +897,8 @@ const ChatWidgetMode: React.FC = () => {
         isCompact={state.history.length === 0}
         onHeightChange={setInputHeight}
         onClearChat={() => setState((prev) => ({ ...prev, history: [] }))}
+        persona={state.persona}
+        hasApprovalRequest={!!state.approvalRequest}
       />
     </div>
   );

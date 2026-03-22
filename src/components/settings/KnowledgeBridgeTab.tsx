@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
+import { settingsService } from "../../services/settingsService";
+const {
   Share2,
   Upload,
   AlertCircle,
@@ -12,7 +14,7 @@ import {
   ExternalLink,
   Check,
   ChevronDown,
-} from "lucide-react";
+} = LucideIcons as any;
 import { cortexUrl } from "../../config/api";
 
 interface NotionPage {
@@ -76,12 +78,24 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
   useEffect(() => {
     fetch(cortexUrl("/oauth/notion/status"))
       .then((res) => res.json())
-      .then((data) => setNotionConnected(data.connected))
+      .then((data) => {
+        setNotionConnected(data.connected);
+        const current = settingsService.get("connectors");
+        settingsService.saveSettings({ 
+          connectors: { ...current, notion: data.connected } 
+        });
+      })
       .catch(() => setNotionConnected(false));
 
     fetch(cortexUrl("/oauth/google/status"))
       .then((res) => res.json())
-      .then((data) => setGoogleConnected(data.connected))
+      .then((data) => {
+        setGoogleConnected(data.connected);
+        const current = settingsService.get("connectors");
+        settingsService.saveSettings({ 
+          connectors: { ...current, google: data.connected } 
+        });
+      })
       .catch(() => setGoogleConnected(false));
 
     fetch(cortexUrl("/knowledge/obsidian/status"))
@@ -89,6 +103,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
       .then((data) => {
         setObsidianConnected(data.connected);
         if (data.vault_path) setVaultPath(data.vault_path);
+        const current = settingsService.get("connectors");
+        settingsService.saveSettings({ 
+          connectors: { ...current, obsidian: data.connected } 
+        });
       })
       .catch(() => setObsidianConnected(false));
   }, []);

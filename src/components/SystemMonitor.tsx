@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Activity } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Activity,
+} = LucideIcons as any;
 import { apiUrl, cortexUrl } from "../config/api";
 // import AudioStreamer from './AudioStreamer'; // REMOVED
 

@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { ArrowRight, Palette } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  ArrowRight,
+  Palette,
+} = LucideIcons as any;
 import { settingsService } from "../../services/settingsService";
 import { THEME_PALETTE, setHexAlpha } from "../../config/themeColors";
 import { useMobile } from "../../hooks/useMobile";
@@ -130,8 +134,8 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
           className="mx-auto transition-colors duration-300"
           style={{
             color: currentThemeHex,
-            width: "clamp(2rem, 10vmin, 4rem)",
-            height: "clamp(2rem, 10vmin, 4rem)",
+            width: "clamp(2rem, 8vmin, 3.5rem)",
+            height: "clamp(2rem, 8vmin, 3.5rem)",
             marginBottom: "2vmin",
           }}
         />
@@ -139,7 +143,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
           className="font-bold tracking-widest uppercase transition-colors duration-300"
           style={{
             color: currentThemeHex,
-            fontSize: "clamp(1rem, 4.5vmin, 1.8rem)",
+            fontSize: "clamp(1rem, 4vmin, 1.6rem)",
           }}
         >
           Interface Calibration
@@ -187,8 +191,8 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                 <div
                   className="rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
                   style={{
-                    width: "clamp(1.5rem, 6vmin, 2.5rem)",
-                    height: "clamp(1.5rem, 6vmin, 2.5rem)",
+                    width: "clamp(1.5rem, 5vmin, 2.2rem)",
+                    height: "clamp(1.5rem, 5vmin, 2.2rem)",
                     backgroundColor: "rgba(255,255,255,0.05)",
                   }}
                 >
@@ -262,8 +266,8 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                 <div
                   className="rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
                   style={{
-                    width: "clamp(1.5rem, 6vmin, 2.5rem)",
-                    height: "clamp(1.5rem, 6vmin, 2.5rem)",
+                    width: "clamp(1.5rem, 5vmin, 2.2rem)",
+                    height: "clamp(1.5rem, 5vmin, 2.2rem)",
                     backgroundColor: "rgba(255,255,255,0.05)",
                   }}
                 >
@@ -422,7 +426,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
           Confirm Style
           <ArrowRight
             className="group-hover:translate-x-1 transition-transform"
-            style={{ width: "3vmin", height: "3vmin" }}
+            style={{ width: "2.5vmin", height: "2.5vmin" }}
           />
         </button>
       </div>

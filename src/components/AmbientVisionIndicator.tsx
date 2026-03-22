@@ -1,5 +1,9 @@
 import React from "react";
-import { Eye, EyeOff } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Eye,
+  EyeOff,
+} = LucideIcons as any;
 
 interface AmbientVisionIndicatorProps {
   active: boolean;

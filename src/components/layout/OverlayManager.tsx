@@ -1,5 +1,10 @@
 import React from "react";
-import { Sparkles, Dna, ShieldAlert } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Sparkles,
+  Dna,
+  ShieldAlert,
+} = LucideIcons as any;
 import { PresenceMonitor } from "../Awareness/PresenceMonitor";
 import { ScreenShare } from "../ScreenShare";
 import GhostCursor from "../GhostCursor";
@@ -117,7 +122,6 @@ interface OverlayManagerProps {
   setShowAutonomyDashboard: (show: boolean) => void;
   showVoiceHud: boolean;
   toggleVoiceMode: () => void;
-  voiceAmplitude: number;
   voiceTranscript: string;
   setVoiceTranscript: (transcript: string) => void;
   voiceTranscriptSource: string;
@@ -267,7 +271,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     setShowAutonomyDashboard,
     showVoiceHud,
     toggleVoiceMode,
-    voiceAmplitude,
     voiceTranscript,
     setVoiceTranscript,
     voiceTranscriptSource,
@@ -678,7 +681,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         isActive={isVoiceMode}
         isVisible={showVoiceHud}
         onClose={toggleVoiceMode}
-        amplitude={voiceAmplitude}
         transcript={voiceTranscript}
         transcriptSource={voiceTranscriptSource as any}
         isVadActive={voiceBackend === "local" ? localVadActive : isVadActive}

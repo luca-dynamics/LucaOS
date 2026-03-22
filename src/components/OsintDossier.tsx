@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { OsintProfile } from "../types";
-import {
+const {
   X,
   User,
   Globe,
@@ -15,7 +16,7 @@ import {
   PieChart,
   Download,
   RefreshCw,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface Props {
   profile: OsintProfile | null;
@@ -32,7 +33,6 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
   const [darkWebQuery, setDarkWebQuery] = useState("");
   const [isDarkWebScanning, setIsDarkWebScanning] = useState(false);
   const [darkWebAccepted, setDarkWebAccepted] = useState(false);
-  const [toolStatus, setToolStatus] = useState<Record<string, boolean>>({});
   const [installingTool, setInstallingTool] = useState<string | null>(null);
   const [missingTools, setMissingTools] = useState<string[]>([]);
 
@@ -57,7 +57,6 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
       const res = await fetch("/api/osint/tools/status");
       if (res.ok) {
         const data = await res.json();
-        setToolStatus(data.tools);
         // Find missing tools
         const missing = Object.entries(data.tools)
           .filter(([, installed]) => !installed)
@@ -79,8 +78,6 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
       });
       const data = await res.json();
       if (data.status === "success") {
-        // Update tool status
-        setToolStatus((prev) => ({ ...prev, [toolName]: true }));
         setMissingTools((prev) => prev.filter((t) => t !== toolName));
       }
     } catch (e) {
@@ -541,7 +538,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
               {profile.hits.map((hit, i) => (
                 <div key={i} className="relative z-10 flex gap-4 group">
                   <div
-                    className={`w-8 h-8 rounded-sm border flex items-center justify-center bg-black shrink-0 transition-all duration-300 ${
+                    className={`w-8 h-8 rounded-sm border flex items-center justify-center bg-black shrink-0 transition-all duration-300 overflow-hidden ${
                       hit.category === "DARK_WEB"
                         ? "border-red-900 group-hover:border-rq-red text-rq-red group-hover:shadow-[0_0_10px_#ef4444]"
                         : hit.category === "SOCIAL"
@@ -549,7 +546,15 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                         : "border-emerald-900 group-hover:border-emerald-500 text-emerald-500 group-hover:shadow-[0_0_10px_#22C55E]"
                     }`}
                   >
-                    {hit.category === "DARK_WEB" ? (
+                    {hit.category === "SOCIAL" && hit.platform.toLowerCase().includes("twitter") ? (
+                      <img src="https://abs.twimg.com/favicons/twitter.2.ico" className="w-5 h-5 object-contain invert opacity-80" />
+                    ) : hit.category === "SOCIAL" && hit.platform.toLowerCase().includes("facebook") ? (
+                      <img src="https://www.facebook.com/favicon.ico" className="w-5 h-5 object-contain" />
+                    ) : hit.category === "SOCIAL" && hit.platform.toLowerCase().includes("linkedin") ? (
+                      <img src="https://static.licdn.com/sc/h/al2o9zrvru7aqj8e1x2rzsrca" className="w-5 h-5 object-contain" />
+                    ) : hit.category === "SOCIAL" && hit.platform.toLowerCase().includes("instagram") ? (
+                      <img src="https://www.instagram.com/static/images/ico/favicon.ico/36b3048c2345.ico" className="w-5 h-5 object-contain" />
+                    ) : hit.category === "DARK_WEB" ? (
                       <Lock size={14} />
                     ) : hit.category === "DOMAIN" ? (
                       <Globe size={14} />
@@ -789,8 +794,12 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                 <h3 className="text-xl font-bold tracking-widest mb-4 text-red-500">
                   RESTRICTED ACCESS
                 </h3>
-                <pre className="text-left text-xs text-slate-400 font-mono whitespace-pre-wrap bg-black/40 p-4 border border-red-900 rounded mb-6 max-w-md">
-                  {`⚠️ LEGAL DISCLAIMER ⚠️
+                <pre className="text-left text-xs text-slate-400 font-mono whitespace-pre-wrap bg-black/40 p-4 border border-red-900 rounded mb-6 max-w-md flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-red-500 font-bold border-b border-red-900/50 pb-2 mb-2">
+                    <AlertTriangle size={16} />
+                    <span>LEGAL CAUTION REQUIRED</span>
+                  </div>
+                  {`LEGAL DISCLAIMER
 
 This tool accesses the Tor network to search .onion sites.
 

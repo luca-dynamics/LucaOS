@@ -1,5 +1,11 @@
 import React from "react";
-import { User, Activity, TrendingUp, TrendingDown } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  User,
+  Activity,
+  TrendingUp,
+  TrendingDown,
+} = LucideIcons as any;
 
 interface TraderDetailsProps {
   themeCardBg?: string;

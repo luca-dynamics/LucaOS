@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Terminal,
   Activity,
   Plus,
@@ -11,7 +12,7 @@ import {
   Pause,
   ChevronDown,
   ChevronRight,
-} from "lucide-react";
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 
 interface Goal {

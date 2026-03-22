@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   User,
   Brain,
   Settings,
@@ -13,7 +14,7 @@ import {
   Zap,
   Smile,
   X,
-} from "lucide-react";
+} = LucideIcons as any;
 import { settingsService } from "../../services/settingsService";
 import { memoryService } from "../../services/memoryService";
 import { personalityService } from "../../services/personalityService";

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   BrainCircuit,
   Code,
@@ -15,7 +16,7 @@ import {
   Package,
   FileText,
   Bot,
-} from "lucide-react";
+} = LucideIcons as any;
 import { CustomSkill } from "../types";
 import SkillPreview from "./SkillPreview";
 import { apiUrl } from "../config/api";
@@ -519,11 +520,15 @@ const SkillCard: React.FC<{
           <div
             className={`p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-${colors.accent}/50 transition-colors`}
           >
-            <Code
-              size={18}
-              className="flex-shrink-0"
-              style={{ color: colors.accent }}
-            />
+            {(skill as any).icon ? (
+              <span className="text-lg">{(skill as any).icon}</span>
+            ) : (
+              <Code
+                size={18}
+                className="flex-shrink-0"
+                style={{ color: colors.accent }}
+              />
+            )}
           </div>
           <h3 className="font-bold text-white text-sm sm:text-base truncate tracking-wide">
             {skill.name}
@@ -557,17 +562,30 @@ const SkillCard: React.FC<{
             className="text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm"
             style={{
               backgroundColor:
-                skill.format === "agent-skills"
+                skill.format === "protocol-suite"
+                  ? "rgba(59, 130, 246, 0.1)"
+                  : skill.format === "agent-skills"
                   ? "rgba(34, 197, 94, 0.1)"
                   : "rgba(100, 116, 139, 0.1)",
               borderColor:
-                skill.format === "agent-skills"
+                skill.format === "protocol-suite"
+                  ? "rgba(59, 130, 246, 0.2)"
+                  : skill.format === "agent-skills"
                   ? "rgba(34, 197, 94, 0.2)"
                   : "rgba(100, 116, 139, 0.2)",
-              color: skill.format === "agent-skills" ? "#4ade80" : "#94a3b8",
+              color: 
+                skill.format === "protocol-suite" 
+                  ? "#60a5fa" 
+                  : skill.format === "agent-skills" 
+                  ? "#4ade80" 
+                  : "#94a3b8",
             }}
           >
-            {skill.format === "agent-skills" ? (
+            {skill.format === "protocol-suite" ? (
+              <span className="flex items-center gap-1">
+                <Sparkles size={10} /> Official
+              </span>
+            ) : skill.format === "agent-skills" ? (
               <span className="flex items-center gap-1">
                 <Package size={10} /> Agent
               </span>
@@ -593,13 +611,15 @@ const SkillCard: React.FC<{
         }}
       >
         <div className="text-[9px] sm:text-[10px] text-slate-500 mb-1 uppercase tracking-widest font-bold">
-          INPUTS
+          {skill.format === "protocol-suite" ? "CAPABILITIES" : "INPUTS"}
         </div>
         <div
           className="text-[10px] sm:text-xs font-mono truncate opacity-90"
           style={{ color: colors.accent }}
         >
-          {skill.inputs.join(", ") || "None"}
+          {skill.format === "protocol-suite" 
+            ? skill.actions?.join(", ")
+            : skill.inputs.join(", ") || "None"}
         </div>
       </div>
 

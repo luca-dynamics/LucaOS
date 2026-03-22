@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Download,
   Trash2,
   LogOut,
@@ -9,7 +10,7 @@ import {
   RefreshCw,
   Filter,
   Trash,
-} from "lucide-react";
+} = LucideIcons as any;
 import { memoryService } from "../../services/memoryService";
 import { MemoryNode } from "../../types";
 import { cortexUrl } from "../../config/api";

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Camera,
   Monitor,
   Disc,
@@ -8,7 +9,7 @@ import {
   Eye,
   X,
   Upload,
-} from "lucide-react";
+} = LucideIcons as any;
 import { soundService } from "../services/soundService";
 
 interface Props {

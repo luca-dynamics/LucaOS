@@ -13,7 +13,7 @@ const ChromaticAberration: React.FC<ChromaticAberrationProps> = ({
 }) => {
   const groupRef = useRef<THREE.Group>(null);
 
-  useFrame((state) => {
+  useFrame((state: any) => {
     if (!groupRef.current) return;
     
     // Subtle chromatic aberration effect

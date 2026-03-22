@@ -1,6 +1,7 @@
 import { IStreamingSttProvider, TranscriptResult } from "../types";
 import { cortexUrl } from "../../../config/api";
 import { WavEncoder } from "../utils/WavEncoder";
+import { eventBus } from "../../eventBus";
 
 export class LucaLocalSttProvider implements IStreamingSttProvider {
   public name = "local-luca";
@@ -40,10 +41,16 @@ export class LucaLocalSttProvider implements IStreamingSttProvider {
       const formData = new FormData();
       formData.append("file", audioBlob, "audio.wav");
 
+      const startTime = Date.now();
       const response = await fetch(`${cortexUrl}/stt/transcribe`, {
         method: "POST",
         body: formData,
         signal: AbortSignal.timeout(30000),
+      });
+
+      const latency = Date.now() - startTime;
+      eventBus.emit("telemetry-update", {
+        stt: { local: latency, fastest: "local" }
       });
 
       if (!response.ok) {

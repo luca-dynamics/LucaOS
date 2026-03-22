@@ -1,22 +1,26 @@
 import React, { useState } from "react";
-import { DollarSign, Activity, Zap } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  DollarSign,
+  Zap,
+} = LucideIcons as any;
 
 interface OrderEntryProps {
-  themeCardBg: string;
+  themeCardBg?: string;
   activeSymbol?: string;
   onPlaceOrder: (order: any) => Promise<void>;
   theme?: { hex: string; primary: string; border: string; bg: string };
 }
 
 export default function OrderEntry({
-  themeCardBg,
+  themeCardBg = "bg-transparent",
   activeSymbol = "BTC/USDT",
   onPlaceOrder,
   theme,
 }: OrderEntryProps) {
   const [side, setSide] = useState<"LONG" | "SHORT">("LONG");
   const [amount, setAmount] = useState("100");
-  const [leverage, setLeverage] = useState("5");
+  const [leverage, setLeverage] = useState("10");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -25,8 +29,8 @@ export default function OrderEntry({
     try {
       await onPlaceOrder({
         symbol: activeSymbol,
-        action: side === "LONG" ? "open_long" : "open_short",
-        quantity: parseFloat(amount) / 50000, // Mock calc for BTC size approx
+        side,
+        amount: parseFloat(amount),
         leverage: parseInt(leverage),
         type: "MARKET",
       });
@@ -38,105 +42,79 @@ export default function OrderEntry({
   };
 
   return (
-    <div
-      className={`${themeCardBg} rounded-lg p-3 flex flex-col gap-3 font-mono`}
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <Zap size={14} style={{ color: theme?.hex || "#F97316" }} />
-          Quick Trade
+    <div className={`${themeCardBg} flex flex-col gap-3 font-mono overflow-hidden p-3`}>
+      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+        <h3 className="text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-2">
+          <Zap size={14} style={{ color: theme?.hex || "#fbbf24" }} />
+          Neural Link
         </h3>
-        <span className="text-xs font-bold text-white bg-white/10 px-2 py-0.5 rounded">
+        <span className="text-[9px] font-bold text-slate-400 px-2 py-0.5 rounded border border-white/10 bg-white/5 uppercase">
           {activeSymbol}
         </span>
       </div>
 
-      <div className="grid grid-cols-12 gap-3">
-        {/* Side Selection */}
-        <div className="col-span-12 md:col-span-3 flex bg-black/20 rounded p-1">
-          <button
-            onClick={() => setSide("LONG")}
-            className={`flex-1 text-xs font-bold py-1.5 rounded transition-colors ${
-              side === "LONG"
-                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                : "text-slate-500 hover:text-slate-300"
-            }`}
-          >
-            LONG
-          </button>
-          <button
-            onClick={() => setSide("SHORT")}
-            className={`flex-1 text-xs font-bold py-1.5 rounded transition-colors ${
-              side === "SHORT"
-                ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20"
-                : "text-slate-500 hover:text-slate-300"
-            }`}
-          >
-            SHORT
-          </button>
-        </div>
+      <div className="flex bg-white/[0.03] rounded-lg p-1 border border-white/5 gap-1">
+        <button
+          onClick={() => setSide("LONG")}
+          className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition-all ${
+            side === "LONG" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-slate-500 hover:text-slate-400"
+          }`}
+        >
+          LONG
+        </button>
+        <button
+          onClick={() => setSide("SHORT")}
+          className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition-all ${
+            side === "SHORT" ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : "text-slate-500 hover:text-slate-400"
+          }`}
+        >
+          SHORT
+        </button>
+      </div>
 
-        {/* Amount Input */}
-        <div className="col-span-6 md:col-span-3 relative">
-          <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none text-slate-500">
+      <div className="space-y-3">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500">
             <DollarSign size={12} />
           </div>
           <input
             type="number"
-            className="w-full bg-black/20 border border-slate-700 rounded py-1.5 pl-7 pr-2 text-xs text-white placeholder-slate-600 focus:outline-none transition-colors text-right font-mono"
-            style={{
-              borderColor: "#334155",
-            }}
-            onFocus={(e) =>
-              (e.target.style.borderColor = theme?.hex || "#F97316")
-            }
-            onBlur={(e) => (e.target.style.borderColor = "#334155")}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full bg-white/[0.03] border border-white/10 rounded-lg py-2 pl-8 pr-12 text-xs text-white placeholder-slate-600 focus:outline-none transition-all font-mono"
+            style={{ borderColor: theme ? `${theme.hex}33` : 'rgba(255,255,255,0.1)' }}
             placeholder="Amount"
           />
-          <span className="absolute inset-y-0 right-7 flex items-center pointer-events-none text-[10px] text-slate-500">
-            USDT
-          </span>
+          <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[9px] text-slate-600 uppercase font-bold">USDT</span>
         </div>
 
-        {/* Leverage Input */}
-        <div className="col-span-6 md:col-span-3 flex items-center gap-2 bg-black/20 border border-slate-700 rounded px-2">
-          <span className="text-[10px] text-slate-500 uppercase">Lev</span>
-          <input
-            type="number"
-            value={leverage}
-            onChange={(e) => setLeverage(e.target.value)}
-            className="w-full bg-transparent border-none text-xs text-white text-right focus:outline-none py-1.5"
-            min="1"
-            max="125"
-          />
-          <span
-            className="text-[10px] font-bold"
-            style={{ color: theme?.hex || "#F97316" }}
-          >
-            x
-          </span>
+        <div className="flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2">
+          <span className="text-[9px] text-slate-500 uppercase font-bold">Leverage</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              value={leverage}
+              onChange={(e) => setLeverage(e.target.value)}
+              className="w-12 bg-transparent border-none text-xs text-white text-right focus:outline-none font-mono"
+              min="1"
+              max="125"
+            />
+            <span className="text-xs text-slate-600 font-bold">x</span>
+          </div>
         </div>
 
-        {/* Submit Button */}
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className={`col-span-12 md:col-span-3 text-xs font-bold rounded flex items-center justify-center gap-2 transition-all ${
-            isSubmitting
-              ? "bg-slate-700 text-slate-400 cursor-not-allowed"
-              : side === "LONG"
-              ? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20"
-              : "bg-rose-500 hover:bg-rose-400 text-white shadow-lg shadow-rose-500/20"
+          className={`w-full py-2.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-2 transition-all border ${
+            isSubmitting 
+              ? "bg-white/5 border-white/10 text-slate-500" 
+              : side === "LONG" 
+                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]" 
+                : "bg-rose-500/20 text-rose-400 border-rose-500/30 hover:bg-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.1)]"
           }`}
         >
-          {isSubmitting ? (
-            "..."
-          ) : (
-            <>
-              <Activity size={14} />
-              PLACE {side}
-            </>
-          )}
+          {isSubmitting ? "TRANSMITTING..." : `COMMIT ${side} ORDER`}
         </button>
       </div>
     </div>

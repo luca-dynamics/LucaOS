@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Terminal, ChevronDown, ChevronUp, Activity, CheckCircle2, Loader2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Terminal,
+  ChevronDown,
+  ChevronUp,
+  Activity,
+  CheckCircle2,
+  Loader2,
+} = LucideIcons as any;
 import { TacticalLog } from "../../types";
 
 interface InlineActionFlowProps {

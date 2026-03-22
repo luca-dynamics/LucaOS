@@ -36,7 +36,7 @@ const ParticleSphere = ({
   );
   const ref = useRef<THREE.Points>(null!);
 
-  useFrame((state, delta) => {
+  useFrame((state: any, delta: any) => {
     ref.current.rotation.x -= delta / 10;
     ref.current.rotation.y -= delta / 15;
   });
@@ -60,7 +60,7 @@ const ParticleSphere = ({
 const Core = ({ color, active }: { color: string; active: boolean }) => {
   const meshRef = useRef<THREE.Mesh>(null!);
 
-  useFrame((state, delta) => {
+  useFrame((state: any, delta: any) => {
     meshRef.current.rotation.x += delta * (active ? 0.5 : 0.2);
     meshRef.current.rotation.y += delta * (active ? 0.5 : 0.2);
   });

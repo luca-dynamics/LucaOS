@@ -57,7 +57,7 @@ RUN mkdir -p /root/.luca/data
 # 3. PYTHON CORTEX SETUP
 # ==========================================
 # Copy requirements first to leverage Docker cache
-COPY cortex/agent/requirements.txt ./cortex/agent/
+COPY cortex/python/requirements.txt ./cortex/python/
 
 # Set up virtual environment and install dependencies
 ENV VIRTUAL_ENV=/opt/venv
@@ -65,7 +65,7 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r cortex/agent/requirements.txt
+    pip install --no-cache-dir -r cortex/python/requirements.txt
 
 # Install Playwright browsers (Required for OSINT/Web Scraping)
 RUN python -m playwright install --with-deps chromium

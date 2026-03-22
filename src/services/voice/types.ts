@@ -33,12 +33,22 @@ export interface IReasoningProvider {
 export interface ITtsProvider {
   synthesize(
     text: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: {
+      abortSignal?: AbortSignal;
+      systemInstruction?: string;
+      voiceId?: string;
+      apiKey?: string;
+    },
   ): Promise<ArrayBuffer>;
 
   synthesizeStream?(
     text: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: {
+      abortSignal?: AbortSignal;
+      systemInstruction?: string;
+      voiceId?: string;
+      apiKey?: string;
+    },
   ): AsyncIterable<ArrayBuffer>;
 }
 

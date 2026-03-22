@@ -42,8 +42,7 @@ export async function ingestMCPServerHandler(
 ): Promise<string> {
   const { repoUrl, toolName, instruction } = args;
   console.log(
-    `[INGESTOR] Starting ingestion of ${toolName} from ${repoUrl}...`,
-  );
+    `[INGESTOR] Starting ingestion of ${toolName} from ${repoUrl}...`, );
 
   try {
     // 1. THE SCOUT: Visual Scrape (Using Navigator Agent)
@@ -70,9 +69,7 @@ export async function ingestMCPServerHandler(
 
     console.log(`[INGESTOR] Deploying Navigator Scout to: ${repoUrl}`);
     const scoutResult = await navigatorHandler("visual_scrape_github", {
-      repoUrl,
-      maxDepth: 3,
-    });
+      repoUrl, maxDepth: 3, });
 
     if (!scoutResult.success) {
       return `Scout Failed: ${scoutResult.error}`;
@@ -82,8 +79,7 @@ export async function ingestMCPServerHandler(
 
     // 2. THE ALCHEMIST: Transmute Code to Plugin
     console.log(
-      `[INGESTOR] Transmuting Reference Code (${codebaseContext.length} chars) into Plugin...`,
-    );
+      `[INGESTOR] Transmuting Reference Code (${codebaseContext.length} chars) into Plugin...`, );
 
     const prompt = `
     **SYSTEM REPLICATION PROTOCOL (LEVEL 10)**
@@ -133,7 +129,7 @@ export async function ingestMCPServerHandler(
     `;
 
     const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp", // Correct model ID for new SDK
+      model: "gemini-2.0-flash", // Correct model ID for new SDK
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
     let generatedCode = result.text || "";

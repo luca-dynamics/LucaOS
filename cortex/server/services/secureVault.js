@@ -1,38 +1,46 @@
 /**
- * Secure Vault
- * Stores sensitive credentials encrypted at rest
+ * 🔐 Secure Vault
+ * 
+ * Stores sensitive credentials encrypted at rest.
+ * Supports Phase 16.3 Elite Key Rotation.
  */
 
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-
-
-
 import { SECURITY_DIR } from '../config/constants.js';
 
 const VAULT_DIR = SECURITY_DIR;
-const ENCRYPTION_KEY = process.env.VAULT_KEY || 'luca-vault-secret-key-change-in-production';
 
 export class SecureVault {
   constructor() {
     this.ensureVaultDir();
+    this._masterKey = process.env.VAULT_KEY || 'luca-vault-secret-key-change-in-production';
   }
 
   async ensureVaultDir() {
     try {
       await fs.mkdir(VAULT_DIR, { recursive: true });
     } catch (err) {
-      console.error('[SecureVault] Failed to create vault directory:', err);
+      if (err.code !== 'EEXIST') {
+        console.error('[SecureVault] Failed to create vault directory:', err);
+      }
     }
+  }
+
+  /**
+   * Derive a 32-byte key from the master secret
+   */
+  _deriveKey(masterKey) {
+    return crypto.scryptSync(masterKey, 'luca-salt-2025', 32);
   }
 
   /**
    * Encrypt data
    */
-  encrypt(data) {
+  encrypt(data, customKey = null) {
     const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(ENCRYPTION_KEY, 'salt', 32);
+    const key = this._deriveKey(customKey || this._masterKey);
     const iv = crypto.randomBytes(16);
     
     const cipher = crypto.createCipheriv(algorithm, key, iv);
@@ -48,9 +56,9 @@ export class SecureVault {
   /**
    * Decrypt data
    */
-  decrypt(encrypted) {
+  decrypt(encrypted, customKey = null) {
     const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(ENCRYPTION_KEY, 'salt', 32);
+    const key = this._deriveKey(customKey || this._masterKey);
     const iv = Buffer.from(encrypted.iv, 'hex');
     
     const decipher = crypto.createDecipheriv(algorithm, key, iv);
@@ -61,18 +69,35 @@ export class SecureVault {
   }
 
   /**
+   * 🔄 Elite Key Rotation
+   * Decrypts all files with old key and re-encrypts with new key.
+   */
+  async rotate(newKey) {
+    console.log('[SecureVault] Starting Elite Key Rotation...');
+    const keys = await this.list();
+    
+    for (const key of keys) {
+      const data = await this.retrieve(key);
+      // Re-store with the new master key (temporarily set)
+      const oldMaster = this._masterKey;
+      this._masterKey = newKey;
+      await this.store(key, data);
+      this._masterKey = oldMaster; // Restore until loop is done or config updated
+    }
+
+    this._masterKey = newKey;
+    console.log('[SecureVault] Key Rotation Complete. All entries updated.');
+    return true;
+  }
+
+  /**
    * Store data in vault
    */
   async store(key, data) {
-    try {
-      const encrypted = this.encrypt(data);
-      const filePath = path.join(VAULT_DIR, `${key}.enc`);
-      await fs.writeFile(filePath, JSON.stringify(encrypted), 'utf8');
-      return true;
-    } catch (error) {
-      console.error('[SecureVault] Store failed:', error);
-      throw error;
-    }
+    const encrypted = this.encrypt(data);
+    const filePath = path.join(VAULT_DIR, `${key}.enc`);
+    await fs.writeFile(filePath, JSON.stringify(encrypted), 'utf8');
+    return true;
   }
 
   /**
@@ -81,48 +106,35 @@ export class SecureVault {
   async retrieve(key) {
     try {
       const filePath = path.join(VAULT_DIR, `${key}.enc`);
-      const encrypted = JSON.parse(await fs.readFile(filePath, 'utf8'));
+      const fileData = await fs.readFile(filePath, 'utf8');
+      const encrypted = JSON.parse(fileData);
       return this.decrypt(encrypted);
     } catch (error) {
-      if (error.code === 'ENOENT') {
-        return null; // Key not found
-      }
-      console.error('[SecureVault] Retrieve failed:', error);
+      if (error.code === 'ENOENT') return null;
       throw error;
     }
   }
 
-  /**
-   * Delete data from vault
-   */
   async delete(key) {
     try {
       const filePath = path.join(VAULT_DIR, `${key}.enc`);
       await fs.unlink(filePath);
       return true;
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        return true; // Already deleted
-      }
-      console.error('[SecureVault] Delete failed:', error);
-      throw error;
+    } catch {
+      return true;
     }
   }
 
-  /**
-   * List all vault keys
-   */
   async list() {
     try {
       const files = await fs.readdir(VAULT_DIR);
       return files
         .filter(f => f.endsWith('.enc'))
         .map(f => f.replace('.enc', ''));
-    } catch (error) {
-      console.error('[SecureVault] List failed:', error);
+    } catch {
       return [];
     }
   }
 }
 
-export default SecureVault;
+export default new SecureVault();

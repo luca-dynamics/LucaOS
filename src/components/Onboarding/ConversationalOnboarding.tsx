@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import TypingIndicator from "./TypingIndicator";
+import * as LucideIcons from "lucide-react";
 import { ConversationMode } from "./ModeSelect";
 import { Message } from "../../types/conversation";
 import { OperatorProfile } from "../../types/operatorProfile";
@@ -10,7 +11,8 @@ import { settingsService } from "../../services/settingsService";
 import { personalityService } from "../../services/personalityService";
 import { InteractionContext } from "../../types/lucaPersonality";
 import { liveService } from "../../services/liveService";
-import { X } from "lucide-react";
+const { X,
+} = LucideIcons as any;
 import { llmService } from "../../services/llmService";
 
 interface ConversationalOnboardingProps {
@@ -132,7 +134,7 @@ Opening message:`;
 
         // Hardcoded fallback if AI generation fails
         if (!openingContent) {
-          openingContent = `Hey ${userName}! 👋
+          openingContent = `Welcome, ${userName}! 
 
 I'm Luca, your Autonomous AI Agent. I'd like to get to know you better so I can serve you well.
 

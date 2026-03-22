@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-import {
+const {
   Shield,
   Cpu,
   Database,
@@ -9,7 +10,7 @@ import {
   Scale,
   Sparkles,
   Key,
-} from "lucide-react";
+} = LucideIcons as any;
 import { LucaSettings } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 
@@ -195,19 +196,31 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Key className="w-4 h-4" style={{ color: theme.hex }} />
-            <h4 className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"} uppercase tracking-widest`}>
+            <h4
+              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-200"} uppercase tracking-widest`}
+            >
               Cloud API Config
             </h4>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-[8px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}>
+            <span
+              className={`text-[8px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+            >
               {settings.brain.useCustomApiKey ? "MANUAL" : "MANAGED"}
             </span>
             <button
-              onClick={() => onUpdate("brain", "useCustomApiKey", !settings.brain.useCustomApiKey)}
+              onClick={() =>
+                onUpdate(
+                  "brain",
+                  "useCustomApiKey",
+                  !settings.brain.useCustomApiKey,
+                )
+              }
               className={`w-8 h-4 rounded-full transition-all relative ${settings.brain.useCustomApiKey ? "bg-green-500" : "bg-gray-700"}`}
             >
-              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${settings.brain.useCustomApiKey ? "translate-x-4" : "translate-x-0.5"}`} />
+              <div
+                className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${settings.brain.useCustomApiKey ? "translate-x-4" : "translate-x-0.5"}`}
+              />
             </button>
           </div>
         </div>
@@ -221,22 +234,34 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             {/* Gemini Config */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <img src="/icons/brands/gemini-color.svg" className="w-3.5 h-3.5 object-contain" alt="Gemini" />
-                <span className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}>Google Gemini</span>
+                <img
+                  src="/icons/brands/gemini-color.svg"
+                  className="w-3.5 h-3.5 object-contain"
+                  alt="Gemini"
+                />
+                <span
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}
+                >
+                  Google Gemini
+                </span>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <input
                   type="password"
                   placeholder="Gemini API Key"
                   value={settings.brain.geminiApiKey}
-                  onChange={(e) => onUpdate("brain", "geminiApiKey", e.target.value)}
+                  onChange={(e) =>
+                    onUpdate("brain", "geminiApiKey", e.target.value)
+                  }
                   className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none font-mono`}
                 />
                 <input
                   type="text"
                   placeholder="Base URL (Optional)"
                   value={settings.brain.geminiBaseUrl || ""}
-                  onChange={(e) => onUpdate("brain", "geminiBaseUrl", e.target.value)}
+                  onChange={(e) =>
+                    onUpdate("brain", "geminiBaseUrl", e.target.value)
+                  }
                   className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none font-mono`}
                 />
               </div>
@@ -245,26 +270,34 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             {/* Anthropic Config */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <img 
-                  src="/icons/brands/anthropic.svg" 
-                  className={`w-[14px] h-[14px] object-contain ${(theme.isLight || theme.themeName?.toLowerCase() === "lucagent") ? "brightness-0" : "brightness-0 invert"}`} 
-                  alt="Anthropic" 
+                <img
+                  src="/icons/brands/anthropic.svg"
+                  className={`w-[14px] h-[14px] object-contain ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "brightness-0" : "brightness-0 invert"}`}
+                  alt="Anthropic"
                 />
-                <span className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}>Anthropic</span>
+                <span
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}
+                >
+                  Anthropic
+                </span>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <input
                   type="password"
                   placeholder="Anthropic API Key"
                   value={settings.brain.anthropicApiKey}
-                  onChange={(e) => onUpdate("brain", "anthropicApiKey", e.target.value)}
+                  onChange={(e) =>
+                    onUpdate("brain", "anthropicApiKey", e.target.value)
+                  }
                   className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none font-mono`}
                 />
                 <input
                   type="text"
                   placeholder="Base URL (Optional)"
                   value={settings.brain.anthropicBaseUrl || ""}
-                  onChange={(e) => onUpdate("brain", "anthropicBaseUrl", e.target.value)}
+                  onChange={(e) =>
+                    onUpdate("brain", "anthropicBaseUrl", e.target.value)
+                  }
                   className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none font-mono`}
                 />
               </div>
@@ -273,26 +306,34 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             {/* OpenAI Config */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <img 
-                  src="/icons/brands/openai.svg" 
-                  className={`w-3.5 h-3.5 object-contain ${(theme.isLight || theme.themeName?.toLowerCase() === "lucagent") ? "brightness-0" : "brightness-0 invert"}`} 
-                  alt="OpenAI" 
+                <img
+                  src="/icons/brands/openai.svg"
+                  className={`w-3.5 h-3.5 object-contain ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "brightness-0" : "brightness-0 invert"}`}
+                  alt="OpenAI"
                 />
-                <span className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}>OpenAI</span>
+                <span
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}
+                >
+                  OpenAI
+                </span>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <input
                   type="password"
                   placeholder="OpenAI API Key"
                   value={settings.brain.openaiApiKey}
-                  onChange={(e) => onUpdate("brain", "openaiApiKey", e.target.value)}
+                  onChange={(e) =>
+                    onUpdate("brain", "openaiApiKey", e.target.value)
+                  }
                   className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none font-mono`}
                 />
                 <input
                   type="text"
                   placeholder="Base URL (Optional)"
                   value={settings.brain.openaiBaseUrl || ""}
-                  onChange={(e) => onUpdate("brain", "openaiBaseUrl", e.target.value)}
+                  onChange={(e) =>
+                    onUpdate("brain", "openaiBaseUrl", e.target.value)
+                  }
                   className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none font-mono`}
                 />
               </div>
@@ -301,12 +342,16 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             {/* xAI Config */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <img 
-                  src="/icons/brands/grok.svg" 
-                  className={`w-[14px] h-[14px] object-contain ${(theme.isLight || theme.themeName?.toLowerCase() === "lucagent") ? "brightness-0" : "brightness-0 invert"}`} 
-                  alt="xAI" 
+                <img
+                  src="/icons/brands/grok.svg"
+                  className={`w-[14px] h-[14px] object-contain ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "brightness-0" : "brightness-0 invert"}`}
+                  alt="xAI"
                 />
-                <span className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}>xAI (Grok)</span>
+                <span
+                  className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}
+                >
+                  xAI (Grok)
+                </span>
               </div>
               <input
                 type="password"
@@ -386,7 +431,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                       !settings.brain.model.includes("gpt") &&
                       !settings.brain.model.includes("claude"))
                       ? theme.hex
-                      : theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
+                      : theme.themeName?.toLowerCase() === "lucagent"
+                        ? "rgba(0,0,0,0.3)"
+                        : "rgba(255,255,255,0.3)",
                 }}
               />
               <span
@@ -599,6 +646,80 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           </select>
         </motion.div>
 
+        {/* Neural Maintenance (Cortex Settings) */}
+        <motion.div
+          variants={item}
+          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-4`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4" style={{ color: theme.hex }} />
+                <h4 className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-widest`}>
+                    Neural Maintenance
+                </h4>
+            </div>
+            <div className="text-[8px] font-mono text-gray-500 uppercase">CORTEX ENGINE</div>
+          </div>
+
+          <div className="space-y-3">
+             {/* Background Sync Toggle */}
+             <div className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
+                <div className="space-y-0.5">
+                    <div className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-200"}`}>
+                        Universal History Sync
+                    </div>
+                    <div className="text-[8px] text-gray-500 uppercase tracking-tighter">
+                        Index history in background (Local Search)
+                    </div>
+                </div>
+                <button
+                    onClick={async () => {
+                        const baseUrl = (window as any).CORTEX_URL || "http://localhost:8000";
+                        const current = await fetch(`${baseUrl}/api/settings`).then(r => r.json());
+                        const newValue = !current.enable_background_sync;
+                        await fetch(`${baseUrl}/api/settings/update`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ key: "enable_background_sync", value: newValue })
+                        });
+                        alert(`Neural Sync: ${newValue ? "ACTIVATED" : "PAUSED"}`);
+                    }}
+                    className={`w-10 h-5 rounded-full transition-all relative ${settings.general.debugMode ? "bg-green-500" : "bg-gray-800"}`}
+                >
+                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${settings.general.debugMode ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+             </div>
+
+             {/* Sync Interval Dropdown */}
+             <div className="grid grid-cols-2 items-center gap-4 bg-black/10 p-2 rounded-lg">
+                <div className="text-[9px] text-gray-500 uppercase tracking-wider font-bold">
+                    Re-index Timeframe
+                </div>
+                <select
+                    defaultValue="30"
+                    onChange={async (e) => {
+                        const baseUrl = (window as any).CORTEX_URL || "http://localhost:8000";
+                        const val = parseInt(e.target.value);
+                        await fetch(`${baseUrl}/api/settings/update`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ key: "sync_interval_minutes", value: val })
+                        });
+                    }}
+                    className="w-full bg-black/40 border border-white/10 rounded p-1 text-[9px] outline-none text-gray-300"
+                >
+                    <option value="30">30 Minutes</option>
+                    <option value="60">1 Hour</option>
+                    <option value="720">12 Hours</option>
+                    <option value="1440">1 Day</option>
+                </select>
+             </div>
+             <p className="text-[8px] text-gray-600 italic px-1">
+                Note: Disabling sync stops the &quot;Invisible API Drain&quot; but Luca will only remember the current session.
+             </p>
+          </div>
+        </motion.div>
+
         {/* Quota Intelligence Card */}
         <motion.div
           variants={item}
@@ -648,7 +769,11 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               <Zap
                 className="w-4 h-4"
                 style={{
-                  color: ollamaStatus.available ? "#10b981" : theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
+                  color: ollamaStatus.available
+                    ? "#10b981"
+                    : theme.themeName?.toLowerCase() === "lucagent"
+                      ? "rgba(0,0,0,0.3)"
+                      : "rgba(255,255,255,0.3)",
                 }}
               />
               <div
@@ -702,7 +827,11 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             >
               <Activity
                 className={`w-3 h-3 ${isRefreshingOllama ? "animate-spin" : ""}`}
-                style={{ color: isRefreshingOllama ? theme.hex : "rgba(107, 114, 128, 0.7)" }}
+                style={{
+                  color: isRefreshingOllama
+                    ? theme.hex
+                    : "rgba(107, 114, 128, 0.7)",
+                }}
               />
             </button>
           </div>

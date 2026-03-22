@@ -10,8 +10,9 @@
  */
 
 import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { mobileOfflineBrain } from "../../services/mobile/MobileOfflineBrain";
-import {
+const {
   Download,
   Trash2,
   Loader2,
@@ -23,7 +24,7 @@ import {
   Zap,
   Sparkles,
   Globe,
-} from "lucide-react";
+} = LucideIcons as any;
 import { llmService } from "../../services/llmService";
 import {
   modelRegistry,

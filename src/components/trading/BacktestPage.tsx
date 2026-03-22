@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  Play,
+import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
+const {
   RotateCw,
   TrendingUp,
   TrendingDown,
@@ -8,11 +8,10 @@ import {
   Brain,
   Zap,
   Target,
-  BarChart2,
   List,
-  Pause,
   StopCircle,
-} from "lucide-react";
+  Database,
+} = LucideIcons as any;
 import {
   ResponsiveContainer,
   AreaChart,
@@ -37,7 +36,7 @@ const MOCK_AI_MODELS = [
     enabled: true,
   },
   { id: "deepseek", name: "DeepSeek V3", provider: "DeepSeek", enabled: true },
-  { id: "llama3", name: "Llama 3 70B", provider: "Meta", enabled: false },
+  { id: "llama3", name: "Llama 3 70B", provider: "Meta", enabled: true },
 ];
 
 const QUICK_RANGES = [
@@ -274,7 +273,7 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
 
   // Form State
   const [config, setConfig] = useState({
-    modelId: "gpt4",
+    modelIds: ["gpt4"],
     symbols: "BTC/USDT",
     timeframe: "1h",
     initialCapital: 10000,
@@ -301,15 +300,15 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
           if (status.progress >= 100 || status.status === "completed") {
             setIsRunning(false);
             setProgress(100);
-            const finalResults = await tradingService.getBacktestResults(
+            const finalResults = (await tradingService.getBacktestResults(
               selectedRunId
-            );
-            setResults(finalResults.results);
+            )) as any;
+            setResults(finalResults);
             // Update list status
             updateRunStatus(
               selectedRunId,
               "completed",
-              finalResults.results.metrics.roi
+              finalResults.metrics.roi
             );
           } else if (status.status === "failed") {
             setIsRunning(false);
@@ -346,29 +345,30 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
       setProgress(0);
       setResults(null);
 
-      const response = await tradingService.runBacktest({
+      const responseId = await tradingService.runBacktest({
         symbol: config.symbols,
         timeframe: config.timeframe,
         initialCapital: config.initialCapital,
-        strategyId: "active_strategy", // Pass actual ID if available
+        strategyId: "active_strategy",
         startTime: new Date(config.startTime).getTime(),
         endTime: new Date(config.endTime).getTime(),
+        modelIds: config.modelIds,
       });
 
-      if (response.success && response.results?.id) {
+      if (responseId) {
         const newRun: BacktestRun = {
-          id: response.results.id, // ID from backend
+          id: responseId,
           status: "running",
           symbol: config.symbols,
           model:
-            MOCK_AI_MODELS.find((m) => m.id === config.modelId)?.name ||
-            "Unknown",
+            MOCK_AI_MODELS.filter((m) => config.modelIds.includes(m.id))
+              .map((m) => m.name)
+              .join(", ") || "Unknown",
           roi: 0,
           date: new Date().toISOString(),
         };
         setRuns([newRun, ...runs]);
         setSelectedRunId(newRun.id);
-        // Backend runs async, polling effect will pick it up
       } else {
         // Fallback for demo if backend isn't actually running async wrapper
         const mockRunId = `bt_${Date.now()}`;
@@ -378,7 +378,7 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
             status: "running",
             symbol: config.symbols,
             model:
-              MOCK_AI_MODELS.find((m) => m.id === config.modelId)?.name ||
+              MOCK_AI_MODELS.find((m) => config.modelIds.includes(m.id))?.name ||
               "Unknown",
             roi: 0,
             date: new Date().toISOString(),
@@ -562,13 +562,20 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
                           {MOCK_AI_MODELS.map((m) => (
                             <div
                               key={m.id}
-                              onClick={() =>
-                                m.enabled &&
-                                setConfig({ ...config, modelId: m.id })
-                              }
+                              onClick={() => {
+                                if (!m.enabled) return;
+                                const isSelected = config.modelIds.includes(m.id);
+                                if (isSelected) {
+                                  if (config.modelIds.length > 1) {
+                                    setConfig({ ...config, modelIds: config.modelIds.filter(id => id !== m.id) });
+                                  }
+                                } else {
+                                  setConfig({ ...config, modelIds: [...config.modelIds, m.id] });
+                                }
+                              }}
                               className={`p-4 rounded-lg border cursor-pointer transition-all`}
                               style={
-                                config.modelId === m.id
+                                config.modelIds.includes(m.id)
                                   ? {
                                       backgroundColor: theme
                                         ? `${theme.hex}1a`
@@ -592,14 +599,14 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
                                 <span
                                   className={`font-bold`}
                                   style={
-                                    config.modelId === m.id
+                                    config.modelIds.includes(m.id)
                                       ? { color: theme?.hex || "#eab308" }
                                       : { color: "#cbd5e1" }
                                   }
                                 >
                                   {m.name}
                                 </span>
-                                {config.modelId === m.id && (
+                                {config.modelIds.includes(m.id) && (
                                   <div
                                     className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.8)]"
                                     style={{
@@ -665,7 +672,7 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
                       </div>
 
                       <button
-                        disabled={!config.modelId}
+                        disabled={config.modelIds.length === 0}
                         onClick={() => setStep(2)}
                         className="w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold rounded-lg mt-4 transition-colors shadow-lg"
                         style={{
@@ -797,11 +804,11 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
                             className="font-bold"
                             style={{ color: theme?.hex || "#eab308" }}
                           >
-                            {
-                              MOCK_AI_MODELS.find(
-                                (m) => m.id === config.modelId
-                              )?.name
-                            }
+                            {MOCK_AI_MODELS.filter((m) =>
+                              config.modelIds.includes(m.id)
+                            )
+                              .map((m) => m.name)
+                              .join(", ")}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
@@ -914,6 +921,54 @@ export default function BacktestPage({ theme }: BacktestPageProps) {
                           color="text-blue-400"
                         />
                       </div>
+
+                      {/* Model Comparison Matrix (Phase 14) */}
+                      {(results as any)?.modelComparisons && (
+                        <div className="bg-[#161b22] border border-slate-800 rounded-xl overflow-hidden animate-in slide-in-from-bottom-4">
+                          <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-[#1e2329]/50">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                              <Database size={14} className="text-yellow-500" />
+                              Model Efficiency Matrix
+                            </h3>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs">
+                              <thead className="bg-[#0b0e14] text-slate-500 uppercase font-bold">
+                                <tr>
+                                  <th className="p-4">Model Brain</th>
+                                  <th className="p-4">ROI %</th>
+                                  <th className="p-4">Win Rate</th>
+                                  <th className="p-4 text-right">Est. Cost</th>
+                                  <th className="p-4 w-48">Efficiency (ROI/$)</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-800/50">
+                                {(results as any).modelComparisons.map((c: any) => (
+                                  <tr key={c.modelId} className="hover:bg-white/5 transition-colors">
+                                    <td className="p-4 font-bold text-white uppercase tracking-tighter">{c.modelId}</td>
+                                    <td className="p-4 text-emerald-400 font-mono font-bold">+{c.roi}%</td>
+                                    <td className="p-4 text-slate-300 font-mono">{c.winRate}%</td>
+                                    <td className="p-4 text-slate-400 font-mono text-right">${c.cost.toFixed(2)}</td>
+                                    <td className="p-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                          <div 
+                                            className="h-full bg-yellow-500 shadow-[0_0_10px_#eab30866]" 
+                                            style={{ width: `${Math.min(100, (c.roi / c.cost) / 2)}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-[10px] text-yellow-500 font-bold min-w-[24px]">
+                                          {(c.roi / c.cost).toFixed(1)}x
+                                        </span>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Chart & Trades Split */}
                       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-6">

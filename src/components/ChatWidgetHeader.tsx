@@ -1,5 +1,9 @@
 import React from "react";
-import { Terminal, X } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Terminal,
+  X,
+} = LucideIcons as any;
 
 interface ChatWidgetHeaderProps {
   primaryColor: string;

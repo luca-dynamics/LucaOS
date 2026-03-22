@@ -1,5 +1,12 @@
 import React from "react";
-import { Wifi, WifiOff, Loader, AlertCircle, Activity } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Wifi,
+  WifiOff,
+  Loader,
+  AlertCircle,
+  Activity,
+} = LucideIcons as any;
 import { ConnectionState } from "../../services/lucaLink/types";
 
 interface ConnectionStatusProps {

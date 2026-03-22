@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { X, Smartphone, Loader } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Smartphone,
+  Loader,
+} = LucideIcons as any;
 import QRCode from "qrcode";
 import { lucaLinkManager } from "../services/lucaLink/manager";
 import { ConnectionStatus } from "./lucaLink/ConnectionStatus";
@@ -253,9 +258,9 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           {/* QR Code Section */}
           <div className="flex flex-col items-center">
             <h3
-              className={`text-xs sm:text-sm font-mono font-bold ${themePrimary} uppercase tracking-wider mb-3 sm:mb-4`}
+              className={`text-xs sm:text-sm font-mono font-bold ${themePrimary} uppercase tracking-wider mb-3 sm:mb-4 flex items-center gap-2`}
             >
-              📱 PAIR NEW DEVICE
+              <Smartphone size={14} /> PAIR NEW DEVICE
             </h3>
 
             <div className="relative group">

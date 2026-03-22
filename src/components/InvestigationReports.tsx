@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   FileText,
   Download,
@@ -10,7 +11,7 @@ import {
   Eye,
   FileJson,
   FileCode,
-} from "lucide-react";
+} = LucideIcons as any;
 import { Subsystem } from "../types";
 import { apiUrl } from "../config/api";
 

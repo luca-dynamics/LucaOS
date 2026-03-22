@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Shield,
   Activity,
   Target,
   Cpu,
   TrendingUp,
   AlertTriangle,
-  Terminal as TerminalIcon,
-} from "lucide-react";
+  Terminal: TerminalIcon,
+} = LucideIcons as any;
 
 interface Props {
   status: string;

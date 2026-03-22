@@ -15,13 +15,46 @@
 import { Router } from 'express';
 import exchangeManager, { SUPPORTED_EXCHANGES } from '../../services/exchangeManager.js';
 import indicatorService from '../../services/indicatorService.js';
+import portfolioAggregator from '../../services/PortfolioAggregator.js';
 import fs from 'fs';
 import path from 'path';
+import protocolSkillEngine from '../../services/ProtocolSkillEngine.js';
 
 
 import { LUCA_USER_DIR } from '../../config/constants.js';
 
 const router = Router();
+
+// ============================================================================
+// 📊 Portfolio Aggregator (Unified Net Worth)
+// ============================================================================
+
+/**
+ * GET /api/trading/portfolio/summary
+ * Unified balance across CEX, DEX, Broker, On-Chain.
+ */
+router.get('/portfolio/summary', async (req, res) => {
+  try {
+    const summary = await portfolioAggregator.getUnifiedSummary();
+    res.json({ success: true, ...summary });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+/**
+ * POST /api/trading/portfolio/rebalance
+ * Get AI-driven rebalancing nudges.
+ */
+router.post('/portfolio/rebalance', async (req, res) => {
+  const { modelAllocation } = req.body;
+  try {
+    const nudge = await portfolioAggregator.calculateRebalanceNudge(modelAllocation);
+    res.json({ success: true, ...nudge });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
 
 // ============================================================================
 // Root Level Dispatchers (For Tools)
@@ -75,6 +108,45 @@ router.get('/positions', async (req, res) => {
     const response = await fetch(`http://localhost:3002/api/trading/exchange/${exchange}/positions`);
     const data = await response.json();
     res.json(data);
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ============================================================================
+// 🛠️ Official Protocol Skill Hub
+// ============================================================================
+
+/**
+ * GET /api/trading/protocol/skills
+ * List all discovered protocol drivers and their actions.
+ */
+router.get('/protocol/skills', async (req, res) => {
+  try {
+    const skills = await protocolSkillEngine.listSkills();
+    res.json({ success: true, skills });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+/**
+ * POST /api/trading/protocol/execute
+ * Execute an official protocol skill (e.g., jupiter/swap, agentkit/supply).
+ */
+router.post('/protocol/execute', async (req, res) => {
+  const { path, params } = req.body;
+  
+  if (!path || !params) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Missing required fields: path (e.g. jupiter/swap) and params' 
+    });
+  }
+
+  try {
+    const result = await protocolSkillEngine.executeSkill(path, params);
+    res.json({ success: true, result });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

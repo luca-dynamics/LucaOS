@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import HologramWidget from "./Hologram/HologramWidget";
 import { useSatelliteState } from "../hooks/useSatelliteState";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
-import { awarenessService } from "../services/awarenessService";
 import { settingsService } from "../services/settingsService";
+import { awarenessService } from "../services/awarenessService";
 
 /**
  * Dedicated Mode for the Holographic Overlay
@@ -12,54 +12,23 @@ import { settingsService } from "../services/settingsService";
  */
 const HologramMode: React.FC = () => {
   const state = useSatelliteState();
-  const hasTriggeredAwakening = useRef(false);
 
   const handleToggleVoice = () => {
     // Send Toggle Request to Main Window which holds the logic
     if (window.electron?.ipcRenderer) {
       window.electron.ipcRenderer.send("widget-toggle-voice", {
         mode: "TOGGLE",
+        context: "hologram",
       });
     }
   };
 
-  // === AWAKENING PULSE — fires once when Hologram first opens ===
-  useEffect(() => {
-    if (hasTriggeredAwakening.current) return;
-    hasTriggeredAwakening.current = true;
-
-    const triggerAwakening = async () => {
-      const profile = settingsService.get("general");
-      const persona = (state.persona || "ASSISTANT") as string;
-      const prompt = await awarenessService.triggerAwakeningPulse(
-        {
-          mode: "voice",
-          operatorName: profile?.userName || "Operator",
-          persona,
-        },
-        "hologram",
-      );
-
-      if (prompt && window.electron?.ipcRenderer) {
-        console.log("[HOLOGRAM] 🌅 Voice awakening pulse fired");
-        // Send to main window to speak through the active voice session
-        window.electron.ipcRenderer.send("hologram-awakening-pulse", {
-          prompt,
-          persona,
-        });
-      }
-    };
-
-    // Delay slightly for window initialization
-    const timer = setTimeout(triggerAwakening, 600);
-    return () => clearTimeout(timer);
-  }, []);
 
   // === AMBIENT VISION LOOP — observe screen and send to main voice session ===
   useEffect(() => {
     const privacy = settingsService.get("privacy");
     if (!privacy?.screenEnabled) {
-      console.warn("[HOLOGRAM] 🔒 Screen observation blocked by privacy.");
+      console.warn("[HOLOGRAM] Screen observation blocked by privacy (REDACTED).");
       return;
     }
 
@@ -77,7 +46,7 @@ const HologramMode: React.FC = () => {
           });
         }
       },
-      onStatusChange: (active) => {
+      onStatusChange: (active: boolean) => {
         console.log(`[HOLOGRAM] Vision loop status: ${active}`);
       },
     });

@@ -1,5 +1,11 @@
 import React, { useEffect, useState, useTransition } from "react";
-import { ArrowLeft, ImageIcon, X, Zap } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  ArrowLeft,
+  ImageIcon,
+  X,
+  Zap,
+} = LucideIcons as any;
 import ChatWidgetInput from "../ChatWidgetInput";
 import ChatMessageBubble from "../ChatMessageBubble";
 import { ProWorkforceCanvas } from "../chat/ProWorkforceCanvas";
@@ -689,15 +695,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   timestamp={msg.timestamp}
                   persona={persona as any}
                   primaryColor={
-                    theme.primary.includes("cyan")
-                      ? "#06b6d4"
-                      : theme.primary.includes("blue")
-                        ? "#3b82f6"
-                        : theme.primary.includes("green")
-                          ? "#10b981"
-                          : theme.primary.includes("orange")
-                            ? "#f97316"
-                            : "#E0E0E0"
+                    theme.hex || "#3b82f6"
                   }
                   isProcessing={index === arr.length - 1 && isProcessing}
                   attachment={msg.attachment}
@@ -710,6 +708,19 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                       const textarea = document.querySelector("textarea");
                       if (textarea) textarea.focus();
                     }, 100);
+                  }}
+                  actions={msg.actions}
+                  onActionClick={async (action) => {
+                    if (action.action === "CONFIRM_TRADE") {
+                      // Execute the trade via handleSendMessage to keep it in the chat flow
+                      await handleSendMessage(
+                        `Confirming ${action.payload.action} on ${action.payload.symbol} based on high-confidence research hits.`,
+                        null,
+                        undefined,
+                        false, // sendHidden=false so it shows as user intent
+                        false
+                      );
+                    }
                   }}
                   isStreaming={(msg as any).isStreaming}
                   tacticalData={(msg as any).tacticalData}

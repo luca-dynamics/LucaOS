@@ -31,6 +31,7 @@ export const GOALS_FILE = path.join(DATA_DIR, 'goals.json');
 // User Interaction & Productivity Paths (Documents)
 export const MACROS_DIR = path.join(LUCA_USER_DIR, 'macros');
 export const SKILLS_DIR = path.join(LUCA_USER_DIR, 'skills');
+export const PROTOCOL_SKILLS_DIR = path.join(LUCA_USER_DIR, 'protocol-skills');
 export const FORGE_DIR = path.join(LUCA_USER_DIR, 'forge');
 export const EVOLUTION_DIR = path.join(LUCA_USER_DIR, 'evolution');
 export const FACES_DIR = path.join(LUCA_USER_DIR, 'media', 'faces');

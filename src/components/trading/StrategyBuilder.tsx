@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from "react";
-import {
-  Zap,
+import * as LucideIcons from "lucide-react";
+const {
   Save,
   Plus,
-  Workflow,
   Trash2,
-  PlayCircle,
-  Clock,
   Activity,
-  ChevronRight,
-  Cpu,
-  Settings,
   Database,
   Shield,
   Command,
   ChevronDown,
   List,
-  X,
-} from "lucide-react";
+  Search,
+} = LucideIcons as any;
 
 import {
   TradingStrategy,
@@ -25,12 +19,12 @@ import {
   AutomationMode,
   ScheduleType,
   FullDecision,
-  TradeAction,
 } from "../../types/trading";
 import { CoinSourceEditor } from "./strategy/CoinSourceEditor";
 import { IndicatorEditor } from "./strategy/IndicatorEditor";
 import { RiskControlEditor } from "./strategy/RiskControlEditor";
 import { PromptSectionsEditor } from "./strategy/PromptSectionsEditor";
+import { IntelligenceSourceEditor } from "./strategy/IntelligenceSourceEditor";
 import { AITestRunner } from "./strategy/AITestRunner";
 import { tradingService } from "../../services/tradingService";
 
@@ -73,6 +67,7 @@ const DEFAULT_STRATEGY: TradingStrategy = {
     intervalMinutes: 15,
   },
   promptVariant: "balanced",
+  intelligenceSources: [],
 };
 
 interface StrategyBuilderProps {
@@ -148,7 +143,7 @@ export default function StrategyBuilder({ theme }: StrategyBuilderProps) {
         setSelectedStrategy(saved as unknown as TradingStrategy);
         alert("Strategy saved successfully!");
       } else {
-        alert(`Error: ${result.error}`);
+        alert(`Error: ${(result as any).error || "Unknown error"}`);
       }
     } catch (e) {
       console.error("Save failed", e);
@@ -182,28 +177,27 @@ export default function StrategyBuilder({ theme }: StrategyBuilderProps) {
   };
 
   const handleRunTest = async (): Promise<FullDecision> => {
-    // Mock AI Simulation for UI feedback (Integration with real AI test runner would be next step)
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          systemPrompt: "System Prompt...",
-          userPrompt: "Market Data...",
-          cotTrace:
-            "Thinking Process:\n1. Analyzing BTC price action.\n2. RSI is oversold at 28.\n3. MACD crossover detected on 15m.\n4. Volume is increasing.\n\nConclusion: Bullish bounce likely.",
-          decisions: [
-            {
-              symbol: "BTC/USDT",
-              action: TradeAction.OPEN_LONG,
-              confidence: 85,
-              reasoning: "Strong technical confluence.",
-            },
-          ],
-          rawResponse: "...",
-          timestamp: Date.now(),
-          aiRequestDurationMs: 1420,
-        });
-      }, 2000);
-    });
+    if (!selectedStrategy) throw new Error("No strategy selected");
+    
+    // Use the first static coin or BTC if none
+    const symbol = selectedStrategy.coinSource.staticCoins?.[0] || "BTC/USDT";
+    
+    const debate = await tradingService.runMultiAgentDebate(symbol, selectedStrategy.id);
+    
+    return {
+      systemPrompt: "Dynamic Multi-Agent Committee",
+      userPrompt: `Analysis of ${symbol} using strategy ${selectedStrategy.name}`,
+      cotTrace: debate.transcript,
+      decisions: debate.votes.map(() => ({
+        symbol,
+        action: debate.action,
+        confidence: debate.confidence,
+        reasoning: "Consensus reached by expert agents."
+      })),
+      rawResponse: JSON.stringify(debate),
+      timestamp: Date.now(),
+      aiRequestDurationMs: 1500,
+    };
   };
 
   if (isLoading && strategies.length === 0) {
@@ -492,9 +486,54 @@ export default function StrategyBuilder({ theme }: StrategyBuilderProps) {
                   <div className="p-4 bg-[#0b0e14] animate-in slide-in-from-top-2">
                     <PromptSectionsEditor
                       customPrompt={selectedStrategy.customPrompt}
-                      onCustomPromptChange={(val) =>
-                        updateStrategy({ customPrompt: val })
-                      }
+                      persona={selectedStrategy.persona}
+                      entryCriteria={selectedStrategy.entryCriteria}
+                      exitRules={selectedStrategy.exitRules}
+                      riskConstraints={selectedStrategy.riskConstraints}
+                      onUpdate={(updates) => updateStrategy(updates)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* 5. Intelligence Watchers */}
+              <div className="border border-slate-800 rounded-lg overflow-hidden">
+                <button
+                  onClick={() =>
+                    setExpandedSection(
+                      expandedSection === "intelligence" ? null : "intelligence"
+                    )
+                  }
+                  className={`w-full p-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider transition-colors`}
+                  style={
+                    expandedSection === "intelligence"
+                      ? {
+                          backgroundColor: theme
+                            ? `${theme.hex}1a`
+                            : "rgba(99,102,241,0.1)",
+                          color: theme?.hex || "#6366f1",
+                        }
+                      : {
+                          backgroundColor: "#1e2329",
+                          color: "#94a3b8",
+                        }
+                  }
+                >
+                  <span className="flex items-center gap-2">
+                    <Search size={14} /> Intelligence Watchers
+                  </span>
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-300 ${
+                      expandedSection === "intelligence" ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {expandedSection === "intelligence" && (
+                  <div className="p-4 bg-[#0b0e14] animate-in slide-in-from-top-2">
+                    <IntelligenceSourceEditor
+                      sources={selectedStrategy.intelligenceSources}
+                      onChange={(src) => updateStrategy({ intelligenceSources: src })}
                     />
                   </div>
                 )}
@@ -560,17 +599,30 @@ export default function StrategyBuilder({ theme }: StrategyBuilderProps) {
                 <div className="h-full bg-black/40 border border-slate-800 rounded-lg p-4 font-mono text-xs text-slate-300 whitespace-pre-wrap overflow-y-auto leading-relaxed scrollbar-thin scrollbar-thumb-slate-700">
                   {`// SYSTEM PROMPT PREVIEW \n\nYou are an advanced crypto trading AI acting as a ${
                     selectedStrategy.promptVariant?.toUpperCase() || "BALANCED"
-                  } analyst.\n\nTARGET ASSETS: \n${selectedStrategy.coinSource?.staticCoins?.join(
+                  } analyst.\n\n${
+                    selectedStrategy.persona
+                      ? "PERSONA:\n" + selectedStrategy.persona + "\n\n"
+                      : ""
+                  }TARGET ASSETS: \n${selectedStrategy.coinSource?.staticCoins?.join(
                     ", "
                   )}\n\nINDICATORS:\n${JSON.stringify(
                     selectedStrategy.indicators,
                     null,
                     2
-                  )}\n\nRISK CONSTRAINTS:\n${JSON.stringify(
-                    selectedStrategy.riskControl,
-                    null,
-                    2
                   )}\n\n${
+                    selectedStrategy.entryCriteria
+                      ? "ENTRY CRITERIA:\n" +
+                        selectedStrategy.entryCriteria +
+                        "\n\n"
+                      : ""
+                  }${
+                    selectedStrategy.exitRules
+                      ? "EXIT RULES:\n" + selectedStrategy.exitRules + "\n\n"
+                      : ""
+                  }RISK CONSTRAINTS:\n${
+                    selectedStrategy.riskConstraints ||
+                    JSON.stringify(selectedStrategy.riskControl, null, 2)
+                  }\n\n${
                     selectedStrategy.customPrompt
                       ? "CUSTOM INSTRUCTIONS:\n" + selectedStrategy.customPrompt
                       : ""

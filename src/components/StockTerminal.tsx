@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   TrendingUp,
   TrendingDown,
   Activity,
   RefreshCw,
   Newspaper,
-} from "lucide-react";
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 import {
   createChart,

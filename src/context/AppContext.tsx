@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useMemo } from "react";
 import { useTradingState } from "../hooks/useTradingState";
 import { useLucaLinkState } from "../hooks/useLucaLinkState";
 import { useVoiceSystem } from "../hooks/useVoiceSystem";
@@ -26,14 +26,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const management = useManagementState();
   const diagnostics = useDiagnostics();
 
-  const value = {
+  const value = useMemo(() => ({
     trading,
     lucaLink,
     voice,
     visual,
     management,
     diagnostics,
-  };
+  }), [trading, lucaLink, voice, visual, management, diagnostics]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

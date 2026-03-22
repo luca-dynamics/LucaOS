@@ -1,5 +1,10 @@
 import React from "react";
-import { Eye, Activity, Trash2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Eye,
+  Activity,
+  Trash2,
+} = LucideIcons as any;
 
 interface MobileAppManagerProps {
   runningPackages: string[];

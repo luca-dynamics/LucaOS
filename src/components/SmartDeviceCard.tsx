@@ -1,6 +1,8 @@
 import React from "react";
-import { SmartDevice, DeviceType } from "../types";
-import {
+import * as LucideIcons from "lucide-react";
+import { SmartDevice,
+  DeviceType } from "../types";
+const {
   Lightbulb,
   Lock,
   Server,
@@ -9,7 +11,7 @@ import {
   Activity,
   Smartphone,
   Tv,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface Props {
   device: SmartDevice;

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   RefreshCw,
   ExternalLink,
@@ -9,7 +10,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Brain,
-} from "lucide-react";
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 
 interface Props {

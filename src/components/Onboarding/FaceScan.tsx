@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Camera, CheckCircle, SkipForward, Scan, Check } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Camera,
+  CheckCircle,
+  SkipForward,
+  Scan,
+  Check,
+} = LucideIcons as any;
 import VisionCameraModal from "../VisionCameraModal";
 import { soundService } from "../../services/soundService";
 import { useMobile } from "../../hooks/useMobile";
@@ -41,7 +48,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
   theme,
 }) => {
   const [showCamera, setShowCamera] = useState(false);
-  const [capturedImage] = useState<string | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [cameraAvailable, setCameraAvailable] = useState(true);

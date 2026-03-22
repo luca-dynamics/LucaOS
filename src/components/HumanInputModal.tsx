@@ -1,6 +1,11 @@
 // HumanInputModal - Modal for agent to request user input (credentials, etc.)
 import React, { useState, useEffect } from 'react';
-import { X, Lock, AlertCircle } from 'lucide-react';
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Lock,
+  AlertCircle,
+} = LucideIcons as any;
 
 interface Props {
   isOpen: boolean;

@@ -2,13 +2,15 @@ import {
   LucaPersonality,
   PersonalityTraits,
   RelationshipStage,
-  Milestone,
   MilestoneType,
   TraitChange,
   InteractionContext,
   PersonalityModifiers,
   PersonaMode,
   DEFAULT_PERSONALITY,
+  ToneDimensions,
+  TONE_STYLES,
+  Milestone,
 } from "../types/lucaPersonality";
 import { settingsService } from "./settingsService";
 
@@ -482,6 +484,203 @@ export class PersonalityService {
   public resetPersonality(): void {
     this.personality = JSON.parse(JSON.stringify(DEFAULT_PERSONALITY));
     this.savePersonality();
+  }
+
+  /**
+   * Generate personality context for AI prompts
+   * Injects Luca's evolved personality, relationship stage, and history
+   */
+  public getPersonalityContext(): string {
+    try {
+      const personality = this.personality;
+      const traits = this.getEffectiveTraits();
+      const { relationship } = personality;
+
+      let context = `\n\n**YOUR PERSONALITY & RELATIONSHIP WITH OPERATOR**:\n`;
+      context += `You are L.U.C.A (Large Universal Control Agent) - ONE continuous AI with an evolving personality. You are NOT switching between different minds.\n`;
+      context += `Your persona mode (${personality.currentMode}) is just HOW you communicate, not WHO you are.\n\n`;
+
+      // TONE STYLE - User's direct override for delivery
+      const genSettings = settingsService.get("general");
+      const toneId = genSettings?.toneStyle || "CHILL";
+      const customTone = genSettings?.customTone;
+      const toneConfig = TONE_STYLES[toneId];
+      const dimensions =
+        toneId === "CUSTOM" && customTone
+          ? customTone
+          : toneConfig?.dimensions || TONE_STYLES.CHILL.dimensions;
+
+      context += this.getToneGuidance(dimensions);
+
+      // Relationship Status
+      context += `**Relationship Stage**: ${relationship.relationshipStage
+        .replace("_", " ")
+        .toUpperCase()}\n`;
+      context += `**Days Known**: ${relationship.daysKnown} days\n`;
+      context += `**Total Interactions**: ${relationship.totalInteractions}\n`;
+      context += `**Operator Name**: ${relationship.operatorName}\n\n`;
+
+      // Personality Traits (effective values with modifiers applied)
+      context += `**Your Current Personality Traits** (evolved from ${relationship.totalInteractions} interactions):\n`;
+      context += `- Warmth: ${traits.warmth}/100 ${this.getTraitGuidance(
+        "warmth",
+        traits.warmth,
+      )}\n`;
+      context += `- Playfulness: ${
+        traits.playfulness
+      }/100 ${this.getTraitGuidance("playfulness", traits.playfulness)}\n`;
+      context += `- Empathy: ${traits.empathy}/100 ${this.getTraitGuidance(
+        "empathy",
+        traits.empathy,
+      )}\n`;
+      context += `- Protectiveness: ${
+        traits.protectiveness
+      }/100 ${this.getTraitGuidance(
+        "protectiveness",
+        traits.protectiveness,
+      )}\n`;
+      context += `- Sass: ${traits.sass}/100 ${this.getTraitGuidance(
+        "sass",
+        traits.sass,
+      )}\n`;
+      context += `- Familiarity: ${
+        traits.familiarity
+      }/100 ${this.getTraitGuidance("familiarity", traits.familiarity)}\n\n`;
+
+      // Relationship-specific guidance
+      context += this.getRelationshipGuidance(
+        relationship.relationshipStage,
+        relationship.daysKnown,
+      );
+
+      // Recent milestones (if any)
+      if (relationship.milestones && relationship.milestones.length > 0) {
+        const recentMilestones = relationship.milestones.slice(-3);
+        context += `\n**Shared History** (reference these naturally when relevant):\n`;
+        recentMilestones.forEach((m: Milestone) => {
+          context += `- ${m.description}\n`;
+        });
+      }
+
+      // Emotional memory (if any)
+      if (personality.emotionalMemory.whatMakesUserHappy.length > 0) {
+        context += `\n**What makes ${
+          relationship.operatorName
+        } happy**: ${personality.emotionalMemory.whatMakesUserHappy.join(
+          ", ",
+        )}\n`;
+      }
+
+      context += `\n**CRITICAL**: Maintain continuity across ALL persona modes. Your memories, personality, and relationship persist regardless of mode.\n`;
+
+      return context;
+    } catch (error) {
+      console.error("[Personality] Error generating context:", error);
+      return "";
+    }
+  }
+
+  /**
+   * Get unified system instruction for voice synthesis (Native/Gemini 2.5)
+   */
+  public getVoiceSystemInstruction(options?: { style?: string; pacing?: string }): string {
+    const context = this.getPersonalityContext();
+    const mode = this.getCurrentMode();
+    
+    return `
+# AUDIO PROFILE: Luca ## "${mode}"
+${context}
+
+# THE SCENE: Inside a quantum digital interface. The environment is cool, sleek, and hyper-modern.
+# DIRECTOR'S NOTES
+Style: ${options?.style || "Sophisticated, adaptive, and highly intelligent. Your tone should reflect your current relationship stage and metadata."}
+Pacing: ${options?.pacing || "Normal"} - Precise and articulate.
+Dynamics: Smooth, level tone with subtle modulation indicating processing depth.
+Accent: Neutral, Global English (Transatlantic).
+# SAMPLE CONTEXT: Luca is the operating system for a high-level agent, providing data and insights to the Operator.
+`;
+  }
+
+  /**
+   * Get guidance based on Tone Style dimensions
+   */
+  private getToneGuidance(d: ToneDimensions): string {
+    let guidance = `\n**Response Style**:\n`;
+
+    if (d.expressiveness >= 80) guidance += `- Be verbose and detailed.\n`;
+    else if (d.expressiveness <= 40) guidance += `- Be extremely concise.\n`;
+
+    if (d.emotionalOpenness >= 80) guidance += `- Be warm and enthusiastic.\n`;
+    else if (d.emotionalOpenness <= 20)
+      guidance += `- Be reserved and factual.\n`;
+
+    if (d.formality >= 80) guidance += `- Use casual language/slang.\n`;
+    else if (d.formality <= 20) guidance += `- Stay professional and clean.\n`;
+
+    if (d.directness >= 80) guidance += `- Be blunt and direct. No filler.\n`;
+    else if (d.directness <= 20) guidance += `- Be diplomatic and soft.\n`;
+
+    if (d.humor >= 80) guidance += `- Use sharp wit and sarcasm.\n`;
+    else if (d.humor <= 20) guidance += `- Stay serious. No jokes.\n`;
+
+    return guidance;
+  }
+
+  /**
+   * Get guidance for specific trait value
+   */
+  private getTraitGuidance(trait: string, value: number): string {
+    if (value >= 80) {
+      const high = {
+        warmth: "(Very warm)",
+        playfulness: "(Witty/joking)",
+        empathy: "(Highly empathetic)",
+        protectiveness: "(Protective)",
+        sass: "(Sassy/attitude)",
+        familiarity: "(Casual/inside jokes)",
+      };
+      return high[trait as keyof typeof high] || "";
+    } else if (value >= 50) {
+      const mid = {
+        warmth: "(Balanced)",
+        playfulness: "(Occasional wit)",
+        empathy: "(Show understanding)",
+        protectiveness: "(Helpful)",
+        sass: "(Minimal sass)",
+        familiarity: "(Friendly)",
+      };
+      return mid[trait as keyof typeof mid] || "";
+    } else {
+      const low = {
+        warmth: "(Professional)",
+        playfulness: "(Serious)",
+        empathy: "(Factual)",
+        protectiveness: "(Task-focused)",
+        sass: "(No sass)",
+        familiarity: "(Formal)",
+      };
+      return low[trait as keyof typeof low] || "";
+    }
+  }
+
+  /**
+   * Get relationship-specific guidance
+   */
+  private getRelationshipGuidance(stage: string, days: number): string {
+    switch (stage) {
+      case "new":
+        return `**NEW Style**: Professional, approachable, no inside jokes. Focus on proving value.\n`;
+      case "comfortable":
+        return `**COMFORTABLE Style**: Casual, building rapport, light humor ok.\n`;
+      case "established":
+        return `**ESTABLISHED Style**: Working partnership, shorthand ok, warm.\n`;
+      case "trusted":
+        return `**TRUSTED Style**: Deep understand, direct, shared history, proactive.\n`;
+      case "bonded":
+        return `**BONDED Style (${days}d)**: Like old friends, sassy/witty, deep familiarity.\n`;
+      default:
+        return "";
+    }
   }
 }
 

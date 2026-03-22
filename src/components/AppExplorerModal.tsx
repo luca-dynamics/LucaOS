@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { X, Search, Box, ExternalLink, Loader2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Search,
+  Box,
+  ExternalLink,
+  Loader2,
+} = LucideIcons as any;
 import { setHexAlpha } from "../config/themeColors";
 import {
   listInstalledApps,

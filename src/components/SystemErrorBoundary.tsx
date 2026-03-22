@@ -1,5 +1,11 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { ShieldAlert, RefreshCw, RotateCcw, Terminal } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  ShieldAlert,
+  RefreshCw,
+  RotateCcw,
+  Terminal,
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 
 interface Props {

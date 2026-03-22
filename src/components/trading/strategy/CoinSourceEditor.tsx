@@ -1,5 +1,11 @@
 import React from "react";
-import { List, Globe, Database, HelpCircle } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  List,
+  Globe,
+  Database,
+  HelpCircle,
+} = LucideIcons as any;
 import { CoinSourceConfig, CoinSourceType } from "../../../types/trading";
 
 interface CoinSourceEditorProps {

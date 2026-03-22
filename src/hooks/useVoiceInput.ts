@@ -348,10 +348,34 @@ export const useVoiceInput = () => {
         const AudioContextClass =
           window.AudioContext || (window as any).webkitAudioContext;
         audioContext.current = new AudioContextClass();
+        
+        // Load RNNoise Denoising Worklet
+        try {
+          await audioContext.current.audioWorklet.addModule('/worklets/RNNoiseProcessor.js');
+          console.log("[VoiceInput] RNNoise Denoising ready");
+        } catch (e) {
+          console.warn("[VoiceInput] RNNoise load failed, falling back to raw audio", e);
+        }
+
         analyser.current = audioContext.current.createAnalyser();
         analyser.current.fftSize = 256;
-        source.current = audioContext.current.createMediaStreamSource(stream);
-        source.current.connect(analyser.current);
+        
+        const micSource = audioContext.current.createMediaStreamSource(stream);
+        let processedSource: AudioNode = micSource;
+
+        // Apply Denoising if worklet loaded
+        if (audioContext.current.audioWorklet && (audioContext.current as any).audioWorklet.addModule) {
+           try {
+             const rnnoiseNode = new AudioWorkletNode(audioContext.current, 'rnnoise-processor');
+             micSource.connect(rnnoiseNode);
+             processedSource = rnnoiseNode;
+           } catch {
+             // Fallback to micSource
+           }
+        }
+
+        processedSource.connect(analyser.current);
+        source.current = micSource; // Keep original for cleanup
 
         const dataArray = new Uint8Array(analyser.current.frequencyBinCount);
         let currentVolume = 0;

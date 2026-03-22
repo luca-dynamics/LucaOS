@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { ArrowRight, ShieldAlert, Heart, Lock, Zap } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  ArrowRight,
+  ShieldAlert,
+  Heart,
+  Lock,
+  Zap,
+} = LucideIcons as any;
 
 interface ConstitutionalAlignmentProps {
   onComplete: () => void;
@@ -41,15 +48,15 @@ const ConstitutionalAlignment: React.FC<ConstitutionalAlignmentProps> = ({
           className="mx-auto mb-[2vmin] animate-pulse"
           style={{ 
             color: themeHex,
-            width: "clamp(2rem, 8vmin, 4rem)",
-            height: "clamp(2rem, 8vmin, 4rem)"
+            width: "clamp(2rem, 6vmin, 3.5rem)",
+            height: "clamp(2rem, 6vmin, 3.5rem)"
           }}
         />
         <h1
           className="font-bold tracking-widest uppercase"
           style={{ 
             color: themeHex,
-            fontSize: "clamp(1rem, 4vmin, 1.75rem)"
+            fontSize: "clamp(1rem, 3.5vmin, 1.6rem)"
           }}
         >
           Constitutional Alignment
@@ -79,7 +86,7 @@ const ConstitutionalAlignment: React.FC<ConstitutionalAlignmentProps> = ({
           <div
             className={`border rounded-[2vmin] p-[3vmin] ${textMuted} leading-relaxed font-mono backdrop-blur-md transition-all duration-300`}
             style={{
-              fontSize: "clamp(0.5rem, 1.6vmin, 0.75rem)",
+              fontSize: "clamp(0.5rem, 1.4vmin, 0.75rem)",
               borderColor: isLightTheme ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.2)",
               backgroundColor: isLightTheme ? hexToRgba(themeHex, 0.08) : hexToRgba(themeHex, 0.1),
               backgroundImage: `linear-gradient(135deg, ${hexToRgba(themeHex, 0.15)} 0%, ${hexToRgba(themeHex, 0.05)} 100%)`,

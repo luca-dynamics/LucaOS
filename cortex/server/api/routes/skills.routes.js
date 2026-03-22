@@ -6,6 +6,8 @@ import { spawn } from 'child_process';
 import multer from 'multer';
 import { signatureService } from '../../services/signatureService.js';
 import { logger } from '../../utils/logger.js';
+import protocolSkillEngine from '../../services/ProtocolSkillEngine.js';
+import { skillDropService } from '../../services/SkillDropService.js';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -167,7 +169,24 @@ See \`main.${language === 'python' ? 'py' : 'js'}\` for the executable code.
 });
 
 // List all skills (both formats)
-router.get('/list', (req, res) => {
+// Drop Hub: Register skill from dropped file/folder
+router.post('/drop', async (req, res) => {
+    const { path: sourcePath } = req.body;
+    
+    if (!sourcePath) {
+        return res.status(400).json({ error: 'Source path is required' });
+    }
+
+    try {
+        const result = await skillDropService.processDrop(sourcePath);
+        res.json(result);
+    } catch (error) {
+        console.error('[SKILLS] Drop registration failed:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/list', async (req, res) => {
     try {
         const items = fs.readdirSync(SKILLS_DIR);
         const skills = [];
@@ -207,6 +226,25 @@ router.get('/list', (req, res) => {
                 console.error(`[SKILLS] Error processing ${item}:`, e);
             }
         }
+
+        // --- INTEGRATE OFFICIAL PROTOCOL SKILLS ---
+        try {
+            const protocolSuites = await protocolSkillEngine.listSkills();
+            for (const suite of protocolSuites) {
+                skills.push({
+                    name: suite.name, // e.g., "Jupiter"
+                    description: suite.description,
+                    version: suite.version || '1.0.0',
+                    format: 'protocol-suite',
+                    actions: suite.skills, // List of actions (swap, dca, etc.)
+                    chains: suite.chains,
+                    isOfficial: true,
+                    icon: suite.name.toLowerCase() === 'jupiter' ? '🪐' : '🛡️'
+                });
+            }
+        } catch (e) {
+            console.error(`[SKILLS] Failed to list protocol skills:`, e);
+        }
         
         res.json({ skills });
     } catch (e) {
@@ -214,12 +252,20 @@ router.get('/list', (req, res) => {
     }
 });
 
-// Execute skill (both formats)
+// Execute skill (both formats + protocol skills)
 router.post('/execute', async (req, res) => {
-    const { name, args } = req.body;
+    const { name, args, path: protocolPath } = req.body;
     
     try {
-        // Try Agent Skills format first
+        // --- ROUTE TO OFFICIAL PROTOCOL SKILLS ---
+        if (protocolPath || (name && name.includes('/'))) {
+            const targetPath = protocolPath || name;
+            console.log(`[SKILLS] Routing to Protocol engine: ${targetPath}`);
+            const result = await protocolSkillEngine.executeSkill(targetPath, args || {});
+            return res.json({ success: true, result });
+        }
+
+        // Try Agent Skills format...
         const skillSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         const skillDir = path.join(SKILLS_DIR, skillSlug);
         

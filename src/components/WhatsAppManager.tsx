@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   MessageSquare,
   User,
@@ -8,7 +9,7 @@ import {
   Phone,
   Video,
   Paperclip,
-} from "lucide-react";
+} = LucideIcons as any;
 import QRCode from "qrcode";
 import { apiUrl } from "../config/api";
 import { setHexAlpha } from "../config/themeColors";

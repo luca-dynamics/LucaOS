@@ -1,8 +1,3 @@
-/**
- * 🎯 Luca Advanced Trading Types
- * Based on NoFx schema with Luca enhancements
- */
-
 // ============================================================================
 // Enums
 // ============================================================================
@@ -192,6 +187,8 @@ export interface RiskControlConfig {
   dailyLossLimitPercent?: number;
   trailingStopEnabled?: boolean;
   trailingStopPercent?: number;
+  adaptiveRisk?: boolean; // Phase 15
+  maxLeverageCap?: number; // Phase 15
 }
 
 export interface CoinSourceConfig {
@@ -218,6 +215,13 @@ export interface ScheduleConfig {
   timezone?: string;
 }
 
+export interface IntelligenceSource {
+  type: "url" | "file";
+  path: string;
+  label?: string;
+  lastScanned?: number;
+}
+
 export interface TradingStrategy {
   id: string;
   userId?: string;
@@ -232,6 +236,11 @@ export interface TradingStrategy {
   schedule: ScheduleConfig;
   promptVariant: "balanced" | "aggressive" | "conservative";
   customPrompt?: string;
+  persona?: string;
+  entryCriteria?: string;
+  exitRules?: string;
+  riskConstraints?: string;
+  intelligenceSources?: IntelligenceSource[];
   createdAt: number;
   updatedAt: number;
 }

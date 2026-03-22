@@ -1,5 +1,6 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Globe,
   TrendingUp,
   Shield,
@@ -8,7 +9,7 @@ import {
   Layers,
   Server,
   Lock,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface ChainStats {
   name: string;

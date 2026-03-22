@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-import {
+const {
   ShieldAlert,
   Lock,
   XCircle,
@@ -9,7 +10,7 @@ import {
   Zap,
   Activity,
   Maximize2,
-} from "lucide-react";
+} = LucideIcons as any;
 import { soundService } from "../services/soundService";
 import AdminEnrollmentModal from "./AdminEnrollmentModal";
 import { lucaService, PersonaType } from "../services/lucaService";

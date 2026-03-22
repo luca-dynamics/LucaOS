@@ -1,0 +1,1 @@
+console.log("Manual Skill Executed");

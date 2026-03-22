@@ -1,23 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Brain,
   Zap,
-  Play,
   Share2,
-  MoreVertical,
   AlertCircle,
   X,
   List,
-} from "lucide-react";
+} = LucideIcons as any;
 import {
   DebateSession,
   DebateMessage,
   DebateVote,
   DebateConsensus,
-  TradeAction,
   DebatePersonality,
   TraderInfo,
 } from "../../types/trading";
+import { eventBus } from "../../services/eventBus";
 import DebateSidebar from "./debate/DebateSidebar";
 import MessageCard from "./debate/MessageCard";
 import VoteCard from "./debate/VoteCard";
@@ -33,9 +32,8 @@ export default function DebateArena({ theme }: DebateArenaProps) {
   // State
   const [sessions, setSessions] = useState<DebateSession[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [traders, setTraders] = useState<TraderInfo[]>([]);
+  const [traders] = useState<TraderInfo[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Mobile Toggles
   const [showSidebar, setShowSidebar] = useState(false);
@@ -53,27 +51,64 @@ export default function DebateArena({ theme }: DebateArenaProps) {
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const selectedSession = sessions.find((s) => s.id === selectedId);
+  const selectedSession = sessions.find((s) => (s.id || (s as any).hash) === selectedId);
 
   // Initial Load
   useEffect(() => {
     loadSessions();
-    // In a real app, we'd also fetch available traders/agents here
-    // For now, we'll let the sidebar use its internal or passed mock traders if api doesn't provide
+    
+    // Listen for NEW research hits to add them to the sidebar list (Phase 5 Sync)
+    const handleGlobalResearch = (data: any) => {
+      setSessions(prev => {
+        if (prev.some(s => s.id === data.symbol)) return prev;
+        const newSession: DebateSession = {
+          id: data.symbol,
+          name: `Research: ${data.symbol}`,
+          status: "completed",
+          symbol: data.symbol,
+          strategyId: "Auto-Research",
+          maxRounds: 1,
+          currentRound: 1,
+          intervalMinutes: 0,
+          promptVariant: "balanced",
+          autoExecute: false,
+          participants: [],
+          messages: data.debate.messages || [],
+          votes: data.debate.votes || [],
+          consensus: [{
+            symbol: data.symbol,
+            action: data.debate.action,
+            confidence: data.debate.confidence,
+            leverage: 1,
+            positionPct: 1,
+            stopLoss: 0,
+            takeProfit: 0,
+            voteCount: 1,
+            totalVotes: 1,
+            hasConsensus: true
+          }],
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        return [newSession, ...prev];
+      });
+    };
+
+    eventBus.on("TRADE_RESEARCH_HIT", handleGlobalResearch);
+    return () => {
+      eventBus.off("TRADE_RESEARCH_HIT", handleGlobalResearch);
+    };
   }, []);
 
   const loadSessions = async () => {
     try {
-      setIsLoading(true);
       const data = await tradingService.getDebates();
-      setSessions(data);
+      setSessions(data as any);
       if (data.length > 0 && !selectedId) {
-        setSelectedId(data[0].id);
+        setSelectedId((data[0] as any).id || (data[0] as any).hash);
       }
     } catch (e) {
       console.error("Failed to load debates", e);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -93,7 +128,7 @@ export default function DebateArena({ theme }: DebateArenaProps) {
 
     if (selectedId) {
       // 1. Load initial details (in case we only had summary)
-      tradingService.getDebateDetails(selectedId).then((session) => {
+      tradingService.getDebateDetails(selectedId).then((session: any) => {
         if (session) {
           setActiveMessages(session.messages || []);
           setActiveVotes(session.votes || []);
@@ -162,18 +197,18 @@ export default function DebateArena({ theme }: DebateArenaProps) {
         promptVariant: request.promptVariant,
       });
 
-      if (result.success && result.session) {
-        setSessions([result.session, ...sessions]);
-        setSelectedId(result.session.id);
+      if (result.success && (result as any).session) {
+        setSessions([(result as any).session, ...sessions]);
+        setSelectedId((result as any).session.id);
       } else {
-        alert("Failed to start debate: " + (result.error || "Unknown error"));
+        alert("Failed to start debate: " + ((result as any).error || "Unknown error"));
       }
     } catch (e) {
       console.error("Create debate error", e);
     }
   };
 
-  const handleStart = (id: string) => {
+  const handleStart = () => {
     // If we were using a manual start trigger not covered by create
     // In this backend implementation, creating usually starts it.
   };

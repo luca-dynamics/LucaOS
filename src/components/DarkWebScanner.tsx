@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   ShieldAlert,
   AlertTriangle,
@@ -9,7 +10,7 @@ import {
   Lock,
   CheckCircle,
   XCircle,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface Props {
   onClose: () => void;
@@ -20,10 +21,10 @@ const DISCLAIMER = `⚠️ LEGAL DISCLAIMER ⚠️
 
 This tool accesses the Tor network to search .onion sites.
 
-• You are solely responsible for ensuring your use complies with local laws.
-• This tool is intended for authorized security research only.
-• The developers assume no liability for misuse.
-• A running Tor service is required (127.0.0.1:9050).`;
+• You are solely responsible for compliance with local laws.
+• Intended for authorized security research only.
+• Developers assume no liability for misuse.
+`;
 
 const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
   const themeHex = theme?.hex || "#ef4444";
@@ -131,7 +132,11 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
                 RESTRICTED ACCESS
               </h3>
 
-              <pre className="text-left text-xs text-slate-400 font-mono whitespace-pre-wrap bg-black/40 p-4 border border-slate-800 rounded mb-6 max-w-md">
+              <pre className="text-left text-xs text-slate-400 font-mono whitespace-pre-wrap bg-black/40 p-4 border border-slate-800 rounded mb-6 max-w-md flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-red-500 font-bold border-b border-red-900/50 pb-2 mb-2">
+                  <AlertTriangle size={16} />
+                  <span>LEGAL CAUTION REQUIRED</span>
+                </div>
                 {DISCLAIMER}
               </pre>
 

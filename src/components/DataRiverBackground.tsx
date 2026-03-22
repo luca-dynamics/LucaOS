@@ -5,9 +5,10 @@ import DataRiver from "./DataRiver";
 
 interface Props {
   intensity?: number;
+  color?: string;
 }
 
-const DataRiverBackground: React.FC<Props> = ({ intensity = 0.3 }) => {
+const DataRiverBackground: React.FC<Props> = ({ intensity = 0.3, color }) => {
   return (
     <div className="absolute inset-0 pointer-events-none z-0">
       <Canvas
@@ -19,7 +20,7 @@ const DataRiverBackground: React.FC<Props> = ({ intensity = 0.3 }) => {
         {/* eslint-disable-next-line react/no-unknown-property */}
         <ambientLight intensity={0.2} />
 
-        <DataRiver intensity={intensity} />
+        <DataRiver intensity={intensity} color={color} />
       </Canvas>
     </div>
   );

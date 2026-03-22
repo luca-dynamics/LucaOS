@@ -1,5 +1,8 @@
 import React from "react";
-import { Database } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Database,
+} = LucideIcons as any;
 import { ModelManager } from "../ModelManager";
 
 interface SettingsModelManagerTabProps {

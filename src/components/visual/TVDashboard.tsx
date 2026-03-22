@@ -1,5 +1,11 @@
 import React from "react";
-import { Monitor, Wifi, Cpu, Database } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Monitor,
+  Wifi,
+  Cpu,
+  Database,
+} = LucideIcons as any;
 
 interface TVDashboardProps {
   themeHex: string;

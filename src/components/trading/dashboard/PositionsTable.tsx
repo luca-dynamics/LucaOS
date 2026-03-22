@@ -1,5 +1,9 @@
 import React from "react";
-import { BarChart2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  BarChart2,
+  Trash2,
+} = LucideIcons as any;
 
 export interface Position {
   id: string;
@@ -23,163 +27,90 @@ interface PositionsTableProps {
 }
 
 export default function PositionsTable({
-  themeCardBg = "bg-black/40 border border-slate-800/60 backdrop-blur-sm",
+  themeCardBg = "bg-transparent",
   positions = [],
   onClosePosition,
   theme,
 }: PositionsTableProps) {
   return (
-    <div
-      className={`${themeCardBg} rounded-lg flex flex-col h-full overflow-hidden`}
-    >
-      <div className="p-3 border-b border-slate-800/60 flex justify-between items-center bg-black/20">
-        <h3 className="font-bold text-sm text-white flex items-center gap-2">
-          <BarChart2 size={16} style={{ color: theme?.hex || "#F97316" }} />
-          Current Positions
+    <div className={`${themeCardBg} flex flex-col h-full overflow-hidden text-white/90`}>
+      <div className="p-2 border-b border-white/5 bg-white/5 flex justify-between items-center">
+        <h3 className="font-bold text-[10px] uppercase tracking-widest flex items-center gap-2">
+          <BarChart2 size={14} style={{ color: theme?.hex || "#22d3ee" }} />
+          Active Intercepts
         </h3>
-        <span
-          className="text-[10px] font-bold border px-2 py-0.5 rounded-sm"
-          style={{
-            backgroundColor: theme ? `${theme.hex}33` : "rgba(234,179,8,0.2)",
-            color: theme?.hex || "#F97316",
-            borderColor: theme ? `${theme.hex}4d` : "rgba(234,179,8,0.3)",
-          }}
-        >
-          {positions.length} Active
+        <span className="text-[8px] font-bold text-slate-500 border border-white/5 px-2 py-0.5 rounded-md bg-black/20">
+          {positions.length} Nodes
         </span>
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto custom-scrollbar">
         {positions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-500 text-xs gap-2">
-            <BarChart2 size={24} className="opacity-20" />
-            <span>No open positions</span>
+          <div className="flex flex-col items-center justify-center h-full text-slate-600 text-[10px] gap-3 uppercase tracking-widest">
+            <BarChart2 size={24} className="opacity-10" />
+            <span>Scanning for active signals...</span>
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
-            <thead className="text-[10px] font-bold text-slate-500 bg-slate-900/30 sticky top-0 z-10">
+            <thead className="text-[9px] font-bold text-slate-500 bg-black/20 sticky top-0 z-10 uppercase tracking-tighter">
               <tr>
-                <th className="p-3 font-normal tracking-wider">SYMBOL</th>
-                <th className="p-3 font-normal tracking-wider text-center">
-                  SIDE
-                </th>
-                <th className="p-3 font-normal tracking-wider text-right">
-                  ENTRY
-                </th>
-                <th className="p-3 font-normal tracking-wider text-right">
-                  MARK
-                </th>
-                <th className="p-3 font-normal tracking-wider text-right">
-                  SIZE
-                </th>
-                <th className="p-3 font-normal tracking-wider text-right">
-                  VALUE
-                </th>
-                <th className="p-3 font-normal tracking-wider text-center">
-                  LEV
-                </th>
-                <th className="p-3 font-normal tracking-wider text-right">
-                  PNL (ROE)
-                </th>
-                <th className="p-3 font-normal tracking-wider text-right">
-                  LIQ. PRICE
-                </th>
-                <th className="p-3 font-normal tracking-wider text-right">
-                  ACTION
-                </th>
+                <th className="px-3 py-2">Symbol</th>
+                <th className="px-2 py-2 text-center">Side</th>
+                <th className="px-2 py-2 text-right">Size</th>
+                <th className="px-2 py-2 text-right">Entry</th>
+                <th className="px-2 py-2 text-right">Mark</th>
+                <th className="px-2 py-2 text-right">PNL</th>
+                <th className="px-2 py-2 text-right">Liq</th>
+                <th className="px-3 py-2 text-right">Ex</th>
               </tr>
             </thead>
-            <tbody className="text-xs font-mono">
+            <tbody className="text-[10px] font-mono">
               {positions.map((pos) => (
                 <tr
                   key={pos.id}
-                  className="border-b border-slate-800/50 hover:bg-white/5 transition-colors group"
+                  className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group"
                 >
-                  <td className="p-3 font-bold text-slate-200">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-1 h-3 rounded-full ${
-                          pos.side === "LONG" ? "bg-emerald-500" : "bg-rose-500"
-                        }`}
-                      ></div>
-                      {pos.symbol}
-                    </div>
+                  <td className="px-3 py-2 font-bold text-slate-200">
+                    {pos.symbol}
+                    <div className="text-[8px] text-slate-600 font-normal">{pos.leverage}x isolated</div>
                   </td>
-                  <td className="p-3 text-center">
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                  <td className="px-2 py-2 text-center">
+                    <span className={`text-[8px] font-bold px-1 rounded-sm border ${
                         pos.side === "LONG"
                           ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
                           : "text-rose-400 border-rose-500/30 bg-rose-500/10"
-                      }`}
-                    >
+                      }`}>
                       {pos.side}
                     </span>
                   </td>
-                  <td className="p-3 text-right text-slate-400">
-                    {pos.entryPrice.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 4,
-                    })}
-                  </td>
-                  <td className="p-3 text-right text-slate-300">
-                    {pos.markPrice.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 4,
-                    })}
-                  </td>
-                  <td className="p-3 text-right text-slate-400">
+                  <td className="px-2 py-2 text-right text-slate-300">
                     {pos.size.toLocaleString()}
                   </td>
-                  <td className="p-3 text-right text-slate-200 font-bold">
-                    {/* Calculate Position Value approx: Size * Mark (simplified) */}
-                    {(pos.size * pos.markPrice).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    USDT
+                  <td className="px-2 py-2 text-right text-slate-500">
+                    ${pos.entryPrice.toLocaleString(undefined, { minimumFractionDigits: 1 })}
                   </td>
-                  <td
-                    className="p-3 text-center font-bold"
-                    style={{ color: theme?.hex || "#F97316" }}
-                  >
-                    {pos.leverage}x
+                  <td className="px-2 py-2 text-right text-slate-300 font-bold">
+                    ${pos.markPrice.toLocaleString(undefined, { minimumFractionDigits: 1 })}
                   </td>
-                  <td className="p-3 text-right">
+                  <td className="px-2 py-2 text-right">
                     <div className="flex flex-col items-end">
-                      <span
-                        className={`font-bold ${
-                          pos.unrealizedPnL >= 0
-                            ? "text-emerald-400"
-                            : "text-rose-400"
-                        }`}
-                      >
-                        {pos.unrealizedPnL >= 0 ? "+" : ""}
-                        {pos.unrealizedPnL.toLocaleString()}
+                      <span className={`font-bold ${pos.unrealizedPnL >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                        {pos.unrealizedPnL >= 0 ? "+" : ""}{pos.unrealizedPnL.toFixed(2)}
                       </span>
-                      <span
-                        className={`text-[10px] ${
-                          pos.pnlPercent >= 0
-                            ? "text-emerald-600"
-                            : "text-rose-600"
-                        }`}
-                      >
-                        ({pos.pnlPercent}%)
+                      <span className={`text-[8px] ${pos.pnlPercent >= 0 ? "text-emerald-500/50" : "text-rose-500/50"}`}>
+                        ({pos.pnlPercent.toFixed(1)}%)
                       </span>
                     </div>
                   </td>
-                  <td className="p-3 text-right text-slate-500">
-                    {pos.liquidationPrice.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 4,
-                    })}
+                  <td className="px-2 py-2 text-right text-rose-500/40 text-[9px]">
+                    ${pos.liquidationPrice.toLocaleString(undefined, { minimumFractionDigits: 1 })}
                   </td>
-                  <td className="p-3 text-right">
+                  <td className="px-3 py-2 text-right">
                     <button
                       onClick={() => onClosePosition?.(pos.symbol)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 text-[10px] px-2 py-1 rounded border border-rose-500/30"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-rose-500/20 text-rose-500/60 rounded border border-white/5"
                     >
-                      Close
+                      <Trash2 size={12} />
                     </button>
                   </td>
                 </tr>

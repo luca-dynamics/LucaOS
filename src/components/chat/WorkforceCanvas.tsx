@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-import { 
-  Cpu, 
-  Terminal, 
-  Shield, 
-  Search, 
+const {
+  Cpu,
+  Terminal,
+  Shield,
+  Search,
   Target,
   Brain,
   Activity,
-} from "lucide-react";
+} = LucideIcons as any;
 import { lucaWorkforce, WorkflowPlan, WorkflowTask } from "../../services/agent/LucaWorkforce";
 import { PersonaType } from "../../config/personaConfig";
 

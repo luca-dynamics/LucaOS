@@ -1,6 +1,11 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Anchor } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { motion,
+  AnimatePresence } from "framer-motion";
+const {
+  X,
+  Anchor,
+} = LucideIcons as any;
 import { getThemeColors } from "../../config/themeColors";
 
 interface FloatingPanelProps {

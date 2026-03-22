@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { 
-  ReactFlow, 
-  Background, 
-  Controls, 
-  useNodesState, 
-  useEdgesState, 
+import * as LucideIcons from "lucide-react";
+import { ReactFlow,
+  Background,
+  Controls,
+  useNodesState,
+  useEdgesState,
   ReactFlowProvider,
   Panel
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
 import { lucaWorkforce } from "../../services/agent/LucaWorkforce";
-import { GoalNode, AgentNode, TaskNode } from "./CustomNodes";
-import { Activity, Maximize2 } from "lucide-react";
+import { GoalNode,
+  AgentNode,
+  TaskNode } from "./CustomNodes";
+const { Activity,
+  Maximize2,
+} = LucideIcons as any;
 import { motion } from "framer-motion";
 
 const nodeTypes = {

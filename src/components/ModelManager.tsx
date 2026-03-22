@@ -6,7 +6,8 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Cpu,
   Eye,
   Volume2,
@@ -24,7 +25,7 @@ import {
   Zap,
   FlaskConical,
   Shield,
-} from "lucide-react";
+} = LucideIcons as any;
 import {
   modelManager,
   LocalModel,

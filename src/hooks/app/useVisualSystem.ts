@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 export interface VisualSystemState {
   isVisionActive: boolean;
@@ -19,14 +19,12 @@ export function useVisualSystem(): VisualSystemState {
     "high" | "balanced" | "eco"
   >("balanced");
 
-  const setVisualData = (data: any) => {
+  const setVisualData = useCallback((data: any) => {
     setInternalVisualData((prev: any) => {
-      // If we are switching types, or data is null, replace entirely
       if (!data || !prev || data.type !== prev.type) {
         return data;
       }
 
-      // If both have logs, stack them. Unique by log ID if possible.
       if (data.logs && prev.logs) {
         const existingIds = new Set(prev.logs.map((l: any) => l.id));
         const newLogs = data.logs.filter((l: any) => !existingIds.has(l.id));
@@ -39,9 +37,9 @@ export function useVisualSystem(): VisualSystemState {
 
       return data;
     });
-  };
+  }, []);
 
-  return {
+  return useMemo(() => ({
     isVisionActive,
     setIsVisionActive,
     visualData,
@@ -50,5 +48,5 @@ export function useVisualSystem(): VisualSystemState {
     setVoiceSearchResults,
     visionPerformanceMode,
     setVisionPerformanceMode,
-  };
+  }), [isVisionActive, visualData, setVisualData, voiceSearchResults, visionPerformanceMode]);
 }

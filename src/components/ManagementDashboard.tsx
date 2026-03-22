@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { TaskStatus, Goal } from "../types";
-import {
+import * as LucideIcons from "lucide-react";
+import { TaskStatus,
+  Goal } from "../types";
+const {
   CheckCircle2,
   Circle,
   Clock,
@@ -9,7 +11,7 @@ import {
   Target,
   X,
   Brain,
-} from "lucide-react";
+} = LucideIcons as any;
 import { useAppContext } from "../context/AppContext";
 import { setHexAlpha } from "../config/themeColors";
 import { memoryService } from "../services/memoryService";

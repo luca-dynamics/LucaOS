@@ -83,6 +83,10 @@ export const HIGH_SECURITY_TOOLS: Record<
     level: SecurityLevel.LEVEL_2,
     scope: MissionScope.FINANCE,
   },
+  executeProtocolSkill: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.FINANCE,
+  },
 
   // Privacy / OSINT / Social
   osintIdentitySearch: {

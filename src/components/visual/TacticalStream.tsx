@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Terminal, Activity, Cpu, Target } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Terminal,
+  Activity,
+  Cpu,
+  Target,
+} = LucideIcons as any;
 import { TacticalLog } from "../../types";
 import { setHexAlpha } from "../../config/themeColors";
 

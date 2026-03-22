@@ -1,5 +1,6 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Clock,
   CheckCircle2,
   XCircle,
@@ -7,7 +8,7 @@ import {
   Pause,
   Trash2,
   Calendar,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface BacktestRun {
   id: string;

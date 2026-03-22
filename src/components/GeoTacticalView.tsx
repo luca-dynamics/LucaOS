@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { TacticalMarker } from "../types";
-import { Globe, Radio, Crosshair, X } from "lucide-react";
+const {
+  Globe,
+  Radio,
+  Crosshair,
+  X,
+} = LucideIcons as any;
 import { setHexAlpha } from "../config/themeColors";
 
 interface Props {

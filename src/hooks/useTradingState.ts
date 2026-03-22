@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   CryptoWallet,
   TradeLog,
@@ -19,7 +19,7 @@ export function useTradingState() {
   const [showPredictionTerminal, setShowPredictionTerminal] = useState(false);
   const [polyPositions, setPolyPositions] = useState<PolyPosition[]>([]);
 
-  return {
+  return useMemo(() => ({
     showCryptoTerminal,
     setShowCryptoTerminal,
     cryptoWallet,
@@ -36,5 +36,5 @@ export function useTradingState() {
     setShowPredictionTerminal,
     polyPositions,
     setPolyPositions,
-  };
+  }), [showCryptoTerminal, cryptoWallet, tradeHistory, showForexTerminal, forexAccount, forexTrades, showPredictionTerminal, polyPositions]);
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   Play,
   Square,
@@ -11,7 +12,7 @@ import {
   HardDrive,
   Clock,
   ExternalLink,
-} from "lucide-react";
+} = LucideIcons as any;
 import { Subsystem, SubsystemLog } from "../types";
 import { apiUrl } from "../config/api";
 

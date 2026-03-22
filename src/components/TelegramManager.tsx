@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { X, Send, ShieldCheck, Smartphone, Lock, Wifi } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Send,
+  ShieldCheck,
+  Smartphone,
+  Lock,
+  Wifi,
+} = LucideIcons as any;
 import { settingsService } from "../services/settingsService";
 import { apiUrl } from "../config/api";
 import { setHexAlpha } from "../config/themeColors";

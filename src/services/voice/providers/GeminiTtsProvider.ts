@@ -1,75 +1,104 @@
 import { ITtsProvider } from "../types";
 import { getGenClient } from "../../genAIClient";
+import { personalityService } from "../../personalityService";
+import { settingsService } from "../../settingsService";
+import { voiceCloneService } from "../../VoiceCloneService";
 
 export class GeminiTtsProvider implements ITtsProvider {
+  private modelId: string;
+
+  constructor(modelId: string = "gemini-2.0-flash") {
+    // Ensure we have the short ID (e.g. gemini-2.0-flash) for the URL
+    this.modelId = modelId.includes("/") ? modelId.split("/").pop()! : modelId;
+  }
+
   async synthesize(
     text: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: { abortSignal?: AbortSignal; systemInstruction?: string },
   ): Promise<ArrayBuffer> {
-    const client = getGenClient();
-    // Assuming a specialized model or method for TTS in the SDK or a direct fetch to the synthesis endpoint
-    // For Gemini 2.0+ it's often part of the multimodal response, but we can hit the specialized endpoint
-    const apiKey = (client as any).apiKey;
-
-    // Fallback to the REST endpoint if the SDK doesn't expose it directly yet
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text }] }],
-          generationConfig: {
-            response_mime_type: "audio/pcm", // Or appropriate audio type
-          },
-        }),
-        signal: options?.abortSignal,
+    const genAI = getGenClient();
+    const contents = await this.prepareContents(text, options);
+    
+    const result = await genAI.models.generateContent({
+      model: this.modelId,
+      contents,
+      config: {
+        responseMimeType: "audio/mp3",
       },
+    });
+
+    const part = result.candidates?.[0].content?.parts?.find(
+      (p: any) => p.inlineData,
     );
 
-    if (!response.ok) throw new Error("Gemini TTS failed");
-    return await response.arrayBuffer();
+    if (part?.inlineData?.data) {
+      const base64 = part.inlineData.data;
+      return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)).buffer;
+    }
+
+    throw new Error("Gemini TTS failed to generate audio data");
   }
 
   async *synthesizeStream(
     text: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: { abortSignal?: AbortSignal; systemInstruction?: string },
   ): AsyncIterable<ArrayBuffer> {
-    const client = getGenClient();
-    const apiKey = (client as any).apiKey;
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text }] }],
-          generationConfig: {
-            response_mime_type: "audio/pcm",
-          },
-        }),
-        signal: options?.abortSignal,
+    const genAI = getGenClient();
+    const contents = await this.prepareContents(text, options);
+    
+    const stream = await genAI.models.generateContentStream({
+      model: this.modelId,
+      contents,
+      config: {
+        responseMimeType: "audio/mp3",
       },
-    );
+    });
 
-    if (!response.ok) throw new Error("Gemini TTS failed");
-    if (!response.body) return;
+    for await (const chunk of stream) {
+      if (options?.abortSignal?.aborted) break;
+      
+      const part = chunk.candidates?.[0].content?.parts?.find(
+        (p: any) => p.inlineData,
+      );
 
-    const reader = response.body.getReader();
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          yield value.buffer.slice(
-            value.byteOffset,
-            value.byteOffset + value.byteLength,
-          );
-        }
+      if (part?.inlineData?.data) {
+        const base64 = part.inlineData.data;
+        yield Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)).buffer;
       }
-    } finally {
-      reader.releaseLock();
     }
+  }
+
+  private async prepareContents(text: string, options?: any) {
+    const settings = settingsService.getSettings();
+    const instruction = options?.systemInstruction || personalityService.getVoiceSystemInstruction({
+      style: settings.voice.style,
+      pacing: settings.voice.pacing
+    });
+    
+    const parts: any[] = [{ text: `${instruction}\n\n#### TRANSCRIPT\n"${text}"` }];
+
+    if (settings.voice.activeClonedVoiceId) {
+      try {
+        const clonedVoice = await voiceCloneService.getVoice(settings.voice.activeClonedVoiceId);
+        if (clonedVoice?.audioBlob) {
+          const base64Audio = await voiceCloneService.blobToBase64(clonedVoice.audioBlob);
+          const cleanBase64 = base64Audio.split(",")[1];
+          
+          parts.unshift({
+            text: "Use the following audio clip as a reference for the voice tone, timbre, and accent. MIMIC this voice exactly when speaking the transcript below.",
+          });
+          parts.unshift({
+            inlineData: {
+              mimeType: "audio/mp3",
+              data: cleanBase64,
+            },
+          });
+        }
+      } catch (e) {
+        console.warn("[GeminiTtsProvider] Voice cloning reference failed:", e);
+      }
+    }
+
+    return [{ role: "user", parts }];
   }
 }

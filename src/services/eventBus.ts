@@ -41,6 +41,23 @@ export interface TranslationStateEvent {
   isActive: boolean;
 }
 
+export interface TelemetryEvent {
+  stt?: {
+    local?: number;
+    cloud?: number;
+    fastest?: "local" | "cloud";
+  };
+  brain?: {
+    ttft?: number;
+    path?: string;
+  };
+  tts?: {
+    buffer?: number;
+    latency?: number;
+    source?: "local" | "neural";
+  };
+}
+
 interface EventHistoryEntry {
   event: VisionEvent;
   timestamp: number;

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { X, Save, Sparkles, Wand2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Save,
+  Sparkles,
+  Wand2,
+} = LucideIcons as any;
 import { AIModel } from "../../types/trading";
 
 interface AIModelConfigModalProps {

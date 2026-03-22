@@ -1,5 +1,6 @@
 import { ITtsProvider } from "../types";
 import { cortexUrl } from "../../../config/api";
+import { settingsService } from "../../settingsService";
 
 export class CortexTtsProvider implements ITtsProvider {
   async synthesize(
@@ -7,10 +8,14 @@ export class CortexTtsProvider implements ITtsProvider {
     options?: { abortSignal?: AbortSignal },
   ): Promise<ArrayBuffer> {
     const url = cortexUrl("/tts");
+    const settings = settingsService.getSettings();
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ 
+        text,
+        speed: settings.voice.rate || 1.0
+      }),
       signal: options?.abortSignal,
     });
 
@@ -23,10 +28,15 @@ export class CortexTtsProvider implements ITtsProvider {
     options?: { abortSignal?: AbortSignal },
   ): AsyncIterable<ArrayBuffer> {
     const url = cortexUrl("/tts");
+    const settings = settingsService.getSettings();
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, stream: true }),
+      body: JSON.stringify({ 
+        text, 
+        stream: true,
+        speed: settings.voice.rate || 1.0
+      }),
       signal: options?.abortSignal,
     });
 

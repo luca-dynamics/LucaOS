@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Globe,
   ExternalLink,
   ShieldCheck,
@@ -7,7 +8,7 @@ import {
   Zap,
   Lock,
   Activity,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface IntelligenceFeedProps {
   results: any;

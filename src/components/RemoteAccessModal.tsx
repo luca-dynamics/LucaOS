@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   QrCode,
   X,
   Wifi,
@@ -16,7 +17,7 @@ import {
   Bug,
   Skull,
   AlertTriangle,
-} from "lucide-react";
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 
 interface Props {

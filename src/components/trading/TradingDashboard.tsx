@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { TrendingUp, LineChart, BarChart, PieChart } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Zap,
+  Settings,
+  TrendingUp,
+} = LucideIcons as any;
 import MarketChart from "./dashboard/MarketChart";
 import RecentDecisions, { DecisionCycle } from "./dashboard/RecentDecisions";
 import PositionsTable, { Position } from "./dashboard/PositionsTable";
 import OrderEntry from "./dashboard/OrderEntry";
 import { tradingService } from "../../services/tradingService";
+import { eventBus } from "../../services/eventBus";
+import { modelShadowService } from "../../services/ai/ModelShadowService";
 
 interface TradingDashboardProps {
   theme?: { hex: string; primary: string; border: string; bg: string };
 }
 
 export default function TradingDashboard({ theme }: TradingDashboardProps) {
-  const themeCardBg = "bg-black/40 border border-slate-800/60 backdrop-blur-sm";
-
   // State
+  const [balance, setBalance] = useState<any>(null);
   const [metrics, setMetrics] = useState({
     totalEquity: 0,
     availableBalance: 0,
@@ -24,260 +30,225 @@ export default function TradingDashboard({ theme }: TradingDashboardProps) {
   });
   const [positions, setPositions] = useState<Position[]>([]);
   const [cycles, setCycles] = useState<DecisionCycle[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [shadowDrift, setShadowDrift] = useState<any[]>([]);
 
   useEffect(() => {
     loadDashboardData();
-    // Optional: Set up polling or SSE listener here
-    const interval = setInterval(loadDashboardData, 10000); // Poll every 10s
-    return () => clearInterval(interval);
+    const interval = setInterval(loadDashboardData, 10000); 
+    eventBus.on("TRADE_EXECUTED", loadDashboardData);
+    eventBus.on("TRADE_PROPOSED", loadDashboardData);
+
+    return () => {
+      clearInterval(interval);
+      eventBus.off("TRADE_EXECUTED", loadDashboardData);
+      eventBus.off("TRADE_PROPOSED", loadDashboardData);
+    };
   }, []);
 
   const loadDashboardData = async () => {
     try {
-      // 1. Get Exchanges to know which one to query (default to first connected or mock)
-      const exchanges = await tradingService.getConnectedExchanges();
-      const activeExchange = exchanges[0]?.id || "binance"; // Default
+      await tradingService.getConnectedExchanges();
 
-      // 2. Fetch Data in Parallel
       const [balanceData, positionsData, debatesData] = await Promise.all([
-        tradingService.getBalance(activeExchange),
-        tradingService.getPositions(activeExchange),
+        tradingService.getBalance(),
+        tradingService.getPositions(),
         tradingService.getDebates(),
       ]);
 
-      // Real balance is now directly from service
-      const realBalance = balanceData || { total: 0, free: 0 };
+      const realBalance = balanceData || { total: 0, free: 0, pnl24h: 0 };
+      setBalance(realBalance);
 
-      // 3. Process Positions
-      const activePositions: Position[] = Array.isArray(positionsData)
-        ? positionsData
-        : [];
-      const totalUnrealizedPnL = activePositions.reduce(
-        (sum, p) => sum + p.unrealizedPnL,
-        0,
-      );
+      // Map service positions to UI Positions
+      const activePositions: Position[] = Array.isArray(positionsData) ? positionsData.map((p: any) => ({
+        id: p.id,
+        symbol: p.symbol,
+        side: p.side,
+        size: p.amount,
+        entryPrice: p.entryPrice,
+        markPrice: p.markPrice,
+        leverage: p.leverage,
+        liquidationPrice: p.liquidPrice,
+        unrealizedPnL: p.unrealizedPnl,
+        pnlPercent: parseFloat(((p.unrealizedPnl / (p.amount * p.entryPrice / p.leverage)) * 100).toFixed(2)) || 0,
+      })) : [];
 
-      // 4. Process Debates (Cycles)
-      // Map API debates to DecisionCycle format if needed
-      // Assuming API returns format compatible or we map it:
+      const totalUnrealizedPnL = activePositions.reduce((sum, p) => sum + p.unrealizedPnL, 0);
+
       const processedCycles: DecisionCycle[] = Array.isArray(debatesData)
         ? debatesData.map((d: any) => ({
             id: d.id,
-            cycleNumber: d.cycleNumber || 0, // Need backend to send this or calculate
+            cycleNumber: d.cycleNumber || 0,
             timestamp: new Date(d.createdAt).toLocaleString(),
             status: d.status === "completed" ? "success" : d.status,
             decisions: d.consensus
               ? [
                   {
                     symbol: d.symbol,
-                    action: d.consensus.verdict
-                      .toUpperCase()
-                      .replace("OPEN_", ""),
+                    action: d.consensus.verdict.toUpperCase().replace("OPEN_", ""),
                     reasoning: `Confidence: ${d.consensus.confidence}%`,
                   },
                 ]
               : [],
-            chainOfThought:
-              d.messages?.map(
-                (m: any) => m.content.substring(0, 100) + "...",
-              ) || [],
+            chainOfThought: d.messages?.map((m: any) => m.content.substring(0, 100) + "...") || [],
           }))
         : [];
 
-      // 5. Update State
       setPositions(activePositions);
       setCycles(processedCycles);
       setMetrics({
         totalEquity: realBalance.total || 0,
         availableBalance: realBalance.free || 0,
-        dailyPnL: totalUnrealizedPnL, // simplified
-        dailyPnLPercent:
-          realBalance.total > 0
-            ? (totalUnrealizedPnL / realBalance.total) * 100
-            : 0,
+        dailyPnL: totalUnrealizedPnL,
+        dailyPnLPercent: realBalance.total > 0 ? (totalUnrealizedPnL / realBalance.total) * 100 : 0,
         activePositions: activePositions.length,
-        marginUsage:
-          realBalance.total > 0
-            ? ((realBalance.total - realBalance.free) / realBalance.total) * 100
-            : 0,
+        marginUsage: realBalance.total > 0 ? ((realBalance.total - realBalance.free) / realBalance.total) * 100 : 0,
       });
+
+      // Fetch Shadow Drift (Phase 14)
+      const drift = modelShadowService.getModelDriftReport("live_session");
+      setShadowDrift(drift);
     } catch (error) {
       console.error("Dashboard Load Error:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handlePlaceOrder = async (order: any) => {
-    // 1. Get Exchange
     const exchanges = await tradingService.getConnectedExchanges();
-    const activeExchange = exchanges[0]?.id || "binance";
-
-    // 2. Execute
+    const activeExchange = exchanges[0]?.id || "Binance";
     const result = await tradingService.executeOrder(activeExchange, order);
-
-    // 3. Refresh Data
     if (result.success || result.orderId) {
-      setTimeout(loadDashboardData, 1000); // Wait for exchange to process
-    } else {
-      console.error("Order Failed:", result.error);
-      alert(`Order Failed: ${result.error}`);
+      setTimeout(loadDashboardData, 1000);
     }
   };
 
   const handleClosePosition = async (symbol: string) => {
     if (!confirm(`Are you sure you want to close ${symbol}?`)) return;
-
     const exchanges = await tradingService.getConnectedExchanges();
-    const activeExchange = exchanges[0]?.id || "binance";
-
+    const activeExchange = exchanges[0]?.id || "Binance";
     const result = await tradingService.closePosition(activeExchange, symbol);
-
     if (result.success || result.id) {
       setTimeout(loadDashboardData, 1000);
-    } else {
-      alert(`Close Failed: ${result.error}`);
     }
   };
 
   return (
-    <div className="h-full flex flex-col gap-4 font-mono text-slate-200 animate-in fade-in duration-500">
-      {/* 1. TOP METRICS ROW */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 h-auto sm:h-24 flex-shrink-0">
-        {/* Total Equity */}
-        <div
-          className={`${themeCardBg} rounded-lg p-3 sm:p-4 flex flex-col justify-between relative overflow-hidden`}
-        >
-          <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
-            Total Equity
+    <div className="flex flex-col h-full bg-[#050505] text-white font-sans overflow-hidden">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5 backdrop-blur-md z-20">
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-8 h-8 rounded-lg flex items-center justify-center border shadow-sm"
+            style={{ 
+              backgroundColor: theme ? `${theme.hex}33` : "rgba(6,182,212,0.2)",
+              borderColor: theme ? `${theme.hex}66` : "rgba(6,182,212,0.4)",
+              boxShadow: theme ? `0 0 15px ${theme.hex}4d` : "0 0 15px rgba(6,182,212,0.3)"
+            }}
+          >
+            <Zap 
+              className="w-5 h-5" 
+              style={{ color: theme?.hex || "#22d3ee" }}
+            />
           </div>
-          <div className="flex items-end gap-2">
-            <span className="text-2xl font-bold text-white tracking-tight">
-              {metrics.totalEquity.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-              })}{" "}
-              USDT
+          <div>
+            <h1 className="text-sm font-bold tracking-wider text-white uppercase">LucaOS Trading Dashboard</h1>
+            <div className="flex items-center gap-2">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] text-emerald-400/80 font-mono uppercase tracking-widest leading-none">Market Live</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-end">
+            <span className="text-[9px] text-white/40 uppercase tracking-tighter">Account Balance</span>
+            <span className="text-sm font-mono font-bold text-white tracking-widest">
+              ${balance?.total.toLocaleString() || "0.00"}
             </span>
           </div>
-          <div
-            className={`flex items-center gap-2 text-[10px] font-bold ${
-              metrics.dailyPnL >= 0 ? "text-emerald-400" : "text-rose-400"
-            }`}
-          >
-            <TrendingUp size={12} />
-            <span>
-              {metrics.dailyPnL >= 0 ? "+" : ""}
-              {(metrics.dailyPnLPercent || 0).toFixed(2)}%
+          <div className="flex flex-col items-end">
+            <span className="text-[9px] text-white/40 uppercase tracking-tighter">24h PnL</span>
+            <span className={`text-sm font-mono font-bold tracking-widest ${metrics.dailyPnL >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+              {metrics.dailyPnL >= 0 ? "+" : ""}${metrics.dailyPnL.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
           </div>
-        </div>
 
-        {/* Available Balance */}
-        <div
-          className={`${themeCardBg} rounded-lg p-3 sm:p-4 flex flex-col justify-between`}
-        >
-          <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
-            Available Balance
-          </div>
-          <div className="text-xl font-bold text-white">
-            {metrics.availableBalance.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-            })}{" "}
-            USDT
-          </div>
-          <div className="text-[10px] text-slate-600">
-            {metrics.totalEquity > 0
-              ? (
-                  (metrics.availableBalance / metrics.totalEquity) *
-                  100
-                ).toFixed(1)
-              : 0}
-            % Free
-          </div>
-        </div>
-
-        {/* Total PnL */}
-        <div
-          className={`${themeCardBg} rounded-lg p-3 sm:p-4 flex flex-col justify-between`}
-        >
-          <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
-            Total PnL (Open)
-          </div>
-          <div
-            className={`text-xl font-bold flex items-center gap-2 ${
-              metrics.dailyPnL >= 0 ? "text-emerald-400" : "text-rose-400"
-            }`}
-          >
-            {metrics.dailyPnL >= 0 ? "+" : ""}
-            {metrics.dailyPnL.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-            })}{" "}
-            USDT
-          </div>
-          <div
-            className={`text-[10px] ${
-              metrics.dailyPnL >= 0 ? "text-emerald-600" : "text-rose-600"
-            }`}
-          >
-            Realized + Unrealized
-          </div>
-        </div>
-
-        {/* Positions Summary */}
-        <div
-          className={`${themeCardBg} rounded-lg p-3 sm:p-4 flex flex-col justify-between`}
-        >
-          <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">
-            Positions
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {metrics.activePositions}
-          </div>
-          <div className="text-[10px] text-slate-500">
-            Margin: {(metrics.marginUsage || 0).toFixed(1)}%
-          </div>
+          {/* Model Drift Indicator (Phase 14) */}
+          {shadowDrift.length > 0 && (
+            <div className="flex flex-col items-end border-l border-white/10 pl-4">
+              <span className="text-[9px] text-white/40 uppercase tracking-tighter">Cortex Drift</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-yellow-500">
+                  {shadowDrift[0].modelId}: {shadowDrift[0].driftPct.toFixed(1)}%
+                </span>
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+              </div>
+            </div>
+          )}
+          <button className="p-1.5 hover:bg-white/5 rounded-md transition-colors border border-white/5">
+            <Settings className="w-4 h-4 text-white/60" />
+          </button>
         </div>
       </div>
 
-      {/* 2. MAIN GRID AREA - 2 COLUMN SPLIT */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
-        {/* LEFT COLUMN: Chart + Positions (Stacked) */}
-        <div className="flex flex-col gap-4 min-h-0 overflow-y-auto pr-0 lg:pr-1">
-          {/* Market Chart Area */}
-          <div className="h-[300px] sm:h-[400px] lg:h-[500px] flex-shrink-0">
-            <MarketChart themeCardBg={themeCardBg} theme={theme} />
+      {/* Main Content Area */}
+      <div className="flex-1 grid grid-cols-12 gap-3 p-3 overflow-hidden">
+        {/* Left Column: Chart & Summary (Col 1-8) */}
+        <div className="col-span-8 flex flex-col gap-3 overflow-hidden">
+          {/* Market Chart Container */}
+          <div className="flex-[3] glass-card-premium liquid-border p-0.5">
+            <div className="w-full h-full bg-[#0a0a0a]/80 flex flex-col">
+              <div className="px-4 py-2 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp 
+                    className="w-4 h-4" 
+                    style={{ color: theme?.hex || "#22d3ee" }}
+                  />
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-white/80">BTC/USDT Perpetual</span>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] font-mono">
+                  <span className="text-emerald-400">$64,120.40</span>
+                  <span className="text-white/30">Vol: 1.2B</span>
+                </div>
+              </div>
+              <div className="flex-1 p-2">
+                <MarketChart theme={theme} />
+              </div>
+            </div>
           </div>
 
-          {/* Manual Trade Entry */}
-          <div className="flex-shrink-0">
-            <OrderEntry
-              themeCardBg={themeCardBg}
-              activeSymbol={positions[0]?.symbol || "BTC/USDT"}
-              onPlaceOrder={handlePlaceOrder}
-              theme={theme}
-            />
-          </div>
-
-          {/* Positions Table Area */}
-          <div className="flex-1 min-h-[300px]">
-            <PositionsTable
-              themeCardBg={themeCardBg}
-              positions={positions}
-              onClosePosition={handleClosePosition}
-              theme={theme}
-            />
+          {/* Positions Table Container */}
+          <div className="flex-[2] glass-card-premium liquid-border p-0.5">
+            <div className="w-full h-full bg-[#0a0a0a]/80 flex flex-col">
+              <PositionsTable 
+                positions={positions} 
+                onClosePosition={handleClosePosition}
+                theme={theme}
+              />
+            </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Recent Decisions (Sticky Container) */}
-        <div className="h-full min-h-0">
-          <div className="h-full sticky top-0">
-            <RecentDecisions
-              themeCardBg={themeCardBg}
-              cycles={cycles}
-              theme={theme}
-            />
+        {/* Right Column: Order Entry & Recent Decisions (Col 9-12) */}
+        <div className="col-span-4 flex flex-col gap-3 overflow-hidden">
+          {/* Order Entry */}
+          <div className="h-auto glass-card-premium liquid-border p-0.5">
+             <div className="w-full bg-[#0a0a0a]/80">
+              <OrderEntry 
+                activeSymbol={positions[0]?.symbol || "BTC/USDT"}
+                onPlaceOrder={handlePlaceOrder}
+                theme={theme}
+              />
+             </div>
+          </div>
+
+          {/* Recent Decisions */}
+          <div className="flex-1 glass-card-premium liquid-border p-0.5">
+            <div className="w-full h-full bg-[#0a0a0a]/80">
+              <RecentDecisions 
+                cycles={cycles}
+                theme={theme}
+              />
+            </div>
           </div>
         </div>
       </div>

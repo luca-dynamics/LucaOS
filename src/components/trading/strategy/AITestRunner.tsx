@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Play,
   Loader2,
   Brain,
@@ -7,7 +8,7 @@ import {
   AlertCircle,
   Terminal,
   Eye,
-} from "lucide-react";
+} = LucideIcons as any;
 import { FullDecision, TradeAction } from "../../../types/trading";
 import ReactJson from "react-json-view";
 

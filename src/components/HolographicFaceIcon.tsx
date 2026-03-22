@@ -31,7 +31,7 @@ const FaceModel = ({ color }: { color: string }) => {
     return color;
   }, [color]);
 
-  useFrame((state, delta) => {
+  useFrame((state: any, delta: any) => {
     // Smooth the amplitude for fluid animation
     smoothedAmplitude.current +=
       (amplitudeRef.current - smoothedAmplitude.current) * 0.15;

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   AlertCircle,
   AlertTriangle,
   Info,
   XCircle,
   RefreshCw,
-} from "lucide-react";
+} = LucideIcons as any;
 import { ErrorSeverity } from "../../services/lucaLink/types";
 import type { LucaLinkError } from "../../services/lucaLink/types";
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { CryptoWallet } from "../types";
-import {
+const {
   X,
   Wallet,
   TrendingUp,
@@ -9,7 +10,7 @@ import {
   Lock,
   ShieldCheck,
   RefreshCw,
-} from "lucide-react";
+} = LucideIcons as any;
 
 import { useAppContext } from "../context/AppContext";
 import { apiUrl } from "../config/api";

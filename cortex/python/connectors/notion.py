@@ -137,10 +137,8 @@ async def notion_sync_page(page_id: str):
         entities = distilled.get("entities", [])
         relationships = distilled.get("relationships", [])
         
-        active_rag = await get_rag(state.rag_embedding_func, state.GOOGLE_API_KEY)
-        if active_rag:
-            for fact in facts:
-                await active_rag.ainsert(fact)
+        # We no longer call ainsert() here. 
+        # The background sync_loop in cortex.py picks up all 'fact' entries automatically.
         
         conn = sqlite3.connect(connector.db_path)
         cursor = conn.cursor()

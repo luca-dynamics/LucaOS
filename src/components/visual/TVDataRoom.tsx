@@ -1,5 +1,9 @@
 import React from "react";
-import { Monitor, Activity } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Monitor,
+  Activity,
+} = LucideIcons as any;
 import DataRoomTile from "../DataRoomTile";
 
 interface TVDataRoomProps {

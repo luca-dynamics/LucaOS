@@ -11,8 +11,11 @@ import { OpenAiTtsProvider } from "./voice/providers/OpenAiTtsProvider";
 import { DeepgramTtsProvider } from "./voice/providers/DeepgramTtsProvider";
 import { CortexTtsProvider } from "./voice/providers/CortexTtsProvider";
 import { GeminiTtsProvider } from "./voice/providers/GeminiTtsProvider";
+import { GeminiSttProvider } from "./voice/providers/GeminiSttProvider";
+import { GoogleTtsProvider } from "./voice/providers/GoogleTtsProvider";
 import { LucaLocalSttProvider } from "./voice/providers/LucaLocalSttProvider";
 import { DEEPGRAM_API_KEY, cortexUrl } from "../config/api";
+import { LOCAL_STT_MODEL_IDS, LOCAL_TTS_MODEL_IDS } from "./ModelManagerService";
 
 /**
  * CapabilityRouter: The intelligent routing layer for Luca OS.
@@ -37,21 +40,30 @@ class CapabilityRouter {
     const settings = settingsService.getSettings();
     const { voice } = settings;
 
-    // 1. SMART HIERARCHY - USER CHOICE
-    if (voice.sttModel === "cloud-gemini") {
-      return new OpenAiSttProvider(); // Gemini using OpenAI wrapper initially, or direct
-    }
-
-    if (settingsService.isModelLocal(voice.sttModel)) {
-      // Check health of local core
+    // 1. LOCAL CHECK: If explicitly chosen a local model
+    if (LOCAL_STT_MODEL_IDS.includes(voice.sttModel) || settingsService.isModelLocal(voice.sttModel)) {
       const healthy = await this.checkLocalHealth();
       if (healthy) return new LucaLocalSttProvider();
-      console.warn(
-        "[Router] Local STT unavailable, falling back to User Peer Cloud...",
-      );
     }
 
-    // 2. USER PEER CLOUD (FALLBACK)
+    // 2. SMART HIERARCHY - GEMINI NATIVE
+    if (
+      voice.sttModel === "cloud-gemini" ||
+      voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" ||
+      voice.sttModel.toLowerCase().includes("gemini")
+    ) {
+      return new GeminiSttProvider(voice.sttModel);
+    }
+
+    // 3. USER CHOICE - CLOUD PROVIDERS
+    if (voice.sttModel === "whisper-1" && settingsService.hasValidCloudKeys("openai")) {
+      return new OpenAiSttProvider();
+    }
+    if (voice.sttModel === "deepgram-nova-2" && (localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY)) {
+      return new DeepgramSttProvider();
+    }
+
+    // 4. FALLBACKS
     if (localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY) {
       return new DeepgramSttProvider();
     }
@@ -59,8 +71,7 @@ class CapabilityRouter {
       return new OpenAiSttProvider();
     }
 
-    // 3. LUCA PRIME (ULTIMATE FALLBACK)
-    return new LucaLocalSttProvider(); // Local fallback if all fails
+    return new LucaLocalSttProvider(); 
   }
 
   /**
@@ -79,18 +90,45 @@ class CapabilityRouter {
     const settings = settingsService.getSettings();
     const { brain, voice } = settings;
 
-    // 1. USER CHOICE
-    if (voice.provider === "local-luca") {
+    // 1. EXPLICIT LOCAL CHOICE
+    if (voice.provider === "local-luca" || LOCAL_TTS_MODEL_IDS.includes(voice.voiceId)) {
       const healthy = await this.checkLocalHealth();
       if (healthy) return new CortexTtsProvider();
-      console.warn("[Router] Local TTS unavailable, falling back...");
     }
 
-    if (voice.provider === "gemini-genai" && brain.geminiApiKey) {
-      return new GeminiTtsProvider();
+    // 2. MULTIMODAL LOOP ENFORCEMENT (Only if using Gemini STT and NO explicit TTS provider choice)
+    if (
+      (voice.sttModel === "cloud-gemini" ||
+      voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" ||
+      voice.sttModel.toLowerCase().includes("gemini")) &&
+      (voice.provider === "gemini-genai" || !voice.provider)
+    ) {
+      const ttsModel =
+        voice.sttModel.includes("native-audio") ||
+        voice.sttModel.includes("live")
+          ? voice.sttModel
+          : brain.voiceModel || brain.model;
+      return new GeminiTtsProvider(ttsModel);
     }
 
-    // 2. USER PEER CLOUD
+    // 3. USER CHOICE (Traditional Providers)
+    if (
+      voice.provider === "openai" &&
+      settingsService.hasValidCloudKeys("openai")
+    ) {
+      return new OpenAiTtsProvider();
+    }
+    if (
+      voice.provider === "deepgram" &&
+      (localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY)
+    ) {
+      return new DeepgramTtsProvider();
+    }
+    if (voice.provider === "google") {
+      return new GoogleTtsProvider();
+    }
+
+    // 4. USER PEER CLOUD (Automatic Fallbacks)
     if (settingsService.hasValidCloudKeys("openai")) {
       return new OpenAiTtsProvider();
     }
@@ -98,25 +136,37 @@ class CapabilityRouter {
       return new DeepgramTtsProvider();
     }
 
-    // 3. LUCA PRIME (Enterprise Cloud / Gemini default)
+    // 5. LUCA PRIME (Enterprise Cloud / Gemini default)
     if (brain.geminiApiKey) {
-      return new GeminiTtsProvider();
+      return new GeminiTtsProvider(brain.voiceModel || brain.model);
     }
 
     // Last Resort
     return new CortexTtsProvider();
   }
 
+  private lastHealthCheck: boolean | null = null;
+  private lastHealthCheckTime: number = 0;
+
   /**
    * Quick health check for local Cortex/Whisper services
    */
   private async checkLocalHealth(): Promise<boolean> {
+    const now = Date.now();
+    if (this.lastHealthCheck !== null && now - this.lastHealthCheckTime < 5000) {
+      return this.lastHealthCheck;
+    }
+
     try {
       const resp = await fetch(cortexUrl("/health"), {
-        signal: AbortSignal.timeout(1500),
+        signal: AbortSignal.timeout(500),
       });
+      this.lastHealthCheck = resp.ok;
+      this.lastHealthCheckTime = now;
       return resp.ok;
     } catch {
+      this.lastHealthCheck = false;
+      this.lastHealthCheckTime = now;
       return false;
     }
   }

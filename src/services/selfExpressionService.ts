@@ -3,53 +3,46 @@ import { voiceService } from "./voiceService";
 
 class SelfExpressionService {
   /**
-   * Generates a spoken status report based on system health.
+   * Generates the iconic, hardcoded spoken status report.
    */
-  private generateGreeting(status: SystemHealth): string {
-    const parts: string[] = [];
-
-    // 1. Specific System Checks
-    if (status.vision.status === "online") {
-      parts.push("Visual cortex: online.");
-    } else {
-      parts.push("Visual cortex: offline.");
-    }
-
-    if (status.audio.status === "online") {
-      parts.push("Audio receptors: active.");
-    } else {
-      parts.push("Audio receptors: disabled.");
-    }
-
-    if (status.cortex.status === "online") {
-      parts.push("Luca link: established.");
-    } else {
-      parts.push("Luca link: unreachable.");
-    }
-
-    // 2. Final Professional Greeting
-    // If all systems online, use concise message
-    if (
+  private generateGreeting(
+    status: SystemHealth,
+    name?: string,
+    hasHistory?: boolean,
+  ): string {
+    const isAllOnline =
       status.vision.status === "online" &&
       status.audio.status === "online" &&
-      status.cortex.status === "online"
-    ) {
-      // All systems confirmed - use concise message
-      return "Luca System initialization complete. Welcome Commander! Let's Get the Agent Started";
+      status.cortex.status === "online";
+
+    const displayName = hasHistory ? name || "Commander" : "Commander";
+
+    if (isAllOnline) {
+      // Signature Iconic Greeting
+      return `Luca Initialization Successful. All systems synchronized. Welcome back ${displayName}.`;
     } else {
-      // Some systems offline - show full status
-      parts.push(
-        "Luca Core initialized. System status reported. Awaiting your command."
-      );
-      return parts.join(" ");
+      // Fault-aware report (Cinematic version)
+      const faults: string[] = [];
+      if (status.cortex.status !== "online")
+        faults.push("Luca link: unreachable.");
+      if (status.vision.status !== "online")
+        faults.push("Visual cortex: offline.");
+      if (status.audio.status !== "online")
+        faults.push("Audio receptors: inactive.");
+
+      return `Luca System Initialization : Online. ${faults.join(" ")} System status reported. Welcome back, ${displayName}.`;
     }
   }
 
   /**
    * Vocalizes the system status.
    */
-  async announceStatus(status: SystemHealth) {
-    const greeting = this.generateGreeting(status);
+  async announceStatus(
+    status: SystemHealth,
+    name?: string,
+    hasHistory?: boolean,
+  ) {
+    const greeting = this.generateGreeting(status, name, hasHistory);
     console.log(`[EXPRESSION] Saying: "${greeting}"`);
 
     // Use voice service to speak

@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { X, Github, Download, Terminal, Database } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Github,
+  Download,
+  Terminal,
+  Database,
+} = LucideIcons as any;
 
 interface Props {
   onClose: () => void;

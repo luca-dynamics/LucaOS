@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { Maximize2, Minimize2, MoreVertical } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Maximize2,
+  Minimize2,
+  MoreVertical,
+} = LucideIcons as any;
 
 interface DataRoomTileProps {
   title: string;

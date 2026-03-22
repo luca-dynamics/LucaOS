@@ -1,5 +1,12 @@
 import React from "react";
-import { Plus, Zap, Trash2, Play, Users } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Plus,
+  Zap,
+  Trash2,
+  Play,
+  Users,
+} = LucideIcons as any;
 import { DebateSession, TraderInfo } from "../../../types/trading";
 import { PunkAvatar } from "../../PunkAvatar";
 

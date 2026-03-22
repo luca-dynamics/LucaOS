@@ -1,5 +1,14 @@
 import React from "react";
-import { Settings, Camera, X, Activity, Cpu, Radio, Lock } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Settings,
+  Camera,
+  X,
+  Activity,
+  Cpu,
+  Radio,
+  Lock,
+} = LucideIcons as any;
 import { PersonaType } from "../../services/lucaService";
 
 interface VoiceControlsProps {

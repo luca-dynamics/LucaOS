@@ -43,10 +43,25 @@ class SQLiteMemoryConnector:
             if not cursor.fetchone():
                 conn.close()
                 return []
-            cursor.execute("SELECT content FROM memories")
+            cursor.execute("SELECT content FROM memories ORDER BY id ASC")
             rows = cursor.fetchall()
             conn.close()
             return [row[0] for row in rows]
+        except Exception as e:
+            print(f"[KNOWLEDGE] SQLite Read Error: {e}")
+            return []
+
+    def get_unindexed_memories(self, last_id: int):
+        """Returns all memories with ID > last_id."""
+        try:
+            if not os.path.exists(self.db_path):
+                return []
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, content, type, metadata_json FROM memories WHERE id > ? ORDER BY id ASC", (last_id,))
+            rows = cursor.fetchall()
+            conn.close()
+            return [{"id": r[0], "content": r[1], "type": r[2], "metadata": json.loads(r[3]) if r[3] else {}} for r in rows]
         except Exception as e:
             print(f"[KNOWLEDGE] SQLite Read Error: {e}")
             return []

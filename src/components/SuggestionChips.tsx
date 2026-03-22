@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Sparkles,
   Scan,
   Clock,
@@ -10,7 +11,8 @@ import {
   Brain,
   Eye,
   Zap,
-} from "lucide-react";
+  Link,
+} = LucideIcons as any;
 
 export interface Suggestion {
   id: string;
@@ -39,6 +41,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   eye: <Eye size={13} />,
   zap: <Zap size={13} />,
   sparkles: <Sparkles size={13} />,
+  link: <Link size={13} />,
 };
 
 const SuggestionChips: React.FC<SuggestionChipsProps> = ({

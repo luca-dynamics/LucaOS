@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { settingsService } from "../../services/settingsService";
 import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
+import { awarenessService } from "../../services/awarenessService";
 import { useVoiceInput } from "../useVoiceInput";
 import { PersonaType } from "../../services/lucaService";
 import { MissionScope } from "../../services/toolRegistry";
@@ -34,8 +35,6 @@ export function useVoiceEngine({
     setIsVadActive,
     isSpeaking,
     setIsSpeaking,
-    voiceAmplitude,
-    setVoiceAmplitude,
     approvalRequest,
     setApprovalRequest,
   } = voice;
@@ -94,8 +93,8 @@ export function useVoiceEngine({
 
   // 3. Connect Voice Session
   const connectVoiceSession = useCallback(
-    async (targetPersona: PersonaType) => {
-      console.log(`[VOICE ENGINE] Connecting Session: ${targetPersona}...`);
+    async (targetPersona: PersonaType, context: string = "voice-dashboard") => {
+      console.log(`[VOICE ENGINE] Connecting Session: ${targetPersona} (Context: ${context})...`);
       liveService.disconnect();
 
       // Dynamic import to avoid circular dependency if it exists
@@ -141,6 +140,9 @@ export function useVoiceEngine({
               }
             },
           });
+          
+          // Trigger Awakening Greeting for Hybrid
+          await triggerGreeting(hybridVoiceService, "hybrid", targetPersona, context);
         } catch (err) {
           console.error("Hybrid Voice Connection Failed:", err);
           setVoiceStatus("CONNECTION FAILED");
@@ -167,9 +169,12 @@ export function useVoiceEngine({
             setVoiceTranscriptSource(source as "user" | "model");
           },
         })
-        .then(() => {
+        .then(async () => {
           setVoiceStatus("VOICE UPLINK ACTIVE");
           soundService.play("SUCCESS");
+          
+          // Trigger Awakening Greeting for Native
+          await triggerGreeting(liveService, "native", targetPersona, context);
         })
         .catch((err) => {
           console.error("Voice Connection Failed:", err);
@@ -186,6 +191,28 @@ export function useVoiceEngine({
       handleSendMessage,
     ],
   );
+
+  // Helper to trigger the proactively generated greeting
+  const triggerGreeting = async (service: any, type: string, persona: string, context: string) => {
+    try {
+      const general = settingsService.get("general") as any;
+      const prompt = await awarenessService.triggerAwakeningPulse(
+        {
+          mode: "voice",
+          operatorName: general?.userName || "Operator",
+          persona: persona,
+        },
+        context
+      );
+
+      if (prompt) {
+        console.log(`[VOICE ENGINE] 🌅 Sending Awakening Pulse via ${type}...`);
+        await service.sendText(prompt);
+      }
+    } catch (e) {
+      console.warn("[VOICE ENGINE] Awakening pulse failed:", e);
+    }
+  };
 
   // 4. Watch for Watch/Wearable Events
   useEffect(() => {
@@ -302,14 +329,8 @@ export function useVoiceEngine({
     prevDictationActive.current = dictationActive;
   }, [dictationActive, voiceTranscript]);
 
-  // 8. Sync Amplitude to Context (Max of Local & Remote)
-  useEffect(() => {
-    const maxAmp = Math.max(localInputAmplitude, remoteAmplitude);
-    // Only update if significant change to avoid context thrashing
-    if (Math.abs(maxAmp - voiceAmplitude) > 5) {
-      setVoiceAmplitude(maxAmp);
-    }
-  }, [localInputAmplitude, remoteAmplitude, voiceAmplitude, setVoiceAmplitude]);
+  // 8. Sync Amplitude to Context (Removed to prevent re-render loop)
+  // Logic moved to eventBus in useVoiceInput and hybridVoiceService
 
   // --- SAFETY VALVE VOICE INTEGRATION ---
   const lastAnnouncedRef = useRef<string | null>(null);

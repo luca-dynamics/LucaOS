@@ -9,6 +9,7 @@ const WidgetMode: React.FC = () => {
   const { isDictating, toggleDictation, setDictationState } = useDictation();
   const state = useSatelliteState();
   const [isHovered, setIsHovered] = useState(false);
+  const [isVisualCoreActive, setIsVisualCoreActive] = useState(false);
 
   useEffect(() => {
     // IPCS Listeners for COMMANDS (Voice Toggles)
@@ -28,11 +29,31 @@ const WidgetMode: React.FC = () => {
         },
       );
 
+      // Visual Core Status Listener
+      const removeVisualStatusListener = window.electron.ipcRenderer.on(
+        "hologram-visual-status",
+        (payload: { isVisible: boolean }) => {
+          console.log("[Widget] Visual Core Status:", payload);
+          setIsVisualCoreActive(payload.isVisible);
+        },
+      );
+
       return () => {
         if (removeDictationListener) removeDictationListener();
+        if (removeVisualStatusListener) removeVisualStatusListener();
       };
     }
   }, [isDictating, setDictationState]);
+
+  const toggleVisualCore = () => {
+    if (window.electron) {
+      if (isVisualCoreActive) {
+        window.electron.ipcRenderer.send("close-visual-core");
+      } else {
+        window.electron.ipcRenderer.send("open-visual-core");
+      }
+    }
+  };
 
   // --- GOD MODE LOGIC ---
   /* Removed Unused God Mode Logic */
@@ -91,6 +112,7 @@ const WidgetMode: React.FC = () => {
         isSpeaking={false}
         persona={state.persona} // Keep original persona (Blue)
         themeHex={primaryColor} // Pass dynamic color
+        isVisualCoreActive={isVisualCoreActive}
         onClick={toggleDictation}
       />
 
@@ -109,7 +131,12 @@ const WidgetMode: React.FC = () => {
       </div>
 
       {/* CONTROLS (EXPAND, ETC) */}
-      <WidgetControls isHovered={isHovered} onExpand={handleExpand} />
+      <WidgetControls
+        isHovered={isHovered}
+        onExpand={handleExpand}
+        onToggleHUD={toggleVisualCore}
+        isHUDActive={isVisualCoreActive}
+      />
     </div>
   );
 };

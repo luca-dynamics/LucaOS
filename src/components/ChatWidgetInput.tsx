@@ -1,5 +1,8 @@
 import React, { useRef, useEffect, KeyboardEvent } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+
+// Fallback to any for icons if types are missing or named exports fail
+const {
   Send,
   Paperclip,
   Camera,
@@ -11,8 +14,8 @@ import {
   Square,
   FolderOpen,
   Lock,
-  Shield,
-} from "lucide-react";
+  Shield
+} = LucideIcons as any;
 
 interface ChatWidgetInputProps {
   input: string;
@@ -29,7 +32,6 @@ interface ChatWidgetInputProps {
   onToggleVoice?: () => void;
   isVoiceActive?: boolean;
   onAttachClick?: () => void;
-  onScreenShare?: () => void;
   onClearChat?: () => void;
   onHeightChange?: (height: number) => void;
   onStop?: () => void;
@@ -40,6 +42,8 @@ interface ChatWidgetInputProps {
   isKernelLocked?: boolean;
   opsecStatus?: string;
   persona?: string;
+  hasApprovalRequest?: boolean;
+  onScreenShare?: () => void;
 }
 
 const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
@@ -57,7 +61,6 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
   onToggleVoice,
   isVoiceActive,
   onAttachClick,
-  onScreenShare,
   onClearChat,
   onHeightChange,
   onStop,
@@ -68,6 +71,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
   isKernelLocked,
   opsecStatus,
   persona,
+  hasApprovalRequest,
+  onScreenShare,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -192,6 +197,16 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
           }
           autoFocus
         />
+
+        {/* MISSION PENDING INDICATOR */}
+        {hasApprovalRequest && (
+          <div className="absolute top-0 right-3 flex items-center gap-1.5 py-2 px-3 bg-red-500/10 border border-red-500/20 rounded-bl-xl z-30 animate-pulse pointer-events-none">
+            <Shield size={12} className="text-red-500" />
+            <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest font-mono">
+              Mission Pending
+            </span>
+          </div>
+        )}
 
         {/* Bottom Icons Row - Relative to flow below textarea */}
         <div className="relative pt-2 pb-2 flex items-center justify-between px-2 sm:px-2 pointer-events-none z-50">

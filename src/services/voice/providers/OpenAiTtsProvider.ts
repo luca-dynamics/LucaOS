@@ -4,10 +4,16 @@ import { settingsService } from "../../settingsService";
 export class OpenAiTtsProvider implements ITtsProvider {
   async synthesize(
     text: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: {
+      abortSignal?: AbortSignal;
+      voiceId?: string;
+      apiKey?: string;
+    },
   ): Promise<ArrayBuffer> {
     const settings = settingsService.getSettings();
-    const apiKey = settings.brain.openaiApiKey;
+    const apiKey = options?.apiKey || settings.brain.openaiApiKey;
+    const voiceId = options?.voiceId || settings.voice.voiceId || "alloy";
+
     if (!apiKey) throw new Error("OpenAI API Key not found.");
 
     const response = await fetch("https://api.openai.com/v1/audio/speech", {
@@ -19,7 +25,8 @@ export class OpenAiTtsProvider implements ITtsProvider {
       body: JSON.stringify({
         model: "tts-1",
         input: text,
-        voice: "shimmer",
+        voice: voiceId,
+        speed: settings.voice.rate || 1.0,
       }),
       signal: options?.abortSignal,
     });
@@ -45,7 +52,8 @@ export class OpenAiTtsProvider implements ITtsProvider {
       body: JSON.stringify({
         model: "tts-1",
         input: text,
-        voice: "shimmer",
+        voice: settings.voice.voiceId || "shimmer",
+        speed: settings.voice.rate || 1.0,
         response_format: "mp3",
       }),
       signal: options?.abortSignal,

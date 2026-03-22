@@ -6,11 +6,11 @@ import * as THREE from "three";
 
 interface Props {
   intensity?: number; // 0 to 1
+  color?: string; // Optional theme color
 }
 
-const DataRiver: React.FC<Props> = ({ intensity = 0.5 }) => {
+const DataRiver: React.FC<Props> = ({ intensity = 0.5, color: themeColor }) => {
   const pointsRef = useRef<THREE.Points>(null);
-  const streamRef = useRef<THREE.Mesh>(null);
 
   // Generate data stream particles
   const streamParticles = useMemo(() => {
@@ -19,9 +19,10 @@ const DataRiver: React.FC<Props> = ({ intensity = 0.5 }) => {
     const colors = new Float32Array(count * 3);
     const speeds = new Float32Array(count);
 
-    const color1 = new THREE.Color(0x06b6d4); // Cyan
-    const color2 = new THREE.Color(0x3b82f6); // Blue
-    const color3 = new THREE.Color(0x8b5cf6); // Purple
+    const baseColor = themeColor ? new THREE.Color(themeColor) : null;
+    const color1 = baseColor || new THREE.Color(0x06b6d4); // Cyan
+    const color2 = baseColor ? baseColor.clone().multiplyScalar(0.8) : new THREE.Color(0x3b82f6); // Blue
+    const color3 = baseColor ? baseColor.clone().multiplyScalar(0.6) : new THREE.Color(0x8b5cf6); // Purple
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
@@ -51,7 +52,7 @@ const DataRiver: React.FC<Props> = ({ intensity = 0.5 }) => {
     return { positions, colors, speeds };
   }, []);
 
-  useFrame((state, delta) => {
+  useFrame((state: any, delta: any) => {
     if (!pointsRef.current) return;
 
     const positions = pointsRef.current.geometry.attributes.position
@@ -84,30 +85,13 @@ const DataRiver: React.FC<Props> = ({ intensity = 0.5 }) => {
         <PointMaterial
           transparent
           vertexColors
-          size={0.02 * intensity}
+          size={0.04 * intensity}
           sizeAttenuation={true}
           depthWrite={false}
-          opacity={0.6 * intensity}
+          opacity={0.8 * intensity}
           blending={THREE.AdditiveBlending}
         />
       </Points>
-
-      {/* Connecting lines between nearby particles */}
-      <mesh ref={streamRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={streamParticles.positions.length / 3}
-            array={streamParticles.positions}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial
-          color={0x06b6d4}
-          transparent
-          opacity={0.2 * intensity}
-        />
-      </mesh>
     </group>
   );
 };

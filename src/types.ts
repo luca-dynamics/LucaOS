@@ -10,6 +10,14 @@ export enum SystemStatus {
   CRITICAL = "CRITICAL",
 }
 
+export interface MessageAction {
+  id: string;
+  label: string;
+  action: string; // e.g., 'CONFIRM_TRADE'
+  payload: any;
+  variant?: "primary" | "secondary" | "danger" | "ghost";
+}
+
 export interface Message {
   id: string;
   text: string;
@@ -22,6 +30,7 @@ export interface Message {
   _wasPruned?: boolean;
   isStreaming?: boolean;
   isHidden?: boolean;
+  actions?: MessageAction[];
   tacticalData?: {
     type:
       | "SECURITY"
@@ -357,8 +366,11 @@ export interface CustomSkill {
   created: number;
   // Agent Skills format fields
   version?: string;
-  format?: "agent-skills" | "legacy";
+  format?: "agent-skills" | "legacy" | "protocol-suite";
   path?: string;
+  isOfficial?: boolean;
+  actions?: string[];
+  icon?: string;
   dependencies?: {
     required?: string[];
     optional?: string[];

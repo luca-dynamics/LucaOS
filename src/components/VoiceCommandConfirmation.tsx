@@ -1,4 +1,12 @@
-import { AlertTriangle, Check, X, Mic } from "lucide-react";
+import React from "react";
+import PropTypes from "prop-types";
+import * as LucideIcons from "lucide-react";
+const {
+  AlertTriangle,
+  Check,
+  X,
+  Mic,
+} = LucideIcons as any;
 import { setHexAlpha } from "../config/themeColors";
 
 interface VoiceCommandConfirmationProps {
@@ -52,7 +60,7 @@ export const VoiceCommandConfirmation: React.FC<
               What You Said
             </label>
             <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white text-sm">
-              "{originalTranscript}"
+              &quot;{originalTranscript}&quot;
             </div>
           </div>
 
@@ -73,7 +81,7 @@ export const VoiceCommandConfirmation: React.FC<
                 border: "1px solid",
               }}
             >
-              "{interpretedCommand}"
+              &quot;{interpretedCommand}&quot;
             </div>
           </div>
 
@@ -103,9 +111,10 @@ export const VoiceCommandConfirmation: React.FC<
           )}
 
           {isRisky && (
-            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">
+              <AlertTriangle className="text-red-400 w-4 h-4 mt-0.5 flex-shrink-0" />
               <p className="text-xs text-red-400">
-                ⚠️ This command may have destructive effects. Please confirm
+                This command may have destructive effects. Please confirm
                 this is what you intended.
               </p>
             </div>
@@ -143,3 +152,20 @@ export const VoiceCommandConfirmation: React.FC<
     </div>
   );
 };
+
+VoiceCommandConfirmation.propTypes = {
+  originalTranscript: PropTypes.string.isRequired,
+  interpretedCommand: PropTypes.string.isRequired,
+  confidence: PropTypes.number,
+  isRisky: PropTypes.bool.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+  theme: PropTypes.shape({
+    hex: PropTypes.string.isRequired,
+    primary: PropTypes.string.isRequired,
+    border: PropTypes.string.isRequired,
+    bg: PropTypes.string.isRequired,
+  }),
+};
+
+export default VoiceCommandConfirmation;

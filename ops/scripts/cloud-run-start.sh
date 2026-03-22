@@ -29,12 +29,11 @@ echo "[BOOT] Starting Python Cortex on internal port $CORTEX_PORT..."
 # Start the Python Cortex in the background
 # Make sure the virtual environment is active
 source /opt/venv/bin/activate
-cd /opt/luca/cortex
-# Assuming core.py or the main python entrypoint exists here
-# Fallback to python server if core.py doesn't match the new structure
-# The architecture uses uvicorn or similar inside core.py or agent package.
-# We'll run the agent package directly if core.py is missing or use a generic start
-if [ -f "core.py" ]; then
+# Correct path for the specialized LUCA Python Brain
+if [ -f "cortex/python/cortex.py" ]; then
+    echo "[BOOT] Starting specialized LUCA Brain (cortex.py)..."
+    python3 cortex/python/cortex.py &
+elif [ -f "core.py" ]; then
     python3 core.py &
 elif [ -f "server/main.py" ]; then
     uvicorn server.main:app --host 127.0.0.1 --port $CORTEX_PORT &

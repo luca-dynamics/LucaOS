@@ -1,16 +1,23 @@
 import { ITtsProvider } from "../types";
 import { DEEPGRAM_API_KEY } from "../../../config/api";
+import { settingsService } from "../../settingsService";
 
 export class DeepgramTtsProvider implements ITtsProvider {
   async synthesize(
     text: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: {
+      abortSignal?: AbortSignal;
+      voiceId?: string;
+      apiKey?: string;
+    },
   ): Promise<ArrayBuffer> {
-    const apiKey = localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY;
+    const apiKey = options?.apiKey || localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY;
     if (!apiKey) throw new Error("Deepgram API Key not found.");
 
+    const settings = settingsService.getSettings();
+    const voiceId = options?.voiceId || settings.voice.voiceId || "aura-athena-en";
     const response = await fetch(
-      "https://api.deepgram.com/v1/speak?model=aura-athena-en",
+      `https://api.deepgram.com/v1/speak?model=${voiceId}&speed=${settings.voice.rate || 1.0}`,
       {
         method: "POST",
         headers: {
@@ -33,8 +40,10 @@ export class DeepgramTtsProvider implements ITtsProvider {
     const apiKey = localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY;
     if (!apiKey) throw new Error("Deepgram API Key not found.");
 
+    const settings = settingsService.getSettings();
+    const voiceId = settings.voice.voiceId || "aura-athena-en";
     const response = await fetch(
-      "https://api.deepgram.com/v1/speak?model=aura-athena-en",
+      `https://api.deepgram.com/v1/speak?model=${voiceId}&speed=${settings.voice.rate || 1.0}`,
       {
         method: "POST",
         headers: {

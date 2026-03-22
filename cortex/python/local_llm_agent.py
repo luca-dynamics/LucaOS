@@ -246,5 +246,5 @@ class LocalLLMAgent:
         
         return response
 
-# No global singleton by default to ensure lazy loading.
-# Use cortex.py's get_local_brain() instead.
+# Singleton instance for lazy loading from cortex.py
+local_brain = LocalLLMAgent()

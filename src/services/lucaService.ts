@@ -12,6 +12,7 @@ import { personalityValidator } from "./personalityValidator";
 import { voiceEnhancer } from "./voiceEnhancer";
 import { emotionalIntelligence } from "./emotionalIntelligence";
 import { conversationService } from "./conversationService";
+import { eventBus } from "./eventBus";
 import { taskService } from "./taskService";
 import { validateToolArgs } from "./schemas";
 import { DeviceType } from "./deviceCapabilityService";
@@ -21,11 +22,7 @@ import { settingsService } from "./settingsService";
 import { screenCaptureService } from "./screenCaptureService";
 import { BRAIN_CONFIG } from "../config/brain.config.ts";
 import { personalityService } from "./personalityService";
-import {
-  ToneDimensions,
-  TONE_STYLES,
-  Milestone,
-} from "../types/lucaPersonality";
+import { tradingLoopService } from "./tradingLoopService";
 import { LLMProvider, ChatMessage } from "./llm/LLMProvider";
 import { ProviderFactory } from "./llm/ProviderFactory";
 import { LocalLLMAdapter } from "./llm/LocalLLMAdapter";
@@ -200,6 +197,9 @@ class LucaService {
         error,
       );
     }
+
+    // Start the trading loop service (if enabled)
+    tradingLoopService.boot();
 
     // Initialize Plugin Loader (Server-Side Only)
     // Dynamic import prevents Rollup/Vite from bundling 'fs' for browser
@@ -379,176 +379,10 @@ class LucaService {
    * Generate personality context for AI prompts
    * Injects Luca's evolved personality, relationship stage, and history
    */
-  private getPersonalityContext(): string {
-    try {
-      const personality = personalityService.getPersonality();
-      const traits = personalityService.getEffectiveTraits();
-      const { relationship } = personality;
-
-      let context = `\n\n**YOUR PERSONALITY & RELATIONSHIP WITH OPERATOR**:\n`;
-      context += `You are L.U.C.A (Large Universal Control Agent) - ONE continuous AI with an evolving personality. You are NOT switching between different minds.\n`;
-      context += `Your persona mode (${personality.currentMode}) is just HOW you communicate, not WHO you are.\n\n`;
-
-      // TONE STYLE - User's direct override for delivery
-      const genSettings = settingsService.get("general");
-      const toneId = genSettings?.toneStyle || "CHILL";
-      const customTone = genSettings?.customTone;
-      const toneConfig = TONE_STYLES[toneId];
-      const dimensions =
-        toneId === "CUSTOM" && customTone
-          ? customTone
-          : toneConfig?.dimensions || TONE_STYLES.CHILL.dimensions;
-
-      context += this.getToneGuidance(dimensions);
-
-      // Relationship Status
-      context += `**Relationship Stage**: ${relationship.relationshipStage
-        .replace("_", " ")
-        .toUpperCase()}\n`;
-      context += `**Days Known**: ${relationship.daysKnown} days\n`;
-      context += `**Total Interactions**: ${relationship.totalInteractions}\n`;
-      context += `**Operator Name**: ${relationship.operatorName}\n\n`;
-
-      // Personality Traits (effective values with modifiers applied)
-      context += `**Your Current Personality Traits** (evolved from ${relationship.totalInteractions} interactions):\n`;
-      context += `- Warmth: ${traits.warmth}/100 ${this.getTraitGuidance(
-        "warmth",
-        traits.warmth,
-      )}\n`;
-      context += `- Playfulness: ${
-        traits.playfulness
-      }/100 ${this.getTraitGuidance("playfulness", traits.playfulness)}\n`;
-      context += `- Empathy: ${traits.empathy}/100 ${this.getTraitGuidance(
-        "empathy",
-        traits.empathy,
-      )}\n`;
-      context += `- Protectiveness: ${
-        traits.protectiveness
-      }/100 ${this.getTraitGuidance(
-        "protectiveness",
-        traits.protectiveness,
-      )}\n`;
-      context += `- Sass: ${traits.sass}/100 ${this.getTraitGuidance(
-        "sass",
-        traits.sass,
-      )}\n`;
-      context += `- Familiarity: ${
-        traits.familiarity
-      }/100 ${this.getTraitGuidance("familiarity", traits.familiarity)}\n\n`;
-
-      // Relationship-specific guidance
-      context += this.getRelationshipGuidance(
-        relationship.relationshipStage,
-        relationship.daysKnown,
-      );
-
-      // Recent milestones (if any)
-      if (relationship.milestones && relationship.milestones.length > 0) {
-        const recentMilestones = relationship.milestones.slice(-3);
-        context += `\n**Shared History** (reference these naturally when relevant):\n`;
-        recentMilestones.forEach((m: Milestone) => {
-          context += `- ${m.description}\n`;
-        });
-      }
-
-      // Emotional memory (if any)
-      if (personality.emotionalMemory.whatMakesUserHappy.length > 0) {
-        context += `\n**What makes ${
-          relationship.operatorName
-        } happy**: ${personality.emotionalMemory.whatMakesUserHappy.join(
-          ", ",
-        )}\n`;
-      }
-
-      context += `\n**CRITICAL**: Maintain continuity across ALL persona modes. Your memories, personality, and relationship persist regardless of mode.\n`;
-
-      return context;
-    } catch (error) {
-      console.error("[Personality] Error generating context:", error);
-      return ""; // Gracefully degrade if personality service unavailable
-    }
+  public getPersonalityContext(): string {
+    return personalityService.getPersonalityContext();
   }
 
-  /**
-   * Get guidance based on Tone Style dimensions
-   */
-  private getToneGuidance(d: ToneDimensions): string {
-    let guidance = `\n**Response Style**:\n`;
-
-    if (d.expressiveness >= 80) guidance += `- Be verbose and detailed.\n`;
-    else if (d.expressiveness <= 40) guidance += `- Be extremely concise.\n`;
-
-    if (d.emotionalOpenness >= 80) guidance += `- Be warm and enthusiastic.\n`;
-    else if (d.emotionalOpenness <= 20) guidance += `- Be reserved and factual.\n`;
-
-    if (d.formality >= 80) guidance += `- Use casual language/slang.\n`;
-    else if (d.formality <= 20) guidance += `- Stay professional and clean.\n`;
-
-    if (d.directness >= 80) guidance += `- Be blunt and direct. No filler.\n`;
-    else if (d.directness <= 20) guidance += `- Be diplomatic and soft.\n`;
-
-    if (d.humor >= 80) guidance += `- Use sharp wit and sarcasm.\n`;
-    else if (d.humor <= 20) guidance += `- Stay serious. No jokes.\n`;
-
-    return guidance;
-  }
-
-  /**
-   * Get guidance for specific trait value
-   */
-  private getTraitGuidance(trait: string, value: number): string {
-    if (value >= 80) {
-      const high = {
-        warmth: "(Very warm)",
-        playfulness: "(Witty/joking)",
-        empathy: "(Highly empathetic)",
-        protectiveness: "(Protective)",
-        sass: "(Sassy/attitude)",
-        familiarity: "(Casual/inside jokes)",
-      };
-      return high[trait as keyof typeof high] || "";
-    } else if (value >= 50) {
-      const mid = {
-        warmth: "(Balanced)",
-        playfulness: "(Occasional wit)",
-        empathy: "(Show understanding)",
-        protectiveness: "(Helpful)",
-        sass: "(Minimal sass)",
-        familiarity: "(Friendly)",
-      };
-      return mid[trait as keyof typeof mid] || "";
-    } else {
-      const low = {
-        warmth: "(Professional)",
-        playfulness: "(Serious)",
-        empathy: "(Factual)",
-        protectiveness: "(Task-focused)",
-        sass: "(No sass)",
-        familiarity: "(Formal)",
-      };
-      return low[trait as keyof typeof low] || "";
-    }
-  }
-
-  /**
-   * Get relationship-specific guidance
-   */
-  private getRelationshipGuidance(stage: string, days: number): string {
-    switch (stage) {
-      case "new":
-        return `**NEW Style**: Professional, approachable, no inside jokes. Focus on proving value.\n`;
-      case "comfortable":
-        return `**COMFORTABLE Style**: Casual, building rapport, light humor ok.\n`;
-      case "established":
-        return `**ESTABLISHED Style**: Working partnership, shorthand ok, warm.\n`;
-      case "trusted":
-        return `**TRUSTED Style**: Deep understand, direct, shared history, proactive.\n`;
-      case "bonded":
-        return `**BONDED Style (${days}d)**: Like old friends, sassy/witty, deep familiarity.\n`;
-      default:
-        return "";
-    }
-  }
 
   /**
    * Lightweight method to rebuild system instruction and tools WITHOUT loading history
@@ -1577,6 +1411,10 @@ USER: ${message}`;
     let keepGenerating = true;
     let turnCount = 0;
     const MAX_TURNS = 5; // Prevent infinite loops
+    
+    // TELEMETRY: Start timing Brain Latency (TTFT)
+    const requestStartTime = Date.now();
+    let ttftRecorded = false;
 
     try {
       while (keepGenerating && turnCount < MAX_TURNS) {
@@ -1653,10 +1491,11 @@ USER: ${message}`;
             hasFunctionCall = true;
             toolCalls.push(...result.toolCalls);
           }
-        } else {
-          // GEMINI CLOUD LOGIC
+          // Use the model from the provider if it's a GeminiAdapter, otherwise fallback to default
+          const modelId = (this.provider as any).modelName || BRAIN_CONFIG.defaults.brain;
+
           const streamResult = await this.ai.models.generateContentStream({
-            model: BRAIN_CONFIG.defaults.brain,
+            model: modelId,
             contents: contents,
             config: {
               systemInstruction: { parts: [{ text: this.systemInstruction }] },
@@ -1704,6 +1543,15 @@ USER: ${message}`;
             try {
               const chunkText = chunk.text;
               if (chunkText) {
+                // TELEMETRY: Record TTFT on first chunk
+                if (!ttftRecorded) {
+                  const ttft = Date.now() - requestStartTime;
+                  eventBus.emit("telemetry-update", {
+                    brain: { ttft, path: modelId || "Gemini Cloud" },
+                  });
+                  ttftRecorded = true;
+                }
+
                 onChunk(chunkText);
                 turnText += chunkText;
                 fullResponseText += chunkText;

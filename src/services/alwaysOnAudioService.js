@@ -3,12 +3,13 @@
  * Main orchestrator for continuous background audio monitoring
  * Coordinates audio capture, analysis, event detection, and notifications
  */
+import fs from 'fs';
 
 import { audioCaptureService } from './audioCaptureService.js';
 import { audioAnalyzerService } from './audioAnalyzerService.js';
 import { audioEventDetector } from './audioEventDetector.js';
 import { eventBus } from './eventBus.ts';
-import { notificationService } from './notificationService.js';
+import { notificationService } from './notificationService';
 import { settingsService } from './settingsService.ts';
 
 class AlwaysOnAudioService {
@@ -287,11 +288,11 @@ class AlwaysOnAudioService {
      */
     cleanupChunk(filePath) {
         try {
-            const fs = require('fs');
+
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
             }
-        } catch (error) {
+        } catch {
             // Ignore cleanup errors
         }
     }

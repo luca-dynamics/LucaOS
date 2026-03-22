@@ -99,16 +99,62 @@ else:
     os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY # Standard SDK Variable
     os.environ["API_KEY"] = GOOGLE_API_KEY # Generic variable often used by new SDKs
     
-    # DEBUG: Reveal part of the key to verify source
-    key_preview = GOOGLE_API_KEY[:10] + "..." if GOOGLE_API_KEY else "None"
-    print(f"[CORTEX] DEBUG: Final Configured Key: {key_preview} (Length: {len(GOOGLE_API_KEY) if GOOGLE_API_KEY else 0})")
+# --- GLOBAL USER SETTINGS (JSON Persistence) ---
+SETTINGS_FILE = os.path.join(os.path.expanduser("~"), ".luca", "settings.json")
+
+def load_settings():
+    try:
+        if os.path.exists(SETTINGS_FILE):
+             with open(SETTINGS_FILE, "r") as f:
+                 return json.load(f)
+    except: pass
+    return {}
+
+def get_settings():
+    """Returns a unified dictionary of all global user settings."""
+    settings = load_settings()
+    # Apply defaults/env fallbacks for core flags
+    return {
+        "enable_background_sync": settings.get("enable_background_sync", get_setting("enable_background_sync", True)),
+        "sync_interval_minutes": settings.get("sync_interval_minutes", get_setting("sync_interval_minutes", 30)),
+        "llm_model": settings.get("llm_model", get_setting("llm_model", "gemini-2.5-pro")),
+        "iconic_boot_enabled": settings.get("iconic_boot_enabled", get_setting("iconic_boot_enabled", True))
+    }
+
+def save_settings(settings):
+    try:
+        os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
+        with open(SETTINGS_FILE, "w") as f:
+            json.dump(settings, f, indent=4)
+    except Exception as e:
+        print(f"[CORTEX] Failed to save settings: {e}")
+
+def get_setting(key, default_val=None):
+    """Priority: settings.json > Environment > Hardcoded Default"""
+    val = load_settings().get(key)
+    if val is not None: return val
+    
+    # Fallback to env (uppercase)
+    env_val = os.environ.get(key.upper())
+    if env_val is not None:
+        if str(env_val).lower() == "true": return True
+        if str(env_val).lower() == "false": return False
+        return env_val
+        
+    return default_val
+
+# Global Feature Flags (Dynamic)
+ENABLE_BACKGROUND_SYNC = get_setting("enable_background_sync", True)
+if not ENABLE_BACKGROUND_SYNC:
+    print("[CORTEX] 💤 Sleep Mode: Background memory sync is DISABLED (Global Setting).")
 
 
 
 # --- LIGHTRAG & EMBEDDING STATE ---
 LIGHTRAG_AVAILABLE = False
-rag = None
-_current_rag_model = None
+# Dual-Mind Storage: "cloud" (Gemini) and "local" (model2vec)
+_rag_instances = {} 
+_current_rag_model = None 
 rag_embedding_func = None
 
 global_genai_client = None
@@ -192,7 +238,7 @@ class HybridEmbeddingLogic:
     
     def set_model(self, model_id: str):
         self.current_model = model_id
-        if model_id == "model2vec-potion": self._embedding_dim = 256
+        if "model2vec" in model_id: self._embedding_dim = 256
         elif model_id in ["mxbai-embed-xsmall", "bge-small-en"]: self._embedding_dim = 384
         else: self._embedding_dim = 768
         
@@ -217,15 +263,24 @@ class HybridEmbeddingLogic:
         if not client:
             return np.zeros((len(texts), self._embedding_dim)) 
         
-        try:
-            from google.genai import types
-            result = await client.aio.models.embed_content(
-                model="text-embedding-004",
-                contents=texts,
-                config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT")
-            )
-            return np.array([e.values for e in result.embeddings])
-        except Exception: return np.zeros((len(texts), self._embedding_dim))
+        max_retries = 3
+        for i in range(max_retries):
+            try:
+                from google.genai import types
+                result = await client.aio.models.embed_content(
+                    model="text-embedding-004",
+                    contents=texts,
+                    config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT")
+                )
+                return np.array([e.values for e in result.embeddings])
+            except Exception as e:
+                if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                    wait_time = (i + 1) * 5
+                    print(f"[CORTEX] ⚠️ Embedding Rate Limit hit. Waiting {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                    continue
+                return np.zeros((len(texts), self._embedding_dim))
+        return np.zeros((len(texts), self._embedding_dim))
 
     async def _local_embed(self, texts: list[str]) -> np.ndarray:
         model_info = get_local_embedding_model(self.current_model)
@@ -526,106 +581,200 @@ class SQLiteMemoryConnector:
         except Exception as e:
             print(f"[CORTEX] SQLite Relation Error: {e}")
 
-async def sync_master_to_rag(target_rag, model_id):
-    """Sync master SQLite memories into LightRAG incrementally."""
+async def sync_loop(target_rag, model_id):
+    """Background loop that syncs memories at regular intervals."""
     model_dir = os.path.join(RAG_BASE_DIR, model_id)
     sync_file = os.path.join(model_dir, "sync_status.json")
     
-    last_idx = 0
-    if os.path.exists(sync_file):
+    print(f"[CORTEX] 🔁 Sync Loop Started for {model_id}")
+    
+    while True:
         try:
-            with open(sync_file, "r") as f:
-                last_idx = json.load(f).get("last_idx", 0)
-        except: last_idx = 0
-            
-    connector = SQLiteMemoryConnector()
-    all_memories = connector.get_all_memories()
-    
-    if last_idx >= len(all_memories):
-        return
-        
-    new_memories = all_memories[last_idx:]
-    print(f"[CORTEX] Syncing {len(new_memories)} new memories to {model_id} (Starting from {last_idx})...")
-    
-    try:
-        batch_size = 20
-        for i in range(0, len(new_memories), batch_size):
-            batch = new_memories[i:i + batch_size]
-            if hasattr(target_rag, 'ainsert_batch'):
-                 await target_rag.ainsert_batch(batch)
-            else:
-                 import time
-                 for text in batch:
-                     # Add timestamp to avoid de-duplication skip during sync
-                     memory_text = f"[{int(time.time())}] Memory: {text}"
-                     await target_rag.ainsert(memory_text)
-            
-        # Update sync status
-        with open(sync_file, "w") as f:
-            json.dump({"last_idx": len(all_memories)}, f)
-            
-        print(f"[CORTEX] Sync Complete for {model_id}!")
-    except Exception as e:
-        print(f"[CORTEX] Sync Failed for {model_id}: {e}")
+            # Always check current settings from the persistent JSON
+            settings = get_settings()
+            if not settings.get("enable_background_sync", True):
+                await asyncio.sleep(60)
+                continue
 
-async def get_rag():
-    """Retrieve or initialize LightRAG instance for the current embedding model."""
-    global rag, _current_rag_model, LIGHTRAG_AVAILABLE, rag_embedding_func
+            sync_interval = int(settings.get("sync_interval_minutes", 30)) * 60
+            
+            last_id = 0
+            if os.path.exists(sync_file):
+                try:
+                    with open(sync_file, "r") as f:
+                        last_id = json.load(f).get("last_id", 0)
+                except: last_id = 0
+                     
+            connector = SQLiteMemoryConnector()
+            new_memories = connector.get_unindexed_memories(last_id)
+            
+            if new_memories:
+                print(f"[CORTEX] 🧠 Neural Catch-up: Indexing {len(new_memories)} new entries for {model_id}...")
+                
+                batch_size = 5 
+                max_new_id = last_id
+                for i in range(0, len(new_memories), batch_size):
+                    # Re-check flag mid-batch for responsiveness
+                    if not get_settings().get("enable_background_sync", True):
+                        break
+
+                    batch = new_memories[i:i + batch_size]
+                    processed_batch = []
+                    
+                    for mem in batch:
+                        m_type = mem.get("type", "frame")
+                        m_content = mem.get("content", "")
+                        
+                        if m_type == "fact":
+                            # Facts are already distilled, insert raw
+                            processed_batch.append(m_content)
+                        else:
+                            # Frames (chat) benefit from a timestamp context
+                            timestamped = f"[{int(time.time())}] Memory: {m_content}"
+                            processed_batch.append(timestamped)
+                        
+                        max_new_id = max(max_new_id, mem["id"])
+
+                    if hasattr(target_rag, 'ainsert_batch'):
+                        await target_rag.ainsert_batch(processed_batch)
+                    else:
+                        for text in processed_batch:
+                            await target_rag.ainsert(text)
+                    
+                    await asyncio.sleep(2) # Small safety throttle
+                
+                # Update sync status
+                with open(sync_file, "w") as f:
+                    json.dump({"last_id": max_new_id}, f)
+                
+                print(f"[CORTEX] ✅ Sync Cycle Complete. Sleeping for {sync_interval//60}m...")
+            
+            await asyncio.sleep(sync_interval)
+
+        except Exception as e:
+            print(f"[CORTEX] ⚠️ Sync Loop Error: {e}")
+            await asyncio.sleep(300) # Wait 5 mins on error before retry
+
+async def cortex_llm_complete(prompt, system_prompt=None, **kwargs):
+    """Universal LLM dispatcher for LightRAG. Routes to Gemini, OpenAI, Anthropic, or Ollama."""
+    settings = get_settings()
+    model_id = settings.get("llm_model", "gemini-2.5-pro")
+    
+    # Check for Native Local Models (GGUF via LocalLLMAgent)
+    if model_id in ["gemma-2b", "gemma-2b-lite", "phi-3-mini", "llama-3.2-1b", "smollm2-1.7b", "qwen-2.5-7b", "deepseek-r1-distill-7b"]:
+        brain = get_local_brain()
+        if brain:
+            # RAG requires a message format. If prompt is string, convert.
+            msgs = [{"role": "user", "content": prompt}]
+            if system_prompt:
+                 msgs.insert(0, {"role": "system", "content": system_prompt})
+            
+            print(f"[CORTEX] 🏠 Routing to Native Local Brain: {model_id}")
+            response = brain.generate_chat(messages=msgs, model_id=model_id, **kwargs)
+            
+            # Extract content string from OpenAI-like format
+            if isinstance(response, dict) and "choices" in response:
+                return response["choices"][0]["message"]["content"]
+            return str(response)
+
+    # Check for Ollama/Local routing
+    if model_id.startswith("local/") or "mistral" in model_id or "llama" in model_id or ":" in model_id:
+        from lightrag.llm.ollama import ollama_chat_complete
+        return await ollama_chat_complete(model_id, prompt, system_prompt=system_prompt, **kwargs)
+    
+    # Check for Anthropic
+    if "claude" in model_id:
+        from lightrag.llm.anthropic import anthropic_complete
+        kwargs["api_key"] = settings.get("anthropic_api_key", os.environ.get("ANTHROPIC_API_KEY"))
+        return await anthropic_complete(model_id, prompt, system_prompt=system_prompt, **kwargs)
+        
+    # Check for OpenAI/xAI
+    if "gpt" in model_id or "grok" in model_id:
+        from lightrag.llm.openai import openai_chat_complete
+        if "grok" in model_id:
+             kwargs["base_url"] = "https://api.x.ai/v1"
+             kwargs["api_key"] = settings.get("xai_api_key", os.environ.get("XAI_API_KEY"))
+        else:
+             kwargs["api_key"] = settings.get("openai_api_key", os.environ.get("OPENAI_API_KEY"))
+        return await openai_chat_complete(model_id, prompt, system_prompt=system_prompt, **kwargs)
+
+    # Default: Google Gemini with 429 Retry Protection
+    from lightrag.llm.gemini import gemini_model_complete
+    max_retries = 3
+    for i in range(max_retries):
+        try:
+            return await gemini_model_complete(model_id, prompt, system_prompt=system_prompt, **kwargs)
+        except Exception as e:
+            err_msg = str(e)
+            if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                wait_time = (i + 1) * 10
+                print(f"[CORTEX] 🚦 Rate Limit Hit. Waiting {wait_time}s before retry {i+1}/{max_retries}...")
+                await asyncio.sleep(wait_time)
+            else:
+                raise e
+                print(f"[CORTEX] ⚠️ Gemini LLM Rate Limit hit. Waiting {wait_time}s before retry {i+1}/3...")
+                await asyncio.sleep(wait_time)
+                continue
+            raise e
+    # Final attempt fallback or raise
+    return await gemini_model_complete(prompt, system_prompt=system_prompt, **kwargs)
+
+async def get_rag(mind_type="cloud"):
+    """Retrieve or initialize LightRAG instance. 'cloud' uses Gemini, 'local' uses free model2vec."""
+    global _rag_instances, _current_rag_model, LIGHTRAG_AVAILABLE
     
     # Lazy Import LightRAG components
-    LightRAG_Class, QueryParam_Class, EmbeddingFunc_Class, gemini_model_complete, _, _ = lazy_import_lightrag()
+    LightRAG_Class, QueryParam_Class, EmbeddingFunc_Class, _, _, _ = lazy_import_lightrag()
     if not LightRAG_Class:
         return None
         
     LIGHTRAG_AVAILABLE = True
     
-    # Initialize embedding func wrapper if not already done
-    if not rag_embedding_func:
-        rag_embedding_func = EmbeddingFunc_Class(
-            func=embedding_logic,
-            embedding_dim=embedding_logic._embedding_dim,
-            max_token_size=2048
-        )
-        state.rag_embedding_func = rag_embedding_func
+    # If already initialized for this mind type, return it
+    if mind_type in _rag_instances:
+        return _rag_instances[mind_type]
 
-    model_id = embedding_logic.current_model or "gemini"
+    # We use a dedicated model_id for the mind type
+    model_id = "model2vec-potion" if mind_type == "local" else (os.environ.get("CORTEX_LLM_MODEL") or "gemini-2.5-pro")
     
-    # If already initialized with this model, return it
-    if rag is not None and _current_rag_model == model_id:
-        return rag
-        
-    # Otherwise, re-initialize for the new model/dimension
+    # Dedicated Embedding Logic instance for this mind type to avoid crosstalk
+    local_embedding_logic = HybridEmbeddingLogic()
+    local_embedding_logic.set_model(model_id)
+
+    # Dedicated wrapper for this mind's dimension
+    current_mind_embedding_func = EmbeddingFunc_Class(
+        func=local_embedding_logic,
+        embedding_dim=local_embedding_logic._embedding_dim,
+        max_token_size=2048
+    )
+
     try:
-        model_dir = os.path.join(RAG_BASE_DIR, model_id)
+        # Separate storage paths for Cloud vs Local to avoid index pollution
+        model_dir = os.path.join(RAG_BASE_DIR, mind_type) 
         os.makedirs(model_dir, exist_ok=True)
             
-        print(f"[CORTEX] Initializing LightRAG for {model_id} in {model_dir}...")
+        print(f"[CORTEX] Initializing {mind_type.upper()} MIND with model {model_id}...")
         
-        # New LightRAG instance with the current embedding func
         new_rag = LightRAG_Class(
             working_dir=model_dir,
-            llm_model_func=gemini_model_complete,
-            llm_model_name="gemini-2.5-pro", 
-            embedding_func=rag_embedding_func,
+            llm_model_func=cortex_llm_complete,
+            llm_model_name=model_id, 
+            embedding_func=current_mind_embedding_func,
             llm_model_max_async=2, 
             llm_model_kwargs={"api_key": GOOGLE_API_KEY, "key": GOOGLE_API_KEY} 
         )
         
         await new_rag.initialize_storages()
-        # Import inside to ensure lazy loading
-        from lightrag.kg.shared_storage import initialize_pipeline_status
-        await initialize_pipeline_status()
         
-        # Always run a sync check in the background
-        import asyncio
-        asyncio.create_task(sync_master_to_rag(new_rag, model_id))
+        # Only run background sync for the local mind if enabled
+        if ENABLE_BACKGROUND_SYNC and mind_type == "local":
+             # We only do the deep history sync in the local MIND (Zero Cost)
+             asyncio.create_task(sync_loop(new_rag, mind_type))
         
-        _current_rag_model = model_id
-        rag = new_rag
-        print(f"[CORTEX] LightRAG Initialized: {model_id}")
-        return rag
+        _rag_instances[mind_type] = new_rag
+        return new_rag
     except Exception as e:
-        print(f"[CORTEX] LightRAG Init Failed for {model_id}: {e}")
+        print(f"[CORTEX] LightRAG Init Failed for {mind_type}: {e}")
         return None
 
 # --- KNOWLEDGE BRIDGE (Import Adapters) ---
@@ -720,21 +869,13 @@ async def distill_knowledge(raw_text, existing_context=""):
     """
     
     try:
-        client = get_genai_client()
-        if client:
-            from google.genai import types
-            response = await client.aio.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction="You are a context-aware knowledge extraction engine. Respond only with valid JSON."
-                )
-            )
-            json_str = response.text.strip()
-        else:
-            # Fallback to legacy if client not initialized
-            response = await gemini_model_complete(prompt, system_prompt="You are a context-aware knowledge extraction engine. Respond only with valid JSON.")
-            json_str = response.strip()
+        # User our retry-protected wrapper for knowledge extraction
+        # This handles 429s automatically
+        json_str = await gemini_model_complete_with_retry(
+            prompt, 
+            system_prompt="You are Luca's Knowledge Distiller. Extract structured facts, entities, and relationships. Respond ONLY with valid JSON."
+        )
+        json_str = json_str.strip()
         if json_str.startswith("```json"):
             json_str = json_str[7:-3].strip()
         elif json_str.startswith("```"):
@@ -780,30 +921,25 @@ async def import_knowledge(platform: str, file: UploadFile = File(...)):
         entities = distilled_data.get("entities", [])
         relationships = distilled_data.get("relationships", [])
         
-        # 4. Ingest into active RAG (Vector Sync)
-        active_rag = await get_rag()
-        if active_rag:
-            for fact in facts:
-                await active_rag.ainsert(fact)
-                
-        # 5. Ingest into Master SQLite (Graph Sync)
+        # 4. Ingest into Master SQLite (Unified Sync Stream)
         for ent in entities:
             connector.add_entity(ent["name"], ent.get("type", "concept"), ent.get("description", ""))
         for rel in relationships:
             connector.add_relationship(rel["source"], rel["relation"], rel["target"])
             
-        # Also save to master memories table for Universal Sync
         import sqlite3
         conn = sqlite3.connect(connector.db_path)
         cursor = conn.cursor()
         for fact in facts:
-            cursor.execute("INSERT INTO memories (content, type) VALUES (?, 'fact')", (fact,))
+            # Type 'fact' tells the background sync_loop to index it raw
+            cursor.execute("INSERT INTO memories (content, type, metadata_json) VALUES (?, 'fact', ?)", 
+                          (fact, json.dumps({"source": f"{platform}_export"})))
         conn.commit()
         conn.close()
                 
         return {
             "status": "success", 
-            "message": f"Bridge Synchronized. {len(facts)} new insights and {len(entities)} entities synced.",
+            "message": f"Bridge Stream Initialized. {len(facts)} insights being indexed in background.",
             "facts": facts[:5],
             "entities": [e["name"] for e in entities[:5]]
         }
@@ -1024,84 +1160,94 @@ class MemoryQueryRequest(BaseModel):
 @app.post("/memory/ingest")
 async def ingest_memory(request: MemoryIngestRequest):
     try:
-        active_rag = await get_rag()
-        if not active_rag:
+        # Ingest into BOTH Minds
+        # 1. Local Mind (Zero Cost History)
+        local_rag = await get_rag(mind_type="local")
+        # 2. Cloud Mind (High Quality Context)
+        cloud_rag = await get_rag(mind_type="cloud")
+        
+        if not local_rag and not cloud_rag:
             raise HTTPException(status_code=503, detail="RAG system not initialized")
             
-        # 0. Enrich with unique ID to avoid de-duplication skip
         import time
         memory_text = f"[{int(time.time())}] Memory: {request.text}"
         
-        # 1. Save to Master SQLite FIRST (Safety First!)
+        # Save to Master SQLite FIRST
         connector = SQLiteMemoryConnector()
         connector.add_memory(request.text)
-        print("[CORTEX] ✅ Saved to Master SQLite.")
         
-        # 2. Save to active RAG (the specific model index)
-        await active_rag.ainsert(memory_text)
-        print(f"[CORTEX] ✅ Indexed in RAG ({_current_rag_model}).")
+        # Asynchronously ingest into both RAG instances
+        tasks = []
+        if local_rag: tasks.append(local_rag.ainsert(memory_text))
+        if cloud_rag: tasks.append(cloud_rag.ainsert(memory_text))
         
-        # 3. Update active sync status to avoid redundant sync of own memory
-        all_memories = connector.get_all_memories()
-        model_dir = os.path.join(RAG_BASE_DIR, _current_rag_model)
-        sync_file = os.path.join(model_dir, "sync_status.json")
-        try:
-            with open(sync_file, "w") as f:
-                json.dump({"last_idx": len(all_memories)}, f)
-        except: pass
+        if tasks:
+            await asyncio.gather(*tasks)
+            print("[CORTEX] ✅ Indexed in Dual-Minds (Local & Cloud).")
         
-        return {"status": "success", "message": f"Memory ingested (Model: {_current_rag_model})"}
+        return {"status": "success", "message": "Memory ingested into Dual-Minds"}
     except Exception as e:
         print(f"[CORTEX] Ingest Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/memory/query")
 async def query_memory(request: MemoryQueryRequest):
-    active_rag = await get_rag()
-    if not active_rag:
-        raise HTTPException(status_code=503, detail="RAG system not initialized")
-    
-    # Get QueryParam class from lazy loader
-    _, QueryParam_Class, _, _, _, _ = lazy_import_lightrag()
-    if not QueryParam_Class:
-        raise HTTPException(status_code=500, detail="Query components not available")
-    
     try:
-        mode_map = {
-            "local": "local",
-            "global": "global",
-            "hybrid": "hybrid",
-            "naive": "naive"
-        }
-        # Default to NAIVE mode for stability (Hybrid can hang on small datasets)
-        query_mode = mode_map.get(request.mode, "naive")
-        print(f"[CORTEX] Querying Memory (Model: {_current_rag_model}, Mode: {query_mode})...")
+        # Get QueryParam class from lazy loader
+        _, QueryParam_Class, _, _, _, _ = lazy_import_lightrag()
         
-        try:
-            result = await active_rag.aquery(
-                request.query, 
-                param=QueryParam_Class(mode=query_mode)
-            )
-            
-            # If the result seems empty or generic, try NAIVE fallback to ensure memory hits
-            if query_mode != "naive" and ("I do not have enough information" in result or "No relevant information" in result):
-                print(f"[CORTEX] Query (Mode: {query_mode}) returned no hits. Trying NAIVE fallback...")
-                result = await active_rag.aquery(request.query, param=QueryParam_Class(mode="naive"))
-                
-            return {"result": result, "model": _current_rag_model}
-        except AttributeError as e:
-            if "async with" in str(e) or "__aexit__" in str(e):
-                 print(f"[CORTEX] Hybrid Query Failed ({e}), falling back to NAIVE mode...")
-                 result = await active_rag.aquery(request.query, param=QueryParam_Class(mode="naive"))
-                 return {"result": result, "model": _current_rag_model}
-            raise e
+        local_rag = await get_rag(mind_type="local")
+        cloud_rag = await get_rag(mind_type="cloud")
+        
+        mode_map = {"local": "local", "global": "global", "hybrid": "hybrid", "naive": "naive"}
+        query_mode = mode_map.get(request.mode, "naive")
+        
+        print(f"[CORTEX] 🧠 Dual-Mind Query initiating (Mode: {query_mode})...")
+        
+        # Search both RAG instances in parallel
+        tasks = []
+        if local_rag: tasks.append(local_rag.aquery(request.query, param=QueryParam_Class(mode=query_mode)))
+        if cloud_rag: tasks.append(cloud_rag.aquery(request.query, param=QueryParam_Class(mode=query_mode)))
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Combine results
+        valid_results = [r for r in results if isinstance(r, str) and "I do not have enough information" not in r]
+        
+        if not valid_results:
+             return {"result": "No relevant memories found in local or cloud storage.", "model": "dual-mind"}
+             
+        # Merge results into a cohesive context
+        combined = "\n\n---\n\n".join(valid_results)
+        return {"result": combined, "model": "dual-mind"}
+        
     except Exception as e:
         print(f"[CORTEX] Query Error: {e}")
-        # Soft fail: Return empty/error message so the agent can still reply without memory
-        return {"result": f"System Note: Memory retrieval failed ({e}). Proceed without context.", "model": _current_rag_model}
+        return {"result": f"Memory retrieval failed: {e}", "model": "error"}
 
 
-# --- SYSTEM CONTROL ENDPOINTS ---
+# --- SETTINGS ENDPOINTS ---
+
+@app.get("/api/settings")
+async def get_all_settings():
+    return get_settings()
+
+class UpdateSettingRequest(BaseModel):
+    key: str
+    value: Any
+
+@app.post("/api/settings/update")
+async def update_setting(request: UpdateSettingRequest):
+    settings = load_settings()
+    settings[request.key] = request.value
+    save_settings(settings)
+    
+    # Update current runtime flag if it's the sync toggle
+    if request.key == "enable_background_sync":
+        global ENABLE_BACKGROUND_SYNC
+        ENABLE_BACKGROUND_SYNC = bool(request.value)
+        
+    return {"success": True, "message": f"Setting '{request.key}' updated to {request.value}"}
 
 # Helper for PIN validation
 from fastapi import Header, HTTPException, Request

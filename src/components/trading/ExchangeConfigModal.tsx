@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { X, Save, AlertTriangle, Key, Shield } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Save,
+  AlertTriangle,
+  Key,
+  Shield,
+} = LucideIcons as any;
 import { Exchange } from "../../types/trading";
 
 interface ExchangeConfigModalProps {

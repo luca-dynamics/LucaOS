@@ -61,7 +61,7 @@ const GlitchEffect: React.FC<GlitchEffectProps> = ({
 }) => {
   const groupRef = useRef<THREE.Group>(null);
 
-  useFrame((state) => {
+  useFrame((state: any) => {
     if (!groupRef.current || !active) return;
     
     const time = state.clock.elapsedTime;

@@ -335,9 +335,10 @@ function launchInterface(isSilent = false) {
 function createWindow() {
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        backgroundColor: '#000000',
+        width: 1000,
+        height: 680,
+        backgroundColor: '#00000000', // Transparent Hex for true native transparency
+        transparent: true,
         titleBarStyle: 'hiddenInset', // Mac-style hidden title bar
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {
@@ -353,7 +354,12 @@ function createWindow() {
     // Load the app
     // Load the app
     const isDev = !app.isPackaged;
-    const startUrl = process.env.ELECTRON_START_URL || (isDev ? `http://localhost:${VITE_DEV_PORT}` : `file://${path.join(__dirname, '../../dist/index.html')}`);
+    let startUrl = process.env.ELECTRON_START_URL || (isDev ? `http://localhost:${VITE_DEV_PORT}` : `file://${path.join(__dirname, '../../dist/index.html')}`);
+    
+    // Append platform parameter for reliable renderer-side detection
+    const urlObj = new URL(startUrl.startsWith('file://') ? startUrl : startUrl);
+    urlObj.searchParams.set('platform', 'electron');
+    startUrl = urlObj.toString();
     
     console.log(`[MAIN] Loading Window URL: ${startUrl}`);
     mainWindow.loadURL(startUrl);
@@ -1435,12 +1441,13 @@ ipcMain.on('sync-widget-state', (event, state) => {
     });
 
 // IPC: Widget Voice Toggle (Widget -> Main -> Dashboard)
-ipcMain.on('widget-toggle-voice', (event, { mode }) => {
-    console.log(`[IPC] Widget requested voice toggle: ${mode}`);
+ipcMain.on('widget-toggle-voice', (event, { mode, context }) => {
+    console.log(`[IPC] Widget requested voice toggle: ${mode} (Context: ${context})`);
     // Route to Main Window (Dashboard) which has the voice infrastructure
     if (mainWindow) {
         mainWindow.webContents.send('trigger-voice-toggle', { 
             mode: mode, 
+            context: context,
             forceHud: false // Keep main HUD hidden, widget shows its own UI
         });
     }
@@ -1604,6 +1611,17 @@ function createVisualCoreWindow(initialData = null) {
 // IPC: Open Visual Core (Smart Screen)
 ipcMain.on('open-visual-core', (event, data) => {
     createVisualCoreWindow(data);
+    syncVisualCoreStatus(true);
+});
+
+// IPC: Close/Hide Visual Core
+ipcMain.on('close-visual-core', () => {
+    console.log('[MAIN PROCESS] Closing Smart Screen');
+    if (visualCoreWindow) {
+        visualCoreWindow.hide();
+        visualCorePendingData = null;
+        syncVisualCoreStatus(false);
+    }
 });
 
 // IPC: Update Visual Core Data
@@ -1611,22 +1629,30 @@ ipcMain.on('update-visual-core', (event, data) => {
     console.log('[MAIN PROCESS] Received update-visual-core IPC:', data);
     if (visualCoreWindow) {
         if (visualCoreReady) {
-            // Window exists and is ready, send directly
             console.log('[MAIN PROCESS] Smart Screen is ready, sending directly');
             visualCoreWindow.webContents.send('visual-core-update', data);
         } else {
-            // Window exists but not ready yet, queue the data
             console.log('[MAIN PROCESS] Smart Screen not ready, queuing data');
             visualCorePendingData = data;
         }
-        visualCoreWindow.show();
+        if (!visualCoreWindow.isVisible()) {
+            visualCoreWindow.show();
+            syncVisualCoreStatus(true);
+        }
         visualCoreWindow.focus();
     } else {
-        // Window doesn't exist, create it with the data (will be queued)
         console.log('[MAIN PROCESS] Creating new Smart Screen window with data');
         createVisualCoreWindow(data);
+        syncVisualCoreStatus(true);
     }
 });
+
+function syncVisualCoreStatus(isVisible) {
+    const status = { isVisible };
+    if (mainWindow) mainWindow.webContents.send('visual-core-status', status);
+    if (hologramWindow) hologramWindow.webContents.send('hologram-visual-status', status);
+    if (chatWindow) chatWindow.webContents.send('widget-visual-status', status);
+}
 
 // Chat Widget Resize Logic
 ipcMain.on('chat-widget-resize', (event, { height, resizable }) => {

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { X, Folder, File, ArrowLeft, Download, Eye } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Folder,
+  File,
+  ArrowLeft,
+  Download,
+  Eye,
+} = LucideIcons as any;
 import { API_BASE_URL } from "../config/api";
 
 interface FileItem {

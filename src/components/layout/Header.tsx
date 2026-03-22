@@ -1,18 +1,19 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Code2,
   Sparkles,
   ShieldAlert,
   Settings,
   Monitor,
   AudioWaveform,
-  Server as ServerIcon,
+  Server: ServerIcon,
   Unplug,
   Cpu,
   Mic,
   Share2,
   Wallet,
-} from "lucide-react";
+} = LucideIcons as any;
 // Holographic icon removed in favor of static branding
 import AmbientVisionIndicator from "../AmbientVisionIndicator";
 import AlwaysOnControls from "../AlwaysOnControls";
@@ -323,7 +324,7 @@ const Header: React.FC<HeaderProps> = ({
           {connectionTier === "LAN"
             ? "LAN"
             : connectionTier === "LOCAL"
-              ? "LINKED"
+              ? (window as any).luca ? "NATIVE" : "LINKED"
               : connectionTier === "CLOUD"
                 ? "CLOUD"
                 : "OFFLINE"}

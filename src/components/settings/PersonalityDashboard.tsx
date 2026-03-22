@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   AlertCircle,
   Terminal,
   Sparkles,
@@ -10,7 +11,7 @@ import {
   Mic,
   Settings,
   Globe,
-} from "lucide-react";
+} = LucideIcons as any;
 import { PersonaConfig, PersonaDefinition } from "../../types";
 
 interface PersonalityDashboardProps {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   Terminal,
   ShieldAlert,
@@ -16,7 +17,7 @@ import {
   Download,
   Code2,
   FolderOpen,
-} from "lucide-react";
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 import { THEME_PALETTE } from "../config/themeColors";
 

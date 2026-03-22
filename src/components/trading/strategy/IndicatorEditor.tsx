@@ -1,5 +1,11 @@
 import React from "react";
-import { Activity, BarChart, TrendingUp, Settings2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Activity,
+  BarChart,
+  TrendingUp,
+  Settings2,
+} = LucideIcons as any;
 import { IndicatorConfig } from "../../../types/trading";
 
 interface IndicatorEditorProps {

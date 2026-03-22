@@ -1,5 +1,12 @@
 import React from "react";
-import { TrendingUp, TrendingDown, Minus, Clock, X } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Clock,
+  X,
+} = LucideIcons as any;
 import { DebateVote, TradeAction } from "../../../types/trading";
 
 interface VoteCardProps {

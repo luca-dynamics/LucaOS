@@ -5,10 +5,20 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { MemoryNode, GraphNode, GraphEdge } from "../types";
+import * as LucideIcons from "lucide-react";
+import {
+  MemoryNode,
+  GraphNode,
+  GraphEdge } from "../types";
 import { memoryService } from "../services/memoryService";
 import { soundService } from "../services/soundService";
-import { RefreshCw, Clock, Box, Maximize, Minimize } from "lucide-react";
+const {
+  RefreshCw,
+  Clock,
+  Box,
+  Maximize,
+  Minimize,
+} = LucideIcons as any;
 import ForceGraph3D from "react-force-graph-3d";
 import * as THREE from "three";
 import { setHexAlpha } from "../config/themeColors";

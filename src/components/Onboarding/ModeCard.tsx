@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ModeCardProps {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
   onClick: () => void;

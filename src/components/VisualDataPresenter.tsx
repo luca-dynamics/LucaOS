@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Globe,
   ArrowRight,
   ArrowLeft,
@@ -22,7 +23,7 @@ import {
   BarChart3,
   Clock,
   Map,
-} from "lucide-react";
+} = LucideIcons as any;
 import SecurityHUD from "./visual/SecurityHUD";
 
 interface VisualItem {

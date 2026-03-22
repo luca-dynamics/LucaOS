@@ -3,7 +3,8 @@ import GhostBrowser from "./GhostBrowser";
 import VisualDataPresenter from "./VisualDataPresenter";
 import CinemaPlayer from "./CinemaPlayer";
 import CastPicker from "./CastPicker";
-import { X, Activity, Cast } from "lucide-react";
+import * as LucideVC from "lucide-react";
+const { X, Activity: ActivityIcon, Cast: CastIcon } = LucideVC as any;
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
 import { SmartDevice } from "../types";
 import SovereigntyDashboard from "./visual/SovereigntyDashboard";
@@ -154,6 +155,34 @@ const VisualCore: React.FC<VisualCoreProps> = ({
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // --- AUTO-DISMISS LOGIC (Industrial Grade Lifecycle) ---
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let dismissTimer: NodeJS.Timeout;
+
+    // 1. Explicit Duration (TTL) if provided by the tool/agent
+    if (visualData?.duration && visualData.duration > 0) {
+      console.log(`[VisualCore] Setting auto-dismiss timer: ${visualData.duration}ms`);
+      dismissTimer = setTimeout(() => {
+        console.log("[VisualCore] TTL Expired. Auto-dismissing...");
+        onClose();
+      }, visualData.duration);
+    }
+    // 2. Idle timeout: If in IDLE mode for too long, auto-hide
+    else if (mode === "IDLE") {
+      console.log("[VisualCore] In IDLE mode. Setting 60s auto-hide timer.");
+      dismissTimer = setTimeout(() => {
+        console.log("[VisualCore] Idle timeout. Auto-hiding...");
+        onClose();
+      }, 60000); // 60 seconds idle
+    }
+
+    return () => {
+      if (dismissTimer) clearTimeout(dismissTimer);
+    };
+  }, [mode, visualData, isVisible, onClose]);
 
   // Auto-switch modes based on props updates
   useEffect(() => {
@@ -316,7 +345,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
       >
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-            <Activity
+            <ActivityIcon
               size={18}
               className={mode !== "IDLE" ? "animate-pulse" : ""}
               style={{
@@ -416,7 +445,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               }}
               title="Cast to IoT Device"
             >
-              <Cast size={16} />
+              <CastIcon size={16} />
             </button>
           </div>
         </div>
@@ -480,7 +509,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               style={{ color: themeColor }}
             >
               <div className="w-12 h-px opacity-30 bg-current" />
-              <Activity size={14} className="animate-pulse" />
+              <ActivityIcon size={14} className="animate-pulse" />
               <span className="font-bold">SYSTEM_STABLE // SECURE_CORE</span>
               <div className="w-12 h-px opacity-30 bg-current" />
             </div>

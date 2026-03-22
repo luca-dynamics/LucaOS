@@ -1,6 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
-import { MousePointer2 } from 'lucide-react';
+import * as LucideIcons from "lucide-react";
+const {
+  MousePointer2,
+} = LucideIcons as any;
 
 interface Props {
   x: number;

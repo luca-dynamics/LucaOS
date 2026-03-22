@@ -75,11 +75,23 @@ export class AudioStreamPlayer {
     source.start(startTime);
     this.nextStartTime = startTime + audioBuffer.duration;
     this.sources.push(source);
+    
+    // TELEMETRY: Update buffer load (max 5 segments for 100%)
+    eventBus.emit("telemetry-update", {
+      tts: { buffer: Math.min(100, (this.sources.length / 5) * 100) }
+    });
+
     monitor();
 
     source.onended = () => {
       sourceActive = false;
       this.sources = this.sources.filter((s) => s !== source);
+      
+      // TELEMETRY: Update buffer load
+      eventBus.emit("telemetry-update", {
+        tts: { buffer: Math.min(100, (this.sources.length / 5) * 100) }
+      });
+
       if (this.sources.length === 0 && this.activeStreams === 0) {
         this.nextStartTime = 0; // Reset timeline if everything is done
       }

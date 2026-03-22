@@ -44,7 +44,7 @@ const TaskNode: React.FC<TaskNodeProps> = ({
   const isActive = status === 'PROCESSING' || status === 'ERROR';
 
   // Animation loop
-  useFrame((state) => {
+  useFrame((state: any) => {
     if (!meshRef.current) return;
 
     const time = state.clock.elapsedTime;

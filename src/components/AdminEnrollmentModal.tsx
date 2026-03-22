@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Camera,
   User,
   Lock,
   Mic,
   Play,
-} from "lucide-react";
+} = LucideIcons as any;
 import { soundService } from "../services/soundService";
 import { apiUrl } from "../config/api";
 import FaceScan from "./Onboarding/FaceScan";

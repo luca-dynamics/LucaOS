@@ -1,5 +1,6 @@
 import { CORTEX_URL } from "../config/api";
 import { settingsService } from "./settingsService";
+import { BRAIN_CONFIG } from "../config/brain.config";
 
 export type VisionIntent = "planning" | "insight" | "action";
 
@@ -38,12 +39,13 @@ export class VisionManager {
     // Industrial Vision Routing:
     // We prioritize the specific vision model setting.
     // If it's a local model (e.g. ui-tars), we use CORTEX_URL.
-    const selectedVisionModel = brain.visionModel || "gemini-3-flash-preview";
+    const selectedVisionModel =
+      brain.visionModel || brain.model || BRAIN_CONFIG.defaults.vision;
     const isLocal = settingsService.isModelLocal(selectedVisionModel);
 
     const defaultCloud: VisionProviderConfig = {
       provider: "gemini",
-      model: "gemini-3-flash-preview",
+      model: selectedVisionModel,
       apiKey: geminiApiKey,
       baseUrl: "https://generativelanguage.googleapis.com/v1beta",
     };
@@ -51,14 +53,14 @@ export class VisionManager {
     return {
       planning: {
         provider: "gemini",
-        model: "gemini-2.0-flash-thinking-exp",
+        model: selectedVisionModel, // Respecting user selection for planning too
         apiKey: geminiApiKey,
         baseUrl: "https://generativelanguage.googleapis.com/v1beta",
         fallback: defaultCloud,
       },
       insight: {
         provider: "gemini",
-        model: "gemini-3-flash-preview",
+        model: selectedVisionModel, // Respecting user selection for insight too
         apiKey: geminiApiKey,
         baseUrl: "https://generativelanguage.googleapis.com/v1beta",
         fallback: defaultCloud,

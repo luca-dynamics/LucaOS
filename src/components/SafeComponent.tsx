@@ -1,5 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { AlertTriangle } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  AlertTriangle,
+} = LucideIcons as any;
 
 interface Props {
   children: ReactNode;

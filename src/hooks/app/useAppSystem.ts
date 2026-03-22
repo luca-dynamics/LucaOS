@@ -297,11 +297,15 @@ export const useAppSystem = ({
           await liveService.registerSensation(health);
           console.log("[BOOT] Sensation Registered.");
 
-          if (messages.length === 0 && !hasAnnouncedRef.current) {
+          const isColdBoot = sessionStorage.getItem("LUCA_HAS_BOOTED") !== "true";
+          const profile = settingsService.get("general") as any;
+          const currentUserName = profile?.userName || profile?.name || "Commander";
+
+          if (isColdBoot && !hasAnnouncedRef.current) {
             hasAnnouncedRef.current = true;
             // Fire-and-forget: don't let voice announcement block boot
             selfExpressionService
-              .announceStatus(health)
+              .announceStatus(health, currentUserName, messages.length > 0)
               .catch((e) =>
                 console.warn(
                   "[BOOT] Voice announcement failed (non-fatal):",

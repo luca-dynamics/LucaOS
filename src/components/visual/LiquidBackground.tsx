@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { setHexAlpha } from "../../config/themeColors";
+import { isElectron as checkElectron } from "../../utils/env";
 
 interface LiquidBackgroundProps {
   theme: {
@@ -18,10 +19,23 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
     theme.themeName?.toLowerCase() === "lucagent" ||
     theme.themeName?.toLowerCase() === "agentic-slate" ||
     theme.themeName?.toLowerCase() === "light";
-  const isWeb =
-    typeof window !== "undefined" &&
-    !(window as any).electron &&
-    !(window as any).Capacitor;
+    
+  const [isElectron, setIsElectron] = useState(() => checkElectron());
+
+  useEffect(() => {
+    if (!isElectron) {
+      const verify = () => {
+        if (checkElectron()) setIsElectron(true);
+      };
+      
+      const t1 = setTimeout(verify, 100);
+      const t2 = setTimeout(verify, 500);
+      const t3 = setTimeout(verify, 1500);
+      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    }
+  }, [isElectron]);
+
+  const isWeb = !isElectron;
 
   // Apple UI Aesthetics for Web Fallback
   const webBackground = isLight

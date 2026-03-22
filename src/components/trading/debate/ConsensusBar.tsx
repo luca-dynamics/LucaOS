@@ -1,12 +1,13 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Trophy,
   Clock,
   Zap,
   Target,
   Activity,
   CheckCircle2,
-} from "lucide-react";
+} = LucideIcons as any;
 import { DebateConsensus, TradeAction } from "../../../types/trading";
 
 interface ConsensusBarProps {

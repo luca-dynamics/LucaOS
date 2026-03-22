@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Activity, Cast, Wifi, Zap, Eye, Monitor, Brain } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Activity,
+  Cast,
+  Wifi,
+  Zap,
+  Eye,
+  Monitor,
+  Brain,
+} = LucideIcons as any;
 import io, { Socket } from "socket.io-client";
 import { WS_PORT } from "../config/api";
 import { OfflineModelManager } from "./llm/OfflineModelManager";

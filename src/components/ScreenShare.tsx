@@ -5,7 +5,10 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { Eye } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Eye,
+} = LucideIcons as any;
 import { settingsService } from "../services/settingsService";
 
 interface ScreenShareProps {

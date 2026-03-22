@@ -1,5 +1,5 @@
 import { introspectionService } from "./introspectionService";
-// @ts-expect-error - JS import in TS environment
+// JS import in TS environment
 import { mcpClientManager } from "./mcpClientManager";
 import { settingsService } from "./settingsService";
 import { HIGH_SECURITY_TOOLS, MissionScope } from "./toolRegistry";

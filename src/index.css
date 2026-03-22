@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+html, body {
   margin: 0;
   padding: 0;
   width: 100vw;
@@ -248,4 +248,68 @@ body {
 
 .animate-scan {
   animation: scan-slow 4s linear infinite;
+}
+
+/* Liquid Border Effect */
+.liquid-border {
+  position: relative;
+  border-radius: inherit;
+}
+
+.liquid-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    var(--liquid-angle, 90deg),
+    transparent 0%,
+    transparent 20%,
+    rgba(var(--primary-rgb, 6, 182, 212), 0.5) 45%,
+    rgba(var(--primary-rgb, 6, 182, 212), 0.8) 50%,
+    rgba(var(--primary-rgb, 6, 182, 212), 0.5) 55%,
+    transparent 80%,
+    transparent 100%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 10;
+  animation: liquid-rotate 4s linear infinite;
+}
+
+@keyframes liquid-rotate {
+  from { --liquid-angle: 0deg; }
+  to { --liquid-angle: 360deg; }
+}
+
+/* Chrome/Safari support for animated CSS variables */
+@property --liquid-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.glass-card-premium {
+  @apply bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl;
+  position: relative;
+}
+
+.glass-card-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
 }

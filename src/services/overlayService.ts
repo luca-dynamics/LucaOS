@@ -98,7 +98,14 @@ class OverlayService {
    */
   async show(widget: "hologram" | "chat" = "hologram"): Promise<void> {
     if (!(await this.hasPermission())) {
-      throw new Error("Overlay permission not granted");
+      console.log(`[OverlayService] Overlay permission missing for ${widget}. Requesting...`);
+      await this.requestPermission();
+      
+      // Verification wait
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (!(await this.hasPermission())) {
+        throw new Error("Overlay permission (Draw over other apps) not granted by user.");
+      }
     }
     await LucaOverlay.show({ widget });
   }

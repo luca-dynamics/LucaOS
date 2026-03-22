@@ -7,6 +7,15 @@ import {
   UIThemeId,
 } from "../types/lucaPersonality";
 
+export interface NotificationSettings {
+  enabled: boolean;
+  voiceEnabled: boolean;
+  visualEnabled: boolean;
+  chatEnabled: boolean;
+  tradingVoiceEnabled: boolean;
+  priorityThreshold: "LOW" | "NORMAL" | "MEDIUM" | "HIGH" | "CRITICAL";
+}
+
 export interface LucaSettings {
   general: {
     backgroundBlur?: number;
@@ -43,7 +52,7 @@ export interface LucaSettings {
     preferOllama: boolean; // Global local routing priority
   };
   voice: {
-    provider: "native" | "google" | "local-luca" | "gemini-genai";
+    provider: "native" | "google" | "local-luca" | "gemini-genai" | "openai" | "deepgram";
     googleApiKey: string;
     voiceId: string; // e.g., 'Google US English' or specific ID
     rate: number;
@@ -71,6 +80,8 @@ export interface LucaSettings {
     instagram: boolean;
     discord: boolean;
     signal: boolean;
+    notion: boolean;
+    obsidian: boolean;
   };
   telegram: {
     apiId: string;
@@ -125,6 +136,7 @@ export interface LucaSettings {
   };
   hardwareSanitized?: boolean; // Flag to indicate if hardware-aware model sanitization has run
   v1betaMigrationComplete?: boolean; // Flag to indicate if model-specific v1beta migration has run
+  notifications: NotificationSettings;
 }
 
 const getEnvVar = (key: string) => {
@@ -168,6 +180,14 @@ const DEFAULT_SETTINGS: LucaSettings = {
   },
   hardwareSanitized: true, // New installs are sanitized by default
   v1betaMigrationComplete: true, // New installs use current defaults
+  notifications: {
+    enabled: true,
+    voiceEnabled: true,
+    visualEnabled: true,
+    chatEnabled: true,
+    tradingVoiceEnabled: true,
+    priorityThreshold: "MEDIUM",
+  },
   brain: {
     useCustomApiKey: false,
     geminiApiKey:
@@ -224,6 +244,8 @@ const DEFAULT_SETTINGS: LucaSettings = {
     instagram: false,
     discord: false,
     signal: false,
+    notion: false,
+    obsidian: false,
   },
   telegram: {
     apiId: "",
@@ -418,7 +440,7 @@ class SettingsService extends EventEmitter {
           // 1. Voice Model Correction (Crucial for 1008 fix)
           if (
             merged.brain.voiceModel.includes("gemini-2.0-flash") ||
-            merged.brain.voiceModel.includes("gemini-3") || // Force migrate away from 3 for Voice
+            merged.brain.voiceModel.includes("gemini-3") ||
             !merged.brain.voiceModel.includes("gemini")
           ) {
             console.log(
@@ -429,13 +451,13 @@ class SettingsService extends EventEmitter {
 
           // 2. Brain/Vision Model Correction
           if (
-            merged.brain.model === "gemini-2.0-flash" ||
+            merged.brain.model === "gemini-2.0-flash-exp" ||
             merged.brain.model === "gemini-1.5-flash"
           ) {
             merged.brain.model = BRAIN_CONFIG.defaults.brain;
           }
           if (
-            merged.brain.visionModel === "gemini-2.0-flash" ||
+            merged.brain.visionModel === "gemini-2.0-flash-exp" ||
             merged.brain.visionModel === "gemini-1.5-flash"
           ) {
             merged.brain.visionModel = BRAIN_CONFIG.defaults.vision;
@@ -449,17 +471,16 @@ class SettingsService extends EventEmitter {
         const isDeprecatedOrBroken = (modelId: string) => {
           if (!modelId) return true; // Empty string is broken
           const brokenIds = [
-            "gemini-2.0-flash", // Deprecated per Google docs mapping
             "gemini-2.0-flash-lite", // Deprecated
             "gemini-1.5-flash",
             "gemini-1.5-pro",
-            "gemini-3.1-pro-high", // Unofficial IDs
+            "gemini-3.1-pro-high",
             "gemini-3.1-pro-low",
             "gemini-3-pro-high",
             "gemini-3-pro-low",
             "gemini-2.0-flash-exp",
-            "gemini-2.5-flash-native-audio-preview-12-2025", // Should be 'models/...'
-            "models/gemini-live-2.5-flash-native-audio", // Legacy incorrect format
+            "gemini-2.5-flash-native-audio-preview-12-2025",
+            "models/gemini-live-2.5-flash-native-audio",
           ];
 
           // DO NOT wipe local models!
@@ -619,10 +640,15 @@ class SettingsService extends EventEmitter {
         });
 
         if (response.ok) {
-          console.log(`[SETTINGS] MCP server synced successfully: ${server.name}`);
+          console.log(
+            `[SETTINGS] MCP server synced successfully: ${server.name}`,
+          );
         } else {
           const error = await response.text();
-          console.warn(`[SETTINGS] MCP sync failed for "${server.name}":`, error);
+          console.warn(
+            `[SETTINGS] MCP sync failed for "${server.name}":`,
+            error,
+          );
         }
       }
     } catch (e) {

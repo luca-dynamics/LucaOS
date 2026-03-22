@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Cast,
   Monitor,
   Tv,
@@ -8,7 +9,7 @@ import {
   QrCode,
   Wifi,
   Shield,
-} from "lucide-react";
+} = LucideIcons as any;
 import { setHexAlpha } from "../config/themeColors";
 import { SmartDevice, DeviceType } from "../types";
 import QRCode from "qrcode";

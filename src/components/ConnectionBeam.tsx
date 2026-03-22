@@ -36,7 +36,7 @@ const ConnectionBeam: React.FC<ConnectionBeamProps> = ({
   }, [points]);
 
   // Animation
-  useFrame((state) => {
+  useFrame((state: any) => {
     if (!materialRef.current || !animated) return;
 
     const time = state.clock.elapsedTime;

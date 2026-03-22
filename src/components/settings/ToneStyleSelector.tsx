@@ -1,17 +1,16 @@
 import React from "react";
-import {
-  ToneStyleId,
+import * as LucideIcons from "lucide-react";
+import { ToneStyleId,
   TONE_STYLES,
-  ToneDimensions,
-} from "../../types/lucaPersonality";
-import {
+  ToneDimensions, } from "../../types/lucaPersonality";
+const {
   MessageSquare,
   Heart,
   Briefcase,
   Zap,
   Smile,
   Settings2,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface ToneStyleSelectorProps {
   currentStyleId: ToneStyleId;

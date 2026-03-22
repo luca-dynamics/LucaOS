@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { X, Code, Play, Eye, Loader } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Code,
+  Play,
+  Eye,
+  Loader,
+} = LucideIcons as any;
 import { CustomSkill } from "../types";
 
 interface Props {

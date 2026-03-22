@@ -10,6 +10,7 @@ interface WidgetVisualizerProps {
   isSpeaking: boolean;
   persona?: string;
   themeHex?: string;
+  isVisualCoreActive?: boolean;
   onClick?: () => void;
 }
 
@@ -19,6 +20,7 @@ const WidgetVisualizer: React.FC<WidgetVisualizerProps> = ({
   isSpeaking,
   persona,
   themeHex,
+  isVisualCoreActive,
   onClick,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,6 +31,7 @@ const WidgetVisualizer: React.FC<WidgetVisualizerProps> = ({
     isSpeaking,
     persona,
     themeHex,
+    isVisualCoreActive,
   });
 
   // Update refs when props change (this avoids restarting the animation loop)
@@ -39,8 +42,9 @@ const WidgetVisualizer: React.FC<WidgetVisualizerProps> = ({
       isSpeaking,
       persona,
       themeHex,
+      isVisualCoreActive,
     };
-  }, [amplitude, isVadActive, isSpeaking, persona, themeHex]);
+  }, [amplitude, isVadActive, isSpeaking, persona, themeHex, isVisualCoreActive]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -52,7 +56,7 @@ const WidgetVisualizer: React.FC<WidgetVisualizerProps> = ({
 
     const draw = () => {
       // Access fresh state from Ref
-      const { amplitude, isVadActive, isSpeaking, persona, themeHex } =
+      const { amplitude, isVadActive, isSpeaking, persona, themeHex, isVisualCoreActive } =
         stateRef.current;
 
       // Clear
@@ -161,6 +165,32 @@ const WidgetVisualizer: React.FC<WidgetVisualizerProps> = ({
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
+
+      // Ring 3: NEW! SMART SCREEN HUD ACTIVE RING (Industrial Grade)
+      if (isVisualCoreActive) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(-tick * 0.4);
+        ctx.beginPath();
+        // Slightly larger than others, glowing
+        ctx.arc(0, 0, baseOrbRadius * 2.5, 0, Math.PI * 1.5); 
+        ctx.strokeStyle = isVadActive ? "#ffffff" : primaryColor;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = primaryColor;
+        ctx.stroke();
+        
+        // Add tiny markers on the ring
+        for(let a = 0; a < Math.PI * 1.5; a += Math.PI/4) {
+            const x = Math.cos(a) * baseOrbRadius * 2.5;
+            const y = Math.sin(a) * baseOrbRadius * 2.5;
+            ctx.beginPath();
+            ctx.arc(x, y, 1.5, 0, Math.PI*2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+        }
+        ctx.restore();
+      }
 
       animationId = requestAnimationFrame(draw);
     };

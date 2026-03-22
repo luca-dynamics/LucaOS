@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Cast, Eye, EyeOff, Crosshair } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Cast,
+  Eye,
+  EyeOff,
+  Crosshair,
+} = LucideIcons as any;
 import { SmartDevice } from "../../types";
 import UiTreeOverlay, { UiNode } from "./UiTreeOverlay";
 

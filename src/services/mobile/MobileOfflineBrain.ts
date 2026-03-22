@@ -13,14 +13,8 @@
 
 import { LLMProvider, ChatMessage, LLMResponse } from "../llm/LLMProvider";
 
-// MediaPipe LLM Inference types (will be dynamically imported)
-interface LlmInference {
-  generateResponse(prompt: string): Promise<string>;
-  generateResponseAsync(
-    prompt: string,
-    callback: (partial: string, done: boolean) => void
-  ): Promise<void>;
-}
+// MediaPipe LLM Inference types (Using real types from the package)
+import { FilesetResolver, LlmInference } from "@mediapipe/tasks-genai";
 
 // Model configuration
 const MODEL_CONFIG = {
@@ -179,51 +173,42 @@ class MobileOfflineBrainService implements LLMProvider {
         return false;
       }
 
-      // Dynamically import MediaPipe (only when needed)
-      // Note: This requires @mediapipe/tasks-genai to be installed
-      // For now we'll create a mock that can be replaced with real MediaPipe
-      console.log("[MobileOfflineBrain] Loading MediaPipe LLM Inference...");
+      console.log("[MobileOfflineBrain] Initializing MediaPipe GenAI tasks...");
 
-      // Attempt to load from cache
+      // 1. Resolve WASM assets
+      const genaiFileset = await FilesetResolver.forGenAiTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai/wasm"
+      );
+
+      // 2. Retrieve model from Cache API
       const cache = await caches.open(MODEL_CONFIG.cacheKey);
       const cachedResponse = await cache.match(MODEL_CONFIG.modelUrl);
 
       if (!cachedResponse) {
-        throw new Error("Model not found in cache");
+        throw new Error("Model file missing from cache during initialization");
       }
 
-      // TODO: Replace with actual MediaPipe LLM initialization
-      // const { FilesetResolver, LlmInference } = await import("@mediapipe/tasks-genai");
-      // const filesetResolver = await FilesetResolver.forGenAiTasks("...");
-      // this.llmInference = await LlmInference.createFromModelPath(filesetResolver, modelPath);
+      // Convert blob to Uint8Array for MediaPipe
+      const modelBuffer = await cachedResponse.arrayBuffer();
 
-      // Placeholder: Create mock inference for development
-      this.llmInference = {
-        generateResponse: async (prompt: string) => {
-          // This will be replaced with actual MediaPipe call
-          console.log(
-            "[MobileOfflineBrain] (Mock) Generating response for:",
-            prompt.substring(0, 50)
-          );
-          return `[Offline Brain] I received your message: "${prompt.substring(
-            0,
-            100
-          )}..." - Full MediaPipe integration pending.`;
+      // 3. Create the real inference engine
+      this.llmInference = await LlmInference.createFromOptions(genaiFileset, {
+        baseOptions: {
+          modelAssetBuffer: new Uint8Array(modelBuffer),
         },
-        generateResponseAsync: async (
-          prompt: string,
-          callback: (partial: string, done: boolean) => void
-        ) => {
-          const response = await this.llmInference!.generateResponse(prompt);
-          callback(response, true);
-        },
-      };
+        maxTokens: 2048,
+        topK: 40,
+        temperature: 0.7,
+        randomSeed: Math.floor(Math.random() * 1000),
+      });
 
       this.isInitialized = true;
-      console.log("[MobileOfflineBrain] Initialized successfully");
+      console.log("[MobileOfflineBrain] Real MediaPipe engine initialized successfully");
       return true;
     } catch (error) {
       console.error("[MobileOfflineBrain] Initialization failed:", error);
+      this.isInitialized = false;
+      this.llmInference = null;
       return false;
     }
   }
@@ -239,12 +224,13 @@ class MobileOfflineBrainService implements LLMProvider {
 
   async generateContent(prompt: string, images?: string[]): Promise<string> {
     if (!this.isReady()) {
-      throw new Error(
-        "Mobile Offline Brain not initialized. Call initialize() first."
-      );
+      const initialized = await this.initialize();
+      if (!initialized) {
+        throw new Error("Failed to initialize Mobile Offline Brain.");
+      }
     }
 
-    // Note: Current Gemma 2B is text-only. Images not supported.
+    // Current Gemma 2B is text-only
     if (images && images.length > 0) {
       console.warn("[MobileOfflineBrain] Images not supported in offline mode");
     }
@@ -257,14 +243,21 @@ class MobileOfflineBrainService implements LLMProvider {
     onToken: (text: string) => void
   ): Promise<string> {
     if (!this.isReady()) {
-      throw new Error("Mobile Offline Brain not initialized");
+      await this.initialize();
     }
 
     let fullText = "";
-    await this.llmInference!.generateResponseAsync(prompt, (partial, _done) => {
-      fullText = partial;
-      onToken(partial);
-    });
+    // Note: In MediaPipe 0.10.x, generateResponse(prompt, callback) is the streaming version.
+    // If your specific version only has generateResponse(prompt), we fallback to the non-streaming one.
+    if ((this.llmInference as any).generateResponse.length > 1) {
+      await (this.llmInference as any).generateResponse(prompt, (partial: string) => {
+        fullText = partial;
+        onToken(partial);
+      });
+    } else {
+      fullText = await this.llmInference!.generateResponse(prompt);
+      onToken(fullText);
+    }
 
     return fullText;
   }
@@ -276,30 +269,33 @@ class MobileOfflineBrainService implements LLMProvider {
     tools?: any[]
   ): Promise<LLMResponse> {
     if (!this.isReady()) {
-      return {
-        text: "Mobile Offline Brain is not ready. Please download the model in Settings.",
-      };
-    }
-
-    // Build prompt from messages (Gemma chat template)
-    let prompt = "";
-
-    if (systemInstruction) {
-      prompt += `<start_of_turn>system\n${systemInstruction}<end_of_turn>\n`;
-    }
-
-    for (const msg of messages) {
-      if (msg.role === "user") {
-        prompt += `<start_of_turn>user\n${msg.content}<end_of_turn>\n`;
-      } else if (msg.role === "model") {
-        prompt += `<start_of_turn>model\n${msg.content}<end_of_turn>\n`;
+      const success = await this.initialize();
+      if (!success) {
+        return {
+          text: "Mobile Offline Brain is not ready. Please go to Settings to download the model (~1.4GB).",
+        };
       }
     }
 
-    // Append tool instructions if provided
+    // Build prompt from messages using Gemma chat template
+    // Reference: https://ai.google.dev/gemma/docs/model_card#instruction_tuned_it_models
+    let prompt = "";
+
+    if (systemInstruction) {
+      prompt += `<start_of_turn>user\nInstruction: ${systemInstruction}<end_of_turn>\n`;
+    }
+
+    for (const msg of messages) {
+      // Map roles correctly for Gemma: user/model are natively supported.
+      // Use 'user' for system/tool if necessary.
+      const role = msg.role === "model" ? "model" : "user";
+      prompt += `<start_of_turn>${role}\n${msg.content}<end_of_turn>\n`;
+    }
+
+    // Append tool instructions
     if (tools && tools.length > 0) {
       const toolNames = tools.map((t: any) => t.name).join(", ");
-      prompt += `\n<start_of_turn>system\nAvailable tools: ${toolNames}. To use a tool, respond with JSON: {"tool": "name", "arguments": {}}<end_of_turn>\n`;
+      prompt += `\n<start_of_turn>user\nYou have access to these tools: ${toolNames}. If you need to use one, respond with format: {"tool": "name", "args": {}}<end_of_turn>\n`;
     }
 
     prompt += `<start_of_turn>model\n`;
@@ -307,32 +303,32 @@ class MobileOfflineBrainService implements LLMProvider {
     try {
       const response = await this.llmInference!.generateResponse(prompt);
 
-      // Try to parse tool calls from response
+      // Simple tool call detection
       const toolCalls: any[] = [];
       try {
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch && jsonMatch[0].includes('"tool"')) {
           const parsed = JSON.parse(jsonMatch[0]);
-          if (parsed.tool && parsed.arguments) {
+          if (parsed.tool) {
             toolCalls.push({
-              id: "mobile_" + Date.now(),
+              id: "offline_" + Date.now(),
               name: parsed.tool,
-              args: parsed.arguments,
+              args: parsed.args || parsed.arguments || {},
             });
           }
         }
       } catch {
-        // Not a tool call, just text
+        // Not a tool call
       }
 
       return {
-        text: toolCalls.length > 0 ? "" : response,
+        text: toolCalls.length > 0 ? "" : response.trim(),
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       };
     } catch (error: any) {
-      console.error("[MobileOfflineBrain] Chat error:", error);
+      console.error("[MobileOfflineBrain] Inference error:", error);
       return {
-        text: `Offline Brain Error: ${error.message}`,
+        text: `The Offline Brain encountered an error: ${error.message}`,
       };
     }
   }

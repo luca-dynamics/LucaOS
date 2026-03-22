@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera, OrbitControls } from '@react-three/drei';
-import { X, BrainCircuit, Network, Activity } from 'lucide-react';
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  BrainCircuit,
+  Network,
+  Activity,
+  Navigation,
+} = LucideIcons as any;
 import ThoughtGraph, { ThoughtNode } from './ThoughtGraph';
 import ExecutionPipeline from './ExecutionPipeline';
 import SubAgentDrone, { DroneTask } from './SubAgentDrone';
@@ -87,8 +94,11 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
                 camera={{ position: [0, 0, 8], fov: 50 }}
               >
                 <PerspectiveCamera makeDefault position={[0, 0, 8]} />
+                {/* eslint-disable-next-line react/no-unknown-property */}
                 <ambientLight intensity={0.5} />
+                {/* eslint-disable-next-line react/no-unknown-property */}
                 <pointLight position={[10, 10, 10]} intensity={1} />
+                {/* eslint-disable-next-line react/no-unknown-property */}
                 <pointLight position={[-10, -10, -10]} intensity={0.5} color="#06b6d4" />
 
                 <ThoughtGraph
@@ -125,7 +135,9 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
                 camera={{ position: [0, 0, 10], fov: 50 }}
               >
                 <PerspectiveCamera makeDefault position={[0, 0, 10]} />
+                {/* eslint-disable-next-line react/no-unknown-property */}
                 <ambientLight intensity={0.5} />
+                {/* eslint-disable-next-line react/no-unknown-property */}
                 <pointLight position={[10, 10, 10]} intensity={1} />
 
                 {drones.map((drone) => (
@@ -159,7 +171,7 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
           {viewMode === 'drones' && drones.length === 0 && (
             <div className="w-full h-full flex items-center justify-center text-gray-500">
               <div className="text-center">
-                <div className="text-4xl mb-4">🚁</div>
+                <Navigation className="text-cyan-500 mx-auto mb-4 animate-bounce" size={40} />
                 <div className="text-sm">No active drones</div>
                 <div className="text-xs opacity-70 mt-2">Drones appear when parallel tasks are executed</div>
               </div>
@@ -172,4 +184,3 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
 };
 
 export default ThoughtProcessPanel;
-

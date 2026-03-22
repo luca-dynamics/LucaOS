@@ -6,11 +6,7 @@ import * as THREE from "three";
 import "./HolographicMaterial";
 import { eventBus } from "../../services/eventBus";
 
-declare module "@react-three/fiber" {
-  interface ThreeElements {
-    holographicMaterial: any;
-  }
-}
+// Three.js elements are now declared in src/types/jsx.d.ts
 
 const sanitizeColor = (color: string) => {
   if (color.startsWith("#") && color.length === 9) {
@@ -36,9 +32,9 @@ const SceneWithMaterial = ({
   const materialRef = useRef<any>(null);
   const groupRef = useRef<THREE.Group>(null);
   const smoothedLevel = useRef(0);
+  const wakePulse = useRef(0);
 
   // Cache THREE colors to avoid GC pressure in useFrame
-  const colorObj = useMemo(() => new THREE.Color(), []);
   const rimColorObj = useMemo(() => new THREE.Color(), []);
 
   const internalAudioLevel = useRef(0);
@@ -47,34 +43,48 @@ const SceneWithMaterial = ({
     const handleAmplitude = (data: any) => {
       internalAudioLevel.current = data.amplitude;
     };
+    const handleWakeWord = () => {
+      wakePulse.current = 1.5; // Trigger a strong visual pulse
+    };
     eventBus.on("audio-amplitude", handleAmplitude);
+    eventBus.on("wake-word-triggered", handleWakeWord);
     return () => {
       eventBus.off("audio-amplitude", handleAmplitude);
+      eventBus.off("wake-word-triggered", handleWakeWord);
     };
   }, []);
 
-  useFrame((state, delta) => {
+  useFrame((state: any, delta: number) => {
     // Combine props with internal event-driven level for maximum responsiveness
     const targetLevel = Math.max(audioLevel, internalAudioLevel.current);
-    smoothedLevel.current += (targetLevel - smoothedLevel.current) * 0.15;
+    // Even faster smoothing for cinematic snappy reactivity
+    smoothedLevel.current += (targetLevel - smoothedLevel.current) * 0.22;
     const level = smoothedLevel.current;
+
+    if (wakePulse.current > 0) {
+      wakePulse.current *= 0.94; // Decay for smooth fade
+      if (wakePulse.current < 0.01) wakePulse.current = 0;
+    }
 
     if (materialRef.current) {
       materialRef.current.time += delta;
-      const baseGlitch = Math.random() > 0.98 ? Math.random() * 0.3 : 0;
-      const audioGlitch = (level / 255) * 0.5;
-      materialRef.current.glitch = baseGlitch + audioGlitch;
+      
+      // Dramatic glitch on audio spikes
+      const baseGlitch = Math.random() > 0.99 ? Math.random() * 0.4 : 0;
+      const audioGlitch = (level / 255) * 0.8;
+      materialRef.current.glitch = baseGlitch + audioGlitch + (wakePulse.current * 0.6);
 
-      const intensity = 1.0 + (level / 255) * 3.0;
+      // RIM BOOST: High intensity rim light that pulses with voice
+      const audioIntensity = (level / 255) * 1.5;
+      const intensity = 1.0 + audioIntensity + (wakePulse.current * 1.5);
       const sanitizedColor = sanitizeColor(color);
 
       materialRef.current.uniforms.color.value.set(sanitizedColor);
 
-      // Fixed: Removed .offsetHSL(0.1, 0, 0.2) which caused "random/drifted" colors.
-      // Now strictly uses a brighter version of the theme color for the rim.
+      // Multi-layered rim coloring for depth
       const rim = rimColorObj
         .set(sanitizedColor)
-        .multiplyScalar(intensity * 1.5);
+        .multiplyScalar(intensity * 1.2);
       materialRef.current.uniforms.rimColor.value.copy(rim);
 
       materialRef.current.uniforms.isVisionActive.value = isVisionActive
@@ -83,10 +93,17 @@ const SceneWithMaterial = ({
     }
 
     if (groupRef.current) {
-      const floatY = Math.sin(state.clock.elapsedTime * 0.5) * 0.1 - 0.2;
-      const scalePulse = 1.2 + (level / 255) * 0.1;
+      // Elegant idle float
+      const floatY = Math.sin(state.clock.elapsedTime * 0.6) * 0.08 - 0.22;
+      
+      // SIZABLE PULSE: Entity grows slightly when speaking
+      const scalePulse = 1.15 + (level / 255) * 0.15 + (wakePulse.current * 0.25);
+      
       groupRef.current.position.y = floatY;
       groupRef.current.scale.setScalar(scalePulse);
+      
+      // Subtle rotation shift based on audio energy
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1 + (level / 255) * 0.05;
     }
   });
 
@@ -105,6 +122,7 @@ const SceneWithMaterial = ({
       vertexShader: `
                 varying vec3 vNormal;
                 varying vec3 vPosition;
+                varying vec3 vViewPosition;
                 varying vec2 vUv;
                 uniform float time;
                 uniform float glitch;
@@ -122,12 +140,15 @@ const SceneWithMaterial = ({
                     }
                   }
                   
-                  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                  vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                  vViewPosition = -mvPosition.xyz;
+                  gl_Position = projectionMatrix * mvPosition;
                 }
             `,
       fragmentShader: `
                 varying vec3 vNormal;
                 varying vec3 vPosition;
+                varying vec3 vViewPosition;
                 varying vec2 vUv;
                 uniform float time;
                 uniform vec3 color;
@@ -136,8 +157,8 @@ const SceneWithMaterial = ({
                 
                 void main() {
                   vec3 normal = normalize(vNormal);
-                  vec3 simpleView = vec3(0.0, 0.0, 1.0);
-                  float fresnel = pow(1.0 - abs(dot(simpleView, normal)), 2.0);
+                  vec3 viewDirection = normalize(vViewPosition);
+                  float fresnel = pow(1.0 - abs(dot(viewDirection, normal)), 2.0);
 
                   float scanline = sin(vPosition.y * 50.0 - time * 5.0) * 0.5 + 0.5;
                   float scanbeam = smoothstep(0.4, 0.6, sin(vPosition.y * 2.0 - time * 2.0));
@@ -152,7 +173,7 @@ const SceneWithMaterial = ({
                   finalColor += rimColor * scanbeam * 0.5; 
                   finalColor += rimColor * visionBeam * 1.5;
 
-                  float alpha = fresnel + 0.1 + (scanbeam * 0.3) + (visionBeam * 0.5);
+                  float alpha = fresnel + (scanbeam * 0.3) + (visionBeam * 0.5);
                   
                   gl_FragColor = vec4(finalColor, alpha);
                 }

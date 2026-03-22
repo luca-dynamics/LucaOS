@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import {
+const {
   X,
   Aperture,
   Target,
@@ -9,7 +10,7 @@ import {
   Activity,
   Check,
   ShieldAlert,
-} from "lucide-react";
+} = LucideIcons as any;
 import { soundService } from "../services/soundService";
 import { useMobile } from "../hooks/useMobile";
 import { biometricService } from "../services/biometricService";

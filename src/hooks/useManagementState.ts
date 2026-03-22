@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MemoryNode, Task, CalendarEvent, Goal } from "../types";
 
 export function useManagementState() {
@@ -12,7 +12,7 @@ export function useManagementState() {
   const [installedModules, setInstalledModules] = useState<string[]>([]);
   const [queuedTasks, setQueuedTasks] = useState<any[]>([]);
 
-  return {
+  return useMemo(() => ({
     rightPanelMode,
     setRightPanelMode,
     memories,
@@ -27,5 +27,5 @@ export function useManagementState() {
     setInstalledModules,
     queuedTasks,
     setQueuedTasks,
-  };
+  }), [rightPanelMode, memories, tasks, events, goals, installedModules, queuedTasks]);
 }

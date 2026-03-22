@@ -5,7 +5,13 @@
  */
 
 import React, { useState } from "react";
-import { Chrome, X, RefreshCw, AlertCircle } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Chrome,
+  X,
+  RefreshCw,
+  AlertCircle,
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 
 interface ChromeProfilePromptProps {

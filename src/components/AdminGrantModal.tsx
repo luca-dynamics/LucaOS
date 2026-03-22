@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   ShieldAlert,
   Lock,
   Fingerprint,
   AlertTriangle,
   X,
   FileText,
-} from "lucide-react";
+} = LucideIcons as any;
 import { soundService } from "../services/soundService";
 
 interface Props {

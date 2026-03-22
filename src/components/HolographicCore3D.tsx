@@ -58,7 +58,7 @@ const HolographicCore3D: React.FC<Props> = ({ status, amplitude, isProcessing })
     return 'sphere';
   };
 
-  useFrame((state, delta) => {
+  useFrame((state: any, delta: any) => {
     if (!pointsRef.current || !meshRef.current) return;
 
     const speed = isProcessing ? 0.5 : 0.1;

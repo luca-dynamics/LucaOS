@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Editor, { useMonaco } from "@monaco-editor/react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   FolderOpen,
   FileCode,
@@ -13,7 +14,7 @@ import {
   Terminal,
   Trash2,
   Minimize2,
-} from "lucide-react";
+} = LucideIcons as any;
 import { lucaService } from "../services/lucaService";
 import { soundService } from "../services/soundService";
 import { apiUrl } from "../config/api";

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { NetworkNode } from "../types";
-import {
+const {
   X,
   Server,
   Smartphone,
@@ -13,7 +14,7 @@ import {
   Printer,
   Watch,
   Wifi,
-} from "lucide-react";
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 import { getGlassStyle } from "../utils/glassStyles";
 

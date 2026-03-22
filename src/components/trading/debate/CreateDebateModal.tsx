@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { X, Loader2, Plus, Bot } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Loader2,
+  Plus,
+  Bot,
+} = LucideIcons as any;
 import { DebatePersonality, CreateDebateRequest } from "../../../types/trading";
 import { PERSONALITY_EMOJIS, PERSONALITY_COLORS } from "../../../types/trading";
 

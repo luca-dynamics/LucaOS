@@ -113,14 +113,13 @@ if (typeof window !== "undefined") {
       };
     }
 
-    // 2. Suppress console noise for polling endpoints in Cloud-Only mode
-    if (url.includes("/api/luca-link/status") || url.includes("/api/status")) {
-      // In Cloud mode (no linked desktop), we know the local backend isn't there.
-      // We return a fake 404 immediately WITHOUT calling originalFetch.
-      // This prevents the browser from logging a red network error to the console.
+    // 2. Suppress console noise for polling endpoints ONLY in confirmed Cloud mode 
+    // to avoid red errors when the local backend isn't expected to be there.
+    if ((url.includes("/api/luca-link/status") || url.includes("/api/status")) && 
+        typeof window !== "undefined" && window.sessionStorage?.getItem("LUCA_CLOUD_ONLY") === "true") {
       return new Response(null, {
         status: 404,
-        statusText: "Not Found (Suppressed)",
+        statusText: "Not Found (Suppressed in Cloud Mode)",
       });
     }
 
@@ -166,15 +165,24 @@ export type ConnectionTier = "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
  * Returns the current active connectivity tier
  */
 export const getConnectionTier = (): ConnectionTier => {
+  const isElectron = typeof window !== "undefined" && !!(window as any).luca;
+
   // 1. LAN (Linked Desktop)
   if (linkedHostIp && linkedHostIp !== "127.0.0.1") return "LAN";
 
-  // 2. LOCAL (Desktop App Loopback)
-  const isElectron = typeof window !== "undefined" && !!(window as any).luca;
+  // 2. ELECTRON (Native/Local Core)
+  // If we are in Electron and not linked to a remote host, we are running the local core
   if (isElectron) return "LOCAL";
 
-  // 3. CLOUD (Web Fallback)
-  const isBrowser = typeof window !== "undefined" && !(window as any).luca;
+  // 3. Browser development on localhost
+  const isBrowser = !isElectron;
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1");
+  if (isBrowser && isLocalhost) return "LOCAL";
+
+  // 4. CLOUD (Web Fallback)
   if (isBrowser && (CLOUD_CORTEX_URL || CLOUD_API_URL)) return "CLOUD";
 
   return "OFFLINE";

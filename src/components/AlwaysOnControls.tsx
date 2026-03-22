@@ -4,7 +4,11 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Hand, Radio } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Hand,
+  Radio,
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 
 interface Props {

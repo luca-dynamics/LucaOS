@@ -1,6 +1,5 @@
 import React from "react";
 import HologramScene from "./HologramScene";
-import { eventBus } from "../../services/eventBus";
 import { ContextCard } from "../../services/ContextCardService";
 import { PERSONA_UI_CONFIG } from "../../config/themeColors";
 import {
@@ -10,6 +9,8 @@ import {
 } from "../../services/TranslationService";
 import { MissionScope } from "../../services/toolRegistry";
 import { MISSION_COLORS } from "../../config/themeColors";
+import { eventBus } from "../../services/eventBus";
+import * as LucideIcons from "lucide-react";
 
 interface TranslationResult {
   originalText: string;
@@ -53,9 +54,24 @@ const HologramWidget: React.FC<HologramWidgetProps> = ({
   const activeConfig = PERSONA_UI_CONFIG[persona] || PERSONA_UI_CONFIG.DEFAULT;
   const primaryColor = propColor || activeConfig.hex;
   const [isVisionActive, setIsVisionActive] = React.useState(false);
+  const [isVisualCoreActive, setIsVisualCoreActive] = React.useState(false);
   const [ipcIntent, setIpcIntent] = React.useState<string | null>(null);
 
   const displayIntent = propIntent || ipcIntent;
+
+  const toggleVisualCore = () => {
+    if (window.electron?.ipcRenderer) {
+      if (isVisualCoreActive) {
+        window.electron.ipcRenderer.send("close-visual-core");
+      } else {
+        window.electron.ipcRenderer.send("open-visual-core");
+      }
+    }
+  };
+
+  const handleExpand = () => {
+    window.electron?.ipcRenderer?.send("expand-dashboard");
+  };
 
   React.useEffect(() => {
     if (window.electron && window.electron.ipcRenderer) {
@@ -71,9 +87,16 @@ const HologramWidget: React.FC<HologramWidgetProps> = ({
           setIpcIntent(intent);
         },
       );
+      const removeVisualStatus = window.electron.ipcRenderer.on(
+        "hologram-visual-status",
+        (payload: { isVisible: boolean }) => {
+          setIsVisualCoreActive(payload.isVisible);
+        },
+      );
       return () => {
         if (removeVision) removeVision();
         if (removeIntent) removeIntent();
+        if (removeVisualStatus) removeVisualStatus();
       };
     }
   }, []);
@@ -99,6 +122,9 @@ const HologramWidget: React.FC<HologramWidgetProps> = ({
       isVisionActive={isVisionActive}
       intent={displayIntent}
       elevationState={elevationState}
+      isVisualCoreActive={isVisualCoreActive}
+      onToggleHUD={toggleVisualCore}
+      onExpand={handleExpand}
     />
   );
 };
@@ -133,16 +159,14 @@ const ContextButton = ({
 }) => {
   const activeConfig = PERSONA_UI_CONFIG[persona] || PERSONA_UI_CONFIG.DEFAULT;
   const glowRaw = activeConfig.glow || `shadow-[0_0_20px_${primaryColor}]`;
-  // Extract CSS value from shadow-[]
   const shadowValue = glowRaw.match(/shadow-\[(.*)\]/)?.[1] || "none";
 
-  // Positions around the face (assuming 200x200 center)
   const positions = [
-    { top: "50%", right: "-30px", transform: "translateY(-50%)" }, // Right Edge
-    { top: "50%", left: "-30px", transform: "translateY(-50%)" }, // Left Edge
-    { top: "-40px", left: "50%", transform: "translateX(-50%)" }, // Top Edge
-    { bottom: "-40px", left: "50%", transform: "translateX(-50%)" }, // Bottom Edge
-    { top: "20px", right: "-20px" }, // Top-Right Offset
+    { top: "50%", right: "-30px", transform: "translateY(-50%)" },
+    { top: "50%", left: "-30px", transform: "translateY(-50%)" },
+    { top: "-40px", left: "50%", transform: "translateX(-50%)" },
+    { bottom: "-40px", left: "50%", transform: "translateX(-50%)" },
+    { top: "20px", right: "-20px" },
   ];
 
   const pos = positions[index] || positions[0];
@@ -150,12 +174,12 @@ const ContextButton = ({
   return (
     <div
       className="absolute z-20 transition-all duration-700 animate-in fade-in zoom-in slide-in-from-bottom-2"
-      style={pos}
+      style={pos as any}
     >
       <button
-        className="px-4 py-2 rounded-xl border backdrop-blur-xl flex items-center gap-3 group/card transition-all duration-300 hover:scale-105"
+        className="pointer-events-auto px-4 py-2 rounded-xl backdrop-blur-xl flex items-center gap-3 group/card transition-all duration-300 hover:scale-105"
         style={{
-          borderColor: `${primaryColor}66`,
+          border: `1px solid ${primaryColor}66`,
           backgroundColor: `${activeConfig.bg ? "transparent" : `${primaryColor}15`}`,
           boxShadow: shadowValue,
         }}
@@ -186,44 +210,190 @@ const ContextButton = ({
   );
 };
 
+const { Power, Mic, Languages, FileText, Monitor, Maximize, HelpCircle } =
+  LucideIcons as any;
+
 const TranslationControlBar = ({
   state,
   primaryColor,
+  onMonitorToggle,
+  onFullscreenToggle,
+  isVisualCoreActive,
+  onToggle,
 }: {
   state: TranslationState;
   primaryColor: string;
+  onMonitorToggle?: () => void;
+  onFullscreenToggle?: () => void;
+  isVisualCoreActive?: boolean;
+  onToggle?: () => void;
 }) => {
-  const modes = [
-    { id: TranslationMode.OFF, label: "OFF", icon: "󰂭" },
-    { id: TranslationMode.ONE_WAY, label: "1-WAY", icon: "󰗊" },
-    { id: TranslationMode.INTERPRETER, label: "INT", icon: "󰗋" },
-    { id: TranslationMode.TRANSCRIBE, label: "TX", icon: "󰙶" },
+  const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
+  const [showHelp, setShowHelp] = React.useState(false);
+  const hideTimeoutRef = React.useRef<any>(null);
+
+  const setHoveredStatus = (desc: string | null) => {
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    if (desc) {
+      setStatusMessage(desc);
+    } else {
+      hideTimeoutRef.current = setTimeout(() => {
+        setStatusMessage(null);
+        setShowHelp(false);
+      }, 350);
+    }
+  };
+
+  const controls = [
+    {
+      id: TranslationMode.OFF,
+      icon: Power,
+      x: 30,
+      y: 178,
+      type: "MODE",
+      desc: "TOGGLE <ON /OFF",
+      info: "Privacy: All translation and transcription services are paused.",
+    },
+    {
+      id: TranslationMode.ONE_WAY,
+      icon: Mic,
+      x: 58,
+      y: 191,
+      type: "MODE",
+      desc: "1-WAY TRANSLATE",
+      info: "Translates one source into your primary language.",
+    },
+    {
+      id: TranslationMode.INTERPRETER,
+      icon: Languages,
+      x: 86,
+      y: 199,
+      type: "MODE",
+      desc: "INTERPRETER MODE",
+      info: "Bilingual: Translates both directions of a conversation.",
+    },
+    {
+      id: TranslationMode.TRANSCRIBE,
+      icon: FileText,
+      x: 114,
+      y: 199,
+      type: "MODE",
+      desc: "LIVE TRANSCRIPT",
+      info: "No translation: Records a real-time text transcript of audio.",
+    },
+    {
+      id: "MONITOR",
+      icon: Monitor,
+      x: 142,
+      y: 191,
+      type: "ACTION",
+      desc: "SMART SCREEN",
+      info: "HUD Vision: Mirror a specific screen or window into the HUD.",
+      onClick: onMonitorToggle,
+    },
+    {
+      id: "EXPAND",
+      icon: Maximize,
+      x: 170,
+      y: 178,
+      type: "ACTION",
+      desc: "DASHBOARD",
+      info: "System Core: Expand to the full LUCA management console.",
+      onClick: onFullscreenToggle,
+    },
   ];
 
+  const activeControl = controls.find(c => c.desc === statusMessage);
+
   return (
-    <div
-      className="flex items-center gap-1 p-1 rounded-full border backdrop-blur-2xl bg-black/20"
-      style={{ borderColor: `${primaryColor}33` }}
-    >
-      {modes.map((m) => (
-        <button
-          key={m.id}
-          onClick={() => translationService.setMode(m.id)}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold tracking-widest transition-all duration-300 ${
-            state.mode === m.id
-              ? "text-white"
-              : "text-white/40 hover:text-white/70"
+    <div className="absolute inset-0 pointer-events-none overflow-visible">
+      <div className="relative w-full h-full">
+        {/* HUD STATUS READOUT */}
+        <div
+          onPointerEnter={() => setHoveredStatus(statusMessage)}
+          onPointerLeave={() => setHoveredStatus(null)}
+          className={`absolute top-[220px] left-1/2 -translate-x-1/2 transition-all duration-300 pointer-events-auto z-50 ${
+            statusMessage
+              ? "opacity-100 translate-y-0 scale-100"
+              : "opacity-0 translate-y-2 scale-95"
           }`}
-          style={{
-            backgroundColor: state.mode === m.id ? primaryColor : "transparent",
-            boxShadow:
-              state.mode === m.id ? `0 0 10px ${primaryColor}66` : "none",
-          }}
         >
-          <span>{m.icon}</span>
-          <span>{m.label}</span>
-        </button>
-      ))}
+          {/* INFO CARD (Fades in when hovering the ?) */}
+          <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 transition-all duration-500 w-[220px] ${
+            showHelp ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'
+          }`}>
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px]"
+                 style={{ borderBottomColor: `${primaryColor}66` }} />
+            <div className="bg-black/95 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl relative"
+                 style={{ border: `1px solid ${primaryColor}66`, boxShadow: `0 8px 32px ${primaryColor}33` }}>
+              <p className="text-[10px] font-mono leading-relaxed text-white/90 text-center">
+                {activeControl?.info}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-xl group/readout cursor-default"
+               style={{ border: `1px solid ${primaryColor}44`, boxShadow: `0 0 15px ${primaryColor}22` }}>
+            <div 
+              onPointerEnter={() => setShowHelp(true)}
+              onPointerLeave={() => setShowHelp(false)}
+              className="pointer-events-auto cursor-help transition-all duration-300 hover:scale-110 opacity-40 hover:opacity-100 w-6 h-6 flex items-center justify-center shrink-0"
+              style={{ color: primaryColor }}
+            >
+              <HelpCircle size={10} />
+            </div>
+            
+            <div
+              className="text-[8px] font-black tracking-[0.2em] uppercase whitespace-nowrap"
+              style={{ color: primaryColor }}
+            >
+              {statusMessage}
+            </div>
+          </div>
+        </div>
+
+        {controls.map((m) => {
+          const Icon = m.icon;
+          const isActive =
+            m.type === "MODE"
+              ? state.mode === m.id
+              : m.id === "MONITOR"
+                ? isVisualCoreActive
+                : false;
+
+          return (
+            <button
+              key={m.id}
+              onPointerEnter={() => setHoveredStatus(m.desc)}
+              onPointerLeave={() => setHoveredStatus(null)}
+              onClick={() => {
+                if (m.id === TranslationMode.OFF) {
+                  onToggle?.();
+                } else if (m.type === "MODE") {
+                  translationService.setMode(m.id as TranslationMode);
+                } else {
+                  m.onClick?.();
+                }
+              }}
+              className={`absolute pointer-events-auto w-7 h-7 rounded-full backdrop-blur-md flex items-center justify-center transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 ${
+                isActive
+                  ? "scale-110"
+                  : "opacity-60 hover:opacity-100 hover:scale-105"
+              }`}
+              style={{
+                left: `${m.x}px`,
+                top: `${m.y}px`,
+                boxShadow: isActive ? `0 0 15px ${primaryColor}66` : "none",
+                border: isActive ? `1px solid ${primaryColor}` : `1px solid ${primaryColor}66`,
+                backgroundColor: isActive ? `${primaryColor}40` : `${primaryColor}1A`,
+                color: isActive ? "#ffffff" : primaryColor,
+              }}
+            >
+              <Icon size={12} />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -239,6 +409,9 @@ const HologramWidgetImplementation = ({
   transcriptSource,
   intent,
   elevationState,
+  isVisualCoreActive,
+  onToggleHUD,
+  onExpand,
 }: any) => {
   const [cards, setCards] = React.useState<ContextCard[]>([]);
   const [translationState, setTranslationState] =
@@ -246,6 +419,7 @@ const HologramWidgetImplementation = ({
   const [translations, setTranslations] = React.useState<TranslationResult[]>(
     [],
   );
+  const [localStatus, setLocalStatus] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const handleTranslationResult = (res: any) => {
@@ -257,25 +431,40 @@ const HologramWidgetImplementation = ({
     const handleStateChange = (state: TranslationState) => {
       setTranslationState(state);
     };
-    const handleCards = (data: { cards: ContextCard[] }) => {
-      setCards(data.cards);
+    const handleCards = (newCards: ContextCard[]) => {
+      setCards(newCards);
+    };
+    const handleWakeWord = () => {
+      setLocalStatus("LISTENING...");
+    };
+    const handleVoiceStatus = (data: { status: string }) => {
+      setLocalStatus(data.status.toUpperCase());
     };
 
     eventBus.on("translation-result", handleTranslationResult);
     eventBus.on("translation-state-changed", handleStateChange);
     eventBus.on("context-cards-updated", handleCards);
+    eventBus.on("wake-word-triggered", handleWakeWord);
+    eventBus.on("voice-status-update", handleVoiceStatus);
 
     return () => {
       eventBus.off("translation-result", handleTranslationResult);
       eventBus.off("translation-state-changed", handleStateChange);
       eventBus.off("context-cards-updated", handleCards);
+      eventBus.off("wake-word-triggered", handleWakeWord);
+      eventBus.off("voice-status-update", handleVoiceStatus);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (transcript && transcript.length > 0) {
+      setLocalStatus(null);
+    }
+  }, [transcript]);
 
   const activeScope = elevationState?.activeMissionScope;
   const hasMission = activeScope && activeScope !== MissionScope.NONE;
 
-  // Map Mission Color
   let missionColor = primaryColor;
   if (hasMission) {
     let colorKey: keyof typeof MISSION_COLORS = "FULL";
@@ -287,7 +476,6 @@ const HologramWidgetImplementation = ({
     missionColor = MISSION_COLORS[colorKey];
   }
 
-  // Dynamic Mission Card injection
   const displayCards = [...cards];
   if (hasMission) {
     displayCards.unshift({
@@ -322,22 +510,15 @@ const HologramWidgetImplementation = ({
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent | PointerEvent) => {
       if (!isDragging.current) return;
-
       const dist = Math.hypot(
         e.clientX - dragStart.current.x,
         e.clientY - dragStart.current.y,
       );
-
-      if (dist > 5) {
-        hasDragged.current = true;
-      }
-
+      if (dist > 5) hasDragged.current = true;
       const isHologramMode = window.location.search.includes("mode=hologram");
-
       if (isHologramMode) {
         const targetX = e.screenX - dragStart.current.x;
         const targetY = e.screenY - dragStart.current.y;
-
         if (window.electron && window.electron.ipcRenderer) {
           window.electron.ipcRenderer.send("set-window-position", {
             x: targetX,
@@ -353,12 +534,10 @@ const HologramWidgetImplementation = ({
         });
       }
     };
-
     const handleMouseUp = () => {
       isDragging.current = false;
       document.body.style.userSelect = "auto";
     };
-
     window.addEventListener("pointermove", handleMouseMove);
     window.addEventListener("pointerup", handleMouseUp);
     return () => {
@@ -378,53 +557,52 @@ const HologramWidgetImplementation = ({
 
   return (
     <div
-      className="fixed z-50 cursor-grab active:cursor-grabbing select-none"
+      className="fixed z-50 select-none pointer-events-none"
       style={containerStyle}
-      onPointerDown={handleMouseDown}
     >
       <div className="relative w-[280px] h-[350px] flex flex-col items-center justify-center group gap-2">
-        {/* Subtitle / Intent Area */}
+        {/* TOP RIGHT GHOST CONTROLS */}
+
         <div className="w-full min-h-[100px] flex flex-col items-center justify-end px-4 text-center pointer-events-none relative">
-          {intent && !transcript && !translations.length && (
+          {(intent || localStatus) && !transcript && !translations.length && (
             <div
-              className={`text-[10px] font-mono tracking-[0.2em] uppercase ${hasMission ? 'animate-pulse' : ''} mb-1`}
+              className={`text-[10px] font-mono tracking-[0.2em] uppercase ${hasMission || localStatus ? "animate-pulse" : ""} mb-1`}
               style={{ color: missionColor }}
             >
-              [{hasMission ? `ARMED: ${activeScope}` : intent}]
+              [{hasMission ? `ARMED: ${activeScope}` : localStatus || intent}]
             </div>
           )}
-
-          {/* Translation Subtitles Overlay */}
           <div className="flex flex-col gap-1 mb-2">
-            {translations.map((t, i) => (
-              <div
-                key={t.timestamp}
-                className={`transition-all duration-500 animate-in fade-in slide-in-from-bottom-1 ${
-                  i === translations.length - 1
-                    ? "opacity-100 scale-100"
-                    : "opacity-40 scale-95"
-                }`}
-              >
+            {translations
+              .filter((t) => t.speaker === "model")
+              .map((t, i, filtered) => (
                 <div
-                  className="text-[9px] font-mono uppercase tracking-tighter opacity-50 mb-0.5"
-                  style={{ color: missionColor }}
+                  key={t.timestamp}
+                  className={`transition-all duration-500 animate-in fade-in slide-in-from-bottom-1 ${
+                    i === filtered.length - 1
+                      ? "opacity-100 scale-100"
+                      : "opacity-40 scale-95"
+                  }`}
                 >
-                  {t.mode === TranslationMode.TRANSCRIBE
-                    ? "Live Text"
-                    : `${t.speaker} Transl.`}
-                </div>
-                <div className="text-[13px] font-medium tracking-tight text-white drop-shadow-lg leading-tight">
-                  {t.translatedText}
-                </div>
-                {t.mode !== TranslationMode.TRANSCRIBE && (
-                  <div className="text-[10px] italic opacity-40 text-white/80 line-clamp-1">
-                    {t.originalText}
+                  <div
+                    className="text-[9px] font-mono uppercase tracking-tighter opacity-50 mb-0.5"
+                    style={{ color: missionColor }}
+                  >
+                    {t.mode === TranslationMode.TRANSCRIBE
+                      ? "Live Text"
+                      : `${t.speaker} Transl.`}
                   </div>
-                )}
-              </div>
-            ))}
+                  <div className="text-[13px] font-medium tracking-tight text-white drop-shadow-lg leading-tight">
+                    {t.translatedText}
+                  </div>
+                  {t.mode !== TranslationMode.TRANSCRIBE && (
+                    <div className="text-[10px] italic opacity-40 text-white/80 line-clamp-1">
+                      {t.originalText}
+                    </div>
+                  )}
+                </div>
+              ))}
           </div>
-
           {transcriptSource === "model" &&
             transcript &&
             !translations.length && (
@@ -434,45 +612,44 @@ const HologramWidgetImplementation = ({
             )}
         </div>
 
-        <div className="w-[200px] h-[200px] relative z-10 scale-100 origin-bottom transition-transform duration-300 pointer-events-auto">
-          <HologramScene
-            color={missionColor}
-            audioLevel={audioLevel}
-            isVisionActive={isVisionActive}
-            onClick={() => {
-              if (!hasDragged.current) {
-                onClick?.();
-              }
-            }}
-            onDragStart={handleMouseDown}
-          />
-
-          {/* AI Context Cards (Glassmorphic Buttons) */}
+        <div className="w-[200px] h-[200px] relative z-20 scale-100 origin-bottom transition-transform duration-300 pointer-events-none">
+          {/* Isolate the canvas clip path so it doesn't crop out the UI icons */}
+          <div 
+            className="absolute inset-0 pointer-events-auto cursor-grab active:cursor-grabbing" 
+            style={{ clipPath: "circle(45% at 50% 50%)" }}
+            onPointerDown={handleMouseDown}
+          >
+            <HologramScene
+              color={missionColor}
+              audioLevel={audioLevel}
+              isVisionActive={isVisionActive}
+              onDragStart={handleMouseDown}
+            />
+          </div>
           {displayCards.map((card, idx) => (
             <ContextButton
               key={card.id}
               card={card}
               index={idx}
-              primaryColor={card.type === "MISSION_ACTIVE" ? missionColor : primaryColor}
+              primaryColor={
+                card.type === "MISSION_ACTIVE" ? missionColor : primaryColor
+              }
               persona={persona}
             />
           ))}
-        </div>
 
-        <div className="mt-4 pointer-events-auto transition-all duration-500 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
-          <TranslationControlBar
-            state={translationState}
-            primaryColor={missionColor}
-          />
+          {/* CURVED HUD CONTROLS - Anchored to the center of the hologram scene */}
+          <div className="absolute inset-0 pointer-events-none transition-all duration-500 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 z-50">
+            <TranslationControlBar
+              state={translationState}
+              primaryColor={missionColor}
+              onMonitorToggle={onToggleHUD}
+              onFullscreenToggle={onExpand}
+              isVisualCoreActive={isVisualCoreActive}
+              onToggle={onClick}
+            />
+          </div>
         </div>
-
-        <div
-          className="absolute bottom-16 right-16 w-32 h-32 rounded-full blur-[50px] -z-10 transition-opacity duration-100"
-          style={{
-            opacity: (audioLevel / 255) * 0.4,
-            backgroundColor: missionColor,
-          }}
-        />
       </div>
     </div>
   );

@@ -1,6 +1,14 @@
 import React, { useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { UserProfile } from "../types";
-import { User, Mic, FileText, Save, X, Settings } from "lucide-react";
+const {
+  User,
+  Mic,
+  FileText,
+  Save,
+  X,
+  Settings,
+} = LucideIcons as any;
 
 interface Props {
   onClose: () => void;

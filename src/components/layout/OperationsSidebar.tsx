@@ -1,5 +1,6 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Activity,
   Eye,
   Lock,
@@ -20,7 +21,7 @@ import {
   Landmark,
   Search,
   ShieldAlert,
-} from "lucide-react";
+} = LucideIcons as any;
 import SystemMonitor from "../SystemMonitor";
 import SmartDeviceCard from "../SmartDeviceCard";
 import { soundService } from "../../services/soundService";

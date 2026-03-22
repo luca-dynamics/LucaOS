@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useMobile } from "./hooks/useMobile";
 import { AppProvider, useAppContext } from "./context/AppContext";
@@ -23,6 +23,7 @@ import { taskQueue } from "./services/taskQueueService";
 import { soundService } from "./services/soundService";
 import { voiceService } from "./services/voiceService";
 import { settingsService } from "./services/settingsService";
+import { eventBus } from "./services/eventBus";
 import { UIThemeId } from "./types/lucaPersonality";
 import { apiUrl, cortexUrl, getConnectionTier } from "./config/api";
 import { ToolRegistry, MissionScope } from "./services/toolRegistry";
@@ -39,15 +40,8 @@ import {
   TacticalLog,
 } from "./types";
 
-import {
-  Activity,
-  Cpu,
-  Database,
-  Terminal as TerminalIcon,
-  Trash2,
-  Trash,
-  BrainCircuit,
-} from "lucide-react";
+import * as LucideAll from "lucide-react";
+const { Activity, Cpu, Database, Terminal: TerminalIcon, Trash2, Trash, BrainCircuit } = LucideAll as any;
 import { setHexAlpha } from "./config/themeColors";
 
 import GhostBrowser from "./components/GhostBrowser";
@@ -88,6 +82,7 @@ import { BootSequence } from "./hooks/app/useAppSystem";
 import OnboardingFlow from "./components/Onboarding/OnboardingFlow";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
 import { THEME_PALETTE } from "./config/themeColors";
+import { isElectron as checkElectron, isWeb } from "./utils/env";
 
 // --- Mock Initial State ---
 
@@ -110,12 +105,10 @@ export default function App() {
 }
 
 function AppContent() {
-  console.log("[APP] Rendering AppContent...");
+  // console.log("[APP] Rendering AppContent...");
   // --- 1. PLATFORM & BASIC STATE ---
   const isCapacitor = Capacitor.isNativePlatform();
-  const isElectron = !!(
-    (window as any).electron && (window as any).electron.ipcRenderer
-  );
+  const isElectron = checkElectron();
   const isMobile = useMobile();
 
   const [currentCwd, setCurrentCwd] = useState<string>("");
@@ -156,6 +149,27 @@ function AppContent() {
   const handlePersonaSwitchRef = useRef<any>(null);
 
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+  // --- 1. SYSTEM TRANSPARENCY CLEANUP (Definitive Fix for Ghost Backgrounds) ---
+  useEffect(() => {
+    if (isElectron) {
+      // Forcefully clear any backgrounds set by index.tsx or other side-effects
+      document.documentElement.style.backgroundColor = "transparent";
+      document.body.style.backgroundColor = "transparent";
+      
+      // Add a class for global CSS overrides
+      document.documentElement.classList.add('is-electron');
+    } else if (isWeb()) {
+      // Web fallback: ensure we have a background if index.tsx didn't set it
+      // but only if it's currently transparent
+      // Note: we'll use a local check for isLight here
+      const themeId = settingsService.get?.("general")?.theme;
+      const isLightMode = PERSONA_UI_CONFIG[themeId as any]?.isLight || false;
+      if (!document.documentElement.style.backgroundColor || document.documentElement.style.backgroundColor === 'transparent') {
+        document.documentElement.style.backgroundColor = isLightMode ? "#f0f0f5" : "#121212";
+      }
+    }
+  }, [isElectron]);
 
   // NEW: UI State (Hoisted for Tool Orchestrator)
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
@@ -217,7 +231,6 @@ function AppContent() {
     const tierInterval = setInterval(() => {
       setConnectionTier(getConnectionTier());
     }, 5000);
-
     return () => {
       settingsService.off("settings-changed", handleSettingsChange);
       clearInterval(tierInterval);
@@ -256,8 +269,6 @@ function AppContent() {
     voiceHubTranscript,
     isVoiceHubListening,
     voiceHubStatus,
-    voiceAmplitude: localAmplitude,
-    remoteAmplitude,
     voiceHubError,
     stopVoiceHub,
     forceKillWakeWord,
@@ -308,9 +319,6 @@ function AppContent() {
     handlePersonaSwitchRef.current = handlePersonaSwitch;
   }, [handlePersonaSwitch]);
 
-  // Alias for backward compatibility & merged UI state
-  const voiceAmplitude = Math.max(localAmplitude, remoteAmplitude);
-  const localVolume = localAmplitude;
   const localVadActive = isVoiceHubListening; // Approximate mapping
 
   // Always-On Monitoring State
@@ -559,6 +567,15 @@ function AppContent() {
     setOpsecStatus,
   });
 
+  const effectiveConnectionTier = useMemo(() => {
+    // If the local core is disconnected and we aren't explicitly in Cloud mode,
+    // force the UI connection tier to OFFLINE to clearly indicate the outage.
+    if (!isLocalCoreConnected && connectionTier !== "CLOUD") {
+      return "OFFLINE";
+    }
+    return connectionTier;
+  }, [isLocalCoreConnected, connectionTier]);
+
   // --- TOOL ORCHESTRATOR ---
   const { executeTool } = useToolOrchestrator({
     persona,
@@ -789,6 +806,72 @@ function AppContent() {
     }
   }, [persona, isCapacitor]);
 
+  useEffect(() => {
+    // 3. EventBus Notification Listeners (Phase 1 Integration)
+    const handleNotification = (event: any) => {
+      const typeLabel = (event.type || event.priority || "INFO").toUpperCase();
+      const content = `[${typeLabel}] ${event.message}`;
+      
+      setMessages((prev: any) => {
+        // Prevent duplicate notifications
+        if (prev.length > 0 && prev[prev.length - 1].content.includes(event.message)) {
+          return prev;
+        }
+        
+        return [
+          ...prev,
+          {
+            id: "notif_" + Date.now() + Math.random(),
+            role: "system", // Trigger System Message Bubble with rich icons
+            content: content,
+            timestamp: Date.now(),
+          }
+        ];
+      });
+    };
+
+    const handleChatNotification = (data: any) => {
+      setMessages((prev: any) => [
+        ...prev,
+        {
+          id: "chat_notif_" + Date.now() + Math.random(),
+          role: data.role || "assistant",
+          content: data.content,
+          timestamp: Date.now(),
+        }
+      ]);
+    };
+
+    // Generic Priority/Type Listeners
+    eventBus.on("notification:info", handleNotification);
+    eventBus.on("notification:warning", handleNotification);
+    eventBus.on("notification:error", handleNotification);
+    eventBus.on("notification:success", handleNotification);
+    eventBus.on("notification:trading", handleNotification);
+    
+    // Priority specific
+    eventBus.on("notification:LOW", handleNotification);
+    eventBus.on("notification:MEDIUM", handleNotification);
+    eventBus.on("notification:HIGH", handleNotification);
+    eventBus.on("notification:CRITICAL", handleNotification);
+
+    // Direct Chat Injection
+    eventBus.on("chat:notification", handleChatNotification);
+
+    return () => {
+      eventBus.off("notification:info", handleNotification);
+      eventBus.off("notification:warning", handleNotification);
+      eventBus.off("notification:error", handleNotification);
+      eventBus.off("notification:success", handleNotification);
+      eventBus.off("notification:trading", handleNotification);
+      eventBus.off("notification:LOW", handleNotification);
+      eventBus.off("notification:MEDIUM", handleNotification);
+      eventBus.off("notification:HIGH", handleNotification);
+      eventBus.off("notification:CRITICAL", handleNotification);
+      eventBus.off("chat:notification", handleChatNotification);
+    };
+  }, [setMessages]);
+
   // --- WATCH COMMAND LISTENERS (Moved to useVoiceEngine) ---
   // --- PERSONA SYNC (Moved to useVoiceEngine) ---
 
@@ -853,14 +936,13 @@ function AppContent() {
         transcript: voiceHubTranscript || voiceTranscript,
         transcriptSource: voiceTranscriptSource,
         intent: activeAutonomousAction?.intent,
-        // Amplitude: Use real voice amplitude if Luca is speaking, else use local volume if user is speaking
-        amplitude: voiceAmplitude,
         persona: persona,
         status: voiceHubStatus, // Pass full status if widget updates to support it
         themeHex:
           THEME_PALETTE[activeThemeId as keyof typeof THEME_PALETTE]?.primary ||
           "#3b82f6",
         elevationState: elevationState,
+        approvalRequest: (voiceSystem as any).approvalRequest,
       };
 
       window.electron.ipcRenderer.send("sync-widget-state", syncData);
@@ -876,8 +958,6 @@ function AppContent() {
     localVadActive,
     isSpeaking,
     voiceTranscript,
-    voiceAmplitude,
-    localVolume,
     persona,
     voiceHubStatus,
     voiceHubTranscript,
@@ -1229,7 +1309,7 @@ function AppContent() {
     return false;
   };
 
-  const toggleVoiceMode = (overrideMode?: string, forceHud = true) => {
+  const toggleVoiceMode = (overrideMode?: string, forceHud = true, context: string = "voice-dashboard") => {
     console.log(
       `[APP] toggleVoiceMode called. Mode: ${overrideMode}, ForceHud: ${forceHud}, CurrentState: ${isVoiceMode}`,
     );
@@ -1286,10 +1366,10 @@ function AppContent() {
 
     if (useLocal) {
       // Using the smarter routing encapsulated in connectVoiceSession
-      connectVoiceSession(overrideMode === "DICTATION" ? "DICTATION" : persona);
+      connectVoiceSession(overrideMode === "DICTATION" ? "DICTATION" : persona, context);
     } else {
       // Cloud Mode: Use Google Live (liveService)
-      connectVoiceSession(overrideMode === "DICTATION" ? "DICTATION" : persona);
+      connectVoiceSession(overrideMode === "DICTATION" ? "DICTATION" : persona, context);
     }
 
     if (overrideMode === "DICTATION") {
@@ -1342,7 +1422,7 @@ function AppContent() {
           // This is the main action when user clicks the Hologram
           if (payload?.mode === "TOGGLE" || !payload?.mode) {
             if (toggleVoiceModeRef.current) {
-              toggleVoiceModeRef.current(undefined, false); // undefined = regular toggle
+              toggleVoiceModeRef.current(undefined, false, payload?.context || "voice-dashboard"); // Pass context
             }
             return;
           }
@@ -1703,7 +1783,7 @@ function AppContent() {
   };
 
   // --- HELPER: Dynamic Theme Colors ---
-  const getThemeColors = () => {
+  const getThemeColors = useCallback(() => {
     if (isLockdown) {
       return {
         primary: "text-rq-red",
@@ -1751,25 +1831,25 @@ function AppContent() {
       coreColor: themeConfig.coreColor,
       hex: themeConfig.hex || "#3b82f6",
       themeName: themeConfig.themeName || activeThemeId,
+      isLight: themeConfig.isLight || false,
     };
-  };
+  }, [isLockdown, activeThemeId, systemStatus]);
 
-  const theme = getThemeColors();
+  const theme = useMemo(() => getThemeColors(), [getThemeColors]);
 
   // --- WEB BACKGROUND SYNC ---
   // Ensure the outer HTML/Body perfectly matches the active theme to prevent edge haze
   useEffect(() => {
-    const isElectron =
-      typeof window !== "undefined" && !!(window as any).electron;
-    if (!isElectron) {
-      const isLightTheme =
-        theme.themeName?.toLowerCase() === "lucagent" ||
-        theme.themeName?.toLowerCase() === "agentic-slate" ||
-        theme.themeName?.toLowerCase() === "light";
+    if (isWeb()) {
+      const isLightTheme = theme.isLight;
 
       const bgColor = isLightTheme ? "#f0f0f5" : "#1c1c1c";
       document.documentElement.style.backgroundColor = bgColor;
       document.body.style.backgroundColor = bgColor;
+    } else {
+      // Ensure transparency remains for Electron/Capacitor
+      document.documentElement.style.backgroundColor = "transparent";
+      document.body.style.backgroundColor = "transparent";
     }
   }, [theme.themeName]);
 
@@ -1931,17 +2011,10 @@ function AppContent() {
 
   // --- BOOT SEQUENCE RENDER ---
   if (bootSequence !== "READY") {
-    const isWeb =
-      typeof window !== "undefined" &&
-      !(window as any).electron &&
-      !(window as any).Capacitor;
-    const isLightTheme =
-      theme.themeName?.toLowerCase() === "lucagent" ||
-      theme.themeName?.toLowerCase() === "light";
 
     return (
       <div
-        className={`h-screen w-full ${isWeb ? (isLightTheme ? "bg-[#f0f0f5]" : "bg-[#1c1c1c]") : "bg-transparent"} flex flex-col items-center justify-center font-mono cursor-default select-none draggable transition-all duration-700 relative overflow-hidden`}
+        className="h-screen w-full bg-transparent flex flex-col items-center justify-center font-mono cursor-default select-none draggable transition-all duration-700 relative overflow-hidden"
         style={{ color: theme.hex || "#3b82f6" }}
         onContextMenu={(e) => e.preventDefault()}
       >
@@ -2083,7 +2156,10 @@ function AppContent() {
         )}
 
         {bootSequence === "ONBOARDING" && (
-          <div className="absolute inset-0 z-10">
+          <div 
+            className="absolute inset-0 z-10"
+            style={{}}
+          >
             <OnboardingFlow
               theme={theme}
               onComplete={(profile, mode) => {
@@ -2111,14 +2187,14 @@ function AppContent() {
 
   // Removed Browser block from here (Moved Up)
 
-  console.log("[RENDER] Boot Ready. Rendering Main UI...");
+  // console.log("[RENDER] Boot Ready. Rendering Main UI...");
 
   return (
     <>
       <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
       <SafeComponent componentName="OverlayManager">
         <OverlayManager
-          theme={getThemeColors()}
+          theme={theme}
           persona={persona}
           bootSequence={bootSequence}
           ambientVisionActive={ambientVisionActive}
@@ -2179,7 +2255,6 @@ function AppContent() {
           setShowAutonomyDashboard={setShowAutonomyDashboard}
           showVoiceHud={showVoiceHud}
           toggleVoiceMode={toggleVoiceMode}
-          voiceAmplitude={voiceAmplitude}
           voiceTranscript={voiceTranscript || ""}
           setVoiceTranscript={setVoiceTranscript}
           voiceTranscriptSource={voiceTranscriptSource || ""}
@@ -2266,14 +2341,23 @@ function AppContent() {
 
       {/* Main Dashboard Container */}
       <div
-        className={`flex flex-col h-screen w-full font-mono overflow-hidden relative transition-all duration-700 ${
+        className={`flex flex-col font-mono overflow-hidden relative transition-all duration-700 ${
           showVoiceHud
             ? "opacity-0 pointer-events-none scale-95"
             : "opacity-100"
         }`}
-        style={{
+        style={window.electron ? {
+          width: '117.64vw',
+          height: '117.64vh',
+          transform: 'scale(0.85)',
+          transformOrigin: 'top left',
           borderColor: getThemeColors().hex,
-          backgroundColor: "transparent",
+          backgroundColor: "transparent"
+        } : {
+          width: '100vw',
+          height: '100vh',
+          borderColor: getThemeColors().hex,
+          backgroundColor: "transparent"
         }}
       >
         <SafeComponent componentName="Header">
@@ -2303,7 +2387,7 @@ function AppContent() {
             setVisionMonitoringActive={setVisionMonitoringActive}
             isWakeWordActive={isWakeWordActive}
             isLockdown={isLockdown}
-            connectionTier={connectionTier}
+            connectionTier={effectiveConnectionTier}
           />
         </SafeComponent>
 
@@ -2349,7 +2433,7 @@ function AppContent() {
                     setShowForexTerminal={setShowForexTerminal}
                     setShowOsintDossier={setShowOsintDossier}
                     setShowHackingTerminal={setShowHackingTerminal}
-                    connectionTier={connectionTier}
+                    connectionTier={effectiveConnectionTier}
                   />
                 </SafeComponent>
               </div>
@@ -2400,7 +2484,7 @@ function AppContent() {
                 setShowForexTerminal={setShowForexTerminal}
                 setShowOsintDossier={setShowOsintDossier}
                 setShowHackingTerminal={setShowHackingTerminal}
-                connectionTier={connectionTier}
+                connectionTier={effectiveConnectionTier}
               />
             </div>
           )}

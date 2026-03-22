@@ -1,5 +1,8 @@
 import React from "react";
-import { Home } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Home,
+} = LucideIcons as any;
 import { LucaSettings } from "../../services/settingsService";
 import { setHexAlpha } from "../../config/themeColors";
 

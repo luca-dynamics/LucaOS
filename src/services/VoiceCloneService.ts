@@ -41,7 +41,7 @@ class VoiceCloneService {
   /**
    * Record audio from microphone
    */
-  async recordVoice(durationSeconds: number = 5): Promise<Blob> {
+  async recordVoice(durationSeconds: number = 6): Promise<Blob> {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const mediaRecorder = new MediaRecorder(stream);
     const chunks: Blob[] = [];
@@ -82,8 +82,8 @@ class VoiceCloneService {
       audio.onloadedmetadata = resolve;
     });
 
-    if (audio.duration < 3 || audio.duration > 10) {
-      throw new Error("Audio must be between 3-10 seconds long.");
+    if (audio.duration < 2 || audio.duration > 30) {
+      throw new Error("Audio must be between 2-30 seconds long.");
     }
 
     return file;

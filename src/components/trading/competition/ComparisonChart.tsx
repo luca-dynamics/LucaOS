@@ -1,6 +1,6 @@
 import React from "react";
-import {
-  ResponsiveContainer,
+import * as LucideIcons from "lucide-react";
+import { ResponsiveContainer,
   ComposedChart,
   Line,
   Area,
@@ -9,9 +9,12 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ReferenceLine,
-} from "recharts";
-import { TrendingUp, TrendingDown, Zap } from "lucide-react";
+  ReferenceLine, } from "recharts";
+const {
+  TrendingUp,
+  TrendingDown,
+  Zap,
+} = LucideIcons as any;
 
 // Types matching the props expected by the page
 interface TraderData {

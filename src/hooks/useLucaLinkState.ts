@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { SmartDevice } from "../types";
 
 export function useLucaLinkState() {
@@ -9,7 +9,7 @@ export function useLucaLinkState() {
   const [desktopTarget, setDesktopTarget] = useState("LOCALHOST");
   const [showLucaLinkModal, setShowLucaLinkModal] = useState(false);
 
-  return {
+  return useMemo(() => ({
     devices,
     setDevices,
     showRemoteModal,
@@ -22,5 +22,5 @@ export function useLucaLinkState() {
     setDesktopTarget,
     showLucaLinkModal,
     setShowLucaLinkModal,
-  };
+  }), [devices, showRemoteModal, remoteCode, showDesktopStream, desktopTarget, showLucaLinkModal]);
 }

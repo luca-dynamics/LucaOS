@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Volume2, Radio, Zap, Eye, ShieldAlert, Terminal } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Volume2,
+  Radio,
+  Zap,
+  Eye,
+  ShieldAlert,
+  Terminal,
+} = LucideIcons as any;
 import { SettingsModal } from "./SettingsModal";
 
 import { getAllTools, PersonaType } from "../services/lucaService";
@@ -37,7 +45,6 @@ interface VoiceHudProps {
   isActive: boolean;
   isVisible?: boolean; // New prop for conditional visibility (Dictation mode)
   onClose: () => void;
-  amplitude: number; // Standardized: 0 to 255
   transcript: string;
   transcriptSource: "user" | "model";
   isVadActive: boolean;
@@ -69,27 +76,29 @@ interface VoiceHudProps {
   hideDebugPanels?: boolean; // Hide ACTIVE PROTOCOLS and TELEMETRY panels
   hideControls?: boolean; // Hide settings and camera buttons (for onboarding)
   transparentBackground?: boolean; // Allow underlying backgrounds to show through
+  amplitude?: number; // Real-time audio amplitude
 }
 
 const VoiceHud: React.FC<VoiceHudProps> = ({
   transcript,
   isActive,
-  isVisible = true, // Default to true
+  isVisible = true,
   onClose,
-  amplitude,
   transcriptSource,
   isVadActive,
   persona,
-  modelName = "GEMINI 2.0 FLASH", // Default
+  modelName = "GEMINI 2.0 FLASH",
   theme,
   statusMessage,
   isVisionActive = false,
-  hideDebugPanels = false, // Default to false (show panels in main app)
-  hideControls = false, // Default to false (show controls in main app)
-  transparentBackground = false, // New prop to allow underlying backgrounds to show through
-  visualData, // Add visualData to props
+  hideDebugPanels = false,
+  hideControls = false,
+  transparentBackground = false,
+  visualData,
   elevationState,
+  amplitude = 0,
 }) => {
+  const [localAmplitude, setLocalAmplitude] = useState(amplitude);
   const videoRef = useRef<HTMLVideoElement>(null);
   const captureCanvasRef = useRef<HTMLCanvasElement>(null);
   const [dynamicProtocols, setDynamicProtocols] = useState<string[]>([]);
@@ -136,6 +145,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       dB?: number;
       dominantFrequency?: number;
     }) => {
+      if (data.amplitude !== undefined) setLocalAmplitude(data.amplitude);
       if (data.dB !== undefined) setRealDB(data.dB);
       if (data.dominantFrequency !== undefined)
         setDominantFrequency(data.dominantFrequency);
@@ -237,7 +247,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       </div>
       <canvas ref={captureCanvasRef} className="hidden" />
       <VoiceVisualizer
-        amplitude={amplitude}
+        amplitude={localAmplitude}
         isVadActive={isVadActive}
         transcriptSource={transcriptSource}
         persona={persona}
@@ -246,7 +256,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       <VoiceStatusOrb
         isVadActive={isVadActive}
         transcriptSource={transcriptSource}
-        amplitude={amplitude}
+        amplitude={localAmplitude}
         persona={persona}
         canvasThemeColor={
           (
@@ -595,10 +605,10 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
           <Volume2
             size={10}
-            className={`md:w-3 md:h-3 ${amplitude > 0.5 ? "text-white" : ""}`}
+            className={`md:w-3 md:h-3 ${localAmplitude > 0.5 ? "text-white" : ""}`}
           />
           VOL:{" "}
-          {((amplitude > 1 ? amplitude / 255 : amplitude) * 100).toFixed(0)}%
+          {((localAmplitude > 1 ? localAmplitude / 255 : localAmplitude) * 100).toFixed(0)}%
         </div>
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
           <Radio

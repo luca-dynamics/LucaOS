@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   ChevronDown,
   ChevronUp,
   TrendingUp,
@@ -9,7 +10,7 @@ import {
   X,
   Target,
   Bot,
-} from "lucide-react";
+} = LucideIcons as any;
 import {
   DebateMessage,
   DebatePersonality,

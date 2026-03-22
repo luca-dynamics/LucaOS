@@ -1,5 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Send } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Send,
+} = LucideIcons as any;
 import { ConversationMode } from "./ModeSelect";
 import VoiceHud from "../VoiceHud";
 import { liveService } from "../../services/liveService";

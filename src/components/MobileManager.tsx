@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { MessageSquare, Wifi } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  MessageSquare,
+  Wifi,
+} = LucideIcons as any;
 import { SmartDevice } from "../types";
 import { apiUrl } from "../config/api";
 

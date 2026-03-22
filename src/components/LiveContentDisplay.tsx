@@ -1,6 +1,15 @@
 
 import React from 'react';
-import { X, Globe, Youtube, ExternalLink, Play, Newspaper, Activity } from 'lucide-react';
+import * as LucideIcons from "lucide-react";
+const {
+  X,
+  Globe,
+  Youtube,
+  ExternalLink,
+  Play,
+  Newspaper,
+  Activity,
+} = LucideIcons as any;
 
 interface Props {
   content: any; // groundingMetadata

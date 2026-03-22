@@ -1,5 +1,13 @@
 import React from "react";
-import { Image, FileText, Music, Video, Folder, Search } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Image,
+  FileText,
+  Music,
+  Video,
+  Folder,
+  Search,
+} = LucideIcons as any;
 
 interface FileItem {
   name: string;

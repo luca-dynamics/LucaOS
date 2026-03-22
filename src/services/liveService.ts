@@ -45,6 +45,7 @@ class LucaLiveService {
   private isConnecting = false; // New guard for race conditions
   private currentConfig: LiveConfig | null = null; // Store config for restarts
   private connectionStartTime: number = 0; // Track connection duration
+  private lastUserSpeechEndTime: number = 0; // NEW: Track latency for telemetry
 
   // --- ADVANCED VAD SETTINGS (TUNED VIA LIVEKIT PATTERNS) ---
   private noiseFloor = 0.002;
@@ -643,6 +644,8 @@ class LucaLiveService {
           if (this.isSpeaking) {
             this.isSpeaking = false;
             config.onVadChange?.(false);
+            this.lastUserSpeechEndTime = Date.now(); // NEW: Start timing Brain Latency (TTFT)
+            console.log("[LIVE] User stopped speaking, starting latent timer.");
 
             // Explicitly signal end of speech to Gemini for faster turn-taking
             if (this.isConnected && this.activeSession) {
@@ -717,6 +720,14 @@ class LucaLiveService {
       // 1. Process Audio Data
       for (const part of modelTurn.parts) {
         if (part.inlineData?.data) {
+          if (this.lastUserSpeechEndTime > 0) {
+            const ttft = Date.now() - this.lastUserSpeechEndTime;
+            eventBus.emit("telemetry-update", {
+              brain: { ttft, path: "Gemini Live (Native)" },
+              stt: { cloud: ttft, fastest: "cloud" }, // In Live mode, STT is part of the loop
+            });
+            this.lastUserSpeechEndTime = 0; // Reset
+          }
           console.log(
             `[LIVE] Received Audio Data (${part.inlineData.data.length} chars b64)`,
           );

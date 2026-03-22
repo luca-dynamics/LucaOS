@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   Save,
   RefreshCw,
@@ -13,7 +14,7 @@ import {
   Wifi,
   Plug,
   Share2,
-} from "lucide-react";
+} = LucideIcons as any;
 import { settingsService, LucaSettings } from "../services/settingsService";
 import { useMobile } from "../hooks/useMobile";
 import { memoryService } from "../services/memoryService";

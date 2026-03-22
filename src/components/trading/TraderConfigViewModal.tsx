@@ -1,5 +1,6 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   Bot,
   Activity,
@@ -8,7 +9,7 @@ import {
   Zap,
   Settings,
   BrainCircuit,
-} from "lucide-react";
+} = LucideIcons as any;
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TraderConfigViewModalProps {

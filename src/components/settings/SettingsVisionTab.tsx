@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-import { Eye, Sparkles } from "lucide-react";
+const {
+  Eye,
+  Sparkles,
+} = LucideIcons as any;
 import { LucaSettings } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 
@@ -97,9 +101,6 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
               className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
             >
               <optgroup label="Cloud Vision (Managed)">
-                <option value="gemini-3-flash-preview">
-                  Gemini 3 Flash (RECOMMENDED)
-                </option>
                 <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
               </optgroup>
               {localVisionModels.length > 0 && (

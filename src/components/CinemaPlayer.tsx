@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Play,
   Pause,
   Volume2,
@@ -7,20 +8,9 @@ import {
   SkipForward,
   SkipBack,
   Monitor,
-} from "lucide-react";
+} = LucideIcons as any;
 
-// Electron webview type declaration
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace JSX {
-    interface IntrinsicElements {
-      webview: React.DetailedHTMLProps<
-        React.WebViewHTMLAttributes<HTMLWebViewElement>,
-        HTMLWebViewElement
-      >;
-    }
-  }
-}
+// Electron webview type declaration is now in src/types/jsx.d.ts
 
 interface CinemaPlayerProps {
   videoUrl?: string;

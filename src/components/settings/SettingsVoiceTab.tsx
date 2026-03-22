@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-import {
+const {
   Mic,
   Upload,
   Play,
@@ -16,9 +17,11 @@ import {
   Activity,
   Cpu,
   BarChart3,
-} from "lucide-react";
+  Pause,
+} = LucideIcons as any;
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
+import { eventBus } from "../../services/eventBus";
 import {
   voiceCloneService,
   ClonedVoice,
@@ -41,40 +44,45 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
 
+  const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+ 
   // Telemetry metrics
   const [metrics, setMetrics] = useState<{
     stt: { local: number; cloud: number; fastest: "local" | "cloud" };
     brain: { ttft: number; path: string };
     tts: { buffer: number; source: "local" | "neural" };
   }>({
-    stt: { local: 42, cloud: 310, fastest: "local" },
-    brain: { ttft: 115, path: "Gemini 3" },
-    tts: { buffer: 92, source: "neural" },
+    stt: { local: 0, cloud: 0, fastest: "local" },
+    brain: { ttft: 0, path: "Awaiting Inference" },
+    tts: { buffer: 0, source: "neural" },
   });
 
-  // Simulated telemetry spikes for cinematic feel
+  // REAL-TIME TELEMETRY: Listen for actual latency/buffer signals from services
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(() => ({
+    const handleTelemetry = (data: any) => {
+      setMetrics((prev) => ({
         stt: {
-          local: 35 + Math.random() * 20,
-          cloud: 280 + Math.random() * 150,
-          fastest: "local",
+          ...prev.stt,
+          ...(data.stt || {}),
         },
         brain: {
-          ttft: 100 + Math.random() * 50,
-          path: settings.brain?.model || "Gemini 1.5 Pro",
+          ...prev.brain,
+          ...(data.brain || {}),
         },
         tts: {
-          buffer: 80 + Math.random() * 20,
-          source: (settings.voice.provider === "local-luca"
-            ? "local"
-            : "neural") as "local" | "neural",
+          ...prev.tts,
+          ...(data.tts || {}),
+          source: (settings.voice.provider === "local-luca" ? "local" : "neural") as "local" | "neural",
         },
       }));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [settings.brain?.model, settings.voice.provider]);
+    };
+
+    eventBus.on("telemetry-update", handleTelemetry);
+    return () => {
+      eventBus.off("telemetry-update", handleTelemetry);
+    };
+  }, [settings.voice.provider]);
 
   useEffect(() => {
     const loadLocalModels = async () => {
@@ -122,11 +130,10 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
       setIsRecording(true);
       setRecordingTime(0);
       const timer = setInterval(() => setRecordingTime((v) => v + 0.1), 100);
-      const audioBlob = await voiceCloneService.recordVoice(5);
+      const audioBlob = await voiceCloneService.recordVoice(6);
       clearInterval(timer);
       const voiceName = `Clone ${new Date().toLocaleTimeString()}`;
-      const voiceId = await voiceCloneService.saveVoice(audioBlob, voiceName);
-      onUpdate("voice", "activeClonedVoiceId", voiceId);
+      await voiceCloneService.saveVoice(audioBlob, voiceName);
       voiceCloneService.getVoices().then(setClonedVoices);
       setIsRecording(false);
     } catch (e) {
@@ -135,42 +142,57 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
     }
   };
 
-  const applyPreset = async (type: "performance" | "balanced" | "privacy") => {
+  const applyPreset = async (type: "performance" | "speedster" | "balanced" | "privacy") => {
     if (type === "performance") {
       onUpdate("voice", "sttModel", "cloud-gemini");
       onUpdate("voice", "provider", "google");
       onUpdate("voice", "voiceId", "en-US-Journey-F");
+    } else if (type === "speedster") {
+      const bestLocalStt = await modelManager.getOptimalModel("stt", "efficiency");
+      if (bestLocalStt) onUpdate("voice", "sttModel", bestLocalStt.id);
+      
+      onUpdate("voice", "provider", "openai");
+      onUpdate("voice", "voiceId", "alloy");
     } else if (type === "balanced") {
       onUpdate("voice", "sttModel", "cloud-gemini");
       onUpdate("voice", "provider", "local-luca");
 
-      const bestLocalTts = await modelManager.getOptimalModel(
-        "tts",
-        "accuracy",
-      );
-      if (bestLocalTts) onUpdate("voice", "voiceId", bestLocalTts.id);
-    } else if (type === "privacy") {
-      const bestLocalStt = await modelManager.getOptimalModel(
-        "stt",
-        "accuracy",
-      );
-      if (bestLocalStt) onUpdate("voice", "sttModel", bestLocalStt.id);
-
-      onUpdate("voice", "provider", "local-luca");
-
-      // Prefer Accuracy (Kokoro) over Efficiency (Piper) for Privacy Mode because Piper is flaky
-      const bestLocalTts = await modelManager.getOptimalModel(
-        "tts",
-        "accuracy",
-      );
-
+      const bestLocalTts = await modelManager.getOptimalModel("tts", "accuracy");
       if (bestLocalTts) {
-        // Fix: Map generic Model IDs to specific Voice IDs that Cortex accepts
         if (bestLocalTts.id === "kokoro-82m") {
           onUpdate("voice", "voiceId", "kokoro-heart");
         } else {
           onUpdate("voice", "voiceId", bestLocalTts.id);
         }
+      }
+    } else if (type === "privacy") {
+      const bestLocalStt = await modelManager.getOptimalModel("stt", "accuracy");
+      if (bestLocalStt) onUpdate("voice", "sttModel", bestLocalStt.id);
+
+      onUpdate("voice", "provider", "local-luca");
+
+      const bestLocalTts = await modelManager.getOptimalModel("tts", "accuracy");
+      if (bestLocalTts) {
+        if (bestLocalTts.id === "kokoro-82m") {
+          onUpdate("voice", "voiceId", "kokoro-heart");
+        } else {
+          onUpdate("voice", "voiceId", bestLocalTts.id);
+        }
+      }
+    }
+  };
+
+  const handleActivateVoice = (voice: ClonedVoice) => {
+    onUpdate("voice", "activeClonedVoiceId", voice.id);
+    onUpdate("voice", "clonedVoiceName", voice.name);
+    
+    // Smart-Link: Voice cloning requires Gemini Native Audio to work.
+    // Automatically switch the provider if it's not already Gemini.
+    if (settings.voice.provider !== "gemini-genai") {
+      onUpdate("voice", "provider", "gemini-genai");
+      // Also ensure we are on a model that supports native audio loop
+      if (!settings.brain.model.includes("flash")) {
+        onUpdate("brain", "model", "gemini-2.0-flash-exp");
       }
     }
   };
@@ -200,7 +222,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             Strategic Performance Presets
           </h4>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {[
             {
               id: "performance",
@@ -209,10 +231,16 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               desc: "Cloud speed, elite quality",
             },
             {
+              id: "speedster",
+              label: "Hybrid Speedster",
+              icon: Sparkles,
+              desc: "Local Ear, Cloud Voice",
+            },
+            {
               id: "balanced",
               label: "Balanced",
               icon: Scale,
-              desc: "Fast STT, high-fi local voice",
+              desc: "Fast STT, local-fi voice",
             },
             {
               id: "privacy",
@@ -220,55 +248,48 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               icon: Shield,
               desc: "100% Offline, ultra-fast",
             },
-          ].map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => applyPreset(preset.id as any)}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/5 hover:bg-black/10" : "border-white/5 bg-white/5 hover:bg-white/10"} transition-all text-center group`}
-              style={{
-                borderColor:
-                  (preset.id === "performance" &&
-                    settings.voice.provider === "google") ||
-                  (preset.id === "balanced" &&
-                    settings.voice.provider === "local-luca" &&
-                    settings.voice.sttModel === "cloud-gemini") ||
-                  (preset.id === "privacy" &&
-                    settings.voice.provider === "local-luca" &&
-                    settings.voice.sttModel !== "cloud-gemini")
+          ].map((preset) => {
+            const isActive = 
+              (preset.id === "performance" && settings.voice.provider === "google") ||
+              (preset.id === "speedster" && settings.voice.provider === "openai" && settingsService.isModelLocal(settings.voice.sttModel)) ||
+              (preset.id === "balanced" && settings.voice.provider === "local-luca" && !settingsService.isModelLocal(settings.voice.sttModel)) ||
+              (preset.id === "privacy" && settings.voice.provider === "local-luca" && settingsService.isModelLocal(settings.voice.sttModel));
+
+            return (
+              <button
+                key={preset.id}
+                onClick={() => applyPreset(preset.id as any)}
+                className={`flex flex-col items-center justify-center p-2 rounded-xl border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/5 hover:bg-black/10" : "border-white/5 bg-white/5 hover:bg-white/10"} transition-all text-center group`}
+                style={{
+                  borderColor: isActive
                     ? `${theme.hex}aa`
                     : theme.themeName?.toLowerCase() === "lucagent"
                       ? "transparent"
                       : "rgba(255,255,255,0.05)",
-              }}
-            >
-              <preset.icon
-                className="w-4 h-4 mb-2 group-hover:scale-110 transition-transform"
-                style={{
-                  color:
-                    (preset.id === "performance" &&
-                      settings.voice.provider === "google") ||
-                    (preset.id === "balanced" &&
-                      settings.voice.provider === "local-luca" &&
-                      settings.voice.sttModel === "cloud-gemini") ||
-                    (preset.id === "privacy" &&
-                      settings.voice.provider === "local-luca" &&
-                      settings.voice.sttModel !== "cloud-gemini")
+                  background: isActive ? `${theme.hex}11` : undefined
+                }}
+              >
+                <preset.icon
+                  className="w-3.5 h-3.5 mb-1.5 group-hover:scale-110 transition-transform"
+                  style={{
+                    color: isActive
                       ? theme.hex
                       : theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
-                }}
-              />
-              <span
-                className={`text-[9px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-gray-300"}`}
-              >
-                {preset.label}
-              </span>
-              <span
-                className={`text-[7px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-500"} uppercase mt-1`}
-              >
-                {preset.desc}
-              </span>
-            </button>
-          ))}
+                  }}
+                />
+                <span
+                  className={`text-[9px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-gray-200"}`}
+                >
+                  {preset.label}
+                </span>
+                <span
+                  className={`text-[7px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-500"} uppercase mt-0.5`}
+                >
+                  {preset.desc}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </motion.div>
 
@@ -357,13 +378,25 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             </div>
             <select
               value={settings.voice.sttModel || "cloud-gemini"}
-              onChange={(e) => onUpdate("voice", "sttModel", e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                onUpdate("voice", "sttModel", val);
+                // Smart Linking: Default to Gemini Native TTS if Gemini STT is selected
+                if (val.includes("gemini") || val === "cloud-gemini") {
+                  onUpdate("voice", "provider", "gemini-genai");
+                }
+              }}
               className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
             >
-              <optgroup label="Cloud Providers">
+              <optgroup label="Cloud Providers (STT)">
                 <option value="cloud-gemini">
-                  Gemini 3 Flash (RECOMMENDED)
+                  Gemini 2.0 Flash (Native Audio)
                 </option>
+                <option value="gemini-live-2.5-flash-preview-native-audio-09-2025">
+                  Multimodal Live 2.5 (Native Audio Loop)
+                </option>
+                <option value="whisper-1">OpenAI Whisper-1</option>
+                <option value="deepgram-nova-2">Deepgram Nova-2</option>
               </optgroup>
               {localSTTModels.length > 0 && (
                 <optgroup label="Local Models (Offline STT)">
@@ -409,44 +442,30 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 Synthesis Engine
               </div>
               <select
-                value={settings.voice.provider}
+                value={settings.voice.provider || "gemini-genai"}
                 onChange={(e) => onUpdate("voice", "provider", e.target.value)}
-                className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none hover:border-black/20 transition-all font-mono`}
+                disabled={settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025"}
+                className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none hover:border-black/20 transition-all font-mono ${(settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025") ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                <option value="google">Google Cloud</option>
-                <option value="gemini-genai">Gemini GenAI</option>
+                <option value="gemini-genai">Gemini Native Audio</option>
+                <option value="google">Google Cloud Neural</option>
+                <option value="openai">OpenAI TTS</option>
+                <option value="deepgram">Deepgram Aura</option>
                 <option value="local-luca">Local Offline</option>
               </select>
+              {(settings.voice.sttModel?.includes("gemini") || settings.voice.sttModel === "cloud-gemini") && settings.voice.provider === "gemini-genai" && (
+                <p className="text-[7px] text-blue-400 font-bold uppercase mt-1 animate-pulse flex items-center gap-1">
+                  <Waves className="w-2 h-2" />
+                  {settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" 
+                    ? "Direct Multimodal Live Loop Active" 
+                    : "Linked to Native Multimodal Persona"}
+                </p>
+              )}
             </div>
 
-            {/* Google Cloud API Key (Only if provider is google) */}
+            {/* Google Cloud Managed Mode (Enterprise Only) */}
             {settings.voice.provider === "google" && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="space-y-2 pt-2 border-t border-white/5"
-              >
-                <div className="flex items-center gap-2">
-                  <img src="/icons/brands/gemini-color.svg" className="w-[14px] h-[14px] object-contain" alt="Google Cloud" />
-                  <span className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-300"}`}>
-                    Google Cloud API Key
-                  </span>
-                </div>
-                <input
-                  type="password"
-                  placeholder="Paste your Google Cloud project API Key..."
-                  value={settings.voice.googleApiKey}
-                  onChange={(e) => onUpdate("voice", "googleApiKey", e.target.value)}
-                  className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none font-mono`}
-                />
-              </motion.div>
-            )}
-
-            {/* Google Cloud Status Note (Optional) */}
-            {settings.voice.provider === "google" && (
-              <p className="text-[8px] text-gray-600 uppercase tracking-tighter ml-1">
-                Managed high-fidelity neural voices provided by Google Cloud.
-              </p>
+              <div className="pt-2 border-t border-white/5" />
             )}
 
             {/* Voice / Identity Selection */}
@@ -499,13 +518,32 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                       <option value="en-US-Neural2-A">
                         Neural2 - Female (A)
                       </option>
-                      <option value="en-US-Neural2-D">
-                        Neural2 - Male (D)
-                      </option>
                     </optgroup>
-                    <optgroup label="Google Cloud Standard Voices">
-                      <option value="en-US-Wavenet-F">Wavenet - Female</option>
-                      <option value="en-US-Wavenet-B">Wavenet - Male</option>
+                  </>
+                ) : settings.voice.provider === "openai" ? (
+                  <>
+                    <optgroup label="OpenAI (Alloy Series)">
+                      <option value="alloy">Alloy (Balanced)</option>
+                      <option value="shimmer">Shimmer (Clear)</option>
+                      <option value="nova">Nova (Energetic)</option>
+                    </optgroup>
+                    <optgroup label="OpenAI (Onyx Series)">
+                      <option value="echo">Echo (Warm)</option>
+                      <option value="onyx">Onyx (Deep)</option>
+                      <option value="fable">Fable (Narrative)</option>
+                    </optgroup>
+                  </>
+                ) : settings.voice.provider === "deepgram" ? (
+                  <>
+                    <optgroup label="Deepgram Aura (Female)">
+                      <option value="aura-asteria-en">Asteria</option>
+                      <option value="aura-athena-en">Athena</option>
+                      <option value="aura-stella-en">Stella</option>
+                    </optgroup>
+                    <optgroup label="Deepgram Aura (Male)">
+                      <option value="aura-arcas-en">Arcas</option>
+                      <option value="aura-orion-en">Orion</option>
+                      <option value="aura-zeus-en">Zeus</option>
                     </optgroup>
                   </>
                 ) : (
@@ -556,14 +594,22 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2 mt-2">
-            {["Slow", "Normal", "Fast", "Dramatic"].map((p) => (
+            {[
+              { id: "Slow", rate: 0.8 },
+              { id: "Normal", rate: 1.0 },
+              { id: "Fast", rate: 1.25 },
+              { id: "Dramatic", rate: 0.9 },
+            ].map((p) => (
               <button
-                key={p}
-                onClick={() => onUpdate("voice", "pacing", p)}
+                key={p.id}
+                onClick={() => {
+                  onUpdate("voice", "pacing", p.id as any);
+                  onUpdate("voice", "rate", p.rate);
+                }}
                 className={`py-1.5 rounded border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/[0.03] hover:bg-black/5" : "border-white/5 bg-white/5 hover:bg-white/10"} text-[8px] font-mono transition-all`}
                 style={{
                   color:
-                    settings.voice.pacing === p
+                    settings.voice.pacing === p.id
                       ? theme.themeName?.toLowerCase() === "lucagent"
                         ? "#000"
                         : theme.hex
@@ -571,12 +617,12 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                         ? "#64748b"
                         : "#6b7280",
                   borderColor:
-                    settings.voice.pacing === p
+                    settings.voice.pacing === p.id
                       ? `${theme.hex}66`
                       : "transparent",
                 }}
               >
-                {p.toUpperCase()}
+                {p.id.toUpperCase()}
               </button>
             ))}
           </div>
@@ -786,50 +832,94 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             </div>
             <p className="text-[8px] text-gray-600 font-mono leading-relaxed">
               Record or upload clear audio. Luca will clone this voice for all
-              vocal output.
+              vocal output (Requires Gemini Native Audio). 
+              <span className="text-blue-500/80 ml-1">Range: 2-30s. Activating will auto-switch engine.</span>
             </p>
           </div>
 
           <div className="space-y-2 overflow-y-auto max-h-[80px] no-scrollbar">
-            {clonedVoices.map((v) => (
-              <div
-                key={v.id}
-                className={`flex items-center justify-between p-2 rounded ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10" : "bg-black/20 border-white/5"}`}
-              >
-                <span
-                  className={`text-[9px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-300"} truncate w-24`}
+            {clonedVoices.map((v) => {
+              const isActive = settings.voice.activeClonedVoiceId === v.id;
+              return (
+                <div
+                  key={v.id}
+                  className={`flex items-center justify-between p-2 rounded border ${theme.themeName?.toLowerCase() === "lucagent" ? (isActive ? "bg-black/10 border-black/20" : "bg-black/5 border-black/10") : (isActive ? "bg-white/10 border-white/20" : "bg-black/20 border-white/5")}`}
                 >
-                  {v.name}
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() =>
-                      voiceCloneService.getVoice(v.id).then((voice) => {
-                        const audio = new Audio(
-                          URL.createObjectURL(voice!.audioBlob),
-                        );
-                        audio.play();
-                      })
-                    }
-                    className="p-1 hover:text-green-500 transition-colors"
-                  >
-                    <Play className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      voiceCloneService
-                        .deleteVoice(v.id)
-                        .then(() =>
-                          voiceCloneService.getVoices().then(setClonedVoices),
-                        )
-                    }
-                    className="p-1 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+                   <div className="flex items-center gap-2 truncate flex-1">
+                     {isActive ? (
+                       <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-green-500/20 text-[6px] font-black text-green-400 border border-green-500/30 animate-pulse">
+                         <Activity className="w-2 h-2" />
+                         WEARING
+                       </span>
+                     ) : (
+                       <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                     )}
+                     <span
+                       className={`text-[9px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : (isActive ? "text-white" : "text-gray-400")} truncate`}
+                     >
+                       {v.name}
+                     </span>
+                   </div>
+                   <div className="flex gap-1.5 items-center">
+                     {!isActive && (
+                       <button
+                         onClick={() => handleActivateVoice(v)}
+                         className="px-2 py-0.5 hover:bg-white/5 rounded transition-all text-[7px] font-bold uppercase tracking-tighter"
+                         style={{ color: theme.hex }}
+                       >
+                         Use
+                       </button>
+                     )}
+                     <button
+                       onClick={() => {
+                         if (playingVoiceId === v.id && currentAudio) {
+                           currentAudio.pause();
+                           setPlayingVoiceId(null);
+                           setCurrentAudio(null);
+                           return;
+                         }
+
+                         // Stop current if any
+                         if (currentAudio) {
+                           currentAudio.pause();
+                         }
+
+                         voiceCloneService.getVoice(v.id).then((voice) => {
+                           if (!voice) return;
+                           const audio = new Audio(URL.createObjectURL(voice.audioBlob));
+                           audio.onended = () => {
+                             setPlayingVoiceId(null);
+                             setCurrentAudio(null);
+                           };
+                           setPlayingVoiceId(v.id);
+                           setCurrentAudio(audio);
+                           audio.play();
+                         });
+                       }}
+                       className={`p-1.5 rounded-md transition-all ${playingVoiceId === v.id ? "bg-white/10 text-white" : "hover:text-green-500 text-gray-500"}`}
+                     >
+                       {playingVoiceId === v.id ? (
+                         <Pause className="w-3 h-3" />
+                       ) : (
+                         <Play className="w-3 h-3" />
+                       )}
+                     </button>
+                     <button
+                       onClick={() =>
+                         voiceCloneService
+                           .deleteVoice(v.id)
+                           .then(() =>
+                             voiceCloneService.getVoices().then(setClonedVoices),
+                           )
+                       }
+                       className="p-1.5 hover:text-red-500 transition-colors text-gray-500"
+                     >
+                       <Trash2 className="w-3 h-3" />
+                     </button>
+                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </motion.div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Wifi,
   WifiOff,
   Globe,
@@ -10,7 +11,7 @@ import {
   Lock,
   Unlock,
   Camera,
-} from "lucide-react";
+} = LucideIcons as any;
 import { LucaSettings } from "../../services/settingsService";
 import { apiUrl, WS_PORT, cortexUrl } from "../../config/api";
 import { useMobile } from "../../hooks/useMobile";
@@ -24,7 +25,7 @@ const GuestAccessSection: React.FC<{
   theme: {
     primary: string;
     hex: string;
-    themeName: string;
+    themeName?: string;
     isLight?: boolean;
   };
   connected: boolean;

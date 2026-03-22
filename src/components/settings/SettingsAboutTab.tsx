@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-import {
+const {
   Cpu,
   Mic,
   Database,
@@ -9,7 +10,7 @@ import {
   ShieldCheck,
   Zap,
   ExternalLink,
-} from "lucide-react";
+} = LucideIcons as any;
 import pkg from "../../../package.json";
 import { LucaSettings } from "../../services/settingsService";
 import { memoryService } from "../../services/memoryService";

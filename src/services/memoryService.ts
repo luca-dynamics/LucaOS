@@ -826,7 +826,7 @@ export const memoryService = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text,
-          model: settings?.memoryModel || "gemini-pro-latest",
+          model: settings?.model || BRAIN_CONFIG.defaults.brain,
         }),
         signal: AbortSignal.timeout(30000), // Increased to 30s
       });
@@ -873,7 +873,7 @@ export const memoryService = {
         body: JSON.stringify({
           query,
           mode: "hybrid",
-          model: settings?.memoryModel || "gemini-pro-latest",
+          model: settings?.model || BRAIN_CONFIG.defaults.brain,
         }),
         signal: AbortSignal.timeout(30000), // Increased to 30s
       });

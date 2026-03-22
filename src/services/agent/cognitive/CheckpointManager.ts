@@ -1,40 +1,78 @@
-/**
- * Phase 10 - Checkpoint Manager (Backend Version)
- * Runs in Electron main process, accessed via IPC
- */
 
-import Database from "better-sqlite3";
-import * as path from "path";
-import * as fs from "fs";
-import { app } from "electron";
+// Runs in Electron main process, accessed via IPC, or in Node server
+
 import { LucaLinkSync } from "./LucaLinkSync";
 import type { Checkpoint, CheckpointQuery } from "./types";
 
+// Environment detection
+const isElectron = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
+
 export class CheckpointManager {
-  private db: Database.Database;
+  private db: any;
   private memoryCache: Map<string, Checkpoint>;
   private lucaLink: LucaLinkSync;
+  private initialized: boolean = false;
 
   constructor() {
-    // Use Electron's userData path
-    const dbPath = path.join(
-      app.getPath("userData"),
-      "agent",
-      "checkpoints.db"
-    );
-
-    // Ensure directory exists
-    const dir = path.dirname(dbPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    this.db = new Database(dbPath);
     this.memoryCache = new Map();
     this.lucaLink = new LucaLinkSync();
-    this.initSchema();
+    
+    // Initializing the DB asynchronously in the background or on-demand
+    this.ensureInitialized();
+  }
 
-    console.log("[CheckpointManager] Initialized at:", dbPath);
+  private async ensureInitialized(): Promise<void> {
+    if (this.initialized) return;
+
+    try {
+      const path = (await import("path")).default;
+      const fs = (await import("fs")).default;
+
+      let dbPath: string;
+      
+      if (isElectron) {
+        const { app } = await import("electron");
+        dbPath = path.join(app.getPath("userData"), "agent", "checkpoints.db");
+      } else {
+        // Fallback to cortex data dir for Node server
+        const constants = await import("../../../../cortex/server/config/constants.js");
+        const DATA_DIR = constants.DATA_DIR || path.join(process.cwd(), '.luca', 'data');
+        dbPath = path.join(DATA_DIR, "agent", "checkpoints.db");
+      }
+
+      // Ensure directory exists
+      const dir = path.dirname(dbPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      try {
+        const Database = (await import("better-sqlite3")).default;
+        this.db = new Database(dbPath);
+        this.initSchema();
+        console.log("[CheckpointManager] Initialized at:", dbPath);
+      } catch (dbErr: any) {
+        console.warn("[CheckpointManager] Native better-sqlite3 failed, using mock:", dbErr.message);
+        this.setupMock();
+      }
+    } catch (err: any) {
+      console.error("[CheckpointManager] Initialization error:", err);
+      this.setupMock();
+    }
+    
+    this.initialized = true;
+  }
+
+  private setupMock(): void {
+    this.db = {
+      exec: () => {},
+      prepare: () => ({
+        run: () => ({ changes: 0, lastInsertRowid: 0 }),
+        get: () => null,
+        all: () => []
+      }),
+      close: () => {}
+    };
   }
 
   /**

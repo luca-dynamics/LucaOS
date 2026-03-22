@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   Check,
   AlertCircle,
@@ -7,7 +8,7 @@ import {
   Shield,
   Globe,
   ChevronRight,
-} from "lucide-react";
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 
 interface ForexBroker {

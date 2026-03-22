@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Plug,
   Plus,
   Trash2,
@@ -12,7 +13,7 @@ import {
   ChevronUp,
   Wrench,
   Settings,
-} from "lucide-react";
+} = LucideIcons as any;
 import { LucaSettings } from "../../services/settingsService";
 import { apiUrl } from "../../config/api";
 import { setHexAlpha } from "../../config/themeColors";

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Plug,
   Copy,
   Check,
@@ -8,7 +9,7 @@ import {
   Shield,
   Activity,
   Settings,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface SettingsConnectivityTabProps {
   theme: {

@@ -124,3 +124,47 @@ export const startDebateTool: FunctionDeclaration = {
     required: ["symbol"],
   },
 };
+export const getTradingHistoryTool: FunctionDeclaration = {
+  name: "getTradingHistory",
+  description: "View the 'Git-like' audit history of AI trading actions, debates, and executions.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      limit: {
+        type: Type.NUMBER,
+        description: "Number of recent commits to retrieve (default: 10).",
+      },
+    },
+  },
+};
+
+export const listProtocolSkillsTool: FunctionDeclaration = {
+  name: "listProtocolSkills",
+  description: "List all official protocol skill suites (Jupiter, AgentKit, etc.) and their available actions (swap, dca, stake, etc.).",
+  parameters: { type: Type.OBJECT, properties: {} },
+};
+
+export const executeProtocolSkillTool: FunctionDeclaration = {
+  name: "executeProtocolSkill",
+  description: "Execute a specific action within an official protocol suite (e.g. swap, lend, stake). Requires protocol path and arguments.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      path: { type: Type.STRING, description: "The skill path (e.g. 'jupiter/swap' or 'agentkit/supply')" },
+      args: { type: Type.OBJECT, description: "Action arguments (symbols, amounts, etc.)" }
+    },
+    required: ["path", "args"]
+  }
+};
+
+export const registerDroppedSkillTool: FunctionDeclaration = {
+  name: "registerDroppedSkill",
+  description: "Register a new skill or protocol suite from an uploaded file or folder path. Automagically detects the format and layout.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      path: { type: Type.STRING, description: "The absolute path of the uploaded file or folder to register as a skill." }
+    },
+    required: ["path"]
+  }
+};

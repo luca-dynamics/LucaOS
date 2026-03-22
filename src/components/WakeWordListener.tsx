@@ -1,7 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import * as tf from "@tensorflow/tfjs";
 import * as speechCommands from "@tensorflow-models/speech-commands";
-import { Loader2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Loader2,
+} = LucideIcons as any;
 
 interface WakeWordListenerProps {
   onWake: () => void;

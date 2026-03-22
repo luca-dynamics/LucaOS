@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Wifi,
   Bluetooth,
   Radio,
@@ -11,7 +12,9 @@ import {
   Plus,
   Eye,
   EyeOff,
-} from "lucide-react";
+  AlertTriangle,
+  CheckCircle2,
+} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 import { getGlassStyle } from "../utils/glassStyles";
 
@@ -353,8 +356,8 @@ const WirelessManager: React.FC<Props> = ({
                   <div className="mb-6 max-w-sm mx-auto text-left">
                     {hostPlatform?.toLowerCase().includes("mac") && (
                       <div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded text-yellow-500/80 text-[10px] font-mono leading-relaxed">
-                        <strong className="block text-yellow-400 mb-1">
-                          ⚠️ MACOS DETECTED
+                        <strong className="block text-yellow-400 mb-1 flex items-center gap-1.5">
+                          <AlertTriangle size={12} /> MACOS DETECTED
                         </strong>
                         Direct Wi-Fi sharing requires an upstream connection.
                         Please connect via Ethernet or USB Tether before
@@ -363,8 +366,8 @@ const WirelessManager: React.FC<Props> = ({
                     )}
                     {hostPlatform?.toLowerCase().includes("win") && (
                       <div className="p-3 bg-green-900/20 border border-green-500/30 rounded text-green-500/80 text-[10px] font-mono leading-relaxed">
-                        <strong className="block text-green-400 mb-1">
-                          ✅ VIRTUAL ROUTER READY
+                        <strong className="block text-green-400 mb-1 flex items-center gap-1.5">
+                          <CheckCircle2 size={12} /> VIRTUAL ROUTER READY
                         </strong>
                         Windows supports simultaneous Wi-Fi client + hotspot
                         mode. No cables required.

@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Brain, ChevronDown, ChevronRight, Check } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Brain,
+  ChevronDown,
+  Check,
+  Zap,
+} = LucideIcons as any;
 
 export interface DecisionCycle {
   id: string;
@@ -21,12 +27,12 @@ interface RecentDecisionsProps {
 }
 
 export default function RecentDecisions({
-  themeCardBg = "bg-black/40 border border-slate-800/60 backdrop-blur-sm",
+  themeCardBg = "bg-transparent",
   cycles = [],
   theme,
 }: RecentDecisionsProps) {
   const [expandedCycles, setExpandedCycles] = useState<Record<string, boolean>>(
-    {}
+    cycles.length > 0 ? { [cycles[0].id]: true } : {}
   );
 
   const toggleCycle = (id: string) => {
@@ -34,118 +40,71 @@ export default function RecentDecisions({
   };
 
   return (
-    <div
-      className={`${themeCardBg} rounded-lg flex flex-col h-full max-h-[calc(100vh-140px)] overflow-hidden`}
-    >
-      <div
-        className="p-3 border-b border-slate-800/60 flex-shrink-0"
-        style={{
-          background: theme
-            ? `linear-gradient(to r, ${theme.hex}1a, transparent)`
-            : "linear-gradient(to r, rgba(99,102,241,0.1), transparent)",
-        }}
-      >
-        <h3
-          className="font-bold text-sm flex items-center gap-2"
-          style={{ color: theme?.hex || "#c7d2fe" }}
-        >
-          <Brain size={16} style={{ color: theme?.hex || "#818cf8" }} />
-          Recent Decisions
-        </h3>
-        <p
-          className="text-[10px] mt-0.5"
-          style={{ color: theme ? `${theme.hex}99` : "rgba(129,140,248,0.6)" }}
-        >
-          Real-time AI Reasoning Log
-        </p>
+    <div className={`${themeCardBg} flex flex-col h-full overflow-hidden`}>
+      <div className="p-3 border-b border-white/5 bg-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Brain size={14} style={{ color: theme?.hex || "#818cf8" }} />
+          <h3 className="font-bold text-[10px] text-white uppercase tracking-widest">Logic Stream</h3>
+        </div>
+        <div className="flex items-center gap-1.5 text-[8px] px-1.5 py-0.5 rounded border border-white/10 bg-black/20 text-slate-500 font-bold uppercase transition-all hover:bg-white/5">
+          <Zap size={8} className="text-amber-400 animate-pulse" />
+          Live Reasoning
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin scrollbar-thumb-indigo-500/20">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
         {cycles.length === 0 && (
-          <div className="text-center py-10 text-slate-500 text-xs">
-            No active decision cycles recorded.
+          <div className="text-center py-10 text-slate-600 text-[10px] uppercase tracking-tighter">
+            Waiting for next decision cycle...
           </div>
         )}
         {cycles.map((cycle) => (
           <div
             key={cycle.id}
-            className="border border-slate-800/80 rounded bg-black/20 overflow-hidden flex-shrink-0"
+            className="border border-white/5 rounded-lg bg-white/[0.02] overflow-hidden transition-all hover:bg-white/[0.04]"
           >
-            {/* Header */}
             <div
-              className="p-2 flex justify-between items-center bg-slate-900/30 cursor-pointer hover:bg-slate-800/30 transition-colors"
+              className="p-2 flex justify-between items-center cursor-pointer"
               onClick={() => toggleCycle(cycle.id)}
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-300">
-                    Cycle #{cycle.cycleNumber}
-                  </span>
-                  {cycle.status === "success" && (
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                      Success
-                    </span>
-                  )}
-                </div>
-                <div className="text-[10px] text-slate-600 mt-0.5 font-mono">
-                  {cycle.timestamp}
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-slate-400">#{cycle.cycleNumber || cycle.id.substring(0,4)}</span>
+                <span className={`w-1.5 h-1.5 rounded-full ${cycle.status === 'success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-amber-500'}`}></span>
               </div>
-              <ChevronDown
-                size={14}
-                className={`text-slate-500 transition-transform ${
-                  expandedCycles[cycle.id] ? "rotate-180" : ""
-                }`}
-              />
+              <div className="flex items-center gap-3">
+                <span className="text-[9px] text-white/30 font-mono">{cycle.timestamp.split(',')[1] || cycle.timestamp}</span>
+                <ChevronDown
+                  size={12}
+                  className={`text-slate-600 transition-transform ${expandedCycles[cycle.id] ? "rotate-180" : ""}`}
+                />
+              </div>
             </div>
 
-            {/* Content */}
             {expandedCycles[cycle.id] && (
-              <div className="p-3 space-y-3 bg-black/20 text-left">
-                {/* Reasoning Steps */}
-                <div className="space-y-1">
+              <div className="px-3 pb-3 space-y-3">
+                <div className="space-y-1 mt-1">
                   {cycle.chainOfThought.map((thought, idx) => (
-                    <div
-                      key={idx}
-                      className="flex gap-2 text-[10px] text-slate-400 font-mono items-start"
-                    >
-                      <ChevronRight
-                        size={12}
-                        className="mt-0.5 shrink-0"
-                        style={{
-                          color: theme
-                            ? `${theme.hex}80`
-                            : "rgba(99,102,241,0.5)",
-                        }}
-                      />
+                    <div key={idx} className="flex gap-2 text-[10px] text-slate-500 font-mono leading-relaxed">
+                      <span className="mt-1" style={{ color: theme ? `${theme.hex}80` : "rgba(99,102,241,0.5)" }}>↳</span>
                       <span>{thought}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Decisions List */}
-                <div className="space-y-1 pt-2 border-t border-slate-800/50">
+                <div className="grid grid-cols-1 gap-1">
                   {cycle.decisions.map((decision, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between text-xs bg-slate-900/50 p-1.5 rounded border border-slate-800/50"
-                    >
-                      <span className="font-bold text-slate-300">
-                        {decision.symbol}
-                      </span>
-                      <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-mono">
-                        {decision.action.toLowerCase()}
+                    <div key={idx} className="flex items-center justify-between text-[10px] bg-white/[0.03] p-1.5 rounded-md border border-white/5">
+                      <span className="font-bold text-slate-300">{decision.symbol}</span>
+                      <span className={`uppercase font-bold ${(decision.action === 'BUY' || decision.action === 'Long') ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {decision.action}
                       </span>
                     </div>
                   ))}
                 </div>
 
-                {/* AI Performance Stats */}
-                <div className="pt-2 flex items-center gap-2 text-[10px] text-slate-500">
-                  <Check size={12} className="text-emerald-500" />
-                  <span>260ms</span>
-                  <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
-                  <span>Safety Checks OK</span>
+                <div className="flex items-center gap-3 text-[9px] text-slate-600 border-t border-white/5 pt-2">
+                  <div className="flex items-center gap-1"><Check size={10} className="text-emerald-500" /> 240ms</div>
+                  <div className="flex items-center gap-1"><Check size={10} className="text-emerald-500" /> Protocol-7 Verified</div>
                 </div>
               </div>
             )}

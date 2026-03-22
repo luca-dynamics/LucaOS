@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import * as LucideIcons from "lucide-react";
 import { SmartDevice } from "../types";
-import {
+const {
   Power,
   Volume2,
   Home,
@@ -18,7 +19,7 @@ import {
   Menu,
   LogOut,
   VolumeX,
-} from "lucide-react";
+} = LucideIcons as any;
 
 interface Props {
   device: SmartDevice | null;

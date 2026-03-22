@@ -1,11 +1,12 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   CheckCircle2,
   XCircle,
   Loader2,
   Clock,
   ChevronRight,
-} from "lucide-react";
+} = LucideIcons as any;
 import { ThoughtNode } from "./ThoughtGraph";
 import { NodeStatus } from "./TaskNode";
 

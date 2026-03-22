@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Wifi } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  Wifi,
+} = LucideIcons as any;
 import io, { Socket } from "socket.io-client";
 import CinemaPlayer from "./CinemaPlayer";
 import GhostBrowser from "./GhostBrowser";

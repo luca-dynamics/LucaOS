@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { ArrowRight, ShieldCheck, FileText } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+const {
+  ArrowRight,
+  ShieldCheck,
+  FileText,
+} = LucideIcons as any;
 
 interface LegalStepProps {
   onComplete: () => void;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TacticalMarker } from "../types";
 
 export function useDiagnostics() {
@@ -8,7 +8,7 @@ export function useDiagnostics() {
   const [tacticalMarkers, setTacticalMarkers] = useState<TacticalMarker[]>([]);
   const [trackingTarget, setTrackingTarget] = useState("UNKNOWN");
 
-  return {
+  return useMemo(() => ({
     showGhostBrowser,
     setShowGhostBrowser,
     ghostBrowserUrl,
@@ -19,5 +19,5 @@ export function useDiagnostics() {
     setTacticalMarkers,
     trackingTarget,
     setTrackingTarget,
-  };
+  }), [showGhostBrowser, ghostBrowserUrl, showGeoTactical, tacticalMarkers, trackingTarget]);
 }

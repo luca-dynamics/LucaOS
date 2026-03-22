@@ -39,7 +39,7 @@ const SubAgentDrone: React.FC<SubAgentDroneProps> = ({
   const speed = 0.05;
 
   // Flight animation
-  useFrame((state, delta) => {
+  useFrame((state: any, delta: any) => {
     if (!droneRef.current) return;
 
     const time = state.clock.elapsedTime;

@@ -11,9 +11,10 @@ export const BRAIN_CONFIG = {
 
   // Global Default Models (Stable IDs)
   defaults: {
-    brain: "gemini-2.0-flash-exp",
-    vision: "gemini-2.0-flash-exp",
-    voice: "models/gemini-2.5-flash-native-audio-preview-12-2025", // Flagship Live API model
+    brain: "gemini-2.0-flash",
+    vision: "gemini-2.0-flash",
+    voice: "gemini-2.0-flash", // Using stable model for voice
+    memory: "gemini-2.0-flash", // Used for long-term memory distillation
     embedding: "text-embedding-004", // Canonical cloud model
   },
 
@@ -30,6 +31,7 @@ export const BRAIN_CONFIG = {
         "2.5-pro": "gemini-2.5-pro",
         "2.5-flash": "gemini-2.5-flash",
         "2.5-flash-lite": "gemini-2.5-flash-lite",
+        "live-2.5-multimodal": "gemini-live-2.5-flash-preview-native-audio-09-2025",
       },
     },
     anthropic: {

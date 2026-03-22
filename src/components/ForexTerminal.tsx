@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { ForexAccount, ForexTradeLog } from "../types";
-import {
+import * as LucideIcons from "lucide-react";
+import { ForexAccount } from "../types";
+const {
   X,
   TrendingUp,
   TrendingDown,
-  Activity,
   Globe,
-  BarChart3,
-  Briefcase,
   Plus,
   Sparkles,
-} from "lucide-react";
+  Lock,
+  MessageCircle,
+  Lightbulb,
+} = LucideIcons as any;
 import ConnectForexAccountModal from "./ConnectForexAccountModal";
 
 import { useAppContext } from "../context/AppContext";
@@ -27,10 +28,10 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
   const themeHex = theme?.hex || "#10b981";
   const { trading } = useAppContext();
   const { forexAccount: account, forexTrades: trades } = trading;
-  const [pairs, setPairs] = useState<
+  const [pairs] = useState<
     { symbol: string; rate: number; change: number }[]
   >([]);
-  const [isRealData, setIsRealData] = useState(false);
+  const [isRealData] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
 
   // Fetch forex rates (only if needed, reduce frequency)
@@ -65,7 +66,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
             }
           }
         }
-      } catch (error) {
+      } catch (err) {
         // Silently fail - no account connected yet
       }
     };
@@ -214,7 +215,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
                 {/* Glass shine effect */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 to-transparent opacity-50" />
 
-                <Briefcase
+                <MessageCircle
                   size={72}
                   className={`${themePrimary} relative z-10 group-hover:scale-110 transition-transform duration-300`}
                 />
@@ -279,19 +280,32 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
 
               {/* Feature Pills */}
               <div className="mt-6 md:mt-8 flex flex-wrap items-center justify-center gap-2 md:gap-3 px-2">
-                {["🎲 Deriv", "⚡ Exness", "🌍 XM", "⚙️ IC Markets"].map(
-                  (broker, i) => (
-                    <div
-                      key={i}
-                      className="px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl bg-slate-800/50 backdrop-blur-sm
+                {[
+                  { name: "Deriv", logo: "https://static.deriv.com/favicons/favicon-32x32.png" },
+                  { name: "Exness", logo: "https://www.exness.com/favicon.ico" },
+                  { name: "XM", logo: "https://www.xm.com/favicon.ico" },
+                  { name: "IC Markets", logo: "https://www.icmarkets.com/favicon.ico" }
+                ].map((broker, i) => (
+                  <div
+                    key={i}
+                    className="px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl bg-slate-800/50 backdrop-blur-sm
                              border border-slate-700/50 text-[11px] md:text-xs font-medium text-slate-400
                              hover:border-slate-600 hover:text-slate-300 transition-all
-                             cursor-default"
-                    >
-                      {broker}
+                             cursor-default flex items-center gap-2"
+                  >
+                    <div className="w-4 h-4 rounded-sm bg-white/10 p-0.5 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={broker.logo} 
+                        alt={broker.name} 
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                     </div>
-                  ),
-                )}
+                    {broker.name}
+                  </div>
+                ))}
                 <div
                   className="px-4 py-2 rounded-xl bg-slate-800/50 backdrop-blur-sm
                               border border-slate-700/50 text-xs font-medium text-slate-400"
@@ -300,8 +314,8 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
                 </div>
               </div>
 
-              <div className="mt-8 text-xs text-slate-500 font-mono">
-                🔒 Credentials encrypted with AES-256 • 🌍 Global brokers
+              <div className="mt-8 text-xs text-slate-500 font-mono flex items-center justify-center gap-2">
+                <Lock size={12} /> Credentials encrypted with AES-256 • <Globe size={12} /> Global brokers
               </div>
             </div>
           </div>
@@ -396,6 +410,26 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
                     );
                   })}
                 </div>
+              </div>
+              <div
+                className={`
+        text-center
+        text-slate-400
+        bg-slate-900/50
+        border border-slate-700/50
+        rounded-[1.5vmin]
+        backdrop-blur-xl
+        max-w-lg
+        mx-auto
+        flex items-center justify-center gap-2
+      `}
+                style={{
+                  padding: "1.5vmin 3vmin",
+                  fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)"
+                }}
+              >
+                <Lightbulb size={14} className="text-amber-400" />
+                <span>You can switch between text and voice anytime during our conversation</span>
               </div>
 
               {/* Bottom: Account & Trade Panel */}

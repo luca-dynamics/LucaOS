@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   Bot,
   Plus,
   Settings,
@@ -9,7 +10,7 @@ import {
   Cpu,
   ArrowRightLeft,
   Sparkles,
-} from "lucide-react";
+} = LucideIcons as any;
 import TraderConfigModal from "./TraderConfigModal";
 import ExchangeConfigModal from "./ExchangeConfigModal";
 import AIModelConfigModal from "./AIModelConfigModal";
@@ -199,87 +200,28 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
   };
 
   return (
-    <div className="relative h-full bg-rq-base flex flex-col font-mono text-slate-200 overflow-hidden animate-in fade-in duration-300">
-      <div className="h-auto sm:h-16 border-b border-rq-border bg-rq-panel px-4 sm:px-6 py-3 sm:py-0 flex flex-col sm:flex-row items-start sm:items-center justify-between flex-shrink-0 gap-3">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-            style={{
-              background: theme
-                ? `linear-gradient(to br, ${theme.hex}, ${theme.hex}cc)`
-                : "linear-gradient(to br, #06b6d4, #2563eb)",
-              boxShadow: theme
-                ? `0 0 20px ${theme.hex}33`
-                : "0 0 20px rgba(6,182,212,0.2)",
-            }}
+    <div className="flex flex-col h-full bg-[#050505] text-white font-sans overflow-hidden">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between px-4 py-3 bg-black/40 border-b border-white/5 backdrop-blur-md z-20">
+        <div className="flex items-center gap-3">
+          <div 
+             className="w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm"
+             style={{ 
+               backgroundColor: theme ? `${theme.hex}33` : "rgba(99,102,241,0.2)",
+               borderColor: theme ? `${theme.hex}66` : "rgba(99,102,241,0.4)",
+               boxShadow: theme ? `0 0 15px ${theme.hex}4d` : "0 0 15px rgba(99,102,241,0.3)"
+             }}
           >
-            <Bot size={20} className="sm:size-6 text-white" />
+            <Bot className="w-6 h-6" style={{ color: theme?.hex || "#818cf8" }} />
           </div>
-          <div className="overflow-hidden">
-            <h1 className="text-base sm:text-xl font-bold text-white tracking-tight flex items-center gap-2 sm:gap-3">
-              <span className="truncate">AI TRADERS</span>
-              <span
-                className="flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] border"
-                style={{
-                  backgroundColor: theme
-                    ? `${theme.hex}1a`
-                    : "rgba(6,182,212,0.1)",
-                  color: theme?.hex || "#06b6d4",
-                  borderColor: theme ? `${theme.hex}4d` : "rgba(6,182,212,0.3)",
-                }}
-              >
-                {activeTradersCount} ACTIVE
-              </span>
-            </h1>
-            <p className="text-[10px] sm:text-xs text-slate-500 truncate">
-              Autonomous Operations {isLoading && "..."}
-            </p>
+          <div>
+            <h1 className="text-sm font-bold tracking-wider text-white uppercase">LucaOS AGENT MANAGEMENT</h1>
+            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Command & Personality Controls</p>
           </div>
         </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-          <button
-            onClick={() => {
-              setEditingModel(null);
-              setShowModelModal(true);
-            }}
-            className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-rq-border/50 hover:bg-rq-border border border-rq-border text-[10px] sm:text-xs font-bold text-slate-300 transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
-          >
-            <Sparkles size={12} /> MODELS
-          </button>
-          <button
-            onClick={() => {
-              setEditingExchange(null);
-              setShowExchangeModal(true);
-            }}
-            className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-rq-border/50 hover:bg-rq-border border border-rq-border text-[10px] sm:text-xs font-bold text-slate-300 transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
-          >
-            <ArrowRightLeft size={12} /> EXCHANGES
-          </button>
-          <button
-            onClick={() => {
-              setEditingTrader(null);
-              setShowTraderModal(true);
-            }}
-            className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-black text-[10px] sm:text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 whitespace-nowrap"
-            style={{
-              backgroundColor: theme?.hex || "#06b6d4",
-              boxShadow: theme
-                ? `0 0 15px ${theme.hex}4d`
-                : "0 0 15px rgba(6,182,212,0.3)",
-            }}
-          >
-            <Plus size={14} /> DEPLOY
-          </button>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-1.5 text-slate-500 hover:text-white"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
-        </div>
+        <button onClick={onClose} className="p-2 text-slate-500 hover:text-white transition-colors">
+          <LucideIcons.X size={20} />
+        </button>
       </div>
 
       {/* 2. MAIN CONTENT (Trader List) */}

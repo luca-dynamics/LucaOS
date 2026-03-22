@@ -1,5 +1,6 @@
 import React from "react";
-import {
+import * as LucideIcons from "lucide-react";
+const {
   X,
   Smartphone,
   Battery,
@@ -12,7 +13,7 @@ import {
   MessageSquare,
   Wifi,
   Terminal,
-} from "lucide-react";
+} = LucideIcons as any;
 import { SmartDevice } from "../../types";
 
 type MobileTab = "DASH" | "FILES" | "COMMS" | "LIVE" | "EXPLOIT" | "WIRELESS";

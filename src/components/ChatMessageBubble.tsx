@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import * as LucideIcons from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  vscDarkPlus,
-  vs,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
-import {
+import { vscDarkPlus,
+  vs } from "react-syntax-highlighter/dist/esm/styles/prism";
+const {
   Copy,
   Terminal,
   ImageIcon,
@@ -15,9 +14,13 @@ import {
   Sparkles,
   Pencil,
   Check,
-} from "lucide-react";
+  TrendingUp,
+  AlertTriangle,
+  Info,
+  CheckCircle2,
+} = LucideIcons as any;
 import { PersonaType } from "../services/lucaService";
-import { TacticalLog } from "../types";
+import { TacticalLog, MessageAction } from "../types";
 import InlineActionFlow from "./chat/InlineActionFlow";
 import ChartRenderer from "./chat/ChartRenderer";
 
@@ -34,6 +37,8 @@ interface ChatMessageBubbleProps {
   wasPruned?: boolean;
   isStreaming?: boolean;
   onEdit?: (text: string) => void;
+  actions?: MessageAction[];
+  onActionClick?: (action: MessageAction) => void;
   tacticalData?: {
     type: "SECURITY" | "HACKING" | "TACTICAL";
     status: string;
@@ -55,6 +60,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   wasPruned,
   isStreaming,
   onEdit,
+  actions,
+  onActionClick,
   tacticalData,
   isLight = false,
 }) => {
@@ -68,15 +75,24 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     setTimeout(() => setCopiedCodeBlock(null), 2000);
   };
 
-  // System messages (errors, status updates)
+  // System messages (errors, status updates, notifications)
   if (isSystem) {
+    const isError = text.includes("[ERROR]") || text.includes("[CRITICAL]");
+    const isWarning = text.includes("[WARNING]") || text.includes("[HIGH]");
+    const isSuccess = text.includes("[SUCCESS]");
+    const isTrading = text.includes("[TRADING]");
+
+    const SystemIcon = isError ? AlertTriangle : isWarning ? Info : isSuccess ? CheckCircle2 : isTrading ? TrendingUp : Terminal;
+    const iconColor = isError ? "text-rose-500" : isWarning ? "text-amber-500" : isSuccess ? "text-emerald-500" : isTrading ? "text-indigo-400" : "text-slate-500";
+    const bgClass = isError ? "bg-rose-500/5 border-rose-500/20" : isWarning ? "bg-amber-500/5 border-amber-500/20" : isSuccess ? "bg-emerald-500/5 border-emerald-500/20" : isTrading ? "bg-indigo-500/5 border-indigo-500/20" : "bg-slate-900/50 border-slate-800";
+
     return (
-      <div className="flex justify-center my-4 animate-in fade-in zoom-in duration-300">
+      <div className="flex justify-center my-2 animate-in fade-in zoom-in duration-300 w-full">
         <div
-          className={`text-[10px] font-mono ${isLight ? "text-gray-500 bg-white/50 border-gray-200" : "text-slate-500 bg-slate-900/50 border-slate-800"} px-3 py-1.5 rounded-full border flex items-center gap-2`}
+          className={`text-[10px] font-mono ${isLight ? "text-gray-500 bg-white/50 border-gray-200" : `text-slate-400 ${bgClass}`} px-4 py-2 rounded-lg border flex items-center gap-3 max-w-[90%] shadow-sm`}
         >
-          <Terminal size={10} />
-          {text}
+          <SystemIcon size={12} className={iconColor} />
+          <span className="flex-1 truncate">{text.replace(/\[[^\]]*\]\s*/g, "")}</span>
         </div>
       </div>
     );
@@ -442,6 +458,34 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     className="inline-block w-2 h-4 ml-1 translate-y-0.5 animate-pulse"
                     style={{ backgroundColor: primaryColor }}
                   />
+                )}
+
+                {/* RICH TERMINAL ACTIONS (Phase 4.3) */}
+                {actions && actions.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    {actions.map((action) => (
+                      <button
+                        key={action.id}
+                        onClick={() => onActionClick?.(action)}
+                        className={`px-4 py-2 rounded-lg text-[12px] font-bold tracking-tight transition-all active:scale-95 border flex items-center gap-2 group/btn`}
+                        style={{
+                          backgroundColor: action.variant === "primary" ? `${primaryColor}20` : 
+                                          action.variant === "danger" ? "rgba(239, 68, 68, 0.1)" : 
+                                          "rgba(255, 255, 255, 0.05)",
+                          borderColor: action.variant === "primary" ? `${primaryColor}40` : 
+                                       action.variant === "danger" ? "rgba(239, 68, 68, 0.3)" : 
+                                       "rgba(255, 255, 255, 0.1)",
+                          color: action.variant === "primary" ? primaryColor : 
+                                 action.variant === "danger" ? "#ef4444" : 
+                                 "#94a3b8"
+                        }}
+                      >
+                        {action.variant === "primary" && <LucideIcons.CheckCircle2 size={12} className="group-hover/btn:scale-110 transition-transform" /> }
+                        {action.variant === "danger" && <LucideIcons.XCircle size={12} className="group-hover/btn:scale-110 transition-transform" /> }
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
