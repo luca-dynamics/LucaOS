@@ -122,6 +122,20 @@ export class MCPClientManager {
     }
 
     /**
+     * Diagnose a connection failure using the McpDoctor
+     */
+    async diagnoseFailure(config) {
+        const { mcpDoctorService } = await import("./mcpDoctorService.js");
+        const findings = await mcpDoctorService.validateConfig(config);
+        if (findings.length > 0) {
+            const auditReport = findings.map(f => `[${f.code}] ${f.message}`).join('\n');
+            console.error(`[MCP] [DOCTOR] Diagnostic findings for failure:\n${auditReport}`);
+            return findings;
+        }
+        return [];
+    }
+
+    /**
      * Get all tools from all connected MCP servers with enhanced metadata
      */
     getAllTools() {

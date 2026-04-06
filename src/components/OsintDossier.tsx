@@ -1,22 +1,6 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "./ui/Icon";
 import { OsintProfile } from "../types";
-const {
-  X,
-  User,
-  Globe,
-  ShieldAlert,
-  Search,
-  Lock,
-  AlertTriangle,
-  UserSearch,
-  Share2,
-  Fingerprint,
-  Network,
-  PieChart,
-  Download,
-  RefreshCw,
-} = LucideIcons as any;
 
 interface Props {
   profile: OsintProfile | null;
@@ -139,9 +123,9 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
   const totalCount = profile.hits.length;
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-300">
       <div
-        className={`relative w-[95%] max-w-5xl h-[85vh] bg-black/40 backdrop-blur-xl border ${themeBorder}/40 rounded-sm flex flex-col overflow-hidden shadow-2xl`}
+        className={`relative w-[95%] max-w-5xl h-[85vh] bg-black/40 glass-blur border ${themeBorder}/40 rounded-sm flex flex-col overflow-hidden shadow-2xl`}
         style={{
           boxShadow: `0 0 80px -20px ${themeHex}40`,
         }}
@@ -187,7 +171,8 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
         {scanProgress < 100 && (
           <div className="absolute inset-0 bg-black/80 z-[60] flex flex-col items-center justify-center font-mono gap-4">
             <div className="relative">
-              <UserSearch
+              <Icon
+                name="User"
                 size={48}
                 className={`${themePrimary} animate-pulse`}
               />
@@ -233,7 +218,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
 
             <div className="relative z-10 flex items-start gap-4">
               <div className={`p-2 ${themePrimary}`}>
-                <AlertTriangle size={20} />
+                <Icon name="Danger" size={20} />
               </div>
               <div className="flex-1">
                 <h3 className="text-sm font-bold text-white mb-1">
@@ -262,12 +247,12 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                     >
                       {installingTool === tool ? (
                         <>
-                          <RefreshCw size={12} className="animate-spin" />
+                          <Icon name="Refresh" size={12} className="animate-spin" />
                           INSTALLING...
                         </>
                       ) : (
                         <>
-                          <Download size={12} />
+                          <Icon name="Download" size={12} />
                           {tool.toUpperCase()}
                         </>
                       )}
@@ -288,7 +273,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
               className={`p-2 border ${themeBorder}/50 rounded-sm ${themePrimary} relative overflow-hidden`}
               style={{ backgroundColor: `${themeHex}1F` }}
             >
-              <ShieldAlert size={20} />
+              <Icon name="ShieldWarning" size={20} />
               <div className="absolute inset-0 bg-current opacity-10 animate-pulse"></div>
             </div>
             <div>
@@ -308,14 +293,14 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
               className={`px-4 py-2 rounded-sm text-xs font-bold tracking-wider flex items-center gap-2 border transition-all hover:bg-white/10`}
               style={{ borderColor: `#ef4444`, color: `#ef4444` }}
             >
-              <Lock size={14} />
+              <Icon name="Lock" size={14} />
               DARK WEB SCAN
             </button>
             <button
               onClick={onClose}
               className="text-slate-500 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
             >
-              <X size={24} />
+              <Icon name="CloseCircle" size={24} />
             </button>
           </div>
         </div>
@@ -341,7 +326,8 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                 className={`absolute bottom-2 right-2 w-4 h-4 border-b border-r ${themeBorder} opacity-60`}
               ></div>
 
-              <User
+              <Icon
+                name="User"
                 size={80}
                 className="text-slate-800 group-hover:scale-110 transition-transform duration-700"
               />
@@ -436,7 +422,8 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                   } opacity-50`}
                 ></div>
                 <div className="flex items-center gap-2 text-white/90 text-[10px] font-bold mb-2 uppercase tracking-tight">
-                  <AlertTriangle
+                  <Icon
+                    name="Danger"
                     size={12}
                     className={
                       profile.riskScore > 70 ? "text-rq-red" : themePrimary
@@ -464,15 +451,15 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
             {/* Filter Stats Bar */}
             <div className="h-12 border-b border-rq-border flex divide-x divide-rq-border bg-white/5 relative z-10">
               <div className="flex-1 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-                <Globe size={14} className={themePrimary} />
+                <Icon name="Global" size={14} className={themePrimary} />
                 <span>SOCIAL {socialCount}</span>
               </div>
               <div className="flex-1 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-                <Lock size={14} className="text-rq-red" />
+                <Icon name="Lock" size={14} className="text-rq-red" />
                 <span>LEAKS {darkCount}</span>
               </div>
               <div className="flex-1 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-                <Network size={14} className="text-emerald-500" />
+                <Icon name="Sitemap" size={14} className="text-emerald-500" />
                 <span>NODES {domainCount}</span>
               </div>
             </div>
@@ -488,7 +475,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                   {profile.intel.dns && (
                     <div className="bg-emerald-950/10 border border-emerald-500/20 p-4 rounded-sm">
                       <div className="text-[10px] font-bold text-emerald-500 tracking-widest mb-3 uppercase flex items-center gap-2">
-                        <Network size={14} /> [DNS ANALYSIS]
+                        <Icon name="Sitemap" size={14} /> [DNS ANALYSIS]
                       </div>
                       <div className="grid grid-cols-1 gap-3 font-mono text-[10px]">
                         {profile.intel.dns.A &&
@@ -555,11 +542,11 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                     ) : hit.category === "SOCIAL" && hit.platform.toLowerCase().includes("instagram") ? (
                       <img src="https://www.instagram.com/static/images/ico/favicon.ico/36b3048c2345.ico" className="w-5 h-5 object-contain" />
                     ) : hit.category === "DARK_WEB" ? (
-                      <Lock size={14} />
+                      <Icon name="Lock" size={14} />
                     ) : hit.category === "DOMAIN" ? (
-                      <Globe size={14} />
+                      <Icon name="Global" size={14} />
                     ) : (
-                      <Search size={14} />
+                      <Icon name="Search" size={14} />
                     )}
                   </div>
 
@@ -631,7 +618,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
               <h3
                 className={`text-[10px] font-bold ${themePrimary} tracking-[0.2em] flex items-center gap-2 uppercase`}
               >
-                <Share2 size={14} className="animate-pulse" /> [RELATIONSHIP
+                <Icon name="Share" size={14} className="animate-pulse" /> [RELATIONSHIP
                 MATRIX]
               </h3>
             </div>
@@ -650,7 +637,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                 <div
                   className={`absolute z-20 w-16 h-16 bg-black border-2 ${themeBorder} rounded-sm flex items-center justify-center shadow-[0_0_30px_${themeHex}33]`}
                 >
-                  <Fingerprint size={32} className="text-white animate-pulse" />
+                  <Icon name="Scanner" size={32} className="text-white animate-pulse" />
                   {/* Inner corners for node */}
                   <div
                     className={`absolute top-1 left-1 w-2 h-2 border-t border-l ${themeBorder} opacity-60`}
@@ -709,7 +696,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
 
             <div className="h-1/3 border-t border-rq-border p-4 bg-white/5 relative z-10">
               <h3 className="text-[10px] font-bold text-slate-500 tracking-[0.2em] mb-4 flex items-center gap-2 uppercase">
-                <PieChart size={12} /> [DATA ALLOCATION]
+                <Icon name="PieChart" size={12} /> [DATA ALLOCATION]
               </h3>
               <div className="space-y-3 font-mono">
                 <div className="space-y-1">
@@ -768,9 +755,9 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
 
       {/* Dark Web Scanner Modal */}
       {showDarkWebModal && (
-        <div className="fixed inset-0 z-[170] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[170] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-300">
           <div
-            className="relative w-[90%] max-w-2xl bg-black/60 backdrop-blur-xl border rounded-sm p-6"
+            className="relative w-[90%] max-w-2xl bg-black/60 glass-blur border rounded-sm p-6"
             style={{
               borderColor: "#ef4444",
               boxShadow: "0 0 60px -15px #ef444440",
@@ -781,14 +768,14 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
               onClick={() => setShowDarkWebModal(false)}
               className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
             >
-              <X size={20} />
+              <Icon name="CloseCircle" size={20} />
             </button>
 
             {!darkWebAccepted ? (
               // Disclaimer Screen
               <div className="flex flex-col items-center text-center py-8">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center border-2 border-red-500 mb-6 relative bg-red-500/10">
-                  <ShieldAlert size={32} className="text-red-500" />
+                  <Icon name="ShieldWarning" size={32} className="text-red-500" />
                   <div className="absolute inset-0 border-2 border-t-transparent rounded-full animate-spin opacity-30 border-red-500" />
                 </div>
                 <h3 className="text-xl font-bold tracking-widest mb-4 text-red-500">
@@ -796,7 +783,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                 </h3>
                 <pre className="text-left text-xs text-slate-400 font-mono whitespace-pre-wrap bg-black/40 p-4 border border-red-900 rounded mb-6 max-w-md flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-red-500 font-bold border-b border-red-900/50 pb-2 mb-2">
-                    <AlertTriangle size={16} />
+                    <Icon name="Danger" size={16} />
                     <span>LEGAL CAUTION REQUIRED</span>
                   </div>
                   {`LEGAL DISCLAIMER
@@ -824,7 +811,7 @@ This tool accesses the Tor network to search .onion sites.
               // Scanner Interface
               <div className="flex flex-col gap-4">
                 <h3 className="text-lg font-bold tracking-widest text-red-500 flex items-center gap-2">
-                  <Lock size={18} />
+                  <Icon name="Lock" size={18} />
                   DARK WEB INTELLIGENCE SCANNER
                 </h3>
 
@@ -849,12 +836,12 @@ This tool accesses the Tor network to search .onion sites.
                   >
                     {isDarkWebScanning ? (
                       <>
-                        <RefreshCw size={14} className="animate-spin" />
+                        <Icon name="Refresh" size={14} className="animate-spin" />
                         SCANNING...
                       </>
                     ) : (
                       <>
-                        <Search size={14} />
+                        <Icon name="Search" size={14} />
                         SCAN
                       </>
                     )}

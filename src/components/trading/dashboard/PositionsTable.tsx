@@ -1,9 +1,5 @@
-import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  BarChart2,
-  Trash2,
-} = LucideIcons as any;
+import React, { useState } from "react";
+import { Icon } from "../../ui/Icon";
 
 export interface Position {
   id: string;
@@ -17,38 +13,65 @@ export interface Position {
   unrealizedPnL: number;
   pnlPercent: number;
   collateral?: number;
+  closedAt?: number;
+  exitPrice?: number;
+  realizedPnL?: number;
 }
 
-interface PositionsTableProps {
+export interface PositionsTableProps {
   themeCardBg?: string;
   positions: Position[];
+  history?: any[];
   onClosePosition?: (symbol: string) => void;
-  theme?: { hex: string; primary: string; border: string; bg: string };
+  theme?: { hex: string; primary: string; border: string; bg: string; isLight?: boolean };
 }
 
 export default function PositionsTable({
   themeCardBg = "bg-transparent",
   positions = [],
+  history = [],
   onClosePosition,
-  theme,
 }: PositionsTableProps) {
+  const [viewMode, setViewMode] = useState<"OPEN" | "HISTORY">("OPEN");
+
+  const displayData = viewMode === "OPEN" ? positions : history;
+
   return (
     <div className={`${themeCardBg} flex flex-col h-full overflow-hidden text-white/90`}>
-      <div className="p-2 border-b border-white/5 bg-white/5 flex justify-between items-center">
-        <h3 className="font-bold text-[10px] uppercase tracking-widest flex items-center gap-2">
-          <BarChart2 size={14} style={{ color: theme?.hex || "#22d3ee" }} />
-          Active Intercepts
-        </h3>
-        <span className="text-[8px] font-bold text-slate-500 border border-white/5 px-2 py-0.5 rounded-md bg-black/20">
-          {positions.length} Nodes
+      <div className="py-1.5 px-3 border-b border-white/[0.08] bg-white/[0.03] flex justify-between items-center glass-blur">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setViewMode("OPEN")}
+            className={`flex items-center gap-2 py-1 relative transition-all ${viewMode === "OPEN" ? "text-white" : "text-white/30 hover:text-white/60"}`}
+          >
+            <Icon name="Chart" variant="BoldDuotone" size={12} className={viewMode === "OPEN" ? "text-emerald-400" : "text-emerald-400/30"} />
+            <h3 className="font-bold text-[10px] uppercase tracking-[0.2em]">Open Positions</h3>
+            {viewMode === "OPEN" && <div className="absolute bottom-[-6px] left-0 right-0 h-0.5 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />}
+          </button>
+          
+          <button 
+            onClick={() => setViewMode("HISTORY")}
+            className={`flex items-center gap-2 py-1 relative transition-all ${viewMode === "HISTORY" ? "text-white" : "text-white/30 hover:text-white/60"}`}
+          >
+            <Icon name="Clock" variant="BoldDuotone" size={12} className={viewMode === "HISTORY" ? "text-amber-400" : "text-amber-400/30"} />
+            <h3 className="font-bold text-[10px] uppercase tracking-[0.2em]">Trade History</h3>
+            {viewMode === "HISTORY" && <div className="absolute bottom-[-6px] left-0 right-0 h-0.5 bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" />}
+          </button>
+        </div>
+        
+        <span className="text-[9px] font-mono font-bold text-slate-400 border border-white/[0.1] px-2 py-0.5 rounded bg-black/40 uppercase tracking-widest">
+          {displayData.length} {viewMode === "OPEN" ? "Active" : "Past"}
         </span>
       </div>
 
-      <div className="flex-1 overflow-auto custom-scrollbar">
-        {positions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-600 text-[10px] gap-3 uppercase tracking-widest">
-            <BarChart2 size={24} className="opacity-10" />
-            <span>Scanning for active signals...</span>
+      <div className="flex-1 overflow-auto custom-scrollbar bg-[#0a0a0a]/40">
+        {displayData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-slate-600 text-[10px] gap-4 uppercase tracking-[0.3em] opacity-40">
+             <div className="relative">
+              {viewMode === "OPEN" ? <Icon name="Chart" variant="BoldDuotone" size={32} className="text-slate-500" /> : <Icon name="Clock" variant="BoldDuotone" size={32} className="text-slate-500" />}
+              <div className={`absolute inset-0 blur-xl rounded-full ${viewMode === "OPEN" ? "bg-emerald-500/10" : "bg-amber-500/10"}`} />
+            </div>
+            <span>{viewMode === "OPEN" ? "No active market exposure" : "No closed trades recorded"}</span>
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
@@ -58,14 +81,13 @@ export default function PositionsTable({
                 <th className="px-2 py-2 text-center">Side</th>
                 <th className="px-2 py-2 text-right">Size</th>
                 <th className="px-2 py-2 text-right">Entry</th>
-                <th className="px-2 py-2 text-right">Mark</th>
-                <th className="px-2 py-2 text-right">PNL</th>
-                <th className="px-2 py-2 text-right">Liq</th>
-                <th className="px-3 py-2 text-right">Ex</th>
+                <th className="px-2 py-2 text-right">{viewMode === "OPEN" ? "Mark" : "Exit"}</th>
+                <th className="px-2 py-2 text-right">{viewMode === "OPEN" ? "Unrealized" : "Realized"}</th>
+                <th className="px-3 py-2 text-right">{viewMode === "OPEN" ? "Ex" : "Date"}</th>
               </tr>
             </thead>
             <tbody className="text-[10px] font-mono">
-              {positions.map((pos) => (
+              {displayData.map((pos) => (
                 <tr
                   key={pos.id}
                   className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group"
@@ -90,28 +112,28 @@ export default function PositionsTable({
                     ${pos.entryPrice.toLocaleString(undefined, { minimumFractionDigits: 1 })}
                   </td>
                   <td className="px-2 py-2 text-right text-slate-300 font-bold">
-                    ${pos.markPrice.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                    ${(viewMode === "OPEN" ? pos.markPrice : pos.exitPrice).toLocaleString(undefined, { minimumFractionDigits: 1 })}
                   </td>
                   <td className="px-2 py-2 text-right">
                     <div className="flex flex-col items-end">
-                      <span className={`font-bold ${pos.unrealizedPnL >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                        {pos.unrealizedPnL >= 0 ? "+" : ""}{pos.unrealizedPnL.toFixed(2)}
-                      </span>
-                      <span className={`text-[8px] ${pos.pnlPercent >= 0 ? "text-emerald-500/50" : "text-rose-500/50"}`}>
-                        ({pos.pnlPercent.toFixed(1)}%)
+                      <span className={`font-bold ${(viewMode === "OPEN" ? pos.unrealizedPnL : pos.realizedPnL) >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                        {(viewMode === "OPEN" ? pos.unrealizedPnL : pos.realizedPnL) >= 0 ? "+" : ""}{(viewMode === "OPEN" ? pos.unrealizedPnL : pos.realizedPnL).toFixed(2)}
                       </span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-right text-rose-500/40 text-[9px]">
-                    ${pos.liquidationPrice.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                  </td>
                   <td className="px-3 py-2 text-right">
-                    <button
-                      onClick={() => onClosePosition?.(pos.symbol)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-rose-500/20 text-rose-500/60 rounded border border-white/5"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                    {viewMode === "OPEN" ? (
+                      <button
+                        onClick={() => onClosePosition?.(pos.symbol)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-rose-500/20 text-rose-500/60 rounded border border-white/5"
+                      >
+                        <Icon name="Trash" variant="BoldDuotone" size={12} />
+                      </button>
+                    ) : (
+                      <span className="text-[8px] text-white/20 whitespace-nowrap">
+                        {new Date(pos.closedAt).toLocaleDateString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

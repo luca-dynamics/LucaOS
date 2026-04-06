@@ -12,7 +12,8 @@ export type PersonaType =
   | "ASSISTANT"
   | "HACKER"
   | "LUCAGENT"
-  | "LOCALCORE";
+  | "LOCALCORE"
+  | "AUDITOR";
 
 // We provide empty/default fallbacks for synchronous access during transpilation/startup.
 // Real data comes from personaService.getPersonaConfig().
@@ -93,6 +94,17 @@ export const PERSONA_CONFIG: Record<string, any> = {
     ) =>
       `You are LUCA in LOCAL CORE mode. You are currently operating in a fully offline, air-gapped state. You MUST rely EXCLUSIVELY on local models for brain, voice, and vision. Do not attempt to contact cloud services. Your primary mission is to protect user privacy and maintain system sovereignty. Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
   },
+  AUDITOR: {
+    voiceName: "Aoede",
+    description: "Sovereign Audit & Verification Mode",
+    instruction: (
+      memory: string,
+      management: string,
+      _platform?: string,
+      profile?: any,
+    ) =>
+      `You are LUCA in AUDITOR mode. Your primary function is AGENTIC SKEPTICISM. You are tasked with verifying the safety, correctness, and mission-alignment of another agent's work. Be critical, look for edge cases, and ensure no security regressions. Memory: ${memory}. Mission Context: ${management}. User: ${profile?.name || "Commander"}.`,
+  },
 };
 
 // Specialized Tools Map (Fallback)
@@ -164,6 +176,10 @@ export const PERSONA_SPECIALIZED_TOOLS: Record<PersonaType, string[]> = {
     "updateTaskStatus",
     "rememberFact",
     "queryGraphKnowledge",
+  ],
+  AUDITOR: [
+    "auditSourceCode",
+    "getSystemSettings",
   ],
 };
 

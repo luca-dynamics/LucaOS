@@ -3,8 +3,7 @@ import GhostBrowser from "./GhostBrowser";
 import VisualDataPresenter from "./VisualDataPresenter";
 import CinemaPlayer from "./CinemaPlayer";
 import CastPicker from "./CastPicker";
-import * as LucideVC from "lucide-react";
-const { X, Activity: ActivityIcon, Cast: CastIcon } = LucideVC as any;
+import { Icon } from "./ui/Icon";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
 import { SmartDevice } from "../types";
 import SovereigntyDashboard from "./visual/SovereigntyDashboard";
@@ -305,7 +304,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-[150] flex flex-col animate-in fade-in duration-700 border shadow-2xl rounded-xl overflow-hidden backdrop-blur-3xl transition-all duration-500`}
+      className={`fixed inset-0 z-[150] flex flex-col animate-in fade-in duration-700 border shadow-2xl rounded-xl overflow-hidden glass-blur transition-all duration-500`}
       style={{
         backgroundColor: isLight
           ? "rgba(255, 255, 255, 0.7)"
@@ -332,7 +331,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
       {/* Visual Core Header / Status Bar - DRAGGABLE AREA */}
       <div
-        className={`h-12 border-b flex items-center justify-between px-6 backdrop-blur-2xl cursor-move transition-colors duration-500`}
+        className={`h-12 border-b flex items-center justify-between px-6 glass-blur cursor-move transition-colors duration-500`}
         style={
           {
             WebkitAppRegion: "drag",
@@ -345,7 +344,8 @@ const VisualCore: React.FC<VisualCoreProps> = ({
       >
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-            <ActivityIcon
+            <Icon
+              name="Activity"
               size={18}
               className={mode !== "IDLE" ? "animate-pulse" : ""}
               style={{
@@ -445,7 +445,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               }}
               title="Cast to IoT Device"
             >
-              <CastIcon size={16} />
+              <Icon name="Cast" size={16} />
             </button>
           </div>
         </div>
@@ -455,7 +455,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
           style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
         >
-          <X size={18} />
+          <Icon name="X" size={18} />
         </button>
       </div>
 
@@ -509,7 +509,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               style={{ color: themeColor }}
             >
               <div className="w-12 h-px opacity-30 bg-current" />
-              <ActivityIcon size={14} className="animate-pulse" />
+              <Icon name="Activity" size={14} className="animate-pulse" />
               <span className="font-bold">SYSTEM_STABLE // SECURE_CORE</span>
               <div className="w-12 h-px opacity-30 bg-current" />
             </div>
@@ -518,7 +518,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
         {/* DATA LAYER (Visual Data Stream) */}
         <div
-          className={`absolute inset-0 transition-opacity duration-500 flex items-center justify-center bg-black/80 backdrop-blur-md ${
+          className={`absolute inset-0 transition-opacity duration-500 flex items-center justify-center bg-black/80 glass-blur ${
             mode === "DATA" || mode === "DATA_ROOM"
               ? "opacity-100 pointer-events-auto"
               : "opacity-0 pointer-events-none"

@@ -494,7 +494,7 @@ export const memoryService = {
     }
 
     // 5. Save to LightRAG Cortex (Level 5 Upgrade)
-    this.saveToCortex(contentToEmbed).catch((e) =>
+    this.saveToCortex(contentToEmbed, category).catch((e) =>
       console.warn("Cortex Save Failed", e),
     );
 
@@ -797,7 +797,7 @@ export const memoryService = {
     }
   },
 
-  async saveToCortex(text: string) {
+  async saveToCortex(text: string, category?: string) {
     // Check health first to avoid unnecessary errors
     const isHealthy = await this.checkCortexHealth();
 
@@ -805,7 +805,7 @@ export const memoryService = {
       // If in delegated mode, we proxy instead of throwing
       if (_currentMode === "DELEGATED" && lucaLinkManager) {
         console.log("[MEMORY] Proxying ingestion to Desktop via Luca Link...");
-        lucaLinkManager.sendEvent("all", "memory:ingest", { text });
+        lucaLinkManager.sendEvent("all", "memory:ingest", { text, category });
         return;
       }
       // If standalone, we just log and skip (fail gracefully)
@@ -821,12 +821,18 @@ export const memoryService = {
     try {
       const url = await this.getCortexUrl();
       const settings = settingsService.get("brain");
+      const memoryModel = settings?.memoryModel || BRAIN_CONFIG.defaults.brain;
+
+      // --- SOVEREIGN CATEGORY TAGGING ---
+      // Distinguish between memory layers (preference vs fact) for better LightRAG indexing
+      const taggedText = category ? `[${category.toUpperCase()}] ${text}` : text;
+
       const res = await fetch(`${url}/memory/ingest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text,
-          model: settings?.model || BRAIN_CONFIG.defaults.brain,
+          text: taggedText,
+          model: memoryModel,
         }),
         signal: AbortSignal.timeout(30000), // Increased to 30s
       });
@@ -945,7 +951,7 @@ export const memoryService = {
     if (conversationText.length <= MAX_CHUNK_SIZE) {
       // Single chunk
       try {
-        await this.saveToCortex(conversationText);
+        await this.saveToCortex(conversationText, "CONVERSATION");
         console.log(
           `[CORTEX] Ingested ${validMessages.length} messages into LightRAG`,
         );
@@ -964,7 +970,7 @@ export const memoryService = {
         ) {
           // Save current chunk
           try {
-            await this.saveToCortex(currentChunk);
+            await this.saveToCortex(currentChunk, "CONVERSATION");
             chunkCount++;
           } catch (e) {
             console.warn("[CORTEX] Failed to ingest conversation chunk:", e);
@@ -978,7 +984,7 @@ export const memoryService = {
       // Save remaining chunk
       if (currentChunk.length > 0) {
         try {
-          await this.saveToCortex(currentChunk);
+          await this.saveToCortex(currentChunk, "CONVERSATION");
           chunkCount++;
         } catch (e) {
           console.warn("[CORTEX] Failed to ingest conversation chunk:", e);

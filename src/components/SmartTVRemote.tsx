@@ -1,25 +1,6 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
 import { SmartDevice } from "../types";
-const {
-  Power,
-  Volume2,
-  Home,
-  Tv,
-  ChevronUp,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Youtube,
-  Wifi,
-  Lock,
-  Grid3x3,
-  ArrowLeft,
-  Menu,
-  LogOut,
-  VolumeX,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface Props {
   device: SmartDevice | null;
@@ -37,6 +18,7 @@ const SmartTVRemote: React.FC<Props> = ({
   const [pressed, setPressed] = useState<string | null>(null);
   const [pairingMode, setPairingMode] = useState(false); // Simulating auth requirement
   const [pin, setPin] = useState("");
+  const [isMuted, setIsMuted] = useState(false);
 
   if (!device) return null;
 
@@ -65,6 +47,7 @@ const SmartTVRemote: React.FC<Props> = ({
   const handlePress = (cmd: string) => {
     console.log(`[REMOTE] Button Pressed: ${cmd}`); // DEBUG LOG
     setPressed(cmd);
+    if (cmd === "MUTE") setIsMuted(!isMuted);
     onCommand(cmd);
     setTimeout(() => setPressed(null), 200);
   };
@@ -79,7 +62,7 @@ const SmartTVRemote: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in zoom-in-95 duration-300">
       {/* Remote Body */}
       <div className="relative w-80 bg-[#050505] border border-slate-800 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
         {/* IR Blaster Visual */}
@@ -112,7 +95,7 @@ const SmartTVRemote: React.FC<Props> = ({
               onClick={onClose}
               className="text-slate-600 hover:text-white"
             >
-              <X size={16} />
+              <Icon name="Play" size={18} />
             </button>
           </div>
           <div className="z-10">
@@ -132,9 +115,9 @@ const SmartTVRemote: React.FC<Props> = ({
                 {pairingMode ? "AUTH_REQUIRED" : `${osName} LINKED`}
               </div>
               {pairingMode ? (
-                <Lock size={14} className="text-amber-500 animate-pulse" />
+                <Icon name="Lock" size={14} className="text-amber-500 animate-pulse" />
               ) : (
-                <Wifi size={14} style={{ color: theme?.hex || "#3b82f6" }} />
+                <Icon name="Wifi" size={14} style={{ color: theme?.hex || "#3b82f6" }} />
               )}
             </div>
           </div>
@@ -142,9 +125,9 @@ const SmartTVRemote: React.FC<Props> = ({
 
         {/* PAIRING OVERLAY */}
         {pairingMode ? (
-          <div className="p-6 flex flex-col items-center gap-4 h-[450px] justify-center bg-black/90 absolute bottom-0 w-full z-20 backdrop-blur-md">
+          <div className="p-6 flex flex-col items-center gap-4 h-[450px] justify-center bg-black/90 absolute bottom-0 w-full z-20 glass-blur">
             <div className="text-amber-500 text-xs font-bold tracking-widest flex items-center gap-2">
-              <Grid3x3 size={16} /> ENTER PAIRING PIN
+              <Icon name="Grid3x3" size={16} /> ENTER PAIRING PIN
             </div>
             <div className="text-[10px] text-slate-500 text-center px-4">
               Enter the code displayed on the{" "}
@@ -211,13 +194,13 @@ const SmartTVRemote: React.FC<Props> = ({
                     : "border-slate-800 bg-slate-900/50 text-red-500 hover:bg-red-900/20"
                 }`}
               >
-                <Power size={22} />
+                <Icon name="Power" size={24} />
               </button>
               <button
                 onClick={() => handlePress("INPUT")}
                 className="w-14 h-14 rounded-full flex items-center justify-center border border-slate-800 bg-slate-900/50 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
               >
-                <Tv size={22} />
+                <Icon name="Tv" size={22} />
               </button>
             </div>
 
@@ -229,7 +212,8 @@ const SmartTVRemote: React.FC<Props> = ({
                   onClick={() => handlePress("MENU")}
                   className="text-[9px] font-bold text-slate-500 hover:text-white flex flex-col items-center gap-1 group"
                 >
-                  <Menu
+                  <Icon
+                    name="Menu"
                     size={16}
                     className="transition-colors"
                     style={{
@@ -242,7 +226,7 @@ const SmartTVRemote: React.FC<Props> = ({
                   onClick={() => handlePress("EXIT")}
                   className="text-[9px] font-bold text-slate-500 hover:text-white flex flex-col items-center gap-1 group"
                 >
-                  <LogOut size={16} className="group-hover:text-red-500" /> EXIT
+                  <Icon name="LogOut" size={16} className="group-hover:text-red-500" /> EXIT
                 </button>
               </div>
 
@@ -256,7 +240,7 @@ const SmartTVRemote: React.FC<Props> = ({
                     : {}
                 }
               >
-                <ChevronUp size={20} />
+                <Icon name="ChevronUp" size={24} />
               </button>
               <div className="flex gap-3">
                 <button
@@ -268,7 +252,7 @@ const SmartTVRemote: React.FC<Props> = ({
                       : {}
                   }
                 >
-                  <ChevronLeft size={20} />
+                  <Icon name="ChevronLeft" size={24} />
                 </button>
                 <button
                   onClick={() => handlePress("OK")}
@@ -288,7 +272,7 @@ const SmartTVRemote: React.FC<Props> = ({
                       : {}
                   }
                 >
-                  <ChevronRight size={20} />
+                  <Icon name="ChevronRight" size={24} />
                 </button>
               </div>
               <button
@@ -300,7 +284,7 @@ const SmartTVRemote: React.FC<Props> = ({
                     : {}
                 }
               >
-                <ChevronDown size={20} />
+                <Icon name="ChevronDown" size={24} />
               </button>
 
               {/* Back Button */}
@@ -308,7 +292,7 @@ const SmartTVRemote: React.FC<Props> = ({
                 onClick={() => handlePress("BACK")}
                 className="absolute bottom-4 left-4 text-slate-500 hover:text-white flex items-center gap-1 text-[9px] font-bold"
               >
-                <ArrowLeft size={14} /> BACK
+                <Icon name="ArrowLeft" size={20} /> BACK
               </button>
             </div>
 
@@ -319,13 +303,13 @@ const SmartTVRemote: React.FC<Props> = ({
                   onClick={() => handlePress("VOL_UP")}
                   className="w-10 h-10 rounded-full hover:bg-slate-800 text-slate-300 flex items-center justify-center"
                 >
-                  <Volume2 size={16} />
+                  <Icon name="Volume2" size={16} />
                 </button>
                 <button
                   onClick={() => handlePress("VOL_DOWN")}
                   className="w-10 h-10 rounded-full hover:bg-slate-800 text-slate-300 flex items-center justify-center"
                 >
-                  <Volume2 size={14} className="opacity-50" />
+                  <Icon name="Volume2" size={14} className="opacity-50" />
                 </button>
               </div>
 
@@ -334,7 +318,7 @@ const SmartTVRemote: React.FC<Props> = ({
                   onClick={() => handlePress("HOME")}
                   className="w-12 h-12 rounded-full border border-slate-700 text-white hover:bg-white hover:text-black transition-colors flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                 >
-                  <Home size={20} />
+                  <Icon name="Home" size={20} />
                 </button>
                 <button
                   onClick={() => handlePress("MUTE")}
@@ -345,7 +329,7 @@ const SmartTVRemote: React.FC<Props> = ({
                   }`}
                   title="Mute"
                 >
-                  <VolumeX size={18} />
+                  <Icon name="Pause" size={18} />
                 </button>
                 <button
                   onClick={() => setPairingMode(true)}
@@ -388,7 +372,7 @@ const SmartTVRemote: React.FC<Props> = ({
                 onClick={() => handlePress("YOUTUBE")}
                 className="h-10 bg-black border border-white/20 rounded text-white font-bold text-[10px] tracking-wider transition-all hover:bg-white hover:text-black flex items-center justify-center gap-1"
               >
-                <Youtube size={12} /> YouTube
+                <Icon name="Youtube" size={12} /> YouTube
               </button>
               <button
                 onClick={() => handlePress("PRIME")}

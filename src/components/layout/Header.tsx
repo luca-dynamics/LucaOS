@@ -1,26 +1,11 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Code2,
-  Sparkles,
-  ShieldAlert,
-  Settings,
-  Monitor,
-  AudioWaveform,
-  Server: ServerIcon,
-  Unplug,
-  Cpu,
-  Mic,
-  Share2,
-  Wallet,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 // Holographic icon removed in favor of static branding
 import AmbientVisionIndicator from "../AmbientVisionIndicator";
 import AlwaysOnControls from "../AlwaysOnControls";
 import { awarenessService } from "../../services/awarenessService";
 import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
-import { setHexAlpha } from "../../config/themeColors";
 import { useCredits } from "../../hooks/useCredits";
 
 interface HeaderProps {
@@ -77,17 +62,11 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id="app-header"
-      className={`${isMobile ? "h-16 pl-3 pr-2" : "h-20 pl-6 pr-6"} ${
-        theme.themeName?.toLowerCase() === "lucagent"
-          ? "glass-panel-light tech-border-light"
-          : "glass-panel tech-border"
-      } ${theme.primary} flex items-center justify-between z-50 shadow-lg transition-all duration-500 relative app-region-drag`}
+      className={`${isMobile ? "h-16 pl-3 pr-2" : "h-20 pl-6 pr-6"} glass-blur tech-border flex items-center justify-between z-50 shadow-lg transition-all duration-500 relative drag`}
       style={{
-        borderBottom: `1px solid ${setHexAlpha(theme.hex, 0.2)}`,
-        background:
-          theme.themeName?.toLowerCase() === "lucagent"
-            ? "rgba(255, 255, 255, 0.5)"
-            : "rgba(0, 0, 0, var(--app-bg-opacity, 0.4))",
+        borderBottom: `1px solid var(--app-border-main, rgba(255, 255, 255, 0.1))`,
+        backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.4))",
+        color: "var(--app-text-main, #ffffff)"
       }}
     >
       <div className={`flex items-center gap-3 app-region-no-drag`}>
@@ -117,28 +96,34 @@ const Header: React.FC<HeaderProps> = ({
               isMobile ? "text-lg" : "text-3xl"
             } font-black ${
               isMobile ? "tracking-[0.1em]" : "tracking-[0.2em]"
-            } uppercase italic transition-colors duration-500 leading-none ${
-              theme.primary
-            } flex items-center gap-2 whitespace-nowrap ${isMobile ? "" : "gap-4"}`}
+            } uppercase italic transition-colors duration-500 leading-none flex items-center gap-2 whitespace-nowrap ${isMobile ? "" : "gap-4"}`}
+            style={{ color: "var(--app-text-main, #ffffff)" }}
           >
             L.U.C.A OS
             <span className="inline-flex items-center gap-3 ml-2">
               {persona === "ENGINEER" && (
-                <Code2
+                <Icon
+                  name="Programming"
                   size={isMobile ? 18 : 22}
+                  variant="Linear"
                   className="opacity-80 transition-opacity group-hover:opacity-100"
                 />
               )}
               {persona === "ASSISTANT" && (
-                <Sparkles
+                <Icon
+                  name="MagicStick"
                   size={isMobile ? 18 : 22}
+                  variant="Linear"
                   className="opacity-80 transition-opacity group-hover:opacity-100"
                 />
               )}
               {persona === "HACKER" && (
-                <ShieldAlert
+                <Icon
+                  name="Shield"
                   size={isMobile ? 18 : 22}
-                  className="text-green-500/80 transition-opacity group-hover:opacity-100"
+                  variant="Linear"
+                  color="#22c55e"
+                  className="opacity-80 transition-opacity group-hover:opacity-100"
                 />
               )}
             </span>
@@ -156,11 +141,10 @@ const Header: React.FC<HeaderProps> = ({
               onKeyDown={handleKeyDown}
               className={`${isMobile ? "text-[10px]" : "text-[9px]"} font-bold ${
                 isMobile ? "tracking-[0.1em]" : "tracking-[0.4em]"
-              } opacity-70 flex items-center gap-1.5 ${
-                theme.primary
-              } hover:text-white transition-all ${
+              } opacity-70 flex items-center gap-1.5 hover:text-[var(--app-text-main)] transition-all ${
                 isRebooting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
               } select-none group`}
+              style={{ color: "var(--app-text-muted, rgba(255, 255, 255, 0.7))" }}
               title={
                 isRebooting
                   ? "Rebooting... Please wait"
@@ -185,15 +169,22 @@ const Header: React.FC<HeaderProps> = ({
             {/* SETTINGS BUTTON */}
             <button
               onClick={() => setIsSettingsOpen(true)}
+              title="Open Settings"
               className={`flex items-center gap-2 ${
                 isMobile
-                  ? "p-2 rounded-full bg-slate-900/50 border border-slate-700/50 text-slate-400 hover:text-white"
-                  : "px-3 py-1.5 rounded-full bg-slate-900/50 border border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:text-white"
-              } transition-all group`}
-              title="Open Settings"
+                  ? "p-2 rounded-full"
+                  : "px-3 py-1.5 rounded-full"
+              } transition-all group border glass-blur`}
+              style={{ 
+                backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.3))",
+                borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.1))",
+                color: "var(--app-text-muted, #94a3b8)"
+              }}
             >
-              <Settings
+              <Icon
+                name="Settings"
                 size={isMobile ? 20 : 14}
+                variant="Linear"
                 className="group-hover:rotate-90 transition-transform"
               />
               {!isMobile && (
@@ -202,29 +193,54 @@ const Header: React.FC<HeaderProps> = ({
                 </span>
               )}
             </button>
-            
+
             {/* SOVEREIGN WALLET INDICATOR */}
             {!isMobile && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/50 border border-slate-700/50 transition-all group cursor-default translate-y-[-14px]">
-                <Wallet size={14} className={`
-                  ${credits.status === "CRITICAL" ? "text-red-500 animate-pulse" : 
-                    credits.status === "LOW" ? "text-amber-500" : "text-emerald-500"}
-                `} />
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all group cursor-default glass-blur"
+                style={{ 
+                  backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.3))",
+                  borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.1))"
+                }}
+              >
+                <Icon
+                  name="Wallet"
+                  size={14}
+                  variant="Linear"
+                  color={
+                    credits.status === "CRITICAL"
+                      ? "#ef4444"
+                      : credits.status === "LOW"
+                        ? "#f59e0b"
+                        : "#10b981"
+                  }
+                  className={credits.status === "CRITICAL" ? "animate-pulse" : ""}
+                />
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5 leading-none">
-                    <span className={`text-[10px] font-black tracking-widest ${
-                      credits.status === "CRITICAL" ? "text-red-500" : "text-white"
-                    }`}>
-                      {credits.isLocal ? "FREE" : credits.isBYOK ? "BYOK" : `FUEL: ${Math.floor(credits.balance)}`}
+                    <span
+                      className={`text-[10px] font-black tracking-widest`}
+                      style={{ color: credits.status === "CRITICAL" ? "#ef4444" : "var(--app-text-main)" }}
+                    >
+                      {credits.isLocal
+                        ? "FREE"
+                        : credits.isBYOK
+                          ? "BYOK"
+                          : `FUEL: ${Math.floor(credits.balance)}`}
                     </span>
                     {!credits.isLocal && !credits.isBYOK && (
                       <div className="w-12 h-1 bg-slate-800 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full transition-all duration-500 ${
-                            credits.status === "CRITICAL" ? "bg-red-500" : 
-                            credits.status === "LOW" ? "bg-amber-500" : "bg-emerald-500"
+                            credits.status === "CRITICAL"
+                              ? "bg-red-500"
+                              : credits.status === "LOW"
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
                           }`}
-                          style={{ width: `${Math.min(100, (credits.balance / 1000) * 100)}%` }}
+                          style={{
+                            width: `${Math.min(100, (credits.balance / 1000) * 100)}%`,
+                          }}
                         />
                       </div>
                     )}
@@ -249,7 +265,7 @@ const Header: React.FC<HeaderProps> = ({
         {/* ADMIN INDICATOR - Hidden on mobile for requested clean look */}
         {isAdminMode && !isMobile && (
           <div className="flex items-center gap-2 px-2 py-1 text-red-500 animate-pulse font-bold border border-red-500 rounded bg-red-950/30 shadow-[0_0_10px_red]">
-            <ShieldAlert size={12} /> ROOT ACCESS
+            <Icon name="Shield" size={12} color="#ef4444" variant="Linear" /> ROOT ACCESS
           </div>
         )}
 
@@ -284,8 +300,11 @@ const Header: React.FC<HeaderProps> = ({
           />
         )}
 
-        <div className={`flex items-center gap-2 text-slate-400 uppercase`}>
-          <Monitor size={isMobile ? 12 : 14} />
+        <div 
+          className="flex items-center gap-2 uppercase"
+          style={{ color: "var(--app-text-muted, #94a3b8)" }}
+        >
+          <Icon name="Monitor" size={isMobile ? 12 : 14} variant="Linear" />
           <span>HOST: </span>
           {
             hostPlatform
@@ -294,37 +313,39 @@ const Header: React.FC<HeaderProps> = ({
               .split(" ")[0]
           }
         </div>
-
-        {isListeningAmbient && !isMobile && (
+        {isListeningAmbient && (
           <div className="flex items-center gap-2 text-rq-red animate-pulse">
-            <AudioWaveform size={14} />
+            <Icon name="Pulse" size={14} variant="Linear" color="#ff0000" />
             <span className="hidden sm:inline">SENSORS_ACTIVE</span>
           </div>
         )}
 
         {/* CORE STATUS - TIER Aware */}
         <div
-          className={`flex items-center gap-2 transition-colors ${
-            connectionTier === "OFFLINE"
-              ? "text-slate-600"
-              : connectionTier === "CLOUD"
-                ? "text-blue-500"
-                : "text-green-500"
-          }`}
+          className="flex items-center gap-2 transition-colors"
+          style={{ 
+            color: connectionTier === "OFFLINE" 
+              ? "var(--app-text-muted, #64748b)" 
+              : connectionTier === "CLOUD" 
+                ? "#3b82f6" 
+                : "#22c55e"
+          }}
           title={`Connection Tier: ${connectionTier}`}
         >
           {connectionTier === "OFFLINE" ? (
-            <Unplug size={isMobile ? 12 : 14} />
+            <Icon name="CloseCircle" size={isMobile ? 12 : 14} color="currentColor" />
           ) : connectionTier === "CLOUD" ? (
-            <Share2 size={isMobile ? 12 : 14} />
+            <Icon name="Cloud" size={isMobile ? 12 : 14} color="currentColor" variant="Linear" />
           ) : (
-            <ServerIcon size={isMobile ? 12 : 14} />
+            <Icon name="Server" size={isMobile ? 12 : 14} color="currentColor" variant="Linear" />
           )}
           <span>CORE: </span>
           {connectionTier === "LAN"
             ? "LAN"
             : connectionTier === "LOCAL"
-              ? (window as any).luca ? "NATIVE" : "LINKED"
+              ? (window as any).luca
+                ? "NATIVE"
+                : "LINKED"
               : connectionTier === "CLOUD"
                 ? "CLOUD"
                 : "OFFLINE"}
@@ -332,13 +353,23 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* LUCA_LOAD - Hidden on mobile for cleaner look */}
         {!isMobile && (
-          <div className={`flex items-center gap-2 ${theme.primary}`}>
-            <Cpu size={isMobile ? 12 : 14} />
+          <div 
+            className="flex items-center gap-2"
+            style={{ color: "var(--app-text-main, #ffffff)" }}
+          >
+            <Icon name="Cpu" size={isMobile ? 12 : 14} variant="Linear" />
             <span>LOAD: </span>
             {isProcessing ? "98%" : "12%"}
             {audioMonitoringActive && !isMobile && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-green-500/10 border border-green-500/30 text-[10px] text-green-400 font-bold animate-pulse">
-                <Mic size={10} />
+              <div 
+                className="flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-bold animate-pulse"
+                style={{ 
+                  backgroundColor: "rgba(16, 185, 129, 0.1)",
+                  borderColor: "rgba(16, 185, 129, 0.3)",
+                  color: "#10b981"
+                }}
+              >
+                <Icon name="Microphone" size={10} variant="Linear" />
                 <span>LIVE EAR</span>
               </div>
             )}

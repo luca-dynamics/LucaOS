@@ -1,31 +1,16 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-const {
-  Cpu,
-  Mic,
-  Database,
-  Eye,
-  Globe,
-  ShieldCheck,
-  Zap,
-  ExternalLink,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import pkg from "../../../package.json";
 import { LucaSettings } from "../../services/settingsService";
 import { memoryService } from "../../services/memoryService";
 
 interface SettingsAboutTabProps {
-  theme: {
-    primary: string;
-    hex: string;
-    themeName: string;
-  };
+  theme?: any;
   settings: LucaSettings;
 }
 
 const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
-  theme,
   settings,
 }) => {
   const version = pkg?.version || "1.0.0";
@@ -81,57 +66,46 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
   return (
     <div className="space-y-8 py-2">
       {/* Brand Header */}
-      <div className="text-center space-y-3">
+      <div className="text-center space-y-4">
         <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className={`w-20 h-20 mx-auto rounded-[22%] border flex items-center justify-center relative group overflow-hidden ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel tech-border"}`}
-          style={{
-            color: theme.hex,
-            boxShadow:
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "0 10px 40px rgba(0,0,0,0.1)"
-                : `0 0 20px ${theme.hex}33`,
-            border:
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "1px solid rgba(0,0,0,0.1)"
-                : undefined,
-          }}
+          className={`w-24 h-24 mx-auto rounded-3xl border flex items-center justify-center relative group overflow-hidden transition-all shadow-xl bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
         >
           {/* Background Highlight Pulse */}
           <motion.div
             animate={{
-              opacity: [0.1, 0.3, 0.1],
-              scale: [1, 1.1, 1],
+              opacity: [0.05, 0.15, 0.05],
+              scale: [1, 1.2, 1],
             }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-0 z-0"
+            className="absolute inset-0 z-0 bg-blue-500/20"
             style={{
-              background: `radial-gradient(circle, ${theme.hex}44 0%, transparent 70%)`,
+              background: `radial-gradient(circle, var(--app-text-main) 0%, transparent 70%)`,
             }}
           />
 
           <img
             src="/logo.png"
             alt="Luca OS Logo"
-            className="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-110"
+            className="w-[80%] h-[80%] object-contain relative z-10 transition-transform duration-700 group-hover:scale-110"
           />
         </motion.div>
 
-        <div>
+        <div className="space-y-1">
           <h2
-            className={`text-xl font-bold tracking-[0.2em] uppercase ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
+            className={`text-4xl font-bold tracking-[0.25em] uppercase text-[var(--app-text-main)] shadow-sm`}
           >
             Luca OS
           </h2>
-          <div className="flex items-center justify-center gap-2 mt-1">
+          <div className="flex items-center justify-center gap-3">
             <span
-              className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 text-gray-400 border-white/10"}`}
+              className={`text-[10px] font-black font-mono px-3 py-1 rounded-full border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-60 uppercase tracking-widest tech-border glass-blur shadow-sm`}
             >
               v{version}
             </span>
-            <span className="flex items-center gap-1 text-[10px] font-mono text-green-500 uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="flex items-center justify-center gap-1.5 text-[10px] font-black font-mono text-green-500 uppercase tracking-widest bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
               Operational
             </span>
           </div>
@@ -148,30 +122,30 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Core Intelligence */}
         <motion.div
           variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
+          className={`transition-all border shadow-sm bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-2xl p-5 space-y-4 relative overflow-hidden tech-border glass-blur`}
         >
           <div className="flex items-center justify-between">
-            <Cpu className="w-4 h-4" style={{ color: theme.hex }} />
-            <Zap
-              className="w-3 h-3"
-              style={{ color: theme.hex, opacity: 0.6 }}
+            <Icon name="Cpu" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
+            <Icon
+              name="Bolt"
+              className="w-3.5 h-3.5 text-[var(--app-text-main)] opacity-40"
             />
           </div>
           <div>
             <div
-              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+              className={`text-[10px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-60 mb-1`}
             >
-              Luca Architecture
+              OS Core
             </div>
             <div
-              className={`text-xs font-medium truncate ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
+              className={`text-base font-bold truncate text-[var(--app-text-main)]`}
             >
               {architecture}
             </div>
             <div
-              className={`text-[10px] mt-1 flex items-center gap-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] mt-2 flex items-center gap-1.5 text-[var(--app-text-muted)] font-bold uppercase tracking-tighter opacity-80`}
             >
-              <ShieldCheck className="w-3 h-3" style={{ color: theme.hex }} />
+              <Icon name="ShieldCheck" className="w-3.5 h-3.5 text-blue-400" />
               {archBadge}
             </div>
           </div>
@@ -180,29 +154,29 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Voice Engine */}
         <motion.div
           variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
+          className={`transition-all border shadow-sm bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-2xl p-5 space-y-4 relative overflow-hidden tech-border glass-blur`}
         >
           <div className="flex items-center justify-between">
-            <Mic className="w-4 h-4" style={{ color: theme.hex }} />
+            <Icon name="Mic" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
             <div
-              className={`text-[8px] px-1.5 py-0.5 rounded font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border border-black/10 text-slate-500" : "bg-white/5 border border-white/10 text-gray-500"}`}
+              className={`text-[9px] px-2 py-0.5 rounded font-black font-mono shadow-sm border bg-white/5 border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-60 uppercase tracking-widest`}
             >
-              {settings.voice.provider.toUpperCase()}
+              {settings.voice.provider}
             </div>
           </div>
           <div>
             <div
-              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+              className={`text-[10px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-60 mb-1`}
             >
-              Voice Synthesis
+              Synthesis Engine
             </div>
             <div
-              className={`text-xs font-medium truncate ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
+              className={`text-base font-bold truncate text-[var(--app-text-main)]`}
             >
               {settings.voice.voiceId.split("-").pop() || "Standard"}
             </div>
             <div
-              className={`text-[10px] mt-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] mt-2 text-[var(--app-text-muted)] font-bold uppercase tracking-tighter opacity-80`}
             >
               Pacing: {settings.voice.pacing}
             </div>
@@ -212,33 +186,34 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Neural Memory */}
         <motion.div
           variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
+          className={`transition-all border shadow-sm bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-2xl p-5 space-y-4 relative overflow-hidden tech-border glass-blur`}
         >
           <div className="flex items-center justify-between">
-            <Database className="w-4 h-4" style={{ color: theme.hex }} />
+            <Icon name="Database" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
             <div
-              className={`text-[8px] flex items-center gap-1 font-mono ${cortexOnline ? (theme.themeName?.toLowerCase() === "lucagent" ? "text-green-600 font-bold" : "text-green-500") : "text-orange-500"}`}
+              className={`text-[9px] flex items-center gap-1.5 font-black font-mono uppercase tracking-widest ${cortexOnline ? "text-green-500" : "text-amber-500 opacity-80"}`}
             >
               <span
-                className={`w-1 h-1 rounded-full ${cortexOnline ? "bg-green-500 animate-pulse" : "bg-orange-500"}`}
+                className={`w-1.5 h-1.5 rounded-full ${cortexOnline ? "bg-green-500 animate-pulse shadow-[0_0_6px_rgba(34,197,94,0.6)]" : "bg-amber-500"}`}
               />
               CORTEX {cortexOnline ? "ON" : "OFF"}
             </div>
           </div>
           <div>
             <div
-              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+              className={`text-[10px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-60 mb-1`}
             >
-              Semantic Memory
+              Semantic Matrix
             </div>
             <div
-              className={`text-xs font-medium ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
+              className={`text-base font-bold text-[var(--app-text-main)]`}
             >
-              {memoryCount} Vectors
+              {memoryCount} Known Facts
             </div>
             <div
-              className={`text-[10px] mt-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] mt-2 text-[var(--app-text-muted)] font-bold uppercase tracking-tighter opacity-80 flex items-center gap-1.5`}
             >
+              <Icon name="Check" className="w-3.5 h-3.5 text-blue-400" />
               Knowledge Graph Active
             </div>
           </div>
@@ -247,23 +222,23 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Environmental Awareness */}
         <motion.div
           variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10" : "glass-panel tech-border border"} p-4 space-y-3 relative overflow-hidden`}
+          className={`transition-all border shadow-sm bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-2xl p-5 space-y-4 relative overflow-hidden tech-border glass-blur`}
         >
           <div className="flex items-center justify-between">
-            <Eye className="w-4 h-4" style={{ color: theme.hex }} />
-            <Globe
-              className="w-3 h-3"
-              style={{ color: theme.hex, opacity: 0.6 }}
+            <Icon name="Eye" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
+            <Icon
+              name="Globus"
+              className="w-3.5 h-3.5 text-[var(--app-text-main)] opacity-40"
             />
           </div>
           <div>
             <div
-              className={`text-[9px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"}`}
+              className={`text-[10px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-60 mb-1`}
             >
-              Vision
+              Spatial Vision
             </div>
             <div
-              className={`text-xs font-medium truncate ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white"}`}
+              className={`text-base font-bold truncate text-[var(--app-text-main)]`}
             >
               {(settings.brain.visionModel || "Gemini 3 Flash")
                 .split("/")
@@ -272,13 +247,13 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
                 .replace(/\b\w/g, (l) => l.toUpperCase())}
             </div>
             <div
-              className={`text-[10px] mt-1 flex items-center gap-1 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 font-bold" : "text-gray-400"}`}
+              className={`text-[10px] mt-2 flex items-center gap-1.5 text-[var(--app-text-muted)] font-bold uppercase tracking-tighter opacity-80`}
             >
-              <Zap
-                className="w-2.5 h-2.5"
-                style={{ color: theme.hex, opacity: 0.6 }}
+              <Icon
+                name="Bolt"
+                className="w-3.5 h-3.5 text-amber-500"
               />
-              Spatial Awareness Active
+              Sensory Aware
             </div>
           </div>
         </motion.div>
@@ -289,38 +264,38 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
-        className="pt-4 flex flex-col items-center gap-4"
+        className="pt-6 flex flex-col items-center gap-6"
       >
-        <div className="flex gap-6">
+        <div className="flex gap-8">
           <button
             onClick={() =>
               window.open("https://github.com/macking/luca/releases")
             }
-            className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-white transition-colors group"
+            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all opacity-60 hover:opacity-100 group"
           >
-            <ExternalLink className="w-3 h-3 group-hover:scale-110 transition-transform" style={{ color: theme.hex }} />
-            Check Updates
+            <Icon name="ExternalLink" className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <span>Check Updates</span>
           </button>
           <button
             onClick={() =>
               window.luca?.openScreenPermissions &&
               window.luca.openScreenPermissions()
             }
-            className={`flex items-center gap-1.5 text-[10px] transition-colors group ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}
+            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all opacity-60 hover:opacity-100 group`}
           >
-            <ShieldCheck className="w-3 h-3 group-hover:scale-110 transition-transform" style={{ color: theme.hex }} />
-            Permissions
+            <Icon name="ShieldCheck" className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <span>Permissions</span>
           </button>
         </div>
 
         <div
-          className={`text-[9px] font-mono tracking-widest flex items-center gap-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-400" : "text-gray-600"}`}
+          className={`text-[10px] font-black font-mono tracking-[0.3em] flex items-center gap-3 text-[var(--app-text-muted)] opacity-40 uppercase`}
         >
           <span>{electronVersion}</span>
           <span
-            className={`w-1 h-1 rounded-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-slate-300" : "bg-gray-700"}`}
+            className={`w-1 h-1 rounded-full bg-[var(--app-text-muted)] opacity-60`}
           />
-          <span>LUCAOS LABS</span>
+          <span>LucaOS LABS</span>
         </div>
       </motion.div>
     </div>

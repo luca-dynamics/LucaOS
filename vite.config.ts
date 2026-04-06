@@ -9,6 +9,27 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
+    optimizeDeps: {
+      include: ["debug", "ajv", "ajv-formats"],
+      exclude: [
+        "@modelcontextprotocol/sdk",
+        "eventsource",
+        "whatsapp-web.js",
+        "robotjs",
+        "playwright",
+        "better-sqlite3",
+        "electron",
+        "express",
+        "ccxt",
+        "node-cron",
+        "mqtt",
+        "socket.io",
+        "socket.io-client",
+        "cheerio",
+        "chokidar",
+        "cross-spawn",
+      ],
+    },
     plugins: [
       react({
         jsxRuntime: "automatic",
@@ -35,13 +56,26 @@ export default defineConfig(({ mode }) => {
         ),
         three: "three",
         child_process: path.resolve(__dirname, "src/mocks/child_process.js"),
+        "cross-spawn": path.resolve(__dirname, "src/mocks/child_process.js"),
         util: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:util": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         fs: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:fs": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         path: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:path": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         crypto: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:crypto": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         module: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:module": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         stream: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:stream": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         timers: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:timers": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:process": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        os: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:os": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        url: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:url": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         "better-sqlite3": path.resolve(
           __dirname,
           "src/mocks/node_polyfills.js",
@@ -62,6 +96,7 @@ export default defineConfig(({ mode }) => {
         VITE_ANTHROPIC_API_KEY: env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
       },
       // Flattened keys for libraries that use direct injection
+      __LUCA_DEV_MODE__: JSON.stringify(mode === "development" || env.VITE_DEV_MODE === "true"),
       "process.env.GEMINI_API_KEY": JSON.stringify(
         env.GEMINI_API_KEY || env.VITE_API_KEY || env.API_KEY || "",
       ),
@@ -87,10 +122,21 @@ export default defineConfig(({ mode }) => {
     // Expose environment variables to import.meta.env (Vite's native way)
     envPrefix: ["VITE_", "API_", "GEMINI_"],
     build: {
+      target: "esnext",
+      minify: false,
       rollupOptions: {
         external: [
-          // Exclude server-only tools from mobile builds
+          // Exclude server-only tools from mobile/browser builds
           /src\/services\/integrations\/ingestor/,
+          "@modelcontextprotocol/sdk",
+          "eventsource",
+          "whatsapp-web.js",
+          "robotjs",
+          "playwright",
+          "better-sqlite3",
+          "electron",
+          "express",
+          "ccxt",
         ],
       },
     },

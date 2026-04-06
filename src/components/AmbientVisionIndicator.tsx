@@ -1,9 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Eye,
-  EyeOff,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface AmbientVisionIndicatorProps {
   active: boolean;
@@ -22,7 +18,6 @@ const AmbientVisionIndicator: React.FC<AmbientVisionIndicatorProps> = ({
   theme,
   isMobile = false,
 }) => {
-  const isLight = theme?.themeName?.toLowerCase() === "lucagent";
   const themeHex = theme?.hex || "#3b82f6";
 
   if (!active) return null;
@@ -32,23 +27,24 @@ const AmbientVisionIndicator: React.FC<AmbientVisionIndicatorProps> = ({
       onClick={onToggle}
       className={`flex items-center gap-1.5 transition-all duration-300 group ${
         isMobile ? "p-1" : "px-2.5 py-1 rounded-full"
-      } ${
-        isLight
-          ? "bg-blue-50/80 border border-blue-200/50 hover:bg-blue-100/80"
-          : "bg-white/5 border border-white/10 hover:bg-white/15"
-      }`}
+      } glass-blur border`}
+      style={{
+        backgroundColor: "var(--app-bg-tint)",
+        borderColor: "var(--app-border-main)",
+      }}
       title="Luca is observing your screen — click to stop"
     >
-      <Eye
+      <Icon
+        name="Eye"
+        variant="Linear"
         size={isMobile ? 12 : 13}
         style={{ color: themeHex }}
         className="animate-pulse"
       />
       {!isMobile && (
         <span
-          className={`text-[9px] font-bold tracking-widest uppercase ${
-            isLight ? "text-gray-500" : "text-white/50"
-          }`}
+          className="text-[9px] font-bold tracking-widest uppercase"
+          style={{ color: "var(--app-text-muted)" }}
         >
           VISION
         </span>

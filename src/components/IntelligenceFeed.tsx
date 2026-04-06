@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Globe,
-  ExternalLink,
-  ShieldCheck,
-  Database,
-  Zap,
-  Lock,
-  Activity,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface IntelligenceFeedProps {
   results: any;
@@ -55,10 +46,12 @@ const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="relative">
-            <Globe
+            <Icon
+              name="Earth"
               size={14}
+              variant="BoldDuotone"
               className="animate-spin-slow sm:w-[18px] sm:h-[18px]"
-              style={{ color: personaColor }}
+              color={personaColor}
             />
             <div
               className="absolute inset-0 animate-ping opacity-50"
@@ -74,11 +67,11 @@ const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
         </div>
         <div className="flex items-center gap-4 text-[10px] font-mono text-slate-400">
           <span className="flex items-center gap-1">
-            <Database size={10} />
+            <Icon name="Database" size={10} color="#94a3b8" />
             NODES: {chunks.length}
           </span>
           <span className="flex items-center gap-1">
-            <Activity size={10} className="animate-pulse" />
+            <Icon name="Chart" size={10} color="#94a3b8" className="animate-pulse" />
             LATENCY: 12ms
           </span>
         </div>
@@ -135,7 +128,7 @@ const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
                     className="flex items-center gap-2 text-[10px] font-mono opacity-70"
                     style={{ color: personaColor }}
                   >
-                    <ShieldCheck size={12} />
+                    <Icon name="ShieldCheck" size={12} variant="BoldDuotone" color={personaColor} />
                     <span>VERIFIED_SOURCE_{i + 1}</span>
                   </div>
                   <div className="text-[10px] font-mono text-slate-500">
@@ -148,7 +141,7 @@ const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
                 </h3>
 
                 <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-400 font-mono">
-                  <ExternalLink size={10} className="sm:w-3 sm:h-3" />
+                  <Icon name="SquareArrowRightUp" size={10} className="sm:w-3 sm:h-3" color="#94a3b8" />
                   <span className="truncate max-w-[150px] sm:max-w-[200px]">
                     {new URL(chunk.web.uri).hostname}
                   </span>

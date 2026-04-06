@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  MessageSquare,
-  Wifi,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { SmartDevice } from "../types";
 import { apiUrl } from "../config/api";
 
@@ -273,7 +269,7 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
   if (!device) return null;
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 glass-blur animate-in fade-in zoom-in-95 duration-300">
       <div
         className={`relative w-[90%] max-w-5xl h-[85vh] bg-[#0a0a0a] border shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-lg flex flex-col overflow-hidden transition-all ${
           activeTab === "EXPLOIT" || activeTab === "WIRELESS"
@@ -340,7 +336,7 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
           {activeTab === "WIRELESS" && (
             <div className="h-full flex flex-col items-center justify-center gap-8">
               <div className="text-center space-y-2">
-                <Wifi size={48} className="mx-auto text-slate-600" />
+                <Icon name="Wifi" size={48} className="mx-auto text-slate-600" variant="BoldDuotone" />
                 <h3 className="text-xl font-bold text-white">
                   WIRELESS ADB BRIDGE
                 </h3>
@@ -423,7 +419,7 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
                   className="p-3 bg-slate-900/40 border border-slate-800 rounded flex gap-4 hover:border-rq-blue/30 transition-colors"
                 >
                   <div className="p-2 bg-slate-800 rounded-full h-fit">
-                    <MessageSquare size={16} className="text-slate-400" />
+                    <Icon name="Chat" size={16} className="text-slate-400" variant="BoldDuotone" />
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-1">

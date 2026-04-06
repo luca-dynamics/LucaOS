@@ -1,18 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Sparkles,
-  Scan,
-  Clock,
-  ListTodo,
-  Globe,
-  Mail,
-  Brain,
-  Eye,
-  Zap,
-  Link,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 export interface Suggestion {
   id: string;
@@ -32,16 +20,16 @@ interface SuggestionChipsProps {
 }
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  scan: <Scan size={13} />,
-  clock: <Clock size={13} />,
-  list: <ListTodo size={13} />,
-  globe: <Globe size={13} />,
-  mail: <Mail size={13} />,
-  brain: <Brain size={13} />,
-  eye: <Eye size={13} />,
-  zap: <Zap size={13} />,
-  sparkles: <Sparkles size={13} />,
-  link: <Link size={13} />,
+  scan: <Icon name="Magnifer" size={13} />,
+  clock: <Icon name="ClockCircle" size={13} />,
+  list: <Icon name="List" size={13} />,
+  globe: <Icon name="Global" size={13} />,
+  mail: <Icon name="Letter" size={13} />,
+  brain: <Icon name="Cpu" size={13} />,
+  eye: <Icon name="Eye" size={13} />,
+  zap: <Icon name="Flash" size={13} />,
+  sparkles: <Icon name="Stars" size={13} />,
+  link: <Icon name="Link" size={13} />,
 };
 
 const SuggestionChips: React.FC<SuggestionChipsProps> = ({
@@ -117,7 +105,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
           }}
         >
           <span className="opacity-70 group-hover:opacity-100 transition-opacity duration-300" style={{ color: themeHex }}>
-            {ICON_MAP[suggestion.icon] || <Zap size={12} />}
+            {ICON_MAP[suggestion.icon] || <Icon name="Flash" size={12} />}
           </span>
           <span className="whitespace-nowrap tracking-tight">{suggestion.label}</span>
         </button>

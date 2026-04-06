@@ -1,27 +1,19 @@
 import React, { memo } from "react";
-import * as LucideIcons from "lucide-react";
 import { Handle,
   Position } from "@xyflow/react";
 import { motion } from "framer-motion";
-const { 
-  Cpu,
-  Shield,
-  Target,
-  Brain,
-  Activity,
-  Globe,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { setHexAlpha, getThemeColors } from "../../config/themeColors";
 
 // --- GOAL NODE ---
 export const GoalNode = memo(({ data }: any) => {
   return (
-    <div className="px-6 py-4 shadow-xl rounded-2xl bg-black/60 backdrop-blur-xl border border-white/20 flex flex-col items-center gap-2 min-w-[200px]">
+    <div className="px-6 py-4 shadow-xl rounded-2xl bg-black/60 glass-blur border border-white/20 flex flex-col items-center gap-2 min-w-[200px]">
       <div 
         className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-500/20 border border-blue-500/50 text-blue-400"
         style={{ boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)" }}
       >
-        <Target size={24} />
+        <Icon name="Target" size={24} variant="BoldDuotone" />
       </div>
       <div className="text-center">
         <div className="text-[10px] text-blue-400 font-bold tracking-widest uppercase mb-1">STRATEGIC GOAL</div>
@@ -42,10 +34,10 @@ export const AgentNode = memo(({ data }: any) => {
   
   const getIcon = () => {
     switch (persona) {
-      case "HACKER": return <Shield size={20} />;
-      case "ENGINEER": return <Cpu size={20} />;
-      case "BROWSER": return <Globe size={20} />;
-      default: return <Brain size={20} />;
+      case "HACKER": return <Icon name="Shield" size={20} variant="BoldDuotone" />;
+      case "ENGINEER": return <Icon name="Cpu" size={20} variant="BoldDuotone" />;
+      case "BROWSER": return <Icon name="Globe" size={20} variant="BoldDuotone" />;
+      default: return <Icon name="Brain" size={20} variant="BoldDuotone" />;
     }
   };
 
@@ -55,7 +47,7 @@ export const AgentNode = memo(({ data }: any) => {
       <motion.div 
         animate={isAnyActive ? { scale: [1, 1.05, 1] } : {}}
         transition={{ repeat: Infinity, duration: 2 }}
-        className="px-4 py-3 rounded-xl bg-black/80 backdrop-blur-md border flex flex-col items-center gap-2 min-w-[140px]"
+        className="px-4 py-3 rounded-xl bg-black/80 glass-blur border flex flex-col items-center gap-2 min-w-[140px]"
         style={{ 
           borderColor: isAnyActive ? theme.hex : "rgba(255,255,255,0.1)",
           boxShadow: isAnyActive ? `0 0 20px ${setHexAlpha(theme.hex, 0.3)}` : "none"
@@ -124,7 +116,7 @@ export const TaskNode = memo(({ data }: any) => {
             />
             <span className="text-[11px] text-slate-300 font-medium truncate">{task.description}</span>
           </div>
-          {isExecuting && <Activity size={10} className="animate-pulse text-slate-500" />}
+          {isExecuting && <Icon name="Activity" size={10} className="animate-pulse text-slate-500" variant="BoldDuotone" />}
         </div>
 
         {/* --- CONTEXTUAL VIEWPORT --- */}

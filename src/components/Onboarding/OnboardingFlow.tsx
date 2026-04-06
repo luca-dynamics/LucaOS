@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import * as LucideIcons from "lucide-react";
-import { THEME_PALETTE } from "../../config/themeColors";
+import { THEME_PALETTE, getDynamicContrast } from "../../config/themeColors";
 import { motion } from "framer-motion";
 import HologramFace from "./HologramFace";
 import ModeSelect, { ConversationMode } from "./ModeSelect";
@@ -17,6 +17,7 @@ import { personalityService } from "../../services/personalityService";
 import { OperatorProfile } from "../../types/operatorProfile";
 import { useMobile } from "../../hooks/useMobile";
 import { modelManager } from "../../services/ModelManagerService";
+import { apiUrl } from "../../config/api";
 
 type Step =
   | "KERNEL_AWAKENING"
@@ -89,6 +90,19 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   // Boot Sequence Animation
   const [bootText, setBootText] = useState<string[]>([]);
+
+  useEffect(() => {
+    const opacity = settingsService.get("general")?.backgroundOpacity ?? 0.3;
+    const dynamicContrast = getDynamicContrast(
+      currentThemeName || "PROFESSIONAL",
+      opacity,
+    );
+    const root = document.documentElement;
+    root.style.setProperty("--app-text-main", dynamicContrast.text);
+    root.style.setProperty("--app-text-muted", dynamicContrast.textMuted);
+    root.style.setProperty("--app-border-main", dynamicContrast.border);
+    root.style.setProperty("--app-bg-tint", dynamicContrast.bgTint);
+  }, [currentThemeName, step]);
 
   const isLightTheme =
     currentThemeName?.toUpperCase() === "LUCAGENT" ||
@@ -492,7 +506,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   return (
     <div
-      className={`absolute inset-0 z-10 ${isLightTheme ? "text-slate-900" : "text-white"} font-mono flex flex-col items-center justify-center overflow-hidden`}
+      className={`absolute inset-0 z-10  font-mono flex flex-col items-center justify-center overflow-hidden`}
     >
       {/* Background handled by App.tsx (LiquidBackground) */}
 
@@ -509,7 +523,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       {/* Hologram Face is visible during hardware scanning, downloads, and voice conversation */}
       {!["KERNEL_AWAKENING", "DIRECTIVE_ALIGNMENT"].includes(step) &&
         !(step === "CONVERSATION" && conversationMode === "text") && (
-          <HologramFace step={step} themeHex={currentThemeHex} />
+          <HologramFace step={step} />
         )}
 
       {/* Primary UI Layer */}
@@ -557,14 +571,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         )}
 
         {step === "DIRECTIVE_ALIGNMENT" && (
-          <ConstitutionalAlignment
-            themeHex={currentThemeHex}
-            isLightTheme={isLightTheme}
-            onComplete={() => {
-              soundService.play("SUCCESS");
-              setStep("THEME");
-            }}
-          />
+          <ConstitutionalAlignment onComplete={() => setStep("THEME")} />
         )}
 
         {step === "THEME" && (
@@ -624,7 +631,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 Neural Handshake
               </h1>
               <p
-                className={`${isLightTheme ? "text-slate-800" : "text-gray-200"} text-center font-medium`}
+                className={` text-center font-medium`}
                 style={{ fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)" }}
               >
                 Define your operator designation...
@@ -643,7 +650,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full border rounded-xl p-3 ${isLightTheme ? "text-slate-900" : "text-white"} outline-none transition-all text-center text-lg placeholder-gray-500 backdrop-blur-md`}
+                className={`w-full border rounded-xl p-3  outline-none transition-all text-center text-lg placeholder-gray-500 backdrop-blur-md`}
                 placeholder="ENTER DESIGNATION"
                 style={{
                   borderColor: "rgba(255,255,255,0.2)",
@@ -675,13 +682,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   currentThemeHex,
                   0.1,
                 )}, inset 0 1px 0 ${hexToRgba(currentThemeHex, 0.15)}`,
-                color: name
-                  ? isLightTheme
-                    ? "#000"
-                    : currentThemeHex
-                  : isLightTheme
-                    ? "rgba(0,0,0,0.5)"
-                    : "rgba(255,255,255,0.7)",
+                color: name ? "var(--app-text-main)" : "var(--app-text-muted)",
               }}
             >
               Initialize Protocol{" "}
@@ -724,7 +725,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 Cognitive Core
               </h1>
               <p
-                className={`${isLightTheme ? "text-slate-800" : "text-gray-200"} max-w-sm mx-auto font-medium`}
+                className={` max-w-sm mx-auto font-medium`}
                 style={{ fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)" }}
               >
                 Luca can operate entirely offline or leverage the managed Luca
@@ -746,14 +747,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     <div className="flex items-center gap-2">
                       <Shield size={12} style={{ color: currentThemeHex }} />
                       <span
-                        className={`text-[10px] font-bold ${isLightTheme ? "text-slate-900" : "text-white/80"} uppercase tracking-widest`}
+                        className={`text-[10px] font-bold  uppercase tracking-widest`}
                       >
                         Managed Connection
                       </span>
                     </div>
-                    <p
-                      className={`text-[9px] ${isLightTheme ? "text-slate-800" : "text-white/80"} font-medium`}
-                    >
+                    <p className={`text-[9px]  font-medium`}>
                       Professional cloud intelligence managed directly by Luca
                       OS.
                     </p>
@@ -775,7 +774,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         currentThemeHex,
                         0.2,
                       )}, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
-                      color: isLightTheme ? "#000" : "#fff",
+                      color: "var(--app-text-main)",
                     }}
                   >
                     {isActivating ? (
@@ -803,7 +802,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     className={`w-full max-w-md mx-auto text-[10px] py-4 rounded-xl border border-white/10 hover:border-white/20 transition-all uppercase tracking-widest font-bold flex items-center justify-center gap-2`}
                     style={{
                       backgroundColor: "rgba(255, 255, 255, 0.05)",
-                      color: isLightTheme ? "#000" : "#fff",
+                      color: "var(--app-text-main)",
                     }}
                   >
                     <Key size={14} style={{ color: currentThemeHex }} />
@@ -944,7 +943,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         currentThemeHex,
                         isLightTheme ? 0.4 : 0.3,
                       ),
-                      color: isLightTheme ? "#000" : "#fff",
+                      color: "var(--app-text-main)",
                     }}
                   >
                     {isActivating ? "Verifying..." : "Link My Cloud Brain"}
@@ -958,7 +957,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   type="button"
                   onClick={handleGoLocal}
                   disabled={isActivating}
-                  className={`w-full max-w-md mx-auto text-[9px] ${isLightTheme ? "text-slate-900 hover:text-black" : "text-gray-200 hover:text-white"} font-bold uppercase tracking-widest transition-all opacity-80 hover:opacity-100 flex items-center gap-1`}
+                  className={`w-full max-w-md mx-auto text-[9px]  font-bold uppercase tracking-widest transition-all opacity-80 hover:opacity-100 flex items-center gap-1`}
                 >
                   <Shield size={10} />
                   Stay Local (Privacy Mode)
@@ -966,7 +965,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
                 {!showByok && (
                   <p
-                    className={`text-[9px] ${isLightTheme ? "text-slate-800" : "text-gray-300"} text-center uppercase tracking-widest leading-relaxed font-bold opacity-90`}
+                    className={`text-[9px]  text-center uppercase tracking-widest leading-relaxed font-bold opacity-90`}
                   >
                     Managed Professional Gateway. <br />
                     Secure. Private. Intelligent.
@@ -981,17 +980,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <FaceScan
             userName={name}
             compact={isMobile}
-            enrollmentEndpoint="/api/admin/enroll"
+            enrollmentEndpoint={apiUrl("/api/admin/enroll-face")}
             onComplete={handleFaceScanComplete}
             onSkip={() => handleFaceScanComplete(null)}
-            isLightTheme={isLightTheme}
-            theme={{ primary: currentThemeName, hex: currentThemeHex }}
           />
         )}
 
-        {step === "MODE_SELECT" && (
-          <ModeSelect onSelect={handleModeSelect} isLightTheme={isLightTheme} />
-        )}
+        {step === "MODE_SELECT" && <ModeSelect onSelect={handleModeSelect} />}
 
         {step === "CONVERSATION" && conversationMode && (
           <ConversationalOnboarding
@@ -1029,7 +1024,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   Hardware Scan
                 </h2>
                 <p
-                  className={`${isLightTheme ? "text-slate-700" : "text-white/60"}`}
+                  className={``}
                   style={{ fontSize: "clamp(0.6rem, 1.5vw, 0.75rem)" }}
                 >
                   Analyzing architecture tensors...
@@ -1069,9 +1064,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 >
                   Upgrade to Ollama?
                 </h2>
-                <p
-                  className={`text-sm ${isLightTheme ? "text-slate-700" : "text-gray-300"} leading-relaxed`}
-                >
+                <p className={`text-sm  leading-relaxed`}>
                   I&apos;ve detected that your hardware is powerful enough to
                   run high-fidelity models locally.
                   <br className="my-2" />
@@ -1111,9 +1104,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   ) : (
                     <Sparkles size={18} className="text-yellow-400" />
                   )}
-                  <span
-                    className={isLightTheme ? "text-slate-900" : "text-white"}
-                  >
+                  <span style={{ color: "var(--app-text-main)" }}>
                     {isActivating ? "Installing..." : "Yes, Let's do it"}
                   </span>
                 </button>
@@ -1121,7 +1112,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <button
                   type="button"
                   onClick={handleProceedWithCortex}
-                  className={`w-full max-w-md mx-auto text-[10px] ${isLightTheme ? "text-slate-600 hover:text-black" : "text-white/40 hover:text-white"} uppercase tracking-widest font-bold transition-all`}
+                  className={`w-full max-w-md mx-auto text-[10px]  uppercase tracking-widest font-bold transition-all`}
                 >
                   No thanks, use native models
                 </button>
@@ -1150,9 +1141,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 >
                   Ollama Detected (Sleeping)
                 </h2>
-                <p
-                  className={`text-xs ${isLightTheme ? "text-slate-700" : "text-gray-300"} leading-relaxed`}
-                >
+                <p className={`text-xs  leading-relaxed`}>
                   Luca has detected an internal architecture capable of running{" "}
                   <strong>{targetBrainModel}</strong>.
                   <br className="my-2" />
@@ -1176,9 +1165,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     style={{ backgroundColor: currentThemeHex }}
                   />
                   <Activity size={12} style={{ color: currentThemeHex }} />
-                  <span
-                    className={isLightTheme ? "text-slate-900" : "text-white"}
-                  >
+                  <span style={{ color: "var(--app-text-main)" }}>
                     Resume Hardware Scan
                   </span>
                 </button>
@@ -1186,7 +1173,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <button
                   type="button"
                   onClick={handleProceedWithCortex}
-                  className={`w-full max-w-md mx-auto text-[10px] ${isLightTheme ? "text-slate-600 hover:text-slate-900" : "text-gray-500 hover:text-gray-300"} uppercase tracking-widest font-bold transition-colors`}
+                  className={`w-full max-w-md mx-auto text-[10px]  uppercase tracking-widest font-bold transition-colors`}
                 >
                   Proceed with Native Download
                 </button>
@@ -1208,7 +1195,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 Core Integration
               </h2>
               <p
-                className={`${isLightTheme ? "text-slate-700" : "text-white/60"} max-w-sm mx-auto`}
+                className={` max-w-sm mx-auto`}
                 style={{ fontSize: "clamp(0.6rem, 1.8vw, 0.75rem)" }}
               >
                 Downloading optimized cognitive modules.
@@ -1245,9 +1232,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     >
                       <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
                         <span
-                          className={
-                            isLightTheme ? "text-slate-800" : "text-white/90"
-                          }
+                          style={{
+                            color: "var(--app-text-main)",
+                            opacity: 0.9,
+                          }}
                         >
                           {label}
                         </span>
@@ -1340,11 +1328,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 >
                   Calibrating Pathways
                 </h2>
-                <p
-                  className={`text-xs ${isLightTheme ? "text-slate-700" : "text-white/60"}`}
-                >
-                  Optimizing cognitive tensors...
-                </p>
+                <p className={`text-xs `}>Optimizing cognitive tensors...</p>
               </div>
             </div>
           </div>
@@ -1371,11 +1355,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               >
                 System Ready
               </h2>
-              <p
-                className={`text-sm ${isLightTheme ? "text-slate-700" : "text-white/60"}`}
-              >
-                Connection Established
-              </p>
+              <p className={`text-sm `}>Connection Established</p>
             </div>
           </div>
         )}
@@ -1384,7 +1364,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       {/* OS Info Footer */}
       {!(step === "CONVERSATION" && conversationMode === "voice") && (
         <div
-          className={`absolute bottom-4 text-[10px] ${isLightTheme ? "text-slate-500" : "text-white/60"} font-mono tracking-widest flex items-center gap-2`}
+          className={`absolute bottom-4 text-[10px]  font-mono tracking-widest flex items-center gap-2`}
         >
           <div
             className="w-2 h-2 rounded-full animate-pulse"

@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera, OrbitControls } from '@react-three/drei';
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  BrainCircuit,
-  Network,
-  Activity,
-  Navigation,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import ThoughtGraph, { ThoughtNode } from './ThoughtGraph';
 import ExecutionPipeline from './ExecutionPipeline';
 import SubAgentDrone, { DroneTask } from './SubAgentDrone';
+import BDIJustificationPanel from './BDIJustificationPanel';
 
 interface ThoughtProcessPanelProps {
   nodes: ThoughtNode[];
@@ -26,16 +20,16 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
   onClose,
   onNodeClick
 }) => {
-  const [viewMode, setViewMode] = useState<'graph' | 'pipeline' | 'drones'>('graph');
+  const [viewMode, setViewMode] = useState<'graph' | 'pipeline' | 'drones' | 'agencies'>('graph');
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300 font-mono">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 glass-blur animate-in fade-in duration-300 font-mono">
       <div className="relative w-[95%] h-[90%] border border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.2)] rounded-sm flex flex-col overflow-hidden bg-[#050505]">
 
         {/* Header */}
         <div className="h-14 border-b border-cyan-900 bg-cyan-950/10 flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <BrainCircuit className="text-cyan-500 animate-pulse" size={20} />
+            <Icon name="BrainCircuit" className="text-cyan-500 animate-pulse" size={20} />
             <div>
               <h2 className="text-lg font-bold text-cyan-500 tracking-[0.2em]">THOUGHT PROCESS</h2>
               <div className="text-[10px] text-cyan-700 flex gap-4">
@@ -55,7 +49,7 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
                 : 'bg-gray-800 text-gray-500 border border-gray-700'
                 }`}
             >
-              <Network size={12} className="inline mr-1" />
+              <Icon name="Network" size={12} className="inline mr-1" />
               GRAPH
             </button>
             <button
@@ -65,7 +59,7 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
                 : 'bg-gray-800 text-gray-500 border border-gray-700'
                 }`}
             >
-              <Activity size={12} className="inline mr-1" />
+              <Icon name="Activity" size={12} className="inline mr-1" />
               PIPELINE
             </button>
             <button
@@ -77,10 +71,20 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
             >
               DRONES
             </button>
+            <button
+              onClick={() => setViewMode('agencies')}
+              className={`px-3 py-1 text-xs font-bold transition-colors ${viewMode === 'agencies'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                : 'bg-gray-800 text-gray-500 border border-gray-700'
+                }`}
+            >
+              <Icon name="SearchCode" size={12} className="inline mr-1" />
+              AGENCIES
+            </button>
           </div>
 
           <button onClick={onClose} className="text-cyan-700 hover:text-cyan-400 transition-colors">
-            <X size={24} />
+            <Icon name="X" size={24} />
           </button>
         </div>
 
@@ -171,10 +175,16 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
           {viewMode === 'drones' && drones.length === 0 && (
             <div className="w-full h-full flex items-center justify-center text-gray-500">
               <div className="text-center">
-                <Navigation className="text-cyan-500 mx-auto mb-4 animate-bounce" size={40} />
+                <Icon name="Navigation" className="text-cyan-500 mx-auto mb-4 animate-bounce" size={40} />
                 <div className="text-sm">No active drones</div>
                 <div className="text-xs opacity-70 mt-2">Drones appear when parallel tasks are executed</div>
               </div>
+            </div>
+          )}
+
+          {viewMode === 'agencies' && (
+            <div className="w-full h-full overflow-hidden">
+                <BDIJustificationPanel />
             </div>
           )}
         </div>

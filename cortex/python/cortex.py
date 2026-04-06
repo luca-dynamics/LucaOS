@@ -238,9 +238,21 @@ class HybridEmbeddingLogic:
     
     def set_model(self, model_id: str):
         self.current_model = model_id
-        if "model2vec" in model_id: self._embedding_dim = 256
+        # Fallback dimensions for common models
+        if "model2vec" in model_id: 
+            # Force 128 or 256 based on typical Potion/StaticModel output
+            # If the user is seeing 64, we might need to adjust here or probe
+            self._embedding_dim = 256 
         elif model_id in ["mxbai-embed-xsmall", "bge-small-en"]: self._embedding_dim = 384
         else: self._embedding_dim = 768
+        
+        # PROBE: If the model is already loaded, use its actual dimension
+        model_info = _local_embedding_models.get(model_id)
+        if model_info:
+            _, model = model_info
+            if hasattr(model, 'embedding_dimension'):
+                self._embedding_dim = model.embedding_dimension
+                print(f"[CORTEX] Detected actual model dimension: {self._embedding_dim}")
         
         # Sync with RAG if it exists
         if rag_embedding_func:
@@ -292,7 +304,19 @@ class HybridEmbeddingLogic:
         else: # model2vec
             embeddings = await asyncio.to_thread(model.encode, texts)
             
-        return np.array(embeddings)
+        embeddings = np.array(embeddings)
+        
+        # LAZY DIMENSION AUDIT: Auto-sync with actual model output
+        if len(embeddings) > 0:
+            actual_dim = embeddings.shape[1]
+            if actual_dim != self._embedding_dim:
+                print(f"[CORTEX] 🧠 Neural Alignment: Model actually outputs {actual_dim} dim (Expected {self._embedding_dim}). Correcting internal state...")
+                self._embedding_dim = actual_dim
+                # Global sync with RAG if it exists
+                if rag_embedding_func:
+                    rag_embedding_func.embedding_dim = actual_dim
+                    
+        return embeddings
 
 # Initialize the logic
 embedding_logic = HybridEmbeddingLogic(embedding_dim=768)
@@ -652,8 +676,24 @@ async def sync_loop(target_rag, model_id):
             await asyncio.sleep(sync_interval)
 
         except Exception as e:
-            print(f"[CORTEX] ⚠️ Sync Loop Error: {e}")
-            await asyncio.sleep(300) # Wait 5 mins on error before retry
+            err_msg = str(e).lower()
+            if "dimension mismatch" in err_msg or "cannot be evenly divided" in err_msg:
+                print(f"[CORTEX] 🛠️ Emergency Recovery: Neural dimension mismatch detected. Purging corrupted index...")
+                try:
+                    # Wipe the vector DB files to allow clean rebuild with new dimensions
+                    for junk in ["vdb_entities.json", "vdb_relationships.json", "vdb_chunks.json", "kv_store_full_text_search.json"]:
+                        junk_path = os.path.join(model_dir, junk)
+                        if os.path.exists(junk_path): 
+                            os.remove(junk_path)
+                            print(f"[CORTEX] Removed stale index: {junk}")
+                    print(f"[CORTEX] ✅ Purge complete. Restarting sync with corrected dimensions...")
+                    # Small sleep before retry
+                    await asyncio.sleep(5)
+                except Exception as purge_err:
+                    print(f"[CORTEX] ❌ Failed to purge index: {purge_err}")
+            else:
+                print(f"[CORTEX] ⚠️ Sync Loop Error: {e}")
+                await asyncio.sleep(300) # Wait 5 mins on error before retry
 
 async def cortex_llm_complete(prompt, system_prompt=None, **kwargs):
     """Universal LLM dispatcher for LightRAG. Routes to Gemini, OpenAI, Anthropic, or Ollama."""
@@ -721,7 +761,7 @@ async def cortex_llm_complete(prompt, system_prompt=None, **kwargs):
 
 async def get_rag(mind_type="cloud"):
     """Retrieve or initialize LightRAG instance. 'cloud' uses Gemini, 'local' uses free model2vec."""
-    global _rag_instances, _current_rag_model, LIGHTRAG_AVAILABLE
+    global _rag_instances, _current_rag_model, LIGHTRAG_AVAILABLE, rag_embedding_func
     
     # Lazy Import LightRAG components
     LightRAG_Class, QueryParam_Class, EmbeddingFunc_Class, _, _, _ = lazy_import_lightrag()
@@ -747,6 +787,10 @@ async def get_rag(mind_type="cloud"):
         embedding_dim=local_embedding_logic._embedding_dim,
         max_token_size=2048
     )
+    
+    # EXTREME UPGRADE: Ensure global logic is aware of this mind's embedding engine
+    # This resolves the 503 error on the /embed endpoint
+    rag_embedding_func = current_mind_embedding_func
 
     try:
         # Separate storage paths for Cloud vs Local to avoid index pollution
@@ -1095,6 +1139,12 @@ class EmbedSettingsRequest(BaseModel):
 @app.post("/embed")
 async def embed_texts(request: EmbedRequest):
     """Generate embeddings for texts using current or specified model."""
+    if not rag_embedding_func:
+        try:
+            await get_rag()
+        except Exception as e:
+            print(f"[CORTEX] Failed to auto-initialize RAG for embedding: {e}")
+            
     if not rag_embedding_func:
         raise HTTPException(status_code=503, detail="Embedding system not available")
     
@@ -3590,4 +3640,16 @@ if __name__ == "__main__":
     if host == "0.0.0.0":
         print(f"[CORTEX] Remote Access URL: http://{LOCAL_IP}:{port}")
     
-    uvicorn.run(app, host=host, port=port)
+    # Use a custom run loop to ensure graceful shutdown of all async tasks
+    # specifically to prevent "Event loop is closed" errors during memory ingestion
+    config = uvicorn.Config(app, host=host, port=port, log_level="info", loop="asyncio")
+    server = uvicorn.Server(config)
+    
+    try:
+        asyncio.run(server.serve())
+    except (KeyboardInterrupt, SystemExit, asyncio.exceptions.CancelledError):
+        print("\n[CORTEX] 🧩 Graceful Shutdown Initiated...")
+        # Signal the server to stop if it hasn't already
+        server.should_exit = True
+    finally:
+        print("[CORTEX] 🧩 System Offline.")

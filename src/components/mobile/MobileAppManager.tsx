@@ -1,10 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Eye,
-  Activity,
-  Trash2,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 
 interface MobileAppManagerProps {
   runningPackages: string[];
@@ -31,7 +26,7 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
       <div className="w-1/3 flex flex-col gap-4">
         <div className="bg-red-950/10 border border-red-900/50 p-4">
           <h3 className="text-xs font-bold text-red-500 tracking-widest mb-3 flex items-center gap-2">
-            <Eye size={12} /> DATA EXFILTRATION
+            <Icon name="Eye" size={12} variant="BoldDuotone" /> DATA EXFILTRATION
           </h3>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -51,7 +46,7 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
 
         <div className="bg-red-950/10 border border-red-900/50 p-4 flex-1 flex flex-col">
           <h3 className="text-xs font-bold text-red-500 tracking-widest mb-3 flex items-center gap-2">
-            <Activity size={12} /> PROCESS KILLER
+            <Icon name="Activity" size={12} variant="BoldDuotone" /> PROCESS KILLER
           </h3>
           <button
             onClick={onRefreshPackages}
@@ -72,7 +67,7 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
                   onClick={() => onKillPackage(pkg)}
                   className="text-red-900 hover:text-red-500"
                 >
-                  <Trash2 size={10} />
+                  <Icon name="Trash" size={10} variant="BoldDuotone" />
                 </button>
               </div>
             ))}

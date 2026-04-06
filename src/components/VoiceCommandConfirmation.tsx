@@ -1,13 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import * as LucideIcons from "lucide-react";
-const {
-  AlertTriangle,
-  Check,
-  X,
-  Mic,
-} = LucideIcons as any;
-import { setHexAlpha } from "../config/themeColors";
+import { Icon } from "./ui/Icon";
 
 interface VoiceCommandConfirmationProps {
   originalTranscript: string;
@@ -16,7 +9,6 @@ interface VoiceCommandConfirmationProps {
   isRisky: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-  theme?: { hex: string; primary: string; border: string; bg: string };
 }
 
 export const VoiceCommandConfirmation: React.FC<
@@ -28,26 +20,17 @@ export const VoiceCommandConfirmation: React.FC<
   isRisky,
   onConfirm,
   onCancel,
-  theme,
 }) => {
   return (
-    <div className="fixed inset-0 z-[400] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[400] bg-black/80 glass-blur flex items-center justify-center p-4">
       <div
-        className="bg-[#0f172a] border rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95 duration-200"
-        style={{
-          borderColor: theme
-            ? setHexAlpha(theme.hex, 0.3)
-            : "rgba(6,182,212,0.3)",
-          boxShadow: theme
-            ? `0 0 50px ${setHexAlpha(theme.hex, 0.15)}`
-            : "0 0 50px rgba(6,182,212,0.1)",
-        }}
+        className="bg-[#0f172a] border rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95 duration-200 border-[rgba(var(--app-primary-rgb),0.3)] shadow-[0_0_50px_rgba(var(--app-primary-rgb),0.15)]"
       >
         <div className="flex items-center gap-3 mb-4">
           {isRisky ? (
-            <AlertTriangle className="text-red-400 w-6 h-6" />
+            <Icon name="Danger" className="text-red-400" size={24} />
           ) : (
-            <Mic size={24} style={{ color: theme?.hex || "#22d3ee" }} />
+            <Icon name="Microphone" size={24} style={{ color: "var(--app-primary)" }} />
           )}
           <h2 className="text-xl font-bold text-white">
             {isRisky ? "Confirm Risky Command" : "Confirm Command"}
@@ -69,17 +52,7 @@ export const VoiceCommandConfirmation: React.FC<
               LUCA Interpreted
             </label>
             <div
-              className="rounded-lg p-3 text-sm font-medium"
-              style={{
-                backgroundColor: theme
-                  ? setHexAlpha(theme.hex, 0.1)
-                  : "rgba(6,182,212,0.1)",
-                borderColor: theme
-                  ? setHexAlpha(theme.hex, 0.3)
-                  : "rgba(6,182,212,0.3)",
-                color: theme?.hex || "#22d3ee",
-                border: "1px solid",
-              }}
+              className="rounded-lg p-3 text-sm font-bold border bg-[rgba(var(--app-primary-rgb),0.1)] border-[rgba(var(--app-primary-rgb),0.3)] text-[var(--app-primary)]"
             >
               &quot;{interpretedCommand}&quot;
             </div>
@@ -112,7 +85,7 @@ export const VoiceCommandConfirmation: React.FC<
 
           {isRisky && (
             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">
-              <AlertTriangle className="text-red-400 w-4 h-4 mt-0.5 flex-shrink-0" />
+              <Icon name="Danger" className="text-red-400 shrink-0" size={16} />
               <p className="text-xs text-red-400">
                 This command may have destructive effects. Please confirm
                 this is what you intended.
@@ -126,25 +99,14 @@ export const VoiceCommandConfirmation: React.FC<
             onClick={onCancel}
             className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
           >
-            <X size={18} />
+            <Icon name="CloseCircle" size={18} />
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3 font-bold rounded-lg transition-colors flex items-center justify-center gap-2`}
-            style={
-              isRisky
-                ? { backgroundColor: "#ef4444", color: "white" }
-                : {
-                    backgroundColor: theme?.hex || "#06b6d4",
-                    color: "black",
-                    boxShadow: theme
-                      ? `0 0 20px ${setHexAlpha(theme.hex, 0.4)}`
-                      : "none",
-                  }
-            }
+            className={`flex-1 py-3 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${isRisky ? "bg-red-500 text-white" : "bg-[var(--app-primary)] text-black"} shadow-[0_0_20px_rgba(var(--app-primary-rgb),0.2)]`}
           >
-            <Check size={18} />
+            <Icon name="CheckCircle" size={18} />
             Confirm
           </button>
         </div>
@@ -160,12 +122,6 @@ VoiceCommandConfirmation.propTypes = {
   isRisky: PropTypes.bool.isRequired,
   onConfirm: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
-  theme: PropTypes.shape({
-    hex: PropTypes.string.isRequired,
-    primary: PropTypes.string.isRequired,
-    border: PropTypes.string.isRequired,
-    bg: PropTypes.string.isRequired,
-  }),
 };
 
 export default VoiceCommandConfirmation;

@@ -6,7 +6,7 @@
 
 import { eventBus } from "./eventBus";
 
-export type ThoughtType = "OBSERVATION" | "REASONING" | "ACTION" | "PLAN" | "WARNING" | "ERROR" | "SECURITY";
+export type ThoughtType = "OBSERVATION" | "REASONING" | "ACTION" | "PLAN" | "WARNING" | "ERROR" | "SECURITY" | "SYNTHESIS" | "AGI_SYNTHESIS";
 
 export interface ThoughtEntry {
   id: string;

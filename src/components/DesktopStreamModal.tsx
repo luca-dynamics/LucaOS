@@ -1,16 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Monitor,
-  HardDrive,
-  Cpu,
-  Activity,
-  RefreshCw,
-  Table,
-  MousePointer2,
-  Keyboard,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface Props {
@@ -93,7 +82,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md animate-in zoom-in-95 duration-300"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 glass-blur animate-in zoom-in-95 duration-300"
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
@@ -114,7 +103,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
               className="flex items-center gap-2 text-sm font-mono transition-colors"
               style={{ color: theme?.hex || "#06b6d4" }}
             >
-              <Monitor size={16} />
+              <Icon name="Monitor" size={16} />
               <span className="uppercase font-bold tracking-wider">
                 {targetName}
               </span>
@@ -133,7 +122,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
                   : "bg-slate-800 border-slate-600 hover:bg-slate-700"
               }`}
             >
-              {inputMode ? <Keyboard size={14} /> : <MousePointer2 size={14} />}
+              {inputMode ? <Icon name="Keyboard" size={14} /> : <Icon name="MousePointer2" size={14} />}
               {inputMode ? "INPUT CAPTURE ACTIVE" : "ENABLE INPUT UPLINK"}
             </button>
 
@@ -150,7 +139,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
               onClick={onClose}
               className="p-1 hover:bg-slate-800 rounded transition-colors text-white"
             >
-              <X size={18} />
+              <Icon name="X" size={18} />
             </button>
           </div>
         </div>
@@ -191,13 +180,13 @@ export const DesktopStreamModal: React.FC<Props> = ({
                   : "rgba(6, 182, 212, 0.5)",
               }}
             >
-              <Activity size={20} />
+              <Icon name="Activity" size={20} />
             </div>
             <div className="p-2 text-slate-500 hover:text-white transition-colors cursor-pointer">
-              <HardDrive size={20} />
+              <Icon name="HardDrive" size={20} />
             </div>
             <div className="p-2 text-slate-500 hover:text-white transition-colors cursor-pointer">
-              <Cpu size={20} />
+              <Icon name="Cpu" size={20} />
             </div>
           </div>
 
@@ -209,10 +198,11 @@ export const DesktopStreamModal: React.FC<Props> = ({
             <div className="relative z-10 flex-1 bg-slate-900/80 border border-slate-700 rounded shadow-lg backdrop-blur flex flex-col overflow-hidden">
               <div className="p-3 border-b border-slate-700 bg-slate-800 flex justify-between items-center">
                 <h3 className="font-mono text-sm text-white font-bold flex items-center gap-2">
-                  <Table size={14} /> ACTIVE PROCESSES ({processes.length})
+                  <Icon name="Table" size={14} /> ACTIVE PROCESSES ({processes.length})
                 </h3>
                 {loading && (
-                  <RefreshCw
+                  <Icon
+                    name="RefreshCw"
                     size={14}
                     className="animate-spin"
                     style={{ color: theme?.hex || "#06b6d4" }}

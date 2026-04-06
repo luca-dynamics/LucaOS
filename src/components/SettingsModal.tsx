@@ -1,20 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Save,
-  RefreshCw,
-  Settings,
-  Cpu,
-  Mic,
-  Home,
-  Link,
-  Database,
-  Info,
-  Wifi,
-  Plug,
-  Share2,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { settingsService, LucaSettings } from "../services/settingsService";
 import { useMobile } from "../hooks/useMobile";
 import { memoryService } from "../services/memoryService";
@@ -60,73 +45,73 @@ const TABS = [
   {
     id: "general",
     label: "General",
-    icon: Settings,
+    icon: "Settings",
     platforms: ["desktop", "mobile"],
   },
-  { id: "brain", label: "Brain", icon: Cpu, platforms: ["desktop", "mobile"] },
-  { id: "voice", label: "Voice", icon: Mic, platforms: ["desktop", "mobile"] },
+  { id: "brain", label: "Brain", icon: "Cpu", platforms: ["desktop", "mobile"] },
+  { id: "voice", label: "Voice", icon: "Microphone", platforms: ["desktop", "mobile"] },
   {
     id: "vision",
     label: "Vision",
-    icon: Share2,
+    icon: "Share",
     platforms: ["desktop", "mobile"],
   },
   {
     id: "model-manager",
     label: "Model Manager",
-    icon: Database,
+    icon: "Database",
     platforms: ["desktop", "mobile"],
   },
   {
     id: "personality",
     label: "Personality",
-    icon: Settings,
+    icon: "User",
     platforms: ["desktop", "mobile"],
   },
   {
     id: "profile",
     label: "Profile",
-    icon: Info,
+    icon: "InfoCircle",
     platforms: ["desktop", "mobile"],
   },
   {
     id: "lucalink",
     label: "Luca Link",
-    icon: Wifi,
+    icon: "Wifi",
     platforms: ["desktop", "mobile"],
   },
-  { id: "mcp", label: "MCP Skills", icon: Plug, platforms: ["desktop"] },
+  { id: "mcp", label: "MCP Skills", icon: "Plug", platforms: ["desktop"] },
   {
     id: "iot",
     label: "Smart Home",
-    icon: Home,
+    icon: "Home",
     platforms: ["desktop", "mobile"],
   },
   {
     id: "connectors",
     label: "Connectors",
-    icon: Link,
+    icon: "Link",
     platforms: ["desktop"],
   },
   {
     id: "data",
     label: "Data & Memory",
-    icon: Database,
+    icon: "Database",
     platforms: ["desktop", "mobile"],
   },
   {
     id: "knowledge-bridge",
     label: "Knowledge Bridge",
-    icon: Share2,
+    icon: "Share",
     platforms: ["desktop", "mobile"],
   },
   {
     id: "connectivity",
     label: "Luca MCP",
-    icon: Link,
+    icon: "Link",
     platforms: ["desktop"],
   },
-  { id: "about", label: "About", icon: Info, platforms: ["desktop", "mobile"] },
+  { id: "about", label: "About", icon: "InfoCircle", platforms: ["desktop", "mobile"] },
 ];
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -149,11 +134,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   // Memory Stats
   const [memoryStats, setMemoryStats] = useState({ count: 0 });
   const isMobile = useMobile();
-  const liveTheme = settings?.general?.theme
-    ? PERSONA_UI_CONFIG[
-        settings.general.theme as keyof typeof PERSONA_UI_CONFIG
-      ]
-    : theme;
+  const liveTheme =
+    (settings?.general?.theme
+      ? PERSONA_UI_CONFIG[
+          settings.general.theme as keyof typeof PERSONA_UI_CONFIG
+        ]
+      : theme) ||
+    theme ||
+    PERSONA_UI_CONFIG.ASSISTANT;
 
   // Filter tabs by platform
   const currentPlatform = isMobile ? "mobile" : "desktop";
@@ -269,7 +257,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm ${
+      className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 glass-blur ${
         isMobile ? "p-2" : "p-4"
       } font-sans select-none`}
     >
@@ -277,39 +265,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         className={`w-full ${
           isMobile
             ? "max-w-[95vw] h-[85vh] rounded-2xl"
-            : "max-w-5xl h-[650px] rounded-xl"
-        } ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border ${
-          liveTheme.primary
-        } flex flex-row overflow-hidden transition-colors duration-300 shadow-[0_0_50px_-20px_rgba(0,0,0,0.5)]`}
+            : "max-w-[90%] h-[90%] rounded-xl"
+        } flex flex-row overflow-hidden transition-colors duration-300 tech-border glass-blur`}
         style={{
           boxShadow: `0 0 50px -20px rgba(0,0,0,0.5)`,
-          border:
-            liveTheme.themeName?.toLowerCase() === "lucagent"
-              ? "1px solid rgba(0,0,0,0.1)"
-              : `1px solid ${liveTheme.hex}33`,
+          backgroundColor: "var(--app-bg-tint, #050505)",
+          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
         }}
       >
         {/* Unified Sidebar Navigation */}
         <div
-          className={`${liveTheme.themeName?.toLowerCase() === "lucagent" ? "bg-white/80" : "bg-black/20"} flex flex-col shrink-0 ${isMobile ? "w-20" : "w-56"}`}
+          className={`flex flex-col shrink-0 ${isMobile ? "w-20" : "w-64"}`}
           style={{
-            borderRight:
-              liveTheme.themeName?.toLowerCase() === "lucagent"
-                ? "1px solid rgba(0,0,0,0.05)"
-                : `1px solid ${liveTheme.hex}33`,
+            backgroundColor: "var(--app-bg-tint, #0a0a0a)",
+            borderRight: "1px solid var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
           {/* Header Area */}
           <div
             className={`flex items-center gap-2 ${isMobile ? "p-4 justify-center" : "p-5"}`}
             style={{
-              borderBottom:
-                liveTheme.themeName?.toLowerCase() === "lucagent"
-                  ? "1px solid rgba(0,0,0,0.05)"
-                  : `1px solid ${liveTheme.hex}33`,
+              borderBottom: "1px solid var(--app-border-main, rgba(255,255,255,0.1))",
             }}
           >
-            <Settings
+            <Icon
+              name="Settings"
+              variant="BoldDuotone"
               className={`${isMobile ? "w-5 h-5" : "w-4 h-4"}`}
               style={{ color: liveTheme.hex }}
             />
@@ -327,7 +308,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             className={`flex-1 overflow-y-auto no-scrollbar ${isMobile ? "p-2" : "p-3"} space-y-2`}
           >
             {visibleTabs.map((tab) => {
-              const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
@@ -335,33 +315,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => setActiveTab(tab.id)}
                   style={{
                     color: isActive
-                      ? liveTheme.themeName?.toLowerCase() === "lucagent"
-                        ? "#0f172a"
-                        : liveTheme.hex
-                      : liveTheme.themeName?.toLowerCase() === "lucagent"
-                        ? "#475569"
-                        : "#9ca3af",
+                      ? "var(--app-text-main, #ffffff)"
+                      : "var(--app-text-muted, #9ca3af)",
                     backgroundColor: isActive
-                      ? liveTheme.themeName?.toLowerCase() === "lucagent"
-                        ? "rgba(0,0,0,0.05)"
-                        : "rgba(255,255,255,0.05)"
+                      ? "var(--app-bg-tint, rgba(255,255,255,0.05))"
                       : "transparent",
                     borderColor: isActive
-                      ? liveTheme.themeName?.toLowerCase() === "lucagent"
-                        ? "rgba(0,0,0,0.1)"
-                        : liveTheme.hex
+                      ? "var(--app-border-main, rgba(255,255,255,0.1))"
                       : "transparent",
                   }}
                   title={tab.label}
-                  className={`w-full flex items-center rounded-lg border border-transparent transition-all ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "hover:bg-black/5" : "hover:bg-white/5"} ${
+                  className={`w-full flex items-center rounded-lg border border-transparent transition-all ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "hover:bg-slate-100" : "hover:bg-white/5"} ${
                     isMobile
                       ? "flex-col justify-center py-3 px-1 gap-1"
                       : "flex-row gap-3 p-2.5"
                   }`}
                 >
-                  <Icon className={`${isMobile ? "w-5 h-5" : "w-4 h-4"}`} />
+                  <Icon name={tab.icon} variant={isActive ? "BoldDuotone" : "Linear"} className={`${isMobile ? "w-5 h-5" : "w-5 h-5"}`} />
                   {!isMobile ? (
-                    <span className="text-xs font-medium">{tab.label}</span>
+                    <span className="text-sm font-medium">{tab.label}</span>
                   ) : (
                     <span className="text-[8px] font-bold uppercase tracking-tighter opacity-70 text-center leading-[1.1]">
                       {tab.label}
@@ -378,7 +350,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className="p-4 flex justify-center border-t border-white/5"
               onClick={onClose}
             >
-              <X className="w-5 h-5 text-gray-500 hover:text-white" />
+              <Icon name="CloseCircle" className="w-5 h-5 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]" />
             </div>
           )}
         </div>
@@ -388,19 +360,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Content Header (Desktop Only) */}
           {!isMobile && (
             <div
-              className={`p-5 flex justify-between items-center ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02]" : "bg-white/5"}`}
-              style={{ borderBottom: `1px solid ${liveTheme.hex}33` }}
+              className={`p-5 flex justify-between items-center ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "bg-slate-50/30" : "bg-white/5"}`}
+              style={{ borderBottom: `1px solid rgba(255,255,255,0.1)` }}
             >
               <h3
-                className={`text-lg font-bold ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-gray-200"}`}
+                className={`text-lg font-bold ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-[var(--app-text-muted)]" : "text-[var(--app-text-muted)]"}`}
               >
                 {TABS.find((t) => t.id === activeTab)?.label}
               </h3>
               <button
                 onClick={onClose}
-                className={`${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-gray-400 hover:text-gray-900" : "text-gray-500 hover:text-white"} transition-colors`}
+                className={`${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-[var(--app-text-muted)] hover:text-[var(--app-text-muted)]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"} transition-colors`}
               >
-                <X className="w-5 h-5" />
+                <Icon name="CloseCircle" className="w-5 h-5" />
               </button>
             </div>
           )}
@@ -495,7 +467,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <KnowledgeBridgeTab theme={liveTheme} />
             )}
             {activeTab === "connectivity" && (
-              <SettingsConnectivityTab theme={liveTheme} />
+              <SettingsConnectivityTab />
             )}
             {activeTab === "about" && (
               <SettingsAboutTab theme={liveTheme} settings={settings} />
@@ -503,21 +475,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div
-            className={`p-4 ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5" : "bg-black/40"} flex justify-between items-center ${
+            <div
+            className={`p-4 flex justify-between items-center ${
               isMobile ? "pb-8" : ""
             }`}
             style={{
-              borderTop:
-                liveTheme.themeName?.toLowerCase() === "lucagent"
-                  ? "1px solid rgba(0,0,0,0.05)"
-                  : `1px solid ${liveTheme.hex}33`,
+              backgroundColor: "var(--app-bg-tint, #0a0a0f)",
+              borderTop: "1px solid var(--app-border-main, rgba(255,255,255,0.1))",
             }}
           >
             <div className="flex items-center gap-4">
               <div
                 className={`text-[10px] md:text-xs ${
-                  statusMsg.includes("Error") ? "text-red-500" : "text-green-500"
+                  statusMsg.includes("Error")
+                    ? "text-red-500"
+                    : "text-green-500"
                 }`}
               >
                 {statusMsg}
@@ -526,7 +498,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="flex gap-2 md:gap-3">
               <button
                 onClick={onClose}
-                className={`px-4 py-2 rounded text-xs ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500 hover:text-gray-900 hover:bg-black/5" : "text-gray-400 hover:text-white hover:bg-white/10"} transition-colors`}
+                className={`px-4 py-2 rounded text-xs ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-[var(--app-text-muted)] hover:text-[var(--app-text-muted)] hover:bg-slate-100" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:bg-white/10"} transition-colors`}
               >
                 {/* On Personality tab, 'Cancel' is just 'Close' since it saves internally */}
                 {/* Reverted: Unified Save uses Cancel for all tabs */}
@@ -549,9 +521,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 className="px-6 py-2 border hover:opacity-90 rounded text-xs font-bold shadow-lg flex items-center gap-2 transition-all disabled:opacity-50"
               >
                 {loading ? (
-                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <Icon name="Restart" className="w-3 h-3 animate-spin" />
                 ) : (
-                  <Save className="w-3 h-3" />
+                  <Icon name="Disk" className="w-3 h-3" />
                 )}
                 {isMobile ? "Save" : "Save Changes"}
               </button>

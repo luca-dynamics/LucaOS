@@ -29,8 +29,16 @@ declare global {
         delete(site: string): Promise<void>;
         hasCredentials(site: string): Promise<boolean>;
       };
+      missionControl: {
+        start: (title: string, metadata?: any) => Promise<number>;
+        addGoal: (missionId: number, description: string, dependencyId?: number) => Promise<number>;
+        updateGoal: (goalId: number, status: string) => Promise<void>;
+        getContext: () => Promise<string>;
+        archive: (missionId: number) => Promise<void>;
+      };
       applySystemSettings(settings: any): void;
       connectSocial(appId: string): Promise<any>;
+      getAboutInfo(): Promise<{ version: string; arch: string; platform: string }>;
     };
     Capacitor?: {
       isNativePlatform(): boolean;

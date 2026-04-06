@@ -1,4 +1,5 @@
 import { FunctionDeclaration } from "@google/genai";
+import { eventBus } from "./eventBus";
 import { nativeControl } from "./nativeControlService";
 import { computerService } from "./computerService";
 import { ServerToolDispatcher } from "../tools/handlers/ServerToolDispatcher";
@@ -11,6 +12,12 @@ import {
   getRequiredPlatformsForTool,
   DeviceType,
 } from "./deviceCapabilityService";
+import { settingsService } from "./settingsService";
+import { harnessService } from "./harnessService";
+import { modelManagerService } from "./ModelManagerService";
+import { maintenancePolicy } from "./selfMaintenancePolicy";
+import { mentalStateService } from "./mentalStateService";
+import { thoughtStreamService } from "./thoughtStreamService";
 
 export type ToolCategory =
   | "CORE"
@@ -48,15 +55,64 @@ export interface ToolEntry {
   keywords: string[];
   securityLevel: SecurityLevel;
   missionScope: MissionScope; // Scoped Mission Arming
+  isConcurrencySafe: boolean;
+  skillSets?: string[]; // 🧠 JIT Capability Bundles
   handler?: (args: any, context: any) => Promise<string>;
 }
 
 const registry: ToolEntry[] = [];
-export const HIGH_SECURITY_TOOLS: Record<
+
+/**
+ * 🏷️ Automatic SkillSet Tagging
+ * Maps tool metadata into capability bundles for JIT ingestion.
+ */
+const inferSkillSets = (tool: FunctionDeclaration, category: ToolCategory): string[] => {
+  const sets = new Set<string>();
+  const desc = (tool.description || "").toLowerCase();
+  const name = (tool.name || "").toLowerCase();
+
+  const isFinance = category === "CRYPTO" || name.includes("trade") || name.includes("transaction") || desc.includes("price") || desc.includes("swap");
+  const isFiles = category === "FILES" || name.includes("file") || name.includes("directory") || desc.includes("path") || desc.includes("fs");
+  const isSystem = category === "SYSTEM" || name.includes("terminal") || name.includes("settings") || desc.includes("shell") || desc.includes("os");
+  const isComm = category === "WHATSAPP" || name.includes("message") || name.includes("communication") || desc.includes("notify") || desc.includes("chat");
+  const isAgency = category === "DEV" || name.includes("skill") || name.includes("ingest") || desc.includes("evolve") || desc.includes("mcp");
+
+  if (isFinance) sets.add("FINANCE");
+  if (isFiles) sets.add("CORE_FILES");
+  if (isSystem) sets.add("SYSTEM_ADMIN");
+  if (isComm) sets.add("COMMUNICATION");
+  if (isAgency) sets.add("AGENCY_EVOLUTION");
+
+  return Array.from(sets);
+};
+
+export const TOOL_CONFIGS: Record<
   string,
-  { level: SecurityLevel; scope: MissionScope }
+  { level: SecurityLevel; scope: MissionScope; isConcurrencySafe?: boolean }
 > = {
-  // Admin / System
+  // --- CORE TOOLS (CONCURRENT SAFE BY DEFAULT) ---
+  searchweb: {
+    level: SecurityLevel.LEVEL_0,
+    scope: MissionScope.NONE,
+    isConcurrencySafe: true,
+  },
+  listavailabletools: {
+    level: SecurityLevel.LEVEL_0,
+    scope: MissionScope.NONE,
+    isConcurrencySafe: true,
+  },
+  listMCPTools: {
+    level: SecurityLevel.LEVEL_0,
+    scope: MissionScope.NONE,
+    isConcurrencySafe: true,
+  },
+  diagnose_mcp_health: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SYSTEM,
+    isConcurrencySafe: true,
+  },
+
+  // --- HIGH SECURITY / SYSTEM (NOT CONCURRENT SAFE) ---
   run_terminal: { level: SecurityLevel.LEVEL_2, scope: MissionScope.SYSTEM },
   terminal: { level: SecurityLevel.LEVEL_2, scope: MissionScope.SYSTEM },
   executeTerminalCommand: {
@@ -69,6 +125,42 @@ export const HIGH_SECURITY_TOOLS: Record<
     scope: MissionScope.SYSTEM,
   },
   controlAlwaysOnVision: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  get_luca_settings: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SYSTEM,
+  },
+  update_luca_settings: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  teleport_mission: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  manage_luca_models: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  start_mission_recording: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  stop_mission_recording: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  replay_mission_tape: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
+  get_maintenance_policy: {
+    level: SecurityLevel.LEVEL_1,
+    scope: MissionScope.SYSTEM,
+  },
+  update_maintenance_policy: {
     level: SecurityLevel.LEVEL_2,
     scope: MissionScope.SYSTEM,
   },
@@ -120,6 +212,10 @@ export const HIGH_SECURITY_TOOLS: Record<
     level: SecurityLevel.LEVEL_1,
     scope: MissionScope.FILE,
   },
+  evolveCodeSafe: {
+    level: SecurityLevel.LEVEL_2,
+    scope: MissionScope.SYSTEM,
+  },
 };
 
 export const ToolRegistry = {
@@ -131,11 +227,17 @@ export const ToolRegistry = {
   ) => {
     // 🏷️ DEFINE SECURITY LEVELS & MISSION SCOPES BY TOOL NAME
     const securityConfig = tool.name
-      ? HIGH_SECURITY_TOOLS[tool.name]
-      : { level: SecurityLevel.LEVEL_0, scope: MissionScope.NONE };
+      ? TOOL_CONFIGS[tool.name]
+      : {
+          level: SecurityLevel.LEVEL_0,
+          scope: MissionScope.NONE,
+          isConcurrencySafe: false,
+        };
 
     const securityLevel = securityConfig?.level || SecurityLevel.LEVEL_0;
     const missionScope = securityConfig?.scope || MissionScope.NONE;
+    const isConcurrencySafe = securityConfig?.isConcurrencySafe || false;
+    const skillSets = inferSkillSets(tool, category);
 
     const existing = registry.findIndex((t) => t.tool.name === tool.name);
     if (existing >= 0) {
@@ -145,6 +247,8 @@ export const ToolRegistry = {
         keywords,
         securityLevel,
         missionScope,
+        isConcurrencySafe,
+        skillSets: [...new Set([...(registry[existing].skillSets || []), ...skillSets])],
         handler: handler || registry[existing].handler,
       };
     } else {
@@ -161,6 +265,8 @@ export const ToolRegistry = {
       registry.push({
         tool,
         category,
+        isConcurrencySafe,
+        skillSets,
         keywords: allKeywords,
         securityLevel,
         missionScope,
@@ -195,13 +301,81 @@ export const ToolRegistry = {
     const entry = registry.find((e) => e.tool.name === name);
     return entry ? entry.missionScope : MissionScope.NONE;
   },
+  isConcurrencySafe: (name: string): boolean => {
+    const entry = registry.find((e) => e.tool.name === name);
+    return entry ? entry.isConcurrencySafe : false;
+  },
+
+  getToolsBySkillSet: (skillSetName: string): FunctionDeclaration[] => {
+    return registry
+      .filter((e) => e.skillSets?.includes(skillSetName))
+      .map((e) => e.tool);
+  },
+
+  /**
+   * 🧠 BDI JIT Retrieval
+   * Maps current mental state (committed intentions) to required capability bundles.
+   */
+  getToolsForIntention: (intentionPlan: string): FunctionDeclaration[] => {
+    const plan = intentionPlan.toLowerCase();
+    const matchedSets = new Set<string>();
+
+    if (plan.includes("trade") || plan.includes("finance") || plan.includes("price")) matchedSets.add("FINANCE");
+    if (plan.includes("file") || plan.includes("repo") || plan.includes("directory")) matchedSets.add("CORE_FILES");
+    if (plan.includes("terminal") || plan.includes("command") || plan.includes("fix")) matchedSets.add("SYSTEM_ADMIN");
+    if (plan.includes("message") || plan.includes("whatsapp") || plan.includes("notify")) matchedSets.add("COMMUNICATION");
+    if (plan.includes("skill") || plan.includes("mcp") || plan.includes("ingest")) matchedSets.add("AGENCY_EVOLUTION");
+
+    const tools: Map<string, FunctionDeclaration> = new Map();
+    matchedSets.forEach((setName) => {
+      const setTools = ToolRegistry.getToolsBySkillSet(setName);
+      setTools.forEach((t) => tools.set(t.name || "unknown", t));
+    });
+
+    return Array.from(tools.values());
+  },
 
   // --- EXECUTION CORE ---
   execute: async (name: string, args: any, context: any): Promise<string> => {
-    console.log(`[TOOL_REGISTRY] Executing ${name} with args:`, args);
+    try {
+      console.log(`[TOOL_REGISTRY] Executing ${name} with args:`, args);
 
     // --- META-TOOLS: On-Demand Tool Access for Voice Mode ---
     // These enable VoiceHUD to access ALL 220+ tools despite payload limits
+
+    if (name === "start_mission_recording") {
+      const { mission_id, description } = args;
+      harnessService.startCapture(mission_id || "manual-mission", {
+        description,
+      });
+      return `📀 [HARNESS] Recording started for mission: ${mission_id}. All tool side-effects and reasoning will be captured to the Sovereign Tape.`;
+    }
+
+    if (name === "stop_mission_recording") {
+      const tape = harnessService.stop();
+      if (!tape) return "❌ [HARNESS] No active recording found.";
+      return `⏹️ [HARNESS] Recording stopped. Tape ${tape.id} finalized with ${tape.turns.length} turns. It is now stored in the Secure Vault.`;
+    }
+
+    if (name === "replay_mission_tape") {
+      const { tape_json } = args;
+      try {
+        const tape = JSON.parse(tape_json);
+        harnessService.startShadow(tape);
+        return `🕵️ [HARNESS] SHADOW Mode activated. Replaying tape ${tape.id}. LUCA will now execute the recorded causal chain. Side-effects will be intercepted.`;
+      } catch (e) {
+        return `❌ [HARNESS] Failed to parse tape JSON: ${e instanceof Error ? e.message : String(e)}`;
+      }
+    }
+
+    if (name === "diagnose_mcp_health") {
+      if (typeof __LUCA_DEV_MODE__ !== "undefined" && __LUCA_DEV_MODE__) {
+        const { mcpDoctorService } = await import("./mcpDoctorService.js");
+        const report = await mcpDoctorService.runFullCheck();
+        return mcpDoctorService.formatReport(report);
+      }
+      return "ERROR: Tool 'diagnose_mcp_health' is only available in Developer/Sovereign mode.";
+    }
 
     if (name === "listAvailableTools") {
       const { query, category } = args;
@@ -762,9 +936,88 @@ export const ToolRegistry = {
 
     // 6. Server Tools Route
     if (ServerToolDispatcher.isServerTool(name) || name === "evolveCodeSafe") {
+      if (name === "evolveCodeSafe") {
+        const intentionId = Array.from(mentalStateService.intentions.values())
+          .find((i: any) => (i.status === "COMMIT" || i.status === "IN_PROGRESS") && (i.plan.toLowerCase().includes("fix") || i.plan.toLowerCase().includes("patch")))?.id;
+        
+        const justification = intentionId ? mentalStateService.getJustificationChain(intentionId) : "Autonomous evolution triggered for maintenance.";
+        
+        thoughtStreamService.pushThought("SECURITY", `Initiating Autonomous Patching: ${justification}`);
+      }
       return await ServerToolDispatcher.execute(name, args, context);
     }
 
-    return `ERROR: Unknown Tool "${name}".`;
+    // --- AGENTIC SELF-MANAGEMENT TOOLS (The OS Brain) ---
+    if (name === "get_luca_settings") {
+      const settings = settingsService.getSettings();
+      // REDACT SENSITIVE DATA
+      const redacted = JSON.parse(JSON.stringify(settings));
+      if (redacted.brain) {
+        redacted.brain.geminiApiKey = "[REDACTED]";
+        redacted.brain.openaiApiKey = "[REDACTED]";
+        redacted.brain.anthropicApiKey = "[REDACTED]";
+      }
+      return JSON.stringify(redacted, null, 2);
+    }
+
+    if (name === "update_luca_settings") {
+      await settingsService.saveSettings(args.settings);
+      return "Settings updated successfully. Changes are now live across the OS.";
+    }
+
+    if (name === "get_maintenance_policy") {
+      const rules = maintenancePolicy.getRules();
+      return JSON.stringify(rules, null, 2);
+    }
+
+    if (name === "update_maintenance_policy") {
+      maintenancePolicy.updateRule(args.id, args.enabled);
+      return `Maintenance rule ${args.id} is now ${args.enabled ? "enabled" : "disabled"}.`;
+    }
+
+    if (name === "manage_luca_models") {
+      const { action, modelId } = args;
+      if (action === "LIST") {
+        const models = modelManagerService.getModels();
+        return JSON.stringify(models, null, 2);
+      }
+      if (action === "DOWNLOAD" && modelId) {
+        await modelManagerService.downloadModel(modelId);
+        return `Download started for ${modelId}. You can track progress in the Model Manager dashboard.`;
+      }
+      if (action === "STATUS") {
+        const ollamaStatus = await modelManagerService.ensureOllamaRunning();
+        return `Ollama Connectivity: ${ollamaStatus ? "READY" : "OFFLINE"}`;
+      }
+      return "Action required: LIST, DOWNLOAD, or STATUS.";
+    }
+
+    if (name === "run_self_diagnostics") {
+      const ram = await nativeControl.getSystemLoad();
+      const battery = await nativeControl.getBatteryStatus();
+      const ollama = await modelManagerService.ensureOllamaRunning();
+
+      const report = {
+        hardware: ram,
+        power: battery,
+        ollama_runtime: ollama ? "READY" : "OFFLINE",
+        timestamp: new Date().toISOString(),
+      };
+
+      return `SELF-DIAGNOSTICS REPORT:\n${JSON.stringify(report, null, 2)}`;
+    }
+
+    if (name === "teleport_mission") {
+      const { lucaService } = await import("./lucaService");
+      const teleportBlob = await lucaService.exportSovereignMission();
+      return `[[Solar:Key]] **MISSION SERIALIZED**: Your current session has been encrypted and packed into a Sovereign "Gold Egg".\n\n**TELEPORTATION DATA (Copy this):**\n\`\`\`\n${teleportBlob}\n\`\`\`\n\nPaste this into your target LUCA instance to re-hydrate the mission context.`;
+    }
+
+      return `ERROR: Unknown Tool "${name}".`;
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      eventBus.emit("tool:failure", { tool: name, error: errorMessage });
+      return `❌ TOOL_ERROR [${name}]: ${errorMessage}`;
+    }
   },
 };

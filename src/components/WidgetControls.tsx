@@ -1,6 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const { Monitor, Maximize2 } = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface WidgetControlsProps {
   isHovered: boolean;
@@ -24,14 +23,14 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
           e.stopPropagation();
           onToggleHUD();
         }}
-        className={`p-2 rounded-full backdrop-blur-md border transition-all duration-300 ${
+        className={`p-2 rounded-full glass-blur border transition-all duration-300 ${
           isHUDActive
             ? "bg-white/20 border-white/40 text-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
             : "bg-black/40 border-white/10 text-white/40 hover:bg-black/60 hover:border-white/20 hover:text-white"
         }`}
         title={isHUDActive ? "Dismiss Smart Screen" : "Summon Smart Screen"}
       >
-        <Monitor size={14} />
+        <Icon name="Monitor" size={14} />
       </button>
 
       <button
@@ -39,10 +38,10 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
           e.stopPropagation();
           onExpand();
         }}
-        className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/40 hover:bg-black/60 hover:border-white/20 hover:text-white transition-all duration-300"
+        className="p-2 rounded-full bg-black/40 glass-blur border border-white/10 text-white/40 hover:bg-black/60 hover:border-white/20 hover:text-white transition-all duration-300"
         title="Expand to Dashboard"
       >
-        <Maximize2 size={14} />
+        <Icon name="Maximize2" size={14} />
       </button>
     </div>
   );

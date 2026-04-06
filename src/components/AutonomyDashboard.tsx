@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Terminal,
-  Activity,
-  Plus,
-  Trash2,
-  RefreshCw,
-  Clock,
-  X,
-  Play,
-  Pause,
-  ChevronDown,
-  ChevronRight,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface Goal {
@@ -141,9 +128,9 @@ export const AutonomyDashboard: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-0 sm:p-4 font-mono">
+    <div className="fixed inset-0 bg-black/80 glass-blur z-50 flex items-center justify-center p-0 sm:p-4 font-mono">
       <div
-        className={`relative w-full h-full sm:h-auto sm:max-w-4xl bg-black/60 backdrop-blur-xl border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-lg shadow-2xl overflow-hidden flex flex-col h-full sm:h-[80vh]`}
+        className={`relative w-full h-full sm:h-auto sm:max-w-4xl bg-black/60 glass-blur border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-lg shadow-2xl overflow-hidden flex flex-col h-full sm:h-[80vh]`}
         style={{
           boxShadow: `0 0 80px -20px ${themeHex}40`,
         }}
@@ -161,7 +148,8 @@ export const AutonomyDashboard: React.FC<{
           style={{ backgroundColor: `${themeHex}1F` }}
         >
           <div className="flex items-center gap-3">
-            <Activity
+            <Icon
+              name="Activity"
               className={`w-5 h-5 sm:w-6 sm:h-6 ${themePrimary} animate-pulse`}
             />
             <h2
@@ -177,7 +165,7 @@ export const AutonomyDashboard: React.FC<{
             onClick={onClose}
             className="relative z-50 p-2 text-gray-400 hover:text-white transition-all rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0"
           >
-            <X size={20} className="sm:size-6" />
+            <Icon name="X" size={20} className="sm:size-6" />
           </button>
         </div>
 
@@ -229,7 +217,7 @@ export const AutonomyDashboard: React.FC<{
                   disabled={loading || !newGoalDesc}
                   className="w-full bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/50 py-2 rounded flex items-center justify-center gap-2 transition-all text-xs"
                 >
-                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <Icon name="Plus" className="w-3 h-3 sm:w-4 sm:h-4" />
                   INJECT GOAL
                 </button>
               </div>
@@ -246,7 +234,7 @@ export const AutonomyDashboard: React.FC<{
                 onClick={fetchGoals}
                 className="text-cyan-500 hover:text-cyan-300"
               >
-                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+                <Icon name="RefreshCw" className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
 
@@ -268,9 +256,9 @@ export const AutonomyDashboard: React.FC<{
                             className="text-gray-400 hover:text-white"
                           >
                             {isExpanded ? (
-                              <ChevronDown className="w-4 h-4" />
+                              <Icon name="ChevronDown" className="w-4 h-4" />
                             ) : (
-                              <ChevronRight className="w-4 h-4" />
+                              <Icon name="ChevronRight" className="w-4 h-4" />
                             )}
                           </button>
                         )}
@@ -303,7 +291,7 @@ export const AutonomyDashboard: React.FC<{
                             className="text-green-500 hover:text-green-400"
                             title="Resume"
                           >
-                            <Play className="w-4 h-4" />
+                            <Icon name="Play" className="w-4 h-4" />
                           </button>
                         ) : goal.type === "RECURRING" &&
                           goal.status !== "COMPLETED" ? (
@@ -312,7 +300,7 @@ export const AutonomyDashboard: React.FC<{
                             className="text-orange-500 hover:text-orange-400"
                             title="Pause"
                           >
-                            <Pause className="w-4 h-4" />
+                            <Icon name="Pause" className="w-4 h-4" />
                           </button>
                         ) : null}
                         {goal.status === "PENDING" && (
@@ -321,7 +309,7 @@ export const AutonomyDashboard: React.FC<{
                             className="text-cyan-500 hover:text-cyan-400"
                             title="Execute Now"
                           >
-                            <Play className="w-4 h-4" />
+                            <Icon name="Play" className="w-4 h-4" />
                           </button>
                         )}
                         <button
@@ -329,7 +317,7 @@ export const AutonomyDashboard: React.FC<{
                           className="text-gray-600 hover:text-red-400"
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Icon name="Trash2" className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -343,7 +331,7 @@ export const AutonomyDashboard: React.FC<{
                       </span>
                       {goal.schedule && (
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {goal.schedule}
+                          <Icon name="Clock" className="w-3 h-3" /> {goal.schedule}
                         </span>
                       )}
                     </div>
@@ -397,7 +385,7 @@ export const AutonomyDashboard: React.FC<{
 
               {goals.length === 0 && (
                 <div className="text-center py-12 text-gray-600">
-                  <Terminal className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <Icon name="Terminal" className="w-12 h-12 mx-auto mb-4 opacity-20" />
                   <p>No active directives found.</p>
                 </div>
               )}

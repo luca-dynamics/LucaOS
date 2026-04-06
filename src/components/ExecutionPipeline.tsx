@@ -1,12 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  Clock,
-  AlertTriangle,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 export type StepStatus =
   | "PENDING"
@@ -41,23 +34,24 @@ const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
     switch (status) {
       case "SUCCESS":
         return (
-          <CheckCircle2 size={12} className="text-green-500 sm:w-4 sm:h-4" />
+          <Icon name="CheckCircle2" size={12} className="text-green-500 sm:w-4 sm:h-4" />
         );
       case "ERROR":
-        return <XCircle size={12} className="text-red-500 sm:w-4 sm:h-4" />;
+        return <Icon name="XCircle" size={12} className="text-red-500 sm:w-4 sm:h-4" />;
       case "PROCESSING":
         return (
-          <Loader2
+          <Icon
+            name="Loader2"
             size={12}
             className="text-yellow-500 animate-spin sm:w-4 sm:h-4"
           />
         );
       case "SKIPPED":
         return (
-          <AlertTriangle size={12} className="text-slate-500 sm:w-4 sm:h-4" />
+          <Icon name="AlertTriangle" size={12} className="text-slate-500 sm:w-4 sm:h-4" />
         );
       default:
-        return <Clock size={12} className="text-slate-500 sm:w-4 sm:h-4" />;
+        return <Icon name="Clock" size={12} className="text-slate-500 sm:w-4 sm:h-4" />;
     }
   };
 
@@ -142,6 +136,12 @@ const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({
                   Tool: <span className="text-cyan-400">{step.toolName}</span>
                 </div>
               )}
+
+              <Icon
+                name="BrainCircuit"
+                className="text-purple-400 shrink-0 mt-1"
+                size={20}
+              />
 
               {step.details && (
                 <div className="text-xs text-slate-300 mt-1">

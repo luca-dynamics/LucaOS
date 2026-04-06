@@ -1,5 +1,4 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
 import { ResponsiveContainer,
   ComposedChart,
   Line,
@@ -10,11 +9,6 @@ import { ResponsiveContainer,
   Tooltip,
   Legend,
   ReferenceLine, } from "recharts";
-const {
-  TrendingUp,
-  TrendingDown,
-  Zap,
-} = LucideIcons as any;
 
 // Types matching the props expected by the page
 interface TraderData {
@@ -27,6 +21,7 @@ interface TraderData {
 
 interface ComparisonChartProps {
   traders: TraderData[];
+  theme?: { hex: string; primary: string; border: string; bg: string };
 }
 
 // Mock history generator if not present
@@ -46,7 +41,7 @@ const generateMockHistory = (trader: TraderData) => {
   return points;
 };
 
-export function ComparisonChart({ traders }: ComparisonChartProps) {
+export function ComparisonChart({ traders, theme }: ComparisonChartProps) {
   // Transform data for Recharts
   // We need a unified timeline. For mock purposes, we'll create a merged dataset.
   const data = React.useMemo(() => {
@@ -78,7 +73,7 @@ export function ComparisonChart({ traders }: ComparisonChartProps) {
     return merged;
   }, [traders]);
 
-  const colors = ["#F0B90B", "#0ECB81", "#3b82f6", "#8b5cf6", "#f43f5e"];
+  const colors = ["#F0B90B", "#0ECB81", theme?.hex || "#0ea5e9", "#8b5cf6", "#f43f5e"];
 
   if (traders.length === 0)
     return (
@@ -158,7 +153,7 @@ export function ComparisonChart({ traders }: ComparisonChartProps) {
           <ReferenceLine y={0} stroke="#334155" strokeDasharray="3 3" />
 
           {/* Top 2 get Areas */}
-          {traders.slice(0, 2).map((t, idx) => (
+          {traders.slice(0, 2).map((t) => (
             <Area
               key={`area-${t.trader_id}`}
               type="monotone"

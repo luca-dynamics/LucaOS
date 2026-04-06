@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  TrendingUp,
-  BarChart3,
-  DollarSign,
-  RefreshCw,
-  Search,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { PolyPosition } from "../types";
 import { apiUrl } from "../config/api";
 
@@ -98,9 +90,9 @@ const PredictionTerminal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in zoom-in-95 duration-300 overflow-y-auto sm:overflow-hidden">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 glass-blur animate-in zoom-in-95 duration-300 overflow-y-auto sm:overflow-hidden">
       <div
-        className={`relative w-[95%] max-w-6xl h-auto min-h-[50vh] sm:h-[85vh] bg-black/40 backdrop-blur-xl border ${themeBorder}/30 rounded-lg flex flex-col overflow-hidden my-auto sm:my-0`}
+        className={`relative w-[95%] max-w-6xl h-auto min-h-[50vh] sm:h-[85vh] bg-black/40 glass-blur border ${themeBorder}/30 rounded-lg flex flex-col overflow-hidden my-auto sm:my-0`}
         style={{
           boxShadow: `0 0 80px -20px ${themeHex}40`,
         }}
@@ -131,7 +123,7 @@ const PredictionTerminal: React.FC<Props> = ({
               className={`p-2 rounded border ${themeBorder}/50 ${themePrimary}`}
               style={{ backgroundColor: `${themeHex}1F` }}
             >
-              <BarChart3 size={20} />
+              <Icon name="BarChart3" size={20} />
             </div>
             <div>
               <h2 className="font-display text-xl font-bold text-white tracking-widest">
@@ -149,7 +141,7 @@ const PredictionTerminal: React.FC<Props> = ({
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors"
           >
-            <X size={24} />
+            <Icon name="X" size={24} />
           </button>
         </div>
 
@@ -161,7 +153,8 @@ const PredictionTerminal: React.FC<Props> = ({
           >
             <div className={`p-4 border-b ${themeBorder}/30 flex gap-2`}>
               <div className="relative flex-1">
-                <Search
+                <Icon
+                  name="Search"
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
                   size={14}
                 />
@@ -196,7 +189,8 @@ const PredictionTerminal: React.FC<Props> = ({
                   e.currentTarget.style.backgroundColor = "";
                 }}
               >
-                <RefreshCw
+                <Icon
+                  name="RefreshCw"
                   size={16}
                   className={loading ? "animate-spin" : ""}
                 />
@@ -289,7 +283,7 @@ const PredictionTerminal: React.FC<Props> = ({
                       WAGER AMOUNT (USD)
                     </label>
                     <div className="flex items-center bg-slate-900 border border-slate-700 rounded px-3 py-2">
-                      <DollarSign size={14} className="text-slate-400" />
+                      <Icon name="DollarSign" size={14} className="text-slate-400" />
                       <input
                         type="number"
                         value={betAmount}
@@ -339,7 +333,7 @@ const PredictionTerminal: React.FC<Props> = ({
             <div
               className={`p-4 border-b ${themeBorder}/30 text-xs font-bold ${themePrimary} tracking-widest flex items-center gap-2`}
             >
-              <TrendingUp size={14} /> ACTIVE POSITIONS
+              <Icon name="TrendingUp" size={14} /> ACTIVE POSITIONS
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
               {positions.length === 0 && (

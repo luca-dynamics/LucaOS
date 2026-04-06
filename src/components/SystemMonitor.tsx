@@ -1,32 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Activity,
-} = LucideIcons as any;
+import React, { useState, useEffect, useRef } from "react";
+import { Icon } from "./ui/Icon";
 import { apiUrl, cortexUrl } from "../config/api";
-// import AudioStreamer from './AudioStreamer'; // REMOVED
+import { useTheme } from "../hooks/useTheme";
 
 interface Props {
   audioListenMode?: boolean;
   connected?: boolean;
-  theme?: {
-    hex: string;
-    primary: string;
-    border: string;
-    bg: string;
-    themeName?: string;
-  };
   connectionTier?: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
 }
 
 const SystemMonitor: React.FC<Props> = ({
   audioListenMode = false,
   connected = false,
-  theme,
   connectionTier = "LOCAL",
 }) => {
-  const themeColor = theme?.hex || "#3b82f6";
-  const themePrimary = theme?.primary || "text-sci-cyan";
+  const { theme, isLight } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [metrics, setMetrics] = useState({
     cpu: 0,
@@ -41,8 +29,6 @@ const SystemMonitor: React.FC<Props> = ({
 
   // Real Audio Data Ref (Mutable for Animation Loop)
   const audioLevelRef = useRef(0);
-
-  // Audio Level Ref removed handler as it is unused
 
   // 3. Permission Pulse (Separate from main loop to avoid spam)
   useEffect(() => {
@@ -63,17 +49,8 @@ const SystemMonitor: React.FC<Props> = ({
       }
     };
 
-    // Initial check
     checkPermissions();
-
-    // Only set up an interval if permissions are NOT okay (to detect fix)
-    let permInterval: NodeJS.Timeout | null = null;
-
-    // We check every 30s if denied, otherwise we stop polling
-    permInterval = setInterval(() => {
-      // If it's already OK, we could stop the interval, but a slow 30s check is safe
-      checkPermissions();
-    }, 30000);
+    let permInterval: NodeJS.Timeout | null = setInterval(checkPermissions, 30000);
 
     return () => {
       if (permInterval) clearInterval(permInterval);
@@ -87,18 +64,11 @@ const SystemMonitor: React.FC<Props> = ({
     const interval = setInterval(async () => {
       if (connected) {
         try {
-          // Use timeout signal for fetch requests
-          const timeoutSignal = (timeout: number) =>
-            AbortSignal.timeout(timeout);
+          const timeoutSignal = (timeout: number) => AbortSignal.timeout(timeout);
 
-          // 1. Resource Pulse
-          const res = await fetch(apiUrl("/api/monitor"), {
-            signal: timeoutSignal(2000), // Increased from 800ms
-          });
+          const res = await fetch(apiUrl("/api/monitor"), { signal: timeoutSignal(2000) });
           const monitorData = res.ok ? await res.json() : null;
-          if (monitorData) console.log("[MONITOR] Data Received:", monitorData);
 
-          // 2. Hardware Pulse (Battery)
           const battRes = await fetch(cortexUrl("/api/system/control"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -107,20 +77,14 @@ const SystemMonitor: React.FC<Props> = ({
           });
           const battData = battRes.ok ? await battRes.json() : null;
 
-          // 3. Dependency Pulse
-          const readyRes = await fetch(apiUrl("/api/system-status/status"), {
-            signal: timeoutSignal(2000), // Increased from 800ms
-          });
+          const readyRes = await fetch(apiUrl("/api/system-status/status"), { signal: timeoutSignal(2000) });
           const readyData = readyRes.ok ? await readyRes.json() : null;
 
           if (monitorData) {
-            // Fix NaN% memory bug
             const memUsed = monitorData.memory?.used || 0;
             const memTotal = monitorData.memory?.total || 1;
             const memPerc = Math.min(100, (memUsed / memTotal) * 100);
 
-            // Fix CPU calculation: Load average should be divided by CPU count, not multiplied
-            // Load average represents number of processes waiting, normalize to 0-100%
             const cpuCores = monitorData.cpuCores || 1;
             const cpuLoad = monitorData.cpu || 0;
             const cpuPerc = Math.min(100, (cpuLoad / cpuCores) * 100);
@@ -132,35 +96,24 @@ const SystemMonitor: React.FC<Props> = ({
               net: monitorData.net || 0,
               battery: battData?.data?.percentage || 100,
               isCharging: battData?.data?.isCharging || false,
-              // permissions is now handled by the separate effect
               readiness: readyData?.status?.toUpperCase() || "READY",
               uptime: `${Math.floor(monitorData.uptime || 0)}s`,
             }));
           }
         } catch (e: any) {
-          // Silence aborted requests (unmount) or timeouts to keep logs clean
-          if (e.name === "AbortError" || e.name === "TimeoutError") {
-            // Ignore - expected behavior
-          } else {
+          if (e.name !== "AbortError" && e.name !== "TimeoutError") {
             console.warn("[HEARTBEAT] Aggregate fetch failed", e);
           }
         }
       } else {
-        // Simulation Mode
         setMetrics((prev) => ({
           ...prev,
-          cpu: Math.min(
-            100,
-            Math.max(5, prev.cpu + (Math.random() - 0.5) * 20),
-          ),
-          mem: Math.min(
-            100,
-            Math.max(20, prev.mem + (Math.random() - 0.5) * 5),
-          ),
+          cpu: Math.min(100, Math.max(5, prev.cpu + (Math.random() - 0.5) * 20)),
+          mem: Math.min(100, Math.max(20, prev.mem + (Math.random() - 0.5) * 5)),
           net: Math.max(0, prev.net + (Math.random() - 0.5) * 10),
         }));
       }
-    }, 2000); // Slower interval for aggregate pulse
+    }, 2000);
 
     return () => {
       clearInterval(interval);
@@ -177,23 +130,20 @@ const SystemMonitor: React.FC<Props> = ({
 
     let animationId: number;
     let tick = 0;
-    const history: number[] = Array(50).fill(0); // For line graph
+    const history: number[] = Array(50).fill(0);
 
     const drawGauge = (
       x: number,
       y: number,
       radius: number,
       value: number,
-      color: string,
+      colors: any,
       label: string,
     ) => {
-      const isLight = theme?.themeName?.toLowerCase() === "lucagent";
       // Background Ring
       ctx.beginPath();
       ctx.arc(x, y, radius, 0.75 * Math.PI, 2.25 * Math.PI);
-      ctx.strokeStyle = isLight
-        ? "rgba(0, 0, 0, 0.05)"
-        : "rgba(30, 41, 59, 0.5)"; // Subtler for light mode
+      ctx.strokeStyle = colors.border;
       ctx.lineWidth = 8;
       ctx.lineCap = "round";
       ctx.stroke();
@@ -204,41 +154,41 @@ const SystemMonitor: React.FC<Props> = ({
 
       ctx.beginPath();
       ctx.arc(x, y, radius, startAngle, endAngle);
-      ctx.strokeStyle = color;
+      ctx.strokeStyle = colors.primary;
       ctx.lineWidth = 8;
       ctx.lineCap = "round";
-      ctx.shadowBlur = isLight ? 0 : 10;
-      ctx.shadowColor = color;
+      
+      // Shadow glow for premium feel in dark mode
+      if (!isLight) {
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = colors.primary;
+      }
       ctx.stroke();
-      ctx.shadowBlur = 0; // Reset
+      ctx.shadowBlur = 0; 
 
       // Value Text
-      ctx.fillStyle = isLight ? "#111827" : "white";
-      ctx.font = 'bold 18px "JetBrains Mono"';
+      ctx.fillStyle = colors.text;
+      ctx.font = 'black 16px "JetBrains Mono"';
       ctx.textAlign = "center";
-      ctx.fillText(Math.round(value) + "%", x, y + 5);
+      ctx.fillText(Math.round(value) + "%", x, y + 6);
 
       // Label Text
-      ctx.fillStyle = isLight
-        ? "rgba(75, 85, 99, 0.8)"
-        : "rgba(148, 163, 184, 0.8)"; // Gray-600 or Slate-400
-      ctx.font = '10px "Rajdhani"';
-      ctx.fillText(label, x, y + 25);
+      ctx.fillStyle = colors.muted;
+      ctx.font = 'black 9px "JetBrains Mono"';
+      ctx.fillText(label, x, y + 28);
     };
 
-    const drawGraph = (x: number, y: number, w: number, h: number) => {
+    const drawGraph = (x: number, y: number, w: number, h: number, colors: any) => {
       ctx.beginPath();
       ctx.moveTo(x, y + h);
 
       history.forEach((val, i) => {
         const px = x + (i / (history.length - 1)) * w;
-        // Clamp value
-        const clampVal = Math.max(0, Math.min(100, val));
-        const py = y + h - (clampVal / 100) * h;
+        const py = y + h - (Math.max(0, Math.min(100, val)) / 100) * h;
         ctx.lineTo(px, py);
       });
 
-      ctx.strokeStyle = audioListenMode ? "#f59e0b" : themeColor;
+      ctx.strokeStyle = audioListenMode ? colors.accent : colors.primary;
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -246,16 +196,15 @@ const SystemMonitor: React.FC<Props> = ({
       ctx.lineTo(x + w, y + h);
       ctx.lineTo(x, y + h);
       ctx.fillStyle = audioListenMode
-        ? "rgba(245, 158, 11, 0.1)"
-        : `${themeColor}1A`; // 10% opacity
+        ? colors.accent + "22"
+        : colors.primary + "1A";
       ctx.fill();
 
-      const isLight = theme?.themeName?.toLowerCase() === "lucagent";
       // Grid lines
       ctx.beginPath();
       ctx.moveTo(x, y + h / 2);
       ctx.lineTo(x + w, y + h / 2);
-      ctx.strokeStyle = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.1)";
+      ctx.strokeStyle = colors.border;
       ctx.setLineDash([2, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
@@ -266,77 +215,68 @@ const SystemMonitor: React.FC<Props> = ({
       ctx.clearRect(0, 0, width, height);
       tick++;
 
+      // Use colors from hook
+      const colors = {
+        primary: theme.primary,
+        text: theme.textMain,
+        muted: theme.textMuted,
+        border: theme.borderMain,
+        accent: "#f59e0b",
+      };
+
       // Update History for graph
       if (tick % 5 === 0) {
         history.shift();
-        // Use Real Audio Level if in Listen Mode
-        if (audioListenMode) {
-          history.push(audioLevelRef.current);
-        } else {
-          history.push(metrics.net * 5);
-        }
+        history.push(audioListenMode ? audioLevelRef.current : metrics.net * 5);
       }
 
-      // Draw Gauges - Use themeColor for both
-      drawGauge(60, 70, 40, metrics.cpu, themeColor, "CPU CORE");
-      drawGauge(160, 70, 40, metrics.mem, themeColor, "MEM ALLOC");
+      // Draw Gauges
+      drawGauge(60, 65, 36, metrics.cpu, colors, "CPU LOAD");
+      drawGauge(150, 65, 36, metrics.mem, colors, "MEM UTIL");
 
       // Draw Graph Area
-      drawGraph(20, 140, width - 140, 50);
+      drawGraph(20, 130, width - 140, 50, colors);
 
-      // Draw "Hex Rain" Text on Right
-      ctx.fillStyle = audioListenMode ? "#f59e0b" : themeColor;
-      ctx.font = "10px monospace";
-      ctx.textAlign = "left";
-
+      // Diagnostics Text
       const logs = [
-        `POWER: ${metrics.battery}% ${metrics.isCharging ? "(AC)" : "(BAT)"}`,
-        `ACCESS: ${metrics.permissions}`,
-        `READY: ${metrics.readiness}`,
-        `UPTIME: ${metrics.uptime}`,
-        `MODE: ACTIVE (ADMIN)`,
+        `PWR: ${metrics.battery}% ${metrics.isCharging ? "(AC)" : "(BAT)"}`,
+        `AUTH: ${metrics.permissions}`,
+        `SYST: ${metrics.readiness}`,
+        `TIME: ${metrics.uptime}`,
+        `KERN: SECURE`,
       ];
 
-      const isLight = theme?.themeName?.toLowerCase() === "lucagent";
       logs.forEach((l, i) => {
-        ctx.fillStyle = isLight
-          ? "rgba(17, 24, 39, 0.9)"
-          : audioListenMode
-            ? "#f59e0b"
-            : themeColor;
-        ctx.fillText(l, width - 110, 145 + i * 12);
+        ctx.fillStyle = audioListenMode ? colors.accent : colors.text;
+        ctx.font = 'black 10px "JetBrains Mono"';
+        ctx.textAlign = "left";
+        ctx.fillText(l, width - 110, 135 + i * 14);
       });
 
-      // Status Header
-      ctx.fillStyle = isLight
-        ? "rgba(17, 24, 39, 1)"
-        : audioListenMode
-          ? "#f59e0b"
-          : themeColor;
-      ctx.font = 'bold 12px "Rajdhani"';
+      ctx.fillStyle = audioListenMode ? colors.accent : colors.primary;
+      ctx.font = 'black 10px "JetBrains Mono"';
       ctx.fillText(
         audioListenMode
-          ? "AUDIO ANALYSIS ACTIVE"
+          ? "SENSOR ARRAY // ACTIVE"
           : connectionTier === "OFFLINE"
-            ? "SIMULATION MODE"
-            : `REALTIME TELEMETRY (${connectionTier})`,
+            ? "SIMULATION // STANDBY"
+            : `TELEMETRY // ${connectionTier}`,
         20,
-        125,
+        115,
       );
 
-      // Decorative Corner
+      // Corner Accents
       ctx.beginPath();
-      ctx.moveTo(width - 10, 10);
-      ctx.lineTo(width - 10, 30);
-      ctx.lineTo(width - 30, 10);
+      ctx.moveTo(width - 5, 5);
+      ctx.lineTo(width - 5, 20);
+      ctx.lineTo(width - 20, 5);
       ctx.closePath();
-      ctx.fillStyle = "#334155";
+      ctx.fillStyle = colors.border;
       ctx.fill();
 
       animationId = requestAnimationFrame(render);
     };
 
-    // Resize observer
     const resize = () => {
       if (canvas.parentElement) {
         canvas.width = canvas.parentElement.clientWidth;
@@ -344,69 +284,47 @@ const SystemMonitor: React.FC<Props> = ({
       }
     };
     window.addEventListener("resize", resize);
-    resize(); // Init
-
+    resize();
     render();
+
     return () => {
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animationId);
     };
-  }, [metrics, audioListenMode, connected, themeColor]);
+  }, [metrics, audioListenMode, connected, connectionTier]);
 
-  const isLight = theme?.themeName?.toLowerCase() === "lucagent";
   return (
-    <div className="h-full w-full flex flex-col gap-2">
+    <div className="h-full w-full flex flex-col gap-3 animate-in fade-in duration-1000">
       <div
-        className="flex items-center justify-between pb-2"
-        style={{
-          borderBottom: `1px solid ${isLight ? "rgba(0,0,0,0.1)" : themeColor + "33"}`,
-        }}
+        className="flex items-center justify-between pb-2 border-b border-[var(--app-border-main)]"
       >
-        <div className="flex items-center gap-2">
-          <Activity
-            className={
-              audioListenMode
-                ? "text-amber-500"
-                : isLight
-                  ? "text-gray-900"
-                  : themePrimary
-            }
-            size={16}
+        <div className="flex items-center gap-2.5">
+          <Icon
+            name="Pulse"
+            className={audioListenMode ? "text-amber-500 animate-pulse" : "text-[var(--app-text-main)]"}
+            size={18}
+            variant="BoldDuotone"
           />
           <h2
-            className={`font-display font-bold tracking-widest text-xs ${
-              audioListenMode
-                ? "text-amber-500"
-                : isLight
-                  ? "text-gray-900"
-                  : themePrimary
-            }`}
+            className={`text-[10px] font-black uppercase tracking-[0.3em] font-display italic text-[var(--app-text-main)]`}
           >
-            {audioListenMode ? "SENSOR ARRAY" : "SYSTEM DIAGNOSTICS"}
+            {audioListenMode ? "Sensor Matrix" : "System Diagnostics"}
           </h2>
         </div>
-        <div
-          className={`flex items-center gap-2 text-[10px] font-mono ${isLight ? "text-gray-500" : "text-slate-500"}`}
-        >
+        <div className="flex items-center gap-3">
           <div
-            className={`w-2 h-2 rounded-full ${
-              connected ? "bg-green-500" : "bg-yellow-500"
-            } animate-pulse`}
-          ></div>
-          {connected ? "ONLINE" : "OFFLINE"}
+            className={`flex items-center gap-2 px-2 py-1 rounded-lg text-[9px] font-black font-mono tracking-widest border border-[var(--app-border-main)] bg-black/20 ${connected ? 'text-green-500' : 'text-amber-500'}`}
+          >
+            <div className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-green-500" : "bg-amber-500"} animate-pulse`} />
+            {connected ? "ONLINE" : "OFFLINE"}
+          </div>
         </div>
       </div>
 
       <div
-        className={`flex-1 w-full relative ${isLight ? "bg-white/30" : "bg-black/40"} rounded overflow-hidden`}
-        style={{
-          border: `1px solid ${isLight ? "rgba(0,0,0,0.05)" : themeColor + "33"}`,
-        }}
+        className={`flex-1 w-full relative rounded-xl overflow-hidden tech-border glass-blur bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] shadow-inner`}
       >
-        <canvas ref={canvasRef} className="w-full h-full" />
-
-        {/* --- REAL SENSOR INTEGRATION REMOVED (Legacy Voice System) --- */}
-        {/* Audio visualization now handled by VoiceHud via liveService */}
+        <canvas ref={canvasRef} className="w-full h-full opacity-90" />
       </div>
     </div>
   );

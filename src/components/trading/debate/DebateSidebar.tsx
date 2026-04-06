@@ -1,14 +1,7 @@
-import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Plus,
-  Zap,
-  Trash2,
-  Play,
-  Users,
-} = LucideIcons as any;
+import { Icon } from "../../ui/Icon";
 import { DebateSession, TraderInfo } from "../../../types/trading";
-import { PunkAvatar } from "../../PunkAvatar";
+
+import { LucaAvatar } from "../../../utils/tradingUI";
 
 interface DebateSidebarProps {
   sessions: DebateSession[];
@@ -20,6 +13,7 @@ interface DebateSidebarProps {
   onDelete: (id: string) => void;
   selectedTraderId?: string;
   onTraderSelect?: (id: string) => void;
+  theme?: { isLight?: boolean };
 }
 
 export default function DebateSidebar({
@@ -32,50 +26,55 @@ export default function DebateSidebar({
   onDelete,
   selectedTraderId,
   onTraderSelect,
+  theme,
 }: DebateSidebarProps) {
+  const isLight = theme?.isLight;
   const onlineTraders = traders.filter((t) => t.is_running);
   const offlineTraders = traders.filter((t) => !t.is_running);
 
   return (
-    <div className="w-64 bg-[#0d1017] border-r border-slate-800/60 flex flex-col h-full overflow-hidden flex-shrink-0">
+    <div className={`w-64 ${isLight ? "bg-white border-slate-200" : "bg-[#0a0a0a] border-white/5"} border-r flex flex-col h-full overflow-hidden flex-shrink-0`}>
       {/* 1. New Debate Button */}
-      <div className="p-3">
+      <div className="p-3 border-b border-white/5">
         <button
           onClick={onCreate}
-          className="w-full py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-yellow-500/10 active:transform active:scale-95"
+          className="w-full py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-yellow-500/5 active:transform active:scale-[0.98]"
         >
-          <Plus size={16} strokeWidth={3} /> New Debate
+          <Icon name="Plus" size={14} variant="BoldDuotone" /> New debate
         </button>
       </div>
 
       {/* 2. Debate Sessions List */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-          <span>Active Sessions</span>
-          <span className="bg-slate-800 text-slate-400 px-1.5 rounded-sm">
+      <div className={`flex-1 flex flex-col min-h-0 overflow-hidden ${isLight ? "bg-white" : "bg-black/20"}`}>
+        <div className={`px-3 py-2 text-[10px] font-bold ${isLight ? "text-slate-400" : "text-slate-500"} flex items-center justify-between border-b ${isLight ? "border-slate-200 bg-slate-50" : "border-white/5 bg-[#0a0a0a]"}`}>
+          <span className="flex items-center gap-1.5 tracking-widest">
+            <Icon name="Users" size={10} className={isLight ? "text-slate-300" : "text-slate-400"} variant="BoldDuotone" />
+            Sessions
+          </span>
+          <span className="bg-slate-800 text-slate-400 px-1.5 rounded-sm tabular-nums">
             {sessions.length}
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2 space-y-1 pb-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 custom-scrollbar">
           {sessions.map((session) => (
             <div
               key={session.id}
               onClick={() => onSelect(session.id)}
-              className={`p-3 rounded-lg cursor-pointer border transition-all group relative ${
+              className={`p-2.5 rounded border transition-all cursor-pointer group relative ${
                 selectedId === session.id
-                  ? "bg-yellow-500/10 border-yellow-500/50 shadow-sm"
-                  : "bg-transparent border-transparent hover:bg-slate-800/40"
+                  ? "bg-yellow-500/10 border-yellow-500/40 shadow-sm"
+                  : "bg-transparent border-transparent hover:bg-white/5"
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
                 <span
-                  className={`w-2 h-2 rounded-full ${getStatusColor(
+                  className={`w-1.5 h-1.5 rounded-full ring-2 ring-black/50 ${getStatusColor(
                     session.status
                   )}`}
                 />
                 <span
-                  className={`text-sm font-bold truncate flex-1 ${
+                  className={`text-xs font-bold truncate flex-1 ${
                     selectedId === session.id ? "text-white" : "text-slate-400"
                   }`}
                 >
@@ -83,7 +82,7 @@ export default function DebateSidebar({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pl-4">
+              <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono tracking-tight pl-3.5">
                 <span
                   className={
                     selectedId === session.id ? "text-yellow-500/80" : ""
@@ -91,31 +90,31 @@ export default function DebateSidebar({
                 >
                   {session.symbol}
                 </span>
-                <span className="bg-slate-800/50 px-1 rounded">
+                <span className="bg-white/5 px-1 rounded tabular-nums">
                   R{session.currentRound}/{session.maxRounds}
                 </span>
               </div>
 
               {/* Actions for Pending State */}
               {session.status === "pending" && selectedId === session.id && (
-                <div className="flex gap-2 mt-2 pt-2 border-t border-white/5 animate-in fade-in duration-200">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStart(session.id);
-                    }}
-                    className="flex-1 py-1.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded hover:bg-emerald-500/20 flex items-center justify-center gap-1 transition-colors"
-                  >
-                    <Play size={10} /> START
-                  </button>
+                <div className="flex gap-1.5 mt-2 pt-2 border-t border-white/5 animate-in slide-in-from-top-1 duration-200">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStart(session.id);
+                      }}
+                      className="flex-1 py-1 bg-emerald-500/10 text-emerald-400 text-[9px] font-bold rounded hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors tracking-wider"
+                    >
+                      Start
+                    </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(session.id);
                     }}
-                    className="flex-1 py-1.5 bg-rose-500/10 text-rose-400 text-[10px] font-bold rounded hover:bg-rose-500/20 flex items-center justify-center gap-1 transition-colors"
+                    className="flex-1 py-1 bg-rose-500/10 text-rose-400 text-[9px] font-bold rounded hover:bg-rose-500/20 border border-rose-500/20 transition-colors tracking-wider"
                   >
-                    <Trash2 size={10} /> DELETE
+                    Delete
                   </button>
                 </div>
               )}
@@ -125,7 +124,7 @@ export default function DebateSidebar({
           {sessions.length === 0 && (
             <div className="text-center py-8 text-slate-600 text-xs italic flex flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center">
-                <Play size={16} className="opacity-50" />
+                <Icon name="Play" size={16} className="opacity-50" variant="BoldDuotone" />
               </div>
               No active debates
             </div>
@@ -133,17 +132,16 @@ export default function DebateSidebar({
         </div>
       </div>
 
-      {/* 3. Online Traders List (Bottom - Fixed Height) */}
-      <div className="h-[35%] min-h-[180px] border-t border-slate-800/60 flex flex-col bg-[#0b0e14]">
-        <div className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 bg-[#0b0e14]">
-          <Zap size={12} className="text-emerald-500" />
-          <span>Network Agents</span>
-          <span className="ml-auto bg-emerald-500/10 text-emerald-500 px-1.5 rounded">
-            {onlineTraders.length} Online
+      <div className={`h-[40%] min-h-[200px] border-t ${isLight ? "border-slate-200" : "border-white/5"} flex flex-col ${isLight ? "bg-white" : "bg-[#080808]"}`}>
+        <div className={`px-3 py-2 text-[10px] font-bold ${isLight ? "text-slate-400" : "text-slate-500"} flex items-center gap-1.5 ${isLight ? "bg-slate-50 border-b border-slate-200" : "bg-[#0a0a0a] border-b border-white/5"} tracking-widest`}>
+          <Icon name="Zap" size={10} className="text-emerald-500" variant="BoldDuotone" />
+          <span>Online traders</span>
+          <span className="ml-auto bg-emerald-500/10 text-emerald-500 px-1.5 rounded-sm tabular-nums">
+            {onlineTraders.length}
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-1 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 custom-scrollbar">
           {onlineTraders.map((trader) => (
             <TraderRow
               key={trader.trader_id}
@@ -154,10 +152,10 @@ export default function DebateSidebar({
           ))}
 
           {offlineTraders.length > 0 && (
-            <div className="pt-2 mt-2 border-t border-slate-800/40">
-              <div className="px-2 mb-2 text-[10px] font-bold text-slate-600 uppercase">
-                Offline
-              </div>
+            <div className="pt-2 mt-2 border-t border-white/5">
+            <div className={`px-2 mb-2 text-[9px] font-bold ${isLight ? "text-slate-300" : "text-slate-600"} tracking-widest`}>
+              Offline
+            </div>
               {offlineTraders.map((trader) => (
                 <TraderRow
                   key={trader.trader_id}
@@ -186,35 +184,51 @@ function TraderRow({
   return (
     <div
       onClick={onClick}
-      className={`p-2 rounded-lg cursor-pointer border transition-all flex items-center gap-3 group ${
+      className={`p-2 rounded border transition-all flex items-center gap-2.5 group ${
         isSelected
-          ? "bg-emerald-500/10 border-emerald-500/50 shadow-sm shadow-emerald-500/10"
-          : "bg-slate-900/40 border-slate-800/40 hover:bg-slate-800/60 hover:border-slate-700"
+          ? "bg-emerald-500/10 border-emerald-500/30 shadow-sm shadow-emerald-500/5"
+          : "bg-transparent border-transparent hover:bg-white/5"
       } ${
         !trader.is_running
-          ? "opacity-50 grayscale hover:grayscale-0 hover:opacity-80"
+          ? "opacity-60 grayscale hover:grayscale-0 hover:opacity-100"
           : ""
       }`}
     >
-      <div className="relative">
-        <PunkAvatar seed={trader.trader_id} size={32} />
+      <div className="relative flex-shrink-0">
+        <LucaAvatar aiModelId={trader.ai_model || ""} size={32} />
         {trader.is_running && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-[#0b0e14] rounded-full animate-pulse" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-[#080808] rounded-full ring-2 ring-emerald-500/20" />
         )}
       </div>
 
       <div className="flex-1 min-w-0">
-        <div
-          className={`text-xs font-bold truncate ${
-            isSelected
-              ? "text-emerald-400"
-              : "text-slate-200 group-hover:text-white"
-          }`}
-        >
-          {trader.trader_name}
+        <div className="flex items-center justify-between gap-1 mb-0.5">
+          <div
+            className={`text-[11px] font-bold truncate tracking-tight ${
+              isSelected
+                ? "text-emerald-400"
+                : "text-slate-200 group-hover:text-white"
+            }`}
+          >
+            {trader.trader_name}
+          </div>
+          <div className="text-[10px] font-mono font-bold text-emerald-400 tabular-nums">
+            +{(trader as any).total_pnl_pct || trader.total_pnl || 0}%
+          </div>
         </div>
-        <div className="text-[10px] text-slate-500 flex items-center gap-1 truncate">
-          {trader.ai_model}
+        
+        <div className={`flex items-center justify-between text-[9px] font-mono tracking-tighter`}>
+          <span className="text-slate-500 truncate mr-2">
+            {trader.ai_model || "Multi-agent"}
+          </span>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="text-slate-400 font-bold whitespace-nowrap">
+              {trader.win_rate}% WR
+            </span>
+            <span className="text-slate-600">
+              {trader.trade_count}T
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -227,7 +241,7 @@ function getStatusColor(status: string) {
       return "bg-slate-500";
     case "running":
     case "in_progress":
-      return "bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]";
+      return "bg-cyan-500 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.5)]";
     case "voting":
       return "bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]";
     case "completed":

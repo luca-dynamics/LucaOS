@@ -1,17 +1,5 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  AlertCircle,
-  Terminal,
-  Sparkles,
-  Cpu,
-  Database,
-  Monitor,
-  Lock,
-  Mic,
-  Settings,
-  Globe,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { PersonaConfig, PersonaDefinition } from "../../types";
 
 interface PersonalityDashboardProps {
@@ -29,7 +17,7 @@ interface PersonalityDashboardProps {
 }
 
 const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
-  theme = { primary: "text-blue-500", hex: "#3b82f6", themeName: "lucagent" },
+  theme = { primary: "text-blue-500", hex: "#3b82f6", themeName: "default" },
   config,
   onUpdate,
 }) => {
@@ -44,8 +32,8 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
 
   if (!config) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-400 gap-2">
-        <AlertCircle className="w-5 h-5 text-gray-500" />
+      <div className="flex items-center justify-center h-64 text-[var(--app-text-muted)] gap-2">
+        <Icon name="AlertCircle" className="w-5 h-5 text-[var(--app-text-muted)]" />
         <span className="text-sm">Loading Personality...</span>
       </div>
     );
@@ -163,11 +151,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
     }
   };
 
-  // Glassmorphism helper styles
-  const glassCardStyle = {
-    backgroundColor: `${theme.hex}0d`, // 5% opacity
-    borderColor: `${theme.hex}33`, // 20% opacity
-  };
+
 
   return (
     <div className="space-y-4 flex flex-col">
@@ -175,49 +159,45 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
       <div className="flex flex-col space-y-2 shrink-0">
         <div className="flex justify-between items-center px-1">
           <h3
-            className="text-sm font-bold flex items-center gap-2"
-            style={{
-              color:
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "#1e1b4b"
-                  : theme.hex === "#111827"
-                    ? "#ffffff"
-                    : theme.hex,
-            }}
+            className="text-base font-bold flex items-center gap-2"
+            style={{ color: "var(--app-text-main, #ffffff)" }}
           >
-            <Sparkles className="w-4 h-4" />
+            <Icon name="Sparkles" className="w-4 h-4" style={{ color: theme.hex }} />
             CORE SYSTEM RULES
           </h3>
           <span
-            className={`text-[9px] px-2 py-0.5 rounded border uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 border-white/10 text-gray-500"}`}
+            className={`text-sm px-2 py-0.5 rounded border uppercase tracking-tighter transition-all tech-border`}
+            style={{ 
+              backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+              borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              color: "var(--app-text-muted, #94a3b8)"
+            }}
           >
             Primary Directives
           </span>
         </div>
 
         <div
-          className={`relative group rounded-xl border overflow-hidden focus-within:ring-1 transition-all shadow-2xl ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10 focus-within:ring-black/5" : "bg-black/40 border-white/10 focus-within:ring-white/20"}`}
+          className={`relative group rounded-xl border overflow-hidden focus-within:ring-1 transition-all shadow-2xl tech-border`}
+          style={{
+            backgroundColor: "var(--app-bg-tint, #0a0a0f)",
+            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          }}
         >
           <div
             className="absolute top-0 left-0 w-1 h-full"
-            style={{
-              backgroundColor:
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "#4f46e5"
-                  : theme.hex === "#111827"
-                    ? "#ffffff"
-                    : theme.hex,
-            }}
+            style={{ backgroundColor: theme.hex }}
           />
           <textarea
             value={globalInstructions}
             onChange={(e) => syncConsciousness(e.target.value)}
-            className={`w-full h-[100px] bg-transparent p-3 text-xs font-mono outline-none resize-none leading-relaxed custom-scrollbar placeholder-gray-500 ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-200"}`}
+            className={`w-full h-[140px] bg-transparent p-3 text-base font-mono outline-none resize-none leading-relaxed custom-scrollbar placeholder-gray-500`}
+            style={{ color: "var(--app-text-main, #ffffff)" }}
             spellCheck={false}
             placeholder="Enter the core system rules and behavioral logic that Luca must ALWAYS follow. (e.g. 'Always be concise', 'Never mention the word technical')..."
           />
-          <div className="absolute bottom-1.5 right-3 text-[10px] text-gray-400 flex items-center gap-1 opacity-40">
-            <Cpu className="w-2.5 h-2.5" /> Logical Core
+          <div className="absolute bottom-1.5 right-3 text-sm text-[var(--app-text-muted)] flex items-center gap-1 opacity-40">
+            <Icon name="Cpu" className="w-2.5 h-2.5" /> Logical Core
           </div>
         </div>
       </div>
@@ -227,12 +207,15 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
       {/* 2. SPECIALIST FOCUS (The Lenses) */}
       <div className="flex-1 flex flex-col min-h-0 space-y-3">
         <div
-          className={`flex flex-col md:flex-row justify-between items-start md:items-center p-2 px-3 rounded-lg border shrink-0 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/5" : "border-white/5 bg-white/5"}`}
-          style={theme.themeName?.toLowerCase() === "lucagent" ? undefined : glassCardStyle}
+          className={`flex flex-col md:flex-row justify-between items-start md:items-center p-2 px-3 rounded-lg border shrink-0 transition-all tech-border`}
+          style={{
+            backgroundColor: "var(--app-bg-tint, #11111a)",
+            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          }}
         >
           <div className="mb-2 md:mb-0">
-            <label className="text-[9px] font-bold text-gray-500 uppercase flex items-center gap-1">
-              <Monitor className="w-2.5 h-2.5" /> System Personas
+            <label className="text-sm font-bold text-[var(--app-text-muted)] uppercase flex items-center gap-1">
+              <Icon name="Monitor" className="w-2.5 h-2.5" /> System Personas
             </label>
           </div>
 
@@ -240,24 +223,21 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             <select
               value={selectedPersona}
               onChange={(e) => setSelectedPersona(e.target.value)}
-              className={`w-full appearance-none rounded-lg px-4 py-1 text-xs outline-none transition-colors pr-8 cursor-pointer ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10 text-slate-900 hover:bg-black/[0.02]" : "bg-black/60 border-white/10 text-white hover:bg-white/5"}`}
+              className={`w-full appearance-none rounded-lg px-4 py-1 text-base outline-none transition-colors pr-8 cursor-pointer border tech-border`}
               style={{
-                borderColor:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(0,0,0,0.15)"
-                    : theme.hex === "#111827"
-                      ? "rgba(255,255,255,0.4)"
-                      : theme.hex,
+                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.6))",
+                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                color: "var(--app-text-main, #ffffff)"
               }}
             >
               {availablePersonas.map((p) => (
-                <option key={p} value={p} className="bg-gray-900 text-white">
+                <option key={p} value={p} className="bg-gray-900 text-[var(--app-text-main)]">
                   {p}
                 </option>
               ))}
             </select>
             <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-              <Terminal className="w-3 h-3" />
+              <Icon name="Terminal" className="w-3 h-3" />
             </div>
           </div>
         </div>
@@ -268,12 +248,17 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             <div className="flex justify-center pt-2">
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className={`text-[8px] uppercase tracking-[0.2em] transition-colors flex items-center gap-2 px-3 py-1 rounded-full border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/5 text-slate-500 hover:text-slate-900" : "text-gray-700 hover:text-gray-400 border-white/5 bg-white/5"}`}
+                className={`text-sm uppercase tracking-[0.2em] transition-all flex items-center gap-2 px-3 py-1 rounded-full border tech-border`}
+                style={{
+                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                  borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                  color: "var(--app-text-muted, #94a3b8)"
+                }}
               >
                 {showAdvanced ? (
-                  <Lock className="w-2 h-2" />
+                  <Icon name="Lock" className="w-2 h-2" />
                 ) : (
-                  <Settings className="w-2 h-2" />
+                  <Icon name="Settings" className="w-2 h-2" />
                 )}
                 {showAdvanced
                   ? "Hide System Logic"
@@ -286,20 +271,25 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                 {/* 3. ARCHETYPE BLUEPRINT (The technical readout) */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between px-1">
-                    <label className="text-[9px] font-bold text-gray-500 uppercase flex items-center gap-1.5">
-                      <Database className="w-3 h-3" /> System Blueprint
+                    <label className="text-sm font-bold text-[var(--app-text-muted)] uppercase flex items-center gap-1.5">
+                      <Icon name="Database" className="w-3 h-3" /> System Blueprint
                     </label>
-                    <span className="text-[8px] text-gray-600 italic">
+                    <span className="text-sm text-[var(--app-text-muted)] italic">
                       READ-ONLY
                     </span>
                   </div>
 
                   <div
-                    className={`relative group/blueprint rounded-xl border overflow-hidden ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/60 border-white/5"}`}
+                    className={`relative group/blueprint rounded-xl border overflow-hidden transition-all shadow-inner tech-border`}
+                    style={{
+                      backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                      borderColor: "var(--app-border-main, rgba(255,255,255,0.1))"
+                    }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-transparent pointer-events-none" />
                     <div
-                      className={`w-full min-h-[100px] p-4 text-[10px] font-mono whitespace-pre-wrap leading-relaxed ${resolvedBase ? (theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700" : "text-gray-400") : "text-gray-700 italic"}`}
+                      className={`w-full min-h-[140px] p-4 text-base font-mono whitespace-pre-wrap leading-relaxed`}
+                      style={{ color: "var(--app-text-muted, #94a3b8)" }}
                     >
                       {resolvedBase ||
                         "System identity for this lens is currently loading or encrypted..."}
@@ -307,8 +297,8 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
 
                     {/* Overlay label to clarify purpose */}
                     <div className="absolute top-2 right-2 flex items-center gap-1 opacity-10 group-hover/blueprint:opacity-100 transition-opacity pointer-events-none">
-                      <Lock className="w-2.5 h-2.5 text-gray-700" />
-                      <span className="text-[8px] text-gray-700 font-bold uppercase">
+                      <Icon name="Lock" className="w-2.5 h-2.5 text-[var(--app-text-muted)]" />
+                      <span className="text-sm text-[var(--app-text-muted)] font-bold uppercase">
                         System Logic
                       </span>
                     </div>
@@ -316,9 +306,9 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
 
                   <div className="flex items-center gap-4 px-1 py-1">
                     <div className="flex items-center gap-2 flex-1">
-                      <Mic className="w-3 h-3 text-gray-600" />
+                      <Icon name="Mic" className="w-3 h-3 text-[var(--app-text-muted)]" />
                       <input
-                        className={`bg-transparent border-none p-0 text-[10px] w-full focus:ring-0 placeholder-gray-800 transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600 focus:text-slate-900" : "text-gray-400 focus:text-white"}`}
+                        className={`bg-transparent border-none p-0 text-base w-full focus:ring-0 placeholder-gray-800 transition-colors text-[var(--app-text-muted)] focus:text-[var(--app-text-main)]`}
                         value={currentPersona.voiceName}
                         onChange={(e) =>
                           updateArchetypeField("voiceName", e.target.value)
@@ -326,7 +316,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                         placeholder="Voice Identification..."
                       />
                     </div>
-                    <div className="text-[8px] text-gray-600 uppercase tracking-widest hidden md:block">
+                    <div className="text-sm text-[var(--app-text-muted)] uppercase tracking-widest hidden md:block">
                       Active Voice Signature
                     </div>
                   </div>
@@ -335,26 +325,26 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                 {/* Protocol Status Footer */}
                 <div className="flex items-center gap-3 pt-4 border-t border-white/5 mt-2">
                   <div className="flex flex-wrap gap-2 items-center flex-1">
-                    <span className="text-[9px] text-gray-600 font-bold uppercase">
+                    <span className="text-sm text-[var(--app-text-muted)] font-bold uppercase">
                       Protocols:
                     </span>
                     {hasMetacognition && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/5 border border-blue-500/10 text-[8px] text-blue-500/60 uppercase">
-                        <Cpu className="w-2.5 h-2.5" /> Metacognition
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/5 border border-blue-500/10 text-sm text-blue-500/60 uppercase">
+                        <Icon name="Cpu" className="w-2.5 h-2.5" /> Metacognition
                       </div>
                     )}
                     {hasMemory && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/5 border border-purple-500/10 text-[8px] text-purple-500/60 uppercase">
-                        <Database className="w-2.5 h-2.5" /> Contextual Memory
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/5 border border-purple-500/10 text-sm text-purple-500/60 uppercase">
+                        <Icon name="Database" className="w-2.5 h-2.5" /> Contextual Memory
                       </div>
                     )}
                     {hasPlatform && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/5 border border-green-500/10 text-[8px] text-green-500/60 uppercase">
-                        <Globe className="w-2.5 h-2.5" /> Platform Awareness
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/5 border border-green-500/10 text-sm text-green-500/60 uppercase">
+                        <Icon name="Globe" className="w-2.5 h-2.5" /> Platform Awareness
                       </div>
                     )}
                   </div>
-                  <div className="text-[8px] text-gray-800 font-bold uppercase">
+                  <div className="text-sm text-[var(--app-text-muted)] font-bold uppercase">
                     System Logic Encrypted
                   </div>
                 </div>
@@ -362,8 +352,8 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             )}
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/5">
-            <span className="text-gray-600 text-[10px] uppercase tracking-widest">
+          <div className={`flex-1 flex items-center justify-center border border-dashed rounded-xl border-[var(--app-border-main)] bg-[var(--app-bg-tint)]`}>
+            <span className="text-[var(--app-text-muted)] text-base uppercase tracking-widest">
               Awaiting Lens Selection...
             </span>
           </div>

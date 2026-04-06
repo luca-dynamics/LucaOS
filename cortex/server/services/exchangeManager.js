@@ -12,7 +12,8 @@
  * - Demo mode support
  */
 
-// ... imports ...
+// imports 
+import ccxt from 'ccxt';
 import { ethers } from 'ethers';
 import { randomBytes } from 'crypto';
 
@@ -30,10 +31,60 @@ const generateOrderId = () => {
   return `x-Luca_${timestamp}${random}`.substring(0, 32);
 };
 
-const SUPPORTED_EXCHANGES = ['binance', 'bybit', 'okx', 'bitget', 'hyperliquid', 'aster', 'lighter'];
+const SUPPORTED_EXCHANGES = ['binance', 'bybit', 'okx', 'bitget', 'hyperliquid', 'aster', 'lighter', 'mexc', 'gate'];
 
 
-// ... (Cache class unchanged) ...
+// --- Cache Management ---
+class Cache {
+  constructor() {
+    this.balances = new Map(); // exchange -> { data, timestamp }
+    this.positions = new Map();
+    this.fundingRates = new Map();
+  }
+
+  getBalance(exchangeId) {
+    const entry = this.balances.get(exchangeId);
+    if (entry && (Date.now() - entry.timestamp < CACHE_DURATION_MS)) {
+      return entry.data;
+    }
+    return null;
+  }
+
+  setBalance(exchangeId, data) {
+    this.balances.set(exchangeId, { data, timestamp: Date.now() });
+  }
+
+  getPositions(exchangeId) {
+    const entry = this.positions.get(exchangeId);
+    if (entry && (Date.now() - entry.timestamp < CACHE_DURATION_MS)) {
+      return entry.data;
+    }
+    return null;
+  }
+
+  setPositions(exchangeId, data) {
+    this.positions.set(exchangeId, { data, timestamp: Date.now() });
+  }
+
+  getFundingRate(symbol) {
+    const entry = this.fundingRates.get(symbol);
+    if (entry && (Date.now() - entry.timestamp < FUNDING_RATE_CACHE_MS)) {
+      return entry.data;
+    }
+    return null;
+  }
+
+  setFundingRate(symbol, data) {
+    this.fundingRates.set(symbol, { data, timestamp: Date.now() });
+  }
+
+  invalidate(exchangeId) {
+    this.balances.delete(exchangeId);
+    this.positions.delete(exchangeId);
+  }
+}
+
+const cache = new Cache();
 
 // ============================================================================
 // Aster Exchange Driver (Ported from NoFx Go Source)
@@ -145,7 +196,7 @@ class AsterExchange {
      };
   }
 
-  async createOrder(symbol, type, side, amount, price, params = {}) {
+  async createOrder(symbol, type, side, amount, price) {
      const req = {
        symbol,
        positionSide: 'BOTH',
@@ -259,7 +310,7 @@ class HyperliquidExchange {
               
               // Hyperliquid specific: liquidation price is often in p.liquidationPx
               const liquidationPrice = parseFloat(p.liquidationPx || 0);
-              const leverage = p.leverage ? parseFloat(p.leverage.value) : 1; // Check structure
+              // const leverage = p.leverage ? parseFloat(p.leverage.value) : 1; // Check structure
               const marginUsed = parseFloat(p.marginUsed || 0); // Check structure
 
               positions.push({
@@ -485,7 +536,22 @@ class LighterExchange {
 // ============================================================================
 
 class ExchangeManager {
-  // ... constructor ...
+  constructor() {
+    this.exchanges = new Map(); // exchangeId -> instance
+    this.demoMode = true;       // Default to demo mode for safety
+    this.demoBalances = new Map();
+    this.cache = new Cache();
+    console.log('[ExchangeManager] Initialized in Demo Mode');
+  }
+
+  /**
+   * Toggle between live and demo trading
+   */
+  setMode(isDemo) {
+    this.demoMode = isDemo;
+    console.log(`[ExchangeManager] Mode switched to: ${isDemo ? 'DEMO' : 'LIVE'}`);
+    return { success: true, mode: isDemo ? 'demo' : 'live' };
+  }
 
   // Connect
   async connect(exchangeId, credentials) {
@@ -519,6 +585,13 @@ class ExchangeManager {
 
         await exchange.loadMarkets();
         this.exchanges.set(id, exchange);
+
+        // Disable demo mode if we just connected a real exchange
+        if (this.demoMode) {
+            console.log(`[ExchangeManager] Real exchange (${id}) connected via custom driver. Disabling Demo Mode.`);
+            this.demoMode = false;
+        }
+
         return { success: true, exchange: id, marketsLoaded: Object.keys(exchange.markets).length };
     }
 
@@ -551,6 +624,12 @@ class ExchangeManager {
       // Store instance
       this.exchanges.set(id, exchange);
 
+      // Disable demo mode if we just connected a real exchange
+      if (this.demoMode) {
+        console.log(`[ExchangeManager] Real exchange (${id}) connected. Disabling Demo Mode.`);
+        this.demoMode = false;
+      }
+
       // Set Hedge Mode (if supported)
       await this.setHedgeMode(exchange, id);
 
@@ -565,6 +644,20 @@ class ExchangeManager {
       console.error(`[ExchangeManager] Failed to connect to ${exchangeId}:`, error.message);
       throw error;
     }
+  }
+
+  /**
+   * Get all markets for an exchange
+   */
+  async getMarkets(exchangeId) {
+    const exchange = await this.getExchange(exchangeId);
+    
+    // Ensure markets are loaded (standard CCXT behavior)
+    if (!exchange.markets || Object.keys(exchange.markets).length === 0) {
+      await exchange.loadMarkets();
+    }
+
+    return exchange.markets;
   }
 
   /**
@@ -652,7 +745,7 @@ class ExchangeManager {
   /**
    * Get exchange instance (auto-connect public if needed)
    */
-  async getExchange(exchangeId, forcePublic = false) {
+  async getExchange(exchangeId) {
     const id = exchangeId.toLowerCase();
     
     // 1. Try existing connection
@@ -1221,7 +1314,6 @@ class ExchangeManager {
    */
   async getFundingRate(exchangeId, symbol) {
     // Check cache first
-    const cacheKey = `${exchangeId}:${symbol}`;
     const cachedRate = this.cache.getFundingRate(symbol);
     if (cachedRate !== null) {
       return cachedRate;

@@ -10,21 +10,8 @@
  */
 
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "../../components/ui/Icon";
 import { mobileOfflineBrain } from "../../services/mobile/MobileOfflineBrain";
-const {
-  Download,
-  Trash2,
-  Loader2,
-  Brain,
-  AlertTriangle,
-  Server,
-  Cpu,
-  Check,
-  Zap,
-  Sparkles,
-  Globe,
-} = LucideIcons as any;
 import { llmService } from "../../services/llmService";
 import {
   modelRegistry,
@@ -41,10 +28,10 @@ interface MobileModelManagerProps {
 
 // Model card icon mapping
 const MODEL_ICONS: Record<string, React.ReactNode> = {
-  "gemma-2b-it": <Cpu size={20} />,
-  "Phi-3-mini-4k-instruct-q4f16_1-MLC": <Sparkles size={20} />,
-  "Llama-3.2-1B-Instruct-q4f16_1-MLC": <Zap size={20} />,
-  "SmolLM2-1.7B-Instruct-q4f16_1-MLC": <Globe size={20} />,
+  "gemma-2b-it": <Icon name="Cpu" size={20} />,
+  "Phi-3-mini-4k-instruct-q4f16_1-MLC": <Icon name="Sparkles" size={20} />,
+  "Llama-3.2-1B-Instruct-q4f16_1-MLC": <Icon name="Zap" size={20} />,
+  "SmolLM2-1.7B-Instruct-q4f16_1-MLC": <Icon name="Globe" size={20} />,
 };
 
 // Check WebGPU support
@@ -214,9 +201,9 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 glass-blur p-4 animate-in fade-in zoom-in-95 duration-200">
       <div
-        className="w-full max-w-2xl bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-2xl bg-black/40 glass-blur border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
         style={{
           boxShadow: `0 0 50px -10px ${theme.hex}30`,
           borderColor: `${theme.hex}40`,
@@ -234,7 +221,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-              <Brain size={20} style={{ color: theme.hex }} />
+              <Icon name="Brain" size={20} style={{ color: theme.hex }} />
             </div>
             <div>
               <h3 className="font-bold text-white tracking-wide text-sm">
@@ -249,7 +236,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors text-xl"
           >
-            ✕
+            <Icon name="X" size={20} />
           </button>
         </div>
 
@@ -263,12 +250,12 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-              <Server size={14} />
+              <Icon name="Server" size={14} />
               SYSTEM BRAIN (PYTHON CORTEX)
             </div>
             <div className="flex items-center gap-2">
               {systemBrainStatus === "checking" && (
-                <Loader2 size={12} className="animate-spin text-slate-500" />
+                <Icon name="Loader2" size={12} className="animate-spin text-slate-500" />
               )}
               {systemBrainStatus === "online" && (
                 <>
@@ -293,7 +280,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
         {/* Error Display */}
         {error && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3 text-red-400 text-xs">
-            <AlertTriangle size={16} />
+            <Icon name="AlertTriangle" size={16} />
             <span>{error}</span>
           </div>
         )}
@@ -301,7 +288,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
         {/* WebGPU Warning */}
         {!isWebGPUSupported && (
           <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-3 text-yellow-400 text-xs">
-            <AlertTriangle size={16} />
+            <Icon name="AlertTriangle" size={16} />
             <span>
               WebGPU not supported. Only Gemma 2B (MediaPipe) will work. Use
               Chrome/Edge 113+ for other models.
@@ -339,7 +326,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                         color: isActive ? "#10b981" : theme.hex,
                       }}
                     >
-                      {MODEL_ICONS[model.id] || <Brain size={20} />}
+                      {MODEL_ICONS[model.id] || <Icon name="Brain" size={20} />}
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white flex items-center gap-2">
@@ -358,7 +345,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                   </div>
                   {isActive && (
                     <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <Check size={12} className="text-emerald-400" />
+                      <Icon name="Check" size={12} className="text-emerald-400" />
                     </div>
                   )}
                 </div>
@@ -411,14 +398,14 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                           : undefined
                       }
                     >
-                      <Download size={12} />
+                      <Icon name="Download" size={12} />
                       DOWNLOAD
                     </button>
                   )}
 
                   {isDownloading && (
                     <button className="flex-1 py-1.5 rounded-lg text-[10px] font-bold tracking-wider flex items-center justify-center gap-1.5 bg-white/5 text-slate-500 border border-white/5 cursor-not-allowed">
-                      <Loader2 size={12} className="animate-spin" />
+                      <Icon name="Loader2" size={12} className="animate-spin" />
                       DOWNLOADING
                     </button>
                   )}
@@ -429,14 +416,14 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                         className="flex-1 py-1.5 rounded-lg text-[10px] font-bold tracking-wider flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all"
                         onClick={() => handleActivate(model.id)}
                       >
-                        <Brain size={12} />
+                        <Icon name="Brain" size={12} />
                         ACTIVATE
                       </button>
                       <button
                         className="py-1.5 px-2 rounded-lg text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all"
                         onClick={() => handleDelete(model)}
                       >
-                        <Trash2 size={12} />
+                        <Icon name="Trash2" size={12} />
                       </button>
                     </>
                   )}
@@ -446,7 +433,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                       className="flex-1 py-1.5 rounded-lg text-[10px] font-bold tracking-wider flex items-center justify-center gap-1.5 bg-slate-500/20 text-slate-400 border border-slate-500/30 hover:bg-slate-500/30 transition-all"
                       onClick={handleDeactivate}
                     >
-                      <Brain size={12} />
+                      <Icon name="Brain" size={12} />
                       DEACTIVATE
                     </button>
                   )}

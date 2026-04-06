@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { Capacitor } from "@capacitor/core";
 import { useMobile } from "./hooks/useMobile";
 import { AppProvider, useAppContext } from "./context/AppContext";
@@ -40,9 +46,8 @@ import {
   TacticalLog,
 } from "./types";
 
-import * as LucideAll from "lucide-react";
-const { Activity, Cpu, Database, Terminal: TerminalIcon, Trash2, Trash, BrainCircuit } = LucideAll as any;
-import { setHexAlpha } from "./config/themeColors";
+import { Icon } from "./components/ui/Icon";
+import { setHexAlpha, getDynamicContrast } from "./config/themeColors";
 
 import GhostBrowser from "./components/GhostBrowser";
 import { watchGateway } from "./services/watchGateway";
@@ -90,6 +95,89 @@ import { isElectron as checkElectron, isWeb } from "./utils/env";
 
 // CHAT_STORAGE_KEY and MAX_HISTORY_LIMIT are now in useChatController
 
+// --- Memory Display Formatter ---
+/**
+ * Converts a raw memory value (which may be JSON) into a human-readable string.
+ * For known trading/equity structures, extracts key fields for HUD display.
+ */
+function formatMemoryValue(value: string): {
+  label: string;
+  summary: string;
+  isStructured: boolean;
+} {
+  const trimmed = value.trim();
+
+  // Attempt to parse as JSON
+  try {
+    const parsed = JSON.parse(trimmed);
+
+    // Array of equity snapshots (e.g., EQUITY_HISTORY)
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const snapshot = parsed[parsed.length - 1];
+      const equity =
+        snapshot.totalEquity ?? snapshot.equity ?? snapshot.balance ?? "?";
+      const available = snapshot.availableBalance ?? snapshot.available ?? "?";
+      const unrealizedPnl = snapshot.unrealizedPnl ?? snapshot.pnl ?? null;
+      let s = `EQUITY: $${Number(equity).toFixed(2)}   AVAILABLE: $${Number(available).toFixed(2)}`;
+      if (unrealizedPnl !== null)
+        s += `   UNREALIZED PNL: $${Number(unrealizedPnl).toFixed(2)}`;
+      return { label: "EQUITY SNAPSHOT", summary: s, isStructured: true };
+    }
+
+    // Single trade commit object
+    if (parsed && typeof parsed === "object") {
+      const symbol = parsed.symbol ?? parsed.asset ?? "";
+      const action = (parsed.action ?? parsed.side ?? parsed.type ?? "")
+        .toString()
+        .toUpperCase()
+        .replace(/_/g, " ");
+      const strategy = parsed.strategy ?? parsed.strategyName ?? "";
+      const confidence =
+        parsed.confidence != null
+          ? `${Math.round(Number(parsed.confidence) * 100)}%`
+          : null;
+      const size = parsed.size ?? parsed.quantity ?? null;
+      let s = symbol ? `${symbol}` : "";
+      if (action) s += s ? ` · ${action}` : action;
+      if (confidence) s += `   CONF: ${confidence}`;
+      if (size) s += `   SIZE: ${size}`;
+      if (strategy) s += `\n${strategy}`;
+      return {
+        label: symbol || "TRADE",
+        summary: s || JSON.stringify(parsed).slice(0, 120),
+        isStructured: true,
+      };
+    }
+  } catch {
+    // Not JSON — check for mixed content (JSON prepended by text)
+    const jsonStart = trimmed.indexOf("{");
+    if (jsonStart > 0) {
+      const prefix = trimmed.slice(0, jsonStart).trim();
+      const rest = trimmed.slice(jsonStart);
+      try {
+        const parsed = JSON.parse(rest);
+        const symbol = parsed.symbol ?? parsed.asset ?? "";
+        const action = (parsed.action ?? parsed.side ?? "")
+          .toString()
+          .toUpperCase()
+          .replace(/_/g, " ");
+        let s = symbol ? `${symbol}` : "";
+        if (action) s += s ? ` · ${action}` : action;
+        return {
+          label: prefix.slice(0, 50),
+          summary: s || prefix,
+          isStructured: true,
+        };
+      } catch {
+        /* fall through */
+      }
+    }
+  }
+
+  // Plain text — truncate gracefully
+  return { label: "", summary: trimmed, isStructured: false };
+}
+
 /**
  * Normalize persona name by mapping common aliases to canonical names
  * "normal mode" or "default mode" -> "ASSISTANT" (the default/normal persona)
@@ -133,11 +221,27 @@ function AppContent() {
   const hasInitializedRef = useRef<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // --- UTILS ---
+  const getRealLocation = async (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve) => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) =>
+            resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => resolve({ lat: 40.7128, lng: -74.006 }), // Fallback to NYC
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
+        );
+      } else {
+        resolve({ lat: 40.7128, lng: -74.006 });
+      }
+    });
+  };
+
   // --- PANEL LAYOUT STATE ---
   const [panelWidths, setPanelWidths] = useState({
-    sidebar: 310,
+    sidebar: 400,
     chat: 430,
-    right: 310,
+    right: 400,
   });
   const [connectionTier, setConnectionTier] = useState<
     "LAN" | "LOCAL" | "CLOUD" | "OFFLINE"
@@ -156,17 +260,22 @@ function AppContent() {
       // Forcefully clear any backgrounds set by index.tsx or other side-effects
       document.documentElement.style.backgroundColor = "transparent";
       document.body.style.backgroundColor = "transparent";
-      
+
       // Add a class for global CSS overrides
-      document.documentElement.classList.add('is-electron');
+      document.documentElement.classList.add("is-electron");
     } else if (isWeb()) {
       // Web fallback: ensure we have a background if index.tsx didn't set it
       // but only if it's currently transparent
       // Note: we'll use a local check for isLight here
       const themeId = settingsService.get?.("general")?.theme;
       const isLightMode = PERSONA_UI_CONFIG[themeId as any]?.isLight || false;
-      if (!document.documentElement.style.backgroundColor || document.documentElement.style.backgroundColor === 'transparent') {
-        document.documentElement.style.backgroundColor = isLightMode ? "#f0f0f5" : "#121212";
+      if (
+        !document.documentElement.style.backgroundColor ||
+        document.documentElement.style.backgroundColor === "transparent"
+      ) {
+        document.documentElement.style.backgroundColor = isLightMode
+          ? "#f0f0f5"
+          : "#121212";
       }
     }
   }, [isElectron]);
@@ -210,13 +319,22 @@ function AppContent() {
       }
 
       // Transparency Control
-      const opacity = settings?.general?.backgroundOpacity ?? 0.45;
-      const blur = Math.max(20, settings?.general?.backgroundBlur ?? 40);
+      const opacity = settings?.general?.backgroundOpacity ?? 0.3;
+      const blur = settings?.general?.backgroundBlur ?? 40; // Defaulting to high-frost tactical look
       document.documentElement.style.setProperty(
         "--app-bg-opacity",
         opacity.toString(),
       );
       document.documentElement.style.setProperty("--app-bg-blur", `${blur}px`);
+
+      // Dynamic Contrast Engine Initialization (Global)
+      if (newTheme) {
+        const contrast = getDynamicContrast(newTheme as UIThemeId, opacity);
+        document.documentElement.style.setProperty("--app-text-main", contrast.text);
+        document.documentElement.style.setProperty("--app-text-muted", contrast.textMuted);
+        document.documentElement.style.setProperty("--app-border-main", contrast.border);
+        document.documentElement.style.setProperty("--app-bg-tint", contrast.bgTint);
+      }
     };
 
     // Apply initially
@@ -811,13 +929,16 @@ function AppContent() {
     const handleNotification = (event: any) => {
       const typeLabel = (event.type || event.priority || "INFO").toUpperCase();
       const content = `[${typeLabel}] ${event.message}`;
-      
+
       setMessages((prev: any) => {
         // Prevent duplicate notifications
-        if (prev.length > 0 && prev[prev.length - 1].content.includes(event.message)) {
+        if (
+          prev.length > 0 &&
+          prev[prev.length - 1].content.includes(event.message)
+        ) {
           return prev;
         }
-        
+
         return [
           ...prev,
           {
@@ -825,7 +946,7 @@ function AppContent() {
             role: "system", // Trigger System Message Bubble with rich icons
             content: content,
             timestamp: Date.now(),
-          }
+          },
         ];
       });
     };
@@ -838,7 +959,7 @@ function AppContent() {
           role: data.role || "assistant",
           content: data.content,
           timestamp: Date.now(),
-        }
+        },
       ]);
     };
 
@@ -848,7 +969,7 @@ function AppContent() {
     eventBus.on("notification:error", handleNotification);
     eventBus.on("notification:success", handleNotification);
     eventBus.on("notification:trading", handleNotification);
-    
+
     // Priority specific
     eventBus.on("notification:LOW", handleNotification);
     eventBus.on("notification:MEDIUM", handleNotification);
@@ -903,6 +1024,19 @@ function AppContent() {
   // NEW: PROFILE MANAGER STATE
   const [showProfileManager, setShowProfileManager] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<string | undefined>(undefined);
+
+  // Open Settings Modal directly to a specific tab via custom event
+  // (e.g. clicking the MCP indicator pill in ChatWidgetInput dispatches this)
+  useEffect(() => {
+    const handleOpenSettings = (e: Event) => {
+      const tab = (e as CustomEvent).detail?.tab;
+      setSettingsInitialTab(tab || undefined);
+      setShowSettingsModal(true);
+    };
+    window.addEventListener("luca:open-settings", handleOpenSettings);
+    return () => window.removeEventListener("luca:open-settings", handleOpenSettings);
+  }, []);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   // NEW: GHOST CURSOR STATE (COMPUTER USE VISUALIZATION)
@@ -921,12 +1055,65 @@ function AppContent() {
     }
   }, []);
 
+  // --- HELPER: Dynamic Theme Colors ---
+  const getThemeColors = useCallback(() => {
+    if (isLockdown) {
+      return {
+        primary: "text-rq-red",
+        border: "border-rq-red",
+        bg: "bg-red-950/40",
+        glow: "shadow-[0_0_30px_#ef4444]",
+        coreColor: "text-red-500",
+        hex: "#ef4444",
+        themeName: "ruthless", // Lockdown defaults to dark
+      };
+    }
+
+    // Use PERSONA_UI_CONFIG for theme colors - decoupled from persona
+    const themeConfig =
+      PERSONA_UI_CONFIG[activeThemeId as any] || PERSONA_UI_CONFIG.ASSISTANT;
+
+    // Handle system status overrides (CAUTION/CRITICAL)
+    if (systemStatus === SystemStatus.CRITICAL) {
+      return {
+        ...themeConfig,
+        primary: "text-rq-red",
+        border: "border-rq-red",
+        bg: "bg-rq-red-dim",
+        glow: "shadow-[0_0_20px_#ef4444]",
+        coreColor: "text-red-500",
+        hex: "#ef4444",
+      };
+    } else if (systemStatus === SystemStatus.CAUTION) {
+      return {
+        ...themeConfig,
+        primary: "text-rq-amber",
+        border: "border-rq-amber",
+        bg: "bg-rq-amber-dim",
+        glow: `shadow-[0_0_20px_${THEME_PALETTE.BUILDER.primary}]`,
+        coreColor: "text-amber-500",
+        hex: THEME_PALETTE.BUILDER.primary,
+      };
+    }
+
+    return {
+      primary: themeConfig.primary,
+      border: themeConfig.border,
+      bg: themeConfig.bg,
+      glow: themeConfig.glow,
+      coreColor: themeConfig.coreColor,
+      hex: themeConfig.hex || "#3b82f6",
+      themeName: themeConfig.themeName || activeThemeId,
+      isLight: themeConfig.isLight || false,
+    };
+  }, [isLockdown, activeThemeId, systemStatus]);
+
+  const theme = useMemo(() => getThemeColors(), [getThemeColors]);
+
   // --- WIDGET SYNC LOOP (REAL-TIME-ISH) ---
   useEffect(() => {
     if ((window as any).electron && (window as any).electron.ipcRenderer) {
       const syncData = {
-        // Map Voice Hub State to Widget
-        // Unified VAD: Check either local ear or global voice system (cloud/hybrid)
         isVadActive:
           isVoiceHubListening ||
           voiceHubStatus === "THINKING" ||
@@ -937,10 +1124,8 @@ function AppContent() {
         transcriptSource: voiceTranscriptSource,
         intent: activeAutonomousAction?.intent,
         persona: persona,
-        status: voiceHubStatus, // Pass full status if widget updates to support it
-        themeHex:
-          THEME_PALETTE[activeThemeId as keyof typeof THEME_PALETTE]?.primary ||
-          "#3b82f6",
+        status: voiceHubStatus,
+        themeHex: theme.hex,
         elevationState: elevationState,
         approvalRequest: (voiceSystem as any).approvalRequest,
       };
@@ -948,7 +1133,6 @@ function AppContent() {
       window.electron.ipcRenderer.send("sync-widget-state", syncData);
       broadcastToSatellites(syncData);
 
-      // Also push to Watch if on iOS
       if (Capacitor.getPlatform() === "ios") {
         watchGateway.updateWatchState(syncData);
       }
@@ -962,6 +1146,7 @@ function AppContent() {
     voiceHubStatus,
     voiceHubTranscript,
     elevationState,
+    theme,
   ]);
 
   // --- SMART SCREEN SYNC (Option B) ---
@@ -1309,7 +1494,11 @@ function AppContent() {
     return false;
   };
 
-  const toggleVoiceMode = (overrideMode?: string, forceHud = true, context: string = "voice-dashboard") => {
+  const toggleVoiceMode = (
+    overrideMode?: string,
+    forceHud = true,
+    context: string = "voice-dashboard",
+  ) => {
     console.log(
       `[APP] toggleVoiceMode called. Mode: ${overrideMode}, ForceHud: ${forceHud}, CurrentState: ${isVoiceMode}`,
     );
@@ -1366,10 +1555,16 @@ function AppContent() {
 
     if (useLocal) {
       // Using the smarter routing encapsulated in connectVoiceSession
-      connectVoiceSession(overrideMode === "DICTATION" ? "DICTATION" : persona, context);
+      connectVoiceSession(
+        overrideMode === "DICTATION" ? "DICTATION" : persona,
+        context,
+      );
     } else {
       // Cloud Mode: Use Google Live (liveService)
-      connectVoiceSession(overrideMode === "DICTATION" ? "DICTATION" : persona, context);
+      connectVoiceSession(
+        overrideMode === "DICTATION" ? "DICTATION" : persona,
+        context,
+      );
     }
 
     if (overrideMode === "DICTATION") {
@@ -1422,7 +1617,11 @@ function AppContent() {
           // This is the main action when user clicks the Hologram
           if (payload?.mode === "TOGGLE" || !payload?.mode) {
             if (toggleVoiceModeRef.current) {
-              toggleVoiceModeRef.current(undefined, false, payload?.context || "voice-dashboard"); // Pass context
+              toggleVoiceModeRef.current(
+                undefined,
+                false,
+                payload?.context || "voice-dashboard",
+              ); // Pass context
             }
             return;
           }
@@ -1782,81 +1981,22 @@ function AppContent() {
     setShowWirelessManager(false);
   };
 
-  // --- HELPER: Dynamic Theme Colors ---
-  const getThemeColors = useCallback(() => {
-    if (isLockdown) {
-      return {
-        primary: "text-rq-red",
-        border: "border-rq-red",
-        bg: "bg-red-950/40",
-        glow: "shadow-[0_0_30px_#ef4444]",
-        coreColor: "text-red-500",
-        hex: "#ef4444",
-        themeName: "ruthless", // Lockdown defaults to dark
-      };
-    }
-
-    // Use PERSONA_UI_CONFIG for theme colors - decoupled from persona
-    const themeConfig =
-      PERSONA_UI_CONFIG[activeThemeId as any] || PERSONA_UI_CONFIG.ASSISTANT;
-
-    // Handle system status overrides (CAUTION/CRITICAL)
-    if (systemStatus === SystemStatus.CRITICAL) {
-      return {
-        ...themeConfig,
-        primary: "text-rq-red",
-        border: "border-rq-red",
-        bg: "bg-rq-red-dim",
-        glow: "shadow-[0_0_20px_#ef4444]",
-        coreColor: "text-red-500",
-        hex: "#ef4444",
-      };
-    } else if (systemStatus === SystemStatus.CAUTION) {
-      return {
-        ...themeConfig,
-        primary: "text-rq-amber",
-        border: "border-rq-amber",
-        bg: "bg-rq-amber-dim",
-        glow: `shadow-[0_0_20px_${THEME_PALETTE.BUILDER.primary}]`,
-        coreColor: "text-amber-500",
-        hex: THEME_PALETTE.BUILDER.primary,
-      };
-    }
-
-    return {
-      primary: themeConfig.primary,
-      border: themeConfig.border,
-      bg: themeConfig.bg,
-      glow: themeConfig.glow,
-      coreColor: themeConfig.coreColor,
-      hex: themeConfig.hex || "#3b82f6",
-      themeName: themeConfig.themeName || activeThemeId,
-      isLight: themeConfig.isLight || false,
-    };
-  }, [isLockdown, activeThemeId, systemStatus]);
-
-  const theme = useMemo(() => getThemeColors(), [getThemeColors]);
-
   // --- WEB BACKGROUND SYNC ---
-  // Ensure the outer HTML/Body perfectly matches the active theme to prevent edge haze
   useEffect(() => {
     if (isWeb()) {
       const isLightTheme = theme.isLight;
-
       const bgColor = isLightTheme ? "#f0f0f5" : "#1c1c1c";
       document.documentElement.style.backgroundColor = bgColor;
       document.body.style.backgroundColor = bgColor;
     } else {
-      // Ensure transparency remains for Electron/Capacitor
       document.documentElement.style.backgroundColor = "transparent";
       document.body.style.backgroundColor = "transparent";
     }
-  }, [theme.themeName]);
+  }, [theme.themeName, theme.isLight]);
 
   // --- THEME SYNC (LUCA LINK) ---
   useEffect(() => {
     if (lucaLinkSocketRef.current?.connected) {
-      console.log("[THEME] Syncing theme to mobile nodes:", theme.hex);
       lucaLinkSocketRef.current.emit("client:message", {
         type: "theme_update",
         target: "all",
@@ -1880,7 +2020,6 @@ function AppContent() {
       else if (ghostBrowserUrl && ghostBrowserUrl !== "about:blank")
         currentMode = "BROWSER";
 
-      console.log("[SYNC] Broadcasting Visual Core state:", currentMode);
       lucaLinkSocketRef.current.emit("client:message", {
         type: "visual_core_sync",
         target: "all",
@@ -1909,7 +2048,6 @@ function AppContent() {
         const nextIndex = (currentIndex + 1) % personas.length;
         const nextPersona = personas[nextIndex];
 
-        console.log("[THEME] Cycling persona to:", nextPersona);
         setIsRebooting(true);
         setTimeout(() => {
           setPersona(nextPersona);
@@ -1922,25 +2060,6 @@ function AppContent() {
     return () => window.removeEventListener("keydown", handleThemeToggle);
   }, [persona]);
 
-  // --- HELPER: Dynamic Glass Style ---
-  // --- UTILS ---
-  const getRealLocation = async (): Promise<{ lat: number; lng: number }> => {
-    return new Promise((resolve) => {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) =>
-            resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          () => resolve({ lat: 40.7128, lng: -74.006 }), // Fallback to NYC
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
-        );
-      } else {
-        resolve({ lat: 40.7128, lng: -74.006 });
-      }
-    });
-  };
-
-  // --- RENDER: VISUAL CORE MODE (Smart Screen - Widget) ---
-  // --- RENDER: VISUAL CORE MODE (Smart Screen - Widget) ---
   if (appMode === "widget") {
     // Start Dictation (Orb Widget)
     return <WidgetMode />;
@@ -2011,11 +2130,10 @@ function AppContent() {
 
   // --- BOOT SEQUENCE RENDER ---
   if (bootSequence !== "READY") {
-
     return (
       <div
         className="h-screen w-full bg-transparent flex flex-col items-center justify-center font-mono cursor-default select-none draggable transition-all duration-700 relative overflow-hidden"
-        style={{ color: theme.hex || "#3b82f6" }}
+        style={{ color: "var(--app-text-main)" }}
         onContextMenu={(e) => e.preventDefault()}
       >
         <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
@@ -2024,10 +2142,10 @@ function AppContent() {
           <div className="max-w-md w-full space-y-4 p-8 relative z-10">
             <div
               className="flex justify-between items-center border-b pb-2 mb-4"
-              style={{ borderColor: `${theme.hex}50` }}
+              style={{ borderColor: "var(--app-border-main)" }}
             >
               <span className="text-xs tracking-widest">LUCA BIOS v2.4</span>
-              <Activity size={14} className="animate-pulse" />
+              <Icon name="Activity" size={14} className="animate-pulse" />
             </div>
 
             {bootSequence === "INIT" && (
@@ -2048,12 +2166,7 @@ function AppContent() {
                         ? "text-green-500"
                         : biosStatus.server === "FAIL"
                           ? "text-red-500 animate-pulse"
-                          : "text-amber-500/50"
-                    }
-                    style={
-                      biosStatus.server !== "OK" && biosStatus.server !== "FAIL"
-                        ? { color: theme.hex }
-                        : {}
+                          : "text-green-500/50"
                     }
                   >
                     {biosStatus.server === "OK"
@@ -2071,12 +2184,7 @@ function AppContent() {
                         ? "text-green-500"
                         : biosStatus.core === "FAIL"
                           ? "text-red-500 animate-pulse"
-                          : "text-amber-500/50"
-                    }
-                    style={
-                      biosStatus.core !== "OK" && biosStatus.core !== "FAIL"
-                        ? { color: theme.hex }
-                        : {}
+                          : "text-green-500/50"
                     }
                   >
                     {biosStatus.core === "OK"
@@ -2094,12 +2202,7 @@ function AppContent() {
                         ? "text-green-500"
                         : biosStatus.vision === "FAIL"
                           ? "text-red-500 animate-pulse"
-                          : "text-amber-500/50"
-                    }
-                    style={
-                      biosStatus.vision !== "OK" && biosStatus.vision !== "FAIL"
-                        ? { color: theme.hex }
-                        : {}
+                          : "text-green-500/50"
                     }
                   >
                     {biosStatus.vision === "OK"
@@ -2117,12 +2220,7 @@ function AppContent() {
                         ? "text-green-500"
                         : biosStatus.audio === "FAIL"
                           ? "text-red-500 animate-pulse"
-                          : "text-amber-500/50"
-                    }
-                    style={
-                      biosStatus.audio !== "OK" && biosStatus.audio !== "FAIL"
-                        ? { color: theme.hex }
-                        : {}
+                          : "text-green-500/50"
                     }
                   >
                     {biosStatus.audio === "OK"
@@ -2156,10 +2254,7 @@ function AppContent() {
         )}
 
         {bootSequence === "ONBOARDING" && (
-          <div 
-            className="absolute inset-0 z-10"
-            style={{}}
-          >
+          <div className="absolute inset-0 z-10" style={{}}>
             <OnboardingFlow
               theme={theme}
               onComplete={(profile, mode) => {
@@ -2346,23 +2441,27 @@ function AppContent() {
             ? "opacity-0 pointer-events-none scale-95"
             : "opacity-100"
         }`}
-        style={window.electron ? {
-          width: '117.64vw',
-          height: '117.64vh',
-          transform: 'scale(0.85)',
-          transformOrigin: 'top left',
-          borderColor: getThemeColors().hex,
-          backgroundColor: "transparent"
-        } : {
-          width: '100vw',
-          height: '100vh',
-          borderColor: getThemeColors().hex,
-          backgroundColor: "transparent"
-        }}
+        style={
+          window.electron
+            ? {
+                width: "117.65vw",
+                height: "117.65vh",
+                transform: "scale(0.85)",
+                transformOrigin: "top left",
+                borderColor: theme.hex,
+                backgroundColor: "transparent",
+              }
+            : {
+                width: "100vw",
+                height: "100vh",
+                borderColor: theme.hex,
+                backgroundColor: "transparent",
+              }
+        }
       >
         <SafeComponent componentName="Header">
           <Header
-            theme={getThemeColors()}
+            theme={theme}
             persona={persona}
             isMobile={isMobile}
             handleCyclePersona={handleCyclePersona}
@@ -2401,7 +2500,7 @@ function AppContent() {
               >
                 <SafeComponent componentName="OperationsSidebar">
                   <OperationsSidebar
-                    theme={getThemeColors()}
+                    theme={theme}
                     isMobile={false}
                     activeMobileTab=""
                     isListeningAmbient={isListeningAmbient}
@@ -2438,7 +2537,7 @@ function AppContent() {
                 </SafeComponent>
               </div>
               <PanelResizer
-                themeColor={getThemeColors().hex}
+                themeColor={theme.hex}
                 onResize={(delta) =>
                   setPanelWidths((p: any) => ({
                     ...p,
@@ -2452,7 +2551,7 @@ function AppContent() {
           {isMobile && activeMobileTab === "SYSTEM" && (
             <div className="flex w-full h-full">
               <OperationsSidebar
-                theme={getThemeColors()}
+                theme={theme}
                 isMobile={true}
                 activeMobileTab="SYSTEM"
                 isListeningAmbient={isListeningAmbient}
@@ -2497,7 +2596,7 @@ function AppContent() {
                     messages={messages}
                     isMobile={false}
                     activeMobileTab=""
-                    theme={getThemeColors()}
+                    theme={theme}
                     isProcessing={isProcessing}
                     persona={persona as PersonaType}
                     chatEndRef={chatEndRef}
@@ -2533,6 +2632,7 @@ function AppContent() {
                     }
                     handleClearChat={handleClearChat}
                     handleStop={handleStop}
+                    setMessages={setMessages}
                   />
                 </SafeComponent>
               </div>
@@ -2545,7 +2645,7 @@ function AppContent() {
                 messages={messages}
                 isMobile={true}
                 activeMobileTab="TERMINAL"
-                theme={getThemeColors()}
+                theme={theme}
                 isProcessing={isProcessing}
                 persona={persona as PersonaType}
                 chatEndRef={chatEndRef}
@@ -2579,6 +2679,7 @@ function AppContent() {
                 handleScreenShare={() => setIsScreenSharing(!isScreenSharing)}
                 handleClearChat={handleClearChat}
                 handleStop={handleStop}
+                setMessages={setMessages}
               />
             </div>
           )}
@@ -2614,7 +2715,7 @@ function AppContent() {
                   <div
                     className="flex flex-none"
                     style={{
-                      borderBottom: `1px solid ${setHexAlpha(getThemeColors().hex, 0.2)}`,
+                      borderBottom: `1px solid ${setHexAlpha(theme.hex, 0.2)}`,
                     }}
                   >
                     <button
@@ -2624,7 +2725,7 @@ function AppContent() {
                       }}
                       className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                         rightPanelMode === "MANAGE"
-                          ? `bg-white/5 ${getThemeColors().primary} border-b-2 ${getThemeColors().border}`
+                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
                           : "text-slate-600 hover:text-slate-400"
                       }`}
                     >
@@ -2637,7 +2738,7 @@ function AppContent() {
                       }}
                       className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                         rightPanelMode === "LOGS"
-                          ? `bg-white/5 ${getThemeColors().primary} border-b-2 ${getThemeColors().border}`
+                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
                           : "text-slate-600 hover:text-slate-400"
                       }`}
                     >
@@ -2650,7 +2751,7 @@ function AppContent() {
                       }}
                       className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                         rightPanelMode === "MEMORY"
-                          ? `bg-white/5 ${getThemeColors().primary} border-b-2 ${getThemeColors().border}`
+                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
                           : "text-slate-600 hover:text-slate-400"
                       }`}
                     >
@@ -2663,18 +2764,18 @@ function AppContent() {
                       }}
                       className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                         rightPanelMode === "CLOUD"
-                          ? `bg-white/5 ${getThemeColors().primary} border-b-2 ${getThemeColors().border}`
+                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
                           : "text-slate-600 hover:text-slate-400"
                       }`}
                     >
-                      <BrainCircuit size={14} className="mx-auto" />
+                      <Icon name="BrainCircuit" size={14} className="mx-auto" />
                     </button>
                   </div>
 
                   <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
                     {rightPanelMode === "MANAGE" && (
                       <div className="space-y-1">
-                        <ManagementDashboard theme={getThemeColors()} />
+                        <ManagementDashboard theme={theme} />
                       </div>
                     )}
 
@@ -2695,7 +2796,7 @@ function AppContent() {
                                 className={`font-bold group-hover:text-white transition-colors ${
                                   log.toolName === "SENTINEL_LOOP"
                                     ? "text-slate-500"
-                                    : getThemeColors().primary
+                                    : theme.primary
                                 }`}
                               >
                                 {log.toolName}
@@ -2726,10 +2827,10 @@ function AppContent() {
                       <div className="space-y-4">
                         <div className="flex justify-between items-center mb-2">
                           <span
-                            style={{ color: getThemeColors().hex }}
+                            style={{ color: theme.hex }}
                             className="font-bold uppercase tracking-wider"
                           >
-                            NEURAL ARCHIVE
+                            LUCA ARCHIVE
                           </span>
                           <button
                             onClick={async () => {
@@ -2740,7 +2841,7 @@ function AppContent() {
                             className="text-red-500 hover:text-white transition-colors p-1 rounded hover:bg-red-500/10"
                             title="Format Memory"
                           >
-                            <Trash2 size={14} />
+                            <Icon name="Trash2" size={14} />
                           </button>
                         </div>
                         {memories.filter(
@@ -2765,14 +2866,8 @@ function AppContent() {
                               key={mem.id}
                               className="p-3 rounded transition-all group/mem relative bg-white/5 border"
                               style={{
-                                borderColor: setHexAlpha(
-                                  getThemeColors().hex,
-                                  0.2,
-                                ),
-                                backgroundColor: setHexAlpha(
-                                  getThemeColors().hex,
-                                  0.05,
-                                ),
+                                borderColor: setHexAlpha(theme.hex, 0.2),
+                                backgroundColor: setHexAlpha(theme.hex, 0.05),
                               }}
                             >
                               <div className="flex justify-between text-[9px] mb-2 opacity-60">
@@ -2795,19 +2890,38 @@ function AppContent() {
                                   className="opacity-0 group-hover/mem:opacity-100 text-red-500 hover:text-white transition-all p-1"
                                   title="Delete Segment"
                                 >
-                                  <Trash size={10} />
+                                  <Icon name="Trash" size={10} />
                                 </button>
                               </div>
-                              <div className="text-slate-400 opacity-80 max-h-32 overflow-hidden text-ellipsis whitespace-pre-wrap">
-                                {mem.value}
-                              </div>
+                              {(() => {
+                                const fmt = formatMemoryValue(mem.value);
+                                return fmt.isStructured ? (
+                                  <div className="space-y-0.5">
+                                    {fmt.label && (
+                                      <div
+                                        className="text-[9px] font-bold uppercase tracking-widest opacity-60"
+                                        style={{ color: theme.hex }}
+                                      >
+                                        {fmt.label}
+                                      </div>
+                                    )}
+                                    <div className="text-slate-200 text-[10px] font-mono leading-snug whitespace-pre-wrap">
+                                      {fmt.summary}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-slate-400 opacity-80 max-h-32 overflow-hidden text-ellipsis whitespace-pre-wrap text-[10px]">
+                                    {fmt.summary}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           ))}
                       </div>
                     )}
 
                     {rightPanelMode === "CLOUD" && (
-                      <LucaCloud memories={memories} theme={getThemeColors()} />
+                      <LucaCloud memories={memories} theme={theme} />
                     )}
                   </div>
                 </div>
@@ -2819,13 +2933,13 @@ function AppContent() {
           {isMobile && activeMobileTab === "DATA" && (
             <section
               className={`flex-1 flex-col h-full border-l border-white/10 relative overflow-hidden flex ${
-                getThemeColors().themeName?.toLowerCase() === "lucagent"
+                theme.themeName?.toLowerCase() === "lucagent"
                   ? "glass-panel-light"
                   : "glass-panel"
               }`}
               style={{
                 background:
-                  getThemeColors().themeName?.toLowerCase() === "lucagent"
+                  theme.themeName?.toLowerCase() === "lucagent"
                     ? "rgba(255, 255, 255, 0.5)"
                     : "rgba(0, 0, 0, 0.4)",
               }}
@@ -2834,7 +2948,7 @@ function AppContent() {
                 <div
                   className="flex flex-none"
                   style={{
-                    borderBottom: `1px solid ${setHexAlpha(getThemeColors().hex, 0.2)}`,
+                    borderBottom: `1px solid ${setHexAlpha(theme.hex, 0.2)}`,
                   }}
                 >
                   <button
@@ -2844,7 +2958,7 @@ function AppContent() {
                     }}
                     className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                       rightPanelMode === "MANAGE"
-                        ? `bg-white/5 ${getThemeColors().primary} border-b-2 ${getThemeColors().border}`
+                        ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
                         : "text-slate-600 hover:text-slate-400"
                     }`}
                   >
@@ -2857,7 +2971,7 @@ function AppContent() {
                     }}
                     className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                       rightPanelMode === "LOGS"
-                        ? `bg-white/5 ${getThemeColors().primary} border-b-2 ${getThemeColors().border}`
+                        ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
                         : "text-slate-600 hover:text-slate-400"
                     }`}
                   >
@@ -2870,7 +2984,7 @@ function AppContent() {
                     }}
                     className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                       rightPanelMode === "MEMORY"
-                        ? `bg-white/5 ${getThemeColors().primary} border-b-2 ${getThemeColors().border}`
+                        ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
                         : "text-slate-600 hover:text-slate-400"
                     }`}
                   >
@@ -2883,18 +2997,18 @@ function AppContent() {
                     }}
                     className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                       rightPanelMode === "CLOUD"
-                        ? `bg-white/5 ${getThemeColors().primary} border-b-2 ${getThemeColors().border}`
+                        ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
                         : "text-slate-600 hover:text-slate-400"
                     }`}
                   >
-                    <BrainCircuit size={14} className="mx-auto" />
+                    <Icon name="BrainCircuit" size={14} className="mx-auto" />
                   </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
                   {rightPanelMode === "MANAGE" && (
                     <div className="space-y-1">
-                      <ManagementDashboard theme={getThemeColors()} />
+                      <ManagementDashboard theme={theme} />
                     </div>
                   )}
 
@@ -2915,7 +3029,7 @@ function AppContent() {
                               className={`font-bold group-hover:text-white transition-colors ${
                                 log.toolName === "SENTINEL_LOOP"
                                   ? "text-slate-500"
-                                  : getThemeColors().primary
+                                  : theme.primary
                               }`}
                             >
                               {log.toolName}
@@ -2946,7 +3060,7 @@ function AppContent() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center mb-2">
                         <span
-                          style={{ color: getThemeColors().hex }}
+                          style={{ color: theme.hex }}
                           className="font-bold uppercase tracking-wider"
                         >
                           NEURAL ARCHIVE
@@ -2960,7 +3074,7 @@ function AppContent() {
                           className="text-red-500 hover:text-white transition-colors p-1 rounded hover:bg-red-500/10"
                           title="Format Memory"
                         >
-                          <Trash2 size={14} />
+                          <Icon name="Trash2" size={14} />
                         </button>
                       </div>
                       {memories.filter(
@@ -2977,14 +3091,8 @@ function AppContent() {
                             key={mem.id}
                             className="p-3 rounded transition-all group/mem relative bg-white/5 border"
                             style={{
-                              borderColor: setHexAlpha(
-                                getThemeColors().hex,
-                                0.2,
-                              ),
-                              backgroundColor: setHexAlpha(
-                                getThemeColors().hex,
-                                0.05,
-                              ),
+                              borderColor: setHexAlpha(theme.hex, 0.2),
+                              backgroundColor: setHexAlpha(theme.hex, 0.05),
                             }}
                           >
                             <div className="flex justify-between text-[9px] mb-2 opacity-60">
@@ -3007,19 +3115,38 @@ function AppContent() {
                                 className="opacity-0 group-hover/mem:opacity-100 text-red-500 hover:text-white transition-all p-1"
                                 title="Delete Segment"
                               >
-                                <Trash size={10} />
+                                <Icon name="Trash" size={10} />
                               </button>
                             </div>
-                            <div className="text-slate-400 opacity-80 max-h-32 overflow-hidden text-ellipsis whitespace-pre-wrap">
-                              {mem.value}
-                            </div>
+                            {(() => {
+                              const fmt = formatMemoryValue(mem.value);
+                              return fmt.isStructured ? (
+                                <div className="space-y-0.5">
+                                  {fmt.label && (
+                                    <div
+                                      className="text-[9px] font-bold uppercase tracking-widest opacity-60"
+                                      style={{ color: theme.hex }}
+                                    >
+                                      {fmt.label}
+                                    </div>
+                                  )}
+                                  <div className="text-slate-200 text-[10px] font-mono leading-snug whitespace-pre-wrap">
+                                    {fmt.summary}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-slate-400 opacity-80 max-h-32 overflow-hidden text-ellipsis whitespace-pre-wrap text-[10px]">
+                                  {fmt.summary}
+                                </div>
+                              );
+                            })()}
                           </div>
                         ))}
                     </div>
                   )}
 
                   {rightPanelMode === "CLOUD" && (
-                    <LucaCloud memories={memories} theme={getThemeColors()} />
+                    <LucaCloud memories={memories} theme={theme} />
                   )}
                 </div>
               </div>
@@ -3031,7 +3158,7 @@ function AppContent() {
         {isMobile && (
           <nav
             className={`flex-none h-16 ${
-              getThemeColors().themeName?.toLowerCase() === "lucagent"
+              theme.themeName?.toLowerCase() === "lucagent"
                 ? "bg-white border-t border-slate-200"
                 : "bg-black border-t border-white/10"
             } grid grid-cols-3 items-center z-50`}
@@ -3039,12 +3166,10 @@ function AppContent() {
             <button
               onClick={() => setActiveMobileTab("SYSTEM")}
               className={`flex flex-col items-center justify-center h-full gap-1 ${
-                activeMobileTab === "SYSTEM"
-                  ? getThemeColors().primary
-                  : "text-slate-500"
+                activeMobileTab === "SYSTEM" ? theme.primary : "text-slate-500"
               }`}
             >
-              <Cpu size={20} />
+              <Icon name="Cpu" size={20} />
               <span className="text-[10px] font-bold tracking-widest">
                 SYSTEM
               </span>
@@ -3053,11 +3178,11 @@ function AppContent() {
               onClick={() => setActiveMobileTab("TERMINAL")}
               className={`flex flex-col items-center justify-center h-full gap-1 ${
                 activeMobileTab === "TERMINAL"
-                  ? getThemeColors().primary
+                  ? theme.primary
                   : "text-slate-500"
               }`}
             >
-              <TerminalIcon size={20} />
+              <Icon name="Terminal" size={20} />
               <span className="text-[10px] font-bold tracking-widest">
                 TERMINAL
               </span>
@@ -3065,12 +3190,10 @@ function AppContent() {
             <button
               onClick={() => setActiveMobileTab("DATA")}
               className={`flex flex-col items-center justify-center h-full gap-1 ${
-                activeMobileTab === "DATA"
-                  ? getThemeColors().primary
-                  : "text-slate-500"
+                activeMobileTab === "DATA" ? theme.primary : "text-slate-500"
               }`}
             >
-              <Database size={20} />
+              <Icon name="Database" size={20} />
               <span className="text-[10px] font-bold tracking-widest">
                 DATA
               </span>
@@ -3079,8 +3202,12 @@ function AppContent() {
         )}
         {showSettingsModal && (
           <SettingsModal
-            theme={getThemeColors()}
-            onClose={() => setShowSettingsModal(false)}
+            theme={theme}
+            initialTab={settingsInitialTab}
+            onClose={() => {
+              setShowSettingsModal(false);
+              setSettingsInitialTab(undefined); // reset so normal re-open starts on default tab
+            }}
           />
         )}
         {showInvestigationReports && (

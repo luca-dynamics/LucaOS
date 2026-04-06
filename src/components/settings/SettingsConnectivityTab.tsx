@@ -1,27 +1,9 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Plug,
-  Copy,
-  Check,
-  ExternalLink,
-  Terminal,
-  Shield,
-  Activity,
-  Settings,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 
-interface SettingsConnectivityTabProps {
-  theme: {
-    primary: string;
-    hex: string;
-    themeName: string;
-  };
-}
+type SettingsConnectivityTabProps = Record<string, never>;
 
-const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({
-  theme,
-}) => {
+const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
   const [copied, setCopied] = useState(false);
   const [bridgeStatus] = useState("active");
   const [mode, setMode] = useState<"stdio" | "sse">("stdio");
@@ -53,122 +35,104 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({
     <div className="space-y-6">
       {/* Header Info */}
       <div
-        className={`flex items-center justify-between p-4 rounded-xl border ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/10 shadow-sm" : "backdrop-blur-sm bg-white/5 border-white/10"}`}
-        style={{
-          backgroundColor:
-            theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}0d`,
-          borderColor:
-            theme.themeName?.toLowerCase() === "lucagent" ? undefined : `${theme.hex}33`,
-        }}
+        className={`flex items-center gap-4 border p-5 rounded-xl transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
       >
-        <div className="space-y-1">
+        <div className="flex-1 min-w-0">
           <h4
-            className="text-sm font-bold flex items-center gap-2"
-            style={{ color: theme.hex }}
+            className="text-lg font-bold flex items-center gap-2 mb-1 text-[var(--app-text-main)]"
           >
-            <Plug className="w-4 h-4" />
-            LUCA MCP
+            <Icon name="Plug" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
+            LUCA MCP Protocol
           </h4>
           <p
-            className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600 font-bold" : "text-gray-500"} max-w-md`}
+            className={`text-sm text-[var(--app-text-muted)] max-w-md opacity-80`}
           >
             Connect Luca to external AI agents. Memory access now, more
             capabilities coming soon.
           </p>
         </div>
         <div
-          className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
             bridgeStatus === "active"
-              ? theme.themeName?.toLowerCase() === "lucagent"
-                ? "bg-green-500/10 text-green-700 border border-green-500/20"
-                : "bg-green-500/20 text-green-400"
-              : theme.themeName?.toLowerCase() === "lucagent"
-                ? "bg-red-500/10 text-red-700 border border-red-500/20"
-                : "bg-red-500/20 text-red-400"
+              ? "bg-green-500/10 text-green-400 border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+              : "bg-red-500/10 text-red-400 border-red-500/30"
           }`}
         >
-          <Activity className="w-3 h-3" />
-          {bridgeStatus.toUpperCase()}
+          <Icon name="Activity" className={`w-3 h-3 ${bridgeStatus === "active" ? "animate-pulse" : ""}`} />
+          {bridgeStatus}
         </div>
       </div>
 
       {/* Mode Selector */}
       <div
-        className={`flex gap-2 p-1 rounded-lg border self-start ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/10" : "bg-black/20 border-white/5"}`}
+        className={`flex gap-1.5 p-1.5 rounded-xl border self-start transition-all bg-white/5 border-[var(--app-border-main)] tech-border glass-blur shadow-inner`}
       >
         <button
           onClick={() => setMode("stdio")}
-          className={`px-4 py-1.5 rounded-md text-[10px] font-bold transition-all ${mode === "stdio" ? (theme.themeName?.toLowerCase() === "lucagent" ? "bg-white text-slate-900 shadow-sm border border-black/10" : "bg-white/10 text-white shadow-sm") : "text-gray-500 hover:text-gray-300"}`}
-          style={
-            mode === "stdio" && theme.themeName !== "lucagent"
-              ? { border: `1px solid ${theme.hex}33` }
-              : {}
-          }
+          className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${mode === "stdio" ? "bg-white/10 text-[var(--app-text-main)] border-[var(--app-border-main)] shadow-sm" : "bg-transparent text-[var(--app-text-muted)] border-transparent hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100"}`}
         >
-          DIRECT (STDIO)
+          Direct (STDIO)
         </button>
         <button
           onClick={() => setMode("sse")}
-          className={`px-4 py-1.5 rounded-md text-[10px] font-bold transition-all ${mode === "sse" ? (theme.themeName?.toLowerCase() === "lucagent" ? "bg-white text-slate-900 shadow-sm border border-black/10" : "bg-white/10 text-white shadow-sm") : "text-gray-500 hover:text-gray-300"}`}
-          style={
-            mode === "sse" && theme.themeName !== "lucagent"
-              ? { border: `1px solid ${theme.hex}33` }
-              : {}
-          }
+          className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${mode === "sse" ? "bg-white/10 text-[var(--app-text-main)] border-[var(--app-border-main)] shadow-sm" : "bg-transparent text-[var(--app-text-muted)] border-transparent hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100"}`}
         >
-          PRODUCTION (SSE)
+          Production (SSE)
         </button>
       </div>
 
       {/* Connection Guide */}
       <div className="space-y-4">
-        <h5 className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+        <h5 className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-[0.2em] font-black opacity-60">
           1. Configure External Apps
         </h5>
 
         {mode === "stdio" ? (
           <div
-            className={`rounded-xl border overflow-hidden ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10" : "bg-black/40 border-white/5"}`}
+            className={`rounded-2xl border overflow-hidden bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-lg`}
           >
             <div
-              className={`flex items-center justify-between px-4 py-2 border-b ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-white/5 border-white/5"}`}
+              className={`flex items-center justify-between px-5 py-3 border-b border-[var(--app-border-main)] bg-white/5 opacity-90`}
             >
-              <span className="text-[10px] font-mono text-gray-400">
-                claude_desktop_config.json
-              </span>
+              <div className="flex items-center gap-2">
+                <Icon name="FileCode" className="w-4 h-4 text-[var(--app-text-muted)] opacity-60" />
+                <span className="text-xs font-mono text-[var(--app-text-muted)] uppercase tracking-widest opacity-80">
+                  claude_desktop_config.json
+                </span>
+              </div>
               <button
                 onClick={copyToClipboard}
-                className={`flex items-center gap-1.5 text-[10px] transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 hover:text-slate-900" : "text-gray-400 hover:text-white"}`}
+                className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
               >
                 {copied ? (
-                  <Check className="w-3 h-3 text-green-400" />
+                  <Icon name="Check" className="w-3.5 h-3.5 text-green-400" />
                 ) : (
-                  <Copy className="w-3 h-3" />
+                  <Icon name="Copy" className="w-3.5 h-3.5" />
                 )}
                 {copied ? "Copied!" : "Copy Config"}
               </button>
             </div>
             <pre
-              className={`p-4 text-[11px] font-mono overflow-x-auto ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-800" : "text-gray-300"}`}
+              className={`p-5 text-sm font-mono overflow-x-auto text-[var(--app-text-main)] bg-black/20 leading-relaxed`}
             >
               {mcpConfig}
             </pre>
           </div>
         ) : (
           <div
-            className={`rounded-xl border overflow-hidden p-6 text-center space-y-4 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10" : "bg-black/40 border-white/5"}`}
+            className={`rounded-2xl border overflow-hidden p-8 text-center space-y-6 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-lg`}
           >
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h6
-                className={`text-xs ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900 font-bold" : "text-gray-300"}`}
+                className={`text-sm font-bold uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
               >
                 SSE Connection URL
               </h6>
               <div
-                className={`flex items-center justify-center gap-2 p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] border-black/5" : "bg-black/50 border-white/5"}`}
+                className={`w-full max-w-md mx-auto flex items-center justify-between bg-black/40 border border-[var(--app-border-main)] rounded-xl py-2 pl-4 pr-2 font-mono text-sm shadow-inner group transition-all hover:border-[var(--app-text-muted)]`}
               >
                 <span
-                  className={`text-sm font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-indigo-600 font-bold" : "text-green-400"}`}
+                  className={`text-[var(--app-text-main)] font-bold truncate`}
                 >
                   {sseUrl}
                 </span>
@@ -178,19 +142,19 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                   }}
-                  className="p-1 hover:bg-white/10 rounded"
+                  className="p-2 hover:bg-white/10 rounded-lg transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                 >
                   {copied ? (
-                    <Check className="w-4 h-4 text-green-400" />
+                    <Icon name="Check" className="w-5 h-5 text-green-400" />
                   ) : (
-                    <Copy className="w-4 h-4 text-gray-500" />
+                    <Icon name="Copy" className="w-5 h-5" />
                   )}
                 </button>
               </div>
             </div>
-            <p className="text-[10px] text-gray-500">
+            <p className="text-sm text-[var(--app-text-muted)] opacity-60 leading-relaxed">
               In SSE mode, you just paste this URL into apps like{" "}
-              <strong>Cursor</strong> or <strong>MCP Inspector</strong>. No
+              <strong className="text-[var(--app-text-main)]">Cursor</strong> or <strong className="text-[var(--app-text-main)]">MCP Inspector</strong>. No
               Python script paths required.
             </p>
           </div>
@@ -200,79 +164,66 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({
       {/* Path Helper */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div
-          className={`p-4 rounded-xl border space-y-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10" : "border-white/5 bg-white/5"}`}
+          className={`p-5 rounded-2xl border space-y-3 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
         >
           <div
-            className={`flex items-center gap-2 text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-300"}`}
+            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
           >
-            <Terminal className="w-3 h-3" style={{ color: theme.hex }} />
+            <Icon name="Terminal" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)]" />
             Local Command
           </div>
           <p
-            className={`text-[10px] font-mono break-all p-2 rounded ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] text-slate-700" : "bg-black/30 text-gray-500"}`}
+            className={`text-[11px] font-mono break-all p-3 rounded-xl bg-black/40 text-[var(--app-text-muted)] border border-[var(--app-border-main)] leading-relaxed shadow-inner`}
           >
             python3
             /Users/macking/Downloads/kaleido/luca/cortex/python/mcp_bridge.py
           </p>
         </div>
         <div
-          className={`p-4 rounded-xl border space-y-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-white border-black/10" : "border-white/5 bg-white/5"}`}
+          className={`p-5 rounded-2xl border space-y-3 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
         >
           <div
-            className={`flex items-center gap-2 text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-300"}`}
+            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
           >
-            <Shield className="w-3 h-3" style={{ color: theme.hex }} />
+            <Icon name="Shield" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)]" />
             Security Mode
           </div>
-          <p
-            className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-700 font-bold" : "text-gray-500"}`}
+          <div
+            className={`text-sm text-[var(--app-text-muted)] leading-relaxed opacity-80`}
           >
             Bridge is currently in{" "}
             <span
-              className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-indigo-600" : "text-white"} italic`}
+              className={`text-[var(--app-text-main)] font-black italic`}
             >
               Direct Mode
             </span>
-            . External apps have full read/write access to your local SQLite
+            . External apps have read/write access to your local SQLite
             memory.
-          </p>
+          </div>
         </div>
       </div>
 
       {/* External Links */}
-      <div className="pt-4 border-t border-white/5 flex gap-4">
+      <div className="pt-6 border-t border-[var(--app-border-main)] flex flex-wrap gap-6">
         <button
           onClick={() =>
             window.open("https://modelcontextprotocol.io", "_blank")
           }
-          className={`flex items-center gap-2 text-[10px] transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 hover:text-slate-900 font-bold" : "text-gray-500 hover:text-white"}`}
+          className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100 group`}
         >
-          <ExternalLink className="w-3 h-3" style={{ color: theme.hex }} />
-          View MCP Protocol Docs
+          <Icon name="ExternalLink" className="w-3.5 h-3.5" />
+          <span>View Protocol Docs</span>
         </button>
         <button
           onClick={() => {
-            // Use Electron shell to open folder in Finder
-            // if (window.require) {
-            // const { shell } = window.require("electron");
-            // const path = window.require("path");
-            // const os = window.require("os");
-            // const configPath = path.join(
-            //   os.homedir(),
-            //   "Library",
-            //   "Application Support",
-            //   "Claude",
-            // );
-            // shell.openPath(configPath);
             console.log(
               "Opening Config Folder is currently disabled on this widget.",
             );
-            // }
           }}
-          className={`flex items-center gap-2 text-[10px] transition-colors ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500 hover:text-slate-900 font-bold" : "text-gray-500 hover:text-white"}`}
+          className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] opacity-60 hover:opacity-100 group`}
         >
-          <Settings className="w-3 h-3" style={{ color: theme.hex }} />
-          Open Claude Config Folder
+          <Icon name="Settings" className="w-3.5 h-3.5" />
+          <span>Open Config Folder</span>
         </button>
       </div>
     </div>

@@ -1,22 +1,15 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Play,
-  Loader2,
-  Brain,
-  CheckCircle,
-  AlertCircle,
-  Terminal,
-  Eye,
-} = LucideIcons as any;
-import { FullDecision, TradeAction } from "../../../types/trading";
+import { Icon } from "../../ui/Icon";
+import { FullDecision } from "../../../types/trading";
 import ReactJson from "react-json-view";
 
 interface AITestRunnerProps {
   onRunTest: () => Promise<FullDecision>;
+  theme?: { hex: string; primary: string; border: string; bg: string; isLight?: boolean };
 }
 
-export function AITestRunner({ onRunTest }: AITestRunnerProps) {
+export function AITestRunner({ onRunTest, theme }: AITestRunnerProps) {
+  const isLight = theme?.isLight;
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<FullDecision | null>(null);
   const [viewMode, setViewMode] = useState<"visual" | "raw">("visual");
@@ -32,155 +25,203 @@ export function AITestRunner({ onRunTest }: AITestRunnerProps) {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col font-mono">
       {/* Control Header */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
+      <div className="flex items-center justify-between mb-4 px-1">
         <button
           onClick={handleRun}
           disabled={isRunning}
-          className="flex items-center gap-2 px-3 sm:px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-[10px] sm:text-xs"
+          className={`group relative flex items-center gap-3 px-6 py-2.5 ${isLight ? "bg-white text-slate-800 shadow-sm" : "bg-[#0b0b0b] text-white"} hover:border-opacity-60 font-black rounded-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden`}
+          style={{ border: `1px solid ${theme?.hex || "#0ea5e9"}66` }}
         >
+          <div 
+            className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity" 
+            style={{ backgroundColor: theme?.hex || "#0ea5e9" }}
+          />
           {isRunning ? (
-            <Loader2 size={14} className="animate-spin" />
+            <Icon name="Loader" size={14} className="animate-spin" style={{ color: theme?.hex || "#0ea5e9" }} />
           ) : (
-            <Play size={14} fill="currentColor" />
+            <Icon name="Play" size={14} style={{ color: theme?.hex || "#0ea5e9" }} className="group-hover:scale-110 transition-transform" />
           )}
-          <span className="hidden xs:inline">RUN AI SIMULATION</span>
-          <span className="xs:hidden">RUN SIM</span>
+          <span className="text-[10px] tracking-[0.2em] relative z-10">
+            {isRunning ? "Processing..." : "Simulate Engine Logic"}
+          </span>
         </button>
 
-        <div className="flex bg-slate-800/50 rounded-lg p-0.5 sm:p-1">
+        <div className={`flex ${isLight ? "bg-white border-black/5" : "bg-[#0b0b0b] border-white/5"} border rounded-sm p-1`}>
           <button
             onClick={() => setViewMode("visual")}
-            className={`p-1 sm:p-1.5 rounded-md transition-all ${
+            className={`px-3 py-1.5 rounded-sm text-[9px] font-black tracking-widest transition-all ${
               viewMode === "visual"
-                ? "bg-slate-700 text-white"
-                : "text-slate-500 hover:text-slate-300"
+                ? isLight ? "text-white shadow-sm" : "bg-white/5 text-white border border-white/10"
+                : `${isLight ? "text-slate-400" : "text-slate-600"} hover:text-slate-400 border border-transparent`
             }`}
+            style={viewMode === "visual" && isLight ? { backgroundColor: theme?.hex || "#0ea5e9" } : {}}
           >
-            <Eye size={14} className="sm:w-4 sm:h-4" />
+            Visual Log
           </button>
           <button
             onClick={() => setViewMode("raw")}
-            className={`p-1 sm:p-1.5 rounded-md transition-all ${
+            className={`px-3 py-1.5 rounded-sm text-[9px] font-black tracking-widest transition-all ${
               viewMode === "raw"
-                ? "bg-slate-700 text-white"
-                : "text-slate-500 hover:text-slate-300"
+                ? isLight ? "text-white shadow-sm" : "bg-white/5 text-white border border-white/10"
+                : `${isLight ? "text-slate-400" : "text-slate-600"} hover:text-slate-400 border border-transparent`
             }`}
+            style={viewMode === "raw" && isLight ? { backgroundColor: theme?.hex || "#0ea5e9" } : {}}
           >
-            <Terminal size={14} className="sm:w-4 sm:h-4" />
+            Raw Data
           </button>
         </div>
       </div>
 
       {/* Results Area */}
-      <div className="flex-1 bg-[#0b0e14] rounded-xl border border-slate-800/60 overflow-hidden relative">
+      <div className={`flex-1 ${isLight ? "bg-[#f8f9fa] border-black/5" : "bg-[#080808] border-white/5"} border rounded-xl overflow-hidden relative shadow-inner`}>
         {!result && !isRunning && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-600 opacity-50">
-            <Brain size={48} className="mb-4" />
-            <p className="font-mono text-sm">Waiting for simulation...</p>
+          <div className={`absolute inset-0 flex flex-col items-center justify-center ${isLight ? "text-slate-300" : "text-slate-800"}`}>
+            <Icon name="Brain" size={48} className="mb-4 opacity-20" />
+            <p className="text-[10px] font-black tracking-[0.3em] opacity-40">Engine Idle: Ready for Simulation</p>
           </div>
         )}
 
         {isRunning && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm z-10">
-            <Loader2 size={48} className="text-indigo-500 animate-spin mb-4" />
-            <p className="font-bold text-indigo-400 animate-pulse">
-              ANALYZING MARKET DATA...
+          <div className={`absolute inset-0 flex flex-col items-center justify-center ${isLight ? "bg-white/90" : "bg-[#080808]/90"} z-10 backdrop-blur-sm`}>
+            <div className="relative mb-6">
+              <Icon name="Loader" size={48} className="animate-spin opacity-40" style={{ color: theme?.hex || "#0ea5e9" }} />
+              <Icon name="Brain" size={24} className="absolute inset-0 m-auto animate-pulse" style={{ color: theme?.hex || "#0ea5e9" }} />
+            </div>
+            <p className="text-[10px] font-black tracking-[0.3em] animate-pulse" style={{ color: theme?.hex || "#0ea5e9" }}>
+              Executing Scenarios...
             </p>
-            <p className="text-xs text-slate-500 mt-2 font-mono">
-              Running Chain of Thought Inference
+            <p className={`text-[8px] ${isLight ? "text-slate-400" : "text-slate-700"} mt-2 tracking-widest`}>
+              {isRunning ? "Neural Compute Active" : "Simulate Engine Logic"}
             </p>
           </div>
         )}
 
         {result && (
-          <div className="h-full overflow-y-auto custom-scrollbar p-0">
+          <div className="h-full overflow-y-auto custom-scrollbar">
             {viewMode === "visual" ? (
               <div className="p-4 space-y-6">
-                {/* Status Badge */}
-                <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-900 border border-slate-800">
-                  <Brain className="text-purple-400" />
-                  <div>
-                    <div className="text-xs text-slate-500 font-bold uppercase">
-                      Model Reasoning Time
+                {/* Header Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className={`p-3 ${isLight ? "bg-white border-black/5" : "bg-[#0b0b0b] border-white/5"} border shadow-inner`}>
+                    <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-slate-600"} font-black tracking-widest mb-1`}>Duration</div>
+                    <div className={`text-sm font-mono ${isLight ? "text-slate-900" : "text-white"} flex items-baseline gap-1`}>
+                      {result.aiRequestDurationMs} <span className={`text-[10px] ${isLight ? "text-slate-400" : "text-slate-600"}`}>ms</span>
                     </div>
-                    <div className="text-lg font-mono text-white">
-                      {result.aiRequestDurationMs}ms
+                  </div>
+                  <div className={`p-3 ${isLight ? "bg-white border-black/5" : "bg-[#0b0b0b] border-white/5"} border shadow-inner`}>
+                    <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-slate-600"} font-black tracking-widest mb-1`}>Signals</div>
+                    <div className={`text-sm font-mono ${isLight ? "text-slate-900" : "text-white"}`}>
+                        {result.decisions.length} Active
                     </div>
                   </div>
                 </div>
 
                 {/* Decisions */}
-                <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                    Trade Decisions ({result.decisions.length})
+                <div className="space-y-4">
+                  <h3 className={`text-[9px] font-black ${isLight ? "text-slate-400" : "text-slate-700"} tracking-[0.2em] flex items-center gap-2`}>
+                    <Icon name="Activity" size={12} className={isLight ? "text-slate-300" : "text-slate-800"} />
+                    <span className={`text-[10px] font-black ${isLight ? "text-slate-800" : "text-white"} tracking-[0.2em]`}>Simulated Trades</span>
                   </h3>
                   <div className="space-y-3">
                     {result.decisions.map((d, idx) => (
                       <div
                         key={idx}
-                        className="bg-[#1e2329] p-4 rounded-lg border border-white/5 relative overflow-hidden group"
+                        className={`${isLight ? "bg-white border-black/5 shadow-sm" : "bg-[#0b0b0b] border-white/5"} p-4 border relative group transition-colors`}
                       >
                         <div
-                          className={`absolute top-0 left-0 w-1 h-full ${getActionColor(
-                            d.action
-                          )}`}
+                          className={`absolute top-0 left-0 w-[2px] h-full ${getActionColor(d.action)} shadow-[0_0_8px_rgba(0,0,0,0.5)]`}
                         />
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg font-bold text-white">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3">
+                            <span className={`text-sm font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                               {d.symbol}
                             </span>
                             <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${getActionBadge(
-                                d.action
-                              )}`}
+                              className={`px-2 py-0.5 text-[10px] font-medium border rounded ${getActionBadge(d.action)}`}
                             >
-                              {d.action.replace("_", " ")}
+                              {d.action.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                             </span>
                           </div>
-                          <div className="flex flex-col items-end">
-                            <span className="text-2xl font-bold text-white">
+                          <div className="text-right">
+                            <div className={`text-sm font-bold ${isLight ? "text-slate-900" : "text-white"} leading-none`}>
                               {d.confidence}%
-                            </span>
-                            <span className="text-[10px] text-slate-500">
-                              CONFIDENCE
-                            </span>
+                            </div>
+                            <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-slate-700"} font-black tracking-tighter`}>
+                              Conviction
+                            </div>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-400 leading-relaxed font-mono">
-                          {d.reasoning}
-                        </p>
+                        <div 
+                          className={`p-3 ${isLight ? "bg-slate-50 text-slate-700 italic" : "bg-[#080808]/50 border-white/[0.02] text-slate-400"} border text-[10px] leading-relaxed font-mono`}
+                          style={isLight ? { borderColor: `${theme?.hex || "#0ea5e9"}33` } : {}}
+                        >
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+                             <div className="flex items-center gap-2">
+                               <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                               <span className="text-[10px] font-black tracking-widest text-white/40">NODE_RESOLVED</span>
+                             </div>
+                             <span className="text-[9px] font-mono opacity-30 italic">
+                               {new Date(result?.timestamp || Date.now()).toLocaleTimeString()}
+                             </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-white/5 border border-white/5">
+                              <Icon name="Zap" size={12} style={{ color: theme?.hex || "#0ea5e9" }} />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <span 
+                                  className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter"
+                                  style={{ borderColor: isLight ? `${theme?.hex || "#0ea5e9"}33` : "", color: isLight ? theme?.hex || "#0f172a" : `${theme?.hex || "#0ea5e9"}b3` }}
+                                >
+                                  {d.reasoning}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* CoT */}
-                <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                    Chain of Thought
+                <div className="space-y-3 pb-4">
+                  <h3 className={`text-[9px] font-black ${isLight ? "text-slate-400" : "text-slate-700"} tracking-[0.2em] flex items-center gap-2`}>
+                    <Icon name="Zap" size={12} style={{ color: theme?.hex || "#0ea5e9" }} />
+                    Engine Decision Trace
                   </h3>
-                  <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800 text-xs font-mono text-indigo-300 whitespace-pre-wrap leading-relaxed">
-                    {result.cotTrace || "No Chain of Thought trace available."}
+                  <div 
+                    className={`p-4 border rounded-lg ${isLight ? "bg-white shadow-inner" : "bg-[#0b0b0b] border-white/5"} text-[9px] font-mono whitespace-pre-wrap leading-relaxed shadow-inner`}
+                    style={{ borderColor: isLight ? `${theme?.hex || "#0ea5e9"}33` : "", color: isLight ? theme?.hex || "#0f172a" : `${theme?.hex || "#0ea5e9"}b3` }}
+                  >
+                    {result.cotTrace || "No trace data recorded."}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="p-4">
+              <div className={`p-4 ${isLight ? "bg-[#f8f9fa]" : "bg-[#080808]"}`}>
                 <ReactJson
-                  src={result}
-                  theme="ocean"
+                  src={result as object}
+                  theme={isLight ? "monokai" : "ocean"}
                   displayDataTypes={false}
                   collapsed={false}
-                  style={{ backgroundColor: "transparent" }}
+                  style={{ backgroundColor: "transparent", fontSize: "10px", fontFamily: "monospace" }}
                 />
               </div>
             )}
           </div>
         )}
       </div>
+      
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: ${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.03)'}; border-radius: 10px; }
+      `}</style>
     </div>
   );
 }
@@ -192,7 +233,7 @@ function getActionColor(action: string) {
 }
 
 function getActionBadge(action: string) {
-  if (action.includes("long")) return "bg-emerald-500/20 text-emerald-400";
-  if (action.includes("short")) return "bg-rose-500/20 text-rose-400";
-  return "bg-slate-500/20 text-slate-400";
+  if (action.includes("long")) return "bg-emerald-500/5 text-emerald-500/80 border-emerald-500/20";
+  if (action.includes("short")) return "bg-rose-500/5 text-rose-500/80 border-rose-500/20";
+  return "bg-slate-500/5 text-slate-500/80 border-slate-500/20";
 }

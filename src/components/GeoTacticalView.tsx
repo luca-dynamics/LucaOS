@@ -1,12 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "./ui/Icon";
 import { TacticalMarker } from "../types";
-const {
-  Globe,
-  Radio,
-  Crosshair,
-  X,
-} = LucideIcons as any;
 import { setHexAlpha } from "../config/themeColors";
 
 interface Props {
@@ -202,7 +196,7 @@ const GeoTacticalView: React.FC<Props> = ({
   }, [markers]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-lg animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 glass-blur animate-in fade-in duration-300">
       <div
         className="relative w-full h-full max-w-6xl max-h-[90vh] border flex flex-col bg-[#050505] overflow-hidden rounded-lg"
         style={{
@@ -240,7 +234,8 @@ const GeoTacticalView: React.FC<Props> = ({
           }}
         >
           <div className="flex items-center gap-4">
-            <Globe
+            <Icon
+              name="Globe"
               style={{ color: theme?.hex || "#06b6d4" }}
               className="animate-pulse"
               size={24}
@@ -254,7 +249,7 @@ const GeoTacticalView: React.FC<Props> = ({
                 style={{ color: theme?.hex || "#06b6d4" }}
               >
                 <span className="flex items-center gap-1">
-                  <Radio size={10} /> SAT_UPLINK: ENCRYPTED
+                  <Icon name="Radio" size={10} /> SAT_UPLINK: ENCRYPTED
                 </span>
                 <span>LATENCY: 14ms</span>
                 <span className="text-white">TARGET_ID: {targetName}</span>
@@ -265,7 +260,7 @@ const GeoTacticalView: React.FC<Props> = ({
             onClick={onClose}
             className="p-2 hover:bg-red-900/30 hover:text-red-500 transition-colors border border-transparent hover:border-red-500 rounded"
           >
-            <X size={20} />
+            <Icon name="CloseCircle" size={20} />
           </button>
         </div>
 
@@ -329,7 +324,7 @@ const GeoTacticalView: React.FC<Props> = ({
             style={{ color: theme?.hex || "#06b6d4" }}
           >
             <div className="flex items-center gap-2 mb-2 opacity-50">
-              <Radio size={12} /> SIGNAL INTERCEPT LOG
+              <Icon name="Radio" size={12} /> SIGNAL INTERCEPT LOG
             </div>
             <div className="flex-1 flex flex-col justify-end">
               {logs.slice(-3).map((log, i) => (
@@ -371,7 +366,7 @@ const GeoTacticalView: React.FC<Props> = ({
           {/* Right: Target Info */}
           <div className="w-1/3 p-4 font-mono text-xs bg-slate-900/50">
             <div className="mb-2 text-red-500 flex items-center gap-2 font-bold tracking-wider">
-              <Crosshair size={14} /> ACTIVE TRACKING
+              <Icon name="Crosshair" size={14} /> ACTIVE TRACKING
             </div>
             {markers.length > 0 ? (
               <div className="space-y-2 text-slate-300">

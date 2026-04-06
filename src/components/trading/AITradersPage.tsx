@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Bot,
-  Plus,
-  Settings,
-  Trash2,
-  Play,
-  Pause,
-  Cpu,
-  ArrowRightLeft,
-  Sparkles,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import TraderConfigModal from "./TraderConfigModal";
 import ExchangeConfigModal from "./ExchangeConfigModal";
 import AIModelConfigModal from "./AIModelConfigModal";
@@ -39,10 +28,9 @@ const MOCK_MODELS: AIModel[] = [
 
 interface AITradersPageProps {
   onClose?: () => void;
-  theme?: { hex: string; primary: string; border: string; bg: string };
 }
 
-export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
+export default function AITradersPage({ onClose }: AITradersPageProps) {
   // State
   const [traders, setTraders] = useState<TraderInfo[]>([]);
   const [models, setModels] = useState<AIModel[]>(MOCK_MODELS);
@@ -134,8 +122,6 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
     }
   };
 
-  const activeTradersCount = traders.filter((t) => t.is_running).length;
-
   const getModelName = (id: string) =>
     models.find((m) => m.id === id)?.name || id;
   const getExchangeName = (id: string) => {
@@ -200,19 +186,21 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-white font-sans overflow-hidden">
+    <div 
+      className="flex flex-col h-full text-white font-sans overflow-hidden transition-all duration-500 bg-[rgba(var(--app-primary-rgb),0.02)]"
+    >
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-black/40 border-b border-white/5 backdrop-blur-md z-20">
+      <div 
+        className="flex items-center justify-between px-4 py-3 border-b border-white/5 glass-blur z-20 bg-[rgba(var(--app-primary-rgb),0.05)]"
+      >
         <div className="flex items-center gap-3">
           <div 
-             className="w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm"
+             className="w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm bg-[var(--app-primary)]/10 border-[var(--app-primary)]/30"
              style={{ 
-               backgroundColor: theme ? `${theme.hex}33` : "rgba(99,102,241,0.2)",
-               borderColor: theme ? `${theme.hex}66` : "rgba(99,102,241,0.4)",
-               boxShadow: theme ? `0 0 15px ${theme.hex}4d` : "0 0 15px rgba(99,102,241,0.3)"
+               boxShadow: "0 0 15px rgba(var(--app-primary-rgb), 0.15)"
              }}
           >
-            <Bot className="w-6 h-6" style={{ color: theme?.hex || "#818cf8" }} />
+            <Icon name="MagicStick" size={24} style={{ color: "var(--app-primary)" }} variant="BoldDuotone" />
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-wider text-white uppercase">LucaOS AGENT MANAGEMENT</h1>
@@ -220,12 +208,14 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
           </div>
         </div>
         <button onClick={onClose} className="p-2 text-slate-500 hover:text-white transition-colors">
-          <LucideIcons.X size={20} />
+          <Icon name="Close" size={20} variant="BoldDuotone" />
         </button>
       </div>
 
       {/* 2. MAIN CONTENT (Trader List) */}
-      <div className="flex-1 overflow-y-auto p-6 bg-rq-base">
+      <div 
+        className="flex-1 overflow-y-auto p-6 transition-all duration-500 bg-gradient-to-b from-[rgba(var(--app-primary-rgb),0.03)] to-transparent"
+      >
         {isLoading ? (
           <div className="flex items-center justify-center h-full text-slate-500 animate-pulse">
             Accessing Cortex Luca Network...
@@ -233,13 +223,12 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
         ) : (
           <div className="grid gap-4">
             {traders.length === 0 && (
-              <div className="text-center py-20 text-slate-500 border border-dashed border-rq-border rounded-xl">
-                <Bot size={48} className="mx-auto mb-4 opacity-20" />
+              <div className="text-center py-20 text-slate-500 border border-dashed border-white/5 rounded-xl">
+                <Icon name="MagicStick" size={48} className="mx-auto mb-4 opacity-20" variant="BoldDuotone" />
                 <p>No active AI Traders deployed.</p>
                 <button
                   onClick={() => setShowTraderModal(true)}
-                  className="mt-4 text-[10px] font-bold"
-                  style={{ color: theme?.hex || "#06b6d4" }}
+                  className="mt-4 text-[10px] font-bold text-[var(--app-primary)]"
                 >
                   + Deploy your first agent
                 </button>
@@ -247,14 +236,11 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
             )}
             {traders.map((trader) => {
               const isRunning = trader.is_running;
-              const statusBg = isRunning
-                ? "bg-emerald-500/10 border-emerald-500/20"
-                : "bg-rq-panel border-rq-border";
-
+              
               return (
                 <div
                   key={trader.trader_id}
-                  className={`group relative rounded-xl border p-4 transition-all duration-200 ${statusBg} hover:border-slate-600`}
+                  className={`group relative rounded-xl border p-4 transition-all duration-500 ${isRunning ? "shadow-[0_0_20px_rgba(var(--app-primary-rgb),0.05)] bg-[rgba(var(--app-primary-rgb),0.05)] border-[rgba(var(--app-primary-rgb),0.2)]" : "border-white/5 bg-black/20 hover:border-white/20"}`}
                 >
                   <div className="flex items-center justify-between">
                     {/* Left: Identity */}
@@ -266,23 +252,23 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
                           className="sm:size-14"
                         />
                         {isRunning && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-rq-panel animate-pulse" />
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#161b22] animate-pulse" />
                         )}
                       </div>
                       <div className="overflow-hidden">
                         <h3 className="text-sm sm:text-lg font-bold text-white truncate">
                           {trader.trader_name}
                         </h3>
-                        <div className="flex flex-wrap items-center gap-2 text-[9px] sm:text-xs mt-0.5">
-                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/40 border border-rq-border text-slate-400 whitespace-nowrap">
-                            <Cpu size={10} />
-                            {getModelName(trader.ai_model)}
+                          <div className="flex items-center gap-2 text-[9px] sm:text-xs mt-0.5">
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/40 border border-white/5 text-slate-400 whitespace-nowrap">
+                              <Icon name="Cpu" size={10} variant="BoldDuotone" />
+                              {getModelName(trader.ai_model)}
+                            </div>
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/40 border border-white/5 text-slate-400 whitespace-nowrap">
+                              <Icon name="Transfer" size={10} variant="BoldDuotone" />
+                              {getExchangeName(trader.exchange_id || "")}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/40 border border-rq-border text-slate-400 whitespace-nowrap">
-                            <ArrowRightLeft size={10} />
-                            {getExchangeName(trader.exchange_id || "")}
-                          </div>
-                        </div>
                       </div>
                     </div>
 
@@ -323,38 +309,38 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingTrader(trader);
-                          setShowTraderModal(true);
-                        }}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-                      >
-                        <Settings size={16} />
-                      </button>
+                        <button
+                          onClick={() => {
+                            setEditingTrader(trader);
+                            setShowTraderModal(true);
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                        >
+                          <Icon name="Settings" size={16} variant="BoldDuotone" />
+                        </button>
                       <button
                         onClick={() => handleToggleTrader(trader.trader_id)}
                         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold text-[10px] sm:text-xs transition-all ${
                           isRunning
                             ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                            : "bg-rq-border text-slate-400 hover:bg-slate-700"
+                            : "bg-white/10 text-slate-400 hover:bg-slate-700"
                         }`}
                       >
                         {isRunning ? (
-                          <Pause size={12} fill="currentColor" />
+                          <Icon name="Pause" size={12} fill="currentColor" variant="BoldDuotone" />
                         ) : (
-                          <Play size={12} fill="currentColor" />
+                          <Icon name="Play" size={12} fill="currentColor" variant="BoldDuotone" />
                         )}
                         <span className="hidden xs:inline">
                           {isRunning ? "RUNNING" : "STOPPED"}
                         </span>
                       </button>
-                      <button
-                        onClick={() => handleDeleteTrader(trader.trader_id)}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                        <button
+                          onClick={() => handleDeleteTrader(trader.trader_id)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                        >
+                          <Icon name="Trash" size={16} variant="BoldDuotone" />
+                        </button>
                     </div>
                   </div>
                 </div>
@@ -371,8 +357,8 @@ export default function AITradersPage({ onClose, theme }: AITradersPageProps) {
         onSave={saveTrader}
         initialData={editingTrader}
         models={models.filter((m) => m.enabled)}
-        exchanges={exchanges} // Pass Real Exchanges
-        strategies={strategies} // Pass Real Strategies
+        exchanges={exchanges} 
+        strategies={strategies}
       />
 
       <ExchangeConfigModal

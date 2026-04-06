@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Maximize2,
-  Minimize2,
-  MoreVertical,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface DataRoomTileProps {
   title: string;
@@ -27,7 +22,7 @@ const DataRoomTile: React.FC<DataRoomTileProps> = ({
 }) => {
   return (
     <div
-      className={`relative flex flex-col bg-black/40 backdrop-blur-md border rounded-xl overflow-hidden transition-all duration-300 group ${className} ${
+      className={`relative flex flex-col bg-black/40 glass-blur border rounded-xl overflow-hidden transition-all duration-300 group ${className} ${
         isExpanded ? "z-50 m-0" : ""
       }`}
       style={{
@@ -67,11 +62,11 @@ const DataRoomTile: React.FC<DataRoomTileProps> = ({
               }}
               className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
             >
-              {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              {isExpanded ? <Icon name="Minimize2" size={14} /> : <Icon name="Maximize2" size={14} />}
             </button>
           )}
           <button className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
-            <MoreVertical size={14} />
+            <Icon name="MoreVertical" size={14} />
           </button>
         </div>
       </div>

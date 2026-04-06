@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Github,
-  Download,
-  Terminal,
-  Database,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface Props {
   onClose: () => void;
@@ -21,9 +14,9 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
   const [url, setUrl] = useState("");
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 p-4">
       <div
-        className={`w-full max-w-lg bg-black/40 backdrop-blur-xl border ${themeBorder}/30 rounded-lg p-4 sm:p-6 relative overflow-hidden`}
+        className={`w-full max-w-lg bg-black/40 glass-blur border ${themeBorder}/30 rounded-lg p-4 sm:p-6 relative overflow-hidden`}
         style={{ boxShadow: `0 0 80px -20px ${themeHex}40` }}
       >
         {/* Liquid background effect 1 (Center) */}
@@ -59,7 +52,7 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
               className={`p-2 rounded border ${themeBorder}/50 ${themePrimary}`}
               style={{ backgroundColor: `${themeHex}1F` }}
             >
-              <Github size={24} />
+              <Icon name="Programming" size={24} variant="BoldDuotone" />
             </div>
             <div>
               <h2 className="font-display text-xl font-bold text-white tracking-widest">
@@ -76,7 +69,7 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors"
           >
-            <X size={24} />
+            <Icon name="Close" size={24} variant="BoldDuotone" />
           </button>
         </div>
 
@@ -86,9 +79,11 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
               TARGET REPOSITORY URL
             </label>
             <div className="relative">
-              <Terminal
+              <Icon
+                name="Programming"
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"
                 size={16}
+                variant="BoldDuotone"
               />
               <input
                 type="text"
@@ -120,7 +115,7 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
             <div
               className={`flex items-center gap-2 ${themePrimary} mb-2 font-bold`}
             >
-              <Database size={12} /> LUCA PROTOCOL:
+              <Icon name="Database" size={12} variant="BoldDuotone" /> LUCA PROTOCOL:
             </div>
             <ul className="space-y-1 list-disc pl-4">
               <li>Deep recursive scan of source trees.</li>
@@ -147,7 +142,7 @@ const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
               e.currentTarget.style.backgroundColor = themeHex;
             }}
           >
-            <Download size={18} /> INITIATE TRANSFER
+            <Icon name="Download" size={18} variant="BoldDuotone" /> INITIATE TRANSFER
           </button>
         </div>
       </div>

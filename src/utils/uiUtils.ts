@@ -21,6 +21,8 @@ export const getGlassStyle = (
       glow: isDanger
         ? "0 0 20px rgba(239, 68, 68, 0.2)"
         : "0 0 20px rgba(255, 255, 255, 0.4)",
+      backdropFilter: "blur(var(--app-bg-blur, 12px))",
+      WebkitBackdropFilter: "blur(var(--app-bg-blur, 12px))",
     };
   }
   // Dark mode uses Hex. We can't strictly use rgba with CSS vars easily unless we parse it.
@@ -33,5 +35,7 @@ export const getGlassStyle = (
       : `inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 0 rgba(100, 116, 139, 0.1)`,
     borderColor: setHexAlpha(baseColor, isActive ? 0.4 : 0.15),
     glow: `0 0 20px ${setHexAlpha(baseColor, 0.15)}`,
+    backdropFilter: "blur(var(--app-bg-blur, 12px))",
+    WebkitBackdropFilter: "blur(var(--app-bg-blur, 12px))",
   };
 };

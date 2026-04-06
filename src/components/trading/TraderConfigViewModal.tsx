@@ -1,27 +1,19 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Bot,
-  Activity,
-  TrendingUp,
-  Shield,
-  Zap,
-  Settings,
-  BrainCircuit,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TraderConfigViewModalProps {
   isOpen: boolean;
   onClose: () => void;
   traderData: any;
+  theme?: { hex: string; primary: string; border: string; bg: string; isLight?: boolean };
 }
 
 export function TraderConfigViewModal({
   isOpen,
   onClose,
   traderData,
+  theme
 }: TraderConfigViewModalProps) {
   if (!isOpen || !traderData) return null;
 
@@ -34,7 +26,7 @@ export function TraderConfigViewModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/80 glass-blur"
         />
 
         {/* Modal */}
@@ -47,13 +39,16 @@ export function TraderConfigViewModal({
           {/* Header */}
           <div className="p-4 sm:p-6 border-b border-slate-800 bg-[#0b0e14] flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
+              <div 
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center text-xl sm:text-2xl flex-shrink-0 border"
+                style={{ backgroundColor: `${theme?.hex || "#0ea5e9"}1a`, borderColor: `${theme?.hex || "#0ea5e9"}33` }}
+              >
                 {traderData.avatar === "BRAIN_CIRCUIT" ? (
-                  <BrainCircuit size={24} className="text-purple-400" />
+                  <Icon name="Cyber" variant="BoldDuotone" size={24} className="text-purple-400" />
                 ) : (
                   <span className="text-xl sm:text-2xl">
                     {traderData.avatar || (
-                      <Bot size={24} className="text-indigo-400" />
+                      <Icon name="Bot" variant="BoldDuotone" size={24} style={{ color: theme?.hex || "#0ea5e9" }} />
                     )}
                   </span>
                 )}
@@ -67,7 +62,7 @@ export function TraderConfigViewModal({
                 </h2>
                 <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-slate-500 mt-1">
                   <span className="flex items-center gap-1 truncate">
-                    <Bot size={10} className="sm:w-3 sm:h-3" />{" "}
+                    <Icon name="Bot" variant="BoldDuotone" size={10} className="sm:w-3 sm:h-3" />{" "}
                     {traderData.ai_model || "GPT-4"}
                   </span>
                   <span className="flex items-center gap-1 truncate">
@@ -100,7 +95,7 @@ export function TraderConfigViewModal({
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-white transition-colors flex-shrink-0"
             >
-              <X size={18} className="sm:w-5 sm:h-5" />
+              <Icon name="CloseCircle" variant="BoldDuotone" size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
 
@@ -108,8 +103,11 @@ export function TraderConfigViewModal({
           <div className="p-6 space-y-6">
             {/* Strategy Section */}
             <div>
-              <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Zap size={14} /> Active Strategy
+              <h3 
+                className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2"
+                style={{ color: theme?.hex || "#0ea5e9" }}
+              >
+                <Icon name="Bolt" variant="BoldDuotone" size={14} /> Active Strategy
               </h3>
               <div className="p-4 rounded-lg bg-[#0b0e14] border border-slate-800">
                 <div className="flex justify-between items-start mb-2">
@@ -131,7 +129,7 @@ export function TraderConfigViewModal({
             {/* Risk Settings */}
             <div>
               <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Shield size={14} /> Risk Configuration
+                <Icon name="ShieldCheck" variant="BoldDuotone" size={14} /> Risk Configuration
               </h3>
               <div className="grid grid-cols-2 xs:grid-cols-3 gap-3 sm:gap-4">
                 <div className="p-2 sm:p-3 rounded bg-[#0b0e14] border border-slate-800">
@@ -164,7 +162,7 @@ export function TraderConfigViewModal({
             {/* Performance Snapshot */}
             <div>
               <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <TrendingUp size={14} /> Performance
+                <Icon name="TrendUp" variant="BoldDuotone" size={14} /> Performance
               </h3>
               <div className="grid grid-cols-2 xs:flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20">
                 <div className="min-w-0">

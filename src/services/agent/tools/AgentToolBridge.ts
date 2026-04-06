@@ -271,6 +271,7 @@ export class AgentToolBridge {
       DEFAULT: getPersonaTools("DEFAULT").length,
       LUCAGENT: getPersonaTools("LUCAGENT").length,
       LOCALCORE: getPersonaTools("LOCALCORE").length,
+      AUDITOR: getPersonaTools("AUDITOR").length,
     };
 
     return {

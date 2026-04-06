@@ -1,13 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Volume2,
-  Radio,
-  Zap,
-  Eye,
-  ShieldAlert,
-  Terminal,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { SettingsModal } from "./SettingsModal";
 
 import { getAllTools, PersonaType } from "../services/lucaService";
@@ -187,10 +179,8 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       style={{
         backgroundColor: transparentBackground
           ? "transparent"
-          : theme.themeName?.toLowerCase() === "lucagent" ||
-              theme.themeName?.toLowerCase() === "agentic-slate"
-            ? `rgba(255, 255, 255, var(--app-bg-opacity, 0.9))`
-            : `rgba(10, 10, 10, var(--app-bg-opacity, 0.9))`,
+          : "var(--app-bg-main)",
+        opacity: transparentBackground ? 1 : "var(--app-bg-opacity, 0.9)",
         backdropFilter: transparentBackground
           ? "none"
           : `blur(var(--app-bg-blur, 40px))`,
@@ -272,10 +262,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
           <div
             className="w-[90%] md:w-[600px] h-48 md:h-64 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden rounded-xl border border-white/10"
             style={{
-              backgroundColor:
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? `rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.75) * 0.4))`
-                  : `rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.75) * 0.6))`,
+              backgroundColor: "var(--app-bg-tint)",
               backdropFilter: `blur(var(--app-bg-blur, 12px))`,
               WebkitBackdropFilter: `blur(var(--app-bg-blur, 12px))`,
             }}
@@ -290,7 +277,6 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
                   THEME_PALETTE.RUTHLESS
                 ).primary
               }
-              isLight={theme.themeName?.toLowerCase() === "lucagent"}
             />
           </div>
         </div>
@@ -300,14 +286,15 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
         {/* Main Transcript */}
         <div className="text-center px-4 sm:px-6 md:px-8 py-3 sm:py-4 min-h-[60px] sm:min-h-[80px] w-full max-w-[90vw] sm:max-w-full">
           <div className="mb-2 sm:mb-3 flex items-center justify-center gap-2">
-            <Radio
+            <Icon
+              name="Microphone"
               size={14}
               className="animate-pulse"
               style={{ color: theme.primary }}
+              variant="Linear"
             />
             <span
-              className="text-[9px] sm:text-[10px] font-mono tracking-widest uppercase"
-              style={{ color: theme.primary }}
+              className="text-[10px] tracking-[0.4em] font-bold uppercase text-[var(--app-text-main)] opacity-80"
             >
               {transcriptSource === "model" ? "LUCA" : "INPUT"}
             </span>
@@ -328,10 +315,8 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
                 text-ellipsis
                 ${
                   transcriptSource === "model"
-                    ? theme.primary
-                    : theme.themeName?.toLowerCase() === "lucagent"
-                      ? "text-gray-900"
-                      : "text-white"
+                    ? "var(--app-id-accent, var(--app-text-main))"
+                    : "var(--app-text-main)"
                 }
               `}
             >
@@ -343,11 +328,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             </div>
           ) : (
             <div
-              className={`${
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "text-slate-600/60"
-                  : "text-slate-600"
-              } font-mono text-[10px] sm:text-xs animate-pulse`}
+              className="text-[var(--app-text-muted)] font-mono text-[10px] sm:text-xs animate-pulse"
             >
               WAITING FOR AUDIO INPUT...
             </div>
@@ -382,14 +363,10 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
               borderColor: `${(THEME_PALETTE[persona as keyof typeof THEME_PALETTE] || THEME_PALETTE.RUTHLESS).primary}4D`,
             }}
           >
-            <Terminal size={14} /> ACTIVE PROTOCOLS
+            <Icon name="Programming" size={14} variant="Linear" /> ACTIVE PROTOCOLS
           </div>
           <div
-            className={`space-y-3 ${
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "text-gray-600"
-                : "text-slate-400"
-            }`}
+            className="space-y-3 text-[var(--app-text-muted)]"
           >
             {dynamicProtocols.map((proto, i) => (
               <div
@@ -430,57 +407,33 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
           </div>
 
           <div
-            className={`flex justify-end items-center gap-2 ${
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "text-gray-600"
-                : "text-slate-400"
-            }`}
+            className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]"
           >
             <span>ACTIVE_MODEL</span>
             <span
-              className={`${
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "text-gray-900"
-                  : "text-white"
-              } font-bold`}
+              className="text-[var(--app-text-main)] font-bold"
             >
               {modelName.toUpperCase()}
             </span>
           </div>
 
           <div
-            className={`flex justify-end items-center gap-2 ${
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "text-gray-600"
-                : "text-slate-400"
-            }`}
+            className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]"
           >
             <span>LATENCY</span>
             <span
-              className={`${
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "text-gray-900"
-                  : "text-white"
-              } font-bold`}
+              className="text-[var(--app-text-main)] font-bold"
             >
               {latency.toFixed(0)}ms
             </span>
           </div>
 
           <div
-            className={`flex justify-end items-center gap-2 ${
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "text-gray-600"
-                : "text-slate-400"
-            }`}
+            className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]"
           >
             <span>AUDIO_INPUT_DB</span>
             <span
-              className={`${
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "text-gray-900"
-                  : "text-white"
-              } font-bold`}
+              className="text-[var(--app-text-main)] font-bold"
             >
               {realDB.toFixed(0)} dB
             </span>
@@ -513,26 +466,18 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
           )}
 
           <div
-            className={`flex justify-end items-center gap-2 ${
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "text-gray-600"
-                : "text-slate-400"
-            }`}
+            className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]"
           >
             <span>DOMINANT_FREQ</span>
             <span
-              className={`${
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "text-gray-900"
-                  : "text-white"
-              } font-bold`}
+              className="text-[var(--app-text-main)] font-bold"
             >
               {dominantFrequency} Hz
             </span>
           </div>
 
           <div
-            className="mt-4 p-2 border flex items-center justify-center gap-2 backdrop-blur-md rounded-sm transition-all duration-500"
+            className="mt-4 p-2 border flex items-center justify-center gap-2 glass-blur rounded-sm transition-all duration-500"
             style={(() => {
               const activeScope = elevationState?.activeMissionScope;
               const hasMission = activeScope && activeScope !== MissionScope.NONE;
@@ -563,13 +508,15 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
               };
             })()}
           >
-            <ShieldAlert
+            <Icon
+              name="ShieldAlert"
               size={12}
               className={
                 elevationState?.activeMissionScope !== MissionScope.NONE
                   ? "animate-pulse"
                   : ""
               }
+              variant="Linear"
             />
             {elevationState?.activeMissionScope !== MissionScope.NONE
               ? `MISSION ACTIVE: ${elevationState?.activeMissionScope}`
@@ -601,17 +548,20 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
         />
       )}
       {/* Footer Status */}
-      <div className="absolute bottom-4 md:bottom-8 flex flex-wrap items-center justify-center gap-3 md:gap-12 text-[8px] md:text-[10px] font-mono text-slate-500 uppercase tracking-widest z-[60] pointer-events-none px-4 w-full text-center">
+      <div className="absolute bottom-4 md:bottom-8 flex flex-wrap items-center justify-center gap-3 md:gap-12 text-[8px] md:text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest z-[60] pointer-events-none px-4 w-full text-center">
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
-          <Volume2
+          <Icon
+            name="VolumeUp"
             size={10}
-            className={`md:w-3 md:h-3 ${localAmplitude > 0.5 ? "text-white" : ""}`}
+            className={`md:w-3 md:h-3 ${localAmplitude > 0.5 ? "text-[var(--app-text-main)]" : ""}`}
+            variant="Linear"
           />
           VOL:{" "}
           {((localAmplitude > 1 ? localAmplitude / 255 : localAmplitude) * 100).toFixed(0)}%
         </div>
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
-          <Radio
+          <Icon
+            name="Microphone"
             size={10}
             className="animate-pulse md:w-3 md:h-3"
             style={{
@@ -620,18 +570,21 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
                 THEME_PALETTE.RUTHLESS
               ).primary,
             }}
+            variant="Linear"
           />
           LOW_LATENCY
         </div>
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
-          <Eye
+          <Icon
+            name="Eye"
             size={10}
             className={`md:w-3 md:h-3 ${isVideoActive ? theme.primary : ""}`}
+            variant="Linear"
           />
           VISION: {isVideoActive ? "ON" : "OFF"}
         </div>
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
-          <Zap size={10} className="md:w-3 md:h-3" />
+          <Icon name="Zap" size={10} className="md:w-3 md:h-3" variant="Linear" />
           CORE: OK
         </div>
       </div>

@@ -5,13 +5,7 @@
  */
 
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Chrome,
-  X,
-  RefreshCw,
-  AlertCircle,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface ChromeProfilePromptProps {
@@ -76,7 +70,7 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 glass-blur">
       <div className="bg-gray-900/95 border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -85,7 +79,7 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
               className="p-2 rounded-lg"
               style={{ backgroundColor: `${theme.hex}20` }}
             >
-              <Chrome className="w-5 h-5" style={{ color: theme.hex }} />
+              <Icon name="Chrome" className="w-5 h-5" style={{ color: theme.hex }} />
             </div>
             <h3 className="text-lg font-bold text-white">
               Use Your Browser Sessions?
@@ -95,7 +89,7 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
             onClick={onClose}
             className="p-1 rounded hover:bg-white/10 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <Icon name="X" className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
@@ -119,7 +113,7 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
 
           {chromeRunning && (
             <div className="flex items-center gap-2 text-orange-400 text-xs mb-3 bg-orange-500/10 p-2 rounded">
-              <AlertCircle className="w-4 h-4" />
+              <Icon name="AlertCircle" className="w-4 h-4" />
               <span>Chrome is running. Please close it first.</span>
             </div>
           )}
@@ -145,9 +139,9 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
             }}
           >
             {importing ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
+              <Icon name="RefreshCw" className="w-4 h-4 animate-spin" />
             ) : (
-              <Chrome className="w-4 h-4" />
+              <Icon name="Chrome" className="w-4 h-4" />
             )}
             Import Chrome
           </button>

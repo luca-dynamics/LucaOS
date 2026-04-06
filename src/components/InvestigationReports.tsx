@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  FileText,
-  Download,
-  Search,
-  Calendar,
-  AlertTriangle,
-  TrendingUp,
-  Eye,
-  FileJson,
-  FileCode,
-} = LucideIcons as any;
-import { Subsystem } from "../types";
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface InvestigationReport {
@@ -97,7 +84,7 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
         const data = await res.json();
         setReportDetails(data);
       }
-    } catch (e) {
+    } catch {
       console.error("Failed to fetch report details");
     } finally {
       setLoading(false);
@@ -202,7 +189,7 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
           )
         );
       }
-    } catch (e) {
+    } catch {
       console.error("Failed to generate summary");
     } finally {
       setLoading(false);
@@ -239,9 +226,9 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 font-mono p-0 sm:p-4 overflow-hidden">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-300 font-mono p-0 sm:p-4 overflow-hidden">
       <div
-        className={`relative w-full h-full sm:h-[90vh] sm:w-[95%] max-w-sm sm:max-w-2xl lg:max-w-7xl bg-black/40 backdrop-blur-xl border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-lg flex flex-col overflow-hidden`}
+        className={`relative w-full h-full sm:h-[90vh] sm:w-[95%] max-w-sm sm:max-w-2xl lg:max-w-7xl bg-black/40 glass-blur border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-lg flex flex-col overflow-hidden`}
         style={{
           boxShadow: `0 0 80px -20px ${themeHex}40`,
         }}
@@ -272,7 +259,7 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
               className={`p-1.5 sm:p-2 rounded border ${themeBorder}/50 ${themePrimary} flex-shrink-0`}
               style={{ backgroundColor: `${themeHex}1F` }}
             >
-              <FileText size={20} className="sm:size-6" />
+                <Icon name="FileText" size={20} className="sm:size-6" />
             </div>
             <div className="overflow-hidden">
               <h2 className="font-display text-base sm:text-xl font-bold text-white tracking-widest truncate">
@@ -290,7 +277,7 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
             onClick={onClose}
             className="relative z-50 p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0"
           >
-            <X size={20} className="sm:size-6" />
+            <Icon name="X" size={20} className="sm:size-6" />
           </button>
         </div>
 
@@ -305,7 +292,8 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
               className={`p-3 sm:p-4 border-b ${themeBorder}/30 flex-shrink-0`}
             >
               <div className="relative mb-3">
-                <Search
+                <Icon
+                  name="Search"
                   size={14}
                   className="absolute left-2 top-2.5 text-slate-500"
                 />
@@ -350,7 +338,8 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
                   >
                     <div className="flex items-center justify-between mb-1.5 sm:mb-2">
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <AlertTriangle
+                        <Icon
+                          name="AlertTriangle"
                           size={12}
                           className={`${getRiskColor(
                             report.riskScore
@@ -400,7 +389,8 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
                   style={{ backgroundColor: `${themeHex}1F` }}
                 >
                   <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
-                    <FileText
+                    <Icon
+                      name="FileText"
                       size={18}
                       className={`${themePrimary} flex-shrink-0`}
                     />
@@ -421,7 +411,7 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
                         className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 border ${themeBorder} ${themePrimary} text-[10px] sm:text-xs font-bold hover:opacity-80 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5`}
                         style={{ backgroundColor: `${themeHex}1F` }}
                       >
-                        <TrendingUp size={12} />{" "}
+                        <Icon name="Sparkles" size={12} />{" "}
                         <span className="sm:inline">SUMMARY</span>
                       </button>
                     )}
@@ -447,9 +437,9 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
                       }}
                     >
                       {exportFormat === "json" ? (
-                        <FileJson size={12} />
+                        <Icon name="FileJson" size={12} />
                       ) : (
-                        <FileCode size={12} />
+                        <Icon name="FileDown" size={12} />
                       )}
                       EXPORT
                     </button>
@@ -465,7 +455,7 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
                       <h4
                         className={`${themePrimary} font-bold mb-2 flex items-center gap-2`}
                       >
-                        <TrendingUp size={14} /> EXECUTIVE SUMMARY
+                        <Icon name="TrendingUp" size={14} /> EXECUTIVE SUMMARY
                       </h4>
                       <p className="text-slate-300 text-sm whitespace-pre-wrap">
                         {reportDetails.summary}
@@ -512,7 +502,7 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
                   {/* Findings */}
                   <div className="mb-6">
                     <h4 className="text-white font-bold mb-4 flex items-center gap-2">
-                      <Eye size={16} /> FINDINGS (
+                      <Icon name="Eye" size={16} /> FINDINGS (
                       {reportDetails.hits?.length || 0})
                     </h4>
                     <div className="space-y-3">
@@ -578,7 +568,7 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
             ) : (
               <div className="flex-1 flex items-center justify-center text-slate-600">
                 <div className="text-center">
-                  <FileText size={48} className="mx-auto mb-4 opacity-50" />
+                  <Icon name="FileText" size={48} className="mx-auto mb-4 opacity-50" />
                   <p className="text-sm">Select a report to view details</p>
                 </div>
               </div>

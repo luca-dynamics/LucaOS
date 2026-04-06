@@ -1,20 +1,6 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "./ui/Icon";
 import { NetworkNode } from "../types";
-const {
-  X,
-  Server,
-  Smartphone,
-  Router,
-  Database,
-  Laptop,
-  Activity,
-  RefreshCw,
-  Tv,
-  Printer,
-  Watch,
-  Wifi,
-} = LucideIcons as any;
 import { apiUrl } from "../config/api";
 import { getGlassStyle } from "../utils/glassStyles";
 
@@ -206,23 +192,23 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
   const getIcon = (type: string) => {
     switch (type) {
       case "ROUTER":
-        return <Router size={24} />;
+        return <Icon name="Wifi" size={24} variant="BoldDuotone" />;
       case "SERVER":
-        return <Server size={24} />;
+        return <Icon name="Server" size={24} variant="BoldDuotone" />;
       case "DB":
-        return <Database size={24} />;
+        return <Icon name="Database" size={24} variant="BoldDuotone" />;
       case "MOBILE":
-        return <Smartphone size={24} />;
+        return <Icon name="Smartphone" size={24} variant="BoldDuotone" />;
       case "LAPTOP":
-        return <Laptop size={24} />;
+        return <Icon name="Laptop" size={24} variant="BoldDuotone" />;
       case "TV":
-        return <Tv size={24} />;
+        return <Icon name="Monitor" size={24} variant="BoldDuotone" />;
       case "PRINTER":
-        return <Printer size={24} />;
+        return <Icon name="Settings" size={24} variant="BoldDuotone" />;
       case "WATCH":
-        return <Watch size={24} />;
+        return <Icon name="Watch" size={24} variant="BoldDuotone" />;
       default:
-        return <Wifi size={24} />; // Generic IOT
+        return <Icon name="Wifi" size={24} variant="BoldDuotone" />; // Generic IOT
     }
   };
 
@@ -250,7 +236,7 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/95 backdrop-blur-lg animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/95 glass-blur animate-in fade-in duration-300">
       <div
         className="relative w-[95%] max-w-5xl h-[85vh] rounded-lg flex flex-col overflow-hidden shadow-2xl"
         style={{
@@ -269,10 +255,12 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
           }}
         >
           <div className="flex items-center gap-4">
-            <Activity
+            <Icon
+              name="Activity"
               className="animate-pulse"
               size={24}
               style={{ color: themeColor }}
+              variant="BoldDuotone"
             />
             <div>
               <h2 className="font-display text-xl font-bold text-white tracking-widest">
@@ -295,7 +283,7 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors"
           >
-            <X size={24} />
+            <Icon name="Close" size={24} variant="BoldDuotone" />
           </button>
         </div>
 
@@ -314,7 +302,7 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
               className="flex h-full items-center justify-center font-mono text-xs gap-2"
               style={{ color: themeColor }}
             >
-              <RefreshCw className="animate-spin" size={16} /> MAPPING LOCAL
+              <Icon name="Restart" className="animate-spin" size={16} variant="BoldDuotone" /> MAPPING LOCAL
               SUBNET...
             </div>
           ) : (

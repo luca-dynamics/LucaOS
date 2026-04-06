@@ -1,6 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+ 
+ :root {
+   --app-text-main: #ffffff;
+   --app-text-muted: rgba(255, 255, 255, 0.7);
+   --app-border-main: rgba(255, 255, 255, 0.1);
+   --app-bg-tint: rgba(18, 18, 18, 0.3);
+ }
 
 html, body {
   margin: 0;
@@ -24,6 +31,20 @@ html, body {
     sans-serif;
 }
 
+.drag {
+  -webkit-app-region: drag !important;
+}
+
+.no-drag,
+button, 
+input, 
+textarea, 
+select, 
+a, 
+[role="button"] {
+  -webkit-app-region: no-drag !important;
+}
+
 #root {
   width: 100%;
   height: 100%;
@@ -31,20 +52,26 @@ html, body {
 
 /* Base Glass Utility */
 .glass-panel {
-  backdrop-filter: blur(var(--app-bg-blur, 12px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 12px));
-  background: rgba(18, 18, 18, var(--app-bg-opacity, 0.4)); /* Coupled to background transparency - Grey Base */
+  backdrop-filter: blur(var(--app-bg-blur, 40px));
+  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
+  background: rgba(18, 18, 18, var(--app-bg-opacity, 0.3)); /* Coupled to background transparency - Grey Base */
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
   position: relative;
   overflow: hidden;
 }
 
+/* Composable Blur Utility - Use this with any background */
+.glass-blur {
+  backdrop-filter: blur(var(--app-bg-blur, 40px));
+  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
+}
+
 /* Light Mode Glass Utility - Ultra-Translucent "Liquid" Aesthetic */
 .glass-panel-light {
-  backdrop-filter: blur(var(--app-bg-blur, 12px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 12px));
-  background: rgba(255, 255, 255, var(--app-bg-opacity, 0.5)); /* Coupled to background transparency */
+  backdrop-filter: blur(var(--app-bg-blur, 40px));
+  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
+  background: rgba(255, 255, 255, var(--app-bg-opacity, 0.3)); /* Coupled to background transparency */
   border: 1px solid rgba(0, 0, 0, 0.08); /* Sophisticated thin border */
   position: relative;
   overflow: hidden;
@@ -55,9 +82,9 @@ html, body {
 }
 
 .glass-card-light {
-  backdrop-filter: blur(var(--app-bg-blur, 12px));
-  -webkit-backdrop-filter: blur(var(--app-bg-blur, 12px));
-  background: rgba(255, 255, 255, var(--app-bg-opacity, 0.5));
+  backdrop-filter: blur(var(--app-bg-blur, 40px));
+  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
+  background: rgba(255, 255, 255, var(--app-bg-opacity, 0.3));
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.03);
 }
@@ -92,24 +119,7 @@ html, body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-.glass-panel-light::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(0, 0, 0, 0.1),
-    transparent
-  );
-  opacity: 0.3;
-  z-index: 1;
-  pointer-events: none;
-  animation: scan-vertical 6s linear infinite;
-}
+/* Scanline removed */
 
 /* Futuristic Technical Border */
 .tech-border {
@@ -145,9 +155,10 @@ html, body {
 
 .tech-border-light {
   position: relative;
-  border: 1px solid rgba(0, 0, 0, 0.15); /* Darker border */
+  border: 1px solid rgba(0, 0, 0, 0.25); /* Hardened light border for visibility */
 }
 
+/* Hardened Tactical corners for Light Mode */
 .tech-border-light::before,
 .tech-border-light::after {
   content: "";
@@ -156,42 +167,24 @@ html, body {
   height: 10px;
   pointer-events: none;
   z-index: 2;
-  opacity: 0.5;
+  opacity: 0.6; /* Slightly higher opacity */
 }
 
 .tech-border-light::before {
   top: -1px;
   left: -1px;
-  border-top: 1px solid currentColor;
-  border-left: 1px solid currentColor;
+  border-top: 1.5px solid rgba(0, 0, 0, 0.6); /* High-contrast black corner */
+  border-left: 1.5px solid rgba(0, 0, 0, 0.6);
 }
 
 .tech-border-light::after {
   bottom: -1px;
   right: -1px;
-  border-bottom: 1px solid currentColor;
-  border-right: 1px solid currentColor;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.6);
+  border-right: 1.5px solid rgba(0, 0, 0, 0.6);
 }
 
-/* Micro-Scanline Effect */
-.glass-panel::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 255, 255, 0.15),
-    transparent
-  );
-  opacity: 0.3;
-  z-index: 1;
-  pointer-events: none;
-  animation: scan-vertical 6s linear infinite;
-}
+/* Scanline removed */
 
 @keyframes scan-vertical {
   0% {
@@ -298,7 +291,9 @@ html, body {
 }
 
 .glass-card-premium {
-  @apply bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl;
+  @apply bg-[#0a0a0a]/60 border border-white/10 rounded-xl overflow-hidden shadow-2xl;
+  backdrop-filter: blur(var(--app-bg-blur, 40px));
+  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
   position: relative;
 }
 
@@ -312,4 +307,33 @@ html, body {
     transparent 60%
   );
   pointer-events: none;
+}
+
+/* Premium Pill Utility */
+.glass-pill {
+  @apply bg-white/[0.03] border border-white/[0.08] rounded-full shadow-[inset_0_0_20px_rgba(255,255,255,0.02)];
+  backdrop-filter: blur(var(--app-bg-blur, 40px));
+  -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
+}
+
+/* Status Glow Effects */
+.status-glow-emerald {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15), inset 0 0 10px rgba(16, 185, 129, 0.05);
+}
+
+.status-glow-amber {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15), inset 0 0 10px rgba(245, 158, 11, 0.05);
+}
+
+.status-glow-rose {
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.15), inset 0 0 10px rgba(244, 63, 94, 0.05);
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite;
 }

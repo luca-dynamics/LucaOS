@@ -1,36 +1,21 @@
-import React, { useEffect, useRef, useState } from "react";
-import * as LucideIcons from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-const {
-  X,
-  Aperture,
-  Target,
-  Crosshair,
-  Activity,
-  Check,
-  ShieldAlert,
-} = LucideIcons as any;
-import { soundService } from "../services/soundService";
+import { Icon } from "./ui/Icon";
 import { useMobile } from "../hooks/useMobile";
+import { soundService } from "../services/soundService";
 import { biometricService } from "../services/biometricService";
-import { setHexAlpha } from "../config/themeColors";
 
 interface Props {
   onClose: () => void;
   onCapture: (base64Image: string, vector?: number[]) => void;
   onLiveAnalyze?: (base64Image: string) => Promise<string>;
-  theme?: {
-    primary: string;
-    hex: string;
-  };
 }
 
 const VisionCameraModal: React.FC<Props> = ({
   onClose,
   onCapture,
   onLiveAnalyze,
-  theme,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -122,18 +107,18 @@ const VisionCameraModal: React.FC<Props> = ({
           
           if (vector && isMounted) {
             // Success: Increment progress
-            setScanProgress(prev => Math.min(prev + 1.8, 100)); // ~2% per successful frame
+            setScanProgress((prev: number) => Math.min(prev + 1.8, 100)); // ~2% per successful frame
             setDetectionFailureCount(0);
             lastVectorRef.current = vector;
             
             // Jitter the neural lock for visual tracking effect
-            setNeuralLock(prev => ({
+            setNeuralLock((prev: any) => ({
               ...prev,
               x: 50 + (Math.random() * 0.8 - 0.4),
               y: 42 + (Math.random() * 0.8 - 0.4)
             }));
           } else if (isMounted) {
-            setDetectionFailureCount(prev => prev + 1);
+            setDetectionFailureCount((prev: number) => prev + 1);
           }
         } catch (e) {
           console.warn("[BIO] Tracking glitch:", e);
@@ -232,11 +217,11 @@ const VisionCameraModal: React.FC<Props> = ({
             <div
               className={`flex items-center gap-2 transition-all duration-500`}
               style={{
-                color: isFaceScanning ? theme?.hex || "#fff" : (theme ? setHexAlpha(theme.hex, 0.8) : "#ffffff"),
-                textShadow: isFaceScanning ? `0 0 20px ${theme?.hex || "#fff"}` : (theme ? `0 0 10px ${setHexAlpha(theme.hex, 0.3)}` : "0 0 10px rgba(255,255,255,0.8)")
+                color: "#ffffff",
+                textShadow: isFaceScanning ? "0 0 20px #ffffff" : "0 0 10px rgba(255,255,255,0.8)"
               }}
             >
-              <Target size={isMobile ? 18 : 24} />
+              <Icon name="Target" size={isMobile ? 18 : 24} />
               <span className="text-[11px] md:text-sm tracking-[0.4em] font-black uppercase">
                 {isFaceScanning ? "SCANNING_IDENTITY_MATRIX" : "VISION UPLINK ACTIVE"}
               </span>
@@ -244,10 +229,9 @@ const VisionCameraModal: React.FC<Props> = ({
           </div>
           <button 
             onClick={onClose} 
-            className="pointer-events-auto p-3 rounded-full border text-white/60 hover:text-white hover:bg-white/10 backdrop-blur-md transition-all"
-            style={{ borderColor: theme ? setHexAlpha(theme.hex, 0.3) : "rgba(255,255,255,0.1)" }}
+            className="pointer-events-auto p-3 rounded-full border text-white/60 hover:text-white hover:bg-white/10 glass-blur transition-all border-white/10"
           >
-            <X size={isMobile ? 20 : 28} />
+            <Icon name="CloseCircle" size={isMobile ? 20 : 28} />
           </button>
         </div>
 
@@ -266,7 +250,7 @@ const VisionCameraModal: React.FC<Props> = ({
                   <motion.circle
                     cx="50%" cy="50%" r="48%"
                     fill="none"
-                    stroke={scanStatus === "success" ? "#22c55e" : (theme?.hex || "#fff")}
+                    stroke={scanStatus === "success" ? "var(--app-primary)" : "#ffffff"}
                     strokeWidth="6"
                     pathLength={100}
                     strokeDasharray="100 100"
@@ -279,17 +263,16 @@ const VisionCameraModal: React.FC<Props> = ({
                 {/* Scan HUD Elements */}
                 <div className="absolute inset-0 flex items-center justify-center">
                    {scanStatus === "success" ? (
-                      <div className="flex flex-col items-center gap-2 text-green-500">
-                        <Check size={48} className="animate-bounce" />
+                      <div className="flex flex-col items-center gap-2 text-[var(--app-primary)]">
+                        <Icon name="CheckCircle" size={48} className="animate-bounce" />
                         <span className="text-[10px] font-bold tracking-widest">VERIFIED</span>
                       </div>
                    ) : (
                       <div 
-                        className="relative w-full h-full border rounded-full flex items-center justify-center"
-                        style={{ borderColor: theme ? setHexAlpha(theme.hex, 0.2) : "rgba(255,255,255,0.05)" }}
+                        className="relative w-full h-full border rounded-full flex items-center justify-center border-white/10"
                       >
                          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 bg-black px-2 text-[8px] text-white/40">BIO_LOCK</div>
-                         {detectionFailureCount > 40 ? ( <div className="flex flex-col items-center gap-1 text-yellow-500 animate-pulse"> <ShieldAlert size={32} /> <span className="text-[8px] font-bold">LOW VISIBILITY</span> </div> ) : ( <Activity className="text-white/20 animate-pulse" size={40} /> )}
+                         {detectionFailureCount > 40 ? ( <div className="flex flex-col items-center gap-1 text-yellow-500 animate-pulse"> <Icon name="Danger" size={32} /> <span className="text-[8px] font-bold">LOW VISIBILITY</span> </div> ) : ( <Icon name="Activity" className="text-white/20 animate-pulse" size={40} /> )}
                       </div>
                    )}
                 </div>
@@ -298,12 +281,13 @@ const VisionCameraModal: React.FC<Props> = ({
             /* Traditional Crosshair Reticle (Idle) */
             <div 
               className={`w-48 h-48 md:w-80 md:h-80 border-2 rounded-2xl flex items-center justify-center transition-all duration-1000 ${hudGlow ? 'scale-110 opacity-100' : 'scale-90 opacity-0'}`}
-              style={{ borderColor: theme ? setHexAlpha(theme.hex, 0.3) : "rgba(255,255,255,0.1)" }}
+              style={{ borderColor: "rgba(255,255,255,0.3)" }}
             >
-               <Crosshair 
+               <Icon 
+                 name="Target"
                  className="animate-spin-slow" 
                  size={48} 
-                 style={{ color: theme ? setHexAlpha(theme.hex, 0.3) : "rgba(255,255,255,0.2)" }} 
+                 style={{ color: "rgba(255,255,255,0.3)" }} 
                />
             </div>
           )}
@@ -316,9 +300,9 @@ const VisionCameraModal: React.FC<Props> = ({
             disabled={analyzing || !cameraReady}
             className={`group relative flex items-center justify-center transition-all active:scale-90 ${!cameraReady ? "opacity-50" : ""}`}
           >
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 group-hover:scale-105 transition-all duration-300" style={{ borderColor: theme?.hex || "#fff" }}></div>
-            <div className={`absolute w-16 h-16 md:w-20 md:h-20 rounded-full transition-all shadow-inner shadow-black/20 ${isFaceScanning ? 'animate-ping' : ''}`} style={{ backgroundColor: theme?.hex || "#fff" }}></div>
-            <Aperture size={32} className="absolute text-black/40 group-hover:rotate-180 transition-all duration-700" />
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 group-hover:scale-105 transition-all duration-300" style={{ borderColor: "#ffffff" }}></div>
+            <div className={`absolute w-16 h-16 md:w-20 md:h-20 rounded-full transition-all shadow-inner shadow-black/20 ${isFaceScanning ? 'animate-ping' : ''}`} style={{ backgroundColor: "#ffffff" }}></div>
+            <Icon name="Aperture" size={32} className="absolute text-black/40 group-hover:rotate-180 transition-all duration-700" />
           </button>
         </div>
       </div>

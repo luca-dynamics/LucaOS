@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import * as LucideIcons from "lucide-react";
 import { ReactFlow,
   Background,
   Controls,
@@ -14,9 +13,7 @@ import { lucaWorkforce } from "../../services/agent/LucaWorkforce";
 import { GoalNode,
   AgentNode,
   TaskNode } from "./CustomNodes";
-const { Activity,
-  Maximize2,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { motion } from "framer-motion";
 
 const nodeTypes = {
@@ -143,7 +140,7 @@ const ProWorkforceCanvasInternal: React.FC<ProWorkforceCanvasProps> = ({ theme }
         <Controls showInteractive={false} className="!bg-black/50 !border-white/10" />
         
         <Panel position="top-right">
-          <div className="px-3 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 flex flex-col gap-0.5">
+          <div className="px-3 py-2 rounded-lg bg-black/60 glass-blur border border-white/10 flex flex-col gap-0.5">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[9px] font-bold text-white tracking-widest uppercase">LUCA WORKFORCE</span>
@@ -156,23 +153,23 @@ const ProWorkforceCanvasInternal: React.FC<ProWorkforceCanvasProps> = ({ theme }
 
         <Panel position="bottom-right">
           <div className="flex gap-2">
-            <button 
-              onClick={() => refreshGraph()}
-              className="p-2 rounded bg-black/60 border border-white/10 hover:bg-white/5 text-slate-400"
-            >
-              <Maximize2 size={14} />
-            </button>
+             <button 
+               onClick={() => refreshGraph()}
+               className="p-2 rounded bg-black/60 border border-white/10 hover:bg-white/5 text-slate-400"
+             >
+               <Icon name="Expand" size={14} variant="BoldDuotone" />
+             </button>
           </div>
         </Panel>
       </ReactFlow>
 
       {/* --- OVERLAY INTERFACE --- */}
-      <div className="absolute bottom-4 left-4 flex flex-col gap-2 z-[50]">
-        <div className="px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center gap-2 backdrop-blur-md">
-           <Activity size={12} className="text-blue-400" />
-           <span className="text-[9px] text-blue-400 font-bold tracking-widest">SYSTEM ACTIVITY</span>
-        </div>
-      </div>
+       <div className="absolute bottom-4 left-4 flex flex-col gap-2 z-[50]">
+         <div className="px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center gap-2 glass-blur">
+            <Icon name="Activity" size={12} className="text-blue-400" variant="BoldDuotone" />
+            <span className="text-[9px] text-blue-400 font-bold tracking-widest">SYSTEM ACTIVITY</span>
+         </div>
+       </div>
     </div>
   );
 };

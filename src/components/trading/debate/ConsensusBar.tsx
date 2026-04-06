@@ -1,13 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Trophy,
-  Clock,
-  Zap,
-  Target,
-  Activity,
-  CheckCircle2,
-} = LucideIcons as any;
+import { Icon } from "../../ui/Icon";
 import { DebateConsensus, TradeAction } from "../../../types/trading";
 
 interface ConsensusBarProps {
@@ -19,42 +11,42 @@ interface ConsensusBarProps {
 
 const ACTION_CONFIG: Record<
   string,
-  { color: string; bg: string; icon: React.ElementType; label: string }
+  { color: string; bg: string; iconName: string; label: string }
 > = {
   [TradeAction.OPEN_LONG]: {
     color: "text-emerald-400",
     bg: "bg-emerald-500/20",
-    icon: Zap,
+    iconName: "Zap",
     label: "LONG",
   },
   [TradeAction.OPEN_SHORT]: {
     color: "text-rose-400",
     bg: "bg-rose-500/20",
-    icon: Zap,
+    iconName: "Zap",
     label: "SHORT",
   },
   [TradeAction.HOLD]: {
-    color: "text-blue-400",
-    bg: "bg-blue-500/20",
-    icon: Target,
+    color: "text-cyan-400",
+    bg: "bg-cyan-500/20",
+    iconName: "Target",
     label: "HOLD",
   },
   [TradeAction.WAIT]: {
     color: "text-slate-400",
     bg: "bg-slate-500/20",
-    icon: Clock,
+    iconName: "Clock",
     label: "WAIT",
   },
   [TradeAction.CLOSE_LONG]: {
     color: "text-amber-400",
     bg: "bg-amber-500/20",
-    icon: Target,
+    iconName: "Target",
     label: "CLOSE",
   },
   [TradeAction.CLOSE_SHORT]: {
     color: "text-amber-400",
     bg: "bg-amber-500/20",
-    icon: Target,
+    iconName: "Target",
     label: "CLOSE",
   },
 };
@@ -68,18 +60,18 @@ export default function ConsensusBar({
   // If no consensus yet or voting in progress
   if (!consensus) {
     return (
-      <div className="p-4 border-t border-white/5 bg-slate-900/80 backdrop-blur-md flex items-center justify-between">
+      <div className="p-3 border-t border-white/5 bg-[#0a0a0a]/80 flex items-center justify-between transition-colors shadow-2xl">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Clock className="text-amber-500" size={20} />
+            <Icon name="Clock" size={16} className="text-amber-500/80" variant="BoldDuotone" />
             <div className="absolute inset-0 bg-amber-500 blur-sm opacity-20 animate-pulse" />
           </div>
-          <span className="text-slate-300 font-bold tracking-wider text-sm animate-pulse">
-            AWAITING FINAL CONSENSUS...
+          <span className="text-slate-500 font-bold tracking-[0.2em] text-[10px] animate-pulse">
+            Awaiting final multi-agent consensus...
           </span>
         </div>
-        <div className="text-xs text-slate-500 font-mono bg-slate-800/50 px-2 py-1 rounded">
-          DEBATE_IN_PROGRESS
+        <div className="text-[9px] text-slate-600 font-mono bg-white/5 border border-white/5 px-2 py-0.5 rounded tracking-tighter">
+          Voting Phase Active
         </div>
       </div>
     );
@@ -95,117 +87,90 @@ export default function ConsensusBar({
     !isExecuted;
 
   return (
-    <div className="p-4 border-t border-white/5 bg-[#161b22] flex items-center gap-6 sticky bottom-0 z-20 shadow-[-10px_-10px_30px_rgba(0,0,0,0.5)]">
-      {/* Label */}
-      <div className="flex items-center gap-3">
-        <div className="bg-yellow-500/20 p-2 rounded-lg border border-yellow-500/30">
-          <Trophy size={20} className="text-yellow-500" />
-        </div>
-        <div>
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-            AI Consensus
-          </div>
-          <div className="text-sm font-bold text-white uppercase flex items-center gap-2">
-            {consensus.hasConsensus ? "Agreed" : "Divided"}
-          </div>
+    <div className="px-4 py-2 border-t border-white/5 bg-[#0a0a0a] flex items-center gap-4 sticky bottom-0 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
+      {/* Consensus Label & Symbol */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Icon name="Cup" size={16} className="text-[#facc15]" variant="BoldDuotone" />
+        <span className="text-[11px] text-slate-500 font-medium">Consensus:</span>
+        <span className="text-[13px] font-black text-[#facc15] font-mono tracking-tight">
+          {consensus?.symbol || "---"}
+        </span>
+      </div>
+
+      {/* Action Badge */}
+      <div className="flex-shrink-0">
+        <div
+          className={`px-2 py-0.5 rounded-[4px] text-[10px] font-black flex items-center gap-1.5 transition-all ${actionConfig.bg} ${actionConfig.color}`}
+        >
+          <Icon name={actionConfig.iconName} size={11} className="opacity-80" variant="BoldDuotone" />
+          {actionConfig.label}
         </div>
       </div>
 
-      {/* Decision Summary */}
-      <div className="flex-1 flex items-center gap-6 px-6 border-l border-white/5 border-r border-white/5">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-bold text-white font-mono tracking-tight">
-            {consensus.symbol}
-          </span>
-          <span
-            className={`px-3 py-1 rounded text-sm font-bold flex items-center gap-2 ${actionConfig.bg} ${actionConfig.color}`}
-          >
-            <actionConfig.icon size={16} />
-            {actionConfig.label}
-          </span>
-        </div>
+      {/* HUD Metrics - Inline NoFx Style */}
+      <div className="flex-1 flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar ml-2">
+        <Metric
+          label="Confidence"
+          value={`${consensus.confidence}%`}
+          color="text-[#facc15]"
+        />
 
-        {/* Metrics Grid */}
-        <div className="flex gap-6 text-xs font-mono ml-auto mr-4">
+        {consensus.leverage > 0 && (
           <Metric
-            label="CONFIDENCE"
-            value={`${consensus.confidence}%`}
-            color="text-amber-400"
+            label="Leverage"
+            value={`${consensus.leverage}x`}
+            color="text-white"
           />
+        )}
 
-          {consensus.leverage > 0 && (
-            <Metric
-              label="LEVERAGE"
-              value={`${consensus.leverage}x`}
-              color="text-white"
-            />
-          )}
-
-          {consensus.positionPct > 0 && (
-            <Metric
-              label="SIZE"
-              value={`${(consensus.positionPct * 100).toFixed(0)}%`}
-              color="text-white"
-            />
-          )}
-
-          {/* Spread Metric (New) */}
+        {consensus.positionPct > 0 && (
           <Metric
-            label="SPREAD"
-            value={consensus.spread ? `${consensus.spread}%` : "0.08%"}
-            color="text-slate-400" // Spread is usually neutral
+            label="Position"
+            value={`${(consensus.positionPct * 100).toFixed(0)}%`}
+            color="text-white"
           />
+        )}
 
-          {(consensus.stopLoss > 0 || consensus.takeProfit > 0) && (
-            <div className="w-px h-8 bg-slate-800 mx-2" />
-          )}
+        {consensus.stopLoss > 0 && (
+          <Metric
+            label="SL"
+            value={`${(consensus.stopLoss * 100).toFixed(1)}%`}
+            color="text-rose-400"
+          />
+        )}
 
-          {consensus.stopLoss > 0 && (
-            <Metric
-              label="SL"
-              value={`${(consensus.stopLoss * 100).toFixed(1)}%`}
-              color="text-rose-400"
-            />
-          )}
-
-          {consensus.takeProfit > 0 && (
-            <Metric
-              label="TP"
-              value={`${(consensus.takeProfit * 100).toFixed(1)}%`}
-              color="text-emerald-400"
-            />
-          )}
-        </div>
+        {consensus.takeProfit > 0 && (
+          <Metric
+            label="TP"
+            value={`${(consensus.takeProfit * 100).toFixed(1)}%`}
+            color="text-emerald-400"
+          />
+        )}
       </div>
 
-      {/* Action Button */}
-      <div>
+      {/* Action Status / Button */}
+      <div className="flex-shrink-0">
         {isExecuted ? (
-          <div className="px-6 py-2 bg-emerald-500/10 text-emerald-400 rounded-lg font-bold border border-emerald-500/30 flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-            <CheckCircle2 size={18} />
-            <div className="flex flex-col leading-none">
-              <span className="text-xs font-extrabold tracking-wider">
-                EXECUTED
-              </span>
-              <span className="text-[10px] opacity-70">CONFIRMED ON-CHAIN</span>
-            </div>
+          <div className="flex items-center gap-2 text-emerald-400 text-[11px] font-black tracking-tight">
+            <Icon name="CheckCircle" size={14} className="stroke-[3px]" variant="BoldDuotone" />
+            Executed
           </div>
         ) : canExecute ? (
           <button
             onClick={onExecute}
             disabled={isExecuting}
-            className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black font-bold rounded-lg shadow-lg shadow-yellow-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-black font-black rounded-[4px] text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 group shadow-[0_0_15px_rgba(234,179,8,0.2)]"
           >
             {isExecuting ? (
-              <Clock className="animate-spin" size={18} />
+              <Icon name="Activity" className="animate-spin" size={12} variant="BoldDuotone" />
             ) : (
-              <Zap size={18} fill="currentColor" />
+              <Icon name="Zap" size={12} variant="BoldDuotone" />
             )}
-            EXECUTE TRADE
+            Execute
           </button>
         ) : (
-          <div className="px-6 py-3 bg-slate-800 text-slate-500 rounded-lg font-bold border border-slate-700 cursor-not-allowed opacity-50">
-            AWAITING SIGNAL
+          <div className="px-5 py-1.5 bg-white/5 text-slate-600 rounded-[4px] border border-white/5 text-[10px] font-black tracking-widest opacity-40 italic">
+            WAITING...
           </div>
         )}
       </div>
@@ -222,10 +187,13 @@ const Metric = ({
   value: string;
   color: string;
 }) => (
-  <div className="flex flex-col">
-    <span className="text-slate-600 text-[9px] font-bold uppercase mb-0.5">
+  <div className="flex items-center gap-1.5 flex-shrink-0">
+    <span className="text-slate-500 text-[10px] font-medium tracking-tight">
       {label}
     </span>
-    <span className={`font-bold ${color}`}>{value}</span>
+    <span className={`text-[11px] font-bold font-mono tracking-tight ${color}`}>
+      {value}
+    </span>
   </div>
 );
+

@@ -86,6 +86,124 @@ export class OpenAIAdapter implements LLMProvider {
 
   // ... constructor ...
 
+  async chatStream(
+    messages: ChatMessage[],
+    onChunk: (text: string) => void,
+    images?: string[],
+    systemInstruction?: string,
+    tools?: any[],
+    abortSignal?: AbortSignal,
+  ): Promise<LLMResponse> {
+    const openAIMessages: any[] = messages.map((msg, index) => {
+      const isLast = index === messages.length - 1;
+
+      if (msg.role === "tool") {
+        return {
+          role: "tool",
+          tool_call_id: msg.toolCallId,
+          content: msg.content,
+        };
+      }
+      if (msg.role === "model") {
+        const m: any = { role: "assistant" };
+        if (msg.content) m.content = msg.content;
+        if (msg.toolCalls) {
+          m.tool_calls = msg.toolCalls.map((tc) => ({
+            id: tc.id,
+            type: "function",
+            function: {
+              name: tc.name,
+              arguments: JSON.stringify(tc.args),
+            },
+          }));
+        }
+        return m;
+      }
+
+      const contentArray: any[] = [];
+      if (msg.content) contentArray.push({ type: "text", text: msg.content });
+      if (isLast && images && images.length > 0) {
+        images.forEach((img) => {
+          contentArray.push({
+            type: "image_url",
+            image_url: { url: `data:image/jpeg;base64,${img}` },
+          });
+        });
+      }
+      return { role: msg.role, content: contentArray };
+    });
+
+    if (systemInstruction) {
+      openAIMessages.unshift({ role: "system", content: systemInstruction });
+    }
+
+    const stream = await this.client.chat.completions.create({
+      model: this.modelName,
+      messages: openAIMessages as any,
+      stream: true,
+      tools:
+        tools && tools.length > 0
+          ? (tools.map((t) => ({
+              type: "function",
+              function: {
+                name: t.name,
+                description: t.description,
+                parameters: t.parameters,
+              },
+            })) as any)
+          : undefined,
+    });
+
+    let fullText = "";
+    const toolCalls: ToolCall[] = [];
+    const tempToolCalls: Record<number, any> = {};
+
+    for await (const chunk of stream) {
+      if (abortSignal?.aborted) break;
+
+      const delta = chunk.choices[0]?.delta;
+      if (!delta) continue;
+
+      if (delta.content) {
+        fullText += delta.content;
+        onChunk(delta.content);
+      }
+
+      if (delta.tool_calls) {
+        delta.tool_calls.forEach((tc: any) => {
+          if (!tempToolCalls[tc.index]) {
+            tempToolCalls[tc.index] = {
+              id: tc.id,
+              name: tc.function.name,
+              args: "",
+            };
+          }
+          if (tc.function.arguments) {
+            tempToolCalls[tc.index].args += tc.function.arguments;
+          }
+        });
+      }
+    }
+
+    // Finalize tool calls
+    Object.values(tempToolCalls).forEach((tc) => {
+      try {
+        toolCalls.push({
+          id: tc.id,
+          name: tc.name,
+          args: JSON.parse(tc.args),
+        });
+      } catch (e) {
+        console.error("[OpenAIAdapter] Failed to parse tool arguments:", e);
+      }
+    });
+
+    return {
+      text: fullText,
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+    };
+  }
+
   async chat(
     messages: ChatMessage[],
     images?: string[],
@@ -200,6 +318,21 @@ export class OpenAIAdapter implements LLMProvider {
     } catch (e) {
       console.error("[OpenAIAdapter] Batch embedding failed:", e);
       return [];
+    }
+  }
+
+  async validateKey(): Promise<{ valid: boolean; message: string; details?: any }> {
+    try {
+      // Use models.list() as a lightweight way to verify the key/base URL
+      await this.client.models.list();
+      return { valid: true, message: `${this.name} API key/routing is valid.` };
+    } catch (e: any) {
+      console.error(`[${this.name}Adapter] Validation failed:`, e);
+      return {
+        valid: false,
+        message: e.message || `Failed to validate ${this.name} API key.`,
+        details: e,
+      };
     }
   }
 }

@@ -30,10 +30,15 @@ export interface LLMProvider {
     systemInstruction?: string,
     tools?: any[]
   ): Promise<LLMResponse>;
-  streamContent(
-    prompt: string,
-    onToken: (text: string) => void
-  ): Promise<string>;
+  chatStream(
+    messages: ChatMessage[],
+    onChunk: (text: string) => void,
+    images?: string[],
+    systemInstruction?: string,
+    tools?: any[],
+    abortSignal?: AbortSignal,
+  ): Promise<LLMResponse>;
   embed?(text: string): Promise<number[]>;
   embedBatch?(texts: string[]): Promise<number[][]>;
+  validateKey(): Promise<{ valid: boolean; message: string; details?: any }>;
 }

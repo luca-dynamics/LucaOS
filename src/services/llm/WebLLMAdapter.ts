@@ -167,6 +167,7 @@ class WebLLMAdapterService implements LLMProvider {
     systemInstruction?: string,
     _tools?: any[]
   ): Promise<LLMResponse> {
+    void _tools;
     if (!this.isReady()) {
       return {
         text: "WebLLM engine not initialized. Please download and activate a model first.",
@@ -174,9 +175,6 @@ class WebLLMAdapterService implements LLMProvider {
     }
 
     try {
-      const model = modelRegistry.getModel(this.currentModelId!);
-      const template = model?.chatTemplate || "chatml";
-
       // Format messages for the model
       const formattedMessages = [
         ...(systemInstruction
@@ -224,6 +222,24 @@ class WebLLMAdapterService implements LLMProvider {
         text: `WebLLM Error: ${error.message}`,
       };
     }
+  }
+
+  async chatStream(
+    messages: ChatMessage[],
+    onChunk: (text: string) => void,
+    images?: string[],
+    systemInstruction?: string,
+    tools?: any[],
+    _abortSignal?: AbortSignal,
+  ): Promise<LLMResponse> {
+    void _abortSignal;
+    const response = await this.chat(messages, images, systemInstruction, tools);
+    onChunk(response.text);
+    return response;
+  }
+
+  async validateKey(): Promise<{ valid: boolean; message: string; details?: any }> {
+    return { valid: true, message: "Local model does not require API key" };
   }
 }
 

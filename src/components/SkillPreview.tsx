@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Code,
-  Play,
-  Eye,
-  Loader,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { CustomSkill } from "../types";
 
 interface Props {
@@ -49,9 +42,9 @@ const SkillPreview: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 glass-blur p-0 sm:p-4 animate-in fade-in duration-300">
       <div
-        className="bg-black/95 backdrop-blur-2xl rounded-none sm:rounded-xl w-full sm:max-w-4xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto flex flex-col"
+        className="bg-black/95 glass-blur rounded-none sm:rounded-xl w-full sm:max-w-4xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto flex flex-col"
         style={{
           border: `1px solid ${themeColors.border}`,
           boxShadow: `0 0 50px ${themeColors.glow}`,
@@ -59,7 +52,7 @@ const SkillPreview: React.FC<Props> = ({
       >
         {/* Header */}
         <div
-          className="sticky top-0 z-30 backdrop-blur-xl border-b p-4 sm:p-6 flex items-center justify-between flex-shrink-0"
+          className="sticky top-0 z-30 glass-blur border-b p-4 sm:p-6 flex items-center justify-between flex-shrink-0"
           style={{
             borderColor: themeColors.border,
             background: `linear-gradient(to right, rgba(0,0,0,0.9), ${themeColors.bgTint})`,
@@ -73,7 +66,8 @@ const SkillPreview: React.FC<Props> = ({
                 border: `1px solid ${themeColors.border}`,
               }}
             >
-              <Eye
+              <Icon
+                name="Eye"
                 size={20}
                 className="sm:size-6"
                 style={{ color: themeColors.accent }}
@@ -92,7 +86,8 @@ const SkillPreview: React.FC<Props> = ({
             onClick={onClose}
             className="relative z-50 p-2 hover:bg-white/10 rounded-lg transition-all flex-shrink-0 ml-2 cursor-pointer active:scale-95"
           >
-            <X
+            <Icon
+              name="X"
               size={20}
               className="sm:size-6 text-slate-400 hover:text-white"
             />
@@ -139,7 +134,7 @@ const SkillPreview: React.FC<Props> = ({
               className="text-xs sm:text-sm font-bold mb-2 flex items-center gap-2"
               style={{ color: themeColors.accent }}
             >
-              <Code size={14} className="sm:w-4 sm:h-4" />
+              <Icon name="Code" size={16} />
               CODE
             </div>
             <div
@@ -161,7 +156,7 @@ const SkillPreview: React.FC<Props> = ({
               className="text-sm font-bold mb-3 flex items-center gap-2"
               style={{ color: themeColors.accent }}
             >
-              <Play size={16} />
+              <Icon name="Play" size={16} />
               TEST EXECUTION
             </div>
 
@@ -218,12 +213,12 @@ const SkillPreview: React.FC<Props> = ({
             >
               {isExecuting ? (
                 <>
-                  <Loader className="animate-spin" size={16} />
+                  <Icon name="Loader" className="animate-spin" size={16} />
                   Running...
                 </>
               ) : (
                 <>
-                  <Play size={16} />
+                  <Icon name="Play" size={16} />
                   Run Test
                 </>
               )}

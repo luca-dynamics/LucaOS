@@ -1,39 +1,15 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Activity,
-  Eye,
-  Lock,
-  Cpu,
-  Box,
-  BrainCircuit,
-  Globe,
-  Shield,
-  Monitor,
-  TrendingUp,
-  Brain,
-  FileText,
-  Download,
-  Code2,
-  BarChart3,
-  Smartphone,
-  Wallet,
-  Landmark,
-  Search,
-  ShieldAlert,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import SystemMonitor from "../SystemMonitor";
 import SmartDeviceCard from "../SmartDeviceCard";
 import { soundService } from "../../services/soundService";
-import { getGlassStyle } from "../../utils/uiUtils";
 import { apiUrl } from "../../config/api";
-import { setHexAlpha } from "../../config/themeColors";
 
 interface OperationsSidebarProps {
-  theme: any;
   isMobile: boolean;
   activeMobileTab: string;
   isListeningAmbient: boolean;
+  theme?: any;
   setWirelessTab: (tab: "BLUETOOTH" | "WIFI") => void;
   setShowWirelessManager: (show: boolean) => void;
   setShowNetworkMap: (show: boolean) => void;
@@ -66,7 +42,6 @@ interface OperationsSidebarProps {
 }
 
 const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
-  theme,
   isMobile,
   activeMobileTab,
   isListeningAmbient,
@@ -104,114 +79,69 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             ? "flex w-full"
             : "hidden"
           : "flex"
-      } flex-col h-full overflow-hidden ${
-        theme.themeName?.toLowerCase() === "lucagent"
-          ? "glass-panel-light tech-border-light"
-          : "glass-panel tech-border"
-      } ${theme.primary} z-10`}
-      style={
-        !isMobile
-          ? {
-              borderRight: `1px solid ${setHexAlpha(theme.hex, 0.2)}`,
-              background:
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "rgba(255, 255, 255, 0.5)"
-                  : "rgba(0, 0, 0, var(--app-bg-opacity, 0.4))",
-            }
-          : {}
-      }
+      } flex-col h-full overflow-hidden tech-border z-10 glass-blur bg-[var(--app-bg-tint)] border-r border-[var(--app-border-main)]`}
     >
       {/* Mobile Header for System Panel */}
       {isMobile && (
         <div
-          className={`flex items-center justify-between p-4 border-b ${theme.border}/50`}
+          className={`flex items-center justify-between p-4 border-b border-[var(--app-border-main)]`}
         >
-          <h2 className={`${theme.primary} font-bold tracking-widest text-sm`}>
-            SYSTEM CONTROL
+          <h2 className="text-[var(--app-text-main)] font-black tracking-[0.3em] text-xs italic uppercase">
+            System Control
           </h2>
         </div>
       )}
 
       {/* System Monitor Area */}
       <div
-        className={`flex-none h-[28%] p-4 bg-transparent`}
-        style={{ borderBottom: `1px solid ${setHexAlpha(theme.hex, 0.2)}` }}
+        className={`flex-none h-[28%] p-4 bg-transparent border-b border-[var(--app-border-main)]`}
       >
         <SystemMonitor
           audioListenMode={isListeningAmbient}
           connected={connectionTier !== "OFFLINE"}
           connectionTier={connectionTier}
-          theme={theme}
         />
       </div>
 
       {/* Devices & Ops Grid */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div className="flex-1 p-4 overflow-y-auto space-y-6 no-scrollbar">
         {/* Agent Operations */}
         <div
-          className={`p-4 rounded-md relative overflow-hidden group border`}
-          style={{
-            ...getGlassStyle(theme, false),
-            background:
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.3))" 
-                : "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.25) * 0.3))", 
-          }}
+          className="p-5 rounded-xl relative overflow-hidden group border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] shadow-xl animate-in slide-in-from-left duration-700"
         >
-          <div className={`absolute top-0 right-0 p-1 ${theme.primary}`}>
-            <Activity size={12} />
+          <div 
+            className="absolute top-0 right-0 p-3 opacity-30 text-[var(--app-text-main)]"
+          >
+            <Icon name="Pulse" size={14} variant="BoldDuotone" />
           </div>
           <div
-            className={`flex items-center gap-2 mb-3 opacity-90 ${theme.primary}`}
+            className="flex items-center gap-3 mb-5 text-[var(--app-text-main)]"
           >
-            <Eye size={16} />
-            <h2 className="font-display font-bold tracking-widest text-sm">
-              LUCA OPS
+            <Icon name="EyeScan" size={18} variant="BoldDuotone" className="opacity-70" />
+            <h2 className="font-black tracking-[0.2em] text-xs italic uppercase">
+              Luca Ops
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => {
                 setWirelessTab("BLUETOOTH");
                 setShowWirelessManager(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`p-2 sm:p-3 min-h-[60px] sm:min-h-[50px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.3)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color =
-                  theme.themeName?.toLowerCase() === "lucagent" ? theme.hex : "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation border rounded-xl tech-border glass-blur bg-black/40 border-[var(--app-border-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95"
             >
-              <span className="text-[10px] tracking-wider transition-colors text-slate-500">
-                WIRELESS
+              <span className="text-[9px] font-black tracking-[0.2em] text-[var(--app-text-muted)] opacity-50 uppercase">
+                Wireless
               </span>
               <span
-                className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"}`}
+                className={`text-xs font-black text-[var(--app-text-main)] tracking-tight uppercase`}
               >
-                INTERCEPT
+                Intercept
               </span>
-              <div className="h-0.5 w-full bg-slate-800 mt-1 overflow-hidden">
+              <div className="h-0.5 w-full bg-[var(--app-border-main)] mt-2 overflow-hidden rounded-full">
                 <div
-                  className={`h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-300 ${theme.bg.replace(
-                    "dim",
-                    "500",
-                  )}`}
+                  className={`h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 bg-[var(--app-text-main)] opacity-30`}
                 ></div>
               </div>
             </button>
@@ -220,42 +150,19 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowNetworkMap(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`p-2 sm:p-3 min-h-[60px] sm:min-h-[50px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.3)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color =
-                  theme.themeName?.toLowerCase() === "lucagent" ? theme.hex : "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation border rounded-xl tech-border glass-blur bg-black/40 border-[var(--app-border-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95"
             >
-              <span className="text-[10px] tracking-wider transition-colors text-slate-500">
-                TOPOLOGY
+              <span className="text-[9px] font-black tracking-[0.2em] text-[var(--app-text-muted)] opacity-50 uppercase">
+                Topology
               </span>
               <span
-                className={`text-xs font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"}`}
+                className={`text-xs font-black text-[var(--app-text-main)] tracking-tight uppercase`}
               >
-                NET MAP
+                Net Map
               </span>
-              <div className="h-0.5 w-full bg-slate-800 mt-1 overflow-hidden">
+              <div className="h-0.5 w-full bg-[var(--app-border-main)] mt-2 overflow-hidden rounded-full">
                 <div
-                  className={`h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-300 ${theme.bg.replace(
-                    "dim",
-                    "500",
-                  )}`}
+                  className={`h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 bg-[var(--app-text-main)] opacity-30`}
                 ></div>
               </div>
             </button>
@@ -263,45 +170,29 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             {/* MANUAL LOCKDOWN TRIGGER */}
             <button
               onClick={() => executeTool("initiateLockdown", {})}
-              className={`col-span-2 p-2 flex items-center justify-center gap-2 transition-all group/btn`}
-              style={{
-                ...getGlassStyle(theme, false, true),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.3)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ef4444";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className={`col-span-2 py-3.5 flex items-center justify-center gap-3 transition-all group/btn border rounded-xl tech-border glass-blur bg-red-500/5 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 hover:scale-[1.02] active:scale-95`}
             >
-              <Lock
-                size={12}
-                className="text-red-500 group-hover/btn:animate-pulse"
+              <Icon
+                name="Lock"
+                size={14}
+                color="#ef4444"
+                className="group-hover/btn:animate-bounce transition-all"
+                variant="BoldDuotone"
               />
-              <span className="text-xs font-bold text-red-500 tracking-widest">
-                INITIATE LOCKDOWN
+              <span className="text-[11px] font-black text-red-500 tracking-[0.3em] uppercase italic">
+                Initiate Lockdown
               </span>
             </button>
           </div>
         </div>
 
-        <div>
+        <div className="space-y-4 animate-in slide-in-from-left duration-700 delay-100">
           <div
-            className={`flex items-center gap-2 mb-4 opacity-80 ${theme.primary}`}
+            className="flex items-center gap-3 mb-2 text-[var(--app-text-main)] opacity-70"
           >
-            <Cpu size={16} />
-            <h2 className="font-display font-bold tracking-widest">
-              LUCA FACILITY CONTROL
+            <Icon name="Cpu" size={18} variant="BoldDuotone" />
+            <h2 className="font-black tracking-[0.2em] text-xs italic uppercase">
+              Facility Control
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -310,54 +201,31 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 key={device.id}
                 device={device}
                 onControlClick={handleDeviceControlClick}
-                themeColor={theme.primary}
-                themeBorder={theme.border}
-                themeBg={theme.bg}
-                themeName={theme.themeName}
               />
             ))}
           </div>
         </div>
 
         {/* Luca Expansion Section */}
-        <div className="animate-in fade-in slide-in-from-left duration-500">
+        <div className="space-y-4 animate-in slide-in-from-left duration-700 delay-200">
           <div
-            className={`flex items-center gap-2 mb-4 opacity-80 ${theme.primary}`}
+            className="flex items-center gap-3 mb-2 text-[var(--app-text-main)] opacity-70"
           >
-            <Box size={16} />
-            <h2 className="font-display font-bold tracking-widest">
-              LUCA EXPANSION
+            <Icon name="Widget" size={18} variant="BoldDuotone" />
+            <h2 className="font-black tracking-[0.2em] text-xs italic uppercase">
+              Expansion Matrix
             </h2>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             <button
               onClick={() => {
                 setShowSkillsMatrix(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <BrainCircuit size={14} />
-              SKILLS
+              <Icon name="MagicStick" size={16} variant="BoldDuotone" />
+              Skills
             </button>
             <button
               onClick={() => {
@@ -372,29 +240,10 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 });
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Globe size={14} />
-              SOVEREIGNTY
+              <Icon name="Earth" size={16} variant="BoldDuotone" />
+              Sovereignty
             </button>
             <button
               onClick={() => {
@@ -412,58 +261,20 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 });
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Shield size={14} />
-              SECURITY
+              <Icon name="Shield" size={16} variant="BoldDuotone" />
+              Security
             </button>
             <button
               onClick={() => {
                 setShowAppExplorer(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Box size={14} />
-              APPS
+              <Icon name="Widget" size={16} variant="BoldDuotone" />
+              Apps
             </button>
             <button
               onClick={() => {
@@ -484,29 +295,10 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                   console.warn("Visual Core window requires Electron");
                 }
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Monitor size={14} />
-              SCREEN
+              <Icon name="Monitor" size={16} variant="BoldDuotone" />
+              Screen
             </button>
             <button
               onClick={(e) => {
@@ -514,29 +306,10 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 soundService.play("KEYSTROKE");
                 setShowLucaRecorder(true);
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Eye size={14} />
-              TRAIN
+              <Icon name="EyeScan" size={16} variant="BoldDuotone" />
+              Train
             </button>
             <button
               onClick={() => {
@@ -544,84 +317,27 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowStockTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <TrendingUp size={10} /> STOCK MARKET FEED
+              <Icon name="Chart" size={14} variant="BoldDuotone" /> Stock Feed
             </button>
             <button
               onClick={() => {
                 setShowTradingTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Brain size={10} /> AI TRADING
+              <Icon name="MagicStick" size={14} variant="BoldDuotone" /> AI Trading
             </button>
             <button
               onClick={() => {
                 setShowSubsystemDashboard(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Activity size={10} /> SUBSYSTEMS
+              <Icon name="Pulse" size={14} variant="BoldDuotone" /> Subsystems
             </button>
 
             <button
@@ -629,28 +345,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowInvestigationReports(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <FileText size={10} /> REPORTS
+              <Icon name="Notes" size={14} variant="BoldDuotone" /> Reports
             </button>
 
             <button
@@ -658,28 +355,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowIngestionModal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors animate-pulse`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20 animate-pulse"
             >
-              <Download size={10} /> IMPORT MODULE
+              <Icon name="Import" size={14} variant="BoldDuotone" /> Import
             </button>
 
             <button
@@ -687,28 +365,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowCodeEditor(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Code2 size={10} /> LUCA IDE
+              <Icon name="Programming" size={14} variant="BoldDuotone" /> IDE
             </button>
 
             <button
@@ -716,28 +375,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowPredictionTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 sm:px-3 sm:py-2 min-h-[44px] rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors touch-manipulation`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.15)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <BarChart3 size={10} /> PREDICTIONS
+              <Icon name="Chart" size={14} variant="BoldDuotone" /> Prediction
             </button>
 
             <button
@@ -745,28 +385,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowLucaLinkModal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors animate-pulse`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.7)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/20 hover:scale-105 active:scale-95 shadow-lg shadow-black/20 border-white/20 animate-pulse"
             >
-              <Smartphone size={10} /> LINK BRIDGE
+              <Icon name="Smartphone" size={14} variant="BoldDuotone" /> Link Bridge
             </button>
 
             <button
@@ -774,28 +395,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowCryptoTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.7)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Wallet size={10} /> DEFI WALLET
+              <Icon name="Wallet" size={14} variant="BoldDuotone" /> DeFi
             </button>
 
             <button
@@ -803,28 +405,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowForexTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.7)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Landmark size={10} /> FX DESK
+              <Icon name="Bank" size={14} variant="BoldDuotone" /> FX
             </button>
 
             <button
@@ -832,29 +415,9 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowOsintDossier(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.7)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color =
-                  theme.themeName?.toLowerCase() === "lucagent" ? theme.hex : "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-                e.currentTarget.style.color = "";
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <Search size={10} /> OSINT
+              <Icon name="Search" size={14} variant="BoldDuotone" /> OSINT
             </button>
 
             <button
@@ -862,53 +425,21 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowHackingTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors`}
-              style={{
-                ...getGlassStyle(theme, false),
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.7)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }}
-              onMouseEnter={(e) => {
-                const style = getGlassStyle(theme, true);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-              }}
-              onMouseLeave={(e) => {
-                const style = getGlassStyle(theme, false);
-                e.currentTarget.style.borderColor = style.borderColor;
-                e.currentTarget.style.boxShadow = style.boxShadow;
-              }}
+              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-red-500/20 hover:border-red-500/40 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
             >
-              <ShieldAlert size={10} /> ETHICAL HACKING
+              <Icon name="Shield" size={14} variant="BoldDuotone" color="#ef4444" /> Ethical Hacking
             </button>
 
             {installedModules.map((mod, i) => (
               <div
                 key={i}
-                className={`${theme.bg} border ${theme.border} ${theme.primary} px-3 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-2 group transition-colors`}
-                style={{
-                  ...getGlassStyle(theme, false),
-                  background:
-                    theme.themeName?.toLowerCase() === "lucagent"
-                      ? "rgba(255, 255, 255, 0.7)"
-                      : "rgba(0, 0, 0, 0.25)",
-                }}
-                onMouseEnter={(e) => {
-                  const style = getGlassStyle(theme, true);
-                  e.currentTarget.style.borderColor = style.borderColor;
-                  e.currentTarget.style.boxShadow = style.boxShadow;
-                }}
-                onMouseLeave={(e) => {
-                  const style = getGlassStyle(theme, false);
-                  e.currentTarget.style.borderColor = style.borderColor;
-                  e.currentTarget.style.boxShadow = style.boxShadow;
-                }}
+                className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 shadow-lg shadow-black/20 italic"
               >
-                <Download
-                  size={10}
+                <Icon
+                  name="Import"
+                  size={14}
                   className="opacity-50 group-hover:opacity-100"
+                  variant="BoldDuotone"
                 />
                 {mod}
               </div>

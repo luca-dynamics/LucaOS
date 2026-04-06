@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 import React, { useRef, useMemo } from "react";
-import { THEME_PALETTE } from "../../config/themeColors";
+import { THEME_PALETTE, getThemeColors, PERSONA_UI_CONFIG } from "../../config/themeColors";
+import { settingsService } from "../../services/settingsService";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Points, PointMaterial, Float } from "@react-three/drei";
 import * as THREE from "three";
@@ -85,8 +86,8 @@ const Core = ({ color, active }: { color: string; active: boolean }) => {
       <mesh ref={meshRef} scale={active ? 0.6 : 0.5}>
         <icosahedronGeometry args={[1, 0]} />
         <meshStandardMaterial
-          color="#ffffff"
-          emissive="#ffffff"
+          color={color}
+          emissive={color}
           emissiveIntensity={0.8}
           wireframe
           transparent
@@ -102,25 +103,32 @@ interface LucaCanvasProps {
 }
 
 const LucaCanvas: React.FC<LucaCanvasProps> = ({ step }) => {
-  let color = "#3b82f6"; // Blue (Default)
+  // Hook into our unified theme engine
+  const themeId = settingsService.get("general")?.theme || "PROFESSIONAL";
+  const themeConfig = PERSONA_UI_CONFIG[themeId] || PERSONA_UI_CONFIG.PROFESSIONAL;
+  const isLight = themeConfig.isLight;
+  const themeColors = getThemeColors(themeId);
+  const coreColor = themeColors.hex || (isLight ? THEME_PALETTE.LIGHTCREAM.primary : THEME_PALETTE.MASTER_SYSTEM.primary);
+  
+  let color = coreColor;
   let active = false;
 
   switch (step) {
     case "BOOT":
-      color = "#64748b"; // Slate
+      color = isLight ? THEME_PALETTE.LIGHTCREAM.primary : (themeColors.dark || THEME_PALETTE.AGENTIC_SLATE.primary); 
       break;
     case "IDENTITY":
-      color = "#3b82f6"; // Blue
+      color = coreColor;
       break;
     case "BRIDGE":
-      color = "#8b5cf6"; // Violet
+      color = themeColors.secondary || THEME_PALETTE.DICTATION.primary; 
       break;
     case "CALIBRATION":
-      color = THEME_PALETTE.ENGINEER.primary; // Bold Terracotta
+      color = THEME_PALETTE.BUILDER.primary; 
       active = true;
       break;
     case "COMPLETE":
-      color = THEME_PALETTE.HACKER.primary; // Green
+      color = THEME_PALETTE.TERMINAL.primary; 
       active = true;
       break;
   }
@@ -136,9 +144,8 @@ const LucaCanvas: React.FC<LucaCanvasProps> = ({ step }) => {
 
         <Core color={color} active={active} />
 
-        {/* Background Fog for Depth */}
-        <color attach="background" args={["#000000"]} />
-        <fog attach="fog" args={["#000000", 3, 10]} />
+        {/* Background Fog for Depth — Dynamic Contrast for Boot Phase */}
+        <fog attach="fog" args={[isLight ? THEME_PALETTE.LIGHTCREAM.dim : THEME_PALETTE.AGENTIC_SLATE.dark, 3, 10]} />
       </Canvas>
     </div>
   );

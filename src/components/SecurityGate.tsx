@@ -1,16 +1,7 @@
-import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-const {
-  ShieldAlert,
-  Lock,
-  XCircle,
-  Fingerprint,
-  Cpu,
-  Zap,
-  Activity,
-  Maximize2,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { soundService } from "../services/soundService";
 import AdminEnrollmentModal from "./AdminEnrollmentModal";
 import { lucaService, PersonaType } from "../services/lucaService";
@@ -21,16 +12,9 @@ interface Props {
   args: any;
   userName: string;
   persona: PersonaType;
-  theme: {
-    primary: string;
-    border: string;
-    bg: string;
-    glow: string;
-    coreColor: string;
-    hex: string;
-  };
   onApprove: () => void;
   onDeny: () => void;
+  theme?: any;
 }
 
 const SecurityGate: React.FC<Props> = ({
@@ -38,7 +22,6 @@ const SecurityGate: React.FC<Props> = ({
   args,
   userName,
   persona,
-  theme,
   onApprove,
   onDeny,
 }) => {
@@ -76,19 +59,21 @@ const SecurityGate: React.FC<Props> = ({
     return (
       <div className="p-6 flex flex-col gap-6">
         <div className="flex gap-4 items-start">
-          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-red-500/20 to-transparent border border-red-500/30 flex items-center justify-center relative shrink-0 shadow-inner group/icon overflow-hidden">
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
-              className="absolute inset-0 opacity-20"
-            >
-              <ShieldAlert
-                className="w-full h-full p-4 scale-150"
-                style={{ color: "#ef4444" }}
-              />
-            </motion.div>
-            <Lock className="w-6 h-6 text-red-500 relative z-10" />
-          </div>
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-red-500/20 to-transparent border border-red-500/30 flex items-center justify-center relative shrink-0 shadow-inner group/icon overflow-hidden">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+                className="absolute inset-0 opacity-20"
+              >
+                <Icon
+                  name="ShieldCheck"
+                  variant="BoldDuotone"
+                  className="w-full h-full p-4 scale-150"
+                  style={{ color: "#ef4444" }}
+                />
+              </motion.div>
+              <Icon name="Lock" className="w-6 h-6 text-red-500 relative z-10" />
+            </div>
 
           <div className="flex-1 space-y-2">
             <h2 className="text-xl font-bold text-white tracking-tight uppercase flex items-center gap-2">
@@ -103,10 +88,10 @@ const SecurityGate: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="bg-red-500/[0.03] border border-red-500/10 rounded-2xl overflow-hidden backdrop-blur-md">
+        <div className="bg-red-500/[0.03] border border-red-500/10 rounded-2xl overflow-hidden glass-blur">
           <div className="p-3 border-b border-red-500/10 bg-red-500/[0.02] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Zap className="w-3 h-3 text-red-500" />
+              <Icon name="Flash" className="w-3 h-3 text-red-500" />
               <span className="text-[9px] font-bold text-red-500/60 uppercase tracking-widest">
                 Action Blocked
               </span>
@@ -148,21 +133,26 @@ const SecurityGate: React.FC<Props> = ({
               onClick={onDeny}
               className="flex-1 py-4 px-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] text-gray-400 hover:text-white font-bold text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
             >
-              <XCircle className="w-4 h-4" />
+              <Icon name="CloseCircle" size={16} />
               Deny Access
             </button>
             <button
               onClick={onApprove}
               className="flex-[2] py-4 px-6 rounded-2xl text-white font-bold text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 relative group overflow-hidden active:scale-[0.98] shadow-[0_0_30px_rgba(239,68,68,0.3)] bg-red-600"
             >
-              <ShieldAlert className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <Icon
+                name="ShieldCheck"
+                variant="BoldDuotone"
+                size={20}
+                className="group-hover:scale-110 transition-transform"
+              />
               Allow Action (One-Time)
             </button>
           </div>
 
           <p className="text-[10px] text-center text-gray-500 font-mono tracking-tight">
             Enable{" "}
-            <span className="text-rq-blue underline cursor-pointer">
+            <span className="text-[var(--app-primary)] underline cursor-pointer">
               God Mode (Autonomy)
             </span>{" "}
             in settings to grant Luca full machine access.
@@ -177,19 +167,19 @@ const SecurityGate: React.FC<Props> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`fixed z-[999] ${isSafetyValve ? "top-6 right-6" : "inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[20px]"}`}
+      className={`fixed z-[999] ${isSafetyValve ? "top-6 right-6" : "inset-0 flex items-center justify-center bg-black/40 glass-blur[20px]"}`}
     >
       {/* Dynamic Background HUD Patterns - Hidden or scoped for Safety Valve */}
       {!isSafetyValve && (
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
-          <div className={`absolute inset-0 ${theme.bg} opacity-30`} />
+          <div className={`absolute inset-0 bg-[#0a0c10] opacity-30`} />
 
           {isSafetyValve ? (
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,0,0,0.1)_0%,transparent_70%)]" />
           ) : persona === "HACKER" ? (
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,100,0.1)_0%,transparent_70%)]" />
           ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--app-primary-rgb),0.05)_0%,transparent_70%)]" />
           )}
 
           <svg width="100%" height="100%" className="absolute inset-0">
@@ -204,7 +194,7 @@ const SecurityGate: React.FC<Props> = ({
                 cy="30"
                 r="28"
                 fill="none"
-                stroke={isSafetyValve ? "#ef4444" : theme.hex}
+                stroke={isSafetyValve ? "#ef4444" : "var(--app-primary)"}
                 strokeWidth="0.5"
                 strokeOpacity="0.1"
               />
@@ -226,11 +216,11 @@ const SecurityGate: React.FC<Props> = ({
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         className={`relative w-full ${
           isSafetyValve ? "max-w-md" : "max-w-2xl"
-        } bg-black/60 border rounded-3xl overflow-hidden shadow-[0_0_80px_-20px_rgba(0,0,0,0.8)] backdrop-blur-3xl`}
+        } bg-black/60 border rounded-3xl overflow-hidden shadow-[0_0_80px_-20px_rgba(0,0,0,0.8)] glass-blur`}
         style={{
           borderColor: isSafetyValve
             ? "rgba(239, 68, 68, 0.4)"
-            : setHexAlpha(theme.hex, 0.2),
+            : "rgba(var(--app-primary-rgb), 0.2)",
         }}
       >
         {/* Scanning Line Animation */}
@@ -239,7 +229,7 @@ const SecurityGate: React.FC<Props> = ({
           transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
           className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent opacity-20 z-10 pointer-events-none"
           style={{
-            boxShadow: `0 0 15px ${isSafetyValve ? "#ef4444" : theme.hex}`,
+            boxShadow: `0 0 15px ${isSafetyValve ? "#ef4444" : "var(--app-primary)"}`,
           }}
         />
 
@@ -249,27 +239,28 @@ const SecurityGate: React.FC<Props> = ({
           style={{
             borderBottomColor: isSafetyValve
               ? "rgba(239, 68, 68, 0.2)"
-              : setHexAlpha(theme.hex, 0.1),
+              : "rgba(var(--app-primary-rgb), 0.1)",
           }}
         >
           <div className="flex items-center gap-3">
             <div className="relative">
-              <ShieldAlert
-                className="w-5 h-5"
-                style={{ color: isSafetyValve ? "#ef4444" : theme.hex }}
+              <Icon
+                name="Danger"
+                size={20}
+                style={{ color: isSafetyValve ? "#ef4444" : "var(--app-primary)" }}
               />
               <motion.div
                 animate={{ opacity: [1, 0.4, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
                 className="absolute inset-0 blur-sm"
                 style={{
-                  backgroundColor: isSafetyValve ? "#ef4444" : theme.hex,
+                  backgroundColor: isSafetyValve ? "#ef4444" : "var(--app-primary)",
                 }}
               />
             </div>
             <span
               className="text-[10px] font-bold uppercase tracking-[0.3em] font-mono"
-              style={{ color: isSafetyValve ? "#ef4444" : theme.hex }}
+              style={{ color: isSafetyValve ? "#ef4444" : "var(--app-primary)" }}
             >
               {isSafetyValve
                 ? "Luca Safety Valve Intercept"
@@ -305,12 +296,14 @@ const SecurityGate: React.FC<Props> = ({
                   }}
                   className="absolute inset-0 opacity-10"
                 >
-                  <Cpu
+                  <Icon
+                    name="Cpu"
+                    size={40}
+                    style={{ color: "var(--app-primary)" }}
                     className="w-full h-full p-4 scale-150"
-                    style={{ color: theme.hex }}
                   />
                 </motion.div>
-                <Lock className="w-10 h-10 text-white relative z-10" />
+                <Icon name="Lock" size={40} className="text-white relative z-10" />
                 <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/40" />
               </div>
 
@@ -333,10 +326,10 @@ const SecurityGate: React.FC<Props> = ({
             {!showVerify ? (
               <>
                 {/* Tool Context Card */}
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl overflow-hidden backdrop-blur-md">
+                <div className="bg-white/[0.03] border border-white/5 rounded-2xl overflow-hidden glass-blur">
                   <div className="p-3 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Zap className="w-3 h-3" style={{ color: theme.hex }} />
+                      <Icon name="Flash" size={12} style={{ color: "var(--app-primary)" }} />
                       <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
                         Protocol Metadata
                       </span>
@@ -372,16 +365,19 @@ const SecurityGate: React.FC<Props> = ({
                     onClick={onDeny}
                     className="flex-1 py-4 px-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] text-gray-400 hover:text-white font-bold text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                   >
-                    <XCircle className="w-4 h-4" />
+                    <Icon name="CloseCircle" size={16} />
                     Terminate
                   </button>
                   <button
                     onClick={() => setShowVerify(true)}
-                    className="flex-[2] py-4 px-6 rounded-2xl text-white font-bold text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 relative group overflow-hidden active:scale-[0.98] shadow-lg"
-                    style={{ backgroundColor: theme.hex }}
+                    className="flex-[2] py-4 px-6 rounded-2xl text-[#050505] font-bold text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 relative group overflow-hidden active:scale-[0.98] shadow-lg bg-[var(--app-primary)]"
                   >
                     <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
-                    <Fingerprint className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <Icon
+                      name="Fingerprint"
+                      size={20}
+                      className="group-hover:scale-110 transition-transform"
+                    />
                     Elevate Permissions
                   </button>
                 </div>
@@ -395,7 +391,10 @@ const SecurityGate: React.FC<Props> = ({
                 <div className="w-full max-w-md">
                   <AdminEnrollmentModal
                     userName={userName}
-                    theme={theme}
+                    theme={{
+                      hex: "var(--app-primary)",
+                      primary: "blue"
+                    }}
                     onClose={() => setShowVerify(false)}
                     onEnrollSuccess={() => {}}
                     onVerify={async (img) => {
@@ -421,16 +420,16 @@ const SecurityGate: React.FC<Props> = ({
           style={{
             borderTopColor: isSafetyValve
               ? "rgba(239, 68, 68, 0.2)"
-              : setHexAlpha(theme.hex, 0.1),
+              : "rgba(var(--app-primary-rgb), 0.1)",
           }}
         >
           <div className="flex gap-4">
             <span className="flex items-center gap-1">
-              <Activity className="w-2.5 h-2.5" />{" "}
+              <Icon name="Activity" size={10} />{" "}
               {isSafetyValve ? "Safety-Link: Restricting" : "Bio-Link: Active"}
             </span>
             <span className="flex items-center gap-1">
-              <Maximize2 className="w-2.5 h-2.5" /> Enclave: Locked
+              <Icon name="Maximize" size={10} /> Enclave: Locked
             </span>
           </div>
           <div className="animate-pulse">

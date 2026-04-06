@@ -217,4 +217,24 @@ router.post('/execute', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/mcp/registry
+ * Proxy for official MCP registry to bypass CORS
+ */
+router.get('/registry', async (req, res) => {
+    try {
+        const query = req.query.q || '';
+        const limit = req.query.limit || '40';
+        const url = `https://registry.modelcontextprotocol.io/v0/servers?q=${encodeURIComponent(query)}&limit=${limit}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Registry return ${response.status}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (e) {
+        console.error('[MCP Registry Proxy] Failed:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

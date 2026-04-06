@@ -1,15 +1,6 @@
 
 import React from 'react';
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Globe,
-  Youtube,
-  ExternalLink,
-  Play,
-  Newspaper,
-  Activity,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface Props {
   content: any; // groundingMetadata
@@ -32,16 +23,16 @@ const LiveContentDisplay: React.FC<Props> = ({ content, onClose }) => {
   return (
     <div className="absolute top-24 right-6 w-[400px] max-h-[80vh] flex flex-col gap-4 z-40 pointer-events-none">
         {/* Container needs pointer-events-auto for interaction */}
-        <div className="bg-[#050505]/90 backdrop-blur-md border border-rq-blue/30 rounded-lg shadow-[0_0_30px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col pointer-events-auto animate-in slide-in-from-right duration-500">
+        <div className="bg-[#050505]/90 glass-blur border border-rq-blue/30 rounded-lg shadow-[0_0_30px_rgba(59,130,246,0.15)] overflow-hidden flex flex-col pointer-events-auto animate-in slide-in-from-right duration-500">
             
             {/* Header */}
             <div className="bg-slate-900/80 p-3 border-b border-rq-blue/20 flex justify-between items-center">
                 <div className="flex items-center gap-2 text-rq-blue text-xs font-bold tracking-widest">
-                    <Activity size={14} className="animate-pulse" />
+                    <Icon name="Activity" size={14} className="animate-pulse" />
                     LIVE INTEL FEED
                 </div>
                 <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
-                    <X size={16} />
+                    <Icon name="CloseCircle" size={16} />
                 </button>
             </div>
 
@@ -51,7 +42,7 @@ const LiveContentDisplay: React.FC<Props> = ({ content, onClose }) => {
                 {videos.length > 0 && (
                     <div className="space-y-3">
                         <div className="text-[10px] font-mono text-slate-500 flex items-center gap-2 border-b border-slate-800 pb-1">
-                            <Youtube size={12} className="text-red-500" /> VIDEO STREAMS
+                            <Icon name="Youtube" size={12} className="text-red-500" /> VIDEO STREAMS
                         </div>
                         {videos.map((video: any, i: number) => {
                             const id = getYoutubeId(video.web.uri);
@@ -84,7 +75,7 @@ const LiveContentDisplay: React.FC<Props> = ({ content, onClose }) => {
                 {articles.length > 0 && (
                     <div className="space-y-2">
                         <div className="text-[10px] font-mono text-slate-500 flex items-center gap-2 border-b border-slate-800 pb-1">
-                            <Newspaper size={12} className="text-emerald-500" /> WEB SOURCES
+                            <Icon name="Newspaper" size={12} className="text-emerald-500" /> WEB SOURCES
                         </div>
                         {articles.map((article: any, i: number) => {
                             const hostname = new URL(article.web.uri).hostname.replace('www.', '');
@@ -102,9 +93,9 @@ const LiveContentDisplay: React.FC<Props> = ({ content, onClose }) => {
                                     </div>
                                     <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
                                         <span className="truncate max-w-[200px] flex items-center gap-1">
-                                            <Globe size={8} /> {hostname}
+                                            <Icon name="Globe" size={8} /> {hostname}
                                         </span>
-                                        <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity text-rq-blue" />
+                                        <Icon name="ExternalLink" size={10} className="opacity-0 group-hover:opacity-100 transition-opacity text-rq-blue" />
                                     </div>
                                 </a>
                             );

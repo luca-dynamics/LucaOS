@@ -1,28 +1,13 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import * as LucideIcons from "lucide-react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus,
-  vs } from "react-syntax-highlighter/dist/esm/styles/prism";
-const {
-  Copy,
-  Terminal,
-  ImageIcon,
-  Globe,
-  ExternalLink,
-  Sparkles,
-  Pencil,
-  Check,
-  TrendingUp,
-  AlertTriangle,
-  Info,
-  CheckCircle2,
-} = LucideIcons as any;
+import { Icon, IconProvider } from "./ui/Icon";
 import { PersonaType } from "../services/lucaService";
 import { TacticalLog, MessageAction } from "../types";
 import InlineActionFlow from "./chat/InlineActionFlow";
 import ChartRenderer from "./chat/ChartRenderer";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface ChatMessageBubbleProps {
   text: string;
@@ -45,7 +30,6 @@ interface ChatMessageBubbleProps {
     logs: TacticalLog[];
     title?: string;
   };
-  isLight?: boolean;
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
@@ -63,7 +47,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   actions,
   onActionClick,
   tacticalData,
-  isLight = false,
 }) => {
   const isUser = sender === "user";
   const isSystem = sender === "system";
@@ -82,16 +65,20 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     const isSuccess = text.includes("[SUCCESS]");
     const isTrading = text.includes("[TRADING]");
 
-    const SystemIcon = isError ? AlertTriangle : isWarning ? Info : isSuccess ? CheckCircle2 : isTrading ? TrendingUp : Terminal;
     const iconColor = isError ? "text-rose-500" : isWarning ? "text-amber-500" : isSuccess ? "text-emerald-500" : isTrading ? "text-indigo-400" : "text-slate-500";
     const bgClass = isError ? "bg-rose-500/5 border-rose-500/20" : isWarning ? "bg-amber-500/5 border-amber-500/20" : isSuccess ? "bg-emerald-500/5 border-emerald-500/20" : isTrading ? "bg-indigo-500/5 border-indigo-500/20" : "bg-slate-900/50 border-slate-800";
 
     return (
       <div className="flex justify-center my-2 animate-in fade-in zoom-in duration-300 w-full">
         <div
-          className={`text-[10px] font-mono ${isLight ? "text-gray-500 bg-white/50 border-gray-200" : `text-slate-400 ${bgClass}`} px-4 py-2 rounded-lg border flex items-center gap-3 max-w-[90%] shadow-sm`}
+          className={`text-[10px] font-mono px-4 py-2 rounded-lg border flex items-center gap-3 max-w-[90%] shadow-sm glass-blur ${bgClass}`}
+          style={{ 
+            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+            color: "var(--app-text-muted, #94a3b8)"
+          }}
         >
-          <SystemIcon size={12} className={iconColor} />
+          <Icon name={isError ? "Danger" : isWarning ? "InfoCircle" : isSuccess ? "CheckCircle" : isTrading ? "Chart" : "Terminal"} size={12} className={iconColor} variant="BoldDuotone" />
           <span className="flex-1 truncate">{text.replace(/\[[^\]]*\]\s*/g, "")}</span>
         </div>
       </div>
@@ -107,8 +94,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           {attachment && (
             <div className="mb-2 overflow-hidden rounded-xl border border-white/10 shadow-lg">
               {wasPruned ? (
-                <div className="flex items-center gap-2 text-xs text-slate-500 bg-black/40 p-3 backdrop-blur-md">
-                  <ImageIcon size={14} /> [IMAGE DATAPRUNED]
+                <div className="flex items-center gap-2 text-xs text-slate-500 bg-black/40 p-3 glass-blur">
+                  <Icon name="Image" size={14} variant="BoldDuotone" /> [IMAGE DATAPRUNED]
                 </div>
               ) : (
                 <img
@@ -125,14 +112,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           )}
 
           <div
-            className={`rounded-2xl rounded-tr-sm px-4 py-3 ${isLight ? "text-gray-900" : "text-white"} text-[14px] leading-relaxed relative overflow-hidden backdrop-blur-sm`}
+            className="rounded-2xl rounded-tr-sm px-4 py-3 text-[14px] leading-relaxed relative overflow-hidden glass-blur"
             style={{
-              backgroundColor: isLight
-                ? "rgba(0, 0, 0, 0.05)"
-                : `${primaryColor}20`,
-              border: isLight
-                ? "1px solid rgba(0, 0, 0, 0.15)"
-                : `1px solid ${primaryColor}40`,
+              color: "var(--app-text-main, #ffffff)",
+              backgroundColor: "var(--app-bg-tint, rgba(255, 255, 255, 0.05))",
+              borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.1))",
+              borderWidth: "1px",
+              borderStyle: "solid"
             }}
           >
             <div className="whitespace-pre-wrap font-sans relative z-10">
@@ -155,7 +141,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                   className="text-slate-500 hover:text-slate-300 transition-colors p-1 rounded-md hover:bg-white/5 active:bg-white/10"
                   title="Edit message"
                 >
-                  <Pencil size={12} />
+                  <Icon name="Pencil" size={12} variant="BoldDuotone" />
                 </button>
               )}
             </div>
@@ -176,7 +162,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
         {isLoadingState && (
           <div className="flex items-center gap-3">
             <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg border ${isLight ? "border-gray-200 bg-white/40" : "border-white/10 bg-black/40"} backdrop-blur-sm`}
+              className="w-6 h-6 rounded-full flex items-center justify-center shadow-lg border glass-blur"
+              style={{
+                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))"
+              }}
             >
               <div
                 className="w-1.5 h-1.5 rounded-full animate-pulse"
@@ -212,10 +202,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
 
         {/* Content area - only shown when NOT in loading state */}
         {!isLoadingState && (
-          <div className="flex-1 min-w-0 w-full px-4 py-3 rounded-2xl rounded-tl-sm transition-all relative overflow-hidden bg-black/5"
+          <div className="flex-1 min-w-0 w-full px-4 py-3 rounded-2xl rounded-tl-sm transition-all relative overflow-hidden glass-blur"
                style={{
-                 backgroundColor: isLight ? "rgba(0, 0, 0, 0.02)" : "rgba(255, 255, 255, 0.02)",
-                 border: isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.05)"
+                 backgroundColor: "var(--app-bg-tint, rgba(255, 255, 255, 0.02))",
+                 border: "1px solid var(--app-border-main, rgba(255, 255, 255, 0.05))"
                }}>
             
             {/* INLINE ACTION FLOW - Repositioned to top for immersion */}
@@ -224,7 +214,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                 logs={tacticalData.logs}
                 status={tacticalData.status}
                 themeColor={primaryColor}
-                isLight={isLight}
               />
             )}
 
@@ -233,7 +222,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
               {generatedImage && (
                 <div className="mb-4 overflow-hidden rounded-xl border border-slate-700/50 bg-black/20 shadow-lg inline-block max-w-full">
                   <div className="px-3 py-1.5 bg-white/5 text-[10px] text-slate-400 font-bold tracking-widest border-b border-white/5 flex items-center gap-2">
-                    <Sparkles size={10} style={{ color: primaryColor }} />
+                    <Icon name="MagicStick" size={10} variant="BoldDuotone" color={primaryColor} />
                     GENERATED ASSET
                   </div>
                   {wasPruned ? (
@@ -251,11 +240,42 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
               )}
 
               <div
-                className={`${isLight ? "prose-slate" : "prose-invert prose-slate"} prose max-w-none text-[15px] leading-7 font-sans ${isLight ? "text-gray-900" : "text-white/90"}`}
+                className="prose max-w-none text-[15px] leading-7 font-sans"
+                style={{ color: "var(--app-text-main, #ffffff)" }}
               >
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
+                    // Custom text processing for [[Icon]] tags
+                    p({ children }) {
+                      const processChildren = (child: any): any => {
+                        if (typeof child === 'string') {
+                          const parts = child.split(/(\[\[[A-Za-z0-9:]+\]\])/g);
+                          return parts.map((part, i) => {
+                            const match = part.match(/\[\[(?:([A-Za-z]+):)?([A-Za-z0-9]+)\]\]/);
+                            if (match) {
+                              const provider = (match[1]?.toLowerCase() as IconProvider) || 'auto';
+                              const name = match[2];
+                              return (
+                                <Icon 
+                                  key={i}
+                                  name={name} 
+                                  provider={provider} 
+                                  size={16} 
+                                  variant="BoldDuotone" 
+                                  className="inline-block align-text-bottom mx-1 transition-transform hover:scale-110"
+                                  color={primaryColor}
+                                />
+                              );
+                            }
+                            return part;
+                          });
+                        }
+                        if (Array.isArray(child)) return child.map(processChildren);
+                        return child;
+                      };
+                      return <p>{processChildren(children)}</p>;
+                    },
                     code({ inline, className, children, ...props }: any) {
                       const match = /language-(\w+)/.exec(className || "");
                       const codeString = String(children).replace(/\n$/, "");
@@ -270,7 +290,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                                 data={parsed.data}
                                 type={parsed.chartType || "bar"}
                                 themeColor={primaryColor}
-                                isLight={isLight}
                               />
                             );
                           }
@@ -284,13 +303,19 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
 
                         return (
                           <div
-                            className={`relative group/code my-6 overflow-hidden rounded-xl border ${isLight ? "border-gray-200 bg-gray-50/50" : "border-white/10 bg-[#0d0d0d] shadow-2xl"}`}
+                            className="relative group/code my-6 overflow-hidden rounded-xl border glass-blur"
                             style={{
-                              boxShadow: isLight ? "none" : `0 0 30px ${primaryColor}08`,
+                              borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                              backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                              boxShadow: `0 0 30px ${primaryColor}08`,
                             }}
                           >
                             <div
-                              className={`flex items-center justify-between px-4 py-2 ${isLight ? "bg-gray-100/80 border-gray-200" : "bg-white/5 border-white/5"} border-b`}
+                              className="flex items-center justify-between px-4 py-2 border-b"
+                              style={{ 
+                                backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
+                                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))"
+                              }}
                             >
                               <div className="flex items-center gap-2">
                                 <div className="flex gap-1">
@@ -299,7 +324,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                                   <div className="w-2 h-2 rounded-full bg-green-500/50" />
                                 </div>
                                 <span
-                                  className={`text-[10px] font-mono uppercase tracking-[0.2em] font-black ${isLight ? "text-gray-500" : "text-slate-400"}`}
+                                  className="text-[10px] font-mono uppercase tracking-[0.2em] font-black"
+                                  style={{ color: "var(--app-text-muted, #94a3b8)" }}
                                 >
                                   {match[1]}
                                 </span>
@@ -308,19 +334,20 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                                 onClick={() =>
                                   handleCopyCode(codeString, blockIndex)
                                 }
-                                className={`${isLight ? "text-gray-500 hover:text-gray-800" : "text-slate-400 hover:text-white"} transition-all active:scale-90`}
+                                className="transition-all active:scale-90"
+                                style={{ color: "var(--app-text-muted, #94a3b8)" }}
                                 title="Copy Code"
                               >
                                 {copiedCodeBlock === blockIndex ? (
-                                  <Check size={14} className="text-green-500" />
+                                  <Icon name="CheckCircle" size={14} color="#10b981" variant="BoldDuotone" />
                                 ) : (
-                                  <Copy size={14} />
+                                  <Icon name="Copy" size={14} variant="BoldDuotone" />
                                 )}
                               </button>
                             </div>
                             <div className="relative">
                               <SyntaxHighlighter
-                                style={isLight ? vs : vscDarkPlus}
+                                style={vscDarkPlus}
                                 language={match[1]}
                                 PreTag="div"
                                 customStyle={{
@@ -342,7 +369,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
 
                       return (
                         <code
-                          className={`${isLight ? "bg-gray-100/80 text-gray-900 font-bold" : "bg-slate-800/60 text-emerald-300"} px-1.5 py-0.5 rounded text-[13px] font-mono`}
+                          className="px-1.5 py-0.5 rounded text-[13px] font-mono glass-blur"
+                          style={{
+                            backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
+                            color: "var(--app-text-main, #ffffff)"
+                          }}
                           {...props}
                         >
                           {children}
@@ -352,13 +383,16 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     table({ children }) {
                       return (
                         <div
-                          className={`overflow-x-auto my-6 rounded-xl border animate-in fade-in slide-in-from-bottom-2 duration-500 ${isLight ? "border-gray-200 bg-white/40 shadow-sm" : "border-white/10 bg-black/20 shadow-2xl"}`}
+                          className="overflow-x-auto my-6 rounded-xl border animate-in fade-in slide-in-from-bottom-2 duration-500 glass-blur"
                           style={{
-                            boxShadow: isLight ? "none" : `0 10px 30px rgba(0,0,0,0.3), 0 0 20px ${primaryColor}05`,
+                            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                            backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.02))",
+                            boxShadow: `0 10px 30px rgba(0,0,0,0.3), 0 0 20px ${primaryColor}05`,
                           }}
                         >
                           <table
-                            className={`min-w-full divide-y ${isLight ? "divide-gray-200" : "divide-white/10"} text-[13px]`}
+                            className="min-w-full divide-y text-[13px]"
+                            style={{ borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}
                           >
                             {children}
                           </table>
@@ -368,7 +402,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     thead({ children }) {
                       return (
                         <thead
-                          className={isLight ? "bg-gray-50" : "bg-slate-800/50"}
+                          style={{ backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.1))" }}
                         >
                           {children}
                         </thead>
@@ -377,7 +411,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     th({ children }) {
                       return (
                         <th
-                          className={`px-4 py-3 text-left text-[11px] font-black ${isLight ? "text-gray-900" : "text-white/70"} uppercase tracking-[0.15em] font-mono`}
+                          className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.15em] font-mono"
+                          style={{ color: "var(--app-text-main, #ffffff)" }}
                         >
                           {children}
                         </th>
@@ -386,7 +421,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     tbody({ children }) {
                       return (
                         <tbody
-                          className={`divide-y ${isLight ? "divide-gray-100 bg-white/40" : "divide-slate-700/50 bg-slate-900/20"}`}
+                          className="divide-y"
+                          style={{ borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}
                         >
                           {children}
                         </tbody>
@@ -395,7 +431,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     tr({ children }) {
                       return (
                         <tr
-                          className={`transition-colors ${isLight ? "hover:bg-gray-50/50" : "hover:bg-white/5"}`}
+                          className="transition-colors hover:bg-white/5"
                         >
                           {children}
                         </tr>
@@ -404,7 +440,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     td({ children }) {
                       return (
                         <td
-                          className={`px-4 py-3 whitespace-nowrap font-medium ${isLight ? "text-gray-800" : "text-white/90"}`}
+                          className="px-4 py-3 whitespace-nowrap font-medium"
+                          style={{ color: "var(--app-text-main, #ffffff)" }}
                         >
                           {children}
                         </td>
@@ -425,7 +462,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     ul({ children }) {
                       return (
                         <ul
-                          className={`list-disc pl-5 my-2 space-y-1 ${isLight ? "text-gray-800 marker:text-gray-400" : "text-slate-300 marker:text-slate-500"}`}
+                          className="list-disc pl-5 my-2 space-y-1"
+                          style={{ color: "var(--app-text-main, #ffffff)" }}
                         >
                           {children}
                         </ul>
@@ -434,7 +472,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     ol({ children }) {
                       return (
                         <ol
-                          className={`list-decimal pl-5 my-2 space-y-1 ${isLight ? "text-gray-800 marker:text-gray-400" : "text-slate-300 marker:text-slate-500"}`}
+                          className="list-decimal pl-5 my-2 space-y-1"
+                          style={{ color: "var(--app-text-main, #ffffff)" }}
                         >
                           {children}
                         </ol>
@@ -443,7 +482,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                     blockquote({ children }) {
                       return (
                         <div
-                          className={`border-l-4 ${isLight ? "border-gray-300 bg-gray-100/30" : "border-slate-700 bg-slate-800/10"} pl-4 py-1 my-4 italic ${isLight ? "text-gray-600" : "text-slate-400"} rounded-r-lg`}
+                          className="border-l-4 pl-4 py-1 my-4 italic rounded-r-lg glass-blur"
+                          style={{ 
+                            borderLeftColor: "var(--app-border-main, rgba(255,255,255,0.2))",
+                            backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.05))",
+                            color: "var(--app-text-muted, #94a3b8)"
+                          }}
                         >
                           {children}
                         </div>
@@ -480,8 +524,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                                  "#94a3b8"
                         }}
                       >
-                        {action.variant === "primary" && <LucideIcons.CheckCircle2 size={12} className="group-hover/btn:scale-110 transition-transform" /> }
-                        {action.variant === "danger" && <LucideIcons.XCircle size={12} className="group-hover/btn:scale-110 transition-transform" /> }
+                        {action.variant === "primary" && <Icon name="CheckCircle" size={12} variant="BoldDuotone" className="group-hover/btn:scale-110 transition-transform" /> }
+                        {action.variant === "danger" && <Icon name="CloseCircle" size={12} variant="BoldDuotone" className="group-hover/btn:scale-110 transition-transform" /> }
                         {action.label}
                       </button>
                     ))}
@@ -503,13 +547,18 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                             href={chunk.web.uri}
                             target="_blank"
                             rel="noreferrer"
-                            className={`flex items-center gap-1.5 border transition-all text-[10px] px-2.5 py-1.5 rounded-full ${isLight ? "bg-white/50 border-gray-200 hover:border-gray-300 text-gray-500 hover:text-gray-900 hover:bg-white" : "bg-slate-800/40 border-slate-700/50 hover:border-slate-500 text-slate-400 hover:text-white hover:bg-slate-800/60"}`}
+                            className="flex items-center gap-1.5 border transition-all text-[10px] px-2.5 py-1.5 rounded-full glass-blur hover:bg-white/10"
+                            style={{
+                              borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                              backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                              color: "var(--app-text-muted, #94a3b8)"
+                            }}
                           >
-                            <Globe size={11} />
+                            <Icon name="Earth" size={11} variant="BoldDuotone" />
                             <span className="truncate max-w-[150px]">
                               {chunk.web.title || "Source"}
                             </span>
-                            <ExternalLink size={8} className="opacity-50" />
+                            <Icon name="Import" size={8} className="opacity-50" />
                           </a>
                         );
                       },
@@ -532,7 +581,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                       className="text-slate-500 hover:text-slate-300 transition-colors p-1 rounded-md hover:bg-white/5 active:bg-white/10"
                       title="Copy full response"
                     >
-                      <Copy size={12} />
+                      <Icon name="Copy" size={12} variant="BoldDuotone" />
                     </button>
                   </div>
                 </div>

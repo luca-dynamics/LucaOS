@@ -1,38 +1,35 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Shield,
-  TrendingDown,
-  Target,
-  Wallet,
-  Zap,
-} = LucideIcons as any;
+import { Icon } from "../../ui/Icon";
 import { RiskControlConfig } from "../../../types/trading";
 
 interface RiskControlEditorProps {
   config: RiskControlConfig;
   onChange: (config: RiskControlConfig) => void;
+  theme?: { hex: string; primary: string; border: string; bg: string; isLight?: boolean };
 }
 
 export function RiskControlEditor({
   config,
   onChange,
+  theme,
 }: RiskControlEditorProps) {
+  const isLight = theme?.isLight;
   const update = (updates: Partial<RiskControlConfig>) => {
     onChange({ ...config, ...updates });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Position Sizing */}
-      <div className="bg-[#1e2329] p-4 rounded-xl border border-white/5">
-        <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-          <Wallet size={16} className="text-indigo-400" /> Sizing & Leverage
+      <div className={`p-4 border rounded-xl ${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#050505] border-white/5"} shadow-inner`}>
+        <h3 className={`text-[10px] font-black ${isLight ? "text-slate-400" : "text-slate-500"} mb-4 tracking-[0.2em] flex items-center gap-2`}>
+          <Icon name="Wallet" size={14} style={{ color: theme?.hex || "#0ea5e9" }} />
+          Sizing And Leverage
         </h3>
 
-        <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
           <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">
+            <label className="text-[9px] font-bold text-slate-600 mb-1.5 block tracking-widest">
               Max Positions
             </label>
             <input
@@ -41,11 +38,12 @@ export function RiskControlEditor({
               onChange={(e) =>
                 update({ maxPositions: parseInt(e.target.value) })
               }
-              className="w-full bg-black/20 border border-slate-700 rounded px-2 py-1.5 text-white text-sm"
+              className={`w-full ${isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-[#050505] border-white/10 text-white"} border border-white/10 rounded-sm px-3 py-2 text-[10px] font-mono outline-none focus:border-opacity-50 transition-all`}
+              style={{ focusBorderColor: theme?.hex || "#0ea5e9" } as any}
             />
           </div>
           <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">
+            <label className="text-[9px] font-bold text-slate-600 mb-1.5 block tracking-widest">
               Position Size %
             </label>
             <div className="relative">
@@ -55,105 +53,121 @@ export function RiskControlEditor({
                 onChange={(e) =>
                   update({ positionSizePercent: parseFloat(e.target.value) })
                 }
-                className="w-full bg-black/20 border border-slate-700 rounded px-2 py-1.5 text-white text-sm pr-6"
+                className={`w-full ${isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-[#050505] border-white/10 text-white"} border border-white/10 rounded-sm px-3 py-2 text-[10px] font-mono outline-none focus:border-opacity-50 transition-all pr-7`}
+                style={{ focusBorderColor: theme?.hex || "#0ea5e9" } as any}
               />
-              <span className="absolute right-2 top-2 text-xs text-slate-500">
+              <span className="absolute right-3 top-2.5 text-[10px] text-slate-600 font-mono">
                 %
               </span>
             </div>
           </div>
 
           <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">
-              BTC/ETH Leverage
+            <label className="text-[9px] font-bold text-slate-600 mb-1.5 block tracking-widest">
+              Btc/Eth Leverage
             </label>
-            <input
-              type="number"
-              value={config.btcEthLeverage}
-              onChange={(e) =>
-                update({ btcEthLeverage: parseInt(e.target.value) })
-              }
-              className="w-full bg-black/20 border border-slate-700 rounded px-2 py-1.5 text-white text-sm"
-            />
+            <div className="relative">
+              <input
+                type="number"
+                value={config.btcEthLeverage}
+                onChange={(e) =>
+                  update({ btcEthLeverage: parseInt(e.target.value) })
+                }
+                className={`w-full ${isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-[#050505] border-white/10 text-white"} border border-white/10 rounded-sm px-3 py-2 text-[10px] font-mono outline-none focus:border-opacity-50 transition-all pr-7`}
+                style={{ focusBorderColor: theme?.hex || "#0ea5e9" } as any}
+              />
+              <span className="absolute right-3 top-2.5 text-[10px] text-slate-600 font-mono">
+                X
+              </span>
+            </div>
           </div>
           <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">
+            <label className="text-[9px] font-bold text-slate-600 mb-1.5 block tracking-widest">
               Altcoin Leverage
             </label>
-            <input
-              type="number"
-              value={config.altcoinLeverage}
-              onChange={(e) =>
-                update({ altcoinLeverage: parseInt(e.target.value) })
-              }
-              className="w-full bg-black/20 border border-slate-700 rounded px-2 py-1.5 text-white text-sm"
-            />
+            <div className="relative">
+              <input
+                type="number"
+                value={config.altcoinLeverage}
+                onChange={(e) =>
+                  update({ altcoinLeverage: parseInt(e.target.value) })
+                }
+                className={`w-full ${isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-[#050505] border-white/10 text-white"} border border-white/10 rounded-sm px-3 py-2 text-[10px] font-mono outline-none focus:border-opacity-50 transition-all pr-7`}
+                style={{ focusBorderColor: theme?.hex || "#0ea5e9" } as any}
+              />
+              <span className="absolute right-3 top-2.5 text-[10px] text-slate-600 font-mono">
+                X
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Elite AI Risk (Phase 15) */}
-      <div className="bg-[#1e2329] p-4 rounded-xl border border-indigo-500/30 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-2">
-          <Zap size={10} className="text-indigo-400 opacity-50" />
-        </div>
-        
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Zap size={16} className="text-indigo-400" /> Adaptive Risk
+      {/* Adaptive Risk */}
+      <div className={`p-4 border rounded-xl transition-all ${
+        config.adaptiveRisk 
+          ? isLight ? "bg-white/50 shadow-[0_0_20px_rgba(255,255,255,0.02)]" : "bg-white/5 border-white/20" 
+          : isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#050505] border-white/5 shadow-inner"
+      }`} style={config.adaptiveRisk ? { borderColor: `${theme?.hex}4d` } : {}}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className={`text-[10px] font-black tracking-[0.2em] flex items-center gap-2 ${config.adaptiveRisk ? (isLight ? "text-slate-900" : "text-white") : "text-slate-500"}`}>
+            <Icon name="Zap" size={14} style={config.adaptiveRisk ? { color: theme?.hex } : { color: "#444" }} />
+            Adaptive Risk Engine
           </h3>
           <button
             type="button"
             onClick={() => update({ adaptiveRisk: !config.adaptiveRisk })}
-            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
-              config.adaptiveRisk 
-                ? "bg-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.5)]" 
-                : "bg-slate-700 text-slate-400"
+            className={`w-10 h-5 rounded-full relative transition-all duration-300 ${
+              config.adaptiveRisk ? "" : "bg-slate-800"
             }`}
+            style={config.adaptiveRisk ? { backgroundColor: theme?.hex, boxShadow: `0 0 10px ${theme?.hex}66` } : {}}
           >
-            {config.adaptiveRisk ? "Active" : "Disabled"}
+            <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${
+              config.adaptiveRisk ? "left-6" : "left-1"
+            }`} />
           </button>
         </div>
 
-        <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">
-          When active, LUCA uses AI Conviction levels to dynamically scale leverage and position sizes. 
-          High confidence trades utilize more capital.
+        <p className={`text-[9px] mb-4 leading-relaxed font-mono tracking-tighter ${config.adaptiveRisk ? (isLight ? "text-slate-700 font-bold" : "text-slate-300") : "text-slate-600"}`}>
+          Confidence-based leverage scaling. High conviction tiers activate aggressive capital deployment.
         </p>
 
         {config.adaptiveRisk && (
-          <div className="animate-in slide-in-from-top-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">
-              Max Leverage Cap ({config.maxLeverageCap || 10}x)
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="20"
-              step="1"
-              value={config.maxLeverageCap || 10}
-              onChange={(e) => update({ maxLeverageCap: parseInt(e.target.value) })}
-              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-            <div className="flex justify-between text-[8px] text-slate-600 mt-1 font-bold">
-              <span>1X</span>
-              <span>10X</span>
-              <span>20X</span>
+          <div className="animate-in fade-in slide-in-from-top-1">
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="text-[9px] font-bold text-slate-500 tracking-widest">
+                Max Leverage Cap
+              </label>
+              <span className="text-[10px] font-mono px-2 rounded-sm border" style={{ color: theme?.hex, backgroundColor: `${theme?.hex}1a`, borderColor: `${theme?.hex}33` }}>
+                {config.maxLeverageCap || 10}X
+              </span>
             </div>
+              <input
+                type="range"
+                min="1"
+                max="20"
+                step="1"
+                value={config.maxLeverageCap || 10}
+                onChange={(e) => update({ maxLeverageCap: parseInt(e.target.value) })}
+                className={`w-full h-1 ${isLight ? "bg-slate-200" : "bg-[#080808]"} rounded-full appearance-none cursor-pointer`}
+                style={{ accentColor: theme?.hex }}
+              />
           </div>
         )}
       </div>
 
       {/* Exit Strategy */}
-      <div className="bg-[#1e2329] p-4 rounded-xl border border-white/5">
-        <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-          <Shield size={16} className="text-rose-400" /> Exit Rules
+      <div className={`p-4 border rounded-xl ${isLight ? "bg-white border-black/5" : "bg-[#0b0b0b] border-white/5"} shadow-inner`}>
+        <h3 className={`text-[10px] font-black ${isLight ? "text-slate-400" : "text-slate-500"} mb-4 tracking-[0.2em] flex items-center gap-2`}>
+          <Icon name="Shield" size={14} className="text-rose-500" />
+          Termination Protocol
         </h3>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block flex items-center gap-1">
-                <TrendingDown size={10} /> Stop Loss
+              <label className="text-[9px] font-bold text-slate-600 mb-1.5 block tracking-widest flex items-center gap-1">
+                <Icon name="TrendingDown" size={10} className="text-rose-500" /> Stop Loss
               </label>
               <div className="relative">
                 <input
@@ -162,16 +176,16 @@ export function RiskControlEditor({
                   onChange={(e) =>
                     update({ stopLossPercent: parseFloat(e.target.value) })
                   }
-                  className="w-full bg-black/20 border border-slate-700 rounded px-2 py-1.5 text-rose-400 font-bold text-sm pr-6"
+                  className={`w-full ${isLight ? "bg-rose-50 border-rose-200 text-rose-600" : "bg-[#080808] border-white/5 text-rose-500"} rounded-sm px-3 py-2 font-mono text-[10px] outline-none focus:border-rose-500/30 transition-all pr-7`}
                 />
-                <span className="absolute right-2 top-2 text-xs text-slate-500">
+                <span className="absolute right-3 top-2.5 text-[10px] text-slate-700 font-mono">
                   %
                 </span>
               </div>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block flex items-center gap-1">
-                <Target size={10} /> Take Profit
+              <label className="text-[9px] font-bold text-slate-600 mb-1.5 block tracking-widest flex items-center gap-1">
+                <Icon name="Target" size={10} className="text-emerald-500" /> Take Profit
               </label>
               <div className="relative">
                 <input
@@ -180,29 +194,30 @@ export function RiskControlEditor({
                   onChange={(e) =>
                     update({ takeProfitPercent: parseFloat(e.target.value) })
                   }
-                  className="w-full bg-black/20 border border-slate-700 rounded px-2 py-1.5 text-emerald-400 font-bold text-sm pr-6"
+                  className={`w-full ${isLight ? "bg-emerald-50 border-emerald-200 text-emerald-600" : "bg-[#080808] border-white/5 text-emerald-500"} rounded-sm px-3 py-2 font-mono text-[10px] outline-none focus:border-emerald-500/30 transition-all pr-7`}
                 />
-                <span className="absolute right-2 top-2 text-xs text-slate-500">
+                <span className="absolute right-3 top-2.5 text-[10px] text-slate-700 font-mono">
                   %
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-800/50">
-            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">
-              Max Drawdown Limit
+          <div className="pt-4 border-t border-white/5">
+            <label className="text-[9px] font-bold text-slate-600 mb-1.5 block tracking-widest">
+              Hard Drawdown Threshold
             </label>
             <div className="relative">
-              <input
-                type="number"
-                value={config.maxDrawdownPercent}
-                onChange={(e) =>
-                  update({ maxDrawdownPercent: parseFloat(e.target.value) })
-                }
-                className="w-full bg-black/20 border border-slate-700 rounded px-2 py-1.5 text-white text-sm pr-6"
-              />
-              <span className="absolute right-2 top-2 text-xs text-slate-500">
+                <input
+                  type="number"
+                  value={config.maxDrawdownPercent}
+                  onChange={(e) =>
+                    update({ maxDrawdownPercent: parseFloat(e.target.value) })
+                  }
+                  className={`w-full ${isLight ? "bg-slate-50 border-black/5 text-slate-900" : "bg-[#080808] border-white/5 text-white"} rounded-sm px-3 py-2 font-mono text-[10px] outline-none transition-all pr-7`}
+                  style={{ border: `1px solid ${theme?.hex}33` }}
+                />
+              <span className="absolute right-3 top-2.5 text-[10px] text-slate-600 font-mono">
                 %
               </span>
             </div>

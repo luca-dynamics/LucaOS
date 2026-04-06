@@ -1,6 +1,7 @@
 import { LLMProvider, ChatMessage, LLMResponse } from "./LLMProvider";
 import { CORTEX_SERVER_URL, OLLAMA_SERVER_URL } from "../../config/api";
 import { settingsService } from "../settingsService";
+import { modelManager, LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
 
 // Define locally to avoid dependency issues if not exported
 interface ToolFunction {
@@ -72,58 +73,24 @@ export class LocalLLMAdapter implements LLMProvider {
    * Priority: Ollama (if detected & has model) > Cortex > Ollama fallback
    */
   private async resolveEndpoint(): Promise<string> {
-    const internalModels = [
-      "gemma-2b",
-      "llama-3.2-1b",
-      "phi-3-mini",
-      "smollm2-1.7b",
-      "qwen-2.5-7b",
-      "deepseek-r1-distill-7b",
-    ];
-    const isInternal =
-      internalModels.includes(this.name) || this.name.startsWith("local-gemma");
-
     const settings = settingsService.getSettings();
     const preferOllama = settings.brain.preferOllama;
+    
+    // 1. Identify Model Category
+    const isBrainModel = LOCAL_BRAIN_MODEL_IDS.includes(this.name) || this.name.startsWith("local-gemma");
 
-    if (preferOllama) {
-      console.log(
-        `[Local Adapter] Global Preference: Priority Routing ${this.name} → Ollama`,
-      );
+    // 2. Routing Decision
+    // BRAIN MODELS: Default to Ollama (Industry Standard for stability/VRAM management)
+    // OTHER MODELS: If preferOllama is on, use it; else use Cortex (Internal)
+    if (isBrainModel || preferOllama) {
+      await modelManager.ensureOllamaRunning();
+      console.log(`[Local Adapter] Routing ${this.name} → Ollama (Sovereign Reliability Managed)`);
       return `${OLLAMA_SERVER_URL}/v1/chat/completions`;
     }
 
-    if (isInternal) {
-      // For internal models, check if Ollama has a matching model loaded
-      const ollama = await this.checkOllama();
-      if (ollama.available) {
-        // Map our internal model IDs to Ollama model tags
-        const ollamaMapping: Record<string, string[]> = {
-          "gemma-2b": ["gemma2:2b", "gemma:2b", "gemma2"],
-          "llama-3.2-1b": ["llama3.2:1b", "llama3.2"],
-          "phi-3-mini": ["phi3:mini", "phi3"],
-          "smollm2-1.7b": ["smollm2:1.7b", "smollm2"],
-          "qwen-2.5-7b": ["qwen2.5:7b", "qwen2.5"],
-          "deepseek-r1-distill-7b": ["deepseek-r1:7b", "deepseek-r1"],
-        };
-        const candidates = ollamaMapping[this.name] || [];
-        const match = ollama.models.find(
-          (m) =>
-            candidates.some((c) => m.startsWith(c)) || m.includes(this.name),
-        );
-        if (match) {
-          console.log(
-            `[Local Adapter] Routing ${this.name} → Ollama (matched: ${match})`,
-          );
-          return `${OLLAMA_SERVER_URL}/v1/chat/completions`;
-        }
-      }
-      // No Ollama match — use Cortex internal brain
-      return `${CORTEX_SERVER_URL}/chat/completions`;
-    }
-
-    // Non-internal model — always route to Ollama
-    return `${OLLAMA_SERVER_URL}/v1/chat/completions`;
+    // Default Fallback: Internal Cortex Brain
+    console.log(`[Local Adapter] Routing ${this.name} → Internal Cortex`);
+    return `${CORTEX_SERVER_URL}/chat/completions`;
   }
 
   // Basic generation (non-chat)
@@ -283,7 +250,8 @@ export class LocalLLMAdapter implements LLMProvider {
     onToken: (chunk: string) => void,
     imageUrls?: string[],
     systemInstruction?: string,
-    tools?: ToolFunction[],
+    tools?: any[],
+    abortSignal?: AbortSignal,
   ): Promise<LLMResponse> {
     try {
       // 1. Construct Messages (Same as chat)
@@ -330,6 +298,7 @@ export class LocalLLMAdapter implements LLMProvider {
       let response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: abortSignal,
         body: JSON.stringify({
           model: this.name,
           messages: messages,
@@ -398,6 +367,18 @@ export class LocalLLMAdapter implements LLMProvider {
       return {
         text: `Error connecting to Local Brain (${this.name}): ${err.message}`,
       };
+    }
+  }
+
+  async validateKey(): Promise<{ valid: boolean; message: string; details?: any }> {
+    try {
+      const status = await this.checkOllama();
+      if (status.available) {
+        return { valid: true, message: "Ollama is running and accessible." };
+      }
+      return { valid: false, message: "Ollama is not responding. Ensure it is installed and running." };
+    } catch (e: any) {
+      return { valid: false, message: "Local connection failed.", details: e };
     }
   }
 }

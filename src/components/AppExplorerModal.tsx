@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Search,
-  Box,
-  ExternalLink,
-  Loader2,
-} = LucideIcons as any;
-import { setHexAlpha } from "../config/themeColors";
+import { Icon } from "./ui/Icon";
+
 import {
   listInstalledApps,
   executeLocalTool,
@@ -17,7 +10,6 @@ import { OfflineModelManager } from "./llm/OfflineModelManager";
 interface AppExplorerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  theme: { hex: string; primary: string; border: string; bg: string };
 }
 
 interface AppInstance {
@@ -29,7 +21,6 @@ interface AppInstance {
 const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
   isOpen,
   onClose,
-  theme,
 }) => {
   const [apps, setApps] = useState<AppInstance[]>([]);
   const [filteredApps, setFilteredApps] = useState<AppInstance[]>([]);
@@ -91,195 +82,120 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 font-mono">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300"
+        className="absolute inset-0 bg-black/70 transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* Modal Content */}
       <div
-        className="relative w-full max-w-4xl h-[80vh] bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
-        style={{
-          boxShadow: `0 0 80px -20px ${setHexAlpha(theme.hex, 0.25)}`,
-          borderColor: setHexAlpha(theme.hex, 0.2),
-        }}
+        className="relative w-full max-w-3xl h-[80vh] bg-[#080808] border border-white/10 rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
       >
-        {/* Liquid background effect 1 (Center) */}
-        <div
-          className="absolute inset-0 opacity-40 pointer-events-none transition-all duration-700 -z-10"
-          style={{
-            background: `radial-gradient(circle at 50% 50%, ${setHexAlpha(theme.hex, 0.15)}, transparent 60%)`,
-          }}
-        />
-        {/* Liquid background effect 2 (Top Right Offset) */}
-        <div
-          className="absolute inset-0 opacity-30 pointer-events-none transition-all duration-700 -z-10"
-          style={{
-            background: `radial-gradient(circle at 80% 20%, ${setHexAlpha(theme.hex, 0.08)}, transparent 50%)`,
-          }}
-        />
 
         {/* Header */}
-        <div
-          className="flex items-center justify-between p-4 sm:p-5 border-b border-white/5 backdrop-blur-xl relative z-10"
-          style={{ backgroundColor: setHexAlpha(theme.hex, 0.12) }}
-        >
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
             <div
-              className={`p-2 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 shadow-inner ${theme.primary}`}
+              className="w-9 h-9 rounded-xl flex items-center justify-center bg-[rgba(var(--app-primary-rgb),0.1)]"
             >
-              <Box size={20} />
+              <Icon name="Widget" size={18} style={{ color: "var(--app-primary)" }} variant="BoldDuotone" />
             </div>
             <div>
-              <h2 className="text-xl font-bold tracking-widest text-white flex items-center gap-2">
-                APP EXPLORER
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-400 font-normal tracking-normal uppercase">
-                  System V1
-                </span>
-              </h2>
-              <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-500 font-mono">
-                <span className="flex items-center gap-1.5">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full animate-pulse ${
-                      theme.bg.replace("bg-", "bg-") || "bg-green-500"
-                    }`}
-                    style={{ backgroundColor: theme.hex }}
-                  ></span>
-                  APPS: {apps.length}
-                </span>
-                <span className="opacity-50">|</span>
-                <span>STATUS: {loading ? "SCANNING..." : "IDLE"}</span>
-              </div>
+              <h2 className="text-white font-bold text-base tracking-wide">App Explorer</h2>
+              <p className="text-slate-500 text-xs mt-0.5">
+                {loading ? "Scanning system…" : `${apps.length} apps installed`}
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 hover:bg-white/10 rounded-full transition-all group border border-transparent hover:border-white/10"
+            className="p-2 hover:bg-white/[0.06] rounded-lg transition-colors border border-transparent hover:border-white/10"
           >
-            <X
-              className="text-slate-400 group-hover:text-white transition-colors"
-              size={20}
-            />
+            <Icon name="X" className="text-slate-400 hover:text-white" size={18} />
           </button>
         </div>
 
         {/* Search Bar */}
-        <div className="p-4 bg-white/[0.02] border-b border-white/5 relative z-10">
-          <div className="relative max-w-lg mx-auto">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              size={16}
-            />
+        <div className="px-5 py-3 border-b border-white/10">
+          <div className="relative">
+            <Icon name="Search" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600" size={15} />
             <input
               type="text"
-              placeholder="SEARCH APPS..."
+              placeholder="Search apps…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm font-mono text-white focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/10 transition-all placeholder:text-slate-600"
+              className="w-full bg-white/[0.04] border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-white/20 transition-all"
               autoFocus
             />
           </div>
         </div>
 
-        {/* App Grid */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar relative z-10">
+        {/* App List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {loading ? (
-            <div className="h-full flex flex-col items-center justify-center gap-4">
-              <Loader2
-                className={`animate-spin ${theme.primary}`}
-                size={32}
-                style={{ color: theme.hex }}
-              />
-              <p className="text-xs font-mono text-slate-500 animate-pulse tracking-widest">
-                SCANNING SYSTEM REGISTRY...
-              </p>
+            <div className="h-full flex flex-col items-center justify-center gap-3">
+              <Icon name="Loader" className="animate-spin" size={24} style={{ color: "var(--app-primary)" }} />
+              <p className="text-xs text-slate-500">Scanning system registry…</p>
             </div>
           ) : filteredApps.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="flex flex-col divide-y divide-white/[0.05]">
               {filteredApps.map((app, index) => (
-                <div
+                <button
                   key={index}
-                  className="group relative bg-white/[0.02] backdrop-blur-md border border-white/5 p-4 rounded-2xl hover:-translate-y-1 transition-all duration-300 hover:bg-white/[0.04] cursor-pointer"
-                  style={{
-                    boxShadow: "0 4px 20px -10px rgba(0,0,0,0.5)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = setHexAlpha(
-                      theme.hex,
-                      0.4,
-                    );
-                    e.currentTarget.style.boxShadow = `0 10px 40px -10px ${setHexAlpha(theme.hex, 0.13)}`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.05)";
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 20px -10px rgba(0,0,0,0.5)";
-                  }}
-                  onClick={() => handleLaunch(app.name)}
+                  className="flex items-center gap-4 px-5 py-3.5 text-left hover:bg-white/[0.03] transition-colors group w-full"
+                  onClick={() => handleLaunch(app.name, app.id)}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                      <Box
-                        size={18}
-                        className="text-slate-500 group-hover:text-white transition-colors"
-                        style={{ color: theme.hex }}
-                      />
-                    </div>
-                    <button
-                      className="p-2 text-slate-600 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                      title="Launch"
-                    >
-                      <ExternalLink size={14} />
-                    </button>
+                  {/* Icon */}
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border border-white/[0.07] bg-[rgba(var(--app-primary-rgb),0.05)]"
+                  >
+                    <Icon
+                      name="Box"
+                      size={16}
+                      variant="BoldDuotone"
+                      style={{ color: "var(--app-primary)" }}
+                    />
                   </div>
 
-                  <h3 className="text-sm font-bold text-slate-200 group-hover:text-white truncate mb-1">
-                    {app.name}
-                  </h3>
-                  <p className="text-[10px] text-slate-600 truncate font-mono uppercase tracking-wider">
-                    {app.path ? "SYSTEM_BINARY" : app.id || "GENERIC_NODE"}
-                  </p>
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-semibold truncate">{app.name}</p>
+                    <p className="text-slate-600 text-xs font-mono truncate mt-0.5">
+                      {app.path ? app.path : app.id || "local app"}
+                    </p>
+                  </div>
 
-                  {/* Hover Gradient */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                </div>
+                  {/* Launch arrow */}
+                  <Icon
+                    name="ArrowRight"
+                    size={14}
+                    className="text-slate-700 group-hover:text-slate-400 transition-colors shrink-0"
+                  />
+                </button>
               ))}
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center opacity-40">
-              <Search size={48} className="mb-4 text-slate-700" />
-              <p className="text-sm font-mono tracking-widest text-slate-500">
-                NO MATCHES FOUND
-              </p>
+            <div className="h-full flex flex-col items-center justify-center gap-2 text-center py-16">
+              <Icon name="Search" size={28} className="text-slate-700" />
+              <p className="text-slate-500 text-sm">No apps match your search</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div
-          className="p-3 px-6 border-t border-white/5 flex justify-between items-center backdrop-blur-md relative z-10"
-          style={{ backgroundColor: setHexAlpha(theme.hex, 0.12) }}
-        >
-          <div className="flex gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-              <span className="text-[9px] font-mono text-slate-500 tracking-wider">
-                CROSS PLATFORM ENGINE
-              </span>
-            </div>
+        <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+            <span className="text-[11px] text-slate-500">Cross-platform engine</span>
           </div>
-          <p className="text-[9px] font-mono text-slate-600">
-            TOTAL APPS: {filteredApps.length}
-          </p>
+          <span className="text-[11px] text-slate-600">{filteredApps.length} apps</span>
         </div>
       </div>
 
       {showOfflineManager && (
         <OfflineModelManager
-          theme={theme}
           onClose={() => setShowOfflineManager(false)}
         />
       )}

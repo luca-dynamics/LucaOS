@@ -1,17 +1,6 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "./ui/Icon";
 import { CryptoWallet } from "../types";
-const {
-  X,
-  Wallet,
-  TrendingUp,
-  History,
-  Coins,
-  Lock,
-  ShieldCheck,
-  RefreshCw,
-} = LucideIcons as any;
-
 import { useAppContext } from "../context/AppContext";
 import { apiUrl } from "../config/api";
 
@@ -116,9 +105,9 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
   }, [wallet, trading]);
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 backdrop-blur-md animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 glass-blur animate-in zoom-in-95 duration-300">
       <div
-        className={`relative w-[90%] max-w-5xl h-[80vh] bg-black/40 backdrop-blur-xl border ${themeBorder}/30 rounded-lg flex flex-col overflow-hidden`}
+        className={`relative w-[90%] max-w-5xl h-[80vh] bg-black/40 glass-blur border ${themeBorder}/30 rounded-lg flex flex-col overflow-hidden`}
         style={{
           boxShadow: `0 0 80px -20px ${themeHex}40`,
         }}
@@ -146,10 +135,9 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
         >
           <div className="flex items-center gap-3">
             <div
-              className={`p-2 rounded border ${themeBorder}/30 ${themePrimary}`}
               style={{ backgroundColor: `${themeHex}1F` }}
             >
-              <Wallet size={18} />
+              <Icon name="Wallet" size={18} variant="BoldDuotone" color={themeHex} />
             </div>
             <div>
               <h2 className="font-display font-bold text-white tracking-widest text-lg">
@@ -180,7 +168,7 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors"
           >
-            <X size={24} />
+            <Icon name="CloseCircle" size={24} />
           </button>
         </div>
 
@@ -192,7 +180,7 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
                 className={`inline-flex p-6 rounded-full border ${themeBorder}/30 mb-6`}
                 style={{ backgroundColor: `${themeHex}1F` }}
               >
-                <Wallet size={64} className={themePrimary} />
+                <Icon name="Wallet" size={64} color={themeHex} variant="BoldDuotone" />
               </div>
               <h3 className="text-2xl font-display font-bold text-white mb-3">
                 WALLET UNPROVISIONED
@@ -211,7 +199,7 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded border ${themeBorder}/30 text-xs font-mono ${themePrimary}`}
                 style={{ backgroundColor: `${themeHex}1F` }}
               >
-                <ShieldCheck size={14} />
+                <Icon name="Shield" size={14} color={themeHex} />
                 <span>SECURE_VAULT_READY • EVM_COMPATIBLE • MULTI_CHAIN</span>
               </div>
             </div>
@@ -228,7 +216,7 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
             >
               <div className="bg-yellow-900/5 border border-yellow-500/20 p-4 rounded-lg relative overflow-hidden">
                 <div className="absolute top-2 right-2 text-yellow-500/20">
-                  <Coins size={48} />
+                  <Icon name="Euro" size={48} variant="BoldDuotone" />
                 </div>
                 <div className="text-slate-400 text-xs font-mono mb-1">
                   TOTAL PORTFOLIO VALUE
@@ -240,7 +228,7 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
                   })}
                 </div>
                 <div className="flex items-center gap-1 text-[10px] font-mono text-green-400 mt-2">
-                  <TrendingUp size={12} /> +2.4% (24h)
+                  <Icon name="Chart" size={12} color="#4ade80" /> +2.4% (24h)
                 </div>
               </div>
 
@@ -249,11 +237,11 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
                   WALLET ADDRESS
                 </div>
                 <div className="flex items-center gap-2 font-mono text-xs bg-black border border-slate-800 p-3 rounded text-yellow-500 break-all">
-                  <ShieldCheck size={14} className="flex-shrink-0" />
+                  <Icon name="Shield" size={14} className="flex-shrink-0" />
                   {wallet.address}
                 </div>
                 <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-600 font-mono">
-                  <Lock size={10} /> PRIVATE KEY: ENCRYPTED_HSM_STORED
+                  <Icon name="Lock" size={10} /> PRIVATE KEY: ENCRYPTED_HSM_STORED
                 </div>
               </div>
               <div className="flex-1">
@@ -303,7 +291,7 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
               >
                 {loading ? (
                   <div className="px-4 text-xs font-mono text-yellow-500 flex items-center gap-2">
-                    <RefreshCw size={10} className="animate-spin" />{" "}
+                    <Icon name="Restart" size={10} className="animate-spin" />{" "}
                     INITIALIZING FEED...
                   </div>
                 ) : (
@@ -325,7 +313,7 @@ const CryptoTerminal: React.FC<Props> = ({ onClose, theme }) => {
               {/* Trade History */}
               <div className="flex-1 p-6 overflow-y-auto font-mono">
                 <div className="flex items-center gap-2 text-slate-500 mb-4 text-xs font-bold tracking-widest">
-                  <History size={14} /> EXECUTION LOG
+                  <Icon name="History" size={14} /> EXECUTION LOG
                 </div>
                 <div className="space-y-1">
                   {trades.length === 0 ? (

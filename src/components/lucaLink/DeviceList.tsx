@@ -1,24 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Smartphone,
-  Tablet,
-  Monitor,
-  Wifi,
-  WifiOff,
-  Battery,
-  BatteryLow,
-  BatteryMedium,
-  BatteryFull,
-  Signal,
-  SignalLow,
-  SignalMedium,
-  SignalHigh,
-  X,
-  RefreshCw,
-  Zap,
-  Clock,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import type { Device } from "../../services/lucaLink/types";
 
 interface DeviceListProps {
@@ -42,30 +23,30 @@ export const DeviceList: React.FC<DeviceListProps> = ({
   const getDeviceIcon = (type: Device["type"]) => {
     switch (type) {
       case "mobile":
-        return Smartphone;
+        return "Smartphone";
       case "tablet":
-        return Tablet;
+        return "Tablet";
       case "desktop":
-        return Monitor;
+        return "Monitor";
       default:
-        return Smartphone;
+        return "Smartphone";
     }
   };
 
   const getBatteryIcon = (level?: number) => {
     if (!level) return null;
-    if (level < 20) return BatteryLow;
-    if (level < 50) return BatteryMedium;
-    if (level < 80) return Battery;
-    return BatteryFull;
+    if (level < 20) return "BatteryLow";
+    if (level < 50) return "BatteryMedium";
+    if (level < 80) return "Battery";
+    return "BatteryFull";
   };
 
   const getSignalIcon = (network?: string) => {
     if (!network || network === "offline") return null;
-    if (network === "wifi") return Signal;
-    if (network === "5g") return SignalHigh;
-    if (network === "4g") return SignalMedium;
-    return SignalLow;
+    if (network === "wifi") return "Signal";
+    if (network === "5g") return "SignalHigh";
+    if (network === "4g") return "SignalMedium";
+    return "SignalLow";
   };
 
   const formatLastSeen = (lastSeen: Date) => {
@@ -97,7 +78,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
     return (
       <div className="flex flex-col items-center justify-center py-8 sm:py-12 px-4 text-center">
         <div className={`mb-3 sm:mb-4 ${themePrimary} opacity-50`}>
-          <Smartphone size={32} className="sm:w-12 sm:h-12" />
+          <Icon name="Smartphone" size={32} className="sm:w-12 sm:h-12" />
         </div>
         <p className="text-sm sm:text-base text-gray-400 font-mono mb-2">
           NO DEVICES LINKED
@@ -133,7 +114,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
             <div
               key={device.id}
               className={`
-                bg-black/40 backdrop-blur-sm
+                bg-black/40 glass-blur
                 border ${isOnline ? themeBorder + "/30" : "border-gray-700/30"}
                 rounded-lg
                 p-3 sm:p-4
@@ -159,7 +140,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                       isOnline ? themePrimary : "text-gray-600"
                     }`}
                   >
-                    <DeviceIcon size={18} className="sm:w-5 sm:h-5" />
+                    <Icon name={DeviceIcon} size={18} className="sm:w-5 sm:h-5" />
                   </div>
 
                   {/* Device Name & Platform */}
@@ -193,12 +174,12 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                   >
                     {isOnline ? (
                       <>
-                        <Wifi size={8} className="sm:w-2.5 sm:h-2.5" />
+                        <Icon name="Wifi" size={8} className="sm:w-2.5 sm:h-2.5" />
                         <span className="hidden xs:inline">ONLINE</span>
                       </>
                     ) : (
                       <>
-                        <WifiOff size={8} className="sm:w-2.5 sm:h-2.5" />
+                        <Icon name="WifiOff" size={8} className="sm:w-2.5 sm:h-2.5" />
                         <span className="hidden xs:inline">OFFLINE</span>
                       </>
                     )}
@@ -211,7 +192,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                 {/* Network */}
                 {SignalIcon && (
                   <div className="flex items-center gap-1">
-                    <SignalIcon size={10} className="sm:w-3 sm:h-3" />
+                    <Icon name={SignalIcon} size={10} className="sm:w-3 sm:h-3" />
                     <span className="hidden xs:inline uppercase">
                       {device.metadata.network}
                     </span>
@@ -229,14 +210,14 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                         : "text-gray-500"
                     }`}
                   >
-                    <BatteryIcon size={10} className="sm:w-3 sm:h-3" />
+                    <Icon name={BatteryIcon} size={10} className="sm:w-3 sm:h-3" />
                     <span>{device.metadata.battery}%</span>
                   </div>
                 )}
 
                 {/* Last Seen */}
                 <div className="flex items-center gap-1">
-                  <Clock size={10} className="sm:w-3 sm:h-3" />
+                  <Icon name="Clock" size={10} className="sm:w-3 sm:h-3" />
                   <span>{formatLastSeen(device.lastSeen)}</span>
                 </div>
               </div>
@@ -345,7 +326,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                         : undefined,
                     }}
                   >
-                    <Zap size={10} className="sm:w-3 sm:h-3" />
+                    <Icon name="Zap" size={10} className="sm:w-3 sm:h-3" />
                     <span className="hidden xs:inline">Test</span>
                   </button>
                 )}
@@ -367,7 +348,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                       uppercase tracking-wider
                     "
                   >
-                    <RefreshCw size={10} className="sm:w-3 sm:h-3" />
+                    <Icon name="RefreshCw" size={10} className="sm:w-3 sm:h-3" />
                     <span className="hidden xs:inline">Reconnect</span>
                   </button>
                 )}
@@ -388,7 +369,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                     uppercase tracking-wider
                   "
                 >
-                  <X size={10} className="sm:w-3 sm:h-3" />
+                  <Icon name="X" size={10} className="sm:w-3 sm:h-3" />
                   <span className="hidden xs:inline">Unpair</span>
                 </button>
               </div>

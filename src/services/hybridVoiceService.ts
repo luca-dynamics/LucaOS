@@ -352,6 +352,8 @@ class HybridVoiceService {
       let fullModelText = "";
       let sentenceBuffer = "";
       const stream = this.brainProvider.chatStream(transcript, {
+        model: this.config.llmModel,
+        systemInstruction: this.config.systemPrompt,
         abortSignal: signal,
         useVision: true,
         useMemory: true,

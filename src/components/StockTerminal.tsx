@@ -1,13 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  RefreshCw,
-  Newspaper,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 import {
   createChart,
@@ -78,9 +70,9 @@ const StockTerminal: React.FC<Props> = ({ onClose, initialSymbol, theme }) => {
   }, [symbol]);
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in zoom-in-95 duration-300 font-mono p-0 sm:p-4 overflow-hidden">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 glass-blur animate-in zoom-in-95 duration-300 font-mono p-0 sm:p-4 overflow-hidden">
       <div
-        className={`relative w-full h-full sm:h-[85vh] sm:w-[95%] max-w-[1400px] bg-black/40 backdrop-blur-xl border-none sm:border border-white/10 rounded-none sm:rounded-lg flex flex-col overflow-hidden shadow-2xl shadow-emerald-500/10`}
+        className={`relative w-full h-full sm:h-[85vh] sm:w-[95%] max-w-[1400px] bg-black/40 glass-blur border-none sm:border border-white/10 rounded-none sm:rounded-lg flex flex-col overflow-hidden shadow-2xl shadow-emerald-500/10`}
         style={{
           boxShadow: `0 0 50px ${themeHex}1a`,
         }}
@@ -111,7 +103,7 @@ const StockTerminal: React.FC<Props> = ({ onClose, initialSymbol, theme }) => {
               className={`p-1.5 sm:p-2 rounded border ${themeBorder}/30 ${themePrimary} flex-shrink-0`}
               style={{ backgroundColor: `${themeHex}1F` }}
             >
-              <Activity size={18} className="sm:size-5" />
+              <Icon name="Pulse" size={18} variant="BoldDuotone" color={themeHex} />
             </div>
             <div className="overflow-hidden">
               <h2 className="font-display text-base sm:text-xl font-bold text-white tracking-widest truncate uppercase">
@@ -129,7 +121,7 @@ const StockTerminal: React.FC<Props> = ({ onClose, initialSymbol, theme }) => {
             onClick={onClose}
             className="relative z-50 p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0"
           >
-            <X size={20} className="sm:size-6" />
+            <Icon name="CloseCircle" size={20} />
           </button>
         </div>
 
@@ -152,7 +144,8 @@ const StockTerminal: React.FC<Props> = ({ onClose, initialSymbol, theme }) => {
                 onClick={fetchData}
                 className={`absolute right-3 top-1/2 -translate-y-1/2 ${themePrimary}`}
               >
-                <RefreshCw
+                <Icon
+                  name="Restart"
                   size={14}
                   className={loading ? "animate-spin" : ""}
                 />
@@ -172,11 +165,11 @@ const StockTerminal: React.FC<Props> = ({ onClose, initialSymbol, theme }) => {
                         : "text-red-500"
                     }`}
                   >
-                    {parseFloat(stockData.change) >= 0 ? (
-                      <TrendingUp size={14} />
-                    ) : (
-                      <TrendingDown size={14} />
-                    )}
+                    <Icon
+                      name="Chart"
+                      size={14}
+                      color={parseFloat(stockData.change) >= 0 ? "#10b981" : "#ef4444"}
+                    />
                     {stockData.change} ({stockData.changePercent})
                   </div>
                 </div>
@@ -230,7 +223,7 @@ const StockTerminal: React.FC<Props> = ({ onClose, initialSymbol, theme }) => {
             <div
               className={`p-3 sm:p-4 border-b ${themeBorder}/30 text-[10px] sm:text-xs font-bold ${themePrimary} tracking-widest flex items-center gap-2 flex-shrink-0`}
             >
-              <Newspaper size={12} className="sm:size-3.5" /> MARKET WIRE
+              <Icon name="Notes" size={12} color={themeHex} /> MARKET WIRE
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3 sm:space-y-4">
               {news.map((item, i) => (

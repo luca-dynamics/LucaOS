@@ -5,20 +5,13 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "./ui/Icon";
 import {
   MemoryNode,
   GraphNode,
   GraphEdge } from "../types";
 import { memoryService } from "../services/memoryService";
 import { soundService } from "../services/soundService";
-const {
-  RefreshCw,
-  Clock,
-  Box,
-  Maximize,
-  Minimize,
-} = LucideIcons as any;
 import ForceGraph3D from "react-force-graph-3d";
 import * as THREE from "three";
 import { setHexAlpha } from "../config/themeColors";
@@ -432,7 +425,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
         className={`absolute top-3 right-3 text-[10px] font-mono ${theme ? theme.coreColor : "text-purple-500"} z-10 flex flex-col items-end gap-1 pointer-events-none`}
       >
         <div className="flex items-center gap-2">
-          {loading && <RefreshCw size={10} className="animate-spin" />}
+          {loading && <Icon name="RefreshCw" size={10} className="animate-spin" />}
           {isGraphMode
             ? "PROJECT SYNAPSE V2 (3D)"
             : "LUCA MEMORY CLUSTERS (3D)"}
@@ -463,7 +456,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
           }`}
           title="Force Graph Refresh"
         >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+          <Icon name="RefreshCw" size={14} className={loading ? "animate-spin" : ""} />
         </button>
 
         {isGraphMode && (
@@ -476,7 +469,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
             }`}
             title="Toggle Temporal History (Expired Edges)"
           >
-            <Clock size={14} />
+            <Icon name="Clock" size={14} />
             {showHistory ? "HISTORY: ON" : "HISTORY: OFF"}
           </button>
         )}
@@ -516,7 +509,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
 
       {/* Control Hint Overlay */}
       <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1 text-[9px] font-mono text-slate-300 bg-black/60 px-2 py-1 rounded border border-white/5 pointer-events-none">
-        <Box size={10} /> ROTATE / SCROLL TO ZOOM
+        <Icon name="Box" size={10} /> ROTATE / SCROLL TO ZOOM
       </div>
 
       {/* Fullscreen Toggle */}
@@ -525,7 +518,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
         className="absolute bottom-3 right-3 z-20 p-1.5 rounded bg-black/50 text-slate-500 hover:text-white hover:bg-white/10 transition-colors border border-white/10"
         title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
       >
-        {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+        {isFullscreen ? <Icon name="Minimize" size={14} /> : <Icon name="Maximize" size={14} />}
       </button>
     </div>
   );

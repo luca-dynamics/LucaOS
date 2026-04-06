@@ -1,16 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  RefreshCw,
-  ExternalLink,
-  Maximize2,
-  Minimize2,
-  Home,
-  ArrowLeft,
-  ArrowRight,
-  Brain,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface Props {
@@ -211,7 +200,7 @@ const GhostBrowser: React.FC<Props> = ({
       <div className="w-full h-full bg-[#0d0d0d] flex flex-col overflow-hidden">
         <div className="flex-1 relative bg-black flex flex-col items-center justify-center overflow-hidden">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 backdrop-blur-sm">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 glass-blur">
               <div className="flex flex-col items-center gap-4">
                 <div
                   className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin"
@@ -238,9 +227,10 @@ const GhostBrowser: React.FC<Props> = ({
               )}
 
               {agentState.reasoning && (
-                <div className="absolute bottom-8 left-8 right-8 bg-black/80 border border-purple-500/50 p-4 rounded-xl backdrop-blur-md shadow-2xl pointer-events-auto max-h-[30vh] overflow-y-auto">
+                <div className="absolute bottom-8 left-8 right-8 bg-black/80 border border-purple-500/50 p-4 rounded-xl glass-blur shadow-2xl pointer-events-auto max-h-[30vh] overflow-y-auto">
                   <div className="flex items-start gap-3">
-                    <Brain
+                    <Icon
+                      name="Brain"
                       className="text-purple-400 shrink-0 mt-1"
                       size={20}
                     />
@@ -299,7 +289,7 @@ const GhostBrowser: React.FC<Props> = ({
   const themeHex = "#06b6d4"; // Placeholder for themeHex
   return (
     <div
-      className={`fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 font-mono ${
+      className={`fixed inset-0 z-[250] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 font-mono ${
         isMaximized ? "p-0" : "p-4 sm:p-20"
       }`}
     >
@@ -313,7 +303,7 @@ const GhostBrowser: React.FC<Props> = ({
                 className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 title="Go Back"
               >
-                <ArrowLeft size={16} />
+                <Icon name="ArrowLeft" size={16} />
               </button>
               <button
                 onClick={handleGoForward}
@@ -321,14 +311,15 @@ const GhostBrowser: React.FC<Props> = ({
                 className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 title="Go Forward"
               >
-                <ArrowRight size={16} />
+                <Icon name="ArrowRight" size={16} />
               </button>
               <button
                 onClick={handleRefresh}
                 className="p-1.5 text-slate-400 hover:text-white transition-colors"
                 title="Refresh"
               >
-                <RefreshCw
+                <Icon
+                  name="RefreshCw"
                   size={16}
                   className={isLoading ? "animate-spin" : ""}
                 />
@@ -338,7 +329,7 @@ const GhostBrowser: React.FC<Props> = ({
                 className="p-1.5 text-slate-400 hover:text-white transition-colors"
                 title="Home"
               >
-                <Home size={16} />
+                <Icon name="Home" size={16} />
               </button>
             </div>
 
@@ -374,28 +365,28 @@ const GhostBrowser: React.FC<Props> = ({
               className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors"
               title="Open in External Browser"
             >
-              <ExternalLink size={16} />
+              <Icon name="ExternalLink" size={16} />
             </button>
             <button
               onClick={handleMaximize}
               className="p-1.5 text-slate-400 hover:text-white transition-colors"
               title={isMaximized ? "Restore" : "Maximize"}
             >
-              {isMaximized ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+              {isMaximized ? <Icon name="Minimize2" size={16} /> : <Icon name="Maximize2" size={16} />}
             </button>
             <button
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
               title="Close"
             >
-              <X size={16} />
+              <Icon name="X" size={16} />
             </button>
           </div>
         </div>
 
         <div className="flex-1 relative bg-black flex flex-col items-center justify-center overflow-hidden">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 backdrop-blur-sm">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 glass-blur">
               <div className="flex flex-col items-center gap-4">
                 <div
                   className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin"
@@ -422,9 +413,10 @@ const GhostBrowser: React.FC<Props> = ({
               )}
 
               {agentState.reasoning && (
-                <div className="absolute bottom-8 left-8 right-8 bg-black/80 border border-purple-500/50 p-4 rounded-xl backdrop-blur-md shadow-2xl pointer-events-auto max-h-[30vh] overflow-y-auto">
+                <div className="absolute bottom-8 left-8 right-8 bg-black/80 border border-purple-500/50 p-4 rounded-xl glass-blur shadow-2xl pointer-events-auto max-h-[30vh] overflow-y-auto">
                   <div className="flex items-start gap-3">
-                    <Brain
+                    <Icon
+                      name="Brain"
                       className="text-purple-400 shrink-0 mt-1"
                       size={20}
                     />

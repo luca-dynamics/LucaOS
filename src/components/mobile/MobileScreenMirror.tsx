@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Cast,
-  Eye,
-  EyeOff,
-  Crosshair,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { SmartDevice } from "../../types";
 import UiTreeOverlay, { UiNode } from "./UiTreeOverlay";
 
@@ -61,7 +55,7 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
     <div className="h-full flex flex-col items-center justify-center">
       {!isAdbConnected ? (
         <div className="text-center text-slate-500">
-          <Cast size={48} className="mx-auto mb-4 opacity-20" />
+          <Icon name="Cast" size={48} className="mx-auto mb-4 opacity-20" variant="BoldDuotone" />
           <h3 className="text-lg font-bold text-white mb-2">
             ADB LINK OFFLINE
           </h3>
@@ -120,7 +114,7 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
           {/* Controls Sidebar */}
           <div className="flex flex-col gap-3 w-48">
             {/* VISION MODES */}
-            <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-sm backdrop-blur-sm">
+            <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-sm glass-blur">
               <div className="text-[10px] font-mono text-rq-blue mb-2 font-bold uppercase tracking-widest">
                 Vision Systems
               </div>
@@ -133,7 +127,7 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  {visionMode ? <Eye size={14} /> : <EyeOff size={14} />}
+                  {visionMode ? <Icon name="Eye" size={14} variant="BoldDuotone" /> : <Icon name="EyeOff" size={14} variant="BoldDuotone" />}
                   INSPECTOR
                 </span>
                 <div
@@ -147,7 +141,7 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
             </div>
 
             {/* NAVIGATION */}
-            <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-sm backdrop-blur-sm flex flex-col gap-2">
+            <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-sm glass-blur flex flex-col gap-2">
               <div className="text-[10px] font-mono text-slate-500 mb-1 font-bold uppercase tracking-widest">
                 Hardware Navigation
               </div>
@@ -184,12 +178,12 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
               className="group relative flex items-center justify-center gap-2 px-4 py-3 bg-purple-900/20 hover:bg-purple-600 text-purple-400 hover:text-white text-[10px] font-bold rounded-sm border border-purple-900/40 shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all overflow-hidden"
             >
               <div className="absolute inset-x-0 bottom-0 h-[1px] bg-purple-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <Cast size={14} />
+               <Icon name="Cast" size={14} variant="BoldDuotone" />
               <span className="tracking-widest">CROSS-LINK MIRROR</span>
             </button>
 
             <div className="mt-2 p-2 rounded bg-cyan-950/20 border border-cyan-900/20 flex gap-2">
-              <Crosshair size={12} className="text-rq-blue shrink-0 mt-0.5" />
+              <Icon name="Target" size={12} className="text-rq-blue shrink-0 mt-0.5" variant="BoldDuotone" />
               <div className="text-[9px] font-mono text-slate-400 leading-tight">
                 Precision Mode Active. Tap screen to send raw events. Use
                 Inspector to target meta-elements.

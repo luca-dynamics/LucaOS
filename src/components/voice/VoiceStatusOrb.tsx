@@ -13,8 +13,6 @@ const VoiceStatusOrb: React.FC<VoiceStatusOrbProps> = ({
   isVadActive,
   transcriptSource,
   amplitude,
-  // persona is used by parent to determine color passed in here
-  canvasThemeColor,
 }) => {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
@@ -25,7 +23,7 @@ const VoiceStatusOrb: React.FC<VoiceStatusOrbProps> = ({
             isVadActive ? "text-white scale-110" : ""
           }`}
           style={{
-            color: isVadActive ? undefined : canvasThemeColor,
+            color: isVadActive ? "var(--app-id-accent, #ffffff)" : "var(--app-text-main, rgba(255,255,255,0.5))",
           }}
         >
           {isVadActive

@@ -1,11 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  ShieldAlert,
-  RefreshCw,
-  RotateCcw,
-  Terminal,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface Props {
@@ -118,7 +112,7 @@ class SystemErrorBoundary extends Component<Props, State> {
 
           <div className="max-w-3xl w-full border-4 border-red-600 bg-[#050000] p-8 shadow-[0_0_100px_rgba(220,38,38,0.5)] relative z-10 rounded-lg">
             <div className="flex items-center gap-4 mb-6 border-b-2 border-red-600 pb-4">
-              <ShieldAlert size={48} className="animate-pulse" />
+              <Icon name="ShieldAlert" size={48} className="animate-pulse" />
               <div>
                 <h1 className="text-4xl font-black tracking-[0.2em]">
                   CRITICAL FAILURE
@@ -141,7 +135,7 @@ class SystemErrorBoundary extends Component<Props, State> {
                 onClick={() => window.location.reload()}
                 className="flex-1 py-4 border border-red-600 hover:bg-red-600 hover:text-black transition-all font-bold tracking-widest flex items-center justify-center gap-2"
               >
-                <RefreshCw size={18} /> FORCE RESTART
+                <Icon name="Refresh" size={18} /> FORCE RESTART
               </button>
 
               <button
@@ -150,9 +144,9 @@ class SystemErrorBoundary extends Component<Props, State> {
                 className="flex-1 py-4 bg-red-600 hover:bg-white hover:text-black text-black transition-all font-bold tracking-widest flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(220,38,38,0.4)] animate-pulse"
               >
                 {this.state.isRestoring ? (
-                  <RefreshCw size={18} className="animate-spin" />
+                  <Icon name="Refresh" size={18} className="animate-spin" />
                 ) : (
-                  <RotateCcw size={18} />
+                  <Icon name="Restart" size={18} />
                 )}
                 INITIATE ROLLBACK PROTOCOL
               </button>
@@ -163,16 +157,16 @@ class SystemErrorBoundary extends Component<Props, State> {
                 className="flex-1 py-4 bg-purple-600 hover:bg-white hover:text-black text-white transition-all font-bold tracking-widest flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(147,51,234,0.5)] animate-pulse"
               >
                 {this.state.isRepairing ? (
-                  <RefreshCw size={18} className="animate-spin" />
+                  <Icon name="Refresh" size={18} className="animate-spin" />
                 ) : (
-                  <Terminal size={18} />
+                  <Icon name="Code" size={18} />
                 )}
                 ATTEMPT AUTO-REPAIR
               </button>
             </div>
 
             <div className="mt-6 text-center text-xs text-red-500/60 uppercase">
-              <Terminal size={10} className="inline mr-1" />
+              <Icon name="Code" size={10} className="inline mr-1" />
               Automated Self-Repair Module V1.0
             </div>
           </div>

@@ -22,6 +22,8 @@ import protocolSkillEngine from '../../services/ProtocolSkillEngine.js';
 
 
 import { LUCA_USER_DIR } from '../../config/constants.js';
+import { marketStreamer } from '../../services/MarketStreamer.js';
+import { socketService } from '../../services/socketService.js';
 
 const router = Router();
 
@@ -313,6 +315,30 @@ router.get('/exchange/:exchange/balance', async (req, res) => {
 });
 
 /**
+ * GET /api/trading/exchange/:exchange/markets
+ * Get all available markets for an exchange
+ */
+router.get('/exchange/:exchange/markets', async (req, res) => {
+  const { exchange } = req.params;
+
+  try {
+    const markets = await exchangeManager.getMarkets(exchange);
+
+    res.json({
+      success: true,
+      exchange,
+      markets,
+      count: Object.keys(markets).length
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
  * GET /api/trading/exchange/:exchange/positions
  * Get all open positions
  */
@@ -481,6 +507,37 @@ router.get('/exchange/:exchange/price/:symbol', async (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+/**
+ * GET /api/trading/stream/subscribe
+ * Start real-time streaming for a symbol
+ */
+router.get('/stream/subscribe', async (req, res) => {
+  const { exchange = 'binance', symbol } = req.query;
+
+  if (!symbol) {
+    return res.status(400).json({ success: false, error: 'Missing symbol' });
+  }
+
+  try {
+    // Ensure socket server is active
+    if (!socketService.isRunning()) {
+      console.log('[TRADING] Starting socket server for market data...');
+      socketService.initialize();
+    }
+
+    // Subscribe to market data
+    marketStreamer.subscribe(exchange, symbol);
+
+    res.json({
+      success: true,
+      message: `Subscribed to real-time updates for ${symbol} on ${exchange}`,
+      socketPort: 3003
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

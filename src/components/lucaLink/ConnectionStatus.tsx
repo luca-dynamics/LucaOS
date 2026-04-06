@@ -1,12 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Wifi,
-  WifiOff,
-  Loader,
-  AlertCircle,
-  Activity,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { ConnectionState } from "../../services/lucaLink/types";
 
 interface ConnectionStatusProps {
@@ -30,7 +23,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     switch (state) {
       case ConnectionState.CONNECTED:
         return {
-          icon: Wifi,
+          icon: "Wifi",
           label: "CONNECTED",
           color: "text-green-400",
           bgColor: "bg-green-500/10",
@@ -42,7 +35,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
       case ConnectionState.HANDSHAKING:
       case ConnectionState.AUTHENTICATING:
         return {
-          icon: Loader,
+          icon: "Loader",
           label: "CONNECTING",
           color: themePrimary,
           bgColor: themeBg,
@@ -54,7 +47,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         };
       case ConnectionState.RECONNECTING:
         return {
-          icon: Activity,
+          icon: "Activity",
           label: "RECONNECTING",
           color: "text-yellow-400",
           bgColor: "bg-yellow-500/10",
@@ -65,7 +58,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
       case ConnectionState.DISCONNECTED:
       case ConnectionState.ERROR:
         return {
-          icon: WifiOff,
+          icon: "WifiOff",
           label: "DISCONNECTED",
           color: "text-red-400",
           bgColor: "bg-red-500/10",
@@ -75,7 +68,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         };
       case ConnectionState.DEGRADED:
         return {
-          icon: AlertCircle,
+          icon: "AlertCircle",
           label: "DEGRADED",
           color: "text-orange-400",
           bgColor: "bg-orange-500/10",
@@ -85,7 +78,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         };
       default:
         return {
-          icon: WifiOff,
+          icon: "WifiOff",
           label: "UNKNOWN",
           color: "text-gray-400",
           bgColor: "bg-gray-500/10",
@@ -97,7 +90,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   };
 
   const config = getStatusConfig();
-  const Icon = config.icon;
+  const IconComp = config.icon;
 
   return (
     <div
@@ -127,7 +120,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
       </div>
 
       {/* Icon */}
-      <Icon size={10} className={`sm:w-3 sm:h-3 ${config.animation}`} />
+      <Icon name={IconComp} size={10} className={`sm:w-3 sm:h-3 ${config.animation}`} />
 
       {/* Status Text - Hidden on very small screens */}
       <span className="hidden xs:inline uppercase tracking-wider">

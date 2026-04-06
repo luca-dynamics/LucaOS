@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Loader2,
-  Plus,
-  Bot,
-} = LucideIcons as any;
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Icon } from "../../ui/Icon";
+
 import { DebatePersonality, CreateDebateRequest } from "../../../types/trading";
 import { PERSONALITY_EMOJIS, PERSONALITY_COLORS } from "../../../types/trading";
+import { BRAIN_CONFIG } from "../../../config/brain.config";
+import { modelManager, LocalModel } from "../../../services/ModelManagerService";
+import { tradingService } from "../../../services/tradingService";
+import { getAgentLogo } from "../../../utils/tradingUI";
 
 interface CreateDebateModalProps {
   isOpen: boolean;
@@ -15,49 +14,28 @@ interface CreateDebateModalProps {
   onCreate: (request: CreateDebateRequest) => void;
 }
 
-// Full AI Model List from NoFx
-const AI_MODELS = [
-  { id: "gpt4", name: "GPT-4o", provider: "OpenAI", color: "bg-emerald-600" },
-  {
-    id: "claude3",
-    name: "Claude 3.5 Sonnet",
-    provider: "Anthropic",
-    color: "bg-orange-500",
-  },
-  {
-    id: "deepseek",
-    name: "DeepSeek V3",
-    provider: "DeepSeek",
-    color: "bg-blue-600",
-  },
-  {
-    id: "gemini",
-    name: "Gemini 1.5 Pro",
-    provider: "Google",
-    color: "bg-blue-400",
-  },
-  { id: "grok", name: "Grok 1.5", provider: "xAI", color: "bg-gray-700" },
-  {
-    id: "kimi",
-    name: "Moonshot Kimi",
-    provider: "Moonshot",
-    color: "bg-purple-500",
-  },
-  { id: "qwen", name: "Qwen 2.5", provider: "Alibaba", color: "bg-indigo-500" },
-];
+// Note: AI_MODELS is now dynamically generated inside the component
 
 const MOCK_STRATEGIES = [
   {
     id: "strat1",
     name: "Trend Following (Safe)",
     type: "static",
-    coins: ["BTCUSDT", "ETHUSDT"],
+    coins: [
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT",
+      "BNBUSDT",
+      "XRPUSDT",
+      "ADAUSDT",
+      "LINKUSDT",
+    ],
   },
   {
     id: "strat2",
     name: "Mean Reversion (Aggressive)",
     type: "static",
-    coins: ["SOLUSDT", "DOGEUSDT"],
+    coins: ["DOGEUSDT", "AVAXUSDT", "DOTUSDT", "NEARUSDT", "PEPEUSDT"],
   },
   {
     id: "strat3",
@@ -65,6 +43,14 @@ const MOCK_STRATEGIES = [
     type: "dynamic",
     coins: [],
   },
+];
+
+const SUPPORTED_ASSETS = [
+  "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT", 
+  "ADAUSDT", "LINKUSDT", "DOGEUSDT", "AVAXUSDT", "DOTUSDT", 
+  "NEARUSDT", "PEPEUSDT", "SHIBUSDT", "TRXUSDT", "MATICUSDT",
+  "LTCUSDT", "BCHUSDT", "FILUSDT", "APTUSDT", "SUIUSDT",
+  "OPUSDT", "ARBUSDT", "TIAUSDT", "SEIUSDT", "INJUSDT"
 ];
 
 const PERSONALITIES: {
@@ -113,28 +99,142 @@ export default function CreateDebateModal({
   const [name, setName] = useState("");
   const [strategyId, setStrategyId] = useState(MOCK_STRATEGIES[0].id);
   const [symbol, setSymbol] = useState(MOCK_STRATEGIES[0].coins[0] || "");
+  const [assetSearch, setAssetSearch] = useState("");
+  const [showAssetDropdown, setShowAssetDropdown] = useState(false);
+  const [liveAssets, setLiveAssets] = useState<string[]>([]);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
+  const [liveStrategies, setLiveStrategies] = useState<{id: string; name: string; coins: string[]; type: string}[]>([]);
+  const assetDropdownRef = useRef<HTMLDivElement>(null);
   const [rounds, setRounds] = useState(3);
+  const [localModels, setLocalModels] = useState<LocalModel[]>([]);
+  
+  // Dynamically assemble available models
+  const AI_MODELS = useMemo(() => {
+    const cloudModels: { id: string; name: string; provider: string; color: string }[] = [];
+    
+    // 1. Collect from BRAIN_CONFIG
+    Object.values(BRAIN_CONFIG.providers).forEach((provider) => {
+      Object.entries(provider.models).forEach(([label, modelId]) => {
+        const brand = getAgentLogo(modelId);
+        cloudModels.push({
+          id: modelId as string,
+          name: `${provider.name} ${label} ${label.includes("3.1") || label.includes("4.5") ? "(Elite)" : "(Managed)"}`,
+          provider: provider.name,
+          color: brand.color,
+        });
+      });
+    });
+
+    // 2. Collect from ModelManager
+    const local = localModels
+      .filter((m: LocalModel) => m.status === "ready" && m.category === "brain")
+      .map((m: LocalModel) => {
+        const brand = getAgentLogo(m.id);
+        return {
+          id: m.id,
+          name: `${m.name} (Local)`,
+          provider: brand.letter === "G" ? "Google" : brand.letter === "L" ? "Meta" : "Local",
+          color: brand.color,
+        };
+      });
+
+    return { cloud: cloudModels, local };
+  }, [localModels]);
+
   const [participants, setParticipants] = useState<
     { aiModelId: string; personality: DebatePersonality }[]
   >([
-    { aiModelId: "claude3", personality: DebatePersonality.ANALYST },
-    { aiModelId: "deepseek", personality: DebatePersonality.BULL },
+    { aiModelId: "gemini-3.1-pro-preview", personality: DebatePersonality.ANALYST },
+    { aiModelId: "gemini-2.0-flash", personality: DebatePersonality.BULL },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sync Local Models + Live Exchange Assets + Real Strategies
+  useEffect(() => {
+    if (isOpen) {
+      modelManager.getModels().then(setLocalModels);
+
+      // Fetch live assets from connected exchange
+      setIsLoadingAssets(true);
+      tradingService.getMarkets().then((markets) => {
+        const symbols = Object.keys(markets ?? {});
+        if (symbols.length > 0) {
+          const normalised = symbols
+            .filter((s) => s.endsWith("/USDT") || s.endsWith("USDT"))
+            .map((s) => s.replace("/", ""))
+            .sort();
+          setLiveAssets(normalised);
+        }
+      }).catch(() => {}).finally(() => setIsLoadingAssets(false));
+
+      // Fetch real strategies from backend
+      fetch("/api/trading/strategy")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.strategies) && data.strategies.length > 0) {
+            const mapped = data.strategies.map((s: any) => ({
+              id: s.id,
+              name: s.name,
+              type: s.type || "static",
+              coins: s.coinSource?.staticCoins || s.coins || [],
+            }));
+            setLiveStrategies(mapped);
+          }
+        })
+        .catch(() => { /* silently fall back to mock strategies */ });
+    }
+  }, [isOpen]);
+
+  // Merge real strategies with built-in mocks (real ones go first)
+  const allStrategies = useMemo(() => {
+    const live = liveStrategies.filter(ls => !MOCK_STRATEGIES.some(m => m.id === ls.id));
+    return [...live, ...MOCK_STRATEGIES];
+  }, [liveStrategies]);
+
+  // Close asset dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (assetDropdownRef.current && !assetDropdownRef.current.contains(e.target as Node)) {
+        setShowAssetDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   // Strategy Logic
-  const selectedStrategy = MOCK_STRATEGIES.find((s) => s.id === strategyId);
+  const selectedStrategy = allStrategies.find((s) => s.id === strategyId);
   const isStatic = selectedStrategy?.type === "static";
+
+  // Merge live exchange assets with hardcoded fallback + strategy coins
+  const allAssets = useMemo(() => {
+    const strategyCoins = selectedStrategy?.coins || [];
+    // Merge live assets with fallback list to ensure variety
+    const base = [...new Set([...liveAssets, ...SUPPORTED_ASSETS])];
+    return [...new Set([...strategyCoins, ...base])];
+  }, [selectedStrategy, liveAssets]);
 
   useEffect(() => {
     if (selectedStrategy && isStatic && selectedStrategy.coins.length > 0) {
-      if (!selectedStrategy.coins.includes(symbol)) {
-        setSymbol(selectedStrategy.coins[0]);
-      }
+      // Only reset when strategy changes — seed with first coin
+      const first = selectedStrategy.coins[0];
+      setSymbol(first);
+      setAssetSearch(first);
     } else if (selectedStrategy && !isStatic) {
-      setSymbol(""); // Clear for dynamic
+      setSymbol("");
+      setAssetSearch("");
     }
-  }, [strategyId, isStatic, selectedStrategy, symbol]);
+    // Only react to strategy change, NOT to symbol changes
+  }, [strategyId]);
+
+  // Filtered asset list based on search
+  const filteredAssets = useMemo(() => {
+    const q = assetSearch.toUpperCase().trim();
+    // If search is empty OR it matches the current symbol exactly, show all assets
+    // This allows the dropdown to be "full" when first opened even if a symbol is pre-selected
+    if (!q || q === symbol) return allAssets;
+    return allAssets.filter((a) => a.includes(q));
+  }, [assetSearch, allAssets, symbol]);
 
   if (!isOpen) return null;
 
@@ -153,8 +253,8 @@ export default function CreateDebateModal({
       onClose();
       setName("");
       setParticipants([
-        { aiModelId: "claude3", personality: DebatePersonality.ANALYST },
-        { aiModelId: "deepseek", personality: DebatePersonality.BULL },
+        { aiModelId: "gemini-3.1-pro-preview", personality: DebatePersonality.ANALYST },
+        { aiModelId: "deepseek-r1-distill-7b", personality: DebatePersonality.BULL },
       ]);
     }, 800);
   };
@@ -167,14 +267,18 @@ export default function CreateDebateModal({
       DebatePersonality.CONTRARIAN,
     ];
     const p = nextPers[participants.length % nextPers.length];
+    
+    // Default to first cloud model if available
+    const defaultModel = AI_MODELS.cloud[0]?.id || "gemini-2.0-flash";
+    
     setParticipants([
       ...participants,
-      { aiModelId: AI_MODELS[0].id, personality: p },
+      { aiModelId: defaultModel, personality: p },
     ]);
   };
 
   const removeParticipant = (index: number) => {
-    setParticipants(participants.filter((_, i) => i !== index));
+    setParticipants((prev) => prev.filter((_: any, i: number) => i !== index));
   };
 
   const updateParticipant = (
@@ -188,19 +292,19 @@ export default function CreateDebateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
-      <div className="bg-[#161b22] border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 glass-blur animate-in fade-in duration-200 font-sans">
+      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 bg-[#0d1017] flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-white/5 bg-[#050505] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
-              <Bot size={18} className="text-yellow-500" />
+              <Icon name="System" size={18} className="text-[#facc15]" variant="BoldDuotone" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-white tracking-tight">
                 Create Debate Session
               </h3>
-              <p className="text-[10px] text-slate-500 font-mono uppercase">
+              <p className="text-[10px] text-slate-500 font-mono">
                 AI Consensus Engine
               </p>
             </div>
@@ -209,16 +313,16 @@ export default function CreateDebateModal({
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-lg"
           >
-            <X size={18} />
+            <Icon name="Close" size={18} variant="BoldDuotone" />
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar bg-[#080808]/40">
           {/* Section 1: Basic Info */}
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+              <label className="text-xs font-bold text-slate-500 mb-2 block">
                 Debate Name
               </label>
               <input
@@ -226,22 +330,22 @@ export default function CreateDebateModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. BTC Breakout Analysis"
-                className="w-full bg-[#0d1017] border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/20 transition-all placeholder:text-slate-600"
+                className="w-full bg-[#0d0d0d] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]/20 transition-all placeholder:text-slate-600 font-medium"
                 autoFocus
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+                <label className="text-xs font-bold text-slate-500 mb-2 block">
                   Strategy
                 </label>
                 <select
                   value={strategyId}
                   onChange={(e) => setStrategyId(e.target.value)}
-                  className="w-full bg-[#0d1017] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-yellow-500"
+                  className="w-full bg-[#0d0d0d] border border-white/10 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-[#facc15] font-medium"
                 >
-                  {MOCK_STRATEGIES.map((s) => (
+                  {allStrategies.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
                     </option>
@@ -249,23 +353,73 @@ export default function CreateDebateModal({
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+                <label className="text-xs font-bold text-slate-500 mb-2 block">
                   Target Asset
                 </label>
                 {isStatic ? (
-                  <select
-                    value={symbol}
-                    onChange={(e) => setSymbol(e.target.value)}
-                    className="w-full bg-[#0d1017] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-yellow-500 font-mono"
-                  >
-                    {selectedStrategy?.coins.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative" ref={assetDropdownRef}>
+                    {/* Text input */}
+                    <div className="relative">
+                      <Icon name="Search" size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" variant="BoldDuotone" />
+                      <input
+                        type="text"
+                        placeholder="Search asset…"
+                        className="w-full bg-[#0d0d0d] border border-white/10 rounded-xl pl-8 pr-8 py-3 text-[#facc15] text-sm focus:outline-none focus:border-[#facc15] focus:ring-1 focus:ring-[#facc15]/20 transition-all placeholder:text-slate-700 placeholder:font-sans placeholder:text-xs font-mono font-bold"
+                        value={assetSearch}
+                        onFocus={() => setShowAssetDropdown(true)}
+                        onChange={(e) => {
+                          const val = e.target.value.toUpperCase().replace("/", "");
+                          setAssetSearch(val);
+                          setSymbol(val);
+                          setShowAssetDropdown(true);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAssetDropdown((v) => !v)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                      >
+                        <Icon name="AltArrowDown" size={13} className={`transition-transform ${showAssetDropdown ? "rotate-180" : ""}`} variant="BoldDuotone" />
+                      </button>
+                    </div>
+
+                    {/* Dropdown list */}
+                    {showAssetDropdown && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#0d0d0d] border border-[#facc15]/20 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar">
+                        {isLoadingAssets ? (
+                          <div className="flex items-center gap-2 px-4 py-3 text-xs text-slate-500">
+                            <Icon name="Restart" size={12} className="animate-spin" variant="BoldDuotone" />
+                            Loading assets from exchange…
+                          </div>
+                        ) : filteredAssets.length > 0 ? (
+                          filteredAssets.map((asset) => (
+                            <button
+                              key={asset}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setSymbol(asset);
+                                setAssetSearch(asset);
+                                setShowAssetDropdown(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 text-sm font-mono font-bold transition-colors hover:bg-[#facc15]/10 ${
+                                symbol === asset ? "text-[#facc15] bg-[#facc15]/5" : "text-slate-300"
+                              }`}
+                            >
+                              {asset}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-xs text-slate-500 italic">
+                            No assets match &quot;{assetSearch}&quot;
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  </div>
                 ) : (
-                  <div className="w-full bg-[#0d1017]/50 border border-slate-800 rounded-xl px-3 py-3 text-slate-500 text-sm italic border-dashed">
+                  <div className="w-full bg-[#0d0d0d]/50 border border-white/5 rounded-xl px-3 py-3 text-slate-500 text-sm italic border-dashed">
                     Auto-Selected by Strategy
                   </div>
                 )}
@@ -273,133 +427,125 @@ export default function CreateDebateModal({
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+              <label className="text-xs font-bold text-slate-500 mb-2 block">
                 Max Rounds
               </label>
-              <div className="flex bg-[#0d1017] p-1 rounded-xl border border-slate-800">
+              <select
+                value={rounds}
+                onChange={(e) => setRounds(parseInt(e.target.value))}
+                className="w-full bg-[#0d0d0d] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#facc15] font-medium"
+              >
                 {[2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setRounds(n)}
-                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                      rounds === n
-                        ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/10"
-                        : "text-slate-500 hover:text-slate-300"
-                    }`}
-                  >
-                    {n} Rounds
-                  </button>
+                  <option key={n} value={n}>
+                    {n} Rounds (Deep Analysis)
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
 
-          <div className="h-px bg-slate-800/60" />
+          <div className="h-px bg-white/5" />
 
           {/* Section 2: Participants */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <label className="text-xs font-bold text-slate-500">
                 AI Panel ({participants.length})
               </label>
               <button
                 onClick={addParticipant}
                 disabled={participants.length >= 6}
-                className="flex items-center gap-1 text-[10px] font-bold text-yellow-500 hover:text-yellow-400 disabled:opacity-50 px-2 py-1 bg-yellow-500/10 rounded border border-yellow-500/20 transition-colors"
+                className="flex items-center gap-1.5 text-[10px] font-black text-[#facc15] hover:text-white disabled:opacity-50 px-3 py-1.5 bg-[#facc15]/10 rounded border border-[#facc15]/20 transition-all uppercase tracking-widest"
               >
-                <Plus size={12} /> ADD AGENT
+                <Icon name="Plus" size={12} variant="BoldDuotone" /> Add Agent
               </button>
             </div>
 
             <div className="space-y-2">
-              {participants.map((p, idx) => (
+              {participants.map((p: any, idx: number) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 bg-[#0d1017] p-2 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors group"
+                  className="flex items-center gap-3 bg-[#0a0a0a] p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors group"
                 >
+                  {/* Personality Select - NoFx Order: Role first */}
+                  <div className="flex-[1.2]">
+                    <div className="text-[9px] text-slate-500 font-black mb-1 opacity-60">Role</div>
+                    <select
+                      value={p.personality}
+                      onChange={(e) =>
+                        updateParticipant(idx, "personality", e.target.value as any)
+                      }
+                      className="w-full bg-transparent text-xs font-bold outline-none cursor-pointer"
+                      style={{ color: (PERSONALITY_COLORS as any)[p.personality] }}
+                    >
+                      {PERSONALITIES.map((pers) => (
+                        <option key={pers.value} value={pers.value} className="bg-[#0a0a0a] text-white">
+                          {pers.emoji} {pers.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="w-px h-8 bg-white/10" />
+
                   {/* Model Select */}
-                  <div className="flex-1">
+                  <div className="flex-[1.5]">
+                    <div className="text-[9px] text-slate-500 font-black mb-1 opacity-60">AI Model</div>
                     <select
                       value={p.aiModelId}
                       onChange={(e) =>
                         updateParticipant(idx, "aiModelId", e.target.value)
                       }
-                      className="w-full bg-transparent text-xs text-white font-bold outline-none"
+                      className="w-full bg-transparent text-xs text-white font-black outline-none cursor-pointer"
                     >
-                      {AI_MODELS.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
+                      <optgroup label="CLOUD AGENTS (FAST)" className="bg-[#0a0a0a] text-slate-500 text-[10px]">
+                        {AI_MODELS.cloud.map((m: any) => (
+                          <option key={m.id} value={m.id} className="bg-[#0a0a0a] text-white">
+                            {m.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="LOCAL AGENTS (OFFLINE)" className="bg-[#0a0a0a] text-slate-500 text-[10px]">
+                        {AI_MODELS.local.map((m: any) => (
+                          <option key={m.id} value={m.id} className="bg-[#0a0a0a] text-white">
+                            {m.name}
+                          </option>
+                        ))}
+                      </optgroup>
                     </select>
-                    <div className="text-[10px] text-slate-500 mt-0.5">
-                      {AI_MODELS.find((m) => m.id === p.aiModelId)?.provider}
-                    </div>
-                  </div>
-
-                  <div className="w-px h-6 bg-slate-800 mx-1" />
-
-                  {/* Personality Select */}
-                  <div className="flex-[1.2]">
-                    <select
-                      value={p.personality}
-                      onChange={(e) =>
-                        updateParticipant(idx, "personality", e.target.value)
-                      }
-                      className="w-full bg-transparent text-xs text-white outline-none"
-                      style={{ color: PERSONALITY_COLORS[p.personality] }}
-                    >
-                      {PERSONALITIES.map((pers) => (
-                        <option key={pers.value} value={pers.value}>
-                          {pers.emoji} {pers.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="text-[10px] text-slate-500 mt-0.5 truncate">
-                      {
-                        PERSONALITIES.find(
-                          (pers) => pers.value === p.personality
-                        )?.desc
-                      }
-                    </div>
                   </div>
 
                   {/* Remove */}
                   <button
                     onClick={() => removeParticipant(idx)}
                     disabled={participants.length <= 2}
-                    className="p-1.5 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-0"
+                    className="p-2 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-0"
                   >
-                    <X size={14} />
+                    <Icon name="Close" size={16} variant="BoldDuotone" />
                   </button>
                 </div>
               ))}
             </div>
-            {participants.length < 2 && (
-              <p className="text-[10px] text-rose-500 mt-2 font-medium flex items-center gap-1">
-                <X size={10} /> Minimum 2 agents required for debate
-              </p>
-            )}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-800 bg-[#0d1017] flex gap-3">
+        <div className="px-6 py-4 border-t border-white/5 bg-[#050505] flex items-center justify-between gap-4">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold transition-colors"
+            className="px-6 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-black tracking-widest transition-all uppercase border border-white/5"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!name || participants.length < 2 || isSubmitting}
-            className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/20"
+            className="flex-1 py-2.5 rounded-lg bg-[#facc15] hover:bg-[#eab308] text-black text-xs font-black tracking-[0.2em] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.15)] uppercase"
           >
             {isSubmitting ? (
-              <Loader2 size={16} className="animate-spin" />
+              <Icon name="Restart" size={16} className="animate-spin" variant="BoldDuotone" />
             ) : (
-              "Initialize Debate"
+              "Initialize Consensus"
             )}
           </button>
         </div>

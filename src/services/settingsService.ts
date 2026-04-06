@@ -16,6 +16,15 @@ export interface NotificationSettings {
   priorityThreshold: "LOW" | "NORMAL" | "MEDIUM" | "HIGH" | "CRITICAL";
 }
 
+export interface SovereignFact {
+  id: string;
+  category: "PREFERENCE" | "DIRECTIVE" | "PROJECT_CONTEXT";
+  content: string;
+  sourceMessageId?: string;
+  timestamp: number;
+  confidence: number;
+}
+
 export interface LucaSettings {
   general: {
     backgroundBlur?: number;
@@ -43,16 +52,33 @@ export interface LucaSettings {
     openaiApiKey: string; // New
     openaiBaseUrl?: string; // Appended for Dev Cloud Support
     xaiApiKey: string; // New
+    xaiBaseUrl?: string; // Appended for Dev Cloud Support
+    deepseekApiKey: string; // New
+    deepseekBaseUrl?: string; // Appended for Dev Cloud Support
     model: string;
+    provider: "local-luca" | "cloud-managed" | "byok";
     voiceModel: string;
     visionModel: string; // Vision & Multimodal model
-    memoryModel: string;
+    memoryModel: string; // Legacy field (kept for migration)
     temperature: number;
     autoContextWindow: boolean;
     preferOllama: boolean; // Global local routing priority
+    conversationMode: "fast" | "planning"; // Universal LUCA Orchestration State
+    activePluginId: string | null; // Currently active power-up bundle/mode
+  };
+  memory: {
+    provider: "local-luca" | "gemini-genai" | "openai";
+    model: string;
+    sovereignFacts: SovereignFact[];
   };
   voice: {
-    provider: "native" | "google" | "local-luca" | "gemini-genai" | "openai" | "deepgram";
+    provider:
+      | "native"
+      | "google"
+      | "local-luca"
+      | "gemini-genai"
+      | "openai"
+      | "deepgram";
     googleApiKey: string;
     voiceId: string; // e.g., 'Google US English' or specific ID
     rate: number;
@@ -157,8 +183,8 @@ const getEnvVar = (key: string) => {
 
 const DEFAULT_SETTINGS: LucaSettings = {
   general: {
-    backgroundBlur: 12, // Default 12px blur
-    backgroundOpacity: 0.75, // Default 75% opacity
+    backgroundBlur: 40, // Default 40px blur
+    backgroundOpacity: 0.3, // Default 30% opacity
     startOnBoot: false,
     minimizeToTray: false,
     debugMode: false,
@@ -190,28 +216,27 @@ const DEFAULT_SETTINGS: LucaSettings = {
   },
   brain: {
     useCustomApiKey: false,
-    geminiApiKey:
-      (typeof window !== "undefined" && window.localStorage
-        ? localStorage.getItem("GEMINI_API_KEY")
-        : "") ||
-      getEnvVar("VITE_GEMINI_API_KEY") ||
-      getEnvVar("VITE_API_KEY") ||
-      getEnvVar("GEMINI_API_KEY") ||
-      "",
-    anthropicApiKey:
-      getEnvVar("VITE_ANTHROPIC_API_KEY") ||
-      getEnvVar("ANTHROPIC_API_KEY") ||
-      "",
-    openaiApiKey:
-      getEnvVar("VITE_OPENAI_API_KEY") || getEnvVar("OPENAI_API_KEY") || "",
-    xaiApiKey: getEnvVar("VITE_XAI_API_KEY") || getEnvVar("XAI_API_KEY") || "",
+    geminiApiKey: "",
+    anthropicApiKey: "",
+    openaiApiKey: "",
+    xaiApiKey: "",
+    xaiBaseUrl: "",
+    deepseekApiKey: "",
     model: BRAIN_CONFIG.defaults.brain,
+    provider: "local-luca",
     voiceModel: BRAIN_CONFIG.defaults.voice,
     visionModel: BRAIN_CONFIG.defaults.vision,
     memoryModel: BRAIN_CONFIG.defaults.memory,
     temperature: 0.7,
     autoContextWindow: true,
-    preferOllama: false, // Default to Luca-native routing
+    preferOllama: true, // Default to true for Privacy-by-Default
+    conversationMode: "fast", // Default to conversational fast mode
+    activePluginId: null, // No active plugin by default
+  },
+  memory: {
+    provider: "local-luca",
+    model: BRAIN_CONFIG.defaults.memory,
+    sovereignFacts: [],
   },
   voice: {
     provider: "local-luca", // Default to Local Luca
@@ -327,6 +352,7 @@ class SettingsService extends EventEmitter {
             { section: "brain", key: "anthropicApiKey" },
             { section: "brain", key: "openaiApiKey" },
             { section: "brain", key: "xaiApiKey" },
+            { section: "brain", key: "deepseekApiKey" },
             { section: "voice", key: "googleApiKey" },
             { section: "iot", key: "haToken" },
           ];
@@ -336,27 +362,33 @@ class SettingsService extends EventEmitter {
             try {
               // 1. Check Vault
               const secured = await vault.retrieve(vaultKey);
-              if (secured && secured.password) {
-                // Value found in secure storage - use it!
-                (merged as any)[item.section][item.key] = secured.password;
-                // Redact from localStorage (Safety)
-                if (parsed[item.section] && parsed[item.section][item.key]) {
+                if (secured && typeof secured.password === "string") {
+                  // Value found in secure storage - use it (even if empty)
+                  (merged as any)[item.section][item.key] = secured.password;
+                  // Redact from localStorage (Safety)
+                  if (parsed[item.section] && parsed[item.section][item.key]) {
+                    parsed[item.section][item.key] = "[SECURED]";
+                  }
+                } else if (
+                  (merged as any)[item.section][item.key] === "[SECURED]"
+                ) {
+                  // IMPORTANT: If Hardware Vault has nothing, but localStorage had "[SECURED]",
+                  // we must CLEAR it to "" so it doesn't leak 9 dots to the UI.
+                  (merged as any)[item.section][item.key] = "";
+                } else if (
+                  merged[item.section][item.key] &&
+                  merged[item.section][item.key] !== "[SECURED]"
+                ) {
+                  // 2. Not in vault, but in localStorage (Migration Phase)
+                  const plainValue = merged[item.section][item.key];
+                  console.log(
+                    `[SECURITY] Migrating ${item.key} to hardware vault...`,
+                  );
+                  await vault.store(vaultKey, item.key, plainValue);
+                  // Redact immediately
+                  (merged as any)[item.section][item.key] = plainValue;
                   parsed[item.section][item.key] = "[SECURED]";
                 }
-              } else if (
-                merged[item.section][item.key] &&
-                merged[item.section][item.key] !== "[SECURED]"
-              ) {
-                // 2. Not in vault, but in localStorage (Migration Phase)
-                const plainValue = merged[item.section][item.key];
-                console.log(
-                  `[SECURITY] Migrating ${item.key} to hardware vault...`,
-                );
-                await vault.store(vaultKey, item.key, plainValue);
-                // Redact immediately
-                (merged as any)[item.section][item.key] = plainValue;
-                parsed[item.section][item.key] = "[SECURED]";
-              }
             } catch (e) {
               console.error(
                 `[SECURITY] Vault recovery failed for ${item.key}:`,
@@ -418,7 +450,7 @@ class SettingsService extends EventEmitter {
               console.warn(
                 `[SETTINGS] Migration: ${hardwareLabel} detected. Correcting Brain to Cloud.`,
               );
-              merged.brain.model = "gemini-3-flash-preview";
+              merged.brain.model = BRAIN_CONFIG.defaults.brain; // gemini-2.0-flash (stable)
             }
           }
 
@@ -466,18 +498,40 @@ class SettingsService extends EventEmitter {
           merged.v1betaMigrationComplete = true;
         }
 
+        // --- BYOK KEY MIGRATION (v3 One-Time Safety Pass)
+        // This block previously wiped all keys, which was too aggressive.
+        // Now it only marks the migration as done without destroying user data.
+        if (!(merged as any).byokSanitized_v3) {
+          console.log("[SETTINGS] v3 BYOK migration complete (preserving existing keys).");
+          (merged as any).byokSanitized_v3 = true;
+          // Note: We intentionally do NOT wipe keys here. The vault handles proper
+          // redaction during save. If the user has a valid key, keep it.
+        }
+
+        // --- KEY RECOVERY GUARD ---
+        // If the old wipe ran and cleared all keys, but the user has since re-entered
+        // them via the UI, make sure nothing silently zeroed them out again.
+        // The vault recovery block above handles re-populating from secure storage.
+        // This guard is a no-op for healthy installs.
+
+
         // --- DEPRECATED MODEL HOTFIX (March 2026 Update) ---
         // Ensure users are not stuck on deprecated 1.5, 2.0, or 2.5 models.
         const isDeprecatedOrBroken = (modelId: string) => {
           if (!modelId) return true; // Empty string is broken
           const brokenIds = [
-            "gemini-2.0-flash-lite", // Deprecated
+            "gemini-2.0-flash-lite", // Deprecated 2025
             "gemini-1.5-flash",
             "gemini-1.5-pro",
+            // Fictional/non-existent Gemini 3.x IDs — API returns 404
+            "gemini-3-flash-preview",
+            "gemini-3.1-pro-preview",
+            "gemini-3.1-flash-lite-preview",
             "gemini-3.1-pro-high",
             "gemini-3.1-pro-low",
-            "gemini-3-pro-high",
-            "gemini-3-pro-low",
+            // Deprecated preview models
+            "gemini-2.5-pro-preview",
+            "gemini-2.5-flash-preview",
             "gemini-2.0-flash-exp",
             "gemini-2.5-flash-native-audio-preview-12-2025",
             "models/gemini-live-2.5-flash-native-audio",
@@ -585,13 +639,15 @@ class SettingsService extends EventEmitter {
           { section: "brain", key: "anthropicApiKey" },
           { section: "brain", key: "openaiApiKey" },
           { section: "brain", key: "xaiApiKey" },
+          { section: "brain", key: "deepseekApiKey" },
           { section: "voice", key: "googleApiKey" },
           { section: "iot", key: "haToken" },
         ];
 
         for (const item of SENSITIVE_MAP) {
           const value = (this.settings as any)[item.section][item.key];
-          if (value && value !== "[SECURED]") {
+          // Always update vault to match current state (even if empty)
+          if (typeof value === "string" && value !== "[SECURED]") {
             await vault.store(
               `setting:${item.section}:${item.key}`,
               item.key,
@@ -798,7 +854,12 @@ class SettingsService extends EventEmitter {
     // 2. Setup not complete - stay silent by default
     if (!settings.general.setupComplete) return false;
 
-    // 3. Check model selections
+    // --- FIX: DESKTOP DISCOVERY ---
+    // On Desktop (Electron), we ALWAYS want to see our local models list status,
+    // even if we are currently using a Cloud model.
+    if (typeof window !== "undefined" && (window as any).luca) return true;
+
+    // 3. Check model & provider selections (Fallback for Web/Mobile)
     const isLocalBrain =
       settings.brain.model.startsWith("local/") ||
       [
@@ -856,7 +917,7 @@ class SettingsService extends EventEmitter {
    * Check if the user has configured valid API keys for peer cloud providers
    */
   public hasValidCloudKeys(
-    provider?: "openai" | "anthropic" | "gemini" | "xai",
+    provider?: "openai" | "anthropic" | "gemini" | "xai" | "deepseek",
   ): boolean {
     const { brain } = this.settings;
     if (provider) {
@@ -871,13 +932,16 @@ class SettingsService extends EventEmitter {
           return !!brain.geminiApiKey && brain.geminiApiKey !== "[SECURED]";
         case "xai":
           return !!brain.xaiApiKey && brain.xaiApiKey !== "[SECURED]";
+        case "deepseek":
+          return !!brain.deepseekApiKey && brain.deepseekApiKey !== "[SECURED]";
       }
     }
     return (
       this.hasValidCloudKeys("openai") ||
       this.hasValidCloudKeys("anthropic") ||
       this.hasValidCloudKeys("gemini") ||
-      this.hasValidCloudKeys("xai")
+      this.hasValidCloudKeys("xai") ||
+      this.hasValidCloudKeys("deepseek")
     );
   }
 
@@ -888,12 +952,54 @@ class SettingsService extends EventEmitter {
     | "gemini"
     | "openai"
     | "anthropic"
-    | "xai" {
+    | "xai"
+    | "deepseek" {
     if (this.hasValidCloudKeys("gemini")) return "gemini";
     if (this.hasValidCloudKeys("anthropic")) return "anthropic";
     if (this.hasValidCloudKeys("openai")) return "openai";
     if (this.hasValidCloudKeys("xai")) return "xai";
+    if (this.hasValidCloudKeys("deepseek")) return "deepseek";
     return "gemini"; // Ultimate fallback to Luca Prime (Gemini)
+  }
+
+  /**
+   * SOVEREIGN MEMORY VAULT: Management
+   */
+  public getSovereignFacts(): SovereignFact[] {
+    return this.settings.memory?.sovereignFacts || [];
+  }
+
+  public async addSovereignFact(fact: Partial<SovereignFact>) {
+    // 1. Initialize memory settings if they somehow became corrupted or missing
+    if (!this.settings.memory) {
+      this.settings.memory = {
+         provider: "local-luca",
+         model: "phi-3-mini",
+         sovereignFacts: []
+      };
+    }
+
+    const newFact: SovereignFact = {
+      id: `fact-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      category: fact.category || "PREFERENCE",
+      content: fact.content || "",
+      timestamp: Date.now(),
+      confidence: fact.confidence || 1.0,
+      sourceMessageId: fact.sourceMessageId,
+    };
+
+    // 2. Simple deduplication: don't add the same content twice in the same session
+    const exists = this.settings.memory.sovereignFacts.some(
+      (f) => f.content.toLowerCase() === newFact.content.toLowerCase()
+    );
+    if (exists) return;
+
+    // 3. Persist
+    this.settings.memory.sovereignFacts.push(newFact);
+    await this.saveSettings(this.settings);
+    this.emit("settings-changed", this.settings);
+    
+    console.log(`[SETTINGS] 🧠 Sovereign Fact Indexed: ${newFact.content.substring(0, 30)}...`);
   }
 }
 

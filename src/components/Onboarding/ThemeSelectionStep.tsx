@@ -1,67 +1,62 @@
-import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  ArrowRight,
-  Palette,
-} = LucideIcons as any;
+import React, { useState, useEffect } from "react";
+import { Icon } from "../ui/Icon";
 import { settingsService } from "../../services/settingsService";
-import { THEME_PALETTE, setHexAlpha } from "../../config/themeColors";
-import { useMobile } from "../../hooks/useMobile";
+import { THEME_PALETTE, getDynamicContrast } from "../../config/themeColors";
+import { UIThemeId } from "../../types/lucaPersonality";
 
 interface ThemeSelectionStepProps {
   onComplete: () => void;
   onThemeChange?: (themeName: UIThemeId) => void;
+  onOpacityChange?: (opacity: number) => void;
 }
-
-import { UIThemeId } from "../../types/lucaPersonality";
 
 const THEMES = [
   {
     id: "PROFESSIONAL",
     label: "Professional",
-    hex: THEME_PALETTE.PROFESSIONAL.primary,
+    hex: "#C6C6C6",
     desc: "Light Grey / Minimal",
   },
   {
     id: "MASTER_SYSTEM",
     label: "Master System",
-    hex: THEME_PALETTE.MASTER_SYSTEM.primary,
+    hex: "#22d3ee",
     desc: "Blue / High-Tech",
   },
   {
     id: "BUILDER",
     label: "Builder",
-    hex: THEME_PALETTE.BUILDER.primary,
+    hex: "#f97316",
     desc: "Peach / Workspace",
   },
   {
     id: "TERMINAL",
     label: "Terminal",
-    hex: THEME_PALETTE.TERMINAL.primary,
+    hex: "#22c55e",
     desc: "Green / CLI",
   },
   {
     id: "AGENTIC_SLATE",
     label: "Agentic Slate",
-    hex: THEME_PALETTE.AGENTIC_SLATE.primary,
+    hex: "#64748b",
     desc: "Slate / Professional",
   },
   {
-    id: "MIDNIGHT",
-    label: "Midnight",
-    hex: THEME_PALETTE.MIDNIGHT.primary,
-    desc: "OLED / Pure Black",
+    id: "LIGHTCREAM",
+    label: "Light Cream",
+    hex: "#E5E1CD",
+    desc: "Cream / Minimal",
   },
   {
     id: "VAPORWAVE",
     label: "Vaporwave",
-    hex: THEME_PALETTE.VAPORWAVE.primary,
+    hex: "#f471b5",
     desc: "Neon / Retro",
   },
   {
     id: "FROST",
     label: "Frost",
-    hex: THEME_PALETTE.FROST.primary,
+    hex: "#93c5fd",
     desc: "Ice / Glassmorphism",
   },
 ] as const;
@@ -69,6 +64,7 @@ const THEMES = [
 const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   onComplete,
   onThemeChange,
+  onOpacityChange,
 }) => {
   const isElectron = !!(
     (window as any).electron && (window as any).electron.ipcRenderer
@@ -78,15 +74,32 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
     settingsService.get("general").theme as UIThemeId,
   );
   const [backgroundOpacity, setBackgroundOpacity] = useState(
-    settingsService.get("general").backgroundOpacity ?? 0.75,
+    settingsService.get("general").backgroundOpacity ?? 0.3,
   );
   const [backgroundBlur, setBackgroundBlur] = useState(
-    settingsService.get("general").backgroundBlur ?? 12,
+    settingsService.get("general").backgroundBlur ?? 40,
   );
-  const isMobile = useMobile();
 
-  const currentThemeHex =
-    THEMES.find((t) => t.id === selectedTheme)?.hex || "#ffffff";
+  // Dynamic Contrast logic - Now purely reactive logic
+  const updateVisualCoreVariables = (themeId: string, opacity: number) => {
+    const root = document.documentElement;
+    const theme =
+      THEME_PALETTE[themeId as keyof typeof THEME_PALETTE] ||
+      THEME_PALETTE.PROFESSIONAL;
+    root.style.setProperty("--app-primary", theme.primary);
+
+    // Apply global dynamic contrast variables
+    const dynamicContrast = getDynamicContrast(themeId, opacity);
+    root.style.setProperty("--app-text-main", dynamicContrast.text);
+    root.style.setProperty("--app-text-muted", dynamicContrast.textMuted);
+    root.style.setProperty("--app-border-main", dynamicContrast.border);
+    root.style.setProperty("--app-bg-tint", dynamicContrast.bgTint);
+  };
+
+  // Sync initial state and updates
+  useEffect(() => {
+    updateVisualCoreVariables(selectedTheme, backgroundOpacity);
+  }, [selectedTheme, backgroundOpacity]);
 
   const handleThemeSelect = (themeId: (typeof THEMES)[number]["id"]) => {
     setSelectedTheme(themeId);
@@ -103,10 +116,16 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value) / 100;
     setBackgroundOpacity(val);
+    if (onOpacityChange) onOpacityChange(val);
     const currentGen = settingsService.get("general");
     settingsService.saveSettings({
       general: { ...currentGen, backgroundOpacity: val },
     });
+    // Live Preview
+    document.documentElement.style.setProperty(
+      "--app-id-backgroundOpacity",
+      val.toString(),
+    );
   };
 
   const handleBlurChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,119 +135,69 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
     settingsService.saveSettings({
       general: { ...currentGen, backgroundBlur: val },
     });
+    // Live Preview
+    document.documentElement.style.setProperty("--app-bg-blur", `${val}px`);
   };
 
   return (
     <div className="flex flex-col h-full animate-fade-in-up">
       {/* Header */}
-      <div
-        className="text-center"
-        style={{
-          gap: "2vmin",
-          display: "flex",
-          flexDirection: "column",
-          marginBottom: "3vmin",
-        }}
-      >
-        <Palette
-          className="mx-auto transition-colors duration-300"
-          style={{
-            color: currentThemeHex,
-            width: "clamp(2rem, 8vmin, 3.5rem)",
-            height: "clamp(2rem, 8vmin, 3.5rem)",
-            marginBottom: "2vmin",
-          }}
+      <div className="text-center flex flex-col gap-4 mb-8">
+        <Icon
+          name="Palette"
+          variant="BoldDuotone"
+          className="mx-auto transition-colors duration-300 text-[var(--app-primary)]"
+          size={56}
         />
-        <h1
-          className="font-bold tracking-widest uppercase transition-colors duration-300"
-          style={{
-            color: currentThemeHex,
-            fontSize: "clamp(1rem, 4vmin, 1.6rem)",
-          }}
-        >
-          Interface Calibration
-        </h1>
-        <p
-          className={`${["AGENTIC_SLATE", "LUCAGENT"].includes(selectedTheme) ? "text-slate-700" : "text-white/60"} uppercase tracking-wider font-bold`}
-          style={{ fontSize: "clamp(0.5rem, 1.8vmin, 0.75rem)" }}
-        >
-          Configure visual style
-        </p>
+        <div>
+          <h1 className="font-black tracking-[0.2em] uppercase italic text-[var(--app-text-main)] text-2xl">
+            Interface Calibration
+          </h1>
+          <p className="uppercase tracking-[0.3em] font-black mt-1 text-[10px] text-[var(--app-text-muted)]">
+            Configure visual style
+          </p>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-8 pr-2 custom-scrollbar px-4">
+      <div className="flex-1 overflow-y-auto space-y-10 pr-2 custom-scrollbar px-6">
         {/* Theme Selection */}
-        <section
-          style={{ gap: "2.5vmin", display: "flex", flexDirection: "column" }}
-        >
-          <div
-            className="grid grid-cols-2 sm:grid-cols-3"
-            style={{ gap: "1.5vmin" }}
-          >
+        <section className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {THEMES.slice(0, 6).map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => handleThemeSelect(t.id)}
-                className="relative flex items-center rounded-[1.5vmin] border transition-all text-left group backdrop-blur-md overflow-hidden"
-                style={{
-                  padding: "1.5vmin",
-                  gap: "1.5vmin",
-                  borderColor: "rgba(255,255,255,0.2)",
-                  backgroundColor: setHexAlpha(t.hex, 0.12),
-                  // ... rest of background styles ...
-                  backgroundImage:
+                className={`relative flex items-center p-3.5 gap-3.5 rounded-2xl border transition-all text-left group overflow-hidden shadow-sm
+                  ${
                     selectedTheme === t.id
-                      ? `linear-gradient(135deg, ${setHexAlpha(t.hex, 0.25)} 0%, ${setHexAlpha(t.hex, 0.1)} 100%)`
-                      : `linear-gradient(135deg, ${setHexAlpha(t.hex, 0.15)} 0%, ${setHexAlpha(t.hex, 0.05)} 100%)`,
-                  boxShadow:
-                    selectedTheme === t.id
-                      ? `0 4px 20px ${setHexAlpha(t.hex, 0.2)}, inset 0 1px 0 ${setHexAlpha(t.hex, 0.2)}`
-                      : `0 2px 10px ${setHexAlpha(t.hex, 0.06)}`,
-                }}
+                      ? "bg-[var(--app-primary)]/10 border-[var(--app-primary)]/40 scale-[1.02] shadow-lg shadow-[var(--app-primary)]/5"
+                      : "bg-black/20 border-white/5 hover:bg-white/5 hover:border-white/10"
+                  }
+                `}
               >
-                {/* Theme indicator */}
                 <div
-                  className="rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
-                  style={{
-                    width: "clamp(1.5rem, 5vmin, 2.2rem)",
-                    height: "clamp(1.5rem, 5vmin, 2.2rem)",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                  }}
+                  className={`w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-inner
+                    ${selectedTheme === t.id ? "bg-[var(--app-primary)]/20" : "bg-black/40"}
+                  `}
                 >
                   <div
-                    className="rounded-full transition-all"
+                    className="w-4 h-4 rounded-full transition-all duration-500 shadow-lg"
                     style={{
-                      width: "50%",
-                      height: "50%",
                       backgroundColor: t.hex,
-                      boxShadow: `0 0 15px ${setHexAlpha(t.hex, 0.5)}`,
+                      boxShadow: `0 0 15px ${t.hex}80`,
                     }}
                   />
                   {selectedTheme === t.id && (
-                    <div
-                      className="absolute inset-0 rounded-full border-2 animate-pulse"
-                      style={{ borderColor: t.hex, opacity: 0.5 }}
-                    />
+                    <div className="absolute inset-0 rounded-xl border-2 border-[var(--app-primary)]/40 animate-pulse" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div
-                    className="font-bold uppercase tracking-wider transition-colors truncate"
-                    style={{
-                      fontSize: "clamp(0.5rem, 1.8vmin, 0.8rem)",
-                      color:
-                        selectedTheme === t.id
-                          ? t.id === "AGENTIC_SLATE" || t.id === "MIDNIGHT"
-                            ? "#ffffff"
-                            : t.hex
-                          : ["PROFESSIONAL", "BUILDER", "FROST"].includes(
-                                selectedTheme,
-                              )
-                            ? "rgba(0,0,0,0.6)"
-                            : "rgba(255,255,255,0.85)",
-                    }}
+                    className={`font-black uppercase tracking-widest text-[9px] transition-colors truncate italic
+                      ${selectedTheme === t.id ? "text-[var(--app-primary)]" : "text-[var(--app-text-main)]"}
+                    `}
                   >
                     {t.label}
                   </div>
@@ -236,74 +205,42 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
               </button>
             ))}
           </div>
-          {/* Last row: centered under the grid */}
-          <div className="flex justify-center" style={{ gap: "1.5vmin" }}>
+          <div className="flex justify-center gap-3">
             {THEMES.slice(6).map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => handleThemeSelect(t.id)}
-                className="relative flex items-center rounded-[1.5vmin] border transition-all text-left group backdrop-blur-md overflow-hidden"
-                style={{
-                  width: isMobile
-                    ? "calc(50% - 0.75vmin)"
-                    : "calc(33.333% - 1vmin)",
-                  padding: "1.5vmin",
-                  gap: "1.5vmin",
-                  borderColor: "rgba(255,255,255,0.2)",
-                  backgroundColor: setHexAlpha(t.hex, 0.12),
-                  backgroundImage:
+                className={`relative flex items-center p-3.5 gap-3.5 rounded-2xl border transition-all text-left group overflow-hidden shadow-sm w-1/2
+                  ${
                     selectedTheme === t.id
-                      ? `linear-gradient(135deg, ${setHexAlpha(t.hex, 0.25)} 0%, ${setHexAlpha(t.hex, 0.1)} 100%)`
-                      : `linear-gradient(135deg, ${setHexAlpha(t.hex, 0.15)} 0%, ${setHexAlpha(t.hex, 0.05)} 100%)`,
-                  boxShadow:
-                    selectedTheme === t.id
-                      ? `0 4px 20px ${setHexAlpha(t.hex, 0.2)}, inset 0 1px 0 ${setHexAlpha(t.hex, 0.2)}`
-                      : `0 2px 10px ${setHexAlpha(t.hex, 0.06)}`,
-                }}
+                      ? "bg-[var(--app-primary)]/10 border-[var(--app-primary)]/40 scale-[1.02] shadow-lg shadow-[var(--app-primary)]/5"
+                      : "bg-black/20 border-white/5 hover:bg-white/5 hover:border-white/10"
+                  }
+                `}
               >
-                {/* Theme indicator */}
                 <div
-                  className="rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
-                  style={{
-                    width: "clamp(1.5rem, 5vmin, 2.2rem)",
-                    height: "clamp(1.5rem, 5vmin, 2.2rem)",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                  }}
+                  className={`w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-inner
+                    ${selectedTheme === t.id ? "bg-[var(--app-primary)]/20" : "bg-black/40"}
+                  `}
                 >
                   <div
-                    className="rounded-full transition-all"
+                    className="w-4 h-4 rounded-full transition-all duration-500 shadow-lg"
                     style={{
-                      width: "50%",
-                      height: "50%",
                       backgroundColor: t.hex,
-                      boxShadow: `0 0 15px ${setHexAlpha(t.hex, 0.5)}`,
+                      boxShadow: `0 0 15px ${t.hex}80`,
                     }}
                   />
                   {selectedTheme === t.id && (
-                    <div
-                      className="absolute inset-0 rounded-full border-2 animate-pulse"
-                      style={{ borderColor: t.hex, opacity: 0.5 }}
-                    />
+                    <div className="absolute inset-0 rounded-xl border-2 border-[var(--app-primary)]/40 animate-pulse" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div
-                    className="font-bold uppercase tracking-wider transition-colors truncate"
-                    style={{
-                      fontSize: "clamp(0.5rem, 1.8vmin, 0.8rem)",
-                      color:
-                        selectedTheme === t.id
-                          ? t.id === "AGENTIC_SLATE" || t.id === "MIDNIGHT"
-                            ? "#ffffff"
-                            : t.hex
-                          : ["PROFESSIONAL", "BUILDER", "FROST"].includes(
-                                selectedTheme,
-                              )
-                            ? "rgba(0,0,0,0.6)"
-                            : "rgba(255,255,255,0.85)",
-                    }}
+                    className={`font-black uppercase tracking-widest text-[9px] transition-colors truncate italic
+                      ${selectedTheme === t.id ? "text-[var(--app-primary)]" : "text-[var(--app-text-main)]"}
+                    `}
                   >
                     {t.label}
                   </div>
@@ -315,45 +252,19 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
 
         {/* Transparency Controls */}
         {isElectron && (
-          <section
-            style={{
-              gap: "2.5vmin",
-              display: "flex",
-              flexDirection: "column",
-              padding: "2.5vmin 0",
-              borderTop: "1px solid rgba(255,255,255,0.05)",
-            }}
-          >
+          <section className="flex flex-col gap-6 py-6 border-t border-white/5">
             <div className="text-center">
-              <h2
-                className="font-bold uppercase tracking-widest"
-                style={{
-                  color: currentThemeHex,
-                  fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)",
-                }}
-              >
+              <h2 className="font-black uppercase tracking-[0.3em] text-[10px] text-[var(--app-text-muted)] italic">
                 Background Visibility
               </h2>
             </div>
-            <div className="space-y-4 max-w-xs mx-auto w-full">
-              <div
-                style={{
-                  gap: "1vmin",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <div className="flex justify-between">
-                  <span
-                    className={`font-mono ${["AGENTIC_SLATE", "LUCAGENT"].includes(selectedTheme) ? "text-slate-600" : "text-gray-400"}`}
-                    style={{ fontSize: "1.4vmin" }}
-                  >
-                    OPACITY
+            <div className="space-y-6 max-w-xs mx-auto w-full">
+              <div className="flex flex-col gap-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <span className="font-black font-mono text-[9px] tracking-widest text-[var(--app-text-muted)] uppercase">
+                    Opacity
                   </span>
-                  <span
-                    className={`font-mono ${["AGENTIC_SLATE", "LUCAGENT"].includes(selectedTheme) ? "text-slate-800" : "text-gray-300"}`}
-                    style={{ fontSize: "1.4vmin" }}
-                  >
+                  <span className="font-black font-mono text-[9px] tracking-widest text-[var(--app-primary)] uppercase">
                     {Math.round(backgroundOpacity * 100)}%
                   </span>
                 </div>
@@ -363,28 +274,18 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                   max="100"
                   value={Math.round(backgroundOpacity * 100)}
                   onChange={handleOpacityChange}
-                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                  style={{ accentColor: currentThemeHex }}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-black/40 border border-white/5 active:scale-[0.98] transition-transform"
+                  style={{
+                    accentColor: "var(--app-primary)",
+                  }}
                 />
               </div>
-              <div
-                style={{
-                  gap: "1vmin",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <div className="flex justify-between">
-                  <span
-                    className={`font-mono ${["AGENTIC_SLATE", "LUCAGENT"].includes(selectedTheme) ? "text-slate-600" : "text-gray-400"}`}
-                    style={{ fontSize: "1.4vmin" }}
-                  >
-                    BLUR
+              <div className="flex flex-col gap-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <span className="font-black font-mono text-[9px] tracking-widest text-[var(--app-text-muted)] uppercase">
+                    Blur
                   </span>
-                  <span
-                    className={`font-mono ${["AGENTIC_SLATE", "LUCAGENT"].includes(selectedTheme) ? "text-slate-800" : "text-gray-300"}`}
-                    style={{ fontSize: "1.4vmin" }}
-                  >
+                  <span className="font-black font-mono text-[9px] tracking-widest text-[var(--app-primary)] uppercase">
                     {backgroundBlur}px
                   </span>
                 </div>
@@ -394,8 +295,10 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                   max="40"
                   value={backgroundBlur}
                   onChange={handleBlurChange}
-                  className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                  style={{ accentColor: currentThemeHex }}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-black/40 border border-white/5 active:scale-[0.98] transition-transform"
+                  style={{
+                    accentColor: "var(--app-primary)",
+                  }}
                 />
               </div>
             </div>
@@ -404,29 +307,17 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
       </div>
 
       {/* Footer Actions */}
-      <div
-        className="pt-4 border-t border-white/10"
-        style={{ marginTop: "3vmin", paddingBottom: "2vmin" }}
-      >
+      <div className="pt-6 border-t border-[var(--app-border-main)] mt-6">
         <button
           onClick={onComplete}
-          className="w-full border py-3 uppercase tracking-widest transition-all flex items-center justify-center group backdrop-blur-md"
-          style={{
-            gap: "2vmin",
-            padding: "2.5vmin 0",
-            borderRadius: "1.5vmin",
-            fontSize: "clamp(0.7rem, 2vmin, 0.9rem)",
-            borderColor: "rgba(255,255,255,0.2)",
-            backgroundColor: setHexAlpha(currentThemeHex, 0.12),
-            backgroundImage: `linear-gradient(135deg, ${setHexAlpha(currentThemeHex, 0.25)} 0%, ${setHexAlpha(currentThemeHex, 0.1)} 100%)`,
-            boxShadow: `0 4px 20px ${setHexAlpha(currentThemeHex, 0.15)}, inset 0 1px 0 ${setHexAlpha(currentThemeHex, 0.2)}`,
-            color: currentThemeHex,
-          }}
+          className="w-full border border-[var(--app-border-main)] py-4 uppercase tracking-[0.4em] font-black italic text-xs transition-all flex items-center justify-center group bg-[var(--app-primary)]/10 hover:bg-[var(--app-primary)]/20 hover:border-[var(--app-primary)]/40 hover:scale-[1.01] active:scale-[0.99] rounded-2xl shadow-xl shadow-black/20 text-[var(--app-primary)]"
         >
           Confirm Style
-          <ArrowRight
-            className="group-hover:translate-x-1 transition-transform"
-            style={{ width: "2.5vmin", height: "2.5vmin" }}
+          <Icon
+            name="ArrowRight"
+            variant="BoldDuotone"
+            size={20}
+            className="group-hover:translate-x-2 transition-transform"
           />
         </button>
       </div>

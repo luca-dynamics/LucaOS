@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Play,
-  Pause,
-  Volume2,
-  Maximize,
-  SkipForward,
-  SkipBack,
-  Monitor,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 // Electron webview type declaration is now in src/types/jsx.d.ts
 
@@ -326,9 +317,9 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition-all backdrop-blur-md"
+          className="absolute top-6 right-6 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-white hover:text-black transition-all glass-blur"
         >
-          <Maximize className="rotate-45" size={24} />
+          <Icon name="Maximize" className="rotate-45" size={24} />
         </button>
 
         {/* PREMIUM CONTROLS OVERLAY */}
@@ -368,7 +359,7 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                     className="text-xs font-mono flex items-center gap-2"
                     style={{ color: themeColor }}
                   >
-                    <Monitor size={10} /> CINEMA CORE //{" "}
+                    <Icon name="Monitor" size={10} /> CINEMA CORE //{" "}
                     {sourceType?.toUpperCase()}
                   </p>
                 </div>
@@ -382,7 +373,7 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                     videoRef.current && (videoRef.current.currentTime -= 10)
                   }
                 >
-                  <SkipBack size={24} />
+                  <Icon name="SkipBack" size={24} />
                 </button>
 
                 <button
@@ -395,9 +386,9 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                   }}
                 >
                   {isPlaying ? (
-                    <Pause size={28} fill="currentColor" />
+                    <Icon name="Pause" size={28} fill="currentColor" />
                   ) : (
-                    <Play size={28} fill="currentColor" className="ml-1" />
+                    <Icon name="Play" size={28} fill="currentColor" className="ml-1" />
                   )}
                 </button>
 
@@ -407,7 +398,7 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                     videoRef.current && (videoRef.current.currentTime += 10)
                   }
                 >
-                  <SkipForward size={24} />
+                  <Icon name="SkipForward" size={24} />
                 </button>
               </div>
 
@@ -416,7 +407,8 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                 <span className="text-xs font-mono text-white/60">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </span>
-                <Volume2
+                <Icon
+                  name="Volume2"
                   size={20}
                   className="hover:text-white cursor-pointer transition-colors"
                   onClick={() => {
@@ -424,7 +416,8 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                       videoRef.current.muted = !videoRef.current.muted;
                   }}
                 />
-                <Maximize
+                <Icon
+                  name="Maximize"
                   size={20}
                   className="hover:text-white cursor-pointer transition-colors"
                   onClick={() => document.documentElement.requestFullscreen()}

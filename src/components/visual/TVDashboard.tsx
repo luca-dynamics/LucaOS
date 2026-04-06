@@ -1,11 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Monitor,
-  Wifi,
-  Cpu,
-  Database,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 
 interface TVDashboardProps {
   themeHex: string;
@@ -38,7 +32,7 @@ const TVDashboard: React.FC<TVDashboardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-16 z-10 border-b border-white/10 pb-6">
         <div className="flex items-center gap-6">
-          <Monitor size={48} style={{ color: themeHex }} />
+          <Icon name="Monitor" size={48} style={{ color: themeHex }} />
           <div>
             <h1 className="text-4xl font-black tracking-[0.3em]">L.U.C.A OS</h1>
             <div
@@ -51,7 +45,8 @@ const TVDashboard: React.FC<TVDashboardProps> = ({
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-            <Wifi
+            <Icon
+              name="Wifi"
               size={20}
               className={
                 status === "CONNECTED"
@@ -106,12 +101,12 @@ const TVDashboard: React.FC<TVDashboardProps> = ({
         {/* Right Column: Vitals (Detail) */}
         <div className="col-span-4 space-y-8 flex flex-col justify-center border-l border-white/10 pl-12">
           {/* CPU Widget */}
-          <div className="bg-white/5 p-8 rounded-2xl border border-white/5 backdrop-blur-sm">
+          <div className="bg-white/5 p-8 rounded-2xl border border-white/5 glass-blur">
             <div
               className="flex items-center gap-4 mb-4 opacity-70"
               style={{ color: themeHex }}
             >
-              <Cpu size={24} />
+              <Icon name="Cpu" size={24} />
               <span className="tracking-widest">PROCESSING POWER</span>
             </div>
             <div className="text-6xl font-thin font-mono mb-2">
@@ -126,12 +121,12 @@ const TVDashboard: React.FC<TVDashboardProps> = ({
           </div>
 
           {/* RAM Widget */}
-          <div className="bg-white/5 p-8 rounded-2xl border border-white/5 backdrop-blur-sm">
+          <div className="bg-white/5 p-8 rounded-2xl border border-white/5 glass-blur">
             <div
               className="flex items-center gap-4 mb-4 opacity-70"
               style={{ color: themeHex }}
             >
-              <Database size={24} />
+              <Icon name="Database" size={24} />
               <span className="tracking-widest">MEMORY ALLOCATION</span>
             </div>
             <div className="text-6xl font-thin font-mono mb-2">

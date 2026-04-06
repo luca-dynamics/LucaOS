@@ -1,13 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Image,
-  FileText,
-  Music,
-  Video,
-  Folder,
-  Search,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 
 interface FileItem {
   name: string;
@@ -30,21 +22,21 @@ const MobileFileManager: React.FC<MobileFileManagerProps> = ({
       case "IMG":
       case "JPG":
       case "PNG":
-        return <Image size={14} />;
+        return <Icon name="Image" size={14} variant="BoldDuotone" />;
       case "DOC":
       case "PDF":
-        return <FileText size={14} />;
+        return <Icon name="FileText" size={14} variant="BoldDuotone" />;
       case "AUDIO":
       case "WAV":
       case "MP3":
-        return <Music size={14} />;
+        return <Icon name="Music" size={14} variant="BoldDuotone" />;
       case "VIDEO":
       case "MP4":
-        return <Video size={14} />;
+        return <Icon name="Video" size={14} variant="BoldDuotone" />;
       case "DIR":
-        return <Folder size={14} />;
+        return <Icon name="Folder" size={14} variant="BoldDuotone" />;
       default:
-        return <FileText size={14} />;
+        return <Icon name="FileText" size={14} variant="BoldDuotone" />;
     }
   };
 
@@ -52,9 +44,11 @@ const MobileFileManager: React.FC<MobileFileManagerProps> = ({
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4 justify-between">
         <div className="relative flex-1 max-w-sm">
-          <Search
+          <Icon
+            name="Search"
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
             size={14}
+            variant="BoldDuotone"
           />
           <input
             type="text"
@@ -96,7 +90,7 @@ const MobileFileManager: React.FC<MobileFileManagerProps> = ({
           </table>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-4 py-20">
-            <Folder size={48} className="opacity-20" />
+            <Icon name="Folder" size={48} className="opacity-20" variant="BoldDuotone" />
             <div className="text-center">
               <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">
                 {usingRealFiles

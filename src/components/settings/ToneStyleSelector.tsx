@@ -1,16 +1,6 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-import { ToneStyleId,
-  TONE_STYLES,
-  ToneDimensions, } from "../../types/lucaPersonality";
-const {
-  MessageSquare,
-  Heart,
-  Briefcase,
-  Zap,
-  Smile,
-  Settings2,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
+import { ToneStyleId, TONE_STYLES, ToneDimensions } from "../../types/lucaPersonality";
 
 interface ToneStyleSelectorProps {
   currentStyleId: ToneStyleId;
@@ -18,7 +8,6 @@ interface ToneStyleSelectorProps {
   onStyleChange: (styleId: ToneStyleId) => void;
   onCustomChange: (dimensions: ToneDimensions) => void;
   themeHex: string;
-  isLightMode: boolean;
 }
 
 const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
@@ -27,7 +16,6 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
   onStyleChange,
   onCustomChange,
   themeHex,
-  isLightMode,
 }) => {
   const activeDimensions =
     currentStyleId === "CUSTOM" && customDimensions
@@ -45,35 +33,35 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
   const dimensionIcons = [
     {
       key: "expressiveness",
-      icon: MessageSquare,
-      label: "Expressive",
+      icon: "MessageSquare",
+      label: "Expressiveness",
       low: "Concise",
       high: "Verbose",
     },
     {
       key: "emotionalOpenness",
-      icon: Heart,
-      label: "Emotional",
+      icon: "Heart",
+      label: "Emotionality",
       low: "Reserved",
       high: "Warm",
     },
     {
       key: "formality",
-      icon: Briefcase,
-      label: "Formal",
+      icon: "Briefcase",
+      label: "Formality",
       low: "Professional",
       high: "Casual",
     },
     {
       key: "directness",
-      icon: Zap,
-      label: "Direct",
+      icon: "Zap",
+      label: "Directness",
       low: "Diplomatic",
       high: "Blunt",
     },
     {
       key: "humor",
-      icon: Smile,
+      icon: "Smile",
       label: "Humor",
       low: "Dry",
       high: "Sarcastic",
@@ -91,18 +79,14 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
             <button
               key={id}
               onClick={() => onStyleChange(id)}
-              className={`py-2 rounded px-1 flex flex-col items-center gap-1 border transition-all ${
-                isActive
-                  ? isLightMode
-                    ? "bg-black/5 border-black/20"
-                    : "bg-white/10 border-white/20"
-                  : isLightMode
-                    ? "border-black/5 hover:bg-black/5"
-                    : "border-white/5 hover:bg-white/5"
-              }`}
+              className={`py-2 rounded px-1 flex flex-col items-center gap-1 border transition-all glass-blur
+                ${isActive ? "bg-[var(--app-bg-tint)]" : "bg-transparent"}
+                ${isActive ? "border-[var(--app-border-main)]" : "border-transparent"}
+                hover:bg-[var(--app-bg-tint)]/20
+              `}
               style={{
-                borderColor: isActive ? themeHex : undefined,
-                color: isActive ? (isLightMode ? "#000" : "#fff") : "#6b7280",
+                borderColor: isActive ? themeHex : "var(--app-border-main, rgba(255,255,255,0.05))",
+                color: isActive ? "var(--app-text-main, #ffffff)" : "var(--app-text-muted, #6b7280)",
               }}
             >
               <span className="text-[9px] font-bold uppercase tracking-tighter">
@@ -114,10 +98,11 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
       </div>
 
       {/* Fine-tuning Sliders */}
-      <div className="space-y-3 p-3 rounded-lg bg-black/5 border border-white/5">
+      <div className={`space-y-3 p-3 rounded-lg border transition-all tech-border glass-blur`}
+           style={{ backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))", borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
         <div className="flex items-center gap-2 mb-1">
-          <Settings2 className="w-3 h-3 text-gray-500" />
-          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+          <Icon name="Settings2" className="w-3 h-3 text-[var(--app-text-muted)]" />
+          <span className="text-[9px] font-bold text-[var(--app-text-muted)] uppercase tracking-widest">
             Delivery Dimensions {currentStyleId !== "CUSTOM" && "(Locked)"}
           </span>
         </div>
@@ -125,8 +110,9 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
         {dimensionIcons.map((d) => (
           <div key={d.key} className="space-y-1">
             <div className="flex justify-between items-center text-[8px] font-mono">
-              <div className="flex items-center gap-1.5 text-gray-400">
-                <d.icon
+              <div className="flex items-center gap-1.5 text-[var(--app-text-muted)]">
+                <Icon
+                  name={d.icon}
                   className="w-3 h-3"
                   style={{
                     color: currentStyleId === "CUSTOM" ? themeHex : undefined,
@@ -138,8 +124,8 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
                 <span
                   className={
                     activeDimensions[d.key as keyof ToneDimensions] < 40
-                      ? "text-white"
-                      : "text-gray-600"
+                      ? "text-[var(--app-text-main)] font-bold"
+                      : "text-[var(--app-text-muted)] opacity-60"
                   }
                 >
                   {d.low}
@@ -147,8 +133,8 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
                 <span
                   className={
                     activeDimensions[d.key as keyof ToneDimensions] > 60
-                      ? "text-white"
-                      : "text-gray-600"
+                      ? "text-[var(--app-text-main)] font-bold"
+                      : "text-[var(--app-text-muted)] opacity-60"
                   }
                 >
                   {d.high}
@@ -172,8 +158,11 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
               }
               className={`w-full h-1 rounded-lg appearance-none cursor-pointer transition-opacity ${
                 currentStyleId === "CUSTOM" ? "opacity-100" : "opacity-30"
-              } ${isLightMode ? "bg-black/10" : "bg-white/10"}`}
-              style={{ accentColor: themeHex }}
+              }`}
+              style={{ 
+                accentColor: themeHex,
+                backgroundColor: "var(--app-border-main, rgba(255,255,255,0.2))"
+              }}
             />
           </div>
         ))}

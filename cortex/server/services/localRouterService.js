@@ -73,6 +73,25 @@ export const classifyIntent = async (text) => {
 
     controlSmartTV: (input.includes("tv")) && (input.includes("on") || input.includes("off") || input.includes("volume") || input.includes("power")) ? 0.9 : 0,
     connectSmartTV: (input.includes("connect to tv") || input.includes("pair tv")) ? 0.95 : 0,
+
+    // --- 10. SETTINGS & PERSONA (ZERO-CLOUD INTERCEPT) ---
+    performSettingsAction: (
+      input.includes("wipe") || input.includes("export") || input.includes("reset") || 
+      input.includes("sync") || input.includes("refresh") || input.includes("calibrate") ||
+      (input.includes("clear") && (input.includes("memory") || input.includes("session") || input.includes("chat"))) ||
+      (input.includes("grant") && input.includes("access")) ||
+      (input.includes("check") && input.includes("status"))
+    ) ? 0.98 : 0,
+
+    updateSystemSettings: (
+      (input.includes("set") || input.includes("change") || input.includes("switch") || input.includes("turn") || input.includes("enable") || input.includes("disable") || input.includes("toggle") || input.includes("use")) && 
+      (input.includes("theme") || input.includes("persona") || input.includes("mode") || input.includes("style") || 
+       input.includes("mic") || input.includes("camera") || input.includes("screen") || input.includes("privacy") ||
+       input.includes("model") || input.includes("brain") || input.includes("voice") || input.includes("tone") ||
+       input.includes("opacity") || input.includes("blur") || input.includes("ollama") || input.includes("sync") ||
+       input.includes("boot") || input.includes("tray") || input.includes("debug") || input.includes("wake word") ||
+       input.includes("always on") || input.includes("lazy mode") || input.includes("home assistant"))
+    ) ? 0.98 : 0,
   };
 
   // Find the highest score
@@ -128,6 +147,119 @@ export const classifyIntent = async (text) => {
                 parameters.level = parseInt(brightnessMatch[0]);
             }
         }
+    }
+
+    // --- 10. SETTINGS EXTRACTION ---
+    if (bestTool === 'updateSystemSettings') {
+        parameters.general = {};
+        parameters.brain = {};
+        parameters.voice = {};
+        parameters.privacy = {};
+        parameters.socialPersistence = {};
+        parameters.iot = {};
+
+        // Persona & Theme
+        if (input.includes("hacker")) parameters.general.persona = "HACKER";
+        else if (input.includes("ruthless")) parameters.general.persona = "RUTHLESS";
+        else if (input.includes("engineer")) parameters.general.persona = "ENGINEER";
+        else if (input.includes("assistant")) parameters.general.persona = "ASSISTANT";
+
+        if (input.includes("cyberpunk")) parameters.general.theme = "CYBERPUNK";
+        else if (input.includes("tactical")) parameters.general.theme = "TACTICAL";
+        else if (input.includes("minimalist") || input.includes("minimal")) parameters.general.theme = "MINIMALIST";
+        else if (input.includes("professional")) parameters.general.theme = "PROFESSIONAL";
+
+        // Toggles (Enable/Disable)
+        const isEnable = input.includes("enable") || input.includes("on") || input.includes("turn on") || input.includes("start");
+        const isDisable = input.includes("disable") || input.includes("off") || input.includes("turn off") || input.includes("stop");
+
+        if (input.includes("mic")) parameters.privacy.micEnabled = isEnable ? true : (isDisable ? false : undefined);
+        if (input.includes("camera")) parameters.privacy.cameraEnabled = isEnable ? true : (isDisable ? false : undefined);
+        if (input.includes("screen") && input.includes("observation")) parameters.privacy.screenEnabled = isEnable ? true : (isDisable ? false : undefined);
+        if (input.includes("boot")) parameters.general.startOnBoot = isEnable ? true : (isDisable ? false : undefined);
+        if (input.includes("debug")) parameters.general.debugMode = isEnable ? true : (isDisable ? false : undefined);
+        if (input.includes("wake word")) parameters.voice.wakeWordEnabled = isEnable ? true : (isDisable ? false : undefined);
+        if (input.includes("sync theme")) parameters.general.syncThemeWithPersona = isEnable ? true : (isDisable ? false : undefined);
+
+        // Sliders / Numbers
+        const numberMatch = input.match(/\d+/);
+        if (numberMatch) {
+            const val = parseInt(numberMatch[0]);
+            if (input.includes("blur")) parameters.general.backgroundBlur = val;
+            if (input.includes("opacity")) parameters.general.backgroundOpacity = val / 100;
+        }
+
+        // Brain Models
+        if (input.includes("model") || input.includes("brain")) {
+            if (input.includes("gemini")) parameters.brain.model = "gemini-3.1-pro-preview";
+            else if (input.includes("claude")) parameters.brain.model = "claude-4.5-sonnet";
+            else if (input.includes("deepseek")) parameters.brain.model = "deepseek-chat";
+            else if (input.includes("gpt")) parameters.brain.model = "gpt-4o";
+            else if (input.includes("ollama") || input.includes("local")) parameters.brain.preferOllama = true;
+        }
+
+        // Voice
+        if (input.includes("voice") || input.includes("pacing")) {
+            if (input.includes("faster")) parameters.voice.pacing = "Fast";
+            else if (input.includes("slower")) parameters.voice.pacing = "Slow";
+            else if (input.includes("normal")) parameters.voice.pacing = "Normal";
+            else if (input.includes("dramatic")) parameters.voice.pacing = "Dramatic";
+        }
+
+        // Social Persistence
+        const isAlwaysOn = input.includes("always on") || input.includes("always-on") || input.includes("persistent");
+        const isLazy = input.includes("lazy") || input.includes("on demand");
+        
+        const apps = ["whatsapp", "telegram", "linkedin", "google", "twitter", "discord"];
+        apps.forEach(app => {
+            if (input.includes(app)) {
+                if (isAlwaysOn) parameters.socialPersistence[app] = "ALWAYS_ON";
+                else if (isLazy) parameters.socialPersistence[app] = "LAZY";
+            }
+        });
+
+        // IoT
+        if (input.includes("home assistant") || input.includes("ha url")) {
+            const urlMatch = input.match(/https?:\/\/[^\s]+/);
+            if (urlMatch) parameters.iot.haUrl = urlMatch[0];
+        }
+        
+        // Cleanup empty sections
+        if (Object.keys(parameters.general).length === 0) delete parameters.general;
+        if (Object.keys(parameters.brain).length === 0) delete parameters.brain;
+        if (Object.keys(parameters.voice).length === 0) delete parameters.voice;
+        if (Object.keys(parameters.privacy).length === 0) delete parameters.privacy;
+        if (Object.keys(parameters.socialPersistence).length === 0) delete parameters.socialPersistence;
+        if (Object.keys(parameters.iot).length === 0) delete parameters.iot;
+    }
+
+    // --- 11. SETTINGS ACTION EXTRACTION ---
+    if (bestTool === 'performSettingsAction') {
+        // Data/Memory
+        if (input.includes("export") && input.includes("memory")) parameters.actionId = "memory-export-json";
+        else if (input.includes("wipe") && input.includes("memory")) parameters.actionId = "memory-wipe-store";
+        else if (input.includes("reset") && (input.includes("chat") || input.includes("session"))) parameters.actionId = "session-reset-chat";
+        
+        // Browser
+        else if (input.includes("sync") && input.includes("chrome")) parameters.actionId = "browser-import-session";
+        else if (input.includes("clear") && input.includes("browser")) parameters.actionId = "browser-clear-session";
+
+        // OS
+        else if (input.includes("grant") && input.includes("access")) parameters.actionId = "os-link-grant";
+        else if (input.includes("check") && input.includes("status")) parameters.actionId = "os-link-check";
+
+        // Skills/MCP
+        else if (input.includes("refresh") && (input.includes("skill") || input.includes("tool"))) parameters.actionId = "skills-refresh";
+        else if (input.includes("sync") && input.includes("mcp")) parameters.actionId = "mcp-sync";
+        
+        // Knowledge
+        else if (input.includes("sync") && input.includes("obsidian")) parameters.actionId = "knowledge-obsidian-sync";
+        else if (input.includes("load") && input.includes("obsidian")) parameters.actionId = "knowledge-obsidian-load";
+        
+        // Voice
+        else if (input.includes("calibrate") && input.includes("voice")) parameters.actionId = "voice-calibrate-rhythm";
+
+        parameters.payload = {};
     }
 
     // Battery Status - map to controlSystem with GET_BATTERY action

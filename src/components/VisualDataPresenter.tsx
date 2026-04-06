@@ -1,29 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Globe,
-  ArrowRight,
-  ArrowLeft,
-  Maximize2,
-  X,
-  Info,
-  Layers,
-  Box,
-  MapPin,
-  Zap,
-  ExternalLink,
-  User,
-  Newspaper,
-  Share2,
-  FileText,
-  Shield,
-  TrendingUp,
-  Music,
-  Code,
-  BarChart3,
-  Clock,
-  Map,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import SecurityHUD from "./visual/SecurityHUD";
 
 interface VisualItem {
@@ -209,9 +185,9 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
     <div className="relative w-full h-[55vh] flex items-center justify-center perspective-1000">
       <button
         onClick={prevSlide}
-        className="absolute left-2 z-20 p-3 rounded-full bg-black/40 border border-white/10 hover:bg-white/10 hover:border-white/30 text-white transition-all backdrop-blur-md"
+        className="absolute left-2 z-20 p-3 rounded-full bg-black/40 border border-white/10 hover:bg-white/10 hover:border-white/30 text-white transition-all glass-blur"
       >
-        <ArrowLeft size={24} />
+        <Icon name="ArrowLeft" size={24} />
       </button>
 
       <HoloCard className="w-full max-w-3xl h-full shadow-[0_0_50px_-10px_rgba(0,0,0,0.5)]">
@@ -272,13 +248,13 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
 
       <button
         onClick={nextSlide}
-        className="absolute right-2 z-20 p-3 rounded-full bg-black/40 border border-white/10 hover:bg-white/10 hover:border-white/30 text-white transition-all backdrop-blur-md"
+        className="absolute right-2 z-20 p-3 rounded-full bg-black/40 border border-white/10 hover:bg-white/10 hover:border-white/30 text-white transition-all glass-blur"
       >
-        <ArrowRight size={24} />
+        <Icon name="ArrowRight" size={24} />
       </button>
 
       {/* Holographic Indicators */}
-      <div className="absolute bottom-[-30px] flex gap-1.5 p-2 rounded-full bg-black/20 backdrop-blur-sm border border-white/5">
+      <div className="absolute bottom-[-30px] flex gap-1.5 p-2 rounded-full bg-black/20 glass-blur border border-white/5">
         {data.items.map((_, i) => (
           <button
             key={i}
@@ -348,7 +324,7 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-white/5 bg-white/[0.02] flex justify-between items-center backdrop-blur-sm">
+          <div className="p-3 border-t border-white/5 bg-white/[0.02] flex justify-between items-center glass-blur">
             <div className="flex items-center gap-2">
               <div
                 className={`w-1.5 h-1.5 rounded-full ${
@@ -360,7 +336,7 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
               </div>
             </div>
             <div className="p-2 rounded bg-white/5 hover:bg-cyan-500/20 hover:text-cyan-400 cursor-pointer transition-all border border-transparent hover:border-cyan-500/30">
-              <ExternalLink size={14} />
+              <Icon name="ExternalLink" size={14} />
             </div>
           </div>
         </HoloCard>
@@ -415,7 +391,8 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
                   </div>
                 ))}
           </div>
-          <ExternalLink
+          <Icon
+            name="ExternalLink"
             size={16}
             className="relative z-10 transition-colors"
             style={{ color: theme.primary }}
@@ -477,7 +454,7 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
                   className="text-[10px] font-mono mt-1 flex items-center gap-1"
                   style={{ color: theme.primary }}
                 >
-                  <Clock size={10} />
+                  <Icon name="Clock" size={10} />
                   {item.details.date}
                 </div>
               )}
@@ -641,7 +618,7 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
                 boxShadow: `0 0 20px ${theme.primary}20`,
               }}
             >
-              <ArrowLeft size={24} style={{ color: theme.primary }} />
+              <Icon name="ArrowLeft" size={24} style={{ color: theme.primary }} />
             </button>
             <button
               onClick={nextSlide}
@@ -652,7 +629,7 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
                 boxShadow: `0 0 20px ${theme.primary}20`,
               }}
             >
-              <ArrowRight size={24} style={{ color: theme.primary }} />
+              <Icon name="ArrowRight" size={24} style={{ color: theme.primary }} />
             </button>
             <div
               className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full font-mono text-sm tracking-widest"
@@ -681,31 +658,31 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-lg bg-white/5 border border-white/10 shadow-[0_0_15px_-5px_rgba(255,255,255,0.2)]">
             {data.type === "PLACE" ? (
-              <MapPin size={20} style={{ color: theme.primary }} />
+              <Icon name="MapPin" size={20} style={{ color: theme.primary }} />
             ) : data.type === "PRODUCT" ? (
-              <Box size={20} style={{ color: theme.primary }} />
+              <Icon name="Box" size={20} style={{ color: theme.primary }} />
             ) : data.type === "PERSON" ? (
-              <User size={20} style={{ color: theme.primary }} />
+              <Icon name="User" size={20} style={{ color: theme.primary }} />
             ) : data.type === "NEWS" ? (
-              <Newspaper size={20} style={{ color: theme.primary }} />
+              <Icon name="Newspaper" size={20} style={{ color: theme.primary }} />
             ) : data.type === "SOCIAL" ? (
-              <Share2 size={20} style={{ color: theme.primary }} />
+              <Icon name="Share2" size={20} style={{ color: theme.primary }} />
             ) : data.type === "DOCUMENT" ? (
-              <FileText size={20} style={{ color: theme.primary }} />
+              <Icon name="FileText" size={20} style={{ color: theme.primary }} />
             ) : data.type === "FINANCIAL" ? (
-              <TrendingUp size={20} style={{ color: theme.primary }} />
+              <Icon name="TrendingUp" size={20} style={{ color: theme.primary }} />
             ) : data.type === "AUDIO" ? (
-              <Music size={20} style={{ color: theme.primary }} />
+              <Icon name="Music" size={20} style={{ color: theme.primary }} />
             ) : data.type === "CODE" ? (
-              <Code size={20} style={{ color: theme.primary }} />
+              <Icon name="Code" size={20} style={{ color: theme.primary }} />
             ) : data.type === "STATS" ? (
-              <BarChart3 size={20} style={{ color: theme.primary }} />
+              <Icon name="BarChart3" size={20} style={{ color: theme.primary }} />
             ) : data.type === "TIMELINE" ? (
-              <Clock size={20} style={{ color: theme.primary }} />
+              <Icon name="Clock" size={20} style={{ color: theme.primary }} />
             ) : data.type === "MAP" ? (
-              <Map size={20} style={{ color: theme.primary }} />
+              <Icon name="Map" size={20} style={{ color: theme.primary }} />
             ) : (
-              <Layers size={20} style={{ color: theme.primary }} />
+              <Icon name="Layers" size={20} style={{ color: theme.primary }} />
             )}
           </div>
           <div>
@@ -725,7 +702,7 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
           onClick={onClose}
           className="group relative p-3 rounded-full hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-transparent hover:border-red-500/40 transition-all duration-300"
         >
-          <X size={20} />
+          <Icon name="X" size={20} />
           {/* Tech Ring on Hover */}
           <div className="absolute inset-0 rounded-full border border-red-500/0 scale-75 group-hover:scale-100 group-hover:border-red-500/50 transition-all duration-500" />
         </button>

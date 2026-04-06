@@ -89,6 +89,27 @@ interface UseToolOrchestratorProps {
   turnLogsRef?: React.MutableRefObject<any[]>;
 }
 
+// Helper to map tool names to human-readable UI actions
+const getHumanReadableAction = (name: string): string => {
+  const map: Record<string, string> = {
+    updateSystemSettings: "Optimizing system parameters",
+    performSettingsAction: "Executing system action",
+    runPythonScript: "Executing Python script in sandbox",
+    executeTerminalCommand: "Running terminal command",
+    getMarketData: "Fetching market data",
+    placeOrder: "Placing order",
+    fetchCryptoData: "Fetching crypto metrics",
+    read_browser_page: "Reading web page",
+    search_web: "Searching the web",
+  };
+
+  if (map[name]) return map[name];
+
+  return name
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (str) => str.toUpperCase()) + " operation";
+};
+
 export function useToolOrchestrator({
   persona,
   isVoiceMode,
@@ -220,7 +241,15 @@ export function useToolOrchestrator({
 
       // Update turnLogsRef for in-chat action blocks
       if (turnLogsRef) {
-        turnLogsRef.current = [...(turnLogsRef.current || []), initialLog];
+        const tacticalMsg = getHumanReadableAction(name);
+        turnLogsRef.current = [...(turnLogsRef.current || []), {
+          id: initialLog.id,
+          timestamp: new Date().toISOString(),
+          source: name,
+          message: tacticalMsg,
+          type: "INFO",
+          toolName: name,
+        }];
       }
 
       // --- SPECIAL HANDLING: Chat ---
@@ -271,8 +300,10 @@ export function useToolOrchestrator({
             });
 
             if (turnLogsRef && turnLogsRef.current.length > 0) {
-              turnLogsRef.current[turnLogsRef.current.length - 1].result =
-                `[DELEGATED to ${bestDevice.name}] ${resultText}`;
+              const lastLog = turnLogsRef.current[turnLogsRef.current.length - 1];
+              lastLog.result = `[DELEGATED to ${bestDevice.name}] ${resultText}`;
+              lastLog.message = `${lastLog.message} [DELEGATED to ${bestDevice.name}]`;
+              lastLog.type = "SUCCESS";
             }
 
             return resultText;
@@ -287,8 +318,10 @@ export function useToolOrchestrator({
             });
 
             if (turnLogsRef && turnLogsRef.current.length > 0) {
-              turnLogsRef.current[turnLogsRef.current.length - 1].result =
-                errorMsg;
+              const lastLog = turnLogsRef.current[turnLogsRef.current.length - 1];
+              lastLog.result = errorMsg;
+              lastLog.message = `${lastLog.message} - Failed`;
+              lastLog.type = "ERROR";
             }
             return errorMsg;
           }
@@ -487,6 +520,9 @@ export function useToolOrchestrator({
         const lastLog = turnLogsRef.current[turnLogsRef.current.length - 1];
         if (lastLog && lastLog.toolName === name) {
           lastLog.result = result;
+          const isError = result.startsWith("CRITICAL ERROR") || result.includes("Failed");
+          lastLog.type = isError ? "ERROR" : "SUCCESS";
+          lastLog.message = `${lastLog.message} - ${isError ? 'Failed' : 'Completed'}`;
         }
       }
 

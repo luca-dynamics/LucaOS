@@ -5,10 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Eye,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { settingsService } from "../services/settingsService";
 
 interface ScreenShareProps {
@@ -17,7 +14,6 @@ interface ScreenShareProps {
   onToggle: (active: boolean) => void;
   theme: { hex: string; bg: string; border: string; primary: string };
   showUI?: boolean;
-  isMobile?: boolean;
 }
 
 export interface ScreenShareHandle {
@@ -32,7 +28,6 @@ export const ScreenShare = forwardRef<ScreenShareHandle, ScreenShareProps>(
       onToggle,
       theme,
       showUI = true,
-      isMobile = false,
     },
     ref,
   ) => {
@@ -224,7 +219,7 @@ export const ScreenShare = forwardRef<ScreenShareHandle, ScreenShareProps>(
 
         {/* SOURCE PICKER OVERLAY */}
         {showUI && showSourcePicker && (
-          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in pointer-events-auto">
+          <div className="fixed inset-0 z-[100] bg-black/80 glass-blur flex items-center justify-center p-8 animate-in fade-in pointer-events-auto">
             <div
               className={`glass-panel tech-border ${theme.primary} rounded-lg p-6 max-w-4xl w-full flex flex-col max-h-[80vh] overflow-hidden`}
               style={{
@@ -234,7 +229,7 @@ export const ScreenShare = forwardRef<ScreenShareHandle, ScreenShareProps>(
               }}
             >
               <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <Eye style={{ color: theme.hex }} /> SELECT SCREEN
+                <Icon name="Eye" style={{ color: theme.hex }} /> SELECT SCREEN
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 overflow-y-auto p-1 flex-1">
                 {availableSources.map((source) => (

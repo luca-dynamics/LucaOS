@@ -1,30 +1,14 @@
-import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Cast,
-  Monitor,
-  Tv,
-  Smartphone,
-  X,
-  QrCode,
-  Wifi,
-  Shield,
-} = LucideIcons as any;
-import { setHexAlpha } from "../config/themeColors";
-import { SmartDevice, DeviceType } from "../types";
+import React, { useState, useEffect } from "react";
 import QRCode from "qrcode";
+import { Icon } from "./ui/Icon";
+import { DeviceType, SmartDevice } from "../types";
 import { apiUrl, FRONTEND_PORT } from "../config/api";
 
 interface CastPickerProps {
   devices: SmartDevice[];
   onSelect: (deviceId: string) => void;
   onCancel: () => void;
-  theme?: {
-    primary: string;
-    border: string;
-    bg: string;
-    hex: string;
-  };
+  theme?: any;
 }
 
 type CastMethod = "SELECT" | "QR" | "HOTSPOT" | "LOCAL";
@@ -33,12 +17,6 @@ const CastPicker: React.FC<CastPickerProps> = ({
   devices,
   onSelect,
   onCancel,
-  theme = {
-    primary: "#22d3ee", // Cyan-400
-    border: "rgba(6, 182, 212, 0.3)", // Cyan-500/30
-    bg: "rgba(8, 51, 68, 0.2)", // Cyan-950/20
-    hex: "#06b6d4",
-  },
 }) => {
   const [method, setMethod] = useState<CastMethod>("SELECT");
   const [qrUrl, setQrUrl] = useState("");
@@ -55,20 +33,19 @@ const CastPicker: React.FC<CastPickerProps> = ({
       .then((res) => res.json())
       .then((data) => {
         if (data.addresses && data.addresses.length > 0) {
-          // Prefer EN0 or similar, but just take first non-internal for now
           const wifi = data.addresses.find(
             (a: any) => a.name.includes("en0") || a.name.includes("wlan"),
           );
           setLanIp(wifi ? wifi.address : data.addresses[0].address);
         }
       })
-      .catch((err) => console.error("Failed to fetch IP", err));
+      .catch((err: any) => console.error("Failed to fetch IP", err));
   }, []);
 
   useEffect(() => {
     QRCode.toDataURL(localUrl)
       .then((url) => setQrUrl(url))
-      .catch((err) => console.error(err));
+      .catch((err: any) => console.error(err));
   }, [localUrl]);
 
   const handleActivateBeacon = async () => {
@@ -90,7 +67,6 @@ const CastPicker: React.FC<CastPickerProps> = ({
     }
   };
 
-  // Filter for devices that likely support casting (TVs, Screens, etc.)
   const castableDevices = devices.filter(
     (d) =>
       d.type === DeviceType.SMART_TV ||
@@ -99,48 +75,44 @@ const CastPicker: React.FC<CastPickerProps> = ({
   );
 
   return (
-    <div className="absolute inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center animate-in fade-in zoom-in duration-200">
+    <div className="absolute inset-0 z-[200] bg-black/60 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300">
       <div
-        className="w-full max-w-md bg-black/40 backdrop-blur-xl border rounded-xl overflow-hidden relative"
-        style={{
-          borderColor: theme.border,
-          boxShadow: `0 0 80px -20px ${setHexAlpha(theme.hex, 0.25)}`,
-        }}
+        className="w-full max-w-md bg-[var(--app-bg-main)]/40 glass-blur border border-[var(--app-border-main)] rounded-2xl overflow-hidden relative shadow-2xl shadow-black/50"
       >
-        {/* Liquid background effect 1 (Center) */}
+        {/* Liquid background effects using reactive vars */}
         <div
           className="absolute inset-0 opacity-40 pointer-events-none transition-all duration-700 -z-10"
           style={{
-            background: `radial-gradient(circle at 50% 50%, ${setHexAlpha(theme.hex, 0.15)}, transparent 60%)`,
-            filter: "blur(40px)",
+            background: `radial-gradient(circle at 50% 50%, var(--app-primary), transparent 70%)`,
+            filter: "blur(60px)",
           }}
         />
-        {/* Liquid background effect 2 (Top Right Offset) */}
         <div
-          className="absolute inset-0 opacity-30 pointer-events-none transition-all duration-700 -z-10"
+          className="absolute inset-0 opacity-20 pointer-events-none transition-all duration-700 -z-10"
           style={{
-            background: `radial-gradient(circle at 80% 20%, ${setHexAlpha(theme.hex, 0.08)}, transparent 50%)`,
+            background: `radial-gradient(circle at 80% 20%, var(--app-primary), transparent 50%)`,
             filter: "blur(40px)",
           }}
         />
+
         {/* Header */}
         <div
-          className="p-4 border-b border-white/10 flex items-center justify-between relative z-10"
-          style={{ backgroundColor: setHexAlpha(theme.hex, 0.12) }}
+          className="p-5 border-b border-[var(--app-border-main)] flex items-center justify-between relative z-10 bg-[var(--app-primary)]/5"
         >
-          <div className="flex items-center gap-3">
-            <Cast style={{ color: theme.primary }} size={20} />
+          <div className="flex items-center gap-3.5">
+            <div className="p-2 rounded-xl bg-[var(--app-primary)]/10 border border-[var(--app-primary)]/20 shadow-inner">
+              <Icon name="Cast" size={20} variant="BoldDuotone" className="text-[var(--app-primary)]" />
+            </div>
             <div>
-              <h3 className="text-white font-bold tracking-wide">
-                CAST TARGET
+              <h3 className="text-[var(--app-text-main)] font-black tracking-[0.1em] uppercase italic">
+                Cast Target
               </h3>
               <p
-                className="text-[10px] font-mono"
-                style={{ color: theme.primary }}
+                className="text-[9px] font-black font-mono tracking-widest text-[var(--app-primary)] uppercase"
               >
                 {method === "SELECT"
-                  ? "SELECT CONNECTION METHOD"
-                  : "ESTABLISH UPLINK"}
+                  ? "Select Connection Method"
+                  : "Establish Uplink"}
               </p>
             </div>
           </div>
@@ -152,47 +124,31 @@ const CastPicker: React.FC<CastPickerProps> = ({
                 setIsBeaconActive(false);
               }
             }}
-            className="p-1 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/40 text-[var(--app-text-muted)] hover:text-red-500"
           >
-            <X size={18} />
+            <Icon name="CloseCircle" size={20} variant="BoldDuotone" />
           </button>
         </div>
 
         {/* Content Area */}
-        <div className="p-2 max-h-[400px] overflow-y-auto custom-scrollbar min-h-[300px] flex flex-col justify-center relative z-10">
+        <div className="p-4 max-h-[450px] overflow-y-auto custom-scrollbar min-h-[320px] flex flex-col justify-center relative z-10">
           {/* METHOD SELECTION SCREEN */}
           {method === "SELECT" && (
-            <div className="grid gap-2 p-2">
+            <div className="grid gap-3 p-1">
               <button
                 onClick={() => setMethod("QR")}
-                className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10 transition-all text-left group"
-                style={
-                  {
-                    "--theme-color": theme.primary,
-                    "--theme-hex": theme.hex,
-                  } as React.CSSProperties
-                }
+                className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-[var(--app-border-main)] transition-all text-left group hover:bg-[var(--app-primary)]/10 hover:border-[var(--app-primary)]/30 hover:scale-[1.02] shadow-sm hover:shadow-lg hover:shadow-[var(--app-primary)]/5"
               >
-                {/* Hover effects handled via group-hover and standard tailwind for simplicity where possible, 
-                    but for dynamic colors we use inline styles for the active elements */}
                 <div
-                  className="p-3 rounded-full bg-slate-800 transition-transform group-hover:scale-110"
-                  style={{ color: theme.primary }}
+                  className="p-3.5 rounded-xl bg-black/40 border border-white/5 transition-all group-hover:scale-110 group-hover:shadow-inner group-hover:bg-[var(--app-primary)]/20 text-[var(--app-primary)]"
                 >
-                  <QrCode size={24} />
+                  <Icon name="QrCode" size={26} variant="BoldDuotone" />
                 </div>
                 <div>
-                  <div
-                    className="font-bold text-slate-200 transition-colors"
-                    style={{
-                      color: undefined, // Let CSS hover handle it if possible, or use inline
-                    }}
-                  >
-                    <span className="group-hover:text-[var(--theme-color)]">
-                      Luca Link (QR)
-                    </span>
+                  <div className="font-black text-sm tracking-[0.05em] uppercase italic text-[var(--app-text-main)] group-hover:text-[var(--app-primary)] transition-colors">
+                    Luca Link (QR)
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono">
+                  <div className="text-[9px] text-[var(--app-text-muted)] font-black font-mono uppercase tracking-widest opacity-60">
                     Scan code to pair mobile device
                   </div>
                 </div>
@@ -200,16 +156,16 @@ const CastPicker: React.FC<CastPickerProps> = ({
 
               <button
                 onClick={() => setMethod("HOTSPOT")}
-                className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all text-left group"
+                className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-[var(--app-border-main)] transition-all text-left group hover:bg-purple-500/10 hover:border-purple-500/30 hover:scale-[1.02] shadow-sm hover:shadow-lg hover:shadow-purple-500/5"
               >
-                <div className="p-3 rounded-full bg-slate-800 text-purple-400 group-hover:scale-110 transition-transform">
-                  <Shield size={24} />
+                <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 transition-all group-hover:scale-110 group-hover:shadow-inner group-hover:bg-purple-500/20 text-purple-400">
+                  <Icon name="Shield" size={26} variant="BoldDuotone" />
                 </div>
                 <div>
-                  <div className="font-bold text-slate-200 group-hover:text-purple-300">
+                  <div className="font-black text-sm tracking-[0.05em] uppercase italic text-[var(--app-text-main)] group-hover:text-purple-400 transition-colors">
                     Secure Hotspot
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono">
+                  <div className="text-[9px] text-[var(--app-text-muted)] font-black font-mono uppercase tracking-widest opacity-60">
                     Direct P2P Encrypted Uplink
                   </div>
                 </div>
@@ -217,16 +173,16 @@ const CastPicker: React.FC<CastPickerProps> = ({
 
               <button
                 onClick={() => setMethod("LOCAL")}
-                className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:border-green-500/50 hover:bg-green-500/10 transition-all text-left group"
+                className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-[var(--app-border-main)] transition-all text-left group hover:bg-green-500/10 hover:border-green-500/30 hover:scale-[1.02] shadow-sm hover:shadow-lg hover:shadow-green-500/5"
               >
-                <div className="p-3 rounded-full bg-slate-800 text-green-400 group-hover:scale-110 transition-transform">
-                  <Wifi size={24} />
+                <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 transition-all group-hover:scale-110 group-hover:shadow-inner group-hover:bg-green-500/20 text-green-400">
+                  <Icon name="Wifi" size={26} variant="BoldDuotone" />
                 </div>
                 <div>
-                  <div className="font-bold text-slate-200 group-hover:text-green-300">
+                  <div className="font-black text-sm tracking-[0.05em] uppercase italic text-[var(--app-text-main)] group-hover:text-green-400 transition-colors">
                     Local Network
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono">
+                  <div className="text-[9px] text-[var(--app-text-muted)] font-black font-mono uppercase tracking-widest opacity-60">
                     Cast to TV/Displays on WiFi
                   </div>
                 </div>
@@ -236,31 +192,29 @@ const CastPicker: React.FC<CastPickerProps> = ({
 
           {/* QR MODE */}
           {method === "QR" && (
-            <div className="p-4 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="p-6 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
               <div
-                className="mb-3 bg-white p-2 rounded-lg"
-                style={{ boxShadow: `0 0 20px ${setHexAlpha(theme.hex, 0.3)}` }}
+                className="mb-5 bg-white p-3 rounded-2xl shadow-2xl shadow-[var(--app-primary)]/20 tech-border border-4 border-white"
               >
                 {qrUrl ? (
-                  <img src={qrUrl} alt="Connect QR" className="w-40 h-40" />
+                  <img src={qrUrl} alt="Connect QR" className="w-44 h-44 mix-blend-multiply" />
                 ) : (
-                  <div className="w-40 h-40 flex items-center justify-center text-slate-400">
-                    <QrCode size={32} className="animate-pulse" />
+                  <div className="w-44 h-44 flex items-center justify-center text-slate-400">
+                    <Icon name="QrCode" size={40} className="animate-pulse" />
                   </div>
                 )}
               </div>
-              <h4 className="text-white font-bold text-sm mt-4">SCAN TARGET</h4>
-              <p className="text-[10px] text-slate-400 max-w-[200px] mt-1 mb-4">
-                Use your mobile device to scan and establish visual uplink.
+              <h4 className="text-[var(--app-text-main)] font-black text-xs tracking-[0.3em] uppercase italic">Scan Target</h4>
+              <p className="text-[10px] text-[var(--app-text-muted)] max-w-[220px] mt-2 mb-6 font-black font-mono uppercase tracking-widest opacity-60">
+                Establish direct visual uplink via mobile linkage
               </p>
-              <div className="w-full bg-black/40 border border-white/10 rounded p-2 flex flex-col items-center max-w-[250px]">
+              <div className="w-full bg-black/40 border border-[var(--app-border-main)] rounded-xl p-3 flex flex-col items-center max-w-[280px] shadow-inner">
                 <span
-                  className="text-[9px] uppercase font-mono tracking-wider mb-1"
-                  style={{ color: setHexAlpha(theme.primary, 0.8) }} // 80% opacity
+                  className="text-[9px] font-black font-mono tracking-[0.2em] mb-1.5 text-[var(--app-primary)] uppercase italic"
                 >
                   Manual Link
                 </span>
-                <code className="text-[10px] text-slate-300 bg-transparent font-mono select-all break-all">
+                <code className="text-[10px] text-[var(--app-text-main)] bg-transparent font-mono select-all break-all opacity-80 leading-relaxed group-hover:opacity-100 transition-all">
                   {localUrl}
                 </code>
               </div>
@@ -269,41 +223,41 @@ const CastPicker: React.FC<CastPickerProps> = ({
 
           {/* HOTSPOT MODE */}
           {method === "HOTSPOT" && (
-            <div className="p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="p-8 text-center animate-in fade-in slide-in-from-bottom-6 duration-500">
               <div
-                className={`w-20 h-20 mx-auto bg-purple-900/20 rounded-full flex items-center justify-center mb-4 ${
-                  isBeaconActive ? "bg-purple-500/30" : "animate-pulse"
-                }`}
+                className={`w-24 h-24 mx-auto rounded-3xl flex items-center justify-center mb-6 transition-all duration-500 tech-border border
+                  ${isBeaconActive ? "bg-green-500/10 border-green-500/30 shadow-lg shadow-green-500/20" : "bg-purple-500/10 border-purple-500/30 animate-pulse"}
+                `}
               >
-                <Shield
-                  size={32}
-                  className={
-                    isBeaconActive ? "text-green-400" : "text-purple-500"
-                  }
+                <Icon
+                  name="Shield"
+                  size={40}
+                  variant="BoldDuotone"
+                  className={isBeaconActive ? "text-green-400" : "text-purple-400"}
                 />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">
-                {isBeaconActive ? "BEACON ACTIVE" : "SECURE HOTSPOT"}
+              <h3 className="text-sm font-black text-[var(--app-text-main)] mb-2 tracking-[0.2em] uppercase italic">
+                {isBeaconActive ? "Beacon Active" : "Secure Hotspot"}
               </h3>
-              <p className="text-xs text-slate-400 mb-6 font-mono">
+              <p className="text-[10px] text-[var(--app-text-muted)] mb-8 font-black font-mono tracking-widest uppercase opacity-60">
                 {isBeaconActive
-                  ? "Encrypted P2P tunnel established."
-                  : "Initializing P2P encrypted broadcasting..."}
+                  ? "Encrypted P2P tunnel established"
+                  : "Initializing P2P encrypted broadcast"}
                 <br />
-                SSID: <span className="text-purple-400">LUCA CORE SECURE</span>
+                <span className="mt-1 block text-purple-400/80">SSID: LUCA CORE SECURE</span>
               </p>
               {!isBeaconActive ? (
                 <button
                   onClick={handleActivateBeacon}
                   disabled={isActivating}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded tracking-wider transition-colors disabled:opacity-50"
+                  className="px-6 py-3 bg-[var(--app-primary)] hover:scale-105 active:scale-95 text-black text-[10px] font-black uppercase tracking-[0.3em] italic rounded-xl transition-all shadow-lg shadow-[var(--app-primary)]/20 disabled:opacity-50"
                 >
-                  {isActivating ? "ACTIVATING..." : "ACTIVATE BEACON"}
+                  {isActivating ? "Activating..." : "Activate Beacon"}
                 </button>
               ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="px-3 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-widest rounded border border-green-500/30 animate-pulse">
-                    Broadcasting...
+                <div className="flex flex-col items-center gap-4">
+                  <div className="px-4 py-1.5 bg-green-500/10 text-green-400 text-[10px] font-black uppercase tracking-[0.3em] italic rounded-xl border border-green-500/20 animate-pulse">
+                    Broadcasting
                   </div>
                   <button
                     onClick={async () => {
@@ -318,7 +272,7 @@ const CastPicker: React.FC<CastPickerProps> = ({
                       }
                       setIsBeaconActive(false);
                     }}
-                    className="mt-4 text-[10px] text-slate-500 hover:text-slate-300 underline"
+                    className="mt-2 text-[9px] font-black font-mono tracking-widest text-[var(--app-text-muted)] hover:text-red-500 transition-colors uppercase italic"
                   >
                     Reset Beacon
                   </button>
@@ -329,58 +283,53 @@ const CastPicker: React.FC<CastPickerProps> = ({
 
           {/* LOCAL NETWORK MODE */}
           {method === "LOCAL" && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 h-full flex flex-col">
+            <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 h-full flex flex-col p-2">
               <div
-                className="px-4 py-2 text-[10px] font-mono uppercase tracking-wider mb-2"
-                style={{ color: setHexAlpha(theme.primary, 0.5) }}
+                className="px-2 py-2 text-[9px] font-black font-mono uppercase tracking-[0.3em] mb-3 text-[var(--app-text-muted)] italic opacity-50"
               >
                 Discovered Nodes
               </div>
 
               {castableDevices.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 opacity-50">
-                  <Wifi size={32} className="mb-2 text-slate-600" />
-                  <div className="text-slate-500 font-mono text-xs">
-                    NO EXTERNAL DISPLAYS DETECTED
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-10 opacity-30">
+                  <Icon name="Wifi" size={40} className="mb-3 text-[var(--app-text-muted)]" />
+                  <div className="text-[var(--app-text-main)] font-black text-xs tracking-[0.1em] uppercase italic">
+                    No External Nodes
                   </div>
-                  <div className="text-[10px] text-slate-700 mt-1">
+                  <div className="text-[9px] text-[var(--app-text-muted)] font-mono mt-2 tracking-widest uppercase">
                     Scanning local subnet...
                   </div>
                 </div>
               ) : (
-                <div className="space-y-1 px-2">
+                <div className="space-y-2 px-1">
                   {castableDevices.map((device) => (
                     <button
                       key={device.id}
                       onClick={() => onSelect(device.id)}
-                      className="w-full text-left p-3 rounded-lg hover:bg-white/5 border border-transparent hover:border-green-500/30 group transition-all flex items-center justify-between"
+                      className="w-full text-left p-4 rounded-xl bg-black/20 border border-[var(--app-border-main)] hover:border-[var(--app-primary)]/40 hover:bg-[var(--app-primary)]/10 group transition-all flex items-center justify-between shadow-sm"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-green-400 group-hover:bg-green-500/10 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center text-[var(--app-text-muted)] group-hover:text-[var(--app-primary)] group-hover:bg-[var(--app-primary)]/20 group-hover:shadow-inner transition-all duration-300">
                           {device.type === DeviceType.SMART_TV && (
-                            <Tv size={20} />
+                            <Icon name="Tv" size={22} variant="BoldDuotone" />
                           )}
                           {device.type === DeviceType.MOBILE && (
-                            <Smartphone size={20} />
+                            <Icon name="Smartphone" size={22} variant="BoldDuotone" />
                           )}
                           {device.type === DeviceType.WIRELESS_NODE && (
-                            <Monitor size={20} />
+                            <Icon name="Monitor" size={22} variant="BoldDuotone" />
                           )}
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-slate-200 group-hover:text-green-300">
+                          <div className="text-sm font-black text-[var(--app-text-main)] group-hover:text-[var(--app-primary)] tracking-wide uppercase italic transition-colors">
                             {device.name}
                           </div>
-                          <div className="text-[10px] font-mono text-slate-500 group-hover:text-green-500/70">
-                            {device.location} • {device.status.toUpperCase()}
+                          <div className="text-[9px] font-black font-mono text-[var(--app-text-muted)] group-hover:text-[var(--app-primary)] opacity-60 uppercase tracking-widest transition-opacity mt-0.5">
+                            {device.location} • {device.status}
                           </div>
                         </div>
                       </div>
-                      {device.isOn ? (
-                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
-                      ) : (
-                        <div className="w-2 h-2 rounded-full bg-slate-700" />
-                      )}
+                      <div className={`w-2 h-2 rounded-full transition-all duration-500 ${device.isOn ? "bg-green-500 shadow-lg shadow-green-500/50" : "bg-white/10"}`} />
                     </button>
                   ))}
                 </div>

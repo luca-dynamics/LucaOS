@@ -1,11 +1,5 @@
 import React, { useEffect, useState, useTransition } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  ArrowLeft,
-  ImageIcon,
-  X,
-  Zap,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import ChatWidgetInput from "../ChatWidgetInput";
 import ChatMessageBubble from "../ChatMessageBubble";
 import { ProWorkforceCanvas } from "../chat/ProWorkforceCanvas";
@@ -14,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sender } from "../../types";
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
+import { apiUrl } from "../../config/api";
 
 interface ChatPanelProps {
   messages: any[];
@@ -47,13 +42,14 @@ interface ChatPanelProps {
   handleScreenShare: () => void;
   handleClearChat: () => void;
   handleStop: () => void;
+  setMessages: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 type ViewMode = "CHAT" | "CORTEX";
 
 // --- Helpers ---
 function cleanAiMessage(text: string): string {
-  // 1. Remove bracketed system headers
+  // 1. Remove bracketed system headers (e.g. [SYSTEM], [BYPASS], [REFLEX])
   let stripped = text.replace(/\[[^\]]*\]/g, "").trim();
   
   // 2. Remove common leading greetings ONLY if there is significant text after them
@@ -90,20 +86,18 @@ function getGreeting(
 const PersonaBadge = ({
   persona,
   themeHex,
-  isLight,
 }: {
   persona: string;
   themeHex: string;
-  isLight: boolean;
 }) => (
   <div
-    className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-mono font-bold tracking-widest uppercase"
+    className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-mono font-bold tracking-widest uppercase glass-blur"
     style={{ 
-      borderColor: isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.15)",
+      borderColor: "var(--app-border-main, rgba(255,255,255,0.15))",
       color: themeHex,
     }}
   >
-    <Zap size={10} className="animate-pulse" />
+    <Icon name="Zap" size={10} className="animate-pulse" variant="BoldDuotone" />
     {persona}
   </div>
 );
@@ -111,11 +105,9 @@ const PersonaBadge = ({
 // --- Rolling Stream (Transient Log) ---
 const RollingStream = ({ 
   text, 
-  isLight,
   isStreaming
 }: { 
   text: string; 
-  isLight: boolean;
   isStreaming: boolean;
 }) => {
   const [visibleLines, setVisibleLines] = useState<string[]>([]);
@@ -172,9 +164,8 @@ const RollingStream = ({
             }}
             exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className={`text-sm md:text-base font-mono tracking-wide text-center max-w-2xl px-6 ${
-              isLight ? "text-gray-700" : "text-gray-300"
-            }`}
+            className="text-sm md:text-base font-mono tracking-wide text-center max-w-2xl px-6"
+            style={{ color: idx === visibleLines.length - 1 ? "var(--app-text-main)" : "var(--app-text-muted)" }}
           >
             {line}{idx === visibleLines.length - 1 && line.length > 0 ? (line.endsWith('.') ? '' : '.') : ''}
             {isStreaming && idx === visibleLines.length -1 && (
@@ -219,6 +210,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   handleScreenShare,
   handleClearChat,
   handleStop,
+  setMessages,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>("CHAT");
   const [, startTransition] = useTransition();
@@ -226,6 +218,62 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     theme.themeName?.toLowerCase() === "lucagent" || 
     theme.themeName?.toLowerCase() === "agentic-slate" ||
     theme.themeName?.toLowerCase() === "light";
+
+  // --- Active MCP servers (polled every 10s) ---
+  const [activeMcpServers, setActiveMcpServers] = useState<{ id: string; name: string; status?: string }[]>([]);
+  useEffect(() => {
+    const fetchMcp = async () => {
+      try {
+        const res = await fetch(apiUrl("/api/mcp/list"));
+        const data = await res.json();
+        setActiveMcpServers(data.servers || []);
+      } catch { /* silent */ }
+    };
+    fetchMcp();
+    const interval = setInterval(fetchMcp, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleDisconnectMcp = async (id: string) => {
+    try {
+      await fetch(apiUrl("/api/mcp/disconnect"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      // Refresh list immediately
+      const res = await fetch(apiUrl("/api/mcp/list"));
+      const data = await res.json();
+      setActiveMcpServers(data.servers || []);
+    } catch (e) {
+      console.error("[MCP] Disconnect failed:", e);
+    }
+  };
+
+  const handleConnectMcp = async (id: string) => {
+    // Find the server config so we can send it to /connect
+    const server = activeMcpServers.find(s => s.id === id);
+    if (!server) return;
+
+    try {
+      await fetch(apiUrl("/api/mcp/connect"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...server
+        }),
+      });
+      // Refresh list immediately
+      const res = await fetch(apiUrl("/api/mcp/list"));
+      const data = await res.json();
+      setActiveMcpServers(data.servers || []);
+    } catch (e) {
+      console.error("[MCP] Connect failed:", e);
+    }
+  };
+
+
+
 
   // Show centered layout until the user has sent at least one message.
   // LUCA's own startup/greeting messages don't count — only user-initiated
@@ -310,13 +358,28 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
             if (prompt) {
               // 4th arg: sendHidden=true, 5th arg: hideResponse=false
-              startTransition(() => {
-                handleSendMessage(prompt, null, undefined, true, false);
-              });
+              const response = await handleSendMessage(prompt, null, undefined, true, false);
+              
+              // If no response (undefined), treat as failure and trigger local fallback
+              if (!response) {
+                throw new Error("No AI response for awakening pulse");
+              }
             }
-          } catch {
+          } catch (err) {
+            console.warn("[AWARENESS] AI Awakening failed, triggering local fallback:", err);
             startTransition(() => {
-              hasTriggeredAwakening.current = false; // Allow retry
+              const fallbackText = awarenessService.getLocalFallbackGreeting(persona || "ASSISTANT", userName || "Operator");
+              setMessages(prev => {
+                  // Only add if no LUCA messages exist yet (Double check protection)
+                  if (prev.some(m => m.sender === Sender.LUCA && !m.isHidden)) return prev;
+                  return [...prev, {
+                      id: "welcome-fallback-" + Date.now(),
+                      text: fallbackText,
+                      sender: Sender.LUCA,
+                      timestamp: Date.now(),
+                      isStreaming: false
+                  }];
+              });
             });
           }
         };
@@ -336,15 +399,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         <div
           className={`flex items-center gap-2 mb-2 border ${theme.border} p-2 w-fit ${isLight ? "bg-gray-100/80" : "bg-white/5"}`}
         >
-          <ImageIcon size={14} className={theme.primary} />
-          <span className={`text-xs ${isLight ? "text-gray-600" : "text-slate-300"}`}>
+          <Icon name="Gallery" size={14} className={theme.primary} variant="BoldDuotone" />
+          <span className={`text-xs "text-[var(--app-text-muted)]"`}>
             Visual_Input_Buffer_01.jpg
           </span>
           <button
             onClick={() => setAttachedImage(null)}
             className="hover:text-red-400"
           >
-            <X size={14} />
+            <Icon name="Close" size={14} variant="BoldDuotone" />
           </button>
         </div>
       )}
@@ -357,10 +420,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       />
       {/* Input box — wider in centered mode */}
       <div
-        className={`rounded-2xl overflow-hidden transition-all duration-500 ${
+        className={`rounded-2xl transition-all duration-500 glass-blur ${
           isLight
             ? "bg-white/60 border border-gray-200 shadow-md"
-            : "bg-white/5 border border-white/10 shadow-lg backdrop-blur-xl"
+            : "bg-white/5 border border-white/10 shadow-lg"
         } ${showCentered ? "shadow-[0_0_40px_rgba(0,0,0,0.3)]" : ""}`}
         style={{
           borderColor: showCentered ? `${theme.hex}33` : undefined,
@@ -394,12 +457,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           isKernelLocked={isKernelLocked}
           opsecStatus={opsecStatus}
           persona={persona}
+          activeMcpServers={activeMcpServers}
+          onDisconnectMcp={handleDisconnectMcp}
+          onConnectMcp={handleConnectMcp}
         />
+
+
       </div>
     </div>
   );
 
   // Shared SuggestionChips renderer
+
   const suggestionChips = (
     <SuggestionChips
       suggestions={ambientSuggestions}
@@ -435,17 +504,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               ? "flex w-full overflow-hidden"
               : "hidden"
             : "flex-1 overflow-hidden"
-        } flex flex-col h-full relative ${isMobile ? "z-10" : "z-20"} transition-all duration-500 ${
-          isLight
-            ? "glass-panel-light tech-border-light"
-            : "glass-panel tech-border"
-        } ${theme.primary}`}
+        } flex flex-col h-full relative ${isMobile ? "z-10" : "z-20"} transition-all duration-500 tech-border glass-blur`}
         style={{
-          borderTop: !isMobile ? `1px solid ${theme.hex}33` : "none",
-          borderBottom: !isMobile ? `1px solid ${theme.hex}33` : "none",
-          background: isLight
-            ? "rgba(255, 255, 255, 0.5)"
-            : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
+          borderTop: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
+          borderBottom: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
+          backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.5))",
         }}
       >
         {/* Header Toggle */}
@@ -454,20 +517,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             onClick={() => {
               setViewMode(viewMode === "CHAT" ? "CORTEX" : "CHAT");
             }}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest
-              ${viewMode === "CORTEX" 
-                ? `bg-zinc-800 ${theme.primary} border-white/20 shadow-[0_0_15px_rgba(0,0,0,0.3)]` 
-                : isLight 
-                  ? "bg-white border-gray-300 shadow-sm"
-                  : "bg-zinc-800 border-white/10 hover:border-white/20"}
-            `}
-            style={viewMode === "CORTEX" ? { borderColor: theme.hex, color: theme.hex } : { color: isLight ? "#4B5563" : "#F8FAFC" }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest glass-blur"
+            style={{ 
+              borderColor: viewMode === "CORTEX" ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))", 
+              backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
+              color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
+            }}
           >
             {viewMode === "CORTEX" ? (
-              <ArrowLeft size={10} />
+              <Icon name="ArrowLeft" size={10} variant="BoldDuotone" />
             ) : (
-              <Zap size={10} className="" />
+              <Icon name="Zap" size={10} variant="BoldDuotone" />
             )}
             {viewMode === "CORTEX" ? "RETURN TO CHAT" : "LUCA WORKFORCE"}
           </button>
@@ -495,9 +555,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             >
               {/* Greeting */}
             <h1
-              className={`text-4xl lg:text-5xl font-black tracking-tight ${
-                isLight ? "text-gray-900" : "text-white"
-              } leading-tight mb-1 text-center`}
+              className="text-4xl lg:text-5xl font-black tracking-tight leading-tight mb-1 text-center"
+              style={{ color: "var(--app-text-main, #ffffff)" }}
             >
               <span className="opacity-40 font-light mr-3">
                 {greeting.prefix}
@@ -513,9 +572,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               </span>
             </h1>
             <p
-              className={`text-sm font-mono tracking-[0.2em] uppercase opacity-30 ${
-                isLight ? "text-gray-600" : "text-slate-400"
-              }`}
+              className="text-sm font-mono tracking-[0.2em] uppercase opacity-40 text-center"
+              style={{ color: "var(--app-text-muted, #94a3b8)" }}
             >
               SYSTEM READY · {persona}
             </p>
@@ -554,7 +612,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 return (
                   <RollingStream 
                     text={cleaned} 
-                    isLight={isLight} 
                     isStreaming={latestMsg.isStreaming} 
                   />
                 );
@@ -562,7 +619,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             </div>
 
             {/* Persona badge */}
-            <PersonaBadge persona={persona} themeHex={theme.hex} isLight={isLight} />
+            <PersonaBadge persona={persona} themeHex={theme.hex} />
 
             {/* Central Input + chips below it, centered */}
             <div
@@ -613,17 +670,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           : "flex-1 overflow-hidden"
       } flex flex-col ${isMobile ? "h-full" : "h-full"} relative ${
         isMobile ? "z-10" : "z-20"
-      } transition-all duration-500 ${
-        isLight
-          ? "glass-panel-light tech-border-light"
-          : "glass-panel tech-border"
-      } ${theme.primary}`}
+      } transition-all duration-500 tech-border glass-blur`}
       style={{
-        borderTop: !isMobile ? `1px solid ${theme.hex}33` : "none",
-        borderBottom: !isMobile ? `1px solid ${theme.hex}33` : "none",
-        background: isLight
-          ? "rgba(255, 255, 255, 0.5)"
-          : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
+        borderTop: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
+        borderBottom: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
+        backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.5))",
       }}
     >
       {/* Header Toggle */}
@@ -632,20 +683,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           onClick={() => {
             setViewMode(viewMode === "CHAT" ? "CORTEX" : "CHAT");
           }}
-          className={`
-            flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest
-            ${viewMode === "CORTEX" 
-              ? `bg-zinc-800 ${theme.primary} border-white/20 shadow-[0_0_15px_rgba(0,0,0,0.3)]` 
-              : isLight
-                ? "bg-white border-gray-300 shadow-sm"
-                : "bg-zinc-800 border-white/10 hover:border-white/20"}
-          `}
-          style={viewMode === "CORTEX" ? { borderColor: theme.hex, color: theme.hex } : { color: isLight ? "#4B5563" : "#F8FAFC" }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest glass-blur"
+          style={{ 
+            borderColor: viewMode === "CORTEX" ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))", 
+            backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
+            color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
+          }}
         >
           {viewMode === "CORTEX" ? (
-            <ArrowLeft size={10} />
+            <Icon name="ArrowLeft" size={10} variant="BoldDuotone" />
           ) : (
-            <Zap size={10} className="" />
+            <Icon name="Zap" size={10} variant="BoldDuotone" />
           )}
           {viewMode === "CORTEX" ? "RETURN TO CHAT" : "LUCA WORKFORCE"}
         </button>
@@ -724,7 +772,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   }}
                   isStreaming={(msg as any).isStreaming}
                   tacticalData={(msg as any).tacticalData}
-                  isLight={isLight}
                 />
               ))}
             <div ref={chatEndRef} />
@@ -749,7 +796,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         className={`${
           isMobile
             ? isLight
-              ? "bg-white/90 backdrop-blur-md"
+              ? "bg-white/90 glass-blur"
               : "bg-black/95"
             : "bg-transparent"
         } z-40 px-3 pb-3 pt-0`}

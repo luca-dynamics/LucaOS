@@ -1,11 +1,6 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-import { motion,
-  AnimatePresence } from "framer-motion";
-const {
-  X,
-  Anchor,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
+import { motion, AnimatePresence } from "framer-motion";
 import { getThemeColors } from "../../config/themeColors";
 
 interface FloatingPanelProps {
@@ -84,9 +79,11 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
               className="p-1 hover:bg-white/10 rounded transition-colors group"
               title="Re-attach to Main Layout"
             >
-              <Anchor
+              <Icon
+                name="Anchor"
                 size={14}
-                className="text-slate-400 group-hover:text-white"
+                className="text-[color:var(--app-text-muted)] group-hover:text-[color:var(--app-text-main)]"
+                variant="BoldDuotone"
               />
             </button>
             <button
@@ -94,9 +91,11 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
               className="p-1 hover:bg-red-500/20 rounded transition-colors group"
               title="Close Panel"
             >
-              <X
+              <Icon
+                name="Close"
                 size={14}
-                className="text-slate-400 group-hover:text-red-400"
+                className="text-[color:var(--app-text-muted)] group-hover:text-red-400"
+                variant="BoldDuotone"
               />
             </button>
           </div>

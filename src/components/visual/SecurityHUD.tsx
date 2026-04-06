@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Shield,
-  Activity,
-  Target,
-  Cpu,
-  TrendingUp,
-  AlertTriangle,
-  Terminal: TerminalIcon,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
+import { apiUrl } from "../../config/api";
 
 interface Props {
   status: string;
@@ -23,327 +15,221 @@ interface Props {
   themeColor?: string;
 }
 
+const StatRow: React.FC<{ label: string; value: string; accent?: string }> = ({ label, value, accent }) => (
+  <div className="flex items-center justify-between py-2.5 border-b border-white/[0.05] last:border-0">
+    <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">{label}</span>
+    <span className="text-sm font-bold font-mono" style={accent ? { color: accent } : { color: "#fff" }}>{value}</span>
+  </div>
+);
+
+const UsageBar: React.FC<{ value: number; accent: string; label: string }> = ({ value, accent, label }) => (
+  <div className="space-y-1.5">
+    <div className="flex items-center justify-between text-[10px]">
+      <span className="text-slate-500 font-medium uppercase tracking-wider">{label}</span>
+      <span className="font-bold font-mono text-white">{value}%</span>
+    </div>
+    <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+      <div
+        className="h-full rounded-full transition-all duration-700"
+        style={{ width: `${value}%`, backgroundColor: accent }}
+      />
+    </div>
+  </div>
+);
+
 const SecurityHUD: React.FC<Props> = ({
   status,
   target,
   profit,
   steps,
   metrics,
-  themeColor = "#ef4444", // Default to Red if not provided
+  themeColor = "#ef4444",
 }) => {
   const [realStats, setRealStats] = useState<any>(null);
-  const [glitch, setGlitch] = useState(false);
 
-  // Poll for real system stats
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:3000/api/system/status/monitor"
-        );
+        const res = await fetch(apiUrl("/api/system/status/monitor"));
         const data = await res.json();
-        if (data.success) {
-          setRealStats(data);
-        }
-      } catch (err) {
-        console.warn("[HUD] Failed to fetch monitor stats", err);
+        if (data.success) setRealStats(data);
+      } catch {
+        // silent
       }
     };
-
     fetchStats();
-    const interval = setInterval(fetchStats, 2000);
+    const interval = setInterval(fetchStats, 3000);
     return () => clearInterval(interval);
   }, []);
 
-  // Update effect for glitch animation
-  useEffect(() => {
-    if (!realStats) return;
-    setGlitch(true);
-    const timeout = setTimeout(() => setGlitch(false), 150);
-    return () => clearTimeout(timeout);
-  }, [realStats]);
-
-  // Derived Values or Fallbacks
-  const displayTarget = realStats
-    ? `${realStats.hostname} (${realStats.platform})`
-    : target;
-  const displayProfit = realStats
-    ? (
-        realStats.totalMem / 1024 / 1024 / 1024 -
-        realStats.freeMem / 1024 / 1024 / 1024
-      ).toFixed(2)
+  const displayTarget = realStats ? `${realStats.hostname} (${realStats.platform})` : target;
+  const freeGb = realStats
+    ? (realStats.freeMem / 1024 / 1024 / 1024).toFixed(1)
     : profit;
-  const displaySteps =
-    realStats?.topProc?.length > 0 ? realStats.topProc : steps;
-  const displayThreat = realStats
-    ? Math.round(realStats.cpuLoad || 0)
-    : metrics.threatLevel;
-
-  // Dynamic styles
-  const hudStyle = {
-    "--hud-color": themeColor,
-    "--hud-bg": `${themeColor}10`, // 10% opacity
-    "--hud-border": `${themeColor}30`, // 30% opacity
-    "--hud-glow": `${themeColor}40`, // 40% opacity
-  } as React.CSSProperties;
+  const cpuLoad = realStats ? Math.round(realStats.cpuLoad || 0) : metrics.threatLevel;
+  const displaySteps = realStats?.topProc?.length > 0 ? realStats.topProc : steps;
+  const uptimeHrs = realStats ? (realStats.uptime / 3600).toFixed(1) : "—";
 
   return (
-    // Security HUD Container
-    <div
-      style={hudStyle}
-      className="h-full w-full bg-black/40 backdrop-blur-xl text-[var(--hud-color)] font-mono p-6 border-2 border-[var(--hud-border)] rounded-sm relative overflow-hidden flex flex-col gap-6 shadow-[0_0_30px_var(--hud-bg)] transition-colors duration-500"
-    >
-      {/* Liquid background effect */}
-      <div
-        className="absolute inset-0 opacity-30 pointer-events-none transition-all duration-700"
-        style={{
-          background: `radial-gradient(circle at 50% 50%, ${themeColor}25, transparent 60%)`,
-        }}
-      />
-      {/* Liquid background effect 2 (Top Right Offset) */}
-      <div
-        className="absolute inset-0 opacity-30 pointer-events-none transition-all duration-700"
-        style={{
-          background: `radial-gradient(circle at 80% 20%, ${themeColor}15, transparent 50%)`,
-        }}
-      />
+    <div className="w-full max-w-5xl mx-auto p-6 flex flex-col gap-6 font-sans">
 
-      {/* Background Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle,var(--hud-bg)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-50" />
-
-      {/* Header: Alpha Loop Identification */}
-      <div className="flex justify-between items-start border-b border-[var(--hud-border)] pb-4 z-10">
-        <div className="flex items-center gap-4">
-          <Shield
-            className={`w-10 h-10 ${glitch ? "animate-pulse text-white" : ""}`}
-            style={{ color: glitch ? "white" : themeColor }}
-          />
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: `${themeColor}15` }}
+          >
+            <Icon name="Shield" size={20} style={{ color: themeColor }} variant="BoldDuotone" />
+          </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-[0.2em] uppercase">
-              Alpha Loop: God Mode
-            </h1>
-            <p
-              className="text-[10px] opacity-70 tracking-widest"
-              style={{ color: themeColor }}
-            >
-              UNREGULATED_SOVEREIGN_CORE // V1.0
+            <h2 className="text-white font-bold text-base tracking-wide">Security Monitor</h2>
+            <p className="text-slate-500 text-xs flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ backgroundColor: themeColor }} />
+              Sovereign protocol · Real-time monitoring
             </p>
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-xs uppercase opacity-60">Status</div>
-          <div className="text-xl font-bold animate-pulse">{status}</div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border"
+          style={{ backgroundColor: `${themeColor}08`, borderColor: `${themeColor}20`, color: themeColor }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: themeColor }} />
+          <span className="text-[11px] font-bold tracking-widest">{status}</span>
         </div>
       </div>
 
-      {/* Main HUD Body */}
-      <div className="flex-1 grid grid-cols-12 gap-6 z-10">
-        {/* Left Panel: Target & Extraction */}
-        <div className="col-span-4 flex flex-col gap-4">
-          <div className="bg-[var(--hud-bg)] border border-[var(--hud-border)] p-4 rounded-sm flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-xs opacity-60 uppercase tracking-tighter">
-              <Target size={14} /> Active Target
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Left: Target + Extraction */}
+        <div className="flex flex-col gap-3">
+          {/* Target */}
+          <div className="bg-[#111111] border border-white/10 rounded-xl p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Icon name="Target" size={14} style={{ color: themeColor }} />
+              <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Active Target</span>
             </div>
-            <div className="text-xl font-bold text-white tracking-widest break-all">
-              {displayTarget}
-            </div>
-            <div className="text-[10px] mt-2 opacity-80">
-              THREAT_VECTOR: RE-ENTRANCY / MULTI-HOP
-            </div>
+            <p className="text-white text-sm font-bold font-mono break-all">{displayTarget}</p>
+            <p className="text-[10px] text-slate-600 font-mono">THREAT_VECTOR: RE-ENTRANCY / MULTI-HOP</p>
           </div>
 
-          <div className="bg-[var(--hud-bg)] border border-[var(--hud-border)] p-4 rounded-sm flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-xs opacity-60 uppercase tracking-tighter">
-              <TrendingUp size={14} /> Extraction Delta
+          {/* Extraction */}
+          <div className="bg-[#111111] border border-white/10 rounded-xl p-4 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Icon name="TrendingUp" size={14} className="text-green-500" />
+              <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Memory Free</span>
             </div>
-            <div className="text-3xl font-bold text-green-500 tracking-tighter">
-              +{displayProfit}{" "}
-              <span className="text-xs opacity-60">GB Free</span>
+            <p className="text-2xl font-bold text-green-400 font-mono">+{freeGb} <span className="text-sm font-normal text-slate-500">GB</span></p>
+            <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+              <div className="h-full w-[65%] rounded-full bg-green-500" />
             </div>
-            <div className="w-full bg-black/20 h-1 mt-2 relative overflow-hidden">
-              <div className="absolute inset-0 bg-green-500/20" />
-              <div className="bg-green-500 h-full w-[65%] animate-shimmer" />
-            </div>
-            <div className="text-[9px] opacity-40 mt-1 uppercase">
-              Extraction Efficiency: Optimal
-            </div>
+            <p className="text-[10px] text-slate-600">Extraction efficiency optimal</p>
           </div>
 
-          <div className="flex-1 bg-[var(--hud-bg)] border border-[var(--hud-border)] p-4 rounded-sm overflow-hidden relative">
-            <div className="text-[10px] opacity-60 uppercase mb-2">
-              Live Logs (C2)
-            </div>
-            <div className="text-[9px] space-y-1 opacity-80">
-              <div className="text-green-400">0x... SYSTEM SCAN ACTIVE</div>
-              <div>FETCHING METRICS...</div>
-              <div className="text-yellow-400">
-                PROBE ACTIVE: {realStats?.arch || "UNKNOWN"}
-              </div>
-              <div className="animate-pulse" style={{ color: themeColor }}>
-                DATA FLOW ESTABLISHED
-              </div>
+          {/* Live Logs */}
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4 flex-1">
+            <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-3">Live Logs</p>
+            <div className="space-y-1.5 font-mono text-[10px]">
+              <div className="text-green-400">SYSTEM_SCAN · ACTIVE</div>
+              <div className="text-slate-500">METRICS_FETCH · {realStats ? "OK" : "PENDING"}</div>
+              <div className="text-yellow-400">PROBE · {realStats?.arch || "DETECTING"}</div>
+              <div style={{ color: themeColor }}>DATA_FLOW · ESTABLISHED</div>
             </div>
           </div>
         </div>
 
-        {/* Center Panel: The Alpha Loop Visualizer */}
-        <div className="col-span-5 flex flex-col bg-[var(--hud-bg)] border border-[var(--hud-border)] p-4 rounded-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-2 opacity-20">
-            <Cpu size={120} style={{ color: themeColor }} />
+        {/* Center: Probe Pipeline */}
+        <div className="bg-[#111111] border border-white/10 rounded-xl p-4 flex flex-col">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
+            <Icon name="Cpu" size={14} style={{ color: themeColor }} />
+            <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Probe Pipeline</span>
           </div>
-
-          <h3 className="text-xs font-bold uppercase tracking-widest mb-4 border-b border-[var(--hud-border)] pb-2">
-            Probe Pipeline
-          </h3>
-
-          <div className="flex-1 flex flex-col justify-around relative">
+          <div className="flex-1 flex flex-col gap-1">
             {displaySteps.map((step: string, idx: number) => (
               <div
                 key={idx}
-                className={`flex items-center gap-4 group transition-all duration-500 ${
-                  idx === 0 ? "scale-110 translate-x-2" : "opacity-70"
-                }`}
+                className={`flex items-center gap-3 p-3 rounded-lg transition-all ${idx === 0 ? "bg-white/[0.04]" : ""}`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold text-xs`}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
                   style={{
-                    borderColor: idx === 0 ? themeColor : `${themeColor}40`,
-                    backgroundColor: idx === 0 ? themeColor : "transparent",
-                    color: idx === 0 ? "black" : themeColor,
+                    backgroundColor: idx === 0 ? themeColor : "rgba(255,255,255,0.05)",
+                    color: idx === 0 ? "#000" : "#64748b",
                   }}
                 >
                   {idx + 1}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] opacity-40 uppercase tracking-tighter">
-                    PID / PROC
-                  </span>
-                  <span
-                    className={`text-sm font-bold uppercase ${
-                      idx === 0 ? "text-white" : ""
-                    }`}
-                  >
+                <div className="flex-1 min-w-0">
+                  <p className={`text-xs font-bold uppercase truncate ${idx === 0 ? "text-white" : "text-slate-600"}`}>
                     {step}
-                  </span>
+                  </p>
                 </div>
                 {idx === 0 && (
-                  <Activity
-                    className="animate-[spin_4s_linear_infinite] ml-auto"
-                    style={{ color: themeColor }}
-                  />
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: themeColor }} />
                 )}
               </div>
             ))}
           </div>
-
-          {/* Costanza/PoCo Indicator */}
-          <div className="mt-4 pt-4 border-t border-[var(--hud-border)]">
-            <div className="flex justify-between items-center text-[10px] uppercase opacity-70">
-              <span>Uptime Stability</span>
-              <span style={{ color: themeColor }}>
-                {(realStats?.uptime / 3600).toFixed(1)} HRS
-              </span>
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <div className="flex items-center justify-between text-[10px] mb-2">
+              <span className="text-slate-500">Uptime Stability</span>
+              <span className="font-bold font-mono text-white">{uptimeHrs} hrs</span>
             </div>
-            <div className="w-full bg-black/20 h-1.5 mt-2 rounded-full overflow-hidden">
-              <div
-                className="h-full w-[92%] animate-pulse"
-                style={{ backgroundColor: themeColor }}
-              />
+            <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+              <div className="h-full w-[92%] rounded-full" style={{ backgroundColor: themeColor }} />
             </div>
           </div>
         </div>
 
-        {/* Right Panel: Metrics & Benchmarks */}
-        <div className="col-span-3 flex flex-col gap-4">
-          <div className="bg-[var(--hud-bg)] border border-[var(--hud-border)] p-4 rounded-sm">
-            <div className="text-[10px] opacity-60 uppercase mb-3">
-              Performance
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-[10px] mb-1">
-                  <span>Architecture</span>
-                  <span className="text-white">{realStats?.arch || "N/A"}</span>
-                </div>
-                <div className="w-full bg-black/20 h-1">
-                  <div
-                    className="h-full w-[100%]"
-                    style={{ backgroundColor: themeColor }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-[10px] mb-1">
-                  <span>Success Rate</span>
-                  <span className="text-white">{metrics.successRate}</span>
-                </div>
-                <div className="w-full bg-black/20 h-1">
-                  <div
-                    className="h-full w-[99%]"
-                    style={{ backgroundColor: themeColor }}
-                  />
-                </div>
-              </div>
-            </div>
+        {/* Right: Metrics */}
+        <div className="flex flex-col gap-3">
+          {/* Performance rows */}
+          <div className="bg-[#111111] border border-white/10 rounded-xl p-4">
+            <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-3">Performance</p>
+            <StatRow label="Architecture" value={realStats?.arch || "N/A"} />
+            <StatRow label="Success Rate" value={metrics.successRate} accent="#22c55e" />
+            <StatRow label="Est. Cost" value={metrics.cost} />
           </div>
 
-          <div className="bg-[var(--hud-bg)] border border-[var(--hud-border)] p-4 rounded-sm flex-1">
-            <div className="text-[10px] opacity-60 uppercase mb-3">
-              CPU Load
-            </div>
-            <div className="flex flex-col items-center justify-center h-full">
+          {/* CPU Gauge */}
+          <div className="bg-[#111111] border border-white/10 rounded-xl p-4 flex-1 flex flex-col">
+            <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-4">System Load</p>
+            <div className="flex-1 flex flex-col items-center justify-center gap-4">
+              {/* Ring */}
               <div className="relative flex items-center justify-center">
-                <svg className="w-32 h-32 transform -rotate-90">
+                <svg className="w-28 h-28 -rotate-90">
+                  <circle cx="56" cy="56" r="46" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
                   <circle
-                    cx="64"
-                    cy="64"
-                    r="50"
-                    fill="none"
-                    stroke={`${themeColor}20`}
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="50"
-                    fill="none"
+                    cx="56" cy="56" r="46" fill="none"
                     stroke={themeColor}
-                    strokeWidth="8"
-                    strokeDasharray="314"
-                    strokeDashoffset={314 * (1 - displayThreat / 100)}
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 46}`}
+                    strokeDashoffset={`${2 * Math.PI * 46 * (1 - cpuLoad / 100)}`}
                     className="transition-all duration-1000"
                   />
                 </svg>
-                <div className="absolute text-2xl font-bold">
-                  {displayThreat}%
+                <div className="absolute text-center">
+                  <p className="text-xl font-bold font-mono text-white">{cpuLoad}%</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-wider">CPU</p>
                 </div>
               </div>
-              <div
-                className="text-[10px] mt-4 font-bold animate-pulse tracking-widest text-center uppercase"
-                style={{ color: themeColor }}
-              >
-                {displayThreat > 80 ? "CRITICAL_LOAD" : "NOMINAL_OPERATION"}
+              <div className="w-full space-y-2">
+                <UsageBar value={cpuLoad} accent={themeColor} label="CPU Load" />
+                <UsageBar
+                  value={realStats ? Math.round(((realStats.totalMem - realStats.freeMem) / realStats.totalMem) * 100) : 55}
+                  accent="#3b82f6"
+                  label="RAM"
+                />
               </div>
+              <p
+                className="text-[10px] font-bold tracking-widest uppercase text-center"
+                style={{ color: cpuLoad > 80 ? "#ef4444" : "#22c55e" }}
+              >
+                {cpuLoad > 80 ? "CRITICAL LOAD" : "NOMINAL OPERATION"}
+              </p>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Bottom: Unregulated Protocol Warning */}
-      <div className="z-10 bg-[var(--hud-bg)] border-t border-[var(--hud-border)] p-3 flex items-center gap-3">
-        <AlertTriangle
-          className="animate-bounce"
-          size={16}
-          style={{ color: themeColor }}
-        />
-        <div
-          className="text-[9px] uppercase tracking-[0.3em] font-bold flex-1"
-          style={{ color: themeColor }}
-        >
-          SOVEREIGN PROTOCOL: REAL-TIME MONITORING ACTIVE
-          {/* OPERATOR LOYALTY ONLY */}
-        </div>
-        <TerminalIcon size={14} className="opacity-40" />
       </div>
     </div>
   );

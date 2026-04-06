@@ -1,23 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Terminal,
-  ShieldAlert,
-  Globe,
-  Network,
-  Lock,
-  Zap,
-  Activity,
-  Cpu,
-  Users,
-  Command,
-  RefreshCw,
-  Send,
-  Download,
-  Code2,
-  FolderOpen,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 import { THEME_PALETTE } from "../config/themeColors";
 
@@ -404,6 +386,10 @@ const HackingTerminal: React.FC<Props> = ({
     setTerminalOutput((prev) => [...prev, "Command queued for AI execution."]);
   };
 
+  const clearHistory = () => {
+    setTerminalOutput([]);
+  };
+
   const handleAutoExploit = async () => {
     if (!sourceUrl.trim() && !sourcePath.trim()) return;
     setIsExecuting(true);
@@ -479,11 +465,12 @@ const HackingTerminal: React.FC<Props> = ({
 
           {/* Cinematic Status Banner */}
           <div
-            className="absolute top-0 left-0 right-0 h-16 sm:h-20 bg-black/80 backdrop-blur-xl border-b z-[210] flex items-center justify-center px-10 transition-all duration-500"
+            className="absolute top-0 left-0 right-0 h-16 sm:h-20 bg-black/80 glass-blur border-b z-[210] flex items-center justify-center px-10 transition-all duration-500"
             style={{ borderBottomColor: `${currentPhaseColor}66` }}
           >
             <div className="flex items-center gap-6">
-              <ShieldAlert
+              <Icon
+                name="Danger"
                 size={32}
                 className="animate-pulse"
                 style={{ color: currentPhaseColor }}
@@ -522,7 +509,7 @@ const HackingTerminal: React.FC<Props> = ({
 
       {/* Main Container */}
       <div
-        className={`relative w-full h-full sm:w-[95%] sm:h-[90%] border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-sm flex flex-col overflow-hidden bg-black/40 backdrop-blur-xl`}
+        className={`relative w-full h-full sm:w-[95%] sm:h-[90%] border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-sm flex flex-col overflow-hidden bg-black/40 glass-blur`}
         style={{
           boxShadow: `0 0 80px -20px ${themeHex}40`,
         }}
@@ -552,47 +539,34 @@ const HackingTerminal: React.FC<Props> = ({
           className={`h-14 sm:h-16 border-b ${themeBorder} flex items-center justify-between px-3 sm:px-6 relative z-30 flex-shrink-0`}
           style={{ backgroundColor: `${themeHex}1F` }}
         >
-          {/* ... existing header content ... */}
-          <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
-            <Terminal
-              className={`${themePrimary} animate-pulse flex-shrink-0`}
-              size={18}
-            />
-            <div className="overflow-hidden">
-              <h2
-                className={`text-sm sm:text-lg font-bold ${themePrimary} tracking-wider sm:tracking-[0.2em] truncate`}
-              >
-                RED TEAM
-              </h2>
-              <div
-                className={`text-[9px] sm:text-[10px] ${themePrimary} flex gap-2 sm:gap-4 opacity-70 truncate`}
-              >
-                <span className="hidden xs:inline">OFFENSIVE</span>
-                <span>ROOT</span>
-                <span className="hidden sm:inline">SECURE</span>
+          <div className="flex items-center gap-3">
+            <Icon name="Document" size={18} className="text-emerald-500" />
+            <h2 className="font-mono text-sm font-bold text-emerald-500 tracking-[0.2em]">
+              LUCA_TERMINAL_V4.0
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 px-3 py-1 bg-black/40 border border-emerald-500/20 rounded">
+              <Icon name="Activity" size={14} className="text-emerald-500 opacity-50" />
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 h-3 rounded-full bg-emerald-500/20"
+                    style={{
+                      height: `${Math.random() * 10 + 4}px`,
+                      backgroundColor: i < 3 ? "#10b981" : undefined,
+                    }}
+                  />
+                ))}
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2">
-            <button
-              onClick={() => setShowLeftSidebar(!showLeftSidebar)}
-              className={`lg:hidden p-2 ${themePrimary} opacity-70 hover:opacity-100 transition-all rounded hover:bg-white/5 flex-shrink-0`}
-              title="Tools"
-            >
-              <Command size={18} />
-            </button>
-            <button
-              onClick={() => setShowRightPanel(!showRightPanel)}
-              className={`lg:hidden p-2 ${themePrimary} opacity-70 hover:opacity-100 transition-all rounded hover:bg-white/5 flex-shrink-0`}
-              title="Visual Feed"
-            >
-              <Activity size={18} />
-            </button>
             <button
               onClick={onClose}
-              className={`relative z-50 p-2 ${themePrimary} opacity-70 hover:opacity-100 transition-all rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0`}
+              className="text-emerald-500/40 hover:text-emerald-500 transition-colors p-1"
             >
-              <X size={20} className="sm:size-6" />
+              <Icon name="CloseCircle" size={20} />
             </button>
           </div>
         </div>
@@ -618,23 +592,23 @@ const HackingTerminal: React.FC<Props> = ({
             style={{ backgroundColor: `${themeHex}0D` }}
           >
             {[
-              { id: "NMAP", label: "NMAP SCAN", icon: Network },
-              { id: "METASPLOIT", label: "METASPLOIT", icon: ShieldAlert },
-              { id: "PAYLOAD", label: "MSFVENOM", icon: Cpu },
+              { id: "NMAP", label: "NMAP SCAN", icon: "Network" },
+              { id: "METASPLOIT", label: "METASPLOIT", icon: "ShieldAlert" },
+              { id: "PAYLOAD", label: "MSFVENOM", icon: "Cpu" },
               {
                 id: "HTTP_C2",
                 label: "PUPPET MASTER",
-                icon: Users,
+                icon: "Users",
                 highlight: true,
               },
-              { id: "BURP", label: "BURP SUITE", icon: Globe },
-              { id: "WIRESHARK", label: "WIRESHARK", icon: Activity },
-              { id: "JOHN", label: "JOHN CRACKER", icon: Lock },
-              { id: "COBALT", label: "COBALT STRIKE", icon: Zap },
+              { id: "BURP", label: "BURP SUITE", icon: "Globe" },
+              { id: "WIRESHARK", label: "WIRESHARK", icon: "Activity" },
+              { id: "JOHN", label: "JOHN CRACKER", icon: "Lock" },
+              { id: "COBALT", label: "COBALT STRIKE", icon: "Zap" },
               {
                 id: "SOURCE",
                 label: "AI PENTESTER",
-                icon: Code2,
+                icon: "Code2",
                 highlight: true,
               },
             ].map((tab) => {
@@ -673,7 +647,7 @@ const HackingTerminal: React.FC<Props> = ({
                   }
                 >
                   <div className="relative">
-                    <tab.icon size={16} />
+                    <Icon name={tab.icon as any} size={16} />
                     {!isInstalled && (
                       <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
                     )}
@@ -708,14 +682,14 @@ const HackingTerminal: React.FC<Props> = ({
                 <div className="h-12 bg-red-950/20 border-b border-red-900/50 flex items-center justify-between px-4 text-red-500">
                   <div className="flex items-center gap-4">
                     <span className="font-bold flex items-center gap-2">
-                      <Users size={16} /> C2 SESSIONS (ZOMBIES)
+                      <Icon name="Users" size={16} /> C2 SESSIONS (ZOMBIES)
                     </span>
                     <span className="text-xs opacity-60">
                       {sessions.length} ONLINE
                     </span>
                   </div>
                   {isRefreshingC2 && (
-                    <RefreshCw size={14} className="animate-spin" />
+                    <Icon name="RefreshCw" size={14} className="animate-spin" />
                   )}
                 </div>
 
@@ -762,9 +736,13 @@ const HackingTerminal: React.FC<Props> = ({
                   <div className="flex-1 flex flex-col bg-transparent relative">
                     {selectedSession ? (
                       <>
-                        <div className="flex-1 overflow-y-auto p-4 font-mono text-xs text-green-500 space-y-2">
-                          <div className="text-slate-600 italic">
-                            -- Session {selectedSession.id} Established --
+                        <div className="flex-1 overflow-y-auto font-mono text-[11px] p-4 flex flex-col gap-1 custom-scrollbar scroll-smooth bg-black/20">
+                          <div className="flex items-center gap-2 text-emerald-500/40 mb-4 border-b border-emerald-500/10 pb-2">
+                            <Icon name="Lock" size={12} />
+                            <span>SECURE_ENCLAVE_ACTIVE</span>
+                            <span className="ml-auto flex items-center gap-2">
+                              <Icon name="Flash" size={12} /> 1.21_GW
+                            </span>
                           </div>
                           {selectedSession.outputs.map((o, i) => (
                             <div key={i}>
@@ -792,7 +770,7 @@ const HackingTerminal: React.FC<Props> = ({
                             onClick={handleSendC2}
                             className="bg-red-900/20 text-red-500 border border-red-900/50 px-4 hover:bg-red-500 hover:text-black transition-colors"
                           >
-                            <Send size={14} />
+                            <Icon name="Send" size={14} />
                           </button>
                         </div>
                       </>
@@ -828,7 +806,8 @@ const HackingTerminal: React.FC<Props> = ({
                     className="absolute inset-0 opacity-20 animate-pulse"
                     style={{ backgroundColor: themeHex }}
                   ></div>
-                  <Cpu
+                  <Icon
+                    name="Cpu"
                     size={40}
                     className={`relative z-10 transition-transform duration-500 group-hover:scale-110`}
                     style={{ color: themeHex }}
@@ -903,7 +882,8 @@ const HackingTerminal: React.FC<Props> = ({
                     </>
                   ) : (
                     <>
-                      <Download
+                      <Icon
+                        name="Download"
                         size={18}
                         className="group-hover:animate-bounce"
                       />
@@ -936,14 +916,19 @@ const HackingTerminal: React.FC<Props> = ({
                         className="flex items-center gap-2 animate-pulse"
                         style={{ color: currentPhaseColor }}
                       >
-                        <ShieldAlert size={14} />
+                        <Icon name="Danger" size={14} />
                         SPECIALIST ENGAGED:{" "}
                         {activeSession.currentPhase?.toUpperCase() || "RECON"}
                       </span>
                     </>
                   )}
-
-                  <span className="ml-auto">CORE LINK: STABLE</span>
+                  <button
+                    onClick={clearHistory}
+                    className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-black/40 hover:bg-emerald-500/10 border border-emerald-500/20 rounded text-[10px] text-emerald-500/60 hover:text-emerald-500 transition-all uppercase tracking-widest font-bold"
+                  >
+                    <Icon name="Refresh" size={12} />
+                    Reset Buffer
+                  </button>
                 </div>
 
                 {/* Terminal Output */}
@@ -964,7 +949,7 @@ const HackingTerminal: React.FC<Props> = ({
                   {activeTab === "SOURCE" && attackPlan.length > 0 && (
                     <div className="mt-6 border-l-2 border-green-500/30 pl-4 space-y-4 animate-in fade-in duration-500">
                       <div className="text-[10px] text-green-700 font-bold tracking-widest uppercase flex items-center gap-2">
-                        <Activity size={12} className="animate-pulse" />
+                        <Icon name="Activity" size={12} className="animate-pulse" />
                         Active Attack Strategy
                       </div>
                       {attackPlan.map((op, idx) => (
@@ -974,7 +959,7 @@ const HackingTerminal: React.FC<Props> = ({
                         >
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-2">
-                              <ShieldAlert
+                              <Icon name="Danger"
                                 size={14}
                                 className={
                                   op.status === "verified"
@@ -1008,7 +993,7 @@ const HackingTerminal: React.FC<Props> = ({
                               }
                               className="w-full py-1.5 bg-green-500 hover:bg-green-400 text-black text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 rounded-sm"
                             >
-                              <Globe size={12} />
+                              <Icon name="Globe" size={12} />
                               Open Verification Browser
                             </button>
                           )}
@@ -1150,7 +1135,7 @@ const HackingTerminal: React.FC<Props> = ({
                                 className="p-2 bg-green-900/30 border border-green-800 rounded hover:bg-green-800/50 text-green-400"
                                 title="Select Directory"
                               >
-                                <FolderOpen size={14} />
+                                <Icon name="FolderOpen" size={14} />
                               </button>
                             </div>
                           </div>
@@ -1229,7 +1214,7 @@ const HackingTerminal: React.FC<Props> = ({
                 onClick={() => setShowRightPanel(false)}
                 className="lg:hidden text-green-600 hover:text-green-400 p-1"
               >
-                <X size={16} />
+                <Icon name="X" size={16} />
               </button>
             </div>
 
@@ -1253,7 +1238,7 @@ const HackingTerminal: React.FC<Props> = ({
               {/* HTTP C2 MAP */}
               {activeTab === "HTTP_C2" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-red-500">
-                  <Network size={48} className="sm:size-16 opacity-50" />
+                  <Icon name="Network" size={48} className="sm:size-16 opacity-50" />
                   <div className="text-[9px] mt-4 text-red-700 animate-pulse text-center">
                     C2 ACTIVE
                     <br />
@@ -1286,7 +1271,8 @@ const HackingTerminal: React.FC<Props> = ({
               {/* METASPLOIT TARGET */}
               {activeTab === "METASPLOIT" && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <ShieldAlert
+                  <Icon
+                    name="ShieldAlert"
                     size={48}
                     className="sm:size-16 text-green-900 opacity-50"
                   />
@@ -1299,7 +1285,8 @@ const HackingTerminal: React.FC<Props> = ({
               {/* PAYLOAD GEN */}
               {activeTab === "PAYLOAD" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                  <Cpu
+                  <Icon
+                    name="Cpu"
                     size={40}
                     className="sm:size-12 text-green-500 animate-pulse"
                   />
@@ -1315,7 +1302,7 @@ const HackingTerminal: React.FC<Props> = ({
                 activeTab === "JOHN" ||
                 activeTab === "COBALT") && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-green-900">
-                  <Activity size={40} className="sm:size-12 animate-pulse" />
+                  <Icon name="Activity" size={40} className="sm:size-12 animate-pulse" />
                   <div className="mt-2 text-[9px]">ACTIVE</div>
                 </div>
               )}

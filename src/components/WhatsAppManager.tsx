@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  MessageSquare,
-  User,
-  Send,
-  Wifi,
-  Phone,
-  Video,
-  Paperclip,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import QRCode from "qrcode";
 import { apiUrl } from "../config/api";
 import { setHexAlpha } from "../config/themeColors";
@@ -135,9 +125,9 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-0 sm:p-4 overflow-y-auto sm:overflow-hidden">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 p-0 sm:p-4 overflow-y-auto sm:overflow-hidden">
       <div
-        className={`w-full h-auto min-h-[50vh] max-h-[90vh] sm:w-[95%] sm:h-[85vh] max-w-5xl rounded-none sm:rounded-lg flex flex-col sm:flex-row overflow-hidden relative my-auto sm:my-0 ${isLight ? "glass-panel-light" : "bg-black/60 backdrop-blur-xl"}`}
+        className={`w-full h-auto min-h-[50vh] max-h-[90vh] sm:w-[95%] sm:h-[85vh] max-w-5xl rounded-none sm:rounded-lg flex flex-col sm:flex-row overflow-hidden relative my-auto sm:my-0 ${isLight ? "glass-panel-light" : "bg-black/60 glass-blur"}`}
         style={{
           boxShadow: isLight ? `0 20px 50px ${setHexAlpha(themeHex, 0.1)}` : `0 0 50px ${themeHex}1a`,
           borderColor: setHexAlpha(themeHex, isLight ? 0.2 : 0.3),
@@ -156,9 +146,9 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
           <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-              className={`sm:hidden p-2 rounded ${isLight ? "hover:bg-black/5 text-slate-600" : "hover:bg-white/5 text-slate-400"}`}
+              className={`sm:hidden p-2 rounded ${isLight ? "hover:bg-slate-100 text-slate-600" : "hover:bg-white/5 text-slate-400"}`}
             >
-              <MessageSquare size={20} />
+              <Icon name="MessageSquare" size={20} />
             </button>
             <div
               className={`p-2 hidden sm:block rounded ${themePrimary}`}
@@ -167,7 +157,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                 backgroundColor: isLight ? "rgba(0,0,0,0.03)" : setHexAlpha(themeHex, 0.1),
               }}
             >
-              <MessageSquare size={24} />
+              <Icon name="MessageSquare" size={24} />
             </div>
             <div>
               <h2 className={`font-display text-lg sm:text-xl font-bold tracking-widest leading-none sm:leading-normal ${isLight ? "text-slate-900" : "text-white"}`}>
@@ -185,7 +175,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
             onClick={onClose}
             className={`transition-colors ${isLight ? "text-slate-400 hover:text-slate-900" : "text-slate-500 hover:text-white"}`}
           >
-            <X size={24} />
+            <Icon name="CloseCircle" size={24} />
           </button>
         </div>
 
@@ -219,7 +209,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                           backgroundColor: isLight ? setHexAlpha(themeHex, 0.1) : setHexAlpha(themeHex, 0.15),
                         }}
                       >
-                        <Wifi size={40} className={themePrimary} />
+                        <Icon name="Wifi" size={40} className={themePrimary} />
                       </div>
                       <div className={`${themePrimary} font-bold text-base tracking-widest`}>
                         LINK ESTABLISHED
@@ -279,7 +269,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                   onClick={() => setShowMobileSidebar(false)}
                   className="text-slate-500"
                 >
-                  <X size={16} />
+                  <Icon name="CloseCircle" size={16} />
                 </button>
               </div>
               {chats.length > 0 ? (
@@ -290,7 +280,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                       if (window.innerWidth < 640) setShowMobileSidebar(false);
                       // In a full implementation, you'd select the chat here
                     }}
-                    className={`p-3 rounded cursor-pointer flex items-center gap-3 mb-1 transition-colors ${isLight ? "hover:bg-black/5" : "hover:bg-white/5"}`}
+                    className={`p-3 rounded cursor-pointer flex items-center gap-3 mb-1 transition-colors ${isLight ? "hover:bg-slate-100" : "hover:bg-white/5"}`}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isLight ? "bg-slate-200 text-slate-600" : "bg-slate-800 text-slate-400"}`}>
                       {chat.name ? chat.name[0] : "U"}
@@ -328,7 +318,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                     backgroundColor: isLight ? "rgba(0,0,0,0.03)" : setHexAlpha(themeHex, 0.1),
                   }}
                 >
-                  <User size={16} className={themePrimary} />
+                  <Icon name="User" size={16} className={themePrimary} />
                 </div>
                 <div>
                   <div className={`text-sm font-bold ${isLight ? "text-slate-900" : "text-white"}`}>OPERATOR</div>
@@ -351,11 +341,11 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className={`p-2 rounded transition-colors ${isLight ? "hover:bg-black/5 text-slate-400" : "hover:bg-white/5 text-slate-500"}`}>
-                  <Phone size={16} />
+                <button className={`p-2 rounded transition-colors ${isLight ? "hover:bg-slate-100 text-slate-400" : "hover:bg-white/5 text-slate-500"}`}>
+                  <Icon name="Phone" size={16} />
                 </button>
-                <button className={`p-2 rounded transition-colors ${isLight ? "hover:bg-black/5 text-slate-400" : "hover:bg-white/5 text-slate-500"}`}>
-                  <Video size={16} />
+                <button className={`p-2 rounded transition-colors ${isLight ? "hover:bg-slate-100 text-slate-400" : "hover:bg-white/5 text-slate-500"}`}>
+                  <Icon name="Video" size={16} />
                 </button>
               </div>
             </div>
@@ -417,7 +407,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                   className={`transition-colors ${isLight ? "text-slate-400 hover:text-slate-900" : "text-slate-500 hover:text-white"}`}
                   style={{ color: isLight ? undefined : "#64748b" }}
                 >
-                  <Paperclip size={18} />
+                  <Icon name="Paperclip" size={18} />
                 </button>
                 <input
                   type="text"
@@ -428,7 +418,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                   className={`flex-1 bg-transparent border-none outline-none text-sm placeholder-slate-600 ${isLight ? "text-slate-900" : "text-white"}`}
                 />
                 <button onClick={sendMessage} className={themePrimary}>
-                  <Send size={18} />
+                  <Icon name="Send" size={18} />
                 </button>
               </div>
             </div>

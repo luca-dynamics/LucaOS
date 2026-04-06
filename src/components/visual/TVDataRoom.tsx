@@ -1,9 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Monitor,
-  Activity,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import DataRoomTile from "../DataRoomTile";
 
 interface TVDataRoomProps {
@@ -20,7 +16,7 @@ const TVDataRoom: React.FC<TVDataRoomProps> = ({ themeHex, vitals }) => {
       {/* Header Overlay */}
       <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex items-center gap-4">
-          <Monitor size={32} style={{ color: themeHex }} />
+          <Icon name="Monitor" size={32} style={{ color: themeHex }} />
           <span className="text-xl font-black text-white tracking-[0.3em]">
             DATA ROOM // MIRROR
           </span>
@@ -33,7 +29,7 @@ const TVDataRoom: React.FC<TVDataRoomProps> = ({ themeHex, vitals }) => {
       {/* Tile 1: System Vitals (Mirrored from Dashboard Logic) */}
       <DataRoomTile
         title="SYSTEM OBSERVABILITY"
-        icon={<Activity size={24} />}
+        icon={<Icon name="Activity" size={24} />}
         themeHex={themeHex}
       >
         <div className="p-8 space-y-8 h-full flex flex-col justify-center">
@@ -85,7 +81,7 @@ const TVDataRoom: React.FC<TVDataRoomProps> = ({ themeHex, vitals }) => {
       {/* Since WebRTC isn't set up for casting stream yet, show scan animation */}
       <DataRoomTile
         title="VISION FEED TARGET"
-        icon={<Monitor size={24} />}
+        icon={<Icon name="Monitor" size={24} />}
         themeHex={themeHex}
       >
         <div className="w-full h-full flex items-center justify-center bg-black/50 relative overflow-hidden">

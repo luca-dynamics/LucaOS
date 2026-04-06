@@ -1,14 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Settings,
-  Camera,
-  X,
-  Activity,
-  Cpu,
-  Radio,
-  Lock,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { PersonaType } from "../../services/lucaService";
 
 interface VoiceControlsProps {
@@ -47,7 +38,8 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-white"
           } tracking-[0.1em] md:tracking-[0.2em] font-bold flex items-center gap-2 md:gap-3`}
         >
-          <Activity
+          <Icon
+            name="Activity"
             className="animate-pulse w-5 h-5 md:w-6 md:h-6"
             style={{ color: canvasThemeColor }}
           />
@@ -59,13 +51,13 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           style={{ color: canvasThemeColor }}
         >
           <span className="flex items-center gap-2">
-            <Cpu size={10} className="md:w-3 md:h-3" /> LUCA CORE: ONLINE
+            <Icon name="Cpu" size={10} className="md:w-3 md:h-3" /> LUCA CORE: ONLINE
           </span>
           <span className="flex items-center gap-2 text-green-400">
-            <Radio size={10} className="md:w-3 md:h-3" /> VAD: LIVEKIT TUNED
+            <Icon name="Radio" size={10} className="md:w-3 md:h-3" /> VAD: LIVEKIT TUNED
           </span>
           <span className="flex items-center gap-2 text-green-400">
-            <Lock size={10} className="md:w-3 md:h-3" /> ENCRYPTION: AES-256
+            <Icon name="Lock" size={10} className="md:w-3 md:h-3" /> ENCRYPTION: AES-256
           </span>
         </div>
       </div>
@@ -80,10 +72,10 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
                 theme.themeName?.toLowerCase() === "lucagent"
                   ? "border-slate-900/10 bg-white/60 text-slate-900 hover:bg-white/80"
                   : "border-white/10 bg-black/60 text-slate-400 hover:text-white"
-              } transition-all backdrop-blur-sm`}
+              } transition-all glass-blur`}
               title="Voice Settings"
             >
-              <Settings size={20} className="md:w-6 md:h-6" />
+              <Icon name="Settings" size={20} className="md:w-6 md:h-6" />
             </button>
             <button
               onClick={onToggleVideo}
@@ -96,7 +88,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
               }`}
               title="Toggle Vision"
             >
-              <Camera size={20} className="md:w-6 md:h-6" />
+              <Icon name="Camera" size={20} className="md:w-6 md:h-6" />
               {isVideoActive && (
                 <div
                   className={`absolute -bottom-6 left-1/2 -translate-x-1/2 text-[8px] font-mono ${theme.primary} whitespace-nowrap`}
@@ -114,10 +106,11 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
             theme.themeName?.toLowerCase() === "lucagent"
               ? "border-red-900/10 bg-white/60 text-red-600 hover:bg-red-50 hover:border-red-500"
               : "border-white/10 bg-black/60 text-slate-400 hover:bg-red-900/50 hover:border-red-500 hover:text-white"
-          } transition-all z-[110] backdrop-blur-sm`}
+          } transition-all z-[110] glass-blur`}
           title="Terminate Voice Uplink"
         >
-          <X
+          <Icon
+            name="CloseCircle"
             size={20}
             className="text-slate-400 group-hover:text-white md:w-6 md:h-6"
           />

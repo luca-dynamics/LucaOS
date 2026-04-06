@@ -57,6 +57,10 @@ class FailurePersonality {
         const prefix = ctx ? `[${ctx}] ` : "";
         return `${prefix}Local constraint triggered: ${e.message}\n\nEnsuring system sovereignty. Stand by for offline recovery.`;
       },
+      AUDITOR: (e, ctx) => {
+        const prefix = ctx ? `[${ctx}] ` : "";
+        return `${prefix}Analytical Disruption: ${e.message}\n\nInitiating root-cause analysis and identifying compensatory verification paths.`;
+      },
     };
 
     return templates[persona](error, context);
@@ -93,6 +97,8 @@ class FailurePersonality {
         `The ${tool} process was obscured: ${err}. Attempting a clearer route.`,
       LOCALCORE: (tool, err) =>
         `Hardware failure on ${tool}: ${err}\n\nRecalibrating local controller.`,
+      AUDITOR: (tool, err) =>
+        `Verification tool abnormality during ${tool}: ${err}\n\nEvaluating alternative testing methodologies.`,
     };
 
     return templates[persona](toolName, error);
@@ -122,6 +128,8 @@ class FailurePersonality {
         `The ${op} task has lost its resonance. Let me re-visualize the approach.`,
       LOCALCORE: (op) =>
         `Operation ${op} exceeded local processing window. Timing out.`,
+      AUDITOR: (op) =>
+        `Verification window exceeded for ${op}.\n\nRe-evaluating the complexity of the analytical target.`,
     };
 
     return templates[persona](operation);
@@ -148,6 +156,8 @@ class FailurePersonality {
       DEFAULT: () => `Network error`,
       LUCAGENT: () => `The network connection has dimmed. Waiting for clarity.`,
       LOCALCORE: () => `Signal lost. Resuming local-only autonomy.`,
+      AUDITOR: () =>
+        `Connectivity interruption detected.\n\nSovereign analysis suspended until network integrity is restored.`,
     };
 
     return templates[persona]();
@@ -176,6 +186,8 @@ class FailurePersonality {
         `My essence is restricted from ${res}. I require your authorization to proceed into this space.`,
       LOCALCORE: (res) =>
         `Access to ${res} is restricted by local security protocols. Override required.`,
+      AUDITOR: (res) =>
+        `Access restriction encountered for ${res}.\n\nThis resource requires elevated cognitive or user authorization for audit.`,
     };
 
     return templates[persona](resource);

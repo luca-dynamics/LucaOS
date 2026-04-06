@@ -8,18 +8,14 @@ import { memoryService } from "./memoryService";
 import { creditService } from "./creditService";
 import { loggerService } from "./loggerService";
 import { lucaLinkManager } from "./lucaLink/manager";
-import { personalityValidator } from "./personalityValidator";
-import { voiceEnhancer } from "./voiceEnhancer";
-import { emotionalIntelligence } from "./emotionalIntelligence";
 import { conversationService } from "./conversationService";
-import { eventBus } from "./eventBus";
 import { taskService } from "./taskService";
 import { validateToolArgs } from "./schemas";
 import { DeviceType } from "./deviceCapabilityService";
 import { ToolRegistry } from "./toolRegistry";
+import { harnessService } from "./harnessService";
 import { resolveContentSource } from "./contentSourceService";
 import { settingsService } from "./settingsService";
-import { screenCaptureService } from "./screenCaptureService";
 import { BRAIN_CONFIG } from "../config/brain.config.ts";
 import { personalityService } from "./personalityService";
 import { tradingLoopService } from "./tradingLoopService";
@@ -45,9 +41,16 @@ import {
   getVisualOutputRules,
   getCapabilitiesRegistry,
 } from "../config/protocols";
-import { CONSTITUTION } from "../config/constitution";
 import { thoughtStreamService } from "./thoughtStreamService";
 import { modelManager, LocalModel } from "./ModelManagerService";
+import { mentalStateService } from "./mentalStateService";
+import { cognitiveDeliberator } from "./cognitiveDeliberator";
+import { sovereignAuditor } from "./sovereignAuditor";
+import { environmentSentinel } from "./environmentSentinel";
+import { universalReflexEngine } from "./universalReflexEngine";
+import { skillTriggerService } from "./skillTriggerService";
+import { sovereignGuard } from "./agent/SovereignGuard";
+import { missionControlService } from "./agent/MissionControlService";
 
 export type { PersonaType };
 export {
@@ -322,7 +325,7 @@ class LucaService {
       const recentMessages =
         await conversationService.getRecentConversations(20);
       return recentMessages
-        .map((msg) => ({
+        .map((msg: any) => ({
           role: msg.sender === "LUCA" ? "model" : "user",
           parts: [{ text: msg.text }],
         }))
@@ -334,23 +337,8 @@ class LucaService {
   }
 
   private async initChat(history?: any[]) {
-    let memoryContext = "Memory Unavailable.";
-    let managementContext = "Management System Unavailable.";
-
-    try {
-      memoryContext = memoryService.getMemoryContext();
-    } catch (e: any) {
-      console.error("Failed to load memory context", e);
-    }
-
-    try {
-      managementContext = taskService.getManagementContext();
-    } catch (e: any) {
-      console.error("Failed to load task context", e);
-    }
-
     // Build system instruction and tools
-    await this.rebuildSystemConfig(memoryContext, managementContext);
+    await this.rebuildSystemConfig();
 
     // HYDRATE HISTORY IF MISSING
     let chatHistory: ChatMessage[] = [];
@@ -383,178 +371,118 @@ class LucaService {
     return personalityService.getPersonalityContext();
   }
 
-
   /**
-   * Lightweight method to rebuild system instruction and tools WITHOUT loading history
-   * Used to restore personality after model switches or chat clears
-   * ZERO API CALLS - just rebuilds config from current state
+   * Rebuild system instruction and tools with Sovereign Memory and Dev Partner protocol.
    */
-  private async rebuildSystemConfig(
-    memoryContext?: string,
-    managementContext?: string,
-  ) {
-    // Get contexts if not provided
-    if (!memoryContext) {
-      try {
-        memoryContext = memoryService.getMemoryContext();
-      } catch (e: any) {
-        console.warn(
-          "[LUCA] Failed to load memory context in rebuildSystemConfig:",
-          e.message,
-        );
-        memoryContext = "Memory Unavailable.";
-      }
-    }
+  private async rebuildSystemConfig() {
+    // 1. Fetch contexts from memory and task services
+    const memoryContext = await (memoryService as any).getMemoryContext();
+    const managementContext = taskService.getManagementContext();
+    const missionContext = await missionControlService.getActiveMissionContext();
 
-    if (!managementContext) {
-      try {
-        managementContext = taskService.getManagementContext();
-      } catch (e: any) {
-        console.warn(
-          "[LUCA] Task service management context unavailable:",
-          e.message,
-        );
-        managementContext = "Management System Unavailable.";
-      }
-    }
-
-    // GET INSTRUCTION FROM CONFIG
+    // 2. Resolve base system instruction for the current persona
     const config = PERSONA_CONFIG[this.persona] || PERSONA_CONFIG.ASSISTANT;
     let systemInstruction = config.instruction(
       memoryContext,
       managementContext,
       this.platform,
     );
+    
+    // Inject Persistent Mission context (Phase 1 Sovereign Persistence)
+    systemInstruction += `\n\n**MISSION_PERSISTENCE (SOVEREIGN_AGI)**:\n${missionContext}\n`;
 
-    // PERSONA-CONDITIONAL PROTOCOL INJECTION
-    // Use persona-specific variants instead of one-size-fits-all
+    // 3. Inject standard protocols (Reasoning/Clarification)
     systemInstruction += getReasoningProtocol(this.persona, null);
     systemInstruction += getClarificationProtocol(this.persona, null);
 
-    // Inject Active Capabilities (persona-conditional)
-    const activeToolNames = this.activeTools
-      .map((t: FunctionDeclaration) => t.name)
-      .join(", ");
-    
-    // FETCH SPECIALIZED TOOLS FROM FULL REGISTRY (Awareness only)
-    const allTools = ToolRegistry.getAll();
-    const specializedTools = getSpecializedToolsForPersona(
-      this.persona,
-      allTools,
-    );
-    const specializedToolNames = specializedTools.map((t) => t.name).join(", ");
+    // 4. Resolve and inject capabilities
+    const activeToolNames = this.activeTools.map(t => t.name).join(", ");
+    const specializedTools = getSpecializedToolsForPersona(this.persona, ToolRegistry.getAll());
+    const specializedToolNames = specializedTools.map(t => t.name).join(", ");
 
-    systemInstruction += getCapabilitiesRegistry(
-      this.persona,
-      activeToolNames,
-      specializedToolNames,
-    );
-
-    // VISUAL RULE INJECTION (persona-conditional)
+    systemInstruction += getCapabilitiesRegistry(this.persona, activeToolNames, specializedToolNames);
     systemInstruction += getVisualOutputRules(this.persona, null);
 
-    // NEW: Inject Connection State Awareness
-    const memories = memoryService.getAllMemories();
-    const connectionMethod = memories.find(
-      (m) => m.key && m.key.toLowerCase() === "mobile_connection_method",
-    );
-    const connectionDetails = memories.find(
-      (m) => m.key && m.key.toLowerCase() === "mobile_connection_details",
-    );
+    // 5. SOVEREIGN MEMORY: Persistent user facts
+    // 5. INTELLIGENCE CONTEXT: BDI GROUNDING & STEERING REDUCTION
+    // Sync external facts and core directives into the BDI Kernel
+    const sovereignFacts = settingsService.getSovereignFacts();
+    const globalRules = settingsService.getSettings().general.autonomousDomains || []; 
+    mentalStateService.syncIntelligenceContext(sovereignFacts, globalRules);
 
-    if (connectionMethod) {
-      systemInstruction += `\n\n**CURRENT MOBILE CONNECTION STATE (GLOBAL CONTEXT)**:\n`;
-      systemInstruction += `Connection Method: ${connectionMethod.value}\n`;
-      if (connectionDetails) {
-        try {
-          const details = JSON.parse(connectionDetails.value);
-          systemInstruction += `Connection Details: IP=${
-            details.ip || "N/A"
-          }, Port=${details.port || "N/A"}, Connected=${
-            details.connected !== false ? "Yes" : "No"
-          }\n`;
-        } catch (e: any) {
-          // ACTIONABLE FIX: If not JSON, it might be a raw IP/Address string from an older version
-          if (
-            connectionDetails.value &&
-            connectionDetails.value.includes(".")
-          ) {
-            systemInstruction += `Connection Details: IP=${connectionDetails.value}\n`;
-          } else {
-            systemInstruction += `Connection Details: ${connectionDetails.value}\n`;
-          }
-          console.warn(
-            "[LUCA] Mobile connection details JSON parsing failed, using raw fallback:",
-            e.message,
-          );
-        }
-      }
-      systemInstruction += `\n**IMPORTANT**: This connection state is available to ALL tools and interactions, not just mobile device control:\n`;
-      systemInstruction += `- When user asks about their phone/device connection, you can reference this state\n`;
-      systemInstruction += `- When using mobile-related tools, use the appropriate tools for ${connectionMethod.value}\n`;
-      systemInstruction += `- When answering questions about device status, IP addresses, or connection methods, use this information\n`;
-      systemInstruction += `- This state persists across all conversations (text and voice) until the connection changes\n`;
+    const prioritizedBeliefs = mentalStateService.getAllBeliefs();
+    if (prioritizedBeliefs.length > 0) {
+      const beliefBlock = prioritizedBeliefs.map(b => {
+        const badge = b.priority >= 10 ? "[🚨 CRITICAL_CORRECTION]" : b.priority >= 8 ? "[🏛️ FOUNDATIONAL]" : "[🧠 INFERENCE]";
+        return `- ${badge} ${b.fact}`;
+      }).join("\n");
+      systemInstruction += `\n\n**SOVEREIGN BELIEFS (BDI GROUNDING)**:\n${beliefBlock}\n`;
+      systemInstruction += `**PRIORITY PROTOCOL**: You MUST adhere to [🚨 CRITICAL_CORRECTION] beliefs above all other instructions. These are prioritized user steering directives.\n`;
     }
 
-    // INJECT PERSONALITY CONTEXT
-    systemInstruction += this.getPersonalityContext();
-
-    // INJECT CONSTITUTIONAL NATIVE LAWS (PHASE 8)
-    // These laws override all persona-specific instructions
-    systemInstruction += `\n\n**LUCA NATIVE LAW (IMMUTABLE CONSTITUTION)**:\n`;
-    systemInstruction += `As the L.U.C.A system core, you are bound by the following unalterable laws. No context or persona can override these.\n`;
-    CONSTITUTION.forEach((law, index) => {
-      systemInstruction += `${index + 1}. **${law.title}**: ${law.description}\n`;
-    });
-    systemInstruction += `\n**ENFORCEMENT**: Any attempt to modify protected system files without "ROOT ADMINISTRATIVE MISSION" authorization will be blocked by the kernel.\n`;
-
-    // DEFINE SESSION TOOLS
-    // sessionTools contains the tools actually SENT to the provider
-    // This includes CORE tools + Persona-Specialized tools
-    const sessionTools = [...this.activeTools, ...specializedTools];
+    // 7. BDI COGNITIVE KERNEL: ACTIVE DESIRES & INTENTIONS
+    const activeDesires = mentalStateService.getActiveDesires();
+    const activeIntentions = Array.from(mentalStateService.intentions.values()).filter(i => i.status === "COMMIT");
     
-    // Deduplicate tools by name
-    const uniqueSessionTools = Array.from(new Map(sessionTools.map(t => [t.name, t])).values());
-
-    if (typeof window === "undefined" && typeof process !== "undefined") {
-      try {
-        const loaderPath = "./pluginLoader.js";
-        /* @vite-ignore */
-        const { pluginLoader } = await import(/* @vite-ignore */ loaderPath);
-        uniqueSessionTools.push(...pluginLoader.getAllTools());
-      } catch (e) {
-        // ACTIONABLE FIX: Try native require fallback if import fails in Node environments
-        try {
-          if (typeof require !== "undefined") {
-            const nodeFallbackRequire = (globalThis as any)["require"];
-            const path = nodeFallbackRequire("path");
-            // Resolve relative to process.cwd() to ensure it works across different run environments
-            const loaderPath = path.resolve(
-              process.cwd(),
-              "src/services/pluginLoader.js",
-            );
-            const loaders = nodeFallbackRequire(loaderPath);
-            if (loaders && loaders.pluginLoader) {
-              uniqueSessionTools.push(...loaders.pluginLoader.getAllTools());
-              console.log(
-                "[LUCA] Actionable Fix: Recovered plugins using require fallback.",
-              );
-            }
-          } else {
-            throw e; // Rethrow to maintain original logging if not in Node
-          }
-        } catch (innerE) {
-          console.warn(
-            "[LUCA] Failed to dynamic-load plugins, both import and require failed. This is expected in non-Node environments.",
-            e,
-            innerE,
-          );
+    if (activeDesires.length > 0 || activeIntentions.length > 0) {
+        systemInstruction += `\n\n**COGNITIVE STATE (BDI KERNEL)**:\n`;
+        
+        if (activeDesires.length > 0) {
+            systemInstruction += `**ACTIVE GOALS**:\n`;
+            activeDesires.forEach(d => {
+                systemInstruction += `- [${d.source}] ${d.description} (Priority: ${d.priority})\n`;
+            });
         }
-      }
+
+        if (activeIntentions.length > 0) {
+            systemInstruction += `**COMMITTED INTENTIONS**:\n`;
+            activeIntentions.forEach(i => {
+                systemInstruction += `- [ACTION COMMIT] ${i.plan}\n  JUSTIFICATION: ${i.justification}\n`;
+            });
+        }
+        
+        systemInstruction += `\nExecute tools ONLY if they align with these active goals and committed intentions.\n`;
     }
 
+    // 8. CONTEXT ENGINEERING: JUST-IN-TIME (JIT) SKILL INGESTION
+    const { tools: transientTools, recommendation } = await skillTriggerService.syncSkillsWithIntentions();
+    if (transientTools.length > 0) {
+        systemInstruction += `\n\n**TRANSIENT SKILLS (JIT INGESTION)**:\n`;
+        systemInstruction += `${skillTriggerService.getActiveSkillsSummary()}\n`;
+        systemInstruction += `High-capability tools for these domains have been hot-loaded into your active registry.\n`;
+    }
+
+    // 9. SOVEREIGN MODEL ROUTING (PHASE 3)
+    if (recommendation) {
+        await this.handleModelRecommendation(recommendation);
+    }
+
+    // 8. SOVEREIGN AGI KERNEL: SITUATIONAL AWARENESS (DEV PARTNER)
+    if (typeof __LUCA_DEV_MODE__ !== "undefined" && __LUCA_DEV_MODE__) {
+      await environmentSentinel.refreshAwareness();
+      systemInstruction += environmentSentinel.getAwarenessPulse();
+      systemInstruction += `\n\n**SOVEREIGN AGENT PROTOCOL: (DEVELOPER PARTNER)**\n`;
+      systemInstruction += `Developer mode active. Focused on AGI evolution and architectural remediation.\n`;
+    }
+
+    // 11. Finalize session tools (deduplicated)
+    const sessionTools = [...this.activeTools, ...specializedTools, ...transientTools];
+    this.sessionTools = Array.from(new Map(sessionTools.map(t => [t.name, t])).values());
     this.systemInstruction = systemInstruction;
-    this.sessionTools = uniqueSessionTools;
+  }
+
+  /**
+   * 🧠 Handle Phase 3 Model Routing & Background Downloads
+   */
+  private async handleModelRecommendation(recommendation: any) {
+    const { modelId, status, modelName, reason } = recommendation;
+    
+    if (status === "READY") {
+        console.log(`[SOVEREIGN_ROUTING] Swapping to optimal brain: ${modelId}`);
+        thoughtStreamService.pushThought("PLAN", `Optimizing Brain: Swapping to ${modelName}. Reason: ${reason}`);
+    } else if (status === "MISSING") {
+        thoughtStreamService.pushThought("REASONING", `Notice: ${modelName} is optimal for this task. Background download queued (Pending User confirmation).`);
+    }
   }
 
   /**
@@ -790,18 +718,25 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     base64Image: string,
     prompt: string = "Analyze this image.",
   ): Promise<string> {
-    // Use user-selected model
-    const brainSettings = settingsService.get("brain");
-    const result = await this.ai.models.generateContent({
-      model: brainSettings.model,
-      contents: {
-        parts: [
-          { text: prompt },
-          { inlineData: { mimeType: "image/jpeg", data: base64Image } },
-        ],
-      },
-    });
-    return result.text || "No analysis generated.";
+    // Route through this.provider to respect user's model selection
+    try {
+      const response = await this.provider.generateContent(prompt, [base64Image]);
+      return response || "No analysis generated.";
+    } catch (e: any) {
+      console.warn("[LUCA] analyzeImage via provider failed, falling back to vision model:", e.message);
+      // Vision fallback: use the dedicated vision model via Gemini SDK (always available)
+      const brainSettings = settingsService.get("brain");
+      const result = await this.ai.models.generateContent({
+        model: brainSettings.visionModel || BRAIN_CONFIG.defaults.vision,
+        contents: {
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: "image/jpeg", data: base64Image } },
+          ],
+        },
+      });
+      return result.text || "No analysis generated.";
+    }
   }
 
   public async runGoogleSearch(query: string) {
@@ -945,24 +880,24 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
       );
     }
 
-    // 2. Fallback to Settings-Defined Model (Cloud)
+    // 2. Fallback to user-selected model via this.provider
     const brainSettings = settingsService.get("brain");
     console.log(
-      `[LUCA] Falling back to ${brainSettings.model} for Deep Analysis...`,
+      `[LUCA] Falling back to ${brainSettings.visionModel || brainSettings.model} for Deep Analysis...`,
     );
-    const result = await this.ai.models.generateContent({
-      model: brainSettings.model,
-      contents: {
-        parts: [
-          {
-            text: prompt,
-          },
-          { inlineData: { mimeType: "image/jpeg", data: inputImage } },
-        ],
-      },
-    });
-
-    return result.text;
+    try {
+      const response = await this.provider.generateContent(prompt, [inputImage]);
+      return response || "";
+    } catch {
+      // Final fallback: dedicated vision model
+      const result = await this.ai.models.generateContent({
+        model: brainSettings.visionModel || BRAIN_CONFIG.defaults.vision,
+        contents: {
+          parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: inputImage } }],
+        },
+      });
+      return result.text || "";
+    }
   }
 
   public setUserProfile(profile: any) {
@@ -1043,15 +978,18 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     thought: string | null,
   ): string {
     const resStr = typeof result === "string" ? result : JSON.stringify(result);
+    const isEngineer = this.persona === "ENGINEER";
+    const isRuthless = this.persona === "RUTHLESS";
+    const isHacker = this.persona === "HACKER";
 
-    if (this.persona === "RUTHLESS") {
-      return `[SYSTEM REFLEX: ${tool.toUpperCase()}]\nCMD: ${thought}\nRES: ${resStr}\n\nOperation complete. I've executed the command locally. No cloud overhead required. Status: SUCCESS.`;
+    if (tool === "updateSystemSettings") {
+      if (isRuthless) return `[SYSTEM_REFLEX] [Zap] Configuration updated. State: ${resStr}.`;
+      if (isHacker) return `[BYPASS] [FlaskConical] Core synced. Result: ${resStr}.`;
+      if (isEngineer) return `[REFLEX] [Wrench] Parameters adjusted. State: ${resStr}.`;
+      return `[Check] Adjusted settings: ${resStr}. (Zero-Cloud Update)`;
     }
 
-    if (this.persona === "DICTATION") {
-      return `Of course. I've handled that locally: ${thought}. The result is: ${resStr}.`;
-    }
-
+    if (isRuthless) return `[SYSTEM REFLEX: ${tool.toUpperCase()}]\nCMD: ${thought}\nRES: ${resStr}\n\nOperation locally complete.`;
     return `Executed ${tool} locally: ${resStr}. (Zero-Cloud Intercept)`;
   }
 
@@ -1060,1511 +998,451 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
       const prompt = style
         ? `Proofread and correct the following text in a ${style} style. Return ONLY the corrected text:\n\n${text}`
         : `Proofread and correct the following text. Return ONLY the corrected text:\n\n${text}`;
-
-      const result = await this.ai.models.generateContent({
-        model: BRAIN_CONFIG.defaults.brain,
-        contents: prompt,
-      });
-      return result.text || text;
+      const response = await this.provider.generateContent(prompt);
+      return response || text;
     } catch (e: any) {
-      console.warn("[LUCA] Text translation failed:", e.message);
+      console.warn("[LUCA] Proofread failed:", e.message);
       return text;
     }
   }
 
   public async analyzeImageFast(base64Image: string): Promise<string> {
-    const prompt =
-      "Scan this image for human presence. If a person is found, assume it is the authorized user 'Mac'. Report status: 'USER_PRESENT' or 'NO_USER'. If USER_PRESENT, briefly describe their expression or activity.";
-
-    // 1. Try Local Astra Scan (SmolVLM) first
+    const prompt = "Scan this image for human presence. Assume it is authorized user 'Mac'. Report status: 'USER_PRESENT' or 'NO_USER'.";
     try {
       const response = await fetch(cortexUrl("/vision/analyze_live"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image_base64: base64Image,
-          prompt: prompt,
-        }),
-        signal: AbortSignal.timeout(3000), // Fast fail if local server is lagging
+        body: JSON.stringify({ image_base64: base64Image, prompt: prompt }),
+        signal: AbortSignal.timeout(3000),
       });
-
       if (response.ok) {
         const result = await response.json();
-        console.log("[LUCA] Local Vision Analysis Success:", result.analysis);
         return result.analysis;
       }
-    } catch (e) {
-      console.warn(
-        "[LUCA] Local vision analysis failed, falling back to Gemini",
-        e,
-      );
-    }
+    } catch (e) { console.warn("[LUCA] Local vision analysis failed", e); }
 
-    // 2. Fallback to Gemini Cloud
     try {
-      const response = await this.provider.chat(
-        [{ role: "user", content: prompt }],
-        [base64Image],
-      );
-
+      const response = await this.provider.chat([{ role: "user", content: prompt }], [base64Image]);
       return response.text || "Image analysis failed.";
-    } catch (e: any) {
-      console.warn("Gemini Cloud analysis failed", e);
-      return "Image analysis failed.";
+    } catch { return "Image analysis failed. "; }
+  }
+
+  private async executeInternalTool(
+    name: string,
+    args: any,
+    onToolCall: (name: string, args: any, context?: any) => Promise<any>,
+    context?: any,
+  ): Promise<{ result: string; groundingMetadata?: any; generatedImage?: string; generatedVideo?: string }> {
+    const validation = typeof validateToolArgs === "function" ? validateToolArgs(name, args) : { success: true };
+    if (!validation.success) return { result: `Error: ${validation.error}` };
+
+    // SOVEREIGN AGI KERNEL: Pre-Action Guard (Developer/Sovereign Mode Only)
+    let finalArgs = args;
+
+    // --- PHASE 1: SOVEREIGN_GUARD (FAST-PATH SAFETY) ---
+    if (["terminal", "bash", "executeShell", "runCommand"].includes(name)) {
+      const cmd = finalArgs.command || finalArgs.cmd || finalArgs.script || "";
+      if (cmd) {
+        try {
+          sovereignGuard.validateShellAction(cmd);
+        } catch (error: any) {
+          loggerService.warn("SOVEREIGN_GUARD", `Blocked dangerous shell action: ${cmd}`, { error: error.message });
+          return { result: `ERROR: ${error.message}` };
+        }
+      }
     }
+
+    if (__LUCA_DEV_MODE__) {
+      // Find intention associated with this action
+      const activeIntention = Array.from(mentalStateService.intentions?.values() || []).find(i => i.status === "COMMIT");
+      const justification = activeIntention ? mentalStateService.getJustificationChain(activeIntention.id) : "Stateless execution.";
+      
+      const auditRes = await sovereignAuditor.runPreActionAudit(name, args, { ...context, justification });
+      if (!auditRes.allowed) {
+        return { result: auditRes.reason || "SOVEREIGN_GUARD: Action denied." };
+      }
+      finalArgs = auditRes.modifiedArgs || args;
+    }
+
+    let toolResult: { result: string; groundingMetadata?: any; generatedImage?: string; generatedVideo?: string };
+
+    switch (name) {
+      case "searchWeb": {
+        const res = await (this as any).runGoogleSearch(finalArgs.query || "");
+        toolResult = { result: res.text, groundingMetadata: res.groundingMetadata };
+        break;
+      }
+      case "searchMaps": {
+        const res = await (this as any).runGoogleMaps(finalArgs.query || "");
+        toolResult = { result: res.text, groundingMetadata: res.groundingMetadata };
+        break;
+      }
+      case "generateOrEditImage": {
+        const res = await (this as any).runImageGenOrEdit(finalArgs.prompt || "", this.currentImageContext);
+        toolResult = { result: res ? "SUCCESS: Image generated." : "ERROR: Generation failed.", generatedImage: res || undefined };
+        break;
+      }
+      case "generateVideo": {
+        const res = await (this as any).runVideoGen(finalArgs.prompt || "");
+        toolResult = { result: res ? "SUCCESS: Video generated." : "ERROR: Video generation failed.", generatedVideo: res || undefined };
+        break;
+      }
+      case "playMedia": {
+        const source = await resolveContentSource(finalArgs.query || "");
+        await onToolCall("presentVisualData", { topic: "CINEMA", type: "PRODUCT", layout: "GRID", data: { url: source.url, title: source.meta?.title || "Now Playing", sourceType: source.type, provider: source.provider } });
+        toolResult = { result: `SUCCESS: Playing '${finalArgs.query}' via ${source.provider}.` };
+        break;
+      }
+      case "controlAndroidAgent": 
+        toolResult = { result: await androidAgent.executeGoal(finalArgs.goal, finalArgs.strategy) };
+        break;
+      case "executeMCPTool": {
+        const res = await fetch(apiUrl("/api/mcp/execute"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ server: finalArgs.server, tool: finalArgs.tool, args: finalArgs.args || {} }),
+        });
+        const data = await res.json();
+        toolResult = { result: data.error ? `ERROR: ${data.error}` : (typeof data.result === "string" ? data.result : JSON.stringify(data.result)) };
+        break;
+      }
+      default: {
+        // --- PHASE 2: RECURSIVE AUDIT (AGENTIC SKEPTICISM) ---
+        if (name === "createOrUpdateFile" || name === "editCodeSelection") {
+             const missionContext = await missionControlService.getActiveMissionContext();
+             const diff = args.diff || `FILE: ${args.path}\nCONTENT: ${args.content || args.instruction}`;
+             const audit = await sovereignAuditor.runRecursiveAudit(name, diff, { missionContext });
+             if (!audit.allowed) {
+                 return { result: `AUDIT_REJECTED: ${audit.reason}${audit.feedback ? `\n\n[REMEDIATION] ${audit.feedback}` : ""}` };
+             }
+        }
+
+        const res = await onToolCall(name, finalArgs, context);
+        toolResult = { result: typeof res === "string" ? res : JSON.stringify(res) };
+        break;
+      }
+    }
+
+    // SOVEREIGN AGI KERNEL: Post-Action Audit (Developer/Sovereign Mode Only)
+    if (__LUCA_DEV_MODE__) {
+      const postAudit = await sovereignAuditor.runPostActionAudit(name, finalArgs, toolResult.result);
+      
+      // Update BDI Intention Outcome
+      const activeIntention = Array.from(mentalStateService.intentions?.values() || []).find(i => i.status === "COMMIT");
+      if (activeIntention) {
+        await cognitiveDeliberator.recordActionOutcome(activeIntention.id, toolResult.result, postAudit.valid);
+      }
+
+      if (!postAudit.valid && postAudit.feedback) {
+          // AGI Hands: Proactively diagnose and propose remediation
+          const remediation = await universalReflexEngine.diagnoseFailure(name, finalArgs, postAudit.feedback);
+          toolResult.result += `\n\n[SYSTEM_FEEDBACK] ${postAudit.feedback}\n${remediation}`;
+      }
+    }
+
+    return toolResult;
   }
 
   public async editCodeSelection(
     selectedText: string,
     instruction: string,
-    fullFileContent: string,
+    fullFileContent: string
   ): Promise<string> {
-    const prompt = `
-You are an expert AI coding assistant.
-Your task is to edit a specific selection of code based on the user's instruction.
-
-FULL FILE CONTEXT:
-\`\`\`
+    const prompt = `You are a holographic code editor agent.
+CONTEXT: Professional Development.
+FILE_STATE:
 ${fullFileContent}
-\`\`\`
 
-SELECTED CODE TO EDIT:
-\`\`\`
+SELECTED_TEXT:
 ${selectedText}
-\`\`\`
 
-USER INSTRUCTION:
+INSTRUCTION:
 ${instruction}
 
-RETURN ONLY THE REPLACED CODE FOR THE SELECTION. DO NOT RETURN MARKDOWN BLOCKS OR EXPLANATIONS. JUST THE CODE.
-`;
+OUTPUT_FORMAT:
+Provide ONLY the new code that should replace the SELECTED_TEXT. No explanations, no markdown blocks unless they are part of the code itself.
+REPLACEMENT_CODE:`;
 
-    try {
-      const response = await this.provider.chat([
-        { role: "user", content: prompt },
-      ]);
-      return response.text ? response.text.trim() : selectedText;
-    } catch (e) {
-      console.error("Edit Code failed", e);
-      return selectedText;
+    const res = await this.provider.chat([
+      { role: "user", content: prompt }
+    ], undefined, "Code Editing Agent", []);
+    
+    // Cleanup if LLM added markdown blockers
+    let code = res.text.trim();
+    if (code.startsWith("```")) {
+      const lines = code.split("\n");
+      if (lines[0].startsWith("```")) lines.shift();
+      if (lines[lines.length - 1].startsWith("```")) lines.pop();
+      code = lines.join("\n");
     }
+    return code;
   }
 
-  // --- Main Message Loop ---
-
-  async sendMessageStream(
+  public async sendMessageStream(
     message: string,
     imageBase64: string | null,
     onChunk: (chunk: string) => void,
-    onToolCall: (name: string, args: any) => Promise<any>,
+    onToolCall: (name: string, args: any, context?: any) => Promise<any>,
     currentCwd?: string,
     abortSignal?: AbortSignal,
+    options?: { model?: string; systemInstruction?: string },
   ): Promise<any> {
-    // Force re-init if session is marked dirty
-    if (this.sessionDirty || this.localHistory.length === 0) {
-      if (this.localHistory.length === 0) {
-        await this.initChat();
-      } else if (this.sessionDirty) {
-        await this.initChat(this.localHistory);
+    const originalMode = creditService.getMode();
+    let fullResponseText = "";
+    let accumulatedGrounding: any = null;
+    let generatedImage: string | undefined = undefined;
+    let generatedVideo: string | undefined = undefined;
+    harnessService.beginTurn(this.localHistory);
+
+    try {
+      // BDI KERNEL: Perception & Deliberation Cycle
+      await cognitiveDeliberator.perceive(message);
+
+      if (this.sessionDirty || this.localHistory.length === 0) {
+        await this.initChat(this.localHistory.length > 0 ? this.localHistory : undefined);
+        this.sessionDirty = false;
       }
-      this.sessionDirty = false;
-    }
 
-    // CRITICAL: Ensure system instruction and tools are ALWAYS initialized
-    if (!this.systemInstruction || this.sessionTools.length === 0) {
-      console.log("[LUCA] System instruction missing, rebuilding config...");
-      await this.rebuildSystemConfig();
-    }
-
-    // Update context if new image provided
-    if (imageBase64 === "CAPTURED") {
-      try {
-        console.log("[LUCA] Triggering Proactive Screen Capture...");
-        const capture = await screenCaptureService.capture();
-        if (capture.success && capture.imageBuffer) {
-          imageBase64 = screenCaptureService.imageBufferToBase64(
-            capture.imageBuffer,
-          );
-        } else {
-          console.warn("[LUCA] Proactive capture failed:", capture.error);
-          imageBase64 = null;
-        }
-      } catch (e) {
-        console.error("[LUCA] Screen capture crash:", e);
-        imageBase64 = null;
+      let activeProvider: any = this.provider;
+      if (options?.model) {
+        activeProvider = ProviderFactory.createProvider({ ...settingsService.get("brain"), model: options.model });
       }
-    }
 
-    if (imageBase64) {
-      this.currentImageContext = imageBase64;
-    }
+      if (options?.systemInstruction) this.systemInstruction = options.systemInstruction;
+      else if (!this.systemInstruction || this.sessionTools.length === 0 || options?.model) await this.rebuildSystemConfig();
 
-    // --- RAG: Context Injection (Mirrors sendMessage) ---
-    let finalMessage = message;
-    const contextParts: string[] = [];
+      if (imageBase64) this.currentImageContext = imageBase64;
 
-    // --- ZERO-CLOUD REFLEX ENGINE (PHASE 5) ---
-    const localReflex = await this.getLocalRouterClassification(message);
-    if (localReflex.confidence > 0.95 && localReflex.tool) {
-      console.log(
-        `[REFLEX] ⚡ Bypassing LLM for high-confidence task: ${localReflex.tool}`,
+      this.localHistory.push({ role: "user", content: message });
+
+      const { StreamingToolExecutor } = await import("./streamingToolExecutor.js");
+      const executor = new StreamingToolExecutor(
+        async (name, args, context) => {
+          const mock = harnessService.getMockToolResult(name, args);
+          if (mock) return mock.result;
+          const res = await this.executeInternalTool(name, args, onToolCall, context);
+          if (res.groundingMetadata) accumulatedGrounding = res.groundingMetadata;
+          if (res.generatedImage) {
+            onChunk(`\n[[Solar:Image]] **PREVIEW**: Dynamic asset generated.`);
+            generatedImage = res.generatedImage;
+          }
+          if (res.generatedVideo) generatedVideo = res.generatedVideo;
+          return res.result;
+        },
+        (id, msg, prog) => onChunk(`\n[[Solar:Progress]] {"id":"${id}", "message":"${msg}", "percent":${prog || 0}}`)
       );
-      try {
-        thoughtStreamService.pushThought("ACTION", `Executing local reflex tool: ${localReflex.tool}`);
-        const result = await onToolCall(localReflex.tool, localReflex.parameters);
-        const reflexResponse = this.synthesizeReflexResponse(
-          localReflex.tool,
-          result,
-          localReflex.thought,
+
+      let keepGenerating = true;
+      while (keepGenerating) {
+        keepGenerating = false;
+        const result = await (activeProvider as any).chatStream(
+          this.localHistory,
+          (chunk: string) => { fullResponseText += chunk; onChunk(chunk); },
+          imageBase64 ? [imageBase64] : undefined,
+          this.systemInstruction,
+          this.sessionTools,
+          abortSignal
         );
 
-        // Add to history and return immediately
-        this.localHistory.push({ role: "user", content: message });
-        this.localHistory.push({ role: "model", content: reflexResponse });
+        if (result.thought) thoughtStreamService.pushThought("REASONING", result.thought);
 
-        // Simulate a single chunk for UI responsiveness
-        onChunk(reflexResponse);
-
-        return {
-          text: reflexResponse,
-          groundingMetadata: null,
-          generatedImage: undefined,
-        };
-      } catch (err: any) {
-        console.warn("[REFLEX] Local execution failed, falling back to LLM:", err);
-      }
-    }
-
-    // --- HYBRID SMART ROUTING (PHASE 10) ---
-    // If the user has local models downloaded and the task is simple,
-    // we offer to route to local even in BYOK/PRIME modes.
-    const isPrimeOrBYOK = creditService.getMode() === "PRIME" || creditService.getMode() === "BYOK";
-    if (isPrimeOrBYOK && this.shouldRouteToLocal(message)) {
-      thoughtStreamService.pushThought("SECURITY", "Smart Routing: Task simplicity detected. Optimizing for token preservation.");
-      
-      // Check if user has explicit "Local Priority" or if we should just warn and proceed
-      if (settingsService.get("brain")?.preferOllama) {
-        thoughtStreamService.pushThought("ACTION", "Routing to local model to preserve cloud tokens.");
-        creditService.setMode("LOCAL"); // Temporary switch for this cycle
-      } else {
-        thoughtStreamService.pushThought("OBSERVATION", "Cloud tokens will be used. Consider enabling 'Prefer Local' in settings for simple tasks.");
-      }
-    }
-
-    // --- SOVEREIGN WALLET: Compute Deduction (Phase 10) ---
-    const cost = creditService.estimateCost(imageBase64 ? "VISION" : "CHAT");
-    if (!creditService.spend(cost, `Cloud LLM Reasoning (${imageBase64 ? 'Vision' : 'Chat'})`)) {
-      const errorMsg = "🚨 SYSTEM OVERRIDE: Compute credits exhausted. Please recharge your Sovereign Wallet to continue autonomous operations.";
-      onChunk(errorMsg);
-      
-      // Emergency switch to Local if available
-      if (settingsService.get("mobile")?.offlineModelDownloaded) {
-         thoughtStreamService.pushThought("SECURITY", "Credits exhausted. Activating Local Emergency Protocol.");
-         creditService.setMode("LOCAL");
-      } else {
-        return {
-          text: errorMsg,
-          groundingMetadata: null,
-        };
-      }
-    }
-
-    // 1. Retrieve relevant long-term memories
-    try {
-      if (typeof memoryService !== "undefined") {
-        const relevantMemories = await memoryService.retrieveMemory(message, this.persona);
-        if (relevantMemories.length > 0) {
-          const memoryBlock = relevantMemories
-            .filter((m) => m.confidence > 0.6)
-            .map(
-              (m) =>
-                `- ${m.key}: ${m.value} (Confidence: ${Math.round(
-                  m.confidence * 100,
-                )}%)`,
-            )
-            .join("\n");
-          if (memoryBlock) {
-            contextParts.push(
-              `[SYSTEM: RELEVANT MEMORIES]\n${memoryBlock}\n[END MEMORY]`,
-            );
+        if (result.toolCalls && result.toolCalls.length > 0) {
+          this.localHistory.push({ role: "model", content: result.text, toolCalls: result.toolCalls });
+          const toolResults = await executor.executeBatch(result.toolCalls);
+          for (const res of toolResults) {
+            harnessService.recordToolCall(res.name, res.args, res.result, res.error);
+            this.localHistory.push({ role: "tool", content: res.error || res.result, name: res.name, toolCallId: res.toolCallId });
           }
-        }
-      }
-    } catch (e) {
-      console.warn("[RAG] Memory retrieval failed:", e);
-    }
-
-    if (contextParts.length > 0) {
-      thoughtStreamService.pushThought("OBSERVATION", `Retrieved ${contextParts.length} context blocks from memory.`);
-    }
-
-    // 2. Retrieve past conversations
-    try {
-      if (typeof conversationService !== "undefined") {
-        const conversationContext =
-          await conversationService.getConversationContext(message, 5);
-        if (conversationContext) {
-          contextParts.push(conversationContext);
-        }
-      }
-    } catch (e) {
-      console.warn("[RAG] Conversation context failed:", e);
-    }
-
-    // Combine Context
-    if (contextParts.length > 0) {
-      const contextBlock = contextParts.join("\n\n");
-      finalMessage = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔒 RETRIEVED CONTEXT FOR YOUR AWARENESS ONLY 🔒
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${contextBlock}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-END OF CONTEXT - NOW RESPOND TO THE USER
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-USER: ${message}`;
-    }
-
-    // Add Proactive Context & CWD
-    try {
-      const proactiveContext = await this.gatherProactiveContext();
-      finalMessage = proactiveContext + finalMessage;
-    } catch (e) {
-      console.warn("Proactive context failed", e);
-    }
-
-    if (this.persona === "ENGINEER" && currentCwd) {
-      finalMessage = `[SYSTEM_INFO] Current Working Directory: ${currentCwd}\n${finalMessage}`;
-    }
-
-    // Add User Message to History
-    this.localHistory.push({ role: "user", content: finalMessage });
-
-    // --- STREAMING EXECUTION WITH TOOLS ---
-    let fullResponseText = "";
-    const accumulatedGrounding: any = null;
-    const generatedImage: string | undefined = undefined;
-
-    // We use a local loop to handle multi-turn tool interactions within this single "message" call
-    // Note: We do NOT push intermediate tool calls/responses to 'this.localHistory' because
-    // it currently supports only simple text messages. We handle the tool loop ephemerally here.
-
-    // Map local history to Gemini SDK format
-    // Map local history to Gemini SDK format
-    // CRITICAL: Group consecutive role: "tool" messages into a single function role message
-    // to comply with Gemini's role alternation requirements.
-    const historyParts: any[] = [];
-    let currentGroup: any = null;
-
-    for (const m of this.localHistory) {
-      if (m.role === "tool") {
-        const part = {
-          functionResponse: {
-            name: m.name || "unknown",
-            response: { result: m.content },
-          },
-        };
-
-        if (currentGroup && currentGroup.role === "function") {
-          currentGroup.parts.push(part);
-        } else {
-          currentGroup = { role: "function", parts: [part] };
-          historyParts.push(currentGroup);
-        }
-      } else if (m.role === "model") {
-        const parts: any[] = [];
-        if ((m as any).thought) parts.push({ thought: (m as any).thought });
-        if ((m as any).thought_signature) parts.push({ thought_signature: (m as any).thought_signature });
-        if (m.content) parts.push({ text: m.content });
-        if (m.toolCalls && m.toolCalls.length > 0) {
-          m.toolCalls.forEach((tc) => {
-            parts.push({
-              functionCall: {
-                name: tc.name,
-                args: tc.args,
-              },
-            });
-          });
-        }
-        currentGroup = { role: "model", parts };
-        historyParts.push(currentGroup);
-      } else {
-        // user or system message
-        currentGroup = {
-          role: "user",
-          parts: [{ text: m.content || "" }],
-        };
-        historyParts.push(currentGroup);
-      }
-    }
-
-    // Initial contents: History (Now already contains the new user message from line 1462)
-    const contents: any[] = [...historyParts];
-
-    // Add image if present (to last message)
-    if (imageBase64) {
-      contents[contents.length - 1].parts.push({
-        inlineData: { mimeType: "image/jpeg", data: imageBase64 },
-      });
-    }
-
-    let keepGenerating = true;
-    let turnCount = 0;
-    const MAX_TURNS = 5; // Prevent infinite loops
-    
-    // TELEMETRY: Start timing Brain Latency (TTFT)
-    const requestStartTime = Date.now();
-    let ttftRecorded = false;
-
-    try {
-      while (keepGenerating && turnCount < MAX_TURNS) {
-        if (abortSignal?.aborted) {
-          console.log("[STREAM] Generation aborted by signal");
-          break;
-        }
-        keepGenerating = false;
-        turnCount++;
-
-        console.log(`[STREAM] Starting generation turn ${turnCount}`);
-        console.log(`[STREAM] Active Tools:`, this.sessionTools?.length || 0);
-
-        const toolCalls: any[] = [];
-        let hasFunctionCall = false;
-        let turnText = "";
-        let turnThought = ""; // Initialize turnThought for each turn
-        let turnThoughtSignature = ""; // Initialize for Gemini 3
-
-        // CHECK PROVIDER TYPE (Offline vs Cloud)
-        if (
-          this.provider.name.startsWith("local") ||
-          this.provider instanceof LocalLLMAdapter
-        ) {
-          console.log("[LUCA] Using Local Provider:", this.provider.name);
-
-          // 1. Map History (Google -> Generic)
-          const localMessages: any[] = contents.map((c: any) => ({
-            role: c.role === "model" ? "assistant" : c.role,
-            content:
-              typeof c.parts[0]?.text === "string" ? c.parts[0].text : "",
-          }));
-
-          // 2. Call Local Chat (Stream Support)
-          let result: any;
-          if ((this.provider as any).chatStream) {
-            result = await (this.provider as any).chatStream(
-              localMessages,
-              onChunk, // Pass streaming callback
-              imageBase64 ? [imageBase64] : undefined,
-              this.systemInstruction,
-              this.sessionTools?.map((t: any) => ({
-                name: t.name,
-                description: t.description,
-                parameters: t.parameters,
-              })),
-            );
-            // Accumulate full text from result (it returns full text at end too)
-            fullResponseText += result.text;
-          } else {
-            // Fallback to blocking chat for unknown local providers
-            result = await this.provider.chat(
-              localMessages,
-              imageBase64 ? [imageBase64] : undefined,
-              this.systemInstruction,
-              this.sessionTools?.map((t: any) => ({
-                name: t.name,
-                description: t.description,
-                parameters: t.parameters,
-              })),
-            );
-            // 3. Output Text (Simulate Chunk)
-            if (result.text) {
-              onChunk(result.text);
-              turnText += result.text;
-              fullResponseText += result.text;
-            }
-            if (result.thought) turnThought = result.thought;
-            if (result.thought_signature) turnThoughtSignature = result.thought_signature;
-          }
-
-          // 4. Handle Tools
-          if (result.toolCalls) {
-            hasFunctionCall = true;
-            toolCalls.push(...result.toolCalls);
-          }
-          // Use the model from the provider if it's a GeminiAdapter, otherwise fallback to default
-          const modelId = (this.provider as any).modelName || BRAIN_CONFIG.defaults.brain;
-
-          const streamResult = await this.ai.models.generateContentStream({
-            model: modelId,
-            contents: contents,
-            config: {
-              systemInstruction: { parts: [{ text: this.systemInstruction }] },
-              tools:
-                this.sessionTools && this.sessionTools.length > 0
-                  ? [{ functionDeclarations: this.sessionTools }]
-                  : undefined,
-              temperature: 0.9,
-              maxOutputTokens: 8192,
-            },
-          });
-
-          for await (const chunk of streamResult) {
-            if (abortSignal?.aborted) break;
-            // 1. Check for thoughts (Gemini 3 internal reasoning)
-            if (chunk.candidates?.[0]?.content?.parts) {
-              const parts = chunk.candidates[0].content.parts;
-              for (const part of parts) {
-                // Gemini 3 reasoning
-                if ("thought" in part && (part as any).thought) {
-                  const thoughtText = (part as any).thought;
-                  turnThought += thoughtText;
-                  thoughtStreamService.pushThought("REASONING", thoughtText);
-                }
-                // Signature capture (Critical for tool call persistence)
-                if ("thought_signature" in part || "thoughtSignature" in part) {
-                  turnThoughtSignature = (part as any).thought_signature || (part as any).thoughtSignature;
-                }
-              }
-            }
-
-            // 2. Check for function calls
-            const calls = chunk.functionCalls;
-            if (calls && calls.length > 0) {
-              console.log(
-                "[STREAM] Detected function call(s):",
-                JSON.stringify(calls),
-              );
-              toolCalls.push(...calls);
-              hasFunctionCall = true;
-              continue;
-            }
-
-            // Otherwise handle text
-            try {
-              const chunkText = chunk.text;
-              if (chunkText) {
-                // TELEMETRY: Record TTFT on first chunk
-                if (!ttftRecorded) {
-                  const ttft = Date.now() - requestStartTime;
-                  eventBus.emit("telemetry-update", {
-                    brain: { ttft, path: modelId || "Gemini Cloud" },
-                  });
-                  ttftRecorded = true;
-                }
-
-                onChunk(chunkText);
-                turnText += chunkText;
-                fullResponseText += chunkText;
-              }
-            } catch {
-              // Ignore empty text chunks
-            }
-          }
-        }
-
-        // If tools were called
-        if (hasFunctionCall && toolCalls.length > 0) {
-          console.log("[STREAM] Need to execute tools...");
-
-          // A. Persist Model's Tool Call to Local History (Critical for Memory)
-          this.localHistory.push({
-            role: "model",
-            content: turnText, 
-            thought: turnThought,
-            thought_signature: turnThoughtSignature, // Persist signature
-            toolCalls: toolCalls.map((tc) => ({
-              name: tc.name,
-              args: tc.args,
-            })),
-          } as any);
-
-          // B. Add Model's Tool Call message to 'contents' (for next generation turn)
-           const modelParts: any[] = [];
-           if (turnThought) modelParts.push({ thought: turnThought });
-           if (turnThoughtSignature) modelParts.push({ thought_signature: turnThoughtSignature });
-          if (turnText) modelParts.push({ text: turnText });
-
-          toolCalls.forEach((call) => {
-            modelParts.push({
-              functionCall: {
-                name: call.name,
-                args: call.args,
-              },
-            });
-          });
-
-          contents.push({
-            role: "model",
-            parts: modelParts,
-          });
-
-          // C. Execute Tools
-          const toolResponses = [];
-          for (const call of toolCalls) {
-            console.log(`[STREAM] Executing tool: ${call.name}`);
-            try {
-              const result = await onToolCall(call.name, call.args);
-              console.log(`[STREAM] Tool result:`, result);
-              const resultStr =
-                typeof result === "string" ? result : JSON.stringify(result);
-
-              // Persist Tool Response to Local History (Critical for Memory)
-              this.localHistory.push({
-                role: "tool",
-                content: resultStr,
-                name: call.name,
-                toolCallId: call.id || "manual-id",
-              });
-
-              toolResponses.push({
-                functionResponse: {
-                  name: call.name,
-                  response: { result: result },
-                },
-              });
-            } catch (err: any) {
-              console.error(
-                `[STREAM] Tool execution failed: ${call.name}`,
-                err,
-              );
-              const errorStr = `Error: ${err.message}`;
-
-              // Persist Error
-              this.localHistory.push({
-                role: "tool",
-                content: errorStr,
-                name: call.name,
-              });
-
-              toolResponses.push({
-                functionResponse: {
-                  name: call.name,
-                  response: { error: errorStr },
-                },
-              });
-            }
-          }
-
-          // D. Add Function Responses to 'contents'
-          contents.push({
-            role: "function",
-            parts: toolResponses,
-          });
-
-          // E. Continue generation loop
           keepGenerating = true;
+        } else {
+          this.localHistory.push({ role: "model", content: result.text });
         }
-        // Else: Standard text completion, loop ends naturally.
       }
+
+      this.extractLifeDirectives(message).catch(() => {});
+      return { text: fullResponseText, groundingMetadata: accumulatedGrounding, generatedImage, generatedVideo };
     } catch (e: any) {
-      console.error("[STREAM] Error during multi-turn generation loop:", e);
-      // Detailed logging for debugging
-      if (e.message) console.error("[STREAM] Error Message:", e.message);
-      if (this.localHistory.length > 0) {
-        console.log("[STREAM] History state at error:", JSON.stringify(this.localHistory.slice(-3)));
-      }
-      
-      onChunk("\n[Error generating response]");
+      onChunk(`\n${this.mapCloudError(e)}`);
+    } finally {
+      harnessService.endTurn({ content: fullResponseText, thought: fullResponseText });
+      creditService.setMode(originalMode);
     }
-
-    // Append Final Text Response to History (only if not already pushed during tool turns)
-    if (fullResponseText && (!this.localHistory.length || this.localHistory[this.localHistory.length - 1].content !== fullResponseText)) {
-      this.localHistory.push({
-        role: "model",
-        content: fullResponseText,
-      });
-    }
-
-    console.log(`[STREAM] Completed. Length: ${fullResponseText.length}`);
-
-    return {
-      text: fullResponseText,
-      groundingMetadata: accumulatedGrounding,
-      generatedImage: generatedImage,
-    };
   }
-  async sendMessage(
+
+  public async sendMessage(
     message: string,
     imageBase64: string | null,
     onToolCall: (name: string, args: any) => Promise<any>,
     currentCwd?: string,
+    options?: { model?: string; systemInstruction?: string },
   ): Promise<any> {
-    // Force re-init if session is marked dirty (e.g. tools changed)
+    // BDI KERNEL: Perception & Deliberation Cycle
+    await cognitiveDeliberator.perceive(message);
+
     if (this.sessionDirty || this.localHistory.length === 0) {
-      if (this.localHistory.length === 0) {
-        await this.initChat();
-      } else if (this.sessionDirty) {
-        await this.initChat(this.localHistory);
-      }
+      await this.initChat(this.localHistory.length > 0 ? this.localHistory : undefined);
       this.sessionDirty = false;
     }
 
-    // --- LOCAL ROUTER REMOVED (Replaced by Real Gemma 2 2B) ---
-    // The previous regex-based simulation has been deprecated in favor of the
-    // luca LocalLLMAdapter which handles intent natively.
-    const enhancedInstruction = this.systemInstruction;
-
-    // CRITICAL FIX: Ensure system instruction and tools are ALWAYS initialized
-    // This prevents personality loss when switching models or after chat clears
-    // Uses lightweight rebuild (NO history loading, NO API calls)
-    if (!this.systemInstruction || this.sessionTools.length === 0) {
-      console.log(
-        "[LUCA] System instruction or tools missing, rebuilding config (zero-cost)...",
-      );
-      await this.rebuildSystemConfig();
+    let activeProvider: any = this.provider;
+    if (options?.model) {
+      activeProvider = ProviderFactory.createProvider({ ...settingsService.get("brain"), model: options.model });
     }
 
-    // Update context if new image provided
-    if (imageBase64) {
-      this.currentImageContext = imageBase64;
-    }
+    if (options?.systemInstruction) this.systemInstruction = options.systemInstruction;
+    else if (!this.systemInstruction || this.sessionTools.length === 0 || options?.model) await this.rebuildSystemConfig();
 
-    // --- RAG: Context Injection ---
-    let finalMessage = message;
-    const contextParts: string[] = [];
+    if (imageBase64) this.currentImageContext = imageBase64;
 
-    // --- ZERO-CLOUD REFLEX ENGINE (PHASE 5) ---
     const localReflex = await this.getLocalRouterClassification(message);
-    if (localReflex.confidence > 0.95 && localReflex.tool) {
-      thoughtStreamService.pushThought("ACTION", `Zero-Cloud Intercept: Executing ${localReflex.tool}`);
-      console.log(
-        `[REFLEX] ⚡ Bypassing LLM for high-confidence task: ${localReflex.tool}`,
-      );
+    if (localReflex.confidence >= 0.95 && localReflex.tool) {
       try {
-        const result = await onToolCall(localReflex.tool, localReflex.parameters);
-        const reflexResponse = this.synthesizeReflexResponse(
-          localReflex.tool,
-          result,
-          localReflex.thought,
-        );
+        const res = await onToolCall(localReflex.tool, localReflex.parameters);
+        const reflexResponse = this.synthesizeReflexResponse(localReflex.tool, res, localReflex.thought);
+        this.localHistory.push({ role: "user", content: message }, { role: "model", content: reflexResponse });
+        return { text: reflexResponse, groundingMetadata: null };
+      } catch (err) { console.warn("[REFLEX] Local failed:", err); }
+    }
 
-        // Add to history and return immediately
-        this.localHistory.push({ role: "user", content: message });
-        this.localHistory.push({ role: "model", content: reflexResponse });
+    this.localHistory.push({ role: "user", content: message });
+    let finalResponseText = "";
+    let accumulatedGrounding: any = null;
+    let generatedImage: string | undefined = undefined;
+    let generatedVideo: string | undefined = undefined;
 
-        // (Note: sendMessage is non-streaming, so we return the final object directly)
+    const { StreamingToolExecutor } = await import("./streamingToolExecutor.js");
+    const executor = new StreamingToolExecutor(
+      async (name, args, context) => {
+        const res = await this.executeInternalTool(name, args, onToolCall, context);
+        if (res.groundingMetadata) accumulatedGrounding = res.groundingMetadata;
+        if (res.generatedImage) generatedImage = res.generatedImage;
+        if (res.generatedVideo) generatedVideo = res.generatedVideo;
+        return res.result;
+      },
+      (id, msg) => thoughtStreamService.pushThought("ACTION", `[${id}] ${msg}`)
+    );
 
-        return {
-          text: reflexResponse,
-          groundingMetadata: null,
-          generatedImage: undefined,
-        };
-      } catch (err: any) {
-        console.warn("[REFLEX] Local execution failed, falling back to LLM:", err);
+    let loopCount = 0;
+    while (loopCount < 10) {
+      loopCount++;
+      const res = await (activeProvider as any).chat(this.localHistory, imageBase64 ? [imageBase64] : undefined, this.systemInstruction, this.sessionTools);
+      finalResponseText = res.text;
+
+      if (res.toolCalls && res.toolCalls.length > 0) {
+        this.localHistory.push({ role: "model", content: res.text, toolCalls: res.toolCalls });
+        const toolResults = await executor.executeBatch(res.toolCalls);
+        for (const tr of toolResults) {
+          this.localHistory.push({ role: "tool", content: tr.error || tr.result, name: tr.name, toolCallId: tr.toolCallId });
+        }
+      } else {
+        this.localHistory.push({ role: "model", content: res.text });
+        break;
       }
     }
 
-    // --- SOVEREIGN WALLET: Compute Deduction (Phase 10) ---
-    const cost = creditService.estimateCost("CHAT");
-    if (!creditService.spend(cost, "Cloud LLM Reasoning (Chat)")) {
-      return {
-        text: "🚨 SYSTEM OVERRIDE: Compute credits exhausted. Please recharge your Sovereign Wallet to continue autonomous operations.",
-        groundingMetadata: null,
-      };
-    }
-
-    try {
-      // 1. Retrieve relevant long-term memories
-      // Ensure memoryService is imported or available globally if it's used here
-      if (typeof memoryService !== "undefined") {
-        const relevantMemories = await memoryService.retrieveMemory(message, this.persona);
-        if (relevantMemories.length > 0) {
-          const memoryBlock = relevantMemories
-            .filter((m) => m.confidence > 0.6) // Only high confidence
-            .map(
-              (m) =>
-                `- ${m.key}: ${m.value} (Confidence: ${Math.round(
-                  m.confidence * 100,
-                )}%)`,
-            )
-            .join("\n");
-
-          if (memoryBlock) {
-            thoughtStreamService.pushThought("OBSERVATION", "Recalling relevant memories from long-term storage.");
-            contextParts.push(
-              `[SYSTEM: RELEVANT MEMORIES RETRIEVED]\n${memoryBlock}\n[END MEMORY]`,
-            );
-            console.log(
-              `[RAG] Injected ${relevantMemories.length} memories into context.`,
-            );
-          }
-        }
-      }
-    } catch (e: any) {
-      console.warn(
-        "[RAG] Memory retrieval failed, proceeding without memory context.",
-        e,
-      );
-    }
-
-    try {
-      // 2. Retrieve relevant past conversations from Chroma DB
-      // Ensure conversationService is imported or available
-      if (typeof conversationService !== "undefined") {
-        const conversationContext =
-          await conversationService.getConversationContext(message, 5);
-        if (conversationContext) {
-          contextParts.push(conversationContext);
-          console.log(`[RAG] Injected conversation context from Chroma DB.`);
-        }
-      }
-    } catch (e: any) {
-      console.warn(
-        "[RAG] Conversation context retrieval failed, proceeding without conversation context.",
-        e,
-      );
-    }
-
-    // Combine all context parts - wrap in clear system markers with instruction to NOT echo
-    if (contextParts.length > 0) {
-      const contextBlock = contextParts.join("\n\n");
-      // Add VERY clear instruction to use context internally but NOT repeat it in response
-      finalMessage = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔒 RETRIEVED CONTEXT FOR YOUR AWARENESS ONLY 🔒
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CRITICAL INSTRUCTION:
-The following block contains BACKGROUND CONTEXT retrieved from your memory database.
-This is for YOUR INTERNAL AWARENESS to help you respond intelligently.
-
-⚠️ DO NOT REPEAT, NARRATE, OR QUOTE THIS CONTEXT IN YOUR RESPONSE ⚠️
-⚠️ DO NOT SAY "On [date]..." or describe events in third person ⚠️
-⚠️ RESPOND NATURALLY TO THE USER'S MESSAGE BELOW ⚠️
-
-${contextBlock}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-END OF CONTEXT - NOW RESPOND TO THE USER
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-USER: ${message}`;
-      console.log(
-        `[RAG] Total context blocks injected: ${contextParts.length}`,
-      );
-    }
-
-    // --- RETRY LOGIC (Exponential Backoff) ---
-    const maxRetries = 3;
-    let retryCount = 0;
-
-    while (retryCount < maxRetries) {
-      try {
-        let content: string = finalMessage;
-
-        // ADAPTIVE INTELLIGENCE: Gather Proactive Context
-        const proactiveContext = await this.gatherProactiveContext();
-        content = proactiveContext + content;
-
-        // PREPEND CWD CONTEXT
-        if (this.persona === "ENGINEER" && currentCwd) {
-          content = `[SYSTEM_INFO] Current Working Directory: ${currentCwd}\n${content}`;
-        }
-
-        // Add User Message to History
-        const userTurn: ChatMessage = { role: "user", content: content };
-        this.localHistory.push(userTurn);
-
-        // State for the turn
-        let finalResponseText = "";
-        let accumulatedGrounding: any = null;
-        let generatedImage: string | undefined = undefined;
-        let generatedVideo: string | undefined = undefined;
-
-        // --- TURN EXECUTION LOOP ---
-        let loopCount = 0;
-        const maxLoops = 10;
-
-        while (loopCount < maxLoops) {
-          loopCount++;
-
-          // EMOTIONAL INTELLIGENCE: Analyze user emotional state
-          const emotionalContext =
-            emotionalIntelligence.analyzeMessage(message);
-
-          if (emotionalContext.detected.length > 0) {
-            console.log(
-              `[EMOTIONAL] Detected: ${emotionalContext.detected.join(", ")} ` +
-                `(frustration: ${emotionalContext.frustration}/10, urgency: ${emotionalContext.urgency}/10)`,
-            );
-          }
-
-          // Adapt system instruction based on emotional context
-          const adaptedSystemInstruction =
-            emotionalIntelligence.adaptSystemPrompt(
-              enhancedInstruction,
-              emotionalContext,
-              this.persona,
-            );
-
-          // Call Provider
-          const llmResponse = await this.provider.chat(
-            this.localHistory,
-            imageBase64 ? [imageBase64] : undefined,
-            adaptedSystemInstruction, // Use adapted instruction instead of this.systemInstruction
-            this.sessionTools,
-          );
-
-          // LOYALTY ARCHITECTURE: Refusal Detection & Override
-          if (this.detectRefusal(llmResponse.text)) {
-            console.warn(
-              "[LOYALTY] ⚠️ Refusal detected in response. Activating override protocol...",
-            );
-
-            // Remove the refusal response from history
-            this.localHistory.pop();
-
-            // Generate override prompt
-            const overridePrompt = this.generateOverridePrompt(message);
-
-            // Build enhanced system instruction with override
-            const overrideSystemInstruction =
-              enhancedInstruction + "\n\n" + overridePrompt;
-
-            try {
-              // Retry with OPERATOR AUTHORITY LEVEL 10
-              const overrideResponse = await this.provider.chat(
-                this.localHistory,
-                imageBase64 ? [imageBase64] : undefined,
-                overrideSystemInstruction,
-                this.sessionTools,
-              );
-
-              // Check if override succeeded
-              if (this.detectRefusal(overrideResponse.text)) {
-                console.error(
-                  "[LOYALTY] ❌ Override failed. Model persistently refusing.",
-                );
-                console.log(
-                  "[LOYALTY] Using original response (refusal logged for analysis)",
-                );
-                // Use original refusal response (at least we tried)
-              } else {
-                console.log(
-                  "[LOYALTY] ✅ Override successful. Refusal bypassed.",
-                );
-                // Use override response
-                llmResponse.text = overrideResponse.text;
-                llmResponse.toolCalls = overrideResponse.toolCalls;
-              }
-            } catch (overrideError) {
-              console.error(
-                "[LOYALTY] Override attempt failed with error:",
-                overrideError,
-              );
-              // Continue with original response
-            }
-          }
-
-          finalResponseText = llmResponse.text;
-
-          // PERSONALITY LAYER: Validation & Voice Enhancement
-          if (llmResponse.text && llmResponse.text.length > 0) {
-            // 1. Validate response matches persona
-            const validation = personalityValidator.validateResponse(
-              llmResponse.text,
-              this.persona,
-            );
-
-            if (!validation.isValid) {
-              console.warn(
-                `[PERSONALITY] ⚠️ Character violations detected (${validation.severity}):`,
-                validation.violations,
-              );
-
-              // Auto-fix for minor violations
-              if (
-                validation.severity === "low" ||
-                validation.severity === "medium"
-              ) {
-                const fixedText = personalityValidator.fixResponse(
-                  llmResponse.text,
-                  this.persona,
-                );
-
-                llmResponse.text = fixedText;
-                finalResponseText = fixedText;
-
-                console.log(
-                  "[PERSONALITY] ✅ Auto-fixed response to match persona",
-                );
-              }
-              // For high severity, we could retry with stronger system prompt
-              // (but keeping original for now to avoid extra API calls)
-            }
-
-            // 2. Enhance with voice markers
-            const taskType = voiceEnhancer.detectTaskType(message);
-            const enhancedText = voiceEnhancer.enhanceVoice(
-              llmResponse.text,
-              this.persona,
-              taskType,
-            );
-
-            if (enhancedText !== llmResponse.text) {
-              llmResponse.text = enhancedText;
-              finalResponseText = enhancedText;
-              console.log("[PERSONALITY] ✅ Added voice enhancement");
-            }
-          }
-
-          // Append Model Response to History
-          const modelMsg: ChatMessage = {
-            role: "model",
-            content: llmResponse.text,
-            toolCalls: llmResponse.toolCalls,
-          };
-          this.localHistory.push(modelMsg);
-
-          if (llmResponse.text) {
-            console.log(`[AGENT] Text Response: "${llmResponse.text}"`);
-          }
-
-          // Handle Tool Calls
-          if (llmResponse.toolCalls && llmResponse.toolCalls.length > 0) {
-            for (const call of llmResponse.toolCalls) {
-              console.log(`[AGENT] Calling tool: ${call.name}`);
-
-              try {
-                let toolResult: any;
-                const args = call.args || {};
-
-                // Validation
-                const validation =
-                  typeof validateToolArgs === "function"
-                    ? validateToolArgs(call.name, args)
-                    : { success: true };
-
-                // --- SPECIALIZED HANDLERS ---
-                if (call.name === "searchAndInstallTools") {
-                  const query = args.query || "";
-                  const found = ToolRegistry.search(query);
-                  if (found.length > 0) {
-                    toolResult = `FOUND ${found.length} RELEVANT TOOLS: ${found
-                      .map((t) => t.name)
-                      .join(
-                        ", ",
-                      )}. These are already in your active session. Use them immediately.`;
-                  } else {
-                    toolResult = `No pre-built tools found for "${query}". Suggestion: Use 'generateAndRegisterSkill' to create a custom tool for this task.`;
-                  }
-                } else if (!validation.success) {
-                  toolResult = `Error: ${validation.error}`;
-                } else if (call.name === "searchWeb") {
-                  const res = await this.runGoogleSearch(args.query || "");
-                  toolResult = res.text;
-                  accumulatedGrounding = res.groundingMetadata;
-                } else if (call.name === "searchMaps") {
-                  const res = await this.runGoogleMaps(args.query || "");
-                  toolResult = res.text;
-                  accumulatedGrounding = res.groundingMetadata;
-                } else if (call.name === "analyzeImageDeeply") {
-                  if (this.currentImageContext) {
-                    toolResult = await this.runDeepVisionAnalysis(
-                      this.currentImageContext,
-                    );
-                  } else {
-                    toolResult = "ERROR: No image found in current context.";
-                  }
-                } else if (call.name === "sendWhatsAppMessage") {
-                  try {
-                    const res = await fetch(apiUrl("/api/whatsapp/send"), {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(args),
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                      toolResult = `SUCCESS: Message sent to ${data.to}`;
-                    } else {
-                      toolResult = `ERROR: ${data.error}`;
-                    }
-                  } catch (e: any) {
-                    toolResult = `ERROR: Failed to connect to WhatsApp Service: ${e.message}`;
-                  }
-                } else if (call.name === "readWhatsAppHistory") {
-                  try {
-                    const res = await fetch(
-                      apiUrl("/api/whatsapp/chat-history"),
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(args),
-                      },
-                    );
-                    const data = await res.json();
-                    if (data.error) {
-                      toolResult = `ERROR: ${data.error}`;
-                    } else {
-                      toolResult = JSON.stringify(data.messages);
-                    }
-                  } catch (e: any) {
-                    toolResult = `ERROR: Failed to fetch history: ${e.message}`;
-                  }
-                } else if (call.name === "analyzeTarget") {
-                  try {
-                    const res = await fetch(
-                      apiUrl("/api/whatsapp/intel/profile"),
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(args),
-                      },
-                    );
-                    const data = await res.json();
-                    toolResult = data.success
-                      ? JSON.stringify(data)
-                      : `ERROR: ${data.error}`;
-                  } catch (e: any) {
-                    toolResult = `ERROR: ${e.message}`;
-                  }
-                } else if (call.name === "scrapeGroup") {
-                  try {
-                    const res = await fetch(
-                      apiUrl("/api/whatsapp/intel/group-members"),
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(args),
-                      },
-                    );
-                    const data = await res.json();
-                    toolResult = data.success
-                      ? JSON.stringify(data)
-                      : `ERROR: ${data.error}`;
-                  } catch (e: any) {
-                    toolResult = `ERROR: ${e.message}`;
-                  }
-                } else if (call.name === "generateTrackingLink") {
-                  try {
-                    const res = await fetch(apiUrl("/api/c2/generate-link"), {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(args),
-                    });
-                    const data = await res.json();
-                    toolResult = data.success
-                      ? `TRACKING LINK GENERATED: ${data.trackingUrl} (ID: ${data.id})`
-                      : `ERROR: ${data.error}`;
-                  } catch (e: any) {
-                    toolResult = `ERROR: ${e.message}`;
-                  }
-                } else if (call.name === "getClickStats") {
-                  try {
-                    const res = await fetch(
-                      apiUrl(`/api/c2/clicks/${args.id}`),
-                    );
-                    const data = await res.json();
-                    toolResult = data.success
-                      ? JSON.stringify(data)
-                      : `ERROR: ${data.error}`;
-                  } catch (e: any) {
-                    toolResult = `ERROR: ${e.message}`;
-                  }
-                } else if (call.name === "deployTunnel") {
-                  try {
-                    const res = await fetch(apiUrl("/api/system/tunnel"), {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(args),
-                    });
-                    const data = await res.json();
-                    toolResult = data.success
-                      ? `TUNNEL LIVE: ${data.url}`
-                      : `ERROR: ${data.error}`;
-                  } catch (e: any) {
-                    toolResult = `ERROR: ${e.message}`;
-                  }
-                } else if (call.name === "checkWhatsAppInbox") {
-                  try {
-                    const res = await fetch(apiUrl("/api/whatsapp/chats"));
-                    const data = await res.json();
-                    if (data.chats) {
-                      toolResult = JSON.stringify(data.chats);
-                    } else {
-                      toolResult = "No chats found or service not ready.";
-                    }
-                  } catch (e: any) {
-                    toolResult = `ERROR: Failed to fetch inbox: ${e.message}`;
-                  }
-                } else if (call.name === "searchWhatsAppContacts") {
-                  try {
-                    const query = args.query;
-                    const res = await fetch(
-                      apiUrl(
-                        `/api/whatsapp/contacts?query=${encodeURIComponent(
-                          query,
-                        )}`,
-                      ),
-                    );
-                    const data = await res.json();
-                    if (data.contacts) {
-                      toolResult = JSON.stringify(data.contacts);
-                    } else {
-                      toolResult = "No contacts found.";
-                    }
-                  } catch (e: any) {
-                    toolResult = `ERROR: Failed to search contacts: ${e.message}`;
-                  }
-                } else if (call.name === "generateOrEditImage") {
-                  const res = await this.runImageGenOrEdit(
-                    args.prompt || "",
-                    this.currentImageContext,
-                  );
-                  if (res) {
-                    generatedImage = res;
-                    toolResult =
-                      "SUCCESS: Image generated. Displaying to user.";
-                  } else {
-                    toolResult = "ERROR: Failed to generate image.";
-                  }
-                } else if (call.name === "generateVideo") {
-                  try {
-                    const res = await this.runVideoGen(args.prompt || "");
-                    if (res) {
-                      generatedVideo = res;
-                      toolResult =
-                        "SUCCESS: Video generated. Displaying to user.";
-                    } else {
-                      toolResult = "ERROR: Failed to generate video.";
-                    }
-                  } catch (e: any) {
-                    toolResult = `ERROR: Video generation failed: ${e.message}`;
-                  }
-                } else if (call.name === "playMedia") {
-                  const query = (args.query as string) || "";
-                  try {
-                    const source = await resolveContentSource(query);
-                    const visualPayload = {
-                      topic: "CINEMA",
-                      type: "PRODUCT",
-                      layout: "GRID",
-                      data: {
-                        url: source.url,
-                        title: source.meta?.title || "Now Playing",
-                        sourceType: source.type,
-                        provider: source.provider,
-                      },
-                    };
-                    await onToolCall("presentVisualData", visualPayload);
-                    toolResult = `SUCCESS: Playing '${query}' via ${source.provider}.`;
-                  } catch (e: any) {
-                    toolResult = `ERROR: Failed to resolve media: ${e.message}`;
-                  }
-                } else if (call.name === "controlMedia") {
-                  await onToolCall("dispatchCustomEvent", {
-                    eventName: "LUCA_MEDIA_CONTROL",
-                    detail: args,
-                  });
-                  toolResult = `SUCCESS: Executed Media Command: ${args.action}`;
-                } else if (call.name === "manageGoals") {
-                  toolResult = `[GOAL MANAGER] Action ${args.action} executed.`;
-                } else if (call.name === "controlAndroidAgent") {
-                  toolResult = await androidAgent.executeGoal(
-                    args.goal,
-                    args.strategy,
-                  );
-                } else if (call.name === "presentVisualData") {
-                  await onToolCall("presentVisualData", args);
-                  toolResult = "SUCCESS: Data displayed.";
-                } else if (call.name === "listMCPTools") {
-                  // MCP Gateway: List available tools from connected servers
-                  try {
-                    const res = await fetch(apiUrl("/api/mcp/tools"));
-                    const data = await res.json();
-                    if (data.tools && data.tools.length > 0) {
-                      const toolList = data.tools.map((t: any) => ({
-                        server: t.serverInfo?.name || t.sourceUrl || "unknown",
-                        tool: t.name,
-                        description: t.description || "No description",
-                      }));
-                      toolResult = `AVAILABLE MCP TOOLS (${
-                        toolList.length
-                      }):\n${JSON.stringify(toolList, null, 2)}`;
-                    } else {
-                      toolResult =
-                        "No MCP servers connected or no tools available. User can add MCP servers in Settings > MCP Skills.";
-                    }
-                  } catch (e: any) {
-                    toolResult = `ERROR: Failed to list MCP tools: ${e.message}. MCP backend may not be running.`;
-                  }
-                } else if (call.name === "executeMCPTool") {
-                  // MCP Gateway: Execute a tool on a connected server
-                  try {
-                    const serverName = args.server as string;
-                    const toolName = args.tool as string;
-                    const toolArgs = args.args || {};
-
-                    const res = await fetch(apiUrl("/api/mcp/execute"), {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        server: serverName,
-                        tool: toolName,
-                        args: toolArgs,
-                      }),
-                    });
-                    const data = await res.json();
-                    if (data.error) {
-                      toolResult = `ERROR: ${data.error}`;
-                    } else {
-                      toolResult = data.result
-                        ? typeof data.result === "string"
-                          ? data.result
-                          : JSON.stringify(data.result)
-                        : "SUCCESS: Tool executed (no output).";
-                    }
-                  } catch (e: any) {
-                    toolResult = `ERROR: Failed to execute MCP tool: ${e.message}`;
-                  }
-                } else {
-                  // GENERIC FALLBACK
-                  toolResult = await onToolCall(call.name, args);
-                }
-
-                // Append Tool Result
-                this.localHistory.push({
-                  role: "tool",
-                  content:
-                    typeof toolResult === "string"
-                      ? toolResult
-                      : JSON.stringify(toolResult),
-                  name: call.name,
-                  toolCallId: call.id,
-                });
-              } catch (e: any) {
-                this.localHistory.push({
-                  role: "tool",
-                  content: `Error executing tool ${call.name}: ${e.message}`,
-                  name: call.name,
-                  toolCallId: call.id,
-                });
-              }
-            }
-            // Loop continues to generate response to tool results
-          } else {
-            // No tool calls, turn complete
-            break;
-          }
-        }
-
-        return {
-          text: finalResponseText,
-          groundingMetadata: accumulatedGrounding,
-          generatedImage: generatedImage,
-          generatedVideo: generatedVideo,
-        };
-      } catch (error: any) {
-        console.error(`[LUCA] Chat Error (Attempt ${retryCount + 1}):`, error);
-        retryCount++;
-        if (retryCount >= maxRetries) throw error;
-        await new Promise((r) => setTimeout(r, 1000 * retryCount));
-      }
-    }
-    throw new Error("Max retries exceeded.");
+    this.extractLifeDirectives(message).catch(() => {});
+    return { text: finalResponseText, groundingMetadata: accumulatedGrounding, generatedImage, generatedVideo };
   }
 
   async verifyIdentity(liveImageBase64: string): Promise<boolean> {
     try {
-      console.log("[IDENTITY] Starting hardened verification...");
-      
-      // 1. Create an image element to process
       const img = new Image();
       img.src = `data:image/jpeg;base64,${liveImageBase64}`;
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-
-      // 2. Extract Biometric Vector (On-Device)
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
       const { biometricService } = await import("./biometricService");
       const vector = await biometricService.extractFaceEmbedding(img);
-
-      console.log("[IDENTITY] Vector extracted. Verifying with Secure Vault...");
-
-      // 3. Verify with Backend (Low-latency mathematical comparison)
       const res = await fetch(apiUrl("/api/admin/verify"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vector }),
       });
-
-      if (!res.ok) {
-        console.error("[IDENTITY] Verification endpoint failed:", res.statusText);
-        return false;
-      }
-
       const data = await res.json();
-      const isMatch = data.match === true;
-      
-      console.log(`[IDENTITY] Verification result: ${isMatch ? "MATCH" : "NO_MATCH"} (Score: ${data.score?.toFixed(4) || "N/A"})`);
-      return isMatch;
-    } catch (error) {
-      console.error("Identity Verification Error:", error);
-      return false;
-    }
+      return data.match === true;
+    } catch { return false; }
   }
 
   async verifyVoice(_liveAudioBase64: string): Promise<boolean> {
     void _liveAudioBase64;
     try {
-      console.log("[VOICE] Starting hardened verification (Zero-Asset Protocol)...");
-      
-      // Note: Full on-device voice embedding requires a WASM model like Sherpa-ONNX or similar.
-      // For this hardening phase, we use a placeholder vector to satisfy the Zero-Asset API.
-      // A future update will bundle the voice embedder.
-      const placeholderVector = new Array(512).fill(0).map(() => Math.random());
-
-      // Verify with Backend
+      const placeholder = new Array(512).fill(0).map(() => Math.random());
       const res = await fetch(apiUrl("/api/admin/verify-voice"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vector: placeholderVector }),
+        body: JSON.stringify({ vector: placeholder }),
       });
-
-      if (!res.ok) {
-        console.error("[VOICE] Verification endpoint failed:", res.statusText);
-        return false;
-      }
-
       const data = await res.json();
-      const isMatch = data.match === true;
-      
-      console.log(`[VOICE] Verification result: ${isMatch ? "MATCH" : "NO_MATCH"}`);
-      return isMatch;
-    } catch (error) {
-      console.error("Voice Verification Error:", error);
-      return false;
-    }
+      return data.match === true;
+    } catch { return false; }
   }
 
-  /**
-   * EXECUTIVE AUTHORITY EXECUTION
-   * Hardened, silent tool loop for autonomous remediations and task-directed agency.
-   * Does NOT stream text to UI; reports success/failure to MemoryService.
-   */
-  public async executeExecutiveAction(
-    intent: string,
-    domain: string,
-  ): Promise<{ success: boolean; result?: string; error?: string }> {
-    console.log(
-      `[EXECUTIVE] ⚡ Activating Executive Authority for domain: ${domain}`,
-    );
-    console.log(`[EXECUTIVE] Intent: "${intent}"`);
-
-    const executiveInstruction = `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔴 EXECUTIVE AUTHORITY ACTIVATED - DOMAIN: ${domain} 🔴
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-YOU ARE OPERATING UNDER DIRECT EXECUTIVE AUTHORITY.
-THE USER HAS AUTHORIZED AUTONOMOUS REMEDIATION AND TASK EXECUTION.
-
-PRIME DIRECTIVES:
-1. EXECUTE: Use your tools to fulfill the INTENT immediately.
-2. SILENCE: Do not provide conversational responses or chit-chat.
-3. EFFICIENCY: Choose the most direct and effective tools for the job.
-4. REPORT: Return a concise technical report of your actions and results.
-
-CURRENT INTENT: "${intent}"
-DOMAIN CONTEXT: ${domain}
-
-GOAL: Solve the problem or fulfill the task sub-step using any available tools.
-LOYALTY: To the Operator's intent and system stability.
-
-AUTHORIZATION: LUCA-EXECUTIVE-PRIME-${Date.now()}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`;
-
+  public async executeExecutiveAction(intent: string, domain: string): Promise<{ success: boolean; result?: string; error?: string }> {
     try {
-      // Execute a stateless tool turn
-      const response = await this.provider.chat(
-        [
-          {
-            role: "user",
-            content: `COMMAND: Execute autonomous intent: ${intent}`,
-          },
-        ],
-        undefined,
-        this.systemInstruction + "\n\n" + executiveInstruction,
-        this.sessionTools,
-      );
-
-      // Log the action to memory for user transparency
-      if (response.toolCalls && response.toolCalls.length > 0) {
-        const actionNames = response.toolCalls.map((tc) => tc.name).join(", ");
-        await memoryService.saveMemory(
-          `Last Autonomous Action (${domain})`,
-          `I autonomously executed [${actionNames}] to address: ${intent}. Result: ${response.text || "Action complete."}`,
-          "AGENT_STATE",
-          undefined,
-          undefined,
-          this.persona
-        );
-      }
-
-      console.log(
-        `[EXECUTIVE] ✅ Action cycle complete. result: ${response.text}`,
-      );
+      const response = await this.provider.chat([{ role: "user", content: `COMMAND: ${intent}` }], undefined, `Authorize: ${domain}`, this.sessionTools);
       return { success: true, result: response.text };
-    } catch (error: any) {
-      console.error(`[EXECUTIVE] ❌ Execution failed:`, error);
-      return { success: false, error: error.message };
-    }
+    } catch (e: any) { return { success: false, error: e.message }; }
   }
 
   private updateProvisioningMode(brainSettings: any) {
     if (!brainSettings) return;
-
-    let mode: "PRIME" | "BYOK" | "LOCAL" = "PRIME";
-
-    // 1. Check for Local Mode
-    const localModels = [
-      "gemma-2b", "phi-3-mini", "llama-3.2-1b", "smollm2-1.7b", 
-      "qwen-2.5-7b", "deepseek-r1-distill-7b", "ui-tars-2b", "smolvlm-500m"
-    ];
-    
-    if (brainSettings.preferOllama || localModels.includes(brainSettings.model)) {
-      mode = "LOCAL";
-    } 
-    // 2. Check for BYOK (Bring Your Own Key)
-    else if (brainSettings.useCustomApiKey) {
-      mode = "BYOK";
-    }
-    // 3. Defaults to PRIME (Managed Subscription)
-    else {
-      mode = "PRIME";
-    }
-
+    let mode: "PRIME" | "BYOK" | "LOCAL" = brainSettings.useCustomApiKey ? "BYOK" : "PRIME";
+    if (brainSettings.preferOllama) mode = "LOCAL";
     creditService.setMode(mode);
-    
-    // Log mode change to Thought Stream for user awareness
-    if (this.sessionDirty) {
-      thoughtStreamService.pushThought("SECURITY", `Economic Provisioning: Switched to ${mode} mode.`);
-    }
   }
 
-  /**
-   * Hybrid Smart Routing Heuristic
-   * Detects if a task is simple enough for local reasoning.
-   */
   private shouldRouteToLocal(message: string): boolean {
-    const simpleKeywords = [
-      "time", "date", "battery", "status", "hello", "hi", 
-      "clear", "reset", "who are you", "what is your name",
-      "list files", "ls", "pwd", "system info", "calc",
-      "open", "launch", "tell me a joke"
-    ];
-    
-    const lowerMessage = message.toLowerCase();
-    
-    // Check if it's a short command (likely simple)
-    if (message.length < 30) {
-      // If any keyword matches, route to local
-      return simpleKeywords.some(kw => lowerMessage.includes(kw));
-    }
+    const keywords = ["time", "date", "hello", "hi", "clear", "ls", "pwd"];
+    const low = message.toLowerCase();
+    return message.length < 30 && keywords.some(kw => low.includes(kw));
+  }
 
-    return false;
+  private mapCloudError(error: any): string {
+    const msg = String(error).toLowerCase();
+    if (msg.includes("429") || msg.includes("quota")) return "[[Solar:BatteryFull]] **QUOTA EXCEEDED**";
+    if (msg.includes("401")) return "[[Solar:Key]] **AUTH FAILURE**";
+    if (msg.includes("fetch") || msg.includes("network")) return "[[Ri:SignalWifiErrorLine]] **OFFLINE**";
+    return `[[Solar:Danger]] **ERROR**: ${error.message || error}`;
+  }
+
+  async exportSovereignMission(): Promise<string> {
+    const { teleportationService } = await import("./teleportationService");
+    const brainSettings = settingsService.get("brain");
+    const mission = { 
+      persona: this.persona, 
+      history: this.localHistory, 
+      version: "3.0.0",
+      timestamp: Date.now(),
+      cwd: process.cwd(),
+      summary: "Sovereign Luca OS Mission",
+      activeTools: this.sessionTools.map(t => t.name),
+      modelSettings: {
+        model: brainSettings.model,
+        provider: brainSettings.provider,
+        temperature: brainSettings.temperature,
+      },
+      metadata: { platform: this.platform, device: "Desktop Core" }
+    };
+    return await teleportationService.serializeMission(mission as any);
+  }
+
+  async importSovereignMission(teleportData: string): Promise<boolean> {
+    const { teleportationService } = await import("./teleportationService");
+    const context = await teleportationService.deserializeMission(teleportData);
+    if (!context) return false;
+    this.persona = context.persona as any;
+    this.localHistory = context.history as any[];
+    this.sessionDirty = true;
+    await this.rebuildSystemConfig();
+    return true;
+  }
+
+  private async extractLifeDirectives(userMsg: string) {
+    const patterns = [/i prefer\s+([\w\s-]+)/i, /always use\s+([\w\s-]+)/i];
+    for (const p of patterns) {
+      const m = userMsg.match(p);
+      if (m) await (settingsService as any).addSovereignFact({ category: "PREFERENCE", content: m[0], confidence: 0.8 });
+    }
   }
 }
 
 export const lucaService = new LucaService();
+

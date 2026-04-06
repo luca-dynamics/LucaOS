@@ -1,23 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  QrCode,
-  X,
-  Wifi,
-  ShieldCheck,
-  Smartphone,
-  Radio,
-  Lock,
-  Scan,
-  CheckCircle2,
-  Cpu,
-  Network,
-  Fingerprint,
-  ArrowRight,
-  Bug,
-  Skull,
-  AlertTriangle,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface Props {
@@ -196,7 +178,7 @@ const RemoteAccessModal: React.FC<Props> = ({
         };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 glass-blur animate-in fade-in duration-300">
       <div
         className={`relative w-[90%] max-w-md bg-[#050505] border ${
           mode === "EXPLOIT" ? "border-red-900" : "border-slate-800"
@@ -223,9 +205,9 @@ const RemoteAccessModal: React.FC<Props> = ({
               }`}
             >
               {mode === "STANDARD" ? (
-                <Wifi className={theme.text} size={20} />
+                <Icon name="Wifi" className={theme.text} size={20} />
               ) : (
-                <Skull className={theme.text} size={20} />
+                <Icon name="Skull" className={theme.text} size={20} />
               )}
             </div>
             <div>
@@ -252,7 +234,7 @@ const RemoteAccessModal: React.FC<Props> = ({
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors"
           >
-            <X size={20} />
+            <Icon name="X" size={20} />
           </button>
         </div>
 
@@ -266,9 +248,9 @@ const RemoteAccessModal: React.FC<Props> = ({
             title="Toggle Offensive Capability"
           >
             {mode === "STANDARD" ? (
-              <ShieldCheck size={10} />
+              <Icon name="ShieldCheck" size={10} />
             ) : (
-              <Bug size={10} />
+              <Icon name="Bug" size={10} />
             )}
             {mode === "STANDARD" ? "SECURE_MODE" : "EXPLOIT_MODE"}
           </button>
@@ -293,7 +275,7 @@ const RemoteAccessModal: React.FC<Props> = ({
                   style={{ borderTopColor: theme.hex }}
                 ></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Cpu size={48} className="text-slate-700" />
+                  <Icon name="Cpu" size={48} className="text-slate-700" />
                 </div>
               </div>
               <div className={`${theme.text} font-mono text-sm animate-pulse`}>
@@ -343,7 +325,8 @@ const RemoteAccessModal: React.FC<Props> = ({
                       className="w-40 h-40 object-contain"
                     />
                   ) : (
-                    <QrCode
+                    <Icon
+                      name="QrCode"
                       size={160}
                       className={
                         mode === "EXPLOIT" ? "text-red-900" : "text-black"
@@ -393,7 +376,7 @@ const RemoteAccessModal: React.FC<Props> = ({
                   className={`absolute inset-0 rounded-full border opacity-50 animate-ping delay-150`}
                   style={{ borderColor: theme.hex }}
                 ></div>
-                <Smartphone size={64} className="text-white relative z-10" />
+                <Icon name="Smartphone" size={64} className="text-white relative z-10" />
                 <div
                   className={`absolute -bottom-8 text-xs font-mono ${theme.text}`}
                 >
@@ -414,9 +397,9 @@ const RemoteAccessModal: React.FC<Props> = ({
                 }`}
               >
                 {mode === "STANDARD" ? (
-                  <CheckCircle2 size={64} className="text-green-500" />
+                  <Icon name="CheckCircle2" size={64} className="text-green-500" />
                 ) : (
-                  <AlertTriangle size={64} className="text-red-500" />
+                  <Icon name="AlertTriangle" size={64} className="text-red-500" />
                 )}
               </div>
               <div
@@ -463,13 +446,13 @@ const RemoteAccessModal: React.FC<Props> = ({
           }`}
         >
           <div className="flex items-center gap-2">
-            <ShieldCheck size={10} className={theme.text} />
+            <Icon name="ShieldCheck" size={10} className={theme.text} />
             {mode === "STANDARD"
               ? "ENCRYPTION: AES-256-GCM"
               : "OBFUSCATION: POLYMORPHIC"}
           </div>
           <div className="flex items-center gap-2">
-            <Network size={10} />
+            <Icon name="Network" size={10} />
             LATENCY: 1ms
           </div>
         </div>

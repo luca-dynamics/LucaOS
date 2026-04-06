@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Activity,
-  Cast,
-  Wifi,
-  Zap,
-  Eye,
-  Monitor,
-  Brain,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import io, { Socket } from "socket.io-client";
 import { WS_PORT } from "../config/api";
 import { OfflineModelManager } from "./llm/OfflineModelManager";
@@ -112,7 +103,8 @@ const MobileCastReceiver = () => {
         style={{ borderColor: `${theme.hex}50` }} // 30% opacity
       >
         <div className="flex items-center gap-2">
-          <Wifi
+          <Icon
+            name="Wifi"
             size={16}
             style={{ color: status === "CONNECTED" ? theme.hex : "#ef4444" }}
             className="animate-pulse"
@@ -136,10 +128,10 @@ const MobileCastReceiver = () => {
             style={{ backgroundColor: theme.hex }}
           />
           <div
-            className="relative border-2 p-6 rounded-full bg-black/50 backdrop-blur-sm"
+            className="relative border-2 p-6 rounded-full bg-black/50 glass-blur"
             style={{ borderColor: `${theme.hex}50` }}
           >
-            <Cast size={48} style={{ color: theme.hex }} />
+            <Icon name="Cast" size={48} style={{ color: theme.hex }} />
           </div>
         </div>
         <h1
@@ -168,7 +160,7 @@ const MobileCastReceiver = () => {
             boxShadow: `0 0 15px ${theme.hex}10`,
           }}
         >
-          <Activity size={24} style={{ color: theme.hex }} />
+          <Icon name="Activity" size={24} style={{ color: theme.hex }} />
           <span
             className="text-[10px] font-bold tracking-wider"
             style={{ color: theme.hex }}
@@ -181,7 +173,7 @@ const MobileCastReceiver = () => {
           onClick={() => sendCommand("switch_mode", { mode: "CINEMA" })}
           className="p-4 bg-red-900/10 border border-red-500/30 rounded-xl hover:bg-red-500/20 active:scale-95 flex flex-col items-center gap-2 transition-all shadow-[0_0_15px_rgba(239,68,68,0.1)]"
         >
-          <Monitor size={24} className="text-red-400" />
+          <Icon name="Monitor" size={24} className="text-red-400" />
           <span className="text-[10px] font-bold text-red-200 tracking-wider">
             CINEMA PROTOCOL
           </span>
@@ -197,7 +189,7 @@ const MobileCastReceiver = () => {
             boxShadow: `0 0 15px ${theme.hex}20`,
           }}
         >
-          <Eye size={24} style={{ color: theme.hex }} />
+          <Icon name="Eye" size={24} style={{ color: theme.hex }} />
           <span
             className="text-[10px] font-bold tracking-wider"
             style={{ color: theme.hex }}
@@ -212,7 +204,7 @@ const MobileCastReceiver = () => {
           }
           className="p-4 bg-orange-900/10 border border-orange-500/30 rounded-xl hover:bg-orange-500/20 active:scale-95 flex flex-col items-center gap-2 transition-all shadow-[0_0_15px_rgba(249,115,22,0.1)]"
         >
-          <Zap size={24} className="text-orange-400" />
+          <Icon name="Zap" size={24} className="text-orange-400" />
           <span className="text-[10px] font-bold text-orange-200 tracking-wider">
             SYSTEM HALT SYSTEM HALT
           </span>
@@ -225,7 +217,7 @@ const MobileCastReceiver = () => {
             borderColor: `${theme.hex}40`,
           }}
         >
-          <Brain size={24} style={{ color: theme.hex }} />
+          <Icon name="Brain" size={24} style={{ color: theme.hex }} />
           <span
             className="text-[10px] font-bold tracking-wider"
             style={{ color: theme.hex }}
@@ -236,7 +228,7 @@ const MobileCastReceiver = () => {
       </div>
 
       {/* Status Footer */}
-      <div className="bg-black/50 backdrop-blur-md border border-white/10 p-4 rounded-lg mt-auto z-10">
+      <div className="bg-black/50 glass-blur border border-white/10 p-4 rounded-lg mt-auto z-10">
         <div className="flex justify-between items-center mb-2">
           <span className="text-[10px] text-slate-500 tracking-widest">
             CURRENT OBJECTIVE

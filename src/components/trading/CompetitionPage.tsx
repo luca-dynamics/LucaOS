@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Trophy,
-  TrendingUp,
-  Users,
-  Activity,
-  RefreshCw,
-  Flame,
-  Crown,
-  BarChart2,
-  Swords,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { ComparisonChart } from "./ComparisonChart";
 import { TraderConfigViewModal } from "./TraderConfigViewModal";
 import { tradingService } from "../../services/tradingService";
@@ -39,7 +28,7 @@ export default function CompetitionPage({
     "7d"
   );
 
-  const currentThemeHex = theme?.hex || "#eab308";
+  const primaryColor = theme?.hex || "#0ea5e9";
 
   useEffect(() => {
     refreshLeaderboard();
@@ -66,7 +55,7 @@ export default function CompetitionPage({
   const getTraderColor = (rank: number) => {
     if (rank === 1) return "#F0B90B";
     if (rank === 2) return "#0ECB81";
-    if (rank === 3) return "#3b82f6";
+    if (rank === 3) return "#0ea5e9";
     return "#848E9C";
   };
 
@@ -78,12 +67,12 @@ export default function CompetitionPage({
   return (
     <div className="h-full flex flex-col font-mono text-slate-200 animate-in fade-in duration-500 overflow-hidden bg-black/20">
       {/* Sub-Header Area */}
-      <div className={`p-4 sm:p-5 flex-shrink-0 border-b border-white/5 bg-white/5 backdrop-blur-md relative overflow-hidden`}>
+      <div className={`p-4 sm:p-5 flex-shrink-0 border-b border-white/5 bg-white/5 glass-blur relative overflow-hidden`}>
         {/* Glow effect */}
         <div 
           className="absolute -top-24 -left-24 w-64 h-64 opacity-20 pointer-events-none"
           style={{ 
-            background: `radial-gradient(circle, ${currentThemeHex} 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${primaryColor} 0%, transparent 70%)`,
             filter: 'blur(40px)'
           }}
         />
@@ -93,13 +82,14 @@ export default function CompetitionPage({
             <div
               className="p-1.5 rounded-xl border liquid-border"
               style={{
-                background: `linear-gradient(to br, ${currentThemeHex}33, ${currentThemeHex}0d)`,
-                borderColor: `${currentThemeHex}33`,
+                background: `linear-gradient(to br, ${primaryColor}33, ${primaryColor}0d)`,
+                borderColor: `${primaryColor}33`,
               }}
             >
-              <Trophy
+              <Icon
+                name="Trophy"
                 size={20}
-                style={{ color: currentThemeHex }}
+                style={{ color: primaryColor }}
               />
             </div>
             <div>
@@ -118,16 +108,16 @@ export default function CompetitionPage({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className={`flex bg-black/40 border border-white/5 p-0.5 rounded-lg backdrop-blur-sm hidden sm:flex`}>
+            <div className={`flex bg-black/40 border border-white/5 p-0.5 rounded-lg glass-blur hidden sm:flex`}>
               {(["24h", "7d", "30d", "all"] as const).map((tf) => (
                 <button
                   key={tf}
                   onClick={() => setTimeframe(tf)}
                   className={`px-3 py-1 rounded text-[9px] font-bold uppercase transition-all`}
                   style={timeframe === tf ? {
-                    backgroundColor: `${currentThemeHex}33`,
-                    color: currentThemeHex,
-                    boxShadow: `0 0 10px ${currentThemeHex}1a`
+                    backgroundColor: `${primaryColor}33`,
+                    color: primaryColor,
+                    boxShadow: `0 0 10px ${primaryColor}1a`
                   } : {
                     color: '#64748b'
                   }}
@@ -142,7 +132,8 @@ export default function CompetitionPage({
               disabled={isLoading}
               className={`p-2 rounded-lg bg-black/40 border border-white/5 hover:bg-white/5 transition-colors text-slate-400 hover:text-white`}
             >
-              <RefreshCw
+              <Icon
+                name="RefreshCw"
                 size={14}
                 className={isLoading ? "animate-spin" : ""}
               />
@@ -153,7 +144,7 @@ export default function CompetitionPage({
                 onClick={onClose}
                 className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-white group"
               >
-                <LucideIcons.X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                <Icon name="X" size={18} className="group-hover:rotate-90 transition-transform duration-300" />
               </button>
             )}
           </div>
@@ -162,21 +153,21 @@ export default function CompetitionPage({
         {/* Mini Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
           {[
-            { label: "Agents", value: liveStats.totalTraders, icon: Users, color: "text-indigo-400" },
-            { label: "Volume", value: liveStats.totalVolume, icon: BarChart2, color: "text-emerald-400" },
-            { label: "Avg ROI", value: `${(liveStats.avgROI || 0).toFixed(1)}%`, icon: TrendingUp, color: "", themeColor: true },
-            { label: "Alpha", value: liveStats.topPerformer, icon: Flame, color: "text-amber-400" },
+            { label: "Agents", value: liveStats.totalTraders, icon: "Users", color: "", themeColor: true },
+            { label: "Volume", value: liveStats.totalVolume, icon: "BarChart2", color: "text-emerald-400" },
+            { label: "Avg ROI", value: `${(liveStats.avgROI || 0).toFixed(1)}%`, icon: "TrendingUp", color: "", themeColor: true },
+            { label: "Alpha", value: liveStats.topPerformer, icon: "Flame", color: "text-amber-400" },
           ].map((stat, i) => (
             <div key={i} className={`glass-card-premium p-2 flex items-center justify-between rounded-lg border border-white/5 relative overflow-hidden group`}>
                <div 
                 className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
-                style={{ background: `radial-gradient(circle at center, ${currentThemeHex}, transparent)` }}
+                style={{ background: `radial-gradient(circle at center, ${primaryColor}, transparent)` }}
               />
               <div className="relative z-10">
                 <div className="text-[8px] font-bold text-slate-500 uppercase mb-0.5 tracking-tighter">{stat.label}</div>
-                <div className={`text-sm font-bold ${stat.color}`} style={stat.themeColor ? { color: currentThemeHex } : {}}>{stat.value}</div>
+                <div className={`text-sm font-bold ${stat.color}`} style={stat.themeColor ? { color: primaryColor } : {}}>{stat.value}</div>
               </div>
-              <stat.icon size={14} className="opacity-40 group-hover:scale-110 transition-transform duration-500" style={stat.themeColor ? { color: currentThemeHex } : {}} />
+              <Icon name={stat.icon} size={14} className="opacity-40 group-hover:scale-110 transition-transform duration-500" style={stat.themeColor ? { color: primaryColor } : {}} />
             </div>
           ))}
         </div>
@@ -189,20 +180,20 @@ export default function CompetitionPage({
           <div className={`glass-card-premium p-4 rounded-xl flex flex-col h-[300px] border border-white/5 relative overflow-hidden`}>
             <div className="flex items-center justify-between mb-3 relative z-10">
               <div className="flex items-center gap-2">
-                <Activity size={14} className="text-white/40" />
+                <Icon name="Activity" size={14} className="text-white/40" />
                 <h2 className="text-xs font-bold text-white uppercase tracking-widest">Growth Matrix</h2>
               </div>
               <span className="text-[9px] text-emerald-500 font-bold animate-pulse">LIVE STREAM</span>
             </div>
-            <div className="flex-1 min-h-0 relative z-10">
-              <ComparisonChart traders={leaderboard} />
-            </div>
+            <div className="flex-1 w-full bg-[#0b0e14]/40 rounded-2xl border border-white/5 p-4 relative group">
+           <ComparisonChart traders={leaderboard} theme={theme} />
+        </div>
           </div>
 
           {/* Leaderboard List */}
           <div className={`glass-card-premium p-0 rounded-xl overflow-hidden flex flex-col h-[300px] border border-white/5`}>
             <div className="p-4 border-b border-white/5 flex items-center gap-2 bg-white/5">
-              <Crown size={14} className="text-amber-400" />
+              <Icon name="Crown" size={14} className="text-amber-400" />
               <h2 className="text-xs font-bold text-white uppercase tracking-widest">Elite Rosters</h2>
             </div>
 
@@ -259,7 +250,7 @@ export default function CompetitionPage({
         <div className="mt-4 glass-card-premium border border-white/5 rounded-xl overflow-hidden p-0.5">
           <div className="bg-[#0a0a0a]/80 p-3 flex flex-col sm:flex-row items-center justify-between border-b border-white/5 gap-3">
              <div className="flex items-center gap-2">
-               <Flame size={14} className="text-amber-500 animate-pulse" />
+               <Icon name="Flame" size={14} className="text-amber-500 animate-pulse" />
                <h2 className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">Global_Alpha_Nexus</h2>
              </div>
              <div className="flex items-center gap-4 text-[9px] font-mono text-white/40 uppercase tracking-tighter overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
@@ -277,7 +268,7 @@ export default function CompetitionPage({
         {/* Head-to-Head */}
         <div className={`mt-4 p-4 rounded-xl glass-card-premium border border-white/5 relative overflow-hidden`}>
            <div className="flex items-center gap-2 mb-4">
-             <Swords size={16} className="text-rose-500" />
+             <Icon name="Swords" size={16} className="text-rose-500" />
              <h2 className="text-xs font-bold text-white uppercase tracking-widest">Head-to-Head Battle</h2>
            </div>
            
@@ -288,21 +279,21 @@ export default function CompetitionPage({
                 const gap = (trader.total_pnl_pct - (opponent?.total_pnl_pct || 0)).toFixed(2);
 
                 return (
-                  <div 
-                    key={trader.trader_id} 
-                    className={`p-4 rounded-xl border transition-all hover:scale-[1.01]`}
-                    style={isFirst ? {
-                      borderColor: `${currentThemeHex}4d`,
-                      backgroundColor: `${currentThemeHex}1a`,
-                    } : {
-                      borderColor: 'rgba(255,255,255,0.05)',
-                      backgroundColor: 'rgba(255,255,255,0.05)',
-                    }}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-2xl filter drop-shadow-md">{trader.avatar}</span>
-                      <div>
-                        <div className={`text-sm font-bold`} style={isFirst ? { color: currentThemeHex } : { color: '#e2e8f0' }}>{trader.trader_name}</div>
+                    <div 
+                      key={trader.trader_id} 
+                      className={`p-4 rounded-xl border transition-all hover:scale-[1.01]`}
+                      style={isFirst ? {
+                        borderColor: `${primaryColor}4d`,
+                        backgroundColor: `${primaryColor}1a`,
+                      } : {
+                        borderColor: 'rgba(255,255,255,0.05)',
+                        backgroundColor: 'rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl filter drop-shadow-md">{trader.avatar}</span>
+                        <div>
+                          <div className={`text-sm font-bold`} style={isFirst ? { color: primaryColor } : { color: '#e2e8f0' }}>{trader.trader_name}</div>
                         <div className="text-[9px] text-slate-500 uppercase font-bold">{trader.exchange}</div>
                       </div>
                     </div>

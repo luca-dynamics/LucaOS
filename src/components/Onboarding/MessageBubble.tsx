@@ -10,9 +10,8 @@ interface MessageBubbleProps {
  * Message bubble component for conversation
  * Displays messages from Luca or User with glassmorphic styling
  */
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, theme }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isLuca = message.role === "luca";
-  const isLight = theme?.hex === "#111827" || theme?.themeName?.toLowerCase() === "lucagent";
 
   // Format timestamp
   const getTimeAgo = (date: Date) => {
@@ -34,51 +33,44 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, theme }) => {
       <div
         className={`
           flex flex-col
-          backdrop-blur-xl
-          ${
-            isLuca
-              ? isLight
-                ? "bg-black/10 border border-black/20"
-                : "bg-white/10 border border-white/20"
-              : isLight
-                ? "bg-blue-600/10 border border-blue-500/20"
-                : "bg-blue-500/20 border border-blue-400/30"
-          }
+          glass-blur
+          border
         `}
         style={{
-          maxWidth: isLuca ? "90%" : "90%",
+          maxWidth: "90%",
           borderRadius: "2vmin",
           padding: "2vmin",
-          gap: "1vmin"
+          gap: "1vmin",
+          backgroundColor: "var(--app-bg-tint)",
+          borderColor: "var(--app-border-main)",
         }}
       >
         {/* Role label */}
         <div
-          className={`font-bold uppercase tracking-wider ${
-            isLuca
-              ? isLight ? "text-black/60" : "text-white/80"
-              : isLight ? "text-blue-700/80" : "text-blue-300/80"
-          }`}
-          style={{ fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)" }}
+          className="font-bold uppercase tracking-wider opacity-80"
+          style={{ 
+            fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)",
+            color: isLuca ? "var(--app-text-muted)" : "var(--app-text-main)"
+          }}
         >
           {isLuca ? "Luca" : "You"}
         </div>
-
+ 
         {/* Message content */}
         <div
-          className={`leading-relaxed whitespace-pre-wrap ${
-            isLight ? "text-gray-900" : "text-white"
-          }`}
-          style={{ fontSize: "clamp(0.7rem, 2vmin, 0.9rem)" }}
+          className="leading-relaxed whitespace-pre-wrap"
+          style={{ 
+            fontSize: "clamp(0.7rem, 2vmin, 0.9rem)",
+            color: "var(--app-text-main)"
+          }}
         >
           {message.content}
         </div>
-
+ 
         {/* Timestamp */}
         <div
-          className={`text-[10px] mt-2 ${
-            isLight ? "text-black/60" : "text-white/60"
-          }`}
+          className="text-[10px] mt-2 opacity-60"
+          style={{ color: "var(--app-text-muted)" }}
         >
           {getTimeAgo(message.timestamp)}
         </div>

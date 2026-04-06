@@ -1,20 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import Editor, { useMonaco } from "@monaco-editor/react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  FolderOpen,
-  FileCode,
-  ChevronDown,
-  Save,
-  Play,
-  Zap,
-  RefreshCw,
-  Code2,
-  Terminal,
-  Trash2,
-  Minimize2,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { lucaService } from "../services/lucaService";
 import { soundService } from "../services/soundService";
 import { apiUrl } from "../config/api";
@@ -270,9 +256,9 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 font-mono">
+    <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 font-mono">
       <div
-        className="relative w-full h-full sm:h-[85vh] sm:w-[90%] max-w-7xl bg-black/40 backdrop-blur-xl text-slate-300 flex flex-col sm:rounded-lg sm:border sm:border-slate-800 overflow-hidden shadow-2xl transition-all"
+        className="relative w-full h-full sm:h-[85vh] sm:w-[90%] max-w-7xl bg-black/40 glass-blur text-slate-300 flex flex-col sm:rounded-lg sm:border sm:border-slate-800 overflow-hidden shadow-2xl transition-all"
         style={{
           borderColor: `${themeBorder}40`,
           boxShadow: `0 0 80px -20px ${themeHex}40`,
@@ -303,7 +289,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
             <div
               className={`p-2 ${themeBg} rounded border ${themeBorder}/50 ${themePrimary}`}
             >
-              <Code2 size={24} />
+              <Icon name="Programming" size={24} variant="BoldDuotone" />
             </div>
             <div>
               <h2 className="font-display text-xl font-bold text-white tracking-widest">
@@ -326,9 +312,9 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                 title="Run Code (Auto-Saves)"
               >
                 {isRunning ? (
-                  <RefreshCw size={14} className="animate-spin" />
+                  <Icon name="Restart" size={14} className="animate-spin" variant="BoldDuotone" />
                 ) : (
-                  <Play size={14} />
+                  <Icon name="Play" size={14} variant="BoldDuotone" />
                 )}
                 RUN
               </button>
@@ -338,14 +324,14 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
               className="p-2 hover:text-green-400 hover:bg-green-900/20 rounded transition-all"
               title="Save (Ctrl+S)"
             >
-              <Save size={18} className={saving ? "animate-bounce" : ""} />
+              <Icon name="Disk" size={18} className={saving ? "animate-bounce" : ""} variant="BoldDuotone" />
             </button>
             <div className="w-px h-4 bg-slate-800 mx-2"></div>
             <button
               onClick={onClose}
               className="p-2 hover:text-red-400 hover:bg-red-900/20 rounded transition-all"
             >
-              <X size={18} />
+              <Icon name="Close" size={18} variant="BoldDuotone" />
             </button>
           </div>
         </div>
@@ -362,7 +348,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                 onClick={() => setCurrentPath(initialCwd)}
                 title="Reset Root"
               >
-                <RefreshCw size={12} />
+                <Icon name="Restart" size={12} variant="BoldDuotone" />
               </button>
             </div>
 
@@ -380,7 +366,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                     )
                   }
                 >
-                  <ChevronDown size={12} /> ..
+                  <Icon name="AltArrowDown" size={12} className="rotate-180" variant="BoldDuotone" /> ..
                 </div>
               )}
               {files.map((file, i) => (
@@ -394,9 +380,9 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                   onClick={() => handleFileClick(file)}
                 >
                   {file.isDirectory ? (
-                    <FolderOpen size={14} className="text-yellow-600" />
+                    <Icon name="Folder" size={14} className="text-yellow-600" variant="BoldDuotone" />
                   ) : (
-                    <FileCode size={14} className={themePrimary} />
+                    <Icon name="Code" size={14} className={themePrimary} variant="BoldDuotone" />
                   )}
                   <span className="truncate">{file.name}</span>
                 </button>
@@ -451,10 +437,10 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                         style={{ color: themeHex }}
                       >
                         <div className="flex items-center gap-2">
-                          <Zap size={14} className="fill-current" /> LUCA EDIT
+                          <Icon name="Zap" size={14} className="fill-current" variant="BoldDuotone" /> LUCA EDIT
                         </div>
                         <button onClick={() => setShowAIInput(false)}>
-                          <X size={14} />
+                          <Icon name="Close" size={14} variant="BoldDuotone" />
                         </button>
                       </div>
                       <textarea
@@ -482,9 +468,9 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                           style={{ backgroundColor: themeHex }}
                         >
                           {aiLoading ? (
-                            <RefreshCw size={12} className="animate-spin" />
+                            <Icon name="Restart" size={12} className="animate-spin" variant="BoldDuotone" />
                           ) : (
-                            <Play size={12} className="fill-current" />
+                            <Icon name="Play" size={12} className="fill-current" variant="BoldDuotone" />
                           )}
                           GENERATE
                         </button>
@@ -494,7 +480,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                 </>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-slate-600">
-                  <Code2 size={64} className="mb-4 opacity-20" />
+                  <Icon name="Programming" size={64} className="mb-4 opacity-20" variant="BoldDuotone" />
                   <div className="text-sm">
                     SELECT A FILE TO INITIALIZE LUCA INTERFACE
                   </div>
@@ -507,7 +493,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
               <div className="h-1/3 bg-[#0c0c0c] border-t border-slate-700 flex flex-col animate-in slide-in-from-bottom-10 duration-300">
                 <div className="flex items-center justify-between px-4 py-2 bg-[#111] border-b border-slate-800 text-xs font-mono">
                   <div className="flex items-center gap-2 text-slate-300">
-                    <Terminal size={12} />
+                    <Icon name="Programming" size={12} variant="BoldDuotone" />
                     <span>TERMINAL OUTPUT</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -516,14 +502,14 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                       className="hover:text-white text-slate-500"
                       title="Clear"
                     >
-                      <Trash2 size={12} />
+                      <Icon name="Trash" size={12} variant="BoldDuotone" />
                     </button>
                     <button
                       onClick={() => setShowTerminal(false)}
                       className="hover:text-white text-slate-500"
                       title="Close"
                     >
-                      <Minimize2 size={12} />
+                      <Icon name="Minimize" size={12} variant="BoldDuotone" />
                     </button>
                   </div>
                 </div>
@@ -566,14 +552,14 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
               className="flex items-center gap-2 cursor-pointer hover:text-white"
               onClick={() => setShowTerminal(!showTerminal)}
             >
-              <Terminal size={10} />
+              <Icon name="Programming" size={10} variant="BoldDuotone" />
               <span>TERMINAL: {showTerminal ? "OPEN" : "CLOSED"}</span>
             </div>
             <div
               className="w-px h-3 mx-2 opacity-30"
               style={{ backgroundColor: themeHex }}
             ></div>
-            <Zap size={10} />
+            <Icon name="Zap" size={10} variant="BoldDuotone" />
             <span>AGENT_MODE: {showAIInput ? "ACTIVE" : "STANDBY"}</span>
           </div>
         </div>

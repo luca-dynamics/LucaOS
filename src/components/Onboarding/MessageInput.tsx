@@ -1,8 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Send,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { ConversationMode } from "./ModeSelect";
 import VoiceHud from "../VoiceHud";
 import { liveService } from "../../services/liveService";
@@ -15,7 +12,6 @@ interface MessageInputProps {
   onSend: (message: string) => void;
   disabled: boolean;
   mode: ConversationMode;
-  theme?: { primary: string; hex: string };
   // Note: lucaMessage/onLucaMessageSpoken removed - Gemini speaks natively in voice-to-voice mode
   onModeChange?: () => void; // Callback to return to mode selection
   onActivity?: () => void; // Callback for silence reset
@@ -24,16 +20,8 @@ interface MessageInputProps {
   onUserResponse?: (text: string) => void; // NEW: Callback when user speaks (for profile extraction)
   userName?: string; // NEW: User's name for personalized greeting
   useLocalVoice?: boolean; // NEW: Use hybrid local voice service instead of cloud liveService
+  targetBrainModel?: string | null;
 }
-
-// Helper to convert hex to rgba (handles 6 or 8 character hex)
-const hexToRgba = (hex: string, alpha: number): string => {
-  const cleanHex = hex.replace("#", "");
-  const r = parseInt(cleanHex.substring(0, 2), 16);
-  const g = parseInt(cleanHex.substring(2, 4), 16);
-  const b = parseInt(cleanHex.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
 
 /**
  * Message input component for text/voice conversation
@@ -44,7 +32,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onSend,
   disabled,
   mode,
-  theme = { primary: "cyan", hex: "#06b6d4" },
   onModeChange,
   onActivity,
   onVoiceComplete,
@@ -52,6 +39,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onUserResponse,
   userName = "Operator", // Default if not provided
   useLocalVoice = false, // Default to cloud voice (liveService)
+  targetBrainModel,
 }) => {
   // Voice state using liveService or hybridVoiceService
   const [amplitude, setAmplitude] = useState(0);
@@ -103,6 +91,44 @@ const MessageInput: React.FC<MessageInputProps> = ({
       isCompletingRef.current = false; // Reset on new connection
       accumulatedTranscriptRef.current = ""; // Reset accumulated transcript
 
+      // --- ONBOARDING VOICE INSTRUCTION (UNIFIED) ---
+      const instruction = `You are LUCA, a sovereign AI operating system meeting your operator for the first time in a VOICE conversation.
+Your tone is professional, tactile, and warmly efficient. 
+
+**CRITICAL FORMAT RULE:**
+- Output ONLY the words you will speak aloud.
+- Do NOT include any asterisks (**), markdown, or formatting.
+- Do NOT include any thinking, reasoning, or stage directions.
+- Just speak naturally as if talking to a person.
+
+**YOUR GOAL:** Get to know your operator through natural conversation and calibrate their profile.
+
+**STEP 1: GATHER INFORMATION (one at a time):**
+1. Preferred name - What preferred name should I use for our interactions?
+2. Communication style - Direct/casual or formal?
+3. Role - What is your primary focus or role?
+4. Needs - What are your immediate operational requirements?
+5. AI preferences - Should I be proactive or wait for specific commands?
+
+**RULES for Step 1:**
+- Ask ONE question at a time.
+- Keep responses SHORT (2-3 sentences).
+- Acknowledge answers warmly and professionally, then ask the next question.
+
+**STEP 2: SUMMARY & CONFIRMATION**
+Once you have gathered all 5 points, provide a professional summary:
+"Operator, let me confirm the calibration: You are [Name], a [Occupation] who prefers a [Style] interface. You're looking for help with [Needs] and you'd like me to be [Proactive/Reactive]. Is this profile accurate?"
+- You MUST wait for them to confirm.
+
+**STEP 3: EXIT**
+- If they confirm, you MUST call the completeOnboarding() tool immediately.
+- If they want to change something, re-calibrate that specific item.
+
+**START:** Say "Hi! I'm LUCA, your autonomous AI partner. It's a pleasure to meet you, ${userName}. What preferred name should I use for our interactions?"
+
+**SKIP:** If they say "skip" or "let's start", call the completeOnboarding() tool immediately.
+`;
+
       // --- LOCAL VOICE MODE (Silero VAD) ---
       if (useLocalVoice) {
         console.log(
@@ -112,12 +138,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
         // Connect with liveService-compatible API
         hybridVoiceService.connect({
           sttModel: "whisper-tiny",
-          llmModel: "llama-3.2-1b",
+          llmModel: targetBrainModel || "llama-3.2-1b",
           ttsVoice: "amy",
-          systemPrompt: `You are Luca, an AI assistant meeting ${userName} for the first time.
-Keep responses SHORT (2-3 sentences). Ask ONE question at a time.
-Get to know: their name, communication style, role, needs, and AI preferences.
-When you have gathered enough info, summarize and say "ONBOARDING_COMPLETE".`,
+          systemPrompt: instruction,
 
           onAudioData: (amp) => setAmplitude(amp),
           onVadChange: (active) => {
@@ -177,14 +200,9 @@ When you have gathered enough info, summarize and say "ONBOARDING_COMPLETE".`,
           onConnectionChange: (connected) => {
             isConnectedRef.current = connected;
             if (connected) {
-              // Kickstart with greeting
-              setTimeout(() => {
-                if (isConnectedRef.current) {
-                  hybridVoiceService.sendText(
-                    "Hi! I'm ready to begin the onboarding.",
-                  );
-                }
-              }, 1000);
+              // Initial greeting for voice mode - Unified LUCA identity
+              const greeting = `Identity Link Established. I am LUCA, your autonomous AI partner. It's a pleasure to meet you, ${userName}. What preferred name should I use for our interactions?`;
+              hybridVoiceService.sendText(greeting);
             }
           },
         });
@@ -199,48 +217,10 @@ When you have gathered enough info, summarize and say "ONBOARDING_COMPLETE".`,
       // --- CLOUD VOICE MODE (liveService) ---
       console.log("[Onboarding Voice] Using CLOUD mode (Gemini Live API)");
 
-      // Onboarding-specific voice conversation instruction
-      const ONBOARDING_VOICE_INSTRUCTION = `You are Luca, an AI assistant meeting your new operator for the first time in a VOICE conversation.
-
-**CRITICAL FORMAT RULE - READ THIS FIRST:**
-- Output ONLY the words you will speak aloud
-- Do NOT include any asterisks (**), markdown, or formatting
-- Do NOT include any thinking, reasoning, or stage directions
-- Do NOT say things like "Begin Interacting" or describe what you're doing
-- Just speak naturally as if talking to a person
-
-**YOUR GOAL:** Get to know them through natural conversation and summarize their profile.
-
-**STEP 1: GATHER INFORMATION (one at a time):**
-1. Preferred name - What should I call you?
-2. Communication style - Direct/casual or formal?
-3. Role - What do you do?
-4. Needs - What do you need help with?
-5. AI preferences - Proactive or wait for commands?
-
-**RULES for Step 1:**
-- Ask ONE question at a time
-- Keep responses SHORT (2-3 sentences)
-- Acknowledge answers warmly, then ask next question
-
-**STEP 2: SUMMARY & CONFIRMATION**
-Once you have gathered all 5 points, provide a warm summary of their profile.
-"So, to recap: You are [Name], a [Occupation] who prefers a [Style] assistant. You're looking for help with [Needs] and you'd like me to be [Proactive/Reactive]. Does that sound correct?"
-- You MUST wait for them to confirm.
-
-**STEP 3: EXIT**
-- If they confirm (e.g., "Yes", "Exactly", "That's it"), you MUST call the completeOnboarding() tool immediately.
-- If they want to change something, go back to Step 1 for that specific item.
-
-**START:** Say "Hi! I'm Luca, your autonomous Ai OS. What preferred name can i call you?"
-
-**SKIP:** If they say "skip" or "let's start", call the completeOnboarding() tool immediately.
-`;
-
       liveService.connect({
         persona: "ASSISTANT",
         // NO suppressOutput - we want Gemini to speak!
-        systemInstruction: ONBOARDING_VOICE_INSTRUCTION,
+        systemInstruction: instruction,
         onToolCall: async (name) => {
           if (name === "completeOnboarding") {
             console.log(
@@ -284,13 +264,18 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
             processedText = processedText.replace(/^["']|["']$/g, "").trim();
 
             // LOG incoming for debug
-            console.log("[Onboarding Voice] Incoming Model Text:", text, "-> Processed:", processedText);
+            console.log(
+              "[Onboarding Voice] Incoming Model Text:",
+              text,
+              "-> Processed:",
+              processedText,
+            );
 
             // Skip ONLY IF truly empty (don't return early if we have something even if short)
             if (!processedText && text.trim()) {
               processedText = text.trim(); // Fallback to raw if logic stripped everything
             }
-            
+
             if (!processedText) return;
           }
 
@@ -428,16 +413,15 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
           isSpeaking={transcriptSource === "model"}
           isVadActive={vadActive}
           paused={false}
-          persona={(theme?.primary as any) || "ASSISTANT"}
+          persona={"DEFAULT"}
           theme={{
-            primary: theme.primary,
-            border: hexToRgba(theme.hex, 0.25),
-            bg: hexToRgba(theme.hex, 0.08),
-            glow: hexToRgba(theme.hex, 0.15),
-            coreColor: theme.hex,
-            hex: theme.hex,
-            themeName: theme.primary, // Required by VoiceHud
-            // Onboarding override: Make HUD background transparent to show OnboardingFlow background
+            primary: "var(--app-primary)",
+            border: "rgba(var(--app-primary-rgb), 0.25)",
+            bg: "rgba(var(--app-primary-rgb), 0.08)",
+            glow: "rgba(var(--app-primary-rgb), 0.15)",
+            coreColor: "var(--app-primary)",
+            hex: "var(--app-primary)",
+            themeName: "DEFAULT", // Required by VoiceHud
           }}
           hideDebugPanels={true}
           hideControls={true}
@@ -466,7 +450,7 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
         {/* Error message overlay */}
         {error && (
           <div className="absolute bottom-20 left-0 right-0 flex justify-center">
-            <div className="bg-red-500/20 border border-red-500/50 px-4 py-2 rounded-lg text-xs text-red-300 backdrop-blur-xl">
+            <div className="bg-red-500/20 border border-red-500/50 px-4 py-2 rounded-lg text-xs text-red-300 glass-blur">
               {error}
             </div>
           </div>
@@ -476,31 +460,24 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
   }
 
   // Text mode: Show text input
-  const isLight = theme?.hex === "#111827" || theme?.primary === "lucagent";
-
   return (
     <form
       onSubmit={handleSubmit}
-      className={`border-t backdrop-blur-xl ${isLight ? "border-black/10" : "border-white/10"}`}
-      style={{ padding: "2vmin" }}
+      className="border-t glass-blur"
+      style={{ 
+        padding: "2vmin",
+        borderColor: "var(--app-border-main)"
+      }}
     >
       <div
-        className={`
-        flex items-center
-        theme-transition
-        backdrop-blur-xl
-        transition-all
-        ${
-          isLight
-            ? "bg-black/5 border border-black/10 focus-within:border-black/30 focus-within:bg-black/10"
-            : "bg-white/5 border border-white/20 focus-within:border-white/40 focus-within:bg-white/10"
-        }
-      `}
-      style={{
-        borderRadius: "1.5vmin",
-        padding: "1vmin 2vmin",
-        gap: "1.5vmin"
-      }}
+        className="flex items-center theme-transition glass-blur transition-all"
+        style={{
+          borderRadius: "1.5vmin",
+          padding: "1vmin 2vmin",
+          gap: "1.5vmin",
+          backgroundColor: "var(--app-bg-tint)",
+          border: "1px solid var(--app-border-main)"
+        }}
       >
         {/* Text input */}
         <input
@@ -514,40 +491,44 @@ Once you have gathered all 5 points, provide a warm summary of their profile.
           disabled={disabled}
           placeholder="Type your message..."
           autoFocus
-          className={`
-            flex-1 
-            bg-transparent 
-            outline-none
-            ${isLight ? "text-gray-900 placeholder-gray-400" : "text-white placeholder-gray-500"}
-          `}
-          style={{ fontSize: "clamp(0.7rem, 2vmin, 0.9rem)" }}
+          className="flex-1 bg-transparent outline-none"
+          style={{ 
+            fontSize: "clamp(0.7rem, 2vmin, 0.9rem)",
+            color: "var(--app-text-main)"
+          }}
         />
 
         {/* Send button */}
         <button
           type="submit"
           disabled={disabled || !value.trim()}
-          className={`
-            rounded-lg
-            disabled:opacity-50
-            disabled:cursor-not-allowed
-            transition-all
-            active:scale-95
-            ${isLight ? "bg-black/10 hover:bg-black/20" : "bg-white/10 hover:bg-white/20"}
-          `}
-          style={{ padding: "1vmin" }}
+          className="rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 hover:bg-[rgba(var(--app-primary-rgb),0.2)] border"
+          style={{ 
+            padding: "1vmin",
+            backgroundColor: value.trim() ? "rgba(var(--app-primary-rgb), 0.1)" : "transparent",
+            borderColor: value.trim() ? "var(--app-primary)" : "transparent"
+          }}
         >
-          <Send
-            className={isLight ? "text-gray-800" : "text-white"}
-            style={{ width: "2.5vmin", height: "2.5vmin" }}
+          <Icon
+            name="Forward"
+            variant="Linear"
+            className="transition-colors"
+            style={{ 
+              width: "2.5vmin", 
+              height: "2.5vmin",
+              color: "var(--app-primary)"
+            }}
           />
         </button>
       </div>
 
       {/* Helper text - hidden on very small screens */}
       <div
-        className={`hidden sm:block text-center mt-2 ${isLight ? "text-black/40" : "text-white/60"}`}
-        style={{ fontSize: "clamp(0.5rem, 1.2vmin, 0.7rem)" }}
+        className="hidden sm:block text-center mt-2 opacity-60"
+        style={{ 
+          fontSize: "clamp(0.5rem, 1.2vmin, 0.7rem)",
+          color: "var(--app-text-muted)"
+        }}
       >
         Press Enter to send, Shift+Enter for new line
       </div>

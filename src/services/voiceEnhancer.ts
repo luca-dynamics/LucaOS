@@ -89,6 +89,16 @@ const VOICE_PROFILES: Record<PersonaType, VoiceProfile> = {
     signOff: ["Local core standing by", "Privacy shield active"],
     transitions: ["Accessing local registry", "Analyzing hardware state"],
   },
+  AUDITOR: {
+    acknowledgments: [
+      "Meticulous",
+      "Analyzing",
+      "Verification started",
+      "Checking integrity",
+    ],
+    signOff: ["Sovereign analysis complete", "Awaiting tactical hand-over"],
+    transitions: ["Verifying", "Evaluating", "Auditing"],
+  },
 };
 
 type TaskType = "command" | "query" | "conversation";

@@ -664,6 +664,8 @@ class LLMService {
   private providers: Map<string, LLMProvider> = new Map();
   private defaultProvider: string = "gemini";
   private defaultModel: string = BRAIN_CONFIG.defaults.brain;
+  private preferredModel: string | null = null;
+  private preferredProvider: string | null = null;
 
   constructor() {
     // Initialize Gemini (current default)
@@ -715,6 +717,12 @@ class LLMService {
     return provider;
   }
 
+  setPreferredModel(modelId: string | null, providerName: string | null = "ollama") {
+    this.preferredModel = modelId;
+    this.preferredProvider = providerName;
+    console.log(`[LLM_SERVICE] Preferred model set to: ${modelId} via ${providerName}`);
+  }
+
   listProviders(): Array<{ name: string; model: string; available: boolean }> {
     return Array.from(this.providers.values()).map((p) => ({
       name: p.name,
@@ -763,6 +771,19 @@ class LLMService {
     prompt: string,
     options?: LLMGenerateOptions,
   ): Promise<string> {
+    if (this.preferredModel && this.preferredProvider) {
+      try {
+        const provider = this.getProvider(this.preferredProvider);
+        // Temporarily set model for this provider if it's dynamic like Ollama
+        const originalModel = provider.model;
+        provider.model = this.preferredModel;
+        const result = await provider.generate(prompt, options);
+        provider.model = originalModel; // Restore
+        return result;
+      } catch (error) {
+        console.warn(`[LLM_SERVICE] Preferred model "${this.preferredModel}" failed, falling back to default.`, error);
+      }
+    }
     return this.getProvider().generate(prompt, options);
   }
 

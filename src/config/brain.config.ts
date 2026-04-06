@@ -24,14 +24,10 @@ export const BRAIN_CONFIG = {
       name: "Google Gemini",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta",
       models: {
-        "3.1-pro-preview": "gemini-3.1-pro-preview",
-        "3.1-flash-lite": "gemini-3.1-flash-lite-preview",
-        "3-flash-preview": "gemini-3-flash-preview",
-        "3-flash": "gemini-3-flash-preview",
-        "2.5-pro": "gemini-2.5-pro",
-        "2.5-flash": "gemini-2.5-flash",
-        "2.5-flash-lite": "gemini-2.5-flash-lite",
-        "live-2.5-multimodal": "gemini-live-2.5-flash-preview-native-audio-09-2025",
+        "2.5-pro":      "gemini-2.5-pro",           // Most capable (reasoning)
+        "2.5-flash":    "gemini-2.5-flash",          // Fast + smart (recommended)
+        "2.0-flash":    "gemini-2.0-flash",          // Luca Prime default (stable)
+        "2.0-flash-exp": "gemini-2.0-flash-exp",    // Experimental
       },
     },
     anthropic: {
@@ -40,8 +36,29 @@ export const BRAIN_CONFIG = {
       models: {
         "sonnet-4.5": "claude-4.5-sonnet",
         "sonnet-4.5-thinking": "claude-4.5-sonnet-thinking",
-        "sonnet-4.6-thinking": "claude-4.6-sonnet-thinking",
-        "opus-4.6-thinking": "claude-4.6-opus-thinking",
+      },
+    },
+    openai: {
+      name: "OpenAI",
+      baseUrl: "https://api.openai.com/v1",
+      models: {
+        "gpt-4o": "gpt-4o",
+        "o1-preview": "o1-preview",
+      },
+    },
+    xai: {
+      name: "xAI (Grok)",
+      baseUrl: "https://api.x.ai/v1",
+      models: {
+        "grok-2": "grok-2-1212",
+      },
+    },
+    deepseek: {
+      name: "DeepSeek",
+      baseUrl: "https://api.deepseek.com/v1",
+      models: {
+        "chat": "deepseek-chat",
+        "reasoner": "deepseek-reasoner",
       },
     },
   },

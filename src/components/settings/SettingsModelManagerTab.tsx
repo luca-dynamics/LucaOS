@@ -1,8 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Database,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { ModelManager } from "../ModelManager";
 
 interface SettingsModelManagerTabProps {
@@ -18,18 +15,18 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
 }) => {
   return (
     <div className="space-y-6 max-h-[420px] pr-2 mt-2">
-      <div className="flex items-center gap-2 mb-4">
-        <Database className="w-4 h-4" style={{ color: theme.hex }} />
-        <h4
-          className={`text-[11px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-widest`}
+      <div className="flex items-center gap-2 mb-2 p-2 rounded bg-black/20 border border-white/5">
+        <Icon name="Sliders" className="w-3 h-3" style={{ color: theme.hex }} />
+        <h5
+          className={`text-[10px] font-bold "text-[var(--app-text-muted)]" uppercase tracking-widest`}
         >
-          Model Inventory & Downloads
-        </h4>
+          Response Dynamic Controls
+        </h5>
       </div>
 
       <ModelManager theme={theme} />
 
-      <div className="text-[9px] text-gray-600 font-mono mt-4 p-3 border border-white/5 bg-black/20 rounded-lg uppercase tracking-tight">
+      <div className={`text-sm font-mono mt-4 p-3 border rounded-lg uppercase tracking-tight transition-all ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-slate-50 border-black/25 text-[var(--app-text-muted)] font-bold" : "border-white/5 bg-black/20 text-[var(--app-text-muted)]"}`}>
         Luca leverages local GGUF and ONNX models for offline operation.
         Downloaded models are stored in the application data directory.
       </div>

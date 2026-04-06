@@ -1,15 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Globe,
-  TrendingUp,
-  Shield,
-  Activity,
-  Zap,
-  Layers,
-  Server,
-  Lock,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 
 interface ChainStats {
   name: string;
@@ -28,199 +18,162 @@ interface Props {
   themeColor: string;
 }
 
+const MetricCard: React.FC<{
+  label: string;
+  value: React.ReactNode;
+  sub?: string;
+  icon: string;
+  accent: string;
+}> = ({ label, value, sub, icon, accent }) => (
+  <div className="bg-[#111111] border border-white/10 rounded-xl p-5 flex flex-col gap-3">
+    <div className="flex items-center justify-between">
+      <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">{label}</span>
+      <div
+        className="w-8 h-8 rounded-lg flex items-center justify-center"
+        style={{ backgroundColor: `${accent}12` }}
+      >
+        <Icon name={icon as any} size={16} style={{ color: accent }} variant="BoldDuotone" />
+      </div>
+    </div>
+    <div className="text-2xl font-bold text-white tracking-tight">{value}</div>
+    {sub && <p className="text-xs text-slate-500 -mt-1">{sub}</p>}
+  </div>
+);
+
 const SovereigntyDashboard: React.FC<Props> = ({ data, themeColor }) => {
-  // Dynamic styles for theme application
-  const themeStyle = {
-    "--theme-color": themeColor,
-    "--theme-glow": `${themeColor}40`,
-    "--theme-border": `${themeColor}30`,
-    "--theme-bg": `${themeColor}10`,
-  } as React.CSSProperties;
+  const activeCount = data.activeChains.filter(c => c.status === "ACTIVE").length;
 
   return (
-    <div
-      className="w-full max-w-7xl mx-auto p-6 flex flex-col gap-6 font-sans relative min-h-screen"
-      style={themeStyle}
-    >
-      {/* Liquid background effect 1 (Center) */}
-      <div
-        className="absolute inset-0 opacity-40 pointer-events-none transition-all duration-700 -z-10"
-        style={{
-          background: `radial-gradient(circle at 50% 50%, ${themeColor}25, transparent 60%)`,
-          filter: "blur(40px)",
-        }}
-      />
-      {/* Liquid background effect 2 (Top Right Offset) */}
-      <div
-        className="absolute inset-0 opacity-30 pointer-events-none transition-all duration-700 -z-10"
-        style={{
-          background: `radial-gradient(circle at 80% 20%, ${themeColor}15, transparent 50%)`,
-          filter: "blur(40px)",
-        }}
-      />
-      {/* Header / Global Status */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-bold text-white tracking-widest flex items-center gap-3">
-            <Globe size={24} style={{ color: themeColor }} />
-            GLOBAL SOVEREIGNTY
-          </h2>
-          <p className="text-slate-400 font-mono text-xs flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            SYSTEM ACTIVE // MEMPOOL MONITORING: ENABLED
-          </p>
-        </div>
+    <div className="w-full max-w-5xl mx-auto p-6 flex flex-col gap-6 font-sans">
 
-        <div className="flex gap-4">
-          <button className="px-4 py-2 rounded bg-white/5 border border-white/10 text-xs font-mono text-slate-300 hover:bg-white/10 transition-colors flex items-center gap-2">
-            <Activity size={14} /> LIVE FEED
-          </button>
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: `${themeColor}15` }}
+          >
+            <Icon name="Earth" size={20} style={{ color: themeColor }} variant="BoldDuotone" />
+          </div>
+          <div>
+            <h2 className="text-white font-bold text-base tracking-wide">Global Sovereignty</h2>
+            <p className="text-slate-500 text-xs flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+              Mempool monitoring active
+            </p>
+          </div>
         </div>
+        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/10 text-xs font-medium text-slate-400 hover:text-white hover:bg-white/[0.07] transition-all">
+          <Icon name="Activity" size={13} />
+          Live Feed
+        </button>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Metric Card 1 */}
-        <div
-          className="relative group overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-md transition-all duration-300 hover:bg-white/[0.07]"
-          style={{ backgroundColor: `${themeColor}0D` }}
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Zap size={64} style={{ color: themeColor }} />
-          </div>
-          <div
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-2"
-            style={{ color: themeColor }}
-          >
-            <Zap size={14} /> Total Yield
-          </div>
-          <div className="text-4xl font-bold text-white tracking-tight mb-1 font-mono">
-            {data.totalProfit.toFixed(2)}{" "}
-            <span className="text-lg text-slate-500 font-normal">ETH</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-green-400 bg-green-400/10 px-2 py-0.5 rounded w-fit">
-            <TrendingUp size={10} /> +12.5% vs Previous Block
-          </div>
-        </div>
-
-        {/* Metric Card 2 */}
-        <div
-          className="relative group overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-md transition-all duration-300 hover:bg-white/[0.07]"
-          style={{ backgroundColor: `${themeColor}0D` }}
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Layers size={64} style={{ color: themeColor }} />
-          </div>
-          <div
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-2"
-            style={{ color: themeColor }}
-          >
-            <Layers size={14} /> Active Leads
-          </div>
-          <div className="text-4xl font-bold text-white tracking-tight mb-1 font-mono">
-            {data.leadsFound}
-          </div>
-          <div className="text-slate-500 text-xs font-mono">
-            Across {data.chainsScanned} networks
-          </div>
-        </div>
-
-        {/* Metric Card 3 */}
-        <div
-          className="relative group overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-md transition-all duration-300 hover:bg-white/[0.07]"
-          style={{ backgroundColor: `${themeColor}0D` }}
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Server size={64} style={{ color: themeColor }} />
-          </div>
-          <div
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-2"
-            style={{ color: themeColor }}
-          >
-            <Server size={14} /> RPC Health
-          </div>
-          <div className="text-4xl font-bold text-white tracking-tight mb-1 font-mono">
-            98.2%
-          </div>
-          <div className="text-slate-500 text-xs font-mono">
-            Latency: 12ms (Global Avg)
-          </div>
-        </div>
-
-        {/* Metric Card 4 - Security */}
-        <div
-          className="relative group overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-md transition-all duration-300 hover:bg-white/[0.07]"
-          style={{ backgroundColor: `${themeColor}0D` }}
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Shield size={64} style={{ color: themeColor }} />
-          </div>
-          <div
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-2"
-            style={{ color: themeColor }}
-          >
-            <Shield size={14} /> Active Defenses
-          </div>
-          <div className="text-4xl font-bold text-white tracking-tight mb-1 font-mono">
-            ARMOR
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded w-fit">
-            <Lock size={10} /> Private Relay Active
-          </div>
-        </div>
+      {/* Metric Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <MetricCard
+          label="Total Yield"
+          icon="TrendingUp"
+          accent={themeColor}
+          value={
+            <span>
+              {data.totalProfit.toFixed(2)}{" "}
+              <span className="text-sm font-normal text-slate-500">ETH</span>
+            </span>
+          }
+          sub="+12.5% vs previous block"
+        />
+        <MetricCard
+          label="Active Leads"
+          icon="Layers"
+          accent={themeColor}
+          value={data.leadsFound}
+          sub={`Across ${data.chainsScanned} networks`}
+        />
+        <MetricCard
+          label="RPC Health"
+          icon="Server"
+          accent="#22c55e"
+          value="98.2%"
+          sub="Latency 12ms avg"
+        />
+        <MetricCard
+          label="Active Defenses"
+          icon="Shield"
+          accent="#3b82f6"
+          value="ARMOR"
+          sub="Private relay active"
+        />
       </div>
 
-      {/* Bottom Panel: Chain Detail List */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-6 flex items-center gap-2">
-          <Activity size={16} className="text-slate-500" /> Network Status
-          Overview
-        </h3>
+      {/* Network Status List */}
+      <div className="bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden">
+        {/* Table Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+          <h3 className="text-[11px] font-bold tracking-widest text-slate-500 uppercase flex items-center gap-2">
+            <Icon name="Activity" size={14} />
+            Network Status Overview
+          </h3>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${themeColor}15`, color: themeColor }}>
+            {activeCount} ACTIVE
+          </span>
+        </div>
 
-        <div className="flex flex-col gap-3">
-          {data.activeChains.map((chain, i) => (
+        {/* Column Headers */}
+        <div className="grid grid-cols-4 px-5 py-2 border-b border-white/[0.05]">
+          {["Network", "Status", "Leads", "Est. Yield"].map(h => (
+            <span key={h} className="text-[10px] font-bold tracking-widest text-slate-600 uppercase">{h}</span>
+          ))}
+        </div>
+
+        {/* Rows */}
+        {data.activeChains.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Icon name="Activity" size={24} className="text-slate-700 mb-3" />
+            <p className="text-slate-600 text-sm">No active networks</p>
+            <p className="text-slate-700 text-xs mt-1">Connect a chain to begin monitoring</p>
+          </div>
+        ) : (
+          data.activeChains.map((chain, i) => (
             <div
               key={i}
-              className="flex items-center justify-between p-4 rounded bg-black/20 hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 group"
+              className="grid grid-cols-4 items-center px-5 py-3.5 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02] transition-colors group"
             >
-              <div className="flex items-center gap-4">
+              {/* Network */}
+              <div className="flex items-center gap-2.5">
                 <div
-                  className={`w-2 h-2 rounded-full ${
-                    chain.status === "ACTIVE"
-                      ? "bg-green-500 shadow-[0_0_10px_#22c55e]"
-                      : "bg-slate-700"
-                  }`}
-                ></div>
-                <span className="text-white font-bold font-mono">
-                  {chain.name}
-                </span>
+                  className={`w-2 h-2 rounded-full shrink-0 ${chain.status === "ACTIVE" ? "bg-green-500" : "bg-slate-700"}`}
+                  style={chain.status === "ACTIVE" ? { boxShadow: "0 0 6px #22c55e" } : {}}
+                />
+                <span className="text-white text-sm font-bold font-mono">{chain.name}</span>
               </div>
 
-              <div className="flex items-center gap-8">
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-500 uppercase tracking-wider">
-                    Leads
-                  </div>
-                  <div className="text-white font-mono">{chain.leads}</div>
-                </div>
-                <div className="text-right min-w-[100px]">
-                  <div className="text-[10px] text-slate-500 uppercase tracking-wider">
-                    Est. Yield
-                  </div>
-                  <div
-                    className="text-white font-mono font-bold"
-                    style={{ color: themeColor }}
-                  >
-                    {chain.profit} ETH
-                  </div>
-                </div>
-                <button className="w-8 h-8 rounded flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-colors">
-                  <TrendingUp size={16} />
+              {/* Status */}
+              <span
+                className="text-[10px] font-bold tracking-widest px-2 py-0.5 rounded w-fit"
+                style={{
+                  backgroundColor: chain.status === "ACTIVE" ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.04)",
+                  color: chain.status === "ACTIVE" ? "#22c55e" : "#64748b",
+                }}
+              >
+                {chain.status}
+              </span>
+
+              {/* Leads */}
+              <span className="text-white text-sm font-mono">{chain.leads}</span>
+
+              {/* Yield */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold font-mono" style={{ color: themeColor }}>
+                  {chain.profit} ETH
+                </span>
+                <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded hover:bg-white/10">
+                  <Icon name="TrendingUp" size={14} className="text-slate-500" />
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+          ))
+        )}
       </div>
     </div>
   );

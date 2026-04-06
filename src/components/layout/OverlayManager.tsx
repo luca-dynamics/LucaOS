@@ -1,10 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Sparkles,
-  Dna,
-  ShieldAlert,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { PresenceMonitor } from "../Awareness/PresenceMonitor";
 import { ScreenShare } from "../ScreenShare";
 import GhostCursor from "../GhostCursor";
@@ -375,14 +370,14 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
 
       {activeAutonomousAction && (
         <div
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] px-4 py-2 rounded-full border flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 backdrop-blur-xl"
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] px-4 py-2 rounded-full border flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 glass-blur"
           style={{
             borderColor: `${theme.hex}66`,
             background: `${theme.hex}1a`,
             boxShadow: `0 0 20px ${theme.hex}33`,
           }}
         >
-          <Sparkles size={16} className="animate-pulse" />
+          <Icon name="MagicStick" size={16} className="animate-pulse" variant="BoldDuotone" />
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest opacity-60">
               Autonomous {activeAutonomousAction.domain}
@@ -394,14 +389,13 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         </div>
       )}
 
-      {backgroundImage && (
         <div
           className="absolute inset-0 z-0 bg-cover bg-center transition-opacity duration-1000 opacity-40 animate-in fade-in"
           style={{
             backgroundImage: `url(data:image/jpeg;base64,${backgroundImage})`,
+            filter: "blur(var(--app-bg-blur, 40px))",
           }}
         />
-      )}
 
       <GhostCursor
         x={ghostCursor.x}
@@ -412,7 +406,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
 
       {isRebooting && (
         <div
-          className={`absolute inset-0 z-[2000] flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto transition-all duration-700 backdrop-blur-[20px]`}
+          className={`absolute inset-0 z-[2000] flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto transition-all duration-700 glass-blur[20px]`}
           style={{
             background:
               theme.themeName?.toLowerCase() === "lucagent"
@@ -599,10 +593,10 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
 
       {ingestionState.active && (
         <div className="absolute inset-0 z-[950] bg-black/90 flex flex-col items-center justify-center pointer-events-none">
-          <div className="w-[600px] h-[400px] border border-green-500/50 bg-black p-8 flex flex-col relative overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.2)] rounded-lg">
+          <div className="w-[600px] h-[400px] border border-green-500/50 bg-[var(--app-bg-tint)] p-8 flex flex-col relative overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.2)] rounded-lg">
             <div className="absolute inset-0 opacity-20 bg-[linear-gradient(0deg,transparent,rgba(34,197,94,0.5)_50%,transparent)] animate-scan"></div>
             <div className="flex items-center gap-4 text-green-500 font-bold tracking-widest text-xl mb-6 border-b border-green-500/30 pb-4">
-              <Dna className="animate-spin-slow w-8 h-8" />
+              <Icon name="Dna" className="animate-spin-slow w-8 h-8" variant="BoldDuotone" />
               <div>
                 <div>LUCA EVOLUTION PROTOCOL</div>
                 <div className="text-[10px] text-green-400/60 font-mono">
@@ -615,7 +609,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
                 ? ingestionState.skills.map((skill: string, i: number) => (
                     <div
                       key={`skill-${i}`}
-                      className="animate-in zoom-in duration-500 flex items-center gap-2 text-white font-bold tracking-wider"
+                      className="animate-in zoom-in duration-500 flex items-center gap-2 text-[color:var(--app-text-main)] font-bold tracking-wider"
                     >
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                       ACQUIRED SKILL: {skill}
@@ -646,8 +640,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
 
       {isLockdown && (
         <div className="absolute inset-0 z-[900] bg-red-950/90 flex flex-col items-center justify-center animate-in fade-in duration-200 pointer-events-none">
-          <div className="border-4 border-red-500 p-12 rounded-lg bg-black flex flex-col items-center shadow-[0_0_100px_#ef4444] animate-pulse">
-            <ShieldAlert size={128} className="text-red-500 mb-6" />
+          <div className="border-4 border-red-500 p-12 rounded-lg bg-[var(--app-bg-tint)] flex flex-col items-center shadow-[0_0_100px_#ef4444] animate-pulse">
+            <Icon name="ShieldAlert" size={128} className="text-red-500 mb-6" variant="BoldDuotone" />
             <h1 className="text-6xl font-display font-bold text-red-500 tracking-[0.2em] mb-4">
               LOCKDOWN
             </h1>
@@ -661,7 +655,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
                   setSystemStatus(SystemStatus.NORMAL);
                   soundService.play("SUCCESS");
                 }}
-                className="border border-red-500 px-4 py-2 hover:bg-red-500 hover:text-black transition-colors"
+                className="border border-red-500 px-4 py-2 hover:bg-red-500 hover:text-[color:var(--app-text-main)] transition-colors"
               >
                 OVERRIDE AUTH CODE: OMEGA-9
               </button>
@@ -782,7 +776,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
             setPendingCommand(null);
             soundService.play("ALERT");
           }}
-          theme={theme}
         />
       )}
 
@@ -878,7 +871,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         <AppExplorerModal
           isOpen={showAppExplorer}
           onClose={() => setShowAppExplorer(false)}
-          theme={theme}
         />
       )}
 
@@ -997,7 +989,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
       {showAITradersPage && (
         <AITradersPage
           onClose={() => setShowAITradersPage(false)}
-          theme={theme}
         />
       )}
 

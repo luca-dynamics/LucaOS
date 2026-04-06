@@ -1,39 +1,16 @@
 import React from "react";
-import { setHexAlpha } from "../../config/themeColors";
+import PropTypes from "prop-types";
 
 interface HologramFace2DProps {
-  step:
-    | "KERNEL_AWAKENING"
-    | "DIRECTIVE_ALIGNMENT"
-    | "THEME"
-    | "NEURAL_HANDSHAKE"
-    | "FACE_SCAN"
-    | "COGNITIVE_CORE_SELECTION"
-    | "HARDWARE_SCAN"
-    | "OLLAMA_INSTALL"
-    | "OLLAMA_WAKE"
-    | "PROVISION_LOCAL"
-    | "MODE_SELECT"
-    | "CONVERSATION"
-    | "CALIBRATION"
-    | "COMPLETE";
-  themeHex?: string;
-  secondaryHex?: string;
+  step: string;
 }
 
-/**
- * 2D Fallback for Hologram Face (for weak devices)
- * Uses static icon with CSS animations instead of 3D WebGL
- */
 const HologramFace2D: React.FC<HologramFace2DProps> = ({
   step,
-  themeHex,
-  secondaryHex,
 }) => {
-  // Use passed colors or default
-  const color = themeHex || "#E0E0E0";
-  const secondary = secondaryHex || color;
-  const glow = setHexAlpha(secondary, 0.5);
+  // logoSrc is now reactive based on dark/light mode via CSS filter or just choosing one clear asset
+  // For Sovereign OS, we use a single high-fidelity asset and apply reactive filters
+  const logoSrc = "/icon.png";
 
   return (
     <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
@@ -41,17 +18,17 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
       <div
         className="absolute inset-0 flex items-center justify-center opacity-40"
         style={{
-          filter: `drop-shadow(0 0 40px ${glow}) drop-shadow(0 0 80px ${glow})`,
+          filter: `drop-shadow(0 0 40px var(--app-primary)) drop-shadow(0 0 80px var(--app-primary))`,
         }}
       >
         <div className="relative animate-pulse" style={{ width: "clamp(25rem, 90vmin, 50rem)", height: "clamp(25rem, 90vmin, 50rem)" }}>
           {/* Luca Icon */}
           <img
-            src="/icon.png"
+            src={logoSrc}
             alt="Luca AI"
             className="w-full h-full object-contain transition-all duration-1000"
             style={{
-              filter: `brightness(1.2) contrast(1.3)`,
+              filter: `brightness(1.2) contrast(1.3) drop-shadow(0 0 20px var(--app-primary))`,
               animation:
                 step === "CALIBRATION"
                   ? "spin 8s linear infinite"
@@ -63,20 +40,21 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
           <div
             className="absolute inset-0 mix-blend-overlay rounded-full"
             style={{
-              background: `radial-gradient(circle, ${setHexAlpha(color, 0.4)} 0%, transparent 70%)`,
+              background: `radial-gradient(circle, var(--app-primary) 0%, transparent 70%)`,
+              opacity: 0.4,
             }}
           />
 
-          {/* Scanline effect (lighter than 3D version) */}
-          <div className="absolute inset-0 pointer-events-none opacity-30">
+          {/* Scanline effect */}
+          <div className="absolute inset-0 pointer-events-none opacity-20">
             {[...Array(20)].map((_, i) => (
               <div
                 key={i}
-                className="absolute left-0 right-0 h-[2px]"
+                className="absolute left-0 right-0 h-[1.5px]"
                 style={{
                   top: `${i * 5}%`,
-                  background: color,
-                  opacity: 0.1,
+                  background: "var(--app-primary)",
+                  opacity: 0.15,
                 }}
               />
             ))}
@@ -94,7 +72,7 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
               style={{
                 width: "min(300px, 50vmin)",
                 height: "min(300px, 50vmin)",
-                borderColor: color,
+                borderColor: "var(--app-primary)",
                 animationDelay: `${i * 0.6}s`,
                 animationDuration: "3s",
               }}
@@ -107,12 +85,11 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
       <div
         className="absolute inset-0 opacity-10 animate-pulse pointer-events-none"
         style={{
-          background: `radial-gradient(circle, ${secondary} 0%, transparent 50%)`,
+          background: `radial-gradient(circle, var(--app-primary) 0%, transparent 50%)`,
           animationDuration: "4s",
         }}
       />
 
-      {/* CSS Keyframes for animations */}
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) scale(1); }
@@ -125,6 +102,10 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
       `}</style>
     </div>
   );
+};
+
+HologramFace2D.propTypes = {
+  step: PropTypes.string.isRequired,
 };
 
 export default HologramFace2D;

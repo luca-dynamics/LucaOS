@@ -1,12 +1,92 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { app, BrowserWindow, ipcMain, shell, desktopCapturer, Tray, Menu, nativeImage, screen, systemPreferences, dialog } = require('electron');
+const { 
+  app, BrowserWindow, ipcMain, shell, desktopCapturer, 
+  Tray, Menu, nativeImage, screen, systemPreferences, dialog 
+} = require('electron');
+
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
 const fs = require('fs');
+
+// [MAIN] Mission Control Service Initialization
+const MissionControl = require('./services/missionControl.cjs');
+let missionControl;
 const net = require('net'); // Native Node.js net module for TCP
 const { spawn, exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+
+// --- WINDOW STATE PERSISTENCE ---
+const WINDOW_STATE_FILENAME = 'window-state.json';
+let windowStateTimer;
+
+function getWindowStatePath() {
+    return path.join(app.getPath('userData'), WINDOW_STATE_FILENAME);
+}
+
+function loadWindowState() {
+    try {
+        const statePath = getWindowStatePath();
+        if (fs.existsSync(statePath)) {
+            const data = fs.readFileSync(statePath, 'utf8');
+            const state = JSON.parse(data);
+            
+            // INDUSTRIAL GRADE: Visibility Audit
+            // Ensure the window isn't opening off-screen (e.g. if a monitor was disconnected)
+            const primaryDisplay = screen.getPrimaryDisplay();
+            const { x, y, width, height } = state;
+            
+            // If we have saved bounds, check if they intersect with ANY active display
+            const display = screen.getDisplayMatching({ x, y, width, height });
+            const titleBarHeight = 32; // Standard Electron title bar height we target
+            
+            // INDUSTRIAL GRADE: "Handle Check"
+            // Let the window stay if the TOP-CENTER (the drag handle area) is on a valid screen.
+            // This prevents the window from being "lost" if only the bottom half is on a screen.
+            const handleX = x + (width / 2);
+            const handleY = y + (titleBarHeight / 2);
+
+            const isHandleVisible = (
+                handleX >= display.bounds.x &&
+                handleX <= display.bounds.x + display.bounds.width &&
+                handleY >= display.bounds.y &&
+                handleY <= display.bounds.y + display.bounds.height
+            );
+
+            if (!isHandleVisible) {
+                console.log('[MAIN] Window handle is off-screen. Resetting to primary display.');
+                return { 
+                    width: 1152, 
+                    height: 710, 
+                    x: Math.floor((primaryDisplay.workArea.width - 1152) / 2),
+                    y: Math.floor((primaryDisplay.workArea.height - 710) / 2)
+                };
+            }
+
+            return state;
+        }
+    } catch (e) {
+        console.error('[MAIN] Failed to load window state:', e);
+    }
+    return { width: 1152, height: 710 }; // Default
+}
+
+function saveWindowState(bounds, isMaximized = false) {
+    // Clear existing timer
+    if (windowStateTimer) clearTimeout(windowStateTimer);
+    
+    // Debounce: save after 500ms of inactivity
+    windowStateTimer = setTimeout(() => {
+        try {
+            const statePath = getWindowStatePath();
+            const data = { ...bounds, isMaximized };
+            fs.writeFileSync(statePath, JSON.stringify(data), 'utf8');
+            // console.log('[MAIN] Window state saved:', data);
+        } catch (e) {
+            console.error('[MAIN] Failed to save window state:', e);
+        }
+    }, 500);
+}
 
 
 // Pentesting modules
@@ -72,7 +152,7 @@ function createBootWindow() {
         height: 400,
         frame: false,
         transparent: false,
-        backgroundColor: '#000000',
+        backgroundColor: '#383737ff',
         center: true,
         resizable: false,
         webPreferences: {
@@ -334,9 +414,27 @@ function launchInterface(isSilent = false) {
 
 function createWindow() {
     // Create the browser window.
+    // [MISSION_CONTROL] Handlers Registration
+    if (!missionControl) {
+        missionControl = new MissionControl(app.getPath('userData'));
+    }
+
+    /* eslint-disable no-unused-vars */
+    ipcMain.handle('mission-start', (_event, title, metadata) => missionControl.startMission(title, metadata));
+    ipcMain.handle('mission-add-goal', (_event, missionId, description, dependencyId) => missionControl.addGoal(missionId, description, dependencyId));
+    ipcMain.handle('mission-update-goal', (_event, goalId, status) => missionControl.updateGoalStatus(goalId, status));
+    ipcMain.handle('mission-get-context', () => missionControl.getActiveMissionContext());
+    ipcMain.handle('mission-archive', (_event, missionId) => missionControl.archiveMission(missionId));
+    /* eslint-enable no-unused-vars */
+
+    // Load saved bounds
+    const savedBounds = loadWindowState();
+
     mainWindow = new BrowserWindow({
-        width: 1000,
-        height: 680,
+        width: savedBounds.width,
+        height: savedBounds.height,
+        x: savedBounds.x,
+        y: savedBounds.y,
         backgroundColor: '#00000000', // Transparent Hex for true native transparency
         transparent: true,
         titleBarStyle: 'hiddenInset', // Mac-style hidden title bar
@@ -350,6 +448,23 @@ function createWindow() {
             backgroundThrottling: false // CRITICAL: Allow Audio/Mic to run when window is backgrounded
         }
     });
+
+    // Save bounds on resize/move
+    const updateBounds = () => {
+        const isMaximized = mainWindow.isMaximized();
+        if (!isMaximized && !mainWindow.isMinimized()) {
+            saveWindowState(mainWindow.getBounds(), false);
+        } else if (isMaximized) {
+            saveWindowState(loadWindowState(), true); // Preserve last normal bounds + maximized flag
+        }
+    };
+    mainWindow.on('resize', updateBounds);
+    mainWindow.on('move', updateBounds);
+
+    // Initial Maximization
+    if (savedBounds.isMaximized) {
+        mainWindow.maximize();
+    }
 
     // Load the app
     // Load the app
@@ -969,6 +1084,29 @@ app.on('ready', () => {
         });
         if (!result.canceled && result.filePaths.length > 0) return result.filePaths[0];
         return null;
+    });
+
+    ipcMain.handle('select-file', async (event, { title, filters } = {}) => {
+        const result = await dialog.showOpenDialog(mainWindow, {
+            title: title || 'Select Intelligence Source',
+            properties: ['openFile'],
+            filters: filters || [
+                { name: 'Logs & Data', extensions: ['log', 'txt', 'csv', 'json'] },
+                { name: 'All Files', extensions: ['*'] }
+            ]
+        });
+        if (!result.canceled && result.filePaths.length > 0) return result.filePaths[0];
+        return null;
+    });
+
+    ipcMain.handle('read-file', async (event, filePath) => {
+        try {
+            if (!fs.existsSync(filePath)) return { error: 'File not found' };
+            const content = await fs.promises.readFile(filePath, 'utf8');
+            return { content };
+        } catch (e) {
+            return { error: e.message };
+        }
     });
 
     ipcMain.on('sensor-status-update', (event, state) => {
@@ -2394,44 +2532,192 @@ ipcMain.handle('get-system-specs', async () => {
 });
 
 ipcMain.handle('is-ollama-installed', async () => {
-  const execP = require('util').promisify(require('child_process').exec);
+  const { execSync } = require('child_process');
+  const fs = require('fs');
+  
   try {
+    // 1. Check CLI binary (for Homebrew/Manual Binary)
     const cmd = process.platform === 'win32' ? 'where ollama' : 'which ollama';
-    await execP(cmd);
-    return true;
-  } catch {
+    try {
+      execSync(cmd, { stdio: 'ignore' });
+      return true;
+    } catch { /* Command not found */ }
+
+    // 2. Check MacOS App Path (for manual GUI installs)
     if (process.platform === 'darwin') {
-      const fs = require('fs');
-      return fs.existsSync('/usr/local/bin/ollama') || fs.existsSync('/Applications/Ollama.app');
+      const appPaths = [
+        '/Applications/Ollama.app',
+        `${require('os').homedir()}/Applications/Ollama.app`
+      ];
+      if (appPaths.some(p => fs.existsSync(p))) return true;
     }
+    
+    // 3. Check Windows Common Paths
+    if (process.platform === 'win32') {
+      const winPath = `${process.env.LOCALAPPDATA}\\Ollama\\ollama.exe`;
+      if (fs.existsSync(winPath)) return true;
+    }
+
+    return false;
+  } catch {
     return false;
   }
 });
 
 ipcMain.handle('start-ollama', async () => {
-  const execP = require('util').promisify(require('child_process').exec);
+  const { exec, spawn } = require('child_process');
+  const fs = require('fs');
+  
+  // 1. Check if already running on port 11434
+  try {
+    const net = require('net');
+    const isPortOpen = await new Promise(resolve => {
+      const client = new net.Socket();
+      client.setTimeout(100);
+      client.on('connect', () => { client.destroy(); resolve(true); });
+      client.on('timeout', () => { client.destroy(); resolve(false); });
+      client.on('error', () => { resolve(false); });
+      client.connect(11434, '127.0.0.1');
+    });
+    if (isPortOpen) {
+      console.log('[MAIN] Ollama is already active on port 11434.');
+      return true;
+    }
+  } catch { /* Port check failed */ }
+
   try {
     if (process.platform === 'darwin') {
-      await execP('open -a Ollama');
+      // Priority 1: Check for App bundle (Tactile UI)
+      const appPath = '/Applications/Ollama.app';
+      if (fs.existsSync(appPath)) {
+        console.log('[MAIN] Starting Ollama App...');
+        exec('open -a Ollama');
+        return true;
+      }
+      
+      // Priority 2: Check for binary (Homebrew/Manual)
+      try {
+        const homebrewBinary = '/opt/homebrew/bin/ollama';
+        const intelBinary = '/usr/local/bin/ollama';
+        const targetBinary = fs.existsSync(homebrewBinary) ? homebrewBinary : fs.existsSync(intelBinary) ? intelBinary : 'ollama';
+
+        console.log(`[MAIN] Starting Ollama Service via binary (${targetBinary})...`);
+        const proc = spawn(targetBinary, ['serve'], {
+          detached: true,
+          stdio: 'ignore'
+        });
+        proc.unref();
+        return true;
+      } catch { /* Binary startup failed */ }
     } else if (process.platform === 'win32') {
-      await execP('start "" "ollama app"');
+      // Priority 1: Try App Start
+      try {
+        exec('start "" "ollama app"');
+        return true;
+      } catch {
+        // Priority 2: Direct Binary Start
+        const winPath = `${process.env.LOCALAPPDATA}\\Ollama\\ollama.exe`;
+        if (fs.existsSync(winPath)) {
+          spawn(winPath, ['serve'], { detached: true, stdio: 'ignore' }).unref();
+          return true;
+        }
+      }
+    } else if (process.platform === 'linux') {
+      // Linux: Try binary start
+      try {
+        spawn('ollama', ['serve'], { detached: true, stdio: 'ignore' }).unref();
+        return true;
+      } catch { /* Failed to spawn linux service */ }
     }
     return true;
-  } catch (error) {
-    console.error('[MAIN] Failed to start Ollama:', error);
+  } catch {
     return false;
   }
 });
 
 ipcMain.handle('install-ollama', async () => {
+  const execP = require('util').promisify(require('child_process').exec);
+  const os = require('os');
+  const tempDir = os.tmpdir();
+  const path = require('path');
+  
   try {
     if (process.platform === 'darwin') {
-      await shell.openExternal('https://ollama.com/download/mac');
+      const zipPath = path.join(tempDir, 'ollama-mac.zip');
+      await execP(`curl -L https://ollama.com/download/ollama-darwin.zip -o "${zipPath}"`);
+      await execP(`unzip -o "${zipPath}" -d "${tempDir}"`);
+      const appPath = path.join(tempDir, 'Ollama.app');
+      try {
+        await execP(`mv -f "${appPath}" /Applications/`);
+      } catch {
+        await execP(`open "${appPath}"`);
+      }
+      await execP('open -a Ollama');
+      return { success: true };
     } else if (process.platform === 'win32') {
-      await shell.openExternal('https://ollama.com/download/windows');
+      const setupPath = path.join(tempDir, 'OllamaSetup.exe');
+      const psCmd = `powershell.exe -Command "& { Invoke-WebRequest -Uri 'https://ollama.com/download/OllamaSetup.exe' -OutFile '${setupPath}'; Start-Process -FilePath '${setupPath}' -ArgumentList '/S' -Wait; }"`;
+      await execP(psCmd);
+      return { success: true };
+    } else if (process.platform === 'linux') {
+      await execP('curl -fsSL https://ollama.com/install.sh | sh');
+      return { success: true };
     }
-    return { success: true, message: "Opened download page" };
+    return { success: false, error: "Unsupported platform." };
   } catch (error) {
-    return { success: false, message: error.message };
+    console.error('[MAIN] Ollama Install Failed:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('setup-ollama-for-model', async (event, { modelId, tag }) => {
+  const { spawn } = require('child_process');
+  
+  const sendStatus = (step, progress) => {
+    event.sender.send('ollama-setup-status', { modelId, step, progress });
+  };
+
+  try {
+    // 1. Check/Install
+    sendStatus("Checking installation...", 0);
+    const installed = await ipcMain.handlers['is-ollama-installed']();
+    if (!installed) {
+      sendStatus("Installing Ollama...", 10);
+      const res = await ipcMain.handlers['install-ollama']();
+      if (!res.success) throw new Error(res.error);
+    }
+
+    // 2. Wake Daemon
+    sendStatus("Waking engine...", 30);
+    await ipcMain.handlers['start-ollama']();
+    await new Promise(r => setTimeout(r, 2000));
+
+    // 3. Pull
+    sendStatus(`Pulling weights...`, 45);
+    return new Promise((resolve, reject) => {
+      const pull = spawn('ollama', ['pull', tag]);
+      pull.stdout.on('data', (d) => {
+        const match = d.toString().match(/(\d+)%/);
+        if (match) sendStatus("Downloading...", 45 + (parseInt(match[1]) * 0.55));
+      });
+      pull.on('close', (code) => {
+        if (code === 0) {
+          sendStatus("Ready", 100);
+          resolve(true);
+        } else reject(new Error("Pull failed"));
+      });
+    });
+  } catch (error) {
+    sendStatus(`Failed: ${error.message}`, 0);
+    return false;
+  }
+});
+
+ipcMain.handle('is-ollama-running', async () => {
+  try {
+    const resp = await fetch('http://127.0.0.1:11434/api/tags', { signal: AbortSignal.timeout(1000) });
+    return resp.ok;
+  } catch {
+    return false;
   }
 });

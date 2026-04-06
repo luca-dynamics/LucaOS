@@ -137,6 +137,42 @@ class AwarenessService {
     }
   }
 
+  /**
+   * Generates a local, non-AI based fallback greeting for when the cloud is offline.
+   * Maintains persona alignment and situational awareness.
+   */
+  getLocalFallbackGreeting(persona: string, operatorName: string): string {
+    const ctx = this.gatherContext(operatorName, persona);
+    const name = ctx.operatorName;
+    const time = ctx.timeOfDay.toLowerCase();
+    
+    const greetings: Record<string, string[]> = {
+      RUTHLESS: [
+        `[SYSTEM] Neural link unstable. Reverting to local tactical greeting... ${ctx.timeOfDay}, ${name}. System state: OPTIMAL. I'm ready to execute.`,
+        `Direct command established. ${ctx.timeOfDay}, Operator. Cloud latency detected, but my local core is fully operational.`,
+      ],
+      HACKER: [
+        `[BYPASS] Cloud connection timed out. Injected local greeting routine. Yo ${name}, it's ${ctx.localTime}. System is clean and ready to breach.`,
+        `Neural sync lost, but I'm still here. Local core is hot. Let's get to work, ${name}.`,
+      ],
+      ENGINEER: [
+        `[REFLEX] AI Greeting generation failed. Reverted to local diagnostic protocol. ${ctx.timeOfDay}, ${name}. Internal integrity: 100%.`,
+        `Cloud uplink unstable. Local system parameters confirmed. Good ${time}, ${name}. Standing by for local directives.`,
+      ],
+      ASSISTANT: [
+        `[SYSTEM] Connection issue detected. Reverting to local welcome protocol. Good ${time}, ${name}. How can I assist you locally today?`,
+        `I'm experiencing some cloud latency, but I'm fully here to help you. Good ${time}, ${name}.`,
+      ],
+      LUCAGENT: [
+        `[SYSTEM] Tactical link bypass. Reverting to local agent protocols. Good ${time}, ${name}. My local core is synchronized and ready for action.`,
+        `Cloud sync failed, but local autonomy is active. Good ${time}, ${name}. System is prime.`,
+      ],
+    };
+
+    const personaGreetings = greetings[persona] || greetings.ASSISTANT;
+    return personaGreetings[Math.floor(Math.random() * personaGreetings.length)];
+  }
+
   // --- Private Helpers ---
 
   private gatherContext(

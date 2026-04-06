@@ -1,13 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Command,
-  Sparkles,
-  MessageSquare,
-  ChevronRight,
-  X,
-  Shield,
-} = LucideIcons as any;
+import { Icon } from "../../ui/Icon";
 import { TradingStrategy } from "../../../types/trading";
 
 interface PromptSectionsEditorProps {
@@ -17,6 +9,7 @@ interface PromptSectionsEditorProps {
   exitRules?: string;
   riskConstraints?: string;
   onUpdate: (updates: Partial<TradingStrategy>) => void;
+  theme?: { hex: string; primary: string; border: string; bg: string; isLight?: boolean };
 }
 
 export function PromptSectionsEditor({
@@ -26,110 +19,130 @@ export function PromptSectionsEditor({
   exitRules,
   riskConstraints,
   onUpdate,
+  theme,
 }: PromptSectionsEditorProps) {
+  const isLight = theme?.isLight;
   const sections = [
     {
       id: "persona",
       label: "Agent Persona",
-      icon: <Sparkles size={10} className="text-yellow-500" />,
+      icon: <Icon name="Sparkles" size={12} />,
       value: persona,
-      placeholder: "e.g., &quot;Risk-Averse Institutional Analyst with a focus on macro trends...&quot;",
-      help: "Defines the 'voice' and decision-making style."
+      placeholder: "e.g., \"Risk-Averse Institutional Analyst focus on macro trends...\"",
+      help: "Agent Cognitive Identity"
     },
     {
       id: "entryCriteria",
       label: "Entry Criteria",
-      icon: <ChevronRight size={10} className="text-emerald-500" />,
+      icon: <Icon name="ChevronRight" size={12} />,
       value: entryCriteria,
-      placeholder: "e.g., &quot;Only enter long if RSI < 30 and price is above 200 EMA...&quot;",
-      help: "Explicit rules for opening a position."
+      placeholder: "e.g., \"Enter long if RSI < 30 and price is above 200 EMA...\"",
+      help: "Protocol Activation Rules"
     },
     {
       id: "exitRules",
       label: "Exit Rules",
-      icon: <X size={10} className="text-rose-500" />,
+      icon: <Icon name="X" size={12} />,
       value: exitRules,
-      placeholder: "e.g., &quot;Exit Long if MACD histogram turns negative on 1h timeframe...&quot;",
-      help: "Explicit rules for closing a position."
+      placeholder: "e.g., \"Exit if MACD histogram turns negative on 1h...\"",
+      help: "Liquidation Protocol"
     },
     {
       id: "riskConstraints",
       label: "Risk Constraints",
-      icon: <Shield size={10} className="text-blue-500" />,
+      icon: <Icon name="Shield" size={12} />,
       value: riskConstraints,
-      placeholder: "e.g., &quot;Never exceed 3 concurrent trades. Max leverage 5x...&quot;",
-      help: "Safety boundaries and position sizing logic."
+      placeholder: "e.g., \"Never exceed 3 concurrent trades. Max leverage 5x...\"",
+      help: "Operational Boundaries"
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="bg-[#1e2329] p-4 rounded-xl border border-white/5">
-        <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-          <Command size={16} className="text-purple-400" /> System Instructions
+    <div className="space-y-4">
+      <div className={`p-4 border rounded-xl ${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#050505] border-white/5 shadow-inner"}`}>
+        <h3 className={`text-[10px] font-black ${isLight ? "text-slate-400" : "text-slate-500"} mb-6 tracking-[0.2em] flex items-center gap-2`}>
+          <Icon name="Command" size={14} style={{ color: theme?.hex || "#0ea5e9" }} />
+          System Instructions
         </h3>
 
         <div className="space-y-6">
           {sections.map((section) => (
-            <div key={section.id}>
+            <div key={section.id} className="group">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                <label 
+                  className={`text-[9px] font-bold ${isLight ? "text-slate-500" : "text-slate-600"} flex items-center gap-2 tracking-widest transition-colors`}
+                  style={{ color: theme?.hex ? undefined : undefined }} // Placeholder to trigger focus-within elsewhere if needed
+                >
                   {section.icon} {section.label}
                 </label>
-                <span className="text-[9px] text-slate-600 font-mono italic">
+                <span className={`text-[8px] ${isLight ? "text-slate-400" : "text-slate-700"} font-mono tracking-tighter`}>
                   {section.help}
                 </span>
               </div>
               <textarea
                 value={section.value || ""}
                 onChange={(e) => onUpdate({ [section.id]: e.target.value })}
-                className="w-full h-24 bg-black/20 border border-slate-700 rounded-lg p-3 text-[11px] font-mono text-slate-300 focus:outline-none focus:border-purple-500/50 resize-none leading-relaxed"
+                className={`w-full h-24 ${isLight ? "bg-slate-50 border-black/10 text-slate-900" : "bg-[#080808] border-white/5 text-slate-300"} rounded-sm p-3 text-[10px] font-mono focus:outline-none focus:border-opacity-30 resize-none leading-relaxed transition-all placeholder:text-slate-300 shadow-inner`}
+                style={{ focusBorderColor: theme?.hex || "#0ea5e9" } as any}
                 placeholder={section.placeholder}
               />
             </div>
           ))}
 
-          <div className="pt-4 border-t border-white/5">
+          <div className="pt-6 border-t border-white/5">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
-                <Command size={10} className="text-slate-400" /> Final Prompt Override
+              <label className="text-[9px] font-bold text-slate-600 flex items-center gap-2 tracking-widest">
+                <Icon name="Command" size={12} /> Global Override
               </label>
-              <span className="text-[9px] text-slate-600 font-mono">
-                Used if everything above is empty
+              <span className="text-[8px] text-rose-500 font-mono tracking-tighter">
+                Priority 0 Bypass
               </span>
             </div>
             <textarea
               value={customPrompt || ""}
               onChange={(e) => onUpdate({ customPrompt: e.target.value })}
-              className="w-full h-32 bg-black/10 border border-dashed border-slate-800 rounded-lg p-3 text-[11px] font-mono text-slate-500 focus:outline-none focus:border-purple-500/30 resize-none leading-relaxed"
+              className={`w-full h-32 ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#050505] border-white/5"} border border-dashed rounded-lg p-3 text-[11px] font-mono ${isLight ? "text-slate-600" : "text-slate-500"} focus:outline-none focus:border-opacity-20 resize-none leading-relaxed transition-all placeholder:text-slate-700`}
+              style={{ focusBorderColor: theme?.hex || "#0ea5e9" } as any}
               placeholder="Legacy or full-text prompt override..."
             />
           </div>
         </div>
       </div>
 
-      <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-        <h4 className="text-xs font-bold text-indigo-300 mb-2 flex items-center gap-2">
-          <MessageSquare size={14} /> Prompt Engineering Tips
+      <div 
+        className="p-4 border rounded-sm"
+        style={{ 
+          backgroundColor: `${theme?.hex || "#0ea5e9"}08`, 
+          borderColor: `${theme?.hex || "#0ea5e9"}1a` 
+        }}
+      >
+        <h4 
+          className="text-[10px] font-black mb-3 flex items-center gap-2 tracking-widest"
+          style={{ color: `${theme?.hex || "#0ea5e9"}cc` }}
+        >
+          <Icon name="MessageSquare" size={12} /> Prompt Engineering Protocol
         </h4>
-        <ul className="space-y-1.5 text-[10px] text-indigo-200/70 list-disc list-inside">
-          <li>
-            Define a clear <strong>Persona</strong> (e.g., Risk-Averse
-            Institutional Trader).
-          </li>
-          <li>
-            Specify <strong>Input Data</strong> reliance (e.g., &quot;Prioritize RSI
-            divergence over MACD&quot;).
-          </li>
-          <li>
-            Set explicit <strong>Constraints</strong> (e.g., &quot;Never trade
-            without volume confirmation&quot;).
-          </li>
-          <li>
-            Use <strong>Chain of Thought</strong> prompting by asking it to
-            &quot;Think step-by-step&quot;.
-          </li>
-        </ul>
+        <div className="space-y-2">
+          {[
+            { tag: "Identity", msg: "Define a high-conviction persona (e.g. Institutional Quantitative Analyst)." },
+            { tag: "Data", msg: "Prioritize specific signals (e.g. 'RSI trend over MACD crossover')." },
+            { tag: "Bounds", msg: "Set hard logic limits (e.g. 'Wait for 3 candle confirmation')." },
+            { tag: "Logic", msg: "Enforce 'Think Step-by-Step' to activate hidden reasoning tiers." }
+          ].map((item, idx) => (
+            <div key={idx} className="flex gap-3 items-start">
+              <span 
+                className="text-[8px] font-bold underline underline-offset-2 shrink-0"
+                style={{ 
+                  color: theme?.hex || "#0ea5e9",
+                  textDecorationColor: `${theme?.hex || "#0ea5e9"}4d`
+                }}
+              >
+                {item.tag}
+              </span>
+              <span className="text-[9px] text-slate-500 font-mono leading-tight">{item.msg}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,19 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Smartphone,
-  Battery,
-  Signal,
-  Cast,
-  Skull,
-  Activity,
-  MonitorPlay,
-  Folder,
-  MessageSquare,
-  Wifi,
-  Terminal,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { SmartDevice } from "../../types";
 
 type MobileTab = "DASH" | "FILES" | "COMMS" | "LIVE" | "EXPLOIT" | "WIRELESS";
@@ -56,9 +42,9 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
             }`}
           >
             {activeTab === "EXPLOIT" ? (
-              <Skull size={20} />
+              <Icon name="Ghost" size={20} variant="BoldDuotone" />
             ) : (
-              <Smartphone size={20} />
+              <Icon name="Smartphone" size={20} variant="BoldDuotone" />
             )}
           </div>
           <div>
@@ -73,23 +59,23 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
             </h2>
             <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500">
               <span className="flex items-center gap-1">
-                <Signal size={12} className="text-green-500" /> ONLINE
+                <Icon name="Pulse" size={12} variant="BoldDuotone" color="#22c55e" /> ONLINE
               </span>
               <span className="flex items-center gap-1">
-                <Cast
-                  size={12}
-                  className={
-                    isAdbConnected ? "text-green-500" : "text-slate-500"
-                  }
+                <Icon 
+                  name="Monitor" 
+                  size={12} 
+                  variant="BoldDuotone" 
+                  color={isAdbConnected ? "#22c55e" : "#64748b"} 
                 />
                 {isAdbConnected ? "ADB: CONNECTED" : "ADB: OFFLINE"}
               </span>
               <span className="flex items-center gap-1">
-                <Battery
-                  size={12}
-                  className={
-                    batteryLevel < 20 ? "text-red-500" : "text-green-500"
-                  }
+                <Icon 
+                  name="Battery" 
+                  size={12} 
+                  variant="BoldDuotone" 
+                  color={batteryLevel < 20 ? "#ef4444" : "#22c55e"} 
                 />
                 {batteryLevel}% {isCharging ? "(CHARGING)" : ""}
               </span>
@@ -100,19 +86,19 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
           onClick={onClose}
           className="text-slate-500 hover:text-white transition-colors"
         >
-          <X size={24} />
+          <Icon name="CloseCircle" size={24} />
         </button>
       </div>
 
       {/* Tabs */}
       <div className="flex border-b border-slate-800 bg-slate-900 overflow-x-auto">
         {[
-          { id: "DASH", label: "DASHBOARD", icon: Activity },
-          { id: "LIVE", label: "LIVE VIEW", icon: MonitorPlay },
-          { id: "FILES", label: "FILES", icon: Folder },
-          { id: "COMMS", label: "LOGS", icon: MessageSquare },
-          { id: "WIRELESS", label: "WIRELESS", icon: Wifi },
-          { id: "EXPLOIT", label: "EXPLOIT", icon: Terminal, danger: true },
+          { id: "DASH", label: "DASHBOARD", icon: "Pulse" },
+          { id: "LIVE", label: "LIVE VIEW", icon: "PlayCircle" },
+          { id: "FILES", label: "FILES", icon: "Folder" },
+          { id: "COMMS", label: "LOGS", icon: "Chat" },
+          { id: "WIRELESS", label: "WIRELESS", icon: "Widget" },
+          { id: "EXPLOIT", label: "EXPLOIT", icon: "Programming", danger: true },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -126,7 +112,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
                             : "text-slate-500 hover:text-slate-300"
                         }`}
           >
-            <tab.icon size={14} /> {tab.label}
+            <Icon name={tab.icon} size={14} variant="BoldDuotone" /> {tab.label}
           </button>
         ))}
       </div>

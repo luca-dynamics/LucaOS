@@ -6,19 +6,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Bot,
-  Play,
-  Pause,
-  Square,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Zap,
-  TrendingUp,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import type { AgentTask, AgentEvent } from "../services/agent/types";
 import { agentService } from "../services/agent/AgentService";
 
@@ -75,11 +63,11 @@ const AgentModePanel: React.FC<Props> = ({
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60 glass-blur" />
 
       {/* Panel Container - Glassmorphic */}
       <div
-        className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-black/40 backdrop-blur-xl border"
+        className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-black/40 glass-blur border"
         style={{
           borderColor: `${themeHex}40`,
           boxShadow: `0 0 40px ${themeHex}40, inset 0 0 60px ${themeHex}10`,
@@ -120,14 +108,14 @@ const AgentModePanel: React.FC<Props> = ({
                   boxShadow: `0 0 20px ${themeHex}30`,
                 }}
               >
-                <Bot className="w-6 h-6" style={{ color: themeHex }} />
+                <Icon name="Astrology" size={24} color={themeHex} />
               </div>
               <div>
                 <h2
                   className="text-xl font-bold flex items-center gap-2"
                   style={{ color: theme?.primary || themeHex }}
                 >
-                  <Bot className="w-5 h-5" /> AGENT MODE
+                  <Icon name="Astrology" size={20} /> AGENT MODE
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {task?.status === "executing"
@@ -146,7 +134,7 @@ const AgentModePanel: React.FC<Props> = ({
                 color: theme?.primary || themeHex,
               }}
             >
-              <X className="w-5 h-5" />
+              <Icon name="CloseCircle" size={20} />
             </button>
           </div>
 
@@ -225,7 +213,7 @@ const AgentModePanel: React.FC<Props> = ({
                       borderColor: `${themeHex}20`,
                     }}
                   >
-                    <Zap className="w-4 h-4 mb-2" style={{ color: themeHex }} />
+                    <Icon name="Flash" size={16} color={themeHex} className="mb-2" />
                     <div className="text-xs text-gray-400">Iterations</div>
                     <div className="text-white font-mono text-lg">
                       {task.currentStep}
@@ -243,9 +231,11 @@ const AgentModePanel: React.FC<Props> = ({
                       borderColor: `${themeHex}20`,
                     }}
                   >
-                    <Clock
-                      className="w-4 h-4 mb-2"
-                      style={{ color: themeHex }}
+                    <Icon
+                      name="ClockCircle"
+                      size={16}
+                      color={themeHex}
+                      className="mb-2"
                     />
                     <div className="text-xs text-gray-400">Duration</div>
                     <div className="text-white font-mono text-lg">
@@ -261,9 +251,11 @@ const AgentModePanel: React.FC<Props> = ({
                       borderColor: `${themeHex}20`,
                     }}
                   >
-                    <TrendingUp
-                      className="w-4 h-4 mb-2"
-                      style={{ color: themeHex }}
+                    <Icon
+                      name="ChartUp"
+                      size={16}
+                      color={themeHex}
+                      className="mb-2"
                     />
                     <div className="text-xs text-gray-400">Est. Cost</div>
                     <div className="text-white font-mono text-lg">$0.00</div>
@@ -291,28 +283,16 @@ const AgentModePanel: React.FC<Props> = ({
                           }}
                         >
                           {event.type === "started" && (
-                            <Play
-                              className="w-4 h-4"
-                              style={{ color: themeHex }}
-                            />
+                            <Icon name="Play" size={16} color={themeHex} />
                           )}
                           {event.type === "step-completed" && (
-                            <CheckCircle2
-                              className="w-4 h-4"
-                              style={{ color: "#10b981" }}
-                            />
+                            <Icon name="CheckCircle" size={16} color="#10b981" />
                           )}
                           {event.type === "step-failed" && (
-                            <AlertCircle
-                              className="w-4 h-4"
-                              style={{ color: "#ef4444" }}
-                            />
+                            <Icon name="DangerCircle" size={16} color="#ef4444" />
                           )}
                           {event.type === "paused" && (
-                            <Pause
-                              className="w-4 h-4"
-                              style={{ color: "#f59e0b" }}
-                            />
+                            <Icon name="Pause" size={16} color="#f59e0b" />
                           )}
                           <div className="flex-1">
                             <p className="text-sm text-white capitalize">
@@ -330,9 +310,12 @@ const AgentModePanel: React.FC<Props> = ({
               </>
             ) : (
               <div className="text-center py-12">
-                <Bot
-                  className="w-16 h-16 mx-auto mb-4"
-                  style={{ color: themeHex, opacity: 0.5 }}
+                <Icon
+                  name="Astrology"
+                  size={64}
+                  color={themeHex}
+                  style={{ opacity: 0.5 }}
+                  className="mx-auto mb-4"
                 />
                 <p className="text-gray-400">No active agent task</p>
               </div>
@@ -373,7 +356,7 @@ const AgentModePanel: React.FC<Props> = ({
                   }}
                   disabled={!agentService.isRunning}
                 >
-                  <Pause className="w-4 h-4 inline mr-2" />
+                  <Icon name="Pause" size={16} className="inline mr-2" />
                   Pause
                 </button>
               ) : (
@@ -386,7 +369,7 @@ const AgentModePanel: React.FC<Props> = ({
                     color: themeHex,
                   }}
                 >
-                  <Play className="w-4 h-4 inline mr-2" />
+                  <Icon name="Play" size={16} className="inline mr-2" />
                   Resume
                 </button>
               )}
@@ -400,7 +383,7 @@ const AgentModePanel: React.FC<Props> = ({
                   color: "#ef4444",
                 }}
               >
-                <Square className="w-4 h-4 inline mr-2" />
+                <Icon name="Stop" size={16} className="inline mr-2" />
                 Stop
               </button>
             </div>

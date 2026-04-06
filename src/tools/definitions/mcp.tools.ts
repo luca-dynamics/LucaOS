@@ -73,3 +73,14 @@ export const ingestMCPServerTool: FunctionDeclaration = {
     required: ["serverName"],
   },
 };
+
+export const diagnoseMCPHealthTool: FunctionDeclaration = {
+  name: "diagnose_mcp_health",
+  description:
+    "Run a deep diagnostic health check on all connected MCP (Model Context Protocol) servers. This identifies configuration errors, missing environment variables, path issues, and connection latency. Use this if tools from a specific server are failing or if you suspect a configuration issue.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {},
+    required: [],
+  },
+};

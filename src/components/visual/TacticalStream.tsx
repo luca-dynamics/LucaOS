@@ -1,11 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Terminal,
-  Activity,
-  Cpu,
-  Target,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { TacticalLog } from "../../types";
 import { setHexAlpha } from "../../config/themeColors";
 
@@ -18,13 +12,17 @@ interface TacticalStreamProps {
   isLight?: boolean;
 }
 
+/**
+ * Tactical Stream Monitor
+ * Dynamic feed of system operations and agentic trajectories.
+ * 100% Theme-Resilient: Uses CSS variables for reactive contrast.
+ */
 const TacticalStream: React.FC<TacticalStreamProps> = ({
   logs,
   themeColor,
   title = "TACTICAL_CONTROL_FEED",
   status = "LINK_ESTABLISHED",
   onClear,
-  isLight = false,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [glitch, setGlitch] = useState(false);
@@ -58,35 +56,30 @@ const TacticalStream: React.FC<TacticalStreamProps> = ({
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col font-mono overflow-hidden transition-all duration-500 rounded-xl border animate-in fade-in zoom-in-95 duration-700 shadow-2xl backdrop-blur-3xl`}
+      className="relative w-full h-full flex flex-col font-mono overflow-hidden transition-all duration-500 rounded-xl border animate-in fade-in zoom-in-95 duration-700 shadow-2xl glass-blur"
       style={{
-        backgroundColor: isLight
-          ? "rgba(255, 255, 255, 0.4)"
-          : "rgba(0, 0, 0, 0.6)",
-        borderColor: isLight
-          ? "rgba(0, 0, 0, 0.1)"
-          : setHexAlpha(themeColor, 0.25),
+        backgroundColor: "var(--app-bg-tint)",
+        borderColor: "var(--app-border-main)",
         boxShadow: `0 0 40px ${setHexAlpha(themeColor, 0.1)}`,
       }}
     >
       {/* Header Bar */}
       <div
-        className="h-12 border-b flex items-center justify-between px-6 bg-black/20 backdrop-blur-md"
+        className="h-12 border-b flex items-center justify-between px-6 bg-black/20 glass-blur"
         style={{
-          borderColor: isLight
-            ? "rgba(0,0,0,0.1)"
-            : setHexAlpha(themeColor, 0.25),
+          borderColor: "var(--app-border-main)",
         }}
       >
         <div className="flex items-center gap-4">
-          <Terminal
+          <Icon
+            name="Terminal"
             size={18}
             className={glitch ? "animate-pulse" : ""}
             style={{ color: themeColor }}
           />
           <div className="flex flex-col">
             <span
-              className={`text-[10px] tracking-[0.4em] font-bold uppercase ${isLight ? "text-slate-900" : "text-white/80"}`}
+              className="text-[10px] tracking-[0.4em] font-bold uppercase text-[var(--app-text-main)] opacity-80"
             >
               {title}
             </span>
@@ -101,7 +94,7 @@ const TacticalStream: React.FC<TacticalStreamProps> = ({
 
         <div className="flex items-center gap-3">
           <div
-            className={`text-[10px] font-bold px-2 py-0.5 rounded border animate-pulse`}
+            className="text-[10px] font-bold px-2 py-0.5 rounded border animate-pulse"
             style={{
               borderColor: setHexAlpha(themeColor, 0.4),
               backgroundColor: setHexAlpha(themeColor, 0.1),
@@ -114,7 +107,7 @@ const TacticalStream: React.FC<TacticalStreamProps> = ({
             <button
               onClick={onClear}
               className="text-[10px] opacity-40 hover:opacity-100 transition-opacity uppercase tracking-tighter"
-              style={{ color: isLight ? "#000" : "#fff" }}
+              style={{ color: "var(--app-text-main)" }}
             >
               [PURGE]
             </button>
@@ -129,7 +122,8 @@ const TacticalStream: React.FC<TacticalStreamProps> = ({
       >
         {logs.length === 0 ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 opacity-20">
-            <Cpu
+            <Icon
+              name="Cpu"
               size={48}
               style={{ color: themeColor }}
               className="animate-spin-slow"
@@ -150,7 +144,7 @@ const TacticalStream: React.FC<TacticalStreamProps> = ({
               <div className="flex flex-col items-center pt-1 flex-shrink-0">
                 <div
                   className="text-[9px] opacity-40 font-bold mb-1"
-                  style={{ color: isLight ? "#000" : "#fff" }}
+                  style={{ color: "var(--app-text-main)" }}
                 >
                   {log.timestamp}
                 </div>
@@ -173,16 +167,17 @@ const TacticalStream: React.FC<TacticalStreamProps> = ({
                     {log.type}
                   </span>
                   <span
-                    className={`text-[10px] font-bold opacity-60 uppercase tracking-tighter ${isLight ? "text-slate-900" : "text-white"}`}
+                    className="text-[10px] font-bold opacity-60 uppercase tracking-tighter text-[var(--app-text-main)]"
                   >
                     {log.source || "SYSTEM_MODULE"}
                   </span>
                 </div>
                 <div
-                  className={`text-sm leading-relaxed tracking-wide font-mono transition-all group-hover:pl-2`}
+                  className="text-sm leading-relaxed tracking-wide font-mono transition-all group-hover:pl-2"
                   style={{
-                    color: isLight ? "#1e293b" : "rgba(255,255,255,0.9)",
+                    color: "var(--app-text-main)",
                     borderLeft: `2px solid transparent`,
+                    opacity: 0.9
                   }}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.borderLeftColor = getTypeColor(
@@ -211,38 +206,33 @@ const TacticalStream: React.FC<TacticalStreamProps> = ({
 
       {/* Footer / Metric Strip */}
       <div
-        className="h-8 border-t flex items-center justify-between px-6 bg-black/40 backdrop-blur-xl opacity-80"
+        className="h-8 border-t flex items-center justify-between px-6 bg-black/40 glass-blur opacity-80"
         style={{
-          borderColor: isLight
-            ? "rgba(0,0,0,0.1)"
-            : setHexAlpha(themeColor, 0.25),
+          borderColor: "var(--app-border-main)",
         }}
       >
         <div className="flex gap-6 items-center">
           <div className="flex items-center gap-2">
-            <Activity size={10} style={{ color: themeColor }} />
+            <Icon name="Activity" size={10} style={{ color: themeColor }} />
             <span
-              className="text-[8px] opacity-50 uppercase tracking-widest"
-              style={{ color: isLight ? "#000" : "#fff" }}
+              className="text-[8px] opacity-50 uppercase tracking-widest text-[var(--app-text-main)]"
             >
               Bandwidth: 1.2 GB/s
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Cpu size={10} style={{ color: themeColor }} />
+            <Icon name="Cpu" size={10} style={{ color: themeColor }} />
             <span
-              className="text-[8px] opacity-50 uppercase tracking-widest"
-              style={{ color: isLight ? "#000" : "#fff" }}
+              className="text-[8px] opacity-50 uppercase tracking-widest text-[var(--app-text-main)]"
             >
               Cores: 128 (HYPER_SYNTH)
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Target size={10} style={{ color: themeColor }} />
+          <Icon name="Target" size={10} style={{ color: themeColor }} />
           <span
-            className="text-[8px] opacity-50 uppercase tracking-widest"
-            style={{ color: isLight ? "#000" : "#fff" }}
+            className="text-[8px] opacity-50 uppercase tracking-widest text-[var(--app-text-main)]"
           >
             Target: {status}
           </span>

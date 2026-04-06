@@ -1,37 +1,28 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  Clock,
-  ChevronRight,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { ThoughtNode } from "./ThoughtGraph";
 import { NodeStatus } from "./TaskNode";
 
 interface ThoughtGraphMobileProps {
   nodes: ThoughtNode[];
   onNodeClick?: (nodeId: string) => void;
-  themePrimary?: string;
 }
 
 const ThoughtGraphMobile: React.FC<ThoughtGraphMobileProps> = ({
   nodes,
   onNodeClick,
-  themePrimary = "text-cyan-400",
 }) => {
   const getStatusIcon = (status: NodeStatus) => {
     switch (status) {
       case "SUCCESS":
       case "COMPLETE":
-        return <CheckCircle2 size={14} className="text-emerald-500" />;
+        return <Icon name="CheckCircle2" size={14} className="text-emerald-500" />;
       case "ERROR":
-        return <XCircle size={14} className="text-rose-500" />;
+        return <Icon name="XCircle" size={14} className="text-rose-500" />;
       case "PROCESSING":
-        return <Loader2 size={14} className="text-amber-500 animate-spin" />;
+        return <Icon name="Loader2" size={14} className="text-amber-500 animate-spin" />;
       default:
-        return <Clock size={14} className="text-slate-500" />;
+        return <Icon name="Clock" size={14} className="text-slate-500" />;
     }
   };
 
@@ -53,7 +44,7 @@ const ThoughtGraphMobile: React.FC<ThoughtGraphMobileProps> = ({
     <div className="w-full h-full overflow-y-auto bg-black font-mono space-y-4 p-4 scrollbar-none">
       {nodes.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-slate-600 gap-4 opacity-50">
-          <Loader2 className="animate-spin" size={24} />
+          <Icon name="Loader2" className="animate-spin" size={24} />
           <div className="text-[10px] tracking-[0.2em] uppercase font-bold">
             Awaiting Luca Sequence...
           </div>
@@ -61,8 +52,6 @@ const ThoughtGraphMobile: React.FC<ThoughtGraphMobileProps> = ({
       ) : (
         <div className="space-y-4">
           {nodes.map((node, index) => {
-            const hasParent = nodes.some((n) => n.id === node.parentId);
-
             return (
               <div key={node.id} className="relative pl-4">
                 {/* Vertical connection line */}
@@ -113,7 +102,7 @@ const ThoughtGraphMobile: React.FC<ThoughtGraphMobileProps> = ({
                   </div>
 
                   <div className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight size={12} className="text-slate-600" />
+                    <Icon name="ChevronRight" size={12} className="text-slate-600" />
                   </div>
                 </button>
               </div>

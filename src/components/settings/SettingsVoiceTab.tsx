@@ -1,24 +1,6 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-const {
-  Mic,
-  Upload,
-  Play,
-  Trash2,
-  Loader2,
-  Volume2,
-  Waves,
-  Lock,
-  Zap,
-  Shield,
-  Scale,
-  Sparkles,
-  Activity,
-  Cpu,
-  BarChart3,
-  Pause,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 import { eventBus } from "../../services/eventBus";
@@ -211,13 +193,14 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-h-[520px] pr-2">
+    <div className="space-y-6 pr-2">
       {/* Strategic Presets Section */}
       <motion.div variants={item} className="space-y-3">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5" style={{ color: theme.hex }} />
+          <Icon name="Sparkles" className="w-3.5 h-3.5" style={{ color: theme.hex }} />
           <h4
-            className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-widest`}
+            className={`text-lg font-bold uppercase tracking-widest`}
+            style={{ color: "var(--app-text-main, #ffffff)" }}
           >
             Strategic Performance Presets
           </h4>
@@ -227,25 +210,25 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             {
               id: "performance",
               label: "Ultra Performance",
-              icon: Zap,
+              icon: "Zap",
               desc: "Cloud speed, elite quality",
             },
             {
               id: "speedster",
               label: "Hybrid Speedster",
-              icon: Sparkles,
+              icon: "Sparkles",
               desc: "Local Ear, Cloud Voice",
             },
             {
               id: "balanced",
               label: "Balanced",
-              icon: Scale,
+              icon: "Scale",
               desc: "Fast STT, local-fi voice",
             },
             {
               id: "privacy",
               label: "Full Privacy",
-              icon: Shield,
+              icon: "Shield",
               desc: "100% Offline, ultra-fast",
             },
           ].map((preset) => {
@@ -259,31 +242,31 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               <button
                 key={preset.id}
                 onClick={() => applyPreset(preset.id as any)}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/5 hover:bg-black/10" : "border-white/5 bg-white/5 hover:bg-white/10"} transition-all text-center group`}
+                className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all text-center group tech-border`}
                 style={{
+                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.1))",
                   borderColor: isActive
                     ? `${theme.hex}aa`
-                    : theme.themeName?.toLowerCase() === "lucagent"
-                      ? "transparent"
-                      : "rgba(255,255,255,0.05)",
+                    : "var(--app-border-main, rgba(255,255,255,0.05))",
                   background: isActive ? `${theme.hex}11` : undefined
                 }}
               >
-                <preset.icon
+                <Icon
+                  name={preset.icon}
                   className="w-3.5 h-3.5 mb-1.5 group-hover:scale-110 transition-transform"
                   style={{
                     color: isActive
                       ? theme.hex
-                      : theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
+                      : "var(--app-text-muted, rgba(255,255,255,0.3))",
                   }}
                 />
                 <span
-                  className={`text-[9px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-900" : "text-gray-200"}`}
+                  className={`text-base font-bold text-[var(--app-text-main, #ffffff)]`}
                 >
                   {preset.label}
                 </span>
                 <span
-                  className={`text-[7px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-500"} uppercase mt-0.5`}
+                  className={`text-sm text-[var(--app-text-muted)] uppercase mt-0.5`}
                 >
                   {preset.desc}
                 </span>
@@ -302,28 +285,34 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Acoustic Detection (Wake Word) */}
         <motion.div
           variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+          className={`tech-border p-4 space-y-3 rounded-xl border glass-blur`}
+          style={{
+            backgroundColor: "var(--app-bg-tint, #11111a)",
+            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          }}
         >
           <div className="flex items-center justify-between">
-            <Mic
+            <Icon
+              name="Mic"
               className={`w-4 h-4 ${settings.voice.wakeWordEnabled ? "animate-pulse" : ""}`}
               style={{
-                color: settings.voice.wakeWordEnabled ? theme.hex : theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
+                color: settings.voice.wakeWordEnabled ? theme.hex : "var(--app-text-muted, rgba(255,255,255,0.3))",
               }}
             />
             <div
-              className={`text-[8px] font-mono ${settings.voice.wakeWordEnabled ? "text-green-500" : theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-400" : "text-gray-500"}`}
+              className={`text-sm font-mono ${settings.voice.wakeWordEnabled ? "text-green-500" : "text-[var(--app-text-muted)]"}`}
             >
               {settings.voice.wakeWordEnabled ? "ACTIVE" : "DISABLED"}
             </div>
           </div>
           <div className="space-y-2">
             <div
-              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-400"} uppercase tracking-tighter`}
+              className={`text-lg font-bold uppercase tracking-tighter`}
+              style={{ color: "var(--app-text-main, #ffffff)" }}
             >
               Wake Word Detection (&quot;Hey Luca&quot;)
             </div>
-            <p className="text-[9px] text-gray-500 leading-tight">
+            <p className="text-sm text-[var(--app-text-muted)] leading-tight">
               Background listening for &quot;Hey Luca&quot; to bring the AI to
               front.
             </p>
@@ -338,18 +327,15 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 };
                 settingsService.saveSettings(updated);
               }}
-              className={`w-full py-1.5 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/[0.03]" : "border-white/5 bg-white/5"} text-[10px] transition-all`}
+              className={`w-full py-1.5 rounded-lg border text-lg outline-none transition-all tech-border`}
               style={{
+                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
                 color: settings.voice.wakeWordEnabled
                   ? theme.hex
-                  : theme.themeName?.toLowerCase() === "lucagent"
-                    ? "#475569"
-                    : "#9ca3af",
+                  : "var(--app-text-muted, #94a3b8)",
                 borderColor: settings.voice.wakeWordEnabled
                   ? `${theme.hex}66`
-                  : theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(0,0,0,0.05)"
-                    : "rgba(255,255,255,0.05)",
+                  : "var(--app-border-main, rgba(255,255,255,0.1))",
               }}
             >
               {settings.voice.wakeWordEnabled ? "DEACTIVATE" : "ACTIVATE"}
@@ -360,19 +346,24 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Listening Model */}
         <motion.div
           variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+          className={`tech-border p-4 space-y-3 rounded-xl border glass-blur`}
+          style={{
+            backgroundColor: "var(--app-bg-tint, #11111a)",
+            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          }}
         >
           <div className="flex items-center justify-between">
-            <Waves className="w-4 h-4" style={{ color: theme.hex }} />
+            <Icon name="Waves" className="w-4 h-4" style={{ color: theme.hex }} />
             <div
-              className={`text-[8px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : "text-gray-500"} uppercase`}
+              className={`text-base font-mono text-[var(--app-text-muted)] uppercase`}
             >
               Listening Model (Ears)
             </div>
           </div>
           <div className="space-y-1">
             <div
-              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-tighter`}
+              className={`text-lg font-bold uppercase tracking-tighter`}
+              style={{ color: "var(--app-text-main, #ffffff)" }}
             >
               Speech-to-Text
             </div>
@@ -386,7 +377,12 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   onUpdate("voice", "provider", "gemini-genai");
                 }
               }}
-              className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-xs outline-none transition-colors`}
+              className={`w-full rounded-lg p-2 text-lg outline-none transition-colors border tech-border`}
+              style={{
+                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                color: "var(--app-text-main, #ffffff)"
+              }}
             >
               <optgroup label="Cloud Providers (STT)">
                 <option value="cloud-gemini">
@@ -424,11 +420,15 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Vocal Synthesis Engine (Merged Card) */}
         <motion.div
           variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-4 lg:col-span-1`}
+          className={`tech-border p-4 space-y-4 lg:col-span-1 rounded-xl border glass-blur`}
+          style={{
+            backgroundColor: "var(--app-bg-tint, #11111a)",
+            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          }}
         >
           <div className="flex items-center justify-between">
-            <Volume2 className="w-4 h-4" style={{ color: theme.hex }} />
-            <div className="text-[8px] font-mono text-gray-500 uppercase">
+            <Icon name="Volume2" className="w-4 h-4" style={{ color: theme.hex }} />
+            <div className="text-sm font-mono text-[var(--app-text-muted)] uppercase">
               Vocal TTS Providers
             </div>
           </div>
@@ -437,7 +437,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             {/* Engine Selection */}
             <div className="space-y-1">
               <div
-                className={`text-[9px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"} uppercase tracking-widest`}
+                className={`text-base font-bold text-[var(--app-text-muted)] uppercase tracking-widest`}
               >
                 Synthesis Engine
               </div>
@@ -445,7 +445,12 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 value={settings.voice.provider || "gemini-genai"}
                 onChange={(e) => onUpdate("voice", "provider", e.target.value)}
                 disabled={settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025"}
-                className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/5 border-black/10 text-gray-900" : "bg-black/40 border-white/10 text-white"} rounded-lg p-2 text-[10px] outline-none hover:border-black/20 transition-all font-mono ${(settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025") ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`w-full rounded-lg p-2 text-xs outline-none transition-all font-mono border tech-border ${(settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025") ? "opacity-50 cursor-not-allowed" : ""}`}
+              style={{
+                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                color: "var(--app-text-main, #ffffff)"
+              }}
               >
                 <option value="gemini-genai">Gemini Native Audio</option>
                 <option value="google">Google Cloud Neural</option>
@@ -454,8 +459,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 <option value="local-luca">Local Offline</option>
               </select>
               {(settings.voice.sttModel?.includes("gemini") || settings.voice.sttModel === "cloud-gemini") && settings.voice.provider === "gemini-genai" && (
-                <p className="text-[7px] text-blue-400 font-bold uppercase mt-1 animate-pulse flex items-center gap-1">
-                  <Waves className="w-2 h-2" />
+                <p className="text-sm text-blue-400 font-bold uppercase mt-1 animate-pulse flex items-center gap-1">
+                  <Icon name="Waves" className="w-2 h-2" />
                   {settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" 
                     ? "Direct Multimodal Live Loop Active" 
                     : "Linked to Native Multimodal Persona"}
@@ -472,7 +477,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <div
-                  className={`text-[9px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-500" : "text-gray-500"} uppercase tracking-widest`}
+                  className={`text-base font-bold text-[var(--app-text-muted)] uppercase tracking-widest`}
                 >
                   {settings.voice.provider === "local-luca"
                     ? "Offline Speaker Profile"
@@ -481,7 +486,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                       : "Voice Identity"}
                 </div>
                 {settings.voice.provider === "gemini-genai" && (
-                  <span className="text-[7px] text-blue-400 font-bold uppercase animate-pulse">
+                  <span className="text-sm text-blue-400 font-bold uppercase animate-pulse">
                     Persona Synced
                   </span>
                 )}
@@ -491,15 +496,14 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 value={settings.voice.voiceId || "native-browser"}
                 onChange={(e) => onUpdate("voice", "voiceId", e.target.value)}
                 disabled={settings.voice.provider === "gemini-genai"}
-                className={`w-full border rounded-lg p-2 text-[10px] outline-none transition-all ${
-                  settings.voice.provider === "gemini-genai"
-                    ? theme.themeName?.toLowerCase() === "lucagent"
-                      ? "bg-black/5 border-black/5 text-gray-400 cursor-not-allowed opacity-50"
-                      : "bg-black/20 border-white/5 text-gray-600 cursor-not-allowed opacity-50"
-                    : theme.themeName?.toLowerCase() === "lucagent"
-                      ? "bg-black/5 border-black/10 text-gray-900 hover:border-black/20"
-                      : "bg-black/40 border-white/10 hover:border-white/20"
-                }`}
+                className={`w-full border rounded-lg p-2 text-xs outline-none transition-all tech-border`}
+                style={{
+                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                  borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                  color: "var(--app-text-main, #ffffff)",
+                  opacity: settings.voice.provider === "gemini-genai" ? 0.5 : 1,
+                  cursor: settings.voice.provider === "gemini-genai" ? "not-allowed" : "pointer"
+                }}
               >
                 {settings.voice.provider === "gemini-genai" ? (
                   <option>Managed by Active Persona</option>
@@ -572,23 +576,22 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Rhythm Calibration (Moved into grid for better balance) */}
         <motion.div
           variants={item}
-          className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-3`}
+          className={`tech-border p-4 space-y-3 rounded-xl border glass-blur`}
+          style={{
+            backgroundColor: "var(--app-bg-tint, #11111a)",
+            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          }}
         >
           <div
-            className={`flex justify-between items-center text-[10px] font-bold uppercase tracking-tighter ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"}`}
+            className={`flex justify-between items-center text-lg font-bold uppercase tracking-tighter text-[var(--app-text-muted)]`}
           >
             <div className="flex items-center gap-2">
-              <Zap className="w-3 h-3" style={{ color: theme.hex }} />
+              <Icon name="Zap" className="w-3 h-3" style={{ color: theme.hex }} />
               Rhythm & Pacing
             </div>
             <span
-              style={{
-                color:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "#000"
-                    : theme.hex,
-              }}
-              className="font-mono text-[9px]"
+              style={{ color: "var(--app-text-main, #ffffff)" }}
+              className="font-mono text-sm"
             >
               {settings.voice.pacing.toUpperCase()}
             </span>
@@ -606,20 +609,16 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   onUpdate("voice", "pacing", p.id as any);
                   onUpdate("voice", "rate", p.rate);
                 }}
-                className={`py-1.5 rounded border ${theme.themeName?.toLowerCase() === "lucagent" ? "border-black/5 bg-black/[0.03] hover:bg-black/5" : "border-white/5 bg-white/5 hover:bg-white/10"} text-[8px] font-mono transition-all`}
+                className={`py-1.5 rounded border bg-[var(--app-bg-tint)] text-sm font-mono transition-all shadow-sm tech-border hover:bg-white/5`}
                 style={{
                   color:
                     settings.voice.pacing === p.id
-                      ? theme.themeName?.toLowerCase() === "lucagent"
-                        ? "#000"
-                        : theme.hex
-                      : theme.themeName?.toLowerCase() === "lucagent"
-                        ? "#64748b"
-                        : "#6b7280",
+                      ? theme.hex
+                      : "var(--app-text-muted)",
                   borderColor:
                     settings.voice.pacing === p.id
                       ? `${theme.hex}66`
-                      : "transparent",
+                      : "var(--app-border-main)",
                 }}
               >
                 {p.id.toUpperCase()}
@@ -627,7 +626,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             ))}
           </div>
           <p
-            className={`text-[7px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-500" : "text-gray-600"} uppercase tracking-widest text-center mt-1`}
+            className={`text-sm text-[var(--app-text-muted)] uppercase tracking-widest text-center mt-1`}
           >
             Vocal tempo calibration protocol
           </p>
@@ -637,13 +636,17 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
       {/* Voice Intelligence Telemetry (Cinematic Monitoring) */}
       <motion.div
         variants={item}
-        className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-4`}
+        className={`tech-border p-4 space-y-4 rounded-xl border glass-blur`}
+        style={{
+          backgroundColor: "var(--app-bg-tint, #11111a)",
+          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+        }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity className="w-3.5 h-3.5" style={{ color: theme.hex }} />
+            <Icon name="Activity" className="w-3.5 h-3.5" style={{ color: theme.hex }} />
             <span
-              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-wider`}
+              className={`text-lg font-bold text-[var(--app-text-muted)] uppercase tracking-wider`}
             >
               Intelligence Telemetry Dashboard
             </span>
@@ -651,7 +654,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[8px] font-mono text-gray-500 uppercase">
+              <span className="text-sm font-mono text-[var(--app-text-muted)] uppercase">
                 Hybrid Link: Active
               </span>
             </div>
@@ -661,21 +664,21 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* STT Race */}
           <div
-            className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-white/[0.02] border-white/5"} space-y-2`}
+            className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] space-y-2`}
           >
-            <div className="flex justify-between items-center text-[8px] font-bold text-gray-500 uppercase tracking-tighter">
+            <div className="flex justify-between items-center text-base font-bold text-[var(--app-text-muted)] uppercase tracking-tighter">
               <span>Acoustic Racing (STT)</span>
-              <Mic className="w-2.5 h-2.5" />
+              <Icon name="Mic" className="w-2.5 h-2.5" />
             </div>
             <div className="space-y-2">
               <div className="space-y-1">
-                <div className="flex justify-between text-[7px] text-gray-400 font-mono uppercase">
+                <div className="flex justify-between text-sm text-[var(--app-text-muted)] font-mono uppercase">
                   <span>Local Core</span>
                   <span style={{ color: theme.hex }}>
                     {metrics.stt.local.toFixed(0)}ms
                   </span>
                 </div>
-                <div className="h-1 bg-black/20 rounded-full overflow-hidden">
+                <div className={`h-1 bg-[var(--app-bg-tint)]/40 rounded-full overflow-hidden border border-[var(--app-border-main)]`}>
                   <motion.div
                     className="h-full bg-green-500"
                     animate={{ width: `${(metrics.stt.local / 100) * 100}%` }}
@@ -684,11 +687,11 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="flex justify-between text-[7px] text-gray-400 font-mono uppercase">
+                <div className="flex justify-between text-sm text-[var(--app-text-muted)] font-mono uppercase">
                   <span>Cloud Nexus</span>
                   <span>{metrics.stt.cloud.toFixed(0)}ms</span>
                 </div>
-                <div className="h-1 bg-black/20 rounded-full overflow-hidden">
+                <div className={`h-1 bg-[var(--app-bg-tint)]/40 rounded-full overflow-hidden border border-[var(--app-border-main)]`}>
                   <motion.div
                     className="h-full opacity-50"
                     style={{ backgroundColor: theme.hex }}
@@ -702,20 +705,20 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
 
           {/* Brain Latency */}
           <div
-            className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-white/[0.02] border-white/5"} space-y-2`}
+            className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] space-y-2`}
           >
-            <div className="flex justify-between items-center text-[8px] font-bold text-gray-500 uppercase tracking-tighter">
+            <div className="flex justify-between items-center text-base font-bold text-[var(--app-text-muted)] uppercase tracking-tighter">
               <span>Hyper-Inference (Brain)</span>
-              <Cpu className="w-2.5 h-2.5" />
+              <Icon name="Cpu" className="w-2.5 h-2.5" />
             </div>
             <div className="flex flex-col justify-center h-[44px] space-y-1">
-              <div className="text-center text-[18px] font-mono leading-none tracking-tighter">
+              <div className="text-center text-2xl font-mono leading-none tracking-tighter">
                 <span style={{ color: theme.hex }}>
                   {metrics.brain.ttft.toFixed(0)}
                 </span>
-                <span className="text-[10px] text-gray-500 ml-0.5">ms</span>
+                <span className="text-base text-[var(--app-text-muted)] ml-0.5">ms</span>
               </div>
-              <div className="text-center text-[7px] text-gray-400 font-bold uppercase truncate">
+              <div className="text-center text-sm text-[var(--app-text-muted)] font-bold uppercase truncate">
                 Via {metrics.brain.path}
               </div>
             </div>
@@ -723,19 +726,19 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
 
           {/* TTS Protocol */}
           <div
-            className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-white/[0.02] border-white/5"} space-y-2`}
+            className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] space-y-2`}
           >
-            <div className="flex justify-between items-center text-[8px] font-bold text-gray-500 uppercase tracking-tighter">
+            <div className="flex justify-between items-center text-base font-bold text-[var(--app-text-muted)] uppercase tracking-tighter">
               <span>Synthesis Flow (TTS)</span>
-              <BarChart3 className="w-2.5 h-2.5" />
+              <Icon name="BarChart3" className="w-2.5 h-2.5" />
             </div>
             <div className="space-y-2">
-              <div className="flex justify-between items-center bg-black/20 rounded px-2 py-1">
-                <span className="text-[7px] text-gray-400 font-mono uppercase">
+              <div className={`flex justify-between items-center bg-[var(--app-bg-tint)]/30 border border-[var(--app-border-main)] rounded px-2 py-1`}>
+                <span className="text-sm text-[var(--app-text-muted)] font-mono uppercase">
                   Current Source
                 </span>
                 <span
-                  className="text-[7px] font-bold uppercase"
+                  className="text-[9px] font-bold uppercase"
                   style={{ color: theme.hex }}
                 >
                   {metrics.tts.source === "neural"
@@ -744,11 +747,11 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 </span>
               </div>
               <div className="space-y-1">
-                <div className="flex justify-between text-[7px] text-gray-400 font-mono uppercase">
+                <div className="flex justify-between text-sm text-[var(--app-text-muted)] font-mono uppercase">
                   <span>Buffer Load</span>
                   <span>{metrics.tts.buffer.toFixed(0)}%</span>
                 </div>
-                <div className="h-1 bg-black/20 rounded-full overflow-hidden">
+                <div className={`h-1 bg-[var(--app-bg-tint)]/40 rounded-full overflow-hidden border border-[var(--app-border-main)]`}>
                   <motion.div
                     className="h-full"
                     style={{ backgroundColor: theme.hex }}
@@ -760,7 +763,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           </div>
         </div>
 
-        <p className="text-[7px] text-center text-gray-600 font-mono uppercase tracking-[0.2em] pt-1">
+        <p className="text-sm text-[var(--app-text-muted)] font-mono uppercase tracking-[0.2em] pt-1">
           Telemetry stream synchronized via Hybrid Connectivity Bridge
         </p>
       </motion.div>
@@ -770,19 +773,23 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         variants={item}
         initial="hidden"
         animate="show"
-        className={`${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"} tech-border p-4 space-y-4`}
+        className={`tech-border p-4 space-y-4 rounded-xl border glass-blur`}
+        style={{
+          backgroundColor: "var(--app-bg-tint, #11111a)",
+          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+        }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Lock className="w-3 h-3" style={{ color: theme.hex }} />
+            <Icon name="Lock" className="w-3 h-3" style={{ color: theme.hex }} />
             <span
-              className={`text-[10px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-gray-400"} uppercase tracking-wider`}
+              className={`text-lg font-bold text-[var(--app-text-muted)] uppercase tracking-wider`}
             >
               My Voice Clones
             </span>
           </div>
           <div
-            className={`text-[8px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.02] border-black/5" : "bg-white/5 border-white/10"} px-2 py-0.5 rounded border text-gray-500`}
+            className={`text-[10px] font-mono bg-[var(--app-bg-tint, rgba(0,0,0,0.1))] px-2 py-0.5 rounded border border-[var(--app-border-main)] text-[var(--app-text-muted)]`}
           >
             {clonedVoices.length} ENCRYPTED
           </div>
@@ -794,16 +801,16 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               <button
                 onClick={handleRecordVoice}
                 disabled={isRecording}
-                className={`flex items-center justify-center gap-2 py-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/5" : "glass-panel tech-border"} transition-all hover:bg-white/5 active:scale-95`}
+                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-xl border glass-blur transition-all hover:bg-white/5 active:scale-95`}
                 style={{
-                  color: isRecording ? "#9ca3af" : theme.hex,
-                  borderColor: `${theme.hex}22`,
+                  color: isRecording ? "var(--app-text-muted)" : theme.hex,
+                  borderColor: isRecording ? "var(--app-border-main)" : `${theme.hex}22`,
                 }}
               >
                 {isRecording ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Icon name="Loader2" className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <Mic className="w-3.5 h-3.5" />
+                  <Icon name="Mic" className="w-3.5 h-3.5" />
                 )}
                 <span className="text-[9px] font-bold">
                   {isRecording
@@ -812,15 +819,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 </span>
               </button>
               <label
-                className={`flex items-center justify-center gap-2 py-2 ${theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light border-black/5" : "glass-panel tech-border"} cursor-pointer hover:bg-white/5 transition-all text-gray-300`}
-                style={{
-                  borderColor:
-                    theme.themeName?.toLowerCase() === "lucagent"
-                      ? "rgba(0,0,0,0.05)"
-                      : "rgba(255,255,255,0.05)",
-                }}
+                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-xl border glass-blur cursor-pointer hover:bg-white/5 transition-all text-[var(--app-text-muted)]`}
               >
-                <Upload className="w-3.5 h-3.5" />
+                <Icon name="Upload" className="w-3.5 h-3.5" />
                 <span className="text-[9px] font-bold uppercase">UPLOAD</span>
                 <input
                   type="file"
@@ -830,7 +831,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 />
               </label>
             </div>
-            <p className="text-[8px] text-gray-600 font-mono leading-relaxed">
+            <p className="text-[8px] text-[var(--app-text-muted)] font-mono leading-relaxed">
               Record or upload clear audio. Luca will clone this voice for all
               vocal output (Requires Gemini Native Audio). 
               <span className="text-blue-500/80 ml-1">Range: 2-30s. Activating will auto-switch engine.</span>
@@ -843,19 +844,23 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               return (
                 <div
                   key={v.id}
-                  className={`flex items-center justify-between p-2 rounded border ${theme.themeName?.toLowerCase() === "lucagent" ? (isActive ? "bg-black/10 border-black/20" : "bg-black/5 border-black/10") : (isActive ? "bg-white/10 border-white/20" : "bg-black/20 border-white/5")}`}
+                  className={`flex items-center justify-between p-2 rounded border tech-border`}
+                  style={{
+                    backgroundColor: isActive ? "var(--app-bg-tint)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
+                    borderColor: isActive ? `${theme.hex}66` : "var(--app-border-main)",
+                  }}
                 >
                    <div className="flex items-center gap-2 truncate flex-1">
                      {isActive ? (
-                       <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-green-500/20 text-[6px] font-black text-green-400 border border-green-500/30 animate-pulse">
-                         <Activity className="w-2 h-2" />
-                         WEARING
-                       </span>
+                        <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-green-500/20 text-[6px] font-black text-green-400 border border-green-500/30 animate-pulse">
+                          <Icon name="Activity" className="w-2 h-2" />
+                          WEARING
+                        </span>
                      ) : (
                        <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
                      )}
                      <span
-                       className={`text-[9px] font-mono ${theme.themeName?.toLowerCase() === "lucagent" ? "text-gray-600" : (isActive ? "text-white" : "text-gray-400")} truncate`}
+                       className={`text-[9px] font-mono ${isActive ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)]"} truncate`}
                      >
                        {v.name}
                      </span>
@@ -896,12 +901,12 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                            audio.play();
                          });
                        }}
-                       className={`p-1.5 rounded-md transition-all ${playingVoiceId === v.id ? "bg-white/10 text-white" : "hover:text-green-500 text-gray-500"}`}
+                       className={`p-1.5 rounded-md transition-all ${playingVoiceId === v.id ? "bg-white/10 text-[var(--app-text-main)]" : "hover:text-green-500 text-[var(--app-text-muted)]"}`}
                      >
                        {playingVoiceId === v.id ? (
-                         <Pause className="w-3 h-3" />
+                         <Icon name="Pause" className="w-3 h-3" />
                        ) : (
-                         <Play className="w-3 h-3" />
+                         <Icon name="Play" className="w-3 h-3" />
                        )}
                      </button>
                      <button
@@ -912,9 +917,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                              voiceCloneService.getVoices().then(setClonedVoices),
                            )
                        }
-                       className="p-1.5 hover:text-red-500 transition-colors text-gray-500"
+                       className="p-1.5 hover:text-red-500 transition-colors text-[var(--app-text-muted)]"
                      >
-                       <Trash2 className="w-3 h-3" />
+                        <Icon name="Trash2" className="w-3 h-3" />
                      </button>
                    </div>
                 </div>

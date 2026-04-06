@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Wifi,
-} = LucideIcons as any;
-import io, { Socket } from "socket.io-client";
+import { Icon } from "./ui/Icon";
+import io from "socket.io-client";
 import CinemaPlayer from "./CinemaPlayer";
 import GhostBrowser from "./GhostBrowser";
 
@@ -15,7 +12,6 @@ import { WS_PORT } from "../config/api";
 
 const TVReceiver = () => {
   const [status, setStatus] = useState("CONNECTING");
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [activeTask, setActiveTask] = useState("SYSTEM IDLE");
   const [vitals, setVitals] = useState({ cpu: 0, mem: 0 });
   const [theme, setTheme] = useState({
@@ -27,7 +23,6 @@ const TVReceiver = () => {
   const [mode, setMode] = useState<
     "IDLE" | "DATA_ROOM" | "CINEMA" | "BROWSER" | "DATA"
   >("IDLE");
-  const [visualData, setVisualData] = useState<any>(null);
   const [browserUrl, setBrowserUrl] = useState<string>("");
 
   useEffect(() => {
@@ -60,7 +55,6 @@ const TVReceiver = () => {
         // MIRRORING UPDATE
         console.log("[TV] Syncing Visual Core:", msg.data);
         setMode(msg.data.mode);
-        setVisualData(msg.data.visualData);
         setBrowserUrl(msg.data.browserUrl);
       }
     });
@@ -79,7 +73,7 @@ const TVReceiver = () => {
       }
     });
 
-    setSocket(newSocket);
+
     return () => {
       newSocket.close();
     };
@@ -92,7 +86,8 @@ const TVReceiver = () => {
       <div className="h-screen w-screen bg-black overflow-hidden relative">
         <CinemaPlayer /> {/* Removed themeColor */}
         <div className="absolute top-8 right-8 flex items-center gap-2 opacity-50">
-          <Wifi
+          <Icon
+            name="Wifi"
             size={24}
             className={
               status === "CONNECTED" ? "text-green-500" : "text-red-500"

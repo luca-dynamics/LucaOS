@@ -46,11 +46,11 @@ export const THEME_PALETTE = {
     dark: "#1e293b",
     dim: "rgba(71, 85, 105, 0.1)",
   },
-  MIDNIGHT: {
-    primary: "#ffffff", // Pure White on Pure Black
-    secondary: "#94a3b8",
-    dark: "#000000",
-    dim: "rgba(255, 255, 255, 0.05)",
+  LIGHTCREAM: {
+    primary: "#6c6a58", // Dark Olive/Slate (Text/Accent on Cream)
+    secondary: "#afa98a",
+    dark: "#4a483f",
+    dim: "rgba(229, 225, 205, 0.15)",
   },
   VAPORWAVE: {
     primary: "#ff71ce", // Hot Pink
@@ -252,14 +252,15 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     coreColor: "text-white",
     hex: "#ffffff",
   },
-  MIDNIGHT: {
-    themeName: "midnight",
-    primary: "text-white",
-    border: "border-white/20",
-    bg: "bg-[#121212]",
-    glow: "shadow-[0_0_30px_rgba(255,255,255,0.1)]",
-    coreColor: "text-white",
-    hex: "#ffffff",
+  LIGHTCREAM: {
+    themeName: "lightcream",
+    primary: "text-[#4a483f]",
+    border: "border-[#6c6a58]/30",
+    bg: "bg-[#E5E1CD]/70",
+    glow: "shadow-[0_4px_20px_rgba(108,106,88,0.15)]",
+    coreColor: "text-[#6c6a58]",
+    hex: "#E5E1CD",
+    isLight: true,
   },
   VAPORWAVE: {
     themeName: "vaporwave",
@@ -278,7 +279,6 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     glow: "shadow-[0_8px_32px_rgba(180,251,255,0.2)]",
     coreColor: "text-white",
     hex: "#b4fbff",
-    isLight: true,
   },
 };
 
@@ -288,4 +288,48 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
  */
 export const getThemeColors = (persona: string = "PROFESSIONAL") => {
   return PERSONA_UI_CONFIG[persona] || PERSONA_UI_CONFIG.PROFESSIONAL;
+};
+
+/**
+ * Dynamic Contrast Engine Logic
+ * Returns optimal text/border colors based on theme type and background opacity.
+ */
+export const getDynamicContrast = (themeId: string, opacity: number) => {
+  const config = PERSONA_UI_CONFIG[themeId] || PERSONA_UI_CONFIG.PROFESSIONAL;
+  const isLight = config.isLight;
+
+  if (isLight) {
+    const isLightCream = config.themeName?.toLowerCase() === "lightcream";
+    
+    // For light themes (Cream/Slate):
+    // If background is transparent (< 0.5), use White/Bright text.
+    // If background is solid (>= 0.5), use Dark Theme Accent.
+    if (opacity < 0.5) {
+      return {
+        text: isLightCream ? "#E5E1CD" : "#ffffff", // Cream: Warm Text | Slate: Bright White
+        textMuted: isLightCream ? "rgba(229, 225, 205, 0.7)" : "rgba(255, 255, 255, 0.7)",
+        border: isLightCream ? "rgba(229, 225, 205, 0.3)" : "rgba(255, 255, 255, 0.3)",
+        bgTint: isLightCream ? "rgba(229, 225, 205, 0.1)" : "rgba(255, 255, 255, 0.1)",
+        isHighContrast: false,
+      };
+    } else {
+      // Transition to dark contrast
+      return {
+        text: isLightCream ? "#4a483f" : "#1e293b", // Cream: Dark Olive | Slate: Deep Slate
+        textMuted: isLightCream ? "rgba(74, 72, 63, 0.8)" : "rgba(30, 41, 59, 0.8)",
+        border: isLightCream ? "rgba(108, 106, 88, 0.4)" : "rgba(30, 41, 59, 0.4)",
+        bgTint: isLightCream ? "rgba(0, 0, 0, 0.05)" : "rgba(0, 0, 0, 0.1)",
+        isHighContrast: true,
+      };
+    }
+  }
+
+  // Default Dark Themes (Professional, Master System, etc.)
+  return {
+    text: "#ffffff",
+    textMuted: "rgba(255, 255, 255, 0.65)",
+    border: "rgba(255, 255, 255, 0.25)",
+    bgTint: "rgba(255, 255, 255, 0.05)",
+    isHighContrast: false,
+  };
 };

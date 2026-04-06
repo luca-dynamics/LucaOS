@@ -2,7 +2,7 @@ import { introspectionService } from "./introspectionService";
 // JS import in TS environment
 import { mcpClientManager } from "./mcpClientManager";
 import { settingsService } from "./settingsService";
-import { HIGH_SECURITY_TOOLS, MissionScope } from "./toolRegistry";
+import { TOOL_CONFIGS, MissionScope } from "./toolRegistry";
 import os from "os";
 
 /**
@@ -131,29 +131,41 @@ class DiagnosticsService {
 
   private async checkEnvironment(): Promise<AuditResult> {
     const requiredKeys = [
+      "GOOGLE_GENERATIVE_AI_API_KEY",
       "ANTHROPIC_API_KEY",
       "OPENAI_API_KEY",
-      "GOOGLE_GENERATIVE_AI_API_KEY",
     ];
     const missing = requiredKeys.filter((k) => !process.env[k]);
 
-    if (missing.length === 0) {
+    // Perform live validation for configured keys
+    const { ProviderFactory } = await import("./llm/ProviderFactory");
+    const settings = settingsService.get("brain");
+    
+    // Check Gemini (Luca Prime)
+    const geminiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || settings?.geminiApiKey;
+    let geminiValid = false;
+    if (geminiKey) {
+      const check = await ProviderFactory.validateSpecificKey("gemini", geminiKey, "gemini-1.5-flash");
+      geminiValid = check.valid;
+    }
+
+    if (geminiValid) {
       return {
         id: "env_vars",
-        name: "Environment Variables",
+        name: "Cloud Intelligence",
         status: "pass",
-        message: "All critical AI provider keys are present.",
+        message: "Gemini (Luca Prime) is online and authenticated.",
       };
     }
 
-    const isTotalFailure = missing.length === requiredKeys.length;
+    const isTotalFailure = missing.length === requiredKeys.length && !geminiValid;
 
     return {
       id: "env_vars",
-      name: "Environment Variables",
+      name: "Cloud Intelligence",
       status: isTotalFailure ? "fail" : "warn",
-      message: `Missing keys: ${missing.join(", ")}`,
-      fix: "Configure your .env file or system environment variables.",
+      message: geminiKey ? "Gemini authentication failed." : "Gemini API key missing (Luca Prime offline).",
+      fix: "Configure your .env file or Settings > Brain > BYOK.",
     };
   }
 
@@ -251,8 +263,8 @@ class DiagnosticsService {
 
   private async checkMissionMode(): Promise<AuditResult> {
     try {
-      // 1. Verify HIGH_SECURITY_TOOLS mapping
-      const toolCount = Object.keys(HIGH_SECURITY_TOOLS).length;
+      // 1. Verify TOOL_CONFIGS mapping
+      const toolCount = Object.keys(TOOL_CONFIGS).length;
       const isMapped = toolCount > 10; // Simple heuristic
 
       // 2. Verify Scopes are valid

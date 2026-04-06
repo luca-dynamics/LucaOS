@@ -48,6 +48,14 @@ expose('luca', {
         const subscription = (event, ...args) => func(...args);
         ipcRenderer.on(channel, subscription);
         return () => ipcRenderer.removeListener(channel, subscription);
+    },
+    // Mission Control Bridge
+    missionControl: {
+        start: (title, metadata) => ipcRenderer.invoke('mission-start', title, metadata),
+        addGoal: (missionId, description, dependencyId) => ipcRenderer.invoke('mission-add-goal', missionId, description, dependencyId),
+        updateGoal: (goalId, status) => ipcRenderer.invoke('mission-update-goal', goalId, status),
+        getContext: () => ipcRenderer.invoke('mission-get-context'),
+        archive: (missionId) => ipcRenderer.invoke('mission-archive', missionId)
     }
 });
 

@@ -1,6 +1,5 @@
 import { Type, FunctionDeclaration } from "@google/genai";
 
-export * from "./system.tools"; // Ensure this exports the new tool
 
 export const readClipboardTool: FunctionDeclaration = {
   name: "readClipboard",
@@ -954,5 +953,35 @@ export const invokeAnyToolTool: FunctionDeclaration = {
       },
     },
     required: ["toolName", "args"],
+  },
+};
+export const setupOllamaTool: FunctionDeclaration = {
+  name: "setupOllama",
+  description:
+    "Automated setup for Ollama (Local AI Runtime). This will download, install, and start Ollama if missing, then pull the specified model. Use this when the user agrees to use Ollama for performance reasons (VRAM Guard) or explicitly asks to 'setup ollama' or 'install ollama'.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      modelId: {
+        type: Type.STRING,
+        description: "The Luca model ID to setup in Ollama (e.g. 'phi-3-mini', 'gemma-2b').",
+      },
+    },
+    required: ["modelId"],
+  },
+};
+export const teleportMissionTool: FunctionDeclaration = {
+  name: "teleport_mission",
+  description:
+    'Sovereign Mission Handoff (Teleportation): Serialize the current mission state (Persona, History, CWD, Summary) into an encrypted "Gold Egg" blob for cross-device migration. Use this when the user says "I am switching to my phone", "handoff this mission", or "teleport me to my laptop". Returns a Base64 encrypted payload that can be pasted into another LUCA instance to re-hydrate the session.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      reason: {
+        type: Type.STRING,
+        description: "Reason for the handoff (e.g., 'Moving to Mobile', 'Session Backup').",
+      },
+    },
+    required: ["reason"],
   },
 };

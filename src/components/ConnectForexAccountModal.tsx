@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Check,
-  AlertCircle,
-  Zap,
-  Shield,
-  Globe,
-  ChevronRight,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface ForexBroker {
@@ -186,7 +177,7 @@ export default function ConnectForexAccountModal({
     <div className="fixed inset-0 z-[200] flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/80 glass-blur"
         onClick={handleClose}
       />
 
@@ -219,7 +210,7 @@ export default function ConnectForexAccountModal({
                   className={`p-3 rounded-xl ${themeBg} border-2`}
                   style={{ borderColor: themeHex }}
                 >
-                  <Globe className={themePrimary} size={28} strokeWidth={2.5} />
+                  <Icon name="Globe" className={themePrimary} size={28} strokeWidth={2.5} />
                 </div>
                 <div>
                   <h2
@@ -239,7 +230,7 @@ export default function ConnectForexAccountModal({
                 className={`p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:${themePrimary} 
                          transition-all duration-200`}
               >
-                <X size={24} />
+                <Icon name="X" size={24} />
               </button>
             </div>
 
@@ -258,7 +249,8 @@ export default function ConnectForexAccountModal({
                 <span>/</span>
                 <span>BROKER</span>
               </div>
-              <ChevronRight
+              <Icon
+                name="ChevronRight"
                 className={
                   step === "credentials" ? themePrimary : "text-slate-700"
                 }
@@ -299,7 +291,7 @@ export default function ConnectForexAccountModal({
                     <h3
                       className={`text-sm font-mono font-bold ${themePrimary} tracking-widest flex items-center gap-2`}
                     >
-                      <Zap size={16} />
+                      <Icon name="Zap" size={16} />
                       AVAILABLE BROKERS
                     </h3>
                     <div
@@ -371,7 +363,7 @@ export default function ConnectForexAccountModal({
                             <div
                               className={`flex items-center gap-2 text-xs font-mono font-bold ${themePrimary}`}
                             >
-                              <ChevronRight size={14} />
+                              <Icon name="ChevronRight" size={14} />
                               CONNECT NOW
                             </div>
                           </div>
@@ -523,7 +515,7 @@ export default function ConnectForexAccountModal({
                 {/* Error Message */}
                 {error && (
                   <div className="flex items-center gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
-                    <AlertCircle className="text-red-400" size={20} />
+                    <Icon name="AlertCircle" className="text-red-400" size={20} />
                     <span className="text-sm text-red-400 font-mono">
                       {error}
                     </span>
@@ -542,7 +534,7 @@ export default function ConnectForexAccountModal({
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
-                <Shield size={14} className={themePrimary} />
+                <Icon name="Shield" size={14} className={themePrimary} />
                 AES-256 ENCRYPTED
               </div>
 
@@ -570,7 +562,7 @@ export default function ConnectForexAccountModal({
                   </>
                 ) : (
                   <>
-                    <Check size={18} />
+                    <Icon name="Check" size={18} />
                     LINK ACCOUNT
                   </>
                 )}

@@ -191,13 +191,13 @@ class NotificationService {
    */
   formatChatMessage(event: VisionEvent) {
     const priorityEmoji: Record<string, string> = {
-      CRITICAL: "🚨",
-      HIGH: "⚠️",
-      MEDIUM: "ℹ️",
-      LOW: "💡",
+      CRITICAL: "[AlertTriangle]",
+      HIGH: "[AlertTriangle]",
+      MEDIUM: "[Info]",
+      LOW: "[Lightbulb]",
     };
 
-    const emoji = priorityEmoji[event.priority] || "ℹ️";
+    const emoji = priorityEmoji[event.priority] || "[Info]";
     let message = `${emoji} **${event.priority}**: ${event.message}`;
 
     const context = event.context as any;
@@ -213,11 +213,11 @@ class NotificationService {
    */
   getNotificationTitle(event: VisionEvent) {
     const titles: Record<string, string> = {
-      error: "🚨 Error Detected",
-      warning: "⚠️ Warning",
-      success: "✅ Success",
-      info: "ℹ️ Information",
-      opportunity: "💡 Opportunity",
+      error: "[AlertTriangle] Error Detected",
+      warning: "[AlertTriangle] Warning",
+      success: "[Check] Success",
+      info: "[Info] Information",
+      opportunity: "[Lightbulb] Opportunity",
     };
 
     return titles[event.type] || "Notification";

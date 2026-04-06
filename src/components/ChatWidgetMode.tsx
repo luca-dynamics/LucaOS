@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useEffect, useRef } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import ChatWidgetHeader from "./ChatWidgetHeader";
 import ChatWidgetHistory from "./ChatWidgetHistory";
 import ChatWidgetInput from "./ChatWidgetInput";
@@ -694,7 +691,7 @@ const ChatWidgetMode: React.FC = () => {
 
   return (
     <div
-      className="flex flex-col bg-transparent overflow-hidden rounded-xl border shadow-2xl relative transition-all duration-300"
+      className="flex flex-col bg-transparent rounded-xl border shadow-2xl relative transition-all duration-300"
       style={
         {
           borderColor: `${primaryColor}40`,
@@ -707,7 +704,7 @@ const ChatWidgetMode: React.FC = () => {
       }
     >
       {/* Drag Handle & Background */}
-      <div className="absolute inset-0 bg-[#0a0a0a]/95 backdrop-blur-xl -z-10"></div>
+      <div className="absolute inset-0 bg-[#0a0a0a]/95 glass-blur -z-10"></div>
       {/* LUCA SYMBOL OVERLAY (Visible only when empty & no chips) */}
       {state.history.length === 0 && !showChips && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 select-none opacity-[0.08]">
@@ -779,7 +776,7 @@ const ChatWidgetMode: React.FC = () => {
           className="absolute top-2 right-2 z-[100] text-slate-500 hover:text-white transition-colors cursor-pointer"
           style={{ WebkitAppRegion: "no-drag", pointerEvents: "auto" } as any}
         >
-          <X size={14} />
+          <Icon name="CloseCircle" size={14} />
         </button>
       )}
 
@@ -840,7 +837,7 @@ const ChatWidgetMode: React.FC = () => {
           persona={(state.persona as any) || "ASSISTANT"}
         />
         {state.approvalRequest && (
-          <div className="p-4 border-t border-white/10 bg-black/40 backdrop-blur-md">
+          <div className="p-4 border-t border-white/10 bg-black/40 glass-blur">
             <SecurityGate
               toolName={state.approvalRequest.toolName || "SYSTEM_OVERRIDE"}
               args={state.approvalRequest.args || {}}
@@ -875,7 +872,6 @@ const ChatWidgetMode: React.FC = () => {
             primary: primaryColor,
           }}
           showUI={false} // Hidden UI, controlled by Camera Button
-          isMobile={false}
         />
       </div>
 

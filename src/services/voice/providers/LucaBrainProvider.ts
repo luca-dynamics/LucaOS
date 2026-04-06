@@ -9,9 +9,10 @@ export class LucaBrainProvider implements IReasoningProvider {
   async *chatStream(
     text: string,
     options?: {
-      useVision?: boolean;
-      useMemory?: boolean;
+      systemInstruction?: string;
       abortSignal?: AbortSignal;
+      useVision?: boolean;
+      model?: string;
     },
   ): AsyncGenerator<ChatChunk> {
     const isVisionRequested =
@@ -24,7 +25,7 @@ export class LucaBrainProvider implements IReasoningProvider {
     let isDone = false;
     let error: Error | null = null;
 
-    // Trigger the callback-based stream with abortSignal support
+    // Trigger the callback-based stream with abortSignal and model support
     lucaService
       .sendMessageStream(
         text,
@@ -35,6 +36,10 @@ export class LucaBrainProvider implements IReasoningProvider {
         async () => null, // Tools handled internally by lucaService
         undefined, // currentCwd
         options?.abortSignal,
+        { 
+          model: options?.model,
+          systemInstruction: options?.systemInstruction 
+        },
       )
       .then(() => {
         isDone = true;

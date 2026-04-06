@@ -3,6 +3,7 @@ import { eventBus } from "./eventBus";
 import { voiceService } from "./voiceService";
 import { Sender, Message } from "../types";
 import { TradeAction } from "../types/trading";
+import { equityTracker } from "./equityTracker";
 
 /**
  * 🔄 Trading Loop Service
@@ -91,6 +92,18 @@ class TradingLoopService {
     console.log(`[TRADING-LOOP] Background Analysis started for ${symbol}...`);
 
     try {
+      // 0. Record Equity Snapshot (Phase 22 Persistence)
+      const balance = await tradingService.getBalance();
+      const positions = await tradingService.getPositions();
+      
+      await equityTracker.recordSnapshot({
+        totalEquity: balance.total,
+        availableBalance: balance.free,
+        unrealizedPnL: positions.reduce((acc: number, pos: any) => acc + (pos.unrealizedPnl || 0), 0),
+        positionCount: positions.length,
+        marginUsedPct: balance.total > 0 ? (balance.used / balance.total) * 100 : 0
+      });
+
       // 1. Run the Multi-Agent Debate in the background
       const debate = await tradingService.runMultiAgentDebate(symbol, "Auto-Research-Core");
 

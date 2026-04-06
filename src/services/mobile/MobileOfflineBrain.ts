@@ -332,6 +332,24 @@ class MobileOfflineBrainService implements LLMProvider {
       };
     }
   }
+
+  async chatStream(
+    messages: ChatMessage[],
+    onChunk: (text: string) => void,
+    images?: string[],
+    systemInstruction?: string,
+    tools?: any[],
+    _abortSignal?: AbortSignal,
+  ): Promise<LLMResponse> {
+    void _abortSignal;
+    const response = await this.chat(messages, images, systemInstruction, tools);
+    onChunk(response.text);
+    return response;
+  }
+
+  async validateKey(): Promise<{ valid: boolean; message: string; details?: any }> {
+    return { valid: true, message: "On-device model does not require auth" };
+  }
 }
 
 // Export singleton instance

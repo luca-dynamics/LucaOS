@@ -1,20 +1,35 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-import { TaskStatus,
-  Goal } from "../types";
-const {
-  CheckCircle2,
-  Circle,
-  Clock,
-  Calendar,
-  Briefcase,
-  Target,
-  X,
-  Brain,
-} = LucideIcons as any;
+import { TaskStatus, Goal } from "../types";
+import { Icon } from "./ui/Icon";
 import { useAppContext } from "../context/AppContext";
 import { setHexAlpha } from "../config/themeColors";
 import { memoryService } from "../services/memoryService";
+
+// --- Intelligence Display Formatter ---
+function formatIntelValue(value: string): { label: string; summary: string; isStructured: boolean } {
+  const trimmed = String(value ?? "").trim();
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const snap = parsed[parsed.length - 1];
+      const equity = snap.totalEquity ?? snap.equity ?? snap.balance ?? "?";
+      const available = snap.availableBalance ?? snap.available ?? "?";
+      return { label: "EQUITY SNAPSHOT", summary: `EQUITY: $${Number(equity).toFixed(2)}   AVAIL: $${Number(available).toFixed(2)}`, isStructured: true };
+    }
+    if (parsed && typeof parsed === "object") {
+      const symbol = parsed.symbol ?? parsed.asset ?? "";
+      const action = (parsed.action ?? parsed.side ?? parsed.type ?? "").toString().toUpperCase().replace(/_/g, " ");
+      const confidence = parsed.confidence != null ? ` · CONF: ${Math.round(Number(parsed.confidence) * 100)}%` : "";
+      let s = symbol ? `${symbol}` : "";
+      if (action) s += s ? ` · ${action}` : action;
+      s += confidence;
+      return { label: symbol || "TRADE", summary: s || JSON.stringify(parsed).slice(0, 80), isStructured: true };
+    }
+  } catch { /* not JSON */ }
+  // Plain text — strip [ANALYST] prefixes for brevity
+  const plain = trimmed.replace(/\[\w+\]:/g, "").replace(/\n+/g, " ").trim();
+  return { label: "", summary: plain.slice(0, 160) + (plain.length > 160 ? "…" : ""), isStructured: false };
+}
 
 interface Props {
   onDeleteGoal?: (goalId: string) => void;
@@ -112,7 +127,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
         className="flex items-center gap-2 mb-2 border-b border-slate-800 pb-2"
         style={{ color: theme?.hex || "#818cf8" }}
       >
-        <Briefcase size={16} />
+        <Icon name="Briefcase" size={16} />
         <h2 className="font-display font-bold tracking-widest text-xs">
           MANAGEMENT CONSOLE
         </h2>
@@ -122,7 +137,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
         {/* Calendar Section */}
         <div>
           <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
-            <Calendar size={12} /> UPCOMING SCHEDULE
+            <Icon name="Calendar" size={12} /> UPCOMING SCHEDULE
           </div>
           {events.length === 0 ? (
             <div className="text-xs text-slate-600 italic pl-4">
@@ -133,10 +148,10 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className={`flex items-center gap-2 p-1.5 rounded border ${theme?.themeName?.toLowerCase() === "lucagent" ? "border-black/5" : "border-slate-800/50"}`}
+                  className={`flex items-center gap-2 p-1.5 rounded border ${theme?.themeName?.toLowerCase() === "lucagent" ? "border-black/20" : "border-slate-800/50"}`}
                 >
                   <div
-                    className={`flex flex-col items-center justify-center w-10 h-10 ${theme?.themeName?.toLowerCase() === "lucagent" ? "bg-white/60" : "bg-slate-900"} rounded text-[10px] font-mono border ${theme?.themeName?.toLowerCase() === "lucagent" ? "border-black/10" : "border-slate-700"}`}
+                    className={`flex flex-col items-center justify-center w-10 h-10 ${theme?.themeName?.toLowerCase() === "lucagent" ? "bg-white/60" : "bg-slate-900"} rounded text-[10px] font-mono border ${theme?.themeName?.toLowerCase() === "lucagent" ? "border-black/25" : "border-slate-700"}`}
                   >
                     <span style={{ color: theme?.hex || "#06b6d4" }}>
                       {new Date(event.startTime).getDate()}
@@ -168,7 +183,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
         {/* Tasks Section */}
         <div>
           <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
-            <CheckCircle2 size={12} /> ACTIVE TASKS
+            <Icon name="CheckCircle2" size={12} /> ACTIVE TASKS
           </div>
           {tasks.length === 0 ? (
             <div className="text-xs text-slate-600 italic pl-4">
@@ -223,15 +238,15 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                       )}`}
                     >
                       {task.status === TaskStatus.COMPLETED ? (
-                        <CheckCircle2 size={10} />
+                        <Icon name="CheckCircle2" size={10} />
                       ) : (
-                        <Circle size={10} />
+                        <Icon name="Circle" size={10} />
                       )}
                       {task.status}
                     </span>
                     {task.deadline && (
                       <span className="flex items-center gap-1 text-slate-500">
-                        <Clock size={10} />
+                        <Icon name="Clock" size={10} />
                         {new Date(task.deadline).toLocaleDateString()}
                       </span>
                     )}
@@ -245,7 +260,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
         {/* Autonomous Goals Section */}
         <div>
           <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
-            <Target size={12} /> AUTONOMOUS GOALS
+            <Icon name="Target" size={12} /> AUTONOMOUS GOALS
           </div>
           {goals.length === 0 ? (
             <div className="text-xs text-slate-600 italic pl-4">
@@ -291,7 +306,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-400 p-1"
                         title="Delete goal"
                       >
-                        <X size={10} />
+                        <Icon name="X" size={10} />
                       </button>
                     )}
                   </div>
@@ -302,16 +317,16 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                       )}`}
                     >
                       {goal.status === "COMPLETED" ? (
-                        <CheckCircle2 size={10} />
+                        <Icon name="CheckCircle2" size={10} />
                       ) : goal.status === "IN_PROGRESS" ? (
-                        <Circle size={10} className="animate-pulse" />
+                        <Icon name="Circle" size={10} className="animate-pulse" />
                       ) : (
-                        <Circle size={10} />
+                        <Icon name="Circle" size={10} />
                       )}
                       {goal.status}
                     </span>
                     <span className="text-[9px] text-slate-500 flex items-center gap-1">
-                      {goal.type === "RECURRING" && <Target size={9} />}
+                      {goal.type === "RECURRING" && <Icon name="Target" size={9} />}
                       {goal.type}
                     </span>
                   </div>
@@ -319,7 +334,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                     className="text-[9px] mt-1 flex items-center gap-1"
                     style={{ color: theme?.hex || "#c084fc" }}
                   >
-                    <Clock size={9} />
+                    <Icon name="Clock" size={9} />
                     {formatSchedule(goal.schedule, goal.scheduledAt)}
                   </div>
 
@@ -377,7 +392,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
         {/* Active Goals Section */}
         <div>
           <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
-            <Target size={12} /> ACTIVE GOALS
+            <Icon name="Target" size={12} /> ACTIVE GOALS
           </div>
           {goals.length === 0 ? (
             <div className="text-xs text-slate-600 italic pl-4">
@@ -405,7 +420,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-red-500"
                         title="Delete Goal"
                       >
-                        <X size={10} />
+                        <Icon name="X" size={10} />
                       </button>
                     )}
                   </div>
@@ -413,16 +428,16 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                     className={`mt-1 pl-1 text-[9px] font-mono flex items-center gap-1 ${getGoalStatusColor(goal.status)}`}
                   >
                     {goal.status === "COMPLETED" ? (
-                      <CheckCircle2 size={10} />
+                      <Icon name="CheckCircle2" size={10} />
                     ) : goal.status === "IN_PROGRESS" ? (
-                      <Circle size={10} className="animate-pulse" />
+                      <Icon name="Circle" size={10} className="animate-pulse" />
                     ) : (
-                      <Circle size={10} />
+                      <Icon name="Circle" size={10} />
                     )}
                     {goal.status} - {goal.type}
                   </div>
                   <div className="mt-1 pl-1 flex items-center gap-1 text-[9px] text-slate-400 font-mono">
-                    <Clock size={9} />
+                    <Icon name="Clock" size={9} />
                     {formatSchedule(goal.schedule, goal.scheduledAt)}
                   </div>
                 </div>
@@ -434,7 +449,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
         {/* Active Intelligence Section (Phase 9) */}
         <div>
           <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
-            <Brain size={12} /> ACTIVE INTELLIGENCE (PHASE 9)
+            <Icon name="Brain" size={12} /> ACTIVE INTELLIGENCE (PHASE 9)
           </div>
           {memoryService.getRecentIntelligence(3).length === 0 ? (
             <div className="text-xs text-slate-600 italic pl-4">
@@ -462,8 +477,26 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
                       {Math.round(intel.confidence * 100)}%
                     </span>
                   </div>
-                  <div className="text-[9px] text-slate-400 pl-1 leading-tight italic line-clamp-2">
-                    {intel.value}
+                  <div className="pl-1 leading-tight">
+                    {(() => {
+                      const fmt = formatIntelValue(String(intel.value));
+                      return fmt.isStructured ? (
+                        <div className="space-y-0.5">
+                          {fmt.label && (
+                            <div className="text-[8px] font-bold uppercase tracking-widest opacity-50" style={{ color: theme?.hex || "#6366f1" }}>
+                              {fmt.label}
+                            </div>
+                          )}
+                          <div className="text-slate-200 text-[9px] font-mono whitespace-pre-wrap">
+                            {fmt.summary}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-[9px] text-slate-400 italic">
+                          {fmt.summary}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="mt-1 flex justify-between items-center text-[8px] font-mono text-slate-600 pl-1">
                     <span>{intel.category}</span>

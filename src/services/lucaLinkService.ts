@@ -429,6 +429,19 @@ class LucaLinkService {
 
           // Forward to message listeners
           this.messageListeners.forEach((listener) => listener(message));
+
+          // --- SOVEREIGN AUTO-HYDRATION: Handle Mission Sync ---
+          if (message.type === "sync" && message.sync?.type === "mission" && typeof message.sync.data === "string") {
+            const goldEgg = message.sync.data;
+            console.log("[LucaLink] Received Mission Sync. Triggering Neural re-hydration...");
+            
+            // We use dynamic import to avoid circular dependency with lucaService
+            import("./lucaService").then(({ lucaService }) => {
+               lucaService.importSovereignMission(goldEgg).catch(e => {
+                 console.error("[TELEPORT] Auto-hydration failed:", e);
+               });
+            });
+          }
         });
 
         this.socket.on("error", (error: { message: string }) => {
@@ -481,6 +494,28 @@ class LucaLinkService {
 
     this.socket.emit("message", message);
     return true;
+  }
+
+  /**
+   * Broadcast mission state for Live-Wire Synchronicity
+   */
+  syncMission(goldEgg: string): void {
+    if (!this.socket || !this.state.connected) return;
+    
+    console.log("[LucaLink] Broadcasting Mission State (Live-Wire Sync)");
+    const syncMessage: LucaLinkMessage = {
+      id: this.generateDeviceId(),
+      type: "sync",
+      source: this.state.deviceId || "unknown",
+      target: "all",
+      timestamp: Date.now(),
+      sync: {
+        type: "mission",
+        data: goldEgg
+      }
+    };
+    
+    this.socket.emit("message", syncMessage);
   }
 
   /**

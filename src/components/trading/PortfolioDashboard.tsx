@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  LayoutDashboard,
-  PieChart,
-  Shield,
-  Wallet,
-  Globe,
-  TrendingUp,
-  AlertCircle,
-  RefreshCw,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface PortfolioSummary {
@@ -25,7 +15,7 @@ interface PortfolioSummary {
 }
 
 interface PortfolioDashboardProps {
-  theme?: { hex: string; primary: string; border: string; bg: string };
+  theme?: { hex: string; primary: string; border: string; bg: string; isLight?: boolean };
 }
 
 export default function PortfolioDashboard({ theme }: PortfolioDashboardProps) {
@@ -33,7 +23,9 @@ export default function PortfolioDashboard({ theme }: PortfolioDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const primaryColor = theme?.hex || "#22d3ee";
+  const primaryColor = theme?.hex || "#0ea5e9";
+  const isLight = theme?.isLight;
+
 
   useEffect(() => {
     fetchPortfolio();
@@ -61,30 +53,39 @@ export default function PortfolioDashboard({ theme }: PortfolioDashboardProps) {
   if (loading && !summary) {
     return (
       <div className="flex items-center justify-center h-full bg-[#050505] text-white/40 font-mono animate-pulse">
-        <RefreshCw className="w-5 h-5 mr-3 animate-spin" />
+        <Icon name="Restart" size={20} className="mr-3 animate-spin" />
         AGGREGATING ELITE INTELLIGENCE...
       </div>
     );
   }
 
   const chartData = [
-    { name: "CEX", value: summary?.breakdown.cex.length || 0, color: "#3b82f6" },
-    { name: "DEX", value: summary?.breakdown.dex.length || 0, color: "#8b5cf6" },
+    { name: "CEX", value: summary?.breakdown.cex.length || 0, color: primaryColor },
+    { name: "DEX", value: summary?.breakdown.dex.length || 0, color: "#a855f7" },
     { name: "Broker", value: summary?.breakdown.forex.length || 0, color: "#10b981" },
     { name: "On-Chain", value: summary?.breakdown.onchain.length || 0, color: "#f59e0b" },
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-white font-sans overflow-hidden p-6 gap-6">
+    <div className={`flex flex-col h-full ${isLight ? "bg-slate-50" : "bg-transparent"} text-white font-sans overflow-hidden p-6 gap-6 transition-colors`}>
+      {error && (
+        <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-lg flex items-center gap-3 text-rose-400 text-xs font-bold animate-shake">
+          <Icon name="Danger" size={16} />
+          {error}
+          <button onClick={() => setError(null)} className="ml-auto hover:text-white transition-colors">
+            <Icon name="Close" size={14} />
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-white/5 border border-white/10 shadow-glow" style={{ boxShadow: `0 0 20px ${primaryColor}22` }}>
-            <LayoutDashboard className="w-6 h-6" style={{ color: primaryColor }} />
+          <div className={`p-3 rounded-xl ${isLight ? "bg-white shadow-lg shadow-slate-200/50" : "bg-white/5"} border border-white/5 shadow-glow`} style={{ boxShadow: `0 0 20px ${primaryColor}22`, borderColor: `${primaryColor}11` }}>
+            <Icon name="Widget" size={24} variant="BoldDuotone" color={primaryColor} />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tighter uppercase italic leading-none">Unified Portfolio</h1>
-            <p className="text-[10px] text-white/40 font-mono tracking-widest mt-1 uppercase">Luca OS Executive Intelligence Dashboard</p>
+            <h1 className={`text-2xl font-black tracking-tighter uppercase italic leading-none ${isLight ? "text-slate-900" : "text-white"}`}>Unified Portfolio</h1>
+            <p className={`text-[10px] ${isLight ? "text-slate-400" : "text-white/40"} font-mono tracking-widest mt-1 uppercase`}>Luca OS Executive Intelligence Dashboard</p>
           </div>
         </div>
 
@@ -100,17 +101,35 @@ export default function PortfolioDashboard({ theme }: PortfolioDashboardProps) {
       </div>
 
       {/* Elite Nudge Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900/40 via-purple-900/40 to-blue-900/40 border border-white/10 p-4 backdrop-blur-xl group cursor-pointer hover:border-blue-400/30 transition-all duration-500">
-        <div className="absolute top-0 left-0 w-2 h-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-        <div className="flex items-center justify-between pl-4">
+      <div 
+        className="relative overflow-hidden rounded-2xl border glass-blur group cursor-pointer transition-all duration-500"
+        style={{ 
+          background: `linear-gradient(90deg, ${primaryColor}0d, #00000000, ${primaryColor}0d)`,
+          borderColor: `${primaryColor}22`
+        }}
+      >
+        <div 
+          className="absolute top-0 left-0 w-1.5 h-full" 
+          style={{ 
+            backgroundColor: primaryColor,
+            boxShadow: `0 0 15px ${primaryColor}80`
+          }} 
+        />
+        <div className="flex items-center justify-between pl-6 pr-4 py-4">
           <div className="flex items-center gap-4">
-            <Shield className="w-8 h-8 text-blue-400 animate-pulse" />
+            <Icon name="Shield" size={28} color={primaryColor} className="animate-pulse" variant="BoldDuotone" />
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-blue-300">AI Risk Orchestrator Nudge</h3>
-              <p className="text-[11px] text-white/60 mt-0.5">Your current SOL exposure (18.4%) exceeds elite risk parameters. Suggest rebalancing to USDC on Base.</p>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: primaryColor }}>Intelligence Advisory</h3>
+              <p className="text-[11px] text-white/60 mt-0.5 font-medium tracking-tight">Your current SOL exposure (18.4%) exceeds elite risk parameters. Suggest rebalancing to USDC on Base.</p>
             </div>
           </div>
-          <button className="px-4 py-1.5 bg-blue-500/20 border border-blue-500/40 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all">
+          <button 
+            className="px-6 py-2 rounded-sm text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-lg"
+            style={{ 
+              backgroundColor: primaryColor,
+              color: "#050505"
+            }}
+          >
             Execute Rebalance
           </button>
         </div>
@@ -120,8 +139,8 @@ export default function PortfolioDashboard({ theme }: PortfolioDashboardProps) {
       <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden">
         {/* Allocation Sidebar */}
         <div className="col-span-4 flex flex-col gap-6">
-          <div className="flex-1 glass-card-premium border border-white/5 p-6 flex flex-col items-center justify-center">
-             <h3 className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/30 mb-6 -mt-4">Asset Class Distribution</h3>
+          <div className={`flex-1 glass-card-premium border ${isLight ? "bg-white shadow-xl shadow-slate-200/50 border-slate-100" : "bg-black/40 border-white/5"} p-6 flex flex-col items-center justify-center`}>
+             <h3 className={`text-[10px] font-mono uppercase tracking-[0.3em] ${isLight ? "text-slate-400" : "text-white/30"} mb-6 -mt-4`}>Asset Class Distribution</h3>
              <div className="w-full h-48">
                <ResponsiveContainer width="100%" height="100%">
                  <RechartsPieChart>
@@ -157,17 +176,17 @@ export default function PortfolioDashboard({ theme }: PortfolioDashboardProps) {
 
         {/* Breakdown List */}
         <div className="col-span-8 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
-          <SectionHeader icon={<Globe />} title="Centralized Exchanges" count={summary?.breakdown.cex.length} />
+          <SectionHeader icon="Earth" title="Centralized Exchanges" count={summary?.breakdown.cex.length} isLight={isLight} />
           {summary?.breakdown.cex.map(acc => (
-            <AccountRow key={acc.id} id={acc.id} alias={acc.id} equity={acc.equity} type="CEX" />
+            <AccountRow key={acc.id} id={acc.id} alias={acc.id} equity={acc.equity} type="CEX" primaryColor={primaryColor} isLight={isLight} />
           ))}
 
-          <SectionHeader icon={<TrendingUp />} title="Forex & Brokers" count={summary?.breakdown.forex.length} />
+          <SectionHeader icon="Chart" title="Forex & Brokers" count={summary?.breakdown.forex.length} isLight={isLight} />
           {summary?.breakdown.forex.map(acc => (
-            <AccountRow key={acc.id} id={acc.id} alias={acc.alias} equity={acc.equity} type="Broker" />
+            <AccountRow key={acc.id} id={acc.id} alias={acc.alias} equity={acc.equity} type="Broker" primaryColor={primaryColor} isLight={isLight} />
           ))}
 
-          <SectionHeader icon={<Wallet />} title="On-Chain Wallets" count={summary?.breakdown.onchain.length} />
+          <SectionHeader icon="Wallet" title="On-Chain Wallets" count={summary?.breakdown.onchain.length} isLight={isLight} />
           {summary?.breakdown.onchain.map(acc => (
              <AccountRow 
                key={acc.id} 
@@ -176,6 +195,8 @@ export default function PortfolioDashboard({ theme }: PortfolioDashboardProps) {
                equity={acc.equity} 
                type={acc.chain.toUpperCase()} 
                detail={acc.address.substring(0,6) + "..." + acc.address.substring(38)} 
+               primaryColor={primaryColor}
+               isLight={isLight}
              />
           ))}
         </div>
@@ -184,22 +205,33 @@ export default function PortfolioDashboard({ theme }: PortfolioDashboardProps) {
   );
 }
 
-function SectionHeader({ icon, title, count }: any) {
+function SectionHeader({ icon, title, count, isLight }: { icon: string, title: string, count?: number, isLight?: boolean }) {
   return (
     <div className="flex items-center gap-2 mt-4 mb-2">
-      <span className="text-white/40">{React.cloneElement(icon, { size: 14 })}</span>
-      <h3 className="text-[11px] font-black uppercase tracking-widest text-white/50">{title}</h3>
-      <div className="px-1.5 py-0.5 rounded bg-white/5 text-[9px] font-mono text-white/30">{count || 0}</div>
-      <div className="flex-1 h-px bg-white/5 ml-2" />
+      <span className={isLight ? "text-slate-300" : "text-white/40"}><Icon name={icon} size={14} /></span>
+      <h3 className={`text-[11px] font-black uppercase tracking-widest ${isLight ? "text-slate-400" : "text-white/50"}`}>{title}</h3>
+      <div className={`px-1.5 py-0.5 rounded ${isLight ? "bg-slate-100 text-slate-400" : "bg-white/5 text-white/30"} text-[9px] font-mono`}>{count || 0}</div>
+      <div className={`flex-1 h-px ${isLight ? "bg-slate-200" : "bg-white/5"} ml-2`} />
     </div>
   );
 }
 
-function AccountRow({ id, alias, equity, type, detail }: any) {
+function AccountRow({ id, alias, equity, type, detail, primaryColor, isLight }: any) {
   return (
-    <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300 group">
+    <div className={`flex items-center justify-between p-4 ${isLight ? "bg-white shadow-sm border-slate-100" : "bg-white/[0.02] border-white/5"} border rounded-xl hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300 group`}>
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center font-mono text-[10px] text-white/20 group-hover:text-blue-400 transition-colors">
+        <div 
+          className={`w-10 h-10 rounded-lg ${isLight ? "bg-slate-50" : "bg-white/5"} flex items-center justify-center font-mono text-[10px] ${isLight ? "text-slate-400" : "text-white/20"} transition-colors`}
+          style={{ transition: 'color 0.3s' }}
+          onMouseEnter={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.color = primaryColor || "";
+          }}
+          onMouseLeave={(e) => {
+            const target = e.currentTarget as HTMLElement;
+            target.style.color = "";
+          }}
+        >
           {type.substring(0, 3)}
         </div>
         <div>

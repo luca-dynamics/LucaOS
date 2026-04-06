@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
-const {
-  Cpu,
-  Terminal,
-  Shield,
-  Search,
-  Target,
-  Brain,
-  Activity,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { lucaWorkforce, WorkflowPlan, WorkflowTask } from "../../services/agent/LucaWorkforce";
 import { PersonaType } from "../../config/personaConfig";
 
@@ -29,15 +20,15 @@ const Node: React.FC<NodeProps> = ({ label, type, status, x, y, persona, themeCo
   const isGoal = type === "GOAL";
   
   const getIcon = () => {
-    if (isGoal) return <Target size={20} />;
-    if (type === "TASK") return <Terminal size={12} />;
+    if (isGoal) return <Icon name="Target" size={20} variant="BoldDuotone" />;
+    if (type === "TASK") return <Icon name="Code" size={12} variant="BoldDuotone" />;
     
     switch (persona) {
-      case "HACKER": return <Shield size={16} />;
-      case "ENGINEER": return <Cpu size={16} />;
-      case "LOCALCORE": return <Terminal size={16} />;
-      case "LUCAGENT": return <Terminal size={16} />;
-      default: return <Brain size={16} />;
+      case "HACKER": return <Icon name="Shield" size={16} variant="BoldDuotone" />;
+      case "ENGINEER": return <Icon name="Cpu" size={16} variant="BoldDuotone" />;
+      case "LOCALCORE": return <Icon name="Code" size={16} variant="BoldDuotone" />;
+      case "LUCAGENT": return <Icon name="Code" size={16} variant="BoldDuotone" />;
+      default: return <Icon name="Brain" size={16} variant="BoldDuotone" />;
     }
   };
 
@@ -58,7 +49,7 @@ const Node: React.FC<NodeProps> = ({ label, type, status, x, y, persona, themeCo
     >
       <div 
         className={`
-          flex items-center justify-center rounded-full border-2 backdrop-blur-md
+          flex items-center justify-center rounded-full border-2 glass-blur
           ${isGoal ? "w-16 h-16" : isAgent ? "w-12 h-12" : "w-8 h-8"}
           transition-all duration-500
         `}
@@ -162,9 +153,9 @@ export const WorkforceCanvas: React.FC<WorkforceCanvasProps> = ({ theme }) => {
     return (
       <div className="flex flex-col items-center justify-center h-full text-slate-600 font-mono gap-4">
         <div className="relative">
-             <Brain size={48} className="opacity-20 translate-y-2" style={{ color: themeColor }} />
+             <Icon name="Brain" size={48} className="opacity-20 translate-y-2" style={{ color: themeColor }} variant="BoldDuotone" />
              <div className="absolute inset-0 flex items-center justify-center">
-                 <Search size={22} className="animate-pulse" style={{ color: themeColor }} />
+                 <Icon name="Search" size={22} className="animate-pulse" style={{ color: themeColor }} variant="BoldDuotone" />
              </div>
              {/* Spinning outer ring */}
              <motion.div 
@@ -190,7 +181,7 @@ export const WorkforceCanvas: React.FC<WorkforceCanvasProps> = ({ theme }) => {
   const centerY = canvasHeight / 2;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-black/40 backdrop-blur-md rounded-xl border border-white/5 shadow-2xl">
+    <div className="relative w-full h-full overflow-hidden bg-black/40 glass-blur rounded-xl border border-white/5 shadow-2xl">
       {/* Background Grid */}
       <div 
         className="absolute inset-0 opacity-10"
@@ -309,7 +300,7 @@ export const WorkforceCanvas: React.FC<WorkforceCanvasProps> = ({ theme }) => {
                 <span style={{ color: themeColor }}>Synchronized</span>
            </div>
            <div className="flex items-center gap-1">
-                <Activity size={10} style={{ color: themeColor }} />
+                <Icon name="Activity" size={10} style={{ color: themeColor }} variant="BoldDuotone" />
                 <span>Latency: 12ms</span>
            </div>
            <div className="animate-pulse px-2 py-0.5 border rounded" style={{ borderColor: `${themeColor}33`, backgroundColor: `${themeColor}0D` }}>

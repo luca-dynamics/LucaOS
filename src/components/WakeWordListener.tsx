@@ -1,10 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import * as tf from "@tensorflow/tfjs";
 import * as speechCommands from "@tensorflow-models/speech-commands";
-import * as LucideIcons from "lucide-react";
-const {
-  Loader2,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface WakeWordListenerProps {
   onWake: () => void;
@@ -357,8 +354,8 @@ export const WakeWordListener: React.FC<WakeWordListenerProps> = ({
   if (status === "TRAINING" && !isModelTrained) {
     return (
       <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="bg-black/80 backdrop-blur-md border border-cyan-500/30 px-3 py-2 rounded-lg shadow-xl flex items-center gap-3">
-          <Loader2 className="text-cyan-400 animate-spin" size={14} />
+        <div className="bg-black/80 glass-blur border border-cyan-500/30 px-3 py-2 rounded-lg shadow-xl flex items-center gap-3">
+          <Icon name="Loader" className="text-cyan-400 animate-spin" size={14} />
           <span className="text-[10px] font-medium text-cyan-100 italic">
             Optimizing Sense...
           </span>

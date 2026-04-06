@@ -1,14 +1,6 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "./ui/Icon";
 import { UserProfile } from "../types";
-const {
-  User,
-  Mic,
-  FileText,
-  Save,
-  X,
-  Settings,
-} = LucideIcons as any;
 
 interface Props {
   onClose: () => void;
@@ -56,11 +48,11 @@ const ProfileManager: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-xl animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 glass-blur animate-in fade-in duration-300">
       <div className="w-full max-w-lg bg-[#050505] border border-rq-blue/40 shadow-[0_0_50px_rgba(59,130,246,0.15)] rounded-lg p-6 flex flex-col gap-6">
         <div className="flex justify-between items-center border-b border-rq-blue/20 pb-4">
           <div className="flex items-center gap-3 text-rq-blue">
-            <Settings size={24} className="animate-spin-slow" />
+            <Icon name="Settings" size={24} className="animate-spin-slow" />
             <div>
               <h2 className="font-display text-xl font-bold tracking-widest">
                 USER PROFILE CONFIG
@@ -87,7 +79,7 @@ const ProfileManager: React.FC<Props> = ({
               onClick={onClose}
               className="text-slate-500 hover:text-white"
             >
-              <X size={24} />
+              <Icon name="X" size={24} />
             </button>
           </div>
         </div>
@@ -96,7 +88,7 @@ const ProfileManager: React.FC<Props> = ({
           {/* Name Input */}
           <div className="space-y-2">
             <label className="text-xs font-mono text-slate-400 flex items-center gap-2">
-              <User size={14} /> DESIGNATION (YOUR NAME)
+              <Icon name="User" size={14} /> DESIGNATION (YOUR NAME)
             </label>
             <input
               type="text"
@@ -110,7 +102,7 @@ const ProfileManager: React.FC<Props> = ({
           {/* Voice Selection */}
           <div className="space-y-2">
             <label className="text-xs font-mono text-slate-400 flex items-center gap-2">
-              <Mic size={14} /> AGENT VOICE SYNTHESIS
+              <Icon name="Mic" size={14} /> AGENT VOICE SYNTHESIS
             </label>
             <div className="grid grid-cols-5 gap-2">
               {VOICES.map((v) => (
@@ -132,7 +124,7 @@ const ProfileManager: React.FC<Props> = ({
           {/* Custom Instructions */}
           <div className="space-y-2">
             <label className="text-xs font-mono text-slate-400 flex items-center gap-2">
-              <FileText size={14} /> CUSTOM SYSTEM INSTRUCTIONS
+              <Icon name="FileText" size={14} /> CUSTOM SYSTEM INSTRUCTIONS
             </label>
             <textarea
               value={instructions}
@@ -147,7 +139,7 @@ const ProfileManager: React.FC<Props> = ({
           onClick={handleSave}
           className="w-full py-4 bg-rq-blue hover:bg-blue-400 text-black font-bold tracking-[0.2em] flex items-center justify-center gap-2 transition-all rounded-sm mt-2"
         >
-          <Save size={18} /> SAVE CONFIGURATION
+          <Icon name="Save" size={18} /> SAVE CONFIGURATION
         </button>
       </div>
     </div>

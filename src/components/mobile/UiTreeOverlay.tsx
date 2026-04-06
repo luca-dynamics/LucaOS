@@ -95,7 +95,7 @@ const UiTreeOverlay: React.FC<UiTreeOverlayProps> = ({
             {hoveredNode === node && (
               <div className="absolute top-0 left-full ml-2 z-[200] pointer-events-none">
                 <div
-                  className="bg-black/90 border border-rq-blue/40 p-2 rounded shadow-2xl backdrop-blur-md min-w-[200px]"
+                  className="bg-black/90 border border-rq-blue/40 p-2 rounded shadow-2xl glass-blur min-w-[200px]"
                   style={{
                     boxShadow:
                       "0 10px 25px rgba(0,0,0,0.5), 0 0 15px rgba(6,182,212,0.1)",

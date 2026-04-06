@@ -1,9 +1,5 @@
 import React from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Terminal,
-  X,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface ChatWidgetHeaderProps {
   primaryColor: string;
@@ -22,7 +18,8 @@ const ChatWidgetHeader: React.FC<ChatWidgetHeaderProps> = ({
       style={{ borderColor: `${primaryColor}20` }}
     >
       <div className="flex items-center gap-2">
-        <Terminal
+        <Icon
+          name="Code"
           size={10}
           color={primaryColor === "#111827" ? "#ffffff" : primaryColor}
         />
@@ -43,7 +40,7 @@ const ChatWidgetHeader: React.FC<ChatWidgetHeaderProps> = ({
         className="hover:text-white transition-colors cursor-pointer z-[60]"
         style={{ WebkitAppRegion: "no-drag" } as any}
       >
-        <X size={12} />
+        <Icon name="CloseCircle" size={12} />
       </button>
     </div>
   );

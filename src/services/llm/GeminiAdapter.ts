@@ -103,6 +103,134 @@ export class GeminiAdapter implements LLMProvider {
     return fullText;
   }
 
+  async chatStream(
+    messages: ChatMessage[],
+    onChunk: (text: string) => void,
+    images?: string[],
+    systemInstruction?: string,
+    tools?: any[],
+    abortSignal?: AbortSignal,
+  ): Promise<LLMResponse> {
+    const client = this.client || getGenClient();
+
+    // Map history to Google GenAI format (V1 Beta)
+    const contents: any[] = [];
+    let currentGroup: any = null;
+
+    messages.forEach((msg, index) => {
+      const isLast = index === messages.length - 1;
+
+      if (msg.role === "tool") {
+        const part = {
+          functionResponse: {
+            name: msg.name || "unknown",
+            response: { result: msg.content },
+          },
+        };
+
+        if (currentGroup && currentGroup.role === "function") {
+          currentGroup.parts.push(part);
+        } else {
+          currentGroup = { role: "function", parts: [part] };
+          contents.push(currentGroup);
+        }
+      } else if (msg.role === "model") {
+        const parts: any[] = [];
+        if (msg.thought) parts.push({ thought: msg.thought });
+        if (msg.thought_signature)
+          parts.push({ thought_signature: msg.thought_signature });
+        if (msg.content) parts.push({ text: msg.content });
+        if (msg.toolCalls) {
+          msg.toolCalls.forEach((tc) => {
+            parts.push({
+              functionCall: {
+                name: tc.name,
+                args: tc.args,
+              },
+            });
+          });
+        }
+        if (parts.length === 0) parts.push({ text: "" });
+        currentGroup = { role: "model", parts };
+        contents.push(currentGroup);
+      } else {
+        const parts: any[] = [{ text: msg.content || "" }];
+        if (isLast && images && images.length > 0) {
+          parts.push(
+            ...images.map((img) => ({
+              inlineData: { data: img, mimeType: "image/jpeg" },
+            })),
+          );
+        }
+        currentGroup = { role: "user", parts };
+        contents.push(currentGroup);
+      }
+    });
+
+    const stream = await client.models.generateContentStream({
+      model: this.modelName,
+      contents: contents,
+      config: {
+        systemInstruction: systemInstruction
+          ? { parts: [{ text: systemInstruction }] }
+          : undefined,
+        tools:
+          tools && tools.length > 0
+            ? [{ functionDeclarations: tools }]
+            : undefined,
+        temperature: 0.7,
+      },
+    });
+
+    let fullText = "";
+    let thought = "";
+    let thought_signature = "";
+    const toolCalls: ToolCall[] = [];
+
+    for await (const chunk of stream) {
+      if (abortSignal?.aborted) break;
+
+      // 1. Extract Thoughts
+      if (chunk.candidates?.[0]?.content?.parts) {
+        for (const part of chunk.candidates[0].content.parts) {
+          if ("thought" in part && (part as any).thought) {
+            thought += (part as any).thought;
+          }
+          if ("thought_signature" in part || "thoughtSignature" in part) {
+            thought_signature =
+              (part as any).thought_signature || (part as any).thoughtSignature;
+          }
+        }
+      }
+
+      // 2. Extract Function Calls
+      const calls = chunk.functionCalls;
+      if (calls && calls.length > 0) {
+        toolCalls.push(
+          ...calls.map((c: any) => ({ name: c.name, args: c.args, id: c.id })),
+        );
+      }
+
+      // 3. Extract Text
+      try {
+        const text = chunk.text;
+        if (text) {
+          fullText += text;
+          onChunk(text);
+        }
+      } catch {
+        // Ignore empty text chunks (common if only thought/tools)
+      }
+    }
+
+    return {
+      text: fullText,
+      thought: thought || undefined,
+      thought_signature: thought_signature || undefined,
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+    };
+  }
+
   async chat(
     messages: ChatMessage[],
     images?: string[],
@@ -265,6 +393,31 @@ export class GeminiAdapter implements LLMProvider {
     } catch (e) {
       console.error("[GeminiAdapter] Batch embedding failed:", e);
       return [];
+    }
+  }
+  
+  async validateKey(): Promise<{ valid: boolean; message: string; details?: any }> {
+    const client = this.client || getGenClient();
+    try {
+      // Use a minimal model list call to verify the key without generating tokens
+      // Stick to the pattern used in the rest of the file (client.models)
+      const result = await (client.models as any).generateContent({
+        model: "gemini-1.5-flash",
+        contents: [{ role: "user", parts: [{ text: "ping" }] }],
+        generationConfig: { maxOutputTokens: 1 },
+      });
+      
+      if (result) {
+        return { valid: true, message: "Gemini API key is valid." };
+      }
+      return { valid: false, message: "Gemini API returned an empty response." };
+    } catch (e: any) {
+      console.error("[GeminiAdapter] Validation failed:", e);
+      return { 
+        valid: false, 
+        message: e.message || "Failed to validate Gemini API key.",
+        details: e 
+      };
     }
   }
 }

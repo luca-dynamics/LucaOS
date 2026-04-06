@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  AlertCircle,
-  AlertTriangle,
-  Info,
-  XCircle,
-  RefreshCw,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { ErrorSeverity } from "../../services/lucaLink/types";
 import type { LucaLinkError } from "../../services/lucaLink/types";
 
@@ -57,7 +49,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
     switch (error.severity) {
       case ErrorSeverity.CRITICAL:
         return {
-          icon: XCircle,
+          icon: "CloseCircle",
           bgColor: "bg-red-500/10",
           borderColor: "border-red-500/50",
           textColor: "text-red-400",
@@ -65,7 +57,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
         };
       case ErrorSeverity.ERROR:
         return {
-          icon: AlertCircle,
+          icon: "Danger",
           bgColor: "bg-orange-500/10",
           borderColor: "border-orange-500/50",
           textColor: "text-orange-400",
@@ -73,7 +65,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
         };
       case ErrorSeverity.WARNING:
         return {
-          icon: AlertTriangle,
+          icon: "AlertTriangle",
           bgColor: "bg-yellow-500/10",
           borderColor: "border-yellow-500/50",
           textColor: "text-yellow-400",
@@ -81,7 +73,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
         };
       case ErrorSeverity.INFO:
         return {
-          icon: Info,
+          icon: "InfoCircle",
           bgColor: themeBg,
           borderColor: themeBorder.includes("#")
             ? `${themeBorder}80`
@@ -95,7 +87,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
   };
 
   const config = getConfig();
-  const Icon = config.icon;
+  const iconName = config.icon;
 
   return (
     <div
@@ -115,7 +107,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
     >
       <div
         className={`
-          bg-black/95 backdrop-blur-md
+          bg-black/95 glass-blur
           border ${config.borderColor}
           rounded-lg
           p-3 sm:p-4
@@ -141,7 +133,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
         <div className="flex items-start gap-2 sm:gap-3 mb-2">
           {/* Icon */}
           <div className={`flex-shrink-0 ${config.textColor}`}>
-            <Icon size={18} className="sm:w-5 sm:h-5" />
+            <Icon name={iconName} size={18} className="sm:w-5 sm:h-5" />
           </div>
 
           {/* Title & Code */}
@@ -169,7 +161,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
               active:scale-95
             `}
           >
-            <X size={14} className="sm:w-4 sm:h-4" />
+            <Icon name="CloseCircle" size={14} className="sm:w-4 sm:h-4" />
           </button>
         </div>
 
@@ -206,7 +198,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
                   uppercase tracking-wider
                 `}
               >
-                <RefreshCw size={10} className="sm:w-3 sm:h-3" />
+                <Icon name="Refresh" size={10} className="sm:w-3 sm:h-3" />
                 RETRY
               </button>
             )}

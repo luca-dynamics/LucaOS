@@ -10,7 +10,7 @@ import {
 import { MissionScope } from "../../services/toolRegistry";
 import { MISSION_COLORS } from "../../config/themeColors";
 import { eventBus } from "../../services/eventBus";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "../ui/Icon";
 
 interface TranslationResult {
   originalText: string;
@@ -177,7 +177,7 @@ const ContextButton = ({
       style={pos as any}
     >
       <button
-        className="pointer-events-auto px-4 py-2 rounded-xl backdrop-blur-xl flex items-center gap-3 group/card transition-all duration-300 hover:scale-105"
+        className="pointer-events-auto px-4 py-2 rounded-xl glass-blur flex items-center gap-3 group/card transition-all duration-300 hover:scale-105"
         style={{
           border: `1px solid ${primaryColor}66`,
           backgroundColor: `${activeConfig.bg ? "transparent" : `${primaryColor}15`}`,
@@ -209,9 +209,6 @@ const ContextButton = ({
     </div>
   );
 };
-
-const { Power, Mic, Languages, FileText, Monitor, Maximize, HelpCircle } =
-  LucideIcons as any;
 
 const TranslationControlBar = ({
   state,
@@ -247,7 +244,7 @@ const TranslationControlBar = ({
   const controls = [
     {
       id: TranslationMode.OFF,
-      icon: Power,
+      icon: "Power",
       x: 30,
       y: 178,
       type: "MODE",
@@ -256,7 +253,7 @@ const TranslationControlBar = ({
     },
     {
       id: TranslationMode.ONE_WAY,
-      icon: Mic,
+      icon: "Mic",
       x: 58,
       y: 191,
       type: "MODE",
@@ -265,7 +262,7 @@ const TranslationControlBar = ({
     },
     {
       id: TranslationMode.INTERPRETER,
-      icon: Languages,
+      icon: "Languages",
       x: 86,
       y: 199,
       type: "MODE",
@@ -274,7 +271,7 @@ const TranslationControlBar = ({
     },
     {
       id: TranslationMode.TRANSCRIBE,
-      icon: FileText,
+      icon: "FileText",
       x: 114,
       y: 199,
       type: "MODE",
@@ -283,7 +280,7 @@ const TranslationControlBar = ({
     },
     {
       id: "MONITOR",
-      icon: Monitor,
+      icon: "Monitor",
       x: 142,
       y: 191,
       type: "ACTION",
@@ -293,7 +290,7 @@ const TranslationControlBar = ({
     },
     {
       id: "EXPAND",
-      icon: Maximize,
+      icon: "Maximize",
       x: 170,
       y: 178,
       type: "ACTION",
@@ -324,7 +321,7 @@ const TranslationControlBar = ({
           }`}>
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px]"
                  style={{ borderBottomColor: `${primaryColor}66` }} />
-            <div className="bg-black/95 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl relative"
+            <div className="bg-black/95 glass-blur p-4 rounded-2xl shadow-2xl relative"
                  style={{ border: `1px solid ${primaryColor}66`, boxShadow: `0 8px 32px ${primaryColor}33` }}>
               <p className="text-[10px] font-mono leading-relaxed text-white/90 text-center">
                 {activeControl?.info}
@@ -332,7 +329,7 @@ const TranslationControlBar = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-xl group/readout cursor-default"
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 glass-blur group/readout cursor-default"
                style={{ border: `1px solid ${primaryColor}44`, boxShadow: `0 0 15px ${primaryColor}22` }}>
             <div 
               onPointerEnter={() => setShowHelp(true)}
@@ -340,7 +337,7 @@ const TranslationControlBar = ({
               className="pointer-events-auto cursor-help transition-all duration-300 hover:scale-110 opacity-40 hover:opacity-100 w-6 h-6 flex items-center justify-center shrink-0"
               style={{ color: primaryColor }}
             >
-              <HelpCircle size={10} />
+              <Icon name="HelpCircle" size={10} />
             </div>
             
             <div
@@ -353,7 +350,6 @@ const TranslationControlBar = ({
         </div>
 
         {controls.map((m) => {
-          const Icon = m.icon;
           const isActive =
             m.type === "MODE"
               ? state.mode === m.id
@@ -375,7 +371,7 @@ const TranslationControlBar = ({
                   m.onClick?.();
                 }
               }}
-              className={`absolute pointer-events-auto w-7 h-7 rounded-full backdrop-blur-md flex items-center justify-center transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 ${
+              className={`absolute pointer-events-auto w-7 h-7 rounded-full glass-blur flex items-center justify-center transition-all duration-300 transform -translate-x-1/2 -translate-y-1/2 ${
                 isActive
                   ? "scale-110"
                   : "opacity-60 hover:opacity-100 hover:scale-105"
@@ -389,7 +385,7 @@ const TranslationControlBar = ({
                 color: isActive ? "#ffffff" : primaryColor,
               }}
             >
-              <Icon size={12} />
+              <Icon name={m.icon as string} size={12} />
             </button>
           );
         })}

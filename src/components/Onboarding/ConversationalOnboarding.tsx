@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import TypingIndicator from "./TypingIndicator";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "../ui/Icon";
 import { ConversationMode } from "./ModeSelect";
 import { Message } from "../../types/conversation";
 import { OperatorProfile } from "../../types/operatorProfile";
@@ -11,13 +12,14 @@ import { settingsService } from "../../services/settingsService";
 import { personalityService } from "../../services/personalityService";
 import { InteractionContext } from "../../types/lucaPersonality";
 import { liveService } from "../../services/liveService";
-const { X,
-} = LucideIcons as any;
 import { llmService } from "../../services/llmService";
+import { soundService } from "../../services/soundService";
+import { useMobile } from "../../hooks/useMobile";
 
 interface ConversationalOnboardingProps {
   mode: ConversationMode;
   userName: string;
+  targetBrainModel?: string | null;
   onBack?: () => void;
   onComplete: (profile: Partial<OperatorProfile>) => void;
   theme?: { primary: string; hex: string };
@@ -30,6 +32,7 @@ interface ConversationalOnboardingProps {
 const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
   mode,
   userName,
+  targetBrainModel,
   onBack,
   onComplete,
   theme = { primary: "cyan", hex: "#06b6d4" },
@@ -37,11 +40,12 @@ const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [input, setInput] = useState("");
-  const isLight = theme?.hex === "#111827" || theme?.primary === "lucagent";
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messageCount, setMessageCount] = useState(0);
   const extractionServiceRef = useRef<ProfileExtractionService | null>(null);
   const interactionStartTime = useRef<number>(Date.now());
+  const openingRef = useRef(false);
+  const isMobile = useMobile();
 
   // Note: lucaMessage state removed - voice model speaks natively in voice-to-voice mode
 
@@ -49,7 +53,6 @@ const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
   const lastUserResponseTime = useRef<number>(Date.now());
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasHandledSilence = useRef<boolean>(false);
-  const generationStartedRef = useRef(false);
 
   // Demo Fallback Key (configured via VITE_API_KEY in .env)
   const DEMO_API_KEY = import.meta.env.VITE_API_KEY || "";
@@ -67,96 +70,62 @@ const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
 
   // Generate opening message from Luca (AI-generated in real-time)
   useEffect(() => {
-    // PREVENT RERENDER LOOPS / RATE LIMITING
-    if (generationStartedRef.current) return;
-    generationStartedRef.current = true;
+    // If we've started text mode and have no messages, generate the opening
+    if (mode === "text" && messages.length === 0 && !isProcessing && !openingRef.current) {
+      openingRef.current = true;
+      
+      const generateOpening = async () => {
+        setIsProcessing(true);
+        let openingContent = "";
 
-    const generateOpening = async () => {
-      let openingContent = "";
-
-      // Voice mode: Generate short, natural AI greeting
-      if (mode === "voice") {
         try {
-          const brainApiKey = getEffectiveApiKey();
-          if (brainApiKey || process.env.VITE_API_KEY) {
-            const prompt = `You are Luca, a friendly AI agent. Greet the operator ${userName} for the first time.
-Keep it warm and very brief (1-2 sentences). 
-Ask them what they would like to be called.
-Greeting:`;
-
-            const generated = await llmService.generate(prompt, {
-              temperature: 0.7,
-              maxTokens: 150,
-            });
-
-            if (generated) {
-              openingContent = generated.trim();
-            }
+          // Tell llmService which model we want to use for onboarding specifically
+          if (targetBrainModel) {
+            llmService.setPreferredModel(targetBrainModel, "ollama");
           }
-        } catch (error) {
-          console.error("[Conversation] Error generating opening:", error);
-        }
 
-        // Fallback if AI generation fails
-        if (!openingContent) {
-          openingContent = `Hey ${userName}! I'm Luca, your Autonomous AI Agent. What would you like me to call you?`;
-        }
-      } else {
-        // Text mode: Short introduction of Luca
-        try {
-          // Generate opening with AI for personalization
-          const brainApiKey = getEffectiveApiKey();
-          if (brainApiKey || process.env.VITE_API_KEY) {
-            const prompt = `You are Luca, a professional Autonomous AI Agent robot meeting your new operator ${userName} for the FIRST time.
+          const effectiveApiKey = getEffectiveApiKey();
+          const hasCloudKey = effectiveApiKey || process.env.VITE_API_KEY;
 
-Generate a warm, brief opening that:
-- Introduces yourself as their Autonomous AI Agent
-- Explains you'd like to get to know them to serve them better
-- Asks ONE simple question to start: "What would you like me to call you?" OR "What's your preferred name?"
-- Sounds natural and friendly
+          // High-level system prompt for LUCA identity
+          const systemPrompt = `You are LUCA, a sovereign AI operating system meeting your operator for the first time. 
+Your tone is professional, tactile, and warmly efficient. 
+Start by greeting the operator ${userName} and briefly introducing yourself. 
+Ask them for their preferred name.`;
 
-Keep it SHORT (2-3 sentences). Ask ONLY about their name/preferred name to start.
-
-Opening message:`;
-
-            const generated = await llmService.generate(prompt, {
-              temperature: 0.7,
-              maxTokens: 250,
-            });
-
-            if (generated) {
-              openingContent = generated.trim();
+          if (hasCloudKey || targetBrainModel) {
+            try {
+              openingContent = await llmService.generate(
+                "Generate a warm, professional first greeting for our conversation. Keep it to 2-3 sentences.",
+                { systemPrompt, temperature: 0.8 }
+              );
+            } catch (e) {
+              console.error("[ConversationalOnboarding] Greeting generation failed, using fallback:", e);
+              openingContent = `Identity Link Established. I am LUCA, your autonomous AI partner. It's a pleasure to meet you, ${userName}. What preferred name should I use for our interactions?`;
             }
+          } else {
+            // Static fallback if no model/key available
+            openingContent = `Identity Link Established. I am LUCA, your autonomous AI partner. It's a pleasure to meet you, ${userName}. What preferred name should I use for our interactions?`;
           }
+
+          const newMessage: Message = {
+            id: Date.now().toString(),
+            role: "luca",
+            content: openingContent,
+            timestamp: new Date(),
+          };
+          setMessages([newMessage]);
+          soundService.play("SUCCESS");
         } catch (error) {
-          console.error("[Conversation] Error generating opening:", error);
+          console.error("[ConversationalOnboarding] Critical greeting failure:", error);
+        } finally {
+          setIsProcessing(false);
         }
-
-        // Hardcoded fallback if AI generation fails
-        if (!openingContent) {
-          openingContent = `Welcome, ${userName}! 
-
-I'm Luca, your Autonomous AI Agent. I'd like to get to know you better so I can serve you well.
-
-Let's start simple - what would you like me to call you?`;
-        }
-      } // Close voice mode else block
-
-      // Create opening message
-      const openingMessage: Message = {
-        id: Date.now().toString(),
-        role: "luca",
-        content: openingContent,
-        timestamp: new Date(),
       };
-      setMessages([openingMessage]);
 
-      // Note: For voice mode, liveService handles the opening greeting via system instruction.
-      // No separate TTS needed - AI model speaks natively.
-    };
-
-    generateOpening();
-  }, [userName, mode]);
+      generateOpening();
+    }
+  }, [mode, messages.length, isProcessing, userName, targetBrainModel]);
 
   // Generate Luca's response
   const getLucaResponse = async (
@@ -252,7 +221,7 @@ THEN, respond by:
 
 Response:`;
 
-      // Call AI API
+      // Call AI API (This will now use preferred model if set in useEffect)
       const response = await llmService.generate(prompt, {
         temperature: 0.7,
         maxTokens: 150,
@@ -268,6 +237,8 @@ Response:`;
   // Handle sending a message
   const handleSend = async (message: string) => {
     if (!message.trim() || isProcessing) return;
+
+    soundService.play("KEYSTROKE");
 
     // --- MODE-AWARE ROUTING ---
     // In VOICE mode, liveService handles the full conversation (user speech → AI → voice response)
@@ -364,6 +335,7 @@ Response:`;
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, lucaMessage]);
+    soundService.play("PROCESSING");
     // Note: For voice mode, liveService handles speaking natively (no separate TTS)
     setIsProcessing(false);
 
@@ -387,7 +359,7 @@ Response:`;
     };
 
     // Process interaction to evolve personality
-    personalityService.processInteraction(interactionContext).catch((err) => {
+    personalityService.processInteraction(interactionContext).catch((err: any) => {
       console.error("[Personality] Error processing interaction:", err);
     });
 
@@ -559,7 +531,7 @@ Nudge:`;
         onSend={handleSend}
         disabled={isProcessing}
         mode={mode}
-        theme={theme}
+        targetBrainModel={targetBrainModel}
         onModeChange={onBack}
         onActivity={handleUserActivity}
         useLocalVoice={settingsService.get("voice")?.provider === "local-luca"}
@@ -629,37 +601,45 @@ Nudge:`;
     );
   }
 
-  // Text Mode: Standard conversational interface
+  // Scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isProcessing]);
+
   return (
-    <div className="flex flex-col h-full w-full max-w-xl sm:max-w-2xl lg:max-w-5xl mx-auto animate-fade-in-up lg:px-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className={`flex flex-col h-full w-full max-w-xl sm:max-w-4xl lg:max-w-full mx-auto lg:px-6 ${isMobile ? "px-2" : ""}`}
+    >
       {/* Header - Only shown in text mode or when explicit header is needed */}
       {mode === "text" && (
         <div
-          className={`flex items-center justify-between p-3 sm:p-4 border-b backdrop-blur-xl ${isLight ? "border-black/10" : "border-white/10"}`}
+          className="flex items-center justify-between p-3 sm:p-4 border-b glass-blur"
+          style={{ borderColor: "var(--app-border-main)" }}
         >
           <div className="flex items-center gap-3">
             {onBack && (
               <button
                 onClick={() => {
+                  soundService.play("KEYSTROKE");
                   liveService.disconnect();
                   onBack();
                 }}
-                className={`
-                  p-2
-                  rounded-full
-                  transition-all
-                  ${isLight ? "text-black/60 hover:text-black hover:bg-black/5" : "text-white/60 hover:text-white hover:bg-white/10"}
-                `}
+                className="p-2 rounded-full transition-all hover:bg-white/5 opacity-60 hover:opacity-100"
+                style={{ color: "var(--app-text-main)" }}
                 title="Close"
               >
-                <X size={20} />
+                <Icon name="CloseCircle" variant="Linear" style={{ width: "1.5vmin", height: "1.5vmin" }} />
               </button>
             )}
           </div>
 
           <div className="flex items-center gap-2">
             <h2
-              className={`text-sm sm:text-lg font-display ${isLight ? "text-black/95" : "text-white/95"}`}
+              className="text-sm sm:text-lg font-display"
+              style={{ color: "var(--app-text-main)" }}
             >
               Quick Intro
             </h2>
@@ -687,17 +667,11 @@ Nudge:`;
               settingsService.saveOperatorProfile(minimalProfile);
               onComplete(minimalProfile);
             }}
-            className={`
-              px-2 sm:px-3 py-1.5
-              text-xs font-mono
-              rounded-lg
-              transition-all
-              ${
-                isLight
-                  ? "text-black/80 hover:text-black hover:bg-black/5 border-black/15 hover:border-black/30"
-                  : "text-white/80 hover:text-white hover:bg-white/5 border-white/15 hover:border-white/30"
-              }
-            `}
+            className="px-2 sm:px-3 py-1.5 text-xs font-mono rounded-lg transition-all border opacity-80 hover:opacity-100 hover:bg-white/5"
+            style={{ 
+              color: "var(--app-text-main)",
+              borderColor: "var(--app-border-main)"
+            }}
           >
             Skip
           </button>
@@ -706,9 +680,18 @@ Nudge:`;
       {/* Messages - Hidden in voice mode (VoiceHud handles conversation) */}
       {mode === "text" && (
         <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-4">
-          {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} theme={theme} />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              >
+                <MessageBubble message={message} theme={theme} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
           {isProcessing && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
@@ -722,12 +705,12 @@ Nudge:`;
         onSend={handleSend}
         disabled={isProcessing}
         mode={mode}
-        theme={theme}
+        targetBrainModel={targetBrainModel}
         onModeChange={onBack}
         onActivity={handleUserActivity}
         useLocalVoice={settingsService.get("voice")?.provider === "local-luca"}
       />
-    </div>
+    </motion.div>
   );
 };
 

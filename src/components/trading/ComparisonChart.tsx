@@ -19,26 +19,20 @@ interface Trader {
 
 interface ComparisonChartProps {
   traders: Trader[];
+  theme?: { hex: string; primary: string; border: string; bg: string };
 }
 
 const COLORS = [
-  "#F0B90B", // Binance/Yellow
-  "#E13333", // Red
-  "#0ECB81", // Green
-  "#3B82F6", // Blue
-  "#8B5CF6", // Purple
-  "#F97316", // Orange
+  "#10B981", // Green
+  "#F59E0B", // Orange
+  "#0EA5E9", // Cyan
   "#EC4899", // Pink
-  "#14B8A6", // Teal
+  "#A855F7", // Purple
 ];
 
-export const ComparisonChart = ({ traders }: ComparisonChartProps) => {
+export const ComparisonChart = ({ traders, theme }: ComparisonChartProps) => {
   // Generate chart data only from real equity curves
   const chartData = React.useMemo(() => {
-    // Determine time range from available data or default
-    const now = Date.now();
-    const startTime = now - 7 * 24 * 3600 * 1000;
-
     // Collect all unique timestamps from all traders' curves or default to empty
     const uniqueTimes = new Set<number>();
     traders.forEach((t) => {
@@ -103,7 +97,7 @@ export const ComparisonChart = ({ traders }: ComparisonChartProps) => {
               key={t.trader_id}
               type="monotone"
               dataKey={t.trader_name}
-              stroke={COLORS[index % COLORS.length]}
+              stroke={index === 0 ? (theme?.hex || COLORS[0]) : COLORS[index % COLORS.length]}
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4 }}

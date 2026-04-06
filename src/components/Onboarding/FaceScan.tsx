@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Camera,
-  CheckCircle,
-  SkipForward,
-  Scan,
-  Check,
-} = LucideIcons as any;
-import VisionCameraModal from "../VisionCameraModal";
-import { soundService } from "../../services/soundService";
+import { Icon } from "../ui/Icon";
 import { useMobile } from "../../hooks/useMobile";
+import { soundService } from "../../services/soundService";
 import { apiUrl } from "../../config/api";
-import { setHexAlpha } from "../../config/themeColors";
+import VisionCameraModal from "../VisionCameraModal";
 
 interface FaceScanProps {
   userName: string;
@@ -23,11 +15,6 @@ interface FaceScanProps {
   confirmMessage?: string;
   hideHeader?: boolean;
   compact?: boolean;
-  isLightTheme?: boolean;
-  theme?: {
-    primary: string;
-    hex: string;
-  };
 }
 
 /**
@@ -44,8 +31,6 @@ const FaceScan: React.FC<FaceScanProps> = ({
   confirmMessage,
   hideHeader = false,
   compact = false,
-  isLightTheme = false,
-  theme,
 }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -55,12 +40,9 @@ const FaceScan: React.FC<FaceScanProps> = ({
   const [error, setError] = useState<string | null>(null);
   const isMobile = useMobile();
 
-  // Theme-aware colors
-  const textMuted = isLightTheme ? "text-slate-700" : "text-white/60";
-  const textBody = isLightTheme ? "text-slate-800" : "text-white/80";
-  const textHeading = isLightTheme ? "text-slate-900" : "text-white";
-  const bgCard = isLightTheme ? "bg-slate-200/60" : "bg-white/5";
-  const bgIcon = isLightTheme ? "bg-slate-200" : "bg-white/10";
+  // Theme-aware colors removed in favor of Dynamic Contrast Variables (CSS)
+  const bgCard = "bg-transparent"; 
+  const bgIcon = "bg-transparent"; 
 
   const defaultDescription =
     description ||
@@ -179,18 +161,21 @@ const FaceScan: React.FC<FaceScanProps> = ({
     return (
       <div className="animate-fade-in-up w-full text-center flex flex-col items-center" style={{ gap: "4vmin" }}>
         <div
-          className={`${bgIcon} border rounded-full flex items-center justify-center backdrop-blur-xl`}
+          className="border rounded-full flex items-center justify-center glass-blur"
           style={{
             width: "clamp(4rem, 15vmin, 6rem)",
             height: "clamp(4rem, 15vmin, 6rem)",
-            borderColor: theme ? setHexAlpha(theme.hex, 0.5) : undefined,
+            borderColor: "var(--app-border-main)",
+            backgroundColor: "var(--app-bg-tint)",
           }}
         >
-          <Camera className={textMuted} style={{ width: "8vmin", height: "8vmin" }} />
+          <Icon name="Camera" variant="Linear" style={{ width: "8vmin", height: "8vmin", color: "var(--app-text-muted)" }} />
         </div>
         <p 
-          className={textMuted}
-          style={{ fontSize: "clamp(0.6rem, 2vmin, 0.9rem)" }}
+          style={{ 
+            fontSize: "clamp(0.6rem, 2vmin, 0.9rem)",
+            color: "var(--app-text-muted)"
+          }}
         >
           No camera detected. Skipping facial recognition setup...
         </p>
@@ -212,7 +197,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
               width: "clamp(12rem, 50vmin, 20rem)",
               height: "clamp(12rem, 50vmin, 20rem)",
               objectFit: "cover",
-              borderColor: theme ? setHexAlpha(theme.hex, 0.5) : undefined,
+              borderColor: "var(--app-primary)",
             }}
           />
 
@@ -221,9 +206,8 @@ const FaceScan: React.FC<FaceScanProps> = ({
             <div
               className="absolute inset-0 animate-scan-line"
               style={{
-                background: theme
-                  ? `linear-gradient(to bottom, transparent, ${setHexAlpha(theme.hex, 0.2)}, transparent)`
-                  : undefined,
+                background: `linear-gradient(to bottom, transparent, var(--app-primary), transparent)`,
+                opacity: 0.3,
               }}
             />
 
@@ -231,46 +215,48 @@ const FaceScan: React.FC<FaceScanProps> = ({
             <div
               className="absolute inset-0 bg-[size:20px_20px]"
               style={{
-                backgroundImage: theme
-                  ? `linear-gradient(${setHexAlpha(theme.hex, 0.1)} 1px, transparent 1px), linear-gradient(90deg, ${setHexAlpha(theme.hex, 0.1)} 1px, transparent 1px)`
-                  : undefined,
+                backgroundImage: `linear-gradient(var(--app-primary) 1px, transparent 1px), linear-gradient(90deg, var(--app-primary) 1px, transparent 1px)`,
+                opacity: 0.15,
               }}
             />
 
             {/* Corner brackets */}
             <div
               className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 animate-pulse"
-              style={{ borderColor: theme?.hex }}
+              style={{ borderColor: "var(--app-primary)" }}
             />
             <div
               className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 animate-pulse"
-              style={{ borderColor: theme?.hex }}
+              style={{ borderColor: "var(--app-primary)" }}
             />
             <div
               className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 animate-pulse"
-              style={{ borderColor: theme?.hex }}
+              style={{ borderColor: "var(--app-primary)" }}
             />
             <div
               className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 animate-pulse"
-              style={{ borderColor: theme?.hex }}
+              style={{ borderColor: "var(--app-primary)" }}
             />
 
             {/* Center scanning icon */}
             <div
-              className={`${isLightTheme ? "bg-white/80" : "bg-black/60"} backdrop-blur-sm rounded-[1.5vmin] border`}
+              className="glass-blur rounded-[1.5vmin] border"
               style={{
-                borderColor: theme ? setHexAlpha(theme.hex, 0.5) : undefined,
+                borderColor: "var(--app-border-main)",
+                backgroundColor: "var(--app-bg-tint)",
                 padding: "1.5vmin 3vmin",
               }}
             >
               <div className="flex items-center" style={{ gap: "1.5vmin" }}>
-                <Scan
+                <Icon
+                  name="MinimalisticMagnifer"
+                  variant="Linear"
                   className="animate-pulse"
-                  style={{ color: theme?.hex, width: "3vmin", height: "3vmin" }}
+                  style={{ color: "var(--app-primary)", width: "3vmin", height: "3vmin" }}
                 />
                 <span
                   className="font-mono"
-                  style={{ color: theme?.hex, fontSize: "clamp(0.5rem, 1.8vmin, 0.8rem)" }}
+                  style={{ color: "var(--app-primary)", fontSize: "clamp(0.5rem, 1.8vmin, 0.8rem)" }}
                 >
                   {enrollmentEndpoint
                     ? "ENROLLING BIOMETRIC DATA..."
@@ -281,7 +267,10 @@ const FaceScan: React.FC<FaceScanProps> = ({
           </div>
         </div>
 
-        <p className={`text-center ${textMuted} text-sm animate-pulse`}>
+        <p 
+          className="text-center text-sm animate-pulse"
+          style={{ color: "var(--app-text-muted)" }}
+        >
           {enrollmentEndpoint
             ? "Registering identity with local core..."
             : "Processing facial recognition data..."}
@@ -294,10 +283,13 @@ const FaceScan: React.FC<FaceScanProps> = ({
   if (error) {
     return (
       <div className="space-y-6 animate-fade-in-up w-full max-w-xl text-center">
-        <div className="w-24 h-24 mx-auto bg-red-500/20 border-2 border-red-500 rounded-full flex items-center justify-center backdrop-blur-xl">
-          <CheckCircle className="w-12 h-12 text-red-500 rotate-45" />
+        <div className="w-24 h-24 mx-auto bg-red-500/10 border-2 border-red-500 rounded-full flex items-center justify-center glass-blur">
+          <Icon name="CheckCircle" variant="Linear" className="w-12 h-12 text-red-500 rotate-45" />
         </div>
-        <h3 className={`text-xl font-bold ${textHeading}`}>
+        <h3 
+          className="text-xl font-bold"
+          style={{ color: "var(--app-text-main)" }}
+        >
           Enrollment Failed
         </h3>
         <p className="text-red-400 text-sm">{error}</p>
@@ -309,13 +301,16 @@ const FaceScan: React.FC<FaceScanProps> = ({
   if (confirmed && capturedImage) {
     return (
       <div className="space-y-6 animate-fade-in-up w-full max-w-xl text-center">
-        <div className="w-24 h-24 mx-auto bg-green-500/20 border-2 border-green-500 rounded-full flex items-center justify-center backdrop-blur-xl animate-scale-in">
-          <Check className="w-12 h-12 text-green-500" />
+        <div className="w-24 h-24 mx-auto bg-green-500/10 border-2 border-green-500 rounded-full flex items-center justify-center glass-blur animate-scale-in">
+          <Icon name="CheckCircle" variant="Linear" className="w-12 h-12 text-green-500" />
         </div>
 
         <div className="space-y-2">
-          <h3 className={`text-xl font-bold ${textHeading}`}>
-            Face Recognized!
+          <h3 
+            className="text-xl font-bold"
+            style={{ color: "var(--app-text-main)" }}
+          >
+            Face recognized!
           </h3>
           <p className="text-green-500 text-sm">
             {confirmMessage ||
@@ -329,7 +324,12 @@ const FaceScan: React.FC<FaceScanProps> = ({
           className="w-32 h-32 mx-auto rounded-lg border-2 border-green-500/50 object-cover"
         />
 
-        <p className={`${textMuted} text-xs`}>Proceeding to next step...</p>
+        <p 
+          className="text-xs"
+          style={{ color: "var(--app-text-muted)" }}
+        >
+          Proceeding to next step...
+        </p>
       </div>
     );
   }
@@ -350,43 +350,43 @@ const FaceScan: React.FC<FaceScanProps> = ({
       {!hideHeader && (
         <div className={`text-center ${compact ? "space-y-0.5" : "space-y-4"}`}>
           <div
-            className={`${bgIcon} border rounded-full flex items-center justify-center backdrop-blur-xl transition-all mx-auto`}
+            className={`${bgIcon} border rounded-full flex items-center justify-center glass-blur transition-all mx-auto`}
             style={{
               width: "clamp(3rem, 12vmin, 5rem)",
               height: "clamp(3rem, 12vmin, 5rem)",
-              borderColor: theme
-                ? setHexAlpha(theme.hex, 0.3)
-                : isLightTheme
-                  ? "rgba(0,0,0,0.2)"
-                  : "rgba(255,255,255,0.2)",
-              boxShadow: theme
-                ? `0 0 20px ${setHexAlpha(theme.hex, 0.2)}`
-                : "none",
+              backgroundColor: "var(--app-bg-tint)",
+              borderColor: "var(--app-border-main)",
+              boxShadow:
+                "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 0 0 1px var(--app-border-main)",
             }}
           >
-            <Camera
+            <Icon
+              name="Camera"
+              variant="Linear"
               style={{
                 width: "6vmin",
                 height: "6vmin",
-                color: theme
-                  ? theme.hex
-                  : isLightTheme
-                    ? "rgba(0,0,0,0.6)"
-                    : "rgba(255,255,255,0.8)",
+                color: "var(--app-text-main)",
               }}
             />
           </div>
 
           <h2
-            className={`font-bold uppercase tracking-widest ${textHeading} transition-all`}
-            style={{ fontSize: "clamp(1rem, 4vmin, 1.75rem)" }}
+            className="font-bold uppercase tracking-widest transition-all"
+            style={{ 
+              fontSize: "clamp(1rem, 4vmin, 1.75rem)",
+              color: "var(--app-text-main)"
+            }}
           >
             {title}
           </h2>
 
           <p
-            className={`${textMuted} max-w-md mx-auto transition-all pt-0.5 leading-tight`}
-            style={{ fontSize: "clamp(0.55rem, 1.8vmin, 0.85rem)" }}
+            className="max-w-md mx-auto transition-all pt-0.5 leading-tight opacity-80"
+            style={{ 
+              fontSize: "clamp(0.55rem, 1.8vmin, 0.85rem)",
+              color: "var(--app-text-muted)"
+            }}
           >
             {defaultDescription}
           </p>
@@ -394,23 +394,22 @@ const FaceScan: React.FC<FaceScanProps> = ({
       )}
 
       <div
-        className={`${bgCard} border rounded-xl ${
-          compact
-            ? isMobile
-              ? "p-1.5 space-y-0.5"
-              : "p-3 space-y-1.5"
-            : "p-5 space-y-3"
-        } backdrop-blur-xl ${textBody} shadow-inner transition-all`}
-        style={{ borderColor: theme ? setHexAlpha(theme.hex, 0.15) : undefined }}
+        className={`${bgCard} border rounded-xl glass-blur shadow-inner transition-all ${compact ? "p-1.5 space-y-0.5" : "p-5 space-y-3"}`}
+        style={{ 
+          borderColor: "var(--app-border-main)",
+          color: "var(--app-text-main)",
+          backgroundColor: "var(--app-bg-tint)"
+        }}
       >
         <div className="flex items-center gap-3">
           <div 
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: theme ? `${theme.hex}1a` : "rgba(34, 197, 94, 0.1)" }}
+            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[var(--app-primary)]/10"
           >
-            <CheckCircle
+            <Icon
+              name="CheckCircle"
               size={compact ? 9 : 14}
-              style={{ color: theme ? theme.hex : "rgba(34, 197, 94, 0.8)" }}
+              variant="Linear"
+              style={{ color: "var(--app-primary)" }}
             />
           </div>
           <span
@@ -421,12 +420,13 @@ const FaceScan: React.FC<FaceScanProps> = ({
         </div>
         <div className="flex items-center gap-3">
           <div 
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: theme ? `${theme.hex}1a` : "rgba(34, 197, 94, 0.1)" }}
+            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[var(--app-primary)]/10"
           >
-            <CheckCircle
+            <Icon
+              name="CheckCircle"
               size={compact ? 9 : 14}
-              style={{ color: theme ? theme.hex : "rgba(34, 197, 94, 0.8)" }}
+              variant="Linear"
+              style={{ color: "var(--app-primary)" }}
             />
           </div>
           <span
@@ -437,12 +437,13 @@ const FaceScan: React.FC<FaceScanProps> = ({
         </div>
         <div className="flex items-center gap-3">
           <div 
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: theme ? `${theme.hex}1a` : "rgba(34, 197, 94, 0.1)" }}
+            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[var(--app-primary)]/10"
           >
-            <CheckCircle
+            <Icon
+              name="CheckCircle"
               size={compact ? 9 : 14}
-              style={{ color: theme ? theme.hex : "rgba(34, 197, 94, 0.8)" }}
+              variant="Linear"
+              style={{ color: "var(--app-primary)" }}
             />
           </div>
           <span
@@ -457,67 +458,36 @@ const FaceScan: React.FC<FaceScanProps> = ({
       <div className="flex flex-col w-full" style={{ gap: "2vmin" }}>
         <button
           onClick={() => setShowCamera(true)}
-          className={`
-            w-full max-w-sm mx-auto
-            ${isLightTheme ? "bg-slate-200/80 hover:bg-slate-300/80" : "bg-white/10 hover:bg-white/20"} 
-            border 
-            ${textHeading} 
-            rounded-[1.5vmin] 
-            uppercase 
-            tracking-[0.2em] 
-            font-bold
-            transition-all 
-            flex 
-            items-center 
-            justify-center 
-            backdrop-blur-xl
-            active:scale-[0.98]
-            shadow-lg
-            group
-          `}
+          className="w-full max-w-sm mx-auto border rounded-[1.5vmin] uppercase tracking-[0.2em] font-bold transition-all flex items-center justify-center glass-blur active:scale-[0.98] shadow-lg group bg-[var(--app-primary)]/10 hover:bg-[var(--app-primary)]/20 shadow-[var(--app-primary)]/10"
           style={{
             padding: "2.5vmin 0",
             gap: "2vmin",
             fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)",
-            borderColor: theme
-              ? setHexAlpha(theme.hex, 0.3)
-              : isLightTheme
-                ? "rgba(0,0,0,0.2)"
-                : "rgba(255,255,255,0.3)",
-            boxShadow: theme
-              ? `0 0 30px ${setHexAlpha(theme.hex, 0.2)}`
-              : "0 0 20px -10px rgba(255,255,255,0.3)",
+            color: "var(--app-primary)",
+            borderColor: "var(--app-primary)",
           }}
         >
-          <Camera
-            style={{ color: theme?.hex, width: "3vmin", height: "3vmin" }}
-            className="group-hover:scale-110 transition-transform"
+          <Icon
+            name="Camera"
+            variant="Linear"
+            size={24}
+            className="group-hover:scale-110 transition-transform text-[var(--app-primary)]"
           />
           Capture My Face
         </button>
 
         <button
           onClick={onSkip}
-          className={`
-            w-full max-w-xs mx-auto
-            bg-transparent 
-            border ${isLightTheme ? "border-slate-300" : "border-white/5"} 
-            ${isLightTheme ? "hover:bg-slate-100 hover:border-slate-400" : "hover:bg-white/5 hover:border-white/20"} 
-            ${isLightTheme ? "text-slate-700 hover:text-slate-900 border-slate-400" : "text-white/50 hover:text-white/80"}
-            rounded-[1.2vmin] 
-            font-medium
-            transition-all 
-            flex 
-            items-center 
-            justify-center 
-          `}
+          className="w-full max-w-xs mx-auto bg-transparent border rounded-[1.2vmin] font-medium transition-all flex items-center justify-center opacity-60 hover:opacity-100"
           style={{
             padding: "1.5vmin 0",
             gap: "1.5vmin",
-            fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)"
+            fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)",
+            color: "var(--app-text-muted)",
+            borderColor: "var(--app-border-main)"
           }}
         >
-          <SkipForward style={{ width: "2vmin", height: "2vmin" }} />
+          <Icon name="AltArrowRight" variant="BoldDuotone" style={{ width: "2vmin", height: "2vmin" }} />
           Skip for Now
         </button>
       </div>
@@ -527,7 +497,6 @@ const FaceScan: React.FC<FaceScanProps> = ({
         <VisionCameraModal
           onClose={() => setShowCamera(false)}
           onCapture={handleCapture}
-          theme={theme}
         />
       )}
     </div>

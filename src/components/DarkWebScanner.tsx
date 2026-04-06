@@ -1,16 +1,5 @@
 import React, { useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  ShieldAlert,
-  AlertTriangle,
-  Search,
-  Loader2,
-  Globe,
-  Lock,
-  CheckCircle,
-  XCircle,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface Props {
   onClose: () => void;
@@ -85,9 +74,9 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[170] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[170] flex items-center justify-center bg-black/90 glass-blur animate-in fade-in duration-300">
       <div
-        className={`relative w-[90%] max-w-2xl bg-black/60 backdrop-blur-xl border ${themeBorder}/40 rounded-sm flex flex-col overflow-hidden shadow-2xl`}
+        className={`relative w-[90%] max-w-2xl bg-black/60 glass-blur border ${themeBorder}/40 rounded-sm flex flex-col overflow-hidden shadow-2xl`}
         style={{ boxShadow: `0 0 60px -20px ${themeHex}40` }}
       >
         {/* Header */}
@@ -96,7 +85,7 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
           style={{ backgroundColor: `${themeHex}15` }}
         >
           <div className="flex items-center gap-3">
-            <ShieldAlert size={20} className={themePrimary} />
+            <Icon name="ShieldCheck" variant="BoldDuotone" size={20} className={themePrimary} />
             <h2 className="font-display text-lg font-bold text-white tracking-widest">
               DARK WEB SCANNER
             </h2>
@@ -105,7 +94,7 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded"
           >
-            <X size={20} />
+            <Icon name="CloseCircle" size={20} />
           </button>
         </div>
 
@@ -118,7 +107,7 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
                 className={`w-20 h-20 rounded-full flex items-center justify-center border-2 ${themeBorder} mb-6 relative`}
                 style={{ backgroundColor: `${themeHex}15` }}
               >
-                <AlertTriangle size={36} className={themePrimary} />
+                <Icon name="Danger" size={36} className={themePrimary} />
                 <div
                   className="absolute inset-0 border-2 border-t-transparent rounded-full animate-spin opacity-30"
                   style={{ borderColor: themeHex }}
@@ -134,7 +123,7 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
 
               <pre className="text-left text-xs text-slate-400 font-mono whitespace-pre-wrap bg-black/40 p-4 border border-slate-800 rounded mb-6 max-w-md flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-red-500 font-bold border-b border-red-900/50 pb-2 mb-2">
-                  <AlertTriangle size={16} />
+                  <Icon name="Danger" size={16} />
                   <span>LEGAL CAUTION REQUIRED</span>
                 </div>
                 {DISCLAIMER}
@@ -164,11 +153,11 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
                 }`}
               >
                 {torStatus === "checking" && (
-                  <Loader2 size={14} className="animate-spin" />
+                  <Icon name="Refresh" size={14} className="animate-spin" />
                 )}
-                {torStatus === "online" && <CheckCircle size={14} />}
-                {torStatus === "offline" && <XCircle size={14} />}
-                {torStatus === "unknown" && <Globe size={14} />}
+                {torStatus === "online" && <Icon name="CheckCircle" size={14} />}
+                {torStatus === "offline" && <Icon name="CloseCircle" size={14} />}
+                {torStatus === "unknown" && <Icon name="Global" size={14} />}
                 <span>
                   {torStatus === "checking" && "Checking Tor status..."}
                   {torStatus === "online" &&
@@ -182,7 +171,8 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
               {/* Search Input */}
               <div className="flex gap-3">
                 <div className="flex-1 relative">
-                  <Search
+                  <Icon
+                    name="Magnifer"
                     size={16}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
                   />
@@ -209,12 +199,12 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
                 >
                   {isScanning ? (
                     <>
-                      <Loader2 size={14} className="animate-spin" />
+                      <Icon name="Refresh" size={14} className="animate-spin" />
                       SCANNING...
                     </>
                   ) : (
                     <>
-                      <Lock size={14} />
+                      <Icon name="Lock" size={14} />
                       SCAN
                     </>
                   )}
@@ -224,7 +214,7 @@ const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
               {/* Error */}
               {error && (
                 <div className="p-3 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs font-mono">
-                  <AlertTriangle size={14} className="inline mr-2" />
+                  <Icon name="Danger" size={14} className="inline mr-2" />
                   {error}
                 </div>
               )}

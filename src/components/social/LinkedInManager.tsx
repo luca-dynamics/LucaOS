@@ -1,16 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  RefreshCw,
-  LogOut,
-  Wifi,
-  WifiOff,
-  Linkedin,
-  Clock,
-  Send,
-  AlertCircle,
-} = LucideIcons as any;
+import { Icon } from "../../components/ui/Icon";
 import { apiUrl } from "../../config/api";
 import { setHexAlpha } from "../../config/themeColors";
 
@@ -105,9 +94,9 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
   const isLoggingIn = status.status === "LOGGING_IN";
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 p-4">
       <div
-        className={`w-full max-w-md backdrop-blur-xl border rounded-xl overflow-hidden relative ${isLight ? "bg-white/80 shadow-2xl" : "bg-black/60"}`}
+        className={`w-full max-w-md glass-blur border rounded-xl overflow-hidden relative ${isLight ? "bg-white/80 shadow-2xl" : "bg-black/60"}`}
         style={{ 
           boxShadow: isLight ? "0 20px 40px rgba(0,0,0,0.1)" : `0 0 50px ${themeHex}1a`,
           borderColor: borderColor
@@ -129,7 +118,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
                 color: themeHex
               }}
             >
-              <Linkedin size={20} />
+              <Icon name="Linkedin" size={20} />
             </div>
             <div>
               <h2 className={`font-display text-base font-bold tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>
@@ -147,7 +136,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors"
           >
-            <X size={20} />
+            <Icon name="CloseCircle" size={20} />
           </button>
         </div>
 
@@ -165,7 +154,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
                   className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 animate-pulse`}
                   style={{ backgroundColor: setHexAlpha(themeHex, 0.1) }}
                 >
-                  <Wifi size={32} style={{ color: themeHex }} />
+                  <Icon name="Wifi" size={32} style={{ color: themeHex }} />
                 </div>
                 <div className="font-bold text-sm" style={{ color: themeHex }}>
                   LINK ESTABLISHED
@@ -182,11 +171,12 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
                   className={`w-16 h-16 rounded-full flex items-center justify-center mb-3`}
                   style={{ backgroundColor: setHexAlpha(themeHex, 0.1) }}
                 >
-                  <RefreshCw
-                    size={32}
-                    className="animate-spin"
-                    style={{ color: themeHex }}
-                  />
+                    <Icon
+                      name="RefreshCw"
+                      size={32}
+                      className="animate-spin"
+                      style={{ color: themeHex }}
+                    />
                 </div>
                 <div className="text-yellow-400 font-bold text-sm">
                   AWAITING AUTHENTICATION
@@ -198,7 +188,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
             ) : (
               <>
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 ${isLight ? "bg-slate-100" : "bg-slate-900"}`}>
-                  <WifiOff size={32} className={isLight ? "text-slate-400" : "text-slate-600"} />
+                  <Icon name="WifiOff" size={32} className={isLight ? "text-slate-400" : "text-slate-600"} />
                 </div>
                 <div className={`${isLight ? "text-slate-600" : "text-slate-400"} font-bold text-sm`}>
                   NOT CONNECTED
@@ -221,7 +211,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
               }}
             >
               <div className="flex items-center gap-2 text-[10px] text-slate-500 mb-1">
-                <Clock size={12} /> UPTIME
+                <Icon name="Clock" size={12} /> UPTIME
               </div>
               <div className="font-mono text-sm" style={{ color: themeHex }}>
                 {formatUptime(status.uptime)}
@@ -235,7 +225,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
               }}
             >
               <div className="flex items-center gap-2 text-[10px] text-slate-500 mb-1">
-                <Send size={12} /> STATUS
+                <Icon name="Send" size={12} /> STATUS
               </div>
               <div
                 className={`font-mono text-sm ${
@@ -253,7 +243,8 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
 
           {status.lastError && (
             <div className="p-3 bg-red-950/20 border border-red-500/30 rounded-lg flex items-start gap-2">
-              <AlertCircle
+              <Icon
+                name="AlertCircle"
                 size={16}
                 className="text-red-400 flex-shrink-0 mt-0.5"
               />
@@ -269,9 +260,9 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
                 className="flex-1 py-3 rounded-lg text-sm font-bold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <Icon name="RefreshCw" className="w-4 h-4 animate-spin" />
                 ) : (
-                  <LogOut className="w-4 h-4" />
+                  <Icon name="LogOut" className="w-4 h-4" />
                 )}
                 Disconnect
               </button>
@@ -287,9 +278,9 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
                 }}
               >
                 {loading || isLoggingIn ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <Icon name="RefreshCw" className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Linkedin className="w-4 h-4" />
+                  <Icon name="Linkedin" className="w-4 h-4" />
                 )}
                 {isLoggingIn ? "Waiting..." : "Login with Browser"}
               </button>
@@ -297,7 +288,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
           </div>
 
           <div
-            className={`text-[10px] p-3 rounded-lg border backdrop-blur-sm ${isLight ? "text-slate-500" : "text-gray-500"}`}
+            className={`text-[10px] p-3 rounded-lg border glass-blur ${isLight ? "text-slate-500" : "text-gray-500"}`}
             style={{
               backgroundColor: isLight ? "rgba(0,0,0,0.02)" : setHexAlpha(themeHex, 0.05),
               borderColor: isLight ? "rgba(0,0,0,0.1)" : setHexAlpha(themeHex, 0.2),

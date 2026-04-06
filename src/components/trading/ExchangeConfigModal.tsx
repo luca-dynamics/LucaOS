@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Save,
-  AlertTriangle,
-  Key,
-  Shield,
-} = LucideIcons as any;
+import { Icon } from "../ui/Icon";
 import { Exchange } from "../../types/trading";
 
 interface ExchangeConfigModalProps {
@@ -21,7 +14,8 @@ export default function ExchangeConfigModal({
   onClose,
   onSave,
   initialData,
-}: ExchangeConfigModalProps) {
+  theme
+}: ExchangeConfigModalProps & { theme?: { hex: string; primary: string; border: string; bg: string } }) {
   const [exchangeType, setExchangeType] = useState("binance");
   const [accountName, setAccountName] = useState("");
   const [apiKey, setApiKey] = useState("");
@@ -90,7 +84,7 @@ export default function ExchangeConfigModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-0 sm:p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 p-0 sm:p-4">
       <div className="bg-[#161b22] border-none sm:border border-slate-700/50 rounded-none sm:rounded-xl w-full h-full sm:h-auto sm:max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-full sm:max-h-[90vh]">
         {/* Header */}
         <div className="px-5 sm:px-6 py-4 border-b border-slate-800 bg-[#0d1017] flex items-center justify-between flex-shrink-0 relative z-30">
@@ -125,7 +119,7 @@ export default function ExchangeConfigModal({
             onClick={onClose}
             className="relative z-50 text-slate-500 hover:text-white transition-all bg-white/5 hover:bg-white/10 p-2 rounded-lg cursor-pointer active:scale-95 flex-shrink-0"
           >
-            <X size={18} />
+            <Icon name="CloseCircle" variant="BoldDuotone" size={18} />
           </button>
         </div>
 
@@ -141,7 +135,8 @@ export default function ExchangeConfigModal({
                   value={exchangeType}
                   onChange={(e) => setExchangeType(e.target.value)}
                   disabled={!!initialData}
-                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl pl-10 pr-3 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 disabled:opacity-50 appearance-none"
+                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl pl-10 pr-3 py-3 text-white text-sm focus:outline-none disabled:opacity-50 appearance-none"
+                  style={{ borderColor: "", boxShadow: "" }} // Reset tailwind focus for custom style if needed, but focus:border-emerald-500 is the issue
                 >
                   <option value="binance">Binance</option>
                   <option value="okx">OKX</option>
@@ -178,7 +173,8 @@ export default function ExchangeConfigModal({
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
                 placeholder="e.g. Main Fund"
-                className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none font-mono"
+                style={{ borderColor: "" }}
               />
             </div>
           </div>
@@ -206,7 +202,8 @@ export default function ExchangeConfigModal({
                   type="text"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none font-mono"
+                  style={{ borderColor: "" }}
                 />
               </div>
             )}
@@ -222,7 +219,8 @@ export default function ExchangeConfigModal({
                 type="password"
                 value={secretKey}
                 onChange={(e) => setSecretKey(e.target.value)}
-                className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none font-mono focus:border-[var(--theme-color)]"
+                style={{ "--theme-color": theme?.hex || "#10b981" } as React.CSSProperties}
               />
             </div>
 
@@ -236,7 +234,8 @@ export default function ExchangeConfigModal({
                   type="text"
                   value={asterUser}
                   onChange={(e) => setAsterUser(e.target.value)}
-                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none font-mono"
+                  style={{ borderColor: "" }}
                 />
               </div>
             )}
@@ -252,7 +251,8 @@ export default function ExchangeConfigModal({
                   value={hyperliquidWalletAddr}
                   onChange={(e) => setHyperliquidWalletAddr(e.target.value)}
                   placeholder="Optional"
-                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none font-mono"
+                  style={{ borderColor: "" }}
                 />
               </div>
             )}
@@ -269,7 +269,8 @@ export default function ExchangeConfigModal({
                   onChange={(e) =>
                     setLighterApiKeyIndex(parseInt(e.target.value) || 0)
                   }
-                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none font-mono"
+                  style={{ borderColor: "" }}
                 />
               </div>
             )}
@@ -284,7 +285,8 @@ export default function ExchangeConfigModal({
                   type="password"
                   value={passphrase}
                   onChange={(e) => setPassphrase(e.target.value)}
-                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[#161b22] border border-slate-700 rounded-xl px-3 py-3 text-white text-sm focus:outline-none font-mono"
+                  style={{ borderColor: "" }}
                 />
               </div>
             )}
@@ -296,7 +298,8 @@ export default function ExchangeConfigModal({
               id="testnet"
               checked={isTestnet}
               onChange={(e) => setIsTestnet(e.target.checked)}
-              className="rounded bg-slate-700 border-slate-600 text-emerald-500 focus:ring-emerald-500"
+              className="rounded bg-slate-700 border-slate-600"
+              style={{ color: theme?.hex || "#10b981", accentColor: theme?.hex || "#10b981" }}
             />
             <label
               htmlFor="testnet"
@@ -307,10 +310,10 @@ export default function ExchangeConfigModal({
           </div>
 
           <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex gap-3">
-            <Shield className="text-amber-500 shrink-0" size={16} />
+            <Icon name="ShieldCheck" variant="BoldDuotone" className="text-amber-500 shrink-0" size={16} />
             <p className="text-[10px] text-amber-200/80 leading-relaxed">
               Keys are encrypted using AES-256 before storage. Ensure your API
-              keys have "Enable Futures" permission but{" "}
+              keys have &quot;Enable Futures&quot; permission but{" "}
               <strong>Disable Withdrawal</strong>.
             </p>
           </div>
@@ -327,9 +330,14 @@ export default function ExchangeConfigModal({
           <button
             onClick={handleSubmit}
             disabled={!apiKey && !secretKey && exchangeType !== "lighter"}
-            className="order-1 sm:order-2 px-8 py-3 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+            className="order-1 sm:order-2 px-8 py-3 sm:py-2.5 rounded-xl text-sm font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+            style={{ 
+              backgroundColor: theme?.hex || "#10b981", 
+              color: "#050505",
+              boxShadow: `0 4px 20px ${theme?.hex || "#10b981"}33`
+            }}
           >
-            <Save size={16} /> Connect Exchange
+            <Icon name="Save" variant="BoldDuotone" size={16} /> {initialData ? "Save Connection" : "Connect Exchange"}
           </button>
         </div>
       </div>

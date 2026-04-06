@@ -15,3 +15,4 @@ export * from "./useSatelliteState";
 export * from "./useTradingState";
 export * from "./useVoiceInput";
 export * from "./useVoiceSystem";
+export * from "./useTheme";

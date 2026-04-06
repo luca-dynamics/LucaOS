@@ -1,11 +1,6 @@
 // HumanInputModal - Modal for agent to request user input (credentials, etc.)
 import React, { useState, useEffect } from 'react';
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Lock,
-  AlertCircle,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 
 interface Props {
   isOpen: boolean;
@@ -69,15 +64,15 @@ const HumanInputModal: React.FC<Props> = ({
                              prompt.toLowerCase().includes('login');
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200">
       <div className="relative w-full max-w-md mx-4 bg-[#0a0a0a] border border-cyan-500/30 rounded-lg shadow-[0_0_50px_rgba(6,182,212,0.2)] overflow-hidden">
         {/* Header */}
         <div className="h-14 border-b border-cyan-900/50 bg-cyan-950/10 flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             {isPassword || isCredentialPrompt ? (
-              <Lock size={18} className="text-cyan-400" />
+              <Icon name="Lock" size={18} className="text-cyan-400" />
             ) : (
-              <AlertCircle size={18} className="text-cyan-400" />
+              <Icon name="AlertCircle" size={18} className="text-cyan-400" />
             )}
             <span className="text-cyan-400 text-sm font-bold tracking-wider">AGENT REQUEST</span>
           </div>
@@ -86,7 +81,7 @@ const HumanInputModal: React.FC<Props> = ({
             className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
             title="Close"
           >
-            <X size={16} />
+            <Icon name="X" size={16} />
           </button>
         </div>
 

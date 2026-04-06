@@ -23,8 +23,10 @@ export interface IReasoningProvider {
   chatStream(
     text: string,
     options?: {
+      model?: string;
       useVision?: boolean;
       useMemory?: boolean;
+      systemInstruction?: string;
       abortSignal?: AbortSignal;
     },
   ): AsyncIterable<ChatChunk>;

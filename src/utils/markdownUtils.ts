@@ -52,6 +52,11 @@ export function getBoldBoxColors(persona: PersonaType): {
       border: "rgba(15, 23, 42, 0.6)",
       text: "#94a3b8",
     },
+    AUDITOR: {
+      bg: "rgba(71, 85, 105, 0.15)",
+      border: "rgba(71, 85, 105, 0.4)",
+      text: "#94a3b8",
+    },
   };
 
   return colorMap[persona] || colorMap.RUTHLESS;
@@ -61,10 +66,7 @@ export function getBoldBoxColors(persona: PersonaType): {
  * Comprehensive markdown renderer for chat messages
  * Converts markdown syntax to styled HTML like Cursor/Antigravity
  */
-export function renderMarkdown(
-  text: string,
-  _persona: PersonaType = "RUTHLESS",
-): string {
+export function renderMarkdown(text: string): string {
   if (!text) return "";
 
   // 1. Initial Cleanup: Standardize newlines

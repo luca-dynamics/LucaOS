@@ -20,11 +20,19 @@ export type UIThemeId =
   | "TERMINAL"
   | "AGENTIC_SLATE"
   | "DICTATION"
-  | "MIDNIGHT"
+  | "LIGHTCREAM"
   | "VAPORWAVE"
   | "FROST";
 
 export type ToneStyleId = "BRIEF" | "CHILL" | "SWEET" | "CUSTOM";
+
+export interface ThemeColors {
+  accent: string;
+  glow: string;
+  border: string;
+  bgTint: string;
+  textColor: string;
+}
 
 export interface ToneDimensions {
   expressiveness: number; // 0 (concise) to 100 (verbose)

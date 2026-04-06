@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Send,
-  ShieldCheck,
-  Smartphone,
-  Lock,
-  Wifi,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { settingsService } from "../services/settingsService";
 import { apiUrl } from "../config/api";
 import { setHexAlpha } from "../config/themeColors";
@@ -138,9 +130,9 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 glass-blur p-4 animate-in fade-in duration-200">
       <div
-        className={`w-full max-w-2xl rounded-lg overflow-hidden flex flex-col transition-all duration-500 ${isLight ? "glass-panel-light" : "bg-black/80 backdrop-blur-xl"}`}
+        className={`w-full max-w-2xl rounded-lg overflow-hidden flex flex-col transition-all duration-500 ${isLight ? "glass-panel-light" : "bg-black/80 glass-blur"}`}
         style={{
           boxShadow: isLight ? `0 20px 50px ${setHexAlpha(themeHex, 0.1)}` : `0 0 50px ${themeHex}40`,
           borderColor: setHexAlpha(themeHex, isLight ? 0.2 : 0.4),
@@ -157,7 +149,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
           }}
         >
           <div className="flex items-center gap-3">
-            <Send className={themePrimary} size={24} />
+            <Icon name="Send" className={themePrimary} size={24} />
             <div>
               <h2 className={`font-display text-xl font-bold tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>
                 TELEGRAM LINK
@@ -171,7 +163,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
             </div>
           </div>
           <button onClick={onClose} className={`transition-colors ${isLight ? "text-slate-400 hover:text-slate-900" : "text-slate-500 hover:text-white"}`}>
-            <X size={24} />
+            <Icon name="CloseCircle" size={24} />
           </button>
         </div>
 
@@ -204,7 +196,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               )}
 
               <div
-                className={`flex items-center justify-between p-3 rounded transition-colors ${isLight ? "bg-black/[0.02]" : "bg-black/40"}`}
+                className={`flex items-center justify-between p-3 rounded transition-colors ${isLight ? "bg-slate-50" : "bg-black/40"}`}
                 style={{
                   border: `1px solid ${setHexAlpha(themeHex, isLight ? 0.1 : 0.2)}`,
                 }}
@@ -271,7 +263,8 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                   PHONE NUMBER (International Format)
                 </label>
                 <div className="relative">
-                  <Smartphone
+                  <Icon
+                    name="Smartphone"
                     className="absolute left-3 top-2.5 text-slate-500"
                     size={16}
                   />
@@ -291,7 +284,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={RequestCode}
                 disabled={loading}
-                className={`w-full py-3 font-bold tracking-widest rounded transition-all flex items-center justify-center gap-2 ${isLight ? "hover:bg-black/5" : "hover:opacity-80"} ${themePrimary}`}
+                className={`w-full py-3 font-bold tracking-widest rounded transition-all flex items-center justify-center gap-2 ${isLight ? "hover:bg-slate-100" : "hover:opacity-80"} ${themePrimary}`}
                 style={{
                   border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.3) : setHexAlpha(themeHex, 0.5)}`,
                   backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
@@ -312,7 +305,8 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                   AUTH CODE
                 </label>
                 <div className="relative">
-                  <ShieldCheck
+                  <Icon
+                    name="ShieldCheck"
                     className="absolute left-3 top-2.5 text-slate-500"
                     size={16}
                   />
@@ -331,7 +325,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={VerifyCode}
                 disabled={loading}
-                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-black/5" : "hover:bg-cyan-500/20"} ${themePrimary}`}
+                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-slate-100" : "hover:bg-cyan-500/20"} ${themePrimary}`}
                 style={{
                   border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.3) : setHexAlpha(themeHex, 0.5)}`,
                   backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
@@ -352,7 +346,8 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                   CLOUD PASSWORD
                 </label>
                 <div className="relative">
-                  <Lock
+                  <Icon
+                    name="Lock"
                     className="absolute left-3 top-2.5 text-slate-500"
                     size={16}
                   />
@@ -371,7 +366,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={VerifyCode}
                 disabled={loading}
-                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-black/5" : "hover:bg-cyan-500/20"} ${themePrimary}`}
+                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-slate-100" : "hover:bg-cyan-500/20"} ${themePrimary}`}
                 style={{
                   border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.3) : setHexAlpha(themeHex, 0.5)}`,
                   backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
@@ -397,7 +392,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                     backgroundColor: isLight ? setHexAlpha(themeHex, 0.1) : setHexAlpha(themeHex, 0.15),
                   }}
                 >
-                  <Wifi size={32} className={themePrimary} />
+                  <Icon name="Wifi" size={32} className={themePrimary} />
                 </div>
                 <h3 className={`text-lg font-bold tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>
                   LUCA LINK ACTIVE
@@ -434,13 +429,13 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                   />
                   <button
                     onClick={SendMessage}
-                    className={`p-2 rounded transition-all ${themePrimary} ${isLight ? "hover:bg-black/5" : "hover:opacity-80"}`}
+                    className={`p-2 rounded transition-all ${themePrimary} ${isLight ? "hover:bg-slate-100" : "hover:opacity-80"}`}
                     style={{
                       border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.2) : setHexAlpha(themeHex, 0.3)}`,
                       backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
                     }}
                   >
-                    <Send size={16} />
+                    <Icon name="Send" size={16} />
                   </button>
                 </div>
               </div>

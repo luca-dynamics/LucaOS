@@ -4,11 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Hand,
-  Radio,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
 interface Props {
@@ -27,7 +23,6 @@ const AlwaysOnControls: React.FC<Props> = ({
   theme,
 }) => {
   const [visionActive, setVisionActive] = useState(false);
-  const [audioActive, setAudioActive] = useState(false);
   const [loading, setLoading] = useState({ vision: false, audio: false });
 
   // Fetch status on mount and periodically
@@ -71,7 +66,6 @@ const AlwaysOnControls: React.FC<Props> = ({
           if (text) {
             try {
               const audioData = JSON.parse(text);
-              setAudioActive(audioData.isRunning || false);
               onAudioToggle(audioData.isRunning || false);
             } catch (parseError) {
               console.warn(
@@ -142,9 +136,9 @@ const AlwaysOnControls: React.FC<Props> = ({
       >
         <div className="relative">
           {visionActive ? (
-            <Hand size={isMobile ? 16 : 14} />
+            <Icon name="Hand" variant="Linear" size={isMobile ? 16 : 14} />
           ) : (
-            <Hand size={isMobile ? 16 : 14} className="opacity-50" />
+            <Icon name="Hand" variant="Linear" size={isMobile ? 16 : 14} className="opacity-50" />
           )}
           {visionActive && (
             <span className="absolute -top-1 -right-1 rounded-full animate-pulse bg-blue-500 w-2 h-2" />
@@ -155,14 +149,16 @@ const AlwaysOnControls: React.FC<Props> = ({
 
       {/* Wake Word indicator (Sense) */}
       <div
-        className={`flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono
-          ${isWakeWordActive ? "bg-green-500/10 text-green-400 border border-green-500/30" : (theme as any).themeName?.toLowerCase() === "lucagent" ? "bg-white/30 text-slate-800 border border-black/5" : "bg-black/20 text-slate-500 border border-white/5"}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono glass-blur border
+          ${isWakeWordActive ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-[var(--app-bg-tint)] text-[var(--app-text-muted)] border-[var(--app-border-main)]"}
         `}
         title={
           isWakeWordActive ? "Wake Word Listening Active" : "Wake Word Disabled"
         }
       >
-        <Radio
+        <Icon
+          name="Radio"
+          variant="Linear"
           size={12}
           className={isWakeWordActive ? "animate-pulse" : "opacity-30"}
         />

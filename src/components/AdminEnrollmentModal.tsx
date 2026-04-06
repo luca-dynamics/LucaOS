@@ -1,12 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  Camera,
-  User,
-  Lock,
-  Mic,
-  Play,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { soundService } from "../services/soundService";
 import { apiUrl } from "../config/api";
 import FaceScan from "./Onboarding/FaceScan";
@@ -229,16 +222,16 @@ const AdminEnrollmentModal: React.FC<Props> = ({
         {step === "intro" && (
           <div className="text-center space-y-4">
               <div 
-                className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto border backdrop-blur-sm shadow-xl"
+                className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto border glass-blur shadow-xl"
                 style={{ 
                   borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
                   boxShadow: theme ? `0 0 20px ${setHexAlpha(theme.hex, 0.1)}` : "none"
                 }}
               >
               {activeTab === "face" ? (
-                <User size={32} style={{ color: theme.hex }} />
+                <Icon name="User" size={32} style={{ color: theme.hex }} />
               ) : (
-                <Mic size={32} style={{ color: theme.hex }} />
+                <Icon name="Microphone" size={32} style={{ color: theme.hex }} />
               )}
             </div>
             <div>
@@ -264,7 +257,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                       startRecording();
                     }
                   }}
-                  className="w-full font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all backdrop-blur-sm text-xs border"
+                  className="w-full font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all glass-blur text-xs border"
                   style={{
                     backgroundColor: theme ? setHexAlpha(theme.hex, 0.2) : "rgba(255,255,255,0.1)",
                     borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
@@ -273,9 +266,9 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                   }}
                 >
                   {activeTab === "face" ? (
-                    <Camera size={14} />
+                    <Icon name="Camera" size={14} />
                   ) : (
-                    <Mic size={14} />
+                    <Icon name="Microphone" size={14} />
                   )}
                   ENROLL
                 </button>
@@ -289,14 +282,14 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                       startRecording();
                     }
                   }}
-                  className="w-full font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border backdrop-blur-sm text-xs"
+                  className="w-full font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border glass-blur text-xs"
                   style={{ 
                     borderColor: theme ? setHexAlpha(theme.hex, 0.4) : "rgba(255,255,255,0.2)",
                     backgroundColor: theme ? setHexAlpha(theme.hex, 0.05) : "transparent",
                     color: theme ? theme.hex : "white/60"
                   }}
                 >
-                  <Lock size={14} />
+                  <Icon name="Lock" size={14} />
                   VERIFY
                 </button>
             </div>
@@ -305,7 +298,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
 
         {step === "camera" && (
           <div 
-            className="relative bg-black/40 rounded-xl overflow-hidden flex-1 w-full flex items-center justify-center border backdrop-blur-xl"
+            className="relative bg-black/40 rounded-xl overflow-hidden flex-1 w-full flex items-center justify-center border glass-blur"
             style={{ borderColor: setHexAlpha(theme.hex, 0.15) }}
           >
             {activeTab === "face" ? (
@@ -332,7 +325,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                 {isRecording ? (
                   <>
                     <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center animate-pulse">
-                      <Mic size={32} className="text-red-500" />
+                      <Icon name="Microphone" size={32} className="text-red-500" />
                     </div>
                     <p className="text-red-400 font-bold tracking-widest text-xs">
                       RECORDING AUDIO...
@@ -353,7 +346,7 @@ const AdminEnrollmentModal: React.FC<Props> = ({
                         borderColor: setHexAlpha(theme.hex, 0.3),
                       }}
                     >
-                      <Play size={32} style={{ color: theme.hex }} />
+                      <Icon name="Play" size={32} style={{ color: theme.hex }} />
                     </div>
                     {audioUrl && (
                       <audio

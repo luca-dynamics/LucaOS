@@ -21,6 +21,11 @@ import { llmToolSelector } from "./tools/LLMToolSelector";
 import { CORTEX_URL } from "../../config/api";
 import { pentestSessionStore } from "./PentestSessionStore";
 import type { PentestPhase } from "./pentestTypes";
+import { missionControlService } from "./MissionControlService";
+import { ProviderFactory } from "../llm/ProviderFactory";
+import { thoughtStreamService } from "../thoughtStreamService";
+import { settingsService } from "../settingsService";
+import { cognitiveDeliberator } from "../cognitiveDeliberator";
 
 export interface WorkflowTask {
   id: string;
@@ -278,6 +283,16 @@ export class LucaWorkforce {
 
     console.log("[LucaWorkforce] === WORKFLOW EXECUTION STARTED ===");
 
+    // PHASE 2: Default to Sequential for complex goals (High Fidelity)
+    const isHighFidelity =
+      plan.tasks.length > 3 ||
+      plan.goal.toLowerCase().includes("implement") ||
+      plan.goal.toLowerCase().includes("build");
+
+    if (isHighFidelity) {
+      return this.executeSequentialPipeline(workflowId);
+    }
+
     try {
       // Execute each parallel group sequentially
       for (
@@ -354,6 +369,16 @@ export class LucaWorkforce {
    */
   private async executeTask(task: WorkflowTask): Promise<void> {
     const startTime = Date.now();
+
+    // PHASE 3: Cognitive Lockdown - Ensure mission integrity before launching persona
+    const check = await cognitiveDeliberator.checkBeliefViolations();
+    if (check.violated) {
+      const category = check.category || "CORE_BELIEF";
+      task.status = "failed";
+      task.error = `[${category}_VIOLATION]: ${check.reason}`;
+      throw new Error(`COGNITIVE_SAFEGUARD: Activity suspended. Category: ${category}. Reason: ${check.reason}`);
+    }
+
     task.status = "in-progress";
 
     console.log(`[${task.persona} Luca] Starting: ${task.description}`);
@@ -1109,6 +1134,123 @@ Return only the Python code, no explanations.`;
     });
 
     return { nodes, edges };
+  }
+
+  /**
+   * Execute workflow as a Sequential Pipeline (PHASE 2 - Sovereign High Fidelity)
+   * This mode ensures each task inherits synthesized context from the previous step.
+   */
+  private async executeSequentialPipeline(workflowId: string): Promise<void> {
+    const plan = this.activeWorkflows.get(workflowId);
+    if (!plan) return;
+
+    console.log(
+      "[LucaWorkforce] ⛓️  Starting High-Fidelity Sequential Pipeline...",
+    );
+    let accumulatedContext = "";
+
+    try {
+      for (let i = 0; i < plan.tasks.length; i++) {
+        const task = plan.tasks[i];
+
+        // 0. COGNITIVE SAFEGUARD: Check for belief violations before proceeding to next tactical stage
+        const check = await cognitiveDeliberator.checkBeliefViolations();
+        if (check.violated) {
+          const category = check.category || "CORE_BELIEF";
+          throw new Error(`PIPELINE_SUSPENDED [${category}]: ${check.reason}`);
+        }
+
+        // 1. Synthesize Hand-over Report (if not the first task)
+        if (i > 0) {
+          const previousTask = plan.tasks[i - 1];
+          const handover = await this.synthesizeHandoverReport(
+            previousTask,
+            task,
+          );
+          accumulatedContext += `\n--- HANDOVER [${previousTask.persona} -> ${task.persona}] ---\n${handover}\n`;
+
+          // Log visible report to student/terminal
+          this.logStrategicReport(previousTask.persona, task.persona, handover);
+        }
+
+        // 2. Inject accumulated context into task description
+        if (accumulatedContext) {
+          task.description = `${task.description}\n\n[PIPELINE_CONTEXT]\n${accumulatedContext}`;
+        }
+
+        // 3. Execute Task
+        await this.executeTask(task);
+
+        // 4. Mission Sync
+        await missionControlService.updateGoalStatus(
+          i + 1,
+          task.status === "complete" ? "COMPLETED" : "FAILED",
+        );
+      }
+
+      console.log("[LucaWorkforce] 🏁 Sequential Pipeline Complete.");
+    } catch (error) {
+      console.error("[LucaWorkforce] Pipeline failed:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Synthesize a Strategic Hand-over Report using an LLM.
+   */
+  private async synthesizeHandoverReport(
+    previous: WorkflowTask,
+    next: WorkflowTask,
+  ): Promise<string> {
+    const prompt = `
+### PREVIOUS_TASK: ${previous.persona} Luca executed: "${previous.description}"
+### OUTCOME: ${JSON.stringify(previous.result || "Action Complete")}
+
+### NEXT_TASK: ${next.persona} Luca will execute: "${next.description}"
+
+---
+TASK: Synthesize a "Strategic Hand-over Report". 
+1. Summarize key findings or artifacts created in the previous step.
+2. Identify dependencies or specific data points the next agent needs.
+3. Call out any mission-critical risks discovered.
+Keep it concise but highly tactical.
+`;
+
+    try {
+      const provider = ProviderFactory.createProvider(
+        settingsService.get("brain"),
+        "LUCAGENT",
+      );
+      const response = await provider.chat(
+        [{ role: "user", content: prompt }],
+        undefined,
+        "You are a Strategic Architect summarizing agentic progress.",
+      );
+      return (
+        response.text ||
+        "Previous stage complete. Proceeding to next objective."
+      );
+    } catch {
+      return `Hand-over synthesized: Previous action by ${previous.persona} complete. Next up: ${next.persona}.`;
+    }
+  }
+
+  /**
+   * Log the Strategic Hand-over Report to the terminal context.
+   */
+  private logStrategicReport(from: string, to: string, report: string): void {
+    const formattedReport = `
+╔══════════════════════════════════════════════════════════════════════════════
+║ 🛡️  STRATEGIC HAND-OVER REPORT [${from} ➜ ${to}]
+╟──────────────────────────────────────────────────────────────────────────────
+${report
+  .split("\n")
+  .map((line) => `║ ${line}`)
+  .join("\n")}
+╚══════════════════════════════════════════════════════════════════════════════
+`;
+    console.log(formattedReport);
+    thoughtStreamService.pushThought("AGI_SYNTHESIS", formattedReport);
   }
 }
 

@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
-const {
-  X,
-  Folder,
-  File,
-  ArrowLeft,
-  Download,
-  Eye,
-} = LucideIcons as any;
+import { Icon } from "./ui/Icon";
 import { API_BASE_URL } from "../config/api";
 
 interface FileItem {
@@ -124,7 +116,7 @@ const MobileFileBrowser: React.FC<Props> = ({
               }}
               className="text-cyan-400 hover:text-cyan-300"
             >
-              <ArrowLeft size={20} />
+              <Icon name="ArrowLeft" size={20} />
             </button>
             <div>
               <div className="text-white font-mono text-sm">
@@ -134,7 +126,7 @@ const MobileFileBrowser: React.FC<Props> = ({
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white">
-            <X size={20} />
+            <Icon name="X" size={20} />
           </button>
         </div>
         <div className="flex-1 overflow-auto p-4">
@@ -155,7 +147,7 @@ const MobileFileBrowser: React.FC<Props> = ({
               onClick={handleBack}
               className="text-cyan-400 hover:text-cyan-300"
             >
-              <ArrowLeft size={20} />
+              <Icon name="ArrowLeft" size={20} />
             </button>
           )}
           <div>
@@ -166,7 +158,7 @@ const MobileFileBrowser: React.FC<Props> = ({
           </div>
         </div>
         <button onClick={onClose} className="text-slate-400 hover:text-white">
-          <X size={20} />
+          <Icon name="X" size={20} />
         </button>
       </div>
 
@@ -194,11 +186,7 @@ const MobileFileBrowser: React.FC<Props> = ({
                 className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded border border-slate-700/50 hover:border-cyan-500/30 transition-colors text-left"
               >
                 <div className="text-cyan-400">
-                  {item.type === "directory" ? (
-                    <Folder size={20} />
-                  ) : (
-                    <File size={20} />
-                  )}
+                    <Icon name={item.type === "directory" ? "Folder" : "File"} size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-sm font-mono truncate">
@@ -211,7 +199,7 @@ const MobileFileBrowser: React.FC<Props> = ({
                   )}
                 </div>
                 {item.type === "file" && (
-                  <Eye size={16} className="text-slate-500" />
+                  <Icon name="Eye" size={16} className="text-slate-500" />
                 )}
               </button>
             ))}

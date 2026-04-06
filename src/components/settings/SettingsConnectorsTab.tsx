@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { apiUrl } from "../../config/api";
-import { setHexAlpha } from "../../config/themeColors";
+import { Icon } from "../ui/Icon";
 
 interface SettingsConnectorsTabProps {
+  theme?: any;
   settings: LucaSettings;
-  theme: any;
   setStatusMsg: (msg: string) => void;
 }
 
 const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
   settings,
-  theme,
   setStatusMsg,
 }) => {
   const [socialStatus, setSocialStatus] = useState<any>({});
@@ -153,21 +152,9 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
   return (
     <div className="space-y-6">
       <div
-        className={`text-xs p-3 rounded-lg border backdrop-blur-sm ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-gray-400"}`}
-        style={{
-          backgroundColor:
-            theme.themeName?.toLowerCase() === "lucagent"
-              ? "rgba(0,0,0,0.03)"
-              : `${theme.hex}0d`,
-          borderColor:
-            theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
-              ? "rgba(0,0,0,0.1)"
-              : setHexAlpha(theme.hex, 0.2),
-        }}
+        className={`text-xl p-4 rounded-xl border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] tech-border glass-blur shadow-sm opacity-90`}
       >
-        <strong style={{ color: theme.hex }}>
-          Social Intelligence Matrix:
-        </strong>{" "}
+        <span className="font-bold opacity-60 uppercase tracking-widest text-xs block mb-1">Social Intelligence Matrix</span>
         Connect your accounts to give Luca direct access. Note: This uses secure
         browser automation (Ghost Browser), not public APIs.
       </div>
@@ -183,7 +170,6 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
             appStatus.status === "AUTHENTICATED";
 
           const isChromeSynced = appStatus.hasChromeProfile;
-
           const isConnected = isManualConnected || isHealthy;
 
           const isAlwaysOn =
@@ -192,99 +178,50 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
           return (
             <div
               key={app.id}
-              className={`relative group overflow-hidden border rounded-2xl p-4 transition-all duration-500 backdrop-blur-2xl shadow-2xl hover:-translate-y-1 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : ""}`}
-              style={{
-                borderColor:
-                  theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(0,0,0,0.1)"
-                    : setHexAlpha(theme.hex, 0.15),
-                backgroundColor:
-                  theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255,255,255,0.7)"
-                    : setHexAlpha(theme.hex, 0.04),
-                boxShadow:
-                  theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
-                    ? "0 10px 30px rgba(0,0,0,0.05)"
-                    : `0 20px 40px -20px rgba(0,0,0,0.5), inset 0 0 0 1px ${setHexAlpha(theme.hex, 0.05)}`,
-              }}
+              className={`relative group overflow-hidden border rounded-2xl p-5 transition-all duration-500 shadow-xl hover:-translate-y-1 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
             >
               {/* Premium Glassmorphic Overlay: Multi-point Glow */}
               <div
-                className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-1000 pointer-events-none"
+                className="absolute inset-0 opacity-10 group-hover:opacity-25 transition-opacity duration-1000 pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle at top right, ${theme.hex}33 0%, transparent 60%), 
-                               radial-gradient(circle at bottom left, ${theme.hex}11 0%, transparent 40%)`,
+                  background: `radial-gradient(circle at top right, var(--app-text-main) 0%, transparent 60%), 
+                               radial-gradient(circle at bottom left, var(--app-text-main) 0%, transparent 40%)`,
                 }}
               />
 
               {/* Animated Top-Edge Accent */}
               <div
-                className="absolute top-0 left-0 w-full h-[1px] opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100 origin-center"
-                style={{
-                  background: `linear-gradient(90deg, transparent, ${theme.hex}aa, transparent)`,
-                }}
+                className="absolute top-0 left-0 w-full h-[1px] opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100 origin-center bg-gradient-to-r from-transparent via-[var(--app-text-main)] to-transparent"
               />
 
               <div className="flex items-start gap-4 mb-4 relative z-10">
                 <div
-                  className="flex-shrink-0 w-10 h-10 rounded-[22.5%] overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:rotate-1 shadow-2xl relative bg-white mt-0.5"
-                  style={{
-                    boxShadow: `0 4px 12px -2px ${
-                      app.color === "#000000"
-                        ? "rgba(0,0,0,0.2)"
-                        : app.color + "44"
-                    }`,
-                  }}
+                  className="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:rotate-1 shadow-lg relative bg-[var(--app-bg-tint)] mt-0.5 border border-black/5"
                 >
-                  <div className="w-full h-full flex items-center justify-center relative">
+                  <div className="w-full h-full flex items-center justify-center relative p-2">
                     <img
                       src={app.logo}
                       alt={app.name}
-                      className="w-[65%] h-[65%] object-contain relative z-10"
-                      style={{ filter: "none" }}
+                      className="w-full h-full object-contain relative z-10"
                     />
-                    <div className="absolute inset-x-0 top-0 h-[30%] bg-gradient-to-b from-black/[0.03] to-transparent pointer-events-none" />
                   </div>
                 </div>
 
                 <div className="flex-1 min-w-0 pr-1">
-                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                  <div className="flex items-center justify-between gap-2 mb-1">
                     <h4
-                      className={`text-[13px] font-bold ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-900" : "text-white/90"} tracking-tight truncate`}
+                      className={`text-xl font-bold text-[var(--app-text-main)] tracking-tight truncate`}
                     >
                       {app.name}
                     </h4>
                     <div
-                      className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full border shrink-0 ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 uppercase tracking-wider ${
                         isConnected
-                          ? "border-green-500/30 text-green-400 bg-green-500/10"
+                          ? "border-green-500/30 text-green-400 bg-green-500/10 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
                           : isChromeSynced
                             ? "border-blue-500/30 text-blue-400 bg-blue-500/10"
-                            : theme.isLight ||
-                                theme.themeName?.toLowerCase() === "lucagent"
-                              ? "text-slate-400 border-slate-200 bg-slate-50"
-                              : `text-white/20`
+                            : "border-[var(--app-border-main)] text-[var(--app-text-muted)] bg-white/5 opacity-50"
                       }`}
-                      style={{
-                        borderColor:
-                          !isConnected &&
-                          !isChromeSynced &&
-                          !(
-                            theme.isLight ||
-                            theme.themeName?.toLowerCase() === "lucagent"
-                          )
-                            ? setHexAlpha(theme.hex, 0.1)
-                            : undefined,
-                        backgroundColor:
-                          !isConnected &&
-                          !isChromeSynced &&
-                          !(
-                            theme.isLight ||
-                            theme.themeName?.toLowerCase() === "lucagent"
-                          )
-                            ? setHexAlpha(theme.hex, 0.05)
-                            : undefined,
-                      }}
                     >
                       {isConnected
                         ? appStatus.email || "ACTIVE"
@@ -294,7 +231,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                     </div>
                   </div>
                   <p
-                    className={`text-[11px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-white/40"} leading-tight mb-2 line-clamp-1`}
+                    className={`text-sm text-[var(--app-text-muted)] leading-tight mb-3 line-clamp-1 opacity-70`}
                   >
                     {app.desc}
                   </p>
@@ -324,25 +261,11 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                         }}
                       />
                       <div
-                        className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter transition-all duration-300 ${
+                        className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border shadow-sm ${
                           isAlwaysOn
-                            ? (theme.hex.toLowerCase() === "#ffffff" || theme.isLight ? "text-slate-900" : "text-white")
-                            : theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
-                              ? "bg-black/[0.03] text-slate-400 border border-black/10"
-                              : "bg-black/20 text-white/40 border border-white/10"
+                            ? "bg-green-500 border-green-400 text-[var(--app-text-main)] shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                            : "bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-60 hover:opacity-100"
                         }`}
-                        style={
-                          isAlwaysOn
-                            ? {
-                                backgroundColor: theme.hex,
-                                boxShadow: `0 0 15px -2px ${setHexAlpha(theme.hex, 0.4)}`,
-                              }
-                            : {
-                                backgroundColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.03)" : "transparent",
-                                color: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.4)" : setHexAlpha(theme.hex, 0.4),
-                                borderColor: theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.1)" : setHexAlpha(theme.hex, 0.2)
-                              }
-                        }
                       >
                         {isAlwaysOn ? "Always Online" : "Lazy Mode"}
                       </div>
@@ -355,18 +278,20 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                 <div className="space-y-2">
                   {isChromeSynced && (
                     <div
-                      className={`text-[10px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-blue-700 bg-blue-50 border-blue-200" : "text-blue-400/80 bg-blue-500/5 border-blue-500/10"} px-3 py-2 rounded-xl border leading-snug`}
+                      className={`text-sm text-blue-400 bg-blue-500/5 border border-blue-500/20 px-3 py-2 rounded-xl leading-snug glass-blur`}
                     >
                       <strong
-                        className={`${theme.themeName?.toLowerCase() === "lucagent" ? "text-blue-800" : "text-blue-400"} block mb-0.5`}
+                        className={`text-blue-400 block mb-0.5 font-bold uppercase tracking-tighter text-xs`}
                       >
                         {app.id === "google"
                           ? "Chrome Sync Active"
                           : "Luca Link Available"}
                       </strong>
-                      {app.id === "google"
-                        ? "Browsing features available. Link API for high-speed Gmail & Drive automation."
-                        : `Session data found. Click below to establish the bridge.`}
+                      <span className="opacity-80">
+                        {app.id === "google"
+                          ? "Browsing features available. Link API for high-speed Gmail & Drive automation."
+                          : `Session data found. Click below to establish the bridge.`}
+                      </span>
                     </div>
                   )}
                   <button
@@ -379,67 +304,23 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                         handleStartAuth(app.id);
                       }
                     }}
-                    className={`w-full py-2 rounded-xl text-[11px] font-black border transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5 backdrop-blur-md ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] hover:bg-black/[0.06]" : ""}`}
-                    style={{
-                      borderColor: isChromeSynced
-                        ? theme.isLight ||
-                          theme.themeName?.toLowerCase() === "lucagent"
-                          ? "rgba(0,0,0,0.2)"
-                          : setHexAlpha(theme.hex, 0.4)
-                        : theme.isLight ||
-                            theme.themeName?.toLowerCase() === "lucagent"
-                          ? "rgba(0,0,0,0.1)"
-                          : setHexAlpha(theme.hex, 0.2),
-                      color: isConnected
-                        ? theme.isLight ||
-                          theme.themeName?.toLowerCase() === "lucagent"
-                          ? "#1e293b"
-                          : "#ffffff"
-                        : theme.isLight ||
-                            theme.themeName?.toLowerCase() === "lucagent"
-                          ? "#111827"
-                          : theme.hex,
-                      backgroundColor: isChromeSynced
-                        ? theme.isLight ||
-                          theme.themeName?.toLowerCase() === "lucagent"
-                          ? "rgba(0,0,0,0.05)"
-                          : setHexAlpha(theme.hex, 0.1)
-                        : "transparent",
-                    }}
+                    className={`w-full py-2.5 rounded-xl text-xs font-black border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] tech-border glass-blur uppercase tracking-widest`}
                   >
-                    {isChromeSynced ? "ESTABLISH LINK" : "LINK MANUALLY"}
+                    {isChromeSynced ? "Establish Link" : "Link Manually"}
                   </button>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <div
-                    className="text-[10px] px-3 py-2 rounded-xl border leading-snug"
-                    style={{
-                      borderColor:
-                        theme.isLight ||
-                        theme.themeName?.toLowerCase() === "lucagent"
-                          ? "rgba(0,0,0,0.1)"
-                          : setHexAlpha(theme.hex, 0.15),
-                      color:
-                        theme.isLight ||
-                        theme.themeName?.toLowerCase() === "lucagent"
-                          ? "#1e293b"
-                          : setHexAlpha(theme.hex, 0.8),
-                      backgroundColor:
-                        theme.isLight ||
-                        theme.themeName?.toLowerCase() === "lucagent"
-                          ? "rgba(0,0,0,0.02)"
-                          : setHexAlpha(theme.hex, 0.05),
-                    }}
+                    className="text-sm px-3 py-2 rounded-xl border border-green-500/20 bg-green-500/5 text-green-400 leading-snug glass-blur tech-border"
                   >
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                      <strong className="text-[11px] uppercase tracking-wider">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                      <strong className="text-[10px] font-bold uppercase tracking-widest text-green-500">
                         Luca Link Active
                       </strong>
                     </div>
-                    Encrypted channel established. Background agents are
-                    synchronized.
+                    <span className="opacity-80 text-xs">Encrypted channel established. Background agents are synchronized.</span>
                   </div>
                 </div>
               )}
@@ -449,55 +330,29 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
       </div>
 
       {proTipModal && (
-        <div className="absolute inset-0 z-[50] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+        <div className="absolute inset-0 z-[50] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/60 glass-blur" />
           <div
-            className={`relative border p-6 rounded-2xl max-w-[280px] text-center shadow-2xl animate-in zoom-in duration-300 ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-white" : "bg-[#0d0d0d]"}`}
-            style={{
-              borderColor:
-                theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
-                  ? "rgba(0,0,0,0.1)"
-                  : setHexAlpha(theme.hex, 0.3),
-            }}
+            className={`relative border p-8 rounded-3xl max-w-[320px] text-center shadow-2xl animate-in zoom-in duration-300 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
           >
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30"
-              style={{ color: theme.hex }}
+              className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 bg-blue-500/10 border border-blue-500/30 text-blue-400"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Icon name="Info" className="w-8 h-8" />
             </div>
             <h5
-              className="font-black mb-2 uppercase tracking-tighter text-sm"
-              style={{ color: theme.hex }}
+              className="font-black mb-2 uppercase tracking-widest text-xl text-[var(--app-text-main)]"
             >
-              PRO-TIP: INSTANT ACCESS
+              Pro-Tip: Access
             </h5>
             <p
-              className={`text-[11px] ${theme.themeName?.toLowerCase() === "lucagent" ? "text-slate-600" : "text-white/70"} mb-6 leading-relaxed`}
+              className={`text-sm text-[var(--app-text-muted)] mb-8 leading-relaxed opacity-80`}
             >
               Luca detected no imported Chrome profile. Import your profile
               first to enable <strong>instant one-click login</strong> and
               deeper browsing automation.
             </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setProTipModal(null)}
-                className={`flex-1 py-2.5 rounded-xl ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-black/[0.03] text-slate-500 border-black/10" : "bg-white/5 text-white/50 border-white/10"} text-[10px] font-black hover:bg-white/10 transition-all border`}
-              >
-                I&apos;ll Import First
-              </button>
+            <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
                   if (proTipModal) {
@@ -505,10 +360,15 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                   }
                   setProTipModal(null);
                 }}
-                className="flex-1 py-2.5 rounded-xl text-black text-[10px] font-black transition-all shadow-lg shadow-cyan-500/20"
-                style={{ background: theme.hex }}
+                className="w-full py-3 rounded-xl bg-blue-600 text-[var(--app-text-main)] text-sm font-black transition-all shadow-lg shadow-blue-500/20 hover:bg-blue-500 hover:shadow-blue-500/40 uppercase tracking-widest"
               >
                 Link Anyway
+              </button>
+              <button
+                onClick={() => setProTipModal(null)}
+                className={`w-full py-3 rounded-xl bg-white/5 text-[var(--app-text-muted)] text-sm font-black hover:bg-white/10 transition-all border border-[var(--app-border-main)] uppercase tracking-widest`}
+              >
+                I&apos;ll Import First
               </button>
             </div>
           </div>

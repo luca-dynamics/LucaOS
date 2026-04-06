@@ -1,19 +1,7 @@
 import React, { useEffect, useState } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "./ui/Icon";
 import { ForexAccount } from "../types";
-const {
-  X,
-  TrendingUp,
-  TrendingDown,
-  Globe,
-  Plus,
-  Sparkles,
-  Lock,
-  MessageCircle,
-  Lightbulb,
-} = LucideIcons as any;
 import ConnectForexAccountModal from "./ConnectForexAccountModal";
-
 import { useAppContext } from "../context/AppContext";
 import { apiUrl } from "../config/api";
 
@@ -66,7 +54,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
             }
           }
         }
-      } catch (err) {
+      } catch {
         // Silently fail - no account connected yet
       }
     };
@@ -141,9 +129,9 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
   }, [account, trading]);
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 glass-blur animate-in fade-in duration-300">
       <div
-        className={`relative w-full md:w-[90%] max-w-5xl h-full md:h-[82vh] bg-black/60 backdrop-blur-xl border ${themeBorder}/30 md:rounded-lg flex flex-col overflow-hidden`}
+        className={`relative w-full md:w-[90%] max-w-5xl h-full md:h-[82vh] bg-black/60 glass-blur border ${themeBorder}/30 md:rounded-lg flex flex-col overflow-hidden`}
         style={{
           boxShadow: `0 0 80px -20px ${themeHex}40`,
         }}
@@ -164,7 +152,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
             <div
               className={`flex items-center gap-1.5 md:gap-2 ${themePrimary} font-bold tracking-widest text-xs md:text-sm`}
             >
-              <Globe size={16} className="md:w-[18px] md:h-[18px]" />
+              <Icon name="Earth" size={18} variant="BoldDuotone" color={themeHex} />
               <span className="hidden sm:inline">INSTITUTIONAL FX DESK</span>
               <span className="sm:hidden">FX DESK</span>
             </div>
@@ -187,7 +175,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
             onClick={onClose}
             className="text-slate-500 hover:text-white transition-colors"
           >
-            <X size={20} />
+            <Icon name="CloseCircle" size={20} />
           </button>
         </div>
 
@@ -206,7 +194,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
               {/* Icon with glassmorphic container */}
               <div
                 className={`inline-flex p-6 md:p-8 rounded-3xl border-2 ${themeBorder}/30 mb-6 md:mb-8
-                          backdrop-blur-xl shadow-2xl relative group`}
+                          glass-blur shadow-2xl relative group`}
                 style={{
                   backgroundColor: `${themeHex}1F`,
                   boxShadow: `0 0 60px ${themeHex}20`,
@@ -215,9 +203,12 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
                 {/* Glass shine effect */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 to-transparent opacity-50" />
 
-                <MessageCircle
+                <Icon
+                  name="Chat"
                   size={72}
-                  className={`${themePrimary} relative z-10 group-hover:scale-110 transition-transform duration-300`}
+                  color={themeHex}
+                  variant="BoldDuotone"
+                  className="relative z-10 group-hover:scale-110 transition-transform duration-300"
                 />
 
                 {/* Animated rings */}
@@ -271,10 +262,10 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
 
                 <span className="relative z-10 flex items-center gap-2 md:gap-3">
                   <div className="p-1.5 md:p-2 rounded-lg bg-white/10">
-                    <Plus size={20} className="md:w-6 md:h-6" />
+                    <Icon name="AddCircle" size={20} />
                   </div>
                   Connect Forex Broker
-                  <Sparkles size={16} className="md:w-5 md:h-5 animate-pulse" />
+                  <Icon name="MagicStick" size={16} className="animate-pulse" />
                 </span>
               </button>
 
@@ -288,7 +279,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
                 ].map((broker, i) => (
                   <div
                     key={i}
-                    className="px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl bg-slate-800/50 backdrop-blur-sm
+                    className="px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl bg-slate-800/50 glass-blur
                              border border-slate-700/50 text-[11px] md:text-xs font-medium text-slate-400
                              hover:border-slate-600 hover:text-slate-300 transition-all
                              cursor-default flex items-center gap-2"
@@ -307,7 +298,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
                   </div>
                 ))}
                 <div
-                  className="px-4 py-2 rounded-xl bg-slate-800/50 backdrop-blur-sm
+                  className="px-4 py-2 rounded-xl bg-slate-800/50 glass-blur
                               border border-slate-700/50 text-xs font-medium text-slate-400"
                 >
                   +4 more
@@ -315,7 +306,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
               </div>
 
               <div className="mt-8 text-xs text-slate-500 font-mono flex items-center justify-center gap-2">
-                <Lock size={12} /> Credentials encrypted with AES-256 • <Globe size={12} /> Global brokers
+                <Icon name="Lock" size={12} /> Credentials encrypted with AES-256 • <Icon name="Earth" size={12} /> Global brokers
               </div>
             </div>
           </div>
@@ -359,9 +350,9 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
                       </div>
                       <div className="flex items-center justify-end gap-1 text-[10px] opacity-60">
                         {pair.change >= 0 ? (
-                          <TrendingUp size={10} />
+                          <Icon name="TrendUp" size={10} variant="BoldDuotone" color="#10b981" />
                         ) : (
-                          <TrendingDown size={10} />
+                          <Icon name="TrendDown" size={10} variant="BoldDuotone" color="#ef4444" />
                         )}
                         {Math.abs(pair.change || 0).toFixed(4)}%
                       </div>
@@ -418,7 +409,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
         bg-slate-900/50
         border border-slate-700/50
         rounded-[1.5vmin]
-        backdrop-blur-xl
+        glass-blur
         max-w-lg
         mx-auto
         flex items-center justify-center gap-2
@@ -428,7 +419,7 @@ const ForexTerminal: React.FC<Props> = ({ onClose, theme }) => {
                   fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)"
                 }}
               >
-                <Lightbulb size={14} className="text-amber-400" />
+                <Icon name="MagicStick" size={14} color="#fbbf24" />
                 <span>You can switch between text and voice anytime during our conversation</span>
               </div>
 
