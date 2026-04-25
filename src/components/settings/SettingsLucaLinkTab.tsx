@@ -158,14 +158,14 @@ const GuestAccessSection: React.FC<{
       className={`rounded-xl p-4 text-center space-y-3 mt-4 border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm tech-border glass-blur`}
     >
       <div
-        className="flex items-center justify-center gap-2 text-lg font-bold uppercase tracking-widest text-[var(--app-text-main)]"
+        className="flex items-center justify-center gap-2 text-base font-black uppercase tracking-widest text-[var(--app-text-main)]"
       >
         <Icon name="Globus" variant="BoldDuotone" className="w-4 h-4" />
         Universal Access (Anywhere)
       </div>
 
       <p
-        className={`text-lg text-[var(--app-text-muted)]`}
+        className={`text-xs text-[var(--app-text-muted)] opacity-70`}
       >
         Access your personal Luca assistant from any device in the world • Works
         over internet
@@ -175,7 +175,7 @@ const GuestAccessSection: React.FC<{
         <button
           onClick={generateGuestAccess}
           disabled={!connected || loading}
-          className={`w-full py-3 rounded-lg text-xl font-bold transition-all disabled:opacity-50 border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 opacity-80 hover:opacity-100`}
+          className={`w-full py-3 rounded-lg text-sm font-black transition-all disabled:opacity-50 border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 opacity-80 hover:opacity-100`}
         >
           {loading ? "Generating..." : "Generate Access Link"}
         </button>
@@ -198,10 +198,10 @@ const GuestAccessSection: React.FC<{
 
           {/* URL Display */}
           <div className="space-y-1">
-            <p className="text-lg text-[var(--app-text-muted)]">Or share this URL:</p>
+            <p className="text-xs text-[var(--app-text-muted)] font-bold">Or share this URL:</p>
             <div className="flex items-center justify-center gap-2">
               <code
-                className="px-3 py-1 rounded text-lg font-mono max-w-[200px] truncate border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)]"
+                className="px-3 py-1 rounded text-sm font-mono max-w-[200px] truncate border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)]"
               >
                 {guestUrl}
               </code>
@@ -217,17 +217,17 @@ const GuestAccessSection: React.FC<{
                 />
               </button>
             </div>
-            {copied && <p className="text-base text-green-400">Copied!</p>}
+            {copied && <p className="text-xs text-green-400 font-bold">Copied!</p>}
           </div>
 
-          <p className="text-lg text-[var(--app-text-muted)]">
+          <p className="text-xs italic text-[var(--app-text-muted)] opacity-60">
             Valid for 24 hours • Live voice chat included
           </p>
         </>
       )}
 
       {!connected && (
-        <p className="text-lg text-yellow-500">
+        <p className="text-xs text-yellow-500 font-bold italics opacity-80">
           Enable Luca Link first to generate guest access
         </p>
       )}
@@ -247,12 +247,12 @@ const GuestAccessSection: React.FC<{
               </div>
               <div className="text-left">
                 <h3
-                  className={`font-bold text-[var(--app-text-main)]`}
+                  className={`font-black uppercase tracking-widest text-sm text-[var(--app-text-main)]`}
                 >
                   Link Security
                 </h3>
                 <p
-                  className={`text-lg text-[var(--app-text-muted)]`}
+                  className={`text-xs text-[var(--app-text-muted)] opacity-70`}
                 >
                   Protect this public link
                 </p>
@@ -315,7 +315,7 @@ const GuestAccessSection: React.FC<{
                           e.target.value.replace(/\D/g, "").slice(0, 6),
                         )
                       }
-                      className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-[var(--app-bg-tint)] border-black/25 shadow-sm text-[var(--app-text-muted)]" : "bg-black/40 border-white/10 text-[var(--app-text-main)]"} rounded-lg p-2 outline-none font-mono text-base border transition-all`}
+                      className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-[var(--app-bg-tint)] border-black/25 shadow-sm text-[var(--app-text-muted)]" : "bg-black/40 border-white/10 text-[var(--app-text-main)]"} rounded-lg p-2 outline-none font-mono text-sm border transition-all`}
                     />
                   </div>
                 ) : (
@@ -352,7 +352,7 @@ const GuestAccessSection: React.FC<{
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={() => setShowSecurityModal(false)}
-                    className="flex-1 py-2 rounded-lg text-xl text-[var(--app-text-muted)] hover:bg-white/5"
+                    className="flex-1 py-2 rounded-lg text-sm font-bold text-[var(--app-text-muted)] hover:bg-white/5"
                   >
                     Cancel
                   </button>
@@ -380,7 +380,7 @@ const GuestAccessSection: React.FC<{
                       }
                     }}
                     disabled={loading}
-                    className="flex-[2] py-2 rounded-lg text-xl font-bold text-[var(--app-text-main)] transition-all shadow-lg shadow-purple-500/20"
+                    className="flex-[2] py-2 rounded-lg text-sm font-black text-[var(--app-text-main)] transition-all shadow-lg shadow-purple-500/20 uppercase tracking-widest"
                     style={{
                       background: `linear-gradient(135deg, ${theme.hex}, ${theme.hex}aa)`,
                     }}
@@ -389,11 +389,11 @@ const GuestAccessSection: React.FC<{
                       ? "Processing..."
                       : pinEnabled
                         ? currentPin
-                          ? "Remove PIN & Generate"
-                          : "Keep PIN & Generate"
+                          ? "Remove & Generate"
+                          : "Keep & Generate"
                         : newPin
-                          ? "Set PIN & Generate"
-                          : "Generate without PIN"}
+                          ? "Set & Generate"
+                          : "Generate unprotected"}
                   </button>
                 </div>
               </div>
@@ -417,6 +417,7 @@ interface SettingsLucaLinkTabProps {
     isLight?: boolean;
   };
   connectionMode?: "local" | "vpn" | "relay" | "disconnected";
+  isMobile?: boolean;
 }
 
 const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
@@ -424,8 +425,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   onUpdate,
   theme,
   connectionMode = "disconnected",
+  isMobile: isMobileProp,
 }) => {
-  const isMobile = useMobile();
+  const isMobile = isMobileProp ?? useMobile();
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [linkState, setLinkState] = useState<LucaLinkState>(
     lucaLink.getState(),
@@ -523,21 +525,21 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const status = getConnectionStatus();
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       {/* Connection Status */}
       <div
-        className={`p-6 rounded-2xl border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
+        className={`p-6 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-2xl bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} tech-border glass-blur`}
       >
         <div className="flex items-center justify-between mb-3">
           <label
-            className={`text-lg font-bold uppercase tracking-widest text-[var(--app-text-main)]`}
+            className={`text-base font-black uppercase tracking-widest text-[var(--app-text-main)]`}
           >
             {isMobile ? "Desktop Connection" : "Connection Status"}
           </label>
           {getConnectionIcon()}
         </div>
         <div
-          className={`text-xl font-medium ${status.color}`}
+          className={`text-sm font-black uppercase tracking-wider ${status.color}`}
           style={(status as any).style}
         >
           {status.text}
@@ -548,8 +550,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {isMobile && (
         <>
           {/* Connection Mode */}
-          <div className="space-y-2">
-            <label className="text-xl font-bold text-[var(--app-text-muted)]">
+          <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
+            <label className="text-base font-black text-[var(--app-text-muted)] uppercase tracking-widest">
               Connection Method
             </label>
             <select
@@ -557,14 +559,14 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               onChange={(e) =>
                 onUpdate("lucaLink", "connectionMode", e.target.value)
               }
-              className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] border rounded-lg p-3 text-xl outline-none transition-all tech-border glass-blur shadow-sm`}
+              className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] border rounded-lg p-3 text-sm font-bold outline-none transition-all tech-border glass-blur shadow-sm`}
             >
               <option value="auto">Auto (Try All Methods)</option>
               <option value="local">Local Network (Same WiFi)</option>
               <option value="vpn">VPN (Tailscale/ZeroTier)</option>
               <option value="relay">Cloud Relay</option>
             </select>
-            <p className="text-base text-[var(--app-text-muted)] opacity-70">
+            <p className="text-xs text-[var(--app-text-muted)] opacity-70 italic leading-tight">
               {settings.lucaLink.connectionMode === "auto" &&
                 "Automatically tries local → VPN → cloud relay"}
               {settings.lucaLink.connectionMode === "local" &&
@@ -580,8 +582,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           {(settings.lucaLink.connectionMode === "auto" ||
             settings.lucaLink.connectionMode === "local" ||
             settings.lucaLink.connectionMode === "vpn") && (
-            <div className="space-y-2">
-              <label className="text-xl font-bold text-[var(--app-text-muted)] flex items-center gap-2">
+            <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
+              <label className="text-base font-black text-[var(--app-text-muted)] uppercase tracking-widest flex items-center gap-2">
                 <Icon name="Smartphone" className="w-4 h-4" />
                 Desktop Address
               </label>
@@ -596,7 +598,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     ? "e.g., 100.x.x.x:8765 (Tailscale IP)"
                     : "e.g., 192.168.1.100:8765"
                 }
-                className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 text-xl outline-none transition-all border tech-border glass-blur shadow-sm`}
+                className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 text-sm font-mono outline-none transition-all border tech-border glass-blur shadow-sm`}
               />
             </div>
           )}
@@ -604,8 +606,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           {/* Cloud Relay Server */}
           {(settings.lucaLink.connectionMode === "auto" ||
             settings.lucaLink.connectionMode === "relay") && (
-            <div className="space-y-2">
-              <label className="text-xl font-bold text-[var(--app-text-muted)] flex items-center gap-2">
+            <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
+              <label className="text-base font-black text-[var(--app-text-muted)] uppercase tracking-widest flex items-center gap-2">
                 <Icon name="Globus" variant="BoldDuotone" className="w-4 h-4" />
                 Cloud Relay Server
               </label>
@@ -616,16 +618,16 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   onUpdate("lucaLink", "relayServerUrl", e.target.value)
                 }
                 placeholder="https://lucaos.onrender.com"
-                className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 outline-none font-mono text-xl transition-all border tech-border glass-blur shadow-sm`}
+                className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 outline-none font-mono text-sm transition-all border tech-border glass-blur shadow-sm`}
               />
-              <p className="text-base text-[var(--app-text-muted)] opacity-70">
+              <p className="text-xs text-[var(--app-text-muted)] opacity-70 italic leading-tight">
                 Default relay provided. You can self-host your own.
               </p>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3">
+          <div className={`flex flex-col gap-3 ${isMobile ? "px-4" : ""}`}>
             {/* QR Code Scanner */}
             <button
               onClick={async () => {
@@ -634,7 +636,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   console.log("[LucaLink] Connected via QR scan");
                 }
               }}
-              className={`w-full py-3 rounded-lg text-xl font-bold transition-all flex items-center justify-center gap-2 border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 tech-border glass-blur shadow-sm`}
+              className={`w-full py-3 rounded-lg text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 tech-border glass-blur shadow-sm`}
             >
               <Icon name="QrCode" className="w-5 h-5" /> Scan QR Code from Desktop
             </button>
@@ -657,7 +659,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 }
               }}
               disabled={linkState.connected}
-              className={`w-full py-3 rounded-lg text-xl font-bold transition-all disabled:opacity-50 border ${
+              className={`w-full py-3 rounded-lg text-sm font-black uppercase tracking-widest transition-all disabled:opacity-50 border ${
                 linkState.connected 
                   ? "bg-green-500/10 border-green-500/30 text-green-400" 
                   : "bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 shadow-sm"
@@ -685,7 +687,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
 
           {/* Privacy Note */}
           <div
-            className={`p-4 rounded-xl border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] tech-border glass-blur opacity-90 shadow-sm`}
+            className={`p-4 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl bg-[var(--app-bg-tint)] border-[var(--app-border-main)]"} text-[var(--app-text-main)] tech-border glass-blur opacity-90 shadow-sm`}
           >
             <div className="flex items-start gap-3">
               <Icon name="Shield" variant="BoldDuotone" className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--app-text-main)]" />
@@ -737,14 +739,16 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   console.error("[LucaLink] Failed to toggle server:", e);
                 }
               }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.lucaLink.enabled ? "bg-green-500" : "bg-gray-600"
-              }`}
+              className={`w-7 h-3.5 rounded-full transition-all relative ${settings.lucaLink.enabled ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
+              style={{
+                backgroundColor: settings.lucaLink.enabled ? theme.hex : undefined,
+              }}
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-[var(--app-bg-tint)] transition-transform ${
-                  settings.lucaLink.enabled ? "translate-x-6" : "translate-x-1"
-                }`}
+              <div
+                className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.lucaLink.enabled ? "translate-x-4" : "translate-x-0.5"}`}
+                style={{ 
+                  backgroundColor: settings.lucaLink.enabled ? "white" : "var(--app-text-muted)" 
+                }}
               />
             </button>
           </div>

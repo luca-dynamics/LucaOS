@@ -9,6 +9,8 @@ interface FaceScanProps {
   userName: string;
   onComplete: (faceData: string | null) => void;
   onSkip: () => void;
+  isLightTheme: boolean;
+  theme: any;
   title?: string;
   description?: string;
   enrollmentEndpoint?: string;
@@ -25,6 +27,8 @@ const FaceScan: React.FC<FaceScanProps> = ({
   userName,
   onComplete,
   onSkip,
+  isLightTheme,
+  theme,
   title = "Facial Recognition Setup",
   description,
   enrollmentEndpoint,

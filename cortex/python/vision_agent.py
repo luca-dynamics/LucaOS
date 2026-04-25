@@ -106,21 +106,45 @@ class UITarsAgent:
                 print(f"[UI-TARS] CRITICAL LOAD ERROR: {e}")
                 raise e
 
-    def is_downloaded(self):
+    def is_downloaded(self, model_id=None):
         """Check if model files exist on disk accurately."""
-        # Check for the existence of the model directory inside the cache folder
-        # HF Hub structure: models--ByteDance-Seed--UI-TARS-2B-SFT
-        folder_name = f"models--{self.model_name.replace('/', '--')}"
-        model_path = os.path.join(self.cache_dir, folder_name)
-        if not os.path.exists(model_path):
-            # Also check for a flat structure just in case
-            flat_path = os.path.join(self.cache_dir, self.model_name.split('/')[-1])
-            return os.path.exists(flat_path)
+        target_model = model_id or self.model_name
         
-        # Check if it has any actual weight files
+        # Handle aliases if needed
+        if target_model == "ui-tars":
+             target_model = "ByteDance-Seed/UI-TARS-2B-SFT"
+        elif target_model == "smolvlm-500m":
+             target_model = "HuggingFaceTB/SmolVLM-500M-Instruct"
+        elif target_model == "moondream2":
+             target_model = "vikhyatk/moondream2"
+        elif target_model == "qwen2.5-vl-3b":
+             target_model = "Qwen/Qwen2.5-VL-3B-Instruct"
+
+        # HF Hub structure: models--Author--ModelName
+        folder_name = f"models--{target_model.replace('/', '--')}"
+        model_path = os.path.join(self.cache_dir, folder_name)
+        
+        if not os.path.exists(model_path):
+            # Also check for a flat structure (manually downloaded folder)
+            flat_path = os.path.join(self.cache_dir, target_model.split('/')[-1])
+            if os.path.exists(flat_path):
+                 return True
+            return False
+        
+        # Check if it has any actual weight files in the snapshots
+        snapshots_dir = os.path.join(model_path, "snapshots")
+        if os.path.exists(snapshots_dir):
+            for snapshot in os.listdir(snapshots_dir):
+                snap_path = os.path.join(snapshots_dir, snapshot)
+                for root, dirs, files in os.walk(snap_path):
+                    if any(f.endswith(".safetensors") or f.endswith(".bin") or f.endswith(".gguf") for f in files):
+                        return True
+        
+        # Fallback recursive check for legacy downloads
         for root, dirs, files in os.walk(model_path):
-            if any(f.endswith(".safetensors") or f.endswith(".bin") for f in files):
+            if any(f.endswith(".safetensors") or f.endswith(".bin") or f.endswith(".gguf") for f in files):
                 return True
+                
         return False
 
     def process_screenshot(self, screenshot_base64, instruction, model_name=None):

@@ -1,104 +1,112 @@
 import { ITtsProvider } from "../types";
-import { getGenClient } from "../../genAIClient";
-import { personalityService } from "../../personalityService";
 import { settingsService } from "../../settingsService";
-import { voiceCloneService } from "../../VoiceCloneService";
+import { API_BASE_URL, getAuthHeaders } from "../../../config/api";
 
+/**
+ * GeminiTtsProvider: A hybrid provider that bridges between the Multimodal Reasoning API 
+ * and the Google Cloud Text-to-Speech Generative engine.
+ */
 export class GeminiTtsProvider implements ITtsProvider {
   private modelId: string;
 
   constructor(modelId: string = "gemini-2.0-flash") {
-    // Ensure we have the short ID (e.g. gemini-2.0-flash) for the URL
-    this.modelId = modelId.includes("/") ? modelId.split("/").pop()! : modelId;
+    const shortId = modelId.includes("/") ? modelId.split("/").pop()! : modelId;
+    this.modelId = `models/${shortId}`;
   }
 
   async synthesize(
     text: string,
-    options?: { abortSignal?: AbortSignal; systemInstruction?: string },
+    options?: { abortSignal?: AbortSignal; systemInstruction?: string; voiceId?: string },
   ): Promise<ArrayBuffer> {
-    const genAI = getGenClient();
-    const contents = await this.prepareContents(text, options);
-    
-    const result = await genAI.models.generateContent({
-      model: this.modelId,
-      contents,
-      config: {
-        responseMimeType: "audio/mp3",
-      },
-    });
+    const isLiveLoop = this.modelId.includes("live") || this.modelId.includes("loop");
 
-    const part = result.candidates?.[0].content?.parts?.find(
-      (p: any) => p.inlineData,
-    );
-
-    if (part?.inlineData?.data) {
-      const base64 = part.inlineData.data;
-      return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)).buffer;
+    if (isLiveLoop) {
+      console.log(`[GeminiTts] Using Live Bridge (Unified Tunnel) for: ${this.modelId}`);
+      return this.synthesizeWithLiveBridge(text, options);
     }
 
-    throw new Error("Gemini TTS failed to generate audio data");
+    // Default: Use Google Cloud Generative TTS for Modular synthesis
+    console.log(`[GeminiTts] Using Cloud Generative TTS for Modular expression: ${this.modelId}`);
+    return this.synthesizeWithCloudTts(text, options);
+  }
+
+  private async synthesizeWithCloudTts(
+    text: string,
+    options?: { abortSignal?: AbortSignal; voiceId?: string }
+  ): Promise<ArrayBuffer> {
+    const settings = settingsService.getSettings();
+    const apiKey = (window as any).GEMINI_API_KEY || localStorage.getItem("GEMINI_API_KEY");
+    
+    const voiceMap: Record<string, string> = {
+      "aoede": "en-US-Journey-F",
+      "fenrir": "en-US-Journey-D",
+      "journey": "en-US-Journey-F",
+    };
+
+    const targetVoice = options?.voiceId?.toLowerCase() || settings.voice.voiceId?.toLowerCase() || "en-US-Journey-F";
+    const mappedVoice = voiceMap[targetVoice] || targetVoice;
+
+    try {
+      if (apiKey) {
+        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            input: { text },
+            voice: { languageCode: "en-US", name: mappedVoice },
+            audioConfig: { audioEncoding: "MP3" },
+          }),
+          signal: options?.abortSignal,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return this.base64ToArrayBuffer(data.audioContent);
+        }
+      }
+
+      const proxyResponse = await fetch(`${API_BASE_URL}/api/voice/google-tts`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          text,
+          voiceId: mappedVoice,
+          speakingRate: settings.voice.rate || 1.0,
+        }),
+        signal: options?.abortSignal,
+      });
+
+      return await proxyResponse.arrayBuffer();
+    } catch (e) {
+      console.error("[GeminiTts] Cloud TTS Synthesis failed:", e);
+      throw e;
+    }
+  }
+
+  private async synthesizeWithLiveBridge(
+    text: string,
+    options?: { abortSignal?: AbortSignal; systemInstruction?: string }
+  ): Promise<ArrayBuffer> {
+    // Current fallback to Cloud TTS until Live Loop requirements are finalized for one-offs
+    return this.synthesizeWithCloudTts(text, options);
   }
 
   async *synthesizeStream(
     text: string,
     options?: { abortSignal?: AbortSignal; systemInstruction?: string },
   ): AsyncIterable<ArrayBuffer> {
-    const genAI = getGenClient();
-    const contents = await this.prepareContents(text, options);
-    
-    const stream = await genAI.models.generateContentStream({
-      model: this.modelId,
-      contents,
-      config: {
-        responseMimeType: "audio/mp3",
-      },
-    });
-
-    for await (const chunk of stream) {
-      if (options?.abortSignal?.aborted) break;
-      
-      const part = chunk.candidates?.[0].content?.parts?.find(
-        (p: any) => p.inlineData,
-      );
-
-      if (part?.inlineData?.data) {
-        const base64 = part.inlineData.data;
-        yield Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)).buffer;
-      }
-    }
+    const buffer = await this.synthesize(text, options);
+    yield buffer;
   }
 
-  private async prepareContents(text: string, options?: any) {
-    const settings = settingsService.getSettings();
-    const instruction = options?.systemInstruction || personalityService.getVoiceSystemInstruction({
-      style: settings.voice.style,
-      pacing: settings.voice.pacing
-    });
-    
-    const parts: any[] = [{ text: `${instruction}\n\n#### TRANSCRIPT\n"${text}"` }];
-
-    if (settings.voice.activeClonedVoiceId) {
-      try {
-        const clonedVoice = await voiceCloneService.getVoice(settings.voice.activeClonedVoiceId);
-        if (clonedVoice?.audioBlob) {
-          const base64Audio = await voiceCloneService.blobToBase64(clonedVoice.audioBlob);
-          const cleanBase64 = base64Audio.split(",")[1];
-          
-          parts.unshift({
-            text: "Use the following audio clip as a reference for the voice tone, timbre, and accent. MIMIC this voice exactly when speaking the transcript below.",
-          });
-          parts.unshift({
-            inlineData: {
-              mimeType: "audio/mp3",
-              data: cleanBase64,
-            },
-          });
-        }
-      } catch (e) {
-        console.warn("[GeminiTtsProvider] Voice cloning reference failed:", e);
-      }
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
     }
-
-    return [{ role: "user", parts }];
+    return bytes.buffer;
   }
 }

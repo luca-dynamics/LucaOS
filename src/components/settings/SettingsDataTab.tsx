@@ -7,11 +7,13 @@ interface SettingsDataTabProps {
   theme?: any;
   memoryStats: { count: number };
   loadMemoryStats: () => void;
+  isMobile?: boolean;
 }
 
 const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   memoryStats,
   loadMemoryStats,
+  isMobile,
 }) => {
   const [memories, setMemories] = useState<MemoryNode[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,11 +70,11 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   ];
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className={`space-y-6 flex flex-col h-full ${isMobile ? "px-0" : ""}`}>
       {/* Overview Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div
-          className={`p-4 rounded-xl flex items-center justify-between border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
+          className={`p-4 rounded-lg flex items-center justify-between ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "bg-[var(--app-bg-tint)] rounded-lg"} tech-border glass-blur shadow-sm transition-all`}
         >
           <div>
             <h3 className="text-xs uppercase tracking-wider text-[var(--app-text-muted)] font-bold mb-1 opacity-60">
@@ -88,7 +90,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         </div>
 
         <div
-          className={`p-4 rounded-xl space-y-2 border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
+          className={`p-4 rounded-lg space-y-2 ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "bg-[var(--app-bg-tint)] rounded-lg"} tech-border glass-blur shadow-sm transition-all`}
         >
           <button
             onClick={() => {
@@ -125,7 +127,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
 
       {/* Memory Explorer */}
       <div
-        className={`flex-1 flex flex-col min-h-0 border rounded-xl overflow-hidden bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
+        className={`flex-1 flex flex-col min-h-0 overflow-hidden ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)]"} tech-border glass-blur`}
       >
         <div
           className={`p-3 border-b flex flex-wrap gap-2 items-center justify-between border-[var(--app-border-main)] bg-white/5 opacity-90`}
@@ -137,7 +139,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
               placeholder="Search facts, concepts, entities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none transition-all shadow-sm tech-border`}
+              className={`w-full bg-[var(--app-bg-tint)] text-[var(--app-text-main)] rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none transition-all shadow-sm tech-border`}
             />
           </div>
 
@@ -146,7 +148,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className={`bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg px-3 py-1.5 text-xs focus:outline-none transition-all shadow-sm font-bold tech-border`}
+              className={`bg-[var(--app-bg-tint)] text-[var(--app-text-main)] rounded-lg px-3 py-1.5 text-xs focus:outline-none transition-all shadow-sm font-bold tech-border`}
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -178,7 +180,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             filteredMemories.map((m) => (
               <div
                 key={m.id}
-                className={`group p-4 rounded-xl transition-all border relative overflow-hidden bg-[var(--app-bg-tint)] border-[var(--app-border-main)] hover:border-[var(--app-text-muted)] shadow-sm tech-border glass-blur`}
+                className={`group p-4 relative overflow-hidden transition-all ${isMobile ? "border-x-0 border-b rounded-none" : "rounded-lg bg-[var(--app-bg-tint)] shadow-sm"} tech-border glass-blur`}
               >
                 {/* Delete Button */}
                 <div className="absolute top-1 right-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -248,7 +250,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
 
       {/* Session Cleanup */}
       <div
-        className={`p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between mt-auto tech-border glass-blur shadow-sm`}
+        className={`p-4 flex items-center justify-between mt-auto tech-border glass-blur shadow-sm ${isMobile ? "border-x-0 border-y rounded-none bg-red-500/5 mx-0" : "rounded-lg bg-amber-500/10 mx-auto"}`}
       >
         <div className="flex items-center gap-4">
           <Icon name="Logout" className="w-5 h-5 text-amber-500 opacity-80" />
@@ -276,7 +278,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
               window.location.reload();
             }
           }}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-red-400 hover:border-red-500/30 shadow-sm tech-border glass-blur`}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all bg-[var(--app-bg-tint)] text-[var(--app-text-muted)] shadow-sm tech-border glass-blur`}
         >
           Reset Session
         </button>

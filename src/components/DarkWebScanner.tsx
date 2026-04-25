@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Icon } from "./ui/Icon";
+import { settingsService } from "../services/settingsService";
+import { getThemeColors } from "../config/themeColors";
 
 interface Props {
   onClose: () => void;
@@ -15,10 +17,18 @@ This tool accesses the Tor network to search .onion sites.
 • Developers assume no liability for misuse.
 `;
 
-const DarkWebScanner: React.FC<Props> = ({ onClose, theme }) => {
-  const themeHex = theme?.hex || "#ef4444";
-  const themeBorder = theme?.border || "border-red-500";
-  const themePrimary = theme?.primary || "text-red-500";
+const DarkWebScanner: React.FC<Props> = ({ onClose, theme: propTheme }) => {
+  // Theme Integration
+  const currentPersona =
+    settingsService.getSettings().general.persona || "ASSISTANT";
+  const calculatedTheme = getThemeColors(currentPersona);
+  const theme = propTheme || calculatedTheme;
+  
+  // Restricted access usually stays RED/Danger, but we wire it to persona for unity 
+  // unless we want a forced "Restricted" theme. Let's use Persona but fallback to Red.
+  const themeHex = theme.hex || "#ef4444";
+  const themeBorder = theme.border || "border-red-500";
+  const themePrimary = theme.primary || "text-red-500";
 
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [query, setQuery] = useState("");

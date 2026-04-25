@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
+import { settingsService } from "../services/settingsService";
+import { getThemeColors } from "../config/themeColors";
 
 interface IntelligenceFeedProps {
   results: any;
@@ -8,15 +10,23 @@ interface IntelligenceFeedProps {
     border: string;
     bg: string;
     glow: string;
+    hex: string;
   };
   personaColor: string;
 }
 
 const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
   results,
-  theme,
+  theme: propTheme,
   personaColor,
 }) => {
+  // Theme Integration
+  const currentPersona =
+    settingsService.getSettings().general.persona || "ASSISTANT";
+  const calculatedTheme = getThemeColors(currentPersona);
+  const theme = propTheme || calculatedTheme;
+  const themeHex = theme.hex || "#3b82f6";
+
   const [visibleCount, setVisibleCount] = useState(0);
   const chunks = results?.groundingChunks || [];
 
@@ -51,16 +61,16 @@ const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
               size={14}
               variant="BoldDuotone"
               className="animate-spin-slow sm:w-[18px] sm:h-[18px]"
-              color={personaColor}
+              color={themeHex}
             />
             <div
               className="absolute inset-0 animate-ping opacity-50"
-              style={{ color: personaColor }}
+              style={{ color: themeHex }}
             ></div>
           </div>
           <span
             className="font-mono font-bold tracking-[0.1em] sm:tracking-[0.2em] text-[10px] sm:text-sm"
-            style={{ color: personaColor }}
+            style={{ color: themeHex }}
           >
             INTELLIGENCE FEED // LIVE
           </span>
@@ -126,9 +136,9 @@ const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
                 <div className="flex items-start justify-between mb-2">
                   <div
                     className="flex items-center gap-2 text-[10px] font-mono opacity-70"
-                    style={{ color: personaColor }}
+                    style={{ color: themeHex }}
                   >
-                    <Icon name="ShieldCheck" size={12} variant="BoldDuotone" color={personaColor} />
+                    <Icon name="ShieldCheck" size={12} variant="BoldDuotone" color={themeHex} />
                     <span>VERIFIED_SOURCE_{i + 1}</span>
                   </div>
                   <div className="text-[10px] font-mono text-slate-500">

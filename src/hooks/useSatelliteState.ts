@@ -13,6 +13,8 @@ export interface SatelliteState {
   persona: PersonaType;
   status?: string;
   themeHex?: string;
+  brainModel?: string;
+  embeddingModel?: string;
   intent?: string | null;
   elevationState?: {
     lastScanTimestamp: number;
@@ -36,21 +38,32 @@ export const useSatelliteState = (
     try {
       // Use settingService as the single source of truth
       const theme = settingsService.get("general")?.theme;
+      const brain = settingsService.get("general")?.activeBrainId;
+      const embedding = settingsService.get("general")?.embeddingModel;
       if (theme) {
         persona = theme as PersonaType;
       }
+      return {
+        transcript: "",
+        transcriptSource: "user",
+        isListening: false,
+        isSpeaking: false,
+        amplitude: 0,
+        persona,
+        brainModel: brain,
+        embeddingModel: embedding,
+      };
     } catch (e) {
       console.warn("[SatelliteState] Initialization failed:", e);
+      return {
+        transcript: "",
+        transcriptSource: "user",
+        isListening: false,
+        isSpeaking: false,
+        amplitude: 0,
+        persona: initialPersona,
+      };
     }
-
-    return {
-      transcript: "",
-      transcriptSource: "user",
-      isListening: false,
-      isSpeaking: false,
-      amplitude: 0,
-      persona,
-    };
   });
 
   // Sync with global settings changes
@@ -60,6 +73,8 @@ export const useSatelliteState = (
         setState((prev) => ({
           ...prev,
           persona: newSettings.general.theme as PersonaType,
+          brainModel: newSettings.general.activeBrainId || prev.brainModel,
+          embeddingModel: newSettings.general.embeddingModel || prev.embeddingModel,
         }));
       }
     };
@@ -86,6 +101,8 @@ export const useSatelliteState = (
               persona: (data.persona as PersonaType) ?? prev.persona,
               status: data.status ?? prev.status,
               themeHex: data.themeHex ?? prev.themeHex,
+              brainModel: data.activeBrainId ?? prev.brainModel,
+              embeddingModel: data.embeddingModel ?? prev.embeddingModel,
               intent: data.intent ?? prev.intent,
               elevationState: data.elevationState ?? prev.elevationState,
             }) as SatelliteState,

@@ -23,68 +23,70 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
   const [viewMode, setViewMode] = useState<'graph' | 'pipeline' | 'drones' | 'agencies'>('graph');
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 glass-blur animate-in fade-in duration-300 font-mono">
-      <div className="relative w-[95%] h-[90%] border border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.2)] rounded-sm flex flex-col overflow-hidden bg-[#050505]">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 glass-blur animate-in fade-in duration-300 font-mono">
+      <div 
+        className="relative w-[96%] h-[92%] border rounded-2xl flex flex-col overflow-hidden shadow-2xl"
+        style={{ 
+          backgroundColor: 'var(--app-bg-main, #050505)',
+          borderColor: 'var(--app-border-main, rgba(255,255,255,0.1))'
+        }}
+      >
 
         {/* Header */}
-        <div className="h-14 border-b border-cyan-900 bg-cyan-950/10 flex items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <Icon name="BrainCircuit" className="text-cyan-500 animate-pulse" size={20} />
-            <div>
-              <h2 className="text-lg font-bold text-cyan-500 tracking-[0.2em]">THOUGHT PROCESS</h2>
-              <div className="text-[10px] text-cyan-700 flex gap-4">
+        <div 
+          className="h-16 border-b flex items-center justify-between px-8"
+          style={{ 
+            borderColor: 'var(--app-border-main)',
+            backgroundColor: 'var(--app-bg-tint)'
+          }}
+        >
+          <div className="flex items-center gap-5">
+            <Icon name="BrainCircuit" className="animate-pulse" size={24} color="var(--app-primary)" />
+            <div className="space-y-0.5">
+              <h2 className="text-sm font-black tracking-[0.3em] uppercase italic" style={{ color: 'var(--app-text-main)' }}>
+                COGNITIVE ENGINE
+              </h2>
+              <div className="text-[9px] flex gap-4 font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                <span>STREAM: LIVE</span>
                 <span>NODES: {nodes.length}</span>
-                <span>DRONES: {drones.length}</span>
                 <span>MODE: {viewMode.toUpperCase()}</span>
               </div>
             </div>
           </div>
 
           {/* View mode switcher */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('graph')}
-              className={`px-3 py-1 text-xs font-bold transition-colors ${viewMode === 'graph'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                : 'bg-gray-800 text-gray-500 border border-gray-700'
-                }`}
-            >
-              <Icon name="Network" size={12} className="inline mr-1" />
-              GRAPH
-            </button>
-            <button
-              onClick={() => setViewMode('pipeline')}
-              className={`px-3 py-1 text-xs font-bold transition-colors ${viewMode === 'pipeline'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                : 'bg-gray-800 text-gray-500 border border-gray-700'
-                }`}
-            >
-              <Icon name="Activity" size={12} className="inline mr-1" />
-              PIPELINE
-            </button>
-            <button
-              onClick={() => setViewMode('drones')}
-              className={`px-3 py-1 text-xs font-bold transition-colors ${viewMode === 'drones'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                : 'bg-gray-800 text-gray-500 border border-gray-700'
-                }`}
-            >
-              DRONES
-            </button>
-            <button
-              onClick={() => setViewMode('agencies')}
-              className={`px-3 py-1 text-xs font-bold transition-colors ${viewMode === 'agencies'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                : 'bg-gray-800 text-gray-500 border border-gray-700'
-                }`}
-            >
-              <Icon name="SearchCode" size={12} className="inline mr-1" />
-              AGENCIES
-            </button>
+          <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+            {[
+              { id: 'graph', label: 'NEURAL GRAPH', icon: 'Network' },
+              { id: 'pipeline', label: 'EXECUTION', icon: 'Activity' },
+              { id: 'drones', label: 'SUB-AGENTS', icon: 'Navigation' },
+              { id: 'agencies', label: 'REASONING', icon: 'ShieldCheck' }
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setViewMode(mode.id as any)}
+                className={`px-4 py-2 text-[10px] font-black transition-all rounded-lg flex items-center gap-2 tracking-widest uppercase
+                  ${viewMode === mode.id
+                    ? 'shadow-lg'
+                    : 'opacity-40 hover:opacity-100'
+                  }`}
+                style={{ 
+                  backgroundColor: viewMode === mode.id ? 'var(--app-primary)' : 'transparent',
+                  color: viewMode === mode.id ? '#000' : 'var(--app-text-main)'
+                }}
+              >
+                <Icon name={mode.icon} size={14} color={viewMode === mode.id ? '#000' : 'currentColor'} />
+                {mode.label}
+              </button>
+            ))}
           </div>
 
-          <button onClick={onClose} className="text-cyan-700 hover:text-cyan-400 transition-colors">
-            <Icon name="X" size={24} />
+          <button 
+            onClick={onClose} 
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:bg-white/5 active:scale-95"
+            style={{ color: 'var(--app-text-muted)' }}
+          >
+            <Icon name="X" size={20} />
           </button>
         </div>
 
@@ -103,7 +105,7 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
                 {/* eslint-disable-next-line react/no-unknown-property */}
                 <pointLight position={[10, 10, 10]} intensity={1} />
                 {/* eslint-disable-next-line react/no-unknown-property */}
-                <pointLight position={[-10, -10, -10]} intensity={0.5} color="#06b6d4" />
+                <pointLight position={[-10, -10, -10]} intensity={0.5} color="var(--app-primary)" />
 
                 <ThoughtGraph
                   nodes={nodes}
@@ -116,11 +118,19 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
                   autoRotate={false}
                 />
               </Canvas>
+              
+              {/* Graph UI Overlay */}
+              <div className="absolute top-6 left-6 p-4 rounded-2xl border border-white/5 glass-blur space-y-4" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
+                  <div className="space-y-1">
+                      <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Synaptic Density</div>
+                      <div className="text-xs font-bold" style={{ color: 'var(--app-text-main)' }}>{Math.round(nodes.length * 1.4)} Connections</div>
+                  </div>
+              </div>
             </div>
           )}
 
           {viewMode === 'pipeline' && (
-            <div className="w-full h-full overflow-y-auto p-6">
+            <div className="w-full h-full overflow-y-auto p-10 custom-scrollbar">
               <ExecutionPipeline
                 steps={nodes.map(n => ({
                   ...n,
@@ -159,25 +169,37 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
               </Canvas>
 
               {/* Drone list overlay */}
-              <div className="absolute bottom-4 left-4 right-4 bg-black/80 border border-cyan-500/30 p-4 rounded">
-                <div className="text-xs font-bold text-cyan-400 mb-2">ACTIVE DRONES</div>
-                <div className="space-y-1">
-                  {drones.map((drone) => (
-                    <div key={drone.id} className="text-[10px] text-gray-400">
-                      {drone.taskName} - {drone.status.toUpperCase()} ({Math.round(drone.progress * 100)}%)
+              <div className="absolute bottom-6 left-6 right-6 p-6 rounded-2xl border glass-blur grid grid-cols-4 gap-6" 
+                style={{ 
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  borderColor: 'var(--app-border-main)'
+                }}>
+                {drones.map((drone) => (
+                  <div key={drone.id} className="space-y-2">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                       <span style={{ color: 'var(--app-text-main)' }}>{drone.taskName}</span>
+                       <span style={{ color: 'var(--app-primary)' }}>{Math.round(drone.progress * 100)}%</span>
                     </div>
-                  ))}
-                </div>
+                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full transition-all duration-500" 
+                          style={{ width: `${drone.progress * 100}%`, backgroundColor: 'var(--app-primary)' }} 
+                        />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
           {viewMode === 'drones' && drones.length === 0 && (
-            <div className="w-full h-full flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <Icon name="Navigation" className="text-cyan-500 mx-auto mb-4 animate-bounce" size={40} />
-                <div className="text-sm">No active drones</div>
-                <div className="text-xs opacity-70 mt-2">Drones appear when parallel tasks are executed</div>
+            <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--app-text-muted)' }}>
+              <div className="text-center space-y-4">
+                <Icon name="Navigation" className="mx-auto animate-bounce opacity-20" size={64} color="var(--app-primary)" />
+                <div className="space-y-1">
+                  <div className="text-sm font-black uppercase tracking-widest">No active drones</div>
+                  <div className="text-[10px] opacity-70 font-bold uppercase tracking-widest">Drones manifest during parallel agent execution</div>
+                </div>
               </div>
             </div>
           )}
@@ -194,3 +216,4 @@ const ThoughtProcessPanel: React.FC<ThoughtProcessPanelProps> = ({
 };
 
 export default ThoughtProcessPanel;
+

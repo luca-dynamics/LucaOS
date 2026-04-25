@@ -32,12 +32,14 @@ interface SettingsGeneralTabProps {
     hex: string;
     themeName: string;
   };
+  isMobile?: boolean;
 }
 
 const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   settings,
   onUpdate,
   theme,
+  isMobile,
 }) => {
   const [profileStatus, setProfileStatus] =
     useState<ChromeProfileStatus | null>(null);
@@ -84,7 +86,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 pr-2 overflow-y-auto">
+    <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"} overflow-y-auto`}>
       <motion.div
         variants={container}
         initial="hidden"
@@ -94,10 +96,10 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         {/* IDENTITY & AESTHETIC (Full Width) */}
         <motion.div
           variants={item}
-          className={`p-5 rounded-2xl border transition-all tech-border p-4 space-y-4 glass-blur`}
+          className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "p-4 rounded-xl border"} transition-all duration-300`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
+            borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
           }}
         >
           <div className="flex items-center justify-between">
@@ -105,39 +107,42 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               <IconEngine name="Palette" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
               <span
                 className={`text-xs font-bold uppercase tracking-tighter`}
-                style={{ color: "var(--app-text-muted, #94a3b8)" }}
+                style={{ color: "var(--app-text-main)" }}
               >
-                Brain & Skin Configuration
+                Persona & Appearance
               </span>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 mr-2">
-                <span className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase">
-                  Sync Theme
-                </span>
-                <input
-                  type="checkbox"
-                  checked={settings.general.syncThemeWithPersona}
-                  onChange={(e) =>
-                    onUpdate(
-                      "general",
-                      "syncThemeWithPersona",
-                      e.target.checked,
-                    )
-                  }
-                  className={`w-3 h-3 rounded appearance-none border cursor-pointer`}
-                  style={{ 
-                    accentColor: theme.hex,
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))"
-                  }}
-                />
+                  <span className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase">
+                    Sync Theme
+                  </span>
+                  <button
+                    onClick={() =>
+                      onUpdate(
+                        "general",
+                        "syncThemeWithPersona",
+                        !settings.general.syncThemeWithPersona,
+                      )
+                    }
+                    className={`w-7 h-3.5 rounded-full transition-all relative ${settings.general.syncThemeWithPersona ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
+                    style={{
+                      backgroundColor: settings.general.syncThemeWithPersona ? theme.hex : undefined,
+                    }}
+                  >
+                    <div
+                      className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.general.syncThemeWithPersona ? "translate-x-4" : "translate-x-0.5"}`}
+                      style={{ 
+                        backgroundColor: settings.general.syncThemeWithPersona ? "white" : "var(--app-text-muted)" 
+                      }}
+                    />
+                  </button>
               </div>
               <div 
                 className={`text-[10px] font-mono uppercase tracking-widest border-l pl-3`}
                 style={{ 
-                  color: "var(--app-text-muted, #94a3b8)",
-                  borderLeftColor: "var(--app-border-main, rgba(255,255,255,0.1))" 
+                  color: "var(--app-text-main)",
+                  borderLeftColor: "var(--app-border-main)" 
                 }}
               >
                 {settings.general.persona} MODE
@@ -150,7 +155,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 mb-1 opacity-60">
                 <IconEngine name="BrainCircuit" variant="BoldDuotone" className="w-3 h-3" style={{ color: theme.hex }} />
-                <span className="text-[11px] font-bold uppercase tracking-wider">
+                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--app-text-main)" }}>
                   Persona (Capabilities)
                 </span>
               </div>
@@ -168,11 +173,11 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     <button
                       key={p}
                       onClick={() => onUpdate("general", "persona", p)}
-                      className={`py-2 rounded border text-[11px] font-mono transition-all`}
+                      className={`py-2 rounded border text-[10px] font-mono transition-all`}
                       style={{ 
                         borderColor: isActive ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))",
                         backgroundColor: isActive ? "var(--app-bg-tint, rgba(255,255,255,0.1))" : "var(--app-bg-tint, rgba(0,0,0,0.2))",
-                        color: "var(--app-text-main, #ffffff)"
+                        color: "var(--app-text-main, #475569)"
                       }}
                     >
                       {p}
@@ -186,8 +191,8 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 mb-1 opacity-60">
                 <IconEngine name="Paintbrush" variant="BoldDuotone" className="w-3 h-3" style={{ color: theme.hex }} />
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  UI Theme (Visuals)
+                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--app-text-main)" }}>
+                  App Theme (Visuals)
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -198,8 +203,9 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     "PROFESSIONAL",
                     "TERMINAL",
                     "AGENTIC_SLATE",
-                    "MIDNIGHT",
+                    "LIGHTCREAM",
                     "VAPORWAVE",
+                    "DICTATION",
                     "FROST",
                   ] as UIThemeId[]
                 ).map((t) => {
@@ -217,13 +223,14 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                       style={{
                         backgroundColor: isActive ? "var(--app-bg-tint)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
                         borderColor: isActive ? `${theme.hex}66` : "var(--app-border-main, rgba(255,255,255,0.1))",
+                        color: "var(--app-text-main, #475569)"
                       }}
                     >
                       <div
                         className="w-1.5 h-1.5 rounded-full"
                         style={{ backgroundColor: cfg.hex }}
                       />
-                      {t.slice(0, 4)}
+                      {t === "LIGHTCREAM" ? "CREA" : t.slice(0, 4)}
                     </button>
                   );
                 })}
@@ -245,10 +252,10 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             {/* Tone Styles Card */}
             <motion.div
               variants={item}
-              className={`tech-border p-4 space-y-4 rounded-xl border glass-blur`}
+              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg glass-blur"}`}
               style={{
-                backgroundColor: "var(--app-bg-tint, #11111a)",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
+                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
               }}
             >
               <div className="flex items-center justify-between">
@@ -261,9 +268,9 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   />
                   <span
                     className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main, #ffffff)" }}
+                    style={{ color: "var(--app-text-main)" }}
                   >
-                    Tone & Delivery
+                    Response Style
                   </span>
                 </div>
                 <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase">
@@ -284,10 +291,10 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             {/* Browser Sessions Card */}
             <motion.div
               variants={item}
-              className={`tech-border p-4 space-y-4 rounded-xl border glass-blur`}
+              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg glass-blur"}`}
               style={{
-                backgroundColor: "var(--app-bg-tint, #0a0a0a)",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #0a0a0a)",
+                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
               }}
             >
               <div className="flex items-center justify-between">
@@ -295,7 +302,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   <IconEngine name="Globus" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
                   <span
                     className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main, #ffffff)" }}
+                    style={{ color: "var(--app-text-main)" }}
                   >
                     Browser Sessions
                   </span>
@@ -312,13 +319,13 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     className={`space-y-1.5 p-2 rounded border glass-blur`}
                     style={{
                       backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
-                      borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                      borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
                     }}
                   >
                     {profileStatus.profileName && (
                       <div
                         className={`text-[11px] font-mono flex items-center gap-2`}
-                        style={{ color: "var(--app-text-main, #ffffff)" }}
+                        style={{ color: "var(--app-text-main, #475569)" }}
                       >
                         <span
                           className="w-1.5 h-1.5 rounded-full"
@@ -349,8 +356,8 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   </div>
                 )}
                 <p
-                  className={`text-[11px] leading-relaxed`}
-                  style={{ color: "var(--app-text-muted, #94a3b8)" }}
+                  className={`text-[10px] leading-relaxed`}
+                  style={{ color: "var(--app-text-main, #64748b)" }}
                 >
                   Link Chrome to synchronize your active sessions and
                   credentials directly with the Ghost Browser.
@@ -368,9 +375,9 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   }
                   className={`flex-1 py-1.5 rounded border text-[11px] font-bold flex items-center justify-center gap-2 transition-all glass-blur`}
                   style={{
-                    color: "var(--app-text-main, #ffffff)",
+                    color: "var(--app-text-main, #475569)",
                     backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                    borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
                   }}
                 >
                   {profileStatus?.imported ? (
@@ -397,10 +404,10 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             {/* Global UI Preferences Card */}
             <motion.div
               variants={item}
-              className={`tech-border p-4 space-y-4 rounded-xl border glass-blur`}
+              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg glass-blur"}`}
               style={{
-                backgroundColor: "var(--app-bg-tint, #11111a)",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
+                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
               }}
             >
               <div className="flex items-center justify-between">
@@ -408,13 +415,13 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   <IconEngine name="Settings" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
                   <span
                     className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main, #ffffff)" }}
+                    style={{ color: "var(--app-text-main)" }}
                   >
-                    SYSTEM UI CONFIG
+                    INTERFACE SETTINGS
                   </span>
                 </div>
                 <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest">
-                  UX PREFERENCES
+                  USER EXPERIENCE
                 </div>
               </div>
 
@@ -429,6 +436,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                       { label: "AUTO BOOT", key: "startOnBoot" },
                       { label: "TRAY MINIMIZE", key: "minimizeToTray" },
                       { label: "DEBUG MATRIX", key: "debugMode" },
+                      { label: "TACTICAL MODE", key: "experimentalMode" },
                     ].map((beh) => (
                       <div
                         key={beh.key}
@@ -436,26 +444,26 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                       >
                         <span
                           className={`text-[10px] font-mono`}
-                          style={{ color: "var(--app-text-muted, #94a3b8)" }}
+                          style={{ color: "var(--app-text-main, #64748b)" }}
                         >
                           {beh.label}
                         </span>
-                        <input
-                          type="checkbox"
-                          checked={
-                            !!settings.general[
-                              beh.key as keyof typeof settings.general
-                            ]
+                        <button
+                          onClick={() =>
+                            onUpdate("general", beh.key, !settings.general[beh.key as keyof typeof settings.general])
                           }
-                          onChange={(e) =>
-                            onUpdate("general", beh.key, e.target.checked)
-                          }
-                          className={`w-4 h-4 rounded appearance-none border transition-all cursor-pointer bg-[var(--app-bg-tint)]`}
-                          style={{ 
-                            accentColor: theme.hex,
-                            borderColor: "var(--app-border-main, rgba(255,255,255,0.2))"
+                          className={`w-7 h-3.5 rounded-full transition-all relative ${settings.general[beh.key as keyof typeof settings.general] ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
+                          style={{
+                            backgroundColor: settings.general[beh.key as keyof typeof settings.general] ? theme.hex : undefined,
                           }}
-                        />
+                        >
+                          <div
+                            className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.general[beh.key as keyof typeof settings.general] ? "translate-x-4" : "translate-x-0.5"}`}
+                            style={{ 
+                              backgroundColor: settings.general[beh.key as keyof typeof settings.general] ? "white" : "var(--app-text-muted)" 
+                            }}
+                          />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -481,7 +489,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                         </span>
                         <span
                           className={`text-[10px] font-mono`}
-                          style={{ color: "var(--app-text-main, #ffffff)" }}
+                          style={{ color: "var(--app-text-main, #475569)" }}
                         >
                           {Math.round(
                             (settings.general.backgroundOpacity ?? 0.75) * 100,
@@ -521,7 +529,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                         </span>
                         <span
                           className={`text-[10px] font-mono`}
-                          style={{ color: "var(--app-text-main, #ffffff)" }}
+                          style={{ color: "var(--app-text-main, #475569)" }}
                         >
                           {settings.general.backgroundBlur ?? 12}px
                         </span>
@@ -552,13 +560,96 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               </div>
             </motion.div>
 
+            {/* Typography & Global Scaling Card */}
+            <motion.div
+              variants={item}
+              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg glass-blur"}`}
+              style={{
+                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
+                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <IconEngine name="TextField" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
+                  <span
+                    className={`text-xs font-bold uppercase tracking-tighter`}
+                    style={{ color: "var(--app-text-main, #475569)" }}
+                  >
+                    Display & Text
+                  </span>
+                </div>
+                <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest">
+                  GLOBAL SCALING
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Font Family Selection */}
+                <div className="space-y-1.5">
+                  <div className="text-[11px] font-bold text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+                    Interface Font
+                  </div>
+                  <select
+                    value={settings.general.fontFamily || '"Inter", system-ui, sans-serif'}
+                    onChange={(e) => onUpdate("general", "fontFamily", e.target.value)}
+                    className={`w-full rounded-lg p-2 text-xs font-mono outline-none transition-colors border tech-border`}
+                    style={{
+                      backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                      borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
+                      color: "var(--app-text-main, #475569)"
+                    }}
+                  >
+                    <option value='"Inter", system-ui, sans-serif'>INTER (STANDARD)</option>
+                    <option value='"JetBrains Mono", monospace'>JETBRAINS MONO (TECH)</option>
+                    <option value='"Outfit", sans-serif'>OUTFIT (PREMIUM)</option>
+                    <option value='"Fraunces", serif'>FRAUNCES (EDITORIAL)</option>
+                    <option value='"Space Mono", monospace'>SPACE MONO (TACTICAL)</option>
+                    <option value='system-ui, sans-serif'>SYSTEM NATIVE</option>
+                  </select>
+                </div>
+
+                {/* Font Scaling Slider */}
+                <div className="space-y-2 border-t pt-3" style={{ borderTopColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
+                   <div className="flex justify-between items-center mb-1">
+                    <span className={`text-[11px] font-bold text-[var(--app-text-muted)] uppercase tracking-wider`}>
+                      UI SCALE
+                    </span>
+                    <span className={`text-[10px] font-mono`} style={{ color: "var(--app-text-main, #475569)" }}>
+                      {Math.round((settings.general.fontScale || 1.0) * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="80"
+                    max="150"
+                    value={Math.round((settings.general.fontScale || 1.0) * 100)}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) / 100;
+                      onUpdate("general", "fontScale", val);
+                      // Live Preview
+                      document.documentElement.style.setProperty("--app-font-scale", val.toString());
+                    }}
+                    className={`w-full h-1 bg-[var(--app-bg-tint)] rounded-lg appearance-none cursor-pointer`}
+                    style={{ 
+                      accentColor: theme.hex,
+                      backgroundColor: "var(--app-border-main, rgba(255,255,255,0.2))"
+                    }}
+                  />
+                  <div className="text-[9px] text-[var(--app-text-muted)] italic px-1">
+                    * Adjusting scale impacts all tactical panels and text density.
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Privacy & Awareness Card */}
             <motion.div
               variants={item}
-              className={`tech-border p-4 space-y-3 rounded-xl border glass-blur`}
+              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-xl border glass-blur"}`}
               style={{
-                backgroundColor: "var(--app-bg-tint, #11111a)",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
+                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
               }}
             >
               <div className="flex items-center justify-between">
@@ -566,13 +657,13 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   <IconEngine name="ShieldCheck" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
                   <span
                     className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main, #ffffff)" }}
+                    style={{ color: "var(--app-text-main, #475569)" }}
                   >
                     Privacy & Awareness
                   </span>
                 </div>
                 <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest">
-                  OBSERVATION CONTROLS
+                  PRIVACY & SENSORS
                 </div>
               </div>
               <p
@@ -601,6 +692,12 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     icon: "Microphone",
                     desc: "Allow Luca to listen for voice input and ambient audio",
                   },
+                  {
+                    label: "GLOBAL FORGE",
+                    key: "telemetryEnabled",
+                    icon: "Link",
+                    desc: "Anonymously share architectural improvements to evolve LUCA",
+                  },
                 ].map((privItem) => {
                   const isEnabled =
                     !!settings.privacy?.[
@@ -624,11 +721,11 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                         <div>
                           <span
                             className={`text-[9px] font-mono block`}
-                            style={{ color: "var(--app-text-muted, #94a3b8)" }}
+                            style={{ color: "var(--app-text-main, #64748b)" }}
                           >
                             {privItem.label}
                           </span>
-                          <span className="text-sm text-[var(--app-text-muted)] uppercasek">
+                          <span className="text-xs text-[var(--app-text-muted)] uppercase italic opacity-60">
                             {privItem.desc}
                           </span>
                         </div>
@@ -637,19 +734,16 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                         onClick={() =>
                           onUpdate("privacy", privItem.key, !isEnabled)
                         }
-                        className={`relative w-9 h-5 rounded-full transition-all duration-300 ${
-                          isEnabled
-                            ? ""
-                            : "bg-[var(--app-border-main)]"
-                        }`}
+                        className={`w-7 h-3.5 rounded-full transition-all relative ${isEnabled ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
                         style={{
                           backgroundColor: isEnabled ? theme.hex : undefined,
                         }}
                       >
-                        <span
-                          className={`absolute top-0.5 w-4 h-4 rounded-full transition-all duration-300 shadow-sm ${
-                            isEnabled ? "left-[18px]" : "left-0.5"
-                          } bg-[var(--app-bg-tint)]`}
+                        <div
+                          className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${isEnabled ? "translate-x-4" : "translate-x-0.5"}`}
+                          style={{ 
+                            backgroundColor: isEnabled ? "white" : "var(--app-text-muted)" 
+                          }}
                         />
                       </button>
                     </div>
@@ -672,7 +766,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     <span
                       className={`text-[10px] font-bold text-[var(--app-text-muted)] uppercase tracking-tighter`}
                     >
-                      OS Link Status
+                      System Permissions
                     </span>
                   </div>
                 </div>

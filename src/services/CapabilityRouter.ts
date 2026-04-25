@@ -96,11 +96,12 @@ class CapabilityRouter {
       if (healthy) return new CortexTtsProvider();
     }
 
-    // 2. MULTIMODAL LOOP ENFORCEMENT (Only if using Gemini STT and NO explicit TTS provider choice)
+    // 2. MULTIMODAL LOOP ENFORCEMENT (Unified Tunnel Path)
+    // We only force the Gemini Loop if the user has specifically chosen a 'Live' or 'Loop' model.
+    // Choice 1 (Gemini 2.0 Flash Native Audio) is NOT locked, allowing modular TTS.
     if (
-      (voice.sttModel === "cloud-gemini" ||
-      voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" ||
-      voice.sttModel.toLowerCase().includes("gemini")) &&
+      (voice.sttModel.toLowerCase().includes("live") || 
+       voice.sttModel.toLowerCase().includes("loop")) &&
       (voice.provider === "gemini-genai" || !voice.provider)
     ) {
       const ttsModel =
@@ -111,7 +112,7 @@ class CapabilityRouter {
       return new GeminiTtsProvider(ttsModel);
     }
 
-    // 3. USER CHOICE (Traditional Providers)
+    // 3. USER CHOICE (Modular Plugin Path)
     if (
       voice.provider === "openai" &&
       settingsService.hasValidCloudKeys("openai")
@@ -128,20 +129,13 @@ class CapabilityRouter {
       return new GoogleTtsProvider();
     }
 
-    // 4. USER PEER CLOUD (Automatic Fallbacks)
-    if (settingsService.hasValidCloudKeys("openai")) {
-      return new OpenAiTtsProvider();
-    }
-    if (localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY) {
-      return new DeepgramTtsProvider();
-    }
-
-    // 5. LUCA PRIME (Enterprise Cloud / Gemini default)
+    // 4. LUCA PRIME (Enterprise Cloud / Gemini default)
+    // Final check for Gemini's own engine as a base standard.
     if (brain.geminiApiKey) {
       return new GeminiTtsProvider(brain.voiceModel || brain.model);
     }
 
-    // Last Resort
+    // Final Sovereign Last Resort
     return new CortexTtsProvider();
   }
 

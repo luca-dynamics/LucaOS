@@ -3,6 +3,7 @@ import { Icon } from "./ui/Icon";
 import ChatModelSwitcher from "./chat/ChatModelSwitcher";
 import ChatModeToggle from "./chat/ChatModeToggle";
 import { settingsService } from "../services/settingsService";
+import { LucaSettings } from "../services/settingsService";
 import { CURATED_PLUGINS, MarketplacePlugin } from "../data/directoryData";
 
 interface ChatWidgetInputProps {
@@ -35,6 +36,7 @@ interface ChatWidgetInputProps {
   activeMcpServers?: { id: string; name: string; status?: string }[];
   onDisconnectMcp?: (id: string) => void;
   onConnectMcp?: (id: string) => void;
+  onClose?: () => void;
 }
 
 const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
@@ -110,7 +112,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
   );
 
   useEffect(() => {
-    const handleSettings = (s: any) => setActivePluginId(s.brain.activePluginId);
+    const handleSettings = (s: LucaSettings) => setActivePluginId(s.brain.activePluginId);
     settingsService.on("settings-changed", handleSettings);
     return () => { settingsService.off("settings-changed", handleSettings); };
   }, []);
@@ -146,9 +148,9 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
 
   return (
     <div
-      className={`relative z-20 transition-colors duration-500 ${
+      className={`relative z-20 transition-colors duration-500 rounded-2xl ${
         isLight 
-          ? "bg-white/10 glass-blur rounded-b-2xl border-t border-gray-200/50" 
+          ? "bg-white/10 glass-blur border-t border-gray-200/50" 
           : "bg-black/40 glass-blur"
       }`}
     >
@@ -174,10 +176,9 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
 
       {/* Main Input Container (Draggable Wrapper) */}
       <div
-        className="relative pt-2 border-t bg-transparent transition-all duration-200"
+        className="relative pt-2 bg-transparent transition-all duration-200"
         style={
           {
-            borderColor: `${safeColor}40`,
             WebkitAppRegion: "drag", // DRAGGABLE AREA
           } as any
         }
@@ -197,8 +198,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
             w-full
             bg-transparent
             ${isLight ? "text-gray-900 placeholder-gray-500" : "text-white placeholder-slate-500"}
-            text-[13px]
-            px-2 sm:px-2.5
+            px-4
             py-2
             focus:outline-none
             resize-none
@@ -226,7 +226,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
         )}
 
         {/* Bottom Icons Row - Relative to flow below textarea */}
-        <div className="relative pt-2 pb-2 flex items-center justify-between px-2 sm:px-2 pointer-events-none z-50">
+        <div className="relative pt-2 pb-2 flex items-center justify-between px-4 sm:px-4 pointer-events-none z-50">
           {/* Left Icons */}
           <div
             className="flex items-center gap-1 sm:gap-1 pointer-events-auto"
@@ -621,6 +621,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 <Icon name="Send" size={15} variant="BoldDuotone" className="sm:w-[13px] sm:h-[13px]" />
               )}
             </button>
+
+            {/* Sovereign Close Trigger (Mini-Chat Only) */}
           </div>
         </div>
 

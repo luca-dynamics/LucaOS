@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
-import { THEME_PALETTE } from "../config/themeColors";
+import { THEME_PALETTE, getThemeColors } from "../config/themeColors";
+import { settingsService } from "../services/settingsService";
 
 interface Props {
   onClose: () => void;
@@ -37,13 +38,18 @@ interface C2Session {
 const HackingTerminal: React.FC<Props> = ({
   onClose,
   toolLogs,
-  theme,
+  theme: propTheme,
   initialTab,
   onOpenBrowser,
 }) => {
-  const themePrimary = theme?.primary || "text-green-500";
-  const themeBorder = theme?.border || "border-green-500";
-  const themeHex = theme?.hex || "#22c55e";
+  // Theme Integration
+  const currentPersona =
+    settingsService.getSettings().general.persona || "ASSISTANT";
+  const themeByPersona = getThemeColors(currentPersona);
+
+  const themeHex = propTheme?.hex || themeByPersona.hex || "#22c55e";
+  const themePrimary = themeByPersona.primary || "text-green-500";
+  const themeBorder = themeByPersona.border || "border-green-500";
 
   // Resolve initial tab from props, then theme, then default
   const resolvedInitialTab = initialTab || (theme as any)?.initialTab || "NMAP";
@@ -540,8 +546,8 @@ const HackingTerminal: React.FC<Props> = ({
           style={{ backgroundColor: `${themeHex}1F` }}
         >
           <div className="flex items-center gap-3">
-            <Icon name="Document" size={18} className="text-emerald-500" />
-            <h2 className="font-mono text-sm font-bold text-emerald-500 tracking-[0.2em]">
+            <Icon name="Document" size={18} style={{ color: themeHex }} />
+            <h2 className="font-mono text-sm font-bold tracking-[0.2em]" style={{ color: themeHex }}>
               LUCA_TERMINAL_V4.0
             </h2>
           </div>

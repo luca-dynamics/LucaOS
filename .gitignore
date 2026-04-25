@@ -50,7 +50,7 @@ rag_storage/
 cortex/python/rag_storage/
 backups/
 backups/
-competitor/
+research/competitors
 
 # 🐍 Python environment
 venv/

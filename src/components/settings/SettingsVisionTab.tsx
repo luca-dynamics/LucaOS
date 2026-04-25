@@ -12,12 +12,14 @@ interface SettingsVisionTabProps {
     hex: string;
     themeName: string;
   };
+  isMobile?: boolean;
 }
 
 const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
   settings,
   onUpdate,
   theme,
+  isMobile,
 }) => {
   const [localVisionModels, setLocalVisionModels] = useState<LocalModel[]>([]);
 
@@ -54,7 +56,7 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-h-[420px] pr-2 mt-2">
+    <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"} mt-2`}>
       <motion.div
         variants={container}
         initial="hidden"
@@ -65,7 +67,7 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
         <div className="flex items-center gap-2">
           <Icon name="Sparkles" className="w-3.5 h-3.5" style={{ color: theme.hex }} />
           <h4
-            className={`text-lg font-bold uppercase tracking-widest`}
+            className={`text-base font-black uppercase tracking-widest`}
             style={{ color: "var(--app-text-main, #ffffff)" }}
           >
             Vision Configuration
@@ -75,32 +77,32 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
         {/* Vision Card */}
         <motion.div
           variants={item}
-          className={`tech-border p-4 space-y-3 rounded-xl border glass-blur`}
+          className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-xl border glass-blur"}`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
           <div className="flex items-center justify-between">
             <Icon name="Eye" className="w-4 h-4" style={{ color: theme.hex }} />
-            <div className="text-base font-mono text-[var(--app-text-muted)] uppercase">
+            <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase opacity-60">
               Vision & Multimodal
             </div>
           </div>
           <div className="space-y-1">
             <div
-              className={`text-lg font-bold uppercase tracking-tighter`}
+              className={`text-base font-black uppercase tracking-widest`}
               style={{ color: "var(--app-text-main, #ffffff)" }}
             >
               Vision Engine
             </div>
-            <p className="text-base text-[var(--app-text-muted)] leading-tight">
+            <p className="text-xs text-[var(--app-text-muted)] leading-tight opacity-70">
               Controls screenshots, screen analysis, and spatial reasoning.
             </p>
             <select
               value={settings.brain.visionModel || "gemini-3-flash-preview"}
               onChange={(e) => onUpdate("brain", "visionModel", e.target.value)}
-              className={`w-full rounded-lg p-2 text-lg outline-none transition-colors border tech-border`}
+              className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border tech-border`}
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -136,7 +138,7 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
         {/* Vision Tips */}
         <motion.div
           variants={item}
-          className={`text-base italic p-4 rounded-xl border transition-all tech-border`}
+          className={`text-xs italic p-4 rounded-xl border transition-all tech-border opacity-70`}
           style={{
             backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",

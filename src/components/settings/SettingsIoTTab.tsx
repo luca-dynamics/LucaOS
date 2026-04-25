@@ -6,17 +6,19 @@ interface SettingsIoTTabProps {
   theme?: any;
   settings: LucaSettings;
   onUpdate: (section: keyof LucaSettings, key: string, value: any) => void;
+  isMobile?: boolean;
 }
 
 const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
   settings,
   onUpdate,
+  isMobile,
 }) => {
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className={`space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ${isMobile ? "px-0" : ""}`}>
       {/* IoT Header */}
       <div
-        className={`flex items-center gap-5 border p-6 rounded-2xl bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-lg transition-all`}
+        className={`flex items-center gap-5 border p-6 ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-2xl bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-lg"} tech-border glass-blur transition-all`}
       >
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-blue-500/10 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
           <Icon
@@ -27,12 +29,12 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
         </div>
         <div>
           <h3
-            className={`text-xl font-black uppercase tracking-widest text-[var(--app-text-main)] mb-1`}
+            className={`text-base font-black uppercase tracking-widest text-[var(--app-text-main)] mb-1`}
           >
             Home Assistant
           </h3>
           <p
-            className={`text-sm text-[var(--app-text-muted)] opacity-80 leading-relaxed max-w-xs`}
+            className={`text-xs text-[var(--app-text-muted)] opacity-70 leading-relaxed max-w-xs`}
           >
             Bridge Luca to your real-world environment. Full automation control active.
           </p>
@@ -40,7 +42,7 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
       </div>
 
       {/* Form Fields */}
-      <div className="space-y-6">
+      <div className={`space-y-6 ${isMobile ? "px-4" : ""}`}>
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--app-text-muted)] ml-1 opacity-60">
             Internal Server URL

@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import * as GoogleAI from "@google/generative-ai";
 import { settingsService } from "./settingsService";
 
 // --- CONFIGURATION ---
@@ -79,7 +79,7 @@ export const getApiKey = () => {
   return "";
 };
 
-export const HARDCODED_API_KEY = getApiKey();
+export const SYSTEM_API_KEY = getApiKey();
 
 const getBaseUrl = (): string | undefined => {
   // 1. Check Settings Service
@@ -113,11 +113,11 @@ const getBaseUrl = (): string | undefined => {
 };
 
 // Start with initial key or dummy if missing (to prevent crash)
-let currentGenAI: GoogleGenAI | null = null;
+let currentGenAI: GoogleAI.GoogleGenerativeAI | null = null;
 let currentKey: string | null = null;
 let currentBaseUrl: string | undefined = undefined;
 
-const initClient = (key: string): GoogleGenAI => {
+const initClient = (key: string): GoogleAI.GoogleGenerativeAI => {
   if (!key) {
     throw new Error("Cannot initialize GoogleGenAI with empty API key");
   }
@@ -133,12 +133,15 @@ const initClient = (key: string): GoogleGenAI => {
   currentKey = key;
   currentBaseUrl = baseUrl;
 
-  const clientConfig: any = { apiKey: key };
+  const clientConfig: any = { 
+    apiKey: key,
+    apiVersion: "v1beta" 
+  };
   if (baseUrl) {
     clientConfig.baseUrl = baseUrl;
   }
 
-  return new GoogleGenAI(clientConfig);
+  return new GoogleAI.GoogleGenerativeAI(clientConfig);
 };
 
 // Listen for settings changes to immediately invalidate the client
@@ -155,7 +158,7 @@ settingsService.on("settings-changed", (settings) => {
 });
 
 // Helper that throws if client is missing (handling the null)
-export const getGenClient = (): GoogleGenAI => {
+export const getGenClient = (): GoogleAI.GoogleGenerativeAI => {
   const key = getApiKey();
   const baseUrl = getBaseUrl();
 
@@ -177,6 +180,6 @@ export const getGenClient = (): GoogleGenAI => {
   return currentGenAI;
 };
 
-export const setGenClient = (client: GoogleGenAI) => {
+export const setGenClient = (client: GoogleAI.GoogleGenerativeAI) => {
   currentGenAI = client;
 };

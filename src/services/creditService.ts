@@ -61,7 +61,7 @@ class CreditService {
   }
 
   public getBalance(): number {
-    return this.mode === "PRIME" ? this.balance : Infinity;
+    return this.balance;
   }
 
   public getStatus(): "NORMAL" | "LOW" | "CRITICAL" | "UNLIMITED" {

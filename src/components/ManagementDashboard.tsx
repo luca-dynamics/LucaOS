@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { TaskStatus, Goal } from "../types";
 import { Icon } from "./ui/Icon";
 import { useAppContext } from "../context/AppContext";
-import { setHexAlpha } from "../config/themeColors";
 import { memoryService } from "../services/memoryService";
+import { settingsService } from "../services/settingsService";
+import { getThemeColors } from "../config/themeColors";
 
 // --- Intelligence Display Formatter ---
 function formatIntelValue(value: string): { label: string; summary: string; isStructured: boolean } {
@@ -42,7 +43,14 @@ interface Props {
   };
 }
 
-const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
+const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal }) => {
+  // Theme Integration
+  const currentPersona =
+    settingsService.getSettings().general.persona || "ASSISTANT";
+  const theme = getThemeColors(currentPersona);
+  const themeHex = theme.hex || "#3b82f6";
+  const themePrimary = theme.primary || "text-white";
+
   const { management } = useAppContext();
   const { tasks, events, goals } = management;
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -57,8 +65,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
       case TaskStatus.COMPLETED:
         return "text-green-500";
       case TaskStatus.IN_PROGRESS:
-        // Use theme primary if available, otherwise fallback
-        return theme?.primary || "text-sci-cyan";
+        return themePrimary;
       case TaskStatus.BLOCKED:
         return "text-red-500";
       default:
@@ -88,7 +95,8 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
       case "FAILED":
         return "text-red-500";
       case "SCHEDULED":
-        return theme ? theme.primary : "text-purple-500";
+        return themePrimary;
+        // return theme ? theme.primary : "text-purple-500";
       default:
         return "text-slate-500";
     }
@@ -122,25 +130,15 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
   };
 
   return (
-    <div className="h-full flex flex-col gap-3">
-      <div
-        className="flex items-center gap-2 mb-2 border-b border-slate-800 pb-2"
-        style={{ color: theme?.hex || "#818cf8" }}
-      >
-        <Icon name="Briefcase" size={16} />
-        <h2 className="font-display font-bold tracking-widest text-xs">
-          MANAGEMENT CONSOLE
-        </h2>
-      </div>
-
+    <div className="h-full flex flex-col gap-2 custom-scrollbar overflow-y-auto px-0">
       <div className="flex-1 overflow-y-auto space-y-4">
         {/* Calendar Section */}
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--app-text-muted)] opacity-60 mb-2 tracking-wider">
             <Icon name="Calendar" size={12} /> UPCOMING SCHEDULE
           </div>
           {events.length === 0 ? (
-            <div className="text-xs text-slate-600 italic pl-4">
+            <div className="text-xs text-[var(--app-text-muted)] opacity-50 italic pl-4">
               No events scheduled.
             </div>
           ) : (
@@ -148,12 +146,12 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className={`flex items-center gap-2 p-1.5 rounded border ${theme?.themeName?.toLowerCase() === "lucagent" ? "border-black/20" : "border-slate-800/50"}`}
+                  className="flex items-center gap-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all"
                 >
                   <div
-                    className={`flex flex-col items-center justify-center w-10 h-10 ${theme?.themeName?.toLowerCase() === "lucagent" ? "bg-white/60" : "bg-slate-900"} rounded text-[10px] font-mono border ${theme?.themeName?.toLowerCase() === "lucagent" ? "border-black/25" : "border-slate-700"}`}
+                    className="flex flex-col items-center justify-center w-12 h-12 bg-white/5 rounded-xl text-[10px] font-black border border-white/10"
                   >
-                    <span style={{ color: theme?.hex || "#06b6d4" }}>
+                    <span style={{ color: themeHex }}>
                       {new Date(event.startTime).getDate()}
                     </span>
                     <span className="text-slate-500">
@@ -182,11 +180,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
 
         {/* Tasks Section */}
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--app-text-muted)] opacity-60 mb-2 tracking-wider">
             <Icon name="CheckCircle2" size={12} /> ACTIVE TASKS
           </div>
           {tasks.length === 0 ? (
-            <div className="text-xs text-slate-600 italic pl-4">
+            <div className="text-xs text-[var(--app-text-muted)] opacity-50 italic pl-4">
               Task queue empty.
             </div>
           ) : (
@@ -194,16 +192,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
               {tasks.map((task) => (
                 <div
                   key={task.id}
-                  className={`border-l-2 pl-2.5 py-1.5 relative group transition-all`}
+                  className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 transition-all hover:bg-white/[0.04]"
                   style={
                     task.status === TaskStatus.COMPLETED
-                      ? { opacity: 0.5, borderLeftColor: "#22C55E" }
-                      : {
-                          borderLeftColor: theme?.hex || "#6366f1",
-                          backgroundColor: theme
-                            ? setHexAlpha(theme.hex, 0.1)
-                            : "rgba(99,102,241,0.1)",
-                        }
+                      ? { opacity: 0.4 }
+                      : { borderLeft: `2px solid ${themeHex}` }
                   }
                 >
                   <div className="flex justify-between items-start mb-1">
@@ -259,11 +252,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
 
         {/* Autonomous Goals Section */}
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--app-text-muted)] opacity-60 mb-2 tracking-wider">
             <Icon name="Target" size={12} /> AUTONOMOUS GOALS
           </div>
           {goals.length === 0 ? (
-            <div className="text-xs text-slate-600 italic pl-4">
+            <div className="text-xs text-[var(--app-text-muted)] opacity-50 italic pl-4">
               No autonomous goals scheduled.
             </div>
           ) : (
@@ -271,20 +264,17 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
               {goals.map((goal) => (
                 <div
                   key={goal.id}
-                  className={`border-l-2 pl-2.5 py-1.5 relative group transition-all`}
+                  className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 transition-all hover:bg-white/[0.04]"
                   style={
                     goal.status === "COMPLETED"
-                      ? { opacity: 0.5, borderLeftColor: "#22C55E" }
+                      ? { opacity: 0.4 }
                       : goal.status === "FAILED"
                         ? {
                             borderLeftColor: "#ef4444",
                             backgroundColor: "rgba(239, 68, 68, 0.1)",
                           }
                         : {
-                            borderLeftColor: theme?.hex || "#a855f7",
-                            backgroundColor: theme
-                              ? setHexAlpha(theme.hex, 0.1)
-                              : "rgba(168, 85, 247, 0.1)",
+                            borderLeft: `2px solid ${themeHex}`,
                           }
                   }
                 >
@@ -391,11 +381,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
 
         {/* Active Goals Section */}
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--app-text-muted)] opacity-60 mb-2 tracking-wider">
             <Icon name="Target" size={12} /> ACTIVE GOALS
           </div>
           {goals.length === 0 ? (
-            <div className="text-xs text-slate-600 italic pl-4">
+            <div className="text-xs text-[var(--app-text-muted)] opacity-50 italic pl-4">
               No active goals.
             </div>
           ) : (
@@ -403,11 +393,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
               {goals.map((goal) => (
                 <div
                   key={goal.id}
-                  className={`p-2 rounded border border-slate-800/50 relative overflow-hidden group`}
+                  className="p-3 rounded-2xl bg-white/[0.02] border border-white/5 relative overflow-hidden group hover:bg-white/[0.04] transition-all"
                 >
                   <div
                     className="absolute inset-y-0 left-0 w-1 opacity-60"
-                    style={{ backgroundColor: theme?.hex || "#10b981" }}
+                    style={{ backgroundColor: themeHex }}
                   />
                   <div className="flex justify-between items-start mb-1 pl-1 text-[10px] font-bold text-white tracking-widest uppercase">
                     <span>{goal.description}</span>
@@ -448,11 +438,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
 
         {/* Active Intelligence Section (Phase 9) */}
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 tracking-wider">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--app-text-muted)] opacity-60 mb-2 tracking-wider">
             <Icon name="Brain" size={12} /> ACTIVE INTELLIGENCE (PHASE 9)
           </div>
           {memoryService.getRecentIntelligence(3).length === 0 ? (
-            <div className="text-xs text-slate-600 italic pl-4">
+            <div className="text-xs text-[var(--app-text-muted)] opacity-50 italic pl-4">
               Intelligence matrix clear.
             </div>
           ) : (
@@ -460,11 +450,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal, theme }) => {
               {memoryService.getRecentIntelligence(3).map((intel) => (
                 <div
                   key={intel.id}
-                  className="p-2 rounded border border-slate-800/50 relative overflow-hidden group"
+                  className="p-3 rounded-2xl bg-white/[0.02] border border-white/5 relative overflow-hidden group hover:bg-white/[0.04] transition-all"
                 >
                   <div
                     className="absolute inset-y-0 left-0 w-1 opacity-60"
-                    style={{ backgroundColor: theme?.hex || "#6366f1" }}
+                    style={{ backgroundColor: themeHex }}
                   />
                   <div className="flex justify-between items-start mb-1 pl-1">
                     <span className="text-[10px] font-bold text-white truncate max-w-[80%] uppercase tracking-tighter">

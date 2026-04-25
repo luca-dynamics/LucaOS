@@ -42,6 +42,11 @@ export interface LucaSettings {
     syncThemeWithPersona: boolean;
     toneStyle: ToneStyleId;
     customTone?: ToneDimensions;
+    experimentalMode: boolean;
+    fontScale?: number;
+    fontFamily?: string;
+    activeBrainId: string;
+    embeddingModel: string;
   };
   brain: {
     useCustomApiKey: boolean;
@@ -159,6 +164,7 @@ export interface LucaSettings {
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenEnabled: boolean;
+    telemetryEnabled: boolean;
   };
   hardwareSanitized?: boolean; // Flag to indicate if hardware-aware model sanitization has run
   v1betaMigrationComplete?: boolean; // Flag to indicate if model-specific v1beta migration has run
@@ -203,6 +209,11 @@ const DEFAULT_SETTINGS: LucaSettings = {
     preferredMode: "text",
     syncThemeWithPersona: true,
     toneStyle: "CHILL",
+    experimentalMode: false,
+    fontScale: 1.0,
+    fontFamily: '"Inter", system-ui, sans-serif',
+    activeBrainId: BRAIN_CONFIG.defaults.brain,
+    embeddingModel: BRAIN_CONFIG.defaults.memory,
   },
   hardwareSanitized: true, // New installs are sanitized by default
   v1betaMigrationComplete: true, // New installs use current defaults
@@ -311,6 +322,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     micEnabled: true,
     cameraEnabled: true,
     screenEnabled: true,
+    telemetryEnabled: false,
   },
 };
 
@@ -666,8 +678,8 @@ class SettingsService extends EventEmitter {
       console.log("[SETTINGS] Saved to Storage (Sensitive data encrypted).");
 
       // Sync embedding model selection with Cortex backend when it changes
-      if (newSettings.brain?.memoryModel) {
-        this.syncEmbeddingModel(newSettings.brain.memoryModel);
+      if (newSettings.general?.embeddingModel) {
+        this.syncEmbeddingModel(newSettings.general.embeddingModel);
       }
 
       // Sync MCP settings with Cortex backend when they change

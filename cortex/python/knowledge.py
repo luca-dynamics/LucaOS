@@ -15,10 +15,15 @@ try:
     from lightrag import LightRAG
     from lightrag.utils import EmbeddingFunc
     from lightrag.kg.shared_storage import initialize_pipeline_status
-    from lightrag.llm.gemini import gemini_model_complete
     LIGHTRAG_AVAILABLE = True
 except ImportError:
     LIGHTRAG_AVAILABLE = False
+
+try:
+    from hdc_manager import HDCMemoryManager
+    HDC_AVAILABLE = True
+except ImportError:
+    HDC_AVAILABLE = False
 
 # Constants (should ideally be imported from a config or passed in)
 MASTER_DB_PATH = os.path.join(os.path.expanduser("~"), ".luca", "data", "luca.db")
@@ -32,6 +37,13 @@ class SQLiteMemoryConnector:
     """Bridges Node.js SQLite memory to Python LightRAG."""
     def __init__(self, db_path=MASTER_DB_PATH):
         self.db_path = db_path
+        self.hdc = HDCMemoryManager(db_path) if HDC_AVAILABLE else None
+
+    async def add_memory_hdc(self, content: str):
+        """Standard ingestion via REFRAG-inspired HDC."""
+        if self.hdc:
+            return await self.hdc.ingest_with_compression(content)
+        return self.add_memory(content)
 
     def get_all_memories(self):
         try:
@@ -58,10 +70,10 @@ class SQLiteMemoryConnector:
                 return []
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-            cursor.execute("SELECT id, content, type, metadata_json FROM memories WHERE id > ? ORDER BY id ASC", (last_id,))
+            cursor.execute("SELECT id, content, type, metadata_json, deep_summary FROM memories WHERE id > ? ORDER BY id ASC", (last_id,))
             rows = cursor.fetchall()
             conn.close()
-            return [{"id": r[0], "content": r[1], "type": r[2], "metadata": json.loads(r[3]) if r[3] else {}} for r in rows]
+            return [{"id": r[0], "content": r[1], "type": r[2], "metadata": json.loads(r[3]) if r[3] else {}, "deep_summary": r[4]} for r in rows]
         except Exception as e:
             print(f"[KNOWLEDGE] SQLite Read Error: {e}")
             return []
@@ -76,6 +88,9 @@ class SQLiteMemoryConnector:
                 CREATE TABLE IF NOT EXISTS memories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     content TEXT,
+                    type TEXT,
+                    metadata_json TEXT,
+                    deep_summary TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -157,10 +172,16 @@ async def distill_knowledge(raw_text, existing_context="", api_key=None):
     """
     
     try:
-        # Note: In a modular setup, gemini_model_complete should be imported properly
-        from lightrag.llm.gemini import gemini_model_complete
-        response = await gemini_model_complete(prompt, system_prompt="You are a knowledge extraction engine. Respond only with valid JSON.")
-        json_str = response.strip()
+        # Custom Gemini Complete Implementation to bypass missing library module
+        genai_client = genai.Client(api_key=api_key)
+        response = genai_client.models.generate_content(
+            model="gemini-1.5-flash", 
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                system_instruction="You are a knowledge extraction engine. Respond only with valid JSON."
+            )
+        )
+        json_str = response.text.strip()
         if json_str.startswith("```json"):
             json_str = json_str[7:-3].strip()
         elif json_str.startswith("```"):
@@ -188,11 +209,25 @@ async def get_rag(embedding_func, api_key):
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
             
-        from lightrag.llm.gemini import gemini_model_complete
+        # Define local bridge for LightRAG if module is missing
+        async def gemini_complete_bridge(prompt, system_prompt=None, history_messages=[], **kwargs):
+            client = genai.Client(api_key=api_key)
+            contents = []
+            for msg in history_messages:
+                contents.append({"role": msg["role"], "parts": [{"text": msg["content"]}]})
+            contents.append({"role": "user", "parts": [{"text": prompt}]})
+            
+            resp = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=contents,
+                config=genai.types.GenerateContentConfig(system_instruction=system_prompt)
+            )
+            return resp.text
+
         _rag_instance = LightRAG(
             working_dir=model_dir,
-            llm_model_func=gemini_model_complete,
-            llm_model_name="gemini-2.5-pro", 
+            llm_model_func=gemini_complete_bridge,
+            llm_model_name="gemini-1.5-flash", 
             embedding_func=embedding_func,
             llm_model_max_async=2, 
             llm_model_kwargs={"api_key": api_key, "key": api_key} 

@@ -42,7 +42,15 @@ export const SkillsTab: React.FC<{
       if (!res.ok) throw new Error(`Registry returned ${res.status}`);
       const data = await res.json();
       
-      const mapped: MarketplaceSkill[] = (data.skills || []).map((s: any) => ({
+      const mapped: MarketplaceSkill[] = (data.skills || []).map((s: { 
+        name: string; 
+        description: string; 
+        category: string; 
+        repo: string; 
+        branch?: string; 
+        path: string; 
+        stars: number;
+      }) => ({
         id: s.name,
         name: s.name.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
         description: s.description,
@@ -210,7 +218,7 @@ export const SkillsTab: React.FC<{
       {/* Category Filters (Marketplace only) */}
       {activeView === "Marketplace" && (
         <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1">
-          {MARKETPLACE_CATEGORIES.map((cat) => (
+          {MARKETPLACE_CATEGORIES.map((cat: string) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -309,8 +317,8 @@ export const SkillCard: React.FC<{
         className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-white/5"
         style={{ backgroundColor: `${colors.accent}08` }}
       >
-        {(skill as any).icon ? (
-           <span className="text-lg">{(skill as any).icon}</span>
+        {skill.icon ? (
+           <span className="text-lg">{skill.icon}</span>
         ) : (
           <Icon name="Code" size={18} style={{ color: colors.accent }} variant="BoldDuotone" />
         )}

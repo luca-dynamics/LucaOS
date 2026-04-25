@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Icon } from "../ui/Icon";
 
-type SettingsConnectivityTabProps = Record<string, never>;
+interface SettingsConnectivityTabProps {
+  isMobile?: boolean;
+}
 
-const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
+const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMobile }) => {
   const [copied, setCopied] = useState(false);
   const [bridgeStatus] = useState("active");
   const [mode, setMode] = useState<"stdio" | "sse">("stdio");
@@ -32,20 +34,20 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       {/* Header Info */}
       <div
-        className={`flex items-center gap-4 border p-5 rounded-xl transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
+        className={`flex items-center gap-4 p-5 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] shadow-sm"} tech-border glass-blur`}
       >
         <div className="flex-1 min-w-0">
           <h4
-            className="text-lg font-bold flex items-center gap-2 mb-1 text-[var(--app-text-main)]"
+            className="text-base font-black flex items-center gap-2 mb-1 text-[var(--app-text-main)] uppercase"
           >
-            <Icon name="Plug" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
+            <Icon name="Plug" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)] opacity-80" />
             LUCA MCP Protocol
           </h4>
           <p
-            className={`text-sm text-[var(--app-text-muted)] max-w-md opacity-80`}
+            className={`text-xs text-[var(--app-text-muted)] max-w-md opacity-60 italic`}
           >
             Connect Luca to external AI agents. Memory access now, more
             capabilities coming soon.
@@ -65,7 +67,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
 
       {/* Mode Selector */}
       <div
-        className={`flex gap-1.5 p-1.5 rounded-xl border self-start transition-all bg-white/5 border-[var(--app-border-main)] tech-border glass-blur shadow-inner`}
+        className={`flex gap-1.5 p-1.5 self-start transition-all ${isMobile ? "mx-4 bg-white/5 border-none" : "rounded-lg bg-white/5 tech-border"} glass-blur shadow-inner`}
       >
         <button
           onClick={() => setMode("stdio")}
@@ -83,13 +85,13 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
 
       {/* Connection Guide */}
       <div className="space-y-4">
-        <h5 className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-[0.2em] font-black opacity-60">
+        <h5 className={`text-[10px] text-[var(--app-text-muted)] uppercase tracking-[0.2em] font-black opacity-60 ${isMobile ? "px-4" : ""}`}>
           1. Configure External Apps
         </h5>
 
         {mode === "stdio" ? (
           <div
-            className={`rounded-2xl border overflow-hidden bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-lg`}
+            className={`overflow-hidden transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)]"} tech-border glass-blur shadow-lg`}
           >
             <div
               className={`flex items-center justify-between px-5 py-3 border-b border-[var(--app-border-main)] bg-white/5 opacity-90`}
@@ -113,23 +115,23 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
               </button>
             </div>
             <pre
-              className={`p-5 text-sm font-mono overflow-x-auto text-[var(--app-text-main)] bg-black/20 leading-relaxed`}
+              className={`p-5 text-xs font-mono overflow-x-auto text-[var(--app-text-main)] bg-black/20 leading-relaxed`}
             >
               {mcpConfig}
             </pre>
           </div>
         ) : (
           <div
-            className={`rounded-2xl border overflow-hidden p-8 text-center space-y-6 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-lg`}
+            className={`overflow-hidden p-8 text-center space-y-6 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-lg"} tech-border glass-blur`}
           >
             <div className="space-y-3">
               <h6
-                className={`text-sm font-bold uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
+                className={`text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
               >
                 SSE Connection URL
               </h6>
               <div
-                className={`w-full max-w-md mx-auto flex items-center justify-between bg-black/40 border border-[var(--app-border-main)] rounded-xl py-2 pl-4 pr-2 font-mono text-sm shadow-inner group transition-all hover:border-[var(--app-text-muted)]`}
+                className={`w-full max-w-md mx-auto flex items-center justify-between bg-black/40 rounded-lg py-1.5 pl-4 pr-2 font-mono text-xs shadow-inner group transition-all hover:border-[var(--app-text-muted)]`}
               >
                 <span
                   className={`text-[var(--app-text-main)] font-bold truncate`}
@@ -152,19 +154,18 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
                 </button>
               </div>
             </div>
-            <p className="text-sm text-[var(--app-text-muted)] opacity-60 leading-relaxed">
+            <p className="text-xs text-[var(--app-text-muted)] opacity-60 leading-relaxed italic">
               In SSE mode, you just paste this URL into apps like{" "}
-              <strong className="text-[var(--app-text-main)]">Cursor</strong> or <strong className="text-[var(--app-text-main)]">MCP Inspector</strong>. No
-              Python script paths required.
+              <strong className="text-[var(--app-text-main)]">Cursor</strong> or <strong className="text-[var(--app-text-main)]">MCP Inspector</strong>.
             </p>
           </div>
         )}
       </div>
 
       {/* Path Helper */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${isMobile ? "gap-0" : "gap-4"}`}>
         <div
-          className={`p-5 rounded-2xl border space-y-3 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
+          className={`p-5 space-y-3 transition-all ${isMobile ? "border-x-0 border-b rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} tech-border glass-blur`}
         >
           <div
             className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
@@ -173,14 +174,14 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
             Local Command
           </div>
           <p
-            className={`text-[11px] font-mono break-all p-3 rounded-xl bg-black/40 text-[var(--app-text-muted)] border border-[var(--app-border-main)] leading-relaxed shadow-inner`}
+            className={`text-[11px] font-mono break-all p-3 rounded-lg bg-black/40 text-[var(--app-text-muted)] leading-relaxed shadow-inner`}
           >
             python3
             /Users/macking/Downloads/kaleido/luca/cortex/python/mcp_bridge.py
           </p>
         </div>
         <div
-          className={`p-5 rounded-2xl border space-y-3 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
+          className={`p-5 space-y-3 transition-all ${isMobile ? "border-x-0 border-b rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} tech-border glass-blur`}
         >
           <div
             className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
@@ -204,7 +205,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = () => {
       </div>
 
       {/* External Links */}
-      <div className="pt-6 border-t border-[var(--app-border-main)] flex flex-wrap gap-6">
+      <div className={`pt-6 border-t border-[var(--app-border-main)] flex flex-wrap gap-6 ${isMobile ? "px-4" : ""}`}>
         <button
           onClick={() =>
             window.open("https://modelcontextprotocol.io", "_blank")

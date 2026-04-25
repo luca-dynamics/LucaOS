@@ -149,26 +149,8 @@ const WirelessManager: React.FC<Props> = ({
         throw new Error("Core Offline");
       }
     } catch (e) {
-      console.warn("Real Scan Failed, using simulation fallback", e);
-      // Fallback to simulation
-      setTimeout(() => {
-        setNetworks([
-          {
-            id: "net1",
-            name: "Real_WiFi_Hidden",
-            strength: 90,
-            locked: true,
-            type: "WPA2",
-          },
-          {
-            id: "net2",
-            name: "Browser_Sandbox_Limit",
-            strength: 60,
-            locked: false,
-            type: "OPEN",
-          },
-        ]);
-      }, 1000);
+      console.warn("[WIRELESS] Real scan failed:", e);
+      setError(e instanceof Error ? e.message : "Scan failed — Core Offline or no NIC access.");
     } finally {
       setScanning(false);
     }
@@ -230,7 +212,9 @@ const WirelessManager: React.FC<Props> = ({
                 ADAPTER:{" "}
                 {activeTab === "BLUETOOTH" ? "WEB_BLE_API" : "HOST_NIC"}
               </span>
-              <span>STATUS: ONLINE</span>
+              <span style={{ color: error ? "#ef4444" : `${themeColor}99` }}>
+                {error ? "OFFLINE" : "ONLINE"}
+              </span>
             </div>
           </div>
         </div>
@@ -595,7 +579,7 @@ const WirelessManager: React.FC<Props> = ({
                       <Icon name="Lock" size={14} className="text-slate-600" />
                     )}
                     <button
-                      onClick={() => onConnect(net.name, activeTab)}
+                      onClick={() => onConnect(net.id, activeTab)}
                       className="px-3 py-1 border border-slate-700 hover:bg-rq-blue hover:text-black hover:border-rq-blue text-[10px] font-bold text-slate-300 transition-all flex items-center gap-1"
                     >
                       <Icon name="Add" size={10} /> CONNECT
@@ -603,11 +587,13 @@ const WirelessManager: React.FC<Props> = ({
                   </div>
                 </div>
               ))}
-                {!scanning && networks.length === 0 && (
+                  {!scanning && networks.length === 0 && (
                   <div className="text-center text-slate-600 mt-10 italic">
-                    {activeTab === "BLUETOOTH"
-                      ? 'Click "SCAN REAL DEVICES" to pair hardware.'
-                      : "No networks found via Host NIC."}
+                    {error
+                      ? `Error: ${error}`
+                      : activeTab === "BLUETOOTH"
+                        ? 'Click "SCAN REAL DEVICES" to pair hardware.'
+                        : "No networks found via Host NIC."}
                   </div>
                 )}
               </div>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
+import { settingsService } from "../services/settingsService";
+import { getThemeColors } from "../config/themeColors";
 import { apiUrl } from "../config/api";
 
 interface InvestigationReport {
@@ -15,13 +17,10 @@ interface InvestigationReport {
 
 interface Props {
   onClose: () => void;
-  theme?: { hex: string; primary: string; border: string; bg: string };
+  theme?: any;
 }
 
-const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
-  const themePrimary = theme?.primary || "text-cyan-400";
-  const themeBorder = theme?.border || "border-cyan-500";
-  const themeHex = theme?.hex || "#06b6d4";
+const InvestigationReports: React.FC<Props> = ({ onClose, theme: propTheme }) => {
   const [reports, setReports] = useState<InvestigationReport[]>([]);
   const [selectedReport, setSelectedReport] =
     useState<InvestigationReport | null>(null);
@@ -31,6 +30,15 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
   const [exportFormat, setExportFormat] = useState<"json" | "markdown">(
     "markdown"
   );
+
+  // Theme Integration
+  const currentPersona =
+    settingsService.getSettings().general.persona || "ASSISTANT";
+  const calculatedTheme = getThemeColors(currentPersona);
+  const theme = propTheme || calculatedTheme;
+  const themeHex = "var(--app-primary)";
+  const themePrimary = theme.primary || "text-white";
+
 
   useEffect(() => {
     fetchReports();
@@ -206,359 +214,336 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
     return new Date(timestamp).toLocaleString();
   };
 
-  const getSeverityColor = (severity?: string) => {
-    switch (severity) {
-      case "HIGH":
-        return "text-red-400";
-      case "MEDIUM":
-        return "text-yellow-400";
-      case "LOW":
-        return "text-green-400";
-      default:
-        return "text-slate-400";
-    }
-  };
 
-  const getRiskColor = (score: number) => {
-    if (score >= 70) return "text-red-400";
-    if (score >= 40) return "text-yellow-400";
-    return "text-green-400";
+  const getRiskColor = (score: number): string => {
+    if (score >= 70) return "var(--app-status-danger)";
+    if (score >= 40) return "var(--app-status-warning)";
+    return "var(--app-status-success)";
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-300 font-mono p-0 sm:p-4 overflow-hidden">
+    <div 
+      className="fixed inset-0 z-[200] flex items-center justify-center glass-blur animate-in fade-in duration-300 font-mono p-4"
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}
+    >
       <div
-        className={`relative w-full h-full sm:h-[90vh] sm:w-[95%] max-w-sm sm:max-w-2xl lg:max-w-7xl bg-black/40 glass-blur border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-lg flex flex-col overflow-hidden`}
+        className={`relative w-full h-[92vh] max-w-7xl flex flex-col overflow-hidden rounded-2xl border shadow-2xl tech-border`}
         style={{
-          boxShadow: `0 0 80px -20px ${themeHex}40`,
+          backgroundColor: theme?.isLight
+            ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.3))"
+            : "rgba(5, 5, 5, var(--app-bg-opacity, 0.3))",
+          borderColor: "var(--app-border-main)",
         }}
       >
-        {/* Liquid background effect 1 (Center) */}
-        <div
-          className="absolute inset-0 opacity-40 pointer-events-none transition-all duration-700 z-0"
-          style={{
-            background: `radial-gradient(circle at 50% 50%, ${themeHex}25, transparent 60%)`,
-            filter: "blur(40px)",
-          }}
-        />
-        {/* Liquid background effect 2 (Top Right Offset) */}
-        <div
-          className="absolute inset-0 opacity-30 pointer-events-none transition-all duration-700 z-0"
-          style={{
-            background: `radial-gradient(circle at 80% 20%, ${themeHex}15, transparent 50%)`,
-            filter: "blur(40px)",
-          }}
-        />
         {/* Header */}
         <div
-          className={`h-16 flex-shrink-0 border-b ${themeBorder}/50 flex items-center justify-between px-4 sm:px-6 relative z-30`}
-          style={{ backgroundColor: `${themeHex}1F` }}
+          className="h-16 flex-shrink-0 border-b flex items-center justify-between px-8 relative z-30"
+          style={{ 
+            borderColor: "var(--app-border-main)",
+            backgroundColor: "var(--app-bg-tint)"
+          }}
         >
-          <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+          <div className="flex items-center gap-5 overflow-hidden">
             <div
-              className={`p-1.5 sm:p-2 rounded border ${themeBorder}/50 ${themePrimary} flex-shrink-0`}
-              style={{ backgroundColor: `${themeHex}1F` }}
+              className={`p-2 rounded-xl border flex-shrink-0 ${themePrimary}`}
+              style={{
+                backgroundColor: "rgba(0,0,0,0.4)",
+                borderColor: `${themeHex}22`,
+                color: themeHex,
+              }}
             >
-                <Icon name="FileText" size={20} className="sm:size-6" />
+                <Icon name="SearchCode" size={24} variant="BoldDuotone" />
             </div>
-            <div className="overflow-hidden">
-              <h2 className="font-display text-base sm:text-xl font-bold text-white tracking-widest truncate">
-                INVESTIGATION REPORTS
+            <div className="space-y-0.5 overflow-hidden">
+              <h2 className="font-black text-sm tracking-[0.3em] uppercase italic text-[var(--app-text-main)] truncate">
+                Security Reports
               </h2>
-              <div
-                className={`text-[9px] sm:text-[10px] font-mono ${themePrimary} flex gap-2 sm:gap-4 truncate`}
-              >
-                <span>TOTAL: {reports.length}</span>
-                <span>ENGINE: OSINT_ARCHIVE</span>
+              <div className="text-[9px] font-black uppercase tracking-widest flex gap-4 text-[var(--app-text-muted)] truncate">
+                <span>IDENTITY: {reports.length} ARCHIVED</span>
+                <span>ENGINE: OSINT_GLOBAL_V2</span>
               </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="relative z-50 p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0"
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-[var(--app-text-muted)]"
           >
-            <Icon name="X" size={20} className="sm:size-6" />
+            <Icon name="X" size={20} />
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
-          {/* Left: Report List */}
+        <div className="flex-1 flex overflow-hidden">
           {/* Sidebar: Report List */}
           <div
-            className={`w-full lg:w-80 border-b lg:border-b-0 lg:border-r ${themeBorder}/30 flex flex-col overflow-hidden h-48 lg:h-auto transition-colors duration-500`}
-            style={{ backgroundColor: `${themeHex}0D` }}
+            className="w-80 border-r flex flex-col overflow-hidden"
+            style={{ 
+                borderColor: "var(--app-border-main)",
+                backgroundColor: "rgba(0,0,0,0.2)"
+            }}
           >
-            <div
-              className={`p-3 sm:p-4 border-b ${themeBorder}/30 flex-shrink-0`}
-            >
-              <div className="relative mb-3">
-                <Icon
-                  name="Search"
-                  size={14}
-                  className="absolute left-2 top-2.5 text-slate-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Search reports..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full pl-8 pr-3 py-1.5 bg-black/40 border ${themeBorder}/30 rounded text-xs text-white placeholder-slate-500 focus:outline-none focus:${themeBorder}`}
-                />
-              </div>
-              <div
-                className={`text-[10px] sm:text-xs ${themePrimary} font-bold tracking-widest`}
-              >
-                INVESTIGATIONS ({filteredReports.length})
-              </div>
+            <div className="p-5 border-b space-y-4" style={{ borderColor: "var(--app-border-main)" }}>
+                <div className="relative">
+                    <Icon
+                    name="Search"
+                    size={14}
+                    className="absolute left-3 top-2.5"
+                    color="var(--app-text-muted)"
+                    />
+                    <input
+                    type="text"
+                    placeholder="Search reports..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-black/20 border rounded-xl text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)] placeholder-[var(--app-text-muted)] focus:outline-none"
+                    style={{ borderColor: "var(--app-border-main)" }}
+                    />
+                </div>
+                <div className="text-[9px] font-black tracking-[0.2em] uppercase text-[var(--app-text-muted)]">
+                    Report History
+                </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-2">
+            
+            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-2">
               {loading && reports.length === 0 ? (
-                <div className="text-slate-600 text-xs italic p-4">
-                  Loading reports...
+                <div className="text-[var(--app-text-muted)] text-[10px] italic p-4 font-black uppercase tracking-widest">
+                  ACCESSING ENCRYPTED FILES...
                 </div>
               ) : filteredReports.length === 0 ? (
-                <div className="text-slate-600 text-xs italic p-4">
-                  No reports found.
+                <div className="text-[var(--app-text-muted)] text-[10px] italic p-4 font-black uppercase tracking-widest text-center">
+                  NO MATCHING DOSSIERS
                 </div>
               ) : (
                 filteredReports.map((report) => (
-                  <div
+                  <button
                     key={report.file}
                     onClick={() => setSelectedReport(report)}
-                    className={`p-3 border rounded cursor-pointer transition-all mb-2 ${
-                      selectedReport?.file === report.file
-                        ? `${themeBorder}`
-                        : `${themeBorder}/30 hover:${themeBorder}/50`
-                    }`}
-                    style={
-                      selectedReport?.file === report.file
-                        ? { backgroundColor: `${themeHex}1F` }
-                        : {}
-                    }
+                    className={`w-full p-4 rounded-2xl border text-left transition-all relative overflow-hidden group
+                      ${selectedReport?.file === report.file ? "shadow-lg" : "hover:bg-white/5"}`}
+                    style={{ 
+                        backgroundColor: selectedReport?.file === report.file ? "var(--app-bg-tint)" : "transparent",
+                        borderColor: selectedReport?.file === report.file ? "var(--app-primary)" : "var(--app-border-main)"
+                    }}
                   >
-                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <Icon
-                          name="AlertTriangle"
-                          size={12}
-                          className={`${getRiskColor(
-                            report.riskScore
-                          )} flex-shrink-0`}
-                        />
-                        <span className="text-white font-bold text-xs sm:text-sm truncate">
-                          {report.target}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between mb-3">
+                         <div className="flex items-center gap-2">
+                            <Icon
+                                name="AlertTriangle"
+                                size={12}
+                                color={getRiskColor(report.riskScore)}
+                            />
+                            <span className="text-[var(--app-text-main)] font-black text-[10px] uppercase tracking-widest truncate">
+                                {report.target}
+                            </span>
+                         </div>
+                         <span className="text-[9px] font-mono opacity-60 text-[var(--app-text-main)]">
+                            {formatDate(report.timestamp).split(',')[0]}
+                         </span>
                     </div>
-                    <div className="text-[9px] sm:text-[10px] text-slate-400 space-y-0.5 sm:space-y-1">
-                      <div className="flex justify-between">
-                        <span>RISK:</span>
-                        <span
-                          className={`${getRiskColor(
-                            report.riskScore
-                          )} font-bold`}
-                        >
-                          {report.riskScore}/100
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>RESULTS:</span>
-                        <span className={themePrimary}>
-                          {report.resultCount}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>DATE:</span>
-                        <span className="text-slate-500">
-                          {formatDate(report.timestamp).split(",")[0]}
-                        </span>
-                      </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-0.5">
+                            <div className="text-[8px] font-black text-[var(--app-text-muted)] uppercase tracking-tighter">RISK_INDEX</div>
+                            <div className="text-[10px] font-black italic" style={{ color: getRiskColor(report.riskScore) }}>
+                                {report.riskScore}% CRITICAL
+                            </div>
+                        </div>
+                        <div className="space-y-0.5 text-right">
+                             <div className="text-[8px] font-black text-[var(--app-text-muted)] uppercase tracking-tighter">HITS_FOUND</div>
+                             <div className="text-[10px] font-black text-[var(--app-text-main)]">
+                                {report.resultCount} NODES
+                             </div>
+                        </div>
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
           </div>
 
-          {/* Center: Report Details */}
-          <div className="flex-1 flex flex-col overflow-hidden min-h-[300px] lg:min-h-0 bg-transparent">
+          {/* Main Area: Report Details */}
+          <div className="flex-1 flex flex-col overflow-hidden bg-transparent">
             {selectedReport && reportDetails ? (
               <>
                 <div
-                  className={`h-auto sm:h-16 flex-shrink-0 border-b ${themeBorder}/30 flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:px-6 gap-3`}
-                  style={{ backgroundColor: `${themeHex}1F` }}
+                  className="h-20 flex-shrink-0 border-b flex items-center justify-between px-10"
+                  style={{ 
+                      borderColor: "var(--app-border-main)",
+                      backgroundColor: "var(--app-bg-tint)" 
+                  }}
                 >
-                  <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+                  <div className="flex items-center gap-6 overflow-hidden">
                     <Icon
                       name="FileText"
-                      size={18}
-                      className={`${themePrimary} flex-shrink-0`}
+                      size={24}
+                      color="var(--app-primary)"
+                      variant="BoldDuotone"
                     />
-                    <div className="overflow-hidden">
-                      <h3 className="text-white font-bold text-sm sm:text-base truncate">
+                    <div className="space-y-0.5">
+                      <h3 className="text-[var(--app-text-main)] font-black text-lg uppercase italic tracking-widest truncate">
                         {selectedReport.target}
                       </h3>
-                      <div className="text-[9px] sm:text-[10px] text-slate-400 truncate">
-                        {formatDate(selectedReport.timestamp)}
+                      <div className="text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                        COLLECTED: {formatDate(selectedReport.timestamp)}
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                  
+                  <div className="flex items-center gap-3">
                     {!reportDetails.summary && (
                       <button
                         onClick={() => generateSummary(selectedReport)}
                         disabled={loading}
-                        className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 border ${themeBorder} ${themePrimary} text-[10px] sm:text-xs font-bold hover:opacity-80 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5`}
-                        style={{ backgroundColor: `${themeHex}1F` }}
+                        className="px-4 py-2 border rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 transition-all hover:bg-[var(--app-primary)] hover:text-black"
+                        style={{ 
+                            borderColor: "var(--app-primary)",
+                            color: "var(--app-primary)"
+                        }}
                       >
-                        <Icon name="Sparkles" size={12} />{" "}
-                        <span className="sm:inline">SUMMARY</span>
+                        <Icon name="Sparkles" size={14} />
+                        ANALYZE
                       </button>
                     )}
-                    <select
-                      value={exportFormat}
-                      onChange={(e) =>
-                        setExportFormat(e.target.value as "json" | "markdown")
-                      }
-                      className="px-1.5 sm:px-2 py-1.5 bg-slate-900/20 border border-slate-700 text-slate-400 text-[10px] sm:text-xs font-bold focus:outline-none"
-                    >
-                      <option value="markdown">MD</option>
-                      <option value="json">JSON</option>
-                    </select>
-                    <button
-                      onClick={() => exportReport(selectedReport, exportFormat)}
-                      className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 border ${themeBorder} ${themePrimary} text-[10px] sm:text-xs font-bold transition-colors flex items-center justify-center gap-1.5`}
-                      style={{ backgroundColor: `${themeHex}1F` }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = `${themeHex}66`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "";
-                      }}
-                    >
-                      {exportFormat === "json" ? (
-                        <Icon name="FileJson" size={12} />
-                      ) : (
-                        <Icon name="FileDown" size={12} />
-                      )}
-                      EXPORT
-                    </button>
+                    <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+                        <select
+                        value={exportFormat}
+                        onChange={(e) =>
+                            setExportFormat(e.target.value as "json" | "markdown")
+                        }
+                        className="bg-transparent text-white text-[10px] font-black uppercase tracking-widest px-3 focus:outline-none"
+                        >
+                        <option value="markdown">MD</option>
+                        <option value="json">JSON</option>
+                        </select>
+                        <button
+                        onClick={() => exportReport(selectedReport, exportFormat)}
+                        className="px-4 py-2 bg-[var(--app-primary)] text-black rounded-lg text-[10px] font-black tracking-widest uppercase transition-all active:scale-95"
+                        >
+                        EXPORT
+                        </button>
+                    </div>
                   </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#0a0a0a]">
+
+                <div className="flex-1 overflow-y-auto p-10 custom-scrollbar space-y-12">
                   {/* Summary Section */}
                   {reportDetails.summary && (
-                    <div
-                      className={`mb-6 p-4 border ${themeBorder}/30 rounded`}
-                      style={{ backgroundColor: `${themeHex}0D` }}
-                    >
-                      <h4
-                        className={`${themePrimary} font-bold mb-2 flex items-center gap-2`}
-                      >
-                        <Icon name="TrendingUp" size={14} /> EXECUTIVE SUMMARY
-                      </h4>
-                      <p className="text-slate-300 text-sm whitespace-pre-wrap">
+                    <section className="p-8 rounded-2xl border" style={{ 
+                        backgroundColor: "var(--app-bg-tint)",
+                        borderColor: "var(--app-primary)"
+                    }}>
+                      <div className="flex items-center gap-3 mb-6">
+                        <Icon name="TrendingUp" size={18} color="var(--app-primary)" />
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: "var(--app-primary)" }}>
+                            REPORT SUMMARY
+                        </h4>
+                      </div>
+                      <p className="text-[var(--app-text-main)] font-bold text-sm leading-relaxed italic opacity-90">
                         {reportDetails.summary}
                       </p>
-                    </div>
+                    </section>
                   )}
 
-                  {/* Risk Score */}
-                  <div className="mb-6 p-4 bg-slate-950/10 border border-slate-900/30 rounded">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-white font-bold">RISK ASSESSMENT</h4>
-                      <span
-                        className={`text-2xl font-bold ${getRiskColor(
-                          selectedReport.riskScore
-                        )}`}
-                      >
-                        {selectedReport.riskScore}/100
-                      </span>
-                    </div>
-                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all ${
-                          selectedReport.riskScore >= 70
-                            ? "bg-red-500"
-                            : selectedReport.riskScore >= 40
-                            ? "bg-yellow-500"
-                            : "bg-green-500"
-                        }`}
-                        style={{ width: `${selectedReport.riskScore}%` }}
-                      ></div>
-                    </div>
-                    <div className="mt-2 text-xs text-slate-400">
-                      Severity:{" "}
-                      <span
-                        className={getSeverityColor(
-                          reportDetails.meta?.SEVERITY
-                        )}
-                      >
-                        {reportDetails.meta?.SEVERITY || "UNKNOWN"}
-                      </span>
-                    </div>
+                  <div className="grid grid-cols-3 gap-8">
+                      {/* Risk Index Card */}
+                      <div className="col-span-1 p-6 rounded-2xl border glass-blur space-y-6" style={{ borderColor: "var(--app-border-main)", backgroundColor: "rgba(0,0,0,0.4)" }}>
+                          <div className="flex justify-between items-center">
+                             <h4 className="text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">RISK LEVEL</h4>
+                             <Icon name="Activity" size={16} color="var(--app-primary)" />
+                          </div>
+                          <div className="space-y-2">
+                             <div className="flex justify-between items-end">
+                                <span className="text-4xl font-black italic tracking-tighter" style={{ color: getRiskColor(selectedReport.riskScore) }}>
+                                    {selectedReport.riskScore}%
+                                </span>
+                                <span className="text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: getRiskColor(selectedReport.riskScore) }}>
+                                    {reportDetails.meta?.SEVERITY || "UNKNOWN"}
+                                </span>
+                             </div>
+                             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full transition-all duration-1000"
+                                    style={{ 
+                                        width: `${selectedReport.riskScore}%`,
+                                        backgroundColor: getRiskColor(selectedReport.riskScore),
+                                        boxShadow: `0 0 10px ${getRiskColor(selectedReport.riskScore)}`
+                                    }}
+                                />
+                             </div>
+                          </div>
+                      </div>
+
+                      {/* Engine Stats Card */}
+                      <div className="col-span-1 p-6 rounded-2xl border glass-blur space-y-6" style={{ borderColor: "var(--app-border-main)", backgroundColor: "rgba(0,0,0,0.4)" }}>
+                          <div className="flex justify-between items-center">
+                             <h4 className="text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">NODE_VISIBILITY</h4>
+                             <Icon name="Network" size={16} color="var(--app-primary)" />
+                          </div>
+                          <div className="space-y-1">
+                               <div className="text-4xl font-black italic tracking-tighter text-[var(--app-text-main)]">
+                                    {reportDetails.hits?.length || 0}
+                               </div>
+                               <div className="text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                                     THREATS IDENTIFIED
+                               </div>
+                          </div>
+                      </div>
+
+                      {/* Network Origin Card */}
+                      <div className="col-span-1 p-6 rounded-2xl border glass-blur space-y-6" style={{ borderColor: "var(--app-border-main)", backgroundColor: "rgba(0,0,0,0.4)" }}>
+                          <div className="flex justify-between items-center">
+                             <h4 className="text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">NETWORK_ORIGIN</h4>
+                             <Icon name="Navigation" size={16} color="var(--app-primary)" />
+                          </div>
+                          <div className="space-y-1">
+                               <div className="text-xl font-black italic tracking-tighter text-[var(--app-text-main)] truncate">
+                                    {reportDetails.torIp || "OSINT_DIRECT"}
+                               </div>
+                               <div className="text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                                    ANONYMIZED ROUTING NODE
+                               </div>
+                          </div>
+                      </div>
                   </div>
 
-                  {/* Findings */}
-                  <div className="mb-6">
-                    <h4 className="text-white font-bold mb-4 flex items-center gap-2">
-                      <Icon name="Eye" size={16} /> FINDINGS (
-                      {reportDetails.hits?.length || 0})
-                    </h4>
-                    <div className="space-y-3">
+                  {/* Findings Table */}
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <Icon name="Rows" size={16} color="var(--app-primary)" />
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--app-text-main)]">
+                            EVIDENCE LOG ({reportDetails.hits?.length || 0})
+                        </h4>
+                    </div>
+                    <div className="space-y-4">
                       {reportDetails.hits && reportDetails.hits.length > 0 ? (
                         reportDetails.hits.map((hit: any, index: number) => (
                           <div
                             key={index}
-                            className="p-3 bg-slate-950/10 border border-slate-900/30 rounded"
+                            className="p-6 rounded-2xl border glass-blur hover:bg-white/5 transition-all group"
+                            style={{ borderColor: "var(--app-border-main)", backgroundColor: "rgba(0,0,0,0.2)" }}
                           >
-                            <div className="flex items-start justify-between mb-2">
-                              <h5
-                                className={`${themePrimary} font-bold text-sm`}
-                              >
-                                {hit.title || `Finding ${index + 1}`}
-                              </h5>
-                              <span className="text-xs text-slate-500">
-                                {hit.engine || "Unknown"}
-                              </span>
-                            </div>
-                            <div className="text-xs text-slate-400 mb-2 font-mono break-all">
-                              {hit.url}
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="space-y-1">
+                                    <h5 className="text-[var(--app-text-main)] font-black text-sm uppercase tracking-wider group-hover:text-[var(--app-primary)] transition-colors">
+                                        {hit.title || `DETECTION_NODE_${index + 1}`}
+                                    </h5>
+                                    <div className="text-[10px] font-black font-mono text-[var(--app-text-muted)] group-hover:text-white/60 transition-colors truncate max-w-2xl">
+                                        {hit.url}
+                                    </div>
+                                </div>
+                                <span className="px-3 py-1 bg-black/40 border border-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                                    {hit.engine || "UNKNOWN"}
+                                </span>
                             </div>
                             {hit.snippet && (
-                              <p className="text-xs text-slate-300 mt-2">
-                                {hit.snippet}
+                              <p className="text-xs text-[var(--app-text-muted)] leading-relaxed italic border-t border-white/5 pt-4">
+                                &quot;{hit.snippet}&quot;
                               </p>
                             )}
                           </div>
                         ))
                       ) : (
-                        <div className="text-slate-600 text-sm italic">
-                          No findings reported.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Metadata */}
-                  <div className="p-4 bg-slate-950/10 border border-slate-900/30 rounded">
-                    <h4 className="text-white font-bold mb-3">METADATA</h4>
-                    <div className="text-xs text-slate-400 space-y-1 font-mono">
-                      <div>
-                        Engines:{" "}
-                        {reportDetails.enginesUsed?.join(", ") || "N/A"}
-                      </div>
-                      {reportDetails.torIp && (
-                        <div>Tor IP: {reportDetails.torIp}</div>
-                      )}
-                      <div>
-                        Timestamp: {formatDate(reportDetails.timestamp)}
-                      </div>
-                      {reportDetails.meta && (
-                        <div className="mt-2">
-                          <pre className="text-xs">
-                            {JSON.stringify(reportDetails.meta, null, 2)}
-                          </pre>
+                        <div className="text-[var(--app-text-muted)] text-sm italic font-black uppercase tracking-widest opacity-20 py-20 text-center">
+                          NO POSSITIVE DETECTION LOGS FOUND
                         </div>
                       )}
                     </div>
@@ -566,10 +551,13 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme }) => {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-slate-600">
-                <div className="text-center">
-                  <Icon name="FileText" size={48} className="mx-auto mb-4 opacity-50" />
-                  <p className="text-sm">Select a report to view details</p>
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center space-y-6 opacity-20" style={{ color: themeHex }}>
+                  <Icon name="SearchCode" size={120} variant="BoldDuotone" className="mx-auto" />
+                  <div className="space-y-2">
+                    <p className="text-lg font-black uppercase tracking-[0.4em] text-[var(--app-text-main)]">Select a Dossier</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-40">OPERATOR AUTHORIZATION REQUIRED</p>
+                  </div>
                 </div>
               </div>
             )}

@@ -19,6 +19,9 @@ import ProfileManager from "../ProfileManager";
 import CodeEditor from "../CodeEditor";
 import IngestionModal from "../IngestionModal";
 import { AutonomyDashboard } from "../AutonomyDashboard";
+import AgentModePanel from "../AgentModePanel";
+import ThoughtProcessPanel from "../ThoughtProcessPanel";
+import { parseToolLogsToThoughtNodes } from "../../utils/thoughtParser";
 import VoiceHud from "../VoiceHud";
 import { VoiceCommandConfirmation } from "../VoiceCommandConfirmation";
 import VisionCameraModal from "../VisionCameraModal";
@@ -115,6 +118,11 @@ interface OverlayManagerProps {
   setSystemStatus: (status: SystemStatus) => void;
   showAutonomyDashboard: boolean;
   setShowAutonomyDashboard: (show: boolean) => void;
+  showAgentMode: boolean;
+  setShowAgentMode: (show: boolean) => void;
+  showThoughtProcess: boolean;
+  setShowThoughtProcess: (show: boolean) => void;
+  toolLogs: any[];
   showVoiceHud: boolean;
   toggleVoiceMode: () => void;
   voiceTranscript: string;
@@ -264,6 +272,11 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     setSystemStatus,
     showAutonomyDashboard,
     setShowAutonomyDashboard,
+    showAgentMode,
+    setShowAgentMode,
+    showThoughtProcess,
+    setShowThoughtProcess,
+    toolLogs,
     showVoiceHud,
     toggleVoiceMode,
     voiceTranscript,
@@ -668,6 +681,26 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         <AutonomyDashboard
           onClose={() => setShowAutonomyDashboard(false)}
           theme={theme}
+        />
+      )}
+
+      {showAgentMode && (
+        <AgentModePanel
+          task={null}
+          onClose={() => setShowAgentMode(false)}
+          theme={{
+            hex: theme?.hex || "#8b5cf6",
+            primary: theme?.primary || theme?.hex || "#8b5cf6",
+            border: theme?.border || `${theme?.hex}40` || "rgba(139,92,246,0.25)",
+            bg: theme?.bg || "rgba(0,0,0,0.4)",
+          }}
+        />
+      )}
+
+      {showThoughtProcess && (
+        <ThoughtProcessPanel
+          nodes={parseToolLogsToThoughtNodes(toolLogs)}
+          onClose={() => setShowThoughtProcess(false)}
         />
       )}
 

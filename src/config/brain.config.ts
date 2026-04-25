@@ -11,11 +11,11 @@ export const BRAIN_CONFIG = {
 
   // Global Default Models (Stable IDs)
   defaults: {
-    brain: "gemini-2.0-flash",
-    vision: "gemini-2.0-flash",
-    voice: "gemini-2.0-flash", // Using stable model for voice
-    memory: "gemini-2.0-flash", // Used for long-term memory distillation
-    embedding: "text-embedding-004", // Canonical cloud model
+    brain: "gemini-3-flash-preview",
+    vision: "gemini-3-flash-preview",
+    voice: "gemini-3-flash-preview", // 3.0 supports multimodal
+    memory: "gemini-3-flash-preview", // High-speed distillation
+    embedding: "gemini-embedding-001", // Verified 2026 stable name
   },
 
   // Managed Cloud Discovery (Stable mapping for UI Labels)
@@ -24,18 +24,19 @@ export const BRAIN_CONFIG = {
       name: "Google Gemini",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta",
       models: {
-        "2.5-pro":      "gemini-2.5-pro",           // Most capable (reasoning)
-        "2.5-flash":    "gemini-2.5-flash",          // Fast + smart (recommended)
-        "2.0-flash":    "gemini-2.0-flash",          // Luca Prime default (stable)
-        "2.0-flash-exp": "gemini-2.0-flash-exp",    // Experimental
+        "3.0-flash":    "gemini-3-flash-preview",        // NEW: High Fidelity Core
+        "2.0-flash":    "gemini-2.0-flash",              // Stable Legacy
+        "1.5-pro":      "gemini-1.5-pro",                // Reasoning
+        "1.5-flash":    "gemini-1.5-flash",              // Logic
       },
     },
     anthropic: {
       name: "Anthropic",
       baseUrl: "https://api.anthropic.com/v1",
       models: {
-        "sonnet-4.5": "claude-4.5-sonnet",
-        "sonnet-4.5-thinking": "claude-4.5-sonnet-thinking",
+        "opus-4.7": "claude-opus-4-7",             // Released April 2026
+        "sonnet-4.6": "claude-sonnet-4-6",         // Released Feb 2026
+        "sonnet-4.6-thought": "claude-4.6-thought", // Extended reasoning variant
       },
     },
     openai: {

@@ -74,6 +74,7 @@ const MARKETPLACE_SERVERS: MarketplaceServer[] = [
     name: "GitHub",
     description: "Interact with repositories, issues, PRs, and user data.",
     icon: "Code",
+    iconUrl: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
     type: "stdio",
     command: "npx",
     args: "-y @modelcontextprotocol/server-github",
@@ -84,7 +85,8 @@ const MARKETPLACE_SERVERS: MarketplaceServer[] = [
     id: "google-drive",
     name: "Google Drive",
     description: "Search, read, and manage your Google Drive documents.",
-    icon: "Globus",
+    icon: "Cloud",
+    iconUrl: "https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg",
     type: "stdio",
     command: "npx",
     args: "-y @modelcontextprotocol/server-google-drive",
@@ -95,7 +97,7 @@ const MARKETPLACE_SERVERS: MarketplaceServer[] = [
     id: "memory",
     name: "Memoir (Memory)",
     description: "Long-term graph memory for maintaining context across chat sessions.",
-    icon: "Settings",
+    icon: "Cpu",
     type: "stdio",
     command: "npx",
     args: "-y @modelcontextprotocol/server-memory",
@@ -107,6 +109,7 @@ const MARKETPLACE_SERVERS: MarketplaceServer[] = [
     name: "Slack",
     description: "Read channels, send messages, and search Slack history.",
     icon: "Globus",
+    iconUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg",
     type: "stdio",
     command: "npx",
     args: "-y @modelcontextprotocol/server-slack",
@@ -118,6 +121,7 @@ const MARKETPLACE_SERVERS: MarketplaceServer[] = [
     name: "PostgreSQL",
     description: "Query and manage your PostgreSQL databases.",
     icon: "Database",
+    iconUrl: "https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephants.svg",
     type: "stdio",
     command: "npx",
     args: "-y @modelcontextprotocol/server-postgres",
@@ -146,11 +150,13 @@ interface SettingsMCPTabProps {
     themeName: string;
   };
   setStatusMsg: (msg: string) => void;
+  isMobile?: boolean;
 }
 
 const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
   theme,
   setStatusMsg,
+  isMobile,
 }) => {
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -377,12 +383,12 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       {/* Header Info Box */}
       <div
-        className={`text-lg p-3 rounded-lg border transition-all tech-border glass-blur`}
+        className={`text-xs p-3 border transition-all tech-border glass-blur opacity-80 ${isMobile ? "mx-4 border-x-0 border-y rounded-none" : "rounded-lg"}`}
         style={{
-          backgroundColor: "var(--app-bg-tint, #11111a)",
+          backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           color: "var(--app-text-muted, #94a3b8)",
         }}
@@ -399,7 +405,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       </div>
 
       {/* Search & Toggle Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+      <div className={`flex flex-col sm:flex-row gap-4 items-center justify-between ${isMobile ? "px-4" : ""}`}>
         <div className="relative flex-1 w-full">
           <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--app-text-muted)]" />
           <input
@@ -407,7 +413,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search servers or skills..."
-            className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-lg transition-all border tech-border`}
+            className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all border rounded-lg tech-border`}
             style={{ 
               backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
               borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -416,17 +422,17 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           />
         </div>
         
-        <div className={`flex p-1 rounded-xl border tech-border`} style={{ backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))", borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
+        <div className={`flex p-1 rounded-xl border rounded-lg tech-border`} style={{ backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))", borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
           <button
             onClick={() => setActiveView("active")}
-            className={`px-4 py-1.5 rounded-lg text-lg font-bold transition-all ${activeView === "active" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
+            className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${activeView === "active" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
             style={activeView === "active" ? { backgroundColor: setHexAlpha(theme.hex, 0.2), color: "var(--app-text-main, #ffffff)" } : {}}
           >
             Active
           </button>
           <button
             onClick={() => setActiveView("marketplace")}
-            className={`px-4 py-1.5 rounded-lg text-lg font-bold transition-all ${activeView === "marketplace" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
+            className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${activeView === "marketplace" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
             style={activeView === "marketplace" ? { backgroundColor: setHexAlpha(theme.hex, 0.2), color: "var(--app-text-main, #ffffff)" } : {}}
           >
             Discover
@@ -435,10 +441,10 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       </div>
 
       {/* Action Bar */}
-      <div className="flex flex-wrap gap-2">
+      <div className={`flex flex-wrap gap-2 ${isMobile ? "px-4" : ""}`}>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-lg font-bold border transition-all shadow-sm hover:bg-white/5 tech-border`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black border transition-all shadow-sm hover:bg-white/5 rounded-lg tech-border`}
           style={{
             borderColor: "var(--app-border-main, rgba(255,255,255,0.2))",
             color: "var(--app-text-main, #ffffff)",
@@ -451,7 +457,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
         <button
           onClick={handleSync}
           disabled={loading}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-lg font-bold transition-all shadow-sm disabled:opacity-50 border tech-border`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all shadow-sm disabled:opacity-50 border rounded-lg tech-border`}
           style={{
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
             backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
@@ -467,7 +473,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       {/* Add Server Form */}
       {showAddForm && (
         <div
-          className={`p-4 rounded-xl space-y-4 border transition-all tech-border glass-blur`}
+          className={`p-4 rounded-xl space-y-4 border transition-all rounded-lg tech-border glass-blur`}
           style={{
             backgroundColor: "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -475,7 +481,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           }}
         >
           <h4
-            className="text-base font-bold flex items-center gap-2"
+            className={`${isMobile ? "text-sm" : "text-base"} font-bold flex items-center gap-2`}
             style={{ color: "var(--app-text-main, #ffffff)" }}
           >
             <Icon name="Plug" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
@@ -484,7 +490,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
 
           {/* Server Name */}
           <div>
-            <label className="block text-sm text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+            <label className="block text-[10px] text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
               Server Name
             </label>
             <input
@@ -494,7 +500,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 setFormData((p) => ({ ...p, name: e.target.value }))
               }
               placeholder="e.g. filesystem, github"
-              className={`w-full rounded-lg px-3 py-2 text-base placeholder-gray-600 focus:outline-none transition-all border tech-border`}
+              className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg tech-border`}
               style={{ 
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
@@ -505,13 +511,13 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
 
           {/* Transport Type */}
           <div>
-            <label className="block text-sm text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+            <label className="block text-[10px] text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
               Transport Type
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setFormData((p) => ({ ...p, type: "stdio" }))}
-                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg text-lg font-bold transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg text-sm font-black transition-all ${
                   formData.type === "stdio" ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                 }`}
                 style={{
@@ -527,7 +533,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
               </button>
               <button
                 onClick={() => setFormData((p) => ({ ...p, type: "sse" }))}
-                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg text-lg font-bold transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg text-sm font-black transition-all ${
                   formData.type === "sse" ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                 }`}
                 style={{
@@ -548,7 +554,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           {formData.type === "stdio" && (
             <>
               <div>
-                <label className="block text-base text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+                <label className="block text-xs uppercase tracking-widest text-[var(--app-text-muted)] mb-1 font-bold">
                   Command
                 </label>
                 <input
@@ -558,7 +564,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     setFormData((p) => ({ ...p, command: e.target.value }))
                   }
                   placeholder="e.g. npx, python3, node"
-                  className={`w-full rounded-lg px-3 py-2 text-base placeholder-gray-600 focus:outline-none transition-all border tech-border`}
+                  className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg tech-border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                     borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -567,7 +573,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-base text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+                <label className="block text-xs uppercase tracking-widest text-[var(--app-text-muted)] mb-1 font-bold">
                   Arguments (space-separated)
                 </label>
                 <input
@@ -577,7 +583,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     setFormData((p) => ({ ...p, args: e.target.value }))
                   }
                   placeholder="e.g. -y @modelcontextprotocol/server-filesystem /tmp"
-                  className={`w-full rounded-lg px-3 py-2 text-base placeholder-gray-600 focus:outline-none transition-all border tech-border`}
+                  className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg tech-border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                     borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -591,7 +597,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           {/* SSE Fields */}
           {formData.type === "sse" && (
             <div>
-              <label className="block text-sm text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+              <label className="block text-[10px] text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
                 Server URL
               </label>
               <input
@@ -601,7 +607,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                   setFormData((p) => ({ ...p, url: e.target.value }))
                 }
                 placeholder="e.g. https://mcp-server.example.com"
-                className={`w-full rounded-lg px-3 py-2 text-base placeholder-gray-600 focus:outline-none transition-all border tech-border`}
+                className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg tech-border`}
                 style={{
                   backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                   borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -613,31 +619,23 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
 
           {/* Auto Connect Toggle */}
           <div className="flex items-center justify-between">
-            <span className={`text-lg text-[var(--app-text-muted)]`}>
+            <span className={`text-sm text-[var(--app-text-muted)] font-bold`}>
               Auto-connect on startup
             </span>
             <button
               onClick={() =>
                 setFormData((p) => ({ ...p, autoConnect: !p.autoConnect }))
               }
-              className={`relative w-10 h-5 rounded-full transition-colors ${
-                formData.autoConnect ? "bg-green-500/30" : "bg-white/10"
-              }`}
-              style={
-                formData.autoConnect
-                  ? { backgroundColor: setHexAlpha(theme.hex, 0.25) }
-                  : {}
-              }
+              className={`w-7 h-3.5 rounded-full transition-all relative ${formData.autoConnect ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
+              style={{
+                backgroundColor: formData.autoConnect ? theme.hex : undefined,
+              }}
             >
               <div
-                className={`absolute top-0.5 w-4 h-4 rounded-full transition-all ${
-                  formData.autoConnect
-                    ? "left-5 bg-green-400"
-                    : "left-0.5 bg-gray-500"
-                }`}
-                style={
-                  formData.autoConnect ? { backgroundColor: theme.hex } : {}
-                }
+                className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${formData.autoConnect ? "translate-x-4" : "translate-x-0.5"}`}
+                style={{ 
+                  backgroundColor: formData.autoConnect ? "white" : "var(--app-text-muted)" 
+                }}
               />
             </button>
           </div>
@@ -647,7 +645,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-2 text-lg text-[var(--app-text-muted)] hover:text-[var(--app-text-muted)] transition-colors"
+              className="flex items-center gap-2 text-sm font-bold text-[var(--app-text-muted)] hover:text-[var(--app-text-muted)] transition-colors"
             >
               <Icon name="Settings" className="w-3 h-3" />
               Advanced
@@ -661,10 +659,10 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             {showAdvanced && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <label className="block text-base text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
+                  <label className="block text-xs uppercase tracking-widest text-[var(--app-text-muted)] mb-1 font-bold">
                     Environment Variables
                   </label>
-                  <p className="text-base text-[var(--app-text-muted)] mb-2">
+                  <p className="text-xs text-[var(--app-text-muted)] mb-2 italic">
                     Pass secrets like API keys to the MCP server (e.g.,
                     GITHUB_TOKEN)
                   </p>
@@ -680,7 +678,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           setEnvVars(updated);
                         }}
                         placeholder="KEY"
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-base placeholder-gray-600 focus:outline-none font-mono transition-all border tech-border`}
+                        className={`flex-1 rounded-lg px-2 py-1.5 text-sm placeholder-gray-600 focus:outline-none font-mono transition-all border rounded-lg tech-border`}
                         style={{
                           backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -696,7 +694,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           setEnvVars(updated);
                         }}
                         placeholder="value"
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-base placeholder-gray-600 focus:outline-none font-mono transition-all border tech-border`}
+                        className={`flex-1 rounded-lg px-2 py-1.5 text-sm placeholder-gray-600 focus:outline-none font-mono transition-all border rounded-lg tech-border`}
                         style={{
                           backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -720,7 +718,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     onClick={() =>
                       setEnvVars([...envVars, { key: "", value: "" }])
                     }
-                    className={`flex items-center gap-1 text-lg px-2 py-1 rounded transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
+                    className={`flex items-center gap-1 ${isMobile ? "text-sm" : "text-lg"} px-2 py-1 rounded transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
                     style={{
                       border: `1px solid var(--app-border-main)`,
                       backgroundColor: "var(--app-bg-tint)",
@@ -738,7 +736,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           <button
             onClick={handleAddServer}
             disabled={loading}
-            className="w-full py-2.5 rounded-lg text-lg font-bold border transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-2.5 rounded-lg text-sm font-black border transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               borderColor: setHexAlpha(theme.hex, 0.4),
               backgroundColor: setHexAlpha(theme.hex, 0.08),
@@ -756,12 +754,12 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       )}
 
       {/* View Content */}
-      <div className="mcp-settings-container overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
+      <div className={`mcp-settings-container overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar ${isMobile ? "px-0" : ""}`}>
         {activeView === "active" ? (
           /* Server List */
           <div className="space-y-3">
             {servers.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
-              <div className="text-center py-12 text-[var(--app-text-muted)] text-lg">
+              <div className={`text-center py-12 text-[var(--app-text-muted)] ${isMobile ? "text-base" : "text-lg"}`}>
                 <Icon name="Plug" className="w-8 h-8 mx-auto mb-3 opacity-30" />
                 {searchQuery ? "No matching servers found." : "No active MCP servers."}
               </div>
@@ -775,7 +773,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                   return (
                     <div
                       key={server.id}
-                      className={`rounded-xl overflow-hidden transition-all tech-border border glass-blur`}
+                      className={`rounded-xl overflow-hidden transition-all rounded-lg tech-border border glass-blur`}
                       style={{
                         backgroundColor: "var(--app-bg-tint, #0a0a0a)",
                         borderColor: isConnected
@@ -804,13 +802,13 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           </div>
                           <div className="min-w-0">
                             <h4
-                              className={`text-lg font-bold truncate`}
+                              className={`${isMobile ? "text-base" : "text-lg"} font-bold truncate`}
                               style={{ color: "var(--app-text-main, #ffffff)" }}
                             >
                               {server.name}
                             </h4>
                             <p
-                              className={`text-base truncate`}
+                              className={`${isMobile ? "text-sm" : "text-base"} truncate`}
                               style={{ color: "var(--app-text-muted, #94a3b8)" }}
                             >
                               {server.type === "stdio"
@@ -823,7 +821,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                         <div className="flex items-center gap-3 flex-shrink-0">
                           {/* Status Badge */}
                           <div
-                            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-base font-bold ${
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${isMobile ? "text-xs" : "text-base"} font-bold ${
                               isConnected
                                 ? "bg-green-500/20 text-green-400"
                                 : "bg-red-500/20 text-red-400"
@@ -861,7 +859,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                         >
                           {/* Tools List */}
                           <div>
-                            <h5 className="text-base text-[var(--app-text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <h5 className={`${isMobile ? "text-sm" : "text-base"} text-[var(--app-text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1`}>
                               <Icon name="Wrench" className="w-3 h-3" />
                               Available Tools
                             </h5>
@@ -871,7 +869,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                                   {serverTools[server.id].map((tool: any) => (
                                     <span
                                       key={tool.name}
-                                      className={`px-2 py-1 rounded-md text-base transition-all border tech-border`}
+                                      className={`px-2 py-1 rounded-md text-base transition-all border rounded-lg tech-border`}
                                       style={{
                                         borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
                                         backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
@@ -968,7 +966,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     return (
                       <div
                         key={item.id}
-                        className={`p-4 rounded-2xl border transition-all relative overflow-hidden group bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border`}
+                        className={`p-4 rounded-2xl border transition-all relative overflow-hidden group bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg tech-border`}
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="p-2.5 rounded-2xl" style={{ backgroundColor: setHexAlpha(item.color, 0.15) }}>

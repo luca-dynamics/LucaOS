@@ -118,7 +118,7 @@ export default function AdvancedTradingTerminal({
                 </div>
               </div>
               <h1 className="text-sm font-black tracking-[0.1em] text-white uppercase whitespace-nowrap">
-                LucaOS <span style={{ color: currentThemeHex }}>TRADING</span>
+                LucaOS <span style={{ color: currentThemeHex }}>TRADE CENTER</span>
               </h1>
             </div>
 

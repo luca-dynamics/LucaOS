@@ -61,11 +61,13 @@ import ManagementDashboard from "./components/ManagementDashboard";
 import { SettingsModal } from "./components/SettingsModal";
 import ChatWidgetMode from "./components/ChatWidgetMode";
 import WidgetMode from "./components/WidgetMode";
+import HologramMode from "./components/HologramMode";
 import LucaCloud from "./components/LucaCloud";
 
 // Helper for device capability check removed temporarily as it's unused
 
 import InvestigationReports from "./components/InvestigationReports";
+import DarkWebScanner from "./components/DarkWebScanner";
 import VisualCore from "./components/VisualCore";
 import { guardService } from "./services/guardService";
 
@@ -239,9 +241,9 @@ function AppContent() {
 
   // --- PANEL LAYOUT STATE ---
   const [panelWidths, setPanelWidths] = useState({
-    sidebar: 400,
+    sidebar: 320,
     chat: 430,
-    right: 400,
+    right: 340,
   });
   const [connectionTier, setConnectionTier] = useState<
     "LAN" | "LOCAL" | "CLOUD" | "OFFLINE"
@@ -334,6 +336,22 @@ function AppContent() {
         document.documentElement.style.setProperty("--app-text-muted", contrast.textMuted);
         document.documentElement.style.setProperty("--app-border-main", contrast.border);
         document.documentElement.style.setProperty("--app-bg-tint", contrast.bgTint);
+        document.documentElement.style.setProperty("--app-bg-main", (contrast as any).bgMain);
+      }
+
+      // Unified Typography Engine
+      const fontScale = settings?.general?.fontScale ?? 1.0;
+      const fontFamily = settings?.general?.fontFamily ?? '"Inter", system-ui, sans-serif';
+
+      document.documentElement.style.setProperty("--app-font-scale", fontScale.toString());
+      document.documentElement.style.setProperty("--app-font-family", fontFamily);
+
+      // Class-based theme toggle for global CSS
+      const isLight = PERSONA_UI_CONFIG[newTheme as UIThemeId]?.isLight || false;
+      if (isLight) {
+        document.documentElement.classList.add("light-mode");
+      } else {
+        document.documentElement.classList.remove("light-mode");
       }
     };
 
@@ -450,6 +468,10 @@ function AppContent() {
 
   // Autonomy Dashboard State
   const [showAutonomyDashboard, setShowAutonomyDashboard] = useState(false);
+
+  // AGI Panel State — Agent Mode & Cognitive Engine
+  const [showAgentMode, setShowAgentMode] = useState(false);
+  const [showThoughtProcess, setShowThoughtProcess] = useState(false);
 
   // wake word state
   const [isWakeWordActive, setIsWakeWordActive] = useState(
@@ -856,6 +878,7 @@ function AppContent() {
   // Investigation Reports State
   const [showInvestigationReports, setShowInvestigationReports] =
     useState(false);
+  const [showDarkWebScanner, setShowDarkWebScanner] = useState(false);
 
   // --- GLOBAL BROWSER TRIGGER ---
   useEffect(() => {
@@ -2070,6 +2093,11 @@ function AppContent() {
     return <ChatWidgetMode />;
   }
 
+  if (appMode === "hologram") {
+    // Dedicated Hologram Face Mode
+    return <HologramMode />;
+  }
+
   if (appMode === "visual_core") {
     console.log(
       "[SMART SCREEN] Rendering with browserUrl:",
@@ -2348,6 +2376,11 @@ function AppContent() {
           setSystemStatus={setSystemStatus}
           showAutonomyDashboard={showAutonomyDashboard}
           setShowAutonomyDashboard={setShowAutonomyDashboard}
+          showAgentMode={showAgentMode}
+          setShowAgentMode={setShowAgentMode}
+          showThoughtProcess={showThoughtProcess}
+          setShowThoughtProcess={setShowThoughtProcess}
+          toolLogs={toolLogs}
           showVoiceHud={showVoiceHud}
           toggleVoiceMode={toggleVoiceMode}
           voiceTranscript={voiceTranscript || ""}
@@ -2436,7 +2469,7 @@ function AppContent() {
 
       {/* Main Dashboard Container */}
       <div
-        className={`flex flex-col font-mono overflow-hidden relative transition-all duration-700 ${
+        className={`flex flex-col gap-0 p-0 font-mono overflow-hidden relative transition-all duration-700 ${
           showVoiceHud
             ? "opacity-0 pointer-events-none scale-95"
             : "opacity-100"
@@ -2491,7 +2524,7 @@ function AppContent() {
         </SafeComponent>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-hidden relative z-10 flex h-full">
+        <main className="flex-1 overflow-hidden relative z-10 flex h-full gap-0 p-0">
           {!isMobile && (
             <>
               <div
@@ -2524,6 +2557,7 @@ function AppContent() {
                     setShowTradingTerminal={setShowTradingTerminal}
                     setShowSubsystemDashboard={setShowSubsystemDashboard}
                     setShowInvestigationReports={setShowInvestigationReports}
+                    setShowDarkWebScanner={setShowDarkWebScanner}
                     setShowIngestionModal={setShowIngestionModal}
                     setShowCodeEditor={setShowCodeEditor}
                     setShowPredictionTerminal={setShowPredictionTerminal}
@@ -2533,6 +2567,9 @@ function AppContent() {
                     setShowOsintDossier={setShowOsintDossier}
                     setShowHackingTerminal={setShowHackingTerminal}
                     connectionTier={effectiveConnectionTier}
+                    onLockdown={() => setIsLockdown(true)}
+                    setShowAgentMode={setShowAgentMode}
+                    setShowThoughtProcess={setShowThoughtProcess}
                   />
                 </SafeComponent>
               </div>
@@ -2575,6 +2612,7 @@ function AppContent() {
                 setShowTradingTerminal={setShowTradingTerminal}
                 setShowSubsystemDashboard={setShowSubsystemDashboard}
                 setShowInvestigationReports={setShowInvestigationReports}
+                setShowDarkWebScanner={setShowDarkWebScanner}
                 setShowIngestionModal={setShowIngestionModal}
                 setShowCodeEditor={setShowCodeEditor}
                 setShowPredictionTerminal={setShowPredictionTerminal}
@@ -2584,6 +2622,9 @@ function AppContent() {
                 setShowOsintDossier={setShowOsintDossier}
                 setShowHackingTerminal={setShowHackingTerminal}
                 connectionTier={effectiveConnectionTier}
+                onLockdown={() => setIsLockdown(true)}
+                setShowAgentMode={setShowAgentMode}
+                setShowThoughtProcess={setShowThoughtProcess}
               />
             </div>
           )}
@@ -2698,16 +2739,15 @@ function AppContent() {
               />
               <section
                 className={`flex-none h-full border-l border-white/10 relative overflow-hidden flex flex-col ${
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "glass-panel-light"
-                    : "glass-panel"
+                  theme.isLight ? "glass-panel-light" : "glass-panel"
                 }`}
                 style={{
                   width: `${panelWidths.right}px`,
-                  background:
-                    theme.themeName?.toLowerCase() === "lucagent"
-                      ? "rgba(255, 255, 255, 0.5)"
-                      : "rgba(0, 0, 0, var(--app-bg-opacity, 0.4))",
+                  background: theme?.isLight
+                    ? (theme.themeName?.toLowerCase() === "lightcream"
+                        ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
+                        : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
+                    : "rgba(0, 0, 0, var(--app-bg-opacity, 0.4))",
                 }}
               >
                 <div className="flex flex-col h-full w-full overflow-hidden">
@@ -2723,13 +2763,17 @@ function AppContent() {
                         setRightPanelMode("MANAGE");
                         soundService.play("KEYSTROKE");
                       }}
-                      className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
+                      className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors relative ${
                         rightPanelMode === "MANAGE"
                           ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-slate-600 hover:text-slate-400"
+                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                       }`}
                     >
                       MANAGE
+                      <div className="absolute top-0.5 right-1.5 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse border border-emerald-400/50 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
+                      </div>
                     </button>
                     <button
                       onClick={() => {
@@ -2739,7 +2783,7 @@ function AppContent() {
                       className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                         rightPanelMode === "LOGS"
                           ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-slate-600 hover:text-slate-400"
+                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                       }`}
                     >
                       LOGS
@@ -2752,7 +2796,7 @@ function AppContent() {
                       className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                         rightPanelMode === "MEMORY"
                           ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-slate-600 hover:text-slate-400"
+                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                       }`}
                     >
                       MEMORY
@@ -2765,7 +2809,7 @@ function AppContent() {
                       className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
                         rightPanelMode === "CLOUD"
                           ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-slate-600 hover:text-slate-400"
+                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                       }`}
                     >
                       <Icon name="BrainCircuit" size={14} className="mx-auto" />
@@ -2782,7 +2826,7 @@ function AppContent() {
                     {rightPanelMode === "LOGS" && (
                       <div className="space-y-1">
                         {toolLogs.length === 0 && (
-                          <div className="text-slate-700 italic">
+                          <div className="text-[var(--app-text-muted)] opacity-50 italic">
                             System idle.
                           </div>
                         )}
@@ -2791,7 +2835,7 @@ function AppContent() {
                             key={i}
                             className={`border-l border-slate-800 pl-2 py-1 hover:bg-white/5 transition-colors group font-mono text-[10px]`}
                           >
-                            <div className="flex justify-between opacity-50 mb-0.5 text-slate-400">
+                            <div className="flex justify-between opacity-50 mb-0.5 text-[var(--app-text-muted)]">
                               <span
                                 className={`font-bold group-hover:text-white transition-colors ${
                                   log.toolName === "SENTINEL_LOOP"
@@ -3213,6 +3257,12 @@ function AppContent() {
         {showInvestigationReports && (
           <InvestigationReports
             onClose={() => setShowInvestigationReports(false)}
+            theme={theme}
+          />
+        )}
+        {showDarkWebScanner && (
+          <DarkWebScanner
+            onClose={() => setShowDarkWebScanner(false)}
             theme={theme}
           />
         )}

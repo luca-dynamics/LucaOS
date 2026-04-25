@@ -123,7 +123,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
     });
     // Live Preview
     document.documentElement.style.setProperty(
-      "--app-id-backgroundOpacity",
+      "--app-bg-opacity",
       val.toString(),
     );
   };

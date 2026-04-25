@@ -7,7 +7,7 @@ import {
   getPersonaConfig,
   savePersonaConfig,
 } from "../services/personaService";
-import { PERSONA_UI_CONFIG } from "../config/themeColors";
+import { PERSONA_UI_CONFIG, getDynamicContrast } from "../config/themeColors";
 import { PersonaConfig } from "../types";
 
 // Import Refactored Tabs
@@ -20,12 +20,11 @@ import SettingsIoTTab from "./settings/SettingsIoTTab";
 import SettingsConnectorsTab from "./settings/SettingsConnectorsTab";
 import SettingsLucaLinkTab from "./settings/SettingsLucaLinkTab";
 import SettingsDataTab from "./settings/SettingsDataTab";
+import SettingsMCPBridgeTab from "./settings/SettingsMCPBridgeTab";
 import SettingsAboutTab from "./settings/SettingsAboutTab";
-import SettingsMCPTab from "./settings/SettingsMCPTab";
 import OperatorProfilePanel from "./settings/OperatorProfilePanel";
 import PersonalityDashboard from "./settings/PersonalityDashboard";
 import KnowledgeBridgeTab from "./settings/KnowledgeBridgeTab";
-import SettingsConnectivityTab from "./settings/SettingsConnectivityTab";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -80,7 +79,7 @@ const TABS = [
     icon: "Wifi",
     platforms: ["desktop", "mobile"],
   },
-  { id: "mcp", label: "MCP Skills", icon: "Plug", platforms: ["desktop"] },
+  { id: "mcp-bridge", label: "MCP Bridge", icon: "Plug", platforms: ["desktop"] },
   {
     id: "iot",
     label: "Smart Home",
@@ -101,15 +100,9 @@ const TABS = [
   },
   {
     id: "knowledge-bridge",
-    label: "Knowledge Bridge",
+    label: "Knowledge Base",
     icon: "Share",
     platforms: ["desktop", "mobile"],
-  },
-  {
-    id: "connectivity",
-    label: "Luca MCP",
-    icon: "Link",
-    platforms: ["desktop"],
   },
   { id: "about", label: "About", icon: "InfoCircle", platforms: ["desktop", "mobile"] },
 ];
@@ -165,6 +158,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       settingsService.off("settings-changed", handleSettingsChanged);
     };
   }, []);
+
+  // --- LIVE PREVIEW ENGINE ---
+  // Apply theme changes to document root in real-time for instant feedback
+  useEffect(() => {
+    const newTheme = settings.general?.theme;
+    if (newTheme) {
+      const opacity = settings.general.backgroundOpacity ?? 0.3;
+      const blur = settings.general.backgroundBlur ?? 40;
+      const contrast = getDynamicContrast(newTheme as any, opacity);
+      
+      document.documentElement.style.setProperty("--app-text-main", contrast.text);
+      document.documentElement.style.setProperty("--app-text-muted", contrast.textMuted);
+      document.documentElement.style.setProperty("--app-border-main", contrast.border);
+      document.documentElement.style.setProperty("--app-bg-tint", contrast.bgTint);
+      document.documentElement.style.setProperty("--app-bg-main", (contrast as any).bgMain);
+      
+      document.documentElement.style.setProperty("--app-bg-opacity", opacity.toString());
+      document.documentElement.style.setProperty("--app-bg-blur", `${blur}px`);
+
+      const isLight = PERSONA_UI_CONFIG[newTheme as any]?.isLight || false;
+      if (isLight) {
+        document.documentElement.classList.add("light-mode");
+      } else {
+        document.documentElement.classList.remove("light-mode");
+      }
+
+      // Sync hex for Voice/Particles
+      const cfg = PERSONA_UI_CONFIG[newTheme as any];
+      if (cfg?.hex) {
+        document.documentElement.style.setProperty("--app-core-hex", cfg.hex);
+      }
+    }
+  }, [settings.general?.theme, settings.general?.backgroundOpacity]);
 
   const loadMemoryStats = () => {
     const mems = memoryService.getAllMemories();
@@ -258,34 +284,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div
       className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 glass-blur ${
-        isMobile ? "p-2" : "p-4"
+        isMobile ? "p-0" : "p-4"
       } font-sans select-none`}
     >
       <div
         className={`w-full ${
           isMobile
-            ? "max-w-[95vw] h-[85vh] rounded-2xl"
+            ? "h-full rounded-none"
             : "max-w-[90%] h-[90%] rounded-xl"
-        } flex flex-row overflow-hidden transition-colors duration-300 tech-border glass-blur`}
+        } flex flex-row overflow-hidden transition-all duration-300 tech-border glass-blur`}
         style={{
-          boxShadow: `0 0 50px -20px rgba(0,0,0,0.5)`,
-          backgroundColor: "var(--app-bg-tint, #050505)",
-          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          boxShadow: isMobile ? "none" : `0 0 50px -20px rgba(0,0,0,0.5)`,
+          backgroundColor: "var(--app-bg-main, #0a0a0f)",
+          borderColor: isMobile ? "transparent" : "var(--app-border-main, rgba(0,0,0,0.2))",
         }}
       >
         {/* Unified Sidebar Navigation */}
         <div
-          className={`flex flex-col shrink-0 ${isMobile ? "w-20" : "w-64"}`}
+          className={`flex flex-col shrink-0 ${isMobile ? "w-16" : "w-64"}`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #0a0a0a)",
-            borderRight: "1px solid var(--app-border-main, rgba(255,255,255,0.1))",
+            backgroundColor: isMobile ? "rgba(0,0,0,0.2)" : "var(--app-bg-main, #0a0a0a)",
+            borderRight: "1px solid var(--app-border-main, rgba(0,0,0,0.1))",
           }}
         >
           {/* Header Area */}
           <div
             className={`flex items-center gap-2 ${isMobile ? "p-4 justify-center" : "p-5"}`}
             style={{
-              borderBottom: "1px solid var(--app-border-main, rgba(255,255,255,0.1))",
+              borderBottom: "1px solid var(--app-border-main, rgba(0,0,0,0.1))",
             }}
           >
             <Icon
@@ -321,11 +347,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       ? "var(--app-bg-tint, rgba(255,255,255,0.05))"
                       : "transparent",
                     borderColor: isActive
-                      ? "var(--app-border-main, rgba(255,255,255,0.1))"
+                      ? "var(--app-border-main, rgba(0,0,0,0.2))"
                       : "transparent",
                   }}
                   title={tab.label}
-                  className={`w-full flex items-center rounded-lg border border-transparent transition-all ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "hover:bg-slate-100" : "hover:bg-white/5"} ${
+                  className={`w-full flex items-center rounded-lg border border-transparent transition-all hover:bg-white/5 ${
                     isMobile
                       ? "flex-col justify-center py-3 px-1 gap-1"
                       : "flex-row gap-3 p-2.5"
@@ -347,7 +373,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Mobile Footer Exit - Since we don't have the header X on mobile anymore */}
           {isMobile && (
             <div
-              className="p-4 flex justify-center border-t border-white/5"
+              className="p-4 flex justify-center border-t" style={{ borderColor: "var(--app-border-main)" }}
               onClick={onClose}
             >
               <Icon name="CloseCircle" className="w-5 h-5 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]" />
@@ -360,17 +386,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Content Header (Desktop Only) */}
           {!isMobile && (
             <div
-              className={`p-5 flex justify-between items-center ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "bg-slate-50/30" : "bg-white/5"}`}
-              style={{ borderBottom: `1px solid rgba(255,255,255,0.1)` }}
+              className="p-5 flex justify-between items-center"
+              style={{ borderBottom: `1px solid var(--app-border-main)`, backgroundColor: "var(--app-bg-tint)" }}
             >
               <h3
-                className={`text-lg font-bold ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-[var(--app-text-muted)]" : "text-[var(--app-text-muted)]"}`}
+                className="text-lg font-bold"
+                style={{ color: "var(--app-text-muted)" }}
               >
                 {TABS.find((t) => t.id === activeTab)?.label}
               </h3>
               <button
                 onClick={onClose}
-                className={`${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-[var(--app-text-muted)] hover:text-[var(--app-text-muted)]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"} transition-colors`}
+                className="transition-colors"
+                style={{ color: "var(--app-text-muted)" }}
               >
                 <Icon name="CloseCircle" className="w-5 h-5" />
               </button>
@@ -392,6 +420,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 settings={settings}
                 onUpdate={updateSetting}
                 theme={liveTheme}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "brain" && (
@@ -399,6 +428,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 settings={settings}
                 onUpdate={updateSetting}
                 theme={liveTheme}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "personality" && (
@@ -406,6 +436,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 theme={liveTheme}
                 config={personaConfig}
                 onUpdate={updatePersonaConfig}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "voice" && (
@@ -413,6 +444,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 settings={settings}
                 onUpdate={updateSetting}
                 theme={liveTheme}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "vision" && (
@@ -420,19 +452,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 settings={settings}
                 onUpdate={updateSetting}
                 theme={liveTheme}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "model-manager" && (
-              <SettingsModelManagerTab theme={liveTheme} />
+              <SettingsModelManagerTab
+                theme={liveTheme}
+                isMobile={isMobile}
+              />
             )}
             {activeTab === "profile" && (
-              <OperatorProfilePanel theme={liveTheme} />
+              <OperatorProfilePanel
+                theme={liveTheme}
+                isMobile={isMobile}
+              />
             )}
             {activeTab === "iot" && (
               <SettingsIoTTab
                 settings={settings}
                 onUpdate={updateSetting}
                 theme={liveTheme}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "connectors" && (
@@ -440,6 +480,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 settings={settings}
                 theme={liveTheme}
                 setStatusMsg={setStatusMsg}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "lucalink" && (
@@ -447,13 +488,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 settings={settings}
                 onUpdate={updateSetting}
                 theme={liveTheme}
+                isMobile={isMobile}
               />
             )}
-            {activeTab === "mcp" && (
-              <SettingsMCPTab
+            {activeTab === "mcp-bridge" && (
+              <SettingsMCPBridgeTab
                 settings={settings}
                 theme={liveTheme}
+                onUpdate={updateSetting}
                 setStatusMsg={setStatusMsg}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "data" && (
@@ -461,16 +505,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 memoryStats={memoryStats}
                 loadMemoryStats={loadMemoryStats}
                 theme={liveTheme}
+                isMobile={isMobile}
               />
             )}
             {activeTab === "knowledge-bridge" && (
-              <KnowledgeBridgeTab theme={liveTheme} />
+              <KnowledgeBridgeTab
+                theme={liveTheme}
+                isMobile={isMobile}
+              />
             )}
-            {activeTab === "connectivity" && (
-              <SettingsConnectivityTab />
-            )}
+
             {activeTab === "about" && (
-              <SettingsAboutTab theme={liveTheme} settings={settings} />
+              <SettingsAboutTab
+                theme={liveTheme}
+                settings={settings}
+                isMobile={isMobile}
+              />
             )}
           </div>
 
@@ -480,8 +530,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               isMobile ? "pb-8" : ""
             }`}
             style={{
-              backgroundColor: "var(--app-bg-tint, #0a0a0f)",
-              borderTop: "1px solid var(--app-border-main, rgba(255,255,255,0.1))",
+              backgroundColor: "var(--app-bg-main, #0a0a0f)",
+              borderTop: "1px solid var(--app-border-main, rgba(0,0,0,0.1))",
             }}
           >
             <div className="flex items-center gap-4">
@@ -498,7 +548,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="flex gap-2 md:gap-3">
               <button
                 onClick={onClose}
-                className={`px-4 py-2 rounded text-xs ${liveTheme.themeName?.toLowerCase() === "lucagent" ? "text-[var(--app-text-muted)] hover:text-[var(--app-text-muted)] hover:bg-slate-100" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:bg-white/10"} transition-colors`}
+                className="px-4 py-2 rounded text-xs hover:bg-white/10 transition-colors"
+                style={{ color: "var(--app-text-muted)" }}
               >
                 {/* On Personality tab, 'Cancel' is just 'Close' since it saves internally */}
                 {/* Reverted: Unified Save uses Cancel for all tabs */}
@@ -509,12 +560,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 disabled={loading}
                 style={{
                   borderColor:
-                    liveTheme.themeName?.toLowerCase() === "lucagent"
+                    liveTheme.isLight
                       ? "rgba(0,0,0,0.1)"
                       : liveTheme.hex,
                   backgroundColor:
-                    liveTheme.themeName?.toLowerCase() === "lucagent"
-                      ? "#0f172a"
+                    liveTheme.isLight
+                      ? liveTheme.hex
                       : `${liveTheme.hex}20`,
                   color: "#ffffff",
                 }}

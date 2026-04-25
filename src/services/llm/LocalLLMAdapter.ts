@@ -165,17 +165,31 @@ export class LocalLLMAdapter implements LLMProvider {
 
       // 5. Smart Routing: Ollama (if detected) > Cortex > Ollama fallback
       const endpoint = await this.resolveEndpoint();
+      
+      // Resolve the actual Ollama tag from the ModelManager if possible
+      let modelTag = this.name;
+      try {
+        const specs = modelManager.getModelSpecs(this.name);
+        if (specs && specs.ollamaTag) {
+          modelTag = specs.ollamaTag;
+        } else if (this.name.includes("-")) {
+          // Fallback heuristic for ad-hoc models
+          modelTag = this.name.replace("-2b", "2:2b").replace("-mini", ":mini").replace("-7b", ":7b");
+        }
+      } catch (e) {
+        console.warn("[Local Adapter] Tag resolution failed, using ID:", e);
+      }
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: this.name, // Pass exact model name
+          model: modelTag, // Pass the tag Ollama expects
           messages: messages,
           tools: backendTools,
           temperature: 0.7,
         }),
-        signal: AbortSignal.timeout(120_000), // 2 min timeout for local model init/slow Intel Mac
+        signal: AbortSignal.timeout(120_000), 
       });
 
       if (!response.ok) {
@@ -282,6 +296,20 @@ export class LocalLLMAdapter implements LLMProvider {
       // 2. Smart Routing: Ollama (if detected) > Cortex > Ollama fallback
       const endpoint = await this.resolveEndpoint();
 
+      // Resolve the actual Ollama tag from the ModelManager if possible
+      let modelTag = this.name;
+      try {
+        const specs = modelManager.getModelSpecs(this.name);
+        if (specs && specs.ollamaTag) {
+          modelTag = specs.ollamaTag;
+        } else if (this.name.includes("-")) {
+          // Fallback heuristic for ad-hoc models (including Gemma 4 translation)
+          modelTag = this.name.replace("-e2b", ":e2b").replace("-31b", ":31b").replace("-4-", "4:").replace("-2b", "2:2b").replace("-mini", ":mini").replace("-7b", ":7b");
+        }
+      } catch (e) {
+        console.warn("[Local Adapter] Tag resolution failed, using ID:", e);
+      }
+
       // 3. Map Tools (Copy from chat)
       const backendTools = tools
         ? tools.map((t) => ({
@@ -300,7 +328,7 @@ export class LocalLLMAdapter implements LLMProvider {
         headers: { "Content-Type": "application/json" },
         signal: abortSignal,
         body: JSON.stringify({
-          model: this.name,
+          model: modelTag,
           messages: messages,
           tools: backendTools,
           stream: true, // ENABLE STREAMING
@@ -317,7 +345,7 @@ export class LocalLLMAdapter implements LLMProvider {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: this.name,
+            model: modelTag,
             messages: messages,
             tools: backendTools,
             stream: false, // DISABLE STREAMING

@@ -259,7 +259,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     bg: "bg-[#E5E1CD]/70",
     glow: "shadow-[0_4px_20px_rgba(108,106,88,0.15)]",
     coreColor: "text-[#6c6a58]",
-    hex: "#E5E1CD",
+    hex: "#4a483f",
     isLight: true,
   },
   VAPORWAVE: {
@@ -301,27 +301,16 @@ export const getDynamicContrast = (themeId: string, opacity: number) => {
   if (isLight) {
     const isLightCream = config.themeName?.toLowerCase() === "lightcream";
     
-    // For light themes (Cream/Slate):
-    // If background is transparent (< 0.5), use White/Bright text.
-    // If background is solid (>= 0.5), use Dark Theme Accent.
-    if (opacity < 0.5) {
-      return {
-        text: isLightCream ? "#E5E1CD" : "#ffffff", // Cream: Warm Text | Slate: Bright White
-        textMuted: isLightCream ? "rgba(229, 225, 205, 0.7)" : "rgba(255, 255, 255, 0.7)",
-        border: isLightCream ? "rgba(229, 225, 205, 0.3)" : "rgba(255, 255, 255, 0.3)",
-        bgTint: isLightCream ? "rgba(229, 225, 205, 0.1)" : "rgba(255, 255, 255, 0.1)",
-        isHighContrast: false,
-      };
-    } else {
-      // Transition to dark contrast
-      return {
-        text: isLightCream ? "#4a483f" : "#1e293b", // Cream: Dark Olive | Slate: Deep Slate
-        textMuted: isLightCream ? "rgba(74, 72, 63, 0.8)" : "rgba(30, 41, 59, 0.8)",
-        border: isLightCream ? "rgba(108, 106, 88, 0.4)" : "rgba(30, 41, 59, 0.4)",
-        bgTint: isLightCream ? "rgba(0, 0, 0, 0.05)" : "rgba(0, 0, 0, 0.1)",
-        isHighContrast: true,
-      };
-    }
+    // For TRUE LIGHT MODE, we prioritize dark contrast text regardless of opacity
+    // to maintain legibility against the light-mode background base.
+    return {
+      text: isLightCream ? "#4a483f" : "#111827", // Cream: Dark Olive | Slate: Deep Navy
+      textMuted: isLightCream ? "rgba(74, 72, 63, 0.8)" : "rgba(30, 41, 59, 0.8)",
+      border: isLightCream ? "rgba(108, 106, 88, 0.4)" : "rgba(30, 41, 59, 0.4)",
+      bgTint: isLightCream ? "rgba(0, 0, 0, 0.05)" : "rgba(0, 0, 0, 0.1)",
+      bgMain: isLightCream ? "#E5E1CD" : "#ffffff",
+      isHighContrast: true,
+    };
   }
 
   // Default Dark Themes (Professional, Master System, etc.)
@@ -330,6 +319,7 @@ export const getDynamicContrast = (themeId: string, opacity: number) => {
     textMuted: "rgba(255, 255, 255, 0.65)",
     border: "rgba(255, 255, 255, 0.25)",
     bgTint: "rgba(255, 255, 255, 0.05)",
+    bgMain: "#0a0a0f",
     isHighContrast: false,
   };
 };

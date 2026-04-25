@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
 import { CustomSkill } from "../types";
-import { ThemeColors } from "../types/lucaPersonality";
 import SkillPreview from "./SkillPreview";
 import { apiUrl } from "../config/api";
+import { settingsService } from "../services/settingsService";
+import { getThemeColors } from "../config/themeColors";
 
 // Sub-components
 import { SkillsTab } from "./directory/SkillsTab";
@@ -28,8 +29,13 @@ interface Props {
 
 type TabType = "AI" | "SKILLS" | "CONNECTORS" | "PLUGINS";
 
-const SkillsMatrix: React.FC<Props> = ({ onClose, onExecute, theme }) => {
-  const themeHex = theme?.hex || "#8b5cf6";
+const SkillsMatrix: React.FC<Props> = ({ onClose, onExecute, theme: propTheme }) => {
+  // Theme Integration
+  const currentPersona =
+    settingsService.getSettings().general.persona || "ASSISTANT";
+  const themeByPersona = getThemeColors(currentPersona);
+  
+  const themeHex = propTheme?.hex || themeByPersona.hex || "#3b82f6";
   
   // State
   const [skills, setSkills] = useState<CustomSkill[]>([]);
@@ -51,22 +57,13 @@ const SkillsMatrix: React.FC<Props> = ({ onClose, onExecute, theme }) => {
   const [previewSkill, setPreviewSkill] = useState<CustomSkill | null>(null);
 
   // Theme color extraction
-  const getThemeColors = (): ThemeColors => {
-    const isBlue = themeHex === "#3b82f6";
-    const isOrange = themeHex === "#C9763D";
-    const isGrey = themeHex === "#E0E0E0";
-    const isGreen = themeHex === "#22C55E" || themeHex === "#22c55e";
-
-    return {
-      accent: isBlue ? "#3b82f6" : isOrange ? "#C9763D" : isGrey ? "#E0E0E0" : isGreen ? "#22c55e" : themeHex || "#a855f7",
-      glow: isBlue ? "rgba(59, 130, 246, 0.3)" : isOrange ? "rgba(201, 118, 61, 0.3)" : isGrey ? "rgba(224, 224, 224, 0.3)" : isGreen ? "rgba(34, 197, 94, 0.3)" : "rgba(168, 85, 247, 0.3)",
-      border: isBlue ? "rgba(59, 130, 246, 0.2)" : isOrange ? "rgba(201, 118, 61, 0.2)" : isGrey ? "rgba(224, 224, 224, 0.2)" : isGreen ? "rgba(34, 197, 94, 0.2)" : "rgba(168, 85, 247, 0.2)",
-      bgTint: isBlue ? "rgba(59, 130, 246, 0.05)" : isOrange ? "rgba(201, 118, 61, 0.05)" : isGrey ? "rgba(224, 224, 224, 0.05)" : isGreen ? "rgba(34, 197, 94, 0.05)" : "rgba(168, 85, 247, 0.05)",
-      textColor: isGrey ? "#000000" : "#ffffff",
-    };
+  const colors = {
+    accent: themeHex,
+    glow: `${themeHex}4d`,
+    border: `${themeHex}33`,
+    bgTint: `${themeHex}0d`,
+    textColor: "#ffffff"
   };
-
-  const colors = getThemeColors();
 
   useEffect(() => {
     fetchSkills();
@@ -146,7 +143,7 @@ const SkillsMatrix: React.FC<Props> = ({ onClose, onExecute, theme }) => {
           name: connector.name,
           type: connector.type,
           command: connector.command,
-          args: connector.args?.split(" ").filter(a => a.trim()) || [],
+          args: connector.args?.split(" ").filter((a: string) => a.trim()) || [],
           url: connector.url,
           autoConnect: true,
         }),
@@ -183,11 +180,12 @@ const SkillsMatrix: React.FC<Props> = ({ onClose, onExecute, theme }) => {
   ];
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 glass-blur font-sans select-none p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 glass-blur font-sans select-none p-4 animate-in fade-in duration-300">
       <div
-        className="w-full max-w-[90%] h-[90%] bg-[#050505] rounded-xl flex flex-row overflow-hidden transition-colors duration-300 shadow-[0_0_50px_-20px_rgba(0,0,0,0.5)]"
+        className={`w-full max-w-6xl h-[90%] bg-[#050505]/60 glass-blur rounded-2xl flex flex-row overflow-hidden shadow-2xl transition-all duration-500`}
         style={{
-          border: `1px solid ${colors.accent}33`,
+          border: `1px solid ${colors.accent}44`,
+          boxShadow: `0 0 80px -20px ${colors.accent}33`,
         }}
       >
         {/* Sidebar Navigation — matches Settings */}

@@ -699,7 +699,7 @@ class LLMService {
   }
 
   getProvider(name?: string): LLMProvider {
-    const providerName = name || this.defaultProvider;
+    const providerName = name || this.preferredProvider || this.defaultProvider;
     const provider = this.providers.get(providerName);
 
     if (!provider) {
@@ -712,6 +712,11 @@ class LLMService {
       const first = this.providers.values().next().value;
       if (!first) throw new Error("No LLM providers available");
       return first;
+    }
+
+    // Apply preferred model if this is the preferred provider and no model was specified
+    if (!name && providerName === this.preferredProvider && this.preferredModel) {
+      provider.model = this.preferredModel;
     }
 
     return provider;

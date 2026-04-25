@@ -50,7 +50,7 @@ const SystemMonitor: React.FC<Props> = ({
     };
 
     checkPermissions();
-    let permInterval: NodeJS.Timeout | null = setInterval(checkPermissions, 30000);
+    const permInterval: NodeJS.Timeout | null = setInterval(checkPermissions, 30000);
 
     return () => {
       if (permInterval) clearInterval(permInterval);
@@ -89,6 +89,12 @@ const SystemMonitor: React.FC<Props> = ({
             const cpuLoad = monitorData.cpu || 0;
             const cpuPerc = Math.min(100, (cpuLoad / cpuCores) * 100);
 
+            const uptimeSecs = Math.floor(monitorData.uptime || 0);
+            const hrs = Math.floor(uptimeSecs / 3600);
+            const mins = Math.floor((uptimeSecs % 3600) / 60);
+            const secs = uptimeSecs % 60;
+            const uptimeStr = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
             setMetrics((prev) => ({
               ...prev,
               cpu: cpuPerc,
@@ -97,7 +103,7 @@ const SystemMonitor: React.FC<Props> = ({
               battery: battData?.data?.percentage || 100,
               isCharging: battData?.data?.isCharging || false,
               readiness: readyData?.status?.toUpperCase() || "READY",
-              uptime: `${Math.floor(monitorData.uptime || 0)}s`,
+              uptime: uptimeStr,
             }));
           }
         } catch (e: any) {
@@ -106,12 +112,23 @@ const SystemMonitor: React.FC<Props> = ({
           }
         }
       } else {
-        setMetrics((prev) => ({
-          ...prev,
-          cpu: Math.min(100, Math.max(5, prev.cpu + (Math.random() - 0.5) * 20)),
-          mem: Math.min(100, Math.max(20, prev.mem + (Math.random() - 0.5) * 5)),
-          net: Math.max(0, prev.net + (Math.random() - 0.5) * 10),
-        }));
+        setMetrics((prev) => {
+          const uptimeMatch = prev.uptime.split(':');
+          let s = parseInt(uptimeMatch[2] || '0') + 2;
+          let m = parseInt(uptimeMatch[1] || '0');
+          let h = parseInt(uptimeMatch[0] || '0');
+          if (s >= 60) { s %= 60; m++; }
+          if (m >= 60) { m %= 60; h++; }
+          const newUptime = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+          return {
+            ...prev,
+            cpu: Math.min(100, Math.max(5, prev.cpu + (Math.random() - 0.5) * 20)),
+            mem: Math.min(100, Math.max(20, prev.mem + (Math.random() - 0.5) * 5)),
+            net: Math.max(0, prev.net + (Math.random() - 0.5) * 10),
+            uptime: newUptime
+          };
+        });
       }
     }, 2000);
 
@@ -211,6 +228,9 @@ const SystemMonitor: React.FC<Props> = ({
     };
 
     const render = () => {
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      
       const { width, height } = canvas;
       ctx.clearRect(0, 0, width, height);
       tick++;
@@ -242,28 +262,17 @@ const SystemMonitor: React.FC<Props> = ({
         `PWR: ${metrics.battery}% ${metrics.isCharging ? "(AC)" : "(BAT)"}`,
         `AUTH: ${metrics.permissions}`,
         `SYST: ${metrics.readiness}`,
-        `TIME: ${metrics.uptime}`,
-        `KERN: SECURE`,
+        `TIME: ${timeStr}`,
+        `UPTM: ${metrics.uptime}`,
+        `SECURE: YES`,
       ];
 
       logs.forEach((l, i) => {
         ctx.fillStyle = audioListenMode ? colors.accent : colors.text;
         ctx.font = 'black 10px "JetBrains Mono"';
-        ctx.textAlign = "left";
-        ctx.fillText(l, width - 110, 135 + i * 14);
+        ctx.textAlign = "right";
+        ctx.fillText(l, width - 20, 40 + i * 14);
       });
-
-      ctx.fillStyle = audioListenMode ? colors.accent : colors.primary;
-      ctx.font = 'black 10px "JetBrains Mono"';
-      ctx.fillText(
-        audioListenMode
-          ? "SENSOR ARRAY // ACTIVE"
-          : connectionTier === "OFFLINE"
-            ? "SIMULATION // STANDBY"
-            : `TELEMETRY // ${connectionTier}`,
-        20,
-        115,
-      );
 
       // Corner Accents
       ctx.beginPath();
@@ -306,9 +315,9 @@ const SystemMonitor: React.FC<Props> = ({
             variant="BoldDuotone"
           />
           <h2
-            className={`text-[10px] font-black uppercase tracking-[0.3em] font-display italic text-[var(--app-text-main)]`}
+            className={`text-[10px] font-black uppercase tracking-widest font-display text-[var(--app-text-main)]`}
           >
-            {audioListenMode ? "Sensor Matrix" : "System Diagnostics"}
+            {audioListenMode ? "Active Sensors" : "System Health"}
           </h2>
         </div>
         <div className="flex items-center gap-3">

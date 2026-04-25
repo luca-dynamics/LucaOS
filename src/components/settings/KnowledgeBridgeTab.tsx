@@ -30,9 +30,13 @@ interface KnowledgeBridgeTabProps {
     themeName: string;
     isLight?: boolean;
   };
+  isMobile?: boolean;
 }
 
-const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
+const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
+  theme,
+  isMobile,
+}) => {
   const [platform, setPlatform] = useState("openai");
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<
@@ -397,11 +401,11 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       <div
-        className={`p-4 rounded-xl border space-y-4 transition-all tech-border glass-blur`}
+        className={`p-4 border space-y-4 transition-all tech-border glass-blur ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"}`}
         style={{
-          backgroundColor: "var(--app-bg-tint, #0a0a0a)",
+          backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #0a0a0a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
         }}
       >
@@ -409,16 +413,16 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
           <Icon name="Share2" className="w-5 h-5" style={{ color: theme.hex }} />
           <div>
             <h3
-              className={`text-lg font-bold`}
+              className={`text-sm font-black uppercase tracking-widest`}
               style={{ color: "var(--app-text-main, #ffffff)" }}
             >
-              Knowledge Bridge
+              Local Knowledge Base
             </h3>
             <p
-              className={`text-sm text-[var(--app-text-muted)]`}
+              className={`text-[10px] text-[var(--app-text-muted)] opacity-70 italic`}
             >
-              Import and distill your intelligence from other AI platforms into
-              Luca&apos;s local mind.
+              Import and distill your knowledge assets from other AI platforms into
+              Luca&apos;s local indexing engine.
             </p>
           </div>
         </div>
@@ -457,13 +461,13 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                   </div>
                   <div className="flex-1">
                     <div
-                      className={`text-base font-bold uppercase tracking-widest`}
+                      className={`text-sm font-black uppercase tracking-widest`}
                       style={{ color: "var(--app-text-main, #ffffff)" }}
                     >
                       {cat.name}
                     </div>
                     <div
-                      className={`text-sm font-mono text-[var(--app-text-muted)]`}
+                      className={`text-[10px] font-mono text-[var(--app-text-muted)] opacity-60`}
                     >
                       Ext: {cat.extension}
                     </div>
@@ -514,7 +518,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                               {p.logo ? (
                                 <img
                                   src={p.logo}
-                                  className={`w-4 h-4 object-contain opacity-70 ${theme.isLight ? "brightness-0" : "brightness-0 invert"}`}
+                                  className={`w-4 h-4 object-contain opacity-70 ${theme.isLight ? "" : "invert brightness-200"}`}
                                 />
                               ) : p.icon ? (
                                 <Icon name={p.icon} className="w-4 h-4 text-[var(--app-text-muted)]" />
@@ -581,7 +585,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
                                         {file.name}
                                       </div>
                                       <div
-                                        className={`text-sm uppercase tracking-tighter text-[var(--app-text-muted)]`}
+                                        className={`text-sm uppercase tracking-wider text-[var(--app-text-muted)]`}
                                       >
                                         {(file.size / 1024 / 1024).toFixed(2)}{" "}
                                         MB
@@ -690,9 +694,9 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
 
       {/* === SAAS SYNC SECTION === */}
       <div
-        className={`p-4 rounded-xl border space-y-4 mt-6 transition-all tech-border glass-blur`}
+        className={`p-4 border space-y-4 mt-6 transition-all tech-border glass-blur ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"}`}
         style={{
-          backgroundColor: "var(--app-bg-tint, #0a0a0a)",
+          backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #0a0a0a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
         }}
       >
@@ -706,13 +710,13 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
           />
           <div>
             <h3
-              className={`text-lg font-bold`}
+              className={`text-base font-black uppercase tracking-widest`}
               style={{ color: "var(--app-text-main, #ffffff)" }}
             >
               SaaS Sync
             </h3>
             <p
-              className={`text-sm text-[var(--app-text-muted)]`}
+              className={`text-xs text-[var(--app-text-muted)] opacity-70`}
             >
               Connect your apps to sync knowledge automatically
             </p>
@@ -732,11 +736,11 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({ theme }) => {
               <img
                 src="/icons/brands/notion.svg"
                 alt="Notion"
-                className={`w-8 h-8 object-contain ${theme.isLight ? "brightness-0" : "brightness-0 invert"}`}
+                className={`w-8 h-8 object-contain ${theme.isLight ? "" : "invert opacity-90"}`}
               />
               <div>
                 <div
-                  className={`text-base font-bold`}
+                  className={`text-sm font-black uppercase tracking-wider`}
                   style={{ color: "var(--app-text-main, #ffffff)" }}
                 >
                   Notion

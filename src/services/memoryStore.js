@@ -137,6 +137,72 @@ export const memoryStore = {
         syncTx(memories);
     },
 
+    // Phase 7: Full Text Search (FTS5) implementation (Unified Memory & Log Index)
+    searchByText: (query, limit = 50) => {
+        try {
+            // 1. Search Memories (Facts/Knowledge)
+            const memoryRows = db.prepare(`
+                SELECT m.*, bm.rank 
+                FROM memories_fts bm
+                JOIN memories m ON m.id = bm.rowid
+                WHERE memories_fts MATCH ?
+                ORDER BY rank
+                LIMIT ?
+            `).all(query, limit);
+
+            // 2. Search Entities (Logs/Events)
+            const entityRows = db.prepare(`
+                SELECT e.*, ef.rank 
+                FROM entities_fts ef
+                JOIN entities e ON e.id = ef.rowid
+                WHERE entities_fts MATCH ?
+                ORDER BY rank
+                LIMIT ?
+            `).all(query, limit);
+
+            const results = [
+                ...memoryRows.map(row => {
+                    const meta = row.metadata_json ? JSON.parse(row.metadata_json) : {};
+                    const [key, ...valParts] = row.content.split(':');
+                    return {
+                        id: `mem_${row.id}`,
+                        source: 'MEMORY',
+                        key: key.trim(),
+                        value: valParts.join(':').trim(),
+                        category: meta.category || 'FACT',
+                        timestamp: row.created_at,
+                        score: 1.0 - (row.rank || 0)
+                    };
+                }),
+                ...entityRows.map(row => {
+                    return {
+                        id: `ent_${row.id}`,
+                        source: row.type || 'ENTITY',
+                        key: row.name,
+                        value: row.description,
+                        category: row.type || 'LOG',
+                        timestamp: row.last_updated,
+                        score: 1.0 - (row.rank || 0)
+                    };
+                })
+            ];
+
+            // Sort by score and limit
+            return results.sort((a, b) => b.score - a.score).slice(0, limit);
+        } catch (e) {
+            console.error('[MEMORY_STORE] FTS5 search failed, falling back to LIKE:', e);
+            const rows = db.prepare('SELECT * FROM memories WHERE content LIKE ? LIMIT ?').all(`%${query}%`, limit);
+            return rows.map(row => ({
+                id: row.id.toString(),
+                key: row.content.split(':')[0].trim(),
+                value: row.content.substring(row.content.indexOf(':') + 1).trim(),
+                category: 'FACT',
+                timestamp: row.created_at,
+                confidence: 0.5
+            }));
+        }
+    },
+
     // Search with Vector (In-memory Cosine Similarity for now)
     searchByVector: (targetEmbedding, limit = 5) => {
         const rows = db.prepare('SELECT * FROM memories WHERE embedding_json IS NOT NULL').all();

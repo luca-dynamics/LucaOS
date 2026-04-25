@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
+import { settingsService } from "../services/settingsService";
+import { getThemeColors } from "../config/themeColors";
 
 interface Goal {
   id: string;
@@ -20,11 +22,16 @@ interface Goal {
 
 export const AutonomyDashboard: React.FC<{
   onClose: () => void;
-  theme?: { hex: string; primary: string; border: string; bg: string };
-}> = ({ onClose, theme }) => {
-  const themePrimary = theme?.primary || "text-cyan-400";
-  const themeBorder = theme?.border || "border-cyan-500";
-  const themeHex = theme?.hex || "#06b6d4";
+  theme?: any;
+}> = ({ onClose, theme: propTheme }) => {
+  // Theme Integration
+  const currentPersona =
+    settingsService.getSettings().general.persona || "ASSISTANT";
+  const theme = propTheme || getThemeColors(currentPersona);
+  const themeHex = theme.hex || "#3b82f6";
+  const themeBorder = theme.border || "border-white/20";
+  const themePrimary = theme.primary || "text-white";
+
   const [goals, setGoals] = useState<Goal[]>([]);
   const [newGoalDesc, setNewGoalDesc] = useState("");
   const [newGoalSchedule, setNewGoalSchedule] = useState("");
@@ -128,117 +135,130 @@ export const AutonomyDashboard: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 glass-blur z-50 flex items-center justify-center p-0 sm:p-4 font-mono">
+    <div className="fixed inset-0 bg-black/90 glass-blur z-[200] flex items-center justify-center p-4 font-mono animate-in fade-in duration-300">
       <div
-        className={`relative w-full h-full sm:h-auto sm:max-w-4xl bg-black/60 glass-blur border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-lg shadow-2xl overflow-hidden flex flex-col h-full sm:h-[80vh]`}
+        className={`relative w-full max-w-5xl h-[85vh] bg-[#050505]/60 glass-blur border rounded-2xl shadow-2xl overflow-hidden flex flex-col ${themeBorder}`}
         style={{
-          boxShadow: `0 0 80px -20px ${themeHex}40`,
+          boxShadow: `0 0 100px -20px ${themeHex}44`,
+          borderColor: `${themeHex}33`,
         }}
       >
-        {/* Liquid background effect */}
+        {/* Background Visuals */}
         <div
-          className="absolute inset-0 opacity-20 pointer-events-none transition-all duration-700"
+          className="absolute inset-0 opacity-30 pointer-events-none -z-10"
           style={{
-            background: `radial-gradient(circle at center, ${themeHex}15, transparent 70%)`,
+            background: `radial-gradient(circle at 50% 0%, ${themeHex}20, transparent 70%)`,
           }}
         />
+        <div 
+          className="absolute inset-0 opacity-[0.03] pointer-events-none -z-10"
+          style={{ backgroundImage: `linear-gradient(${themeHex} 1px, transparent 1px), linear-gradient(90deg, ${themeHex} 1px, transparent 1px)`, backgroundSize: '40px 40px' }}
+        ></div>
         {/* Header */}
         <div
-          className={`p-4 border-b ${themeBorder}/30 flex justify-between items-center flex-shrink-0 relative z-30`}
-          style={{ backgroundColor: `${themeHex}1F` }}
+          className="h-16 flex-shrink-0 border-b flex items-center justify-between px-8 relative z-30"
+          style={{ 
+            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            backgroundColor: "rgba(255,255,255,0.02)"
+          }}
         >
-          <div className="flex items-center gap-3">
-            <Icon
-              name="Activity"
-              className={`w-5 h-5 sm:w-6 sm:h-6 ${themePrimary} animate-pulse`}
-            />
-            <h2
-              className={`text-lg sm:text-xl font-bold ${themePrimary.replace(
-                "text-",
-                "text-gray-100 "
-              )} tracking-wider`}
+          <div className="flex items-center gap-4">
+            <div
+              className={`p-2 rounded-xl border flex-shrink-0 bg-black/40 ${themePrimary}`}
+              style={{ borderColor: `${themeHex}22` }}
             >
-              AUTONOMY MATRIX
-            </h2>
+              <Icon name="Activity" size={24} variant="BoldDuotone" className="animate-pulse" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black tracking-[0.3em] uppercase italic text-white">
+                Autonomy Control Matrix
+              </h2>
+              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Sovereign Expert // Cognitive Layer</p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="relative z-50 p-2 text-gray-400 hover:text-white transition-all rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0"
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:bg-white/5 active:scale-95 text-white/40 hover:text-white"
           >
-            <Icon name="X" size={20} className="sm:size-6" />
+            <Icon name="X" size={20} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
-          {/* Sidebar / Stats */}
-          <div className="w-full sm:w-1/3 border-b sm:border-b-0 sm:border-r border-cyan-500/20 p-4 sm:p-6 bg-black/20 flex-shrink-0">
-            <div className="mb-6 sm:mb-8 grid grid-cols-2 sm:grid-cols-1 gap-3 sm:gap-4">
-              <div className="bg-gray-800/40 p-3 rounded border border-cyan-500/10">
-                <div className="text-[10px] sm:text-xs text-gray-400">
-                  HEARTBEAT
-                </div>
-                <div className="text-green-400 font-bold flex items-center gap-2 text-xs sm:text-sm">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-ping"></div>
-                  ACTIVE
-                </div>
-              </div>
-              <div className="bg-gray-800/40 p-3 rounded border border-cyan-500/10">
-                <div className="text-[10px] sm:text-xs text-gray-400">
-                  ACTIVE GOALS
-                </div>
-                <div className="text-xl sm:text-2xl text-white font-bold">
-                  {goals.filter((g) => g.status !== "COMPLETED").length}
-                </div>
-              </div>
+        <div className="flex-1 flex overflow-hidden">
+          {/* Sidebar: New Goal Injection */}
+          <div className="w-80 border-r border-white/5 p-8 space-y-10 bg-black/20 flex flex-col overflow-hidden">
+            <div className="space-y-4">
+               <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/30">System Stats</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></div>
+               </div>
+               <div className="grid grid-cols-1 gap-4">
+                  <div className="bg-white/[0.03] border border-white/5 p-4 rounded-xl">
+                      <div className="text-[9px] font-black text-white/40 uppercase tracking-tighter mb-1">Active Threads</div>
+                      <div className="text-xl font-black text-white italic">
+                         {goals.filter((g) => g.status !== "COMPLETED").length} <span className="text-xs text-white/20">NODES</span>
+                      </div>
+                  </div>
+               </div>
             </div>
 
-            <div className="space-y-3">
-              <h3 className="text-[10px] sm:text-xs font-bold text-cyan-500 uppercase mb-2">
-                Add New Directive
+            <div className="flex-1 flex flex-col space-y-6 overflow-hidden">
+              <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] ${themePrimary}`}>
+                Inject Directive
               </h3>
-              <div className="flex flex-col gap-2">
-                <input
-                  type="text"
-                  value={newGoalDesc}
-                  onChange={(e) => setNewGoalDesc(e.target.value)}
-                  placeholder="Goal Description..."
-                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none"
-                />
-                <input
-                  type="text"
-                  value={newGoalSchedule}
-                  onChange={(e) => setNewGoalSchedule(e.target.value)}
-                  placeholder="Schedule (Optional)"
-                  className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none"
-                />
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                   <label className="text-[8px] font-black text-white/20 uppercase">Core Description</label>
+                   <textarea
+                     value={newGoalDesc}
+                     onChange={(e) => setNewGoalDesc(e.target.value)}
+                     placeholder="Define system objective..."
+                     className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all h-24 resize-none"
+                   />
+                </div>
+                <div className="space-y-1.5">
+                   <label className="text-[8px] font-black text-white/20 uppercase">Temporal Schedule</label>
+                   <input
+                     type="text"
+                     value={newGoalSchedule}
+                     onChange={(e) => setNewGoalSchedule(e.target.value)}
+                     placeholder="CRON or recurring string..."
+                     className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all"
+                   />
+                </div>
                 <button
                   onClick={addGoal}
                   disabled={loading || !newGoalDesc}
-                  className="w-full bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/50 py-2 rounded flex items-center justify-center gap-2 transition-all text-xs"
+                  className={`w-full py-3 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase flex items-center justify-center gap-3 transition-all border ${
+                    loading || !newGoalDesc 
+                      ? "opacity-20 grayscale" 
+                      : `hover:bg-white/5`
+                  }`}
+                  style={{ borderColor: `${themeHex}44`, color: themeHex }}
                 >
-                  <Icon name="Plus" className="w-3 h-3 sm:w-4 sm:h-4" />
-                  INJECT GOAL
+                  <Icon name="PlusCircle" size={16} variant="BoldDuotone" />
+                  Commit Directive
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Main List */}
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-black/40">
-            <div className="flex justify-between items-center mb-4 sm:mb-6">
-              <h3 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase">
-                Active Directives
-              </h3>
-              <button
+          {/* Main Directives List */}
+          <div className="flex-1 p-8 overflow-y-auto custom-scrollbar relative">
+            <div className="flex justify-between items-center mb-8">
+               <div className="flex items-center gap-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50">Active Directives Matrix</h3>
+                  <span className="text-[10px] font-mono text-white/20">({getTopLevelGoals().length} PRIMARY)</span>
+               </div>
+               <button 
                 onClick={fetchGoals}
-                className="text-cyan-500 hover:text-cyan-300"
-              >
-                <Icon name="RefreshCw" className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
+                className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-all"
+               >
+                  <Icon name="RefreshCw" size={14} className={loading ? "animate-spin" : ""} />
+               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {getTopLevelGoals().map((goal) => {
                 const subGoals = getSubGoals(goal.id);
                 const isExpanded = expandedGoals.has(goal.id);
@@ -246,7 +266,9 @@ export const AutonomyDashboard: React.FC<{
                 return (
                   <div
                     key={goal.id}
-                    className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:border-cyan-500/30 transition-colors"
+                    className={`bg-white/[0.02] border rounded-2xl p-6 transition-all group ${
+                        isExpanded ? "border-white/20 bg-white/[0.05]" : "border-white/5 hover:border-white/10"
+                    }`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2 flex-1">
@@ -263,16 +285,16 @@ export const AutonomyDashboard: React.FC<{
                           </button>
                         )}
                         <div
-                          className={`w-2 h-2 rounded-full ${
+                          className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${
                             goal.status === "COMPLETED"
                               ? "bg-green-500"
                               : goal.status === "IN_PROGRESS"
-                              ? "bg-yellow-500 animate-pulse"
+                              ? "bg-amber-500 animate-pulse"
                               : goal.status === "FAILED"
                               ? "bg-red-500"
                               : goal.status === "PAUSED"
                               ? "bg-orange-500"
-                              : "bg-gray-500"
+                              : "bg-white/20"
                           }`}
                         />
                         <span className="font-bold text-white">
@@ -306,10 +328,12 @@ export const AutonomyDashboard: React.FC<{
                         {goal.status === "PENDING" && (
                           <button
                             onClick={() => executeGoal(goal.id)}
-                            className="text-cyan-500 hover:text-cyan-400"
-                            title="Execute Now"
+                            className="p-1 px-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all flex items-center gap-1.5"
+                            style={{ color: themeHex, borderColor: `${themeHex}22` }}
+                            title="Execute Forcefully"
                           >
-                            <Icon name="Play" className="w-4 h-4" />
+                            <Icon name="Play" size={14} />
+                            <span className="text-[8px] font-black uppercase">Force</span>
                           </button>
                         )}
                         <button
@@ -323,10 +347,10 @@ export const AutonomyDashboard: React.FC<{
                     </div>
 
                     <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
-                      <span className="bg-gray-800 px-2 py-1 rounded border border-gray-700">
+                      <span className="bg-white/5 px-2 py-0.5 rounded border border-white/5 text-[9px] font-black tracking-widest text-white/40 uppercase">
                         {goal.type}
                       </span>
-                      <span className="bg-gray-800 px-2 py-1 rounded border border-gray-700">
+                      <span className="bg-white/5 px-2 py-0.5 rounded border border-white/5 text-[9px] font-black tracking-widest text-white/40 uppercase">
                         {goal.status}
                       </span>
                       {goal.schedule && (
@@ -336,9 +360,9 @@ export const AutonomyDashboard: React.FC<{
                       )}
                     </div>
 
-                    {/* Sub-goals */}
+                    {/* Sub-goals Matrix */}
                     {isExpanded && subGoals.length > 0 && (
-                      <div className="ml-6 mt-3 space-y-2 border-l-2 border-cyan-500/30 pl-4">
+                      <div className="ml-6 mt-4 space-y-3 border-l border-white/10 pl-6">
                         {subGoals.map((subGoal) => (
                           <div
                             key={subGoal.id}
@@ -366,15 +390,15 @@ export const AutonomyDashboard: React.FC<{
                       </div>
                     )}
 
-                    {/* Mini Logs */}
+                    {/* Cognitive Logs */}
                     {goal.logs?.length > 0 && (
-                      <div className="mt-3 bg-black/30 rounded p-2 text-xs font-mono text-gray-400 max-h-20 overflow-y-auto">
-                        {goal.logs.slice(-3).map((log, i) => (
-                          <div key={i} className="truncate">
-                            <span className="text-gray-600">
+                      <div className="mt-4 bg-black/40 rounded-xl border border-white/5 p-4 text-[10px] font-mono text-white/40 max-h-32 overflow-y-auto custom-scrollbar">
+                        {goal.logs.slice(-5).map((log, i) => (
+                          <div key={i} className="py-1 border-b border-white/[0.02] last:border-0 flex items-start gap-3">
+                            <span className="text-white/20 shrink-0">
                               [{new Date(log.timestamp).toLocaleTimeString()}]
-                            </span>{" "}
-                            {log.message}
+                            </span>
+                            <span className="italic">{log.message}</span>
                           </div>
                         ))}
                       </div>

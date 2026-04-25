@@ -7,11 +7,14 @@ interface SettingsConnectorsTabProps {
   theme?: any;
   settings: LucaSettings;
   setStatusMsg: (msg: string) => void;
+  isMobile?: boolean;
 }
 
 const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
+  theme,
   settings,
   setStatusMsg,
+  isMobile,
 }) => {
   const [socialStatus, setSocialStatus] = useState<any>({});
   const [proTipModal, setProTipModal] = useState<{
@@ -150,16 +153,16 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       <div
-        className={`text-xl p-4 rounded-xl border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] tech-border glass-blur shadow-sm opacity-90`}
+        className={`text-sm p-4 ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl border bg-[var(--app-bg-tint)] shadow-sm"} border-[var(--app-border-main)] text-[var(--app-text-main)] transition-all tech-border glass-blur opacity-90`}
       >
         <span className="font-bold opacity-60 uppercase tracking-widest text-xs block mb-1">Social Intelligence Matrix</span>
         Connect your accounts to give Luca direct access. Note: This uses secure
         browser automation (Ghost Browser), not public APIs.
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${isMobile ? "gap-0" : "gap-5"}`}>
         {SOCIAL_APPS.map((app) => {
           const isManualConnected =
             settings.connectors?.[app.id as keyof typeof settings.connectors];
@@ -178,7 +181,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
           return (
             <div
               key={app.id}
-              className={`relative group overflow-hidden border rounded-2xl p-5 transition-all duration-500 shadow-xl hover:-translate-y-1 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
+              className={`relative group overflow-hidden border ${isMobile ? "border-x-0 border-b rounded-none p-6" : "rounded-2xl p-5 hover:-translate-y-1 shadow-xl"} transition-all duration-500 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
             >
               {/* Premium Glassmorphic Overlay: Multi-point Glow */}
               <div
@@ -210,7 +213,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                 <div className="flex-1 min-w-0 pr-1">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <h4
-                      className={`text-xl font-bold text-[var(--app-text-main)] tracking-tight truncate`}
+                      className={`text-lg font-bold text-[var(--app-text-main)] tracking-tight truncate`}
                     >
                       {app.name}
                     </h4>
@@ -237,15 +240,13 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                   </p>
 
                   <div className="flex items-center">
-                    <label className="relative z-20 flex items-center gap-2 cursor-pointer group/toggle">
-                      <input
-                        type="checkbox"
-                        className="sr-only"
-                        checked={isAlwaysOn}
-                        onChange={(e) => {
-                          const newMode = (
-                            e.target.checked ? "ALWAYS_ON" : "LAZY"
-                          ) as "ALWAYS_ON" | "LAZY";
+                    <div className="flex items-center gap-2">
+                       <span className={`text-[10px] font-mono uppercase tracking-widest ${isAlwaysOn ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] opacity-60"}`}>
+                        {isAlwaysOn ? "Always Online" : "Lazy Mode"}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const newMode = (!isAlwaysOn ? "ALWAYS_ON" : "LAZY") as "ALWAYS_ON" | "LAZY";
                           const updated = {
                             socialPersistence: {
                               ...settings.socialPersistence,
@@ -259,17 +260,19 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                             body: JSON.stringify(updated.socialPersistence),
                           }).catch((err) => console.error("Sync error:", err));
                         }}
-                      />
-                      <div
-                        className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border shadow-sm ${
-                          isAlwaysOn
-                            ? "bg-green-500 border-green-400 text-[var(--app-text-main)] shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-                            : "bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-60 hover:opacity-100"
-                        }`}
+                        className={`w-7 h-3.5 rounded-full transition-all relative ${isAlwaysOn ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
+                        style={{
+                          backgroundColor: isAlwaysOn ? theme.hex : undefined,
+                        }}
                       >
-                        {isAlwaysOn ? "Always Online" : "Lazy Mode"}
-                      </div>
-                    </label>
+                        <div
+                          className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${isAlwaysOn ? "translate-x-4" : "translate-x-0.5"}`}
+                          style={{ 
+                            backgroundColor: isAlwaysOn ? "white" : "var(--app-text-muted)" 
+                          }}
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

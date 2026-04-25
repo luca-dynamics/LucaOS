@@ -296,23 +296,25 @@ async function bootSequence(isSilent = false) {
         log("Initializing Hardware Abstraction Layer...", 'info', 10);
         await new Promise(r => setTimeout(r, 800)); 
         
-        // --- PROVISIONING CHECK ---
-        const venvExists = fs.existsSync(paths.VENV_DIR) || fs.existsSync(paths.SYSTEM_VENV_DIR);
-        if (!venvExists) {
-            try {
-                await provisionEnvironment(log);
-            } catch (err) {
-                log(`CRITICAL: Provisioning Failed. Luca cannot start. Error: ${err.message}`, 'error', 100);
-                return; // Halt
+        // --- PROVISIONING CHECK (Dev Only) ---
+        if (!app.isPackaged) {
+            const venvExists = fs.existsSync(paths.VENV_DIR) || fs.existsSync(paths.SYSTEM_VENV_DIR);
+            if (!venvExists) {
+                try {
+                    await provisionEnvironment(log);
+                } catch (err) {
+                    log(`CRITICAL: Provisioning Failed. Luca cannot start. Error: ${err.message}`, 'error', 100);
+                    return; // Halt
+                }
+            } else {
+                log("AI Environment Verified. Integrity Check: PASS.", 'success', 25);
             }
-        } else {
-            log("AI Environment Verified. Integrity Check: PASS.", 'success', 25);
         }
     }
 
     // 2. Start Subsystems
-    log(`Spawning Luca Cortex (Port ${CORTEX_PORT})...`, 'warn', 30);
-    startCortex();
+    log(`Spawning Luca Cortex...`, 'warn', 30);
+    await startCortex();
     
     log(`Igniting Node.js Logic Core (Port ${SERVER_PORT})...`, 'warn', 40);
     startServer();
@@ -321,7 +323,7 @@ async function bootSequence(isSilent = false) {
     let serverReady = false;
     let cortexReady = false;
     let attempts = 0;
-    const maxAttempts = 60; // Increased to 60s
+    const maxAttempts = 180; // Increased to 180s for Intel Mac First-Boot headroom
 
     const checkInterval = setInterval(async () => {
         attempts++;
@@ -333,7 +335,7 @@ async function bootSequence(isSilent = false) {
         }
 
         if (!serverReady) serverReady = await checkPort(SERVER_PORT);
-        if (!cortexReady) cortexReady = await checkPort(CORTEX_PORT);
+        if (!cortexReady) cortexReady = await checkPort(cortexPort);
 
         if (serverReady && !cortexReady) {
             log(`[WAIT] Logic Core Ready. Waiting for Cortex Graph DB... (${attempts}s)`, 'info', 50 + Math.floor(attempts/2));
@@ -401,12 +403,19 @@ function launchInterface(isSilent = false) {
     
     // Smooth transition: Show Main, Wait, Close Boot
     if (mainWindow && bootWindow) {
-        mainWindow.once('ready-to-show', () => {
-            mainWindow.show(); // Assuming mainWindow is created with show:false usually, but here default is show
+        let shown = false;
+        const show = () => {
+            if (shown) return;
+            shown = true;
+            if (mainWindow) mainWindow.show();
             setTimeout(() => {
-                 if (bootWindow) bootWindow.close();
+                if (bootWindow) bootWindow.close();
             }, 500);
-        });
+        };
+
+        mainWindow.once('ready-to-show', show);
+        // INDUSTRIAL GRADE: "Force Render" fallback for Intel Macs under load
+        setTimeout(show, 5000); 
     } else {
         if (bootWindow) bootWindow.close();
     }
@@ -605,34 +614,36 @@ let cortexPort = CORTEX_PORT; // Default from env or 8000
 // Start the Python Cortex (LightRAG)
 // Start the Python Cortex (LightRAG)
 async function startCortex() {
-    const cortexPath = path.join(__dirname, '../../cortex/python/cortex.py');
-    console.log('Starting Cortex (LightRAG) at:', cortexPath);
-
-    try {
-        cortexPort = await findAvailablePort(CORTEX_PORT);
-        console.log(`[CORTEX] Found available port: ${cortexPort}`);
-    } catch (e) {
-        console.error('[CORTEX] Failed to find port:', e);
-        cortexPort = CORTEX_PORT; // Fallback to env/default
-    }
-
-    // Check for venv python from standardized bridge
-    // Unified Python Resolution
-    // 1. Check Project Local (cortex/python/venv)
-    // 2. Check System Hidden (~/.luca/python/venv)
-    // 3. Fallback to System Global (python3)
-    let pythonCmd = 'python3';
-    if (fs.existsSync(paths.PYTHON_BIN)) {
-        pythonCmd = paths.PYTHON_BIN;
-    } else if (fs.existsSync(paths.SYSTEM_PYTHON_BIN)) {
-        pythonCmd = paths.SYSTEM_PYTHON_BIN;
-    }
+    const isPackaged = app.isPackaged;
+    const cortexBinaryName = process.platform === 'win32' ? 'cortex.exe' : 'cortex';
     
-    if (process.platform === 'win32') {
-        pythonCmd = pythonCmd.replace('python', 'python.exe'); // Windows fix
-    }
+    let cortexPath;
+    let pythonCmd = null;
 
-    console.log('[CORTEX] Using Python Interpreter:', pythonCmd);
+    if (isPackaged) {
+        // PRODUCTION: Use the bundled standalone binary
+        cortexPath = path.join(process.resourcesPath, 'bin', cortexBinaryName);
+        console.log('[CORTEX] [PROD] Spawning bundled binary:', cortexPath);
+    } else {
+        // DEVELOPMENT: Use the local script and venv
+        cortexPath = path.join(__dirname, '../../cortex/python/cortex.py');
+        
+        // Unified Python Resolution
+        if (fs.existsSync(paths.PYTHON_BIN)) {
+            pythonCmd = paths.PYTHON_BIN;
+        } else if (fs.existsSync(paths.SYSTEM_PYTHON_BIN)) {
+            pythonCmd = paths.SYSTEM_PYTHON_BIN;
+        } else {
+            pythonCmd = 'python3';
+        }
+
+        if (process.platform === 'win32' && pythonCmd.includes('python')) {
+            pythonCmd = pythonCmd.replace('python', 'python.exe');
+        }
+        
+        console.log('[CORTEX] [DEV] Using Python Source:', cortexPath);
+        console.log('[CORTEX] [DEV] Using Interpreter:', pythonCmd);
+    }
 
 
     // Initial Env from Process
@@ -678,10 +689,18 @@ async function startCortex() {
         console.error('[CORTEX] CRITICAL: GEMINI_API_KEY missing from Final Env!');
     }
 
-    cortexProcess = spawn(pythonCmd, [cortexPath], {
-        stdio: 'inherit',
-        env: env
-    });
+    if (pythonCmd) {
+        cortexProcess = spawn(pythonCmd, [cortexPath], {
+            stdio: 'inherit',
+            env: env
+        });
+    } else {
+        cortexProcess = spawn(cortexPath, [], {
+            stdio: 'inherit',
+            env: env,
+            windowsHide: true // Cleaner for Windows binary launching
+        });
+    }
 
     cortexProcess.on('error', (err) => {
         console.error('Failed to start Cortex:', err);
@@ -804,12 +823,26 @@ function updateTrayMenu() {
 
         { type: 'separator' },
         { 
-            label: 'Change Theme', 
+            label: 'Switch Mind (Persona)', 
              submenu: [
-                { label: 'Assistant Mode (White)', click: () => switchPersona('ASSISTANT') },
-                { label: 'Engineer Mode (Terracotta)', click: () => switchPersona('ENGINEER') },
-                { label: 'Ruthless Mode (Blue)', click: () => switchPersona('RUTHLESS') },
-                { label: 'Hacker Mode (Green)', click: () => switchPersona('HACKER') }
+                { label: 'Assistant Mode', click: () => switchPersona('ASSISTANT') },
+                { label: 'Engineer Mode', click: () => switchPersona('ENGINEER') },
+                { label: 'Ruthless Mode', click: () => switchPersona('RUTHLESS') },
+                { label: 'Hacker Mode', click: () => switchPersona('HACKER') }
+            ]
+        },
+        { 
+            label: 'Switch Skin (Theme)', 
+             submenu: [
+                { label: 'Master System (Blue)', click: () => switchTheme('MASTER_SYSTEM') },
+                { label: 'Terminal (Green)', click: () => switchTheme('TERMINAL') },
+                { label: 'Builder (Terracotta)', click: () => switchTheme('BUILDER') },
+                { label: 'Professional (White)', click: () => switchTheme('PROFESSIONAL') },
+                { label: 'Agentic Slate', click: () => switchTheme('AGENTIC_SLATE') },
+                { label: 'Frost Ice', click: () => switchTheme('FROST') },
+                { label: 'Satin Cream', click: () => switchTheme('LIGHTCREAM') },
+                { label: 'Vaporwave Night', click: () => switchTheme('VAPORWAVE') },
+                { label: 'Neural Purple', click: () => switchTheme('DICTATION') }
             ]
         },
         { type: 'separator' },
@@ -955,6 +988,14 @@ function switchPersona(mode) {
     if (widgetWindow) widgetWindow.webContents.send('switch-persona', mode);
     if (hologramWindow) hologramWindow.webContents.send('switch-persona', mode);
     if (chatWindow) chatWindow.webContents.send('switch-persona', mode);
+}
+
+function switchTheme(themeId) {
+    if (mainWindow) mainWindow.webContents.send('switch-theme', themeId);
+    if (visualCoreWindow) visualCoreWindow.webContents.send('switch-theme', themeId);
+    if (widgetWindow) widgetWindow.webContents.send('switch-theme', themeId);
+    if (hologramWindow) hologramWindow.webContents.send('switch-theme', themeId);
+    if (chatWindow) chatWindow.webContents.send('switch-theme', themeId);
 }
 
 async function toggleGodMode(enabled) {

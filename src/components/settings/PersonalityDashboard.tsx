@@ -11,15 +11,17 @@ interface PersonalityDashboardProps {
   config: PersonaConfig | null;
   onUpdate: (
     personaName: string,
-    key: string, // Changed to string to support root level keys like 'globalInstructions'
+    key: string,
     value: string,
   ) => void;
+  isMobile?: boolean;
 }
 
 const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
   theme = { primary: "text-blue-500", hex: "#3b82f6", themeName: "default" },
   config,
   onUpdate,
+  isMobile,
 }) => {
   const [selectedPersona, setSelectedPersona] = useState<string>("DEFAULT");
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
@@ -154,7 +156,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
 
 
   return (
-    <div className="space-y-4 flex flex-col">
+    <div className={`space-y-4 flex flex-col ${isMobile ? "px-0 pb-16" : ""}`}>
       {/* 1. UNIFIED CONSCIOUSNESS (The Global Mind) */}
       <div className="flex flex-col space-y-2 shrink-0">
         <div className="flex justify-between items-center px-1">
@@ -178,9 +180,9 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
         </div>
 
         <div
-          className={`relative group rounded-xl border overflow-hidden focus-within:ring-1 transition-all shadow-2xl tech-border`}
+          className={`relative group ${isMobile ? "border-x-0 border-y rounded-none" : "rounded-xl border shadow-2xl"} overflow-hidden focus-within:ring-1 transition-all tech-border`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #0a0a0f)",
+            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #0a0a0f)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
@@ -196,7 +198,10 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             spellCheck={false}
             placeholder="Enter the core system rules and behavioral logic that Luca must ALWAYS follow. (e.g. 'Always be concise', 'Never mention the word technical')..."
           />
-          <div className="absolute bottom-1.5 right-3 text-sm text-[var(--app-text-muted)] flex items-center gap-1 opacity-40">
+          <div 
+            className="absolute bottom-1.5 right-3 text-sm flex items-center gap-1 opacity-40"
+            style={{ color: "var(--app-text-muted)" }}
+          >
             <Icon name="Cpu" className="w-2.5 h-2.5" /> Logical Core
           </div>
         </div>
@@ -207,9 +212,9 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
       {/* 2. SPECIALIST FOCUS (The Lenses) */}
       <div className="flex-1 flex flex-col min-h-0 space-y-3">
         <div
-          className={`flex flex-col md:flex-row justify-between items-start md:items-center p-2 px-3 rounded-lg border shrink-0 transition-all tech-border`}
+          className={`flex flex-col md:flex-row justify-between items-start md:items-center ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "p-2 px-3 rounded-lg border shrink-0 tech-border" } transition-all`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
@@ -236,7 +241,10 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                 </option>
               ))}
             </select>
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
+            <div 
+              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50"
+              style={{ color: "var(--app-text-muted)" }}
+            >
               <Icon name="Terminal" className="w-3 h-3" />
             </div>
           </div>
@@ -280,9 +288,9 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                   </div>
 
                   <div
-                    className={`relative group/blueprint rounded-xl border overflow-hidden transition-all shadow-inner tech-border`}
+                    className={`relative group/blueprint ${isMobile ? "border-x-0 border-y rounded-none" : "rounded-xl border shadow-inner"} overflow-hidden transition-all tech-border`}
                     style={{
-                      backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                      backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.2))",
                       borderColor: "var(--app-border-main, rgba(255,255,255,0.1))"
                     }}
                   >
@@ -296,9 +304,14 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                     </div>
 
                     {/* Overlay label to clarify purpose */}
-                    <div className="absolute top-2 right-2 flex items-center gap-1 opacity-10 group-hover/blueprint:opacity-100 transition-opacity pointer-events-none">
-                      <Icon name="Lock" className="w-2.5 h-2.5 text-[var(--app-text-muted)]" />
-                      <span className="text-sm text-[var(--app-text-muted)] font-bold uppercase">
+                    <div 
+                      className="absolute top-2 right-2 flex items-center gap-1 opacity-10 group-hover/blueprint:opacity-100 transition-opacity pointer-events-none"
+                    >
+                      <Icon name="Lock" className="w-2.5 h-2.5" style={{ color: "var(--app-text-muted)" }} />
+                      <span 
+                        className="text-sm font-bold uppercase"
+                        style={{ color: "var(--app-text-muted)" }}
+                      >
                         System Logic
                       </span>
                     </div>

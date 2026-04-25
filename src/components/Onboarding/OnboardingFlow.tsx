@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import * as LucideIcons from "lucide-react";
+import { Icon } from "../ui/Icon";
 import { THEME_PALETTE, getDynamicContrast } from "../../config/themeColors";
 import { motion } from "framer-motion";
 import HologramFace from "./HologramFace";
@@ -8,8 +8,6 @@ import ConversationalOnboarding from "./ConversationalOnboarding";
 import FaceScan from "./FaceScan";
 import ConstitutionalAlignment from "./ConstitutionalAlignment";
 import ThemeSelectionStep from "./ThemeSelectionStep";
-const { ArrowRight, Check, Sparkles, Terminal, Key, Shield, Activity, Cpu } =
-  LucideIcons as any;
 import { soundService } from "../../services/soundService";
 import { settingsService } from "../../services/settingsService";
 import { requestVoicePermission } from "../../utils/voicePermissions";
@@ -106,7 +104,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const isLightTheme =
     currentThemeName?.toUpperCase() === "LUCAGENT" ||
-    currentThemeName?.toUpperCase() === "AGENTIC_SLATE";
+    currentThemeName?.toUpperCase() === "AGENTIC_SLATE" ||
+    currentThemeName?.toUpperCase() === "LIGHTCREAM";
 
   // Sync theme with parent props when changed from tray menu
   useEffect(() => {
@@ -271,6 +270,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             ...currentBrain,
             useCustomApiKey: false,
             model: isCustomOllama ? targetModel : `local/${targetModel}`,
+            embeddingModel: "local/nomic-embed-text", // Sovereign Default
           },
           voice: {
             ...currentVoice,
@@ -298,6 +298,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         ...currentBrain,
         useCustomApiKey: false,
         model: `local/${targetBrainModel}`,
+        embeddingModel: "local/nomic-embed-text",
       },
       voice: {
         ...currentVoice,
@@ -321,6 +322,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         targetBrainModel,
         "whisper-tiny",
         "piper-amy",
+        "nomic-embed-text", // Required for Split-Mind HDC
       ].filter(Boolean) as string[];
 
       modelsToEnsure.forEach((id) => {
@@ -420,7 +422,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       }
 
       settingsService.saveSettings({
-        brain: brainSettings,
+        brain: {
+          ...brainSettings,
+          embeddingModel: showByok && byokProvider === "gemini" ? "gemini-2.1-flash" : "local/nomic-embed-text",
+        },
         voice: {
           ...currentVoice,
           provider: "gemini-genai", // Cloud voice (not local-luca)
@@ -613,7 +618,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 flexDirection: "column",
               }}
             >
-              <Terminal
+              <Icon
+                name="Terminal"
+                variant="Linear"
                 className="mx-auto mb-2"
                 style={{
                   color: currentThemeHex,
@@ -650,19 +657,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full border rounded-xl p-3  outline-none transition-all text-center text-lg placeholder-gray-500 backdrop-blur-md`}
+                className={`w-full border rounded-xl p-3 outline-none transition-all text-center text-lg placeholder-[var(--app-text-muted)] backdrop-blur-md text-[var(--app-text-main)]`}
                 placeholder="ENTER DESIGNATION"
                 style={{
-                  borderColor: "rgba(255,255,255,0.2)",
-                  backgroundColor: hexToRgba(currentThemeHex, 0.12),
-                  backgroundImage: `linear-gradient(135deg, ${hexToRgba(
-                    currentThemeHex,
-                    0.2,
-                  )} 0%, ${hexToRgba(currentThemeHex, 0.08)} 100%)`,
-                  boxShadow: `0 4px 20px ${hexToRgba(
-                    currentThemeHex,
-                    0.08,
-                  )}, inset 0 1px 0 ${hexToRgba(currentThemeHex, 0.15)}`,
+                  borderColor: "var(--app-border-main)",
+                  backgroundColor: "var(--app-bg-tint)",
+                  boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`,
                 }}
               />
             </div>
@@ -686,7 +686,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               }}
             >
               Initialize Protocol{" "}
-              <ArrowRight
+              <Icon
+                name="AltArrowRight"
                 size={16}
                 className="group-hover:translate-x-1 transition-transform"
               />
@@ -696,8 +697,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
         {step === "COGNITIVE_CORE_SELECTION" && (
           <div
-            className="animate-fade-in-up w-full"
-            style={{ gap: "4vmin", display: "flex", flexDirection: "column" }}
+            className="animate-fade-in-up w-full px-4 sm:px-6"
+            style={{ 
+              gap: isMobile ? "3vmin" : "4vmin", 
+              display: "flex", 
+              flexDirection: "column",
+              maxWidth: isMobile ? "420px" : "1000px" 
+            }}
           >
             <div
               className="text-center"
@@ -707,272 +713,260 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 flexDirection: "column",
               }}
             >
-              <Key
-                className="mx-auto mb-2"
+              <div
+                className="mx-auto mb-2 flex items-center justify-center rounded-full border glass-blur transition-all"
                 style={{
-                  color: currentThemeHex,
                   width: "clamp(2rem, 10vmin, 4rem)",
                   height: "clamp(2rem, 10vmin, 4rem)",
+                  borderColor: "var(--app-border-main)",
+                  backgroundColor: "var(--app-bg-tint)",
                 }}
-              />
+              >
+                <Icon
+                  name="Key"
+                  variant="Linear"
+                  style={{
+                    color: currentThemeHex,
+                    width: "clamp(1rem, 5vmin, 2rem)",
+                    height: "clamp(1rem, 5vmin, 2rem)",
+                  }}
+                />
+              </div>
               <h1
                 className="font-bold tracking-widest uppercase"
                 style={{
-                  color: currentThemeHex,
+                  color: "var(--app-text-main)",
                   fontSize: "clamp(1.2rem, 4.5vmin, 2rem)",
                 }}
               >
                 Cognitive Core
               </h1>
               <p
-                className={` max-w-sm mx-auto font-medium`}
-                style={{ fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)" }}
+                className="max-w-md mx-auto font-medium opacity-80"
+                style={{ fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)", color: "var(--app-text-muted)" }}
               >
-                Luca can operate entirely offline or leverage the managed Luca
-                Cloud for advanced reasoning and multimodal agency.
+                Choose how Luca processes your thoughts. Secure local compute or cloud-enhanced agency.
               </p>
             </div>
 
-            <div
-              className={`border rounded-2xl p-6 gap-6 flex flex-col backdrop-blur-xl transition-all duration-500 shadow-2xl mx-auto w-full max-w-xl`}
-              style={{
-                borderColor: "rgba(255, 255, 255, 0.12)",
-                background: `linear-gradient(135deg, ${hexToRgba(currentThemeHex, 0.08)} 0%, rgba(255, 255, 255, 0.02) 100%)`,
-                boxShadow: `0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 0 0 1px rgba(255, 255, 255, 0.05)`,
-              }}
-            >
-              {!showByok ? (
-                <>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Shield size={12} style={{ color: currentThemeHex }} />
-                      <span
-                        className={`text-[10px] font-bold  uppercase tracking-widest`}
-                      >
-                        Managed Connection
-                      </span>
-                    </div>
-                    <p className={`text-[9px]  font-medium`}>
-                      Professional cloud intelligence managed directly by Luca
-                      OS.
-                    </p>
-                  </div>
-
+            {!showByok ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-4xl mx-auto">
+                  {/* Luca Prime (Cloud) */}
                   <button
                     type="button"
                     onClick={handleActivateCloud}
                     disabled={isActivating}
-                    className="w-full max-w-md mx-auto border rounded-xl py-5 uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group backdrop-blur-md"
+                    className="relative flex flex-col items-center text-center p-6 sm:p-8 rounded-3xl border backdrop-blur-xl transition-all duration-300 group hover:scale-[1.02] active:scale-[0.98]"
                     style={{
-                      borderColor: "rgba(255, 255, 255, 0.15)",
-                      backgroundColor: hexToRgba(currentThemeHex, 0.25),
-                      backgroundImage: `linear-gradient(135deg, ${hexToRgba(
-                        currentThemeHex,
-                        0.35,
-                      )} 0%, ${hexToRgba(currentThemeHex, 0.15)} 100%)`,
-                      boxShadow: `0 8px 32px ${hexToRgba(
-                        currentThemeHex,
-                        0.2,
-                      )}, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
-                      color: "var(--app-text-main)",
+                      borderColor: "rgba(255, 255, 255, 0.12)",
+                      background: `linear-gradient(135deg, ${hexToRgba(currentThemeHex, 0.08)} 0%, rgba(255, 255, 255, 0.02) 100%)`,
+                      boxShadow: `0 8px 32px 0 rgba(0, 0, 0, 0.37)`,
                     }}
                   >
-                    {isActivating ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Establishing Link...
-                      </>
-                    ) : (
-                      <>
-                        Activate Luca Prime
-                        <Sparkles
-                          size={18}
-                          className="group-hover:rotate-12 transition-all duration-500 text-yellow-400"
-                        />
-                      </>
+                    {/* Recommendation Badge */}
+                    {((navigator as any).deviceMemory || 8) < 8 && (
+                       <div className="absolute -top-3 right-4 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-lg border animate-pulse bg-yellow-500/20 border-yellow-500/40" style={{ color: "var(--app-text-main)" }}>
+                         LUCA RECOMMEND
+                       </div>
                     )}
+
+                    <div className="mb-4 p-4 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors">
+                      <Icon
+                        name="Stars"
+                        variant="Bold"
+                        size={isMobile ? 28 : 36}
+                        color="var(--app-text-main)"
+                        className="group-hover:rotate-12 transition-transform duration-500"
+                      />
+                    </div>
+                    
+                    <h3 className="text-sm sm:text-base font-bold tracking-widest uppercase mb-2" style={{ color: "var(--app-text-main)" }}>
+                      Luca Prime
+                    </h3>
+                    <p className="text-[10px] sm:text-xs opacity-70 leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
+                      Maximum reasoning power via cloud-managed agency. Multi-modal, lightning fast.
+                    </p>
+
+                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
+                      {isActivating ? "Establishing Link..." : "ACTIVATE CLOUD"}
+                      {!isActivating && <Icon name="AltArrowRight" size={12} />}
+                    </div>
                   </button>
 
+                  {/* Local Core */}
+                  <button
+                    type="button"
+                    onClick={handleGoLocal}
+                    className="relative flex flex-col items-center text-center p-6 sm:p-8 rounded-3xl border backdrop-blur-xl transition-all duration-300 group hover:scale-[1.02] active:scale-[0.98]"
+                    style={{
+                      borderColor: "rgba(255, 255, 255, 0.12)",
+                      background: `linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%)`,
+                      boxShadow: `0 8px 32px 0 rgba(0, 0, 0, 0.37)`,
+                    }}
+                  >
+                    {/* Recommendation Badge */}
+                    {((navigator as any).deviceMemory || 8) >= 8 && (
+                       <div className="absolute -top-3 right-4 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-lg border animate-pulse bg-green-500/20 border-green-500/40" style={{ color: "var(--app-text-main)" }}>
+                         LUCA RECOMMEND
+                       </div>
+                    )}
+
+                    <div className="mb-4 p-4 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors">
+                      <Icon
+                        name="ShieldCheck"
+                        variant="Bold"
+                        size={isMobile ? 28 : 36}
+                        color={currentThemeHex}
+                        className="group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                    
+                    <h3 className="text-sm sm:text-base font-bold tracking-widest uppercase mb-2" style={{ color: "var(--app-text-main)" }}>
+                      Go Local 
+                    </h3>
+                    <p className="text-[10px] sm:text-xs opacity-70 leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
+                      100% private, sovereign compute. Your data never leaves this machine. 
+                    </p>
+
+                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
+                      INITIALIZE OFFLINE
+                      <Icon name="AltArrowRight" size={12} />
+                    </div>
+                  </button>
+                </div>
+
+                <div className="flex flex-col items-center gap-3 mt-4">
                   <button
                     type="button"
                     onClick={() => {
                       soundService.play("KEYSTROKE");
                       setShowByok(true);
                     }}
-                    className={`w-full max-w-md mx-auto text-[10px] py-4 rounded-xl border border-white/10 hover:border-white/20 transition-all uppercase tracking-widest font-bold flex items-center justify-center gap-2`}
+                    className="w-full max-w-md mx-auto text-[10px] py-4 rounded-2xl border border-white/10 hover:border-white/20 transition-all uppercase tracking-widest font-bold flex items-center justify-center gap-2 glass-blur hover:bg-white/5"
                     style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.05)",
                       color: "var(--app-text-main)",
                     }}
                   >
-                    <Key size={14} style={{ color: currentThemeHex }} />
+                    <Icon name="Key" size={14} color={currentThemeHex} />
                     Bring Your Own Key (BYOK)
                   </button>
-                </>
-              ) : (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => setShowByok(false)}
-                      className="text-[9px] uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity"
-                    >
-                      ← Back
-                    </button>
-                    <span className="text-[10px] font-bold uppercase tracking-widest">
-                      Provider Selection
-                    </span>
-                  </div>
+                  <p className="text-[9px] text-center uppercase tracking-[0.2em] font-bold opacity-40">
+                    Managed Professional Gateway
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-6 animate-fade-in w-full max-w-xl mx-auto border rounded-3xl p-6 sm:p-8 backdrop-blur-xl" style={{ borderColor: "rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.02)" }}>
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setShowByok(false)}
+                    className="text-[9px] uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity flex items-center gap-1"
+                  >
+                    <Icon name="AltArrowLeft" size={10} /> Back
+                  </button>
+                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+                    Provider Selection
+                  </span>
+                </div>
 
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      {
-                        id: "gemini",
-                        name: "Gemini",
-                        color: "#4285F4",
-                        logo: "/icons/brands/gemini-color.svg",
-                        placeholder: "AIza...",
-                      },
-                      {
-                        id: "openai",
-                        name: "OpenAI",
-                        color: "#10a37f",
-                        logo: "/icons/brands/openai.svg",
-                        placeholder: "sk-proj-...",
-                      },
-                      {
-                        id: "anthropic",
-                        name: "Claude",
-                        color: "#d97757",
-                        logo: "/icons/brands/claude-color.svg",
-                        placeholder: "sk-ant-...",
-                      },
-                      {
-                        id: "xai",
-                        name: "xAI",
-                        color: "#fff",
-                        logo: "/icons/brands/grok.svg",
-                        placeholder: "xai-...",
-                      },
-                    ].map((p) => (
-                      <button
-                        key={p.id}
-                        onClick={() => {
-                          setByokProvider(p.id as any);
-                          soundService.play("HOVER");
-                        }}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
-                          byokProvider === p.id
-                            ? "scale-105 border-white/40 bg-white/10 shadow-lg"
-                            : "border-white/5 bg-black/20 opacity-50 hover:opacity-100"
-                        }`}
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    {
+                      id: "gemini",
+                      name: "Gemini",
+                      color: "#4285F4",
+                      logo: "/icons/brands/gemini-color.svg",
+                    },
+                    {
+                      id: "openai",
+                      name: "OpenAI",
+                      color: "#10a37f",
+                      logo: "/icons/brands/openai.svg",
+                    },
+                    {
+                      id: "anthropic",
+                      name: "Claude",
+                      color: "#d97757",
+                      logo: "/icons/brands/claude-color.svg",
+                    },
+                    {
+                      id: "xai",
+                      name: "xAI",
+                      color: "#fff",
+                      logo: "/icons/brands/grok.svg",
+                    },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setByokProvider(p.id as any);
+                        soundService.play("HOVER");
+                      }}
+                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                        byokProvider === p.id
+                          ? "border-white/40 bg-white/10 shadow-lg scale-105"
+                          : "border-white/5 bg-black/20 opacity-50 hover:opacity-100"
+                      }`}
+                      style={{
+                        borderColor: byokProvider === p.id ? p.color + "40" : "rgba(255,255,255,0.05)",
+                      }}
+                    >
+                      <div
+                        className="rounded-full flex items-center justify-center p-2"
                         style={{
-                          borderColor:
-                            byokProvider === p.id
-                              ? p.color + "40"
-                              : "rgba(255,255,255,0.05)",
+                          width: "3rem",
+                          height: "3rem",
+                          backgroundColor: byokProvider === p.id ? p.color + "20" : "rgba(255,255,255,0.05)",
                         }}
                       >
-                        <div
-                          className="rounded-full flex items-center justify-center"
-                          style={{
-                            width: "clamp(2rem, 8vmin, 3.5rem)",
-                            height: "clamp(2rem, 8vmin, 3.5rem)",
-                            padding: "1.2vmin",
-                            backgroundColor:
-                              byokProvider === p.id
-                                ? p.color + "20"
-                                : "rgba(255,255,255,0.05)",
-                          }}
-                        >
-                          <img
-                            src={p.logo}
-                            alt={p.name}
-                            className={`w-full h-full object-contain ${
-                              p.id === "xai" && !isLightTheme ? "invert" : ""
-                            }`}
-                          />
-                        </div>
-                        <span
-                          className="uppercase tracking-tighter"
-                          style={{
-                            fontSize: "clamp(0.5rem, 1.2vmin, 0.75rem)",
-                          }}
-                        >
-                          {p.name}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[9px] uppercase tracking-widest opacity-60 px-1">
-                      {byokProvider.toUpperCase()} API KEY
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="password"
-                        value={byokKeys[byokProvider]}
-                        onChange={(e) =>
-                          setByokKeys((prev) => ({
-                            ...prev,
-                            [byokProvider]: e.target.value,
-                          }))
-                        }
-                        placeholder={
-                          byokProvider === "gemini"
-                            ? "AIza..."
-                            : byokProvider === "openai"
-                              ? "sk-proj-..."
-                              : byokProvider === "anthropic"
-                                ? "sk-ant-..."
-                                : "xai-..."
-                        }
-                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs outline-none focus:border-white/30 transition-all font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleActivateCloud}
-                    disabled={!byokKeys[byokProvider] || isActivating}
-                    className="w-full max-w-md mx-auto border rounded-xl py-4 uppercase tracking-widest text-[11px] font-bold transition-all flex items-center justify-center gap-2 group disabled:opacity-30"
-                    style={{
-                      borderColor: "rgba(255, 255, 255, 0.2)",
-                      backgroundColor: hexToRgba(
-                        currentThemeHex,
-                        isLightTheme ? 0.4 : 0.3,
-                      ),
-                      color: "var(--app-text-main)",
-                    }}
-                  >
-                    {isActivating ? "Verifying..." : "Link My Cloud Brain"}
-                    {!isActivating && <ArrowRight size={14} />}
-                  </button>
+                        <img
+                          src={p.logo}
+                          alt={p.name}
+                          className={`w-full h-full object-contain ${
+                            p.id === "xai" && !isLightTheme ? "invert" : ""
+                          }`}
+                        />
+                      </div>
+                      <span className="text-[8px] uppercase font-bold tracking-tighter">{p.name}</span>
+                    </button>
+                  ))}
                 </div>
-              )}
 
-              <div className="flex flex-col items-center gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] uppercase tracking-widest opacity-60 px-1 font-bold">
+                    {byokProvider.toUpperCase()} API KEY
+                  </label>
+                  <input
+                    type="password"
+                    value={byokKeys[byokProvider]}
+                    onChange={(e) =>
+                      setByokKeys((prev) => ({
+                        ...prev,
+                        [byokProvider]: e.target.value,
+                      }))
+                    }
+                    placeholder="ENTER KEY"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs outline-none focus:border-white/30 transition-all font-mono"
+                  />
+                </div>
+
                 <button
                   type="button"
-                  onClick={handleGoLocal}
-                  disabled={isActivating}
-                  className={`w-full max-w-md mx-auto text-[9px]  font-bold uppercase tracking-widest transition-all opacity-80 hover:opacity-100 flex items-center gap-1`}
+                  onClick={handleActivateCloud}
+                  disabled={!byokKeys[byokProvider] || isActivating}
+                  className="w-full border rounded-xl py-4 uppercase tracking-widest text-[10px] font-bold transition-all flex items-center justify-center gap-2 group disabled:opacity-30"
+                  style={{
+                    borderColor: "rgba(255, 255, 255, 0.2)",
+                    backgroundColor: hexToRgba(currentThemeHex, 0.2),
+                    color: "var(--app-text-main)",
+                  }}
                 >
-                  <Shield size={10} />
-                  Stay Local (Privacy Mode)
+                  {isActivating ? "Verifying..." : "Link My Cloud Brain"}
+                  {!isActivating && <Icon name="AltArrowRight" size={14} />}
                 </button>
-
-                {!showByok && (
-                  <p
-                    className={`text-[9px]  text-center uppercase tracking-widest leading-relaxed font-bold opacity-90`}
-                  >
-                    Managed Professional Gateway. <br />
-                    Secure. Private. Intelligent.
-                  </p>
-                )}
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -980,13 +974,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <FaceScan
             userName={name}
             compact={isMobile}
+            isLightTheme={isLightTheme}
+            theme={settingsService.get("general").theme || "PROFESSIONAL"}
             enrollmentEndpoint={apiUrl("/api/admin/enroll-face")}
             onComplete={handleFaceScanComplete}
             onSkip={() => handleFaceScanComplete(null)}
           />
         )}
 
-        {step === "MODE_SELECT" && <ModeSelect onSelect={handleModeSelect} />}
+        {step === "MODE_SELECT" && (
+          <ModeSelect onSelect={handleModeSelect} isLightTheme={isLightTheme} />
+        )}
 
         {step === "CONVERSATION" && conversationMode && (
           <ConversationalOnboarding
@@ -1048,7 +1046,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   height: "clamp(3rem, 12vmin, 5rem)",
                 }}
               >
-                <Cpu
+                <Icon
+                  name="Cpu"
+                  variant="Linear"
                   style={{
                     color: currentThemeHex,
                     width: "50%",
@@ -1102,7 +1102,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   {isActivating ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
-                    <Sparkles size={18} className="text-yellow-400" />
+                    <Icon name="Sparkles" variant="Bold" size={18} className="text-yellow-400" />
                   )}
                   <span style={{ color: "var(--app-text-main)" }}>
                     {isActivating ? "Installing..." : "Yes, Let's do it"}
@@ -1131,7 +1131,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 className="w-12 h-12 rounded-xl mx-auto flex items-center justify-center bg-black/20 border"
                 style={{ borderColor: hexToRgba(currentThemeHex, 0.2) }}
               >
-                <Cpu className="w-6 h-6" style={{ color: currentThemeHex }} />
+                <Icon
+                  name="Cpu"
+                  variant="Linear"
+                  className="w-6 h-6"
+                  style={{ color: currentThemeHex }}
+                />
               </div>
 
               <div className="space-y-2">
@@ -1164,7 +1169,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     className="absolute inset-0 opacity-20 mix-blend-screen transition-opacity group-hover:opacity-40"
                     style={{ backgroundColor: currentThemeHex }}
                   />
-                  <Activity size={12} style={{ color: currentThemeHex }} />
+                  <Icon
+                    name="Activity"
+                    variant="Linear"
+                    size={12}
+                    style={{ color: currentThemeHex }}
+                  />
                   <span style={{ color: "var(--app-text-main)" }}>
                     Resume Hardware Scan
                   </span>
@@ -1304,7 +1314,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 }}
                 className="w-full max-w-sm mx-auto border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl py-4 uppercase tracking-widest text-sm font-bold transition-all backdrop-blur-md mt-6 flex items-center justify-center gap-2"
               >
-                <Activity size={16} />
+                <Icon name="Activity" variant="Linear" size={16} />
                 Retry Neural Sync
               </button>
             )}
@@ -1344,7 +1354,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 height: "clamp(4rem, 15vmin, 7rem)",
               }}
             >
-              <Check
+              <Icon
+                name="CheckCircle"
+                variant="Linear"
                 style={{ color: currentThemeHex, width: "50%", height: "50%" }}
               />
             </div>

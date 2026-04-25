@@ -47,14 +47,44 @@ export interface Intention {
     complexity: number;    // 🧠 1 (Low) to 10 (Critical Reasoning)
 }
 
+export interface ReflexLesson {
+    id: string;
+    fact: string;
+}
+
 class MentalStateService {
     public beliefs: Map<string, Belief> = new Map();
     public desires: Map<string, Desire> = new Map();
     public intentions: Map<string, Intention> = new Map();
+    private activeLessons: ReflexLesson[] = [];
 
     constructor() {
         console.log("[BDI_KERNEL] MentalStateService Initialized");
         this.loadMissionTape();
+    }
+
+    // --- PHASE 11: REFLEX ENGINE (Hard-Gated) ---
+    public recordReflexLesson(fact: string) {
+        // BUILD-TIME GUARD: Zero footprint in public build
+        if (typeof __LUCA_DEV_MODE__ === 'undefined' || !__LUCA_DEV_MODE__) return;
+
+        const lesson: ReflexLesson = {
+            id: `L-${Math.random().toString(36).substring(2, 7)}`,
+            fact: `[LESSON_LEARNED] ${fact}`
+        };
+        this.activeLessons.push(lesson);
+        this.addBelief({
+            fact: lesson.fact,
+            confidence: 1.0,
+            priority: 10,
+            source: "inference",
+            isPersistent: false
+        });
+        console.log(`[REFLEX] New pattern learned: ${fact}`);
+    }
+
+    public getActiveLessons(): ReflexLesson[] {
+        return this.activeLessons;
     }
 
     /**

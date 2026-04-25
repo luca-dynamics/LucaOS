@@ -13,6 +13,7 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
   const [nodes, setNodes] = useState<NetworkNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [isReal, setIsReal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Extract theme color from theme object
   const themeColor = theme?.hex || "#22C55E";
@@ -133,54 +134,9 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
         } else {
           throw new Error("Core Offline");
         }
-      } catch {
-        // Fallback Simulation
+      } catch (e: any) {
         setIsReal(false);
-        const mockNodes: NetworkNode[] = [
-          {
-            id: "GATEWAY",
-            label: "Core Gateway",
-            type: "ROUTER",
-            ip: "192.168.1.1",
-            status: "ONLINE",
-          },
-          {
-            id: "SRV_01",
-            label: "Luca Mainframe",
-            type: "SERVER",
-            ip: "192.168.1.10",
-            status: "ONLINE",
-          },
-          {
-            id: "DB_01",
-            label: "Vector Store",
-            type: "DB",
-            ip: "192.168.1.12",
-            status: "ONLINE",
-          },
-          {
-            id: "IOT_HUB",
-            label: "Smart Hub",
-            type: "IOT",
-            ip: "192.168.1.50",
-            status: "ONLINE",
-          },
-          {
-            id: "MOB_ADMIN",
-            label: "Admin Mobile",
-            type: "MOBILE",
-            ip: "192.168.1.101",
-            status: "ONLINE",
-          },
-          {
-            id: "GUEST_DEV",
-            label: "Unknown Device",
-            type: "MOBILE",
-            ip: "192.168.1.155",
-            status: "COMPROMISED",
-          },
-        ];
-        setNodes(mockNodes);
+        setError(e?.message || "Core Offline — Cannot reach local network scanner.");
       } finally {
         setLoading(false);
       }
@@ -270,11 +226,11 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
                 <span>PROTOCOL: ARP CACHE ANALYSIS</span>
                 <span
                   className="font-bold"
-                  style={{ color: isReal ? "#22C55E" : "#eab308" }}
+                  style={{ color: isReal ? "#22C55E" : "#ef4444" }}
                 >
                   {isReal
                     ? `LIVE SCAN (${nodes.length} NODES)`
-                    : "SIMULATION MODE"}
+                    : error ? "CORE OFFLINE" : "SCANNING..."}
                 </span>
               </div>
             </div>
@@ -302,8 +258,19 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
               className="flex h-full items-center justify-center font-mono text-xs gap-2"
               style={{ color: themeColor }}
             >
-              <Icon name="Restart" className="animate-spin" size={16} variant="BoldDuotone" /> MAPPING LOCAL
-              SUBNET...
+              <Icon name="Restart" className="animate-spin" size={16} variant="BoldDuotone" /> MAPPING LOCAL SUBNET...
+            </div>
+          ) : error ? (
+            <div className="flex h-full flex-col items-center justify-center gap-4 font-mono">
+              <Icon name="Danger" size={48} style={{ color: "#ef4444" }} variant="BoldDuotone" />
+              <div className="text-red-500 text-sm font-bold tracking-widest uppercase">Network Scanner Offline</div>
+              <div className="text-slate-500 text-xs text-center max-w-sm">{error}</div>
+              <div className="text-[10px] text-slate-600 text-center">Ensure the Luca Core server is running and the Electron IPC bridge is active.</div>
+            </div>
+          ) : nodes.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center gap-4 font-mono">
+              <Icon name="Wifi" size={48} style={{ color: themeColor }} variant="BoldDuotone" />
+              <div className="text-xs tracking-widest" style={{ color: themeColor }}>No devices found on local subnet.</div>
             </div>
           ) : (
             <div className="relative w-full h-full flex items-center justify-center">

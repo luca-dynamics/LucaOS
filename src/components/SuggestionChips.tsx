@@ -54,10 +54,8 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
 
   if (!visible || suggestions.length === 0) return null;
 
-  const isLight = 
-    theme?.themeName?.toLowerCase() === "lucagent" || 
-    theme?.themeName?.toLowerCase() === "agentic-slate" ||
-    theme?.themeName?.toLowerCase() === "light";
+  const isLight = theme?.isLight;
+  const isLightCream = theme?.themeName?.toLowerCase() === "lightcream";
 
   // Normalize theme color to ensure it has a hash (prevents browser fallback to white)
   let themeHex = theme?.hex || "#3b82f6";
@@ -67,11 +65,11 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-2 transition-all duration-700 ${
+      className={`flex items-center gap-2 px-3 py-1 transition-all duration-700 ${
         mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       } ${
         isDocked 
-          ? "overflow-x-auto no-scrollbar whitespace-nowrap justify-start scroll-smooth" 
+          ? "w-full justify-center overflow-hidden" 
           : "flex-wrap justify-center"
       }`}
     >
@@ -79,15 +77,18 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
         <button
           key={suggestion.id}
           onClick={() => onChipClick(suggestion.prompt)}
-          className={`group flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-300 ${
+          className={`group flex-shrink flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium transition-all duration-300 tech-border glass-blur ${
             isLight
-              ? "bg-white/80 shadow-sm hover:bg-white hover:shadow-md"
-              : "bg-white/5 hover:bg-white/10"
+              ? "shadow-sm hover:shadow-md"
+              : "hover:bg-white/10"
           }`}
           style={{
             transitionDelay: `${index * 60}ms`,
-            borderColor: isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.15)",
-            color: isLight ? "#334155" : "rgba(234, 230, 230, 0.9)",
+            backgroundColor: isLight 
+              ? `rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.4) * 0.5))`
+              : `${themeHex}10`,
+            borderColor: isLight ? "rgba(0,0,0,0.1)" : `${themeHex}33`,
+            color: isLight ? (isLightCream ? "#4a483f" : "#334155") : "var(--app-text-main, rgba(234, 230, 230, 0.9))",
             borderWidth: "1px",
             borderStyle: "solid"
           }}
@@ -95,19 +96,21 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
             e.currentTarget.style.borderColor = `${themeHex}80`;
             e.currentTarget.style.boxShadow = `0 0 15px ${themeHex}20`;
             e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.backgroundColor = isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.08)";
+            e.currentTarget.style.backgroundColor = isLight ? (isLightCream ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.02)") : `${themeHex}25`;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.15)";
+            e.currentTarget.style.borderColor = isLight ? "rgba(0,0,0,0.1)" : `${themeHex}33`;
             e.currentTarget.style.boxShadow = "none";
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.backgroundColor = isLight ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.05)";
+            e.currentTarget.style.backgroundColor = isLight 
+              ? `rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.4) * 0.5))`
+              : `${themeHex}10`;
           }}
         >
           <span className="opacity-70 group-hover:opacity-100 transition-opacity duration-300" style={{ color: themeHex }}>
-            {ICON_MAP[suggestion.icon] || <Icon name="Flash" size={12} />}
+            {ICON_MAP[suggestion.icon] || <Icon name="Flash" size={10} />}
           </span>
-          <span className="whitespace-nowrap tracking-tight">{suggestion.label}</span>
+          <span className="whitespace-nowrap tracking-tight font-bold uppercase text-[8px]">{suggestion.label}</span>
         </button>
       ))}
 

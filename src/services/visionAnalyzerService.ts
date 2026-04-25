@@ -1,6 +1,5 @@
 import { visionManager } from "./visionManager";
 import { screenCaptureService } from "./screenCaptureService";
-import { settingsService } from "./settingsService";
 
 export interface VisionEvent {
   type:
@@ -119,20 +118,9 @@ Return JSON:
         effectivePrompt = `Analyze camera feed for security/safety. User said: ${customInstruction || "Detect everything"}. Return JSON {events: [...]}`;
       }
 
+      // Optimized routing: Let VisionManager handle the provider selection based on settings
+      // but allow the component to suggest a specific model if needed.
       const intent = "insight";
-      const targetModel = options.model || "gemini-3-flash-preview";
-
-      // Standardizing Gemini config for analysis
-      const brainSettings = settingsService.get("brain");
-      (visionManager as any).updateConfig({
-        insight: {
-          ...(visionManager as any).config?.insight,
-          provider: "gemini",
-          model: targetModel,
-          apiKey: brainSettings?.geminiApiKey,
-          baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-        },
-      });
 
       const result = await (visionManager as any).analyze(
         base64Image,

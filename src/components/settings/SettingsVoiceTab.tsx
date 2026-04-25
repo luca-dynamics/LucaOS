@@ -13,12 +13,14 @@ interface SettingsVoiceTabProps {
   settings: LucaSettings;
   onUpdate: (section: keyof LucaSettings, key: string, value: any) => void;
   theme: any;
+  isMobile?: boolean;
 }
 
 const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
   settings,
   onUpdate,
   theme,
+  isMobile,
 }) => {
   const [localTTSModels, setLocalTTSModels] = useState<LocalModel[]>([]);
   const [localSTTModels, setLocalSTTModels] = useState<LocalModel[]>([]);
@@ -193,14 +195,14 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 pr-2">
+    <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"}`}>
       {/* Strategic Presets Section */}
       <motion.div variants={item} className="space-y-3">
         <div className="flex items-center gap-2">
           <Icon name="Sparkles" className="w-3.5 h-3.5" style={{ color: theme.hex }} />
           <h4
-            className={`text-lg font-bold uppercase tracking-widest`}
-            style={{ color: "var(--app-text-main, #ffffff)" }}
+            className={`${isMobile ? "text-sm" : "text-base"} font-black uppercase tracking-widest`}
+            style={{ color: "var(--app-text-main)" }}
           >
             Strategic Performance Presets
           </h4>
@@ -242,12 +244,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               <button
                 key={preset.id}
                 onClick={() => applyPreset(preset.id as any)}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all text-center group tech-border`}
+                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all text-center group tech-border`}
                 style={{
-                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.1))",
-                  borderColor: isActive
-                    ? `${theme.hex}aa`
-                    : "var(--app-border-main, rgba(255,255,255,0.05))",
+                  backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
                   background: isActive ? `${theme.hex}11` : undefined
                 }}
               >
@@ -261,12 +260,14 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   }}
                 />
                 <span
-                  className={`text-base font-bold text-[var(--app-text-main, #ffffff)]`}
+                  className="text-sm font-black"
+                  style={{ color: "var(--app-text-main)" }}
                 >
                   {preset.label}
                 </span>
                 <span
-                  className={`text-sm text-[var(--app-text-muted)] uppercase mt-0.5`}
+                  className="text-[10px] uppercase mt-0.5 opacity-70"
+                  style={{ color: "var(--app-text-muted)" }}
                 >
                   {preset.desc}
                 </span>
@@ -285,34 +286,39 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Acoustic Detection (Wake Word) */}
         <motion.div
           variants={item}
-          className={`tech-border p-4 space-y-3 rounded-xl border glass-blur`}
+          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
-          <div className="flex items-center justify-between">
-            <Icon
-              name="Mic"
-              className={`w-4 h-4 ${settings.voice.wakeWordEnabled ? "animate-pulse" : ""}`}
-              style={{
-                color: settings.voice.wakeWordEnabled ? theme.hex : "var(--app-text-muted, rgba(255,255,255,0.3))",
-              }}
-            />
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Icon
+                name="Mic"
+                className={`w-4 h-4 flex-shrink-0 ${settings.voice.wakeWordEnabled ? "animate-pulse" : ""}`}
+                style={{
+                  color: settings.voice.wakeWordEnabled ? theme.hex : "var(--app-text-muted, rgba(255,255,255,0.3))",
+                }}
+              />
+              <div
+                className={`${isMobile ? "text-xs" : "text-sm"} font-black uppercase tracking-widest truncate`}
+                style={{ color: "var(--app-text-main)" }}
+              >
+                Wake Word Detection (&quot;Hey Luca&quot;)
+              </div>
+            </div>
             <div
-              className={`text-sm font-mono ${settings.voice.wakeWordEnabled ? "text-green-500" : "text-[var(--app-text-muted)]"}`}
+              className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0 ${settings.voice.wakeWordEnabled ? "bg-green-500/10 text-green-500" : "bg-black/20 text-[var(--app-text-muted)]"}`}
             >
               {settings.voice.wakeWordEnabled ? "ACTIVE" : "DISABLED"}
             </div>
           </div>
           <div className="space-y-2">
-            <div
-              className={`text-lg font-bold uppercase tracking-tighter`}
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+            <p 
+              className="text-xs leading-tight opacity-70"
+              style={{ color: "var(--app-text-muted)" }}
             >
-              Wake Word Detection (&quot;Hey Luca&quot;)
-            </div>
-            <p className="text-sm text-[var(--app-text-muted)] leading-tight">
               Background listening for &quot;Hey Luca&quot; to bring the AI to
               front.
             </p>
@@ -327,7 +333,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 };
                 settingsService.saveSettings(updated);
               }}
-              className={`w-full py-1.5 rounded-lg border text-lg outline-none transition-all tech-border`}
+              className={`w-full py-1.5 rounded-lg border text-sm font-black outline-none transition-all tech-border`}
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
                 color: settings.voice.wakeWordEnabled
@@ -346,24 +352,32 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Listening Model */}
         <motion.div
           variants={item}
-          className={`tech-border p-4 space-y-3 rounded-xl border glass-blur`}
+          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
-          <div className="flex items-center justify-between">
-            <Icon name="Waves" className="w-4 h-4" style={{ color: theme.hex }} />
-            <div
-              className={`text-base font-mono text-[var(--app-text-muted)] uppercase`}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Icon name="Waves" className="w-4 h-4 flex-shrink-0" style={{ color: theme.hex }} />
+              <div 
+                className={`${isMobile ? "text-xs" : "text-sm"} font-black uppercase tracking-widest truncate`}
+                style={{ color: "var(--app-text-main)" }}
+              >
+                Listening Model (Ears)
+              </div>
+            </div>
+            <div 
+               className="text-[9px] font-black font-mono uppercase bg-black/20 px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0"
+               style={{ color: "var(--app-text-muted)" }}
             >
-              Listening Model (Ears)
+               STT ACTIVE
             </div>
           </div>
           <div className="space-y-1">
-            <div
-              className={`text-lg font-bold uppercase tracking-tighter`}
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+            <div 
+              className={`${isMobile ? "text-[10px]" : "text-xs"} font-bold uppercase tracking-wider opacity-60 text-[var(--app-text-muted)]`}
             >
               Speech-to-Text
             </div>
@@ -377,11 +391,11 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   onUpdate("voice", "provider", "gemini-genai");
                 }
               }}
-              className={`w-full rounded-lg p-2 text-lg outline-none transition-colors border tech-border`}
+              className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border tech-border`}
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                color: "var(--app-text-main, #ffffff)"
+                color: "var(--app-text-main)"
               }}
             >
               <optgroup label="Cloud Providers (STT)">
@@ -420,27 +434,33 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Vocal Synthesis Engine (Merged Card) */}
         <motion.div
           variants={item}
-          className={`tech-border p-4 space-y-4 lg:col-span-1 rounded-xl border glass-blur`}
+          className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 lg:col-span-1 rounded-lg glass-blur"}`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
-          <div className="flex items-center justify-between">
-            <Icon name="Volume2" className="w-4 h-4" style={{ color: theme.hex }} />
-            <div className="text-sm font-mono text-[var(--app-text-muted)] uppercase">
-              Vocal TTS Providers
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2 min-w-0">
+              <Icon name="Volume2" className="w-4 h-4 flex-shrink-0" style={{ color: theme.hex }} />
+              <div 
+                className={`${isMobile ? "text-xs" : "text-sm"} font-black uppercase tracking-widest truncate`}
+                style={{ color: "var(--app-text-main)" }}
+              >
+                Voice Provider
+              </div>
+            </div>
+            <div 
+               className="text-[9px] font-black font-mono uppercase bg-black/20 px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0"
+               style={{ color: "var(--app-text-muted)" }}
+            >
+               LOCAL-FIRST LOGIC
             </div>
           </div>
 
           <div className="space-y-3">
             {/* Engine Selection */}
             <div className="space-y-1">
-              <div
-                className={`text-base font-bold text-[var(--app-text-muted)] uppercase tracking-widest`}
-              >
-                Synthesis Engine
-              </div>
               <select
                 value={settings.voice.provider || "gemini-genai"}
                 onChange={(e) => onUpdate("voice", "provider", e.target.value)}
@@ -449,17 +469,17 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                color: "var(--app-text-main, #ffffff)"
+                color: "var(--app-text-main)"
               }}
               >
                 <option value="gemini-genai">Gemini Native Audio</option>
-                <option value="google">Google Cloud Neural</option>
+                <option value="google">Google Cloud Audio</option>
                 <option value="openai">OpenAI TTS</option>
                 <option value="deepgram">Deepgram Aura</option>
                 <option value="local-luca">Local Offline</option>
               </select>
               {(settings.voice.sttModel?.includes("gemini") || settings.voice.sttModel === "cloud-gemini") && settings.voice.provider === "gemini-genai" && (
-                <p className="text-sm text-blue-400 font-bold uppercase mt-1 animate-pulse flex items-center gap-1">
+                <p className="text-[10px] text-blue-400 font-bold uppercase mt-1 animate-pulse flex items-center gap-1">
                   <Icon name="Waves" className="w-2 h-2" />
                   {settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" 
                     ? "Direct Multimodal Live Loop Active" 
@@ -477,7 +497,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <div
-                  className={`text-base font-bold text-[var(--app-text-muted)] uppercase tracking-widest`}
+                  className={`text-xs font-black uppercase tracking-widest`}
+                  style={{ color: "var(--app-text-muted)" }}
                 >
                   {settings.voice.provider === "local-luca"
                     ? "Offline Speaker Profile"
@@ -500,7 +521,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 style={{
                   backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                   borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                  color: "var(--app-text-main, #ffffff)",
+                  color: "var(--app-text-main)",
                   opacity: settings.voice.provider === "gemini-genai" ? 0.5 : 1,
                   cursor: settings.voice.provider === "gemini-genai" ? "not-allowed" : "pointer"
                 }}
@@ -509,7 +530,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   <option>Managed by Active Persona</option>
                 ) : settings.voice.provider === "google" ? (
                   <>
-                    <optgroup label="Google Cloud Neural Voices">
+                    <optgroup label="Google Cloud Voices">
                       <option value="en-US-Journey-F">
                         Journey - Female (RECOMMENDED)
                       </option>
@@ -517,10 +538,10 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                         Journey - Male (Premium)
                       </option>
                       <option value="en-US-Neural2-F">
-                        Neural2 - Female (F)
+                        Luca - Female (F)
                       </option>
                       <option value="en-US-Neural2-A">
-                        Neural2 - Female (A)
+                        Luca - Female (A)
                       </option>
                     </optgroup>
                   </>
@@ -554,7 +575,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   <>
                     <optgroup label="System Standard">
                       <option value="native-browser">
-                        Default Neural Voice
+                        Default Luca Voice
                       </option>
                     </optgroup>
                     {localTTSModels.length > 0 && (
@@ -576,21 +597,22 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Rhythm Calibration (Moved into grid for better balance) */}
         <motion.div
           variants={item}
-          className={`tech-border p-4 space-y-3 rounded-xl border glass-blur`}
+          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
-          <div
-            className={`flex justify-between items-center text-lg font-bold uppercase tracking-tighter text-[var(--app-text-muted)]`}
+          <div 
+            className={`flex justify-between items-center ${isMobile ? "text-base" : "text-lg"} font-bold uppercase tracking-wider`}
+            style={{ color: "var(--app-text-muted)" }}
           >
             <div className="flex items-center gap-2">
               <Icon name="Zap" className="w-3 h-3" style={{ color: theme.hex }} />
               Rhythm & Pacing
             </div>
             <span
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+              style={{ color: "var(--app-text-main)" }}
               className="font-mono text-sm"
             >
               {settings.voice.pacing.toUpperCase()}
@@ -625,39 +647,38 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               </button>
             ))}
           </div>
-          <p
-            className={`text-sm text-[var(--app-text-muted)] uppercase tracking-widest text-center mt-1`}
+          <div 
+            className="text-sm uppercase tracking-widest text-center mt-1"
+            style={{ color: "var(--app-text-muted)" }}
           >
             Vocal tempo calibration protocol
-          </p>
+          </div>
         </motion.div>
       </motion.div>
 
       {/* Voice Intelligence Telemetry (Cinematic Monitoring) */}
       <motion.div
         variants={item}
-        className={`tech-border p-4 space-y-4 rounded-xl border glass-blur`}
+        className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg"} glass-blur`}
         style={{
-          backgroundColor: "var(--app-bg-tint, #11111a)",
+          backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
         }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Icon name="Activity" className="w-3.5 h-3.5" style={{ color: theme.hex }} />
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon name="Activity" className="w-3.5 h-3.5 flex-shrink-0" style={{ color: theme.hex }} />
             <span
-              className={`text-lg font-bold text-[var(--app-text-muted)] uppercase tracking-wider`}
+              className={`${isMobile ? "text-base" : "text-lg"} font-bold text-[var(--app-text-muted)] uppercase tracking-wider truncate`}
             >
               Intelligence Telemetry Dashboard
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-mono text-[var(--app-text-muted)] uppercase">
-                Hybrid Link: Active
-              </span>
-            </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className={`${isMobile ? "text-[9px]" : "text-sm"} font-mono text-[var(--app-text-muted)] uppercase`}>
+              {isMobile ? "Hybrid Active" : "Hybrid Link: Active"}
+            </span>
           </div>
         </div>
 
@@ -666,7 +687,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           <div
             className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] space-y-2`}
           >
-            <div className="flex justify-between items-center text-base font-bold text-[var(--app-text-muted)] uppercase tracking-tighter">
+            <div className={`flex justify-between items-center ${isMobile ? "text-sm" : "text-base"} font-bold text-[var(--app-text-muted)] uppercase tracking-wider`}>
               <span>Acoustic Racing (STT)</span>
               <Icon name="Mic" className="w-2.5 h-2.5" />
             </div>
@@ -707,7 +728,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           <div
             className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] space-y-2`}
           >
-            <div className="flex justify-between items-center text-base font-bold text-[var(--app-text-muted)] uppercase tracking-tighter">
+            <div className={`flex justify-between items-center ${isMobile ? "text-sm" : "text-base"} font-bold text-[var(--app-text-muted)] uppercase tracking-tighter`}>
               <span>Hyper-Inference (Brain)</span>
               <Icon name="Cpu" className="w-2.5 h-2.5" />
             </div>
@@ -728,7 +749,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           <div
             className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] space-y-2`}
           >
-            <div className="flex justify-between items-center text-base font-bold text-[var(--app-text-muted)] uppercase tracking-tighter">
+            <div className={`flex justify-between items-center ${isMobile ? "text-sm" : "text-base"} font-bold text-[var(--app-text-muted)] uppercase tracking-tighter`}>
               <span>Synthesis Flow (TTS)</span>
               <Icon name="BarChart3" className="w-2.5 h-2.5" />
             </div>
@@ -763,7 +784,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           </div>
         </div>
 
-        <p className="text-sm text-[var(--app-text-muted)] font-mono uppercase tracking-[0.2em] pt-1">
+        <p className={`${isMobile ? "text-[9px]" : "text-sm"} text-[var(--app-text-muted)] font-mono uppercase tracking-[0.2em] pt-1`}>
           Telemetry stream synchronized via Hybrid Connectivity Bridge
         </p>
       </motion.div>
@@ -773,7 +794,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         variants={item}
         initial="hidden"
         animate="show"
-        className={`tech-border p-4 space-y-4 rounded-xl border glass-blur`}
+        className={`tech-border p-4 space-y-4 rounded-lg glass-blur`}
         style={{
           backgroundColor: "var(--app-bg-tint, #11111a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -801,7 +822,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               <button
                 onClick={handleRecordVoice}
                 disabled={isRecording}
-                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-xl border glass-blur transition-all hover:bg-white/5 active:scale-95`}
+                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg glass-blur transition-all hover:bg-white/5 active:scale-95`}
                 style={{
                   color: isRecording ? "var(--app-text-muted)" : theme.hex,
                   borderColor: isRecording ? "var(--app-border-main)" : `${theme.hex}22`,
@@ -819,7 +840,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 </span>
               </button>
               <label
-                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-xl border glass-blur cursor-pointer hover:bg-white/5 transition-all text-[var(--app-text-muted)]`}
+                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg glass-blur cursor-pointer hover:bg-white/5 transition-all text-[var(--app-text-muted)]`}
               >
                 <Icon name="Upload" className="w-3.5 h-3.5" />
                 <span className="text-[9px] font-bold uppercase">UPLOAD</span>

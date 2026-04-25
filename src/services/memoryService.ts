@@ -3,6 +3,7 @@ import { settingsService } from "./settingsService";
 import { apiUrl, cortexUrl } from "../config/api";
 import { LOCAL_EMBEDDING_MODEL_IDS } from "./ModelManagerService";
 import { BRAIN_CONFIG } from "../config/brain.config";
+import { eventBus } from "./eventBus";
 
 // API Key sourced from environment variable
 // For Vite/browser: VITE_API_KEY, For Node.js: API_KEY
@@ -114,6 +115,36 @@ export const memoryService = {
     // 2. Fallback to static config
     return cortexUrl("");
   },
+  
+  /**
+   * REFRAG-HDC: Sends a visual frame to the backend for semantic compression.
+   */
+  async saveVisualHDC(rawText: string) {
+    try {
+      // Extract base64 image if present
+      const match = rawText.match(/data:image\/[a-zA-Z]*;base64,([^"\s]*)/);
+      const screenshot = match ? match[1] : null;
+      
+      if (!screenshot) return;
+      
+      const url = await this.getCortexUrl();
+      const res = await fetch(`${url}/vision/semantic-snapshot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          screenshot,
+          instruction: "Describe exactly what application or task the user is doing in 1 short sentence."
+        })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        console.log(`[MEMORY] HDC Visual Anchor Saved: ${data.summary}`);
+      }
+    } catch (e) {
+      console.warn("[MEMORY] HDC Visual Save failed:", e);
+    }
+  },
 
   /**
    * Centralized filter for ignoring high-entropy system instructions or maintenance pulses.
@@ -197,6 +228,8 @@ export const memoryService = {
             MEMORY_STORAGE_KEY,
             JSON.stringify(serverMemories),
           );
+          // Broadcast to UI that memories have been refreshed
+          eventBus.emit("memory:synced", serverMemories);
           return serverMemories;
         }
       }
@@ -361,7 +394,7 @@ export const memoryService = {
       // Legacy fallback just in case
       const ai = getGenClient();
       const result = await (ai.models as any).embedContent({
-        model: "text-embedding-004", // Use canonical high-quality model
+        model: "gemini-embedding-001", // Use stable high-availability model
         content: { parts: [{ text }] },
       });
       return result.embedding?.values || [];
@@ -395,8 +428,16 @@ export const memoryService = {
     tenantId?: string,
   ): Promise<MemoryNode | null> {
     // --- SYSTEM FILTER ---
+    const isVisual = value.toLowerCase().includes("[ambient vision]") || key.toLowerCase().includes("[ambient vision]");
+    
     if (this.isSystemPrompt(value) || this.isSystemPrompt(key)) {
-      console.log(`[MEMORY] Skipping system-level prompt/pulse: ${key}`);
+      if (isVisual && value.includes("data:image")) {
+         // REFRAG UPGRADE: Don't just skip vision, send it to the HDC Semantic Snapshotter
+         console.log(`[MEMORY] Visual Sentry detection. Routing to HDC Semantic Snapshotter.`);
+         this.saveVisualHDC(value).catch(e => console.warn("[MEMORY] HDC Vision Snapshot failed:", e));
+      } else {
+         console.log(`[MEMORY] Skipping system-level prompt/pulse: ${key}`);
+      }
       return null;
     }
 
@@ -711,6 +752,23 @@ export const memoryService = {
     }
 
     // 3. Fallback to Keyword Match (Level 3)
+    const mode = this.getMode();
+    if (mode === "LOCAL") {
+      try {
+        const res = await fetch(`${CORE_URL}/text-search`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, limit: 10 }),
+        });
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn("[MEMORY] Local FTS search failed:", e);
+      }
+    }
+
+    // Last resort: simple JS filter (Standalone Mode)
     const memories = this.getAllMemories();
     const lowerQuery = query.toLowerCase();
     return memories.filter(
@@ -821,7 +879,7 @@ export const memoryService = {
     try {
       const url = await this.getCortexUrl();
       const settings = settingsService.get("brain");
-      const memoryModel = settings?.memoryModel || BRAIN_CONFIG.defaults.brain;
+      const memoryModel = settings?.memoryModel || BRAIN_CONFIG.defaults.memory || "gemini-embedding-001";
 
       // --- SOVEREIGN CATEGORY TAGGING ---
       // Distinguish between memory layers (preference vs fact) for better LightRAG indexing

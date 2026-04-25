@@ -30,6 +30,7 @@ interface OperationsSidebarProps {
   setShowTradingTerminal: (show: boolean) => void;
   setShowSubsystemDashboard: (show: boolean) => void;
   setShowInvestigationReports: (show: boolean) => void;
+  setShowDarkWebScanner: (show: boolean) => void;
   setShowIngestionModal: (show: boolean) => void;
   setShowCodeEditor: (show: boolean) => void;
   setShowPredictionTerminal: (show: boolean) => void;
@@ -38,16 +39,17 @@ interface OperationsSidebarProps {
   setShowForexTerminal: (show: boolean) => void;
   setShowOsintDossier: (show: boolean) => void;
   setShowHackingTerminal: (show: boolean) => void;
+  setShowAgentMode: (show: boolean) => void;
+  setShowThoughtProcess: (show: boolean) => void;
   connectionTier?: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
+  onLockdown?: () => void;
 }
 
 const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
   isMobile,
   activeMobileTab,
   isListeningAmbient,
-  setWirelessTab,
-  setShowWirelessManager,
-  setShowNetworkMap,
+  theme,
   executeTool,
   devices,
   handleDeviceControlClick,
@@ -61,6 +63,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
   setShowTradingTerminal,
   setShowSubsystemDashboard,
   setShowInvestigationReports,
+  setShowDarkWebScanner,
   setShowIngestionModal,
   setShowCodeEditor,
   setShowPredictionTerminal,
@@ -69,7 +72,10 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
   setShowForexTerminal,
   setShowOsintDossier,
   setShowHackingTerminal,
+  setShowAgentMode,
+  setShowThoughtProcess,
   connectionTier = "LOCAL",
+  onLockdown,
 }) => {
   return (
     <section
@@ -79,15 +85,29 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             ? "flex w-full"
             : "hidden"
           : "flex"
-      } flex-col h-full overflow-hidden tech-border z-10 glass-blur bg-[var(--app-bg-tint)] border-r border-[var(--app-border-main)]`}
+      } flex-col h-full overflow-hidden z-10 glass-blur rounded-lg`}
+      style={{
+        backgroundColor: theme?.isLight
+          ? (theme.themeName?.toLowerCase() === "lightcream"
+              ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
+              : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
+          : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))"
+      }}
     >
+      {/* INTERNAL THEME LOGIC */}
+      {(() => {
+        const isLightCream = theme?.themeName?.toLowerCase() === "lightcream";
+        const isLight = theme?.isLight;
+        
+        return (
+          <>
       {/* Mobile Header for System Panel */}
       {isMobile && (
         <div
           className={`flex items-center justify-between p-4 border-b border-[var(--app-border-main)]`}
         >
           <h2 className="text-[var(--app-text-main)] font-black tracking-[0.3em] text-xs italic uppercase">
-            System Control
+            System Center
           </h2>
         </div>
       )}
@@ -107,7 +127,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
       <div className="flex-1 p-4 overflow-y-auto space-y-6 no-scrollbar">
         {/* Agent Operations */}
         <div
-          className="p-5 rounded-xl relative overflow-hidden group border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] shadow-xl animate-in slide-in-from-left duration-700"
+          className="p-5 rounded-lg relative overflow-hidden group tech-border glass-blur bg-black/20 shadow-xl animate-in slide-in-from-left duration-700"
         >
           <div 
             className="absolute top-0 right-0 p-3 opacity-30 text-[var(--app-text-main)]"
@@ -115,29 +135,35 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             <Icon name="Pulse" size={14} variant="BoldDuotone" />
           </div>
           <div
-            className="flex items-center gap-3 mb-5 text-[var(--app-text-main)]"
+            className={`flex items-center gap-3 mb-5 text-[var(--app-text-main)] ${theme?.isLight ? "opacity-90" : ""}`}
           >
-            <Icon name="EyeScan" size={18} variant="BoldDuotone" className="opacity-70" />
-            <h2 className="font-black tracking-[0.2em] text-xs italic uppercase">
-              Luca Ops
+            <Icon name="EyeScan" size={18} variant="BoldDuotone" className={`${theme?.isLight ? "opacity-100" : "opacity-70"}`} />
+            <h2 className="font-black tracking-widest text-xs uppercase">
+              Core Actions
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => {
-                setWirelessTab("BLUETOOTH");
-                setShowWirelessManager(true);
+                setShowAgentMode(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation border rounded-xl tech-border glass-blur bg-black/40 border-[var(--app-border-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95"
+              className={`p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation rounded-lg tech-border glass-blur hover:scale-105 active:scale-95 shadow-md`}
+              style={{
+                backgroundColor: isLightCream 
+                  ? "rgba(108, 106, 88, var(--app-bg-opacity, 0.9))" 
+                  : isLight 
+                    ? "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.3) * 0.3))"
+                    : "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.3) * 0.4))"
+              }}
             >
-              <span className="text-[9px] font-black tracking-[0.2em] text-[var(--app-text-muted)] opacity-50 uppercase">
-                Wireless
+              <span className={`text-[9px] font-black tracking-[0.2em] ${isLightCream ? "text-[#E5E1CD]/80" : "text-[var(--app-text-muted)]"} ${isLight && !isLightCream ? "opacity-70" : ""} uppercase`}>
+                Agent
               </span>
               <span
-                className={`text-xs font-black text-[var(--app-text-main)] tracking-tight uppercase`}
+                className={`text-xs font-black ${isLightCream ? "text-[#E5E1CD]" : "text-[var(--app-text-main)]"} tracking-tight uppercase`}
               >
-                Intercept
+                Mode
               </span>
               <div className="h-0.5 w-full bg-[var(--app-border-main)] mt-2 overflow-hidden rounded-full">
                 <div
@@ -147,18 +173,25 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             </button>
             <button
               onClick={() => {
-                setShowNetworkMap(true);
+                setShowThoughtProcess(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation border rounded-xl tech-border glass-blur bg-black/40 border-[var(--app-border-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95"
+              className={`p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation rounded-lg tech-border glass-blur hover:scale-105 active:scale-95 shadow-md`}
+              style={{
+                backgroundColor: isLightCream 
+                  ? "rgba(108, 106, 88, var(--app-bg-opacity, 0.9))" 
+                  : isLight 
+                    ? "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.3) * 0.3))"
+                    : "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.3) * 0.4))"
+              }}
             >
-              <span className="text-[9px] font-black tracking-[0.2em] text-[var(--app-text-muted)] opacity-50 uppercase">
-                Topology
+              <span className={`text-[9px] font-black tracking-[0.2em] ${isLightCream ? "text-[#E5E1CD]/80" : "text-[var(--app-text-muted)]"} ${isLight && !isLightCream ? "opacity-70" : ""} uppercase`}>
+                Cognitive
               </span>
               <span
-                className={`text-xs font-black text-[var(--app-text-main)] tracking-tight uppercase`}
+                className={`text-xs font-black ${isLightCream ? "text-[#E5E1CD]" : "text-[var(--app-text-main)]"} tracking-tight uppercase`}
               >
-                Net Map
+                Engine
               </span>
               <div className="h-0.5 w-full bg-[var(--app-border-main)] mt-2 overflow-hidden rounded-full">
                 <div
@@ -169,17 +202,31 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
 
             {/* MANUAL LOCKDOWN TRIGGER */}
             <button
-              onClick={() => executeTool("initiateLockdown", {})}
-              className={`col-span-2 py-3.5 flex items-center justify-center gap-3 transition-all group/btn border rounded-xl tech-border glass-blur bg-red-500/5 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 hover:scale-[1.02] active:scale-95`}
+              onClick={() => {
+                executeTool("initiateLockdown", {});
+                onLockdown?.();
+              }}
+              className={`col-span-2 py-3.5 flex items-center justify-center gap-3 transition-all group/btn rounded-lg tech-border ${isLightCream ? "" : "glass-blur hover:scale-[1.02] active:scale-95 shadow-md"}`}
+              style={{
+                backgroundColor: isLightCream 
+                  ? "rgba(180, 80, 80, 0.15)"
+                  : isLight 
+                    ? "rgba(239, 68, 68, calc(var(--app-bg-opacity, 0.3) * 0.5))"
+                    : "rgba(239, 68, 68, calc(var(--app-bg-opacity, 0.3) * 0.3))",
+                borderColor: isLightCream ? "rgba(150, 40, 40, 0.4)" : "var(--app-border-main)"
+              }}
             >
               <Icon
                 name="Lock"
                 size={14}
-                color="#ef4444"
+                color={isLightCream ? "#991b1b" : "#ef4444"}
                 className="group-hover/btn:animate-bounce transition-all"
                 variant="BoldDuotone"
               />
-              <span className="text-[11px] font-black text-red-500 tracking-[0.3em] uppercase italic">
+              <span 
+                className={`text-[11px] font-black tracking-widest uppercase transition-colors`}
+                style={{ color: isLightCream ? "#991b1b" : "#ef4444" }}
+              >
                 Initiate Lockdown
               </span>
             </button>
@@ -188,10 +235,10 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
 
         <div className="space-y-4 animate-in slide-in-from-left duration-700 delay-100">
           <div
-            className="flex items-center gap-3 mb-2 text-[var(--app-text-main)] opacity-70"
+            className={`flex items-center gap-3 mb-2 text-[var(--app-text-main)] ${theme?.isLight ? "opacity-90" : "opacity-70"}`}
           >
             <Icon name="Cpu" size={18} variant="BoldDuotone" />
-            <h2 className="font-black tracking-[0.2em] text-xs italic uppercase">
+            <h2 className="font-black tracking-widest text-xs uppercase">
               Facility Control
             </h2>
           </div>
@@ -209,11 +256,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
         {/* Luca Expansion Section */}
         <div className="space-y-4 animate-in slide-in-from-left duration-700 delay-200">
           <div
-            className="flex items-center gap-3 mb-2 text-[var(--app-text-main)] opacity-70"
+            className={`flex items-center gap-3 mb-2 text-[var(--app-text-main)] ${theme?.isLight ? "opacity-90" : "opacity-70"}`}
           >
             <Icon name="Widget" size={18} variant="BoldDuotone" />
-            <h2 className="font-black tracking-[0.2em] text-xs italic uppercase">
-              Expansion Matrix
+            <h2 className="font-black tracking-widest text-xs uppercase">
+              Tools & Apps
             </h2>
           </div>
           <div className="flex flex-wrap gap-2.5">
@@ -222,7 +269,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowSkillsMatrix(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className={`px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur hover:scale-105 active:scale-95 shadow-lg shadow-black/20`}
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="MagicStick" size={16} variant="BoldDuotone" />
               Skills
@@ -240,7 +291,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 });
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Earth" size={16} variant="BoldDuotone" />
               Sovereignty
@@ -261,7 +316,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 });
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Shield" size={16} variant="BoldDuotone" />
               Security
@@ -271,7 +330,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowAppExplorer(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Widget" size={16} variant="BoldDuotone" />
               Apps
@@ -295,7 +358,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                   console.warn("Visual Core window requires Electron");
                 }
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Monitor" size={16} variant="BoldDuotone" />
               Screen
@@ -306,7 +373,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 soundService.play("KEYSTROKE");
                 setShowLucaRecorder(true);
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="EyeScan" size={16} variant="BoldDuotone" />
               Train
@@ -317,7 +388,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowStockTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Chart" size={14} variant="BoldDuotone" /> Stock Feed
             </button>
@@ -326,7 +401,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowTradingTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="MagicStick" size={14} variant="BoldDuotone" /> AI Trading
             </button>
@@ -335,9 +414,13 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowSubsystemDashboard(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
-              <Icon name="Pulse" size={14} variant="BoldDuotone" /> Subsystems
+              <Icon name="Pulse" size={14} variant="BoldDuotone" /> System Services
             </button>
 
             <button
@@ -345,9 +428,27 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowInvestigationReports(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Notes" size={14} variant="BoldDuotone" /> Reports
+            </button>
+
+            <button
+              onClick={() => {
+                setShowDarkWebScanner(true);
+                soundService.play("KEYSTROKE");
+              }}
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? (isLightCream ? "rgba(255,255,255,0.4)" : "rgba(0, 0, 0, 0.05)") : "rgba(0, 0, 0, 0.3)",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
+            >
+              <Icon name="Shield" size={14} variant="BoldDuotone" /> Dark Web
             </button>
 
             <button
@@ -355,7 +456,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowIngestionModal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20 animate-pulse"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur bg-black/20 text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20 animate-pulse"
             >
               <Icon name="Import" size={14} variant="BoldDuotone" /> Import
             </button>
@@ -365,7 +466,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowCodeEditor(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Programming" size={14} variant="BoldDuotone" /> IDE
             </button>
@@ -375,7 +480,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowPredictionTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Chart" size={14} variant="BoldDuotone" /> Prediction
             </button>
@@ -385,7 +494,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowLucaLinkModal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/20 hover:scale-105 active:scale-95 shadow-lg shadow-black/20 border-white/20 animate-pulse"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur hover:scale-105 active:scale-95 shadow-lg shadow-black/20 animate-pulse"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Smartphone" size={14} variant="BoldDuotone" /> Link Bridge
             </button>
@@ -395,7 +508,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowCryptoTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Wallet" size={14} variant="BoldDuotone" /> DeFi
             </button>
@@ -405,7 +522,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowForexTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))" : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Bank" size={14} variant="BoldDuotone" /> FX
             </button>
@@ -415,7 +536,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowOsintDossier(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? (isLightCream ? "rgba(255,255,255,0.4)" : "rgba(0, 0, 0, 0.05)") : "rgba(0, 0, 0, 0.2)",
+                color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+              }}
             >
               <Icon name="Search" size={14} variant="BoldDuotone" /> OSINT
             </button>
@@ -425,7 +550,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
                 setShowHackingTerminal(true);
                 soundService.play("KEYSTROKE");
               }}
-              className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-red-500/20 hover:border-red-500/40 hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur hover:scale-105 active:scale-95 shadow-lg shadow-black/20"
+              style={{
+                backgroundColor: isLight ? (isLightCream ? "rgba(255,255,255,0.4)" : "rgba(0, 0, 0, 0.05)") : "rgba(0, 0, 0, 0.2)",
+                color: isLightCream ? "#ef4444" : "#ef4444"
+              }}
             >
               <Icon name="Shield" size={14} variant="BoldDuotone" color="#ef4444" /> Ethical Hacking
             </button>
@@ -433,7 +562,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             {installedModules.map((mod, i) => (
               <div
                 key={i}
-                className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all border tech-border glass-blur bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-[var(--app-text-main)]/10 shadow-lg shadow-black/20 italic"
+                className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur shadow-lg shadow-black/20 italic"
+                style={{
+                  backgroundColor: isLight ? (isLightCream ? "rgba(255,255,255,0.4)" : "rgba(0, 0, 0, 0.05)") : "rgba(0, 0, 0, 0.2)",
+                  color: isLightCream ? "#4a483f" : "var(--app-text-main)"
+                }}
               >
                 <Icon
                   name="Import"
@@ -447,6 +580,10 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           </div>
         </div>
       </div>
+      {/* FOOTER WRAPPER */}
+          </>
+        );
+      })()}
     </section>
   );
 };

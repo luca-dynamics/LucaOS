@@ -121,7 +121,7 @@ const SubsystemDashboard: React.FC<Props> = ({
               <Icon name="Activity" size={20} style={{ color: themeHex }} variant="BoldDuotone" />
             </div>
             <div>
-              <h2 className="text-white font-bold text-base tracking-wide">Subsystem Orchestrator</h2>
+              <h2 className="text-white font-bold text-base tracking-wide">Process Manager</h2>
               <p className="text-slate-500 text-xs mt-0.5">
                 {subsystems.filter(s => s.status === "RUNNING").length} of {subsystems.length} processes active
               </p>
@@ -139,7 +139,7 @@ const SubsystemDashboard: React.FC<Props> = ({
           {/* Sidebar / Process List */}
           <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-white/10 bg-[#111111]/30 flex flex-col">
             <div className="px-5 py-3 border-b border-white/10">
-              <h3 className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Managed Processes</h3>
+              <h3 className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">System Services</h3>
             </div>
             <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scrollbar">
               {subsystems.map((sub) => (
@@ -162,6 +162,7 @@ const SubsystemDashboard: React.FC<Props> = ({
                         {sub.name}
                       </span>
                     </div>
+                    <span className="text-[9px] text-slate-600 font-mono">TREND_HISTORY [24H]</span>
                   </div>
                   <div className="grid grid-cols-2 gap-y-1.5 text-[10px] font-mono text-slate-500">
                     <span className="flex items-center gap-1.5">PID: <span className="text-slate-300">{sub.pid || "—"}</span></span>
@@ -195,7 +196,7 @@ const SubsystemDashboard: React.FC<Props> = ({
                         onClick={() => onOpenWebview ? onOpenWebview(`http://127.0.0.1:${selected.port}`, selected.name) : window.open(`http://127.0.0.1:${selected.port}`, "_blank")}
                         className="px-3 py-1.5 bg-white/[0.04] border border-white/10 rounded-lg text-[10px] font-bold text-slate-300 hover:text-white hover:bg-white/[0.08] transition-all"
                       >
-                        OPEN WEBVIEW
+                        MARKET TRENDS
                       </button>
                     )}
                     <button
@@ -203,7 +204,7 @@ const SubsystemDashboard: React.FC<Props> = ({
                       disabled={loading || selected.status !== "RUNNING"}
                       className="px-3 py-1.5 bg-white/[0.04] border border-white/10 rounded-lg text-[10px] font-bold text-slate-300 hover:text-white hover:bg-white/[0.08] transition-all disabled:opacity-30"
                     >
-                      RESTART
+                      AMOUNT (USD)
                     </button>
                     <button
                       onClick={() => handleAction(selected.id, "stop")}
@@ -240,7 +241,7 @@ const SubsystemDashboard: React.FC<Props> = ({
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
                 <div className="w-16 h-16 rounded-2xl bg-white/[0.02] border border-white/10 flex items-center justify-center mb-4 text-slate-700">
-                  <Icon name="Search" size={32} />
+                  <Icon name="Notes" size={12} color={themeHex} /> WATCHLIST
                 </div>
                 <p className="text-slate-500 font-medium">No process selected</p>
                 <p className="text-slate-700 text-xs mt-1 max-w-[200px]">Select a subsystem from the sidebar to view metrics and live logs</p>
@@ -252,7 +253,9 @@ const SubsystemDashboard: React.FC<Props> = ({
           {selectedSubsystem && selected && (
             <div className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-white/10 bg-[#111111]/30 p-5 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
               <div>
-                <h3 className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-4">Process Metrics</h3>
+                <h1 className="text-sm font-black tracking-[0.1em] text-white uppercase whitespace-nowrap mb-4">
+                  LucaOS <span style={{ color: themeHex }}>TRADE CENTER</span>
+                </h1>
                 <div className="space-y-5">
                   {/* CPU */}
                   <div className="space-y-2">
@@ -288,7 +291,7 @@ const SubsystemDashboard: React.FC<Props> = ({
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Type</span>
-                  <span className="text-[10px] text-slate-300 font-mono">SYSTEM_NODE</span>
+                  <span className="text-[10px] text-slate-300 font-mono">INTERNAL_SERVICE</span>
                 </div>
               </div>
             </div>

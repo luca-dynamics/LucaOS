@@ -34,6 +34,8 @@ interface ChatWidgetState {
   isProcessing: boolean;
   persona?: string;
   theme?: string;
+  brainModel?: string;
+  embeddingModel?: string;
   approvalRequest?: any;
 }
 
@@ -43,12 +45,16 @@ const ChatWidgetMode: React.FC = () => {
     const settings = settingsService.getSettings();
     const savedPersona = settings.general.persona || "ASSISTANT";
     const savedTheme = settings.general.theme || "ASSISTANT";
+    const activeBrainId = settings.general.activeBrainId || "gemma-2b";
+    const embeddingModel = settings.general.embeddingModel || "gemini-2.1-flash";
 
     return {
       history: [],
       isProcessing: false,
       persona: savedPersona as PersonaType,
       theme: savedTheme as any,
+      brainModel: activeBrainId,
+      embeddingModel: embeddingModel,
     };
   });
   const [inputHeight, setInputHeight] = useState(44); // Base input height
@@ -72,6 +78,7 @@ const ChatWidgetMode: React.FC = () => {
   // === AWARENESS ENGINE STATE ===
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showChips, setShowChips] = useState(false);
+  const [showClose, setShowClose] = useState(false);
   const hasTriggeredAwakening = useRef(false);
 
   const {
@@ -415,6 +422,12 @@ const ChatWidgetMode: React.FC = () => {
           if (data.theme) {
             setState((prev) => ({ ...prev, theme: data.theme }));
           }
+          if (data.activeBrainId) {
+            setState((prev) => ({ ...prev, brainModel: data.activeBrainId }));
+          }
+          if (data.embeddingModel) {
+            setState((prev) => ({ ...prev, embeddingModel: data.embeddingModel }));
+          }
           if (data.amplitude !== undefined) {
             setRemoteAmplitude(data.amplitude);
           }
@@ -492,9 +505,8 @@ const ChatWidgetMode: React.FC = () => {
 
       // Only handle Compact Mode resizing here (reactive to inputHeight)
       if (isCompact) {
-        // Add extra height for suggestion chips when visible
-        const chipsHeight = showChips && suggestions.length > 0 ? 44 : 0;
-        const height = 16 + inputHeight + chipsHeight;
+        // Chips suppressed in compact mode
+        const height = 16 + inputHeight;
         // @ts-ignore
         window.electron.ipcRenderer.send("chat-widget-resize", {
           height,
@@ -698,10 +710,12 @@ const ChatWidgetMode: React.FC = () => {
           WebkitAppRegion: "drag",
           width: `${width}px`,
           maxWidth: "100vw",
-          minHeight: state.history.length === 0 ? "40px" : "300px",
+          minHeight: state.history.length === 0 ? "80px" : "300px",
           maxHeight: "90vh",
         } as any
       }
+      onMouseEnter={() => setShowClose(true)}
+      onMouseLeave={() => setShowClose(false)}
     >
       {/* Drag Handle & Background */}
       <div className="absolute inset-0 bg-[#0a0a0a]/95 glass-blur -z-10"></div>
@@ -717,8 +731,8 @@ const ChatWidgetMode: React.FC = () => {
         </div>
       )}
 
-      {/* SUGGESTION CHIPS — shown when chat is empty */}
-      {state.history.length === 0 && (
+      {/* SUGGESTION CHIPS — SUPPRESSED IN COMPACT MODE PER USER REQUEST */}
+      {state.history.length > 0 && (
         <div
           className="relative z-10"
           style={{ WebkitAppRegion: "no-drag", pointerEvents: "auto" } as any}
@@ -750,6 +764,7 @@ const ChatWidgetMode: React.FC = () => {
               PERSONA_UI_CONFIG[(state.persona as PersonaType) || "ASSISTANT"]
             }
             visible={showChips}
+            isDocked={true}
           />
         </div>
       )}
@@ -757,28 +772,39 @@ const ChatWidgetMode: React.FC = () => {
       {/* LUCA SCAN PULSE */}
       {isScanning && (
         <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center overflow-hidden">
-          <div className="w-full h-full absolute inset-0 opacity-20 bg-[radial-gradient(circle,rgba(6,182,212,0.4)_1px,transparent_1px)] bg-[size:10px_10px] animate-pulse"></div>
-          <div className="w-48 h-48 rounded-full border border-rq-blue/30 animate-ping opacity-40"></div>
-          <div className="w-32 h-32 rounded-full border border-rq-blue/20 animate-ping delay-700 opacity-20"></div>
+          <div
+            className="w-full h-full absolute inset-0 opacity-20 bg-[size:10px_10px] animate-pulse"
+            style={{
+              backgroundImage: `radial-gradient(circle, ${primaryColor}66 1px, transparent 1px)`,
+            }}
+          ></div>
+          <div
+            className="w-48 h-48 rounded-full border animate-ping opacity-40"
+            style={{ borderColor: `${primaryColor}4d` }}
+          ></div>
+          <div
+            className="w-32 h-32 rounded-full border animate-ping delay-700 opacity-20"
+            style={{ borderColor: `${primaryColor}33` }}
+          ></div>
           <div className="absolute bottom-4 left-4 flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-rq-blue animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-            <span className="text-[8px] font-mono text-rq-blue tracking-[0.2em] font-bold uppercase animate-pulse">
+            <div
+              className="w-2 h-2 rounded-full animate-pulse shadow-lg"
+              style={{
+                backgroundColor: primaryColor,
+                boxShadow: `0 0 8px ${primaryColor}`,
+              }}
+            ></div>
+            <span
+              className="text-[8px] font-mono tracking-[0.2em] font-bold uppercase animate-pulse"
+              style={{ color: primaryColor }}
+            >
               Luca Synchronization Active
             </span>
           </div>
         </div>
       )}
 
-      {/* COMPACT CLOSE BUTTON (Visible only when history is empty) */}
-      {state.history.length === 0 && (
-        <button
-          onClick={handleClose}
-          className="absolute top-2 right-2 z-[100] text-slate-500 hover:text-white transition-colors cursor-pointer"
-          style={{ WebkitAppRegion: "no-drag", pointerEvents: "auto" } as any}
-        >
-          <Icon name="CloseCircle" size={14} />
-        </button>
-      )}
+      {/* COMPACT CLOSE BUTTON (Visible only when history is empty) - REMOVED, now in Input bar */}
 
       {/* LEFT RESIZE HANDLE */}
       <div
@@ -798,6 +824,21 @@ const ChatWidgetMode: React.FC = () => {
         <div className="absolute inset-y-0 -left-1 -right-1" />
       </div>
 
+      <button
+        onClick={handleClose}
+        className={`absolute top-4 right-4 z-[200] p-1.5 rounded-full bg-black/40 border border-white/10 transition-all duration-300 hover:bg-red-500/20 hover:border-red-500/40 group/close ${
+          showClose ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
+        }`}
+        style={{ WebkitAppRegion: "no-drag" } as any}
+        title="Close Luca"
+      >
+        <Icon 
+          name="Close" 
+          size={14} 
+           className="text-white/40 group-hover/close:text-red-400 transition-colors" 
+        />
+      </button>
+
       {/* COMPONENTIZED UI */}
       {/* DICTATION VISUALIZER OVERLAY */}
       {/* COMPONENTIZED UI */}
@@ -808,11 +849,7 @@ const ChatWidgetMode: React.FC = () => {
           state.history.length === 0 ? "opacity-0 h-0 hidden" : "opacity-100"
         }`}
       >
-        <ChatWidgetHeader
-          persona={state.persona}
-          primaryColor={primaryColor}
-          onClose={handleClose}
-        />
+      {/* HEADER DELETED FOR PURE STRUCTURE */}
       </div>
 
       <input
@@ -895,6 +932,7 @@ const ChatWidgetMode: React.FC = () => {
         onClearChat={() => setState((prev) => ({ ...prev, history: [] }))}
         persona={state.persona}
         hasApprovalRequest={!!state.approvalRequest}
+        onClose={handleClose}
       />
     </div>
   );

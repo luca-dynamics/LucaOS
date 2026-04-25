@@ -109,7 +109,7 @@ const HologramWidget: React.FC<HologramWidgetProps> = ({
   }, [transcript, transcriptSource]);
 
   return (
-    <HologramWidgetImplementation
+    <HologramEntity
       isVoiceActive={isVoiceActive}
       isMicOpen={isMicOpen}
       transcript={transcript}
@@ -394,7 +394,7 @@ const TranslationControlBar = ({
   );
 };
 
-const HologramWidgetImplementation = ({
+const HologramEntity = ({
   isVoiceActive,
   audioLevel,
   primaryColor,
@@ -568,7 +568,8 @@ const HologramWidgetImplementation = ({
               [{hasMission ? `ARMED: ${activeScope}` : localStatus || intent}]
             </div>
           )}
-          <div className="flex flex-col gap-1 mb-2">
+
+          <div className="flex flex-col gap-1 mb-2 mt-2">
             {translations
               .filter((t) => t.speaker === "model")
               .map((t, i, filtered) => (

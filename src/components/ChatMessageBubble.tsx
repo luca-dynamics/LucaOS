@@ -356,7 +356,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                                   background: "transparent",
                                   fontSize: "13px",
                                   lineHeight: "1.6",
-                                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                                  fontFamily: "var(--app-font-family), monospace",
                                 }}
                                 {...props}
                               >

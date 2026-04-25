@@ -55,7 +55,7 @@ const PanelResizer: React.FC<PanelResizerProps> = ({
     <div
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
-      className={`group relative w-1 hover:w-1.5 transition-all cursor-col-resize z-50 flex items-center justify-center ${className}`}
+      className={`group relative w-[1px] hover:w-[3px] transition-all cursor-col-resize z-50 flex items-center justify-center ${className}`}
       style={{
         background: isDragging ? `${themeColor}66` : "transparent",
       }}

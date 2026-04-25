@@ -4,18 +4,24 @@ import { Icon } from "../ui/Icon";
 import pkg from "../../../package.json";
 import { LucaSettings } from "../../services/settingsService";
 import { memoryService } from "../../services/memoryService";
+import { modelManagerService } from "../../services/ModelManagerService";
 
 interface SettingsAboutTabProps {
   theme?: any;
   settings: LucaSettings;
+  isMobile?: boolean;
 }
 
 const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
   settings,
+  isMobile,
 }) => {
   const version = pkg?.version || "1.0.0";
   const [memoryCount, setMemoryCount] = useState(0);
   const [cortexOnline, setCortexOnline] = useState(false);
+  const [systemSpecs, setSystemSpecs] = useState<any>({ cpu: '...', gpu: '...', memory: { total: 0 } });
+  const [uptime, setUptime] = useState("00:00:00");
+  const [sessionStart] = useState(Date.now());
 
   useEffect(() => {
     // Load local stats
@@ -24,7 +30,21 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
 
     // Check Cortex Health
     memoryService.checkCortexHealth().then(setCortexOnline);
-  }, []);
+
+    // Fetch System Specs
+    modelManagerService.getSystemSpecs().then(setSystemSpecs);
+
+    // Uptime Counter
+    const timer = setInterval(() => {
+      const diff = Math.floor((Date.now() - sessionStart) / 1000);
+      const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+      const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+      const s = Math.floor(diff % 60).toString().padStart(2, '0');
+      setUptime(`${h}:${m}:${s}`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [sessionStart]);
 
   const electronVersion =
     typeof process !== "undefined" && process.versions?.electron
@@ -32,20 +52,16 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
       : "Web Relay";
 
   // Dynamic Architecture Detection
-  const model = settings.brain.model.toLowerCase();
-  let architecture = "Gemini 3 Flash";
-  let archBadge = "One OS";
-
-  if (
-    model.includes("local") ||
-    model.includes("gemma") ||
-    model.includes("llama")
-  ) {
-    architecture = "Hybrid Multi-Agent";
-    archBadge = "Local Core";
-  } else if (model.includes("pro")) {
-    architecture = "Gemini 3 Pro";
+  const activeModel = settings.brain.model;
+  const architecture = activeModel.split('/').pop()?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Gemini 3 Flash";
+  
+  let archBadge = "Standard OS";
+  if (activeModel.includes("local") || activeModel.includes("ollama")) {
+    archBadge = "Sovereign Core";
+  } else if (activeModel.includes("pro") || activeModel.includes("ultra")) {
     archBadge = "Elite Reasoning";
+  } else if (activeModel.includes("flash")) {
+    archBadge = "Low Latency";
   }
 
   const container = {
@@ -64,7 +80,7 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
   };
 
   return (
-    <div className="space-y-8 py-2">
+    <div className={`space-y-8 py-2 ${isMobile ? "px-0" : ""}`}>
       {/* Brand Header */}
       <div className="text-center space-y-4">
         <motion.div
@@ -104,9 +120,9 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
             >
               v{version}
             </span>
-            <span className="flex items-center justify-center gap-1.5 text-[10px] font-black font-mono text-green-500 uppercase tracking-widest bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-              Operational
+            <span className="flex items-center justify-center gap-1.5 text-[10px] font-black font-mono text-green-500 uppercase tracking-widest bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+              <Icon name="Activity" size={10} variant="BoldDuotone" />
+              Live: {uptime}
             </span>
           </div>
         </div>
@@ -117,12 +133,12 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 gap-4"
+        className={`grid ${isMobile ? "grid-cols-1 gap-0" : "grid-cols-2 gap-4"}`}
       >
         {/* Core Intelligence */}
         <motion.div
           variants={item}
-          className={`transition-all border shadow-sm bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-2xl p-5 space-y-4 relative overflow-hidden tech-border glass-blur`}
+          className={`transition-all border shadow-sm ${isMobile ? "border-x-0 border-b rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-2xl p-5 border-[var(--app-border-main)] space-y-4"} relative overflow-hidden tech-border glass-blur`}
         >
           <div className="flex items-center justify-between">
             <Icon name="Cpu" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
@@ -145,8 +161,8 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
             <div
               className={`text-[10px] mt-2 flex items-center gap-1.5 text-[var(--app-text-muted)] font-bold uppercase tracking-tighter opacity-80`}
             >
-              <Icon name="ShieldCheck" className="w-3.5 h-3.5 text-blue-400" />
-              {archBadge}
+              <Icon name="Cpu" className="w-3.5 h-3.5 text-blue-400" />
+              {archBadge} • {systemSpecs.gpu?.split('(')[0].trim() || 'Core_Compute'}
             </div>
           </div>
         </motion.div>
@@ -154,7 +170,7 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Voice Engine */}
         <motion.div
           variants={item}
-          className={`transition-all border shadow-sm bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-2xl p-5 space-y-4 relative overflow-hidden tech-border glass-blur`}
+          className={`transition-all border shadow-sm ${isMobile ? "border-x-0 border-b rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-2xl p-5 border-[var(--app-border-main)] space-y-4"} relative overflow-hidden tech-border glass-blur`}
         >
           <div className="flex items-center justify-between">
             <Icon name="Mic" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
@@ -183,10 +199,10 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
           </div>
         </motion.div>
 
-        {/* Neural Memory */}
+        {/* Luca Memory */}
         <motion.div
           variants={item}
-          className={`transition-all border shadow-sm bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-2xl p-5 space-y-4 relative overflow-hidden tech-border glass-blur`}
+          className={`transition-all border shadow-sm ${isMobile ? "border-x-0 border-b rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-2xl p-5 border-[var(--app-border-main)] space-y-4"} relative overflow-hidden tech-border glass-blur`}
         >
           <div className="flex items-center justify-between">
             <Icon name="Database" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />
@@ -222,7 +238,7 @@ const SettingsAboutTab: React.FC<SettingsAboutTabProps> = ({
         {/* Environmental Awareness */}
         <motion.div
           variants={item}
-          className={`transition-all border shadow-sm bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-2xl p-5 space-y-4 relative overflow-hidden tech-border glass-blur`}
+          className={`transition-all border shadow-sm ${isMobile ? "border-x-0 border-b rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-2xl p-5 border-[var(--app-border-main)] space-y-4"} relative overflow-hidden tech-border glass-blur`}
         >
           <div className="flex items-center justify-between">
             <Icon name="Eye" variant="BoldDuotone" className="w-5 h-5 text-[var(--app-text-main)] opacity-80" />

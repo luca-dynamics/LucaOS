@@ -52,17 +52,21 @@ export class VisionManager {
 
     return {
       planning: {
-        provider: "gemini",
-        model: selectedVisionModel, // Respecting user selection for planning too
-        apiKey: geminiApiKey,
-        baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        provider: isLocal ? "ui-tars" : "gemini",
+        model: selectedVisionModel,
+        apiKey: isLocal ? undefined : geminiApiKey,
+        baseUrl: isLocal
+          ? CORTEX_URL
+          : "https://generativelanguage.googleapis.com/v1beta",
         fallback: defaultCloud,
       },
       insight: {
-        provider: "gemini",
-        model: selectedVisionModel, // Respecting user selection for insight too
-        apiKey: geminiApiKey,
-        baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        provider: isLocal ? "ui-tars" : "gemini",
+        model: selectedVisionModel,
+        apiKey: isLocal ? undefined : geminiApiKey,
+        baseUrl: isLocal
+          ? CORTEX_URL
+          : "https://generativelanguage.googleapis.com/v1beta",
         fallback: defaultCloud,
       },
       action: {

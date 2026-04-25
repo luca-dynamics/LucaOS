@@ -18,7 +18,7 @@ pillow
 huggingface_hub
 protobuf
 sentencepiece
-faster-whisper
+faster-whisper>=1.1.0
 piper-tts
 soundfile
 kokoro

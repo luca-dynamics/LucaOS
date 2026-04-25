@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "server": "node server.js",
     "cortex": "./cortex/python/venv/bin/python3 cortex/python/cortex.py",
+    "cortex:build": "sh ops/scripts/build-cortex.sh",
     "start:all": "concurrently -k -p \"[{name}]\" -n \"UI,CORE,BRAIN\" -c \"cyan,magenta,yellow\" \"npm run dev\" \"npm run server\" \"npm run cortex\"",
     "cleanup": "./ops/scripts/cleanup.sh",
     "restore": "node ops/scripts/restore.js",
@@ -29,9 +30,8 @@
     "mobile:build:android": "npm run mobile:sync && cd android && ./gradlew assembleRelease",
     "mobile:build:ios": "npm run mobile:sync && cd ios && xcodebuild -workspace App.xcworkspace -scheme App -configuration Release archive",
     "electron:dev": "concurrently -k \"npm run dev\" \"wait-on tcp:3000 && unset ELECTRON_RUN_AS_NODE && electron .\"",
-    "electron:full": "concurrently -k -p \"[{name}]\" -n \"SERVER,CORTEX,VITE,ELECTRON\" -c \"magenta,yellow,cyan,blue\" \"npm run server\" \"npm run cortex\" \"npm run dev\" \"wait-on tcp:3000 && unset ELECTRON_RUN_AS_NODE && electron .\"",
+    "electron:full": "concurrently -k -p \"[{name}]\" -n \"VITE,ELECTRON\" -c \"cyan,blue\" \"npm run dev\" \"wait-on tcp:3000 && unset ELECTRON_RUN_AS_NODE && electron .\"",
     "phoenix": "node ops/phoenix/supervisor.cjs",
-    "migrate-skills": "node scripts/migrate-skills.js",
     "postinstall": "electron-rebuild -v 40.7.0"
   },
   "dependencies": {
@@ -179,6 +179,12 @@
       "server.js",
       "package.json",
       "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "cortex/python/dist/cortex",
+        "to": "bin/cortex"
+      }
     ],
     "directories": {
       "buildResources": "assets"

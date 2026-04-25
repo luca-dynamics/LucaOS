@@ -260,7 +260,7 @@ export const Icon: React.FC<IconProps> = ({
   function renderIcon(p: IconProvider, Comp: any) {
     switch(p) {
       case 'solar':
-        return <Comp size={size} color={iconColor} variant={variant} className={className} secondaryColor={secondaryColor} {...props} />;
+        return <Comp size={size} color={iconColor} variant={variant} className={className} secondarycolor={secondaryColor} {...props} />;
       case 'phosphor':
         return <Comp size={size} color={iconColor} weight={weight === 'duotone' ? 'duotone' : weight} className={className} {...props} />;
       case 'remix':

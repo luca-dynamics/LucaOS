@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "./ui/Icon";
 import { OsintProfile } from "../types";
+import { settingsService } from "../services/settingsService";
+import { getThemeColors } from "../config/themeColors";
 
 interface Props {
   profile: OsintProfile | null;
@@ -8,10 +10,15 @@ interface Props {
   theme?: { hex: string; primary: string; border: string; bg: string };
 }
 
-const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
-  const themePrimary = theme?.primary || "text-rq-blue";
-  const themeBorder = theme?.border || "border-rq-blue";
-  const themeHex = theme?.hex || "#3b82f6";
+const OsintDossier: React.FC<Props> = ({ profile, onClose }) => {
+  // Theme Integration
+  const currentPersona =
+    settingsService.getSettings().general.persona || "ASSISTANT";
+  const theme = getThemeColors(currentPersona);
+  const themeHex = theme.hex || "#3b82f6";
+  const themeBorder = theme.border || "border-white/30";
+  const themePrimary = theme.primary || "text-white";
+
   const [scanProgress, setScanProgress] = useState(0);
   const [showDarkWebModal, setShowDarkWebModal] = useState(false);
   const [darkWebQuery, setDarkWebQuery] = useState("");
@@ -192,7 +199,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
             <div
               className={`text-[10px] ${themePrimary} tracking-[0.3em] font-bold`}
             >
-              INITIALIZING TARGET RECONNAISSANCE... {scanProgress}%
+              SEARCHING FOR INFORMATION... {scanProgress}%
             </div>
           </div>
         )}
@@ -278,7 +285,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
             </div>
             <div>
               <h2 className="font-display text-2xl font-bold text-white tracking-[0.2em]">
-                INTEL DOSSIER V2
+                SECURITY PROFILE
               </h2>
               <div className="text-[10px] font-mono text-slate-500 flex gap-4 uppercase tracking-tighter">
                 <span>[REF: {profile.target}]</span>
@@ -291,7 +298,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
             <button
               onClick={() => setShowDarkWebModal(true)}
               className={`px-4 py-2 rounded-sm text-xs font-bold tracking-wider flex items-center gap-2 border transition-all hover:bg-white/10`}
-              style={{ borderColor: `#ef4444`, color: `#ef4444` }}
+              style={{ borderColor: `var(--app-status-danger)`, color: `var(--app-status-danger)` }}
             >
               <Icon name="Lock" size={14} />
               DARK WEB SCAN
@@ -353,7 +360,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
             <div className="space-y-5">
               <div>
                 <div className="text-[9px] font-bold text-slate-500 tracking-[0.2em] mb-1.5 uppercase opacity-70">
-                  TARGET PROFILE
+                  IDENTITY PROFILE
                 </div>
                 <div
                   className={`font-mono text-xl text-white font-bold border-b-2 ${themeBorder}/40 pb-2 tracking-wide uppercase italic`}
@@ -364,7 +371,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
 
               <div>
                 <div className="text-[9px] font-bold text-slate-500 tracking-[0.2em] mb-2 uppercase opacity-70">
-                  THREAT LEVEL INDEX
+                  RISK LEVEL
                 </div>
                 <div className="flex items-center gap-4 mb-3">
                   <div
@@ -384,7 +391,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <div className="flex justify-between text-[9px] font-mono text-slate-400">
-                      <span>EXPOSURE</span>
+                      <span>WEB PRESENCE</span>
                       <span>{Math.min(100, totalCount * 10)}%</span>
                     </div>
                     <div className="h-1 bg-slate-900 w-full overflow-hidden">
@@ -400,12 +407,12 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
 
                   <div className="space-y-1">
                     <div className="flex justify-between text-[9px] font-mono text-slate-400">
-                      <span>LEAK GRAVITY</span>
+                      <span>SECURITY RISK</span>
                       <span>{Math.min(100, darkCount * 30)}%</span>
                     </div>
                     <div className="h-1 bg-slate-900 w-full overflow-hidden">
                       <div
-                        className="h-full bg-rq-red shadow-[0_0_5px_#ef4444]"
+                        className="h-full bg-rq-red shadow-[0_0_5px_var(--app-status-danger)]"
                         style={{ width: `${Math.min(100, darkCount * 30)}%` }}
                       ></div>
                     </div>
@@ -429,7 +436,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                       profile.riskScore > 70 ? "text-rq-red" : themePrimary
                     }
                   />{" "}
-                  ANALYST VERDICT
+                  SECURITY CONCLUSION
                 </div>
                 <p className="text-[10px] text-slate-400 leading-normal font-mono">
                   Target displays significant digital footprint patterns.{" "}
@@ -518,7 +525,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
 
               {profile.hits.length === 0 && !profile.intel && (
                 <div className="text-slate-600 italic text-sm font-mono text-center mt-10">
-                  [NO RECORDS FOUND IN BUFFER]
+                  [NO RECORDS FOUND]
                 </div>
               )}
 
@@ -527,7 +534,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
                   <div
                     className={`w-8 h-8 rounded-sm border flex items-center justify-center bg-black shrink-0 transition-all duration-300 overflow-hidden ${
                       hit.category === "DARK_WEB"
-                        ? "border-red-900 group-hover:border-rq-red text-rq-red group-hover:shadow-[0_0_10px_#ef4444]"
+                        ? "border-red-900 group-hover:border-rq-red text-rq-red group-hover:shadow-[0_0_10px_var(--app-status-danger)]"
                         : hit.category === "SOCIAL"
                         ? `border-blue-900 group-hover:border-rq-blue ${themePrimary} group-hover:shadow-[0_0_10px_currentColor]`
                         : "border-emerald-900 group-hover:border-emerald-500 text-emerald-500 group-hover:shadow-[0_0_10px_#22C55E]"
@@ -618,8 +625,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
               <h3
                 className={`text-[10px] font-bold ${themePrimary} tracking-[0.2em] flex items-center gap-2 uppercase`}
               >
-                <Icon name="Share" size={14} className="animate-pulse" /> [RELATIONSHIP
-                MATRIX]
+                <Icon name="Share" size={14} className="animate-pulse" /> [NETWORK VIEW]
               </h3>
             </div>
 
@@ -696,7 +702,7 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
 
             <div className="h-1/3 border-t border-rq-border p-4 bg-white/5 relative z-10">
               <h3 className="text-[10px] font-bold text-slate-500 tracking-[0.2em] mb-4 flex items-center gap-2 uppercase">
-                <Icon name="PieChart" size={12} /> [DATA ALLOCATION]
+                <Icon name="PieChart" size={12} /> [DATA BREAKDOWN]
               </h3>
               <div className="space-y-3 font-mono">
                 <div className="space-y-1">
@@ -759,8 +765,8 @@ const OsintDossier: React.FC<Props> = ({ profile, onClose, theme }) => {
           <div
             className="relative w-[90%] max-w-2xl bg-black/60 glass-blur border rounded-sm p-6"
             style={{
-              borderColor: "#ef4444",
-              boxShadow: "0 0 60px -15px #ef444440",
+              borderColor: "var(--app-status-danger)",
+              boxShadow: "0 0 60px -15px var(--app-status-danger)40",
             }}
           >
             {/* Close Button */}

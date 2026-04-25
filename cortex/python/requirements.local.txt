@@ -6,7 +6,7 @@
 -r requirements.txt
 
 # Heavy ML Dependencies (for local development only)
-torch>=2.2.0
+torch
 transformers==4.46.3
 bitsandbytes>=0.40.0
 accelerate==1.2.1
@@ -15,9 +15,9 @@ accelerate==1.2.1
 faster-whisper>=1.0.0
 soundfile==0.12.1
 
-# TTS Engines (Local)
-piper-tts==1.2.0
-onnxruntime==1.20.1
+# TTS Engines (Local) - Piper disabled on Intel Mac 3.9 due to phonemize wheel issues
+# piper-tts==1.2.0
+onnxruntime>=1.15.0
 
 # Local LLM Support (GGUF)
 llama-cpp-python==0.3.16

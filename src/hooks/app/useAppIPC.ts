@@ -234,6 +234,7 @@ export const useAppIPC = ({
           micEnabled: false,
           cameraEnabled: false,
           screenEnabled: false,
+          telemetryEnabled: false,
         },
       });
 
@@ -260,6 +261,23 @@ export const useAppIPC = ({
     const removePersona = (window as any).electron.ipcRenderer.on(
       "switch-persona",
       personaHandler,
+    );
+    
+    // 9. THEME SWITCH FROM TRAY
+    const themeHandler = (themeId: string) => {
+      console.log("[useAppIPC] Tray requested theme switch:", themeId);
+      const current = settingsService.getSettings();
+      settingsService.saveSettings({
+        general: { 
+          ...current.general, 
+          theme: themeId as any, 
+          syncThemeWithPersona: false // Manual user choice overrides auto-sync
+        }
+      });
+    };
+    const removeTheme = (window as any).electron.ipcRenderer.on(
+      "switch-theme",
+      themeHandler,
     );
 
     const chatWidgetHandler = async (data: {
@@ -314,6 +332,7 @@ export const useAppIPC = ({
       if (removeSentryInstr) removeSentryInstr();
       if (removeKill) removeKill();
       if (removePersona) removePersona();
+      if (removeTheme) removeTheme();
       if (removeChatWidget) removeChatWidget();
       if (removeRemote) removeRemote();
     };

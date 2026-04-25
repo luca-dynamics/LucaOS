@@ -125,13 +125,13 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-md border transition-all active:scale-95 ${
+        className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 h-[24px] sm:h-[27px] rounded-md border transition-all active:scale-95 ${
           isLight ? "hover:bg-gray-100 bg-white shadow-sm" : "hover:bg-white/10 bg-black/20"
         } group`}
         style={{ borderColor: `${safeColor}40` }}
         title="Change Intelligence Model"
       >
-        <span className={`text-[11px] sm:text-xs font-bold ${isLight ? "text-gray-700" : "text-gray-200"}`}>
+        <span className={`text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[130px] whitespace-nowrap ${isLight ? "text-gray-700" : "text-gray-200"}`}>
           {activeDisplay}
         </span>
         

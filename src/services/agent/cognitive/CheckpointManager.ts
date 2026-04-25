@@ -25,18 +25,54 @@ export class CheckpointManager {
     if (this.initialized) return;
 
     try {
-      const path = (await import("path")).default;
-      const fs = (await import("fs")).default;
+      let path: any, fs: any;
+      
+      if (typeof window !== "undefined" && (window as any).require) {
+        path = (window as any).require("path");
+        fs = (window as any).require("fs");
+      } else {
+        const pathMod = "path";
+        const fsMod = "fs";
+        path = (await import(/* @vite-ignore */ pathMod)).default || await import(/* @vite-ignore */ pathMod);
+        fs = (await import(/* @vite-ignore */ fsMod)).default || await import(/* @vite-ignore */ fsMod);
+      }
 
       let dbPath: string;
       
       if (isElectron) {
-        const { app } = await import("electron");
-        dbPath = path.join(app.getPath("userData"), "agent", "checkpoints.db");
+        let app: any;
+        let isMainProcess = false;
+        
+        if (typeof window !== "undefined" && (window as any).require) {
+          const electron = (window as any).require("electron");
+          // If we are in the renderer, app is undefined. We must use IPC or a hardcoded path.
+          if (electron.app) {
+            app = electron.app;
+            isMainProcess = true;
+          }
+        } else {
+          const elecMod = "electron";
+          const electron = await import(/* @vite-ignore */ elecMod);
+          if (electron.app) {
+            app = electron.app;
+            isMainProcess = true;
+          }
+        }
+        
+        if (isMainProcess && app) {
+          dbPath = path.join(app.getPath("userData"), "agent", "checkpoints.db");
+        } else {
+          // In renderer, we don't have access to app.getPath synchronously without IPC.
+          // Fallback to a relative path or standard data directory.
+          const cwd = (typeof process !== "undefined" && typeof process.cwd === "function") ? process.cwd() : ".";
+          dbPath = path.join(cwd, '.luca', 'data', 'agent', 'checkpoints.db');
+        }
       } else {
         // Fallback to cortex data dir for Node server
-        const constants = await import("../../../../cortex/server/config/constants.js");
-        const DATA_DIR = constants.DATA_DIR || path.join(process.cwd(), '.luca', 'data');
+        const constMod = "../../../../cortex/server/config/constants.js";
+        const constants = await import(/* @vite-ignore */ constMod);
+        const cwd = (typeof process !== "undefined" && typeof process.cwd === "function") ? process.cwd() : ".";
+        const DATA_DIR = constants.DATA_DIR || path.join(cwd, '.luca', 'data');
         dbPath = path.join(DATA_DIR, "agent", "checkpoints.db");
       }
 
@@ -47,7 +83,13 @@ export class CheckpointManager {
       }
 
       try {
-        const Database = (await import("better-sqlite3")).default;
+        let Database: any;
+        if (typeof window !== "undefined" && (window as any).require) {
+          Database = (window as any).require("better-sqlite3");
+        } else {
+          const sqliteMod = "better-sqlite3";
+          Database = (await import(/* @vite-ignore */ sqliteMod)).default || await import(/* @vite-ignore */ sqliteMod);
+        }
         this.db = new Database(dbPath);
         this.initSchema();
         console.log("[CheckpointManager] Initialized at:", dbPath);

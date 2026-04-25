@@ -26,7 +26,7 @@ class LucaShutdownManager {
 
   constructor() {
     // Register signal handlers
-    if (typeof process !== "undefined") {
+    if (typeof process !== "undefined" && typeof process.on === "function") {
       process.on("SIGTERM", () => this.initiateShutdown("SIGTERM"));
       process.on("SIGINT", () => this.initiateShutdown("SIGINT"));
       process.on("beforeExit", () => this.initiateShutdown("beforeExit"));
@@ -207,9 +207,15 @@ export class MemoryServiceShutdownHandler implements ShutdownHandler {
  * Helper to create PID file for process tracking
  */
 export async function writePidFile(path: string): Promise<void> {
-  if (typeof process !== "undefined") {
+  if (typeof process !== "undefined" && process.pid) {
     try {
-      const fs = await import("fs/promises");
+      let fs: any;
+      if (typeof window !== "undefined" && (window as any).require) {
+        fs = (window as any).require("fs/promises");
+      } else {
+        const modName = "fs/promises";
+        fs = await import(/* @vite-ignore */ modName);
+      }
       await fs.writeFile(path, process.pid.toString());
       console.log(`[PID] Written PID file: ${process.pid} -> ${path}`);
 

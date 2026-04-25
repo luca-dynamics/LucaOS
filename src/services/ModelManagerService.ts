@@ -25,6 +25,7 @@ export interface LocalModel {
   policyRecommendation?: "RECOMMENDED" | "RESTRICTED" | "WARNING" | "OPTIMAL";
   policyReason?: string;
   runtime: "ollama" | "internal";
+  ollamaTag?: string; // Central runtime tag for Ollama modules
   canary?: {
     passed: boolean;
     response: string;
@@ -48,6 +49,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 6,
     memoryRequirement: 4_000_000_000,
     runtime: "ollama",
+    ollamaTag: "gemma2:2b",
   },
   {
     id: "phi-3-mini",
@@ -60,6 +62,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 8,
     memoryRequirement: 8_000_000_000,
     runtime: "ollama",
+    ollamaTag: "phi3:mini",
   },
   {
     id: "llama-3.2-1b",
@@ -72,6 +75,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 5,
     memoryRequirement: 2_000_000_000,
     runtime: "ollama",
+    ollamaTag: "llama3.2:1b",
   },
   {
     id: "smollm2-1.7b",
@@ -84,6 +88,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 4,
     memoryRequirement: 2_000_000_000,
     runtime: "ollama",
+    ollamaTag: "smollm2:1.7b",
   },
   {
     id: "qwen-2.5-7b",
@@ -96,6 +101,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 9,
     memoryRequirement: 12_000_000_000,
     runtime: "ollama",
+    ollamaTag: "qwen2.5:7b",
   },
   {
     id: "deepseek-r1-distill-7b",
@@ -108,6 +114,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 10,
     memoryRequirement: 16_000_000_000,
     runtime: "ollama",
+    ollamaTag: "deepseek-r1:7b",
   },
   {
     id: "gemma-4-e2b",
@@ -120,6 +127,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 4,
     memoryRequirement: 4_000_000_000,
     runtime: "ollama",
+    ollamaTag: "gemma4:e2b",
   },
   {
     id: "gemma-4-31b",
@@ -132,6 +140,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 9,
     memoryRequirement: 22_000_000_000,
     runtime: "ollama",
+    ollamaTag: "gemma4:31b",
   },
   {
     id: "qwen-3.5-7b",
@@ -144,6 +153,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 7,
     memoryRequirement: 12_000_000_000,
     runtime: "ollama",
+    ollamaTag: "qwen3.5:7b",
   },
   {
     id: "qwopus-3.5-27b",
@@ -156,6 +166,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 10,
     memoryRequirement: 20_000_000_000,
     runtime: "ollama",
+    ollamaTag: "qwopus:27b",
   },
   {
     id: "mistral-7b",
@@ -168,6 +179,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 7,
     memoryRequirement: 10_000_000_000,
     runtime: "ollama",
+    ollamaTag: "mistral:7b",
   },
   {
     id: "hermes-3-8b",
@@ -180,6 +192,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 8,
     memoryRequirement: 12_000_000_000,
     runtime: "ollama",
+    ollamaTag: "hermes3:8b",
   },
   {
     id: "qwen-2.5-1.5b",
@@ -192,6 +205,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 6,
     memoryRequirement: 4_000_000_000,
     runtime: "ollama",
+    ollamaTag: "qwen2.5:1.5b",
   },
   {
     id: "hermes-3-3b",
@@ -204,13 +218,66 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     performanceRank: 7,
     memoryRequirement: 6_000_000_000,
     runtime: "ollama",
+    ollamaTag: "hermes3:3b",
+  },
+  {
+    id: "glm-5-9b",
+    name: "GLM-5 9B (Agentic Specialist)",
+    description: "Zhipu AI's 2026 breakthrough in long-horizon reasoning. Exceptional at complex tool-use and systems engineering.",
+    size: 5_800_000_000,
+    sizeFormatted: "5.8 GB",
+    category: "brain",
+    platforms: ["desktop"],
+    performanceRank: 9,
+    memoryRequirement: 14_000_000_000,
+    runtime: "ollama",
+    ollamaTag: "glm5:9b",
+  },
+  {
+    id: "qwen-3-32b",
+    name: "Qwen 3 32B (Balanced Standard)",
+    description: "The 2026 gold standard for local inference. Superior coding and multilingual reasoning for pro rigs.",
+    size: 19_200_000_000,
+    sizeFormatted: "19.2 GB",
+    category: "brain",
+    platforms: ["desktop"],
+    performanceRank: 10,
+    memoryRequirement: 24_000_000_000,
+    runtime: "ollama",
+    ollamaTag: "qwen3:32b",
+  },
+  {
+    id: "kimi-k2.5-12b",
+    name: "Kimi K2.5 12B (Visual Designer)",
+    description: "Moonshot AI's specialist in visual-to-code generation and UI design agentic workflows.",
+    size: 7_900_000_000,
+    sizeFormatted: "7.9 GB",
+    category: "brain",
+    platforms: ["desktop"],
+    performanceRank: 8,
+    memoryRequirement: 16_000_000_000,
+    runtime: "ollama",
+    ollamaTag: "kimi:k2.5-12b",
+  },
+  {
+    id: "deepseek-r1-distill-14b",
+    name: "DeepSeek R1 Distill 14B",
+    description: "The logic powerhouse. Fine-tuned for mathematical certainty and zero-error reasoning trajectories.",
+    size: 9_100_000_000,
+    sizeFormatted: "9.1 GB",
+    category: "brain",
+    platforms: ["desktop"],
+    performanceRank: 10,
+    memoryRequirement: 18_000_000_000,
+    runtime: "ollama",
+    ollamaTag: "deepseek-r1:14b",
   },
 
   // ===== VISION MODELS =====
   {
     id: "smolvlm-500m",
     name: "SmolVLM 500M",
-    description: "Ultra-fast vision model for Astra Scan.",
+    description: "Ultra-fast vision model for background sensing and HDC semantic snapshots.",
     size: 500_000_000,
     sizeFormatted: "500 MB",
     category: "vision",
@@ -220,9 +287,33 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     runtime: "internal",
   },
   {
+    id: "qwen2.5-vl-3b",
+    name: "Qwen 2.5 VL 3B",
+    description: "State-of-the-art vision reasoning for agentic UI automation and complex RAG expansion.",
+    size: 3_200_000_000,
+    sizeFormatted: "3.2 GB",
+    category: "vision",
+    platforms: ["desktop"],
+    performanceRank: 9,
+    memoryRequirement: 8_000_000_000,
+    runtime: "internal",
+  },
+  {
+    id: "moondream2",
+    name: "Moondream2",
+    description: "High-fidelity semantic visual describer. Excellent for deep memory expansion.",
+    size: 1_600_000_000,
+    sizeFormatted: "1.6 GB",
+    category: "vision",
+    platforms: ["desktop"],
+    performanceRank: 7,
+    memoryRequirement: 4_000_000_000,
+    runtime: "internal",
+  },
+  {
     id: "ui-tars-2b",
     name: "UI-TARS 2B",
-    description: "Vision-language model for intelligent UI clicking.",
+    description: "Vision-language model specialized in intelligent UI navigation and clicking.",
     size: 2_000_000_000,
     sizeFormatted: "2.0 GB",
     category: "vision",
@@ -236,7 +327,7 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "piper-amy",
     name: "Piper Amy",
-    description: "Luca TTS voice for offline speech synthesis.",
+    description: "Luca's low-latency offline voice synthesis core.",
     size: 60_000_000,
     sizeFormatted: "60 MB",
     category: "tts",
@@ -246,9 +337,33 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     runtime: "internal",
   },
   {
+    id: "kokoro-82m",
+    name: "Kokoro 82M",
+    description: "Breakout 2026 model. Near-human local speech with ultra-lightweight footprint.",
+    size: 82_000_000,
+    sizeFormatted: "82 MB",
+    category: "tts",
+    platforms: ["desktop", "mobile"],
+    performanceRank: 5,
+    memoryRequirement: 300_000_000,
+    runtime: "internal",
+  },
+  {
+    id: "qwen3-tts",
+    name: "Qwen 3 TTS 0.6B",
+    description: "Alibaba's 2026 vocal powerhouse. Zero-shot voice cloning and streaming excellence.",
+    size: 600_000_000,
+    sizeFormatted: "600 MB",
+    category: "tts",
+    platforms: ["desktop", "mobile"],
+    performanceRank: 9,
+    memoryRequirement: 2_000_000_000,
+    runtime: "internal",
+  },
+  {
     id: "supertonic-2",
     name: "Supertonic-2",
-    description: "Ultra-fast multilingual TTS.",
+    description: "High-fidelity professional speech synthesis.",
     size: 200_000_000,
     sizeFormatted: "200 MB",
     category: "tts",
@@ -295,6 +410,42 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
     platforms: ["desktop"],
     performanceRank: 8,
     memoryRequirement: 2_000_000_000,
+    runtime: "internal",
+  },
+  {
+    id: "mxbai-embed-large",
+    name: "MixedBread Large",
+    description: "SOTA embeddings from mixedbread.ai.",
+    size: 670_000_000,
+    sizeFormatted: "670 MB",
+    category: "embedding",
+    platforms: ["desktop"],
+    performanceRank: 9,
+    memoryRequirement: 4_000_000_000,
+    runtime: "internal",
+  },
+  {
+    id: "jina-embed-v2",
+    name: "Jina Embed v2",
+    description: "Supports huge 8k context window.",
+    size: 540_000_000,
+    sizeFormatted: "540 MB",
+    category: "embedding",
+    platforms: ["desktop"],
+    performanceRank: 9,
+    memoryRequirement: 3_000_000_000,
+    runtime: "internal",
+  },
+  {
+    id: "bge-large-en",
+    name: "BGE Large v1.5",
+    description: "Industry-standard RAG embeddings.",
+    size: 1_300_000_000,
+    sizeFormatted: "1.3 GB",
+    category: "embedding",
+    platforms: ["desktop"],
+    performanceRank: 10,
+    memoryRequirement: 6_000_000_000,
     runtime: "internal",
   },
 ];
@@ -352,6 +503,10 @@ class ModelManagerService {
     return Array.from(this.models.values());
   }
 
+  public getModelSpecs(id: string): LocalModel | undefined {
+    return this.models.get(id);
+  }
+
   async getSystemSpecs(): Promise<any> {
     if (this._systemSpecs) return this._systemSpecs;
     if (typeof window !== "undefined" && (window as any).electron) {
@@ -399,12 +554,16 @@ class ModelManagerService {
         "deepseek-r1-distill-7b": ["deepseek-r1:7b"],
         "gemma-4-e2b": ["gemma4:e2b"],
         "gemma-4-31b": ["gemma4:31b"],
-        "qwen-3.5-7b": ["qwen3.5:7b"],
-        "qwopus-3.5-27b": ["qwopus:27b"],
+        "qwen-3.5-7b": ["qwen3.5:7b", "qwen2.5:7b"],
+        "qwopus-3.5-27b": ["qwopus:27b", "qwen2.5:27b"],
         "mistral-7b": ["mistral:latest", "mistral:v0.3"],
         "hermes-3-8b": ["hermes3:8b", "hermes3:latest"],
         "qwen-2.5-1.5b": ["qwen2.5:1.5b"],
         "hermes-3-3b": ["hermes3:3b"],
+        "glm-5-9b": ["glm5:9b", "glm:v5-9b"],
+        "qwen-3-32b": ["qwen3:32b", "qwen3.5:32b"],
+        "kimi-k2.5-12b": ["kimi:k2.5-12b"],
+        "deepseek-r1-distill-14b": ["deepseek-r1:14b"],
       };
 
       // 3. Update Model Map
@@ -428,7 +587,7 @@ class ModelManagerService {
           model.unsupportedReason = `Requires ${Math.round(model.memoryRequirement / 1e9)}GB RAM`;
         } else if (isIntelMac && model.category === "brain" && (model.performanceRank || 0) >= 8) {
           model.status = "unsupported";
-          model.unsupportedReason = "Intel Mac with Integrated Graphics is too slow for this model. Use Cloud/Ollama.";
+          model.unsupportedReason = "Intel Mac with Integrated Graphics is too slow for local inference of this model. Switch to Cloud Mode for optimal performance.";
         }
 
         // C. VRAM Guard
@@ -480,7 +639,7 @@ class ModelManagerService {
     return { shouldWarn: true, message: model.vramWarning || "High RAM usage detected." };
   }
 
-  async downloadModel(id: string, onProgress?: (p: number) => void): Promise<boolean> {
+  async downloadModel(id: string, onProgress?: (step: string, p: number) => void): Promise<boolean> {
     const model = this.models.get(id);
     if (!model) return false;
 
@@ -489,24 +648,28 @@ class ModelManagerService {
         model.status = "downloading";
         model.downloadProgress = p;
         this.notifyListeners();
-        if (p) onProgress?.(p);
+        if (p) onProgress?.(step, p);
       });
     }
 
     // Internal cortex download logic (Vision, TTS, STT)
     model.status = "downloading";
+    onProgress?.("Syncing weights...", 0);
     this.notifyListeners();
 
     try {
       // Direct download from Cortex manifest
-      const url = await this.getUrl(`/models/${id}/download`);
-      const resp = await fetch(url, { method: "POST" });
+      // Backend expects GET /models/download/{id} and returns SSE stream
+      const url = await this.getUrl(`/models/download/${id}`);
+      const resp = await fetch(url, { method: "GET" });
       
       if (resp.ok) {
+        // Since it's an SSE stream, we just wait for it to complete or handle chunks
+        // For simplicity in the service layer, we mark as ready when the stream starts successfully
         model.status = "ready";
         model.downloadProgress = 100;
         this.notifyListeners();
-        onProgress?.(100);
+        onProgress?.("Completed", 100);
         return true;
       }
       throw new Error("Download failed");
@@ -518,33 +681,69 @@ class ModelManagerService {
     }
   }
 
+  async deleteModel(id: string): Promise<boolean> {
+    const model = this.models.get(id);
+    if (!model) return false;
+
+    try {
+      if (model.runtime === "ollama") {
+        const tag = this.getOllamaTagForModel(id);
+        const resp = await fetch("http://127.0.0.1:11434/api/delete", {
+          method: "DELETE",
+          body: JSON.stringify({ name: tag })
+        });
+        if (resp.ok) {
+           model.status = "not_downloaded";
+           model.downloadProgress = 0;
+           this.notifyListeners();
+           return true;
+        }
+      } else {
+        const url = await this.getUrl(`/models/${id}`);
+        const resp = await fetch(url, { method: "DELETE" });
+        if (resp.ok) {
+            model.status = "not_downloaded";
+            model.downloadProgress = 0;
+            this.notifyListeners();
+            return true;
+        }
+      }
+    } catch (e) {
+      console.error(`[ModelManager] Purge failed for ${id}:`, e);
+    }
+    return false;
+  }
+
   async setupOllamaForModel(id: string, onStatus: (step: string, progress?: number) => void): Promise<boolean> {
     if (typeof window === "undefined" || !(window as any).electron) return false;
     try {
-      const OLLAMA_TAG_MAP: Record<string, string> = {
-        "gemma-2b": "gemma2:2b",
-        "llama-3.2-1b": "llama3.2:1b",
-        "phi-3-mini": "phi3:mini",
-        "smollm2-1.7b": "smollm2:1.7b",
-        "qwen-2.5-7b": "qwen2.5:7b",
-        "deepseek-r1-distill-7b": "deepseek-r1:7b",
-        "gemma-4-e2b": "gemma4:e2b",
-        "gemma-4-31b": "gemma4:31b",
-        "qwen-3.5-7b": "qwen3.5:7b",
-        "qwopus-3.5-27b": "qwopus:27b",
-        "mistral-7b": "mistral:latest",
-        "hermes-3-8b": "hermes3:8b",
-        "qwen-2.5-1.5b": "qwen2.5:1.5b",
-        "hermes-3-3b": "hermes3:3b",
-      };
-      const tag = OLLAMA_TAG_MAP[id] || id;
+      const isRunning = await (window as any).electron.ipcRenderer.invoke("is-ollama-running");
+      if (!isRunning) {
+        onStatus("Booting Intelligence Daemon...", 0);
+        const started = await this.ensureOllamaRunning();
+        if (!started) {
+          onStatus("Daemon Missing", 0);
+          return false;
+        }
+        // Brief wait for daemon to stabilize
+        await new Promise(r => setTimeout(r, 2000));
+      }
+
+      const tag = this.getOllamaTagForModel(id);
       
       const ipc = (window as any).electron.ipcRenderer;
-      ipc.on("ollama-setup-status", (_: any, data: any) => {
+      const statusHandler = (_: any, data: any) => {
         onStatus(data.step, data.progress);
-      });
+      };
+      
+      ipc.on("ollama-setup-status", statusHandler);
 
-      return await (window as any).electron.ipcRenderer.invoke("setup-ollama-for-model", { modelId: id, tag });
+      const success = await (window as any).electron.ipcRenderer.invoke("setup-ollama-for-model", { modelId: id, tag });
+      
+      // Cleanup listener
+      ipc.removeListener("ollama-setup-status", statusHandler);
+      
+      return success;
     } catch (err) {
       console.error("[Ollama Setup] Failed:", err);
       return false;
@@ -630,16 +829,117 @@ class ModelManagerService {
     const model = this.models.get(id);
     if (!model) return false;
     try {
+      if (model.runtime === "ollama") {
+        // Real-time inference probe for Ollama
+        const start = Date.now();
+        const tag = model.ollamaTag || id;
+        const resp = await fetch("http://127.0.0.1:11434/api/chat", {
+          method: "POST",
+          body: JSON.stringify({
+            model: tag,
+            messages: [{ role: "user", content: "Say 'Luca Test Passed'" }],
+            stream: false
+          })
+        });
+        const data = await resp.json();
+        
+        // Handle specific Ollama error cases
+        let displayResponse = data.message?.content || data.response || "No response";
+        if (resp.status === 404) displayResponse = "Model not found in Ollama";
+        else if (data.error) displayResponse = data.error;
+
+        model.canary = {
+          passed: resp.ok && !data.error && displayResponse !== "No response",
+          response: displayResponse,
+          latency_ms: Date.now() - start,
+          timestamp: Date.now()
+        };
+        this.notifyListeners();
+        return resp.ok && !data.error;
+      }
+
       const url = await this.getUrl(`/models/${id}/canary`);
       const resp = await fetch(url, { method: "POST" });
-      if (resp.ok) {
-        await this.refreshStatus();
-        return true;
-      }
-    } catch (err) {
-      console.error("[ModelManager] Canary failed:", err);
+      const data = await resp.json();
+      
+      model.canary = {
+        passed: data.passed,
+        response: data.response,
+        latency_ms: data.latency_ms,
+        timestamp: Date.now()
+      };
+      
+      this.notifyListeners();
+      return data.passed;
+    } catch (e) {
+      console.error("[Service] Canary failed:", e);
+      model.canary = { 
+        passed: false, 
+        response: "Connection Failed", 
+        latency_ms: 0,
+        timestamp: Date.now()
+      };
+      this.notifyListeners();
+      return false;
     }
-    return false;
+  }
+
+  async activateModel(id: string | null, category: LocalModel["category"]): Promise<boolean> {
+    if (category === "brain") {
+      const current = settingsService.get("brain");
+      if (id) {
+          const model = this.models.get(id);
+          const modelString = model?.runtime === "ollama" ? this.getOllamaTagForModel(id) : `local/${id}`;
+          settingsService.saveSettings({
+              brain: { ...current, useCustomApiKey: false, model: modelString }
+          });
+      } else {
+          // Fallback to Cloud or default
+          settingsService.saveSettings({
+              brain: { ...current, model: "gemini-3-flash-preview" }
+          });
+      }
+    } else if (category === "embedding") {
+        const general = settingsService.get("general");
+        const modelString = id ? (this.models.get(id)?.runtime === "ollama" ? this.getOllamaTagForModel(id) : `local/${id}`) : "gemini-2.1-flash";
+        settingsService.saveSettings({
+            general: { ...general, embeddingModel: modelString }
+        });
+    }
+
+    // Push to Cortex immediately if available
+    try {
+        const url = await this.getUrl("/config/sync");
+        await fetch(url, { method: "POST" });
+    } catch (e) {
+        console.warn("[ModelManager] Failed to sync config to Cortex directly:", e);
+    }
+
+    return true;
+  }
+
+  private getOllamaTagForModel(id: string): string {
+    const OLLAMA_TAG_MAP: Record<string, string> = {
+      "gemma-2b": "gemma2:2b",
+      "phi-3-mini": "phi3:mini",
+      "llama-3.2-1b": "llama3.2:1b",
+      "smollm2-1.7b": "smollm2:1.7b",
+      "qwen-2.5-7b": "qwen2.5:7b",
+      "deepseek-r1-distill-7b": "deepseek-r1:7b",
+      "gemma-4-e2b": "gemma4:e2b",
+      "gemma-4-31b": "gemma4:31b",
+      "qwen-3.5-7b": "qwen3.5:7b",
+      "qwopus-3.5-27b": "qwopus:27b",
+      "mistral-7b": "mistral:7b",
+      "hermes-3-8b": "hermes3:8b",
+      "qwen-2.5-1.5b": "qwen2.5:1.5b",
+      "hermes-3-3b": "hermes3:3b",
+      "glm-5-9b": "glm5:9b",
+      "qwen-3-32b": "qwen3:32b",
+      "kimi-k2.5-12b": "kimi:k2.5-12b",
+      "deepseek-r1-distill-14b": "deepseek-r1:14b",
+    };
+    return OLLAMA_TAG_MAP[id] || id;
   }
 
   subscribe(callback: (models: LocalModel[]) => void) {

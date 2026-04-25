@@ -10,7 +10,8 @@ import { soundService } from "../../services/soundService";
 import { apiUrl, waitForAuth } from "../../config/api";
 import { clearCloudOnlyMode, isCloudOnly } from "../../utils/cloudMode";
 
-import { Sender, Message } from "../../types";
+import { Message } from "../../types";
+import { eventBus } from "../../services/eventBus";
 
 interface UseAppSystemProps {
   messages: Message[];
@@ -44,14 +45,12 @@ export type BootSequence = "INIT" | "BIOS" | "KERNEL" | "ONBOARDING" | "READY";
 export const useAppSystem = ({
   messages,
   isElectron,
-  setMessages,
   setCurrentCwd,
   setMemories,
   setTasks,
   setEvents,
   setBackgroundImage,
   setGhostBrowserUrl,
-
   hasInitializedRef,
   hasAnnouncedRef,
   restoreTools,
@@ -134,6 +133,10 @@ export const useAppSystem = ({
           const { setLucaAuthToken } = await import("../../config/api");
           setLucaAuthToken(token || ""); // Unblock with empty if null
           console.log("[BOOT] Security Handshake Complete.");
+
+          // Initialize services that require authentication
+          const { lucaService } = await import("../../services/lucaService");
+          lucaService.initializeAuthenticatedServices();
         } catch (e) {
           console.error("[BOOT] Security Handshake Failed:", e);
           // Still need to unblock waiters even on failure
@@ -283,9 +286,11 @@ export const useAppSystem = ({
         setBootSequence("KERNEL");
 
         try {
+          await import("../../services/safetyService");
           memoryService.startSynapse();
+          console.log("[BOOT] Safety Sentinel Enforced.");
         } catch (e) {
-          console.warn("[BOOT] Synapse start failed (non-fatal):", e);
+          console.warn("[BOOT] Synapse start or Safety init failed (non-fatal):", e);
         }
 
         try {
@@ -428,14 +433,22 @@ export const useAppSystem = ({
 
   // 4. INITIAL ASYNC LOAD
   useEffect(() => {
-    if (!isCloudOnly()) {
-      memoryService.syncWithCore().then(setMemories);
-    }
     setTasks(taskService.getTasks());
     setEvents(taskService.getEvents());
     const bg = localStorage.getItem("LUCA_BACKGROUND");
     if (bg) setBackgroundImage(bg);
-  }, [setMemories, setTasks, setEvents, setBackgroundImage]);
+  }, [setTasks, setEvents, setBackgroundImage]);
+
+  // 4b. MEMORY EVENT LISTENER
+  useEffect(() => {
+    const handleMemorySync = (newMemories: any) => {
+      setMemories(newMemories);
+    };
+    eventBus.on("memory:synced", handleMemorySync);
+    return () => {
+      eventBus.off("memory:synced", handleMemorySync);
+    };
+  }, [setMemories]);
 
   // 5. GOAL MANAGEMENT
   const fetchGoals = async (retryCount = 0) => {

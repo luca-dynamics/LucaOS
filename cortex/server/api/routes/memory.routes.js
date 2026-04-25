@@ -36,6 +36,20 @@ router.post('/wipe', (req, res) => {
     }
 });
 
+// --- TEXT SEARCH (FTS5) ---
+router.post('/text-search', (req, res) => {
+    try {
+        const { query, limit } = req.body;
+        if (!query) {
+            return res.status(400).json({ error: "Query required" });
+        }
+        const results = memoryStore.searchByText(query, limit);
+        res.json(results);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // --- VECTOR OPERATIONS ---
 router.post('/vector-search', (req, res) => {
     try {

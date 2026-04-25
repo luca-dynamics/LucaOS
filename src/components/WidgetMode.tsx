@@ -118,7 +118,7 @@ const WidgetMode: React.FC = () => {
 
       {/* Transcript / Status Text */}
       <div
-        className={`mt-4 px-6 py-2 bg-black/80 glass-blur rounded-full border border-white/10 text-center transition-all duration-300 shadow-2xl
+        className={`mt-4 px-6 py-2 bg-black/80 glass-blur rounded-full border border-white/10 text-center transition-all duration-300 shadow-2xl relative
         ${state.transcript ? "min-w-[300px] w-auto animate-pulse-once" : "w-[180px]"}`}
       >
         <span

@@ -366,7 +366,7 @@ export class GeminiAdapter implements LLMProvider {
     try {
       // Reverting to the exact GitHub pattern confirmed by user.
       const result = await (client.models as any).embedContent({
-        model: "text-embedding-004", // Force standard high-quality model
+        model: "embedding-001", // Reverted to high-availability stable model (004 was 404ing)
         contents: [{ parts: [{ text }] }], // NEW SDK (plural)
         taskType: "RETRIEVAL_QUERY",
       });
@@ -386,7 +386,7 @@ export class GeminiAdapter implements LLMProvider {
       }));
       // Some versions of the GenAI SDK expect the object with requests directly on the client.models
       // While others expect them on the specific model object. We use the most robust approach.
-      const result = await (client as any).getGenerativeModel({ model: "text-embedding-004" }).batchEmbedContents({
+      const result = await (client as any).getGenerativeModel({ model: "embedding-001" }).batchEmbedContents({
         requests,
       });
       return (result.embeddings || []).map((e: any) => e.values || []);

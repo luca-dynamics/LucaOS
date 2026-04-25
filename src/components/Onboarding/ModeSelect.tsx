@@ -6,6 +6,7 @@ export type ConversationMode = "text" | "voice";
 
 interface ModeSelectProps {
   onSelect: (mode: ConversationMode) => void;
+  isLightTheme: boolean;
 }
 
 /**
@@ -13,7 +14,7 @@ interface ModeSelectProps {
  * Lets user choose between text or voice conversation
  * Theme-aware with support for light and dark modes
  */
-const ModeSelect: React.FC<ModeSelectProps> = ({ onSelect }) => {
+const ModeSelect: React.FC<ModeSelectProps> = ({ onSelect, isLightTheme }) => {
   const iconColor = "var(--app-text-main)";
 
   return (

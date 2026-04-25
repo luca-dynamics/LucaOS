@@ -11,16 +11,16 @@ import type { AgentTask, AgentEvent } from "../services/agent/types";
 import { agentService } from "../services/agent/AgentService";
 
 interface Props {
-  task: AgentTask | null;
-  onStop: () => void;
+  task?: AgentTask | null;
+  onClose: () => void;
   onPause?: () => void;
   onResume?: () => void;
-  theme?: { hex: string; primary: string; border: string; bg: string };
+  theme?: any;
 }
 
 const AgentModePanel: React.FC<Props> = ({
-  task,
-  onStop,
+  task = null,
+  onClose,
   onPause,
   onResume,
   theme,
@@ -53,7 +53,7 @@ const AgentModePanel: React.FC<Props> = ({
 
   const handleStop = () => {
     agentService.emergencyStop();
-    onStop();
+    onClose();
   };
 
   const progress = task
@@ -112,7 +112,7 @@ const AgentModePanel: React.FC<Props> = ({
               </div>
               <div>
                 <h2
-                  className="text-xl font-bold flex items-center gap-2"
+                  className="text-base font-black flex items-center gap-2 tracking-[0.2em]"
                   style={{ color: theme?.primary || themeHex }}
                 >
                   <Icon name="Astrology" size={20} /> AGENT MODE
@@ -128,7 +128,7 @@ const AgentModePanel: React.FC<Props> = ({
             </div>
 
             <button
-              onClick={onStop}
+              onClick={onClose}
               className="p-2 rounded-xl hover:bg-white/10 transition-all"
               style={{
                 color: theme?.primary || themeHex,
@@ -215,9 +215,9 @@ const AgentModePanel: React.FC<Props> = ({
                   >
                     <Icon name="Flash" size={16} color={themeHex} className="mb-2" />
                     <div className="text-xs text-gray-400">Iterations</div>
-                    <div className="text-white font-mono text-lg">
+                    <div className="text-white font-mono text-base font-bold">
                       {task.currentStep}
-                      <span className="text-gray-500 text-xs">
+                      <span className="text-gray-500 text-[10px]">
                         /{task.limits.maxIterations}
                       </span>
                     </div>
@@ -238,7 +238,7 @@ const AgentModePanel: React.FC<Props> = ({
                       className="mb-2"
                     />
                     <div className="text-xs text-gray-400">Duration</div>
-                    <div className="text-white font-mono text-lg">
+                    <div className="text-white font-mono text-base font-bold">
                       {Math.round((Date.now() - task.createdAt) / 1000)}s
                     </div>
                   </div>
@@ -258,7 +258,7 @@ const AgentModePanel: React.FC<Props> = ({
                       className="mb-2"
                     />
                     <div className="text-xs text-gray-400">Est. Cost</div>
-                    <div className="text-white font-mono text-lg">$0.00</div>
+                    <div className="text-white font-mono text-base font-bold">$0.00</div>
                   </div>
                 </div>
 

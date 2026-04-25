@@ -117,7 +117,7 @@ def get_settings():
     return {
         "enable_background_sync": settings.get("enable_background_sync", get_setting("enable_background_sync", True)),
         "sync_interval_minutes": settings.get("sync_interval_minutes", get_setting("sync_interval_minutes", 30)),
-        "llm_model": settings.get("llm_model", get_setting("llm_model", "gemini-2.5-pro")),
+        "llm_model": settings.get("llm_model", get_setting("llm_model", "gemini-3-flash-preview")),
         "iconic_boot_enabled": settings.get("iconic_boot_enabled", get_setting("iconic_boot_enabled", True))
     }
 
@@ -165,10 +165,18 @@ def lazy_import_lightrag():
     try:
         from lightrag import LightRAG, QueryParam
         from lightrag.utils import EmbeddingFunc
-        from lightrag.llm.gemini import gemini_model_complete
-        from google import genai
-        from google.genai import types
-        return LightRAG, QueryParam, EmbeddingFunc, gemini_model_complete, genai, types
+        
+        # Modern GenAI is optional for local mode
+        genai = None
+        genai_types = None
+        try:
+            from google import genai
+            from google.genai import types as genai_types
+        except ImportError:
+            print("[CORTEX] Optimized: Google GenAI SDK not found. Cloud-Reasoning will fallback to REST.")
+
+        # Note: we use cortex_llm_complete as the dispatcher, so native adapters are optional
+        return LightRAG, QueryParam, EmbeddingFunc, None, genai, genai_types
     except Exception as e:
         print(f"[CORTEX] WARN: LightRAG libraries not ready: {e}")
         return None, None, None, None, None, None
@@ -179,8 +187,11 @@ def get_genai_client():
     
     _, _, _, _, genai, _ = lazy_import_lightrag()
     if genai and GOOGLE_API_KEY:
-        global_genai_client = genai.Client(api_key=GOOGLE_API_KEY)
-        print("[CORTEX] Optimized: Modern GenAI Client Initialized.")
+        try:
+            global_genai_client = genai.Client(api_key=GOOGLE_API_KEY)
+            print("[CORTEX] Optimized: Modern GenAI Client Initialized.")
+        except Exception as e:
+            print(f"[CORTEX] GenAI Client failed: {e}")
     return global_genai_client
 
 # --- Local Embedding Model Loaders ---
@@ -221,7 +232,7 @@ def get_local_embedding_model(model_id: str):
     
     try:
         print(f"[CORTEX] Loading SentenceTransformer from {model_path}...")
-        model = SentenceTransformer(model_path)
+        model = SentenceTransformer(model_path, trust_remote_code=True)
         print(f"[CORTEX] SentenceTransformer Loaded Successfully.")
         _local_embedding_models[model_id] = ("sentence_transformers", model)
         return _local_embedding_models[model_id]
@@ -278,11 +289,11 @@ class HybridEmbeddingLogic:
         max_retries = 3
         for i in range(max_retries):
             try:
-                from google.genai import types
+                from google.genai import types as genai_types
                 result = await client.aio.models.embed_content(
-                    model="text-embedding-004",
+                    model="gemini-embedding-001", # High-availability 2026 stable engine
                     contents=texts,
-                    config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT")
+                    config=genai_types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT")
                 )
                 return np.array([e.values for e in result.embeddings])
             except Exception as e:
@@ -551,6 +562,9 @@ class SQLiteMemoryConnector:
                 CREATE TABLE IF NOT EXISTS memories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     content TEXT,
+                    type TEXT,
+                    metadata_json TEXT,
+                    deep_summary TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -561,6 +575,17 @@ class SQLiteMemoryConnector:
         except Exception as e:
             print(f"[CORTEX] SQLite Write Error: {e}")
             return False
+
+    async def add_memory_hdc(self, content: str):
+        """Bridge to the HDC Compression layer."""
+        try:
+            from hdc_manager import HDCMemoryManager
+            manager = HDCMemoryManager(self.db_path)
+            return await manager.ingest_with_compression(content)
+        except Exception as e:
+            print(f"[CORTEX] HDC Ingest Error: {e}")
+            # Fallback to simple add
+            return self.add_memory(content)
 
     def add_entity(self, name, entity_type="concept", description=""):
         try:
@@ -697,8 +722,9 @@ async def sync_loop(target_rag, model_id):
 
 async def cortex_llm_complete(prompt, system_prompt=None, **kwargs):
     """Universal LLM dispatcher for LightRAG. Routes to Gemini, OpenAI, Anthropic, or Ollama."""
+    # Priority: 1. Passed in kwargs (RAG), 2. Settings, 3. Hard Default
     settings = get_settings()
-    model_id = settings.get("llm_model", "gemini-2.5-pro")
+    model_id = kwargs.get("model") or settings.get("llm_model") or "gemini-2.1-flash"
     
     # Check for Native Local Models (GGUF via LocalLLMAgent)
     if model_id in ["gemma-2b", "gemma-2b-lite", "phi-3-mini", "llama-3.2-1b", "smollm2-1.7b", "qwen-2.5-7b", "deepseek-r1-distill-7b"]:
@@ -759,8 +785,8 @@ async def cortex_llm_complete(prompt, system_prompt=None, **kwargs):
     # Final attempt fallback or raise
     return await gemini_model_complete(prompt, system_prompt=system_prompt, **kwargs)
 
-async def get_rag(mind_type="cloud"):
-    """Retrieve or initialize LightRAG instance. 'cloud' uses Gemini, 'local' uses free model2vec."""
+async def get_rag(mind_type="cloud", model_id=None):
+    """Retrieve or initialize LightRAG instance. 'cloud' uses LLM, 'local' uses free model2vec."""
     global _rag_instances, _current_rag_model, LIGHTRAG_AVAILABLE, rag_embedding_func
     
     # Lazy Import LightRAG components
@@ -770,13 +796,15 @@ async def get_rag(mind_type="cloud"):
         
     LIGHTRAG_AVAILABLE = True
     
-    # If already initialized for this mind type, return it
-    if mind_type in _rag_instances:
-        return _rag_instances[mind_type]
-
     # We use a dedicated model_id for the mind type
-    model_id = "model2vec-potion" if mind_type == "local" else (os.environ.get("CORTEX_LLM_MODEL") or "gemini-2.5-pro")
+    if not model_id:
+        model_id = "model2vec-potion" if mind_type == "local" else (os.environ.get("CORTEX_LLM_MODEL") or "gemini-2.1-flash")
     
+    # If already initialized for this exact model and mind type, return it
+    cache_key = f"{mind_type}_{model_id}"
+    if cache_key in _rag_instances:
+        return _rag_instances[cache_key]
+
     # Dedicated Embedding Logic instance for this mind type to avoid crosstalk
     local_embedding_logic = HybridEmbeddingLogic()
     local_embedding_logic.set_model(model_id)
@@ -788,8 +816,7 @@ async def get_rag(mind_type="cloud"):
         max_token_size=2048
     )
     
-    # EXTREME UPGRADE: Ensure global logic is aware of this mind's embedding engine
-    # This resolves the 503 error on the /embed endpoint
+    # Update global reference (last initialized mind wins for general /embed calls)
     rag_embedding_func = current_mind_embedding_func
 
     try:
@@ -797,12 +824,20 @@ async def get_rag(mind_type="cloud"):
         model_dir = os.path.join(RAG_BASE_DIR, mind_type) 
         os.makedirs(model_dir, exist_ok=True)
             
-        print(f"[CORTEX] Initializing {mind_type.upper()} MIND with model {model_id}...")
+        # Split-Mind Check: If model_id is an embedding model, we must use a reasoning model for LLM tasks
+        llm_reasoner = model_id
+        if any(kw in model_id.lower() for kw in ["embed", "model2vec", "potion"]):
+            # Use active brain from settings if available, else environment, else stable fallback
+            settings = get_settings()
+            llm_reasoner = settings.get("llm_model") or os.environ.get("CORTEX_LLM_MODEL") or "gemini-2.1-flash"
+            print(f"[CORTEX] 🧩 Hybrid-HDC Logic: Using '{model_id}' for vectors but '{llm_reasoner}' for reasoning.")
+
+        print(f"[CORTEX] Initializing {mind_type.upper()} MIND with model {llm_reasoner} (Vectors: {model_id})...")
         
         new_rag = LightRAG_Class(
             working_dir=model_dir,
             llm_model_func=cortex_llm_complete,
-            llm_model_name=model_id, 
+            llm_model_name=llm_reasoner, 
             embedding_func=current_mind_embedding_func,
             llm_model_max_async=2, 
             llm_model_kwargs={"api_key": GOOGLE_API_KEY, "key": GOOGLE_API_KEY} 
@@ -815,10 +850,10 @@ async def get_rag(mind_type="cloud"):
              # We only do the deep history sync in the local MIND (Zero Cost)
              asyncio.create_task(sync_loop(new_rag, mind_type))
         
-        _rag_instances[mind_type] = new_rag
+        _rag_instances[cache_key] = new_rag
         return new_rag
     except Exception as e:
-        print(f"[CORTEX] LightRAG Init Failed for {mind_type}: {e}")
+        print(f"[CORTEX] LightRAG Init Failed for {mind_type} ({model_id}): {e}")
         return None
 
 # --- KNOWLEDGE BRIDGE (Import Adapters) ---
@@ -1210,11 +1245,17 @@ class MemoryQueryRequest(BaseModel):
 @app.post("/memory/ingest")
 async def ingest_memory(request: MemoryIngestRequest):
     try:
-        # Ingest into BOTH Minds
+        # Determine if the request is targeting a local model
+        is_local_model = request.model and any(kw in request.model.lower() for kw in ["gemma", "phi", "llama", "local", "model2vec", "qwen", "ollama"])
+        
+        # Ingest into BOTH Minds if cloud is requested, otherwise stick to Local/HDC
         # 1. Local Mind (Zero Cost History)
         local_rag = await get_rag(mind_type="local")
-        # 2. Cloud Mind (High Quality Context)
-        cloud_rag = await get_rag(mind_type="cloud")
+        
+        # 2. Cloud Mind (High Quality Context) - Skip if local model is requested
+        cloud_rag = None
+        if not is_local_model:
+            cloud_rag = await get_rag(mind_type="cloud", model_id=request.model)
         
         if not local_rag and not cloud_rag:
             raise HTTPException(status_code=503, detail="RAG system not initialized")
@@ -1222,20 +1263,20 @@ async def ingest_memory(request: MemoryIngestRequest):
         import time
         memory_text = f"[{int(time.time())}] Memory: {request.text}"
         
-        # Save to Master SQLite FIRST
+        # Save to Master SQLite FIRST (Async HDC Ingestion)
         connector = SQLiteMemoryConnector()
-        connector.add_memory(request.text)
+        await connector.add_memory_hdc(request.text)
         
-        # Asynchronously ingest into both RAG instances
+        # Asynchronously ingest into available RAG instances
         tasks = []
         if local_rag: tasks.append(local_rag.ainsert(memory_text))
         if cloud_rag: tasks.append(cloud_rag.ainsert(memory_text))
         
         if tasks:
             await asyncio.gather(*tasks)
-            print("[CORTEX] ✅ Indexed in Dual-Minds (Local & Cloud).")
+            print(f"[CORTEX] ✅ Indexed in {'Dual-Minds' if cloud_rag else 'Local-Mind'} + HDC Persistent Layer.")
         
-        return {"status": "success", "message": "Memory ingested into Dual-Minds"}
+        return {"status": "success", "message": f"Memory ingested into {'Dual-Minds' if cloud_rag else 'Local-Mind'} with HDC Compression"}
     except Exception as e:
         print(f"[CORTEX] Ingest Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1246,14 +1287,37 @@ async def query_memory(request: MemoryQueryRequest):
         # Get QueryParam class from lazy loader
         _, QueryParam_Class, _, _, _, _ = lazy_import_lightrag()
         
+        is_local_model = request.model and any(kw in request.model.lower() for kw in ["gemma", "phi", "llama", "local", "model2vec", "qwen", "ollama"])
+        
         local_rag = await get_rag(mind_type="local")
-        cloud_rag = await get_rag(mind_type="cloud")
+        cloud_rag = None
+        if not is_local_model:
+            cloud_rag = await get_rag(mind_type="cloud", model_id=request.model)
         
         mode_map = {"local": "local", "global": "global", "hybrid": "hybrid", "naive": "naive"}
         query_mode = mode_map.get(request.mode, "naive")
         
-        print(f"[CORTEX] 🧠 Dual-Mind Query initiating (Mode: {query_mode})...")
+        print(f"[CORTEX] 🧠 {'Dual-Mind' if cloud_rag else 'Local-Mind'} Query initiating (Mode: {query_mode})...")
         
+        # 3. HDC Hybrid Optimization (REFRAG-inspired)
+        if request.mode == "hdc":
+            print("[CORTEX] ⚡ HDC Neural Sensing active. Building high-density context...")
+            connector = SQLiteMemoryConnector()
+            # Retrieve from SQL (Simple keyword/vector hybrid retrieval placeholder)
+            # In production, we merge the LightRAG chunks with our Deep Summaries
+            raw_memories = connector.get_unindexed_memories(0)[-20:] # Get last 20 for HDC sensing
+            processed_memories = []
+            for m in raw_memories:
+                processed_memories.append({
+                    "content": m["content"],
+                    "deep_summary": m["deep_summary"],
+                    "similarity": 0.9 # Placeholder: in prod this uses embedding distance
+                })
+            
+            if connector.hdc:
+                combined = connector.hdc.sense_and_expand(processed_memories)
+                return {"result": combined, "model": "hdc-sovereign"}
+
         # Search both RAG instances in parallel
         tasks = []
         if local_rag: tasks.append(local_rag.aquery(request.query, param=QueryParam_Class(mode=query_mode)))
@@ -1411,11 +1475,11 @@ class VoiceAgentHelper:
                 return ""
                 
             # Gemini Native Audio Processing (Async SDK)
-            from google.genai import types
+            from google.genai import types as genai_types
             response = await client.aio.models.generate_content(
                 model=target_model,
                 contents=[
-                    types.Part.from_bytes(data=audio_data, mime_type="audio/webm"),
+                    genai_types.Part.from_bytes(data=audio_data, mime_type="audio/webm"),
                     "Listen to this audio chunk. Transcribe all speech you hear. If there is background noise, silence, or no clear speech, return an empty string. If you hear a command for an AI assistant named 'Luca', transcribe it accurately."
                 ]
             )
@@ -2107,6 +2171,63 @@ class VisionRequest(BaseModel):
     screenshot: str # Base64
     instruction: str
     model: Optional[str] = None
+
+@app.post("/vision/semantic-snapshot")
+async def vision_semantic_snapshot(request: Dict[str, Any] = Body(...)):
+    """
+    REFRAG-inspired Visual HDC: Compresses a screenshot into a deep semantic summary.
+    This prevents 'Visual Context Bloat' while maintaining long-term awareness.
+    """
+    try:
+        screenshot_b64 = request.get("screenshot")
+        # Target smolvlm-500m for efficiency, or fallback to ui-tars-2b
+        model_id = request.get("model", "smolvlm-500m")
+        instruction = request.get("instruction", "Summarize what the user is doing on screen in 1 short sentence.")
+        
+        # Use existing vision agent
+        agent = get_vision_agent()
+        
+        # Check if local model is downloaded to avoid "Stealth Background Downloads"
+        is_local_available = agent and VISION_AGENT_AVAILABLE and agent.is_downloaded(model_id)
+        
+        if not is_local_available:
+             # Fallback to cloud vision if local is missing or not downloaded
+             client = get_genai_client()
+             if client:
+                 mode_str = "Agent Missing" if not agent else "Model not downloaded"
+                 print(f"[HDC-VISION] {mode_str}. Falling back to Cloud for Semantic Snapshot (Requested: {model_id}).")
+                 from google.genai import types as genai_types
+                 image_data = base64.b64decode(screenshot_b64)
+                 resp = await client.aio.models.generate_content(
+                     model="gemini-1.5-flash",
+                     contents=[
+                         genai_types.Part.from_bytes(data=image_data, mime_type="image/png"),
+                         instruction
+                     ]
+                 )
+                 summary = resp.text.strip()
+             else:
+                 return {"status": "error", "message": "No vision backend available (Local model not found and Cloud offline)"}
+        else:
+            # Resolve model ID to path
+            model_arg = MODEL_PATHS.get(model_id, {}).get("path", model_id)
+            # Use local UI-TARS, SmolVLM or Moondream
+            summary = agent.process_screenshot(screenshot_b64, instruction, model_arg)
+
+        # INGEST INTO HDC LAYER
+        from knowledge import SQLiteMemoryConnector
+        connector = SQLiteMemoryConnector()
+        if connector.hdc:
+            timestamp = int(time.time())
+            full_content = f"[VISUAL_SNAPSHOT_{timestamp}] {summary}"
+            await connector.add_memory_hdc(full_content)
+            print(f"[HDC-VISION] Semantic Anchor Ingested: {summary}")
+            return {"status": "success", "summary": summary}
+        
+        return {"status": "error", "message": "HDC layer not ready"}
+    except Exception as e:
+        print(f"[HDC-VISION] Error: {e}")
+        return {"status": "error", "message": str(e)}
 
 @app.post("/vision/analyze")
 async def vision_analyze(request: VisionRequest):
@@ -3371,6 +3492,18 @@ MODEL_PATHS = {
         "repo_id": "bytedance-research/UI-TARS-2B-SFT",
         "is_folder": True
     },
+    "qwen2.5-vl-3b": {
+        "path": str(MODELS_BASE_DIR / "vision" / "qwen2.5-vl-3b"),
+        "repo_id": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "is_folder": True,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
+    "moondream2": {
+        "path": str(MODELS_BASE_DIR / "vision" / "moondream2"),
+        "repo_id": "vikhyatk/moondream2",
+        "is_folder": True,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
     "piper-amy": {
         "path": str(MODELS_BASE_DIR / "tts" / "en_US-amy-medium.onnx"),
         "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx",
@@ -3386,12 +3519,11 @@ MODEL_PATHS = {
         "repo_id": "Supertone/supertonic-2",
         "is_folder": True
     },
-    "pocket-tts": {
-        "path": str(MODELS_BASE_DIR / "tts" / "pocket-tts"),
-        "repo_id": "kyutai/pocket-tts-without-voice-cloning",
+    "qwen3-tts": {
+        "path": str(MODELS_BASE_DIR / "tts" / "qwen3-tts"),
+        "repo_id": "Qwen/Qwen3-TTS-0.6B-Instruct",
         "is_folder": True,
-        "supported_platforms": ["macos-arm64", "windows", "linux"],
-        "unsupported_reason": "Requires PyTorch 2.5+ (not available on Intel Mac)"
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
     },
     "moonshine-tiny": {
         "path": str(MODELS_BASE_DIR / "stt" / "faster-whisper-tiny-en"),
@@ -3430,13 +3562,26 @@ MODEL_PATHS = {
         "is_folder": True,
         "category": "embedding"
     },
-    "embedding-gemma": {
+    "mxbai-embed-large": {
         "path": str(MODELS_BASE_DIR / "embeddings" / "mxbai-embed-large"),
         "repo_id": "mixedbread-ai/mxbai-embed-large-v1",
         "is_folder": True,
         "category": "embedding",
         "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"],
-        "unsupported_reason": "Desktop only - high performance"
+        "unsupported_reason": "High-accuracy large model"
+    },
+    "jina-embed-v2": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "jina-embed-v2"),
+        "repo_id": "jinaai/jina-embeddings-v2-base-en",
+        "is_folder": True,
+        "category": "embedding",
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
+    "bge-large-en": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "bge-large-en"),
+        "repo_id": "BAAI/bge-large-en-v1.5",
+        "is_folder": True,
+        "category": "embedding"
     },
     "nomic-embed-text": {
         "path": str(MODELS_BASE_DIR / "embeddings" / "nomic-embed-text"),
@@ -3452,6 +3597,67 @@ MODEL_PATHS = {
 import state
 state.MODEL_PATHS = MODEL_PATHS
 state.MODELS_BASE_DIR = MODELS_BASE_DIR
+
+@app.get("/models/{model_id}/canary")
+@app.post("/models/{model_id}/canary")
+async def model_canary(model_id: str):
+    """Run a high-fidelity diagnostic (canary) test on a specific model"""
+    if model_id not in MODEL_PATHS:
+        return {"passed": False, "response": f"Unknown model: {model_id}"}
+    
+    config = MODEL_PATHS[model_id]
+    start_time = time.time()
+    
+    try:
+        if config.get("category") == "embedding":
+            # Real-time neural probe for embeddings
+            print(f"[CANARY] Probing Embedding Model: {model_id}...")
+            
+            # Lazy initialize if needed
+            if not embedding_logic:
+                return {"passed": False, "response": "Embedding logic not initialized"}
+            
+            # Temporarily switch to this model for the probe
+            original_model = embedding_logic.current_model
+            embedding_logic.set_model(model_id)
+            
+            try:
+                # Attempt a sample encoding
+                sample_text = "Luca Intelligence Probe: Status Operational."
+                vector = await embedding_logic.acall([sample_text])
+                
+                latency = int((time.time() - start_time) * 1000)
+                
+                if vector is not None and len(vector) > 0:
+                    return {
+                        "passed": True, 
+                        "response": f"Neural Alignment Perfect. Output: {len(vector[0])} dimensions",
+                        "latency_ms": latency
+                    }
+                else:
+                    return {"passed": False, "response": "Empty vector returned"}
+            finally:
+                # Restore original model
+                embedding_logic.set_model(original_model)
+        
+        # Generic check for other categories for now
+        # Check if downloaded
+        path = config["path"]
+        downloaded = os.path.exists(path)
+        
+        return {
+            "passed": downloaded,
+            "response": "Ready for Inference" if downloaded else "Model Missing from Disk",
+            "latency_ms": int((time.time() - start_time) * 1000)
+        }
+        
+    except Exception as e:
+        print(f"[CANARY ERROR] {e}")
+        return {
+            "passed": False, 
+            "response": f"Diagnostic Failed: {str(e)}",
+            "latency_ms": int((time.time() - start_time) * 1000)
+        }
 
 @app.get("/models/status")
 async def get_models_status():
@@ -3517,13 +3723,14 @@ async def download_model(model_id: str):
                             use_auth = hf_token if hf_token else False
                             
                             if config.get("is_folder"):
-                                 snapshot_download(
+                                snapshot_download(
                                     repo_id=config["repo_id"],
                                     local_dir=config["path"],
                                     # Relaxed patterns to ensure we get config.json and model files
                                     allow_patterns=["*.json", "*.onnx", "*.pth", "*.bin", "*.safetensors", "*.txt", "*.wav", "*.model"],
                                     resume_download=True,
-                                    token=use_auth
+                                    token=use_auth,
+                                    max_retries=5  # Added resilience
                                 )
                             else:
                                 hf_hub_download(
@@ -3531,7 +3738,8 @@ async def download_model(model_id: str):
                                     filename=config["filename"],
                                     local_dir=os.path.dirname(config["path"]),
                                     resume_download=True,
-                                    token=use_auth
+                                    token=use_auth,
+                                    max_retries=5  # Added resilience
                                 )
                         except Exception as thread_error:
                             print(f"[DOWNLOAD ERROR] Thread failed: {thread_error}")
@@ -3600,6 +3808,7 @@ async def delete_model(model_id: str):
         return {"success": True, "message": f"Deleted {model_id}"}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
 
 if __name__ == "__main__":
     # Get port from environment (passed by Electron) or default

@@ -27,7 +27,51 @@ if (isNode || isElectron) {
         const initSchema = (database) => {
             console.log('[DB] Initializing Node/Electron Schema...');
             database.exec(`CREATE TABLE IF NOT EXISTS memories (id INTEGER PRIMARY KEY AUTOINCREMENT, content TEXT NOT NULL, embedding_json TEXT, type TEXT DEFAULT 'episodic', created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), metadata_json TEXT)`);
+            
+            // Phase 7: FTS5 Integration
+            database.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(content, content='memories', content_rowid='id')`);
+            
+            // Triggers to keep FTS index in sync
+            database.exec(`
+                CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
+                    INSERT INTO memories_fts(rowid, content) VALUES (new.id, new.content);
+                END;
+            `);
+            database.exec(`
+                CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
+                    INSERT INTO memories_fts(memories_fts, rowid, content) VALUES('delete', old.id, old.content);
+                END;
+            `);
+            database.exec(`
+                CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
+                    INSERT INTO memories_fts(memories_fts, rowid, content) VALUES('delete', old.id, old.content);
+                    INSERT INTO memories_fts(rowid, content) VALUES (new.id, new.content);
+                END;
+            `);
+
             database.exec(`CREATE TABLE IF NOT EXISTS entities (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, type TEXT, description TEXT, last_updated INTEGER DEFAULT (strftime('%s', 'now') * 1000))`);
+            
+            // Phase 7: FTS5 for Entities (Indexing Logs & Knowledge)
+            database.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS entities_fts USING fts5(name, description, content='entities', content_rowid='id')`);
+            
+            // Triggers for entities
+            database.exec(`
+                CREATE TRIGGER IF NOT EXISTS entities_ai AFTER INSERT ON entities BEGIN
+                    INSERT INTO entities_fts(rowid, name, description) VALUES (new.id, new.name, new.description);
+                END;
+            `);
+            database.exec(`
+                CREATE TRIGGER IF NOT EXISTS entities_ad AFTER DELETE ON entities BEGIN
+                    INSERT INTO entities_fts(entities_fts, rowid, name, description) VALUES('delete', old.id, old.name, old.description);
+                END;
+            `);
+            database.exec(`
+                CREATE TRIGGER IF NOT EXISTS entities_au AFTER UPDATE ON entities BEGIN
+                    INSERT INTO entities_fts(entities_fts, rowid, name, description) VALUES('delete', old.id, old.name, old.description);
+                    INSERT INTO entities_fts(rowid, name, description) VALUES (new.id, new.name, new.description);
+                END;
+            `);
+
             database.exec(`CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, source_id INTEGER NOT NULL, target_id INTEGER NOT NULL, relation TEXT NOT NULL, strength REAL DEFAULT 1.0, created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), valid_until INTEGER, context_event_id TEXT, weight REAL DEFAULT 1.0, FOREIGN KEY(source_id) REFERENCES entities(id), FOREIGN KEY(target_id) REFERENCES entities(id), UNIQUE(source_id, target_id, relation))`);
             database.exec(`CREATE TABLE IF NOT EXISTS user_profile (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, face_reference_path TEXT, voice_settings_json TEXT, voice_reference_path TEXT, created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000))`);
             database.exec(`CREATE TABLE IF NOT EXISTS credentials (site TEXT PRIMARY KEY, username TEXT NOT NULL, encrypted_password TEXT NOT NULL, iv TEXT NOT NULL, auth_tag TEXT NOT NULL, metadata_json TEXT, created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000), updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000))`);

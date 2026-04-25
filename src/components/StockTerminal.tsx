@@ -107,7 +107,7 @@ const StockTerminal: React.FC<Props> = ({ onClose, initialSymbol, theme }) => {
             </div>
             <div className="overflow-hidden">
               <h2 className="font-display text-base sm:text-xl font-bold text-white tracking-widest truncate uppercase">
-                EQUITY INTELLIGENCE
+                MARKET WATCH
               </h2>
               <div
                 className={`text-[9px] sm:text-[10px] font-mono ${themePrimary} flex gap-2 sm:gap-4 truncate`}
@@ -223,7 +223,7 @@ const StockTerminal: React.FC<Props> = ({ onClose, initialSymbol, theme }) => {
             <div
               className={`p-3 sm:p-4 border-b ${themeBorder}/30 text-[10px] sm:text-xs font-bold ${themePrimary} tracking-widest flex items-center gap-2 flex-shrink-0`}
             >
-              <Icon name="Notes" size={12} color={themeHex} /> MARKET WIRE
+              <Icon name="Notes" size={12} color={themeHex} /> WATCHLIST
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3 sm:space-y-4">
               {news.map((item, i) => (

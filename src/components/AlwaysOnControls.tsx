@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
+import { settingsService } from "../services/settingsService";
 
 interface Props {
   onVisionToggle: (active: boolean) => void;
@@ -20,7 +21,6 @@ const AlwaysOnControls: React.FC<Props> = ({
   onAudioToggle,
   isMobile = false,
   isWakeWordActive = false,
-  theme,
 }) => {
   const [visionActive, setVisionActive] = useState(false);
   const [loading, setLoading] = useState({ vision: false, audio: false });
@@ -82,6 +82,24 @@ const AlwaysOnControls: React.FC<Props> = ({
   };
 
   const handleVisionToggle = async () => {
+    // Proactive Efficiency Check: Suggest local model if using cloud for ambient
+    if (!visionActive) {
+      const { brain } = settingsService.getSettings();
+      const currentModel = brain.visionModel || brain.model || "gemini-3-flash-preview";
+      const isLocal = settingsService.isModelLocal(currentModel);
+      
+      if (!isLocal) {
+        const wantsLocal = window.confirm(
+          "LUCA EFFICIENCY RECOMMENDATION:\n\nAmbient 'God Hand' vision consumes significant fuel on cloud models. Use local vision (UI-TARS) to conserve your Sovereign Wallet?"
+        );
+        
+        if (wantsLocal) {
+          settingsService.saveSettings({ brain: { ...brain, visionModel: "ui-tars-2b" } });
+          console.log("[AlwaysOnControls] User accepted local vision pivot");
+        }
+      }
+    }
+
     setLoading((prev) => ({ ...prev, vision: true }));
     try {
       const action = visionActive ? "stop" : "start";
@@ -111,40 +129,28 @@ const AlwaysOnControls: React.FC<Props> = ({
         className={`
           flex items-center justify-center ${
             isMobile ? "p-1.5 w-8 h-8" : "gap-2 px-3 py-1.5"
-          } rounded text-xs font-bold transition-all
+          } rounded-sm text-[10px] font-black transition-all glass-blur
           ${
             visionActive
-              ? `${theme.bg.replace("/20", "/30")} ${theme.borderColor} ${
-                  theme.primary
-                } shadow-lg`
-              : `${theme.bg} border ${theme.borderColor} ${theme.primary} opacity-80 hover:opacity-100`
+              ? "bg-amber-500/20 border-amber-500/50 text-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+              : "bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-70 hover:opacity-100"
           }
           ${loading.vision ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
         `}
-        style={
-          !visionActive
-            ? {
-                background:
-                  theme.primary === "lucagent" ||
-                  (theme as any).themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.3)"
-                    : "rgba(0, 0, 0, 0.25)",
-              }
-            : {}
-        }
         title={visionActive ? "Stop God Hand" : "Start God Hand"}
       >
         <div className="relative">
-          {visionActive ? (
-            <Icon name="Hand" variant="Linear" size={isMobile ? 16 : 14} />
-          ) : (
-            <Icon name="Hand" variant="Linear" size={isMobile ? 16 : 14} className="opacity-50" />
-          )}
+          <Icon 
+            name="Hand" 
+            variant="Linear" 
+            size={isMobile ? 14 : 12} 
+            className={visionActive ? "" : "opacity-40"}
+          />
           {visionActive && (
-            <span className="absolute -top-1 -right-1 rounded-full animate-pulse bg-blue-500 w-2 h-2" />
+            <span className="absolute -top-1 -right-1 rounded-full animate-pulse bg-amber-500 w-1.5 h-1.5" />
           )}
         </div>
-        {!isMobile && <span className="ml-2">GOD HAND</span>}
+        {!isMobile && <span className="tracking-[0.2em] font-mono">GOD HAND</span>}
       </button>
 
       {/* Wake Word indicator (Sense) */}

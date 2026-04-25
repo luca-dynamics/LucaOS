@@ -305,6 +305,8 @@ const AdminEnrollmentModal: React.FC<Props> = ({
               <FaceScan
                 userName={userName}
                 compact
+                isLightTheme={theme.primary === "white"}
+                theme={theme}
                 enrollmentEndpoint={
                   mode === "enroll" ? "/api/admin/enroll" : undefined
                 }

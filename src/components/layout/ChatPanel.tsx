@@ -508,7 +508,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         style={{
           borderTop: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
           borderBottom: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
-          backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.5))",
+          backgroundColor: theme?.isLight
+            ? (theme.themeName?.toLowerCase() === "lightcream"
+                ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
+                : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
+            : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
         }}
       >
         {/* Header Toggle */}
@@ -533,16 +537,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           </button>
         </div>
 
-        {/* Subtle scanline layer */}
-        <div
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            background: isLight
-              ? `linear-gradient(rgba(255,255,255,0) 2px, rgba(255,255,255,0.04) 2px)`
-              : `linear-gradient(rgba(0,0,0,0) 2px, rgba(0,0,0,0.08) 2px)`,
-            backgroundSize: "100% 4px",
-          }}
-        />
+        {/* Background handled by global container style to ensure consistency */}
 
         <AnimatePresence mode="wait">
           {viewMode === "CHAT" ? (
@@ -670,11 +665,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           : "flex-1 overflow-hidden"
       } flex flex-col ${isMobile ? "h-full" : "h-full"} relative ${
         isMobile ? "z-10" : "z-20"
-      } transition-all duration-500 tech-border glass-blur`}
+      } transition-all duration-500 glass-blur`}
       style={{
         borderTop: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
         borderBottom: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
-        backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.5))",
+        backgroundColor: theme?.isLight
+          ? (theme.themeName?.toLowerCase() === "lightcream"
+              ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
+              : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
+          : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
       }}
     >
       {/* Header Toggle */}
@@ -699,16 +698,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         </button>
       </div>
 
-      {/* Scanline */}
-      <div
-        className="absolute inset-0 pointer-events-none z-30"
-        style={{
-          background: isLight
-            ? `linear-gradient(rgba(255,255,255,0) 2px, rgba(255,255,255,0.05) 2px)`
-            : `linear-gradient(rgba(0,0,0,0) 2px, rgba(0,0,0,0.1) 2px)`,
-          backgroundSize: "100% 4px",
-        }}
-      />
+      {/* Background/Scanlines removed for consistency */}
 
       {/* Faint watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
@@ -729,7 +719,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             exit={{ opacity: 0 }}
             className={`flex-1 ${
               isMobile ? "overflow-y-auto min-h-0" : "overflow-y-auto"
-            } ${isMobile ? "p-2" : "p-3"} ${
+            } ${isMobile ? "p-2" : "px-0 py-2"} ${
               isMobile ? "space-y-4" : "space-y-1"
             } scroll-smooth z-10 flex flex-col`}
           >

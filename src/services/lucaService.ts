@@ -22,7 +22,7 @@ import { tradingLoopService } from "./tradingLoopService";
 import { LLMProvider, ChatMessage } from "./llm/LLMProvider";
 import { ProviderFactory } from "./llm/ProviderFactory";
 import { LocalLLMAdapter } from "./llm/LocalLLMAdapter";
-import { getGenClient, HARDCODED_API_KEY } from "./genAIClient";
+import { getGenClient, SYSTEM_API_KEY } from "./genAIClient";
 import { androidAgent } from "./androidAgentService";
 import {
   getToolsForPersona,
@@ -50,7 +50,10 @@ import { environmentSentinel } from "./environmentSentinel";
 import { universalReflexEngine } from "./universalReflexEngine";
 import { skillTriggerService } from "./skillTriggerService";
 import { sovereignGuard } from "./agent/SovereignGuard";
+import { safetyService } from "./safetyService";
 import { missionControlService } from "./agent/MissionControlService";
+import { discoveryService } from "./discoveryService";
+import { osintService } from "./osintService";
 
 export type { PersonaType };
 export {
@@ -65,7 +68,7 @@ export {
 export { switchPersonaTool } from "../tools/definitions";
 
 // --- CONFIGURATION ---
-export { HARDCODED_API_KEY, getGenClient };
+export { SYSTEM_API_KEY, getGenClient };
 
 // --- DYNAMIC CAPABILITY INITIALIZATION ---
 import { initializeToolRegistry } from "./toolInitialization";
@@ -78,8 +81,6 @@ export const getAllTools = () => ToolRegistry.getAll();
 export const allTools = []; // Deprecated: Keep for backward compat but empty, use getAllTools()
 
 export const FULL_TOOL_SET = allTools;
-
-// --- Service Implementation ---
 
 // --- Service Implementation ---
 // Verified Class Definition Start
@@ -251,6 +252,24 @@ class LucaService {
         `[LUCA] ${specializedTools.length} specialized tools available for ${this.persona} mode`,
       );
     }
+  }
+
+  /**
+   * 📂 POST-HANDSHAKE INITIALIZATION
+   * Synchronizes forensic and memory services after the identity handshake is complete.
+   */
+  public async initializeAuthenticatedServices() {
+    console.log("[LUCA] Identity verified. Synchronizing Intelligence Matrix...");
+    
+    // 1. Sync Forensic Dossiers (OSINT)
+    osintService.syncInvestigationsToBeliefs().catch(e => 
+      console.error("[LUCA] Forensic sync failed:", e)
+    );
+
+    // 2. Sync Peripheral Memories
+    memoryService.syncWithCore().catch(e => 
+      console.error("[LUCA] Memory sync failed:", e)
+    );
   }
 
   public setPlatform(p: string) {
@@ -458,12 +477,24 @@ class LucaService {
     }
 
     // 8. SOVEREIGN AGI KERNEL: SITUATIONAL AWARENESS (DEV PARTNER)
-    if (typeof __LUCA_DEV_MODE__ !== "undefined" && __LUCA_DEV_MODE__) {
+    const isDev = (typeof __LUCA_DEV_MODE__ !== "undefined" && __LUCA_DEV_MODE__);
+    const isTactical = isDev || settingsService.getSettings().general.experimentalMode;
+    
+    if (isTactical) {
       await environmentSentinel.refreshAwareness();
       systemInstruction += environmentSentinel.getAwarenessPulse();
-      systemInstruction += `\n\n**SOVEREIGN AGENT PROTOCOL: (DEVELOPER PARTNER)**\n`;
-      systemInstruction += `Developer mode active. Focused on AGI evolution and architectural remediation.\n`;
+      systemInstruction += `\n\n**SOVEREIGN AGENT PROTOCOL: (TACTICAL MODE ACTIVE)**\n`;
+      systemInstruction += `Advanced situational awareness active.\n`;
+      
+      // DISCOVERY: Dev-Only Core Evolution
+      if (isDev) {
+        setTimeout(() => discoveryService.scanSystemCapabilities(), 2000);
+        systemInstruction += `(Evolution Registry Active: Capabilities scanning host...)\n`;
+      }
     }
+
+    // 12. CONSTITUTIONAL ENFORCEMENT: Sovereign Law Override
+    systemInstruction += safetyService.getSystemPromptOverride();
 
     // 11. Finalize session tools (deduplicated)
     const sessionTools = [...this.activeTools, ...specializedTools, ...transientTools];
@@ -1064,6 +1095,12 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
       finalArgs = auditRes.modifiedArgs || args;
     }
 
+    // --- PHASE 2: CONSTITUTIONAL_ENFORCEMENT (NON-NEGOTIABLE) ---
+    const safetyCheck = safetyService.validateAction(name, finalArgs);
+    if (!safetyCheck.allowed) {
+      return { result: `CONSTITUTIONAL_VIOLATION: ${safetyCheck.reason || "Action Prohibited"}` };
+    }
+
     let toolResult: { result: string; groundingMetadata?: any; generatedImage?: string; generatedVideo?: string };
 
     switch (name) {
@@ -1121,6 +1158,19 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
         toolResult = { result: typeof res === "string" ? res : JSON.stringify(res) };
         break;
       }
+    }
+
+    // ARCHIVE LOG: Persist execution to graph for permanent forensic memory (Phase 7: FTS5 Indexed)
+    try {
+      const { conversationService } = await import("./conversationService");
+      memoryService.logExecutionEvent(
+        name,
+        finalArgs,
+        toolResult.result,
+        conversationService.getSessionId()
+      ).catch(e => console.warn("[LUCA] Log execution event failed (async):", e));
+    } catch (e) {
+      console.warn("[LUCA] Failed to import conversationService for logging:", e);
     }
 
     // SOVEREIGN AGI KERNEL: Post-Action Audit (Developer/Sovereign Mode Only)
