@@ -22,6 +22,8 @@ import { AutonomyDashboard } from "../AutonomyDashboard";
 import AgentModePanel from "../AgentModePanel";
 import ThoughtProcessPanel from "../ThoughtProcessPanel";
 import { parseToolLogsToThoughtNodes } from "../../utils/thoughtParser";
+import { getFriendlyVoiceModelLabel } from "../../utils/voiceDisplay";
+import { voiceSessionOrchestrator } from "../../services/voiceSessionOrchestrator";
 import VoiceHud from "../VoiceHud";
 import { VoiceCommandConfirmation } from "../VoiceCommandConfirmation";
 import VisionCameraModal from "../VisionCameraModal";
@@ -152,6 +154,8 @@ interface OverlayManagerProps {
   setShowDesktopStream: (show: boolean) => void;
   desktopTarget: string;
   isLocalCoreConnected: boolean;
+  localCoreReadinessLevel: "ready" | "limited" | "offline";
+  localCoreReadinessReason: string;
   showGeoTactical: boolean;
   setShowGeoTactical: (show: boolean) => void;
   trackingTarget: string;
@@ -210,6 +214,29 @@ interface OverlayManagerProps {
     authorizedMissionIds: Set<string>;
     activeMissionScope: MissionScope;
   };
+}
+
+function normalizePersonaDisplay(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value == null) return "ASSISTANT";
+
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (
+      entries.length > 0 &&
+      entries.every(
+        ([key, item]) => /^\d+$/.test(key) && typeof item === "string",
+      )
+    ) {
+      return entries
+        .sort((a, b) => Number(a[0]) - Number(b[0]))
+        .map(([, item]) => item)
+        .join("");
+    }
+  }
+
+  const fallback = String(value).trim();
+  return fallback && fallback !== "[object Object]" ? fallback : "ASSISTANT";
 }
 
 const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
@@ -306,6 +333,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     setShowDesktopStream,
     desktopTarget,
     isLocalCoreConnected,
+    localCoreReadinessLevel,
+    localCoreReadinessReason,
     showGeoTactical,
     setShowGeoTactical,
     trackingTarget,
@@ -361,6 +390,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     handleHumanInputSubmit,
     elevationState,
   } = props;
+  const personaLabel = normalizePersonaDisplay(persona);
 
   return (
     <>
@@ -449,7 +479,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
             className="mt-4 text-xs font-mono opacity-60 animate-pulse text-center"
             style={{ color: theme.hex }}
           >
-            LOADING LUCA CORE: {persona}...
+            LOADING LUCA CORE: {personaLabel}...
           </div>
         </div>
       )}
@@ -576,7 +606,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         <LucaLinkModal
           onClose={() => setShowLucaLinkModal(false)}
           localIp={localIp || window.location.hostname}
-          theme={theme}
         />
       )}
 
@@ -717,14 +746,20 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         isSpeaking={voiceTranscriptSource === "model"}
         paused={showCamera}
         persona={persona as any}
-        modelName={voiceModel}
+        modelName={getFriendlyVoiceModelLabel(
+          voiceSessionOrchestrator.routeKind,
+        )}
+        technicalModelName={voiceModel}
         theme={theme}
+        isLocalCoreConnected={isLocalCoreConnected}
+        localCoreReadinessLevel={localCoreReadinessLevel}
+        localCoreReadinessReason={localCoreReadinessReason}
         statusMessage={
           voiceHubError
             ? `VOICE SYSTEM ERROR: ${voiceHubError}`
             : presenceMode === "SENTRY"
               ? "SENTRY MODE ACTIVE - LISTENING FOR 'HEY LUCA'"
-              : voiceStatus || "VOICE UPLINK ACTIVE"
+              : voiceStatus || "Cloud Voice is active"
         }
         onTranscriptChange={(text) => {
           setVoiceTranscript(text);
@@ -929,7 +964,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         <HackingTerminal
           onClose={() => setShowHackingTerminal(false)}
           toolLogs={hackingLogs}
-          theme={theme}
+          themeId={theme.themeName}
         />
       )}
 

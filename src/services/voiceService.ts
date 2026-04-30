@@ -42,9 +42,10 @@ export const voiceService = {
       });
 
       if (audioBuffer) {
-        const audioBlob = new Blob([audioBuffer], { type: "audio/mp3" });
+        // Remove hardcoded MIME type to allow browser to auto-detect (WAV vs MP3)
+        const audioBlob = new Blob([audioBuffer]); 
         const audioUrl = URL.createObjectURL(audioBlob);
-        await analyzeAndPlayAudio(audioUrl, "audio/mp3");
+        await analyzeAndPlayAudio(audioUrl);
         return audioBlob;
       }
       return null;
@@ -166,7 +167,7 @@ function setNativeVoice(
  */
 export async function analyzeAndPlayAudio(
   audioUrl: string,
-  mimeType: string = "audio/wav",
+  mimeType: string = "audio/mpeg",
 ): Promise<void> {
   console.log(
     `[VoiceService] Analyzing & Playing (${mimeType}):`,
@@ -251,18 +252,25 @@ export async function analyzeAndPlayAudio(
     audio.onended = () => {
       isPlaying = false;
       cancelAnimationFrame(animationId);
-      audioCtx.close();
       if (activeAudio === audio) activeAudio = null;
       // Reset animation
       eventBus.emit("audio-amplitude", { amplitude: 0, source: "tts" });
       resolve();
     };
 
-    audio.onerror = (e) => {
-      console.error("Audio Playback Error:", e);
+    audio.onerror = async (e) => {
+      console.error("Audio Playback Error Event:", e);
+      // Diagnostic: check if the blob is actually text (an error message)
+      try {
+        const response = await fetch(audioUrl);
+        const text = await response.text();
+        if (text.length < 500 && (text.includes("{") || text.includes("Error"))) {
+           console.error("[VoiceService] 🚩 DIAGNOSTIC: Audio data appears to be a TEXT ERROR:", text);
+        }
+      } catch { /* ignore */ }
+      
       isPlaying = false;
       cancelAnimationFrame(animationId);
-      audioCtx.close();
       if (activeAudio === audio) activeAudio = null;
       resolve();
     };
@@ -272,8 +280,18 @@ export async function analyzeAndPlayAudio(
       .then(() => {
         analyze();
       })
-      .catch((e) => {
-        console.error("Audio Playback Failed:", e);
+      .catch(async (e) => {
+        console.error("Audio Playback Failed (Exception):", e);
+        
+        // Diagnostic: check if the blob is actually text
+        try {
+          const response = await fetch(audioUrl);
+          const text = await response.text();
+          if (text.length < 500 && (text.includes("{") || text.includes("Error"))) {
+             console.error("[VoiceService] 🚩 DIAGNOSTIC: Audio data appears to be a TEXT ERROR:", text);
+          }
+        } catch { /* ignore */ }
+
         if (activeAudio === audio) activeAudio = null;
         resolve();
       });

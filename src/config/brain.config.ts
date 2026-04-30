@@ -58,8 +58,26 @@ export const BRAIN_CONFIG = {
       name: "DeepSeek",
       baseUrl: "https://api.deepseek.com/v1",
       models: {
-        "chat": "deepseek-chat",
-        "reasoner": "deepseek-reasoner",
+        chat: "deepseek-chat",
+        reasoner: "deepseek-reasoner",
+      },
+    },
+    openrouter: {
+      name: "OpenRouter (Omni)",
+      baseUrl: "https://openrouter.ai/api/v1",
+      models: {
+        "auto": "openrouter/auto",
+        "hermes-3": "nousresearch/hermes-3-llama-3.1-405b",
+        "llama-3.1-70b": "meta-llama/llama-3.1-70b-instruct",
+        "sonnet-3.5": "anthropic/claude-3.5-sonnet",
+      },
+    },
+    groq: {
+      name: "Groq (Speed)",
+      baseUrl: "https://api.groq.com/openai/v1",
+      models: {
+        "llama3-70b": "llama3-70b-8192",
+        "mixtral-8x7b": "mixtral-8x7b-32768",
       },
     },
   },

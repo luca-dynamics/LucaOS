@@ -1,11 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "./ui/Icon";
 import { soundService } from "../services/soundService";
 import AdminEnrollmentModal from "./AdminEnrollmentModal";
 import { lucaService, PersonaType } from "../services/lucaService";
-import { setHexAlpha } from "../config/themeColors";
 
 interface Props {
   toolName: string;

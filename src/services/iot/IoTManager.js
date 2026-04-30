@@ -18,6 +18,14 @@ class IoTManager extends EventEmitter {
     }
 
     async loadDrivers() {
+        // [HYBRID GUARD] Skip file system operations if we are in a browser context 
+        // where 'fs' is a mock or unavailable.
+        const isBrowser = typeof window !== 'undefined' && !window.luca;
+        if (isBrowser || !fs.readdirSync) {
+            console.log('[IoT_MANAGER] Running in browser mode. Skipping local driver ingestion.');
+            return;
+        }
+
         if (!fs.existsSync(DRIVERS_DIR)) {
             console.log(`[IoT_MANAGER] Drivers directory not found: ${DRIVERS_DIR}`);
             return;

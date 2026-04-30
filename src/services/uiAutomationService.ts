@@ -314,8 +314,14 @@ Return ONLY a valid JSON object matching this schema:
 }`;
 
       try {
-        const result = await ai.models.generateContent({
+        const model = ai.getGenerativeModel({
           model: "gemini-2.0-flash", // Excellent at multimodal spatial reasoning
+          generationConfig: {
+            temperature: 0.1, // Low temp for deterministic logic
+          }
+        });
+
+        const result = await model.generateContent({
           contents: [
             {
               role: "user",
@@ -330,12 +336,9 @@ Return ONLY a valid JSON object matching this schema:
               ],
             },
           ],
-          config: {
-            temperature: 0.1, // Low temp for deterministic logic
-          },
         });
 
-        const responseText = result.text || "";
+        const responseText = result.response.text() || "";
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         
         if (!jsonMatch) {

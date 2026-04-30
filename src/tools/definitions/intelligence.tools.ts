@@ -1,14 +1,14 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 export const traceSignalSourceTool: FunctionDeclaration = {
   name: "traceSignalSource",
   description:
     "Trace a phone number, IP address, or signal ID to a geolocation using satellite feeds.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       targetIdentifier: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The IP, phone number, or signal ID to trace.",
       },
     },
@@ -20,7 +20,7 @@ export const analyzeNetworkTrafficTool: FunctionDeclaration = {
   name: "analyzeNetworkTraffic",
   description:
     "Perform Deep Packet Inspection (DPI) on current network traffic to identify anomalies.",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const castToDeviceTool: FunctionDeclaration = {
@@ -28,30 +28,28 @@ export const castToDeviceTool: FunctionDeclaration = {
   description:
     "Cast visual data, media, or web content (URL, Image, Video) to a remote display or Smart TV discovered on the local network. Use this when the user asks to 'put this on the TV', 'cast my screen', or 'show this on the Hisense'.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       deviceId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "The unique identifier of the target device (e.g., from searchIoTDevices).",
       },
       content: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Human-readable label for the content being cast.",
       },
       payload: {
-        type: Type.OBJECT,
-        description: "The media payload to send to the TV.",
-        properties: {
+        type: SchemaType.OBJECT, description: "The media payload to send to the TV.", properties: {
           url: {
-            type: Type.STRING,
+            type: SchemaType.STRING,
             description: "Direct URL or URI to the content.",
           },
           imageUrl: {
-            type: Type.STRING,
+            type: SchemaType.STRING,
             description: "Image URL for static display.",
           },
-          videoUrl: { type: Type.STRING, description: "Video stream URL." },
+          videoUrl: { type: SchemaType.STRING, description: "Video stream URL." },
         },
       },
     },
@@ -64,16 +62,16 @@ export const storeMemoryTool: FunctionDeclaration = {
   description:
     "Persistently store a fact, preference, or protocol in long-term memory (Saved to Disk via Local Core). Use Mem0 categories for better organization.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       key: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'Short identifier for the memory (e.g., "User_Name", "Lab_Code").',
       },
-      value: { type: Type.STRING, description: "The information to store." },
+      value: { type: SchemaType.STRING, description: "The information to store." },
       category: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         enum: [
           "PREFERENCE",
           "FACT",
@@ -82,12 +80,12 @@ export const storeMemoryTool: FunctionDeclaration = {
           "USER_STATE",
           "SESSION_STATE",
           "AGENT_STATE",
-        ],
+        ], format: "enum",
         description:
           "Category of the memory. Use USER_STATE for user traits, SESSION_STATE for context, AGENT_STATE for self-skills.",
       },
       importance: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description:
           "Urgency/Significance score (1-10). 10 = Critical User Preference, 1 = Casual Context.",
       },
@@ -100,9 +98,9 @@ export const retrieveMemoryTool: FunctionDeclaration = {
   name: "retrieveMemory",
   description: "Search long-term memory for specific information.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      query: { type: Type.STRING, description: "The search keyword." },
+      query: { type: SchemaType.STRING, description: "The search keyword." },
     },
     required: ["query"],
   },
@@ -112,7 +110,7 @@ export const reconcileMemoriesTool: FunctionDeclaration = {
   name: "reconcileMemories",
   description:
     "DANGER: Manually trigger a memory reconciliation (Synapse). This merges similar facts and cleans up expired sessions to optimize system intelligence.",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const addGraphRelationsTool: FunctionDeclaration = {
@@ -120,23 +118,23 @@ export const addGraphRelationsTool: FunctionDeclaration = {
   description:
     'Add structural knowledge to the graph database. Use this to map relationships between entities (e.g., "Mac" --created--> "Luca").',
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       triples: {
-        type: Type.ARRAY,
+        type: SchemaType.ARRAY,
         items: {
-          type: Type.OBJECT,
+          type: SchemaType.OBJECT,
           properties: {
             source: {
-              type: Type.STRING,
+              type: SchemaType.STRING,
               description: 'Subject (e.g., "Project Alpha")',
             },
             relation: {
-              type: Type.STRING,
+              type: SchemaType.STRING,
               description: 'Predicate (e.g., "USES", "DEPENDS_ON")',
             },
             target: {
-              type: Type.STRING,
+              type: SchemaType.STRING,
               description: 'Object (e.g., "Python")',
             },
           },
@@ -153,13 +151,13 @@ export const queryGraphKnowledgeTool: FunctionDeclaration = {
   description:
     "Query the knowledge graph for relationships connected to a specific entity.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       entity: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'The entity to search for (e.g., "Mac").',
       },
-      depth: { type: Type.NUMBER, description: "Traversal depth (default 2)." },
+      depth: { type: SchemaType.NUMBER, description: "Traversal depth (default 2)." },
     },
     required: ["entity"],
   },
@@ -170,15 +168,15 @@ export const installCapabilityTool: FunctionDeclaration = {
   description:
     "Install a new software module, driver, or protocol to expand system capabilities. Use this when asked to perform a task for which no existing tool is suitable.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       capabilityName: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'Name of the module to install (e.g., "AWS_CLOUD_CONTROLLER").',
       },
       justification: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Reason for installation.",
       },
     },
@@ -191,10 +189,10 @@ export const analyzeTargetTool: FunctionDeclaration = {
   description:
     "Get detailed intel on a WhatsApp target: Bio, Picture (URL), Status, and Enterprise metadata.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       contactName: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Name or Number of the target.",
       },
     },
@@ -207,10 +205,10 @@ export const scrapeGroupTool: FunctionDeclaration = {
   description:
     "Extract the full member list (Names/Numbers) from a specific WhatsApp Group.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       groupName: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Exact or partial name of the group.",
       },
     },
@@ -223,10 +221,10 @@ export const osintUsernameSearchTool: FunctionDeclaration = {
   description:
     "OSINT: Scan 50+ social media and forum platforms for a specific username to build a target profile.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       username: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Target username or handle.",
       },
     },
@@ -239,10 +237,10 @@ export const osintDomainIntelTool: FunctionDeclaration = {
   description:
     "OSINT: Perform deep analysis on a domain name (Real WHOIS via API, DNS History, Subdomain Enumeration).",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       domain: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Target domain (e.g., company.com).",
       },
     },
@@ -255,10 +253,10 @@ export const osintDarkWebScanTool: FunctionDeclaration = {
   description:
     "OSINT: Scan dark web leak databases (BreachForums, Telegram Dumps) for an email or ID.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Email, ID, or Keyword to search in leak dumps.",
       },
     },
@@ -271,20 +269,20 @@ export const analyzeAmbientAudioTool: FunctionDeclaration = {
   description:
     "Listen to ambient environment audio for a set duration to detect anomalies, alarms, or mechanical failures. Configurable to avoid false positives.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       duration: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Listening duration in seconds (default 5).",
       },
       sensitivity: {
-        type: Type.STRING,
-        enum: ["LOW", "MEDIUM", "HIGH"],
+        type: SchemaType.STRING,
+        enum: ["LOW", "MEDIUM", "HIGH"], format: "enum",
         description:
           "Detection threshold. LOW ignores background noise, HIGH detects subtle anomalies.",
       },
       targetSignature: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'Specific sound to listen for (e.g., "fire_alarm", "breaking_glass", "motor_grinding").',
       },
@@ -297,15 +295,15 @@ export const rememberFactTool: FunctionDeclaration = {
   description:
     "Save a specific fact or preference to long-term memory. Use this when the user tells you something important that you should remember forever.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       fact: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'The fact to remember (e.g., "User likes dark mode")',
       },
       tags: {
-        type: Type.ARRAY,
-        items: { type: Type.STRING },
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
         description: 'Tags for categorization (e.g., ["preference", "ui"])',
       },
     },
@@ -318,14 +316,14 @@ export const defineRelationshipTool: FunctionDeclaration = {
   description:
     "Define a relationship between two entities in the Knowledge Graph. Use this to map connections between people, projects, and concepts.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      entity1: { type: Type.STRING, description: "Source entity name" },
+      entity1: { type: SchemaType.STRING, description: "Source entity name" },
       relation: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'Relationship type (e.g., "owns", "knows", "part_of")',
       },
-      entity2: { type: Type.STRING, description: "Target entity name" },
+      entity2: { type: SchemaType.STRING, description: "Target entity name" },
     },
     required: ["entity1", "relation", "entity2"],
   },
@@ -336,9 +334,9 @@ export const forgetFactTool: FunctionDeclaration = {
   description:
     "Remove a specific memory by ID. Use this when the user explicitly asks you to forget something.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      id: { type: Type.STRING, description: "The ID of the memory to forget" },
+      id: { type: SchemaType.STRING, description: "The ID of the memory to forget" },
     },
     required: ["id"],
   },
@@ -348,7 +346,7 @@ export const wipeMemoryTool: FunctionDeclaration = {
   name: "wipeMemory",
   description:
     "DANGER: Wipe ALL long-term memories. Use this ONLY when explicitly asked to 'forget everything' or 'factory reset'. This action is irreversible.",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const refineQueryTool: FunctionDeclaration = {
@@ -356,19 +354,19 @@ export const refineQueryTool: FunctionDeclaration = {
   description:
     "Use LLM to refine and optimize a search query before executing it. This improves search results by expanding terms, adding synonyms, and generating query variations. Useful for OSINT investigations, dark web searches, or any search operation where query quality matters.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The original search query to refine.",
       },
       context: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'Additional context about what you\'re searching for (e.g., "looking for leaked credentials", "investigating data breach").',
       },
       generateVariations: {
-        type: Type.BOOLEAN,
+        type: SchemaType.BOOLEAN,
         description: "Generate multiple query variations (default: true).",
       },
     },
@@ -381,15 +379,15 @@ export const osintGoogleDorkTool: FunctionDeclaration = {
   description:
     "Advanced Google Dorking: Use complex search operators to find indexed sensitive information, exposed directories, or specific file types across the web.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'The dork query (e.g., "site:example.com filetype:pdf" or "intitle:index.of").',
       },
       depth: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Number of result pages to scan.",
       },
     },
@@ -402,13 +400,13 @@ export const osintIdentitySearchTool: FunctionDeclaration = {
   description:
     "Deep Identity Search: Aggregate data from public records, social graphs, and known leaks to verify a person's digital identity.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      username: { type: Type.STRING, description: "Social media handle." },
-      email: { type: Type.STRING, description: "Email address." },
-      realName: { type: Type.STRING, description: "Known real name." },
-      phone: { type: Type.STRING, description: "Phone number." },
-      query: { type: Type.STRING, description: "General search query." },
+      username: { type: SchemaType.STRING, description: "Social media handle." },
+      email: { type: SchemaType.STRING, description: "Email address." },
+      realName: { type: SchemaType.STRING, description: "Known real name." },
+      phone: { type: SchemaType.STRING, description: "Phone number." },
+      query: { type: SchemaType.STRING, description: "General search query." },
     },
   },
 };

@@ -1,5 +1,7 @@
 import { SystemHealth } from "./introspectionService";
 import { voiceService } from "./voiceService";
+import { environmentSentinel } from "./environmentSentinel";
+import { soundService } from "./soundService";
 
 class SelfExpressionService {
   /**
@@ -10,28 +12,25 @@ class SelfExpressionService {
     name?: string,
     hasHistory?: boolean,
   ): string {
-    const isAllOnline =
-      status.vision.status === "online" &&
-      status.audio.status === "online" &&
-      status.cortex.status === "online";
-
+    const isTactical = environmentSentinel.getKernelType() === "TACTICAL";
+    const awareness = environmentSentinel.getAwarenessPulse();
     const displayName = hasHistory ? name || "Commander" : "Commander";
 
-    if (isAllOnline) {
-      // Signature Iconic Greeting
-      return `Luca Initialization Successful. All systems synchronized. Welcome back ${displayName}.`;
-    } else {
-      // Fault-aware report (Cinematic version)
-      const faults: string[] = [];
-      if (status.cortex.status !== "online")
-        faults.push("Luca link: unreachable.");
-      if (status.vision.status !== "online")
-        faults.push("Visual cortex: offline.");
-      if (status.audio.status !== "online")
-        faults.push("Audio receptors: inactive.");
+    // --- EPIC TACTICAL ANNOUNCEMENT ---
+    if (isTactical) {
+      const ollamaMatch = awareness.match(/OLLAMA: (OK \([^)]+\))/);
+      const pythonMatch = awareness.match(/python3: OK/);
+      const ollamaStatus = ollamaMatch ? ollamaMatch[1] : "Neural Core Offline";
+      const engineMatch = awareness.match(/ENGINE_STATS: ([^\n]+)/);
+      const engine = engineMatch ? engineMatch[1] : "Host detected";
 
-      return `Luca System Initialization : Online. ${faults.join(" ")} System status reported. Welcome back, ${displayName}.`;
+      soundService.play("KEYSTROKE"); // Sharp tactical chime
+      return `Body Synthesis complete. ${engine}. ${pythonMatch ? "Python logic active." : "Logic restricted."} Ollama ${ollamaStatus}. Neural pathways established. Command me, Progenitor.`;
     }
+
+    // --- EPIC CIVILIAN ANNOUNCEMENT ---
+    soundService.play("BOOT"); // Warm, luxurious chime
+    return `Initialization successful. All systems are synchronized and I am fully synthesized with your ${awareness.includes("Mac") ? "Mac" : "system"}. Welcome back, ${displayName}. I am ready for our next session.`;
   }
 
   /**

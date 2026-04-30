@@ -1,7 +1,7 @@
+/* eslint-disable react/no-unknown-property */
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3 } from 'three';
-import * as THREE from 'three';
 
 export interface DroneTask {
   id: string;
@@ -12,14 +12,12 @@ export interface DroneTask {
   onComplete?: () => void;
   status: 'FLYING' | 'EXECUTING' | 'RETURNING' | 'COMPLETE';
   color?: string;
-  progress: number; // Added progress to match usage in ThoughtProcessPanel
+  progress: number;
 }
 
-interface SubAgentDroneProps extends DroneTask { }
+type SubAgentDroneProps = DroneTask;
 
 const SubAgentDrone: React.FC<SubAgentDroneProps> = ({
-  id,
-  taskName,
   startPosition,
   targetPosition,
   onArrive,

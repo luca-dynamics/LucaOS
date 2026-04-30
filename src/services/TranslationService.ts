@@ -1,6 +1,6 @@
 import { eventBus } from "./eventBus";
 import { getGenClient } from "./genAIClient";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export enum TranslationMode {
   OFF = "OFF",
@@ -24,7 +24,7 @@ class TranslationService {
     isActive: false,
   };
 
-  private ai: GoogleGenAI;
+  private ai: GoogleGenerativeAI;
 
   constructor() {
     this.ai = getGenClient();
@@ -92,12 +92,12 @@ class TranslationService {
     Return ONLY the translated text.
     Text: "${text}"`;
 
-    const result = await this.ai.models.generateContent({
-      model: "gemini-1.5-flash",
+    const model = this.ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
-    return (result.text || "").trim();
+    return result.response.text().trim();
   }
 
   private broadcastResult(

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon";
 import { settingsService } from "../../services/settingsService";
-import { THEME_PALETTE, getDynamicContrast } from "../../config/themeColors";
+import {
+  THEME_PALETTE,
+  getDynamicContrast,
+  setHexAlpha,
+} from "../../config/themeColors";
 import { UIThemeId } from "../../types/lucaPersonality";
 
 interface ThemeSelectionStepProps {
@@ -79,6 +83,12 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   const [backgroundBlur, setBackgroundBlur] = useState(
     settingsService.get("general").backgroundBlur ?? 40,
   );
+  const currentThemeHex =
+    THEMES.find((t) => t.id === selectedTheme)?.hex || "#ffffff";
+  const currentContrast = getDynamicContrast(selectedTheme, backgroundOpacity);
+  const isLightSelection =
+    selectedTheme === "LIGHTCREAM" || selectedTheme === "AGENTIC_SLATE";
+  const headingColor = isLightSelection ? currentContrast.text : currentThemeHex;
 
   // Dynamic Contrast logic - Now purely reactive logic
   const updateVisualCoreVariables = (themeId: string, opacity: number) => {
@@ -140,109 +150,181 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full animate-fade-in-up">
+    <div className="flex flex-col h-full min-h-0 animate-fade-in-up overflow-hidden">
       {/* Header */}
-      <div className="text-center flex flex-col gap-4 mb-8">
+      <div className="text-center space-y-1 mb-4 shrink-0">
         <Icon
           name="Palette"
           variant="BoldDuotone"
-          className="mx-auto transition-colors duration-300 text-[var(--app-primary)]"
-          size={56}
+          className="mx-auto mb-1 transition-colors duration-300"
+          size={34}
+          style={{ color: headingColor }}
         />
-        <div>
-          <h1 className="font-black tracking-[0.2em] uppercase italic text-[var(--app-text-main)] text-2xl">
-            Interface Calibration
-          </h1>
-          <p className="uppercase tracking-[0.3em] font-black mt-1 text-[10px] text-[var(--app-text-muted)]">
-            Configure visual style
-          </p>
-        </div>
+        <h1
+          className="text-[1.55rem] font-bold tracking-[0.16em] uppercase italic transition-colors duration-300"
+          style={{ color: headingColor }}
+        >
+          Interface Calibration
+        </h1>
+        <p className="text-xs uppercase tracking-wider font-bold text-[var(--app-text-main)] opacity-85">
+          Configure visual style
+        </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-10 pr-2 custom-scrollbar px-6">
+      <div className="flex-1 min-h-0 overflow-hidden space-y-4 px-2">
         {/* Theme Selection */}
-        <section className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <section className="space-y-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {THEMES.slice(0, 6).map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => handleThemeSelect(t.id)}
-                className={`relative flex items-center p-3.5 gap-3.5 rounded-2xl border transition-all text-left group overflow-hidden shadow-sm
-                  ${
+                className="relative flex items-center gap-2 p-2 rounded-xl border transition-all text-left group backdrop-blur-md h-[62px]"
+                style={{
+                  borderColor:
                     selectedTheme === t.id
-                      ? "bg-[var(--app-primary)]/10 border-[var(--app-primary)]/40 scale-[1.02] shadow-lg shadow-[var(--app-primary)]/5"
-                      : "bg-black/20 border-white/5 hover:bg-white/5 hover:border-white/10"
-                  }
-                `}
+                      ? setHexAlpha(t.hex, 0.42)
+                      : currentContrast.border,
+                  backgroundColor: setHexAlpha(t.hex, 0.12),
+                  backgroundImage:
+                    selectedTheme === t.id
+                      ? `linear-gradient(135deg, ${setHexAlpha(
+                          t.hex,
+                          0.25,
+                        )} 0%, ${setHexAlpha(t.hex, 0.1)} 100%)`
+                      : `linear-gradient(135deg, ${setHexAlpha(
+                          t.hex,
+                          0.15,
+                        )} 0%, ${setHexAlpha(t.hex, 0.05)} 100%)`,
+                  boxShadow:
+                    selectedTheme === t.id
+                      ? `0 4px 20px ${setHexAlpha(
+                          t.hex,
+                          0.2,
+                        )}, inset 0 1px 0 ${setHexAlpha(t.hex, 0.2)}`
+                      : `0 2px 10px ${setHexAlpha(t.hex, 0.06)}`,
+                }}
               >
                 <div
-                  className={`w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-inner
-                    ${selectedTheme === t.id ? "bg-[var(--app-primary)]/20" : "bg-black/40"}
-                  `}
+                    className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                  style={{
+                    backgroundColor: currentContrast.bgTint,
+                    borderColor: currentContrast.border,
+                  }}
                 >
                   <div
-                    className="w-4 h-4 rounded-full transition-all duration-500 shadow-lg"
+                    className="h-3.5 w-3.5 rounded-full transition-all"
                     style={{
                       backgroundColor: t.hex,
-                      boxShadow: `0 0 15px ${t.hex}80`,
+                      boxShadow: `0 0 15px ${setHexAlpha(t.hex, 0.5)}`,
                     }}
                   />
                   {selectedTheme === t.id && (
-                    <div className="absolute inset-0 rounded-xl border-2 border-[var(--app-primary)]/40 animate-pulse" />
+                    <div
+                      className="absolute inset-0 rounded-full border-2 animate-pulse"
+                      style={{ borderColor: t.hex, opacity: 0.5 }}
+                    />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div
-                    className={`font-black uppercase tracking-widest text-[9px] transition-colors truncate italic
-                      ${selectedTheme === t.id ? "text-[var(--app-primary)]" : "text-[var(--app-text-main)]"}
-                    `}
+                    className="text-[10px] font-bold uppercase tracking-[0.06em] transition-colors truncate leading-tight"
+                    style={{
+                      color:
+                        selectedTheme === t.id
+                          ? t.id === "LIGHTCREAM" || t.id === "AGENTIC_SLATE"
+                            ? currentContrast.text
+                            : t.hex
+                          : currentContrast.text,
+                    }}
                   >
                     {t.label}
+                  </div>
+                  <div
+                    className="text-[9px] font-medium truncate leading-tight"
+                    style={{ color: currentContrast.textMuted }}
+                  >
+                    {t.desc}
                   </div>
                 </div>
               </button>
             ))}
           </div>
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-2.5">
             {THEMES.slice(6).map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => handleThemeSelect(t.id)}
-                className={`relative flex items-center p-3.5 gap-3.5 rounded-2xl border transition-all text-left group overflow-hidden shadow-sm w-1/2
-                  ${
+                className="relative flex items-center gap-2 p-2 rounded-xl border transition-all text-left group backdrop-blur-md w-[calc(33.333%-0.25rem)] h-[62px]"
+                style={{
+                  borderColor:
                     selectedTheme === t.id
-                      ? "bg-[var(--app-primary)]/10 border-[var(--app-primary)]/40 scale-[1.02] shadow-lg shadow-[var(--app-primary)]/5"
-                      : "bg-black/20 border-white/5 hover:bg-white/5 hover:border-white/10"
-                  }
-                `}
+                      ? setHexAlpha(t.hex, 0.42)
+                      : currentContrast.border,
+                  backgroundColor: setHexAlpha(t.hex, 0.12),
+                  backgroundImage:
+                    selectedTheme === t.id
+                      ? `linear-gradient(135deg, ${setHexAlpha(
+                          t.hex,
+                          0.25,
+                        )} 0%, ${setHexAlpha(t.hex, 0.1)} 100%)`
+                      : `linear-gradient(135deg, ${setHexAlpha(
+                          t.hex,
+                          0.15,
+                        )} 0%, ${setHexAlpha(t.hex, 0.05)} 100%)`,
+                  boxShadow:
+                    selectedTheme === t.id
+                      ? `0 4px 20px ${setHexAlpha(
+                          t.hex,
+                          0.2,
+                        )}, inset 0 1px 0 ${setHexAlpha(t.hex, 0.2)}`
+                      : `0 2px 10px ${setHexAlpha(t.hex, 0.06)}`,
+                }}
               >
                 <div
-                  className={`w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-inner
-                    ${selectedTheme === t.id ? "bg-[var(--app-primary)]/20" : "bg-black/40"}
-                  `}
+                    className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                  style={{
+                    backgroundColor: currentContrast.bgTint,
+                    borderColor: currentContrast.border,
+                  }}
                 >
                   <div
-                    className="w-4 h-4 rounded-full transition-all duration-500 shadow-lg"
+                    className="h-3.5 w-3.5 rounded-full transition-all"
                     style={{
                       backgroundColor: t.hex,
-                      boxShadow: `0 0 15px ${t.hex}80`,
+                      boxShadow: `0 0 15px ${setHexAlpha(t.hex, 0.5)}`,
                     }}
                   />
                   {selectedTheme === t.id && (
-                    <div className="absolute inset-0 rounded-xl border-2 border-[var(--app-primary)]/40 animate-pulse" />
+                    <div
+                      className="absolute inset-0 rounded-full border-2 animate-pulse"
+                      style={{ borderColor: t.hex, opacity: 0.5 }}
+                    />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div
-                    className={`font-black uppercase tracking-widest text-[9px] transition-colors truncate italic
-                      ${selectedTheme === t.id ? "text-[var(--app-primary)]" : "text-[var(--app-text-main)]"}
-                    `}
+                    className="text-[10px] font-bold uppercase tracking-[0.06em] transition-colors truncate leading-tight"
+                    style={{
+                      color:
+                        selectedTheme === t.id
+                          ? t.id === "LIGHTCREAM" || t.id === "AGENTIC_SLATE"
+                            ? currentContrast.text
+                            : t.hex
+                          : currentContrast.text,
+                    }}
                   >
                     {t.label}
+                  </div>
+                  <div
+                    className="text-[9px] font-medium truncate leading-tight"
+                    style={{ color: currentContrast.textMuted }}
+                  >
+                    {t.desc}
                   </div>
                 </div>
               </button>
@@ -252,19 +334,37 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
 
         {/* Transparency Controls */}
         {isElectron && (
-          <section className="flex flex-col gap-6 py-6 border-t border-white/5">
-            <div className="text-center">
-              <h2 className="font-black uppercase tracking-[0.3em] text-[10px] text-[var(--app-text-muted)] italic">
+          <section
+            className="space-y-2 pt-2 pb-1"
+            style={{ borderTop: `1px solid ${currentContrast.border}` }}
+          >
+            <div className="text-center mb-1">
+              <h2
+                className="text-xs font-bold uppercase tracking-widest"
+                style={{ color: currentContrast.text }}
+              >
                 Background Visibility
               </h2>
+              <p
+                className="text-[9px] mt-0.5"
+                style={{ color: currentContrast.textMuted }}
+              >
+                Adjust UI Transparency
+              </p>
             </div>
-            <div className="space-y-6 max-w-xs mx-auto w-full">
-              <div className="flex flex-col gap-2.5">
-                <div className="flex justify-between items-center px-1">
-                  <span className="font-black font-mono text-[9px] tracking-widest text-[var(--app-text-muted)] uppercase">
-                    Opacity
+            <div className="space-y-3 max-w-lg mx-auto">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span
+                    className="text-[10px] font-mono"
+                    style={{ color: currentContrast.textMuted }}
+                  >
+                    OPACITY
                   </span>
-                  <span className="font-black font-mono text-[9px] tracking-widest text-[var(--app-primary)] uppercase">
+                  <span
+                    className="text-[10px] font-mono"
+                    style={{ color: currentContrast.text }}
+                  >
                     {Math.round(backgroundOpacity * 100)}%
                   </span>
                 </div>
@@ -274,18 +374,25 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                   max="100"
                   value={Math.round(backgroundOpacity * 100)}
                   onChange={handleOpacityChange}
-                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-black/40 border border-white/5 active:scale-[0.98] transition-transform"
+                  className="w-full h-1 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    accentColor: "var(--app-primary)",
+                    accentColor: currentThemeHex,
+                    backgroundColor: currentContrast.bgTint,
                   }}
                 />
               </div>
-              <div className="flex flex-col gap-2.5">
-                <div className="flex justify-between items-center px-1">
-                  <span className="font-black font-mono text-[9px] tracking-widest text-[var(--app-text-muted)] uppercase">
-                    Blur
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span
+                    className="text-[10px] font-mono"
+                    style={{ color: currentContrast.textMuted }}
+                  >
+                    BLUR
                   </span>
-                  <span className="font-black font-mono text-[9px] tracking-widest text-[var(--app-primary)] uppercase">
+                  <span
+                    className="text-[10px] font-mono"
+                    style={{ color: currentContrast.text }}
+                  >
                     {backgroundBlur}px
                   </span>
                 </div>
@@ -295,9 +402,10 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                   max="40"
                   value={backgroundBlur}
                   onChange={handleBlurChange}
-                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-black/40 border border-white/5 active:scale-[0.98] transition-transform"
+                  className="w-full h-1 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    accentColor: "var(--app-primary)",
+                    accentColor: currentThemeHex,
+                    backgroundColor: currentContrast.bgTint,
                   }}
                 />
               </div>
@@ -307,17 +415,33 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
       </div>
 
       {/* Footer Actions */}
-      <div className="pt-6 border-t border-[var(--app-border-main)] mt-6">
+      <div
+        className="mt-3 pt-2 pb-2 px-3 shrink-0"
+        style={{ borderTop: `1px solid ${currentContrast.border}` }}
+      >
         <button
           onClick={onComplete}
-          className="w-full border border-[var(--app-border-main)] py-4 uppercase tracking-[0.4em] font-black italic text-xs transition-all flex items-center justify-center group bg-[var(--app-primary)]/10 hover:bg-[var(--app-primary)]/20 hover:border-[var(--app-primary)]/40 hover:scale-[1.01] active:scale-[0.99] rounded-2xl shadow-xl shadow-black/20 text-[var(--app-primary)]"
+          className="w-full border rounded-xl py-2 uppercase tracking-[0.22em] text-[13px] transition-all flex items-center justify-center gap-2 group backdrop-blur-md"
+          style={{
+            borderColor: currentContrast.border,
+            backgroundColor: currentContrast.bgTint,
+            backgroundImage: `linear-gradient(135deg, ${currentContrast.bgTint} 0%, ${setHexAlpha(
+              currentThemeHex,
+              isLightSelection ? 0.05 : 0.1,
+            )} 100%)`,
+            boxShadow: `0 4px 20px ${setHexAlpha(
+              currentThemeHex,
+              isLightSelection ? 0.06 : 0.15,
+            )}, inset 0 1px 0 ${setHexAlpha(currentThemeHex, isLightSelection ? 0.08 : 0.2)}`,
+            color: currentContrast.text,
+          }}
         >
           Confirm Style
           <Icon
             name="ArrowRight"
             variant="BoldDuotone"
-            size={20}
-            className="group-hover:translate-x-2 transition-transform"
+            size={16}
+            className="group-hover:translate-x-1 transition-transform"
           />
         </button>
       </div>

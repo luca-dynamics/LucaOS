@@ -46,7 +46,7 @@ const ChatWidgetMode: React.FC = () => {
     const savedPersona = settings.general.persona || "ASSISTANT";
     const savedTheme = settings.general.theme || "ASSISTANT";
     const activeBrainId = settings.general.activeBrainId || "gemma-2b";
-    const embeddingModel = settings.general.embeddingModel || "gemini-2.1-flash";
+    const embeddingModel = settings.brain.embeddingModel || "gemini-2.1-flash";
 
     return {
       history: [],

@@ -241,6 +241,10 @@ export interface TradingStrategy {
   exitRules?: string;
   riskConstraints?: string;
   intelligenceSources?: IntelligenceSource[];
+  committee?: {
+    personality: DebatePersonality;
+    aiModelId: string;
+  }[];
   createdAt: number;
   updatedAt: number;
 }

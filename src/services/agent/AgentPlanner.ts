@@ -207,6 +207,17 @@ Return ONLY valid JSON array format:
         ),
       );
     } else if (
+      goalLower.includes("system audit") ||
+      goalLower.includes("self audit") ||
+      goalLower.includes("governance audit")
+    ) {
+      steps.push(
+        this.createStep(1, "Retrieve current system configuration", 3, ["getSystemSettings"], []),
+        this.createStep(2, "Analyze configuration for inconsistencies or risks", 5, ["ai"], [1]),
+        this.createStep(3, "Run formal system audit protocol", 4, ["auditSystem"], [1, 2]),
+        this.createStep(4, "Repair or optimize configuration findings", 6, ["updateSystemSettings", "repairSystem"], [3]),
+      );
+    } else if (
       goalLower.includes("security") ||
       goalLower.includes("audit") ||
       goalLower.includes("pentest")

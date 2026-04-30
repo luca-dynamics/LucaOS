@@ -317,11 +317,12 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     const settings = settingsService.getSettings();
     if (settings.general) {
         if (settings.general.activeBrainId) {
-            const id = settings.general.activeBrainId.includes('/') ? settings.general.activeBrainId.split('/')[1] : settings.general.activeBrainId;
-            setActiveBrainId(id);
+            setActiveBrainId(settings.general.activeBrainId);
         }
-        if (settings.general.embeddingModel) {
-            const id = settings.general.embeddingModel.includes('/') ? settings.general.embeddingModel.split('/')[1] : settings.general.embeddingModel;
+        if (settings.general.activeEmbedId) {
+            setActiveEmbedId(settings.general.activeEmbedId);
+        } else if (settings.brain.embeddingModel) {
+            const id = settings.brain.embeddingModel.includes('/') ? settings.brain.embeddingModel.split('/')[1] : settings.brain.embeddingModel;
             setActiveEmbedId(id);
         }
     }

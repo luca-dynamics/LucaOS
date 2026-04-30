@@ -1,4 +1,4 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 // --- SEARCH & MAPS ---
 
@@ -7,10 +7,10 @@ export const searchWebTool: FunctionDeclaration = {
   description:
     "Use Google Search to find real-time information.    - **MANDATORY VISUALIZATION**: If you search for products, specs, or images, the VERY NEXT STEP after getting data MUST be 'presentVisualData'.\n    - **NO IMAGES**: Do NOT use this tool to find images. Use 'googleImageSearch' for that. This tool returns text only.\n    - **NO CHATTING**: Do NOT write a text summary of the specs. Use the tool to show them.\n    - **SEARCH LIMIT**: Do NOT call 'searchWeb' more than twice. Gather basic info and SHOW IT.\n    - **VISUAL CORE**: 'presentVisualData' is the ONLY way to show the \"Smart Screen\" comparison view. Use it.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The optimized, highly specific search query.",
       },
     },
@@ -23,10 +23,10 @@ export const searchMapsTool: FunctionDeclaration = {
   description:
     "Use Google Maps to find locations, places, businesses, or navigation info.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Location or place to search for.",
       },
     },
@@ -39,10 +39,10 @@ export const googleImageSearchTool: FunctionDeclaration = {
   description:
     "Search for images on Google. Returns image URLs and contexts. MUST be used before 'presentVisualData' when the user asks for products or comparisons, to provide the 'items' array.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Image search query (e.g. 'iPhone 17 Pro render').",
       },
     },
@@ -56,14 +56,14 @@ export const searchYouTubeTool: FunctionDeclaration = {
   name: "searchYouTube",
   description: "Search for videos on YouTube.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The search query.",
       },
       count: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Number of results to return (default 10).",
       },
     },
@@ -75,10 +75,10 @@ export const getYouTubeSubscriptionsTool: FunctionDeclaration = {
   name: "getYouTubeSubscriptions",
   description: "Get recent videos from YouTube subscriptions.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       count: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Number of videos to retrieve (default 20).",
       },
     },
@@ -89,10 +89,10 @@ export const likeYouTubeVideoTool: FunctionDeclaration = {
   name: "likeYouTubeVideo",
   description: "Like a YouTube video. Requires login.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       videoUrl: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The full URL of the YouTube video.",
       },
     },
@@ -104,14 +104,14 @@ export const commentYouTubeVideoTool: FunctionDeclaration = {
   name: "commentYouTubeVideo",
   description: "Post a comment on a YouTube video. Requires login.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       videoUrl: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The full URL of the YouTube video.",
       },
       comment: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The comment text.",
       },
     },
@@ -125,14 +125,14 @@ export const gmailListMessagesTool: FunctionDeclaration = {
   name: "gmail_list_messages",
   description: "Retrieve a list of Gmail messages matching a query.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Gmail search query (e.g. 'from:boss', 'is:unread')",
       },
       maxResults: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Maximum number of messages to return (default 10)",
       },
     },
@@ -143,10 +143,10 @@ export const gmailGetMessageTool: FunctionDeclaration = {
   name: "gmail_get_message",
   description: "Retrieve full content of a specific Gmail message by ID.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       messageId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The unique ID of the Gmail message.",
       },
     },
@@ -158,18 +158,18 @@ export const gmailSendMessageTool: FunctionDeclaration = {
   name: "gmail_send_message",
   description: "Send a new email message via Gmail.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      to: { type: Type.STRING, description: "Recipient's email address." },
-      subject: { type: Type.STRING, description: "Subject of the email." },
+      to: { type: SchemaType.STRING, description: "Recipient's email address." },
+      subject: { type: SchemaType.STRING, description: "Subject of the email." },
       body: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "HTML or plain text body of the email.",
       },
       attachments: {
-        type: Type.ARRAY,
+        type: SchemaType.ARRAY,
         items: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
         },
         description:
           "Optional. Array of file paths or base64 data strings to attach to the email.",
@@ -183,15 +183,15 @@ export const driveListFilesTool: FunctionDeclaration = {
   name: "drive_list_files",
   description: "List files and folders in Google Drive.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "Drive search query (e.g. 'mimeType = \"application/pdf\"')",
       },
       maxResults: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Maximum number of files to return (default 10)",
       },
     },
@@ -202,10 +202,10 @@ export const driveSearchTool: FunctionDeclaration = {
   name: "drive_search",
   description: "Search for files in Google Drive by name or content.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Name or text content to search for.",
       },
     },
@@ -217,22 +217,22 @@ export const driveUploadFileTool: FunctionDeclaration = {
   name: "drive_upload_file",
   description: "Upload a file to Google Drive.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       filePath: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Local path or Base64 data of the file to upload.",
       },
       fileName: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Name to give the file in Drive.",
       },
       mimeType: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "MIME type of the file (optional).",
       },
       folderId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "ID of the folder to upload into (optional).",
       },
     },
@@ -244,18 +244,18 @@ export const calendarListEventsTool: FunctionDeclaration = {
   name: "calendar_list_events",
   description: "Retrieve upcoming events from a Google Calendar.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       calendarId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Calendar ID (default 'primary')",
       },
       timeMin: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "ISO DateTime string (e.g. '2023-10-01T00:00:00Z')",
       },
       maxResults: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Maximum number of events to return",
       },
     },
@@ -266,13 +266,13 @@ export const calendarCreateEventTool: FunctionDeclaration = {
   name: "calendar_create_event",
   description: "Create a new event in Google Calendar.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      summary: { type: Type.STRING, description: "Event title." },
-      description: { type: Type.STRING, description: "Event description." },
-      start: { type: Type.STRING, description: "Start ISO DateTime." },
-      end: { type: Type.STRING, description: "End ISO DateTime." },
-      location: { type: Type.STRING, description: "Event location." },
+      summary: { type: SchemaType.STRING, description: "Event title." },
+      description: { type: SchemaType.STRING, description: "Event description." },
+      start: { type: SchemaType.STRING, description: "Start ISO DateTime." },
+      end: { type: SchemaType.STRING, description: "End ISO DateTime." },
+      location: { type: SchemaType.STRING, description: "Event location." },
     },
     required: ["summary", "start", "end"],
   },
@@ -282,10 +282,10 @@ export const docsGetDocumentTool: FunctionDeclaration = {
   name: "docs_get_document",
   description: "Retrieve the full content of a Google Document.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       documentId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The unique ID of the Google Document.",
       },
     },
@@ -297,10 +297,10 @@ export const docsCreateDocumentTool: FunctionDeclaration = {
   name: "docs_create_document",
   description: "Create a new blank Google Document.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       title: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The title of the new document.",
       },
     },
@@ -314,14 +314,14 @@ export const sheetsReadRangeTool: FunctionDeclaration = {
   name: "sheets_read_range",
   description: "Read data from a specific range in a Google Sheet.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       spreadsheetId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The unique ID of the Google Sheet.",
       },
       range: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "A1 notation range (e.g., 'Sheet1!A1:B10').",
       },
     },
@@ -333,22 +333,22 @@ export const sheetsWriteRangeTool: FunctionDeclaration = {
   name: "sheets_write_range",
   description: "Write data to a specific range in a Google Sheet.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       spreadsheetId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The unique ID of the Google Sheet.",
       },
       range: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "A1 notation range (e.g., 'Sheet1!A1').",
       },
       values: {
-        type: Type.ARRAY,
+        type: SchemaType.ARRAY,
         items: {
-          type: Type.ARRAY,
+          type: SchemaType.ARRAY,
           items: {
-            type: Type.STRING, // Or NUMBER/BOOLEAN, but STRING is safest for generic JSON
+            type: SchemaType.STRING, // Or NUMBER/BOOLEAN, but STRING is safest for generic JSON
           },
         },
         description: "2D array of values to write.",
@@ -362,10 +362,10 @@ export const sheetsCreateTool: FunctionDeclaration = {
   name: "sheets_create",
   description: "Create a new Google Sheet.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       title: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The title of the new spreadsheet.",
       },
     },
@@ -379,10 +379,10 @@ export const contactsSearchTool: FunctionDeclaration = {
   name: "contacts_search",
   description: "Search for Google Contacts by name, email, or phone.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Search query (e.g. 'Bob', 'bob@example.com').",
       },
     },
@@ -394,10 +394,10 @@ export const contactsGetTool: FunctionDeclaration = {
   name: "contacts_get",
   description: "Get details for a specific contact by resource name.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       resourceName: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The resource name (people/12345).",
       },
     },

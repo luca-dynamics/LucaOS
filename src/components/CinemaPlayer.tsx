@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Icon } from "./ui/Icon";
+import { SubsystemPulse } from "./visual/SubsystemPulse";
 
 // Electron webview type declaration is now in src/types/jsx.d.ts
 
@@ -234,29 +235,29 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
             playsInline
           />
         ) : !videoUrl ? (
-          // Waiting for content - idle state
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            <div
-              className="text-6xl font-bold tracking-widest mb-4 animate-pulse"
-              style={{ color: themeColor }}
-            >
-              CINEMA
-            </div>
-            <div className="text-slate-500 font-mono text-sm tracking-[0.3em] uppercase">
-              Awaiting Content Stream
-            </div>
-            <div className="mt-8 flex gap-2">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="w-2 h-8 rounded-full animate-pulse"
-                  style={{
-                    backgroundColor: themeColor,
-                    opacity: 0.3 + i * 0.15,
-                    animationDelay: `${i * 0.1}s`,
-                  }}
-                />
-              ))}
+          // Waiting for content - Ethereal State
+          <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden">
+            <SubsystemPulse color={themeColor} amplitude={0.2} opacity={0.4} blur={120} />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div
+                className="text-7xl font-medium tracking-tight mb-4 animate-in fade-in slide-in-from-bottom-8 duration-1000"
+                style={{ color: "white", textShadow: `0 0 40px ${themeColor}40` }}
+              >
+                Cinema
+              </div>
+              <div className="text-white/30 font-bold text-[10px] tracking-[0.4em] uppercase">
+                Awaiting Content Stream
+              </div>
+              
+              <div className="mt-12 flex gap-4">
+                <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-3xl text-[10px] font-bold text-white/50 tracking-widest uppercase">
+                  4K HDR // READY
+                </div>
+                <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-3xl text-[10px] font-bold text-white/50 tracking-widest uppercase">
+                  SPATIAL AUDIO // ENABLED
+                </div>
+              </div>
             </div>
           </div>
         ) : sourceType === "webview" ? (
@@ -324,101 +325,91 @@ const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
 
         {/* PREMIUM CONTROLS OVERLAY */}
         <div
-          className={`absolute bottom-0 left-0 right-0 p-8 pt-24 bg-gradient-to-t from-black via-black/80 to-transparent z-40 transition-all duration-500 ease-out ${
+          className={`absolute bottom-12 left-1/2 -translate-x-1/2 w-full max-w-4xl z-40 transition-all duration-700 ease-out ${
             showControls
               ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-4"
+              : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="max-w-5xl mx-auto flex flex-col gap-4">
-            {/* Progress Bar (Interactive for Local) */}
-            <div className="w-full h-1.5 bg-white/10 rounded-full cursor-pointer hover:h-2.5 transition-all group/progress relative">
+          <div 
+            className="rounded-[32px] p-8 border border-white/10 backdrop-blur-[40px] shadow-2xl flex flex-col gap-6"
+            style={{ 
+              background: "rgba(0, 0, 0, 0.4)",
+              boxShadow: `0 30px 60px -12px rgba(0,0,0,0.5), inset 0 0 0 1px ${themeColor}15`
+            }}
+          >
+            {/* Progress Bar */}
+            <div className="w-full h-1 bg-white/10 rounded-full cursor-pointer hover:h-2 transition-all group/progress relative">
               <div
                 className="h-full rounded-full relative"
                 style={{
                   width: `${(currentTime / duration) * 100}%`,
                   background: `linear-gradient(to right, ${themeColor}, white)`,
-                  boxShadow: `0 0 15px ${activeColor.replace("0.4", "0.8")}`,
+                  boxShadow: `0 0 20px ${themeColor}40`,
                 }}
               >
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity" />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-2xl opacity-0 group-hover/progress:opacity-100 transition-opacity" />
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                {/* Metadata */}
-                <div className="flex flex-col">
-                  <h3 className="text-white font-bold text-lg tracking-wide drop-shadow-md flex items-center gap-2">
-                    {title}{" "}
-                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-white/20 text-white/60">
-                      4K HDR
-                    </span>
-                  </h3>
-                  <p
-                    className="text-xs font-mono flex items-center gap-2"
-                    style={{ color: themeColor }}
-                  >
-                    <Icon name="Monitor" size={10} /> CINEMA CORE //{" "}
-                    {sourceType?.toUpperCase()}
-                  </p>
+              <div className="flex flex-col">
+                <h3 className="text-white font-medium text-2xl tracking-tight leading-none mb-2">
+                  {title}
+                </h3>
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-bold text-white/30 tracking-widest uppercase">
+                    {sourceType?.toUpperCase()} {/* 4K_MASTERY */}
+                  </span>
+                  <div className="w-1 h-1 rounded-full bg-white/20" />
+                  <span className="text-[10px] font-mono text-white/50">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
                 </div>
               </div>
 
               {/* Center Controls */}
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-6">
+              <div className="flex items-center gap-8">
                 <button
-                  className="text-white/50 hover:text-white transition-colors"
-                  onClick={() =>
-                    videoRef.current && (videoRef.current.currentTime -= 10)
-                  }
+                  className="text-white/40 hover:text-white transition-all hover:scale-110 active:scale-95"
+                  onClick={() => videoRef.current && (videoRef.current.currentTime -= 10)}
                 >
-                  <Icon name="SkipBack" size={24} />
+                  <Icon name="SkipBack" size={28} />
                 </button>
 
                 <button
                   onClick={togglePlay}
-                  className="w-14 h-14 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-                  style={{
-                    backgroundColor: isPlaying ? "white" : themeColor, // Use theme color for play button accent? Or keep white layout.
-                    // Actually white is cleaner, let's keep white bg but maybe shadow color
-                    boxShadow: `0 0 20px ${activeColor}`,
-                  }}
+                  className="w-16 h-16 flex items-center justify-center rounded-full bg-white text-black hover:scale-[1.05] active:scale-95 transition-all shadow-2xl"
+                  style={{ boxShadow: `0 0 30px ${themeColor}40` }}
                 >
                   {isPlaying ? (
-                    <Icon name="Pause" size={28} fill="currentColor" />
+                    <Icon name="Pause" size={32} fill="currentColor" />
                   ) : (
-                    <Icon name="Play" size={28} fill="currentColor" className="ml-1" />
+                    <Icon name="Play" size={32} fill="currentColor" className="ml-1" />
                   )}
                 </button>
 
                 <button
-                  className="text-white/50 hover:text-white transition-colors"
-                  onClick={() =>
-                    videoRef.current && (videoRef.current.currentTime += 10)
-                  }
+                  className="text-white/40 hover:text-white transition-all hover:scale-110 active:scale-95"
+                  onClick={() => videoRef.current && (videoRef.current.currentTime += 10)}
                 >
-                  <Icon name="SkipForward" size={24} />
+                  <Icon name="SkipForward" size={28} />
                 </button>
               </div>
 
               {/* Right Actions */}
-              <div className="flex items-center gap-4 text-slate-400">
-                <span className="text-xs font-mono text-white/60">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
+              <div className="flex items-center gap-6 text-white/40">
                 <Icon
                   name="Volume2"
-                  size={20}
+                  size={24}
                   className="hover:text-white cursor-pointer transition-colors"
                   onClick={() => {
-                    if (videoRef.current)
-                      videoRef.current.muted = !videoRef.current.muted;
+                    if (videoRef.current) videoRef.current.muted = !videoRef.current.muted;
                   }}
                 />
                 <Icon
                   name="Maximize"
-                  size={20}
+                  size={24}
                   className="hover:text-white cursor-pointer transition-colors"
                   onClick={() => document.documentElement.requestFullscreen()}
                 />

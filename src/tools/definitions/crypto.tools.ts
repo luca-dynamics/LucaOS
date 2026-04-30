@@ -1,19 +1,19 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 export const createWalletTool: FunctionDeclaration = {
   name: "createWallet",
   description:
     "Create a new EVM-compatible wallet (Ethereum, Polygon, Base). securely stores the Private Key in the local Vault.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       chain: {
-        type: Type.STRING,
-        enum: ["ethereum", "polygon", "base"],
+        type: SchemaType.STRING,
+        enum: ["ethereum", "polygon", "base"], format: "enum",
         description: "Blockchain to create wallet for.",
       },
       alias: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "Optional alias/label for the wallet (e.g., 'main_savings').",
       },
@@ -26,12 +26,12 @@ export const getWalletBalanceTool: FunctionDeclaration = {
   name: "getWalletBalance",
   description: "Get the Native Token balance (ETH, MATIC) of a wallet address.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      address: { type: Type.STRING, description: "Wallet Address (0x...)" },
+      address: { type: SchemaType.STRING, description: "Wallet Address (0x...)" },
       chain: {
-        type: Type.STRING,
-        enum: ["ethereum", "polygon", "base"],
+        type: SchemaType.STRING,
+        enum: ["ethereum", "polygon", "base"], format: "enum",
         description: "Blockchain to query.",
       },
     },
@@ -44,19 +44,19 @@ export const sendCryptoTransactionTool: FunctionDeclaration = {
   description:
     "Send native cryptocurrency to another address. REQUIRES AUTONOMY LEVEL 5 or User Confirmation.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       chain: {
-        type: Type.STRING,
-        enum: ["ethereum", "polygon", "base"],
+        type: SchemaType.STRING,
+        enum: ["ethereum", "polygon", "base"], format: "enum",
       },
       vaultKey: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Key ID from listWallets (e.g., wallet_ethereum_main)",
       },
-      to: { type: Type.STRING, description: "Recipient Address (0x...)" },
+      to: { type: SchemaType.STRING, description: "Recipient Address (0x...)" },
       amount: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Amount in native token (e.g., 0.01)",
       },
     },
@@ -68,7 +68,7 @@ export const listWalletsTool: FunctionDeclaration = {
   name: "listWallets",
   description: "List all managed wallets in the secure vault.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {},
   },
 };

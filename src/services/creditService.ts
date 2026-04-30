@@ -74,9 +74,9 @@ class CreditService {
   /**
    * Deduct credits for a system action
    */
-  public spend(amount: number, reason: string): boolean {
-    // LOCAL mode is free
-    if (this.mode === "LOCAL") {
+  public spend(amount: number, reason: string, force: boolean = false): boolean {
+    // LOCAL mode is free, unless we force deduction for cloud fallback/background tasks
+    if (this.mode === "LOCAL" && !force) {
       console.log(`[CREDITS] LOCAL Mode: Skipping deduction for: ${reason}`);
       return true;
     }
@@ -121,12 +121,13 @@ class CreditService {
    * Estimates cost based on action type
    * Adjusts costs based on provisioning mode
    */
-  public estimateCost(type: "CHAT" | "TOOL" | "GENERATION" | "VISION"): number {
-    if (this.mode === "LOCAL") return 0; // Local compute is free
+  public estimateCost(type: "CHAT" | "TOOL" | "GENERATION" | "VISION" | "INDEXING"): number {
+    if (this.mode === "LOCAL" && type !== "INDEXING") return 0; // Local compute is free, except cloud indexing
 
     const baseCosts = {
       CHAT: 0.5,
       TOOL: 1.5,
+      INDEXING: 2.0, // Entity extraction is heavy
       GENERATION: 3.0,
       VISION: 5.0
     };

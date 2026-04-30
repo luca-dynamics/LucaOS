@@ -1,4 +1,4 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 /**
  * Enable the live vision (camera or screen) feed for multimodal analysis.
@@ -8,11 +8,11 @@ export const enableVisionTool: FunctionDeclaration = {
   description:
     "Enables the live vision feed to allow Luca to see. Supported sources are 'camera' (surroundings) and 'screen' (desktop/mobile display). This should be used when the user asks Luca to 'look at something', 'see my screen', or 'open your eyes'.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       source: {
-        type: Type.STRING,
-        enum: ["camera", "screen"],
+        type: SchemaType.STRING,
+        enum: ["camera", "screen"], format: "enum",
         description: "The visual source to activate.",
       },
     },
@@ -28,7 +28,7 @@ export const disableVisionTool: FunctionDeclaration = {
   description:
     "Disables the live vision feed (camera or screen) and stops the stream.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {},
   },
 };

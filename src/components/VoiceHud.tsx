@@ -3,7 +3,6 @@ import { Icon } from "./ui/Icon";
 import { SettingsModal } from "./SettingsModal";
 
 import { getAllTools, PersonaType } from "../services/lucaService";
-import { eventBus } from "../services/eventBus";
 
 // Import Refactored Components
 import VoiceVisualizer from "./voice/VoiceVisualizer";
@@ -12,6 +11,13 @@ import VoiceStatusOrb from "./voice/VoiceStatusOrb";
 import TacticalStream from "./visual/TacticalStream";
 import { THEME_PALETTE, MISSION_COLORS } from "../config/themeColors";
 import { MissionScope } from "../services/toolRegistry";
+import { useTheme } from "../hooks/useTheme";
+import { eventBus } from "../services/eventBus";
+import {
+  getFriendlyVoiceTelemetrySummary,
+  getFriendlyLocalCoreLabel,
+} from "../utils/voiceDisplay";
+import { voiceSessionOrchestrator } from "../services/voiceSessionOrchestrator";
 
 // --- HELPER COMPONENT: Typewriter Text ---
 const TypewriterText = ({ text }: { text: string }) => {
@@ -49,6 +55,7 @@ interface VoiceHudProps {
   isSpeaking: boolean;
   persona: PersonaType;
   modelName?: string; // Active Voice Model Name
+  technicalModelName?: string; // Detailed model/runtime label for tactical mode
   theme: {
     primary: string;
     border: string;
@@ -69,6 +76,9 @@ interface VoiceHudProps {
   hideControls?: boolean; // Hide settings and camera buttons (for onboarding)
   transparentBackground?: boolean; // Allow underlying backgrounds to show through
   amplitude?: number; // Real-time audio amplitude
+  isLocalCoreConnected?: boolean;
+  localCoreReadinessLevel?: "ready" | "limited" | "offline";
+  localCoreReadinessReason?: string;
 }
 
 const VoiceHud: React.FC<VoiceHudProps> = ({
@@ -78,8 +88,10 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
   onClose,
   transcriptSource,
   isVadActive,
+  isSpeaking,
   persona,
   modelName = "GEMINI 2.0 FLASH",
+  technicalModelName,
   theme,
   statusMessage,
   isVisionActive = false,
@@ -89,15 +101,22 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
   visualData,
   elevationState,
   amplitude = 0,
+  isLocalCoreConnected,
+  localCoreReadinessLevel,
+  localCoreReadinessReason,
 }) => {
   const [localAmplitude, setLocalAmplitude] = useState(amplitude);
   const videoRef = useRef<HTMLVideoElement>(null);
   const captureCanvasRef = useRef<HTMLCanvasElement>(null);
   const [dynamicProtocols, setDynamicProtocols] = useState<string[]>([]);
-  const [latency, setLatency] = useState(14);
   const [isVideoActive, setIsVideoActive] = useState(false);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [, setVoiceSessionTick] = useState(0);
+  
+  // Phase 3: Adaptive UI Logic
+  const { isTactical } = useTheme();
+  const showTechnicalPanels = !hideDebugPanels && isTactical;
 
   // --- REAL AUDIO TELEMETRY STATE ---
   const [realDB, setRealDB] = useState(-60);
@@ -120,13 +139,6 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       }
       setIsVideoActive(false);
     }
-
-    const interval = setInterval(() => {
-      setLatency((prev) =>
-        Math.max(5, Math.min(40, prev + (Math.random() - 0.5) * 10)),
-      );
-    }, 1000);
-    return () => clearInterval(interval);
   }, [isActive, isVisible]);
 
   // --- SUBSCRIBE TO REAL AUDIO TELEMETRY ---
@@ -147,6 +159,35 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       eventBus.off("audio-amplitude", handleAudioData);
     };
   }, []);
+
+  useEffect(() => {
+    const handleVoiceSessionStateChanged = () => {
+      setVoiceSessionTick((prev) => prev + 1);
+    };
+
+    eventBus.on("voice-session-state-changed", handleVoiceSessionStateChanged);
+    return () => {
+      eventBus.off(
+        "voice-session-state-changed",
+        handleVoiceSessionStateChanged,
+      );
+    };
+  }, []);
+
+  const responseLatency = voiceSessionOrchestrator.responseLatencyMs;
+  const telemetrySummary = getFriendlyVoiceTelemetrySummary({
+    latencyMs: responseLatency,
+    isLocalCoreConnected,
+    localCoreReadinessLevel,
+  });
+  const speedLabel = voiceSessionOrchestrator.responseSpeedLabel;
+  const localCoreLabel = getFriendlyLocalCoreLabel(
+    isLocalCoreConnected,
+    localCoreReadinessLevel,
+  );
+  const routingHealth = voiceSessionOrchestrator.routingHealth;
+  const routeRecommendation = voiceSessionOrchestrator.routeRecommendation;
+  const adaptiveRouteApplied = voiceSessionOrchestrator.adaptiveRouteApplied;
 
   const toggleVideo = async () => {
     if (isVideoActive) {
@@ -254,6 +295,10 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             THEME_PALETTE.RUTHLESS
           ).primary
         }
+        isSpeaking={isSpeaking}
+        statusMessage={statusMessage}
+        voiceModeLabel={modelName}
+        detailLabel={telemetrySummary}
       />
 
       {/* ACTION BLOCK LAYER - HUD STYLE */}
@@ -334,7 +379,7 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             </div>
           )}
 
-          {/* SYSTEM STATUS LOG (Underground) */}
+          {/* Voice Status */}
           {statusMessage && (
             <div
               className="mt-3 sm:mt-4 font-mono text-[10px] sm:text-xs tracking-widest opacity-70 animate-pulse"
@@ -345,13 +390,18 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
                 ).primary,
               }}
             >
-              [SYSTEM_LOG]: {statusMessage}
+              Voice Status: {statusMessage}
+            </div>
+          )}
+          {telemetrySummary && (
+            <div className="mt-2 font-mono text-[10px] sm:text-xs opacity-55 text-[var(--app-text-main)]">
+              {telemetrySummary}
             </div>
           )}
         </div>
       </div>
-      {/* Left Panel: Dynamic Active Protocols - Hidden in onboarding */}
-      {!hideDebugPanels && (
+      {/* Left Panel: Dynamic Active Protocols - Hidden in onboarding OR Civilian mode */}
+      {showTechnicalPanels && (
         <div className="absolute left-16 bottom-[15%] hidden md:flex flex-col gap-4 w-64 font-mono text-[10px] z-10 pointer-events-none">
           <div
             className="flex items-center gap-2 font-bold border-b pb-2 mb-2"
@@ -391,8 +441,8 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
           </div>
         </div>
       )}
-      {/* Right Panel: Telemetry ONLY - Hidden in onboarding */}
-      {!hideDebugPanels && (
+      {/* Right Panel: Telemetry ONLY - Hidden in onboarding OR Civilian mode */}
+      {showTechnicalPanels && (
         <div className="absolute right-16 bottom-[15%] hidden md:flex flex-col gap-2 w-80 font-mono text-[10px] text-right z-30 pointer-events-auto">
           <div
             className="font-bold mb-2"
@@ -413,18 +463,87 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
             <span
               className="text-[var(--app-text-main)] font-bold"
             >
-              {modelName.toUpperCase()}
+              {(technicalModelName || modelName).toUpperCase()}
             </span>
           </div>
 
           <div
             className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]"
           >
-            <span>LATENCY</span>
+            <span>RESPONSE_SPEED</span>
             <span
               className="text-[var(--app-text-main)] font-bold"
             >
-              {latency.toFixed(0)}ms
+              {responseLatency != null ? `${responseLatency.toFixed(0)}ms` : "--"}
+            </span>
+          </div>
+
+          <div
+            className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]"
+          >
+            <span>RESPONSE_CLASS</span>
+            <span className="text-[var(--app-text-main)] font-bold">
+              {(speedLabel || "Awaiting response").toUpperCase()}
+            </span>
+          </div>
+
+          <div
+            className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]"
+          >
+            <span>LOCAL_CORE</span>
+            <span className="text-[var(--app-text-main)] font-bold">
+              {(localCoreLabel || "Unknown").toUpperCase()}
+            </span>
+          </div>
+
+          {localCoreReadinessReason ? (
+            <div className="flex justify-end items-start gap-2 text-[var(--app-text-muted)]">
+              <span>LOCAL_CORE_DETAIL</span>
+              <span className="max-w-[180px] text-right text-[var(--app-text-main)] opacity-80">
+                {localCoreReadinessReason}
+              </span>
+            </div>
+          ) : null}
+
+          <div className="mt-2 flex justify-end items-center gap-2 text-[var(--app-text-muted)]">
+            <span>ROUTING_HEALTH</span>
+            <span className="text-[var(--app-text-main)] font-bold">
+              {routingHealth}
+            </span>
+          </div>
+
+          <div className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]">
+            <span>NEXT_ROUTE</span>
+            <span className="text-[var(--app-text-main)] font-bold">
+              {routeRecommendation.recommendedRouteKind}
+            </span>
+          </div>
+
+          <div className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]">
+            <span>ROUTE_CONFIDENCE</span>
+            <span className="text-[var(--app-text-main)] font-bold">
+              {routeRecommendation.confidence}
+            </span>
+          </div>
+
+          <div className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]">
+            <span>ROUTE_SWITCH</span>
+            <span className="text-[var(--app-text-main)] font-bold">
+              {routeRecommendation.shouldSwitch ? "ADVISED" : "HOLD"}
+            </span>
+          </div>
+
+          <div className="flex justify-end items-center gap-2 text-[var(--app-text-muted)]">
+            <span>ROUTE_ACTION</span>
+            <span className="text-[var(--app-text-main)] font-bold">
+              {adaptiveRouteApplied ? "APPLIED" : "NOT_APPLIED"}
+            </span>
+          </div>
+
+          <div className="flex justify-end items-start gap-2 text-[var(--app-text-muted)]">
+            <span>ROUTE_REASON</span>
+            <span className="max-w-[180px] text-right text-[var(--app-text-main)] opacity-80">
+              {routeRecommendation.reason}
             </span>
           </div>
 

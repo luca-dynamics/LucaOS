@@ -51,9 +51,10 @@ export class GeminiSttProvider implements IStreamingSttProvider {
       // Convert Blob to Base64 for the SDK (Browser-friendly)
       const base64Data = await this.blobToBase64(audioBlob);
 
+      const model = genAI.getGenerativeModel({ model: this.modelId });
+      
       const startTime = Date.now();
-      const result = await genAI.models.generateContent({
-        model: this.modelId,
+      const result = await model.generateContent({
         contents: [
           {
             role: "user",
@@ -68,7 +69,7 @@ export class GeminiSttProvider implements IStreamingSttProvider {
             ],
           },
         ],
-        config: {
+        generationConfig: {
           temperature: 0.1, // Keep it precise for transcription
         }
       });
@@ -78,7 +79,7 @@ export class GeminiSttProvider implements IStreamingSttProvider {
         stt: { cloud: latency, fastest: "cloud" }
       });
 
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
       
       if (text) {
         this.transcriptCallback?.({

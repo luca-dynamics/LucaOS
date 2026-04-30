@@ -13,6 +13,7 @@ export class LucaBrainProvider implements IReasoningProvider {
       abortSignal?: AbortSignal;
       useVision?: boolean;
       model?: string;
+      provider?: string;
     },
   ): AsyncGenerator<ChatChunk> {
     const isVisionRequested =
@@ -38,6 +39,7 @@ export class LucaBrainProvider implements IReasoningProvider {
         options?.abortSignal,
         { 
           model: options?.model,
+          provider: options?.provider,
           systemInstruction: options?.systemInstruction 
         },
       )

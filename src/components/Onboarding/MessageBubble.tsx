@@ -10,8 +10,11 @@ interface MessageBubbleProps {
  * Message bubble component for conversation
  * Displays messages from Luca or User with glassmorphic styling
  */
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, theme }) => {
   const isLuca = message.role === "luca";
+  const isLight =
+    theme?.hex === "#111827" ||
+    theme?.themeName?.toLowerCase() === "lucagent";
 
   // Format timestamp
   const getTimeAgo = (date: Date) => {
@@ -26,8 +29,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
     <div
       className={`flex ${
         isLuca
-          ? "justify-start"
-          : "justify-end"
+          ? "justify-start lg:justify-center"
+          : "justify-end lg:justify-center"
       } animate-fade-in-up`}
     >
       <div
@@ -35,42 +38,56 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           flex flex-col
           glass-blur
           border
+          max-w-[85%] lg:max-w-none lg:w-full
+          rounded-2xl
+          p-3 sm:p-4 lg:p-5
         `}
         style={{
-          maxWidth: "90%",
-          borderRadius: "2vmin",
-          padding: "2vmin",
-          gap: "1vmin",
-          backgroundColor: "var(--app-bg-tint)",
-          borderColor: "var(--app-border-main)",
+          backgroundColor: isLuca
+            ? isLight
+              ? "rgba(0,0,0,0.1)"
+              : "rgba(255,255,255,0.1)"
+            : isLight
+              ? "rgba(37,99,235,0.1)"
+              : "rgba(59,130,246,0.2)",
+          borderColor: isLuca
+            ? isLight
+              ? "rgba(0,0,0,0.2)"
+              : "rgba(255,255,255,0.2)"
+            : isLight
+              ? "rgba(59,130,246,0.2)"
+              : "rgba(96,165,250,0.3)",
         }}
       >
         {/* Role label */}
         <div
-          className="font-bold uppercase tracking-wider opacity-80"
-          style={{ 
-            fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)",
-            color: isLuca ? "var(--app-text-muted)" : "var(--app-text-main)"
-          }}
+          className={`text-xs font-bold uppercase tracking-wider mb-2 ${
+            isLuca
+              ? isLight
+                ? "text-black/60"
+                : "text-white/80"
+              : isLight
+                ? "text-blue-700/80"
+                : "text-blue-300/80"
+          }`}
         >
           {isLuca ? "Luca" : "You"}
         </div>
  
         {/* Message content */}
         <div
-          className="leading-relaxed whitespace-pre-wrap"
-          style={{ 
-            fontSize: "clamp(0.7rem, 2vmin, 0.9rem)",
-            color: "var(--app-text-main)"
-          }}
+          className={`text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
+            isLight ? "text-gray-900" : "text-white"
+          }`}
         >
           {message.content}
         </div>
  
         {/* Timestamp */}
         <div
-          className="text-[10px] mt-2 opacity-60"
-          style={{ color: "var(--app-text-muted)" }}
+          className={`text-[10px] mt-2 ${
+            isLight ? "text-black/60" : "text-white/60"
+          }`}
         >
           {getTimeAgo(message.timestamp)}
         </div>

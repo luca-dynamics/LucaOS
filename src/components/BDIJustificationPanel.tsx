@@ -28,9 +28,11 @@ const BDIJustificationPanel: React.FC = () => {
   const activeBrain = brainSettings.model 
         ? (brainSettings.model.startsWith('local/') ? brainSettings.model.split('/')[1] : brainSettings.model)
         : "UNASSIGNED";
-  const activeEmbed = brainSettings.embeddingModel
-        ? (brainSettings.embeddingModel.startsWith('local/') ? brainSettings.embeddingModel.split('/')[1] : brainSettings.embeddingModel)
+  const activeEmbed = settingsService.getSettings().brain.embeddingModel
+        ? (settingsService.getSettings().brain.embeddingModel.startsWith('local/') ? brainSettings.embeddingModel.split('/')[1] : brainSettings.embeddingModel)
         : "CLOUD_FALLBACK";
+
+  const isTactical = localStorage.getItem("LUCA_USER_TACTICAL") === "true";
 
   useEffect(() => {
     const update = () => {
@@ -152,11 +154,13 @@ const BDIJustificationPanel: React.FC = () => {
         )}
 
         {/* SECTION: REFLEX ENGINE (Phase 11 RECOVERED) */}
-        {isDev && lessons.length > 0 && (
+        {lessons.length > 0 && (
           <section className="space-y-4 bg-purple-500/5 border border-purple-500/20 p-5 rounded-2xl glass-blur">
              <div className="flex items-center gap-3 mb-4">
                 <Icon name="Activity" size={16} className="text-purple-400" />
-                <h4 className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">Reflex Mutations</h4>
+                <h4 className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">
+                  {isTactical ? "Reflex Mutations" : "Instinctive Adjustments"}
+                </h4>
              </div>
              <div className="grid grid-cols-1 gap-2">
                 {lessons.map(lesson => (
@@ -170,11 +174,13 @@ const BDIJustificationPanel: React.FC = () => {
         )}
 
         {/* SECTION: SOVEREIGN FORGE (Phase 12 RECOVERED) */}
-        {isDev && proposals.filter(p => p.status === 'PENDING').length > 0 && (
-          <section className="space-y-4 bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl glass-blur">
+        {proposals.filter(p => p.status === 'PENDING').length > 0 && (
+          <section className="space-y-4 bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl glass-blur animate-in slide-in-from-top-4 duration-700">
             <div className="flex items-center gap-3 mb-4">
               <Icon name="Wrench" size={16} className="text-amber-500" />
-              <h4 className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Evolution Proposals</h4>
+              <h4 className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">
+                {isTactical ? "Evolution Proposals" : "Internal Integration Requests"}
+              </h4>
             </div>
             <div className="space-y-3">
               {proposals.filter(p => p.status === 'PENDING').map(prop => (

@@ -47,6 +47,7 @@ const RemoteAccessModal: React.FC<Props> = ({
         if (res.ok) {
           const data = await res.json();
           setLocalIp(data.ip);
+          setProgress(25);
           // Generate Real QR pointing to the mobile endpoint
           const targetUrl = `http://${data.ip}:${data.port}/mobile`;
           // Use a public QR API for generation
@@ -64,15 +65,17 @@ const RemoteAccessModal: React.FC<Props> = ({
         } else {
           throw new Error("Core Offline");
         }
-      } catch (e) {
+      } catch {
         // Fallback
         setLocalIp("OFFLINE_MODE");
+        setProgress(15);
         setQrUrl(null); // Will use icon as fallback
       }
 
       await new Promise((r) => setTimeout(r, 1000));
 
       setStage("KEYS");
+      setProgress(50);
       if (mode === "STANDARD") {
         addLog("GENERATING RSA-4096 KEYPAIR...");
       } else {
@@ -81,6 +84,7 @@ const RemoteAccessModal: React.FC<Props> = ({
 
       // Stage 2: Keys -> QR
       setTimeout(() => {
+        setProgress(75);
         if (mode === "STANDARD") {
           addLog("ENCRYPTING SESSION TOKEN...");
         } else {
@@ -89,6 +93,7 @@ const RemoteAccessModal: React.FC<Props> = ({
 
         setTimeout(() => {
           setStage("QR");
+          setProgress(100);
           if (mode === "STANDARD") {
             addLog("VISUAL UPLINK READY. SCAN NOW.");
           } else {
@@ -117,7 +122,7 @@ const RemoteAccessModal: React.FC<Props> = ({
               handleRealConnection(data.device);
             }
           }
-        } catch (e) {
+        } catch {
           // Ignore polling errors
         }
       }, 1000);
@@ -411,6 +416,18 @@ const RemoteAccessModal: React.FC<Props> = ({
               </div>
             </div>
           )}
+        </div>
+
+        {/* Handshake Progress Bar */}
+        <div className="h-1 w-full bg-black/40 relative overflow-hidden">
+          <div 
+            className="h-full transition-all duration-700 ease-out"
+            style={{ 
+              width: `${progress}%`,
+              backgroundColor: theme.hex,
+              boxShadow: `0 0 10px ${theme.hex}`
+            }}
+          />
         </div>
 
         {/* Terminal Log Footer */}

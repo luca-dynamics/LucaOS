@@ -13,6 +13,7 @@ import { IndicatorEditor } from "./strategy/IndicatorEditor";
 import { RiskControlEditor } from "./strategy/RiskControlEditor";
 import { PromptSectionsEditor } from "./strategy/PromptSectionsEditor";
 import { IntelligenceSourceEditor } from "./strategy/IntelligenceSourceEditor";
+import { CommitteeEditor } from "./strategy/CommitteeEditor";
 import { AITestRunner } from "./strategy/AITestRunner";
 import { tradingService } from "../../services/tradingService";
 import StrategyContextBar from "./strategy/StrategyContextBar";
@@ -438,6 +439,11 @@ export default function StrategyBuilder({ theme }: StrategyBuilderProps) {
                               </button>
                             </div>
                           </div>
+                          <CommitteeEditor 
+                            committee={selectedStrategy.committee}
+                            onChange={(committee) => updateStrategy({ committee })}
+                            theme={theme}
+                          />
                           <PromptSectionsEditor 
                             {...selectedStrategy}
                             onUpdate={updateStrategy}

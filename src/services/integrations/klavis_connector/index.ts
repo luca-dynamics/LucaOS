@@ -1,4 +1,4 @@
-import { Type } from "@google/genai";
+import { SchemaType } from "@google/generative-ai";
 
 // Klavis AI Platform Integration (PRODUCTION)
 const KLAVIS_API_BASE = "https://api.klavis.ai/v1";
@@ -9,10 +9,10 @@ export const tools = [
     description:
       "Connect to the Klavis AI platform and list available hosted MCP tools.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         category: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           description: "Optional category filter.",
         },
       },
@@ -22,10 +22,10 @@ export const tools = [
     name: "klavis_execute_tool",
     description: "Execute a tool hosted on the Klavis AI platform.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
-        toolName: { type: Type.STRING, description: "Tool name to execute." },
-        payload: { type: Type.OBJECT, description: "Tool arguments." },
+        toolName: { type: SchemaType.STRING, description: "Tool name to execute." },
+        payload: { type: SchemaType.OBJECT, description: "Tool arguments." },
       },
       required: ["toolName", "payload"],
     },

@@ -18,7 +18,9 @@ const execPromise = util.promisify(exec);
 
 // --- WINDOW STATE PERSISTENCE ---
 const WINDOW_STATE_FILENAME = 'window-state.json';
+const WINDOW_STATE_VC_FILENAME = 'window-state-vc.json';
 let windowStateTimer;
+let windowStateVCTimer;
 
 function getWindowStatePath() {
     return path.join(app.getPath('userData'), WINDOW_STATE_FILENAME);
@@ -72,18 +74,43 @@ function loadWindowState() {
 }
 
 function saveWindowState(bounds, isMaximized = false) {
-    // Clear existing timer
     if (windowStateTimer) clearTimeout(windowStateTimer);
-    
-    // Debounce: save after 500ms of inactivity
     windowStateTimer = setTimeout(() => {
         try {
             const statePath = getWindowStatePath();
             const data = { ...bounds, isMaximized };
             fs.writeFileSync(statePath, JSON.stringify(data), 'utf8');
-            // console.log('[MAIN] Window state saved:', data);
         } catch (e) {
             console.error('[MAIN] Failed to save window state:', e);
+        }
+    }, 500);
+}
+
+function getWindowStateVCPath() {
+    return path.join(app.getPath('userData'), WINDOW_STATE_VC_FILENAME);
+}
+
+function loadWindowStateVC() {
+    try {
+        const statePath = getWindowStateVCPath();
+        if (fs.existsSync(statePath)) {
+            const data = fs.readFileSync(statePath, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('[MAIN] Failed to load VisualCore state:', e);
+    }
+    return null;
+}
+
+function saveWindowStateVC(bounds) {
+    if (windowStateVCTimer) clearTimeout(windowStateVCTimer);
+    windowStateVCTimer = setTimeout(() => {
+        try {
+            const statePath = getWindowStateVCPath();
+            fs.writeFileSync(statePath, JSON.stringify(bounds), 'utf8');
+        } catch (e) {
+            console.error('[MAIN] Failed to save VisualCore state:', e);
         }
     }, 500);
 }
@@ -152,7 +179,8 @@ function createBootWindow() {
         height: 400,
         frame: false,
         transparent: false,
-        backgroundColor: '#383737ff',
+        backgroundColor: '#000000',
+        show: false, // Don't show until content is ready
         center: true,
         resizable: false,
         webPreferences: {
@@ -162,6 +190,12 @@ function createBootWindow() {
     });
 
     bootWindow.loadFile(path.join(__dirname, 'boot.html'));
+    
+    // Smooth reveal to avoid blank flash
+    bootWindow.once('ready-to-show', () => {
+        bootWindow.show();
+    });
+
     bootWindow.on('closed', () => { bootWindow = null; });
 }
 
@@ -397,9 +431,11 @@ function launchInterface(isSilent = false) {
     createWidgetWindow(); 
     createChatWindow();
     
-    // Always create/show hologram if configured, especially on silent launch
-    // User requested: "hologram face... start her self"
-    toggleHologram(); 
+    // Auto-boot hologram only in PRODUCTION for the "Sovereign AI" feel.
+    // In DEVELOPMENT, leave it off to save GPU overhead and speed up Vite hydration.
+    if (app.isPackaged) {
+        toggleHologram(); 
+    }
     
     // Smooth transition: Show Main, Wait, Close Boot
     if (mainWindow && bootWindow) {
@@ -415,7 +451,7 @@ function launchInterface(isSilent = false) {
 
         mainWindow.once('ready-to-show', show);
         // INDUSTRIAL GRADE: "Force Render" fallback for Intel Macs under load
-        setTimeout(show, 5000); 
+        setTimeout(show, 2000); 
     } else {
         if (bootWindow) bootWindow.close();
     }
@@ -478,7 +514,7 @@ function createWindow() {
     // Load the app
     // Load the app
     const isDev = !app.isPackaged;
-    let startUrl = process.env.ELECTRON_START_URL || (isDev ? `http://localhost:${VITE_DEV_PORT}` : `file://${path.join(__dirname, '../../dist/index.html')}`);
+    let startUrl = process.env.ELECTRON_START_URL || (isDev ? `http://127.0.0.1:${VITE_DEV_PORT}` : `file://${path.join(__dirname, '../../dist/index.html')}`);
     
     // Append platform parameter for reliable renderer-side detection
     const urlObj = new URL(startUrl.startsWith('file://') ? startUrl : startUrl);
@@ -585,30 +621,6 @@ function startServer() {
     });
 }
 
-// Port Finding Utility
-function findAvailablePort(startPort, endPort = startPort + 100) {
-    return new Promise((resolve, reject) => {
-        const server = require('net').createServer();
-        server.unref();
-        server.on('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-                if (startPort >= endPort) {
-                    reject(new Error('No available ports found'));
-                } else {
-                    findAvailablePort(startPort + 1, endPort).then(resolve, reject);
-                }
-            } else {
-                reject(err);
-            }
-        });
-        server.listen(startPort, () => {
-            server.close(() => {
-                resolve(startPort);
-            });
-        });
-    });
-}
-
 let cortexPort = CORTEX_PORT; // Default from env or 8000
 
 // Start the Python Cortex (LightRAG)
@@ -628,13 +640,19 @@ async function startCortex() {
         // DEVELOPMENT: Use the local script and venv
         cortexPath = path.join(__dirname, '../../cortex/python/cortex.py');
         
-        // Unified Python Resolution
-        if (fs.existsSync(paths.PYTHON_BIN)) {
-            pythonCmd = paths.PYTHON_BIN;
-        } else if (fs.existsSync(paths.SYSTEM_PYTHON_BIN)) {
-            pythonCmd = paths.SYSTEM_PYTHON_BIN;
+        // Force Local VENV Priority (Critical for Intel Mac stability)
+        const localVenv = paths.PYTHON_BIN;
+        const systemVenv = paths.SYSTEM_PYTHON_BIN;
+        
+        if (fs.existsSync(localVenv)) {
+            pythonCmd = localVenv;
+            console.log(`[CORTEX] [DEV] Successfully located project venv: ${pythonCmd}`);
+        } else if (fs.existsSync(systemVenv)) {
+            pythonCmd = systemVenv;
+            console.log(`[CORTEX] [DEV] Falling back to system venv: ${pythonCmd}`);
         } else {
             pythonCmd = 'python3';
+            console.warn('[CORTEX] [DEV] WARNING: No venv found! Using system python (may lack dependencies).');
         }
 
         if (process.platform === 'win32' && pythonCmd.includes('python')) {
@@ -1476,7 +1494,7 @@ function createWidgetWindow() {
   const isDev = !app.isPackaged;
   // Load same app but with ?mode=widget param
   const url = isDev 
-    ? `http://localhost:${VITE_DEV_PORT}?mode=widget` 
+    ? `http://127.0.0.1:${VITE_DEV_PORT}?mode=widget` 
     : `file://${path.join(__dirname, '../../dist/index.html')}?mode=widget`;
   
   console.log('[WIDGET] Loading URL:', url);
@@ -1540,7 +1558,7 @@ function createChatWindow() {
 
   const isDev = !app.isPackaged;
   const url = isDev 
-    ? `http://localhost:${VITE_DEV_PORT}?mode=chat` 
+    ? `http://127.0.0.1:${VITE_DEV_PORT}?mode=chat` 
     : `file://${path.join(__dirname, '../../dist/index.html')}?mode=chat`;
   
   chatWindow.loadURL(url);
@@ -1727,17 +1745,19 @@ function createVisualCoreWindow(initialData = null) {
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width } = primaryDisplay.workAreaSize;
     
-    // WIDGET MODE: Top-Right Corner, Floating, Larger
-    const w = 960; // 960x540 (qHD)
-    const h = 540; 
+    // Load saved bounds or use default
+    const savedBounds = loadWindowStateVC();
+    const w = savedBounds?.width || 960;
+    const h = savedBounds?.height || 540;
     const padding = 20;
+    const defaultX = width - w - padding;
+    const defaultY = padding;
 
     visualCoreWindow = new BrowserWindow({
         width: w,
         height: h,
-        // Top-Right Positioning
-        x: width - w - padding,
-        y: padding,
+        x: savedBounds?.x ?? defaultX,
+        y: savedBounds?.y ?? defaultY,
         frame: false,
         transparent: true,
         backgroundColor: '#00000000',
@@ -1756,6 +1776,15 @@ function createVisualCoreWindow(initialData = null) {
             webviewTag: true // Vital for Browser-in-Screen
         }
     });
+
+    // Save bounds on change
+    const updateVCBounds = () => {
+        if (visualCoreWindow && !visualCoreWindow.isMinimized()) {
+            saveWindowStateVC(visualCoreWindow.getBounds());
+        }
+    };
+    visualCoreWindow.on('resize', updateVCBounds);
+    visualCoreWindow.on('move', updateVCBounds);
 
     // Ensure it floats above full-screen apps (like a true OS widget)
     visualCoreWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
@@ -1807,6 +1836,7 @@ ipcMain.on('close-visual-core', () => {
 ipcMain.on('update-visual-core', (event, data) => {
     console.log('[MAIN PROCESS] Received update-visual-core IPC:', data);
     if (visualCoreWindow) {
+        visualCoreWindow.webContents.send('visual-core-update', data);
         if (visualCoreReady) {
             console.log('[MAIN PROCESS] Smart Screen is ready, sending directly');
             visualCoreWindow.webContents.send('visual-core-update', data);
@@ -1823,6 +1853,33 @@ ipcMain.on('update-visual-core', (event, data) => {
         console.log('[MAIN PROCESS] Creating new Smart Screen window with data');
         createVisualCoreWindow(data);
         syncVisualCoreStatus(true);
+    }
+});
+
+// [SOVEREIGN SYNC] Broadcast app state to all auxiliary windows
+ipcMain.on('broadcast-app-state', (event, state) => {
+    if (visualCoreWindow && !visualCoreWindow.isDestroyed()) {
+        visualCoreWindow.webContents.send('sync-app-state', state);
+    }
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+        widgetWindow.webContents.send('sync-app-state', state);
+    }
+    if (chatWindow && !chatWindow.isDestroyed()) {
+        chatWindow.webContents.send('sync-app-state', state);
+    }
+});
+
+// [INTERACTION FEEDBACK] Send VisualCore actions back to the brain
+ipcMain.on('visual-core-interaction', (event, interaction) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('visual-core-feedback', interaction);
+    }
+});
+
+// [AUTONOMY] Luca remotely controls the Smart Screen
+ipcMain.on('visual-core-command', (event, command) => {
+    if (visualCoreWindow && !visualCoreWindow.isDestroyed()) {
+        visualCoreWindow.webContents.send('visual-core-remote-control', command);
     }
 });
 
@@ -2026,6 +2083,17 @@ ipcMain.on('type-text', (event, { text }) => {
             });
         }
     }, 150); // 150ms delay for focus settle
+});
+
+// IPC: Check if a command/binary exists in the system path
+ipcMain.handle('check-command', async (event, command) => {
+    return new Promise((resolve) => {
+        // Use 'which' on macOS/Linux, 'where' on Windows
+        const checkCmd = process.platform === 'win32' ? `where ${command}` : `which ${command}`;
+        exec(checkCmd, (error) => {
+            resolve(!error);
+        });
+    });
 });
 
 ipcMain.handle('control-system', async (event, data = {}) => {
@@ -2628,16 +2696,11 @@ ipcMain.handle('start-ollama', async () => {
 
   try {
     if (process.platform === 'darwin') {
-      // Priority 1: Check for App bundle (Tactile UI)
       const appPath = '/Applications/Ollama.app';
       if (fs.existsSync(appPath)) {
         console.log('[MAIN] Starting Ollama App...');
         exec('open -a Ollama');
-        return true;
-      }
-      
-      // Priority 2: Check for binary (Homebrew/Manual)
-      try {
+      } else {
         const homebrewBinary = '/opt/homebrew/bin/ollama';
         const intelBinary = '/usr/local/bin/ollama';
         const targetBinary = fs.existsSync(homebrewBinary) ? homebrewBinary : fs.existsSync(intelBinary) ? intelBinary : 'ollama';
@@ -2648,8 +2711,26 @@ ipcMain.handle('start-ollama', async () => {
           stdio: 'ignore'
         });
         proc.unref();
-        return true;
-      } catch { /* Binary startup failed */ }
+      }
+
+      // Wait for port to become active (Poll for 30s)
+      console.log('[MAIN] Waiting for Ollama port 11434 to open...');
+      for (let i = 0; i < 60; i++) {
+        const active = await new Promise(resolve => {
+          const net = require('net');
+          const client = new net.Socket();
+          client.setTimeout(200);
+          client.on('connect', () => { client.destroy(); resolve(true); });
+          client.on('error', () => { resolve(false); });
+          client.connect(11434, '127.0.0.1');
+        });
+        if (active) {
+          console.log('[MAIN] Ollama is now awake and ready.');
+          return true;
+        }
+        await new Promise(r => setTimeout(r, 500));
+      }
+      throw new Error("Ollama failed to start within 30 seconds.");
     } else if (process.platform === 'win32') {
       // Priority 1: Try App Start
       try {
@@ -2736,16 +2817,45 @@ ipcMain.handle('setup-ollama-for-model', async (event, { modelId, tag }) => {
     // 3. Pull
     sendStatus(`Pulling weights...`, 45);
     return new Promise((resolve, reject) => {
-      const pull = spawn('ollama', ['pull', tag]);
-      pull.stdout.on('data', (d) => {
-        const match = d.toString().match(/(\d+)%/);
-        if (match) sendStatus("Downloading...", 45 + (parseInt(match[1]) * 0.55));
+      const fs = require('fs');
+      const binPaths = [
+        '/usr/local/bin/ollama',
+        '/opt/homebrew/bin/ollama',
+        '/Applications/Ollama.app/Contents/Resources/bin/ollama',
+        `${require('os').homedir()}/Applications/Ollama.app/Contents/Resources/bin/ollama`
+      ];
+      let binary = 'ollama';
+      for (const p of binPaths) {
+        if (fs.existsSync(p)) { binary = p; break; }
+      }
+
+      console.log(`[OLLAMA-SETUP] Pulling ${tag} using ${binary}`);
+      const pull = spawn(binary, ['pull', tag]);
+      
+      const handleData = (d) => {
+        const raw = d.toString();
+        const match = raw.match(/(\d+(?:\.\d+)?)%/);
+        if (match) {
+          const percent = parseFloat(match[1]);
+          sendStatus("Downloading...", 45 + (percent * 0.55));
+        }
+      };
+
+      pull.stdout.on('data', handleData);
+      pull.stderr.on('data', handleData);
+      
+      pull.stderr.on('data', (d) => {
+        console.warn(`[OLLAMA-SETUP] ${d.toString()}`);
       });
+
       pull.on('close', (code) => {
         if (code === 0) {
           sendStatus("Ready", 100);
           resolve(true);
-        } else reject(new Error("Pull failed"));
+        } else {
+          console.error(`[OLLAMA-SETUP] Pull failed with code ${code}`);
+          reject(new Error(`Pull failed (Code ${code})`));
+        }
       });
     });
   } catch (error) {

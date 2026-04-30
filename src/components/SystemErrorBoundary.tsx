@@ -59,7 +59,7 @@ class SystemErrorBoundary extends Component<Props, State> {
         );
         this.setState({ isRestoring: false });
       }
-    } catch (e) {
+    } catch {
       alert("CONNECTION ERROR: Local Core offline. Cannot automate rollback.");
       this.setState({ isRestoring: false });
     }
@@ -97,7 +97,7 @@ class SystemErrorBoundary extends Component<Props, State> {
         alert(`REPAIR FAILED: ${data.error || data.message}`);
         this.setState({ isRepairing: false });
       }
-    } catch (e) {
+    } catch {
       alert("REPAIR ERROR: Could not contact Evolution Engine.");
       this.setState({ isRepairing: false });
     }

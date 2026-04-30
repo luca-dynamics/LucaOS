@@ -35,12 +35,44 @@ interface SettingsGeneralTabProps {
   isMobile?: boolean;
 }
 
+function normalizeDisplayValue(value: unknown, fallback = "ASSISTANT"): string {
+  if (typeof value === "string") return value;
+  if (value == null) return fallback;
+
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (
+      entries.length > 0 &&
+      entries.every(
+        ([key, item]) => /^\d+$/.test(key) && typeof item === "string",
+      )
+    ) {
+      return entries
+        .sort((a, b) => Number(a[0]) - Number(b[0]))
+        .map(([, item]) => item)
+        .join("");
+    }
+
+    const candidate =
+      (value as any).persona ??
+      (value as any).name ??
+      (value as any).id ??
+      (value as any).value;
+
+    if (typeof candidate === "string") return candidate;
+  }
+
+  const text = String(value).trim();
+  return text && text !== "[object Object]" ? text : fallback;
+}
+
 const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   settings,
   onUpdate,
   theme,
   isMobile,
 }) => {
+  const personaLabel = normalizeDisplayValue(settings.general.persona);
   const [profileStatus, setProfileStatus] =
     useState<ChromeProfileStatus | null>(null);
 
@@ -145,7 +177,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   borderLeftColor: "var(--app-border-main)" 
                 }}
               >
-                {settings.general.persona} MODE
+                {personaLabel} MODE
               </div>
             </div>
           </div>
@@ -168,7 +200,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     "HACKER",
                   ] as PersonaMode[]
                 ).map((p) => {
-                  const isActive = settings.general.persona === p;
+                  const isActive = personaLabel === p;
                   return (
                     <button
                       key={p}

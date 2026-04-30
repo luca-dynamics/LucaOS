@@ -1,4 +1,12 @@
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+// Re-import missing types or use string literals for Modality
+export type LiveServerMessage = any; 
+export enum Modality {
+  TEXT = "TEXT",
+  IMAGE = "IMAGE",
+  AUDIO = "AUDIO",
+  VIDEO = "VIDEO"
+}
 import {
   getAllTools,
   PERSONA_CONFIG,
@@ -13,11 +21,15 @@ import { settingsService } from "./settingsService";
 import { SystemHealth } from "./introspectionService";
 import { eventBus } from "./eventBus";
 import { CORE_VOICE_TOOLS } from "../config/voiceTools";
-import { BRAIN_CONFIG } from "../config/brain.config.ts";
+import { BRAIN_CONFIG } from "../config/brain.config";
 import { contextCardService } from "./ContextCardService";
 import { translationService } from "./TranslationService";
+import {
+  resolveVoiceSessionRoute,
+  VoiceSessionRoute,
+} from "./voiceSessionRouter";
 
-interface LiveConfig {
+export interface LiveConfig {
   onToolCall: (name: string, args: any) => Promise<any>;
   onAudioData: (amplitude: number) => void;
   onTranscript: (text: string, type: "user" | "model") => void;
@@ -32,7 +44,7 @@ interface LiveConfig {
 }
 
 class LucaLiveService {
-  private ai: GoogleGenAI;
+  private ai: GoogleGenerativeAI;
   private activeSession: any = null;
   private inputAudioContext: AudioContext | null = null;
   private outputAudioContext: AudioContext | null = null;
@@ -61,11 +73,13 @@ class LucaLiveService {
   private retryTimeout: NodeJS.Timeout | null = null;
   private keepAliveInterval: NodeJS.Timeout | null = null; // Heartbeat to prevent server timeout
   private readonly KEEP_ALIVE_INTERVAL_MS = 15000; // Send heartbeat every 15 seconds
+  private currentStatus = "IDLE";
+  private currentRouteKind: VoiceSessionRoute["kind"] | null = null;
 
   constructor() {
     // We defer AI initialization to connect() to ensure we have the latest key
     // Initial placeholder, overwritten in connect() with real key
-    this.ai = new GoogleGenAI({ apiKey: "placeholder" });
+    this.ai = new GoogleGenerativeAI("placeholder");
   }
 
   async connect(config: LiveConfig) {
@@ -88,6 +102,7 @@ class LucaLiveService {
     }
 
     this.isConnecting = true;
+    this.currentStatus = "CONNECTING";
     config.onConnectionChange?.(false); // Initial state
 
     // 1. Get Fresh API Key
@@ -97,6 +112,7 @@ class LucaLiveService {
       console.error("[LIVE] Failed to get GenAI client");
       config.onStatusUpdate?.("Error: Missing API Key");
       this.isConnecting = false;
+      this.currentStatus = "ERROR";
       return;
     }
 
@@ -107,6 +123,19 @@ class LucaLiveService {
     if (this.retryTimeout) {
       clearTimeout(this.retryTimeout);
       this.retryTimeout = null;
+    }
+
+    const liveRoute = resolveVoiceSessionRoute();
+    this.currentRouteKind = liveRoute.kind;
+    if (liveRoute.kind !== "CLOUD_BIDI") {
+      const reason =
+        liveRoute.reason ||
+        `Resolved voice route "${liveRoute.kind}" is not compatible with bidi uplink.`;
+      console.warn("[LIVE] Bidi connect refused:", reason);
+      config.onStatusUpdate?.("Voice route is local/hybrid");
+      this.isConnecting = false;
+      this.currentStatus = "ROUTE_MISMATCH";
+      throw new Error(reason);
     }
 
     const memoryContext = memoryService.getMemoryContext();
@@ -228,30 +257,15 @@ class LucaLiveService {
       this.outputNode.gain.value = 1.0; // Ensure full volume
       this.outputNode.connect(this.outputAudioContext.destination);
 
-      let voiceModel =
-        settingsService.get("brain")?.voiceModel || BRAIN_CONFIG.defaults.voice;
-
-      // SAFETY GUARD: The Multimodal Live API (bidiGenerateContent) has strict model requirements.
-      // 1. Rejects Local Models (Piper/Kokoro) -> Error 1008
-      // 2. Rejects Standard Flash/Pro (gemini-1.5/2.0) -> Not found for bidi
-      // 3. Rejects Gemini 3 (for now) -> Error 1008
-      // 4. Requires native-audio series or verified 2.5 series.
-      if (
-        voiceModel.includes("piper") ||
-        voiceModel.includes("kokoro") ||
-        voiceModel.includes("local") ||
-        voiceModel.includes("gemini-2.0-flash") ||
-        voiceModel.includes("gemini-1.5") ||
-        voiceModel.includes("gemini-3") || // EXPLICIT REJECT: Verified 1008 error
-        !voiceModel.includes("gemini")
-      ) {
-        console.warn(
-          `[LIVE] Model "${voiceModel}" is incompatible with Cloud Bidi Uplink. Falling back to "${BRAIN_CONFIG.defaults.voice}"`,
-        );
-        voiceModel = BRAIN_CONFIG.defaults.voice;
+      const voiceModel = liveRoute.model;
+      if (liveRoute.fallbackApplied && liveRoute.reason) {
+        console.warn(`[LIVE] ${liveRoute.reason}`);
       }
+      console.log(
+        `[LIVE] Route=${liveRoute.kind} Provisioning=${liveRoute.provisioning} Model=${voiceModel}`,
+      );
 
-      const sessionPromise = this.ai.live.connect({
+      const sessionPromise = (this.ai as any).live.connect({
         model: voiceModel,
         callbacks: {
           onopen: () => {
@@ -260,6 +274,7 @@ class LucaLiveService {
             this.connectionStartTime = Date.now(); // Track stability
             this.isConnecting = false; // Reset guard
             this.retryCount = 0; // Reset retry count
+            this.currentStatus = "CONNECTED";
             this.setupInputStream(config, sessionPromise);
             this.startKeepAlive(sessionPromise); // KEEP-ALIVE: Start heartbeat
             config.onStatusUpdate?.("Voice Uplink Active");
@@ -281,6 +296,7 @@ class LucaLiveService {
               );
               config.onStatusUpdate?.("Connection Unstable - Stopping");
               this.shouldReconnect = false;
+              this.currentStatus = "UNSTABLE";
             }
 
             // Only auto-reconnect if we didn't explicitly disconnect AND shouldReconnect is true
@@ -294,8 +310,9 @@ class LucaLiveService {
               this.disconnect(false);
             }
           },
-          onerror: (err) => {
+          onerror: (err: any) => {
             console.error("LUCA Voice Error", err);
+            this.currentStatus = "ERROR";
             // Try to reconnect on error
             if (this.isConnected) {
               this.handleReconnect(config);
@@ -381,6 +398,7 @@ class LucaLiveService {
     } catch {
       console.error("Failed to initialize voice session");
       this.isConnecting = false; // Reset guard on error
+      this.currentStatus = "ERROR";
       config.onStatusUpdate?.("Connection Failed");
       config.onConnectionChange?.(false);
       this.handleReconnect(config);
@@ -706,7 +724,7 @@ class LucaLiveService {
     if (modelTurn?.parts) {
       console.log(
         "[LIVE] Model Turn Parts:",
-        modelTurn.parts.map((p) => ({
+        modelTurn.parts.map((p: any) => ({
           text: p.text
             ? p.text.length > 50
               ? p.text.substring(0, 50) + "..."
@@ -792,7 +810,7 @@ class LucaLiveService {
 
       // NEW: Trigger Context Card Analysis
       const modelSpeech = modelTurn.parts
-        .map((p) => p.text)
+        .map((p: any) => p.text)
         .filter(Boolean)
         .join(" ");
       if (modelSpeech) {
@@ -825,6 +843,12 @@ class LucaLiveService {
         // Immediate acknowledgment
         config.onTranscript(`Starting ${fc.name}...`, "model");
         config.onStatusUpdate?.(`Starting ${fc.name}...`);
+        eventBus.emit("tool-started", {
+          toolName: fc.name,
+          toolCallId: fc.id,
+          source: "voice",
+          status: "started",
+        });
 
         try {
           // Send progress updates during execution
@@ -847,6 +871,12 @@ class LucaLiveService {
           const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
           config.onTranscript(`${fc.name} completed in ${elapsed}s`, "model");
           config.onStatusUpdate?.(`${fc.name} completed`);
+          eventBus.emit("tool-finished", {
+            toolName: fc.name,
+            toolCallId: fc.id,
+            source: "voice",
+            status: "finished",
+          });
 
           sessionPromise.then((session) =>
             session.sendToolResponse({
@@ -861,6 +891,13 @@ class LucaLiveService {
           console.error("Tool Error", e);
           config.onTranscript(`Error in ${fc.name}: ${e}`, "model");
           config.onStatusUpdate?.(`Error: ${fc.name} failed`);
+          eventBus.emit("tool-failed", {
+            toolName: fc.name,
+            toolCallId: fc.id,
+            source: "voice",
+            status: "failed",
+            error: e instanceof Error ? e.message : String(e),
+          });
         } finally {
           // Unlock interruptions after tool completes
           if (isCriticalTool) {
@@ -934,6 +971,8 @@ class LucaLiveService {
     this.isSpeaking = false;
     this.retryCount = 0; // Reset retry count on explicit disconnect
     this.activeSession = null;
+    this.currentStatus = "DISCONNECTED";
+    this.currentRouteKind = null;
     this.interrupt(); // Clear audio queue
 
     // 4. Cleanup Input Node (Worker)
@@ -1015,6 +1054,26 @@ class LucaLiveService {
     this.nextStartTime = 0;
     this.noiseFloor = 0.002; // Reset noise floor to original initialization value
     this.vadHangover = 0;
+  }
+
+  get connected(): boolean {
+    return this.isConnected;
+  }
+
+  get status(): string {
+    return this.currentStatus;
+  }
+
+  get routeKind(): VoiceSessionRoute["kind"] | null {
+    return this.currentRouteKind;
+  }
+
+  get canBargeIn(): boolean {
+    return true;
+  }
+
+  get supportsAudioOutput(): boolean {
+    return true;
   }
 
   private interrupt() {

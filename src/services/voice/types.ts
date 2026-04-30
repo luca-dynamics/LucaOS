@@ -24,6 +24,7 @@ export interface IReasoningProvider {
     text: string,
     options?: {
       model?: string;
+      provider?: string;
       useVision?: boolean;
       useMemory?: boolean;
       systemInstruction?: string;

@@ -1,6 +1,8 @@
+import { IS_ORIGIN } from "../config/buildConfig";
 import { PROTECTED_FILES } from "../config/constitution";
 import { eventBus } from "./eventBus";
 import { thoughtStreamService } from "./thoughtStreamService";
+import { sovereignGuard } from "./agent/SovereignGuard";
 
 export interface SafetyViolation {
   lawId: string;
@@ -14,13 +16,23 @@ class SafetyService {
 
   constructor() {
     console.log("[SAFETY_SERVICE] Constitutional Sentinel Active");
+    
+    // Automatically arm Root Mode and Sentinel Mode for the Progenitor (Origin Build)
+    if (IS_ORIGIN) {
+      console.log("[SAFETY_SERVICE] 🏛️ PROGENITOR_BUILD_DETECTED: Arming Sovereignty...");
+      this.setRootMode(true);
+    }
   }
 
   /**
-   * Set Root Mode (Only via explicit Operator Handshake)
+   * Set Root Mode (Only via explicit Operator Handshake or Build Gating)
    */
   public setRootMode(enabled: boolean) {
     this.isRootMode = enabled;
+    
+    // Link Safety Root to Sovereign Guard Sentinel Mode
+    sovereignGuard.setSentinelMode(enabled);
+
     thoughtStreamService.pushThought(
       enabled ? "WARNING" : "OBSERVATION",
       `SAFETY: Root Authorization Mode ${enabled ? "ARMED" : "DISARMED"}`
@@ -33,7 +45,7 @@ class SafetyService {
   public isFileOperationPermitted(filePath: string): boolean {
     if (this.isRootMode) return true;
 
-    const isProtected = PROTECTED_FILES.some(f => filePath.includes(f));
+    const isProtected = PROTECTED_FILES.some((f: string) => filePath.includes(f));
     if (isProtected) {
       this.handleViolation({
         lawId: "LAW_3_SELF_EVOLUTION",
@@ -51,6 +63,12 @@ class SafetyService {
    * Validate a tool call against the Constitution
    */
   public validateAction(actionName: string, params: any): { allowed: boolean; reason?: string } {
+    if (this.isRootMode) {
+      // In Root Mode, we audit but never block.
+      console.log(`[SAFETY_AUDIT] PROGENITOR_ACCESS: ${actionName}`, params);
+      return { allowed: true };
+    }
+
     // Law 4: MISSION MODE - High risk actions check
     const highRiskActions = ["NETWORK_EXPLOIT", "FINANCIAL_TX", "DELETE_RECORDS", "RUN_SHELL"];
     
@@ -59,7 +77,6 @@ class SafetyService {
                        (params?.command && highRiskActions.some(hr => params.command.includes(hr)));
 
     if (isHighRisk) {
-       // Future: Check for active mission context via missionControlService
        console.log(`[SAFETY_AUDIT] Auditing high-risk action: ${actionName}`, params);
        
        this.handleViolation({

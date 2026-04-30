@@ -1,19 +1,19 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 export const createForexAccountTool: FunctionDeclaration = {
   name: "createForexAccount",
   description:
     "Open a new Institutional Forex Trading Account. Enables fiat currency trading.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       leverage: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description:
           "Account leverage (e.g., 100 for 1:100, 500 for 1:500). Default 100.",
       },
       baseCurrency: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Account currency (USD, EUR, GBP). Default USD.",
       },
     },
@@ -26,10 +26,10 @@ export const analyzeForexPairTool: FunctionDeclaration = {
   description:
     "Analyze a Forex Pair (e.g., EURUSD). Returns Macro-economic data, Technical Analysis levels, and Bank Sentiment.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       pair: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Forex Pair (e.g., EURUSD, GBPJPY).",
       },
     },
@@ -42,27 +42,27 @@ export const executeForexTradeTool: FunctionDeclaration = {
   description:
     "Execute a Market Order on MT4 Forex. Requires MT4 bridge connection.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       symbol: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Forex Pair Symbol (e.g., EURUSD, GBPJPY).",
       },
       type: {
-        type: Type.STRING,
-        enum: ["BUY", "SELL"],
+        type: SchemaType.STRING,
+        enum: ["BUY", "SELL"], format: "enum",
         description: "Order type: BUY (long) or SELL (short).",
       },
       lots: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Volume in Lots (0.01 = micro lot, 1.0 = standard lot).",
       },
       stopLoss: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Optional Stop Loss price.",
       },
       takeProfit: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Optional Take Profit price.",
       },
     },
@@ -74,7 +74,7 @@ export const getForexPositionsTool: FunctionDeclaration = {
   name: "getForexPositions",
   description: "Get all open positions from MT4 account.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {},
   },
 };
@@ -83,10 +83,10 @@ export const closeForexPositionTool: FunctionDeclaration = {
   name: "closeForexPosition",
   description: "Close a specific open position by ticket number.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       ticket: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "MT4 order ticket number.",
       },
     },
@@ -98,7 +98,7 @@ export const closeAllForexPositionsTool: FunctionDeclaration = {
   name: "closeAllForexPositions",
   description: "Close all open forex positions. Use with caution.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {},
   },
 };

@@ -5,7 +5,7 @@
  * Reduces prompt bloat by only loading tools relevant to the current mission.
  */
 
-import { FunctionDeclaration } from "@google/genai";
+import { FunctionDeclaration } from "@google/generative-ai";
 import { ToolRegistry } from "./toolRegistry";
 import { mentalStateService } from "./mentalStateService";
 import { modelRouterService, ModelRecommendation } from "./ModelRouterService";

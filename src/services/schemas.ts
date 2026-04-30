@@ -831,6 +831,13 @@ export const ToolSchemas = {
     protocol: z.enum(["HTTP", "TCP", "UDP", "MQTT"]).optional(),
     port: z.number().optional(),
   }),
+
+  // --- SELF-CONFIGURATION ---
+  getSystemSettings: z.object({}).describe("Retrieve all current system settings for analysis and auditing"),
+  updateSystemSettings: z.object({
+    key: z.string().describe("The setting key to update (e.g. 'llm_model', 'enable_background_sync', 'voice_provider')"),
+    value: z.any().describe("The new value for the setting"),
+  }),
 };
 
 export const validateToolArgs = (toolName: string, args: any) => {

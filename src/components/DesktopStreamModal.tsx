@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 
@@ -23,7 +23,6 @@ export const DesktopStreamModal: React.FC<Props> = ({
 
   // Process List Polling
   useEffect(() => {
-    let interval: any;
     const fetchProcesses = async () => {
       if (connected) {
         try {
@@ -33,7 +32,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
             setProcesses(data);
             setLoading(false);
           }
-        } catch (e) {
+        } catch {
           console.error("Failed to fetch processes");
         }
       } else {
@@ -48,7 +47,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
       }
     };
     fetchProcesses();
-    interval = setInterval(fetchProcesses, 2000);
+    const interval = setInterval(fetchProcesses, 2000);
     return () => clearInterval(interval);
   }, [connected]);
 

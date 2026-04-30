@@ -27,14 +27,30 @@ export class CheckpointManager {
     try {
       let path: any, fs: any;
       
+      // Strict environment check: only use dynamic imports for node/electron built-ins 
+      // if we are NOT in a standard browser environment that would trigger a CDN fetch.
+      const isNative = typeof window === 'undefined' || !!(window as any).luca || !!(window as any).require;
+
       if (typeof window !== "undefined" && (window as any).require) {
         path = (window as any).require("path");
         fs = (window as any).require("fs");
+      } else if (isNative) {
+        try {
+          const pathMod = "path";
+          const fsMod = "fs";
+          path = (await import(/* @vite-ignore */ pathMod)).default || await import(/* @vite-ignore */ pathMod);
+          fs = (await import(/* @vite-ignore */ fsMod)).default || await import(/* @vite-ignore */ fsMod);
+        } catch {
+          console.warn("[CheckpointManager] Dynamic import of fs/path failed, falling back to mock.");
+          this.setupMock();
+          this.initialized = true;
+          return;
+        }
       } else {
-        const pathMod = "path";
-        const fsMod = "fs";
-        path = (await import(/* @vite-ignore */ pathMod)).default || await import(/* @vite-ignore */ pathMod);
-        fs = (await import(/* @vite-ignore */ fsMod)).default || await import(/* @vite-ignore */ fsMod);
+        // We are in a pure browser/web context without node polyfills
+        this.setupMock();
+        this.initialized = true;
+        return;
       }
 
       let dbPath: string;

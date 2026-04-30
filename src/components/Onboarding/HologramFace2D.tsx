@@ -16,9 +16,11 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
     <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
       {/* Large 2D Icon Face */}
       <div
-        className="absolute inset-0 flex items-center justify-center opacity-40"
+        className="absolute inset-0 flex items-center justify-center transition-all duration-700"
         style={{
-          filter: `drop-shadow(0 0 40px var(--app-primary)) drop-shadow(0 0 80px var(--app-primary))`,
+          opacity:
+            "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.84) / 0.16), 1)) * 0.5)",
+          filter: `blur(calc(var(--app-bg-blur, 40px) * 0.12)) drop-shadow(0 0 40px var(--app-primary)) drop-shadow(0 0 80px var(--app-primary))`,
         }}
       >
         <div className="relative animate-pulse" style={{ width: "clamp(25rem, 90vmin, 50rem)", height: "clamp(25rem, 90vmin, 50rem)" }}>
@@ -83,8 +85,10 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
 
       {/* Subtle Glow Pulse Effect */}
       <div
-        className="absolute inset-0 opacity-10 animate-pulse pointer-events-none"
+        className="absolute inset-0 animate-pulse pointer-events-none transition-opacity duration-700"
         style={{
+          opacity:
+            "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.84) / 0.16), 1)) * 0.1)",
           background: `radial-gradient(circle, var(--app-primary) 0%, transparent 50%)`,
           animationDuration: "4s",
         }}

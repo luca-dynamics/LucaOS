@@ -24,9 +24,11 @@ const HologramFace: React.FC<HologramFaceProps> = ({
     <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
       {/* Large 3D Holographic Face */}
       <div
-        className="absolute inset-0 flex items-center justify-center opacity-30 shadow-2xl shadow-black/80"
+        className="absolute inset-0 flex items-center justify-center shadow-2xl shadow-black/80 transition-all duration-700"
         style={{
-          filter: `drop-shadow(0 0 60px var(--app-primary)) drop-shadow(0 0 100px var(--app-primary))`,
+          opacity:
+            "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.84) / 0.16), 1)) * 0.42)",
+          filter: `blur(calc(var(--app-bg-blur, 40px) * 0.12)) drop-shadow(0 0 60px var(--app-primary)) drop-shadow(0 0 100px var(--app-primary))`,
         }}
       >
         <div 
@@ -65,8 +67,10 @@ const HologramFace: React.FC<HologramFaceProps> = ({
 
       {/* Subtle Glow Pulse Effect */}
       <div
-        className="absolute inset-0 opacity-10 animate-pulse pointer-events-none"
+        className="absolute inset-0 animate-pulse pointer-events-none transition-opacity duration-700"
         style={{
+          opacity:
+            "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.84) / 0.16), 1)) * 0.1)",
           background: `radial-gradient(circle, var(--app-primary) 0%, transparent 50%)`,
           animationDuration: "4s",
         }}

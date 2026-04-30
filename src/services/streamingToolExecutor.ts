@@ -1,4 +1,5 @@
 import { ToolRegistry } from "./toolRegistry";
+import { eventBus } from "./eventBus";
 
 export interface ToolCall {
   id: string;
@@ -80,6 +81,12 @@ export class StreamingToolExecutor {
 
   private async executeSingle(call: ToolCall) {
     this.activeCount++;
+    eventBus.emit("tool-started", {
+      toolName: call.name,
+      toolCallId: call.id,
+      source: "chat",
+      status: "started",
+    });
     try {
       // Inject Progress Reporter into context
       const context = {
@@ -96,6 +103,12 @@ export class StreamingToolExecutor {
         args: call.args, 
         result 
       });
+      eventBus.emit("tool-finished", {
+        toolName: call.name,
+        toolCallId: call.id,
+        source: "chat",
+        status: "finished",
+      });
     } catch (err: any) {
       console.error(`[EXECUTOR] Tool ${call.name} failed:`, err);
       this.results.push({ 
@@ -104,6 +117,13 @@ export class StreamingToolExecutor {
         args: call.args, 
         result: `Error: ${err.message || "Unknown tool error"}`,
         error: err.message 
+      });
+      eventBus.emit("tool-failed", {
+        toolName: call.name,
+        toolCallId: call.id,
+        source: "chat",
+        status: "failed",
+        error: err.message || "Unknown tool error",
       });
     } finally {
       this.activeCount--;

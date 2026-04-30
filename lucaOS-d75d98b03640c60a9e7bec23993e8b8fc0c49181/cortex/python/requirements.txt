@@ -1,0 +1,12 @@
+python-multipart>=0.0.12
+google-genai>=0.1.0
+fastapi
+uvicorn
+lightrag-hku
+sentence-transformers
+model2vec
+networkx
+numpy<2.0.0
+Pillow
+cryptography
+faster-whisper

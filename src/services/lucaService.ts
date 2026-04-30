@@ -1,9 +1,15 @@
 import {
-  GoogleGenAI,
+  GoogleGenerativeAI,
   FunctionDeclaration,
   Part,
-  Modality,
-} from "@google/genai";
+} from "@google/generative-ai";
+// Re-import Modality if needed, or define locally if SDK mismatch
+export enum Modality {
+  TEXT = "TEXT",
+  IMAGE = "IMAGE",
+  AUDIO = "AUDIO",
+  VIDEO = "VIDEO"
+}
 import { memoryService } from "./memoryService";
 import { creditService } from "./creditService";
 import { loggerService } from "./loggerService";
@@ -13,10 +19,9 @@ import { taskService } from "./taskService";
 import { validateToolArgs } from "./schemas";
 import { DeviceType } from "./deviceCapabilityService";
 import { ToolRegistry } from "./toolRegistry";
-import { harnessService } from "./harnessService";
 import { resolveContentSource } from "./contentSourceService";
 import { settingsService } from "./settingsService";
-import { BRAIN_CONFIG } from "../config/brain.config.ts";
+import { BRAIN_CONFIG } from "../config/brain.config";
 import { personalityService } from "./personalityService";
 import { tradingLoopService } from "./tradingLoopService";
 import { LLMProvider, ChatMessage } from "./llm/LLMProvider";
@@ -54,6 +59,7 @@ import { safetyService } from "./safetyService";
 import { missionControlService } from "./agent/MissionControlService";
 import { discoveryService } from "./discoveryService";
 import { osintService } from "./osintService";
+import type { ModelProvisioningRoute } from "./llm/ProviderFactory";
 
 export type { PersonaType };
 export {
@@ -89,7 +95,7 @@ export const FULL_TOOL_SET = allTools;
  * The prime orchestration service for the Luca OS environment.
  */
 class LucaService {
-  private ai: GoogleGenAI;
+  private ai: GoogleGenerativeAI;
   private provider: LLMProvider;
   private localHistory: ChatMessage[] = [];
   private systemInstruction: string = "";
@@ -757,16 +763,21 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
       console.warn("[LUCA] analyzeImage via provider failed, falling back to vision model:", e.message);
       // Vision fallback: use the dedicated vision model via Gemini SDK (always available)
       const brainSettings = settingsService.get("brain");
-      const result = await this.ai.models.generateContent({
+      const model = this.ai.getGenerativeModel({
         model: brainSettings.visionModel || BRAIN_CONFIG.defaults.vision,
-        contents: {
-          parts: [
-            { text: prompt },
-            { inlineData: { mimeType: "image/jpeg", data: base64Image } },
-          ],
-        },
       });
-      return result.text || "No analysis generated.";
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: "image/jpeg", data: base64Image } },
+            ],
+          },
+        ],
+      });
+      return result.response.text() || "No analysis generated.";
     }
   }
 
@@ -805,31 +816,27 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     console.log(`[SEARCH] Query Optimized: "${query}" -> "${finalQuery}"`);
 
     const brainSettings = settingsService.get("brain");
-    const result = await this.ai.models.generateContent({
-      model: brainSettings.model,
-      contents: finalQuery,
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
+    const model = this.ai.getGenerativeModel({ model: brainSettings.model });
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: finalQuery }] }],
+      tools: [{ googleSearch: {} }] as any,
     });
     return {
-      text: result.text,
-      groundingMetadata: result.candidates?.[0]?.groundingMetadata,
+      text: result.response.text(),
+      groundingMetadata: result.response.candidates?.[0]?.groundingMetadata,
     };
   }
 
   private async runGoogleMaps(query: string) {
     const brainSettings = settingsService.get("brain");
-    const result = await this.ai.models.generateContent({
-      model: brainSettings.model,
-      contents: query,
-      config: {
-        tools: [{ googleMaps: {} }],
-      },
+    const model = this.ai.getGenerativeModel({ model: brainSettings.model });
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: query }] }],
+      tools: [{ googleMaps: {} }] as any,
     });
     return {
-      text: result.text,
-      groundingMetadata: result.candidates?.[0]?.groundingMetadata,
+      text: result.response.text(),
+      groundingMetadata: result.response.candidates?.[0]?.groundingMetadata,
     };
   }
 
@@ -841,15 +848,17 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     parts.push({ text: prompt });
 
     const brainSettings = settingsService.get("brain");
-    const result = await this.ai.models.generateContent({
-      model: brainSettings.visionModel || BRAIN_CONFIG.defaults.vision, // Use stable vision model
-      contents: { parts },
-      config: { responseModalities: [Modality.IMAGE] },
+    const model = this.ai.getGenerativeModel({
+      model: brainSettings.visionModel || BRAIN_CONFIG.defaults.vision,
     });
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts }],
+      generationConfig: { responseModalities: [Modality.IMAGE as any] } as any,
+    } as any);
 
     // Extract base64 image
     const generatedBase64 =
-      result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      result.response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     return generatedBase64;
   }
 
@@ -857,18 +866,22 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     console.log(`[LUCA] Generating Video for: ${prompt}`);
     try {
       const brainSettings = settingsService.get("brain");
-      const result = await this.ai.models.generateContent({
-        model: brainSettings.model || BRAIN_CONFIG.defaults.brain, // Use stable model ID
-        contents: {
-          parts: [
-            { text: `Generate a high quality 5 second video: ${prompt}` },
-          ],
-        },
-
-        config: { responseModalities: ["VIDEO"] },
+      const model = this.ai.getGenerativeModel({
+        model: brainSettings.model || BRAIN_CONFIG.defaults.brain,
       });
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: `Generate a high quality 5 second video: ${prompt}` },
+            ],
+          },
+        ],
+        generationConfig: { responseModalities: ["VIDEO" as any] } as any,
+      } as any);
 
-      const videoPart = result.candidates?.[0]?.content?.parts?.find(
+      const videoPart = result.response.candidates?.[0]?.content?.parts?.find(
         (p: any) => p.inlineData && p.inlineData.mimeType?.startsWith("video"),
       );
 
@@ -921,13 +934,21 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
       return response || "";
     } catch {
       // Final fallback: dedicated vision model
-      const result = await this.ai.models.generateContent({
+      const model = this.ai.getGenerativeModel({
         model: brainSettings.visionModel || BRAIN_CONFIG.defaults.vision,
-        contents: {
-          parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: inputImage } }],
-        },
       });
-      return result.text || "";
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: "image/jpeg", data: inputImage } },
+            ],
+          },
+        ],
+      });
+      return result.response.text() || "";
     }
   }
 
@@ -1193,6 +1214,114 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     return toolResult;
   }
 
+  public async ensureTurnReady(
+    options?: { provider?: string; model?: string; systemInstruction?: string },
+  ): Promise<LLMProvider> {
+    if (this.sessionDirty || this.localHistory.length === 0) {
+      await this.initChat(
+        this.localHistory.length > 0 ? this.localHistory : undefined,
+      );
+      this.sessionDirty = false;
+    }
+
+    let activeProvider: LLMProvider = this.provider;
+    if (options?.model || options?.provider) {
+      activeProvider = ProviderFactory.createProvider(
+        { ...settingsService.get("brain"), model: options?.model || settingsService.get("brain")?.model },
+        this.persona,
+        options?.provider,
+      );
+    }
+
+    if (options?.systemInstruction) {
+      this.systemInstruction = options.systemInstruction;
+    } else if (
+      !this.systemInstruction ||
+      this.sessionTools.length === 0 ||
+      options?.model
+    ) {
+      await this.rebuildSystemConfig();
+    }
+
+    return activeProvider;
+  }
+
+  public setCurrentImageContext(imageBase64: string | null) {
+    this.currentImageContext = imageBase64;
+  }
+
+  public appendUserMessage(message: string) {
+    this.localHistory.push({ role: "user", content: message });
+  }
+
+  public appendModelMessage(message: string, toolCalls?: any[]) {
+    this.localHistory.push({ role: "model", content: message, toolCalls });
+  }
+
+  public appendToolMessage(
+    name: string,
+    result: string,
+    toolCallId?: string,
+  ) {
+    this.localHistory.push({
+      role: "tool",
+      content: result,
+      name,
+      toolCallId,
+    });
+  }
+
+  public getTurnState() {
+    return {
+      history: this.localHistory,
+      systemInstruction: this.systemInstruction,
+      sessionTools: this.sessionTools,
+      persona: this.persona,
+    };
+  }
+
+  public getProvisioningRoute(
+    modelOverride?: string,
+  ): ModelProvisioningRoute {
+    const settings = settingsService.get("brain");
+    const effectiveSettings = modelOverride
+      ? { ...settings, model: modelOverride }
+      : settings;
+    return ProviderFactory.resolveProvisioningRoute(
+      effectiveSettings,
+      this.persona,
+    );
+  }
+
+  public async executeToolForTurn(
+    name: string,
+    args: any,
+    onToolCall: (name: string, args: any, context?: any) => Promise<any>,
+    context?: any,
+  ) {
+    return this.executeInternalTool(name, args, onToolCall, context);
+  }
+
+  public async classifyLocalReflexForTurn(text: string) {
+    return this.getLocalRouterClassification(text);
+  }
+
+  public synthesizeReflexForTurn(
+    tool: string,
+    result: any,
+    thought: string | null,
+  ): string {
+    return this.synthesizeReflexResponse(tool, result, thought);
+  }
+
+  public async extractTurnDirectives(userMsg: string) {
+    await this.extractLifeDirectives(userMsg);
+  }
+
+  public mapCloudErrorForTurn(error: any): string {
+    return this.mapCloudError(error);
+  }
+
   public async editCodeSelection(
     selectedText: string,
     instruction: string,
@@ -1235,88 +1364,18 @@ REPLACEMENT_CODE:`;
     onToolCall: (name: string, args: any, context?: any) => Promise<any>,
     currentCwd?: string,
     abortSignal?: AbortSignal,
-    options?: { model?: string; systemInstruction?: string },
+    options?: { provider?: string; model?: string; systemInstruction?: string },
   ): Promise<any> {
-    const originalMode = creditService.getMode();
-    let fullResponseText = "";
-    let accumulatedGrounding: any = null;
-    let generatedImage: string | undefined = undefined;
-    let generatedVideo: string | undefined = undefined;
-    harnessService.beginTurn(this.localHistory);
-
-    try {
-      // BDI KERNEL: Perception & Deliberation Cycle
-      await cognitiveDeliberator.perceive(message);
-
-      if (this.sessionDirty || this.localHistory.length === 0) {
-        await this.initChat(this.localHistory.length > 0 ? this.localHistory : undefined);
-        this.sessionDirty = false;
-      }
-
-      let activeProvider: any = this.provider;
-      if (options?.model) {
-        activeProvider = ProviderFactory.createProvider({ ...settingsService.get("brain"), model: options.model });
-      }
-
-      if (options?.systemInstruction) this.systemInstruction = options.systemInstruction;
-      else if (!this.systemInstruction || this.sessionTools.length === 0 || options?.model) await this.rebuildSystemConfig();
-
-      if (imageBase64) this.currentImageContext = imageBase64;
-
-      this.localHistory.push({ role: "user", content: message });
-
-      const { StreamingToolExecutor } = await import("./streamingToolExecutor.js");
-      const executor = new StreamingToolExecutor(
-        async (name, args, context) => {
-          const mock = harnessService.getMockToolResult(name, args);
-          if (mock) return mock.result;
-          const res = await this.executeInternalTool(name, args, onToolCall, context);
-          if (res.groundingMetadata) accumulatedGrounding = res.groundingMetadata;
-          if (res.generatedImage) {
-            onChunk(`\n[[Solar:Image]] **PREVIEW**: Dynamic asset generated.`);
-            generatedImage = res.generatedImage;
-          }
-          if (res.generatedVideo) generatedVideo = res.generatedVideo;
-          return res.result;
-        },
-        (id, msg, prog) => onChunk(`\n[[Solar:Progress]] {"id":"${id}", "message":"${msg}", "percent":${prog || 0}}`)
-      );
-
-      let keepGenerating = true;
-      while (keepGenerating) {
-        keepGenerating = false;
-        const result = await (activeProvider as any).chatStream(
-          this.localHistory,
-          (chunk: string) => { fullResponseText += chunk; onChunk(chunk); },
-          imageBase64 ? [imageBase64] : undefined,
-          this.systemInstruction,
-          this.sessionTools,
-          abortSignal
-        );
-
-        if (result.thought) thoughtStreamService.pushThought("REASONING", result.thought);
-
-        if (result.toolCalls && result.toolCalls.length > 0) {
-          this.localHistory.push({ role: "model", content: result.text, toolCalls: result.toolCalls });
-          const toolResults = await executor.executeBatch(result.toolCalls);
-          for (const res of toolResults) {
-            harnessService.recordToolCall(res.name, res.args, res.result, res.error);
-            this.localHistory.push({ role: "tool", content: res.error || res.result, name: res.name, toolCallId: res.toolCallId });
-          }
-          keepGenerating = true;
-        } else {
-          this.localHistory.push({ role: "model", content: result.text });
-        }
-      }
-
-      this.extractLifeDirectives(message).catch(() => {});
-      return { text: fullResponseText, groundingMetadata: accumulatedGrounding, generatedImage, generatedVideo };
-    } catch (e: any) {
-      onChunk(`\n${this.mapCloudError(e)}`);
-    } finally {
-      harnessService.endTurn({ content: fullResponseText, thought: fullResponseText });
-      creditService.setMode(originalMode);
-    }
+    const { turnRunner } = await import("./turns/TurnRunner");
+    return turnRunner.runStreamTurn({
+      message,
+      imageBase64,
+      onChunk,
+      onToolCall,
+      currentCwd,
+      abortSignal,
+      options,
+    });
   }
 
   public async sendMessage(
@@ -1324,74 +1383,16 @@ REPLACEMENT_CODE:`;
     imageBase64: string | null,
     onToolCall: (name: string, args: any) => Promise<any>,
     currentCwd?: string,
-    options?: { model?: string; systemInstruction?: string },
+    options?: { provider?: string; model?: string; systemInstruction?: string },
   ): Promise<any> {
-    // BDI KERNEL: Perception & Deliberation Cycle
-    await cognitiveDeliberator.perceive(message);
-
-    if (this.sessionDirty || this.localHistory.length === 0) {
-      await this.initChat(this.localHistory.length > 0 ? this.localHistory : undefined);
-      this.sessionDirty = false;
-    }
-
-    let activeProvider: any = this.provider;
-    if (options?.model) {
-      activeProvider = ProviderFactory.createProvider({ ...settingsService.get("brain"), model: options.model });
-    }
-
-    if (options?.systemInstruction) this.systemInstruction = options.systemInstruction;
-    else if (!this.systemInstruction || this.sessionTools.length === 0 || options?.model) await this.rebuildSystemConfig();
-
-    if (imageBase64) this.currentImageContext = imageBase64;
-
-    const localReflex = await this.getLocalRouterClassification(message);
-    if (localReflex.confidence >= 0.95 && localReflex.tool) {
-      try {
-        const res = await onToolCall(localReflex.tool, localReflex.parameters);
-        const reflexResponse = this.synthesizeReflexResponse(localReflex.tool, res, localReflex.thought);
-        this.localHistory.push({ role: "user", content: message }, { role: "model", content: reflexResponse });
-        return { text: reflexResponse, groundingMetadata: null };
-      } catch (err) { console.warn("[REFLEX] Local failed:", err); }
-    }
-
-    this.localHistory.push({ role: "user", content: message });
-    let finalResponseText = "";
-    let accumulatedGrounding: any = null;
-    let generatedImage: string | undefined = undefined;
-    let generatedVideo: string | undefined = undefined;
-
-    const { StreamingToolExecutor } = await import("./streamingToolExecutor.js");
-    const executor = new StreamingToolExecutor(
-      async (name, args, context) => {
-        const res = await this.executeInternalTool(name, args, onToolCall, context);
-        if (res.groundingMetadata) accumulatedGrounding = res.groundingMetadata;
-        if (res.generatedImage) generatedImage = res.generatedImage;
-        if (res.generatedVideo) generatedVideo = res.generatedVideo;
-        return res.result;
-      },
-      (id, msg) => thoughtStreamService.pushThought("ACTION", `[${id}] ${msg}`)
-    );
-
-    let loopCount = 0;
-    while (loopCount < 10) {
-      loopCount++;
-      const res = await (activeProvider as any).chat(this.localHistory, imageBase64 ? [imageBase64] : undefined, this.systemInstruction, this.sessionTools);
-      finalResponseText = res.text;
-
-      if (res.toolCalls && res.toolCalls.length > 0) {
-        this.localHistory.push({ role: "model", content: res.text, toolCalls: res.toolCalls });
-        const toolResults = await executor.executeBatch(res.toolCalls);
-        for (const tr of toolResults) {
-          this.localHistory.push({ role: "tool", content: tr.error || tr.result, name: tr.name, toolCallId: tr.toolCallId });
-        }
-      } else {
-        this.localHistory.push({ role: "model", content: res.text });
-        break;
-      }
-    }
-
-    this.extractLifeDirectives(message).catch(() => {});
-    return { text: finalResponseText, groundingMetadata: accumulatedGrounding, generatedImage, generatedVideo };
+    const { turnRunner } = await import("./turns/TurnRunner");
+    return turnRunner.runTurn({
+      message,
+      imageBase64,
+      onToolCall,
+      currentCwd,
+      options,
+    });
   }
 
   async verifyIdentity(liveImageBase64: string): Promise<boolean> {
@@ -1434,8 +1435,13 @@ REPLACEMENT_CODE:`;
 
   private updateProvisioningMode(brainSettings: any) {
     if (!brainSettings) return;
-    let mode: "PRIME" | "BYOK" | "LOCAL" = brainSettings.useCustomApiKey ? "BYOK" : "PRIME";
-    if (brainSettings.preferOllama) mode = "LOCAL";
+    const route = ProviderFactory.resolveProvisioningRoute(
+      brainSettings,
+      this.persona,
+    );
+    let mode: "PRIME" | "BYOK" | "LOCAL" = "PRIME";
+    if (route.kind === "BYOK") mode = "BYOK";
+    if (route.kind === "LOCAL") mode = "LOCAL";
     creditService.setMode(mode);
   }
 
@@ -1495,4 +1501,3 @@ REPLACEMENT_CODE:`;
 }
 
 export const lucaService = new LucaService();
-

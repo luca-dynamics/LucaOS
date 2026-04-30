@@ -10,20 +10,14 @@ class DiscoveryService {
     private isScanning: boolean = false;
     private discoveredTools: Set<string> = new Set();
 
-    private isEnabled(): boolean {
-        return typeof __LUCA_DEV_MODE__ !== 'undefined' && __LUCA_DEV_MODE__;
-    }
-
     constructor() {
-        if (!this.isEnabled()) return;
-        console.log("[THE_EXPLORER] Discovery Service Active (Dev Mode Only)");
+        console.log("[THE_EXPLORER] Discovery Service Active. sensing kernel...");
     }
 
     /**
      * Scans the system path for high-value CLI tools that are not yet agentized.
      */
     public async scanSystemCapabilities() {
-        if (!this.isEnabled()) return;
         if (this.isScanning) return;
 
         this.isScanning = true;
@@ -51,20 +45,31 @@ class DiscoveryService {
     }
 
     private async checkBinaryAvailability(tool: string): Promise<boolean> {
-        if (!this.isEnabled()) return false;
-        // Logic will be populated by the bridge during terminal sessions
-        return ['git', 'curl', 'python3'].includes(tool);
+        if (typeof window !== 'undefined' && (window as any).electron) {
+            try {
+                return await (window as any).electron.ipcRenderer.invoke('check-command', tool);
+            } catch {
+                return false;
+            }
+        }
+        return false;
     }
 
     private proposeNewCapabilities(tools: string[]) {
-        if (!this.isEnabled()) return;
-
         tools.forEach(tool => {
             this.discoveredTools.add(tool);
+            
+            // Phase 6: Propose differently based on persona
+            const isTactical = localStorage.getItem("LUCA_USER_TACTICAL") === "true";
+            
             forgeProposalService.generateSyntheticProposal({
-                title: `Bridge discovered: ${tool.toUpperCase()}`,
-                problem: `I have detected ${tool} in the host environment, but I do not have a BDI bridge to utilize it.`,
-                remediation: `Create a standardized BDI tool wrapper for '${tool}' execution.`,
+                title: isTactical ? `Bridge discovered: ${tool.toUpperCase()}` : `Body Synthesis: ${tool.toUpperCase()}`,
+                problem: isTactical 
+                    ? `Detected ${tool} in host, but no BDI bridge exists.` 
+                    : `I have identified a missing sensory organ (${tool}). My cognitive reach is limited without it.`,
+                remediation: isTactical 
+                    ? `Create BDI tool wrapper for '${tool}'.` 
+                    : `Integrate ${tool} into my core system.`,
                 type: 'CAPABILITY_GAP',
                 impactScore: 7,
                 meta: { binary: tool }

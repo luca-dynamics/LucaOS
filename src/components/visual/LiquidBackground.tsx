@@ -3,24 +3,36 @@ import { setHexAlpha } from "../../config/themeColors";
 import { isElectron as checkElectron } from "../../utils/env";
 
 interface LiquidBackgroundProps {
-  theme: {
+  theme?: {
     hex: string;
     themeName: string;
   };
+  color?: string;
+  amplitude?: number;
+  isThinking?: boolean;
+  isSpeaking?: boolean;
+  opacity?: number;
   className?: string;
 }
 
 export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
   theme,
+  color,
+  amplitude = 0,
+  isThinking = false,
+  isSpeaking = false,
+  opacity,
   className = "",
 }) => {
-  const hex = theme.hex;
+  const hex = color || theme?.hex || "#00ffff";
+  const resolvedOpacity =
+    typeof opacity === "number" ? opacity : "var(--app-bg-opacity, 0.3)";
   const isLight =
-    theme.themeName?.toLowerCase() === "lightcream" ||
-    theme.themeName?.toLowerCase() === "lucagent" ||
-    theme.themeName?.toLowerCase() === "light";
-    
-  const isLightCream = theme.themeName?.toLowerCase() === "lightcream";
+    theme?.themeName?.toLowerCase() === "lightcream" ||
+    theme?.themeName?.toLowerCase() === "lucagent" ||
+    theme?.themeName?.toLowerCase() === "light";
+
+  const isLightCream = theme?.themeName?.toLowerCase() === "lightcream";
 
   const [isElectron, setIsElectron] = useState(() => checkElectron());
 
@@ -62,20 +74,38 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
             ? webBackground
             : isLight
               ? isLightCream
-                ? `rgba(229, 225, 205, var(--app-bg-opacity, 0.7))`
-                : `radial-gradient(ellipse at 50% -10%, ${setHexAlpha(hex, 0.3)} 0%, transparent 60%), rgba(255, 255, 255, var(--app-bg-opacity, 0.5))`
-              : `radial-gradient(ellipse at 50% 20%, ${setHexAlpha(hex, 0.3)} 0%, transparent 60%), radial-gradient(ellipse at 85% 85%, ${setHexAlpha(hex, 0.2)} 0%, transparent 50%), radial-gradient(ellipse at 15% 75%, ${setHexAlpha(hex, 0.15)} 0%, transparent 50%), rgba(18, 18, 18, var(--app-bg-opacity, 0.3))`,
-          filter: isLightCream ? "none" : "blur(var(--app-bg-blur, 40px))",
+                ? `color-mix(in srgb, #E5E1CD calc(min(100%, (${resolvedOpacity}) * 100% + max(0%, ((${resolvedOpacity}) - 0.95) * 2000%))), transparent)`
+                : `color-mix(in srgb, #F7F8FB calc(min(100%, (${resolvedOpacity}) * 100% + max(0%, ((${resolvedOpacity}) - 0.95) * 2000%))), transparent)`
+              : `color-mix(in srgb, #121212 calc(min(100%, (${resolvedOpacity}) * 100% + max(0%, ((${resolvedOpacity}) - 0.95) * 2000%))), transparent)`,
+          filter: "none",
           transform: "translateZ(0)",
-          willChange: "filter",
+          willChange: "opacity",
         }}
       />
 
+      {!isLightCream && (
+        <div
+          className={`absolute inset-0 transition-all duration-1000 ${isThinking ? "animate-pulse" : ""}`}
+          style={{
+            background: isLight
+              ? `radial-gradient(ellipse at 50% -10%, ${setHexAlpha(hex, 0.3 + (amplitude * 0.2))} 0%, transparent 60%)`
+              : `radial-gradient(ellipse at 50% 20%, ${setHexAlpha(hex, 0.3 + (amplitude * 0.4))} 0%, transparent 60%), radial-gradient(ellipse at 85% 85%, ${setHexAlpha(hex, 0.2 + (isSpeaking ? 0.1 : 0))} 0%, transparent 50%), radial-gradient(ellipse at 15% 75%, ${setHexAlpha(hex, 0.15 + (isThinking ? 0.1 : 0))} 0%, transparent 50%)`,
+            filter: `blur(calc(var(--app-bg-blur, 40px) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.82) / 0.18), 1))))`,
+            opacity:
+              "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.9) / 0.1), 1)) * 0.9)",
+            transform: `translateZ(0) scale(${1 + (amplitude * 0.05)})`,
+            willChange: "filter, transform",
+          }}
+        />
+      )}
+
       {/* Grid Overlay for LightCream Theme */}
       {isLightCream && (
-        <div 
-          className="absolute inset-0 opacity-[0.12] transition-opacity duration-1000"
+        <div
+          className="absolute inset-0 transition-opacity duration-1000"
           style={{
+            opacity:
+              "calc((1 - var(--app-bg-opacity, 0.7)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.7) - 0.9) / 0.1), 1)) * 0.18)",
             backgroundImage: `
               linear-gradient(to right, #6c6a58 1px, transparent 1px),
               linear-gradient(to bottom, #6c6a58 1px, transparent 1px)
@@ -88,8 +118,10 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
       {/* 3. Subtle Noise - Disabled for Web to match Apple clean look */}
       {!isWeb && (
         <div
-          className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
+          className="absolute inset-0 mix-blend-overlay pointer-events-none transition-opacity duration-1000"
           style={{
+            opacity:
+              "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.7) / 0.3), 1)) * 0.025)",
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
           }}
         />

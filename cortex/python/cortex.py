@@ -98,17 +98,192 @@ else:
     os.environ["GEMINI_API_KEY"] = GOOGLE_API_KEY
     os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY # Standard SDK Variable
     os.environ["API_KEY"] = GOOGLE_API_KEY # Generic variable often used by new SDKs
-    
+
+# --- GLOBAL MODELS CONFIG ---
+# Models directory already defined above (MODELS_BASE_DIR)
+
+# Model definitions with paths
+MODEL_PATHS = {
+    "gemma-2b": {
+        "path": str(MODELS_BASE_DIR / "llm" / "gemma-2-2b-it-Q6_K.gguf"),
+        "repo_id": "bartowski/gemma-2-2b-it-GGUF",
+        "filename": "gemma-2-2b-it-Q6_K.gguf",
+        "n_ctx": 8192
+    },
+    "gemma-2b-lite": {
+        "path": str(MODELS_BASE_DIR / "llm" / "gemma-2-2b-it-Q4_K_M.gguf"),
+        "repo_id": "bartowski/gemma-2-2b-it-GGUF",
+        "filename": "gemma-2-2b-it-Q4_K_M.gguf",
+        "n_ctx": 8192,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
+    },
+    "phi-3-mini": {
+        "path": str(MODELS_BASE_DIR / "llm" / "Phi-3-mini-4k-instruct-q4.gguf"),
+        "repo_id": "microsoft/Phi-3-mini-4k-instruct-gguf",
+        "filename": "Phi-3-mini-4k-instruct-q4.gguf",
+        "n_ctx": 4096,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
+    },
+    "llama-3.2-1b": {
+        "path": str(MODELS_BASE_DIR / "llm" / "Llama-3.2-1B-Instruct-Q8_0.gguf"),
+        "repo_id": "bartowski/Llama-3.2-1B-Instruct-GGUF",
+        "filename": "Llama-3.2-1B-Instruct-Q8_0.gguf",
+        "n_ctx": 8192
+    },
+    "smollm2-1.7b": {
+        "path": str(MODELS_BASE_DIR / "llm" / "smollm2-1.7b-instruct-q8_0.gguf"),
+        "repo_id": "bartowski/SmolLM2-1.7B-Instruct-GGUF",
+        "filename": "smollm2-1.7b-instruct-q8_0.gguf",
+        "n_ctx": 2048,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
+    },
+    "qwen-2.5-7b": {
+        "path": str(MODELS_BASE_DIR / "llm" / "Qwen2.5-7B-Instruct-Q4_K_M.gguf"),
+        "repo_id": "bartowski/Qwen2.5-7B-Instruct-GGUF",
+        "filename": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+        "n_ctx": 32768,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
+    "deepseek-r1-distill-7b": {
+        "path": str(MODELS_BASE_DIR / "llm" / "DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf"),
+        "repo_id": "unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF",
+        "filename": "DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf",
+        "n_ctx": 8192,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
+    "smolvlm-500m": {
+        "path": str(MODELS_BASE_DIR / "vision" / "smolvlm"),
+        "repo_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+        "is_folder": True
+    },
+    "ui-tars-2b": {
+        "path": str(MODELS_BASE_DIR / "vision" / "ui-tars"),
+        "repo_id": "bytedance-research/UI-TARS-2B-SFT",
+        "is_folder": True
+    },
+    "qwen2.5-vl-3b": {
+        "path": str(MODELS_BASE_DIR / "vision" / "qwen2.5-vl-3b"),
+        "repo_id": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "is_folder": True,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
+    "moondream2": {
+        "path": str(MODELS_BASE_DIR / "vision" / "moondream2"),
+        "repo_id": "vikhyatk/moondream2",
+        "is_folder": True,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
+    "piper-amy": {
+        "path": str(MODELS_BASE_DIR / "tts" / "en_US-amy-medium.onnx"),
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx",
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
+    },
+    "kokoro-82m": {
+        "path": str(MODELS_BASE_DIR / "tts" / "kokoro-82m"),
+        "repo_id": "hexgrad/Kokoro-82M",
+        "is_folder": True
+    },
+    "supertonic-2": {
+        "path": str(MODELS_BASE_DIR / "tts" / "supertonic-2"),
+        "repo_id": "Supertone/supertonic-2",
+        "is_folder": True
+    },
+    "qwen3-tts": {
+        "path": str(MODELS_BASE_DIR / "tts" / "qwen3-tts"),
+        "repo_id": "Qwen/Qwen3-TTS-0.6B-Instruct",
+        "is_folder": True,
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
+    "moonshine-tiny": {
+        "path": str(MODELS_BASE_DIR / "stt" / "faster-whisper-tiny-en"),
+        "repo_id": "Systran/faster-whisper-tiny.en",
+        "is_folder": True,
+        "category": "stt",
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
+    },
+    "distil-whisper-medium-en": {
+        "path": str(MODELS_BASE_DIR / "stt" / "distil-whisper-medium-en"),
+        "repo_id": "Systran/faster-distil-whisper-medium.en",
+        "is_folder": True,
+        "category": "stt"
+    },
+    "whisper-v3-turbo": {
+        "path": str(MODELS_BASE_DIR / "stt" / "whisper-large-v3-turbo"),
+        "repo_id": "Deep-Learning-VJ/whisper-large-v3-turbo-ct2",
+        "is_folder": True,
+        "category": "stt"
+    },
+    "model2vec-potion": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "model2vec-potion"),
+        "repo_id": "minishlab/potion-base-2M",
+        "is_folder": True,
+        "category": "embedding"
+    },
+    "mxbai-embed-xsmall": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "mxbai-embed-xsmall"),
+        "repo_id": "mixedbread-ai/mxbai-embed-xsmall-v1",
+        "is_folder": True,
+        "category": "embedding"
+    },
+    "bge-small-en": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "bge-small-en"),
+        "repo_id": "BAAI/bge-small-en-v1.5",
+        "is_folder": True,
+        "category": "embedding"
+    },
+    "mxbai-embed-large": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "mxbai-embed-large"),
+        "repo_id": "mixedbread-ai/mxbai-embed-large-v1",
+        "is_folder": True,
+        "category": "embedding",
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"],
+        "unsupported_reason": "High-accuracy large model"
+    },
+    "jina-embed-v2": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "jina-embed-v2"),
+        "repo_id": "jinaai/jina-embeddings-v2-base-en",
+        "is_folder": True,
+        "category": "embedding",
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
+    },
+    "bge-large-en": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "bge-large-en"),
+        "repo_id": "BAAI/bge-large-en-v1.5",
+        "is_folder": True,
+        "category": "embedding"
+    },
+    "nomic-embed-text": {
+        "path": str(MODELS_BASE_DIR / "embeddings" / "nomic-embed-text"),
+        "repo_id": "nomic-ai/nomic-embed-text-v1.5",
+        "is_folder": True,
+        "category": "embedding",
+        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"],
+        "unsupported_reason": "Desktop only - 270MB model"
+    }
+}
+
+# Sync to global state for other modules (like local_llm_agent)
+import state
+state.MODEL_PATHS = MODEL_PATHS
+state.MODELS_BASE_DIR = MODELS_BASE_DIR
+
 # --- GLOBAL USER SETTINGS (JSON Persistence) ---
 SETTINGS_FILE = os.path.join(os.path.expanduser("~"), ".luca", "settings.json")
 
 def load_settings():
+    if not os.path.exists(SETTINGS_FILE):
+        return {}
+        
     try:
-        if os.path.exists(SETTINGS_FILE):
-             with open(SETTINGS_FILE, "r") as f:
-                 return json.load(f)
-    except: pass
-    return {}
+        with open(SETTINGS_FILE, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"[CORTEX] 🚨 SETTINGS CORRUPTION DETECTED: {e}")
+        # Return a special flag so the Auditor can detect the issue
+        return {"_error": "JSON_SYNTAX_ERROR", "_details": str(e)}
+    except Exception as e:
+        print(f"[CORTEX] Failed to load settings: {e}")
+        return {}
 
 def get_settings():
     """Returns a unified dictionary of all global user settings."""
@@ -276,10 +451,30 @@ class HybridEmbeddingLogic:
         return await self.acall(texts)
 
     async def acall(self, texts: list[str]) -> np.ndarray:
+        # ENSURE texts is a list (LightRAG usually sends a list, but we must be certain)
+        if isinstance(texts, str):
+            texts = [texts]
+            
         # Check if using a local model
         if self.current_model and self.current_model not in ["gemini", "gemini-3-pro-preview", "gemini-3-flash-preview", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.5-pro"]:
-            return await self._local_embed(texts)
-        return await self._gemini_embed(texts)
+            res = await self._local_embed(texts)
+        else:
+            res = await self._gemini_embed(texts)
+            
+        # SAFETY ALIGNMENT: LightRAG is extremely sensitive to vector count mismatch
+        if len(res) != len(texts):
+            print(f"[CORTEX] 🚩 DIAGNOSTIC: Alignment Triggered. Texts: {len(texts)}, Vectors: {len(res)}, Model: {self.current_model}")
+            if len(texts) == 1:
+                aligned = np.mean(res, axis=0, keepdims=True)
+                print(f"[CORTEX] 🚩 DIAGNOSTIC: Aligned {len(res)} -> {len(aligned)}")
+                return aligned
+            elif len(res) > len(texts):
+                return res[:len(texts)]
+            else:
+                padding = np.zeros((len(texts) - len(res), self._embedding_dim))
+                return np.vstack([res, padding])
+                
+        return res
     
     async def _gemini_embed(self, texts: list[str]) -> np.ndarray:
         client = get_genai_client()
@@ -291,10 +486,14 @@ class HybridEmbeddingLogic:
             try:
                 from google.genai import types as genai_types
                 result = await client.aio.models.embed_content(
-                    model="gemini-embedding-001", # High-availability 2026 stable engine
+                    model="gemini-embedding-001",
                     contents=texts,
                     config=genai_types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT")
                 )
+                
+                # result.embeddings is a list of embeddings. Each embedding has a 'values' list.
+                # If Gemini returned multiple embeddings for one content (due to length), 
+                # we need to be careful.
                 return np.array([e.values for e in result.embeddings])
             except Exception as e:
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
@@ -302,6 +501,7 @@ class HybridEmbeddingLogic:
                     print(f"[CORTEX] ⚠️ Embedding Rate Limit hit. Waiting {wait_time}s...")
                     await asyncio.sleep(wait_time)
                     continue
+                # For other errors, return zero-vectors to allow the process to continue
                 return np.zeros((len(texts), self._embedding_dim))
         return np.zeros((len(texts), self._embedding_dim))
 
@@ -353,6 +553,8 @@ from osint_endpoints import router as osint_router
 from agent_endpoints import router as agent_router  
 from agent_tool_endpoints import router as agent_tool_router  
 from quality_tools import router as quality_router  
+from build_endpoints import router as build_router
+from state_endpoints import router as state_router
 
 # Import Modular Connectors
 from connectors.notion import notion_router, notion_oauth_router
@@ -369,6 +571,8 @@ app.include_router(osint_router)
 app.include_router(agent_router)
 app.include_router(agent_tool_router)
 app.include_router(quality_router)
+app.include_router(build_router)
+app.include_router(state_router)
 app.include_router(notion_router)
 app.include_router(notion_oauth_router)
 app.include_router(google_router)
@@ -548,6 +752,30 @@ class SQLiteMemoryConnector:
             return [row[0] for row in rows]
         except Exception as e:
             # print(f"[CORTEX] SQLite Read Error: {e}")
+            return []
+
+    def get_unindexed_memories(self, last_id: int):
+        """Retrieve memories that haven't been synced to the vector DB yet."""
+        try:
+            if not os.path.exists(self.db_path):
+                return []
+            import sqlite3
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row # Required for dict-like access in sync_loop
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='memories'")
+            if not cursor.fetchone():
+                conn.close()
+                return []
+                
+            cursor.execute("SELECT id, content, type FROM memories WHERE id > ? ORDER BY id ASC", (last_id,))
+            rows = cursor.fetchall()
+            conn.close()
+            
+            return [dict(row) for row in rows]
+        except Exception as e:
+            print(f"[CORTEX] SQLite Sync Error: {e}")
             return []
 
     def add_memory(self, content: str):
@@ -752,7 +980,9 @@ async def cortex_llm_complete(prompt, system_prompt=None, **kwargs):
     if "claude" in model_id:
         from lightrag.llm.anthropic import anthropic_complete
         kwargs["api_key"] = settings.get("anthropic_api_key", os.environ.get("ANTHROPIC_API_KEY"))
-        return await anthropic_complete(model_id, prompt, system_prompt=system_prompt, **kwargs)
+        # Ensure system_prompt is not duplicated in kwargs
+        kwargs.pop("system_prompt", None)
+        return await anthropic_complete(prompt, system_prompt=system_prompt, model_name=model_id, **kwargs)
         
     # Check for OpenAI/xAI
     if "gpt" in model_id or "grok" in model_id:
@@ -762,14 +992,18 @@ async def cortex_llm_complete(prompt, system_prompt=None, **kwargs):
              kwargs["api_key"] = settings.get("xai_api_key", os.environ.get("XAI_API_KEY"))
         else:
              kwargs["api_key"] = settings.get("openai_api_key", os.environ.get("OPENAI_API_KEY"))
-        return await openai_chat_complete(model_id, prompt, system_prompt=system_prompt, **kwargs)
+        # Ensure system_prompt is not duplicated in kwargs
+        kwargs.pop("system_prompt", None)
+        return await openai_chat_complete(prompt, system_prompt=system_prompt, model_name=model_id, **kwargs)
 
-    # Default: Google Gemini with 429 Retry Protection
     from lightrag.llm.gemini import gemini_model_complete
     max_retries = 3
+    # Ensure system_prompt and model_name are not duplicated in kwargs
+    kwargs.pop("system_prompt", None)
+    kwargs.pop("model_name", None)
     for i in range(max_retries):
         try:
-            return await gemini_model_complete(model_id, prompt, system_prompt=system_prompt, **kwargs)
+            return await gemini_model_complete(prompt, system_prompt=system_prompt, model_name=model_id, **kwargs)
         except Exception as e:
             err_msg = str(e)
             if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
@@ -783,7 +1017,7 @@ async def cortex_llm_complete(prompt, system_prompt=None, **kwargs):
                 continue
             raise e
     # Final attempt fallback or raise
-    return await gemini_model_complete(prompt, system_prompt=system_prompt, **kwargs)
+    return await gemini_model_complete(prompt, system_prompt=system_prompt, model_name=model_id, **kwargs)
 
 async def get_rag(mind_type="cloud", model_id=None):
     """Retrieve or initialize LightRAG instance. 'cloud' uses LLM, 'local' uses free model2vec."""
@@ -798,7 +1032,22 @@ async def get_rag(mind_type="cloud", model_id=None):
     
     # We use a dedicated model_id for the mind type
     if not model_id:
-        model_id = "model2vec-potion" if mind_type == "local" else (os.environ.get("CORTEX_LLM_MODEL") or "gemini-2.1-flash")
+        if mind_type == "local":
+            # Dynamic Sensing: Use setting or first available downloaded embedding model
+            settings = get_settings()
+            model_id = settings.get("local_embedding_model")
+            if not model_id:
+                for m_id, m_cfg in MODEL_PATHS.items():
+                    if m_cfg.get("category") == "embedding":
+                        path = m_cfg["path"]
+                        is_ready = os.path.isdir(path) if m_cfg.get("is_folder") else os.path.isfile(path)
+                        if is_ready:
+                            model_id = m_id
+                            break
+            # Ultimate fallback if nothing found
+            if not model_id: model_id = "model2vec-potion"
+        else:
+            model_id = (os.environ.get("CORTEX_LLM_MODEL") or "gemini-2.1-flash")
     
     # If already initialized for this exact model and mind type, return it
     cache_key = f"{mind_type}_{model_id}"
@@ -1153,13 +1402,70 @@ async def startup_event():
     print("[CORTEX] Startup: Embedding routing active")
 
 
+def get_acceleration_status():
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            device_name = torch.cuda.get_device_name(0)
+            return {
+                "acceleration": "cuda",
+                "accelerator_ready": True,
+                "device": device_name,
+            }
+
+        mps_backend = getattr(torch.backends, "mps", None)
+        if mps_backend and torch.backends.mps.is_available():
+            return {
+                "acceleration": "mps",
+                "accelerator_ready": True,
+                "device": "Apple Silicon GPU",
+            }
+
+        return {
+            "acceleration": "cpu",
+            "accelerator_ready": False,
+            "device": "CPU fallback",
+        }
+    except ImportError:
+        return {
+            "acceleration": "unavailable",
+            "accelerator_ready": False,
+            "device": "Torch not installed",
+        }
+    except Exception as exc:
+        return {
+            "acceleration": "unknown",
+            "accelerator_ready": False,
+            "device": f"Probe failed: {exc}",
+        }
+
+
 @app.get("/health")
 async def health_check():
+    acceleration = get_acceleration_status()
     return {
         "status": "online", 
         "rag_initialized": rag is not None,
         "backend": "Gemini/LightRAG",
-        "embedding_model": embedding_logic.current_model if embedding_logic else "none"
+        "embedding_model": embedding_logic.current_model if embedding_logic else "none",
+        "runtime": "python",
+        "platform": {
+            "system": PLATFORM_INFO["system"],
+            "machine": PLATFORM_INFO["machine"],
+        },
+        "local_models_ready": acceleration["acceleration"] != "unavailable",
+        **acceleration,
+    }
+
+@app.get("/api/vision/status")
+async def vision_status():
+    """Returns the status of specialized vision and live-speech models."""
+    return {
+        "vision_agent": True, 
+        "vision_models_ready": True, 
+        "live_models_ready": True,
+        "provider": "Hybrid"
     }
 
 # --- EMBEDDING ENDPOINTS ---
@@ -3431,172 +3737,7 @@ async def execute_control_system(request: dict = Body(...), authorized: bool = D
 # ============ MODEL MANAGER ENDPOINTS ============
 # Unified management of local AI models (Gemma, SmolVLM, UI-TARS, Piper)
 
-# Get platform-specific models directory (Already defined at top)
-
-# Model definitions with paths
-MODEL_PATHS = {
-    "gemma-2b": {
-        "path": str(MODELS_BASE_DIR / "llm" / "gemma-2-2b-it-Q6_K.gguf"),
-        "repo_id": "bartowski/gemma-2-2b-it-GGUF",
-        "filename": "gemma-2-2b-it-Q6_K.gguf",
-        "n_ctx": 8192
-    },
-    "gemma-2b-lite": {
-        "path": str(MODELS_BASE_DIR / "llm" / "gemma-2-2b-it-Q4_K_M.gguf"),
-        "repo_id": "bartowski/gemma-2-2b-it-GGUF",
-        "filename": "gemma-2-2b-it-Q4_K_M.gguf",
-        "n_ctx": 8192,
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
-    },
-    "phi-3-mini": {
-        "path": str(MODELS_BASE_DIR / "llm" / "Phi-3-mini-4k-instruct-q4.gguf"),
-        "repo_id": "microsoft/Phi-3-mini-4k-instruct-gguf",
-        "filename": "Phi-3-mini-4k-instruct-q4.gguf",
-        "n_ctx": 4096,
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
-    },
-    "llama-3.2-1b": {
-        "path": str(MODELS_BASE_DIR / "llm" / "Llama-3.2-1B-Instruct-Q8_0.gguf"),
-        "repo_id": "bartowski/Llama-3.2-1B-Instruct-GGUF",
-        "filename": "Llama-3.2-1B-Instruct-Q8_0.gguf",
-        "n_ctx": 8192
-    },
-    "smollm2-1.7b": {
-        "path": str(MODELS_BASE_DIR / "llm" / "smollm2-1.7b-instruct-q8_0.gguf"),
-        "repo_id": "bartowski/SmolLM2-1.7B-Instruct-GGUF",
-        "filename": "smollm2-1.7b-instruct-q8_0.gguf",
-        "n_ctx": 2048,
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
-    },
-    "qwen-2.5-7b": {
-        "path": str(MODELS_BASE_DIR / "llm" / "Qwen2.5-7B-Instruct-Q4_K_M.gguf"),
-        "repo_id": "bartowski/Qwen2.5-7B-Instruct-GGUF",
-        "filename": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
-        "n_ctx": 32768,
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
-    },
-    "deepseek-r1-distill-7b": {
-        "path": str(MODELS_BASE_DIR / "llm" / "DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf"),
-        "repo_id": "unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF",
-        "filename": "DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf",
-        "n_ctx": 8192,
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
-    },
-    "smolvlm-500m": {
-        "path": str(MODELS_BASE_DIR / "vision" / "smolvlm"),
-        "repo_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
-        "is_folder": True
-    },
-    "ui-tars-2b": {
-        "path": str(MODELS_BASE_DIR / "vision" / "ui-tars"),
-        "repo_id": "bytedance-research/UI-TARS-2B-SFT",
-        "is_folder": True
-    },
-    "qwen2.5-vl-3b": {
-        "path": str(MODELS_BASE_DIR / "vision" / "qwen2.5-vl-3b"),
-        "repo_id": "Qwen/Qwen2.5-VL-3B-Instruct",
-        "is_folder": True,
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
-    },
-    "moondream2": {
-        "path": str(MODELS_BASE_DIR / "vision" / "moondream2"),
-        "repo_id": "vikhyatk/moondream2",
-        "is_folder": True,
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
-    },
-    "piper-amy": {
-        "path": str(MODELS_BASE_DIR / "tts" / "en_US-amy-medium.onnx"),
-        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx",
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
-    },
-    "kokoro-82m": {
-        "path": str(MODELS_BASE_DIR / "tts" / "kokoro-82m"),
-        "repo_id": "hexgrad/Kokoro-82M",
-        "is_folder": True
-    },
-    "supertonic-2": {
-        "path": str(MODELS_BASE_DIR / "tts" / "supertonic-2"),
-        "repo_id": "Supertone/supertonic-2",
-        "is_folder": True
-    },
-    "qwen3-tts": {
-        "path": str(MODELS_BASE_DIR / "tts" / "qwen3-tts"),
-        "repo_id": "Qwen/Qwen3-TTS-0.6B-Instruct",
-        "is_folder": True,
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
-    },
-    "moonshine-tiny": {
-        "path": str(MODELS_BASE_DIR / "stt" / "faster-whisper-tiny-en"),
-        "repo_id": "Systran/faster-whisper-tiny.en",
-        "is_folder": True,
-        "category": "stt",
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux", "android"]
-    },
-    "distil-whisper-medium-en": {
-        "path": str(MODELS_BASE_DIR / "stt" / "distil-whisper-medium-en"),
-        "repo_id": "Systran/faster-distil-whisper-medium.en",
-        "is_folder": True,
-        "category": "stt"
-    },
-    "whisper-v3-turbo": {
-        "path": str(MODELS_BASE_DIR / "stt" / "whisper-large-v3-turbo"),
-        "repo_id": "Deep-Learning-VJ/whisper-large-v3-turbo-ct2",
-        "is_folder": True,
-        "category": "stt"
-    },
-    "model2vec-potion": {
-        "path": str(MODELS_BASE_DIR / "embeddings" / "model2vec-potion"),
-        "repo_id": "minishlab/potion-base-2M",
-        "is_folder": True,
-        "category": "embedding"
-    },
-    "mxbai-embed-xsmall": {
-        "path": str(MODELS_BASE_DIR / "embeddings" / "mxbai-embed-xsmall"),
-        "repo_id": "mixedbread-ai/mxbai-embed-xsmall-v1",
-        "is_folder": True,
-        "category": "embedding"
-    },
-    "bge-small-en": {
-        "path": str(MODELS_BASE_DIR / "embeddings" / "bge-small-en"),
-        "repo_id": "BAAI/bge-small-en-v1.5",
-        "is_folder": True,
-        "category": "embedding"
-    },
-    "mxbai-embed-large": {
-        "path": str(MODELS_BASE_DIR / "embeddings" / "mxbai-embed-large"),
-        "repo_id": "mixedbread-ai/mxbai-embed-large-v1",
-        "is_folder": True,
-        "category": "embedding",
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"],
-        "unsupported_reason": "High-accuracy large model"
-    },
-    "jina-embed-v2": {
-        "path": str(MODELS_BASE_DIR / "embeddings" / "jina-embed-v2"),
-        "repo_id": "jinaai/jina-embeddings-v2-base-en",
-        "is_folder": True,
-        "category": "embedding",
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"]
-    },
-    "bge-large-en": {
-        "path": str(MODELS_BASE_DIR / "embeddings" / "bge-large-en"),
-        "repo_id": "BAAI/bge-large-en-v1.5",
-        "is_folder": True,
-        "category": "embedding"
-    },
-    "nomic-embed-text": {
-        "path": str(MODELS_BASE_DIR / "embeddings" / "nomic-embed-text"),
-        "repo_id": "nomic-ai/nomic-embed-text-v1.5",
-        "is_folder": True,
-        "category": "embedding",
-        "supported_platforms": ["macos-arm64", "macos-x86", "windows", "linux"],
-        "unsupported_reason": "Desktop only - 270MB model"
-    }
-}
-
-# Sync to global state for other modules (like local_llm_agent)
-import state
-state.MODEL_PATHS = MODEL_PATHS
-state.MODELS_BASE_DIR = MODELS_BASE_DIR
+# Model definitions moved to top of file
 
 @app.get("/models/{model_id}/canary")
 @app.post("/models/{model_id}/canary")

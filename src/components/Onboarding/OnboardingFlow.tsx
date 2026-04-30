@@ -135,9 +135,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     if (step === "KERNEL_AWAKENING") {
       const messages = [
         "KERNEL AWAKENING IN PROGRESS...",
-        "STABILIZING NEURAL TENSORS...",
+        "STABILIZING LUCA TENSORS...",
         "GENERATING IDENTITY KEYPAIR [ED25519]...",
-        "SOVEREIGN AGENT INITIALIZED.",
+        "LUCA AGENT INITIALIZED.",
       ];
 
       let i = 0;
@@ -270,7 +270,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             ...currentBrain,
             useCustomApiKey: false,
             model: isCustomOllama ? targetModel : `local/${targetModel}`,
-            embeddingModel: "local/nomic-embed-text", // Sovereign Default
+            embeddingModel: "local/nomic-embed-text",
           },
           voice: {
             ...currentVoice,
@@ -424,7 +424,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       settingsService.saveSettings({
         brain: {
           ...brainSettings,
-          embeddingModel: showByok && byokProvider === "gemini" ? "gemini-2.1-flash" : "local/nomic-embed-text",
+          embeddingModel: (showByok && byokProvider === "gemini" ? "gemini-2.1-flash" : "local/nomic-embed-text") as any,
         },
         voice: {
           ...currentVoice,
@@ -515,11 +515,19 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     >
       {/* Background handled by App.tsx (LiquidBackground) */}
 
-      <div className="glass-noise" />
+      <div
+        className="glass-noise transition-opacity duration-700"
+        style={{
+          opacity:
+            "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.7) / 0.3), 1)) * 0.025)",
+        }}
+      />
 
       <div
-        className="absolute inset-0 opacity-20 transition-opacity duration-500"
+        className="absolute inset-0 transition-opacity duration-500"
         style={{
+          opacity:
+            "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.88) / 0.12), 1)) * 0.16)",
           backgroundImage: `radial-gradient(${isLightTheme ? currentThemeHex + "60" : currentThemeHex + "40"} 1px, transparent 1px)`,
           backgroundSize: "30px 30px",
         }}
@@ -533,20 +541,20 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
       {/* Primary UI Layer */}
       <div
-        className={`z-10 relative transition-all duration-700 ease-in-out mx-auto flex flex-col items-center justify-center ${
+        className={`z-10 relative transition-all duration-700 ease-in-out mx-auto flex flex-col items-center ${
           step === "CONVERSATION"
             ? conversationMode === "voice"
-              ? "w-full h-full"
+              ? "w-full h-full justify-center"
               : isMobile
-                ? "w-[95vw] h-[90vh] px-4"
-                : "w-[min(80vmin,1000px)] h-[min(75vmin,800px)]"
+                ? "w-[95vw] h-[90vh] px-4 justify-center"
+                : "w-[min(80vmin,1000px)] h-[min(75vmin,800px)] justify-center"
             : step === "THEME"
               ? isMobile
-                ? "w-[90vw]"
-                : "w-[min(95vw,1100px)]"
+                ? "w-[92vw] h-[88vh] max-h-[88vh] justify-start pt-6"
+                : "w-full max-w-2xl h-[min(88vh,860px)] max-h-[88vh] px-4 justify-start pt-8"
               : isMobile
-                ? "w-[85vw]"
-                : "w-[min(90vw,1000px)]"
+                ? "w-[85vw] justify-center"
+                : "w-[min(90vw,1000px)] justify-center"
         }`}
         style={{
           padding:
@@ -635,13 +643,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   fontSize: "clamp(1.2rem, 4.5vmin, 2rem)",
                 }}
               >
-                Neural Handshake
+                Luca Handshake
               </h1>
               <p
                 className={` text-center font-medium`}
                 style={{ fontSize: "clamp(0.6rem, 1.8vmin, 0.85rem)" }}
               >
-                Define your operator designation...
+                Define your operator alias...
               </p>
             </div>
 
@@ -658,7 +666,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={`w-full border rounded-xl p-3 outline-none transition-all text-center text-lg placeholder-[var(--app-text-muted)] backdrop-blur-md text-[var(--app-text-main)]`}
-                placeholder="ENTER DESIGNATION"
+                placeholder="ENTER NAME"
                 style={{
                   borderColor: "var(--app-border-main)",
                   backgroundColor: "var(--app-bg-tint)",
@@ -739,7 +747,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   fontSize: "clamp(1.2rem, 4.5vmin, 2rem)",
                 }}
               >
-                Cognitive Core
+                Luca Core
               </h1>
               <p
                 className="max-w-md mx-auto font-medium opacity-80"

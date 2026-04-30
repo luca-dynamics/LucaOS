@@ -1,16 +1,16 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 export const runNmapScanTool: FunctionDeclaration = {
   name: "runNmapScan",
   description:
     "Use Nmap (Network Cartographer) to scan a target. Detects open ports, services, versions, and OS fingerprinting. Use for Recon.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      target: { type: Type.STRING, description: "Target IP or Domain." },
+      target: { type: SchemaType.STRING, description: "Target IP or Domain." },
       scanType: {
-        type: Type.STRING,
-        enum: ["QUICK", "FULL", "SERVICE", "OS_DETECT"],
+        type: SchemaType.STRING,
+        enum: ["QUICK", "FULL", "SERVICE", "OS_DETECT"], format: "enum",
         description: "Type of scan execution.",
       },
     },
@@ -23,11 +23,11 @@ export const runMetasploitExploitTool: FunctionDeclaration = {
   description:
     "Use Metasploit Framework to verify a known vulnerability or simulate an exploit payload against a target.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      target: { type: Type.STRING, description: "Target IP." },
+      target: { type: SchemaType.STRING, description: "Target IP." },
       module: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "Metasploit module path (e.g. exploit/windows/smb/ms17_010_eternalblue).",
       },
@@ -41,18 +41,18 @@ export const generatePayloadTool: FunctionDeclaration = {
   description:
     "Generate a payload (shellcode/binary) using msfvenom (or simulation). Create payloads like reverse shells or meterpreter sessions for authorized testing.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       os: {
-        type: Type.STRING,
-        enum: ["windows", "linux", "android", "osx"],
+        type: SchemaType.STRING,
+        enum: ["windows", "linux", "android", "osx"], format: "enum",
         description: "Target Operating System.",
       },
-      lhost: { type: Type.STRING, description: "Listening Host IP (Your IP)." },
-      lport: { type: Type.NUMBER, description: "Listening Port (e.g., 4444)." },
+      lhost: { type: SchemaType.STRING, description: "Listening Host IP (Your IP)." },
+      lport: { type: SchemaType.NUMBER, description: "Listening Port (e.g., 4444)." },
       format: {
-        type: Type.STRING,
-        enum: ["exe", "elf", "apk", "raw"],
+        type: SchemaType.STRING,
+        enum: ["exe", "elf", "apk", "raw"], format: "enum",
         description: "Output format.",
       },
     },
@@ -65,12 +65,12 @@ export const runBurpSuiteTool: FunctionDeclaration = {
   description:
     "Initiate a Web Vulnerability Scan using Burp Suite integration (or simulated web spider). Detects SQLi, XSS, CSRF.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      url: { type: Type.STRING, description: "Target URL." },
+      url: { type: SchemaType.STRING, description: "Target URL." },
       scanMode: {
-        type: Type.STRING,
-        enum: ["PASSIVE", "ACTIVE"],
+        type: SchemaType.STRING,
+        enum: ["PASSIVE", "ACTIVE"], format: "enum",
         description: "Scan intrusiveness.",
       },
     },
@@ -83,14 +83,14 @@ export const runWiresharkTool: FunctionDeclaration = {
   description:
     "Start a Network Packet Capture using Wireshark/TShark. Analyzes traffic for anomalies or credentials.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       interface: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Network interface (e.g. eth0, wlan0).",
       },
       duration: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Capture duration in seconds.",
       },
     },
@@ -103,11 +103,11 @@ export const runJohnRipperTool: FunctionDeclaration = {
   description:
     "Use John the Ripper to test password strength by attempting to crack a hash string.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      hash: { type: Type.STRING, description: "The password hash string." },
+      hash: { type: SchemaType.STRING, description: "The password hash string." },
       format: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Hash format (e.g. md5, sha256).",
       },
     },
@@ -120,15 +120,15 @@ export const runCobaltStrikeTool: FunctionDeclaration = {
   description:
     "Deploy a simulated Cobalt Strike Beacon for Adversary Emulation drills. Red Team operation.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       listenerIP: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Team Server Listener IP.",
       },
       payloadType: {
-        type: Type.STRING,
-        enum: ["HTTP", "DNS", "SMB"],
+        type: SchemaType.STRING,
+        enum: ["HTTP", "DNS", "SMB"], format: "enum",
         description: "Beacon communication protocol.",
       },
     },
@@ -140,11 +140,11 @@ export const deployCaptivePortalTool: FunctionDeclaration = {
   name: "deployCaptivePortal",
   description: "Deploy a captive portal hotspot for mobile hacking.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      ssid: { type: Type.STRING, description: "SSID for the hotspot." },
+      ssid: { type: SchemaType.STRING, description: "SSID for the hotspot." },
       portalContent: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "HTML content for the portal.",
       },
     },
@@ -156,13 +156,13 @@ export const wifiDeauthTool: FunctionDeclaration = {
   name: "wifiDeauth",
   description: "Perform a WiFi deauthentication attack.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       targetMAC: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "MAC address of the target device.",
       },
-      count: { type: Type.NUMBER, description: "Number of packets to send." },
+      count: { type: SchemaType.NUMBER, description: "Number of packets to send." },
     },
     required: ["targetMAC"],
   },
@@ -171,18 +171,18 @@ export const wifiDeauthTool: FunctionDeclaration = {
 export const scanWifiDevicesTool: FunctionDeclaration = {
   name: "scanWifiDevices",
   description: "Scan for devices on the local WiFi network.",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const exfiltrateDataTool: FunctionDeclaration = {
   name: "exfiltrateData",
   description: "Exfiltrate data (SMS, Call Logs) from the Android device.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       type: {
-        type: Type.STRING,
-        enum: ["SMS", "CALLS"],
+        type: SchemaType.STRING,
+        enum: ["SMS", "CALLS"], format: "enum",
         description: "Type of data to exfiltrate.",
       },
     },
@@ -195,15 +195,15 @@ export const deployPhishingKitTool: FunctionDeclaration = {
   description:
     "Deploy a Social Engineering Phishing Template (L0p4 Style) on a local port to capture credentials during Red Team assessments.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       template: {
-        type: Type.STRING,
-        enum: ["LOGIN_GENERIC", "GOOGLE", "BANK"],
+        type: SchemaType.STRING,
+        enum: ["LOGIN_GENERIC", "GOOGLE", "BANK"], format: "enum",
         description: "The fake site template to serve.",
       },
       port: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Local port to host on (default 8080).",
       },
     },
@@ -216,18 +216,18 @@ export const generateHttpPayloadTool: FunctionDeclaration = {
   description:
     "Generate a custom Python HTTP Reverse Shell payload that connects back to LUCA C2 infrastructure. Returns the script content or file path.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       lhost: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "Listening Host IP (LUCA server IP). Defaults to Local IP.",
       },
       lport: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Listening Port. Defaults to 3001.",
       },
-      fileName: { type: Type.STRING, description: "Output filename." },
+      fileName: { type: SchemaType.STRING, description: "Output filename." },
     },
   },
 };
@@ -236,7 +236,7 @@ export const listC2SessionsTool: FunctionDeclaration = {
   name: "listC2Sessions",
   description:
     "List all active HTTP C2 sessions (Zombies) connected to the internal listener.",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const performStressTestTool: FunctionDeclaration = {
@@ -244,16 +244,16 @@ export const performStressTestTool: FunctionDeclaration = {
   description:
     "Perform a Load/Stress Test (DoS) against a target to verify infrastructure resilience. Supports HTTP Flood, UDP Flood, and SYN Flood modes.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      target: { type: Type.STRING, description: "Target IP or URL." },
-      port: { type: Type.NUMBER, description: "Target Port." },
+      target: { type: SchemaType.STRING, description: "Target IP or URL." },
+      port: { type: SchemaType.NUMBER, description: "Target Port." },
       method: {
-        type: Type.STRING,
-        enum: ["HTTP_FLOOD", "UDP_FLOOD", "SYN_FLOOD"],
+        type: SchemaType.STRING,
+        enum: ["HTTP_FLOOD", "UDP_FLOOD", "SYN_FLOOD"], format: "enum",
         description: "Attack vector.",
       },
-      duration: { type: Type.NUMBER, description: "Duration in seconds." },
+      duration: { type: SchemaType.NUMBER, description: "Duration in seconds." },
     },
     required: ["target", "port", "method"],
   },
@@ -264,15 +264,15 @@ export const runSqlInjectionScanTool: FunctionDeclaration = {
   description:
     "Execute an automated SQL Injection vulnerability scan against a target URL using custom Python fuzzing logic (L0p4 Style).",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       targetUrl: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "The target URL with query parameters (e.g. http://site.com?id=1).",
       },
       params: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Specific parameters to fuzz.",
       },
     },
@@ -285,13 +285,13 @@ export const scanPublicCamerasTool: FunctionDeclaration = {
   description:
     "Scan internet-facing IP ranges or Shodan dorks for unsecured RTSP/CCTV camera feeds. Returns a list of potentially accessible streams.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'Search query or country code (e.g., "webcam", "US").',
       },
-      limit: { type: Type.NUMBER, description: "Number of results to return." },
+      limit: { type: SchemaType.NUMBER, description: "Number of results to return." },
     },
   },
 };
@@ -300,11 +300,11 @@ export const sendC2CommandTool: FunctionDeclaration = {
   name: "sendC2Command",
   description: "Send a shell command to a specific C2 session (Zombie).",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      sessionId: { type: Type.STRING, description: "The Zombie ID." },
+      sessionId: { type: SchemaType.STRING, description: "The Zombie ID." },
       command: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The shell command to execute.",
       },
     },
@@ -317,18 +317,18 @@ export const wifiDeauthAttackTool: FunctionDeclaration = {
   description:
     "Launch WiFi deauthentication attack to force target device off its network. Device may then auto-connect to your malicious hotspot. Requires aircrack-ng suite and monitor mode. Use scanWiFiDevices first to get target MAC address.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       targetMAC: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'Target device MAC address (e.g., "aa:bb:cc:dd:ee:ff").',
       },
       interface: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'Network interface (default: "wlan0").',
       },
       count: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Number of deauth packets to send (default: 5).",
       },
     },

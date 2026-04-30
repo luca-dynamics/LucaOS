@@ -33,6 +33,7 @@ const SceneWithMaterial = ({
   const groupRef = useRef<THREE.Group>(null);
   const smoothedLevel = useRef(0);
   const wakePulse = useRef(0);
+  const genesisPulse = useRef(0);
 
   // Cache THREE colors to avoid GC pressure in useFrame
   const rimColorObj = useMemo(() => new THREE.Color(), []);
@@ -46,11 +47,19 @@ const SceneWithMaterial = ({
     const handleWakeWord = () => {
       wakePulse.current = 1.5; // Trigger a strong visual pulse
     };
+    const handleGenesis = () => {
+      console.log("[HOLOGRAM] Genesis Expansion Initialized...");
+      genesisPulse.current = 3.0; // Massive cinematic expansion
+    };
+
     eventBus.on("audio-amplitude", handleAmplitude);
     eventBus.on("wake-word-triggered", handleWakeWord);
+    eventBus.on("genesis-start", handleGenesis);
+
     return () => {
       eventBus.off("audio-amplitude", handleAmplitude);
       eventBus.off("wake-word-triggered", handleWakeWord);
+      eventBus.off("genesis-start", handleGenesis);
     };
   }, []);
 
@@ -66,17 +75,24 @@ const SceneWithMaterial = ({
       if (wakePulse.current < 0.01) wakePulse.current = 0;
     }
 
+    if (genesisPulse.current > 0) {
+      genesisPulse.current *= 0.97; // Slower decay for dramatic effect
+      if (genesisPulse.current < 0.01) genesisPulse.current = 0;
+    }
+
     if (materialRef.current) {
       materialRef.current.time += delta;
       
-      // Dramatic glitch on audio spikes
+      // Dramatic glitch on audio spikes + massive glitch on genesis
       const baseGlitch = Math.random() > 0.99 ? Math.random() * 0.4 : 0;
       const audioGlitch = (level / 255) * 0.8;
-      materialRef.current.glitch = baseGlitch + audioGlitch + (wakePulse.current * 0.6);
+      const genesisGlitch = (genesisPulse.current * 0.5);
+      
+      materialRef.current.glitch = baseGlitch + audioGlitch + (wakePulse.current * 0.6) + genesisGlitch;
 
       // RIM BOOST: High intensity rim light that pulses with voice
       const audioIntensity = (level / 255) * 1.5;
-      const intensity = 1.0 + audioIntensity + (wakePulse.current * 1.5);
+      const intensity = 1.0 + audioIntensity + (wakePulse.current * 1.5) + (genesisPulse.current * 2.0);
       const sanitizedColor = sanitizeColor(color);
 
       materialRef.current.uniforms.color.value.set(sanitizedColor);
@@ -96,14 +112,15 @@ const SceneWithMaterial = ({
       // Elegant idle float
       const floatY = Math.sin(state.clock.elapsedTime * 0.6) * 0.08 - 0.22;
       
-      // SIZABLE PULSE: Entity grows slightly when speaking
-      const scalePulse = 1.15 + (level / 255) * 0.15 + (wakePulse.current * 0.25);
+      // SIZABLE PULSE: Entity grows slightly when speaking, EXPANDS on genesis
+      const scalePulse = 1.15 + (level / 255) * 0.15 + (wakePulse.current * 0.25) + (genesisPulse.current * 0.8);
       
       groupRef.current.position.y = floatY;
       groupRef.current.scale.setScalar(scalePulse);
       
-      // Subtle rotation shift based on audio energy
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1 + (level / 255) * 0.05;
+      // Subtle rotation shift based on audio energy + Genesis spin
+      const genesisSpin = genesisPulse.current * 0.2;
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1 + (level / 255) * 0.05 + genesisSpin;
     }
   });
 
@@ -135,8 +152,10 @@ const SceneWithMaterial = ({
                   vec3 pos = position;
                   if (glitch > 0.0) {
                     float noise = sin(time * 50.0 + position.y * 10.0);
-                    if (noise > 0.9) {
-                      pos.x += sin(time * 100.0) * 0.1 * glitch;
+                    // Progenitor Distort: More chaotic during high glitch (Genesis)
+                    if (noise > 0.8) {
+                      pos.x += sin(time * 100.0) * 0.15 * glitch;
+                      pos.y += cos(time * 100.0) * 0.15 * glitch;
                     }
                   }
                   

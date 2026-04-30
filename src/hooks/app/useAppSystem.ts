@@ -63,6 +63,12 @@ export const useAppSystem = ({
   setOpsecStatus,
 }: UseAppSystemProps) => {
   const [isLocalCoreConnected, setIsLocalCoreConnected] = useState(false);
+  const [localCoreReadinessLevel, setLocalCoreReadinessLevel] = useState<
+    "ready" | "limited" | "offline"
+  >("offline");
+  const [localCoreReadinessReason, setLocalCoreReadinessReason] = useState(
+    "Local core is offline.",
+  );
   const [hostPlatform, setHostPlatform] = useState(() => {
     const ua = navigator.userAgent;
     if (/iPhone|iPad|iPod/.test(ua)) return "iOS (Safari)";
@@ -148,8 +154,6 @@ export const useAppSystem = ({
       let criticalPassed = true;
 
       if (!isFastReboot) {
-        await new Promise((r) => setTimeout(r, 800));
-
         const check = async (
           name: string,
           fn: () => Promise<boolean>,
@@ -166,7 +170,7 @@ export const useAppSystem = ({
             !window.location.hostname.includes("127.0.0.1") &&
             !isElectron;
 
-          const maxRetries = isPublicHosted ? 1 : 10;
+          const maxRetries = isPublicHosted ? 1 : 20; // Increased from 10 to 20 for Intel Mac warming
 
           for (let i = 0; i < maxRetries; i++) {
             try {
@@ -179,7 +183,7 @@ export const useAppSystem = ({
                 console.log(
                   `[BIOS] Check attempt ${i + 1} failed for ${name}... retrying`,
                 );
-                await new Promise((r) => setTimeout(r, 1000));
+                await new Promise((r) => setTimeout(r, 2000)); // Increased delay to 2s
               }
             } catch (e: any) {
               console.warn(`[BIOS] Check error for ${name}:`, e.message || e);
@@ -203,6 +207,7 @@ export const useAppSystem = ({
                 );
                 const resp = await fetch(apiUrl("/api/health"), {
                   headers: getAuthHeaders(),
+                  signal: AbortSignal.timeout(30000), 
                 });
                 console.log(
                   "[DEBUG] Server health fetch complete. Status:",
@@ -330,15 +335,38 @@ export const useAppSystem = ({
               } else {
                 console.log("[BOOT] System READY.");
                 sessionStorage.setItem("LUCA_HAS_BOOTED", "true");
-                setBootSequence("READY");
+                
+                // GENESIS HANDSHAKE: Signal Hologram and Phoenix Supervisor
+                if (isElectron) {
+                  console.log("[BOOT] 🌌 Initiating Genesis Handshake...");
+                  
+                  // Phase 6: Body Synthesis (Kernel Inheritance)
+                  import("../../services/environmentSentinel").then(({ environmentSentinel }) => {
+                    environmentSentinel.refreshAwareness().then(() => {
+                      console.log("[BOOT] 🏛️ Physical Body Synthesized. Kernel awareness active.");
+                    });
+                  });
 
-                if (messages.length === 0) {
-                  // Post-system greeting now handled by ChatPanel Omni-Center UI
-                  // to keep history clean for user first interaction.
+                  eventBus.emit("genesis-start");
+                  
+                  // Use a 2-second timeout to prevent boot hangs if Phoenix is slow
+                  const controller = new AbortController();
+                  const timeoutId = setTimeout(() => controller.abort(), 2000);
+                  
+                  fetch("http://localhost:3444/phoenix/ready", { 
+                    method: "POST",
+                    signal: controller.signal 
+                  })
+                  .then(() => clearTimeout(timeoutId))
+                  .catch(() => {
+                    console.warn("[BOOT] Phoenix Receiver not found or timed out. Genesis proceeding in local-only mode.");
+                  });
                 }
+
+                setBootSequence("READY");
               }
             },
-            messages.length > 0 ? 0 : 2000,
+            0,
           );
         } catch (error) {
           console.error("[BOOT] CRITICAL ERROR DURING KERNEL LOAD:", error);
@@ -395,15 +423,27 @@ export const useAppSystem = ({
         });
         if (!res.ok) {
           setIsLocalCoreConnected(false);
+          setLocalCoreReadinessLevel("offline");
+          setLocalCoreReadinessReason("Local API gateway is unavailable.");
           return;
         }
         const data = await res.json();
-        setIsLocalCoreConnected(true);
         if (data.cwd) setCurrentCwd(data.cwd);
         if (data.platform) setHostPlatform(data.platform);
         if (data.isProduction !== undefined)
           setIsKernelLocked(data.isProduction);
         if (data.opsecStatus) setOpsecStatus(data.opsecStatus);
+
+        const health = await introspectionService.scan();
+        const readiness = introspectionService.getLocalCoreReadiness(health);
+        setIsLocalCoreConnected(readiness.ready);
+        setLocalCoreReadinessLevel(readiness.level);
+        setLocalCoreReadinessReason(readiness.reason);
+
+        if (!readiness.ready) {
+          console.warn("[BOOT] Local core not ready:", readiness.reason);
+          return;
+        }
 
         // Dynamic Recovery: If we booted in Cloud-Only mode but the backend just came online,
         // clear the flag so features re-enable on next render cycle
@@ -413,8 +453,11 @@ export const useAppSystem = ({
             "[BOOT] Local infrastructure detected! Exiting Cloud-Only mode.",
           );
         }
-      } catch {
+      } catch (error) {
+        console.warn("[BOOT] Local core readiness check failed:", error);
         setIsLocalCoreConnected(false);
+        setLocalCoreReadinessLevel("offline");
+        setLocalCoreReadinessReason("Local core readiness probe failed.");
       }
     };
 
@@ -511,6 +554,8 @@ export const useAppSystem = ({
     setBootSequence,
     biosStatus,
     isLocalCoreConnected,
+    localCoreReadinessLevel,
+    localCoreReadinessReason,
     hostPlatform,
     isKernelLocked,
     localIp,

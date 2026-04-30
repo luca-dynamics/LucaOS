@@ -1,4 +1,4 @@
-import { Type, FunctionDeclaration, GoogleGenAI } from "@google/genai";
+import { SchemaType, FunctionDeclaration, GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -13,20 +13,20 @@ export const ingestMCPServerTool: FunctionDeclaration = {
   description:
     "SELF-REPLICATION / INGESTION TOOL. Use this to 'learn' a new tool from a GitHub repository. It downloads the source code, analyzes the logic, and GENERATES a new Native Plugin (TypeScript) in 'services/integrations/'. This permanently gives you the capabilities of that MCP server.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       repoUrl: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "The full GitHub URL (e.g. https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search).",
       },
       toolName: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "The name of the tool/service to create (e.g. 'brave_search', 'filesystem', 'slack'). MUST be snake_case.",
       },
       instruction: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "Optional specific instructions or focus (e.g., 'Only ingest the search tool, ignore local file serving').",
       },
@@ -38,7 +38,7 @@ export const ingestMCPServerTool: FunctionDeclaration = {
 // --- HANDLER (THE ALCHEMIST) ---
 export async function ingestMCPServerHandler(
   args: any,
-  ai: GoogleGenAI,
+  ai: GoogleGenerativeAI,
 ): Promise<string> {
   const { repoUrl, toolName, instruction } = args;
   console.log(
@@ -101,7 +101,7 @@ export async function ingestMCPServerHandler(
     
     **TEMPLATE TO FOLLOW**:
     \`\`\`typescript
-    import { Type, FunctionDeclaration } from "@google/genai";
+    import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
     // imports...
     
     export const tools: FunctionDeclaration[] = [
@@ -128,11 +128,11 @@ export async function ingestMCPServerHandler(
     )} // Truncate if too huge to likely fit context
     `;
 
-    const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash", // Correct model ID for new SDK
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
-    let generatedCode = result.text || "";
+    let generatedCode = result.response.text() || "";
 
     // Clean Markdown
     generatedCode = generatedCode

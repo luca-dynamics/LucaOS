@@ -1,4 +1,4 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 /**
  * Practice Generator Tool Definition
@@ -9,15 +9,15 @@ export const generatePracticeQuestionsTool: FunctionDeclaration = {
   description:
     "Generate practice questions that mimic the style and difficulty of reference material. Works for exams, homework, research problems, textbooks,  any learning content. Returns twin questions that test the same concepts with different values.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       referenceContent: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "The reference material to mimic (exam question, homework problem, textbook example, research question, etc.)",
       },
       numQuestions: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Number of practice questions to generate (default: 3)",
       },
     },

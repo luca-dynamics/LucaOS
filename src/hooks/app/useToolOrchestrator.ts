@@ -101,6 +101,7 @@ const getHumanReadableAction = (name: string): string => {
     fetchCryptoData: "Fetching crypto metrics",
     read_browser_page: "Reading web page",
     search_web: "Searching the web",
+    controlSmartScreen: "Directing Smart Screen presentation",
   };
 
   if (map[name]) return map[name];
@@ -423,6 +424,19 @@ export function useToolOrchestrator({
         let msg = "Sentry configuration updated.";
         if (args.instruction) msg += ` Monitoring for "${args.instruction}".`;
         return msg;
+      }
+
+      // --- SMART SCREEN REMOTE CONTROL ---
+      if (name === "controlSmartScreen") {
+        if (window.electron?.ipcRenderer) {
+          window.electron.ipcRenderer.send("visual-core-command", {
+            type: args.action, // NEXT, PREV, SET_INDEX, SCROLL, BROWSER_NAVIGATE
+            value: args.value,
+            timestamp: Date.now(),
+          });
+          return `Smart Screen command sent: ${args.action}`;
+        }
+        return "Smart Screen control is only available on Desktop.";
       }
 
       let result = "";

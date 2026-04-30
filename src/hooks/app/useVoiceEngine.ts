@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { settingsService } from "../../services/settingsService";
-import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
 import { awarenessService } from "../../services/awarenessService";
 import { useVoiceInput } from "../useVoiceInput";
 import { PersonaType } from "../../services/lucaService";
 import { MissionScope } from "../../services/toolRegistry";
 import { useAppContext } from "../../context/AppContext";
+import { voiceSessionOrchestrator } from "../../services/voiceSessionOrchestrator";
+import {
+  getFriendlyAdaptiveVoiceNotice,
+  getFriendlyVoiceStatus,
+} from "../../utils/voiceDisplay";
+import { eventBus } from "../../services/eventBus";
 
 interface UseVoiceEngineProps {
   executeTool: (toolName: string, args: any) => Promise<any>;
@@ -40,6 +45,9 @@ export function useVoiceEngine({
   } = voice;
 
   // --- LOCAL ENGINE STATE ---
+  useEffect(() => {
+    voiceSessionOrchestrator.setPersona(persona);
+  }, [persona]);
 
   const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
   const [voiceBackend, setVoiceBackend] = useState<
@@ -52,6 +60,7 @@ export function useVoiceEngine({
     settingsService.get("voice")?.sttModel || "cloud-gemini",
   );
   const prevDictationActive = useRef(false);
+  const adaptiveNoticeTimeoutRef = useRef<number | null>(null);
 
   // --- VOICE HUB INTEGRATION (Local VAD) ---
   const {
@@ -67,57 +76,76 @@ export function useVoiceEngine({
 
   // --- EFFECTS ---
 
-  // 1. Sync Persona with Settings
-  useEffect(() => {
-    const handleSettingsChange = (newSettings: any) => {
-      const newTheme = newSettings.general?.theme;
-      if (newTheme && newTheme !== persona) {
-        console.log("[VOICE ENGINE] Persona changed via Settings:", newTheme);
+  const syncVoiceRuntimeState = useCallback(() => {
+    const routeKind = voiceSessionOrchestrator.routeKind;
+    setVoiceBackend(routeKind === "CLOUD_BIDI" ? "cloud" : "local");
+    setVoiceStatus(
+      getFriendlyVoiceStatus(voiceSessionOrchestrator.displayStatus, routeKind),
+    );
+  }, []);
 
-        // Bridge: Auto-switch voice backend based on persona
-        const personaBackends: Record<string, string> = {
-          ASSISTANT: "GEMINI",
-          RUTHLESS: "GROQ",
-          ENGINEER: "OPENAI",
-          HACKER: "GROQ",
-        };
-        const backend = (personaBackends[newTheme] || "GEMINI") as any;
-        setVoiceBackend(backend);
+  useEffect(() => {
+    return () => {
+      if (adaptiveNoticeTimeoutRef.current) {
+        window.clearTimeout(adaptiveNoticeTimeoutRef.current);
       }
     };
-    settingsService.on("settings-changed", handleSettingsChange);
-    return () => {
-      settingsService.off("settings-changed", handleSettingsChange);
-    };
-  }, [persona]);
+  }, []);
+
 
   // 3. Connect Voice Session
   const connectVoiceSession = useCallback(
     async (targetPersona: PersonaType, context: string = "voice-dashboard") => {
       console.log(`[VOICE ENGINE] Connecting Session: ${targetPersona} (Context: ${context})...`);
-      liveService.disconnect();
-
-      // Dynamic import to avoid circular dependency if it exists
-      const { hybridVoiceService } =
-        await import("../../services/hybridVoiceService");
-
       const voiceSettings = settingsService.get("voice");
-      const brainSettings = settingsService.get("brain");
+      const baseRoute = voiceSessionOrchestrator.resolveRoute();
+      const route = voiceSessionOrchestrator.resolveAdaptiveRoute();
+      console.log(
+        `[VOICE ENGINE] Voice route resolved: ${route.kind} (${route.provisioning})`,
+        route,
+      );
+      setVoiceBackend(route.kind === "CLOUD_BIDI" ? "cloud" : "local");
 
-      // Check if we have the Gemini key required for liveService
-      const hasGeminiKey = !!brainSettings?.geminiApiKey;
-      const isNativeVoice = voiceSettings?.provider === "gemini-genai";
+      setVoiceStatus(
+        route.kind === "CLOUD_BIDI"
+          ? "Connecting Cloud Voice..."
+          : route.kind === "LOCAL_PIPELINE"
+            ? "Starting Local Voice..."
+            : "Starting Hybrid Voice...",
+      );
 
-      const useHybridFallback = !hasGeminiKey || !isNativeVoice;
-
-      if (useHybridFallback && targetPersona !== "DICTATION") {
-        console.log("[VOICE ENGINE] Using Hybrid Voice Fallback pipeline...");
-
-        setVoiceStatus("INITIALIZING HYBRID UPLINK...");
-        try {
-          await hybridVoiceService.connect({
+      try {
+        const activeRoute = await voiceSessionOrchestrator.connect({
+          liveConfig: {
+            persona: targetPersona,
+            suppressOutput: false,
+            onToolCall: executeTool,
+            onStatusUpdate: (status) => {
+              const normalized = status.toLowerCase();
+              if (
+                normalized.includes("error") ||
+                normalized.includes("failed")
+              ) {
+                setVoiceStatus(status);
+                return;
+              }
+              syncVoiceRuntimeState();
+            },
+            onConnectionChange: (connected) => {
+              soundService.play(connected ? "SUCCESS" : "ALERT");
+              syncVoiceRuntimeState();
+            },
+            onAudioData: (amp) => {
+              setRemoteAmplitude(amp);
+            },
+            onVadChange: (active) => setIsVadActive(active),
+            onTranscript: (text, source) => {
+              setVoiceTranscript(text);
+              setVoiceTranscriptSource(source as "user" | "model");
+            },
+          },
+          hybridConfig: {
             sttModel: voiceSettings?.sttModel || "whisper-tiny",
-            // Route LLM generation through the global handleSendMessage
             onTranscript: (text, source) => {
               setVoiceTranscript(text);
               setVoiceTranscriptSource(source as "user" | "model");
@@ -130,57 +158,56 @@ export function useVoiceEngine({
               setRemoteAmplitude(amp);
             },
             onVadChange: (active) => setIsVadActive(active),
-            onStatusUpdate: (status) => setVoiceStatus(status.toUpperCase()),
-            onConnectionChange: (connected) => {
-              if (connected) {
-                setVoiceStatus("HYBRID UPLINK ACTIVE");
-                soundService.play("SUCCESS");
-              } else {
-                soundService.play("ALERT");
+            onStatusUpdate: (status) => {
+              const normalized = status.toLowerCase();
+              if (
+                normalized.includes("listening") ||
+                normalized.includes("thinking")
+              ) {
+                setVoiceStatus(status);
+                return;
               }
+              if (normalized.includes("error") || normalized.includes("failed")) {
+                setVoiceStatus(status);
+                return;
+              }
+              syncVoiceRuntimeState();
             },
-          });
-          
-          // Trigger Awakening Greeting for Hybrid
-          await triggerGreeting(hybridVoiceService, "hybrid", targetPersona, context);
-        } catch (err) {
-          console.error("Hybrid Voice Connection Failed:", err);
-          setVoiceStatus("CONNECTION FAILED");
-          soundService.play("ALERT");
-        }
-        return;
-      }
-
-      console.log("[VOICE ENGINE] Using Native Gemini Live API...");
-      const isHybridMode = false; // LiveService handling only native now
-
-      liveService
-        .connect({
-          persona: targetPersona,
-          suppressOutput: isHybridMode,
-          onToolCall: executeTool,
-          onAudioData: (amp) => {
-            setRemoteAmplitude(amp);
-            // We'll sync the max amplitude in an effect
+            onConnectionChange: (connected) => {
+              soundService.play(connected ? "SUCCESS" : "ALERT");
+              syncVoiceRuntimeState();
+            },
           },
-          onVadChange: (active) => setIsVadActive(active),
-          onTranscript: (text, source) => {
-            setVoiceTranscript(text);
-            setVoiceTranscriptSource(source as "user" | "model");
-          },
-        })
-        .then(async () => {
-          setVoiceStatus("VOICE UPLINK ACTIVE");
-          soundService.play("SUCCESS");
-          
-          // Trigger Awakening Greeting for Native
-          await triggerGreeting(liveService, "native", targetPersona, context);
-        })
-        .catch((err) => {
-          console.error("Voice Connection Failed:", err);
-          setVoiceStatus("CONNECTION FAILED");
-          soundService.play("ALERT");
         });
+
+        const adaptiveNotice = getFriendlyAdaptiveVoiceNotice(
+          baseRoute.kind,
+          activeRoute.kind,
+        );
+        if (adaptiveNotice) {
+          setVoiceStatus(adaptiveNotice);
+          if (adaptiveNoticeTimeoutRef.current) {
+            window.clearTimeout(adaptiveNoticeTimeoutRef.current);
+          }
+          adaptiveNoticeTimeoutRef.current = window.setTimeout(() => {
+            syncVoiceRuntimeState();
+            adaptiveNoticeTimeoutRef.current = null;
+          }, 1800);
+        } else {
+          syncVoiceRuntimeState();
+        }
+
+        await triggerGreeting(
+          voiceSessionOrchestrator,
+          activeRoute.kind === "CLOUD_BIDI" ? "native" : activeRoute.kind === "LOCAL_PIPELINE" ? "local" : "hybrid",
+          targetPersona,
+          context,
+        );
+      } catch (err) {
+        console.error("Voice Connection Failed:", err);
+        setVoiceStatus("CONNECTION FAILED");
+        soundService.play("ALERT");
+      }
     },
     [
       executeTool,
@@ -189,8 +216,44 @@ export function useVoiceEngine({
       setVoiceTranscriptSource,
       dictationActive,
       handleSendMessage,
+      syncVoiceRuntimeState,
     ],
   );
+
+  // --- EVENT LISTENERS (VOICE SESSION & ADAPTIVE ROUTING) ---
+  useEffect(() => {
+    const handleVoiceSessionStateChanged = () => {
+      syncVoiceRuntimeState();
+    };
+
+    const handleAdaptiveReconnectRequired = (event: {
+      recommendedRouteKind: string;
+      reason: string;
+    }) => {
+      console.log(
+        `[VOICE ENGINE] ⚡ Hot-Swap Signal Received: Switching to ${event.recommendedRouteKind} (${event.reason})`,
+      );
+      // Re-trigger connection with current persona - connectVoiceSession handles resolveAdaptiveRoute() internally
+      connectVoiceSession(persona, "adaptive-hot-swap");
+    };
+
+    eventBus.on("voice-session-state-changed", handleVoiceSessionStateChanged);
+    eventBus.on(
+      "voice-session-adaptive-reconnect-required",
+      handleAdaptiveReconnectRequired,
+    );
+
+    return () => {
+      eventBus.off(
+        "voice-session-state-changed",
+        handleVoiceSessionStateChanged,
+      );
+      eventBus.off(
+        "voice-session-adaptive-reconnect-required",
+        handleAdaptiveReconnectRequired,
+      );
+    };
+  }, [syncVoiceRuntimeState, connectVoiceSession, persona]);
 
   // Helper to trigger the proactively generated greeting
   const triggerGreeting = async (service: any, type: string, persona: string, context: string) => {
@@ -249,8 +312,13 @@ export function useVoiceEngine({
       if (!newSettings.voice) return;
 
       const { provider, sttModel } = newSettings.voice;
-      const isNative = provider === "gemini-genai";
-      const mode = isNative ? "CLOUD (Native)" : "LOCAL/HYBRID";
+      const route = voiceSessionOrchestrator.resolveRoute();
+      const mode =
+        route.kind === "CLOUD_BIDI"
+          ? "CLOUD (Bidi)"
+          : route.kind === "LOCAL_PIPELINE"
+            ? "LOCAL"
+            : "HYBRID";
 
       console.log(
         `[VOICE ENGINE] Settings Update (${mode}) - Provider: ${provider}`,
@@ -263,9 +331,9 @@ export function useVoiceEngine({
       if (prevStt !== newStt) {
         console.log(`[VOICE ENGINE] STT Change: ${prevStt} -> ${newStt}`);
         const wasCloud = prevStt.includes("gemini");
-        const isCloud = newStt.includes("gemini");
+        const isCloud = route.kind === "CLOUD_BIDI";
 
-        if (wasCloud) liveService.disconnect();
+        if (wasCloud) voiceSessionOrchestrator.disconnect();
         else stopVoiceHub();
 
         setVoiceBackend(isCloud ? "cloud" : "local");
@@ -345,7 +413,7 @@ export function useVoiceEngine({
         
         const announceMsg = `SECURITY PROTOCOL: I need to enter ${scopeLabel} Mode to proceed with ${approvalRequest.tool}. Shall I authorize this mission?`;
         
-        liveService.sendText(announceMsg);
+        voiceSessionOrchestrator.sendText(announceMsg);
         lastAnnouncedRef.current = requestId;
       }
     } else {

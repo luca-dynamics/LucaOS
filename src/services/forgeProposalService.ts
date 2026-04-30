@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import { eventBus } from "./eventBus";
+import { telemetryService } from "./telemetryService";
 
 export interface ForgeProposal {
     id: string;

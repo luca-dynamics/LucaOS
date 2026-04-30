@@ -26,6 +26,7 @@ import { ProviderFactory } from "../llm/ProviderFactory";
 import { thoughtStreamService } from "../thoughtStreamService";
 import { settingsService } from "../settingsService";
 import { cognitiveDeliberator } from "../cognitiveDeliberator";
+import { IS_ORIGIN } from "../../config/buildConfig";
 
 export interface WorkflowTask {
   id: string;
@@ -206,6 +207,13 @@ export class LucaWorkforce {
       desc.includes("check")
     ) {
       return "ENGINEER"; // Testing is part of engineering
+    }
+    if (
+      desc.includes("audit") ||
+      desc.includes("configuration") ||
+      desc.includes("settings")
+    ) {
+      return "AUDITOR";
     }
     if (
       desc.includes("document") ||
@@ -478,57 +486,58 @@ export class LucaWorkforce {
     const selection = await llmToolSelector.selectTool(task, availableTools);
 
     if (!selection) {
-      // No suitable tool found - TRY TO CREATE IT!
-      console.log(
-        `[${task.persona} Luca] 🔧 No suitable tool found, attempting to create one...`,
-      );
-
-      if (this.trace) {
-        this.trace.log("attempting_tool_creation", {
-          task: task.description,
-          persona: task.persona,
-          availableToolCount: availableTools.length,
-        });
-      }
-
-      // PHASE 8C: Self-Replication!
-      const createdTool = await this.createMissingTool(task, toolBridge);
-
-      if (createdTool) {
+      // PHASE 8C: Self-Replication (ORIGIN ONLY)
+      if (IS_ORIGIN) {
         console.log(
-          `[${task.persona} Luca] ✨ Created new tool: ${createdTool.name}`,
+          `[${task.persona} Luca] 🔧 No suitable tool found, attempting to create one...`,
         );
 
-        // Retry tool selection with newly created tool
-        const retrySelection = await llmToolSelector.selectTool(task, [
-          ...availableTools,
-          createdTool.name,
-        ]);
+        if (this.trace) {
+          this.trace.log("attempting_tool_creation", {
+            task: task.description,
+            persona: task.persona,
+            availableToolCount: availableTools.length,
+          });
+        }
 
-        if (retrySelection) {
-          // Execute with newly created tool!
-          const result = await toolBridge.executeTool(
-            retrySelection.toolName,
-            retrySelection.params,
-            task.persona,
+        const createdTool = await this.createMissingTool(task, toolBridge);
+
+        if (createdTool) {
+          console.log(
+            `[${task.persona} Luca] ✨ Created new tool: ${createdTool.name}`,
           );
 
-          if (result.success) {
-            task.result = result;
-            console.log(
-              `[${task.persona} Luca] ✅ Tool executed successfully (using new tool!)`,
+          // Retry tool selection with newly created tool
+          const retrySelection = await llmToolSelector.selectTool(task, [
+            ...availableTools,
+            createdTool.name,
+          ]);
+
+          if (retrySelection) {
+            // Execute with newly created tool!
+            const result = await toolBridge.executeTool(
+              retrySelection.toolName,
+              retrySelection.params,
+              task.persona,
             );
-            return;
+
+            if (result.success) {
+              task.result = result;
+              console.log(
+                `[${task.persona} Luca] ✅ Tool executed successfully (using new tool!)`,
+              );
+              return;
+            }
           }
         }
       }
 
-      // Tool creation failed - NOW we error
-      const errorMsg = `No suitable tool found and unable to create one for task: "${task.description}"`;
+      // If not Origin or creation failed
+      const errorMsg = `No suitable tool found for task: "${task.description}"`;
       console.error(`[${task.persona} Luca] ❌ ${errorMsg}`);
 
       if (this.trace) {
-        this.trace.error("tool_creation_failed", new Error(errorMsg));
+        this.trace.error("tool_selection_failed", new Error(errorMsg));
       }
 
       throw new Error(errorMsg);

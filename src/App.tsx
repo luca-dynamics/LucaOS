@@ -29,6 +29,7 @@ import { taskQueue } from "./services/taskQueueService";
 import { soundService } from "./services/soundService";
 import { voiceService } from "./services/voiceService";
 import { settingsService } from "./services/settingsService";
+import { voiceSessionOrchestrator } from "./services/voiceSessionOrchestrator";
 import { eventBus } from "./services/eventBus";
 import { UIThemeId } from "./types/lucaPersonality";
 import { apiUrl, cortexUrl, getConnectionTier } from "./config/api";
@@ -180,6 +181,39 @@ function formatMemoryValue(value: string): {
   return { label: "", summary: trimmed, isStructured: false };
 }
 
+function normalizePersonaValue(value: unknown): PersonaType {
+  if (typeof value === "string" && value.trim()) {
+    return value as PersonaType;
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (
+      entries.length > 0 &&
+      entries.every(
+        ([key, item]) => /^\d+$/.test(key) && typeof item === "string",
+      )
+    ) {
+      return entries
+        .sort((a, b) => Number(a[0]) - Number(b[0]))
+        .map(([, item]) => item)
+        .join("") as PersonaType;
+    }
+
+    const candidate =
+      (value as any).persona ??
+      (value as any).name ??
+      (value as any).id ??
+      (value as any).value;
+
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate as PersonaType;
+    }
+  }
+
+  return "ASSISTANT";
+}
+
 /**
  * Normalize persona name by mapping common aliases to canonical names
  * "normal mode" or "default mode" -> "ASSISTANT" (the default/normal persona)
@@ -291,13 +325,16 @@ function AppContent() {
 
   const [persona, setPersona] = useState<PersonaType>(() => {
     const settings = settingsService.getSettings();
-    return (settings.general?.persona as PersonaType) || "ASSISTANT";
+    return normalizePersonaValue(settings.general?.persona);
   });
 
   const [activeThemeId, setActiveThemeId] = useState<UIThemeId>(() => {
     const settings = settingsService.getSettings();
     return (settings.general?.theme as UIThemeId) || "PROFESSIONAL";
   });
+
+  const [backgroundOpacity, setBackgroundOpacity] = useState<number>(0.3);
+  const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
 
   // Watch Settings changes outside of voice subsystem to guarantee UI renders
   useEffect(() => {
@@ -307,7 +344,7 @@ function AppContent() {
       const newTheme = settings?.general?.theme;
 
       if (newPersona) {
-        setPersona(newPersona as PersonaType);
+        setPersona(normalizePersonaValue(newPersona));
       }
       if (newTheme) {
         setActiveThemeId(newTheme as UIThemeId);
@@ -323,6 +360,10 @@ function AppContent() {
       // Transparency Control
       const opacity = settings?.general?.backgroundOpacity ?? 0.3;
       const blur = settings?.general?.backgroundBlur ?? 40; // Defaulting to high-frost tactical look
+      
+      setBackgroundOpacity(opacity);
+      setBackgroundBlur(blur);
+
       document.documentElement.style.setProperty(
         "--app-bg-opacity",
         opacity.toString(),
@@ -682,6 +723,8 @@ function AppContent() {
     localIp,
     appMode,
     isLocalCoreConnected,
+    localCoreReadinessLevel,
+    localCoreReadinessReason,
   } = useAppSystem({
     messages,
     persona,
@@ -715,6 +758,10 @@ function AppContent() {
     }
     return connectionTier;
   }, [isLocalCoreConnected, connectionTier]);
+
+  useEffect(() => {
+    voiceSessionOrchestrator.setLocalCoreConnected(isLocalCoreConnected);
+  }, [isLocalCoreConnected]);
 
   // --- TOOL ORCHESTRATOR ---
   const { executeTool } = useToolOrchestrator({
@@ -1762,6 +1809,13 @@ function AppContent() {
     isCapacitor: Capacitor.isNativePlatform(),
     devices,
     Sender,
+    // Sovereign Sync
+    persona,
+    activeThemeId,
+    isSpeaking,
+    isThinking: isProcessing,
+    opacity: backgroundOpacity,
+    blur: backgroundBlur,
   });
 
   // --- Presence & Power Management ---
@@ -2073,7 +2127,7 @@ function AppContent() {
 
         setIsRebooting(true);
         setTimeout(() => {
-          setPersona(nextPersona);
+          setPersona(normalizePersonaValue(nextPersona));
           setIsRebooting(false);
         }, 800);
       }
@@ -2411,6 +2465,8 @@ function AppContent() {
           setShowDesktopStream={setShowDesktopStream}
           desktopTarget={desktopTarget}
           isLocalCoreConnected={isLocalCoreConnected}
+          localCoreReadinessLevel={localCoreReadinessLevel}
+          localCoreReadinessReason={localCoreReadinessReason}
           showGeoTactical={showGeoTactical}
           setShowGeoTactical={setShowGeoTactical}
           trackingTarget={trackingTarget}

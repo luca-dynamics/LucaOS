@@ -39,35 +39,46 @@ export interface LocalModel {
 const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   // ===== BRAIN MODELS (Chat & Reasoning) =====
   {
+    id: "gemma-4b",
+    name: "Gemma 4B (Agentic)",
+    description: "Google's 2026 breakthrough. Native tool-calling support in a compact 4B frame. (Sovereign Tools Ready).",
+    size: 4_200_000_000,
+    sizeFormatted: "4.2 GB",
+    category: "brain",
+    platforms: ["desktop", "mobile"],
+    performanceRank: 7, // Optimized for Intel and M1/M2/M3 entry-level
+    memoryRequirement: 8_000_000_000,
+    runtime: "ollama",
+    ollamaTag: "gemma4:4b",
+  },
+  {
     id: "gemma-2b",
     name: "Gemma 2B",
-    description: "Google's local chat brain for offline conversations and tool calling.",
+    description: "Google's lightweight brain for mobile. Optimized for low-latency offline conversations.",
     size: 2_200_000_000,
     sizeFormatted: "2.1 GB",
     category: "brain",
-    platforms: ["desktop", "mobile"],
+    platforms: ["mobile"], 
     performanceRank: 6,
     memoryRequirement: 4_000_000_000,
-    runtime: "ollama",
-    ollamaTag: "gemma2:2b",
+    runtime: "internal",
   },
   {
     id: "phi-3-mini",
     name: "Phi-3 Mini 3.8B",
-    description: "Microsoft's reasoning powerhouse. High performance, zero-gate access.",
+    description: "Microsoft's reasoning specialist for mobile. High performance, zero-gate access.",
     size: 2_300_000_000,
     sizeFormatted: "2.3 GB",
     category: "brain",
-    platforms: ["desktop", "mobile"],
+    platforms: ["mobile"],
     performanceRank: 8,
     memoryRequirement: 8_000_000_000,
-    runtime: "ollama",
-    ollamaTag: "phi3:mini",
+    runtime: "internal",
   },
   {
     id: "llama-3.2-1b",
     name: "Llama 3.2 1B",
-    description: "Meta's efficient small model. Ungated community GGUF version.",
+    description: "Meta's efficient small model. Exceptional at native tool-calling and system automation tasks.",
     size: 1_000_000_000,
     sizeFormatted: "1.0 GB",
     category: "brain",
@@ -80,25 +91,24 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "smollm2-1.7b",
     name: "SmolLM2 1.7B",
-    description: "HuggingFace's tiny but mighty model. Ultra-fast on any device.",
+    description: "HuggingFace's ultra-lightweight mobile brain. Exceptional speed on constrained hardware.",
     size: 1_200_000_000,
     sizeFormatted: "1.2 GB",
     category: "brain",
-    platforms: ["desktop", "mobile"],
+    platforms: ["mobile"],
     performanceRank: 4,
     memoryRequirement: 2_000_000_000,
-    runtime: "ollama",
-    ollamaTag: "smollm2:1.7b",
+    runtime: "internal",
   },
   {
     id: "qwen-2.5-7b",
     name: "Qwen 2.5 7B",
-    description: "Alibaba's SOTA coding & reasoning model. Best general-purpose 7B.",
+    description: "Alibaba's SOTA coding & reasoning model. Premier choice for complex multi-tool agentic workflows.",
     size: 4_700_000_000,
     sizeFormatted: "4.7 GB",
     category: "brain",
     platforms: ["desktop"],
-    performanceRank: 9,
+    performanceRank: 9, // Heavy reasoning for high-end Desktop only
     memoryRequirement: 12_000_000_000,
     runtime: "ollama",
     ollamaTag: "qwen2.5:7b",
@@ -546,6 +556,7 @@ class ModelManagerService {
       }
 
       const OLLAMA_TAG_MAP: Record<string, string[]> = {
+        "gemma-4b": ["gemma4:4b", "gemma:4b"],
         "gemma-2b": ["gemma2:2b", "gemma:2b"],
         "llama-3.2-1b": ["llama3.2:1b"],
         "phi-3-mini": ["phi3:mini"],
@@ -648,7 +659,7 @@ class ModelManagerService {
         model.status = "downloading";
         model.downloadProgress = p;
         this.notifyListeners();
-        if (p) onProgress?.(step, p);
+        if (onProgress) onProgress(step, p || 0);
       });
     }
 
@@ -733,14 +744,16 @@ class ModelManagerService {
       
       const ipc = (window as any).electron.ipcRenderer;
       const statusHandler = (_: any, data: any) => {
-        onStatus(data.step, data.progress);
+        if (data && data.step) {
+          onStatus(data.step, data.progress);
+        }
       };
       
       ipc.on("ollama-setup-status", statusHandler);
 
       const success = await (window as any).electron.ipcRenderer.invoke("setup-ollama-for-model", { modelId: id, tag });
       
-      // Cleanup listener
+      // Cleanup listener properly
       ipc.removeListener("ollama-setup-status", statusHandler);
       
       return success;
@@ -886,25 +899,32 @@ class ModelManagerService {
 
   async activateModel(id: string | null, category: LocalModel["category"]): Promise<boolean> {
     if (category === "brain") {
-      const current = settingsService.get("brain");
+      const current = settingsService.getSettings();
       if (id) {
           const model = this.models.get(id);
           const modelString = model?.runtime === "ollama" ? this.getOllamaTagForModel(id) : `local/${id}`;
           settingsService.saveSettings({
-              brain: { ...current, useCustomApiKey: false, model: modelString }
+              ...current,
+              brain: { ...current.brain, useCustomApiKey: false, model: modelString },
+              general: { ...current.general, activeBrainId: id }
           });
       } else {
           // Fallback to Cloud or default
           settingsService.saveSettings({
-              brain: { ...current, model: "gemini-3-flash-preview" }
+              ...current,
+              brain: { ...current.brain, model: "gemini-3-flash-preview" },
+              general: { ...current.general, activeBrainId: null }
           });
       }
     } else if (category === "embedding") {
-        const general = settingsService.get("general");
-        const modelString = id ? (this.models.get(id)?.runtime === "ollama" ? this.getOllamaTagForModel(id) : `local/${id}`) : "gemini-2.1-flash";
-        settingsService.saveSettings({
-            general: { ...general, embeddingModel: modelString }
-        });
+        const current = settingsService.getSettings();
+        if (id) {
+            settingsService.saveSettings({
+                ...current,
+                brain: { ...current.brain, embeddingModel: id },
+                general: { ...current.general, activeEmbedId: id }
+            });
+        }
     }
 
     // Push to Cortex immediately if available
@@ -920,6 +940,7 @@ class ModelManagerService {
 
   private getOllamaTagForModel(id: string): string {
     const OLLAMA_TAG_MAP: Record<string, string> = {
+      "gemma-4b": "gemma4:4b",
       "gemma-2b": "gemma2:2b",
       "phi-3-mini": "phi3:mini",
       "llama-3.2-1b": "llama3.2:1b",

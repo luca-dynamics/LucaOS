@@ -22,7 +22,7 @@ router.post('/domain', async (req, res) => {
             dnsResults.A = a.status === 'fulfilled' ? a.value : [];
             dnsResults.MX = mx.status === 'fulfilled' ? mx.value.map(m => m.exchange) : [];
             dnsResults.TXT = txt.status === 'fulfilled' ? txt.value.flat() : [];
-        } catch (e) {
+        } catch {
             console.warn(`[OSINT] DNS Resolution failed for ${domain}`);
         }
 
@@ -44,7 +44,7 @@ router.post('/domain', async (req, res) => {
             } else {
                 // Fallback to CLI whois
                 const runCmd = (cmd) => new Promise((resolve) => {
-                    exec(cmd, (err, stdout, stderr) => resolve(stdout || ""));
+                    exec(cmd, (_err, stdout) => resolve(stdout || ""));
                 });
                 whoisData = await runCmd(`whois ${domain}`);
                 source = "CLI_WHOIS";
@@ -170,7 +170,7 @@ router.post('/trace', async (req, res) => {
     const { target } = req.body;
     const cmd = process.platform === 'win32' ? `tracert -h 8 ${target}` : `traceroute -m 8 ${target}`;
 
-    exec(cmd, (error, stdout, stderr) => {
+    exec(cmd, (error, stdout) => {
         if (error) return res.json({ result: `TRACE FAILED: ${error.message}` });
         res.json({ result: `SIGNAL TRACE RESULTS:\n${stdout}` });
     });
@@ -194,6 +194,59 @@ router.post('/identity', async (req, res) => {
     } catch (e) {
         console.error('[OSINT] Identity Proxy Failed:', e);
         res.status(500).json({ result: `IDENTITY SEARCH FAILED: ${e.message}` });
+    }
+});
+
+// OSINT Investigation Management (The Missing Link)
+router.get('/investigations/list', async (req, res) => {
+    try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const os = await import('os');
+        
+        const INVESTIGATIONS_DIR = path.join(os.homedir(), 'Documents', 'Luca', 'Investigations');
+        
+        if (!fs.existsSync(INVESTIGATIONS_DIR)) {
+            fs.mkdirSync(INVESTIGATIONS_DIR, { recursive: true });
+        }
+
+        const files = fs.readdirSync(INVESTIGATIONS_DIR);
+        const reports = [];
+
+        for (const file of files) {
+            if (file.endsWith('.json')) {
+                try {
+                    const content = fs.readFileSync(path.join(INVESTIGATIONS_DIR, file), 'utf8');
+                    const data = JSON.parse(content);
+                    reports.push({
+                        file,
+                        target: data.target || 'Unknown Target',
+                        riskScore: data.riskScore || 0,
+                        timestamp: data.timestamp || Date.now(),
+                        summary: data.summary || 'No summary available.'
+                    });
+                } catch (e) {
+                    console.error(`[OSINT] Failed to parse report ${file}:`, e);
+                }
+            }
+        }
+
+        // If no reports exist, send a "First Ingestion" welcome report
+        if (reports.length === 0) {
+            const welcomeReport = {
+                file: 'welcome_dossier.json',
+                target: 'System User',
+                riskScore: 10,
+                timestamp: Date.now(),
+                summary: 'Forensic Intel system initialized. Ready to process dossiers.'
+            };
+            reports.push(welcomeReport);
+        }
+
+        res.json(reports);
+    } catch (e) {
+        console.error('[OSINT] List Investigations Failed:', e);
+        res.status(500).json({ error: e.message });
     }
 });
 

@@ -119,12 +119,12 @@ let currentBaseUrl: string | undefined = undefined;
 
 const initClient = (key: string): GoogleAI.GoogleGenerativeAI => {
   if (!key) {
-    throw new Error("Cannot initialize GoogleGenAI with empty API key");
+    throw new Error("Cannot initialize GoogleGenerativeAI with empty API key");
   }
 
   const baseUrl = getBaseUrl();
   console.log(
-    `[genAIClient] Initializing new GoogleGenAI client (Key: ${key.substring(
+    `[genAIClient] Initializing new GoogleGenerativeAI client (Key: ${key.substring(
       0,
       4,
     )}...${key.substring(key.length - 4)}${baseUrl ? `, BaseUrl: ${baseUrl}` : ""})`,

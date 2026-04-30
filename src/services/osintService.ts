@@ -74,16 +74,11 @@ class OsintService {
         loggerService.info("OSINT", `Ingesting high-risk target: ${report.target}`);
 
         mentalStateService.addBelief({
-            id: beliefId,
-            fact: `TARGET_RECON: ${report.target} has been identified as a high-risk entity (Score: ${report.riskScore}). Investigation archival ID: ${report.file}.`,
-            certainty: 0.95,
+            fact: `TARGET_RECON: ${report.target} has been identified as a high-risk entity (Risk: ${report.riskScore}/100). Source File: ${report.file}. Timestamp: ${new Date(report.timestamp).toLocaleString()}.`,
+            confidence: 0.95,
             priority: report.riskScore >= 70 ? 10 : 7,
             source: "sovereign_fact",
-            metadata: {
-                timestamp: report.timestamp,
-                file: report.file,
-                riskScore: report.riskScore
-            }
+            isPersistent: true
         });
 
         // Emit for immediate UI feedback

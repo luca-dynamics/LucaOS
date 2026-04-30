@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { settingsService } from "../services/settingsService";
+import { environmentSentinel } from "../services/environmentSentinel";
 import { useMobile } from "./useMobile";
 
 export interface ThemeColors {
@@ -20,7 +21,14 @@ export function useTheme() {
   const isMobile = useMobile();
   const [themeName, setThemeName] = useState(settingsService.get("general").theme || "DEFAULT");
   const [isLight, setIsLight] = useState(false);
+  const [kernelType, setKernelType] = useState(environmentSentinel.getKernelType());
   
+  // Tactical Mode Logic: User Setting (Experimental) OR Detected Kernel
+  const isTactical = useMemo(() => {
+    const setting = settingsService.get("general").experimentalMode;
+    return setting || kernelType === "TACTICAL";
+  }, [kernelType]);
+
   // Basic colors for Canvas and legacy components that can't use CSS variables
   const [colors, setColors] = useState<ThemeColors>({
     primary: "#3b82f6",
@@ -33,10 +41,15 @@ export function useTheme() {
   });
 
   useEffect(() => {
+    // Sync with Sentinel (Phase 6: Body Synthesis)
+    setKernelType(environmentSentinel.getKernelType());
+
     // Listen for theme changes in settings
     const handleSettingsChange = () => {
-      const newTheme = settingsService.get("general").theme || "DEFAULT";
-      setThemeName(newTheme);
+      const settings = settingsService.get("general");
+      setThemeName(settings.theme || "DEFAULT");
+      // Force tactical refresh if setting changed
+      setKernelType(environmentSentinel.getKernelType());
     };
 
     settingsService.on("settings-changed", handleSettingsChange);
@@ -66,8 +79,6 @@ export function useTheme() {
     syncWithCSS();
 
     // Re-sync on theme name change
-    // Using an observer for CSS variable changes is heavy, 
-    // so we just rely on common trigger points
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === "style" || mutation.attributeName === "class") {
@@ -88,7 +99,9 @@ export function useTheme() {
     themeName,
     isLight,
     isMobile,
+    kernelType,
+    isTactical,
     colors,
-    theme: colors, // Alias for backward compatibility in TradingSettings
+    theme: colors,
   };
 }

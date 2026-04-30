@@ -7,16 +7,176 @@ import { GrokAdapter } from "./GrokAdapter";
 import { DeepSeekAdapter } from "./DeepSeekAdapter";
 import { LucaSettings, settingsService } from "../settingsService";
 import { LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
-import { BRAIN_CONFIG } from "../../config/brain.config.ts";
+import { BRAIN_CONFIG } from "../../config/brain.config";
 import { ollamaUrl } from "../../config/api";
+
+export type CloudProviderId =
+  | "gemini"
+  | "anthropic"
+  | "openai"
+  | "xai"
+  | "groq"
+  | "deepseek";
+
+export type ModelProvisioningRoute =
+  | {
+      kind: "LUCA_PRIME";
+      provider: CloudProviderId;
+      model: string;
+    }
+  | {
+      kind: "BYOK";
+      provider: CloudProviderId;
+      model: string;
+      apiKeySource: "user_settings";
+    }
+  | {
+      kind: "LOCAL";
+      runtime: "ollama" | "internal";
+      model: string;
+      modelId: string;
+    };
 
 /**
  * ProviderFactory - Unified LLM Provider Routing
- *
- * DESIGN: Cloud-first with opt-in local
- * Smart Fallback Hierarchy: Choice -> User Cloud -> Luca Prime
  */
 export class ProviderFactory {
+  static resolveProvisioningRoute(
+    settings: LucaSettings["brain"],
+    persona?: string,
+    providerOverride?: string,
+  ): ModelProvisioningRoute {
+    const { model, useCustomApiKey } = settings;
+
+    // 1. Handle Explicit Provider Override (Active Routing)
+    if (providerOverride) {
+      const provider = providerOverride.toLowerCase() as CloudProviderId;
+      // Map 'groq' to compatible models if the current one isn't
+      const finalModel = provider === "groq" && !model.includes("llama") && !model.includes("mixtral")
+        ? "llama3-70b-8192" 
+        : model;
+
+      return useCustomApiKey
+        ? {
+            kind: "BYOK",
+            provider,
+            model: finalModel,
+            apiKeySource: "user_settings",
+          }
+        : {
+            kind: "LUCA_PRIME",
+            provider,
+            model: finalModel,
+          };
+    }
+
+    if (persona === "LOCALCORE") {
+      const modelId = model.includes("/") ? model.split("/")[1] : model;
+      return {
+        kind: "LOCAL",
+        runtime: "internal",
+        model,
+        modelId,
+      };
+    }
+
+    const isExplicitLocal =
+      model.startsWith("local/") ||
+      model.includes(":") ||
+      LOCAL_BRAIN_MODEL_IDS.includes(model);
+
+    if (isExplicitLocal) {
+      const modelId = model.startsWith("local/") ? model.split("/")[1] : model;
+      return {
+        kind: "LOCAL",
+        runtime: model.includes(":") ? "ollama" : "internal",
+        model,
+        modelId,
+      };
+    }
+
+    const provider = this.resolveCloudProvider(model);
+    return useCustomApiKey
+      ? {
+          kind: "BYOK",
+          provider,
+          model,
+          apiKeySource: "user_settings",
+        }
+      : {
+          kind: "LUCA_PRIME",
+          provider,
+          model,
+        };
+  }
+
+  static createProviderForRoute(
+    route: ModelProvisioningRoute,
+    settings: LucaSettings["brain"],
+  ): LLMProvider {
+    if (route.kind === "LOCAL") {
+      return new LocalLLMAdapter(route.modelId);
+    }
+
+    const resolveKey = (userKey: string | undefined) =>
+      route.kind === "BYOK" ? userKey || "" : "";
+
+    if (route.provider === "gemini") {
+      return new GeminiAdapter(resolveKey(settings.geminiApiKey), route.model);
+    }
+
+    if (route.provider === "anthropic") {
+      return new AnthropicAdapter(
+        resolveKey(settings.anthropicApiKey),
+        route.model,
+      );
+    }
+
+    if (route.provider === "openai") {
+      return new OpenAIAdapter(resolveKey(settings.openaiApiKey), route.model);
+    }
+
+    if (route.provider === "groq") {
+      // Groq uses OpenAIAdapter with custom base URL
+      return new OpenAIAdapter(
+        resolveKey(settings.groqApiKey || settings.openaiApiKey), 
+        route.model,
+        "https://api.groq.com/openai/v1"
+      );
+    }
+
+    if (route.provider === "xai") {
+      return new GrokAdapter(
+        resolveKey(settings.xaiApiKey),
+        route.model,
+        (settings as any).xaiBaseUrl,
+      );
+    }
+
+    if (route.provider === "deepseek") {
+      return new DeepSeekAdapter(
+        resolveKey(settings.deepseekApiKey),
+        route.model,
+      );
+    }
+
+    console.warn(
+      `[ProviderFactory] Unknown route provider "${String(
+        (route as any).provider,
+      )}", defaulting to Luca Prime.`,
+    );
+    return new GeminiAdapter("", BRAIN_CONFIG.defaults.brain);
+  }
+
+  private static resolveCloudProvider(model: string): CloudProviderId {
+    if (model.startsWith("claude")) return "anthropic";
+    if (model.startsWith("gpt") || model.startsWith("o1")) return "openai";
+    if (model.startsWith("grok")) return "xai";
+    if (model.startsWith("deepseek")) return "deepseek";
+    if (model.startsWith("llama") || model.startsWith("mixtral")) return "groq";
+    return "gemini";
+  }
+
 /**
    * Synchronous creation of provider based on settings.
    *
@@ -31,65 +191,10 @@ export class ProviderFactory {
   static createProvider(
     settings: LucaSettings["brain"],
     persona?: string,
+    providerOverride?: string,
   ): LLMProvider {
-    const {
-      model,
-      useCustomApiKey,
-      geminiApiKey,
-      anthropicApiKey,
-      openaiApiKey,
-      xaiApiKey,
-      deepseekApiKey,
-    } = settings;
-
-    // TIER 3 — LOCAL: LOCALCORE persona or explicit local model ID
-    if (persona === "LOCALCORE") {
-      return new LocalLLMAdapter(
-        model.includes("/") ? model.split("/")[1] : model,
-      );
-    }
-
-    const isExplicitLocal =
-      model.startsWith("local/") || LOCAL_BRAIN_MODEL_IDS.includes(model);
-
-    if (isExplicitLocal) {
-      const adapterModelId = model.startsWith("local/")
-        ? model.split("/")[1]
-        : model;
-      return new LocalLLMAdapter(adapterModelId);
-    }
-
-    // TIER 1 vs TIER 2 key resolution:
-    // When useCustomApiKey is false (Luca Prime), pass "" so adapters defer to
-    // the enterprise getGenClient() singleton loaded from env vars.
-    // When useCustomApiKey is true (BYOK), pass the user's stored key.
-    const resolveKey = (userKey: string | undefined) =>
-      useCustomApiKey ? (userKey || "") : "";
-
-    // Route by model prefix
-    if (model.startsWith("gemini")) {
-      return new GeminiAdapter(resolveKey(geminiApiKey), model);
-    }
-
-    if (model.startsWith("claude")) {
-      return new AnthropicAdapter(resolveKey(anthropicApiKey), model);
-    }
-
-    if (model.startsWith("gpt") || model.startsWith("o1")) {
-      return new OpenAIAdapter(resolveKey(openaiApiKey), model);
-    }
-
-    if (model.startsWith("grok")) {
-      return new GrokAdapter(resolveKey(xaiApiKey), model, (settings as any).xaiBaseUrl);
-    }
-
-    if (model.startsWith("deepseek")) {
-      return new DeepSeekAdapter(resolveKey(deepseekApiKey), model);
-    }
-
-    // Final fallback: Luca Prime default model (enterprise key via singleton)
-    console.warn(`[ProviderFactory] Unknown model ID "${model}", defaulting to Luca Prime.`);
-    return new GeminiAdapter("", BRAIN_CONFIG.defaults.brain);
+    const route = this.resolveProvisioningRoute(settings, persona, providerOverride);
+    return this.createProviderForRoute(route, settings);
   }
 
 
@@ -124,6 +229,8 @@ export class ProviderFactory {
     const isLocal =
       persona === "LOCALCORE" ||
       model.startsWith("local/") ||
+      model.includes(":") || // Ollama tags (e.g. gemma2:2b)
+      model.includes("embed") || // Local embedding models
       LOCAL_BRAIN_MODEL_IDS.includes(model);
 
     if (isLocal) {

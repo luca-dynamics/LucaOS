@@ -15,11 +15,22 @@ export interface SystemHealth {
     status: "online" | "offline" | "connecting";
     url?: string;
     backend?: string;
+    runtime?: string;
+    acceleration?: "cuda" | "mps" | "cpu" | "unavailable" | "unknown";
+    acceleratorReady?: boolean;
+    device?: string;
+    localModelsReady?: boolean;
   };
   tools: {
     count: number;
     hash: string; // Simple hash to detect changes
   };
+}
+
+export interface LocalCoreReadiness {
+  ready: boolean;
+  level: "ready" | "limited" | "offline";
+  reason: string;
 }
 
 export const introspectionService = {
@@ -47,6 +58,47 @@ export const introspectionService = {
 
     console.log("[INTROSPECTION] Scan Complete:", status);
     return status;
+  },
+
+  /**
+   * Determine whether the local core is truly ready for local reasoning/voice work.
+   * We require the Cortex backend plus a usable microphone signal path.
+   * Vision stays informative, but does not block "core ready" because many voice-only
+   * sessions do not require an active camera.
+   */
+  getLocalCoreReadiness(health: SystemHealth): LocalCoreReadiness {
+    if (health.cortex.status !== "online") {
+      return {
+        ready: false,
+        level: "offline",
+        reason: "Local cortex backend is offline.",
+      };
+    }
+
+    if (health.audio.status !== "online") {
+      return {
+        ready: false,
+        level: "offline",
+        reason: health.audio.details || "Microphone is unavailable.",
+      };
+    }
+
+    if (!health.cortex.acceleratorReady) {
+      return {
+        ready: false,
+        level: "limited",
+        reason:
+          health.cortex.acceleration === "cpu"
+            ? "Local cortex is reachable, but running on CPU fallback."
+            : health.cortex.device || "Local accelerator is not ready.",
+      };
+    }
+
+    return {
+      ready: true,
+      level: "ready",
+      reason: `Local ${health.cortex.acceleration?.toUpperCase() || "AI"} core and microphone are ready.`,
+    };
   },
 
   /**
@@ -111,6 +163,11 @@ export const introspectionService = {
           status: "online",
           url,
           backend: data.backend || "Unknown",
+          runtime: data.runtime || "python",
+          acceleration: data.acceleration || "unknown",
+          acceleratorReady: Boolean(data.accelerator_ready),
+          device: data.device || "Unknown device",
+          localModelsReady: Boolean(data.local_models_ready),
         };
       }
       return { status: "offline", url };

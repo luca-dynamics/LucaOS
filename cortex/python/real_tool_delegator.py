@@ -9,6 +9,7 @@ import logging
 import json
 import subprocess
 import os
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,10 @@ class RealToolDelegator:
             'osintUsernameSearch': self.handle_osint_username,
             'osintDomainIntel': self.handle_osint_domain,
             'osintDarkWebScan': self.handle_osint_darkweb,
+            
+            # Self-Configuration
+            'getSystemSettings': self.handle_get_settings,
+            'updateSystemSettings': self.handle_update_settings,
         }
     
     async def execute(self, tool_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -177,8 +182,6 @@ class RealToolDelegator:
                 }
                 
             # 2. Build Prompt for LLM Execution (Batched to prevent Context Window overflow)
-            import httpx
-            
             BATCH_SIZE = 150
             chunks = [files_meta[i:i + BATCH_SIZE] for i in range(0, len(files_meta), BATCH_SIZE)]
             
@@ -432,6 +435,58 @@ class RealToolDelegator:
                 'results': []
             }
         }
+
+    # ===== SELF-CONFIGURATION =====
+
+    async def handle_get_settings(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Retrieve Luca's internal settings via backend API"""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    'http://127.0.0.1:8000/api/settings',
+                    timeout=10.0
+                )
+                
+                if response.status_code != 200:
+                    raise Exception(f"API Error: {response.text}")
+                
+                res_data = response.json()
+                return {
+                    'output': "Successfully retrieved system settings",
+                    'result': res_data
+                }
+        except Exception as e:
+            logger.error(f"Failed to retrieve settings: {e}")
+            raise Exception(f"Failed to retrieve settings: {str(e)}")
+
+    async def handle_update_settings(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Update Luca's internal settings via backend API"""
+        key = params.get('key')
+        value = params.get('value')
+        
+        if not key:
+            raise Exception("Missing setting 'key'")
+            
+        try:
+            # We call the local API to ensure runtime variables (like background sync) are also updated
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    'http://127.0.0.1:8000/api/settings/update',
+                    json={"key": key, "value": value},
+                    timeout=10.0
+                )
+                
+                if response.status_code != 200:
+                    raise Exception(f"API Error: {response.text}")
+                
+                res_data = response.json()
+                return {
+                    'output': f"Successfully updated setting '{key}' to '{value}'",
+                    'result': res_data
+                }
+        except Exception as e:
+            logger.error(f"Failed to update setting {key}: {e}")
+            raise Exception(f"Failed to update setting: {str(e)}")
 
 
 # Global instance

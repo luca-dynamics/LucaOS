@@ -29,7 +29,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
     path: string;
     content: string;
   } | null>(null);
-  const [, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // AI Edit State
@@ -74,8 +74,8 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
       } else {
         setFiles([]);
       }
-    } catch (e) {
-      console.error("FS Error", e);
+    } catch {
+      console.error("FS Error");
       setFiles([]);
     }
   };
@@ -99,8 +99,8 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
         });
         // Auto-hide terminal when switching files
         setShowTerminal(false);
-      } catch (e) {
-        console.error("Read Error", e);
+      } catch {
+        console.error("Read Error");
       } finally {
         setLoading(false);
       }
@@ -393,6 +393,21 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
           {/* Main Editor Area */}
           <div className="flex-1 relative bg-[#1e1e1e]/90 flex flex-col h-80 sm:h-auto min-h-[300px] sm:min-h-0">
             <div className="flex-1 relative">
+              {loading && (
+                <div className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-4 animate-in fade-in">
+                  <div 
+                    className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
+                    style={{ borderColor: `${themeHex} transparent ${themeHex} ${themeHex}` }}
+                  />
+                  <div 
+                    className="text-[10px] font-mono tracking-[0.3em] animate-pulse"
+                    style={{ color: themeHex }}
+                  >
+                    ACCESSING_SOURCE...
+                  </div>
+                </div>
+              )}
+
               {activeFile ? (
                 <>
                   <Editor

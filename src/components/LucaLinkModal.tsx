@@ -8,19 +8,17 @@ import { ErrorToast } from "./lucaLink/ErrorToast";
 import type { Device, LucaLinkError } from "../services/lucaLink/types";
 import { ConnectionState } from "../services/lucaLink/types";
 import { WS_PORT, RELAY_SERVER_URL } from "../config/api";
-import { setHexAlpha } from "../config/themeColors";
 
 interface LucaLinkModalProps {
   onClose: () => void;
   localIp: string;
-  theme?: any;
 }
 
 const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
   onClose,
   localIp,
 }) => {
-  const themeHex = "var(--app-primary)";
+  const themeHex = getComputedStyle(document.documentElement).getPropertyValue('--app-primary').trim() || "#06b6d4";
   
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [devices, setDevices] = useState<Device[]>([]);
@@ -77,7 +75,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           width: 256,
           margin: 2,
           color: {
-            dark: getComputedStyle(document.documentElement).getPropertyValue('--app-primary').trim() || "#06b6d4",
+            dark: themeHex,
             light: isLightMode ? "#FFFFFFFF" : "#00000000",
           },
         });
@@ -87,8 +85,8 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
 
         // Load existing devices
         updateDevices();
-      } catch (error) {
-        console.error("[LucaLinkModal] Initialization failed:", error);
+      } catch {
+        console.error("[LucaLinkModal] Initialization failed");
       }
     };
 

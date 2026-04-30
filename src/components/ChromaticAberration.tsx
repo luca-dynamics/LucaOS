@@ -25,10 +25,10 @@ const ChromaticAberration: React.FC<ChromaticAberrationProps> = ({
       if (child instanceof THREE.Mesh) {
         const material = child.material as THREE.MeshStandardMaterial;
         if (material) {
-          // Shift colors slightly for chromatic effect
+          // Shift positions slightly for chromatic effect
           const colorShift = offset * (index % 3 - 1);
-          // This would need a custom shader for true chromatic aberration
-          // For now, we'll use a subtle effect
+          child.position.x = colorShift * 0.1;
+          child.position.y = colorShift * 0.05;
         }
       }
     });

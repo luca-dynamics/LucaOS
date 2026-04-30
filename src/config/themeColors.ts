@@ -297,28 +297,55 @@ export const getThemeColors = (persona: string = "PROFESSIONAL") => {
 export const getDynamicContrast = (themeId: string, opacity: number) => {
   const config = PERSONA_UI_CONFIG[themeId] || PERSONA_UI_CONFIG.PROFESSIONAL;
   const isLight = config.isLight;
+  const clampedOpacity = Math.max(0, Math.min(1, opacity));
 
   if (isLight) {
     const isLightCream = config.themeName?.toLowerCase() === "lightcream";
-    
-    // For TRUE LIGHT MODE, we prioritize dark contrast text regardless of opacity
-    // to maintain legibility against the light-mode background base.
+    const usesDarkSurfaceContrast = clampedOpacity >= 0.45;
+    const contrastLift = Math.max(0, (clampedOpacity - 0.45) / 0.55);
+
+    if (!usesDarkSurfaceContrast) {
+      return {
+        text: isLightCream ? "#f7f3e3" : "#f8fafc",
+        textMuted: isLightCream
+          ? "rgba(247, 243, 227, 0.78)"
+          : "rgba(248, 250, 252, 0.78)",
+        border: isLightCream
+          ? "rgba(247, 243, 227, 0.28)"
+          : "rgba(226, 232, 240, 0.28)",
+        bgTint: isLightCream
+          ? "rgba(255, 248, 220, 0.06)"
+          : "rgba(255, 255, 255, 0.07)",
+        bgMain: isLightCream ? "#E5E1CD" : "#ffffff",
+        isHighContrast: false,
+      };
+    }
+
+    // Once the background becomes sufficiently opaque, switch the light themes
+    // to a darker text system and gradually harden borders/muted text.
     return {
       text: isLightCream ? "#4a483f" : "#111827", // Cream: Dark Olive | Slate: Deep Navy
-      textMuted: isLightCream ? "rgba(74, 72, 63, 0.8)" : "rgba(30, 41, 59, 0.8)",
-      border: isLightCream ? "rgba(108, 106, 88, 0.4)" : "rgba(30, 41, 59, 0.4)",
-      bgTint: isLightCream ? "rgba(0, 0, 0, 0.05)" : "rgba(0, 0, 0, 0.1)",
+      textMuted: isLightCream
+        ? `rgba(74, 72, 63, ${0.76 + contrastLift * 0.16})`
+        : `rgba(30, 41, 59, ${0.76 + contrastLift * 0.16})`,
+      border: isLightCream
+        ? `rgba(108, 106, 88, ${0.28 + contrastLift * 0.28})`
+        : `rgba(30, 41, 59, ${0.26 + contrastLift * 0.3})`,
+      bgTint: isLightCream
+        ? `rgba(74, 72, 63, ${0.04 + contrastLift * 0.06})`
+        : `rgba(15, 23, 42, ${0.05 + contrastLift * 0.08})`,
       bgMain: isLightCream ? "#E5E1CD" : "#ffffff",
       isHighContrast: true,
     };
   }
 
   // Default Dark Themes (Professional, Master System, etc.)
+  const darkLift = Math.max(0, (clampedOpacity - 0.35) / 0.65);
   return {
     text: "#ffffff",
-    textMuted: "rgba(255, 255, 255, 0.65)",
-    border: "rgba(255, 255, 255, 0.25)",
-    bgTint: "rgba(255, 255, 255, 0.05)",
+    textMuted: `rgba(255, 255, 255, ${0.62 + darkLift * 0.12})`,
+    border: `rgba(255, 255, 255, ${0.18 + darkLift * 0.14})`,
+    bgTint: `rgba(255, 255, 255, ${0.03 + darkLift * 0.04})`,
     bgMain: "#0a0a0f",
     isHighContrast: false,
   };

@@ -1,4 +1,4 @@
-import { Type } from "@google/genai";
+import { SchemaType } from "@google/generative-ai";
 
 // Standard Spotify Web API Endpoints
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
@@ -10,15 +10,15 @@ export const tools = [
     description:
       "Control Spotify playback (Play, Pause, Next, Previous, Volume). Requires active device.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         action: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           enum: ["play", "pause", "next", "previous", "volume"],
           description: "The action to perform.",
         },
         value: {
-          type: Type.NUMBER,
+          type: SchemaType.NUMBER,
           description: "Volume level (0-100) if action is volume.",
         },
       },
@@ -29,14 +29,14 @@ export const tools = [
     name: "spotify_search",
     description: "Search for tracks, albums, or artists on Spotify.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         query: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           description: "Search query (e.g. 'Bohemian Rhapsody').",
         },
         type: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           enum: ["track", "album", "artist", "playlist"],
           description: "Type of item to search for. Default is 'track'.",
         },

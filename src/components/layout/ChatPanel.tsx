@@ -48,6 +48,40 @@ interface ChatPanelProps {
 type ViewMode = "CHAT" | "CORTEX";
 
 // --- Helpers ---
+function normalizePersonaLabel(value: unknown): string {
+  if (typeof value === "string") return value;
+
+  if (value == null) return "ASSISTANT";
+
+  // Handle boxed strings or odd IPC/settings payloads that arrive as
+  // index-keyed objects instead of primitive text.
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (
+      entries.length > 0 &&
+      entries.every(
+        ([key, item]) => /^\d+$/.test(key) && typeof item === "string",
+      )
+    ) {
+      return entries
+        .sort((a, b) => Number(a[0]) - Number(b[0]))
+        .map(([, item]) => item)
+        .join("");
+    }
+
+    const candidate =
+      (value as any).persona ??
+      (value as any).name ??
+      (value as any).id ??
+      (value as any).value;
+
+    if (typeof candidate === "string") return candidate;
+  }
+
+  const fallback = String(value).trim();
+  return fallback && fallback !== "[object Object]" ? fallback : "ASSISTANT";
+}
+
 function cleanAiMessage(text: string): string {
   // 1. Remove bracketed system headers (e.g. [SYSTEM], [BYPASS], [REFLEX])
   let stripped = text.replace(/\[[^\]]*\]/g, "").trim();
@@ -87,20 +121,29 @@ const PersonaBadge = ({
   persona,
   themeHex,
 }: {
-  persona: string;
+  persona: unknown;
   themeHex: string;
-}) => (
-  <div
-    className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-mono font-bold tracking-widest uppercase glass-blur"
-    style={{ 
-      borderColor: "var(--app-border-main, rgba(255,255,255,0.15))",
-      color: themeHex,
-    }}
-  >
-    <Icon name="Zap" size={10} className="animate-pulse" variant="BoldDuotone" />
-    {persona}
-  </div>
-);
+}) => {
+  const label = normalizePersonaLabel(persona);
+
+  return (
+    <div
+      className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-mono font-bold tracking-widest uppercase glass-blur"
+      style={{
+        borderColor: "var(--app-border-main, rgba(255,255,255,0.15))",
+        color: themeHex,
+      }}
+    >
+      <Icon
+        name="Zap"
+        size={10}
+        className="animate-pulse"
+        variant="BoldDuotone"
+      />
+      {label}
+    </div>
+  );
+};
 
 // --- Rolling Stream (Transient Log) ---
 const RollingStream = ({ 
@@ -214,6 +257,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>("CHAT");
   const [, startTransition] = useTransition();
+  const personaLabel = normalizePersonaLabel(persona);
   const isLight = 
     theme.themeName?.toLowerCase() === "lucagent" || 
     theme.themeName?.toLowerCase() === "agentic-slate" ||
@@ -570,7 +614,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               className="text-sm font-mono tracking-[0.2em] uppercase opacity-40 text-center"
               style={{ color: "var(--app-text-muted, #94a3b8)" }}
             >
-              SYSTEM READY · {persona}
+              SYSTEM READY · {personaLabel}
             </p>
 
             {/* AI Generated Welcome Message (Rolling Stream) */}
@@ -614,7 +658,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             </div>
 
             {/* Persona badge */}
-            <PersonaBadge persona={persona} themeHex={theme.hex} />
+            <PersonaBadge persona={personaLabel} themeHex={theme.hex} />
 
             {/* Central Input + chips below it, centered */}
             <div

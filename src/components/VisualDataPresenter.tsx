@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
-import SecurityHUD from "./visual/SecurityHUD";
 
 interface VisualItem {
   title: string;
@@ -47,12 +46,19 @@ interface VisualDataPresenterProps {
     glow: string;
   };
   onClose: () => void;
+  onInteraction?: (type: string, details: any) => void;
+  remoteCommand?: {
+    type: "NEXT" | "PREV" | "SET_INDEX" | "SCROLL" | string;
+    value?: any;
+  };
 }
 
 const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
   data,
   theme,
   onClose,
+  onInteraction,
+  remoteCommand,
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -61,12 +67,37 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
     setIsLoaded(true);
   }, []);
 
-  const nextSlide = () =>
-    setActiveIndex((prev) => (prev + 1) % data.items.length);
-  const prevSlide = () =>
-    setActiveIndex(
-      (prev) => (prev - 1 + data.items.length) % data.items.length
-    );
+  const nextSlide = () => {
+    const nextIdx = (activeIndex + 1) % data.items.length;
+    setActiveIndex(nextIdx);
+    onInteraction?.("SLIDE_CHANGE", { index: nextIdx, item: data.items[nextIdx] });
+  };
+  const prevSlide = () => {
+    const nextIdx = (activeIndex - 1 + data.items.length) % data.items.length;
+    setActiveIndex(nextIdx);
+    onInteraction?.("SLIDE_CHANGE", { index: nextIdx, item: data.items[nextIdx] });
+  };
+
+  // --- REMOTE CONTROL LISTENER ---
+  useEffect(() => {
+    if (!remoteCommand) return;
+
+    switch (remoteCommand.type) {
+      case "NEXT":
+        nextSlide();
+        break;
+      case "PREV":
+        prevSlide();
+        break;
+      case "SET_INDEX":
+        if (typeof remoteCommand.value === "number") {
+          setActiveIndex(remoteCommand.value % data.items.length);
+        }
+        break;
+      default:
+        console.log("[VisualDataPresenter] Unhandled remote command:", remoteCommand);
+    }
+  }, [remoteCommand]);
 
   // --- RENDERERS ---
 
@@ -74,54 +105,32 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
   const HoloCard: React.FC<{
     children: React.ReactNode;
     className?: string;
-  }> = ({ children, className = "" }) => (
+    onClick?: () => void;
+  }> = ({ children, className = "", onClick }) => (
     <div
-      className={`relative rounded-xl border overflow-hidden group ${className}`}
+      onClick={onClick}
+      className={`relative rounded-[24px] border overflow-hidden group transition-all duration-700 ${className}`}
       style={{
-        background: `linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.9) 100%)`,
-        borderColor: `${theme.primary}40`,
-        boxShadow: `
-          0 0 40px ${theme.primary}15,
-          inset 0 0 30px ${theme.primary}10,
-          0 4px 30px rgba(0,0,0,0.5)
-        `,
-        backdropFilter: "blur(20px)",
+        background: `rgba(0, 0, 0, ${0.4 * (1)})`, // Scaled based on premium glass logic
+        borderColor: `${theme.primary}25`,
+        boxShadow: `0 20px 40px rgba(0,0,0,0.4), inset 0 0 0 1px ${theme.primary}15`,
+        backdropFilter: "blur(40px) saturate(1.8)",
       }}
     >
-      {/* Tech Corner Brackets */}
+      {/* Subtle Top Shine */}
       <div
-        className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 opacity-60 transition-all duration-300 group-hover:w-8 group-hover:h-8 group-hover:opacity-100"
-        style={{ borderColor: theme.primary }}
-      />
-      <div
-        className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 opacity-60 transition-all duration-300 group-hover:w-8 group-hover:h-8 group-hover:opacity-100"
-        style={{ borderColor: theme.primary }}
-      />
-      <div
-        className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 opacity-60 transition-all duration-300 group-hover:w-8 group-hover:h-8 group-hover:opacity-100"
-        style={{ borderColor: theme.primary }}
-      />
-      <div
-        className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 opacity-60 transition-all duration-300 group-hover:w-8 group-hover:h-8 group-hover:opacity-100"
-        style={{ borderColor: theme.primary }}
-      />
-
-      {/* Animated Glow Line (Top) */}
-      <div
-        className="absolute top-0 left-0 w-full h-[2px] opacity-60"
+        className="absolute top-0 left-0 w-full h-[1px] opacity-40"
         style={{
           background: `linear-gradient(90deg, transparent 0%, ${theme.primary} 50%, transparent 100%)`,
         }}
       />
 
-      {/* CRT Scanlines Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.3)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30" />
-
-      {/* Holographic Shimmer */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+      {/* Elegant Refractive Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-10 transition-opacity duration-700"
         style={{
-          background: `linear-gradient(135deg, transparent 30%, ${theme.primary}20 50%, transparent 70%)`,
+          background: `linear-gradient(135deg, white 0%, transparent 50%, black 100%)`,
+          mixBlendMode: "soft-light"
         }}
       />
 
@@ -130,11 +139,12 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
   );
 
   const renderGrid = () => (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-8 p-6 max-h-[65vh] overflow-y-auto custom-scrollbar">
       {data.items.map((item, i) => (
         <HoloCard
           key={i}
-          className="aspect-square hover:shadow-2xl hover:scale-[1.02] transition-all duration-500"
+          className="aspect-square hover:scale-[1.03] active:scale-[0.98] transition-all duration-500 cursor-pointer"
+          onClick={() => onInteraction?.("ITEM_SELECT", { index: i, item })}
         >
           {item.videoUrl ? (
             <video
@@ -144,37 +154,36 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
               muted
               loop
               playsInline
-              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
             <img
               src={item.imageUrl}
               alt={item.title}
-              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-          <div className="absolute bottom-0 left-0 w-full p-4">
-            <div className="text-sm font-bold text-white tracking-wider mb-1">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 w-full p-5">
+            <div className="text-[10px] font-bold tracking-[0.2em] uppercase opacity-50 text-white mb-1">
+              {item.source || data.type}
+            </div>
+            <div className="text-lg font-medium text-white tracking-tight leading-tight mb-2">
               {item.title}
             </div>
-            {/* Tech Line */}
-            <div
-              className="w-8 h-0.5 mb-2"
-              style={{ backgroundColor: theme.primary }}
-            />
-            {item.details &&
-              Object.entries(item.details)
-                .slice(0, 1)
-                .map(([k, v]) => (
-                  <div
-                    key={k}
-                    className="text-[10px] text-slate-400 font-mono truncate"
-                  >
-                    <span className="text-white/40 uppercase mr-2">{k}</span>
-                    <span style={{ color: theme.primary }}>{v}</span>
-                  </div>
-                ))}
+            <div className="flex flex-wrap gap-2">
+              {item.details &&
+                Object.entries(item.details)
+                  .slice(0, 2)
+                  .map(([k, v]) => (
+                    <div
+                      key={k}
+                      className="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[9px] text-white/80 font-medium"
+                    >
+                      {v}
+                    </div>
+                  ))}
+            </div>
           </div>
         </HoloCard>
       ))}
@@ -392,9 +401,9 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
                 ))}
           </div>
           <Icon
-            name="ExternalLink"
+            name="ChevronRight"
             size={16}
-            className="relative z-10 transition-colors"
+            className="relative z-10 transition-colors opacity-30 group-hover:opacity-100 group-hover:translate-x-1"
             style={{ color: theme.primary }}
           />
         </div>
@@ -404,61 +413,53 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
 
   // --- TIMELINE LAYOUT (Horizontal timeline) ---
   const renderTimeline = () => (
-    <div className="w-full p-4 max-h-[60vh] overflow-x-auto custom-scrollbar">
-      <div className="relative flex items-start gap-8 min-w-max pb-4">
+    <div className="w-full p-8 max-h-[65vh] overflow-x-auto custom-scrollbar">
+      <div className="relative flex items-start gap-12 min-w-max pb-8">
         {/* Glowing Timeline Line */}
         <div
-          className="absolute top-6 left-0 right-0 h-[2px]"
+          className="absolute top-10 left-0 right-0 h-[1px] opacity-20"
           style={{
-            background: `linear-gradient(90deg, transparent 0%, ${theme.primary}60 20%, ${theme.primary}60 80%, transparent 100%)`,
-            boxShadow: `0 0 10px ${theme.primary}40`,
+            background: `linear-gradient(90deg, transparent 0%, ${theme.primary} 20%, ${theme.primary} 80%, transparent 100%)`,
           }}
         />
         {data.items.map((item, i) => (
           <div
             key={i}
-            className="relative flex flex-col items-center w-52 group"
+            className="relative flex flex-col items-center w-64 group"
           >
             {/* Animated Node */}
             <div
-              className="w-4 h-4 rounded-full z-10 animate-pulse border-2"
+              className="w-4 h-4 rounded-full z-10 border-[3px] transition-all duration-500 group-hover:scale-125"
               style={{
-                backgroundColor: theme.primary,
+                backgroundColor: "#000",
                 borderColor: theme.primary,
-                boxShadow: `0 0 15px ${theme.primary}80`,
+                boxShadow: `0 0 20px ${theme.primary}40`,
               }}
             />
             {/* Timeline Card */}
-            <div
-              className="mt-4 p-4 rounded-xl w-full transition-all duration-300 group-hover:translate-y-[-4px]"
-              style={{
-                background: `linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%)`,
-                border: `1px solid ${theme.primary}30`,
-                boxShadow: `0 0 25px ${theme.primary}15, inset 0 0 15px ${theme.primary}08`,
-                backdropFilter: "blur(15px)",
-              }}
+            <HoloCard
+              className="mt-6 p-5 w-full hover:translate-y-[-8px]"
             >
               {item.imageUrl && (
                 <img
                   src={item.imageUrl}
                   alt={item.title}
-                  className="w-full h-28 rounded-lg object-cover mb-3 opacity-80 group-hover:opacity-100 transition-opacity"
-                  style={{ border: `1px solid ${theme.primary}30` }}
+                  className="w-full h-32 rounded-xl object-cover mb-4 transition-transform duration-700 group-hover:scale-105"
                 />
               )}
-              <div className="text-sm font-bold text-white truncate tracking-wide">
+              <div className="text-lg font-medium text-white tracking-tight leading-tight mb-2">
                 {item.title}
               </div>
               {item.details?.date && (
                 <div
-                  className="text-[10px] font-mono mt-1 flex items-center gap-1"
+                  className="text-[10px] font-bold tracking-[0.1em] uppercase opacity-60 flex items-center gap-2"
                   style={{ color: theme.primary }}
                 >
-                  <Icon name="Clock" size={10} />
+                  <Icon name="Clock" size={12} />
                   {item.details.date}
                 </div>
               )}
-            </div>
+            </HoloCard>
           </div>
         ))}
       </div>
@@ -467,65 +468,50 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
 
   // --- DASHBOARD LAYOUT (Multi-panel) ---
   const renderDashboard = () => (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 p-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 p-6 max-h-[65vh] overflow-y-auto custom-scrollbar">
       {data.items.map((item, i) => (
-        <div
+        <HoloCard
           key={i}
-          className="relative p-4 rounded-xl overflow-hidden group transition-all duration-300"
-          style={{
-            background: `linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.75) 100%)`,
-            border: `1px solid ${theme.primary}25`,
-            boxShadow: `0 0 30px ${theme.primary}10, inset 0 0 20px ${theme.primary}05`,
-            backdropFilter: "blur(20px)",
-          }}
+          className="p-6 flex flex-col hover:scale-[1.02]"
         >
-          {/* Corner Accent */}
-          <div
-            className="absolute top-0 left-0 w-8 h-[2px]"
-            style={{ background: theme.primary }}
-          />
-          <div
-            className="absolute top-0 left-0 h-8 w-[2px]"
-            style={{ background: theme.primary }}
-          />
-
           {/* Header */}
-          <div className="flex items-center gap-2 mb-4">
-            <div
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{
-                backgroundColor: theme.primary,
-                boxShadow: `0 0 8px ${theme.primary}`,
-              }}
-            />
-            <div
-              className="text-[10px] font-mono uppercase truncate tracking-widest"
-              style={{ color: theme.primary }}
-            >
-              {item.title}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold tracking-[0.2em] uppercase opacity-40 text-white mb-1">
+                RESOURCE_{i.toString().padStart(2, '0')}
+              </span>
+              <h3 className="text-xl font-medium text-white tracking-tight">
+                {item.title}
+              </h3>
             </div>
+            <div
+              className="w-2 h-2 rounded-full shadow-[0_0_10px_currentcolor]"
+              style={{ backgroundColor: theme.primary, color: theme.primary }}
+            />
           </div>
 
-          {/* Stats */}
-          {item.details &&
-            Object.entries(item.details).map(([k, v]) => (
-              <div
-                key={k}
-                className="flex justify-between items-center py-2 border-b last:border-0"
-                style={{ borderColor: `${theme.primary}15` }}
-              >
-                <span className="text-[10px] text-slate-500 uppercase font-mono">
-                  {k}
-                </span>
-                <span
-                  className="text-sm font-bold"
-                  style={{ color: theme.primary }}
+          {/* Stats Grid */}
+          <div className="space-y-4">
+            {item.details &&
+              Object.entries(item.details).map(([k, v]) => (
+                <div
+                  key={k}
+                  className="flex flex-col gap-1 border-l-2 pl-3"
+                  style={{ borderColor: `${theme.primary}20` }}
                 >
-                  {v}
-                </span>
-              </div>
-            ))}
-        </div>
+                  <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest">
+                    {k}
+                  </span>
+                  <span
+                    className="text-lg font-medium tracking-tight"
+                    style={{ color: theme.primary }}
+                  >
+                    {v}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </HoloCard>
       ))}
     </div>
   );
@@ -535,112 +521,70 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
     const item = data.items[activeIndex] || data.items[0];
     if (!item) return null;
     return (
-      <div className="relative w-full h-[60vh] flex items-center justify-center">
-        {/* Background Grid Pattern */}
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage: `
-              linear-gradient(${theme.primary}20 1px, transparent 1px),
-              linear-gradient(90deg, ${theme.primary}20 1px, transparent 1px)
-            `,
-            backgroundSize: "40px 40px",
-          }}
-        />
-
-        {/* Content Container */}
-        <div
-          className="relative max-w-4xl w-full rounded-2xl overflow-hidden"
-          style={{
-            border: `2px solid ${theme.primary}30`,
-            boxShadow: `
-              0 0 60px ${theme.primary}20,
-              inset 0 0 40px ${theme.primary}10
-            `,
-            backdropFilter: "blur(20px)",
-          }}
+      <div className="relative w-full h-[65vh] flex items-center justify-center p-8">
+        {/* Immersive Glass Frame */}
+        <HoloCard
+          className="relative max-w-5xl w-full h-full flex flex-col md:flex-row overflow-hidden shadow-2xl"
         >
-          {item.videoUrl ? (
-            <video
-              src={item.videoUrl}
-              poster={item.imageUrl}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-[50vh] object-contain"
-              style={{ background: "rgba(0,0,0,0.8)" }}
-            />
-          ) : item.imageUrl ? (
-            <img
-              src={item.imageUrl}
-              alt={item.title}
-              className="w-full h-[50vh] object-contain"
-              style={{ background: "rgba(0,0,0,0.8)" }}
-            />
-          ) : (
-            <div
-              className="text-center p-12 min-h-[50vh] flex flex-col items-center justify-center"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%)",
-              }}
-            >
-              <div
-                className="text-5xl font-bold mb-6 tracking-wider"
-                style={{
-                  color: theme.primary,
-                  textShadow: `0 0 30px ${theme.primary}50`,
-                }}
-              >
-                {item.title}
+          <div className="flex-1 relative bg-black/40">
+            {item.videoUrl ? (
+              <video
+                src={item.videoUrl}
+                poster={item.imageUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-contain"
+              />
+            ) : item.imageUrl ? (
+              <img
+                src={item.imageUrl}
+                alt={item.title}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Icon name="Image" size={64} className="opacity-10" />
               </div>
+            )}
+          </div>
+
+          <div className="w-full md:w-80 p-8 flex flex-col justify-center border-l border-white/5 bg-white/[0.02] backdrop-blur-xl">
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase opacity-40 text-white mb-2">
+              FEATURED_DATA
+            </span>
+            <h2 className="text-3xl font-medium text-white tracking-tight mb-6 leading-tight">
+              {item.title}
+            </h2>
+            
+            <div className="space-y-6">
               {item.details &&
                 Object.entries(item.details).map(([k, v]) => (
-                  <div key={k} className="text-sm text-slate-400 font-mono">
-                    <span className="text-white/40 uppercase mr-3">{k}:</span>
-                    <span style={{ color: theme.primary }}>{v}</span>
+                  <div key={k} className="flex flex-col gap-1 border-l-2 pl-4" style={{ borderColor: `${theme.primary}30` }}>
+                    <span className="text-[9px] text-white/30 uppercase font-bold tracking-widest">{k}</span>
+                    <span className="text-sm font-medium text-white/90">{v}</span>
                   </div>
                 ))}
             </div>
-          )}
-        </div>
+          </div>
+        </HoloCard>
 
-        {/* Navigation Buttons */}
+        {/* Navigation Overlays */}
         {data.items.length > 1 && (
           <>
             <button
               onClick={prevSlide}
-              className="absolute left-4 p-4 rounded-full transition-all duration-300 group"
-              style={{
-                background: `linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%)`,
-                border: `1px solid ${theme.primary}40`,
-                boxShadow: `0 0 20px ${theme.primary}20`,
-              }}
+              className="absolute left-12 p-5 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:scale-110 active:scale-95 transition-all backdrop-blur-2xl"
             >
-              <Icon name="ArrowLeft" size={24} style={{ color: theme.primary }} />
+              <Icon name="ArrowLeft" size={28} />
             </button>
             <button
               onClick={nextSlide}
-              className="absolute right-4 p-4 rounded-full transition-all duration-300 group"
-              style={{
-                background: `linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%)`,
-                border: `1px solid ${theme.primary}40`,
-                boxShadow: `0 0 20px ${theme.primary}20`,
-              }}
+              className="absolute right-12 p-5 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:scale-110 active:scale-95 transition-all backdrop-blur-2xl"
             >
-              <Icon name="ArrowRight" size={24} style={{ color: theme.primary }} />
+              <Icon name="ArrowRight" size={28} />
             </button>
-            <div
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full font-mono text-sm tracking-widest"
-              style={{
-                background: "rgba(0,0,0,0.7)",
-                border: `1px solid ${theme.primary}30`,
-                color: theme.primary,
-              }}
-            >
-              {activeIndex + 1} / {data.items.length}
-            </div>
           </>
         )}
       </div>
@@ -654,45 +598,52 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
       }`}
     >
       {/* Header Bar */}
-      <div className="flex items-center justify-between mb-8 px-4 border-b border-white/5 pb-4">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-white/5 border border-white/10 shadow-[0_0_15px_-5px_rgba(255,255,255,0.2)]">
+      <div className="flex items-center justify-between mb-12 px-6">
+        <div className="flex items-center gap-6">
+          <div 
+            className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-3xl shadow-2xl"
+            style={{ boxShadow: `0 10px 30px -10px ${theme.primary}20` }}
+          >
             {data.type === "PLACE" ? (
-              <Icon name="MapPin" size={20} style={{ color: theme.primary }} />
+              <Icon name="MapPin" size={24} style={{ color: theme.primary }} />
             ) : data.type === "PRODUCT" ? (
-              <Icon name="Box" size={20} style={{ color: theme.primary }} />
+              <Icon name="Box" size={24} style={{ color: theme.primary }} />
             ) : data.type === "PERSON" ? (
-              <Icon name="User" size={20} style={{ color: theme.primary }} />
+              <Icon name="User" size={24} style={{ color: theme.primary }} />
             ) : data.type === "NEWS" ? (
-              <Icon name="Newspaper" size={20} style={{ color: theme.primary }} />
+              <Icon name="Newspaper" size={24} style={{ color: theme.primary }} />
             ) : data.type === "SOCIAL" ? (
-              <Icon name="Share2" size={20} style={{ color: theme.primary }} />
+              <Icon name="Share2" size={24} style={{ color: theme.primary }} />
             ) : data.type === "DOCUMENT" ? (
-              <Icon name="FileText" size={20} style={{ color: theme.primary }} />
+              <Icon name="FileText" size={24} style={{ color: theme.primary }} />
             ) : data.type === "FINANCIAL" ? (
-              <Icon name="TrendingUp" size={20} style={{ color: theme.primary }} />
+              <Icon name="TrendingUp" size={24} style={{ color: theme.primary }} />
             ) : data.type === "AUDIO" ? (
-              <Icon name="Music" size={20} style={{ color: theme.primary }} />
+              <Icon name="Music" size={24} style={{ color: theme.primary }} />
             ) : data.type === "CODE" ? (
-              <Icon name="Code" size={20} style={{ color: theme.primary }} />
+              <Icon name="Code" size={24} style={{ color: theme.primary }} />
             ) : data.type === "STATS" ? (
-              <Icon name="BarChart3" size={20} style={{ color: theme.primary }} />
+              <Icon name="BarChart3" size={24} style={{ color: theme.primary }} />
             ) : data.type === "TIMELINE" ? (
-              <Icon name="Clock" size={20} style={{ color: theme.primary }} />
+              <Icon name="Clock" size={24} style={{ color: theme.primary }} />
             ) : data.type === "MAP" ? (
-              <Icon name="Map" size={20} style={{ color: theme.primary }} />
+              <Icon name="Map" size={24} style={{ color: theme.primary }} />
             ) : (
-              <Icon name="Layers" size={20} style={{ color: theme.primary }} />
+              <Icon name="Layers" size={24} style={{ color: theme.primary }} />
             )}
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <div className="text-[10px] font-mono text-slate-400 tracking-[0.2em] uppercase">
-                VISUAL DATA STREAM // {data.layout}
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex gap-1">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="w-1 h-1 rounded-full bg-white/20" />
+                ))}
+              </div>
+              <div className="text-[10px] font-bold text-white/40 tracking-[0.3em] uppercase">
+                {data.layout} {/* NODE_SYNC: ACTIVE */}
               </div>
             </div>
-            <div className="text-2xl font-bold text-white tracking-wide uppercase drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+            <div className="text-4xl font-medium text-white tracking-tight">
               {data.topic}
             </div>
           </div>
@@ -710,39 +661,15 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
 
       {/* Content Area */}
       <div className="relative min-h-[60vh] flex items-center justify-center">
-        {data.type === "SECURITY" ? (
-          <div className="flex-1 p-6 flex flex-col">
-            <SecurityHUD
-              status={data.items[0]?.details?.status || "AUDITING"}
-              target={data.items[0]?.title || "UNKNOWN_TARGET"}
-              profit={data.items[0]?.details?.projectedProfit || "0.00"}
-              steps={[
-                "RECONNAISSANCE",
-                "AUDITOR_LEAD_FOLLOWING",
-                "EXPLOIT_SYNTHESIS",
-                "PROFIT_VALIDATION",
-              ]}
-              metrics={{
-                cost: data.items[0]?.details?.scanCost || "$1.22",
-                successRate:
-                  data.items[0]?.details?.successProbability || "55.88%",
-                threatLevel: parseInt(
-                  data.items[0]?.details?.threatLevel || "85"
-                ),
-              }}
-            />
-          </div>
-        ) : (
-          <div className="flex-1 overflow-hidden pointer-events-auto">
-            {data.layout === "GRID" && renderGrid()}
-            {data.layout === "CAROUSEL" && renderCarousel()}
-            {data.layout === "COMPARISON" && renderComparison()}
-            {data.layout === "LIST" && renderList()}
-            {data.layout === "TIMELINE" && renderTimeline()}
-            {data.layout === "DASHBOARD" && renderDashboard()}
-            {data.layout === "FULLSCREEN" && renderFullscreen()}
-          </div>
-        )}
+        <div className="flex-1 overflow-hidden pointer-events-auto">
+          {data.layout === "GRID" && renderGrid()}
+          {data.layout === "CAROUSEL" && renderCarousel()}
+          {data.layout === "COMPARISON" && renderComparison()}
+          {data.layout === "LIST" && renderList()}
+          {data.layout === "TIMELINE" && renderTimeline()}
+          {data.layout === "DASHBOARD" && renderDashboard()}
+          {data.layout === "FULLSCREEN" && renderFullscreen()}
+        </div>
       </div>
     </div>
   );

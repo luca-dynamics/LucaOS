@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+/* eslint-disable react/no-unknown-property */
+import React, { useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import TaskNode, { NodeStatus } from './TaskNode';
 import ConnectionBeam from './ConnectionBeam';
 
@@ -30,9 +31,6 @@ const ThoughtGraph: React.FC<ThoughtGraphProps> = ({
   const layoutedNodes = useMemo(() => {
     if (!autoLayout) return nodes;
 
-    const rootNodes = nodes.filter(n => !n.parentId);
-    const childNodes = nodes.filter(n => n.parentId);
-    
     const positioned: ThoughtNode[] = [];
     const levelMap = new Map<string, number>();
     const levelCounts = new Map<number, number>();

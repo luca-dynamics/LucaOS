@@ -33,6 +33,29 @@ interface HeaderProps {
   connectionTier?: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
 }
 
+function normalizePersonaDisplay(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value == null) return "ASSISTANT";
+
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (
+      entries.length > 0 &&
+      entries.every(
+        ([key, item]) => /^\d+$/.test(key) && typeof item === "string",
+      )
+    ) {
+      return entries
+        .sort((a, b) => Number(a[0]) - Number(b[0]))
+        .map(([, item]) => item)
+        .join("");
+    }
+  }
+
+  const fallback = String(value).trim();
+  return fallback && fallback !== "[object Object]" ? fallback : "ASSISTANT";
+}
+
 const Header: React.FC<HeaderProps> = ({
   theme,
   persona,
@@ -57,6 +80,7 @@ const Header: React.FC<HeaderProps> = ({
   isLockdown,
   connectionTier = "LOCAL",
 }) => {
+  const personaLabel = normalizePersonaDisplay(persona);
   const credits = useCredits();
 
   return (
@@ -160,11 +184,11 @@ const Header: React.FC<HeaderProps> = ({
                 }`}
               >
                 <span>MODE: </span>
-                {persona === "RUTHLESS"
+                {personaLabel === "RUTHLESS"
                   ? isLockdown
                     ? "LOCKDOWN"
                     : "RUTHLESS"
-                  : persona}
+                  : personaLabel}
               </span>
               <span className="w-1 h-1 rounded-full bg-current animate-pulse"></span>
             </button>

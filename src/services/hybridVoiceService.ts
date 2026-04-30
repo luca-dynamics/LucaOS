@@ -15,6 +15,7 @@ import {
 import { personalityService } from "./personalityService";
 import { settingsService } from "./settingsService";
 import { AudioStreamPlayer } from "./voice/utils/AudioStreamPlayer";
+import type { VoiceSessionRoute } from "./voiceSessionRouter";
 
 export interface HybridVoiceConfig {
   onSpeechStart?: () => void;
@@ -27,6 +28,7 @@ export interface HybridVoiceConfig {
   sttModel?: string;
   llmModel?: string;
   ttsVoice?: string;
+  brainProvider?: string;
   systemPrompt?: string;
 }
 
@@ -60,12 +62,14 @@ class HybridVoiceService {
   private lastWakeWordIntentTime: number = 0;
   private WAKE_WORD_VALIDITY_MS = 10000; // 10s window after "Hi Luca"
   private isSessionActive: boolean = false;
+  private currentStatus = "IDLE";
 
   async connect(options: Partial<HybridVoiceConfig> = {}): Promise<void> {
     if (this.isConnected) return;
     this.config = { ...DEFAULT_CONFIG, ...options };
 
     try {
+      this.currentStatus = "CONNECTING";
       // 1. Initialize AudioContext (Shared Singleton)
       if (!this.audioContext) {
         this.audioContext = new (
@@ -179,6 +183,7 @@ class HybridVoiceService {
       this.vad.start();
       
       this.isConnected = true;
+      this.currentStatus = "CONNECTED";
       this.config.onConnectionChange?.(true);
       this.startAmplitudeMonitoringForStream(vadStream);
 
@@ -187,6 +192,7 @@ class HybridVoiceService {
     } catch (error) {
       console.error("[VOICE] Connection failed:", error);
       this.isConnected = false;
+      this.currentStatus = "ERROR";
       this.config.onConnectionChange?.(false);
       throw error;
     }
@@ -353,6 +359,7 @@ class HybridVoiceService {
       let sentenceBuffer = "";
       const stream = this.brainProvider.chatStream(transcript, {
         model: this.config.llmModel,
+        provider: this.config.brainProvider,
         systemInstruction: this.config.systemPrompt,
         abortSignal: signal,
         useVision: true,
@@ -511,6 +518,7 @@ class HybridVoiceService {
     }
     this.stopPlayback();
     this.isConnected = false;
+    this.currentStatus = "DISCONNECTED";
     this.config.onConnectionChange?.(false);
   }
 
@@ -528,6 +536,24 @@ class HybridVoiceService {
 
   get connected(): boolean {
     return this.isConnected;
+  }
+
+  get status(): string {
+    return this.currentStatus;
+  }
+
+  get routeKind(): VoiceSessionRoute["kind"] | null {
+    return this.config.ttsVoice === "__LOCAL_PIPELINE__"
+      ? "LOCAL_PIPELINE"
+      : "HYBRID_PIPELINE";
+  }
+
+  get canBargeIn(): boolean {
+    return true;
+  }
+
+  get supportsAudioOutput(): boolean {
+    return true;
   }
 }
 

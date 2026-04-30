@@ -1,10 +1,10 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 export const completeOnboardingTool: FunctionDeclaration = {
   name: "completeOnboarding",
   description:
     "Signal that the conversational onboarding process is complete and the user's profile is ready. Use this when the conversation has reached a natural conclusion and all required information has been gathered. Calling this tool will transition the system to the next phase (Calibration).",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const createTaskTool: FunctionDeclaration = {
@@ -12,14 +12,14 @@ export const createTaskTool: FunctionDeclaration = {
   description:
     "Create a new task in the project management queue. Use this when the user implies a goal or future action.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      title: { type: Type.STRING, description: "Short title of the task." },
+      title: { type: SchemaType.STRING, description: "Short title of the task." },
       priority: {
-        type: Type.STRING,
-        enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+        type: SchemaType.STRING,
+        enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"], format: "enum",
       },
-      description: { type: Type.STRING, description: "Detailed description." },
+      description: { type: SchemaType.STRING, description: "Detailed description." },
     },
     required: ["title", "priority"],
   },
@@ -29,12 +29,12 @@ export const updateTaskStatusTool: FunctionDeclaration = {
   name: "updateTaskStatus",
   description: "Update the status of an existing task.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      taskId: { type: Type.STRING, description: "Task ID or Title keyword." },
+      taskId: { type: SchemaType.STRING, description: "Task ID or Title keyword." },
       status: {
-        type: Type.STRING,
-        enum: ["IN_PROGRESS", "COMPLETED", "BLOCKED"],
+        type: SchemaType.STRING,
+        enum: ["IN_PROGRESS", "COMPLETED", "BLOCKED"], format: "enum",
       },
     },
     required: ["taskId", "status"],
@@ -45,11 +45,11 @@ export const translateTextTool: FunctionDeclaration = {
   name: "translateText",
   description: "Translate a text string from one language to another.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      text: { type: Type.STRING, description: "Text to translate." },
+      text: { type: SchemaType.STRING, description: "Text to translate." },
       targetLanguage: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'Target language (e.g., "Spanish", "French", "Japanese").',
       },
     },
@@ -62,11 +62,11 @@ export const visualTacticalUpdateTool: FunctionDeclaration = {
   description:
     "Present a visual tactical update to the user. Use this when major systems change state or when a summary of multiple operations is needed.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      summary: { type: Type.STRING, description: "Executive summary." },
-      status: { type: Type.STRING, enum: ["NORMAL", "ALERT", "CRITICAL"] },
-      data: { type: Type.OBJECT, description: "Tactical data points (JSON)." },
+      summary: { type: SchemaType.STRING, description: "Executive summary." },
+      status: { type: SchemaType.STRING, enum: ["NORMAL", "ALERT", "CRITICAL"], format: "enum" },
+      data: { type: SchemaType.OBJECT, properties: {}, description: "Tactical data points (JSON)." },
     },
     required: ["summary", "status"],
   },
@@ -76,14 +76,14 @@ export const scheduleEventTool: FunctionDeclaration = {
   name: "scheduleEvent",
   description: "Add an event to the calendar.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      title: { type: Type.STRING },
+      title: { type: SchemaType.STRING },
       startTimeISO: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'ISO Date string or "tomorrow at 2pm" (agent infers).',
       },
-      type: { type: Type.STRING, enum: ["MEETING", "DEADLINE", "MAINTENANCE"] },
+      type: { type: SchemaType.STRING, enum: ["MEETING", "DEADLINE", "MAINTENANCE"], format: "enum" },
     },
     required: ["title", "type"],
   },
@@ -94,14 +94,14 @@ export const presentVisualDataTool: FunctionDeclaration = {
   description:
     "ACTIVATE THE VISUAL CORE (SMART SCREEN). Use this for product comparisons, specs, shopping research, or data visualization. This is the ONLY way to show a visual report. usage: call googleImageSearch first. IF IMAGE SEARCH FAILS, USE PLACEHOLDERS. DO NOT RETRY SEARCH ENDLESSLY.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       topic: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The title/topic of the data.",
       },
       type: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         enum: [
           "table",
           "chart",
@@ -136,43 +136,41 @@ export const presentVisualDataTool: FunctionDeclaration = {
           "WHATSAPP",
           "WIRELESS",
           "INGESTION",
-        ],
+        ], format: "enum",
         description: "The type of visualization.",
       },
       layout: {
-        type: Type.STRING,
-        enum: ["GRID", "CAROUSEL", "COMPARISON"],
+        type: SchemaType.STRING,
+        enum: ["GRID", "CAROUSEL", "COMPARISON"], format: "enum",
         description:
           "Layout style. Use 'COMPARISON' for products, 'GRID' for galleries.",
       },
       data: {
-        type: Type.OBJECT,
-        description:
+        type: SchemaType.OBJECT, properties: {}, description:
           "The raw data object (JSON). If type is PRODUCT, this usually contains an 'items' array.",
       },
       items: {
-        type: Type.ARRAY,
+        type: SchemaType.ARRAY,
         items: {
-          type: Type.OBJECT,
+          type: SchemaType.OBJECT,
           properties: {
             title: {
-              type: Type.STRING,
+              type: SchemaType.STRING,
               description: 'Title of the item (e.g., "iPhone 17 Pro").',
             },
             imageUrl: {
-              type: Type.STRING,
+              type: SchemaType.STRING,
               description: "Valid image URL.",
             },
             videoUrl: {
-              type: Type.STRING,
+              type: SchemaType.STRING,
               description: "Optional video URL.",
             },
             details: {
-              type: Type.OBJECT,
-              description: "Key-value pairs for specs.",
+              type: SchemaType.OBJECT, properties: {}, description: "Key-value pairs for specs.",
             },
             source: {
-              type: Type.STRING,
+              type: SchemaType.STRING,
               description: "Source domain.",
             },
           },

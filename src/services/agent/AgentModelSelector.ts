@@ -9,6 +9,7 @@
 
 import type { AgentStep } from "./types";
 import { settingsService } from "../settingsService";
+import { modelManagerService } from "../ModelManagerService";
 
 export interface ModelCapability {
   name: string;
@@ -539,10 +540,8 @@ Strategy:
    * Check if local model is available
    */
   private checkLocalModelAvailable(modelId: string): boolean {
-    // Phase 6: Check ModelManager
-    // For now, assume available if in localStorage
-    const downloaded = localStorage.getItem(`model_${modelId}_status`);
-    return downloaded === "ready";
+    const model = modelManagerService.getModelSpecs(modelId);
+    return model?.status === "ready";
   }
 
   /**

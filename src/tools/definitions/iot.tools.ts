@@ -1,19 +1,19 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 export const scanLocalDevicesTool: FunctionDeclaration = {
   name: "scanLocalDevices",
   description:
     "Scan the local network for connected devices. Returns a list of IP addresses, Hostnames, and open ports. Use this to discover new hardware to control.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       scanType: {
-        type: Type.STRING,
-        enum: ["FAST_DISCOVERY", "FULL_PORT_SCAN"],
+        type: SchemaType.STRING,
+        enum: ["FAST_DISCOVERY", "FULL_PORT_SCAN"], format: "enum",
         description: "FAST: mDNS/UPnP only. FULL: TCP connect scan (slower).",
       },
       targetSubnet: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           "Optional subnet (e.g. '192.168.1.0/24'). Defaults to local.",
       },
@@ -26,15 +26,15 @@ export const researchDeviceProtocolTool: FunctionDeclaration = {
   description:
     "Research how to control a specific device by brand/model. This tool simulates a 'developer search' to find API docs, Curl commands, or libraries.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       brand: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Device brand (e.g. 'Phillips', 'Shelly', 'LG').",
       },
-      model: { type: Type.STRING, description: "Model number or name." },
+      model: { type: SchemaType.STRING, description: "Model number or name." },
       category: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         enum: [
           "LIGHT",
           "SWITCH",
@@ -43,7 +43,7 @@ export const researchDeviceProtocolTool: FunctionDeclaration = {
           "APPLIANCE",
           "TV",
           "SPEAKER",
-        ],
+        ], format: "enum",
       },
     },
     required: ["brand", "category"],
@@ -55,18 +55,18 @@ export const generateDeviceDriverTool: FunctionDeclaration = {
   description:
     "Generate and save a robust control driver for a device. This persists the research into a reusable JSON driver file.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       deviceName: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Friendly name (e.g. 'Kitchen_LEDs').",
       },
       protocol: {
-        type: Type.STRING,
-        enum: ["HTTP", "TCP", "UDP", "MQTT", "BLE"],
+        type: SchemaType.STRING,
+        enum: ["HTTP", "TCP", "UDP", "MQTT", "BLE"], format: "enum",
       },
       definition: {
-        type: Type.STRING, // schema: DeviceDriverDefinition
+        type: SchemaType.STRING, // schema: DeviceDriverDefinition
         description:
           "Stringified JSON definition of the driver (endpoints, payloads, methods).",
       },
@@ -80,23 +80,23 @@ export const executeDeviceCommandTool: FunctionDeclaration = {
   description:
     "Execute a control command on an IoT device. Can use a cached driver OR a raw raw network request.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
-      target: { type: Type.STRING, description: "IP address or Device ID." },
+      target: { type: SchemaType.STRING, description: "IP address or Device ID." },
       command: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "High-level command (e.g. 'TURN_ON', 'SET_COLOR').",
       },
       rawPayload: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Optional: Raw packet data if constructing JIT.",
       },
       protocol: {
-        type: Type.STRING,
-        enum: ["HTTP", "TCP", "UDP", "MQTT"],
+        type: SchemaType.STRING,
+        enum: ["HTTP", "TCP", "UDP", "MQTT"], format: "enum",
         description: "Network transport protocol.",
       },
-      port: { type: Type.NUMBER, description: "Target port." },
+      port: { type: SchemaType.NUMBER, description: "Target port." },
     },
     required: ["target", "command"],
   },

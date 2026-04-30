@@ -30,6 +30,8 @@ import WirelessManager from "./WirelessManager";
 import IngestionModal from "./IngestionModal";
 import SignalVisualizer from "./visual/SignalVisualizer";
 import TacticalStream from "./visual/TacticalStream";
+import { LiquidBackground } from "./visual/LiquidBackground";
+import { SubsystemPulse } from "./visual/SubsystemPulse";
 
 export type VisualCoreMode =
   | "IDLE"
@@ -107,16 +109,26 @@ const VisualCore: React.FC<VisualCoreProps> = ({
   cinemaSourceType = "stream",
   cinemaTitle = "Now Streaming",
   theme,
+  sessionId = "LUCA-CORE",
 }) => {
   const [mode, setMode] = useState<VisualCoreMode>("IDLE");
   const [showCastPicker, setShowCastPicker] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [remoteCommand, setRemoteCommand] = useState<any>(null);
+  const [currentBrowserUrl, setCurrentBrowserUrl] = useState(browserUrl || "");
+
+  // Sovereign Sync States
+  const [syncState, setSyncState] = useState({
+    persona: persona || "ASSISTANT",
+    themeId: "PROFESSIONAL",
+    isSpeaking: false,
+    isThinking: false,
+    amplitude: 0,
+    opacity: 0.85,
+    blur: 20,
+  });
 
   // Derive theme color from persona if not explicitly provided
-  const getPersonaColor = (p: string) => {
-    return PERSONA_UI_CONFIG[p]?.hex || PERSONA_UI_CONFIG.DEFAULT.hex;
-  };
-
   const getContextTheme = (type?: string) => {
     switch (type) {
       case "FINANCE":
@@ -140,9 +152,57 @@ const VisualCore: React.FC<VisualCoreProps> = ({
     }
   };
 
-  const contextColor = getContextTheme(visualData?.type);
+  // Clock Ticker
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // [SOVEREIGN SYNC] Listen for Main App State
+  useEffect(() => {
+    if (!window.electron?.ipcRenderer) return;
+
+    const handleSync = (state: any) => {
+      console.log("[VisualCore] Received Sovereign State Sync:", state);
+      setSyncState((prev) => ({ ...prev, ...state }));
+    };
+
+    const handleVoice = (data: { amplitude: number }) => {
+      setSyncState((prev) => ({ ...prev, amplitude: data.amplitude }));
+    };
+
+    const removeSync = window.electron.ipcRenderer.on("sync-app-state", handleSync);
+    const removeVoice = window.electron.ipcRenderer.on("widget-voice-data", handleVoice);
+
+    const handleRemoteControl = (command: any) => {
+      console.log("[VisualCore] Received Remote Command:", command);
+      
+      if (command.type === "BROWSER_NAVIGATE") {
+        setMode("BROWSER");
+        setCurrentBrowserUrl(command.value);
+      }
+      
+      setRemoteCommand(command);
+      // Auto-clear after a delay if it's a one-shot command
+      if (command.type !== "PERSISTENT") {
+        setTimeout(() => setRemoteCommand(null), 500);
+      }
+    };
+    const removeRemote = window.electron.ipcRenderer.on("visual-core-remote-control", handleRemoteControl);
+
+    return () => {
+      if (removeSync) removeSync();
+      if (removeVoice) removeVoice();
+      if (removeRemote) removeRemote();
+    };
+  }, []);
+
   const themeColor =
-    theme?.hex || contextColor || propThemeColor || getPersonaColor(persona);
+    theme?.hex || 
+    getContextTheme(visualData?.type) || 
+    propThemeColor || 
+    PERSONA_UI_CONFIG[syncState.persona]?.hex || 
+    PERSONA_UI_CONFIG.DEFAULT.hex;
   const isLight =
     themeColor === "#ffffff" ||
     themeColor === "#e2e8f0" ||
@@ -294,29 +354,49 @@ const VisualCore: React.FC<VisualCoreProps> = ({
       return;
     }
 
-    // Default to IDLE if nothing is active
     if (isVisible && !browserUrl && !visualData && !cinemaUrl && !videoStream) {
       setMode("IDLE");
     }
   }, [visualData, browserUrl, isVisible, cinemaUrl, videoStream]);
 
+  // [INTERACTION] Feedback to Brain
+  const handleInteraction = (type: string, details: any) => {
+    if (window.electron?.ipcRenderer) {
+      window.electron.ipcRenderer.send("visual-core-interaction", {
+        type,
+        details,
+        timestamp: Date.now(),
+      });
+    }
+  };
+
   if (!isVisible) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-[150] flex flex-col animate-in fade-in duration-700 border shadow-2xl rounded-xl overflow-hidden glass-blur transition-all duration-500`}
+      className={`fixed inset-0 z-[150] flex flex-col animate-in fade-in duration-700 border shadow-2xl rounded-xl overflow-hidden transition-all duration-500`}
       style={{
         backgroundColor: isLight
-          ? "rgba(255, 255, 255, 0.7)"
-          : "rgba(0, 0, 0, 0.85)",
+          ? `rgba(255, 255, 255, ${syncState.opacity})`
+          : `rgba(0, 0, 0, ${syncState.opacity})`,
         borderColor: isLight
           ? "rgba(0, 0, 0, 0.1)"
           : "rgba(255, 255, 255, 0.15)",
         boxShadow: `0 0 80px -20px ${themeColor}30, inset 0 0 40px ${themeColor}10`,
+        backdropFilter: `blur(${syncState.blur}px)`,
       }}
     >
       {/* Cinematic HUD Background Grain/Noise */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+      {/* LIQUID BACKGROUND SYNC */}
+      <LiquidBackground 
+        color={themeColor}
+        amplitude={syncState.amplitude}
+        isThinking={syncState.isThinking}
+        isSpeaking={syncState.isSpeaking}
+        opacity={0.4}
+      />
 
       {/* GLOBAL SIGNAL VISUALIZER BACKGROUND */}
       <SignalVisualizer
@@ -461,57 +541,56 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
       {/* Main Content Area */}
       <div className="flex-1 relative overflow-hidden flex flex-col items-center justify-center">
-        {/* IDLE SCREEN - Minimalist Clock / Status */}
+        {/* IDLE SCREEN - Subsystem Activity Matrix */}
         <div
           className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-1000 ${
             mode === "IDLE" ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          {/* Subtle Background Pulse / Fluid Glow */}
-          <div
-            className="absolute inset-0 animate-pulse-slow transition-colors duration-1000"
-            style={{
-              background: `radial-gradient(circle at center, ${themeColor}15, transparent 70%)`,
-            }}
-          />
-
-          {/* Ambient Scanning Line */}
-          <div
-            className="absolute w-full h-px opacity-20 animate-scanline"
-            style={{
-              background: `linear-gradient(90deg, transparent, ${themeColor}, transparent)`,
-              top: "50%",
-            }}
-          />
+          <SubsystemPulse color={themeColor} amplitude={syncState.amplitude} />
 
           <div className="text-center z-10 space-y-6">
             <div className="relative inline-block">
               <h1
-                className={`text-8xl font-thin tracking-[0.2em] font-mono transition-colors duration-500 ${isLight ? "text-slate-900" : "text-white"}`}
+                className={`text-8xl font-thin tracking-[0.25em] font-mono transition-colors duration-500 ${isLight ? "text-slate-900" : "text-white"}`}
+                style={{ textShadow: `0 0 30px ${themeColor}40` }}
               >
                 {currentTime.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
+                  second: "2-digit",
                 })}
               </h1>
-              <div className="absolute -top-4 -right-8">
-                <span
-                  className={`text-[10px] font-mono tracking-widest opacity-40 uppercase ${isLight ? "text-slate-900" : "text-white"}`}
-                >
-                  UTC {currentTime.getUTCHours()}:
-                  {currentTime.getUTCMinutes().toString().padStart(2, "0")}
-                </span>
+              <div className="absolute -top-4 -right-12">
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`text-[9px] font-mono tracking-widest opacity-40 uppercase ${isLight ? "text-slate-900" : "text-white"}`}>
+                    NODE_ID: {sessionId.substring(0, 8)}
+                  </span>
+                  <span className={`text-[9px] font-mono tracking-widest opacity-40 uppercase ${isLight ? "text-slate-900" : "text-white"}`}>
+                    UTC {currentTime.getUTCHours()}:{currentTime.getUTCMinutes().toString().padStart(2, "0")}
+                  </span>
+                </div>
               </div>
             </div>
 
             <div
-              className={`flex items-center justify-center gap-4 font-mono text-[9px] tracking-[0.5em] transition-all duration-700 animate-in fade-in slide-in-from-bottom-4`}
+              className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000"
               style={{ color: themeColor }}
             >
-              <div className="w-12 h-px opacity-30 bg-current" />
-              <Icon name="Activity" size={14} className="animate-pulse" />
-              <span className="font-bold">SYSTEM_STABLE // SECURE_CORE</span>
-              <div className="w-12 h-px opacity-30 bg-current" />
+              <div className="flex items-center gap-4 font-mono text-[10px] tracking-[0.5em]">
+                <div className="w-16 h-px opacity-20 bg-current" />
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
+                  <span className="font-bold">CORE_HANDSHAKE: ACTIVE</span>
+                </div>
+                <div className="w-16 h-px opacity-20 bg-current" />
+              </div>
+              
+              <div className="text-[8px] font-mono opacity-40 uppercase tracking-[0.3em] flex gap-6">
+                <span>MEM_ALLOC: OK</span>
+                <span>UPLINK: SECURE</span>
+                <span>LATENCY: 14ms</span>
+              </div>
             </div>
           </div>
         </div>
@@ -534,6 +613,8 @@ const VisualCore: React.FC<VisualCoreProps> = ({
                 glow: `0 0 20px ${themeColor}50`,
               }}
               onClose={onClearData}
+              onInteraction={handleInteraction}
+              remoteCommand={remoteCommand}
             />
           ) : (
             <div className="text-slate-500 font-mono text-sm tracking-widest">
@@ -820,12 +901,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
             <HackingTerminal
               onClose={() => setMode("IDLE")}
               toolLogs={[]}
-              theme={{
-                hex: themeColor,
-                primary: `text-[${themeColor}]`,
-                border: `border-[${themeColor}]`,
-                bg: `bg-[${themeColor}]/10`,
-              }}
+              themeId={persona as any}
             />
           )}
         </div>
@@ -1023,7 +1099,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "BROWSER" && (
             <GhostBrowser
-              url={browserUrl || "https://google.com"}
+              url={currentBrowserUrl || "https://google.com"}
               onClose={() => setMode("IDLE")}
               mode="EMBEDDED"
             />

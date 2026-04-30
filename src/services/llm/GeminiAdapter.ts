@@ -1,40 +1,40 @@
 import { LLMProvider, LLMResponse, ToolCall, ChatMessage } from "./LLMProvider";
-import { getGenClient, setGenClient } from "../genAIClient";
-import { GoogleGenAI } from "@google/genai";
-import { BRAIN_CONFIG } from "../../config/brain.config.ts";
+import { getApiKey, SYSTEM_API_KEY } from "../genAIClient";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { BRAIN_CONFIG } from "../../config/brain.config";
 
 export class GeminiAdapter implements LLMProvider {
   name = "Google Gemini";
-  private client?: GoogleGenAI;
+  private client?: GoogleGenerativeAI;
   private modelName: string = BRAIN_CONFIG.defaults.brain; // Match Backend Config
 
   constructor(apiKey: string, modelName: string = BRAIN_CONFIG.defaults.brain) {
     this.modelName = modelName;
-    // If a key is passed, we use it to initialize a fresh client.
-    // Otherwise we fall back to the singleton via getGenClient() but we must type it.
-
     if (apiKey) {
       console.log(
         `[GeminiAdapter] Initializing with specific key (Length: ${apiKey.length})`,
       );
-      this.client = new GoogleGenAI({ apiKey });
-      setGenClient(this.client);
-    } else {
-      // Lazy Init: Do NOT set `this.client` here.
-      // Let chat() call getGenClient() at runtime when settings are ready.
-      console.log(
-        "[GeminiAdapter] No key provided. Deferring to runtime getGenClient().",
-      );
+      this.client = new GoogleGenerativeAI(apiKey);
     }
+  }
+
+  private getClient(): GoogleGenerativeAI {
+    if (this.client) return this.client;
+    
+    // Instantiate new SDK on the fly since genAIClient returns the old SDK
+    const key = getApiKey() || SYSTEM_API_KEY;
+    if (!key || !key.startsWith("AIza")) {
+        console.warn("[GeminiAdapter] No valid API key found. API calls may fail.");
+    }
+    this.client = new GoogleGenerativeAI(key || "invalid-key");
+    return this.client;
   }
 
   updateConfig(apiKey: string, modelName: string) {
     this.modelName = modelName;
     if (apiKey) {
       try {
-        const client = new GoogleGenAI({ apiKey });
-        setGenClient(client);
-        this.client = client;
+        this.client = new GoogleGenerativeAI(apiKey);
       } catch (e) {
         console.error("Failed to update GenAI config", e);
       }
@@ -42,7 +42,7 @@ export class GeminiAdapter implements LLMProvider {
   }
 
   async generateContent(prompt: string, images?: string[]): Promise<string> {
-    const client = this.client || getGenClient(); // Fallback if undefined
+    const client = this.getClient();
 
     // Construct parts
     const parts: any[] = [{ text: prompt }];
@@ -59,8 +59,8 @@ export class GeminiAdapter implements LLMProvider {
 
     console.log(`[GeminiAdapter] Generating content with model: ${this.modelName}`);
     try {
-      const result = await (client.models as any).generateContent({
-        model: this.modelName,
+      const model = client.getGenerativeModel({ model: this.modelName });
+      const result = await model.generateContent({
         contents: [{ role: "user", parts }],
         generationConfig: {
           maxOutputTokens: 1024,
@@ -69,7 +69,7 @@ export class GeminiAdapter implements LLMProvider {
       });
 
       // SDK fallback: check both .text and .response.text()
-      const text = result.text || (result.response && typeof result.response.text === 'function' ? result.response.text() : "");
+      const text = result.response.text();
       
       console.log(`[GeminiAdapter] Generated response length: ${text.length}`);
       if (text.length < 20) {
@@ -86,15 +86,15 @@ export class GeminiAdapter implements LLMProvider {
     prompt: string,
     onToken: (text: string) => void,
   ): Promise<string> {
-    const client = this.client || getGenClient();
-    const result = await client.models.generateContentStream({
-      model: this.modelName,
+    const client = this.getClient();
+    const model = client.getGenerativeModel({ model: this.modelName });
+    const result = await model.generateContentStream({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
     let fullText = "";
-    for await (const chunk of result) {
-      const text = chunk.text;
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
       if (text) {
         fullText += text;
         onToken(text);
@@ -111,7 +111,7 @@ export class GeminiAdapter implements LLMProvider {
     tools?: any[],
     abortSignal?: AbortSignal,
   ): Promise<LLMResponse> {
-    const client = this.client || getGenClient();
+    const client = this.getClient();
 
     // Map history to Google GenAI format (V1 Beta)
     const contents: any[] = [];
@@ -167,17 +167,18 @@ export class GeminiAdapter implements LLMProvider {
       }
     });
 
-    const stream = await client.models.generateContentStream({
+    const model = client.getGenerativeModel({
       model: this.modelName,
-      contents: contents,
-      config: {
-        systemInstruction: systemInstruction
-          ? { parts: [{ text: systemInstruction }] }
+      systemInstruction: systemInstruction ? { role: "system", parts: [{ text: systemInstruction }] } : undefined,
+      tools:
+        tools && tools.length > 0
+          ? [{ functionDeclarations: tools }]
           : undefined,
-        tools:
-          tools && tools.length > 0
-            ? [{ functionDeclarations: tools }]
-            : undefined,
+    });
+
+    const stream = await model.generateContentStream({
+      contents: contents,
+      generationConfig: {
         temperature: 0.7,
       },
     });
@@ -187,7 +188,7 @@ export class GeminiAdapter implements LLMProvider {
     let thought_signature = "";
     const toolCalls: ToolCall[] = [];
 
-    for await (const chunk of stream) {
+    for await (const chunk of stream.stream) {
       if (abortSignal?.aborted) break;
 
       // 1. Extract Thoughts
@@ -204,16 +205,16 @@ export class GeminiAdapter implements LLMProvider {
       }
 
       // 2. Extract Function Calls
-      const calls = chunk.functionCalls;
+      const calls = chunk.functionCalls();
       if (calls && calls.length > 0) {
         toolCalls.push(
-          ...calls.map((c: any) => ({ name: c.name, args: c.args, id: c.id })),
+          ...calls.map((c: any) => ({ name: c.name, args: c.args })),
         );
       }
 
       // 3. Extract Text
       try {
-        const text = chunk.text;
+        const text = chunk.text();
         if (text) {
           fullText += text;
           onChunk(text);
@@ -237,7 +238,7 @@ export class GeminiAdapter implements LLMProvider {
     systemInstruction?: string,
     tools?: any[],
   ): Promise<LLMResponse> {
-    const client = this.client || getGenClient();
+    const client = this.getClient();
 
     // Map history to Google GenAI format (V1 Beta)
     // CRITICAL: Group consecutive role: 'tool' messages into a single function role message
@@ -312,35 +313,34 @@ export class GeminiAdapter implements LLMProvider {
       }
     });
 
-    const config: any = {
+    const model = client.getGenerativeModel({
       model: this.modelName,
+      systemInstruction: systemInstruction ? { role: "system", parts: [{ text: systemInstruction }] } : undefined,
+      tools:
+        tools && tools.length > 0
+          ? [{ functionDeclarations: tools }]
+          : undefined,
+    });
+
+    // Stateless call - clearer and often more robust
+    const result = await model.generateContent({
       contents: contents,
       generationConfig: {
         temperature: 0.7,
       },
-    };
-
-    if (systemInstruction) {
-      config.systemInstruction = { parts: [{ text: systemInstruction }] };
-    }
-
-    if (tools && tools.length > 0) {
-      config.tools = [{ functionDeclarations: tools }];
-    }
-
-    // Stateless call - clearer and often more robust
-    const result = await client.models.generateContent(config);
-    const text = result.text || "";
+    });
+    const response = result.response;
+    const text = response.text() || "";
 
     // Handle function calls
-    const calls = result.functionCalls;
+    const calls = response.functionCalls();
 
     let thought: string | undefined;
     let thought_signature: string | undefined;
 
     // Extract thoughts and signatures from parts
-    if (result.candidates?.[0]?.content?.parts) {
-      for (const part of result.candidates[0].content.parts) {
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
         if ("thought" in part && (part as any).thought) {
           thought = (part as any).thought;
         }
@@ -362,14 +362,10 @@ export class GeminiAdapter implements LLMProvider {
   }
 
   async embed(text: string): Promise<number[]> {
-    const client = this.client || getGenClient();
+    const client = this.getClient();
     try {
-      // Reverting to the exact GitHub pattern confirmed by user.
-      const result = await (client.models as any).embedContent({
-        model: "embedding-001", // Reverted to high-availability stable model (004 was 404ing)
-        contents: [{ parts: [{ text }] }], // NEW SDK (plural)
-        taskType: "RETRIEVAL_QUERY",
-      });
+      const model = client.getGenerativeModel({ model: "gemini-embedding-001" });
+      const result = await model.embedContent(text);
       return result.embedding?.values || [];
     } catch (e) {
       console.error("[GeminiAdapter] Embedding failed:", e);
@@ -378,7 +374,7 @@ export class GeminiAdapter implements LLMProvider {
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
-    const client = this.client || getGenClient();
+    const client = this.getClient();
     try {
       const requests = texts.map((text) => ({
         content: { parts: [{ text }] },
@@ -386,7 +382,7 @@ export class GeminiAdapter implements LLMProvider {
       }));
       // Some versions of the GenAI SDK expect the object with requests directly on the client.models
       // While others expect them on the specific model object. We use the most robust approach.
-      const result = await (client as any).getGenerativeModel({ model: "embedding-001" }).batchEmbedContents({
+      const result = await (client as any).getGenerativeModel({ model: "gemini-embedding-001" }).batchEmbedContents({
         requests,
       });
       return (result.embeddings || []).map((e: any) => e.values || []);
@@ -397,17 +393,15 @@ export class GeminiAdapter implements LLMProvider {
   }
   
   async validateKey(): Promise<{ valid: boolean; message: string; details?: any }> {
-    const client = this.client || getGenClient();
+    const client = this.getClient();
     try {
-      // Use a minimal model list call to verify the key without generating tokens
-      // Stick to the pattern used in the rest of the file (client.models)
-      const result = await (client.models as any).generateContent({
-        model: "gemini-1.5-flash",
+      const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent({
         contents: [{ role: "user", parts: [{ text: "ping" }] }],
         generationConfig: { maxOutputTokens: 1 },
       });
       
-      if (result) {
+      if (result.response.text()) {
         return { valid: true, message: "Gemini API key is valid." };
       }
       return { valid: false, message: "Gemini API returned an empty response." };

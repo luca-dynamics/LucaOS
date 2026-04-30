@@ -15,25 +15,15 @@ interface ModeSelectProps {
  * Theme-aware with support for light and dark modes
  */
 const ModeSelect: React.FC<ModeSelectProps> = ({ onSelect, isLightTheme }) => {
-  const iconColor = "var(--app-text-main)";
-
   return (
-    <div
-      className="animate-fade-in-up w-full flex flex-col items-center"
-      style={{ gap: "4vmin" }}
-    >
+    <div className="space-y-4 sm:space-y-8 animate-fade-in-up w-full max-w-2xl px-4 sm:px-0">
       {/* Luca's message */}
-      <div
-        className="text-center flex flex-col items-center"
-        style={{ gap: "2vmin" }}
-      >
+      <div className="text-center space-y-2 sm:space-y-3">
         {/* Icon - Hidden on mobile for more compact view */}
-        <div className="hidden sm:flex justify-center">
+        <div className="hidden sm:flex justify-center mb-4">
           <div
-            className="rounded-full border glass-blur flex items-center justify-center transition-all"
+            className="w-16 h-16 rounded-full border glass-blur flex items-center justify-center transition-all"
             style={{
-              width: "clamp(3rem, 10vmin, 4.5rem)",
-              height: "clamp(3rem, 10vmin, 4.5rem)",
               borderColor: "var(--app-border-main)",
               backgroundColor: "var(--app-bg-tint)",
             }}
@@ -41,43 +31,28 @@ const ModeSelect: React.FC<ModeSelectProps> = ({ onSelect, isLightTheme }) => {
             <Icon
               name="ChatRoundDots"
               variant="Linear"
-              style={{
-                width: "clamp(1.5rem, 5vmin, 2.25rem)",
-                height: "clamp(1.5rem, 5vmin, 2.25rem)",
-                color: iconColor,
-              }}
+              className="w-8 h-8"
+              style={{ color: "var(--app-text-main)" }}
             />
           </div>
         </div>
-
-        <div className="flex flex-col" style={{ gap: "1.5vmin" }}>
-          <h1
-            className="font-bold tracking-widest uppercase transition-colors"
-            style={{
-              fontSize: "clamp(1rem, 4.5vmin, 1.8rem)",
-              color: "var(--app-text-main)",
-            }}
-          >
-            How would you like to talk to LUCA?
-          </h1>
-          <p
-            className="transition-colors opacity-80"
-            style={{
-              fontSize: "clamp(0.6rem, 2.2vmin, 0.9rem)",
-              color: "var(--app-text-muted)",
-            }}
-          >
-            Let&apos;s get to know each other. Choose your preferred way to
-            communicate.
-          </p>
-        </div>
+        <h1
+          className="text-xl sm:text-2xl font-bold tracking-widest uppercase"
+          style={{ color: "var(--app-text-main)" }}
+        >
+          How would you like to talk?
+        </h1>
+        <p
+          className="text-xs sm:text-sm"
+          style={{ color: "var(--app-text-muted)" }}
+        >
+          Let&apos;s get to know each other. Choose your preferred way to
+          communicate.
+        </p>
       </div>
 
       {/* Mode cards */}
-      <div
-        className="grid grid-cols-1 sm:grid-cols-2 w-full max-w-2xl mx-auto"
-        style={{ gap: "clamp(1rem, 4vmin, 3rem)" }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <ModeCard
           iconName="ChatRoundDots"
           title="TEXT"
@@ -93,25 +68,14 @@ const ModeSelect: React.FC<ModeSelectProps> = ({ onSelect, isLightTheme }) => {
       </div>
 
       <div
-        className="text-center rounded-[1.5vmin] glass-blur max-w-lg mx-auto flex items-center justify-center transition-all duration-300"
+        className="text-center text-xs rounded-lg px-4 py-2 glass-blur border transition-all duration-300"
         style={{
-          padding: "1.5vmin 3vmin",
-          fontSize: "clamp(0.5rem, 1.5vmin, 0.75rem)",
-          gap: "1vmin",
           color: "var(--app-text-muted)",
           backgroundColor: "var(--app-bg-tint)",
-          border: "1px solid var(--app-border-main)",
+          borderColor: "var(--app-border-main)",
         }}
       >
-        <Icon
-          name="Lightbulb"
-          size={12}
-          style={{ color: iconColor }}
-          variant="Linear"
-        />
-        <span>
-          You can switch between text and voice anytime during our conversation
-        </span>
+        You can switch between text and voice anytime during our conversation
       </div>
     </div>
   );

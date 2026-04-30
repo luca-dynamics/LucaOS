@@ -130,7 +130,7 @@ export class LocalLLMAdapter implements LLMProvider {
       history.forEach((msg) => {
         messages.push({
           role: msg.role === "model" ? "assistant" : msg.role,
-          content: msg.content,
+          content: msg.content || " ", // Ollama 400s on empty content
         });
       });
 
@@ -180,15 +180,21 @@ export class LocalLLMAdapter implements LLMProvider {
         console.warn("[Local Adapter] Tag resolution failed, using ID:", e);
       }
 
+      const requestBody: any = {
+        model: modelTag,
+        messages: messages,
+        temperature: 0.7,
+      };
+
+      // Only include tools if they are actually present to avoid Ollama 400s
+      if (backendTools && backendTools.length > 0) {
+        requestBody.tools = backendTools;
+      }
+
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: modelTag, // Pass the tag Ollama expects
-          messages: messages,
-          tools: backendTools,
-          temperature: 0.7,
-        }),
+        body: JSON.stringify(requestBody),
         signal: AbortSignal.timeout(120_000), 
       });
 
@@ -276,7 +282,7 @@ export class LocalLLMAdapter implements LLMProvider {
       history.forEach((msg) => {
         messages.push({
           role: msg.role === "model" ? "assistant" : msg.role,
-          content: msg.content,
+          content: msg.content || " ", // Ollama 400s on empty content
         });
       });
 
@@ -322,18 +328,23 @@ export class LocalLLMAdapter implements LLMProvider {
           }))
         : undefined;
 
+      const requestBody: any = {
+        model: modelTag,
+        messages: messages,
+        stream: true,
+        temperature: 0.7,
+      };
+
+      if (backendTools && backendTools.length > 0) {
+        requestBody.tools = backendTools;
+      }
+
       // 4. Request with stream: true
       let response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: abortSignal,
-        body: JSON.stringify({
-          model: modelTag,
-          messages: messages,
-          tools: backendTools,
-          stream: true, // ENABLE STREAMING
-          temperature: 0.7,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       // FALLBACK: If streaming fails (500/400), try non-streaming
@@ -341,16 +352,11 @@ export class LocalLLMAdapter implements LLMProvider {
         console.warn(
           `[Local Adapter] Streaming failed (${response.status}), falling back to blocking...`,
         );
+        requestBody.stream = false;
         response = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: modelTag,
-            messages: messages,
-            tools: backendTools,
-            stream: false, // DISABLE STREAMING
-            temperature: 0.7,
-          }),
+          body: JSON.stringify(requestBody),
         });
       }
 

@@ -65,7 +65,7 @@ echo "[BOOT] [PROGRESS:30] Optimizing package manager (pip)..."
 # 6. Install Dependencies
 if [ "$1" == "--full" ]; then
     echo "[BOOT] [PROGRESS:40] Stage 1: Core System Utilities..."
-    "$VENV_DIR/bin/pip" install python-multipart fastapi uvicorn networkx "numpy<2" flask-cors google-genai google-generativeai python-dotenv pyautogui websockets requests nest_asyncio
+    "$VENV_DIR/bin/pip" install python-multipart fastapi uvicorn networkx "numpy<2" flask-cors google-genai google-generativeai python-dotenv pyautogui websockets requests nest_asyncio lightrag-h3
     
     echo "[BOOT] [PROGRESS:50] Stage 2: Neural Foundation (Torch & Transformers)..."
     "$VENV_DIR/bin/pip" install torch transformers accelerate bitsandbytes huggingface_hub

@@ -38,8 +38,8 @@ export const useSatelliteState = (
     try {
       // Use settingService as the single source of truth
       const theme = settingsService.get("general")?.theme;
-      const brain = settingsService.get("general")?.activeBrainId;
-      const embedding = settingsService.get("general")?.embeddingModel;
+      const brain = settingsService.get("general")?.activeBrainId || undefined;
+      const embedding = settingsService.get("brain")?.embeddingModel || undefined;
       if (theme) {
         persona = theme as PersonaType;
       }
@@ -72,9 +72,9 @@ export const useSatelliteState = (
       if (newSettings.general?.theme) {
         setState((prev) => ({
           ...prev,
-          persona: newSettings.general.theme as PersonaType,
+          persona: (newSettings.general.persona as PersonaType) || prev.persona,
           brainModel: newSettings.general.activeBrainId || prev.brainModel,
-          embeddingModel: newSettings.general.embeddingModel || prev.embeddingModel,
+          embeddingModel: newSettings.brain?.embeddingModel || prev.embeddingModel,
         }));
       }
     };

@@ -1,4 +1,4 @@
-import { Type } from "@google/genai";
+import { SchemaType } from "@google/generative-ai";
 
 // Brave Search API Integration
 // Ingested from: https://github.com/Klavis-AI/klavis/tree/main/mcp_servers/brave_search
@@ -10,15 +10,15 @@ export const tools = [
     description:
       "Perform a web search using Brave Search API. Returns text results.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
-        query: { type: Type.STRING, description: "The search query." },
+        query: { type: SchemaType.STRING, description: "The search query." },
         count: {
-          type: Type.NUMBER,
+          type: SchemaType.NUMBER,
           description: "Number of results (1-20). Default 10.",
         },
         safesearch: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           enum: ["off", "moderate", "strict"],
           description: "Safe search setting.",
         },
@@ -30,10 +30,10 @@ export const tools = [
     name: "brave_image_search",
     description: "Perform an image search using Brave Search API.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
-        query: { type: Type.STRING, description: "The search query." },
-        count: { type: Type.NUMBER, description: "Number of results." },
+        query: { type: SchemaType.STRING, description: "The search query." },
+        count: { type: SchemaType.NUMBER, description: "Number of results." },
       },
       required: ["query"],
     },

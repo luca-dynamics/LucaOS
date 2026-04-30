@@ -1,14 +1,14 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 export const aiQueryTool: FunctionDeclaration = {
   name: "aiQuery",
   description:
     "Ask a natural language question about the visual state of the screen. Returns a text answer based on visual analysis. Use this when you need to understand the screen but coordinates aren't enough.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'Question to ask (e.g. "What is the status of the order?").',
       },
@@ -22,10 +22,10 @@ export const aiBooleanTool: FunctionDeclaration = {
   description:
     "Check if a visual condition is true or false on the screen. Returns a boolean. Use this for conditional logic based on visual state.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       condition: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'Condition to check (e.g. "is the login button visible?").',
       },
@@ -39,15 +39,15 @@ export const aiAssertTool: FunctionDeclaration = {
   description:
     "Assert that a visual condition is true on the screen. If false, the task will fail with the provided reason. Use this for validation steps.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       assertion: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'What to assert (e.g. "the payment successful message is shown").',
       },
       reason: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Message to show if the assertion fails.",
       },
     },
@@ -60,10 +60,10 @@ export const aiLocateTool: FunctionDeclaration = {
   description:
     "Locate a UI element on the screen using a natural language description. Returns coordinates (x, y) and bounding box. This is the most robust way to find elements.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       description: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'Description of the element (e.g. "the red close button").',
       },
@@ -77,15 +77,15 @@ export const aiWaitForTool: FunctionDeclaration = {
   description:
     "Wait for a visual condition to become true on the screen. Times out if not met within the limit.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       condition: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description:
           'Condition to wait for (e.g. "the loading spinner disappears").',
       },
       timeout: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: "Timeout in milliseconds (default 5000).",
       },
     },
@@ -98,10 +98,10 @@ export const aiActTool: FunctionDeclaration = {
   description:
     "Perform a natural language action on the screen. Use this for high-level UI automation steps that involve visual reasoning.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       action: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'Action to perform (e.g. "log in using my credentials").',
       },
     },

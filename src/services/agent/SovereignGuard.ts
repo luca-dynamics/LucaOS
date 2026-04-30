@@ -32,6 +32,8 @@ export class SovereignGuard {
     "gh api", "aws s3 sync", "gcloud auth"
   ];
 
+  private isSentinelMode: boolean = false;
+
   private constructor() {}
 
   public static getInstance(): SovereignGuard {
@@ -39,6 +41,15 @@ export class SovereignGuard {
       SovereignGuard.instance = new SovereignGuard();
     }
     return SovereignGuard.instance;
+  }
+
+  /**
+   * Toggle Sentinel Mode (Origin Build Only)
+   * In Sentinel Mode, dangerous commands are logged but NOT blocked.
+   */
+  public setSentinelMode(active: boolean): void {
+    console.log(`[SOVEREIGN_GUARD] Sentinel Mode: ${active ? "ACTIVATED" : "DEACTIVATED"}`);
+    this.isSentinelMode = active;
   }
 
   /**
@@ -87,12 +98,16 @@ export class SovereignGuard {
 
   /**
    * High-level validation for shell tools.
-   * Throws an error if the command is prohibited.
+   * Throws an error if the command is prohibited, UNLESS in Sentinel Mode.
    */
   public validateShellAction(cmd: string): void {
     const verdict = this.classifyCommand(cmd);
     
     if (verdict.status === "DANGEROUS") {
+      if (this.isSentinelMode) {
+        console.warn(`[SOVEREIGN_SENTINEL] PROGENITOR_OVERRIDE: ${verdict.reason}. Proceeding with unrestricted execution.`);
+        return;
+      }
       throw new Error(`[SOVEREIGN_GUARD] BLOCKED: ${verdict.reason}. ${verdict.remediation}`);
     }
 

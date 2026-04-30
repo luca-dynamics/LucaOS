@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { BRAIN_CONFIG } from "../config/brain.config.ts";
+import { BRAIN_CONFIG } from "../config/brain.config";
 import {
   ToneStyleId,
   ToneDimensions,
@@ -45,8 +45,8 @@ export interface LucaSettings {
     experimentalMode: boolean;
     fontScale?: number;
     fontFamily?: string;
-    activeBrainId: string;
-    embeddingModel: string;
+    activeBrainId: string | null;
+    activeEmbedId?: string | null;
   };
   brain: {
     useCustomApiKey: boolean;
@@ -60,6 +60,8 @@ export interface LucaSettings {
     xaiBaseUrl?: string; // Appended for Dev Cloud Support
     deepseekApiKey: string; // New
     deepseekBaseUrl?: string; // Appended for Dev Cloud Support
+    groqApiKey: string; // New
+    groqBaseUrl?: string; // Appended for Dev Cloud Support
     model: string;
     provider: "local-luca" | "cloud-managed" | "byok";
     voiceModel: string;
@@ -70,6 +72,7 @@ export interface LucaSettings {
     preferOllama: boolean; // Global local routing priority
     conversationMode: "fast" | "planning"; // Universal LUCA Orchestration State
     activePluginId: string | null; // Currently active power-up bundle/mode
+    embeddingModel: string; // New: Centralized embedding model ID
   };
   memory: {
     provider: "local-luca" | "gemini-genai" | "openai";
@@ -213,7 +216,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     fontScale: 1.0,
     fontFamily: '"Inter", system-ui, sans-serif',
     activeBrainId: BRAIN_CONFIG.defaults.brain,
-    embeddingModel: BRAIN_CONFIG.defaults.memory,
+    activeEmbedId: BRAIN_CONFIG.defaults.memory,
   },
   hardwareSanitized: true, // New installs are sanitized by default
   v1betaMigrationComplete: true, // New installs use current defaults
@@ -233,6 +236,8 @@ const DEFAULT_SETTINGS: LucaSettings = {
     xaiApiKey: "",
     xaiBaseUrl: "",
     deepseekApiKey: "",
+    groqApiKey: "",
+    groqBaseUrl: "https://api.groq.com/openai/v1",
     model: BRAIN_CONFIG.defaults.brain,
     provider: "local-luca",
     voiceModel: BRAIN_CONFIG.defaults.voice,
@@ -243,6 +248,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     preferOllama: true, // Default to true for Privacy-by-Default
     conversationMode: "fast", // Default to conversational fast mode
     activePluginId: null, // No active plugin by default
+    embeddingModel: BRAIN_CONFIG.defaults.memory,
   },
   memory: {
     provider: "local-luca",
@@ -334,6 +340,7 @@ class SettingsService extends EventEmitter {
 
   constructor() {
     super();
+    this.setMaxListeners(50); // Increase limit for complex UI synchronization
     this.settings = DEFAULT_SETTINGS; // Initial placeholder
     this.initialize();
   }
@@ -678,8 +685,8 @@ class SettingsService extends EventEmitter {
       console.log("[SETTINGS] Saved to Storage (Sensitive data encrypted).");
 
       // Sync embedding model selection with Cortex backend when it changes
-      if (newSettings.general?.embeddingModel) {
-        this.syncEmbeddingModel(newSettings.general.embeddingModel);
+      if (newSettings.brain?.embeddingModel) {
+        this.syncEmbeddingModel(newSettings.brain.embeddingModel);
       }
 
       // Sync MCP settings with Cortex backend when they change
@@ -880,6 +887,7 @@ class SettingsService extends EventEmitter {
         "llama-3.2-1b",
         "smollm2-1.7b",
         "qwen-2.5-7b",
+        "qwen-3.6-27b",
         "deepseek-r1-distill-7b",
       ].includes(settings.brain.model);
 
@@ -918,6 +926,7 @@ class SettingsService extends EventEmitter {
         "llama-3.2-1b",
         "smollm2-1.7b",
         "qwen-2.5-7b",
+        "qwen-3.6-27b",
         "deepseek-r1-distill-7b",
         "smolvlm-500m",
         "ui-tars-2b",
@@ -929,7 +938,7 @@ class SettingsService extends EventEmitter {
    * Check if the user has configured valid API keys for peer cloud providers
    */
   public hasValidCloudKeys(
-    provider?: "openai" | "anthropic" | "gemini" | "xai" | "deepseek",
+    provider?: "openai" | "anthropic" | "gemini" | "xai" | "deepseek" | "groq",
   ): boolean {
     const { brain } = this.settings;
     if (provider) {
@@ -940,6 +949,8 @@ class SettingsService extends EventEmitter {
           return (
             !!brain.anthropicApiKey && brain.anthropicApiKey !== "[SECURED]"
           );
+        case "groq":
+          return !!brain.groqApiKey && brain.groqApiKey !== "[SECURED]";
         case "gemini":
           return !!brain.geminiApiKey && brain.geminiApiKey !== "[SECURED]";
         case "xai":

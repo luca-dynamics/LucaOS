@@ -4,6 +4,7 @@ import { apiUrl, cortexUrl } from "../config/api";
 import { LOCAL_EMBEDDING_MODEL_IDS } from "./ModelManagerService";
 import { BRAIN_CONFIG } from "../config/brain.config";
 import { eventBus } from "./eventBus";
+import { creditService } from "./creditService";
 
 // API Key sourced from environment variable
 // For Vite/browser: VITE_API_KEY, For Node.js: API_KEY
@@ -365,7 +366,7 @@ export const memoryService = {
             model: memoryModel,
             localOnly: true, // If we are in the local path, we want to enforce privacy
           }),
-          signal: AbortSignal.timeout(15000), // 15s for local processing
+          signal: AbortSignal.timeout(30000), // 30s for local processing (Essential for Intel Mac)
         });
 
         if (response.ok) {
@@ -393,10 +394,8 @@ export const memoryService = {
       
       // Legacy fallback just in case
       const ai = getGenClient();
-      const result = await (ai.models as any).embedContent({
-        model: "gemini-embedding-001", // Use stable high-availability model
-        content: { parts: [{ text }] },
-      });
+      const model = ai.getGenerativeModel({ model: "gemini-embedding-001" });
+      const result = await model.embedContent(text);
       return result.embedding?.values || [];
     } catch (e: any) {
       if (
@@ -794,14 +793,14 @@ export const memoryService = {
       // The Node server mounts root routes at /api/ (e.g., /api/health)
       const gatewayUrl = apiUrl("/api/health");
       const gatewayRes = await fetch(gatewayUrl, {
-        signal: AbortSignal.timeout(3000),
+        signal: AbortSignal.timeout(10000), // Increased to 10s for Intel Mac
       });
       if (gatewayRes.ok) return true;
 
       // 2. Fallback to direct Cortex port if gateway is bypassed
       const url = await this.getCortexUrl();
       const res = await fetch(`${url}/health`, {
-        signal: AbortSignal.timeout(2000),
+        signal: AbortSignal.timeout(10000), // Increased to 10s for Intel Mac
       });
       return res.ok;
     } catch {
@@ -817,7 +816,7 @@ export const memoryService = {
       const url = await this.getCortexUrl();
       const res = await fetch(`${url}/health`, {
         method: "GET",
-        signal: AbortSignal.timeout(5000), // Increased to 5s
+        signal: AbortSignal.timeout(10000), // Increased to 10s for Intel Mac
       });
       if (res.ok) {
         const data = await res.json();
@@ -892,8 +891,14 @@ export const memoryService = {
           text: taggedText,
           model: memoryModel,
         }),
-        signal: AbortSignal.timeout(30000), // Increased to 30s
+        signal: AbortSignal.timeout(120000), // Increased to 120s (2m) for heavy background indexing load
       });
+      
+      if (res.ok) {
+        // Track background intelligence cost
+        const cost = creditService.estimateCost("INDEXING");
+        creditService.spend(cost, `Memory Ingestion: ${category || "General"}`, true);
+      }
 
       if (!res.ok) {
         const errorText = await res.text().catch(() => "Unknown error");
@@ -939,7 +944,7 @@ export const memoryService = {
           mode: "hybrid",
           model: settings?.model || BRAIN_CONFIG.defaults.brain,
         }),
-        signal: AbortSignal.timeout(30000), // Increased to 30s
+        signal: AbortSignal.timeout(120000), // Increased to 120s (2m)
       });
 
       if (!res.ok) {

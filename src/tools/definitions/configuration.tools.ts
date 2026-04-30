@@ -1,10 +1,10 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 
 export const getSystemSettingsTool: FunctionDeclaration = {
   name: "getSystemSettings",
   description:
     "Retrieve the current system configuration for LUCA, including brain models, voice providers, personality modes, IoT settings, and connection status. Use this to understand your current capabilities and configuration.",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const updateSystemSettingsTool: FunctionDeclaration = {
@@ -12,128 +12,126 @@ export const updateSystemSettingsTool: FunctionDeclaration = {
   description:
     "Update LUCA's system configuration across any category (Brain, Voice, IoT, Privacy, etc.). Use this to adapt LUCA to user commands or environment changes. Only provide the specific fields that need updating.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       general: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          userName: { type: Type.STRING },
+          userName: { type: SchemaType.STRING },
           agencyLevel: {
-            type: Type.STRING,
-            enum: ["PASSIVE", "PROACTIVE", "EXECUTIVE"],
+            type: SchemaType.STRING,
+            enum: ["PASSIVE", "PROACTIVE", "EXECUTIVE"], format: "enum",
           },
           persona: {
-            type: Type.STRING,
+            type: SchemaType.STRING,
             description: "Persona mode (ASSISTANT, RUTHLESS, ENGINEER, HACKER)",
           },
           theme: {
-            type: Type.STRING,
-            enum: ["PROFESSIONAL", "TACTICAL", "MINIMALIST", "CYBERPUNK"],
+            type: SchemaType.STRING,
+            enum: ["PROFESSIONAL", "TACTICAL", "MINIMALIST", "CYBERPUNK"], format: "enum",
           },
-          preferredMode: { type: Type.STRING, enum: ["text", "voice"] },
-          backgroundBlur: { type: Type.NUMBER, description: "Background blur intensity in pixels (e.g., 12)" },
-          backgroundOpacity: { type: Type.NUMBER, description: "Background opacity (0.0 to 1.0)" },
-          syncThemeWithPersona: { type: Type.BOOLEAN },
+          preferredMode: { type: SchemaType.STRING, enum: ["text", "voice"], format: "enum" },
+          backgroundBlur: { type: SchemaType.NUMBER, description: "Background blur intensity in pixels (e.g., 12)" },
+          backgroundOpacity: { type: SchemaType.NUMBER, description: "Background opacity (0.0 to 1.0)" },
+          syncThemeWithPersona: { type: SchemaType.BOOLEAN },
         },
       },
       brain: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          model: { type: Type.STRING, description: "Main LLM model ID" },
+          model: { type: SchemaType.STRING, description: "Main LLM model ID" },
           voiceModel: {
-            type: Type.STRING,
+            type: SchemaType.STRING,
             description: "Native audio model for voice",
           },
           visionModel: {
-            type: Type.STRING,
+            type: SchemaType.STRING,
             description: "Multimodal model for vision",
           },
-          temperature: { type: Type.NUMBER },
-          preferOllama: { type: Type.BOOLEAN },
+          temperature: { type: SchemaType.NUMBER },
+          preferOllama: { type: SchemaType.BOOLEAN },
         },
       },
       voice: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
           provider: {
-            type: Type.STRING,
-            enum: ["native", "google", "local-luca", "gemini-genai", "openai", "deepgram"],
+            type: SchemaType.STRING,
+            enum: ["native", "google", "local-luca", "gemini-genai", "openai", "deepgram"], format: "enum",
           },
-          voiceId: { type: Type.STRING, description: "Specific voice ID or speaker profile name" },
-          rate: { type: Type.NUMBER },
-          pitch: { type: Type.NUMBER },
+          voiceId: { type: SchemaType.STRING, description: "Specific voice ID or speaker profile name" },
+          rate: { type: SchemaType.NUMBER },
+          pitch: { type: SchemaType.NUMBER },
           pacing: {
-            type: Type.STRING,
-            enum: ["Fast", "Normal", "Slow", "Dramatic"],
+            type: SchemaType.STRING,
+            enum: ["Fast", "Normal", "Slow", "Dramatic"], format: "enum",
           },
         },
       },
       iot: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          haUrl: { type: Type.STRING, description: "Home Assistant URL" },
+          haUrl: { type: SchemaType.STRING, description: "Home Assistant URL" },
           haToken: {
-            type: Type.STRING,
+            type: SchemaType.STRING,
             description: "Home Assistant Access Token",
           },
         },
       },
       lucaLink: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          enabled: { type: Type.BOOLEAN },
+          enabled: { type: SchemaType.BOOLEAN },
           connectionMode: {
-            type: Type.STRING,
-            enum: ["auto", "local", "vpn", "relay"],
+            type: SchemaType.STRING,
+            enum: ["auto", "local", "vpn", "relay"], format: "enum",
           },
-          relayServerUrl: { type: Type.STRING },
-          vpnServerUrl: { type: Type.STRING },
+          relayServerUrl: { type: SchemaType.STRING },
+          vpnServerUrl: { type: SchemaType.STRING },
         },
       },
       agentMode: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          enabled: { type: Type.BOOLEAN },
-          maxIterations: { type: Type.NUMBER },
-          autoApprove: { type: Type.BOOLEAN },
+          enabled: { type: SchemaType.BOOLEAN },
+          maxIterations: { type: SchemaType.NUMBER },
+          autoApprove: { type: SchemaType.BOOLEAN },
         },
       },
       socialPersistence: {
-        type: Type.OBJECT,
-        description: "Control 'Always Online' (ALWAYS_ON) vs 'On Demand' (LAZY) status for social connectors.",
-        properties: {
-          whatsapp: { type: Type.STRING, enum: ["ALWAYS_ON", "LAZY"] },
-          telegram: { type: Type.STRING, enum: ["ALWAYS_ON", "LAZY"] },
-          linkedin: { type: Type.STRING, enum: ["ALWAYS_ON", "LAZY"] },
-          google: { type: Type.STRING, enum: ["ALWAYS_ON", "LAZY"] },
-          twitter: { type: Type.STRING, enum: ["ALWAYS_ON", "LAZY"] },
-          discord: { type: Type.STRING, enum: ["ALWAYS_ON", "LAZY"] },
+        type: SchemaType.OBJECT, description: "Control 'Always Online' (ALWAYS_ON) vs 'On Demand' (LAZY) status for social connectors.", properties: {
+          whatsapp: { type: SchemaType.STRING, enum: ["ALWAYS_ON", "LAZY"], format: "enum" },
+          telegram: { type: SchemaType.STRING, enum: ["ALWAYS_ON", "LAZY"], format: "enum" },
+          linkedin: { type: SchemaType.STRING, enum: ["ALWAYS_ON", "LAZY"], format: "enum" },
+          google: { type: SchemaType.STRING, enum: ["ALWAYS_ON", "LAZY"], format: "enum" },
+          twitter: { type: SchemaType.STRING, enum: ["ALWAYS_ON", "LAZY"], format: "enum" },
+          discord: { type: SchemaType.STRING, enum: ["ALWAYS_ON", "LAZY"], format: "enum" },
         },
       },
       privacy: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          micEnabled: { type: Type.BOOLEAN },
-          cameraEnabled: { type: Type.BOOLEAN },
-          screenEnabled: { type: Type.BOOLEAN },
+          micEnabled: { type: SchemaType.BOOLEAN },
+          cameraEnabled: { type: SchemaType.BOOLEAN },
+          screenEnabled: { type: SchemaType.BOOLEAN },
         },
       },
       mcp: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
           servers: {
-            type: Type.ARRAY,
+            type: SchemaType.ARRAY,
             items: {
-              type: Type.OBJECT,
+              type: SchemaType.OBJECT,
               properties: {
-                id: { type: Type.STRING },
-                name: { type: Type.STRING },
-                type: { type: Type.STRING, enum: ["stdio", "sse"] },
-                command: { type: Type.STRING },
-                args: { type: Type.ARRAY, items: { type: Type.STRING } },
-                url: { type: Type.STRING },
-                env: { type: Type.OBJECT },
-                autoConnect: { type: Type.BOOLEAN },
+                id: { type: SchemaType.STRING },
+                name: { type: SchemaType.STRING },
+                type: { type: SchemaType.STRING, enum: ["stdio", "sse"], format: "enum" },
+                command: { type: SchemaType.STRING },
+                args: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+                url: { type: SchemaType.STRING },
+                env: { type: SchemaType.OBJECT, properties: {} },
+                autoConnect: { type: SchemaType.BOOLEAN },
               },
               required: ["id", "name", "type"],
             },
@@ -148,14 +146,14 @@ export const auditSystemTool: FunctionDeclaration = {
   name: "auditSystem",
   description:
     "Run a comprehensive production-grade system audit of LUCA's core components, infrastructure (Cortex, MCP, IoT), security protocols, and resource health. Use this for 'Survival Awareness' and system health reporting.",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const repairSystemTool: FunctionDeclaration = {
   name: "repairSystem",
   description:
     "Execute the LUCA Self-Repair Protocol. This autonomously identifies and attempts to fix degraded system components, reconfigures unhealthy infrastructure, and optimizes resource allocations. Use this for 'Self-Healing' when system health is degraded.",
-  parameters: { type: Type.OBJECT, properties: {} },
+  parameters: { type: SchemaType.OBJECT, properties: {} },
 };
 
 export const applyConfigFromSourceTool: FunctionDeclaration = {
@@ -163,18 +161,18 @@ export const applyConfigFromSourceTool: FunctionDeclaration = {
   description:
     "Apply a configuration to LUCA's settings from a raw JSON config block that the user has pasted or uploaded, or from a URL pointing to a config file. Parse the config and merge it into the current settings. Use this when the user shares a settings file, pastes config JSON, or sends a link to a config they want applied.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       configJson: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "Raw JSON string of the configuration to apply. Can be a full or partial settings object.",
       },
       configUrl: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "URL to a JSON config file to fetch and apply.",
       },
       preview: {
-        type: Type.BOOLEAN,
+        type: SchemaType.BOOLEAN,
         description: "If true, return what would be applied without saving. Useful for confirming the config before applying.",
       },
     },
@@ -186,10 +184,10 @@ export const triggerConnectorAuthTool: FunctionDeclaration = {
   description:
     "Trigger the authentication/linking process for a specific connector (e.g., WhatsApp, Google, Telegram). Use this when the user asks to link, connect, or authenticate a social or productivity account. This will autonomously start the flow (opening Ghost Browser or triggering a manual link event) so the user doesn't have to navigate to settings.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       connectorId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "ID of the connector (e.g., 'whatsapp', 'google', 'telegram', 'twitter', 'linkedin', 'youtube', 'discord').",
       },
     },
@@ -202,10 +200,10 @@ export const performSettingsActionTool: FunctionDeclaration = {
   description:
     "Perform a specific action within a settings tab that goes beyond a simple state update. Use this when the user asks to 'Sync Notion', 'Load Google Files', 'Reset Brain to Defaults', 'Clear Fact Memory', or 'Re-distill Knowledge'. This autonomously triggers the logic associated with buttons in the Settings UI.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       actionId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: `The specific action to perform. Supported actions:
 - General: 'browser-import-session', 'browser-clear-session', 'os-link-check', 'os-link-grant'
 - Voice: 'voice-apply-preset' (payload: { preset: 'performance'|'speedster'|'balanced'|'privacy' }), 'voice-calibrate-rhythm' (payload: { pacing: 'Slow'|'Normal'|'Fast'|'Dramatic' }), 'voice-clone-delete' (payload: { voiceId: string }), 'voice-clone-activate' (payload: { voiceId: string })
@@ -215,23 +213,21 @@ export const performSettingsActionTool: FunctionDeclaration = {
 - Knowledge: 'knowledge-obsidian-sync' (payload: { filePath }), 'knowledge-obsidian-configure' (payload: { vaultPath }), 'knowledge-obsidian-load', 'knowledge-import' (payload: { platform: 'openai'|'claude'|'gemini'|'cursor'|'generic' })`,
       },
       payload: {
-        type: Type.OBJECT,
-        description: "Required parameters for the action.",
-        properties: {
-          preset: { type: Type.STRING },
-          pacing: { type: Type.STRING },
-          voiceId: { type: Type.STRING },
-          nodeId: { type: Type.STRING },
-          pin: { type: Type.STRING },
-          token: { type: Type.STRING },
-          modelId: { type: Type.STRING },
-          pageId: { type: Type.STRING },
-          fileId: { type: Type.STRING },
-          vaultPath: { type: Type.STRING },
-          filePath: { type: Type.STRING },
-          platform: { type: Type.STRING },
-          id: { type: Type.STRING, description: "Generic ID for connector, server, or file" },
-          name: { type: Type.STRING, description: "Generic name for connector or server" }
+        type: SchemaType.OBJECT, description: "Required parameters for the action.", properties: {
+          preset: { type: SchemaType.STRING },
+          pacing: { type: SchemaType.STRING },
+          voiceId: { type: SchemaType.STRING },
+          nodeId: { type: SchemaType.STRING },
+          pin: { type: SchemaType.STRING },
+          token: { type: SchemaType.STRING },
+          modelId: { type: SchemaType.STRING },
+          pageId: { type: SchemaType.STRING },
+          fileId: { type: SchemaType.STRING },
+          vaultPath: { type: SchemaType.STRING },
+          filePath: { type: SchemaType.STRING },
+          platform: { type: SchemaType.STRING },
+          id: { type: SchemaType.STRING, description: "Generic ID for connector, server, or file" },
+          name: { type: SchemaType.STRING, description: "Generic name for connector or server" }
         },
       },
     },

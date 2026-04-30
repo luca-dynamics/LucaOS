@@ -1,4 +1,4 @@
-import { Type } from "@google/genai";
+import { SchemaType } from "@google/generative-ai";
 
 // Calendly API Integration
 // Ingested from: https://github.com/Klavis-AI/klavis/tree/main/mcp_servers/calendly
@@ -9,7 +9,7 @@ export const tools = [
     name: "calendly_get_user_info",
     description: "Get current user's Calendly profile information.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {},
     },
   },
@@ -17,15 +17,15 @@ export const tools = [
     name: "calendly_list_events",
     description: "List scheduled events for the current user.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         status: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           enum: ["active", "canceled"],
           description: "Filter by status.",
         },
         count: {
-          type: Type.NUMBER,
+          type: SchemaType.NUMBER,
           description: "Number of events (max 100).",
         },
       },
@@ -35,9 +35,9 @@ export const tools = [
     name: "calendly_list_event_types",
     description: "List available event types.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
-        active: { type: Type.BOOLEAN, description: "Filter by active status." },
+        active: { type: SchemaType.BOOLEAN, description: "Filter by active status." },
       },
     },
   },

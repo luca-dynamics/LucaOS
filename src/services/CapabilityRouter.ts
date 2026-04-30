@@ -153,7 +153,7 @@ class CapabilityRouter {
 
     try {
       const resp = await fetch(cortexUrl("/health"), {
-        signal: AbortSignal.timeout(500),
+        signal: AbortSignal.timeout(5000), // Increased to 5s for Intel Mac stability
       });
       this.lastHealthCheck = resp.ok;
       this.lastHealthCheckTime = now;

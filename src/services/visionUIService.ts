@@ -63,8 +63,8 @@ INSTRUCTIONS:
 
 CRITICAL: Return ONLY the JSON object, no other text.`;
 
-      const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent({
         contents: [
           {
             role: "user",
@@ -79,13 +79,13 @@ CRITICAL: Return ONLY the JSON object, no other text.`;
             ],
           },
         ],
-        config: {
+        generationConfig: {
           temperature: 0.1,
           maxOutputTokens: 200,
         },
       });
 
-      const responseText = result.text || "";
+      const responseText = result.response.text() || "";
 
       // Parse JSON response
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -150,8 +150,8 @@ Return JSON array of matches:
   ...
 ]`;
 
-      const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent({
         contents: [
           {
             role: "user",
@@ -166,13 +166,13 @@ Return JSON array of matches:
             ],
           },
         ],
-        config: {
+        generationConfig: {
           temperature: 0.2,
           maxOutputTokens: 500,
         },
       });
 
-      const responseText = result.text || "";
+      const responseText = result.response.text() || "";
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
 
       if (!jsonMatch) {
@@ -205,8 +205,8 @@ Return JSON array of matches:
 
       const prompt = `Is there a "${expectedDescription}" visible in this screenshot? Answer only: YES or NO`;
 
-      const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent({
         contents: [
           {
             role: "user",
@@ -221,13 +221,13 @@ Return JSON array of matches:
             ],
           },
         ],
-        config: {
+        generationConfig: {
           temperature: 0,
           maxOutputTokens: 10,
         },
       });
 
-      const response = (result.text || "").trim().toUpperCase();
+      const response = (result.response.text() || "").trim().toUpperCase();
       return response.includes("YES");
     } catch (error) {
       console.error("[VisionUI] Error verifying element:", error);

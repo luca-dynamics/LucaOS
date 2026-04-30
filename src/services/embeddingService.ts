@@ -17,12 +17,12 @@ export const embeddingService = {
 
       // Format contents for embedContent API
       // If it's a string, it's fine. If it's an array, we ensure it's structured for the API.
-      const result = await client.models.embedContent({
-        model: "gemini-embedding-2-preview",
-        contents: Array.isArray(contents) ? contents : [contents],
-      });
+      const model = client.getGenerativeModel({ model: "models/text-embedding-004" });
+      const result = await model.embedContent(
+        typeof contents === "string" ? contents : JSON.stringify(contents)
+      );
 
-      return result.embeddings?.[0]?.values || [];
+      return result.embedding?.values || [];
     } catch (e: any) {
       console.error("[EMBEDDING] Generation failed:", e.message);
       return []; // Fallback to empty vector

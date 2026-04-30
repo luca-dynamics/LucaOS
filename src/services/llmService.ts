@@ -9,10 +9,11 @@
  *   const response = await llm.generate(prompt);
  */
 
-import { FunctionDeclaration } from "@google/genai";
+import { FunctionDeclaration } from "@google/generative-ai";
 import { BRAIN_CONFIG } from "../config/brain.config";
 import { getApiKey } from "./genAIClient";
 import { settingsService } from "./settingsService";
+import { environmentSentinel } from "./environmentSentinel";
 
 // --- LLM PROVIDER INTERFACE ---
 export interface LLMProvider {
@@ -659,6 +660,72 @@ export class OllamaProvider implements LLMProvider {
   }
 }
 
+// --- OPENROUTER PROVIDER ---
+class OpenRouterProvider implements LLMProvider {
+  name = "openrouter";
+  model: string;
+  private apiKey: string;
+
+  constructor(model: string = "openrouter/auto", apiKey?: string) {
+    this.model = model;
+    this.apiKey = apiKey || process.env.VITE_OPENROUTER_API_KEY || "";
+  }
+
+  async generate(prompt: string, options?: LLMGenerateOptions): Promise<string> {
+    if (!this.apiKey) throw new Error("OpenRouter API key not configured.");
+    
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://luca-os.com",
+        "X-Title": "Luca OS Sovereign"
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages: [{ role: "user", content: prompt }],
+        temperature: options?.temperature ?? 0.7,
+      }),
+    });
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "";
+  }
+}
+
+// --- GROQ PROVIDER ---
+class GroqProvider implements LLMProvider {
+  name = "groq";
+  model: string;
+  private apiKey: string;
+
+  constructor(model: string = "llama3-70b-8192", apiKey?: string) {
+    this.model = model;
+    this.apiKey = apiKey || process.env.VITE_GROQ_API_KEY || "";
+  }
+
+  async generate(prompt: string, options?: LLMGenerateOptions): Promise<string> {
+    if (!this.apiKey) throw new Error("Groq API key not configured.");
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages: [{ role: "user", content: prompt }],
+        temperature: options?.temperature ?? 0.7,
+      }),
+    });
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "";
+  }
+}
+
 // --- LLM SERVICE MANAGER ---
 class LLMService {
   private providers: Map<string, LLMProvider> = new Map();
@@ -689,6 +756,16 @@ class LLMService {
     if (process.env.VITE_OLLAMA_BASE_URL || process.env.OLLAMA_BASE_URL) {
       this.registerProvider(new OllamaProvider("llama3.1"));
     }
+
+    const openRouterKey = process.env.VITE_OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
+    if (openRouterKey) {
+      this.registerProvider(new OpenRouterProvider("openrouter/auto", openRouterKey));
+    }
+
+    const groqKey = process.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY;
+    if (groqKey) {
+      this.registerProvider(new GroqProvider("llama3-70b-8192", groqKey));
+    }
   }
 
   registerProvider(provider: LLMProvider) {
@@ -699,7 +776,19 @@ class LLMService {
   }
 
   getProvider(name?: string): LLMProvider {
-    const providerName = name || this.preferredProvider || this.defaultProvider;
+    let providerName = name || this.preferredProvider || this.defaultProvider;
+
+    // --- BODY AWARENESS CHECK ---
+    // If we are asking for Ollama but the sentinel says her neural organs are restricted, fallback immediately.
+    if (providerName === "ollama") {
+      const isOllamaOnline = environmentSentinel.getAwarenessPulse().includes("OLLAMA: OK");
+      if (!isOllamaOnline) {
+        console.warn("[LLM_SERVICE] Body Scan: Ollama is offline. Falling back to Cloud Synapse.");
+        providerName = "openrouter"; // Prefer OpenRouter as the elite fallback
+        if (!this.providers.has(providerName)) providerName = this.defaultProvider;
+      }
+    }
+
     const provider = this.providers.get(providerName);
 
     if (!provider) {

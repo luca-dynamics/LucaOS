@@ -1,6 +1,6 @@
-import { Type } from "@google/genai";
-import type { FunctionDeclaration } from "@google/genai";
-import { authService } from "../../auth/authService.ts";
+import { SchemaType } from "@google/generative-ai";
+import type { FunctionDeclaration } from "@google/generative-ai";
+import { authService } from "../../auth/authService";
 
 // Detect environment
 const isElectron =
@@ -17,15 +17,15 @@ export const tools: FunctionDeclaration[] = [
     description:
       "Visually scrape a GitHub repository to extract source code structure and content. Bypasses API rate limits by reading the screen like a human.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         repoUrl: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           description:
             "The full GitHub URL (e.g. https://github.com/owner/repo).",
         },
         maxDepth: {
-          type: Type.NUMBER,
+          type: SchemaType.NUMBER,
           description: "Maximum folder depth to traverse. Default 3.",
         },
       },
@@ -37,14 +37,14 @@ export const tools: FunctionDeclaration[] = [
     description:
       "Launch a VISIBLE browser window to let the user log in to a service (e.g. WhatsApp, TikTok). Saves the session (cookies) for future autonomous use.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         url: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           description: "The login URL (e.g. https://web.whatsapp.com).",
         },
         serviceName: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           description:
             "The name to save this session as (e.g. 'whatsapp', 'tiktok').",
         },

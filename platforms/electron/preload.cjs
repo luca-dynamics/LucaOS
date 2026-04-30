@@ -45,9 +45,8 @@ expose('luca', {
     getSecureToken: () => ipcRenderer.invoke('get-secure-token'),
     send: (channel, data) => ipcRenderer.send(channel, data),
     on: (channel, func) => {
-        const subscription = (event, ...args) => func(...args);
-        ipcRenderer.on(channel, subscription);
-        return () => ipcRenderer.removeListener(channel, subscription);
+        ipcRenderer.on(channel, func);
+        return () => ipcRenderer.removeListener(channel, func);
     },
     // Mission Control Bridge
     missionControl: {
@@ -63,11 +62,12 @@ expose('electron', {
     ipcRenderer: {
         send: (channel, data) => ipcRenderer.send(channel, data),
         on: (channel, func) => {
-            const subscription = (event, ...args) => func(...args);
-            ipcRenderer.on(channel, subscription);
-            return () => ipcRenderer.removeListener(channel, subscription);
+            ipcRenderer.on(channel, func);
+            return () => ipcRenderer.removeListener(channel, func);
         },
-        once: (channel, func) => ipcRenderer.once(channel, (event, ...args) => func(...args)),
-        invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args)
+        once: (channel, func) => ipcRenderer.once(channel, func),
+        invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+        removeListener: (channel, func) => ipcRenderer.removeListener(channel, func),
+        off: (channel, func) => ipcRenderer.off(channel, func)
     }
 });

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Sphere } from '@react-three/drei';
@@ -133,6 +134,21 @@ const TaskNode: React.FC<TaskNodeProps> = ({
           maxWidth={2}
         >
           {toolName}
+        </Text>
+      )}
+
+      {/* Tertiary Details (even smaller, below toolName) */}
+      {details && (
+        <Text
+          position={[0, -1.05, 0]}
+          fontSize={0.07}
+          color="#64748b"
+          opacity={0.6}
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={2}
+        >
+          {details.toUpperCase()}
         </Text>
       )}
 

@@ -30,6 +30,9 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme: propTheme }) =>
   const [exportFormat, setExportFormat] = useState<"json" | "markdown">(
     "markdown"
   );
+  const [isReconMode, setIsReconMode] = useState(false);
+  const [reconTarget, setReconTarget] = useState("");
+  const [reconProgress, setReconProgress] = useState(0);
 
   // Theme Integration
   const currentPersona =
@@ -204,6 +207,59 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme: propTheme }) =>
     }
   };
 
+  const startLiveRecon = async () => {
+    if (!reconTarget.trim()) return;
+    setLoading(true);
+    setReconProgress(10);
+    
+    try {
+      const { llmService } = await import("../services/llmService");
+      const brain = llmService.getProvider("gemini");
+      
+      setReconProgress(30);
+      const prompt = `Perform a forensic OSINT reconnaissance on the following target: "${reconTarget}".
+Provide a comprehensive dossier including:
+1. Executive Summary
+2. Estimated Risk Score (0-100)
+3. Key Findings (URLs, Snippets, Entities)
+4. Severity Assessment
+
+Format the output as a JSON object:
+{
+  "target": "${reconTarget}",
+  "riskScore": 75,
+  "summary": "...",
+  "hits": [{"title": "...", "url": "...", "snippet": "...", "engine": "GOOGLE"}],
+  "meta": {"SEVERITY": "HIGH" | "MEDIUM" | "LOW"}
+}`;
+
+      setReconProgress(60);
+      const synthesis = await brain.generate(prompt, { temperature: 0.3 });
+      const data = JSON.parse(synthesis.match(/\{[\s\S]*\}/)?.[0] || "{}");
+      
+      setReconProgress(90);
+      const newReport: InvestigationReport = {
+        file: `live_${Date.now()}.json`,
+        target: data.target || reconTarget,
+        timestamp: Date.now(),
+        riskScore: data.riskScore || 50,
+        resultCount: data.hits?.length || 0,
+        summary: data.summary,
+      };
+
+      setReports([newReport, ...reports]);
+      setSelectedReport(newReport);
+      setReportDetails(data);
+      setIsReconMode(false);
+      setReconTarget("");
+    } catch (e) {
+      console.error("Live Recon Failed:", e);
+    } finally {
+      setLoading(false);
+      setReconProgress(0);
+    }
+  };
+
   const filteredReports = reports.filter(
     (r) =>
       r.target.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -362,7 +418,54 @@ const InvestigationReports: React.FC<Props> = ({ onClose, theme: propTheme }) =>
 
           {/* Main Area: Report Details */}
           <div className="flex-1 flex flex-col overflow-hidden bg-transparent">
-            {selectedReport && reportDetails ? (
+            {isReconMode || (reports.length === 0 && !loading) ? (
+              <div className="flex-1 flex items-center justify-center p-10">
+                <div className={`w-full max-w-xl p-10 rounded-3xl border glass-blur-heavy space-y-8 animate-in zoom-in-95 duration-500`}
+                     style={{ backgroundColor: "rgba(0,0,0,0.4)", borderColor: "var(--app-primary)" }}>
+                  <div className="text-center space-y-3">
+                    <Icon name="Target" size={48} color="var(--app-primary)" className="mx-auto animate-pulse" />
+                    <h3 className="text-xl font-black uppercase tracking-[0.3em] text-[var(--app-text-main)]">Target Acquisition</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Initiate sovereign reconnaissance protocol</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="relative">
+                       <input 
+                         type="text" 
+                         value={reconTarget}
+                         onChange={(e) => setReconTarget(e.target.value)}
+                         placeholder="Enter target name, domain, or identifier..."
+                         className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black uppercase tracking-widest text-white placeholder-white/20 focus:outline-none focus:border-[var(--app-primary)] transition-all"
+                       />
+                    </div>
+                    
+                    <button 
+                      onClick={startLiveRecon}
+                      disabled={loading || !reconTarget.trim()}
+                      className="w-full py-4 bg-[var(--app-primary)] text-black rounded-2xl font-black uppercase tracking-[0.2em] text-xs transition-all active:scale-95 disabled:opacity-30 flex items-center justify-center gap-3"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                          Acquiring... {reconProgress}%
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="Radar" size={16} />
+                          Initialize Recon
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 pt-4 border-t border-white/5 opacity-40">
+                     <div className="flex-1 h-[1px] bg-white/10" />
+                     <span className="text-[8px] font-black uppercase tracking-widest">Global OSINT Grid Active</span>
+                     <div className="flex-1 h-[1px] bg-white/10" />
+                  </div>
+                </div>
+              </div>
+            ) : selectedReport && reportDetails ? (
               <>
                 <div
                   className="h-20 flex-shrink-0 border-b flex items-center justify-between px-10"

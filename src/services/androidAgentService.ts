@@ -279,12 +279,12 @@ export class AndroidAgentService {
         `;
 
     try {
-      const result = await genAI.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: { parts: [{ text: prompt }] },
-        config: { responseMimeType: "application/json" },
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" },
       });
-      return JSON.parse(result.text || "{}") as AgentStep;
+      return JSON.parse(result.response.text() || "{}") as AgentStep;
     } catch (e) {
       console.error("XML Decision failed:", e);
       return { action: "FAIL", reasoning: "Brain failure" };
@@ -366,17 +366,20 @@ export class AndroidAgentService {
         `;
 
     try {
-      const result = await genAI.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: {
-          parts: [
-            { text: prompt },
-            { inlineData: { mimeType: "image/png", data: screenshotBase64 } },
-          ],
-        },
-        config: { responseMimeType: "application/json" },
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: "image/png", data: screenshotBase64 } },
+            ],
+          },
+        ],
+        generationConfig: { responseMimeType: "application/json" },
       });
-      return JSON.parse(result.text || "{}") as AgentStep;
+      return JSON.parse(result.response.text() || "{}") as AgentStep;
     } catch (e) {
       console.error("Vision Decision failed:", e);
       return { action: "FAIL", reasoning: "Visual Brain failure" };

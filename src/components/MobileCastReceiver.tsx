@@ -228,7 +228,7 @@ const MobileCastReceiver = () => {
       </div>
 
       {/* Status Footer */}
-      <div className="bg-black/50 glass-blur border border-white/10 p-4 rounded-lg mt-auto z-10">
+      <div className="bg-black/50 glass-blur border border-white/10 p-4 rounded-lg mt-auto z-10 w-full">
         <div className="flex justify-between items-center mb-2">
           <span className="text-[10px] text-slate-500 tracking-widest">
             CURRENT OBJECTIVE
@@ -244,10 +244,40 @@ const MobileCastReceiver = () => {
             EXECUTING
           </span>
         </div>
-        <div className="text-xs text-white/80 font-mono truncate">
+        
+        <div className="text-xs text-white/80 font-mono truncate mb-4">
           {activeTask.toUpperCase()}
         </div>
+
+        {/* Tactical Vitals Pulse */}
+        <div className="flex gap-4 pt-3 border-t border-white/5">
+          <div className="flex-1">
+            <div className="flex justify-between text-[8px] text-slate-500 mb-1">
+              <span>CPU_LOAD</span>
+              <span>{vitals.cpu}%</span>
+            </div>
+            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+              <div 
+                className="h-full transition-all duration-500" 
+                style={{ width: `${vitals.cpu}%`, backgroundColor: theme.hex }}
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between text-[8px] text-slate-500 mb-1">
+              <span>MEM_USAGE</span>
+              <span>{vitals.mem}%</span>
+            </div>
+            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+              <div 
+                className="h-full transition-all duration-500" 
+                style={{ width: `${vitals.mem}%`, backgroundColor: theme.hex }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
+
       {showModelManager && (
         <OfflineModelManager
           theme={theme}

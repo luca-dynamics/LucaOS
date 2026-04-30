@@ -190,7 +190,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         document.documentElement.style.setProperty("--app-core-hex", cfg.hex);
       }
     }
-  }, [settings.general?.theme, settings.general?.backgroundOpacity]);
+  }, [
+    settings.general?.theme,
+    settings.general?.backgroundOpacity,
+    settings.general?.backgroundBlur,
+  ]);
 
   const loadMemoryStats = () => {
     const mems = memoryService.getAllMemories();

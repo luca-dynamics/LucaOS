@@ -1,4 +1,4 @@
-import { FunctionDeclaration } from "@google/genai";
+import { FunctionDeclaration } from "@google/generative-ai";
 import { eventBus } from "./eventBus";
 import { nativeControl } from "./nativeControlService";
 import { computerService } from "./computerService";

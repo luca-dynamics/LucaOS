@@ -50,6 +50,13 @@ interface UseAppIPCProps {
   isCapacitor: boolean;
   devices: any[];
   Sender: any;
+  // Sovereign Sync Props
+  persona: string;
+  activeThemeId: string;
+  isSpeaking: boolean;
+  isThinking: boolean;
+  opacity: number;
+  blur: number;
 }
 
 export const useAppIPC = ({
@@ -87,6 +94,12 @@ export const useAppIPC = ({
   isCapacitor,
   devices,
   Sender,
+  persona,
+  activeThemeId,
+  isSpeaking,
+  isThinking,
+  opacity,
+  blur,
 }: UseAppIPCProps) => {
   const handleRemoteSuccess = () => {
     setShowRemoteModal(false);
@@ -600,4 +613,22 @@ Mention it briefly (1-2 sentences). Do NOT describe literals — be helpful.`;
       settingsService.off("settings-changed", handleSettingsUpdate);
     };
   }, [isElectron, setIsWakeWordActive]);
+
+  // [SOVEREIGN] Cross-Window State Broadcaster
+  useEffect(() => {
+    if (!isElectron) return;
+
+    const state = {
+      persona,
+      themeId: activeThemeId,
+      isSpeaking,
+      isThinking,
+      opacity,
+      blur,
+      timestamp: Date.now(),
+    };
+
+    console.log("[useAppIPC] Broadcasting Sovereign State Sync:", state);
+    (window as any).electron.ipcRenderer.send("broadcast-app-state", state);
+  }, [isElectron, persona, activeThemeId, isSpeaking, isThinking]);
 };

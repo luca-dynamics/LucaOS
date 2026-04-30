@@ -1,4 +1,4 @@
-import { Type, FunctionDeclaration } from "@google/genai";
+import { SchemaType, FunctionDeclaration } from "@google/generative-ai";
 import { tradingService } from "../../tradingService";
 
 export const tools: FunctionDeclaration[] = [
@@ -6,10 +6,10 @@ export const tools: FunctionDeclaration[] = [
     name: "get_trading_balance",
     description: "Get the current trading account balance, free margin, and 24h PnL performance.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         exchange: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           description: "Optional exchange name (e.g., 'Binance'). Defaults to active exchange.",
         },
       },
@@ -19,10 +19,10 @@ export const tools: FunctionDeclaration[] = [
     name: "get_active_positions",
     description: "Retrieve a list of all currently open trading positions across connected exchanges.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         exchange: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           description: "Optional exchange name filter.",
         },
       },
@@ -32,7 +32,7 @@ export const tools: FunctionDeclaration[] = [
     name: "get_trading_leaderboard",
     description: "Get the current 'War Room' leaderboard to see the top performing AI trading agents.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {},
     },
   },
@@ -40,23 +40,24 @@ export const tools: FunctionDeclaration[] = [
     name: "place_trade_order",
     description: "Place a new trading order (Long or Short) for a specific symbol.",
     parameters: {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         symbol: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
           description: "The trading pair (e.g. 'BTC/USDT').",
         },
         side: {
-          type: Type.STRING,
+          type: SchemaType.STRING,
+          format: "enum",
           enum: ["LONG", "SHORT"],
           description: "The direction of the trade.",
         },
         amount: {
-          type: Type.NUMBER,
+          type: SchemaType.NUMBER,
           description: "The amount to trade (in base currency).",
         },
         leverage: {
-          type: Type.NUMBER,
+          type: SchemaType.NUMBER,
           description: "Optional leverage (1-100). Defaults to 10.",
         },
       },

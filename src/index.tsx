@@ -50,3 +50,10 @@ root.render(
   </SystemErrorBoundary>,
   // </React.StrictMode>
 );
+
+// Remove the native splash loader once hydration begins
+const loader = document.getElementById("root-loader");
+if (loader) {
+  loader.style.opacity = "0";
+  setTimeout(() => loader.remove(), 500);
+}

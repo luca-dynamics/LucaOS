@@ -58,6 +58,14 @@ export interface TelemetryEvent {
   };
 }
 
+export interface ToolLifecycleEvent {
+  toolName: string;
+  toolCallId?: string;
+  source?: "chat" | "voice";
+  status?: "started" | "finished" | "failed";
+  error?: string;
+}
+
 interface EventHistoryEntry {
   event: VisionEvent;
   timestamp: number;

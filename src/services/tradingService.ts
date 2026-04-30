@@ -1,6 +1,5 @@
 import { memoryService } from "./memoryService";
 import { eventBus } from "./eventBus";
-import { modelShadowService } from "./ai/ModelShadowService";
 import { riskOrchestrator } from "./ai/RiskOrchestrator";
 import { TradeAction, TradingStrategy } from "../types/trading";
 
@@ -186,22 +185,29 @@ export const tradingService = {
     );
 
     // 2. Use Structured Sections for better AI reasoning (Phase 4.1 Integration)
-    const persona = strategy?.persona || "Standard analyst persona.";
-    const entry = strategy?.entryCriteria || "Standard technical entry criteria.";
-    const riskConstraints = strategy?.riskConstraints || "Standard risk management rules.";
+    // Variables like persona, entry, and riskConstraints are derived from strategy data if available.
 
     // 4. Trigger Real Backend Debate (Phase 4.1 Sync)
     try {
+      const { settingsService } = await import("./settingsService");
+      const settings = settingsService.getSettings();
+      const defaultModel = settings.brain.model || "gemini-3-flash-preview";
+
+      const participants = strategy?.committee?.length ? strategy.committee.map(p => ({
+        personality: p.personality,
+        aiModelId: p.aiModelId
+      })) : [
+        { personality: "bull", aiModelId: defaultModel },
+        { personality: "bear", aiModelId: defaultModel },
+        { personality: "risk_manager", aiModelId: defaultModel }
+      ];
+
       const resp = await this.startDebate({
         symbol,
         strategyId,
         maxRounds: 3,
         promptVariant: strategy?.promptVariant || "balanced",
-        participants: [
-          { personality: "bull", aiModelId: "gpt-4o" },
-          { personality: "bear", aiModelId: "claude-3-5" },
-          { personality: "risk_manager", aiModelId: "gpt-4o" }
-        ]
+        participants
       });
 
       if (resp.success && resp.session) {
@@ -215,39 +221,68 @@ export const tradingService = {
           votes: s.votes || [],
         };
       }
-    } catch (e) {
-      console.warn("[TRADING-OS] Backend debate failed, falling back to enriched mocks:", e);
+    } catch {
+      console.warn("[TRADING-OS] Backend debate failed, falling back to enriched mocks.");
     }
 
-    // 5. Enriched Fallback (If backend is unreachable)
-    const messages = [
-      {
-        id: "m1",
-        participantId: "BULL_ANALYST",
-        content: `ANALYSIS START: Symbol=${symbol}\n${alphaContext ? `ALPHA FEED: ${alphaContext}\n` : ""}Persona: ${persona}...`,
-        timestamp: Date.now() - 5000,
-      },
-      {
-        id: "m2",
-        participantId: "RISK_MANAGER",
-        content: `Guardrails active. Constraints: ${riskConstraints.substring(0, 50)}...`,
-        timestamp: Date.now() - 2000,
-      }
-    ];
+    // 5. ENHANCED CLOUD SYNTHESIS (The "Oxygen Tank" Fallback)
+    try {
+      const { llmService } = await import("./llmService");
+      const brain = llmService.getProvider("gemini");
+      
+      const prompt = `Act as a committee of 3 expert AI traders:
+1. BULL ANALYST: Looking for every reason to buy.
+2. BEAR ANALYST: Looking for every reason to sell.
+3. RISK MANAGER: Focused on capital preservation.
 
-    const votes = [
-      { id: "v1", participantId: "BULL_ANALYST", action: TradeAction.OPEN_LONG, confidence: 75 },
-      { id: "v2", participantId: "RISK_MANAGER", action: TradeAction.WAIT, confidence: 50 },
-    ];
+Analyze the current market sentiment for ${symbol}.
+${alphaContext ? `Additional Context: ${alphaContext}` : ""}
 
-    return {
-      action: TradeAction.WAIT,
-      confidence: 62.5,
-      sentimentScore: 0.2,
-      transcript: messages.map(m => `[${m.participantId}]: ${m.content}`).join("\n"),
-      messages,
-      votes,
-    };
+Provide a detailed transcript of your debate.
+Then, conclude with a JSON block:
+{
+  "consensus": {"action": "OPEN_LONG" | "OPEN_SHORT" | "WAIT", "confidence": 0-100},
+  "sentiment": 0.0-1.0
+}`;
+
+      const synthesis = await brain.generate(prompt, { temperature: 0.7 });
+      
+      // Parse JSON from response
+      const jsonMatch = synthesis.match(/\{[\s\S]*\}/);
+      const data = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      
+      const transcript = synthesis.replace(/\{[\s\S]*\}/, "").trim();
+      
+      const messages = [
+        {
+          id: "m_syn_1",
+          participantId: "SOVEREIGN_SYNTHESIS",
+          content: transcript,
+          timestamp: Date.now(),
+        }
+      ];
+
+      return {
+        action: data?.consensus?.action || TradeAction.WAIT,
+        confidence: data?.consensus?.confidence || 50,
+        sentimentScore: data?.sentiment || 0.5,
+        transcript: transcript,
+        messages,
+        votes: [],
+      };
+    } catch (synthesisError) {
+      console.error("[TRADING-OS] Sovereign Synthesis failed:", synthesisError);
+      
+      // 6. Absolute Minimal Fallback (If cloud also fails)
+      return {
+        action: TradeAction.WAIT,
+        confidence: 0,
+        sentimentScore: 0.5,
+        transcript: "STRATEGIC_TIMEOUT: External and internal brain links unreachable.",
+        messages: [],
+        votes: [],
+      };
+    }
   },
 
   async startDebate(config: any) {
@@ -297,8 +332,8 @@ export const tradingService = {
       }
 
       throw new Error(data.error || "Backend debate failed");
-    } catch (e: any) {
-      console.warn("[TradingService] Backend debate API not reachable, falling back to local stub:", e.message);
+    } catch (err: any) {
+      console.warn("[TradingService] Backend debate API not reachable, falling back to local stub:", err.message);
 
       // --- Local fallback (stub) ---
       const result = await this.runMultiAgentDebate(config.symbol, config.strategyId || "Manual");
@@ -733,8 +768,8 @@ export const tradingService = {
           exchange: "LOCAL_HUB",
           is_local: true,
         }));
-      } catch (e) {
-        console.error("Local leaderboard fetch error:", e);
+      } catch {
+        console.error("Local leaderboard fetch error");
       }
     }
 
@@ -776,7 +811,7 @@ export const tradingService = {
           time: item.time || "Just now"
         }));
       }
-    } catch (e) {
+    } catch {
       console.warn("[TRADING-OS] Real Alpha Feed unreachable, using simulation.");
     }
 
@@ -969,7 +1004,7 @@ export const tradingService = {
         // 2. Local File Scraping (Electron Only)
         else if (source.type === "file" && isElectron) {
           console.log(`[TRADING-OS] Reading Private Alpha File: ${source.path}`);
-          const result = await (window as any).luca.getSecureToken(); // Re-use secure bridge for file reading if available
+          await (window as any).luca.getSecureToken(); // Re-use secure bridge for file reading if available
           // Placeholder for actual file read via IPC
           content = "File context analyzed. Local metrics integrated.";
         }

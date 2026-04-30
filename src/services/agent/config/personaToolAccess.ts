@@ -17,6 +17,8 @@ const ALL_ROLES_FULL_ACCESS = [
   "controlDevice",
   "runDiagnostics",
   "requestFullSystemPermissions",
+  "getSystemSettings",
+  "updateSystemSettings",
 
   // File Operations
   "readFile",

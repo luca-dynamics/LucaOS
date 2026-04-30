@@ -16,9 +16,22 @@ import os from "os";
 const USER_HOME = os.homedir();
 const PERSONA_FILE = path.join(USER_HOME, "Documents", "Luca", "persona.json");
 
+const DEFAULT_CONFIG = {
+  active: "SOVEREIGN",
+  personas: {
+    SOVEREIGN: {
+      name: "Luca (Sovereign)",
+      tagline: "Primary Strategic Intelligence",
+      instruction: "{{CORE_IDENTITY}}\nYou are in SOVEREIGN mode. Be direct, efficient, and strategic.",
+      theme: { color: "#3b82f6", mode: "dark" }
+    }
+  },
+  ui: { showHologram: true, animationsEnabled: true }
+};
+
 export class PersonaManager {
   static instance;
-  config = null;
+  config = DEFAULT_CONFIG; // Start with default instead of null
 
   constructor() {
     this.loadConfig();
@@ -43,9 +56,11 @@ export class PersonaManager {
         console.warn(
           `[PERSONA_MANAGER] Config not found at ${PERSONA_FILE}. Using fallback.`,
         );
+        this.config = DEFAULT_CONFIG;
       }
     } catch (e) {
-      console.error(`[PERSONA_MANAGER] Failed to load config:`, e);
+      console.error(`[PERSONA_MANAGER] Failed to load config, using default:`, e);
+      this.config = DEFAULT_CONFIG;
     }
   }
   

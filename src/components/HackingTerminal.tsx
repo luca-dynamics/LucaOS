@@ -1,29 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
-import { THEME_PALETTE, getThemeColors } from "../config/themeColors";
+import { THEME_PALETTE, PERSONA_UI_CONFIG, getDynamicContrast } from "../config/themeColors";
 import { settingsService } from "../services/settingsService";
 
 interface Props {
   onClose: () => void;
   toolLogs: { tool: string; output: string; timestamp: number }[];
-  theme?: {
-    hex: string;
-    primary: string;
-    border: string;
-    bg: string;
-    initialTab?: string;
-  };
-  initialTab?:
-    | "NMAP"
-    | "METASPLOIT"
-    | "PAYLOAD"
-    | "BURP"
-    | "WIRESHARK"
-    | "JOHN"
-    | "COBALT"
-    | "HTTP_C2"
-    | "SOURCE";
+  themeId?: string;
+  opacity?: number;
+  initialTab?: string;
   onOpenBrowser?: (url: string, sessionId?: string) => void;
 }
 
@@ -38,21 +24,22 @@ interface C2Session {
 const HackingTerminal: React.FC<Props> = ({
   onClose,
   toolLogs,
-  theme: propTheme,
+  themeId: propThemeId,
+  opacity = 0.9,
   initialTab,
   onOpenBrowser,
 }) => {
-  // Theme Integration
-  const currentPersona =
-    settingsService.getSettings().general.persona || "ASSISTANT";
-  const themeByPersona = getThemeColors(currentPersona);
+  // --- THEME-AGNOSTIC SKIN SYSTEM ---
+  const activeThemeId = propThemeId || settingsService.getSettings().general.theme || "MASTER_SYSTEM";
+  const themeConfig = PERSONA_UI_CONFIG[activeThemeId] || PERSONA_UI_CONFIG.MASTER_SYSTEM;
+  const contrast = getDynamicContrast(activeThemeId, opacity);
 
-  const themeHex = propTheme?.hex || themeByPersona.hex || "#22c55e";
-  const themePrimary = themeByPersona.primary || "text-green-500";
-  const themeBorder = themeByPersona.border || "border-green-500";
+  const themeHex = themeConfig.hex;
+  const themePrimary = themeConfig.primary;
+  const themeBorder = themeConfig.border;
 
   // Resolve initial tab from props, then theme, then default
-  const resolvedInitialTab = initialTab || (theme as any)?.initialTab || "NMAP";
+  const resolvedInitialTab = initialTab || "NMAP";
 
   const [activeTab, setActiveTab] = useState<
     | "NMAP"
@@ -61,7 +48,6 @@ const HackingTerminal: React.FC<Props> = ({
     | "BURP"
     | "WIRESHARK"
     | "JOHN"
-    | "COBALT"
     | "COBALT"
     | "HTTP_C2"
     | "SOURCE"
@@ -88,7 +74,7 @@ const HackingTerminal: React.FC<Props> = ({
   // Sync global tool logs to this specific terminal if they match the active tab
   useEffect(() => {
     // Filter logs based on active tool context
-    const relevantLogs = toolLogs.filter((l) => {
+    const relevantLogs = toolLogs.filter((l: any) => {
       if (activeTab === "NMAP" && l.tool === "runNmapScan") return true;
       if (activeTab === "METASPLOIT" && l.tool === "runMetasploitExploit")
         return true;
@@ -201,7 +187,7 @@ const HackingTerminal: React.FC<Props> = ({
     }
   };
 
-  const activeSession = pentestSessions.find((s) => s.id === activePentestId);
+  const activeSession = pentestSessions.find((s: any) => s.id === activePentestId);
   const currentPhaseColor = getPhaseColor(activeSession?.currentPhase);
 
   const handleSendC2 = async () => {
@@ -221,7 +207,7 @@ const HackingTerminal: React.FC<Props> = ({
     }
   };
 
-  const selectedSession = sessions.find((s) => s.id === selectedSessionId);
+  const selectedSession = sessions.find((s: any) => s.id === selectedSessionId);
 
   // Tool Status State
   const [toolStatus, setToolStatus] = useState<Record<string, boolean>>({});
@@ -515,9 +501,10 @@ const HackingTerminal: React.FC<Props> = ({
 
       {/* Main Container */}
       <div
-        className={`relative w-full h-full sm:w-[95%] sm:h-[90%] border-none sm:border ${themeBorder}/30 rounded-none sm:rounded-sm flex flex-col overflow-hidden bg-black/40 glass-blur`}
+        className={`relative w-full h-full sm:w-[95%] sm:h-[90%] border rounded-none sm:rounded-lg flex flex-col overflow-hidden bg-black/20 backdrop-blur-[40px] transition-all duration-700`}
         style={{
-          boxShadow: `0 0 80px -20px ${themeHex}40`,
+          boxShadow: `0 0 100px -20px ${themeHex}33`,
+          borderColor: contrast.border,
         }}
       >
         {/* ... (existing effects & header) ... */}
@@ -542,13 +529,16 @@ const HackingTerminal: React.FC<Props> = ({
 
         {/* Header */}
         <div
-          className={`h-14 sm:h-16 border-b ${themeBorder} flex items-center justify-between px-3 sm:px-6 relative z-30 flex-shrink-0`}
-          style={{ backgroundColor: `${themeHex}1F` }}
+          className={`h-14 sm:h-16 border-b flex items-center justify-between px-3 sm:px-6 relative z-30 flex-shrink-0 transition-colors duration-500`}
+          style={{ 
+            backgroundColor: `${themeHex}1A`,
+            borderBottomColor: contrast.border
+          }}
         >
           <div className="flex items-center gap-3">
             <Icon name="Document" size={18} style={{ color: themeHex }} />
-            <h2 className="font-mono text-sm font-bold tracking-[0.2em]" style={{ color: themeHex }}>
-              LUCA_TERMINAL_V4.0
+            <h2 className="font-mono text-xs font-bold tracking-[0.4em] uppercase" style={{ color: contrast.text }}>
+              Tactical_Command_Matrix_v4.0
             </h2>
           </div>
 
@@ -617,7 +607,7 @@ const HackingTerminal: React.FC<Props> = ({
                 icon: "Code2",
                 highlight: true,
               },
-            ].map((tab) => {
+            ].map((tab: any) => {
               // Determine if installed
               const backendName = TOOL_MAPPING[tab.id];
               // Default to true if not mapped or for C2 (which is virtual/internal)
@@ -709,7 +699,7 @@ const HackingTerminal: React.FC<Props> = ({
                         Deploy payload to connect.
                       </div>
                     )}
-                    {sessions.map((s) => (
+                    {sessions.map((s: any) => (
                       <div
                         key={s.id}
                         onClick={() => setSelectedSessionId(s.id)}
@@ -742,21 +732,24 @@ const HackingTerminal: React.FC<Props> = ({
                   <div className="flex-1 flex flex-col bg-transparent relative">
                     {selectedSession ? (
                       <>
-                        <div className="flex-1 overflow-y-auto font-mono text-[11px] p-4 flex flex-col gap-1 custom-scrollbar scroll-smooth bg-black/20">
-                          <div className="flex items-center gap-2 text-emerald-500/40 mb-4 border-b border-emerald-500/10 pb-2">
+                        <div className="flex-1 overflow-y-auto font-mono text-[11px] p-4 flex flex-col gap-1 custom-scrollbar scroll-smooth bg-black/10">
+                          <div className="flex items-center gap-2 mb-4 border-b pb-2 opacity-50" style={{ borderColor: contrast.border, color: contrast.text }}>
                             <Icon name="Lock" size={12} />
-                            <span>SECURE_ENCLAVE_ACTIVE</span>
+                            <span className="tracking-[0.2em] text-[9px]">SECURE_ENCLAVE_ACTIVE</span>
                             <span className="ml-auto flex items-center gap-2">
-                              <Icon name="Flash" size={12} /> 1.21_GW
+                              <Icon name="Flash" size={12} /> OMNI_NEURAL_ROUTE
                             </span>
                           </div>
-                          {selectedSession.outputs.map((o, i) => (
-                            <div key={i}>
-                              <div className="text-[10px] text-slate-700 mb-0.5">
+                          {selectedSession.outputs.map((o: any, i: number) => (
+                            <div key={i} className="animate-in fade-in slide-in-from-bottom-1 duration-300">
+                              <div className="text-[9px] opacity-40 mb-1" style={{ color: contrast.text }}>
                                 [{new Date(o.timestamp).toLocaleTimeString()}]
-                                OUTPUT:
                               </div>
-                              <div className="whitespace-pre-wrap break-all text-slate-300 bg-slate-900/30 p-2 border border-slate-800 rounded">
+                              <div className="whitespace-pre-wrap break-all p-3 border rounded-sm bg-white/5" 
+                                   style={{ 
+                                     color: contrast.text,
+                                     borderColor: `${themeHex}33`
+                                   }}>
                                 {o.output}
                               </div>
                             </div>

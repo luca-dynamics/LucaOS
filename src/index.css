@@ -108,10 +108,10 @@ a,
   backdrop-filter: blur(var(--app-bg-blur, 40px));
   -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
   background: rgba(255, 255, 255, var(--app-bg-opacity, 0.3)); /* Coupled to background transparency */
-  border: 1px solid rgba(0, 0, 0, 0.08); /* Sophisticated thin border */
+  border: 1px solid var(--app-border-main, rgba(0, 0, 0, 0.14));
   position: relative;
   overflow: hidden;
-  color: #111827; /* Gray-900 */
+  color: var(--app-text-main, #111827);
   box-shadow:
     0 8px 32px 0 rgba(0, 0, 0, 0.05),
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.8); /* Refracted top highlight */
@@ -121,7 +121,7 @@ a,
   backdrop-filter: blur(var(--app-bg-blur, 40px));
   -webkit-backdrop-filter: blur(var(--app-bg-blur, 40px));
   background: rgba(255, 255, 255, var(--app-bg-opacity, 0.3));
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--app-border-main, rgba(0, 0, 0, 0.12));
   box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.03);
 }
 
