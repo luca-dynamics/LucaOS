@@ -101,3 +101,23 @@ export const executeDeviceCommandTool: FunctionDeclaration = {
     required: ["target", "command"],
   },
 };
+
+export const check_camera_footageTool: FunctionDeclaration = {
+  name: "check_camera_footage",
+  description:
+    "Connect to a discovered IP camera, capture a live snapshot, and describe the current scene (activity, people, security state). Use this ONLY when the user asks to 'check the cameras' or see 'what's happening'.",
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      targetIp: {
+        type: SchemaType.STRING,
+        description: "IP address of the camera substrate.",
+      },
+      focusArea: {
+        type: SchemaType.STRING,
+        description: "Optional: Specific area or object to focus on (e.g. 'front door', 'package').",
+      },
+    },
+    required: ["targetIp"],
+  },
+};

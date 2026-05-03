@@ -6,6 +6,7 @@ import {
   PersonaMode,
   UIThemeId,
 } from "../types/lucaPersonality";
+import { secureVault } from "./secureVault";
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -172,6 +173,13 @@ export interface LucaSettings {
   hardwareSanitized?: boolean; // Flag to indicate if hardware-aware model sanitization has run
   v1betaMigrationComplete?: boolean; // Flag to indicate if model-specific v1beta migration has run
   notifications: NotificationSettings;
+  autonomy: {
+    backgroundMissionsEnabled: boolean;
+    shadowExecutionEnabled: boolean;
+    doubleBrainConsensus: boolean;
+    resourceAwareThrottling: boolean;
+    idleThresholdMinutes: number;
+  };
 }
 
 const getEnvVar = (key: string) => {
@@ -330,6 +338,13 @@ const DEFAULT_SETTINGS: LucaSettings = {
     screenEnabled: true,
     telemetryEnabled: false,
   },
+  autonomy: {
+    backgroundMissionsEnabled: false,
+    shadowExecutionEnabled: false,
+    doubleBrainConsensus: true,
+    resourceAwareThrottling: true,
+    idleThresholdMinutes: 10,
+  },
 };
 
 const STORAGE_KEY = "LUCA_SETTINGS_V1";
@@ -356,69 +371,66 @@ class SettingsService extends EventEmitter {
         typeof window !== "undefined" && window.localStorage
           ? localStorage.getItem(STORAGE_KEY)
           : null;
+      let merged = DEFAULT_SETTINGS;
+      let parsed: any = {};
+
       if (stored) {
-        const parsed = JSON.parse(stored);
+        parsed = JSON.parse(stored);
         // Deep merge with defaults to ensure new keys exist
-        const merged = this.deepMerge(DEFAULT_SETTINGS, parsed);
+        merged = this.deepMerge(DEFAULT_SETTINGS, parsed);
 
-        // --- HARDWARE-BACKED VAULT MIGRATION & RECOVERY ---
-        if ((window as any).luca?.vault) {
-          const vault = (window as any).luca.vault;
+        // --- SECURE VAULT RECOVERY (Keychain Redirection) ---
+        const SENSITIVE_MAP = [
+          { section: "brain", key: "geminiApiKey" },
+          { section: "brain", key: "anthropicApiKey" },
+          { section: "brain", key: "openaiApiKey" },
+          { section: "brain", key: "xaiApiKey" },
+          { section: "brain", key: "deepseekApiKey" },
+          { section: "brain", key: "groqApiKey" },
+          { section: "voice", key: "googleApiKey" },
+          { section: "iot", key: "haToken" },
+        ];
 
-          // List of sensitive paths in settings
-          const SENSITIVE_MAP = [
-            { section: "brain", key: "geminiApiKey" },
-            { section: "brain", key: "anthropicApiKey" },
-            { section: "brain", key: "openaiApiKey" },
-            { section: "brain", key: "xaiApiKey" },
-            { section: "brain", key: "deepseekApiKey" },
-            { section: "voice", key: "googleApiKey" },
-            { section: "iot", key: "haToken" },
-          ];
-
-          for (const item of SENSITIVE_MAP) {
-            const vaultKey = `setting:${item.section}:${item.key}`;
-            try {
-              // 1. Check Vault
-              const secured = await vault.retrieve(vaultKey);
-                if (secured && typeof secured.password === "string") {
-                  // Value found in secure storage - use it (even if empty)
-                  (merged as any)[item.section][item.key] = secured.password;
-                  // Redact from localStorage (Safety)
-                  if (parsed[item.section] && parsed[item.section][item.key]) {
-                    parsed[item.section][item.key] = "[SECURED]";
-                  }
-                } else if (
-                  (merged as any)[item.section][item.key] === "[SECURED]"
-                ) {
-                  // IMPORTANT: If Hardware Vault has nothing, but localStorage had "[SECURED]",
-                  // we must CLEAR it to "" so it doesn't leak 9 dots to the UI.
-                  (merged as any)[item.section][item.key] = "";
-                } else if (
-                  merged[item.section][item.key] &&
-                  merged[item.section][item.key] !== "[SECURED]"
-                ) {
-                  // 2. Not in vault, but in localStorage (Migration Phase)
-                  const plainValue = merged[item.section][item.key];
-                  console.log(
-                    `[SECURITY] Migrating ${item.key} to hardware vault...`,
-                  );
-                  await vault.store(vaultKey, item.key, plainValue);
-                  // Redact immediately
-                  (merged as any)[item.section][item.key] = plainValue;
-                  parsed[item.section][item.key] = "[SECURED]";
-                }
-            } catch (e) {
-              console.error(
-                `[SECURITY] Vault recovery failed for ${item.key}:`,
-                e,
-              );
+        for (const item of SENSITIVE_MAP) {
+          const vaultKey = `setting:${item.section}:${item.key}`;
+          try {
+            const secured = await secureVault.retrieve(vaultKey);
+            if (secured.success && secured.password) {
+              if ((merged as any)[item.section]) {
+                (merged as any)[item.section][item.key] = secured.password;
+              }
+              // Redact from local storage copy (Safety)
+              if (parsed[item.section] && parsed[item.section][item.key]) {
+                parsed[item.section][item.key] = "[SECURED]";
+              }
+            } else if (
+              (merged as any)[item.section] &&
+              (merged as any)[item.section][item.key] === "[SECURED]"
+            ) {
+              // IMPORTANT: If Vault has nothing, but localStorage had "[SECURED]",
+              // we must CLEAR it to "" so it doesn't leak 9 dots to the UI.
+              (merged as any)[item.section][item.key] = "";
+            } else if (
+              (merged as any)[item.section] &&
+              (merged as any)[item.section][item.key] &&
+              (merged as any)[item.section][item.key] !== "[SECURED]"
+            ) {
+              // 2. Not in vault, but in localStorage (Migration Phase)
+              const plainValue = (merged as any)[item.section][item.key];
+              console.log(`[SECURITY] Migrating ${item.key} to secure vault...`);
+              await secureVault.store(vaultKey, item.key, plainValue);
+              // Redact immediately in parsed for next write
+              parsed[item.section][item.key] = "[SECURED]";
             }
+          } catch (e) {
+            console.error(`[SECURITY] Vault recovery failed for ${item.key}:`, e);
           }
-
-          // Update localStorage with redacted values if we modified 'parsed'
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
         }
+
+        // Update localStorage with redacted values if we modified 'parsed'
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+
+      this.settings = merged;
 
         // HARDWARE-AWARE MIGRATION (One-time correction)
         // ... (existing logic continues here)
@@ -650,30 +662,31 @@ class SettingsService extends EventEmitter {
     try {
       const savedSettings = JSON.parse(JSON.stringify(this.settings));
 
-      // --- VAULT STORAGE ---
-      if ((window as any).luca?.vault) {
-        const vault = (window as any).luca.vault;
-        const SENSITIVE_MAP = [
-          { section: "brain", key: "geminiApiKey" },
-          { section: "brain", key: "anthropicApiKey" },
-          { section: "brain", key: "openaiApiKey" },
-          { section: "brain", key: "xaiApiKey" },
-          { section: "brain", key: "deepseekApiKey" },
-          { section: "voice", key: "googleApiKey" },
-          { section: "iot", key: "haToken" },
-        ];
+      // --- SECURE VAULT STORAGE (Keychain Redirection) ---
+      const SENSITIVE_MAP = [
+        { section: "brain", key: "geminiApiKey" },
+        { section: "brain", key: "anthropicApiKey" },
+        { section: "brain", key: "openaiApiKey" },
+        { section: "brain", key: "xaiApiKey" },
+        { section: "brain", key: "deepseekApiKey" },
+        { section: "brain", key: "groqApiKey" },
+        { section: "voice", key: "googleApiKey" },
+        { section: "iot", key: "haToken" },
+      ];
 
-        for (const item of SENSITIVE_MAP) {
-          const value = (this.settings as any)[item.section][item.key];
-          // Always update vault to match current state (even if empty)
-          if (typeof value === "string" && value !== "[SECURED]") {
-            await vault.store(
-              `setting:${item.section}:${item.key}`,
-              item.key,
-              value,
-            );
-          }
-          // Redact in local storage copy
+      for (const item of SENSITIVE_MAP) {
+        if (!(this.settings as any)[item.section]) continue;
+        const value = (this.settings as any)[item.section][item.key];
+        // Always update vault to match current state (even if empty)
+        if (typeof value === "string" && value !== "[SECURED]" && value !== "") {
+          await secureVault.store(
+            `setting:${item.section}:${item.key}`,
+            item.key,
+            value,
+          );
+        }
+        // Redact in local storage copy
+        if (savedSettings[item.section]) {
           (savedSettings as any)[item.section][item.key] = "[SECURED]";
         }
       }
@@ -735,12 +748,20 @@ class SettingsService extends EventEmitter {
   private async syncEmbeddingModel(model: string) {
     try {
       // 1. Check if this is a local model (Full Privacy Trigger)
-      const { isLocalModelId } = await import("./ModelManagerService");
-      const localOnly = isLocalModelId(model);
+      const { isLocalModelId, LOCAL_EMBEDDING_MODEL_IDS } = await import("./ModelManagerService");
+      const normalizedModel = model.startsWith("local/")
+        ? model.split("/")[1] || model
+        : model;
+      const localOnly = isLocalModelId(normalizedModel);
 
       // 2. SAFETY: Only sync if it looks like an embedding model
       // This prevents 400 errors when the brain model (gemini-*) is accidentally passed here
-      if (!model.includes("embedding")) {
+      const isKnownEmbeddingModel =
+        normalizedModel.includes("embedding") ||
+        normalizedModel.includes("embed") ||
+        LOCAL_EMBEDDING_MODEL_IDS.includes(normalizedModel);
+
+      if (!isKnownEmbeddingModel) {
         console.debug(
           `[SETTINGS] Skipping embedding sync for non-embedding model: ${model}`,
         );
@@ -754,7 +775,7 @@ class SettingsService extends EventEmitter {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model,
+          model: normalizedModel,
           localOnly,
         }),
         signal: AbortSignal.timeout(5000),

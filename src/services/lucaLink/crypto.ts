@@ -1,13 +1,12 @@
 import * as naclModule from "tweetnacl";
-import {
-  encodeBase64,
-  decodeUTF8,
-  decodeBase64,
-} from "tweetnacl-util";
+import * as naclUtilModule from "tweetnacl-util";
 import CryptoJS from "crypto-js";
 import type { EncryptedMessage, KeyPair, SharedSecret } from "./types";
 
 const nacl = (naclModule as any).default || naclModule;
+const naclUtil = (naclUtilModule as any).default || naclUtilModule;
+
+const { encodeBase64, decodeUTF8, decodeBase64 } = naclUtil;
 
 /**
  * CryptoService - Handles all encryption, decryption, and signing for Luca Link
@@ -60,52 +59,70 @@ export class CryptoService {
   }
 
   /**
-   * Encrypt a message using AES-256-CTR
-   * Note: Using CTR mode since crypto-js doesn't support GCM
+   * Encrypt a message using AES-256-GCM (Hardware Accelerated)
    */
-  static encrypt(
+  static async encrypt(
     message: string,
     sharedSecret: Uint8Array
-  ): { encrypted: string; iv: string } {
-    // Generate random IV
-    const iv = CryptoJS.lib.WordArray.random(16);
+  ): Promise<{ encrypted: string; iv: string }> {
+    const crypto = (global as any).crypto || (global as any).window?.crypto;
+    if (!crypto?.subtle) {
+      throw new Error("Substrate Failure: WebCrypto not available.");
+    }
 
-    // Convert shared secret to WordArray
-    const key = CryptoJS.lib.WordArray.create(sharedSecret as any);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await crypto.subtle.importKey(
+      "raw",
+      sharedSecret,
+      { name: "AES-GCM" },
+      false,
+      ["encrypt"]
+    );
 
-    // Encrypt using AES-256-CTR (GCM not available in crypto-js)
-    const encrypted = CryptoJS.AES.encrypt(message, key, {
-      iv: iv,
-      mode: CryptoJS.mode.CTR,
-      padding: CryptoJS.pad.NoPadding,
-    });
+    const encoded = new TextEncoder().encode(message);
+    const encrypted = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      key,
+      encoded
+    );
 
     return {
-      encrypted: encrypted.toString(),
-      iv: iv.toString(CryptoJS.enc.Base64),
+      encrypted: Buffer.from(encrypted).toString("base64"),
+      iv: Buffer.from(iv).toString("base64"),
     };
   }
 
   /**
-   * Decrypt a message using AES-256-CTR
+   * Decrypt a message using AES-256-GCM
    */
-  static decrypt(
+  static async decrypt(
     encryptedData: string,
     iv: string,
     sharedSecret: Uint8Array
-  ): string {
-    // Convert shared secret to WordArray
-    const key = CryptoJS.lib.WordArray.create(sharedSecret as any);
-    const ivWordArray = CryptoJS.enc.Base64.parse(iv);
+  ): Promise<string> {
+    const crypto = (global as any).crypto || (global as any).window?.crypto;
+    if (!crypto?.subtle) {
+      throw new Error("Substrate Failure: WebCrypto not available.");
+    }
 
-    // Decrypt
-    const decrypted = CryptoJS.AES.decrypt(encryptedData, key, {
-      iv: ivWordArray,
-      mode: CryptoJS.mode.CTR,
-      padding: CryptoJS.pad.NoPadding,
-    });
+    const ivBytes = Buffer.from(iv, "base64");
+    const dataBytes = Buffer.from(encryptedData, "base64");
+    
+    const key = await crypto.subtle.importKey(
+      "raw",
+      sharedSecret,
+      { name: "AES-GCM" },
+      false,
+      ["decrypt"]
+    );
 
-    return decrypted.toString(CryptoJS.enc.Utf8);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: ivBytes },
+      key,
+      dataBytes
+    );
+
+    return new TextDecoder().decode(decrypted);
   }
 
   /**
@@ -170,20 +187,20 @@ export class CryptoService {
   /**
    * Create an encrypted message with signature
    */
-  static createSecureMessage(
+  static async createSecureMessage(
     payload: any,
     sharedSecret: Uint8Array
-  ): EncryptedMessage {
+  ): Promise<EncryptedMessage> {
     const nonce = this.generateNonce();
     const timestamp = Date.now();
 
     // Serialize payload
     const message = JSON.stringify(payload);
 
-    // Encrypt
-    const { encrypted, iv } = this.encrypt(message, sharedSecret);
+    // Encrypt (Now async GCM)
+    const { encrypted, iv } = await this.encrypt(message, sharedSecret);
 
-    // Sign the encrypted data + metadata
+    // Sign the encrypted data + metadata (Neural Signature)
     const dataToSign = `${encrypted}|${iv}|${timestamp}|${nonce}`;
     const signature = this.sign(dataToSign, sharedSecret);
 
@@ -199,35 +216,35 @@ export class CryptoService {
   /**
    * Decrypt and verify a secure message
    */
-  static decryptSecureMessage(
+  static async decryptSecureMessage(
     encryptedMessage: EncryptedMessage,
     sharedSecret: Uint8Array,
     maxAge: number = 60000 // 60 seconds default
-  ): any {
+  ): Promise<any> {
     const { encrypted, iv, signature, timestamp, nonce } = encryptedMessage;
 
     // Check message age (replay protection)
     const age = Date.now() - timestamp;
     if (age > maxAge) {
-      throw new Error(`Message too old: ${age}ms (max: ${maxAge}ms)`);
+      throw new Error(`Neural Decay: Packet too old: ${age}ms (max: ${maxAge}ms)`);
     }
 
-    // Verify signature
+    // Verify signature (Integrity check)
     const dataToVerify = `${encrypted}|${iv}|${timestamp}|${nonce}`;
     if (!this.verifySignature(dataToVerify, signature, sharedSecret)) {
       throw new Error(
-        "Invalid signature - message may have been tampered with"
+        "Neural Fracture: Signature mismatch - packet may have been intercepted."
       );
     }
 
-    // Decrypt
-    const decrypted = this.decrypt(encrypted, iv, sharedSecret);
+    // Decrypt (Now async GCM)
+    const decrypted = await this.decrypt(encrypted, iv, sharedSecret);
 
     // Parse JSON
     try {
       return JSON.parse(decrypted);
     } catch {
-      throw new Error("Failed to parse decrypted message");
+      throw new Error("Neural Corruption: Failed to parse decrypted packet.");
     }
   }
 

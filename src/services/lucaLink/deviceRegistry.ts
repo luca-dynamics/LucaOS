@@ -94,6 +94,9 @@ export class DeviceRegistryService {
     if (/mac/.test(ua)) return "macos";
     if (/win/.test(ua)) return "windows";
     if (/linux/.test(ua)) return "linux";
+    if (/tizen/.test(ua)) return "tizen";
+    if (/webos/.test(ua)) return "webos";
+    if (/wear os|watch/.test(ua)) return "wearos";
 
     return "web";
   }
@@ -105,6 +108,10 @@ export class DeviceRegistryService {
     const ua = userAgent.toLowerCase();
 
     if (/tablet|ipad/.test(ua)) return "tablet";
+    if (/tv|smarttv|tizen|webos/.test(ua)) return "tv";
+    if (/watch|wear os/.test(ua)) return "watch";
+    if (/speaker|google home|alexa/.test(ua)) return "speaker";
+    if (/iot|gateway|hub/.test(ua)) return "iot";
     if (/mobile|android|iphone/.test(ua)) return "mobile";
 
     return "desktop";

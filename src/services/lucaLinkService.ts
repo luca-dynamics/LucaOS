@@ -8,6 +8,9 @@
 import { io, Socket } from "socket.io-client";
 import { settingsService } from "./settingsService";
 import { cortexUrl, RELAY_SERVER_URL } from "../config/api";
+import { sessionManager } from "./lucaLink/sessionManager";
+import { CryptoService } from "./lucaLink/crypto";
+import type { EncryptedMessage } from "./lucaLink/types";
 
 // Types
 export interface LucaLinkMessage {
@@ -17,6 +20,7 @@ export interface LucaLinkMessage {
   target: string;
   timestamp: number;
   payload?: unknown;
+  secure?: boolean; // Indicates if the payload is an EncryptedMessage
   sync?: {
     type: string;
     data: unknown;
@@ -417,14 +421,51 @@ class LucaLinkService {
           resolve();
         });
 
-        this.socket.on("message", (message: LucaLinkMessage) => {
+        this.socket.on("message", async (message: LucaLinkMessage) => {
           console.log("[LucaLink] Received message:", message.type);
+
+          // --- NEURAL HARDENING: Decrypt secure messages ---
+          if (message.secure && message.payload) {
+            try {
+              const sessionData = await sessionManager.recoverSessionByDevice(message.source);
+              if (sessionData) {
+                console.log(`[LucaLink] 🔓 Unlocking Secure Packet from ${message.source}...`);
+                message.payload = await CryptoService.decryptSecureMessage(
+                  message.payload as EncryptedMessage,
+                  sessionData.sharedSecret
+                );
+
+                // --- VISUAL FEEDBACK: Express Thinking on thought arrival ---
+                import("./iot/CognitiveExpressor").then(({ cognitiveExpressor }) => {
+                  cognitiveExpressor.expressThinking();
+                });
+              } else {
+                console.warn(`[LucaLink] ⚠️ Received secure message but no session found for ${message.source}`);
+                return; // Drop unverified secure message
+              }
+            } catch (e) {
+              console.error("[LucaLink] ❌ Neural Fracture: Failed to decrypt secure packet:", e);
+              return; // Drop corrupted packet
+            }
+          }
 
           // Handle registry sync
           if (message.type === "sync" && message.sync?.type === "registry") {
-            this.updateState({
-              connectedDevices: message.sync.data as LucaLinkDevice[],
-            });
+            const devices = message.sync.data as LucaLinkDevice[];
+            this.updateState({ connectedDevices: devices });
+
+            // --- MESH BOOT: Activate Consciousness Layer when mesh has 2+ devices ---
+            // We boot lazily — only when there's actually a mesh to manage.
+            if (devices.length >= 2) {
+              import("./consciousnessLayer").then(({ consciousnessLayer }) => {
+                if (consciousnessLayer.getStatus() === "DORMANT") {
+                  console.log("[LucaLink] 🌌 Mesh detected. Booting Consciousness Layer...");
+                  consciousnessLayer.boot().catch((e) => {
+                    console.error("[LucaLink] Consciousness boot failed:", e);
+                  });
+                }
+              });
+            }
           }
 
           // Forward to message listeners
@@ -440,6 +481,27 @@ class LucaLinkService {
                lucaService.importSovereignMission(goldEgg).catch(e => {
                  console.error("[TELEPORT] Auto-hydration failed:", e);
                });
+            });
+          }
+
+          // --- MESH OBSERVATION: Handle Sensor Pulses (2050 Alien Tech) ---
+          if (message.type === "SENSOR_PULSE" && message.payload) {
+            import("./meshObservationService").then(({ meshObservationService }) => {
+              meshObservationService.registerNodePulse(message.payload as any);
+            });
+
+            // --- COGNITIVE SHARDING: Feed health signals to the Living Brain ---
+            import("./cognitiveShardingEngine").then(({ cognitiveShardingEngine }) => {
+              const pulse = message.payload as any;
+              cognitiveShardingEngine.ingestHealthSignal({
+                deviceId: pulse.deviceId || message.source,
+                battery: pulse.payload?.battery ?? -1,
+                cpuLoad: pulse.payload?.cpuLoad ?? 30,
+                signalStrength: pulse.payload?.signalStrength ?? 70,
+                isActive: pulse.payload?.isActive ?? true,
+                npuAvailable: pulse.payload?.npuAvailable ?? false,
+                lastHeartbeat: Date.now(),
+              });
             });
           }
         });
@@ -955,6 +1017,79 @@ class LucaLinkService {
     });
 
     console.log("[LucaLink] Guest message handler initialized");
+  }
+
+  /**
+   * [2050 ALIEN TECH]: Neural Beam
+   * Transmits a high-fidelity neural packet to a target Satellite Node.
+   * Hardened with AES-256-GCM for absolute privacy and integrity.
+   */
+  async beamPacket(
+    targetDeviceId: string,
+    packet: { type: string; payload: any },
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!this.socket || !this.state.connected) {
+      return {
+        success: false,
+        error: "Transporter offline: Luca Link not connected.",
+      };
+    }
+
+    console.log(`[LucaLink] ⚡ Preparing Neural Beam for ${targetDeviceId}...`);
+
+    // --- NEURAL HARDENING: Try to encrypt the payload ---
+    let finalPayload = packet.payload;
+    let isSecure = false;
+
+    try {
+      const sessionData = await sessionManager.recoverSessionByDevice(targetDeviceId);
+      if (sessionData) {
+        console.log(`[LucaLink] 🔐 Vaulting Neural Packet with AES-256-GCM...`);
+        finalPayload = await CryptoService.createSecureMessage(
+          packet.payload,
+          sessionData.sharedSecret
+        );
+        isSecure = true;
+      } else {
+        console.warn(`[LucaLink] ⚠️ No secure session for ${targetDeviceId}. Sending Naked Transmission.`);
+      }
+    } catch (e) {
+      console.error("[LucaLink] ❌ Cryptographic Failure during beam prep:", e);
+      return { success: false, error: "Neural Encryption Failure." };
+    }
+
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        resolve({
+          success: false,
+          error:
+            "Beam timed out: Satellite Node did not acknowledge transubstantiation.",
+        });
+      }, 15000);
+
+      const message: LucaLinkMessage = {
+        id: this.generateDeviceId(),
+        type: packet.type,
+        source: this.state.deviceId || "origin",
+        target: targetDeviceId,
+        timestamp: Date.now(),
+        payload: finalPayload,
+        secure: isSecure,
+      };
+
+      // Emit with acknowledgement
+      this.socket?.emit("message", message, (ack: any) => {
+        clearTimeout(timeout);
+        if (ack && ack.success) {
+          resolve({ success: true });
+        } else {
+          resolve({
+            success: false,
+            error: ack?.error || "Neural fracture detected during beam.",
+          });
+        }
+      });
+    });
   }
 }
 

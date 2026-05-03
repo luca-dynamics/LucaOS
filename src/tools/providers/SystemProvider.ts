@@ -2,16 +2,18 @@ import { ToolRegistry } from "../../services/toolRegistry";
 import * as Definitions from "../definitions";
 import { apiUrl } from "../../config/api";
 import { nativeControl } from "../../services/nativeControlService";
-import { diagnosticsService } from "../../services/diagnosticsService";
+import { getDiagnosticsSurfaceResult } from "../../services/diagnosticsSurfacePolicy";
+import { canRegisterSystemTool } from "../systemToolSurfacePolicy";
 
 export const SystemProvider = {
   register: () => {
     // 1. Terminal Execution (The "Nerve Center")
-    ToolRegistry.register(
-      Definitions.executeTerminalCommandTool,
-      "SYSTEM",
-      ["terminal", "shell", "bash", "zsh", "command"],
-      async (args, context) => {
+    if (canRegisterSystemTool("executeTerminalCommand", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        Definitions.executeTerminalCommandTool,
+        "SYSTEM",
+        ["terminal", "shell", "bash", "zsh", "command"],
+        async (args, context) => {
         const { soundService, persona, setVisualData } = context;
         const { command } = args;
 
@@ -81,15 +83,17 @@ export const SystemProvider = {
         } catch (e: any) {
           return `Terminal Error: ${e.message}`;
         }
-      },
-    );
+        },
+      );
+    }
 
     // 2. Interactive Terminal (GUI)
-    ToolRegistry.register(
-      Definitions.openInteractiveTerminalTool,
-      "SYSTEM",
-      ["terminal", "gui", "window"],
-      async (args, context) => {
+    if (canRegisterSystemTool("openInteractiveTerminal", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        Definitions.openInteractiveTerminalTool,
+        "SYSTEM",
+        ["terminal", "gui", "window"],
+        async (args, context) => {
         const { soundService, hostPlatform } = context;
         const { command } = args;
 
@@ -120,138 +124,140 @@ export const SystemProvider = {
         } catch (e: any) {
           return `Failed to launch GUI terminal: ${e.message}`;
         }
-      },
-    );
+        },
+      );
+    }
 
     // 3. System Doctor (Consolidated Diagnostics)
-    ToolRegistry.register(
-      Definitions.systemDoctorTool,
-      "SYSTEM",
-      ["doctor", "diagnostics", "status", "health", "audit", "fix"],
-      async (args, context) => {
-        const { soundService, setVisualData } = context;
-        soundService?.play("PROCESSING");
+    if (canRegisterSystemTool("systemDoctor", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        Definitions.systemDoctorTool,
+        "SYSTEM",
+        ["doctor", "diagnostics", "status", "health", "audit", "fix", "support", "snapshot"],
+        async (args, context) => {
+          const { soundService, setVisualData } = context;
+          soundService?.play("PROCESSING");
 
-        const diagId = Math.random().toString(36).substring(7);
-
-        if (setVisualData) {
-          setVisualData({
-            type: "SYSTEM",
-            status: "LUCA_DOCTOR_RUNNING",
-            logs: [
-              {
-                id: `init-${diagId}`,
-                timestamp: new Date().toLocaleTimeString(),
-                source: "DOCTOR_PROT",
-                message: "Initiating multi-sector production audit...",
-                type: "INFO",
-              },
-            ],
-            title: "L.U.C.A_DOCTOR",
-            summonHUD: true, // Always show the doctor report
-          });
-        }
-
-        try {
-          const report = await diagnosticsService.audit();
+          const diagId = Math.random().toString(36).substring(7);
 
           if (setVisualData) {
             setVisualData({
               type: "SYSTEM",
-              status: `AUDIT_${report.overall.toUpperCase()}`,
-              logs: report.results.map((r) => ({
-                id: r.id,
-                timestamp: new Date().toLocaleTimeString(),
-                source: r.name,
-                message: r.message + (r.fix ? ` (Suggested Fix: ${r.fix})` : ""),
-                type: r.status === "pass" ? "SUCCESS" : (r.status === "warn" ? "WARNING" : "ERROR"),
-              })),
-              title: "L.U.C.A_DOCTOR_REPORT",
+              status: "LUCA_DOCTOR_RUNNING",
+              logs: [
+                {
+                  id: `init-${diagId}`,
+                  timestamp: new Date().toLocaleTimeString(),
+                  source: "DOCTOR_PROT",
+                  message: "Initiating multi-sector production audit...",
+                  type: "INFO",
+                },
+              ],
+              title: "L.U.C.A_DOCTOR",
+              summonHUD: true, // Always show the doctor report
             });
           }
 
-          const summary = report.results
-            .map((r) => `${r.status === "pass" ? "✓" : (r.status === "warn" ? "⚠" : "✗")} ${r.name}: ${r.message}`)
-            .join("\n");
+          try {
+            const surfaceResult = await getDiagnosticsSurfaceResult(
+              args?.reportType === "snapshot" ? "snapshot" : "audit",
+              diagId,
+            );
 
-          return `L.U.C.A DOCTOR REPORT [${report.overall.toUpperCase()}]\n\n${summary}\n\nSYSTEM: ${report.system.platform} (${report.system.arch}) | RAM Free: ${(report.system.freeMem / 1024 / 1024 / 1024).toFixed(2)} GB`;
-        } catch (e: any) {
-          return `Doctor Audit Failed: ${e.message}`;
-        }
-      },
-    );
+            if (setVisualData) {
+              setVisualData({
+                type: "SYSTEM",
+                status: surfaceResult.visualStatus,
+                logs: surfaceResult.logs || [],
+                title: surfaceResult.title,
+              });
+            }
+
+            return surfaceResult.text;
+          } catch (e: any) {
+            return `Doctor Audit Failed: ${e.message}`;
+          }
+        },
+      );
+    }
 
     // 4. Master Control System (Volume, Display, etc.)
-    ToolRegistry.register(
-      Definitions.nativeControlTool,
-      "SYSTEM",
-      ["control", "volume", "audio", "display"],
-      async (args, context) => {
-        const { action, value } = args;
-        const { soundService } = context;
+    if (canRegisterSystemTool("controlSystem", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        Definitions.nativeControlTool,
+        "SYSTEM",
+        ["control", "volume", "audio", "display"],
+        async (args, context) => {
+          const { action, value } = args;
+          const { soundService } = context;
 
-        soundService?.play("SUCCESS");
+          soundService?.play("SUCCESS");
 
-        switch (action) {
-          case "VOLUME_SET":
-            return (await nativeControl.setVolume(value)) || "Volume adjusted.";
-          case "VOLUME_MUTE":
-            return (await nativeControl.mute()) || "Audio muted.";
-          case "VOLUME_UNMUTE":
-            return (await nativeControl.unmute()) || "Audio restored.";
-          case "GET_BATTERY":
-            return await nativeControl.getBatteryStatus();
-          case "GET_SYSTEM_LOAD":
-            return await nativeControl.getSystemLoad();
-          case "MEDIA_PLAY_PAUSE":
-            return (
-              (await nativeControl.mediaPlayPause()) || "Playback toggled."
-            );
-          case "MEDIA_NEXT":
-            return (await nativeControl.mediaNext()) || "Skipped track.";
-          default:
-            return `Action ${action} initiated.`;
-        }
-      },
-    );
+          switch (action) {
+            case "VOLUME_SET":
+              return (await nativeControl.setVolume(value)) || "Volume adjusted.";
+            case "VOLUME_MUTE":
+              return (await nativeControl.mute()) || "Audio muted.";
+            case "VOLUME_UNMUTE":
+              return (await nativeControl.unmute()) || "Audio restored.";
+            case "GET_BATTERY":
+              return await nativeControl.getBatteryStatus();
+            case "GET_SYSTEM_LOAD":
+              return await nativeControl.getSystemLoad();
+            case "MEDIA_PLAY_PAUSE":
+              return (
+                (await nativeControl.mediaPlayPause()) || "Playback toggled."
+              );
+            case "MEDIA_NEXT":
+              return (await nativeControl.mediaNext()) || "Skipped track.";
+            default:
+              return `Action ${action} initiated.`;
+          }
+        },
+      );
+    }
 
     // 5. Admin / Lockdown Tools
-    ToolRegistry.register(
-      Definitions.initiateLockdownTool,
-      "SYSTEM",
-      ["lockdown", "secure", "critical"],
-      async (args, context) => {
+    if (canRegisterSystemTool("initiateLockdown", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        Definitions.initiateLockdownTool,
+        "SYSTEM",
+        ["lockdown", "secure", "critical"],
+        async (args, context) => {
         const { soundService, handlePersonaSwitch } = context;
 
         soundService?.play("ALARM");
         if (handlePersonaSwitch) await handlePersonaSwitch("RUTHLESS");
 
         return "⚠️ LOCKDOWN INITIATED. All non-essential services suspended. Persona force-switched to RUTHLESS.";
-      },
-    );
+        },
+      );
+    }
 
     // 6. Manual Display Trigger (Opt-In Visualization)
-    ToolRegistry.register(
-      Definitions.showActionBlockDisplayTool,
-      "SYSTEM",
-      ["show", "display", "maximize", "render", "ui"],
-      async (args, context) => {
-        const { setVisualData, soundService } = context;
-        soundService?.play("success");
+    if (canRegisterSystemTool("showActionBlockDisplay", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        Definitions.showActionBlockDisplayTool,
+        "SYSTEM",
+        ["show", "display", "maximize", "render", "ui"],
+        async (args, context) => {
+          const { setVisualData, soundService } = context;
+          soundService?.play("success");
 
-        if (setVisualData) {
-          // Send signal to VisualCore to MAXIMIZE the current view
-          // We use "SHOW_DISPLAY" as a special control type
-          setVisualData({
-            type: "SHOW_DISPLAY",
-            status: "DISPLAY_MAXIMIZED",
-            logs: [],
-            title: "VISUAL_INTERFACE",
-          });
-          return "Display maximized.";
-        }
-        return "Visual Core not available.";
-      },
-    );
+          if (setVisualData) {
+            // Send signal to VisualCore to MAXIMIZE the current view
+            // We use "SHOW_DISPLAY" as a special control type
+            setVisualData({
+              type: "SHOW_DISPLAY",
+              status: "DISPLAY_MAXIMIZED",
+              logs: [],
+              title: "VISUAL_INTERFACE",
+            });
+            return "Display maximized.";
+          }
+          return "Visual Core not available.";
+        },
+      );
+    }
   },
 };

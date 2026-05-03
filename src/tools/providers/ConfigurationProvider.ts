@@ -1,13 +1,16 @@
 import { ToolRegistry } from "../../services/toolRegistry";
 import * as Definitions from "../definitions/configuration.tools";
 import { settingsService } from "../../services/settingsService";
-import { diagnosticsService } from "../../services/diagnosticsService";
 import { voiceCloneService } from "../../services/VoiceCloneService";
 import { modelManager } from "../../services/ModelManagerService";
 import { lucaLink } from "../../services/lucaLinkService";
 import { initializeToolRegistry } from "../../services/toolInitialization";
 import { memoryService } from "../../services/memoryService";
 import { cortexUrl, apiUrl } from "../../config/api";
+import {
+  getDiagnosticsSurfaceResult,
+  runDiagnosticsRepair,
+} from "../../services/diagnosticsSurfacePolicy";
 
 export const ConfigurationProvider = {
   register: () => {
@@ -85,11 +88,14 @@ export const ConfigurationProvider = {
     ToolRegistry.register(
       Definitions.auditSystemTool,
       "SYSTEM",
-      ["audit", "health", "check", "diagnostics"],
-      async () => {
+      ["audit", "health", "check", "diagnostics", "support", "snapshot"],
+      async (args) => {
         try {
-          const report = await diagnosticsService.audit();
-          return JSON.stringify(report, null, 2);
+          const surfaceResult = await getDiagnosticsSurfaceResult(
+            args?.mode === "snapshot" ? "snapshot" : "audit",
+            "config-audit",
+          );
+          return surfaceResult.text;
         } catch (e: any) {
           return `ERROR running system audit: ${e.message}`;
         }
@@ -103,16 +109,8 @@ export const ConfigurationProvider = {
       ["repair", "fix", "self-heal", "recovery"],
       async () => {
         try {
-          const result = await diagnosticsService.repair();
-          return JSON.stringify(
-            {
-              status: "SUCCESS",
-              repairLog: result.log,
-              finalReport: result.report,
-            },
-            null,
-            2,
-          );
+          const result = await runDiagnosticsRepair();
+          return result.text;
         } catch (e: any) {
           return `ERROR executing self-repair protocol: ${e.message}`;
         }
@@ -494,5 +492,3 @@ export const ConfigurationProvider = {
     );
   },
 };
-
-

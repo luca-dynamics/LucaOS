@@ -5,22 +5,6 @@ import { ScreenShare } from "../ScreenShare";
 import GhostCursor from "../GhostCursor";
 import LiveContentDisplay from "../LiveContentDisplay";
 import SecurityGate from "../SecurityGate";
-import AdminGrantModal from "../AdminGrantModal";
-import WhatsAppManager from "../WhatsAppManager";
-import TelegramManager from "../TelegramManager";
-import TwitterManager from "../social/TwitterManager";
-import InstagramManager from "../social/InstagramManager";
-import LinkedInManager from "../social/LinkedInManager";
-import DiscordManager from "../social/DiscordManager";
-import YouTubeManager from "../social/YouTubeManager";
-import WeChatManager from "../social/WeChatManager";
-import LucaLinkModal from "../LucaLinkModal";
-import ProfileManager from "../ProfileManager";
-import CodeEditor from "../CodeEditor";
-import IngestionModal from "../IngestionModal";
-import { AutonomyDashboard } from "../AutonomyDashboard";
-import AgentModePanel from "../AgentModePanel";
-import ThoughtProcessPanel from "../ThoughtProcessPanel";
 import { parseToolLogsToThoughtNodes } from "../../utils/thoughtParser";
 import { getFriendlyVoiceModelLabel } from "../../utils/voiceDisplay";
 import { voiceSessionOrchestrator } from "../../services/voiceSessionOrchestrator";
@@ -29,26 +13,10 @@ import { VoiceCommandConfirmation } from "../VoiceCommandConfirmation";
 import VisionCameraModal from "../VisionCameraModal";
 import RemoteAccessModal from "../RemoteAccessModal";
 import { DesktopStreamModal } from "../DesktopStreamModal";
-import GeoTacticalView from "../GeoTacticalView";
-import CryptoTerminal from "../CryptoTerminal";
-import ForexTerminal from "../ForexTerminal";
-import PredictionTerminal from "../PredictionTerminal";
-import OsintDossier from "../OsintDossier";
-import SmartTVRemote from "../SmartTVRemote";
-import WirelessManager from "../WirelessManager";
-import AppExplorerModal from "../AppExplorerModal";
-import MobileFileBrowser from "../MobileFileBrowser";
-import MobileManager from "../MobileManager";
-import NetworkMap from "../NetworkMap";
-import HackingTerminal from "../HackingTerminal";
-import SkillsMatrix from "../SkillsMatrix";
 import { LucaRecorder } from "../LucaRecorder";
-import StockTerminal from "../StockTerminal";
-import AdvancedTradingTerminal from "../trading/AdvancedTradingTerminal";
-import CompetitionPage from "../trading/CompetitionPage";
-import AITradersPage from "../trading/AITradersPage";
-import SubsystemDashboard from "../SubsystemDashboard";
 import HumanInputModal from "../HumanInputModal";
+import OriginOverlayPanels from "../../surfaces/origin/OriginOverlayPanels";
+import SharedOverlayPanels from "../../surfaces/shared/SharedOverlayPanels";
 
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
@@ -56,7 +24,7 @@ import { soundService } from "../../services/soundService";
 import { lucaService } from "../../services/lucaService";
 import { voiceCommandService } from "../../services/voiceCommandService";
 import { taskQueue } from "../../services/taskQueueService";
-import { SystemStatus, Sender } from "../../types";
+import { Sender, SystemStatus } from "../../types";
 import { apiUrl } from "../../config/api";
 import { MissionScope } from "../../services/toolRegistry";
 
@@ -391,6 +359,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     elevationState,
   } = props;
   const personaLabel = normalizePersonaDisplay(persona);
+  const thoughtNodes = parseToolLogsToThoughtNodes(toolLogs);
 
   return (
     <>
@@ -505,233 +474,47 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         />
       )}
 
-      {showAdminGrantModal && (
-        <AdminGrantModal
-          justification={adminJustification}
-          onGrant={() => {
-            setIsAdminMode(true);
-            setShowAdminGrantModal(false);
-            setToolLogs((prev) => [
-              ...prev,
-              {
-                toolName: "SYSTEM_KERNEL",
-                args: {},
-                result: "ADMINISTRATIVE PRIVILEGES GRANTED (ROOT).",
-                timestamp: Date.now(),
-              },
-            ]);
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: Date.now().toString(),
-                text: "SYSTEM_ALERT: ROOT ACCESS GRANTED. AUTHORIZATION LEVEL: ADMINISTRATOR. FULL SYSTEM CONTROL ENABLED.",
-                sender: Sender.SYSTEM,
-                timestamp: Date.now(),
-              },
-            ]);
-            soundService.play("SUCCESS");
-          }}
-          onDeny={() => {
-            setShowAdminGrantModal(false);
-            setToolLogs((prev) => [
-              ...prev,
-              {
-                toolName: "SYSTEM_KERNEL",
-                args: {},
-                result: "ADMINISTRATIVE PRIVILEGES DENIED.",
-                timestamp: Date.now(),
-              },
-            ]);
-          }}
-        />
-      )}
-
-      {showWhatsAppManager && (
-        <WhatsAppManager
-          onClose={() => setShowWhatsAppManager(false)}
-          theme={theme}
-        />
-      )}
-
-      {showTelegramManager && (
-        <TelegramManager
-          onClose={() => setShowTelegramManager(false)}
-          theme={theme}
-        />
-      )}
-
-      {showTwitterManager && (
-        <TwitterManager
-          onClose={() => setShowTwitterManager(false)}
-          theme={theme}
-        />
-      )}
-
-      {showInstagramManager && (
-        <InstagramManager
-          onClose={() => setShowInstagramManager(false)}
-          theme={theme}
-        />
-      )}
-
-      {showLinkedInManager && (
-        <LinkedInManager
-          onClose={() => setShowLinkedInManager(false)}
-          theme={theme}
-        />
-      )}
-
-      {showDiscordManager && (
-        <DiscordManager
-          onClose={() => setShowDiscordManager(false)}
-          theme={theme}
-        />
-      )}
-
-      {showYouTubeManager && (
-        <YouTubeManager
-          onClose={() => setShowYouTubeManager(false)}
-          theme={theme}
-        />
-      )}
-
-      {showWeChatManager && (
-        <WeChatManager
-          onClose={() => setShowWeChatManager(false)}
-          theme={theme}
-        />
-      )}
-
-      {showLucaLinkModal && (
-        <LucaLinkModal
-          onClose={() => setShowLucaLinkModal(false)}
-          localIp={localIp || window.location.hostname}
-        />
-      )}
-
-      {showProfileManager && (
-        <ProfileManager
-          onClose={() => setShowProfileManager(false)}
-          onSave={handleSaveProfile}
-          currentProfile={userProfile || undefined}
-        />
-      )}
-
-      {showCodeEditor && (
-        <CodeEditor
-          onClose={() => setShowCodeEditor(false)}
-          initialCwd={currentCwd || "."}
-          theme={theme}
-        />
-      )}
-
-      {showIngestionModal && (
-        <IngestionModal
-          onClose={() => setShowIngestionModal(false)}
-          onIngest={handleIngest}
-          theme={theme}
-        />
-      )}
-
-      {ingestionState.active && (
-        <div className="absolute inset-0 z-[950] bg-black/90 flex flex-col items-center justify-center pointer-events-none">
-          <div className="w-[600px] h-[400px] border border-green-500/50 bg-[var(--app-bg-tint)] p-8 flex flex-col relative overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.2)] rounded-lg">
-            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(0deg,transparent,rgba(34,197,94,0.5)_50%,transparent)] animate-scan"></div>
-            <div className="flex items-center gap-4 text-green-500 font-bold tracking-widest text-xl mb-6 border-b border-green-500/30 pb-4">
-              <Icon name="Dna" className="animate-spin-slow w-8 h-8" variant="BoldDuotone" />
-              <div>
-                <div>LUCA EVOLUTION PROTOCOL</div>
-                <div className="text-[10px] text-green-400/60 font-mono">
-                  INTEGRATING AGENTIC CAPABILITIES...
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden text-xs font-mono text-green-400/80 space-y-2 pl-4 border-l-2 border-green-500/20">
-              {ingestionState && ingestionState.skills.length > 0
-                ? ingestionState.skills.map((skill: string, i: number) => (
-                    <div
-                      key={`skill-${i}`}
-                      className="animate-in zoom-in duration-500 flex items-center gap-2 text-[color:var(--app-text-main)] font-bold tracking-wider"
-                    >
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      ACQUIRED SKILL: {skill}
-                    </div>
-                  ))
-                : (ingestionState && ingestionState.files.length > 0
-                    ? ingestionState.files.slice(-8)
-                    : [
-                        "Initializing Deep Scan...",
-                        "Parsing Jupyter Notebooks...",
-                        "Extracting Algorithmic Logic...",
-                        "Identifying Agent Architectures...",
-                        "Synthesizing Luca Pathways...",
-                      ]
-                  ).map((file: string, i: number) => (
-                    <div
-                      key={i}
-                      className="truncate animate-in slide-in-from-left-4 fade-in duration-500 flex items-center gap-2"
-                    >
-                      <span className="text-green-700">&gt;</span>
-                      {file}
-                    </div>
-                  ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isLockdown && (
-        <div className="absolute inset-0 z-[900] bg-red-950/90 flex flex-col items-center justify-center animate-in fade-in duration-200 pointer-events-none">
-          <div className="border-4 border-red-500 p-12 rounded-lg bg-[var(--app-bg-tint)] flex flex-col items-center shadow-[0_0_100px_#ef4444] animate-pulse">
-            <Icon name="ShieldAlert" size={128} className="text-red-500 mb-6" variant="BoldDuotone" />
-            <h1 className="text-6xl font-display font-bold text-red-500 tracking-[0.2em] mb-4">
-              LOCKDOWN
-            </h1>
-            <div className="text-2xl font-mono text-red-400 tracking-widest mb-8">
-              DEFENSE PROTOCOL ALPHA ACTIVE
-            </div>
-            <div className="mt-8 text-xs text-red-500/50 font-mono pointer-events-auto">
-              <button
-                onClick={() => {
-                  setIsLockdown(false);
-                  setSystemStatus(SystemStatus.NORMAL);
-                  soundService.play("SUCCESS");
-                }}
-                className="border border-red-500 px-4 py-2 hover:bg-red-500 hover:text-[color:var(--app-text-main)] transition-colors"
-              >
-                OVERRIDE AUTH CODE: OMEGA-9
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAutonomyDashboard && (
-        <AutonomyDashboard
-          onClose={() => setShowAutonomyDashboard(false)}
-          theme={theme}
-        />
-      )}
-
-      {showAgentMode && (
-        <AgentModePanel
-          task={null}
-          onClose={() => setShowAgentMode(false)}
-          theme={{
-            hex: theme?.hex || "#8b5cf6",
-            primary: theme?.primary || theme?.hex || "#8b5cf6",
-            border: theme?.border || `${theme?.hex}40` || "rgba(139,92,246,0.25)",
-            bg: theme?.bg || "rgba(0,0,0,0.4)",
-          }}
-        />
-      )}
-
-      {showThoughtProcess && (
-        <ThoughtProcessPanel
-          nodes={parseToolLogsToThoughtNodes(toolLogs)}
-          onClose={() => setShowThoughtProcess(false)}
-        />
-      )}
+      <SharedOverlayPanels
+        theme={theme}
+        showWhatsAppManager={showWhatsAppManager}
+        setShowWhatsAppManager={setShowWhatsAppManager}
+        showTelegramManager={showTelegramManager}
+        setShowTelegramManager={setShowTelegramManager}
+        showTwitterManager={showTwitterManager}
+        setShowTwitterManager={setShowTwitterManager}
+        showInstagramManager={showInstagramManager}
+        setShowInstagramManager={setShowInstagramManager}
+        showLinkedInManager={showLinkedInManager}
+        setShowLinkedInManager={setShowLinkedInManager}
+        showDiscordManager={showDiscordManager}
+        setShowDiscordManager={setShowDiscordManager}
+        showYouTubeManager={showYouTubeManager}
+        setShowYouTubeManager={setShowYouTubeManager}
+        showWeChatManager={showWeChatManager}
+        setShowWeChatManager={setShowWeChatManager}
+        showLucaLinkModal={showLucaLinkModal}
+        setShowLucaLinkModal={setShowLucaLinkModal}
+        localIp={localIp}
+        showProfileManager={showProfileManager}
+        setShowProfileManager={setShowProfileManager}
+        handleSaveProfile={handleSaveProfile}
+        userProfile={userProfile}
+        showCodeEditor={showCodeEditor}
+        setShowCodeEditor={setShowCodeEditor}
+        currentCwd={currentCwd}
+        showIngestionModal={showIngestionModal}
+        setShowIngestionModal={setShowIngestionModal}
+        handleIngest={handleIngest}
+        ingestionState={ingestionState}
+        showAppExplorer={showAppExplorer}
+        setShowAppExplorer={setShowAppExplorer}
+        showMobileFileBrowser={showMobileFileBrowser}
+        setShowMobileFileBrowser={setShowMobileFileBrowser}
+        serverUrl={apiUrl("")}
+        showMobileManager={showMobileManager}
+        setShowMobileManager={setShowMobileManager}
+        activeMobileDevice={activeMobileDevice}
+      />
 
       <VoiceHud
         isActive={isVoiceMode}
@@ -872,115 +655,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         />
       )}
 
-      {showGeoTactical && (
-        <GeoTacticalView
-          targetName={trackingTarget}
-          markers={tacticalMarkers}
-          onClose={() => setShowGeoTactical(false)}
-        />
-      )}
-
-      {showCryptoTerminal && (
-        <CryptoTerminal
-          onClose={() => setShowCryptoTerminal(false)}
-          theme={theme}
-        />
-      )}
-
-      {showForexTerminal && (
-        <ForexTerminal
-          onClose={() => setShowForexTerminal(false)}
-          theme={theme}
-        />
-      )}
-
-      {showPredictionTerminal && (
-        <PredictionTerminal
-          positions={polyPositions}
-          onBet={handlePlaceBet}
-          onClose={() => setShowPredictionTerminal(false)}
-          theme={theme}
-        />
-      )}
-
-      {showOsintDossier && (
-        <OsintDossier
-          profile={osintProfile}
-          onClose={() => setShowOsintDossier(false)}
-          theme={theme}
-        />
-      )}
-
-      {showTVRemote && (
-        <SmartTVRemote
-          device={activeTV}
-          onClose={() => setShowTVRemote(false)}
-          onCommand={(cmd: string, params: any) =>
-            executeTool("controlSmartTV", {
-              deviceId: activeTV?.id,
-              action: cmd,
-              ...params,
-            })
-          }
-          theme={theme}
-        />
-      )}
-
-      {showWirelessManager && (
-        <WirelessManager
-          onClose={() => setShowWirelessManager(false)}
-          onConnect={handleWirelessConnect}
-          activeTab={wirelessTab}
-          theme={theme}
-        />
-      )}
-
-      {showAppExplorer && (
-        <AppExplorerModal
-          isOpen={showAppExplorer}
-          onClose={() => setShowAppExplorer(false)}
-        />
-      )}
-
-      {showMobileFileBrowser && (
-        <MobileFileBrowser
-          onClose={() => setShowMobileFileBrowser(false)}
-          serverUrl={apiUrl("")}
-        />
-      )}
-
-      {showMobileManager && (
-        <MobileManager
-          device={activeMobileDevice}
-          onClose={() => setShowMobileManager(false)}
-        />
-      )}
-
-      {showNetworkMap && (
-        <NetworkMap onClose={() => setShowNetworkMap(false)} />
-      )}
-
-      {showHackingTerminal && (
-        <HackingTerminal
-          onClose={() => setShowHackingTerminal(false)}
-          toolLogs={hackingLogs}
-          themeId={theme.themeName}
-        />
-      )}
-
-      {showSkillsMatrix && (
-        <SkillsMatrix
-          onClose={() => setShowSkillsMatrix(false)}
-          theme={theme}
-          onExecute={async (skillName, args) => {
-            return await executeTool("executeCustomSkill", {
-              skillName,
-              args,
-            });
-          }}
-        />
-      )}
-
       {showLucaRecorder && (
         <LucaRecorder
           onClose={() => setShowLucaRecorder(false)}
@@ -1028,44 +702,112 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         />
       )}
 
-      {showStockTerminal && (
-        <StockTerminal
-          onClose={() => setShowStockTerminal(false)}
-          initialSymbol={stockTerminalSymbol}
-          theme={theme}
-        />
-      )}
-
-      {showTradingTerminal && (
-        <AdvancedTradingTerminal
-          onClose={() => setShowTradingTerminal(false)}
-          onOpenCompetition={() => {
-            setShowTradingTerminal(false);
-            setShowCompetitionPage(true);
-          }}
-          theme={theme}
-        />
-      )}
-
-      {showCompetitionPage && (
-        <CompetitionPage
-          onClose={() => setShowCompetitionPage(false)}
-          theme={theme}
-        />
-      )}
-
-      {showAITradersPage && (
-        <AITradersPage
-          onClose={() => setShowAITradersPage(false)}
-        />
-      )}
-
-      {showSubsystemDashboard && (
-        <SubsystemDashboard
-          onClose={() => setShowSubsystemDashboard(false)}
-          theme={theme}
-        />
-      )}
+      <OriginOverlayPanels
+        theme={theme}
+        showAdminGrantModal={showAdminGrantModal}
+        adminJustification={adminJustification}
+        onAdminGrant={() => {
+          setIsAdminMode(true);
+          setShowAdminGrantModal(false);
+          setToolLogs((prev) => [
+            ...prev,
+            {
+              toolName: "SYSTEM_KERNEL",
+              args: {},
+              result: "ADMINISTRATIVE PRIVILEGES GRANTED (ROOT).",
+              timestamp: Date.now(),
+            },
+          ]);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              text: "SYSTEM_ALERT: ROOT ACCESS GRANTED. AUTHORIZATION LEVEL: ADMINISTRATOR. FULL SYSTEM CONTROL ENABLED.",
+              sender: Sender.SYSTEM,
+              timestamp: Date.now(),
+            },
+          ]);
+          soundService.play("SUCCESS");
+        }}
+        onAdminDeny={() => {
+          setShowAdminGrantModal(false);
+          setToolLogs((prev) => [
+            ...prev,
+            {
+              toolName: "SYSTEM_KERNEL",
+              args: {},
+              result: "ADMINISTRATIVE PRIVILEGES DENIED.",
+              timestamp: Date.now(),
+            },
+          ]);
+        }}
+        isLockdown={isLockdown}
+        onLockdownOverride={() => {
+          setIsLockdown(false);
+          setSystemStatus(SystemStatus.NORMAL);
+          soundService.play("SUCCESS");
+        }}
+        showAutonomyDashboard={showAutonomyDashboard}
+        setShowAutonomyDashboard={setShowAutonomyDashboard}
+        showAgentMode={showAgentMode}
+        setShowAgentMode={setShowAgentMode}
+        showThoughtProcess={showThoughtProcess}
+        setShowThoughtProcess={setShowThoughtProcess}
+        thoughtNodes={thoughtNodes}
+        showGeoTactical={showGeoTactical}
+        setShowGeoTactical={setShowGeoTactical}
+        trackingTarget={trackingTarget}
+        tacticalMarkers={tacticalMarkers}
+        showCryptoTerminal={showCryptoTerminal}
+        setShowCryptoTerminal={setShowCryptoTerminal}
+        showForexTerminal={showForexTerminal}
+        setShowForexTerminal={setShowForexTerminal}
+        showPredictionTerminal={showPredictionTerminal}
+        setShowPredictionTerminal={setShowPredictionTerminal}
+        polyPositions={polyPositions}
+        handlePlaceBet={handlePlaceBet}
+        showOsintDossier={showOsintDossier}
+        setShowOsintDossier={setShowOsintDossier}
+        osintProfile={osintProfile}
+        showTVRemote={showTVRemote}
+        setShowTVRemote={setShowTVRemote}
+        activeTV={activeTV}
+        handleTvCommand={(cmd, params) =>
+          executeTool("controlSmartTV", {
+            deviceId: activeTV?.id,
+            action: cmd,
+            ...params,
+          })
+        }
+        showWirelessManager={showWirelessManager}
+        setShowWirelessManager={setShowWirelessManager}
+        handleWirelessConnect={handleWirelessConnect}
+        wirelessTab={wirelessTab}
+        showNetworkMap={showNetworkMap}
+        setShowNetworkMap={setShowNetworkMap}
+        showHackingTerminal={showHackingTerminal}
+        setShowHackingTerminal={setShowHackingTerminal}
+        hackingLogs={hackingLogs}
+        showSkillsMatrix={showSkillsMatrix}
+        setShowSkillsMatrix={setShowSkillsMatrix}
+        handleSkillExecute={(skillName, args) =>
+          executeTool("executeCustomSkill", {
+            skillName,
+            args,
+          })
+        }
+        showStockTerminal={showStockTerminal}
+        setShowStockTerminal={setShowStockTerminal}
+        stockTerminalSymbol={stockTerminalSymbol}
+        showTradingTerminal={showTradingTerminal}
+        setShowTradingTerminal={setShowTradingTerminal}
+        setShowCompetitionPage={setShowCompetitionPage}
+        showCompetitionPage={showCompetitionPage}
+        showAITradersPage={showAITradersPage}
+        setShowAITradersPage={setShowAITradersPage}
+        showSubsystemDashboard={showSubsystemDashboard}
+        setShowSubsystemDashboard={setShowSubsystemDashboard}
+      />
 
       {humanInputModal && (
         <HumanInputModal

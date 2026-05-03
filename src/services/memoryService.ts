@@ -16,6 +16,22 @@ const CORE_URL = apiUrl("/api/memory");
 type MemoryMode = "LOCAL" | "DELEGATED" | "STANDALONE";
 let _currentMode: MemoryMode = "LOCAL";
 
+function normalizeLocalModelId(modelId?: string | null): string {
+  if (!modelId) return "";
+  return modelId.startsWith("local/") ? modelId.split("/")[1] || modelId : modelId;
+}
+
+function getSelectedEmbeddingModel(): string {
+  const settings = settingsService.getSettings();
+  return (
+    settings.brain?.embeddingModel ||
+    settings.memory?.model ||
+    settings.brain?.memoryModel ||
+    BRAIN_CONFIG.defaults.memory ||
+    "gemini-embedding-001"
+  );
+}
+
 import { getGenClient } from "./genAIClient";
 import { ProviderFactory } from "./llm/ProviderFactory";
 
@@ -129,13 +145,19 @@ export const memoryService = {
       if (!screenshot) return;
       
       const url = await this.getCortexUrl();
+      const visionModel = normalizeLocalModelId(
+        settingsService.getSettings().brain?.visionModel ||
+          BRAIN_CONFIG.defaults.vision,
+      );
       const res = await fetch(`${url}/vision/semantic-snapshot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           screenshot,
-          instruction: "Describe exactly what application or task the user is doing in 1 short sentence."
-        })
+          instruction:
+            "Describe exactly what application or task the user is doing in 1 short sentence.",
+          model: visionModel,
+        }),
       });
       
       if (res.ok) {
@@ -346,24 +368,28 @@ export const memoryService = {
   async generateEmbedding(contents: string | any | any[]): Promise<number[]> {
     const text = typeof contents === "string" ? contents : "";
     const settings = settingsService.get("brain");
-    const memoryModel = settings?.memoryModel || BRAIN_CONFIG.defaults.brain;
+    const memoryModel = getSelectedEmbeddingModel();
+    const normalizedMemoryModel = normalizeLocalModelId(memoryModel);
 
     // Check if using local embedding model (IDs from ModelManagerService - single source of truth)
     const isLocalModel = LOCAL_EMBEDDING_MODEL_IDS.some(
-      (id: string) => memoryModel === id || memoryModel.includes(id),
+      (id: string) =>
+        normalizedMemoryModel === id || normalizedMemoryModel.includes(id),
     );
 
     // --- LOCAL EMBEDDING PATH ---
     if (isLocalModel) {
       try {
-        console.log(`[MEMORY] Using LOCAL embedding model: ${memoryModel}`);
+        console.log(
+          `[MEMORY] Using LOCAL embedding model: ${normalizedMemoryModel}`,
+        );
         const url = await this.getCortexUrl();
         const response = await fetch(`${url}/embed`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             texts: [text],
-            model: memoryModel,
+            model: normalizedMemoryModel,
             localOnly: true, // If we are in the local path, we want to enforce privacy
           }),
           signal: AbortSignal.timeout(30000), // 30s for local processing (Essential for Intel Mac)
@@ -877,8 +903,7 @@ export const memoryService = {
 
     try {
       const url = await this.getCortexUrl();
-      const settings = settingsService.get("brain");
-      const memoryModel = settings?.memoryModel || BRAIN_CONFIG.defaults.memory || "gemini-embedding-001";
+      const memoryModel = normalizeLocalModelId(getSelectedEmbeddingModel());
 
       // --- SOVEREIGN CATEGORY TAGGING ---
       // Distinguish between memory layers (preference vs fact) for better LightRAG indexing
@@ -935,14 +960,14 @@ export const memoryService = {
 
     try {
       const url = await this.getCortexUrl(); // Use dynamic URL
-      const settings = settingsService.get("brain");
+      const memoryModel = normalizeLocalModelId(getSelectedEmbeddingModel());
       const res = await fetch(`${url}/memory/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query,
           mode: "hybrid",
-          model: settings?.model || BRAIN_CONFIG.defaults.brain,
+          model: memoryModel,
         }),
         signal: AbortSignal.timeout(120000), // Increased to 120s (2m)
       });

@@ -895,6 +895,9 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
   private async runDeepVisionAnalysis(inputImage: string) {
     const prompt =
       "Analyze this image in extreme technical detail. Identify objects, text, anomalies, or schematics.";
+    const brainSettings = settingsService.get("brain");
+    const selectedVisionModel =
+      brainSettings.visionModel || BRAIN_CONFIG.defaults.vision;
 
     // 1. Try Local Vision (SmolVLM) First
     try {
@@ -905,6 +908,7 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
         body: JSON.stringify({
           image_base64: inputImage,
           prompt: prompt,
+          model: selectedVisionModel,
         }),
         signal: AbortSignal.timeout(8000), // Give local model more time for deep analysis
       });
@@ -925,7 +929,6 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     }
 
     // 2. Fallback to user-selected model via this.provider
-    const brainSettings = settingsService.get("brain");
     console.log(
       `[LUCA] Falling back to ${brainSettings.visionModel || brainSettings.model} for Deep Analysis...`,
     );
@@ -994,14 +997,18 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     parameters: any;
     confidence: number;
   }> {
-    // Pattern-based local router for instant tool execution
+    // 1. Extract context for state-aware affirmations (Zero-Cloud Intercept)
+    const history = this.localHistory;
+    let lastBotMessage = "";
+    if (history.length > 0) {
+        const lastMsg = history[history.length - 1];
+        if (lastMsg.role === "model" && lastMsg.parts.length > 0) {
+            lastBotMessage = lastMsg.parts[0].text || "";
+        }
+    }
+
     try {
-      const res = await fetch(apiUrl("/api/router/classify"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      const data = await res.json();
+      const data = await universalReflexEngine.classifyIntent(text, lastBotMessage);
       if (data.success && data.tool) {
         console.log(
           `[LOCAL ROUTER] ⚡ ${data.thought} (${Math.round(
@@ -1060,11 +1067,16 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
 
   public async analyzeImageFast(base64Image: string): Promise<string> {
     const prompt = "Scan this image for human presence. Assume it is authorized user 'Mac'. Report status: 'USER_PRESENT' or 'NO_USER'.";
+    const brainSettings = settingsService.get("brain");
     try {
       const response = await fetch(cortexUrl("/vision/analyze_live"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image_base64: base64Image, prompt: prompt }),
+        body: JSON.stringify({
+          image_base64: base64Image,
+          prompt: prompt,
+          model: brainSettings.visionModel || BRAIN_CONFIG.defaults.vision,
+        }),
         signal: AbortSignal.timeout(3000),
       });
       if (response.ok) {
@@ -1104,12 +1116,16 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
       }
     }
 
-    if (__LUCA_DEV_MODE__) {
+    const autonomySettings = settingsService.getSettings().autonomy;
+    const isAutonomous = context?.isAutonomous || false;
+    const shouldAudit = __LUCA_DEV_MODE__ || isAutonomous || autonomySettings?.backgroundMissionsEnabled;
+
+    if (shouldAudit) {
       // Find intention associated with this action
       const activeIntention = Array.from(mentalStateService.intentions?.values() || []).find(i => i.status === "COMMIT");
-      const justification = activeIntention ? mentalStateService.getJustificationChain(activeIntention.id) : "Stateless execution.";
+      const justification = activeIntention ? mentalStateService.getJustificationChain(activeIntention.id) : "Autonomous or state-aware execution.";
       
-      const auditRes = await sovereignAuditor.runPreActionAudit(name, args, { ...context, justification });
+      const auditRes = await sovereignAuditor.runPreActionAudit(name, args, { ...context, isAutonomous, justification });
       if (!auditRes.allowed) {
         return { result: auditRes.reason || "SOVEREIGN_GUARD: Action denied." };
       }
@@ -1496,6 +1512,56 @@ REPLACEMENT_CODE:`;
     for (const p of patterns) {
       const m = userMsg.match(p);
       if (m) await (settingsService as any).addSovereignFact({ category: "PREFERENCE", content: m[0], confidence: 0.8 });
+    }
+  }
+
+  /**
+   * PHASE 3: LUCY_GRADE_AUTONOMY
+   * Executes a proactive autonomous turn when triggered by AwarenessService.
+   * Enforces Double-Brain Consensus and respects user budget.
+   */
+  public async runProactiveAutonomousTurn(eventData: any) {
+    const settings = settingsService.getSettings();
+    if (!settings.autonomy?.backgroundMissionsEnabled) return;
+
+    loggerService.info("SOVEREIGN", "Initiating LUCY Proactive Autonomous Turn...", { eventData });
+
+    // 1. Gather Context (Missions, Environment, Tasks)
+    const missionContext = await missionControlService.getActiveMissionContext();
+    const taskContext = taskService.getManagementContext();
+    const awarenessPulse = environmentSentinel.getAwarenessPulse();
+
+    // 2. Prepare Shadow Session
+    const systemPrompt = `
+[SYSTEM_PROTOCOL: LUCY_AUTONOMOUS_KERNEL]
+CONTEXT: ${awarenessPulse}
+ACTIVE_MISSIONS: ${missionContext}
+PENDING_TASKS: ${taskContext}
+EVENT_TRIGGER: ${JSON.stringify(eventData)}
+
+GOAL: Pursue mission objectives autonomously.
+RULES:
+- Use tools to gather info or perform tasks.
+- If no immediate action is needed, summarize your findings.
+- Maintain system integrity.
+- You are in SHADOW_MODE (Background).
+`;
+
+    try {
+      // Create a dedicated provider for the autonomous turn
+      const autonomousProvider = await this.ensureTurnReady();
+      
+      const response = await autonomousProvider.chat(
+        [{ role: "user", content: "PROACTIVE_PULSE_REPORT: Analysis of current environment and mission state." }],
+        undefined,
+        systemPrompt,
+        this.sessionTools
+      );
+
+      loggerService.info("SOVEREIGN", "LUCY Proactive Turn Complete.", { response: response.text });
+      
+    } catch (error: any) {
+      loggerService.error("SOVEREIGN", "LUCY Proactive Turn Failed", error);
     }
   }
 }

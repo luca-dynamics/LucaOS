@@ -26,6 +26,73 @@ router.post('/save', (req, res) => {
     }
 });
 
+router.post('/store', (req, res) => {
+    try {
+        const { key, value, category, importance, tenantId, expiresAt, confidence } = req.body || {};
+
+        if (!key || typeof key !== 'string') {
+            return res.status(400).json({ error: "Memory 'key' is required" });
+        }
+
+        if (typeof value !== 'string') {
+            return res.status(400).json({ error: "Memory 'value' must be a string" });
+        }
+
+        const result = memoryStore.add({
+            key,
+            value,
+            category: category || 'FACT',
+            importance,
+            tenantId,
+            expiresAt,
+            confidence: typeof confidence === 'number' ? confidence : 0.99,
+            timestamp: Date.now(),
+        });
+
+        res.json({
+            success: true,
+            memory: {
+                id: result.lastInsertRowid?.toString?.() || null,
+                key,
+                value,
+                category: category || 'FACT',
+                importance,
+                tenantId,
+                expiresAt,
+                confidence: typeof confidence === 'number' ? confidence : 0.99,
+            },
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/retrieve', (req, res) => {
+    try {
+        const { query, limit } = req.body || {};
+        if (!query || typeof query !== 'string') {
+            return res.status(400).json({ error: "Memory 'query' is required" });
+        }
+
+        const results = memoryStore.searchByText(query, limit || 10);
+        res.json({ success: true, results });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/reconcile', (req, res) => {
+    try {
+        const result = memoryStore.reconcile();
+        res.json({
+            ...result,
+            note: "Performed exact duplicate cleanup on persisted memories. This does not run full semantic synapse consolidation.",
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Wipe all memories (Factory Reset)
 router.post('/wipe', (req, res) => {
     try {

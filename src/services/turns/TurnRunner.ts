@@ -12,6 +12,7 @@ export interface RunStreamTurnOptions {
   onToolCall: (name: string, args: any, context?: any) => Promise<any>;
   currentCwd?: string;
   abortSignal?: AbortSignal;
+  isAutonomous?: boolean;
   options?: { provider?: string; model?: string; systemInstruction?: string };
 }
 
@@ -20,6 +21,7 @@ export interface RunTurnOptions {
   imageBase64: string | null;
   onToolCall: (name: string, args: any, context?: any) => Promise<any>;
   currentCwd?: string;
+  isAutonomous?: boolean;
   options?: { provider?: string; model?: string; systemInstruction?: string };
 }
 
@@ -29,7 +31,9 @@ class TurnRunner {
     imageBase64,
     onChunk,
     onToolCall,
+    currentCwd,
     abortSignal,
+    isAutonomous,
     options,
   }: RunStreamTurnOptions): Promise<any> {
     const originalMode = creditService.getMode();
@@ -53,6 +57,37 @@ class TurnRunner {
         lucaService.setCurrentImageContext(imageBase64);
       }
 
+      // --- OFFLINE / ZERO-LATENCY REFLEX FALLBACK ---
+      const localReflex = await lucaService.classifyLocalReflexForTurn(message);
+      if (localReflex.confidence >= 0.95 && localReflex.tool) {
+        try {
+          console.log(`[REFLEX] Triggering instant offline execution for: ${localReflex.tool}`);
+          const toolResult = await onToolCall(
+            localReflex.tool,
+            localReflex.parameters,
+            { currentCwd, isAutonomous: true }
+          );
+          const reflexResponse = lucaService.synthesizeReflexForTurn(
+            localReflex.tool,
+            toolResult,
+            localReflex.thought,
+          );
+          lucaService.appendUserMessage(message);
+          lucaService.appendModelMessage(reflexResponse);
+          
+          // Stream the response out instantly
+          onChunk(reflexResponse);
+
+          return {
+            text: reflexResponse,
+            groundingMetadata: null,
+            route,
+          };
+        } catch (err) {
+          console.warn("[REFLEX] Local execution failed, falling back to LLM:", err);
+        }
+      }
+
       lucaService.appendUserMessage(message);
 
       const executor = new StreamingToolExecutor(
@@ -64,7 +99,7 @@ class TurnRunner {
             name,
             args,
             onToolCall,
-            context,
+             { ...context, isAutonomous, currentCwd },
           );
 
           if (res.groundingMetadata) {
@@ -157,7 +192,9 @@ class TurnRunner {
   async runTurn({
     message,
     imageBase64,
-    onToolCall,
+    onToolCall, 
+    isAutonomous,
+    currentCwd,
     options,
   }: RunTurnOptions): Promise<any> {
     const originalMode = creditService.getMode();
@@ -187,6 +224,7 @@ class TurnRunner {
           const toolResult = await onToolCall(
             localReflex.tool,
             localReflex.parameters,
+            { currentCwd, isAutonomous: true }
           );
           const reflexResponse = lucaService.synthesizeReflexForTurn(
             localReflex.tool,
@@ -216,7 +254,7 @@ class TurnRunner {
             name,
             args,
             onToolCall,
-            context,
+             { ...context, isAutonomous, currentCwd },
           );
           if (res.groundingMetadata) {
             accumulatedGrounding = res.groundingMetadata;

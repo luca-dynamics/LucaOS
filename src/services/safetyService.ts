@@ -1,4 +1,4 @@
-import { IS_ORIGIN } from "../config/buildConfig";
+import { BUILD_CAPABILITIES } from "../config/buildConfig";
 import { PROTECTED_FILES } from "../config/constitution";
 import { eventBus } from "./eventBus";
 import { thoughtStreamService } from "./thoughtStreamService";
@@ -18,7 +18,7 @@ class SafetyService {
     console.log("[SAFETY_SERVICE] Constitutional Sentinel Active");
     
     // Automatically arm Root Mode and Sentinel Mode for the Progenitor (Origin Build)
-    if (IS_ORIGIN) {
+    if (BUILD_CAPABILITIES.ROOT_ACCESS) {
       console.log("[SAFETY_SERVICE] 🏛️ PROGENITOR_BUILD_DETECTED: Arming Sovereignty...");
       this.setRootMode(true);
     }

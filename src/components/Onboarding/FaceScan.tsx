@@ -11,7 +11,10 @@ interface FaceScanProps {
   onComplete: (faceData: string | null) => void;
   onSkip: () => void;
   isLightTheme: boolean;
-  theme: any;
+  theme?: {
+    primary: string;
+    hex: string;
+  };
   title?: string;
   description?: string;
   enrollmentEndpoint?: string;
@@ -44,10 +47,8 @@ const FaceScan: React.FC<FaceScanProps> = ({
   const [cameraAvailable, setCameraAvailable] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMobile = useMobile();
-
-  // Theme-aware colors removed in favor of Dynamic Contrast Variables (CSS)
-  const bgCard = "bg-transparent";
-  const bgIcon = "bg-transparent";
+  const themeHex =
+    theme && typeof theme === "object" && "hex" in theme ? theme.hex : undefined;
 
   const defaultDescription =
     description ||
@@ -168,16 +169,16 @@ const FaceScan: React.FC<FaceScanProps> = ({
         <div
           className="w-20 h-20 mx-auto border rounded-full flex items-center justify-center glass-blur"
           style={{
-            borderColor: theme ? setHexAlpha(theme.hex, 0.3) : "var(--app-border-main)",
+            borderColor: themeHex ? setHexAlpha(themeHex, 0.3) : "var(--app-border-main)",
             backgroundColor: "var(--app-bg-tint)",
-            boxShadow: theme ? `0 0 20px ${setHexAlpha(theme.hex, 0.2)}` : "none",
+            boxShadow: themeHex ? `0 0 20px ${setHexAlpha(themeHex, 0.2)}` : "none",
           }}
         >
           <Icon
             name="Camera"
             variant="Linear"
             className="w-10 h-10"
-            style={{ color: theme ? theme.hex : "var(--app-text-muted)" }}
+            style={{ color: themeHex || "var(--app-text-muted)" }}
           />
         </div>
         <p className="text-sm" style={{ color: "var(--app-text-muted)" }}>
@@ -198,7 +199,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
             alt="Captured face"
             className="w-full max-w-md mx-auto rounded-lg border-2 shadow-2xl"
             style={{
-              borderColor: theme ? setHexAlpha(theme.hex, 0.5) : "var(--app-primary)",
+              borderColor: themeHex ? setHexAlpha(themeHex, 0.5) : "var(--app-primary)",
             }}
           />
 
@@ -208,7 +209,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
               className="absolute inset-0 animate-scan-line"
               style={{
                 background: theme
-                  ? `linear-gradient(to bottom, transparent, ${setHexAlpha(theme.hex, 0.2)}, transparent)`
+                  ? `linear-gradient(to bottom, transparent, ${setHexAlpha(themeHex || "#ffffff", 0.2)}, transparent)`
                   : `linear-gradient(to bottom, transparent, var(--app-primary), transparent)`,
                 opacity: 0.3,
               }}
@@ -219,7 +220,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
               className="absolute inset-0 bg-[size:20px_20px]"
               style={{
                 backgroundImage: theme
-                  ? `linear-gradient(${setHexAlpha(theme.hex, 0.1)} 1px, transparent 1px), linear-gradient(90deg, ${setHexAlpha(theme.hex, 0.1)} 1px, transparent 1px)`
+                  ? `linear-gradient(${setHexAlpha(themeHex || "#ffffff", 0.1)} 1px, transparent 1px), linear-gradient(90deg, ${setHexAlpha(themeHex || "#ffffff", 0.1)} 1px, transparent 1px)`
                   : `linear-gradient(var(--app-primary) 1px, transparent 1px), linear-gradient(90deg, var(--app-primary) 1px, transparent 1px)`,
                 opacity: 0.15,
               }}
@@ -228,27 +229,27 @@ const FaceScan: React.FC<FaceScanProps> = ({
             {/* Corner brackets */}
             <div
               className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 animate-pulse"
-              style={{ borderColor: theme?.hex || "var(--app-primary)" }}
+              style={{ borderColor: themeHex || "var(--app-primary)" }}
             />
             <div
               className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 animate-pulse"
-              style={{ borderColor: theme?.hex || "var(--app-primary)" }}
+              style={{ borderColor: themeHex || "var(--app-primary)" }}
             />
             <div
               className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 animate-pulse"
-              style={{ borderColor: theme?.hex || "var(--app-primary)" }}
+              style={{ borderColor: themeHex || "var(--app-primary)" }}
             />
             <div
               className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 animate-pulse"
-              style={{ borderColor: theme?.hex || "var(--app-primary)" }}
+              style={{ borderColor: themeHex || "var(--app-primary)" }}
             />
 
             {/* Center scanning icon */}
             <div
               className="glass-blur rounded-lg border px-6 py-3"
               style={{
-                borderColor: theme ? setHexAlpha(theme.hex, 0.5) : "var(--app-border-main)",
-                backgroundColor: isLightTheme ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.6)",
+                borderColor: themeHex ? setHexAlpha(themeHex, 0.5) : "var(--app-border-main)",
+                backgroundColor: "var(--app-bg-tint)",
               }}
             >
               <div className="flex items-center gap-3">
@@ -256,11 +257,11 @@ const FaceScan: React.FC<FaceScanProps> = ({
                   name="MinimalisticMagnifer"
                   variant="Linear"
                   className="animate-pulse"
-                  style={{ color: theme?.hex || "var(--app-primary)", width: "1.25rem", height: "1.25rem" }}
+                  style={{ color: "var(--app-text-main)", width: "1.25rem", height: "1.25rem" }}
                 />
                 <span
                   className="font-mono"
-                  style={{ color: theme?.hex || "var(--app-primary)", fontSize: "0.875rem" }}
+                  style={{ color: "var(--app-text-main)", fontSize: "0.875rem" }}
                 >
                   {enrollmentEndpoint
                     ? "ENROLLING BIOMETRIC DATA..."
@@ -351,12 +352,12 @@ const FaceScan: React.FC<FaceScanProps> = ({
       {!hideHeader && (
         <div className={`text-center ${compact ? "space-y-0.5" : "space-y-4"}`}>
           <div
-            className={`${compact ? (isMobile ? "w-8 h-8" : "w-12 h-12") : "w-20 h-20"} ${bgIcon} border rounded-full flex items-center justify-center glass-blur transition-all mx-auto`}
+            className={`${compact ? (isMobile ? "w-8 h-8" : "w-12 h-12") : "w-20 h-20"} border rounded-full flex items-center justify-center glass-blur transition-all mx-auto`}
             style={{
               backgroundColor: "var(--app-bg-tint)",
-              borderColor: theme ? setHexAlpha(theme.hex, 0.3) : "var(--app-border-main)",
-              boxShadow: theme
-                ? `0 0 20px ${setHexAlpha(theme.hex, 0.2)}`
+              borderColor: themeHex ? setHexAlpha(themeHex, 0.3) : "var(--app-border-main)",
+              boxShadow: themeHex
+                ? `0 0 20px ${setHexAlpha(themeHex, 0.2)}`
                 : "0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 0 0 1px var(--app-border-main)",
             }}
           >
@@ -366,7 +367,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
               style={{
                 width: compact ? (isMobile ? "1rem" : "1.5rem") : "2.5rem",
                 height: compact ? (isMobile ? "1rem" : "1.5rem") : "2.5rem",
-                color: theme ? theme.hex : "var(--app-text-main)",
+                color: themeHex || "var(--app-text-main)",
               }}
             />
           </div>
@@ -398,7 +399,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
       )}
 
       <div
-        className={`${bgCard} border rounded-xl glass-blur shadow-inner transition-all ${
+        className={`border rounded-xl glass-blur shadow-inner transition-all ${
           compact
             ? isMobile
               ? "p-1.5 space-y-0.5"
@@ -470,7 +471,6 @@ const FaceScan: React.FC<FaceScanProps> = ({
           onClick={() => setShowCamera(true)}
           className={`
             w-full
-            max-w-sm mx-auto
             border
             rounded-xl
             uppercase
@@ -485,7 +485,6 @@ const FaceScan: React.FC<FaceScanProps> = ({
             active:scale-[0.98]
             shadow-lg
             group
-            bg-[var(--app-primary)]/10 hover:bg-[var(--app-primary)]/20
           `}
           style={{
             padding: compact
@@ -498,19 +497,20 @@ const FaceScan: React.FC<FaceScanProps> = ({
                 ? "9px"
                 : "10px"
               : "0.75rem",
-            color: "var(--app-primary)",
-            borderColor: theme ? setHexAlpha(theme.hex, 0.3) : "var(--app-primary)",
-            boxShadow: theme
-              ? `0 0 30px ${setHexAlpha(theme.hex, 0.2)}`
-              : "0 0 20px -10px rgba(255,255,255,0.3)",
+            color: "var(--app-text-main)",
+            backgroundColor: "var(--app-bg-tint)",
+            borderColor: themeHex ? setHexAlpha(themeHex, 0.3) : "var(--app-primary)",
+            boxShadow: themeHex
+              ? `0 0 30px ${setHexAlpha(themeHex, 0.2)}`
+              : "0 0 20px -10px var(--app-border-main)",
           }}
         >
           <Icon
             name="Camera"
             variant="Linear"
             size={compact ? (isMobile ? 12 : 14) : 18}
-            className="group-hover:scale-110 transition-transform text-[var(--app-primary)]"
-            style={{ color: theme?.hex || "var(--app-primary)" }}
+            className="group-hover:scale-110 transition-transform"
+            style={{ color: themeHex || "var(--app-text-main)" }}
           />
           Capture My Face
         </button>
@@ -519,7 +519,6 @@ const FaceScan: React.FC<FaceScanProps> = ({
           onClick={onSkip}
           className={`
             w-full
-            max-w-xs mx-auto
             bg-transparent
             border
             rounded-lg

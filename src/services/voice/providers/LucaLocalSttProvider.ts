@@ -2,6 +2,7 @@ import { IStreamingSttProvider, TranscriptResult } from "../types";
 import { cortexUrl } from "../../../config/api";
 import { WavEncoder } from "../utils/WavEncoder";
 import { eventBus } from "../../eventBus";
+import { settingsService } from "../../settingsService";
 
 export class LucaLocalSttProvider implements IStreamingSttProvider {
   public name = "local-luca";
@@ -40,6 +41,10 @@ export class LucaLocalSttProvider implements IStreamingSttProvider {
 
       const formData = new FormData();
       formData.append("file", audioBlob, "audio.wav");
+      formData.append(
+        "model",
+        settingsService.getSettings().voice?.sttModel || "whisper-tiny",
+      );
 
       const startTime = Date.now();
       const response = await fetch(`${cortexUrl}/stt/transcribe`, {

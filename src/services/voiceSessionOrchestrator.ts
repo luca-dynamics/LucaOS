@@ -150,6 +150,7 @@ class VoiceSessionOrchestrator {
       event.brain?.ttft ??
       event.stt?.local ??
       event.stt?.cloud ??
+      event.tts?.latency ??
       null;
 
     if (nextLatency == null || Number.isNaN(nextLatency) || nextLatency <= 0) {

@@ -40,8 +40,6 @@ const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [input, setInput] = useState("");
-  const isLight =
-    theme?.hex === "#111827" || theme?.primary === "lucagent";
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messageCount, setMessageCount] = useState(0);
   const extractionServiceRef = useRef<ProfileExtractionService | null>(null);
@@ -618,9 +616,8 @@ Nudge:`;
       {/* Header - Only shown in text mode or when explicit header is needed */}
       {mode === "text" && (
         <div
-          className={`flex items-center justify-between p-3 sm:p-4 border-b glass-blur ${
-            isLight ? "border-black/10" : "border-white/10"
-          }`}
+          className="flex items-center justify-between p-3 sm:p-4 border-b glass-blur"
+          style={{ borderColor: "var(--app-border-main)" }}
         >
           <div className="flex items-center gap-3">
             {onBack && (
@@ -630,11 +627,8 @@ Nudge:`;
                   liveService.disconnect();
                   onBack();
                 }}
-                className={`p-2 rounded-full transition-all ${
-                  isLight
-                    ? "text-black/60 hover:text-black hover:bg-black/5"
-                    : "text-white/60 hover:text-white hover:bg-white/10"
-                }`}
+                className="p-2 rounded-full transition-all"
+                style={{ color: "var(--app-text-muted)" }}
                 title="Close"
               >
                 <Icon
@@ -648,9 +642,8 @@ Nudge:`;
 
           <div className="flex items-center gap-2">
             <h2
-              className={`text-sm sm:text-lg font-display ${
-                isLight ? "text-black/95" : "text-white/95"
-              }`}
+              className="text-sm sm:text-lg font-display"
+              style={{ color: "var(--app-text-main)" }}
             >
               Quick Intro
             </h2>
@@ -678,11 +671,12 @@ Nudge:`;
               settingsService.saveOperatorProfile(minimalProfile);
               onComplete(minimalProfile);
             }}
-            className={`px-2 sm:px-3 py-1.5 text-xs font-mono rounded-lg transition-all border ${
-              isLight
-                ? "text-black/80 hover:text-black hover:bg-black/5 border-black/15 hover:border-black/30"
-                : "text-white/80 hover:text-white hover:bg-white/5 border-white/15 hover:border-white/30"
-            }`}
+            className="px-2 sm:px-3 py-1.5 text-xs font-mono rounded-lg transition-all border"
+            style={{
+              color: "var(--app-text-main)",
+              borderColor: "var(--app-border-main)",
+              backgroundColor: "var(--app-bg-tint)",
+            }}
           >
             Skip
           </button>

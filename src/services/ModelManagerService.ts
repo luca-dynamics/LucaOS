@@ -675,8 +675,62 @@ class ModelManagerService {
       const resp = await fetch(url, { method: "GET" });
       
       if (resp.ok) {
-        // Since it's an SSE stream, we just wait for it to complete or handle chunks
-        // For simplicity in the service layer, we mark as ready when the stream starts successfully
+        const reader = resp.body?.getReader();
+        if (!reader) {
+          throw new Error("Download stream unavailable");
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let sawComplete = false;
+
+        while (true) {
+          const { value, done } = await reader.read();
+          buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+
+          const events = buffer.split("\n\n");
+          buffer = events.pop() || "";
+
+          for (const eventChunk of events) {
+            const dataLines = eventChunk
+              .split("\n")
+              .filter((line) => line.startsWith("data:"))
+              .map((line) => line.slice(5).trim());
+
+            if (dataLines.length === 0) continue;
+
+            try {
+              const payload = JSON.parse(dataLines.join("\n"));
+              const progress = typeof payload.progress === "number" ? payload.progress : model.downloadProgress || 0;
+              const status = payload.status || "downloading";
+
+              model.downloadProgress = progress;
+
+              if (status === "error") {
+                model.status = "error";
+                this.notifyListeners();
+                throw new Error(payload.message || `Download failed for ${id}`);
+              }
+
+              model.status = status === "complete" ? "ready" : "downloading";
+              this.notifyListeners();
+              onProgress?.(payload.status || "downloading", progress);
+
+              if (status === "complete") {
+                sawComplete = true;
+              }
+            } catch (parseError) {
+              console.warn(`[ModelManager] Failed to parse download event for ${id}:`, parseError);
+            }
+          }
+
+          if (done) break;
+        }
+
+        if (!sawComplete) {
+          throw new Error(`Download stream ended before completion for ${id}`);
+        }
+
         model.status = "ready";
         model.downloadProgress = 100;
         this.notifyListeners();
@@ -822,6 +876,10 @@ class ModelManagerService {
 
   getModel(id: string): LocalModel | undefined {
     return this.models.get(id);
+  }
+
+  getAllModels(): LocalModel[] {
+    return Array.from(this.models.values());
   }
 
   getModelsByCategory(category: LocalModel["category"]): LocalModel[] {

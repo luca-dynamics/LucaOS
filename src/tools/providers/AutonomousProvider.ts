@@ -9,6 +9,7 @@ import {
   executeCustomSkillTool,
   listCustomSkillsTool,
 } from "../definitions";
+import { canRegisterAutonomousTool } from "../autonomousToolSurfacePolicy";
 
 /**
  * AutonomousProvider
@@ -17,11 +18,12 @@ import {
 export const AutonomousProvider = {
   register: () => {
     // 1. Goal Management
-    ToolRegistry.register(
-      manageGoalsTool,
-      "CORE",
-      ["goals", "autonomous", "management", "long-term"],
-      async (args, _context) => {
+    if (canRegisterAutonomousTool("manageGoals", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        manageGoalsTool,
+        "CORE",
+        ["goals", "autonomous", "management", "long-term"],
+        async (args, _context) => {
         const { managementService, lucaWorkforce } = _context;
         const { action, description, schedule, id } = args;
 
@@ -60,38 +62,44 @@ export const AutonomousProvider = {
         }
 
         return "Goal management action failed or service unavailable.";
-      },
-    );
+        },
+      );
+    }
 
     // 2. Autonomous Web Browsing
-    ToolRegistry.register(
-      autonomousWebBrowseTool,
-      "CORE",
-      ["browse", "web", "ghost", "nav"],
-      async (args, context) => {
+    if (canRegisterAutonomousTool("autonomousWebBrowse", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        autonomousWebBrowseTool,
+        "CORE",
+        ["browse", "web", "ghost", "nav"],
+        async (args, context) => {
         // This will eventually call the specific GhostBrowser engine
         return `AUTONOMOUS BROWSE INITIALIZED: Moving to "${args.url || "google.com"}" to achieve: "${args.goal}"`;
-      },
-    );
+        },
+      );
+    }
 
     // 3. UI Dashboard
-    ToolRegistry.register(
-      openAutonomyDashboardTool,
-      "SYSTEM",
-      ["ui", "dashboard", "autonomy"],
-      async (_args, context) => {
+    if (canRegisterAutonomousTool("openAutonomyDashboard", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        openAutonomyDashboardTool,
+        "SYSTEM",
+        ["ui", "dashboard", "autonomy"],
+        async (_args, context) => {
         const { uiNotificationService } = context;
         uiNotificationService?.notify("OPEN_DASHBOARD", { type: "AUTONOMY" });
         return "Dashboard triggered.";
-      },
-    );
+        },
+      );
+    }
 
     // 4. Custom Skills & Self-Evolution (PHASE 8C)
-    ToolRegistry.register(
-      generateAndRegisterSkillTool,
-      "DEV",
-      ["evolve", "learn", "create", "tool"],
-      async (args, context) => {
+    if (canRegisterAutonomousTool("generateAndRegisterSkill", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        generateAndRegisterSkillTool,
+        "DEV",
+        ["evolve", "learn", "create", "tool"],
+        async (args, context) => {
         const { learningEngine } = context;
         if (learningEngine) {
           const result = await learningEngine.generateSkill(
@@ -101,44 +109,53 @@ export const AutonomousProvider = {
           return `SKILL GENERATED: ${result.name}. Logic: ${result.summary}`;
         }
         return "Learning engine unavailable.";
-      },
-    );
+        },
+      );
+    }
 
-    ToolRegistry.register(
-      executeRpcScriptTool,
-      "SYSTEM",
-      ["rpc", "script", "automation"],
-      async (args) => {
+    if (canRegisterAutonomousTool("executeRpcScript", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        executeRpcScriptTool,
+        "SYSTEM",
+        ["rpc", "script", "automation"],
+        async (args) => {
         return `RPC Script execution requested with ${Object.keys(args.script || {}).length} steps.`;
-      },
-    );
+        },
+      );
+    }
 
-    ToolRegistry.register(
-      createCustomSkillTool,
-      "DEV",
-      ["create", "skill"],
-      async (args) => {
+    if (canRegisterAutonomousTool("createCustomSkill", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        createCustomSkillTool,
+        "DEV",
+        ["create", "skill"],
+        async (args) => {
         return `Custom skill "${args.name}" creation initialized.`;
-      },
-    );
+        },
+      );
+    }
 
-    ToolRegistry.register(
-      executeCustomSkillTool,
-      "DEV",
-      ["run", "skill"],
-      async (args) => {
+    if (canRegisterAutonomousTool("executeCustomSkill", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        executeCustomSkillTool,
+        "DEV",
+        ["run", "skill"],
+        async (args) => {
         // Logic handled via Cortex or dynamic eval
         return `Custom skill "${args.skillName}" execution requested.`;
-      },
-    );
+        },
+      );
+    }
 
-    ToolRegistry.register(
-      listCustomSkillsTool,
-      "DEV",
-      ["list", "skills"],
-      async () => {
+    if (canRegisterAutonomousTool("listCustomSkills", { enforceBoundary: true })) {
+      ToolRegistry.register(
+        listCustomSkillsTool,
+        "DEV",
+        ["list", "skills"],
+        async () => {
         return "Retrieving custom skill registry...";
-      },
-    );
+        },
+      );
+    }
   },
 };

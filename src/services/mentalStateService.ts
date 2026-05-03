@@ -300,6 +300,48 @@ class MentalStateService {
             console.error("[BDI_KERNEL] Failed to rehydrate mission tape:", error);
         }
     }
+
+    /**
+     * [2050 ALIEN TECH]: Consciousness Snapshot
+     * Captures the current BDI state for teleportation across kernels.
+     */
+    public getCurrentState() {
+        return {
+            beliefs: Array.from(this.beliefs.values()),
+            desires: Array.from(this.desires.values()),
+            intentions: Array.from(this.intentions.values()),
+        };
+    }
+
+    /**
+     * [2050 ALIEN TECH]: Neural Re-Merge
+     * Integrates external neural experiences (from Satellite Nodes) back into the Cortex.
+     */
+    public async mergeExternalState(externalMind: any) {
+        console.log("[BDI_KERNEL] 🧬 Integrating external neural experiences into Cortex...");
+        
+        if (externalMind.beliefs && Array.isArray(externalMind.beliefs)) {
+            let mergedCount = 0;
+            externalMind.beliefs.forEach((b: Belief) => {
+                const existing = this.beliefs.get(b.id);
+                // 2050 Selection Logic: If the new belief is fresher or has higher confidence, adopt it.
+                if (!existing || b.confidence > existing.confidence || b.timestamp > existing.timestamp) {
+                    this.beliefs.set(b.id, b);
+                    mergedCount++;
+                }
+            });
+            console.log(`[BDI_KERNEL] ✅ Neural Merge Complete: ${mergedCount} beliefs evolved.`);
+        }
+        
+        // Desires and Intentions are typically transient, but we preserve them if they are still ACTIVE.
+        if (externalMind.desires && Array.isArray(externalMind.desires)) {
+            externalMind.desires.forEach((d: Desire) => {
+                if (d.status === "ACTIVE" || d.status === "PENDING") {
+                    this.desires.set(d.id, d);
+                }
+            });
+        }
+    }
 }
 
 export const mentalStateService = new MentalStateService();

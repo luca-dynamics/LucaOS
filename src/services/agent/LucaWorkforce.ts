@@ -26,7 +26,7 @@ import { ProviderFactory } from "../llm/ProviderFactory";
 import { thoughtStreamService } from "../thoughtStreamService";
 import { settingsService } from "../settingsService";
 import { cognitiveDeliberator } from "../cognitiveDeliberator";
-import { IS_ORIGIN } from "../../config/buildConfig";
+import { BUILD_CAPABILITIES } from "../../config/buildConfig";
 
 export interface WorkflowTask {
   id: string;
@@ -486,8 +486,8 @@ export class LucaWorkforce {
     const selection = await llmToolSelector.selectTool(task, availableTools);
 
     if (!selection) {
-      // PHASE 8C: Self-Replication (ORIGIN ONLY)
-      if (IS_ORIGIN) {
+      // PHASE 8C: Dynamic tool creation when no suitable tool exists
+      if (BUILD_CAPABILITIES.DYNAMIC_TOOL_CREATION) {
         console.log(
           `[${task.persona} Luca] 🔧 No suitable tool found, attempting to create one...`,
         );

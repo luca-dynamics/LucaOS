@@ -10,6 +10,7 @@ import json
 import subprocess
 import os
 import httpx
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +43,127 @@ class RealToolDelegator:
             'osintUsernameSearch': self.handle_osint_username,
             'osintDomainIntel': self.handle_osint_domain,
             'osintDarkWebScan': self.handle_osint_darkweb,
+
+            # Memory
+            'storeMemory': self.handle_store_memory,
+            'retrieveMemory': self.handle_retrieve_memory,
+            'reconcileMemories': self.handle_reconcile_memories,
             
             # Self-Configuration
             'getSystemSettings': self.handle_get_settings,
             'updateSystemSettings': self.handle_update_settings,
+            'controlSystem': self.handle_control_system,
+            'readClipboard': self.handle_read_clipboard,
+            'writeClipboard': self.handle_write_clipboard,
+            'system_doctor': self.handle_system_doctor,
+
+            # Shared Knowledge & Web
+            'readUrl': self.handle_read_url,
+            'addGraphRelations': self.handle_add_graph_relations,
+            'queryGraphKnowledge': self.handle_query_graph_knowledge,
+            'createTask': self.handle_create_task,
+            'updateTaskStatus': self.handle_update_task_status,
+
+            # Autonomy & Skills
+            'manageGoals': self.handle_manage_goals,
+            'createCustomSkill': self.handle_create_custom_skill,
+            'generateAndRegisterSkill': self.handle_generate_and_register_skill,
+            'listCustomSkills': self.handle_list_custom_skills,
+            'executeCustomSkill': self.handle_execute_custom_skill,
+            'executeRpcScript': self.handle_execute_rpc_script,
+
+            # Subsystems
+            'listSubsystems': self.handle_list_subsystems,
+            'startSubsystem': self.handle_start_subsystem,
         }
+
+    async def _call_local_api(
+        self,
+        method: str,
+        endpoint: str,
+        payload: Optional[Dict[str, Any]] = None,
+    ) -> Any:
+        """Call Luca's local Node/Cortex HTTP surface."""
+        async with httpx.AsyncClient() as client:
+            response = await client.request(
+                method,
+                f'http://127.0.0.1:8000{endpoint}',
+                json=payload,
+                timeout=30.0,
+            )
+
+        if response.status_code >= 400:
+            raise Exception(f"API Error ({response.status_code}): {response.text}")
+
+        try:
+            return response.json()
+        except Exception:
+            return response.text
+
+    def get_supported_tools(self) -> list[str]:
+        """Return the currently implemented tool names."""
+        return sorted(self.tool_handlers.keys())
+
+    def get_tool_categories(self) -> Dict[str, list[str]]:
+        """Return implemented tools grouped by functional category."""
+        categories = defaultdict(list)
+
+        for tool_name in self.get_supported_tools():
+            if tool_name in {
+                'readFile',
+                'writeProjectFile',
+                'listFiles',
+                'batchAnalyzeAndOrganizeDirectory',
+            }:
+                categories['file'].append(tool_name)
+            elif tool_name in {'executeTerminalCommand', 'runPythonScript'}:
+                categories['terminal'].append(tool_name)
+            elif tool_name in {'auditSourceCode'}:
+                categories['engineering'].append(tool_name)
+            elif tool_name in {
+                'osintUsernameSearch',
+                'osintDomainIntel',
+                'osintDarkWebScan',
+            }:
+                categories['osint'].append(tool_name)
+            elif tool_name in {
+                'getSystemSettings',
+                'updateSystemSettings',
+                'controlSystem',
+                'readClipboard',
+                'writeClipboard',
+            }:
+                categories['system'].append(tool_name)
+            elif tool_name in {
+                'storeMemory',
+                'retrieveMemory',
+                'reconcileMemories',
+                'readUrl',
+                'addGraphRelations',
+                'queryGraphKnowledge',
+                'createTask',
+                'updateTaskStatus',
+            }:
+                categories['knowledge'].append(tool_name)
+            elif tool_name in {
+                'system_doctor',
+            }:
+                categories['diagnostics'].append(tool_name)
+            elif tool_name in {
+                'manageGoals',
+                'createCustomSkill',
+                'generateAndRegisterSkill',
+                'listCustomSkills',
+                'executeCustomSkill',
+                'executeRpcScript',
+            }:
+                categories['autonomy'].append(tool_name)
+            elif tool_name in {'listSubsystems', 'startSubsystem'}:
+                categories['subsystems'].append(tool_name)
+            else:
+                categories['other'].append(tool_name)
+
+        return {category: tools for category, tools in categories.items()}
     
     async def execute(self, tool_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a tool with real delegation"""
@@ -436,6 +553,55 @@ class RealToolDelegator:
             }
         }
 
+    # ===== MEMORY =====
+
+    async def handle_store_memory(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        key = params.get('key')
+        value = params.get('value')
+
+        if not key:
+            raise Exception("Missing 'key'")
+        if value is None:
+            raise Exception("Missing 'value'")
+
+        payload = {
+            'key': key,
+            'value': str(value),
+            'category': params.get('category', 'FACT'),
+            'importance': params.get('importance'),
+            'tenantId': params.get('tenantId'),
+            'expiresAt': params.get('expiresAt'),
+            'confidence': params.get('confidence'),
+        }
+        result = await self._call_local_api('POST', '/api/memory/store', payload)
+        return {
+            'output': f"Stored memory: {key}",
+            'result': result,
+        }
+
+    async def handle_retrieve_memory(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        query = params.get('query')
+        if not query:
+            raise Exception("Missing 'query'")
+
+        payload = {
+            'query': query,
+            'limit': params.get('limit', 10),
+        }
+        result = await self._call_local_api('POST', '/api/memory/retrieve', payload)
+        count = len(result.get('results', [])) if isinstance(result, dict) else 0
+        return {
+            'output': f"Retrieved {count} memory results for: {query}",
+            'result': result,
+        }
+
+    async def handle_reconcile_memories(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = await self._call_local_api('POST', '/api/memory/reconcile', {})
+        return {
+            'output': 'Triggered persisted memory reconciliation',
+            'result': result,
+        }
+
     # ===== SELF-CONFIGURATION =====
 
     async def handle_get_settings(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -487,6 +653,237 @@ class RealToolDelegator:
         except Exception as e:
             logger.error(f"Failed to update setting {key}: {e}")
             raise Exception(f"Failed to update setting: {str(e)}")
+
+    async def handle_control_system(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = await self._call_local_api('POST', '/api/control/control-unified', params)
+        return {
+            'output': f"Executed controlSystem action: {params.get('action', 'unknown')}",
+            'result': result,
+        }
+
+    async def handle_read_clipboard(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = await self._call_local_api('GET', '/api/system/clipboard')
+        return {
+            'output': 'Read clipboard contents',
+            'result': result,
+        }
+
+    async def handle_write_clipboard(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        content = params.get('content')
+        if content is None:
+            raise Exception("Missing 'content'")
+
+        result = await self._call_local_api('POST', '/api/system/clipboard', {
+            'content': content,
+        })
+        return {
+            'output': 'Wrote clipboard contents',
+            'result': result,
+        }
+
+    async def handle_system_doctor(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        payload = {
+            'scanLevel': params.get('scanLevel', 'quick'),
+            'reportType': params.get('reportType', 'audit'),
+        }
+        result = await self._call_local_api('POST', '/api/system-status/doctor', payload)
+        return {
+            'output': f"Ran system doctor ({payload['reportType']})",
+            'result': result,
+        }
+
+    # ===== KNOWLEDGE / GRAPH =====
+
+    async def handle_read_url(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        url = params.get('url')
+        if not url:
+            raise Exception("Missing 'url'")
+
+        result = await self._call_local_api('POST', '/api/knowledge/scrape', {
+            'url': url,
+        })
+        return {
+            'output': f"Fetched URL: {url}",
+            'result': result,
+        }
+
+    async def handle_add_graph_relations(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = await self._call_local_api('POST', '/api/memory/graph/merge', params)
+        return {
+            'output': 'Graph relations updated',
+            'result': result,
+        }
+
+    async def handle_query_graph_knowledge(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = await self._call_local_api('POST', '/api/memory/graph/query', params)
+        return {
+            'output': f"Queried graph for {params.get('entity', 'entity')}",
+            'result': result,
+        }
+
+    async def handle_create_task(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        title = params.get('title')
+        if not title:
+            raise Exception("Missing 'title'")
+
+        description = params.get('description') or title
+        priority = params.get('priority', 'MEDIUM')
+        result = await self._call_local_api('POST', '/api/tasks/create', {
+            'description': f"{title}: {description}",
+            'priority': priority,
+            'type': 'ONE_OFF',
+        })
+        return {
+            'output': f"Created task: {title}",
+            'result': result,
+        }
+
+    async def handle_update_task_status(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        task_id = params.get('taskId')
+        status = params.get('status')
+        if not task_id or not status:
+            raise Exception("Missing 'taskId' or 'status'")
+
+        result = await self._call_local_api('POST', '/api/goals/update', {
+            'id': task_id,
+            'status': status,
+        })
+        return {
+            'output': f"Updated task {task_id} to {status}",
+            'result': result,
+        }
+
+    # ===== AUTONOMY / GOALS / SKILLS =====
+
+    async def handle_manage_goals(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        action = (params.get('action') or '').upper()
+
+        if action == 'ADD':
+            description = params.get('description')
+            if not description:
+                raise Exception("Missing 'description' for ADD")
+
+            payload = {
+                'description': description,
+                'type': 'RECURRING' if params.get('schedule') else 'ONCE',
+                'schedule': params.get('schedule'),
+            }
+            result = await self._call_local_api('POST', '/api/goals/add', payload)
+            return {
+                'output': f'Goal added: {description}',
+                'result': result,
+            }
+
+        if action == 'LIST':
+            result = await self._call_local_api('GET', '/api/goals/list')
+            return {
+                'output': 'Retrieved goal list',
+                'result': result,
+            }
+
+        if action == 'DELETE':
+            goal_id = params.get('id')
+            if not goal_id:
+                raise Exception("Missing 'id' for DELETE")
+
+            result = await self._call_local_api('DELETE', '/api/goals/delete', {
+                'id': goal_id,
+            })
+            return {
+                'output': f'Goal deleted: {goal_id}',
+                'result': result,
+            }
+
+        raise Exception(f"Unsupported manageGoals action: {action}")
+
+    async def handle_create_custom_skill(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        payload = {
+            'name': params.get('name'),
+            'description': params.get('description'),
+            'code': params.get('script'),
+            'language': params.get('language'),
+            'inputs': params.get('inputs') or [],
+        }
+        result = await self._call_local_api('POST', '/api/skills/create', payload)
+        return {
+            'output': f"Created custom skill: {params.get('name')}",
+            'result': result,
+        }
+
+    async def handle_generate_and_register_skill(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        generated = await self._call_local_api('POST', '/api/skills/generate', {
+            'description': params.get('description'),
+            'language': params.get('language', 'python'),
+        })
+
+        payload = {
+            'name': generated.get('name'),
+            'description': generated.get('description'),
+            'code': generated.get('code'),
+            'language': generated.get('language'),
+            'inputs': generated.get('inputs') or [],
+        }
+        created = await self._call_local_api('POST', '/api/skills/create', payload)
+
+        return {
+            'output': f"Generated and registered custom skill: {generated.get('name')}",
+            'result': {
+                'generated': generated,
+                'created': created,
+            },
+        }
+
+    async def handle_list_custom_skills(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = await self._call_local_api('GET', '/api/skills/list')
+        return {
+            'output': 'Retrieved custom skill registry',
+            'result': result,
+        }
+
+    async def handle_execute_custom_skill(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = await self._call_local_api('POST', '/api/skills/execute', {
+            'name': params.get('skillName'),
+            'args': params.get('args') or {},
+        })
+        return {
+            'output': f"Executed custom skill: {params.get('skillName')}",
+            'result': result,
+        }
+
+    async def handle_execute_rpc_script(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        script = params.get('script')
+        if isinstance(script, dict) and 'run' in script:
+            script = script.get('run')
+
+        result = await self._call_local_api('POST', '/api/rpc/execute', {
+            'script': script,
+            'stopOnError': params.get('stopOnError', True),
+        })
+        return {
+            'output': 'Executed RPC automation script',
+            'result': result,
+        }
+
+    # ===== SUBSYSTEMS =====
+
+    async def handle_list_subsystems(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = await self._call_local_api('GET', '/api/subsystems/list')
+        return {
+            'output': 'Retrieved subsystem list',
+            'result': result,
+        }
+
+    async def handle_start_subsystem(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        payload = {
+            'name': params.get('name'),
+            'command': params.get('command'),
+            'args': params.get('args') or [],
+        }
+        result = await self._call_local_api('POST', '/api/subsystems/start', payload)
+        return {
+            'output': f"Started subsystem: {params.get('name')}",
+            'result': result,
+        }
 
 
 # Global instance

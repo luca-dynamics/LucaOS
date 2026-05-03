@@ -1,21 +1,54 @@
 import { ToolRegistry } from "../../services/toolRegistry";
 import * as Definitions from "../definitions";
 import { apiUrl } from "../../config/api";
+import { canRegisterIntelligenceTool } from "../intelligenceToolSurfacePolicy";
 
 export const IntelligenceProvider = {
   register: () => {
     // 1. OSINT & INVESTIGATIONS
     const OSINT_TOOLS = [
-      { tool: Definitions.osintUsernameSearchTool, api: "/api/osint/username" },
-      { tool: Definitions.osintDomainIntelTool, api: "/api/osint/domain" },
-      { tool: Definitions.osintDarkWebScanTool, api: "/api/osint/darkweb" },
-      { tool: Definitions.traceSignalSourceTool, api: "/api/osint/trace" },
-      { tool: Definitions.refineQueryTool, api: "/api/osint/refine-query" },
-      { tool: Definitions.osintGoogleDorkTool, api: "/api/osint/google-dork" },
-      { tool: Definitions.osintIdentitySearchTool, api: "/api/osint/identity" },
+      {
+        toolId: "osintUsernameSearch" as const,
+        tool: Definitions.osintUsernameSearchTool,
+        api: "/api/osint/username",
+      },
+      {
+        toolId: "osintDomainIntel" as const,
+        tool: Definitions.osintDomainIntelTool,
+        api: "/api/osint/domain",
+      },
+      {
+        toolId: "osintDarkWebScan" as const,
+        tool: Definitions.osintDarkWebScanTool,
+        api: "/api/osint/darkweb",
+      },
+      {
+        toolId: "traceSignalSource" as const,
+        tool: Definitions.traceSignalSourceTool,
+        api: "/api/osint/trace",
+      },
+      {
+        toolId: "refineQuery" as const,
+        tool: Definitions.refineQueryTool,
+        api: "/api/osint/refine-query",
+      },
+      {
+        toolId: "osintGoogleDork" as const,
+        tool: Definitions.osintGoogleDorkTool,
+        api: "/api/osint/google-dork",
+      },
+      {
+        toolId: "osintIdentitySearch" as const,
+        tool: Definitions.osintIdentitySearchTool,
+        api: "/api/osint/identity",
+      },
     ];
 
-    OSINT_TOOLS.forEach(({ tool, api }) => {
+    OSINT_TOOLS.forEach(({ toolId, tool, api }) => {
+      if (!canRegisterIntelligenceTool(toolId, { enforceBoundary: true })) {
+        return;
+      }
+
       ToolRegistry.register(
         tool,
         "OSINT",

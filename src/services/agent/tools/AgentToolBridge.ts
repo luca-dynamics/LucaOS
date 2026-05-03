@@ -10,6 +10,7 @@ import type { PersonaType } from "../../../config/personaConfig";
 import { hasToolAccess, getPersonaTools } from "../config/personaToolAccess";
 import { tracingService } from "../LucaTracing";
 import { CORTEX_URL } from "../../../config/api";
+import { ToolRegistry } from "../../toolRegistry";
 
 export interface ToolResult {
   success: boolean;
@@ -25,6 +26,41 @@ export interface ToolDefinition {
   description?: string;
 }
 
+const BACKEND_EXECUTABLE_TOOLS = new Set([
+  "readFile",
+  "writeProjectFile",
+  "listFiles",
+  "batchAnalyzeAndOrganizeDirectory",
+  "executeTerminalCommand",
+  "runPythonScript",
+  "auditSourceCode",
+  "osintUsernameSearch",
+  "osintDomainIntel",
+  "osintDarkWebScan",
+  "storeMemory",
+  "retrieveMemory",
+  "reconcileMemories",
+  "getSystemSettings",
+  "updateSystemSettings",
+  "controlSystem",
+  "readClipboard",
+  "writeClipboard",
+  "system_doctor",
+  "readUrl",
+  "addGraphRelations",
+  "queryGraphKnowledge",
+  "createTask",
+  "updateTaskStatus",
+  "manageGoals",
+  "createCustomSkill",
+  "generateAndRegisterSkill",
+  "listCustomSkills",
+  "executeCustomSkill",
+  "executeRpcScript",
+  "listSubsystems",
+  "startSubsystem",
+]);
+
 /**
  * Bridge between Agent Workforce and Luca's tool ecosystem
  */
@@ -33,6 +69,30 @@ export class AgentToolBridge {
 
   constructor(traceId?: string) {
     this.traceId = traceId;
+  }
+
+  /**
+   * Runtime-registered tools are the source of truth for what this build can
+   * actually expose to the workforce right now.
+   */
+  private getRegisteredToolNames(): Set<string> {
+    return new Set(
+      ToolRegistry.getAll()
+        .map((tool) => tool.name)
+        .filter((name): name is string => Boolean(name)),
+    );
+  }
+
+  /**
+   * Persona access is still modeled separately, but we intersect it with the
+   * live registry so the workforce does not advertise unavailable tools.
+   */
+  private getAvailablePersonaToolNames(persona: PersonaType): string[] {
+    const registeredToolNames = this.getRegisteredToolNames();
+    return getPersonaTools(persona).filter((toolName) =>
+      registeredToolNames.has(toolName) &&
+      BACKEND_EXECUTABLE_TOOLS.has(toolName),
+    );
   }
 
   /**
@@ -46,7 +106,12 @@ export class AgentToolBridge {
     const startTime = Date.now();
 
     // 1. Check access
-    if (!hasToolAccess(persona, toolName)) {
+    const availablePersonaTools = this.getAvailablePersonaToolNames(persona);
+
+    if (
+      !hasToolAccess(persona, toolName) ||
+      !availablePersonaTools.includes(toolName)
+    ) {
       const error = `Persona ${persona} does not have access to tool: ${toolName}`;
 
       if (this.traceId) {
@@ -168,7 +233,7 @@ export class AgentToolBridge {
    * Get all tools available to a persona
    */
   getToolsForPersona(persona: PersonaType): string[] {
-    return getPersonaTools(persona);
+    return this.getAvailablePersonaToolNames(persona);
   }
 
   /**
@@ -176,8 +241,12 @@ export class AgentToolBridge {
    */
   listAllTools(): ToolDefinition[] {
     const tools: ToolDefinition[] = [];
+    const registeredToolNames = this.getRegisteredToolNames();
 
-    for (const [name, schema] of Object.entries(ToolSchemas)) {
+    for (const tool of ToolRegistry.getAll()) {
+      const name = tool.name;
+      if (!name || !registeredToolNames.has(name)) continue;
+      const schema = ToolSchemas[name as keyof typeof ToolSchemas];
       tools.push({
         name,
         schema,
@@ -263,15 +332,15 @@ export class AgentToolBridge {
     toolsByPersona: Record<PersonaType, number>;
   } {
     const toolsByPersona: Record<PersonaType, number> = {
-      ENGINEER: getPersonaTools("ENGINEER").length,
-      HACKER: getPersonaTools("HACKER").length,
-      ASSISTANT: getPersonaTools("ASSISTANT").length,
-      RUTHLESS: getPersonaTools("RUTHLESS").length,
-      DICTATION: getPersonaTools("DICTATION").length,
-      DEFAULT: getPersonaTools("DEFAULT").length,
-      LUCAGENT: getPersonaTools("LUCAGENT").length,
-      LOCALCORE: getPersonaTools("LOCALCORE").length,
-      AUDITOR: getPersonaTools("AUDITOR").length,
+      ENGINEER: this.getToolsForPersona("ENGINEER").length,
+      HACKER: this.getToolsForPersona("HACKER").length,
+      ASSISTANT: this.getToolsForPersona("ASSISTANT").length,
+      RUTHLESS: this.getToolsForPersona("RUTHLESS").length,
+      DICTATION: this.getToolsForPersona("DICTATION").length,
+      DEFAULT: this.getToolsForPersona("DEFAULT").length,
+      LUCAGENT: this.getToolsForPersona("LUCAGENT").length,
+      LOCALCORE: this.getToolsForPersona("LOCALCORE").length,
+      AUDITOR: this.getToolsForPersona("AUDITOR").length,
     };
 
     return {

@@ -3,7 +3,19 @@ import { introspectionService } from "./introspectionService";
 import { mcpClientManager } from "./mcpClientManager";
 import { settingsService } from "./settingsService";
 import { TOOL_CONFIGS, MissionScope } from "./toolRegistry";
+import { modelManager } from "./ModelManagerService";
+import { resolveVoiceSessionRoute } from "./voiceSessionRouter";
+import { voiceSessionOrchestrator } from "./voiceSessionOrchestrator";
+import { loggerService } from "./loggerService";
 import os from "os";
+import {
+  calculateOverallAuditStatus,
+  createHostSystemSnapshot,
+} from "../shared/diagnostics/diagnosticsContract.js";
+import {
+  createMcpInfrastructureAuditResult,
+  summarizeMcpConnections,
+} from "../shared/diagnostics/mcpDiagnosticsShared.js";
 
 /**
  * Audit Result for a specific check
@@ -25,7 +37,12 @@ export interface AuditReport {
   overall: "healthy" | "degraded" | "critical";
   results: AuditResult[];
   repairSummary?: string;
-  system: {
+  system: ReturnType<typeof createHostSystemSnapshot>;
+}
+
+export interface SupportSnapshot {
+  timestamp: number;
+  app: {
     platform: string;
     arch: string;
     cpus: number;
@@ -33,9 +50,147 @@ export interface AuditReport {
     totalMem: number;
     uptime: number;
   };
+  onboarding: {
+    setupComplete: boolean;
+    preferredMode: string;
+    persona: string;
+    theme: string;
+    localProvisioningResume: any | null;
+  };
+  localCore: {
+    health: Awaited<ReturnType<typeof introspectionService.scan>>;
+    readiness: ReturnType<typeof introspectionService.getLocalCoreReadiness>;
+  };
+  selectedModels: {
+    brain: string;
+    vision: string;
+    memoryLegacy: string;
+    embedding: string;
+    memoryProviderModel: string;
+    stt: string;
+    ttsVoice: string;
+  };
+  localModels: {
+    total: number;
+    ready: number;
+    downloading: number;
+    error: number;
+    byCategory: Record<string, Array<{
+      id: string;
+      runtime: string;
+      status: string;
+      sizeFormatted: string;
+      downloadProgress?: number;
+    }>>;
+  };
+  ollama: {
+    available: boolean;
+    models: string[];
+  };
+  voice: {
+    route: ReturnType<typeof resolveVoiceSessionRoute>;
+    orchestrator: {
+      connected: boolean;
+      status: string;
+      displayStatus: string;
+      routeKind: string | null;
+      responseLatencyMs: number | null;
+      responseSpeedLabel: string | null;
+      routingHealth: string;
+      adaptiveRouteApplied: boolean;
+    };
+  };
+  diagnostics: {
+    recentLogs: ReturnType<typeof loggerService.getRecentLogs>;
+  };
 }
 
+const LOCAL_ONBOARDING_RESUME_KEY = "LUCA_LOCAL_ONBOARDING_RESUME_V1";
+
 class DiagnosticsService {
+  public async collectSupportSnapshot(): Promise<SupportSnapshot> {
+    const settings = settingsService.getSettings();
+    const health = await introspectionService.scan();
+    const readiness = introspectionService.getLocalCoreReadiness(health);
+    const allModels = modelManager.getAllModels();
+    const ollama = await modelManager.getOllamaModels();
+    const route = resolveVoiceSessionRoute(settings);
+    const localProvisioningResume = this.readLocalProvisioningResume();
+
+    const byCategory = allModels.reduce<SupportSnapshot["localModels"]["byCategory"]>(
+      (acc, model) => {
+        const entry = {
+          id: model.id,
+          runtime: model.runtime,
+          status: model.status,
+          sizeFormatted: model.sizeFormatted,
+          downloadProgress: model.downloadProgress,
+        };
+        if (!acc[model.category]) acc[model.category] = [];
+        acc[model.category].push(entry);
+        return acc;
+      },
+      {},
+    );
+
+    return {
+      timestamp: Date.now(),
+      app: createHostSystemSnapshot(os),
+      onboarding: {
+        setupComplete: Boolean(settings.general?.setupComplete),
+        preferredMode: settings.general?.preferredMode || "text",
+        persona: settings.general?.persona || "ASSISTANT",
+        theme: settings.general?.theme || "PROFESSIONAL",
+        localProvisioningResume,
+      },
+      localCore: {
+        health,
+        readiness,
+      },
+      selectedModels: {
+        brain: settings.brain?.model || "",
+        vision: settings.brain?.visionModel || "",
+        memoryLegacy: settings.brain?.memoryModel || "",
+        embedding: settings.brain?.embeddingModel || "",
+        memoryProviderModel: settings.memory?.model || "",
+        stt: settings.voice?.sttModel || "",
+        ttsVoice: settings.voice?.voiceId || "",
+      },
+      localModels: {
+        total: allModels.length,
+        ready: allModels.filter((m) => m.status === "ready").length,
+        downloading: allModels.filter((m) => m.status === "downloading").length,
+        error: allModels.filter((m) => m.status === "error").length,
+        byCategory,
+      },
+      ollama: {
+        available: Boolean(ollama?.available),
+        models: (ollama?.models || []).map((m: any) => m.name || String(m)),
+      },
+      voice: {
+        route,
+        orchestrator: {
+          connected: voiceSessionOrchestrator.connected,
+          status: voiceSessionOrchestrator.status,
+          displayStatus: voiceSessionOrchestrator.displayStatus,
+          routeKind: voiceSessionOrchestrator.routeKind,
+          responseLatencyMs: voiceSessionOrchestrator.responseLatencyMs,
+          responseSpeedLabel: voiceSessionOrchestrator.responseSpeedLabel,
+          routingHealth: voiceSessionOrchestrator.routingHealth,
+          adaptiveRouteApplied: voiceSessionOrchestrator.adaptiveRouteApplied,
+        },
+      },
+      diagnostics: {
+        recentLogs: loggerService.getRecentLogs().slice(-50),
+      },
+    };
+  }
+
+  public async exportSupportSnapshot(): Promise<string> {
+    const snapshot = await this.collectSupportSnapshot();
+    return JSON.stringify(snapshot, null, 2);
+  }
+
   /**
    * Run a comprehensive system audit
    * Designed for production-grade reliability (Finance, Gov, Industrial)
@@ -64,20 +219,13 @@ class DiagnosticsService {
     results.push(await this.checkResources());
 
     // Calculate overall status
-    const overall = this.calculateOverallStatus(results);
+    const overall = calculateOverallAuditStatus(results);
 
     const report: AuditReport = {
       timestamp: Date.now(),
       overall,
       results,
-      system: {
-        platform: os.platform(),
-        arch: os.arch(),
-        cpus: os.cpus().length,
-        freeMem: os.freemem(),
-        totalMem: os.totalmem(),
-        uptime: os.uptime(),
-      },
+      system: createHostSystemSnapshot(os),
     };
 
     console.log(`[DIAGNOSTICS] Audit Complete. Status: ${overall.toUpperCase()}`);
@@ -208,32 +356,10 @@ class DiagnosticsService {
     });
 
     // MCP Audit
-    const mcpStatus = mcpClientManager.getConnectionStatus();
-    const unHealthyMcp = mcpStatus.filter((s: any) => !s.isHealthy);
-
-    if (mcpStatus.length === 0) {
-      results.push({
-        id: "infra_mcp",
-        name: "MCP Infrastructure",
-        status: "warn",
-        message: "No MCP servers configured or connected.",
-      });
-    } else if (unHealthyMcp.length > 0) {
-      results.push({
-        id: "infra_mcp",
-        name: "MCP Infrastructure",
-        status: "fail",
-        message: `${unHealthyMcp.length} of ${mcpStatus.length} servers are unhealthy.`,
-        details: unHealthyMcp,
-      });
-    } else {
-      results.push({
-        id: "infra_mcp",
-        name: "MCP Infrastructure",
-        status: "pass",
-        message: `All ${mcpStatus.length} MCP servers are healthy.`,
-      });
-    }
+    const mcpSummary = summarizeMcpConnections(
+      mcpClientManager.getConnectionStatus(),
+    );
+    results.push(createMcpInfrastructureAuditResult(mcpSummary));
 
     return results;
   }
@@ -329,10 +455,14 @@ class DiagnosticsService {
     };
   }
 
-  private calculateOverallStatus(results: AuditResult[]): AuditReport["overall"] {
-    if (results.some((r) => r.status === "fail")) return "critical";
-    if (results.some((r) => r.status === "warn")) return "degraded";
-    return "healthy";
+  private readLocalProvisioningResume() {
+    try {
+      if (typeof localStorage === "undefined") return null;
+      const raw = localStorage.getItem(LOCAL_ONBOARDING_RESUME_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
   }
 }
 

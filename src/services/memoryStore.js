@@ -81,7 +81,10 @@ export const memoryStore = {
         const content = `${memory.key}: ${memory.value}`;
         const meta = {
             category: memory.category,
-            confidence: memory.confidence
+            confidence: memory.confidence,
+            importance: memory.importance,
+            tenantId: memory.tenantId,
+            expiresAt: memory.expiresAt,
         };
 
         return stmt.run(
@@ -90,6 +93,100 @@ export const memoryStore = {
             memory.timestamp || Date.now(),
             JSON.stringify(meta)
         );
+    },
+
+    reconcile: () => {
+        const rows = db.prepare(`
+            SELECT id, content, type, created_at, metadata_json
+            FROM memories
+            ORDER BY created_at DESC, id DESC
+        `).all();
+
+        const nodes = rows.map((row) => {
+            const meta = row.metadata_json ? JSON.parse(row.metadata_json) : {};
+            const [rawKey, ...rawValueParts] = row.content.split(':');
+            return {
+                id: row.id,
+                row,
+                key: rawKey.trim(),
+                value: rawValueParts.join(':').trim(),
+                category: meta.category || 'FACT',
+                confidence: typeof meta.confidence === 'number' ? meta.confidence : 0.7,
+                importance: typeof meta.importance === 'number' ? meta.importance : 0,
+                tenantId: meta.tenantId,
+                expiresAt: meta.expiresAt,
+                timestamp: row.created_at,
+            };
+        });
+
+        const removedIds = [];
+        const mergedPairs = [];
+        const survivors = [];
+
+        for (const node of nodes) {
+            let mergedInto = null;
+
+            for (const survivor of survivors) {
+                const similarity = computeMemorySimilarity(node, survivor);
+                const sameKeyCategory =
+                    survivor.key.trim().toLowerCase() === node.key.trim().toLowerCase() &&
+                    String(survivor.category).trim().toLowerCase() === String(node.category).trim().toLowerCase();
+
+                if (sameKeyCategory || similarity >= 0.92) {
+                    mergedInto = survivor;
+                    mergedPairs.push({
+                        kept: survivor.id,
+                        removed: node.id,
+                        similarity,
+                        sameKeyCategory,
+                    });
+                    mergeMemoryNodes(survivor, node);
+                    removedIds.push(node.id);
+                    break;
+                }
+            }
+
+            if (!mergedInto) {
+                survivors.push({ ...node });
+            }
+        }
+
+        const updateStmt = db.prepare(`
+            UPDATE memories
+            SET content = ?, created_at = ?, metadata_json = ?
+            WHERE id = ?
+        `);
+        const deleteStmt = db.prepare('DELETE FROM memories WHERE id = ?');
+        const tx = db.transaction((mergedNodes, ids) => {
+            for (const node of mergedNodes) {
+                updateStmt.run(
+                    `${node.key}: ${node.value}`,
+                    node.timestamp,
+                    JSON.stringify({
+                        category: node.category,
+                        confidence: node.confidence,
+                        importance: node.importance,
+                        tenantId: node.tenantId,
+                        expiresAt: node.expiresAt,
+                    }),
+                    node.id,
+                );
+            }
+
+            for (const id of ids) deleteStmt.run(id);
+        });
+
+        tx(survivors, removedIds);
+
+        return {
+            success: true,
+            totalMemoriesScanned: rows.length,
+            duplicatesRemoved: removedIds.length,
+            remainingMemories: rows.length - removedIds.length,
+            mode: 'semantic_merge_and_latest_key_category_preservation',
+            exactOrNearDuplicatesRemoved: mergedPairs.filter((pair) => !pair.sameKeyCategory).length,
+            supersededKeyCategoryEntriesRemoved: mergedPairs.filter((pair) => pair.sameKeyCategory).length,
+        };
     },
 
     // Wipe all memory data (Factory Reset)
@@ -366,4 +463,88 @@ function cosineSimilarity(vecA, vecB) {
     magB = Math.sqrt(magB);
     if (magA === 0 || magB === 0) return 0;
     return dot / (magA * magB);
+}
+
+function normalizeMemoryText(text) {
+    return String(text || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function tokenSet(text) {
+    const normalized = normalizeMemoryText(text);
+    if (!normalized) return new Set();
+    return new Set(normalized.split(' ').filter(Boolean));
+}
+
+function jaccardSimilarity(a, b) {
+    if (a.size === 0 || b.size === 0) return 0;
+    let intersection = 0;
+    for (const token of a) {
+        if (b.has(token)) intersection += 1;
+    }
+    const union = a.size + b.size - intersection;
+    return union === 0 ? 0 : intersection / union;
+}
+
+function computeMemorySimilarity(memoryA, memoryB) {
+    const categoryA = String(memoryA.category || '').toLowerCase();
+    const categoryB = String(memoryB.category || '').toLowerCase();
+    if (categoryA !== categoryB) return 0;
+
+    const keyA = normalizeMemoryText(memoryA.key);
+    const keyB = normalizeMemoryText(memoryB.key);
+    const valueA = normalizeMemoryText(memoryA.value);
+    const valueB = normalizeMemoryText(memoryB.value);
+
+    if (keyA && keyA === keyB && valueA && valueA === valueB) return 1;
+    if (valueA && valueB && (valueA.includes(valueB) || valueB.includes(valueA))) {
+        return keyA === keyB ? 0.98 : 0.93;
+    }
+
+    const keyScore = keyA === keyB ? 1 : jaccardSimilarity(tokenSet(keyA), tokenSet(keyB));
+    const valueScore = jaccardSimilarity(tokenSet(valueA), tokenSet(valueB));
+    return (keyScore * 0.45) + (valueScore * 0.55);
+}
+
+function mergeMemoryNodes(primaryCandidate, secondaryCandidate) {
+    let primary = primaryCandidate;
+    let secondary = secondaryCandidate;
+
+    if (secondary.confidence > primary.confidence) {
+        primary = secondaryCandidate;
+        secondary = primaryCandidate;
+    } else if (
+        secondary.confidence === primary.confidence &&
+        secondary.timestamp > primary.timestamp
+    ) {
+        primary = secondaryCandidate;
+        secondary = primaryCandidate;
+    }
+
+    let mergedValue = primary.value;
+    if (primary.value !== secondary.value) {
+        if (primary.value.length < 100 && secondary.value.length < 100) {
+            if (primary.value.toLowerCase().includes(secondary.value.toLowerCase())) {
+                mergedValue = primary.value;
+            } else if (secondary.value.toLowerCase().includes(primary.value.toLowerCase())) {
+                mergedValue = secondary.value;
+            } else {
+                mergedValue = `${primary.value} | ${secondary.value}`;
+            }
+        } else {
+            mergedValue = `${primary.value}\n\n[Also noted: ${secondary.value}]`;
+        }
+    }
+
+    primaryCandidate.key = primary.key;
+    primaryCandidate.value = mergedValue;
+    primaryCandidate.category = primary.category;
+    primaryCandidate.timestamp = Math.max(primary.timestamp, secondary.timestamp);
+    primaryCandidate.confidence = Math.max(primary.confidence, secondary.confidence);
+    primaryCandidate.importance = Math.max(primary.importance || 0, secondary.importance || 0);
+    primaryCandidate.tenantId = primary.tenantId || secondary.tenantId;
+    primaryCandidate.expiresAt = primary.expiresAt || secondary.expiresAt;
 }

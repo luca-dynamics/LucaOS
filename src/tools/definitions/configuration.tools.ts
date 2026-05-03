@@ -145,8 +145,19 @@ export const updateSystemSettingsTool: FunctionDeclaration = {
 export const auditSystemTool: FunctionDeclaration = {
   name: "auditSystem",
   description:
-    "Run a comprehensive production-grade system audit of LUCA's core components, infrastructure (Cortex, MCP, IoT), security protocols, and resource health. Use this for 'Survival Awareness' and system health reporting.",
-  parameters: { type: SchemaType.OBJECT, properties: {} },
+    "Run a comprehensive production-grade system audit of LUCA's core components, infrastructure (Cortex, MCP, IoT), security protocols, and resource health. Can also export an internal support snapshot for tactical diagnostics.",
+  parameters: {
+    type: SchemaType.OBJECT,
+    properties: {
+      mode: {
+        type: SchemaType.STRING,
+        description:
+          'Diagnostic mode: "audit" for the standard health report, or "snapshot" for the full internal support snapshot.',
+        enum: ["audit", "snapshot"],
+        format: "enum",
+      },
+    },
+  },
 };
 
 export const repairSystemTool: FunctionDeclaration = {
@@ -234,6 +245,5 @@ export const performSettingsActionTool: FunctionDeclaration = {
     required: ["actionId"],
   },
 };
-
 
 

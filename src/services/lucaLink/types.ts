@@ -23,15 +23,31 @@ export interface DeviceMetadata {
   battery?: number;
   network?: "wifi" | "5g" | "4g" | "3g" | "offline";
   location?: Geolocation;
-  platform: "ios" | "android" | "web" | "desktop";
+  platform:
+    | "ios"
+    | "android"
+    | "web"
+    | "desktop"
+    | "tizen"
+    | "webos"
+    | "wearos";
   capabilities: string[];
 }
 
 export interface Device {
   id: string;
   name: string;
-  type: "mobile" | "tablet" | "desktop";
-  platform: "ios" | "android" | "web" | "macos" | "windows" | "linux";
+  type: "mobile" | "tablet" | "desktop" | "watch" | "tv" | "speaker" | "iot";
+  platform:
+    | "ios"
+    | "android"
+    | "web"
+    | "macos"
+    | "windows"
+    | "linux"
+    | "tizen"
+    | "webos"
+    | "wearos";
   capabilities: string[];
   status: "online" | "offline" | "away";
   lastSeen: Date;

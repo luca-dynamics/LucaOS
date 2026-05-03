@@ -12,7 +12,7 @@ from typing import Optional, List, Dict, Any, Union
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-from fastapi import FastAPI, HTTPException, Body, Request, UploadFile, File, Depends
+from fastapi import FastAPI, HTTPException, Body, Request, UploadFile, File, Depends, Form
 from pydantic import BaseModel
 import uvicorn
 try:
@@ -1477,6 +1477,20 @@ class EmbedRequest(BaseModel):
 class EmbedSettingsRequest(BaseModel):
     model: str  # The embedding model ID to use
 
+def normalize_local_model_id(model_id: Optional[str]) -> Optional[str]:
+    if model_id and model_id.startswith("local/"):
+        return model_id.split("/", 1)[1] or model_id
+    return model_id
+
+def is_local_model_request(model_id: Optional[str]) -> bool:
+    normalized_model = normalize_local_model_id(model_id)
+    if not normalized_model:
+        return False
+    model_meta = MODEL_PATHS.get(normalized_model)
+    if model_meta:
+        return model_meta.get("runtime") == "internal" or model_meta.get("category") in {"embedding", "vision", "stt", "tts"}
+    return any(kw in normalized_model.lower() for kw in ["gemma", "phi", "llama", "local", "model2vec", "qwen", "ollama", "embed", "bge", "jina", "mxbai", "nomic"])
+
 @app.post("/embed")
 async def embed_texts(request: EmbedRequest):
     """Generate embeddings for texts using current or specified model."""
@@ -1491,8 +1505,9 @@ async def embed_texts(request: EmbedRequest):
     
     # Temporarily switch model if specified
     original_model = embedding_logic.current_model
-    if request.model:
-        embedding_logic.set_model(request.model)
+    request_model = normalize_local_model_id(request.model)
+    if request_model:
+        embedding_logic.set_model(request_model)
     
     try:
         embeddings = await embedding_logic.acall(request.texts)
@@ -1503,7 +1518,7 @@ async def embed_texts(request: EmbedRequest):
         }
     finally:
         # Restore original model if we switched
-        if request.model:
+        if request_model:
             embedding_logic.set_model(original_model)
 
 @app.post("/settings/embedding")
@@ -1516,13 +1531,14 @@ async def set_embedding_model(request: EmbedSettingsRequest):
     embedding_models = [k for k, v in MODEL_PATHS.items() if v.get("category") == "embedding"]
     valid_models.extend(embedding_models)
     
-    if request.model not in valid_models:
+    normalized_model = normalize_local_model_id(request.model)
+    if normalized_model not in valid_models:
         raise HTTPException(status_code=400, detail=f"Invalid model: {request.model}. Valid: {valid_models}")
     
-    embedding_logic.set_model(request.model)
+    embedding_logic.set_model(normalized_model)
     return {
         "status": "success",
-        "model": request.model,
+        "model": normalized_model,
         "dimension": embedding_logic._embedding_dim
     }
 
@@ -1552,7 +1568,8 @@ class MemoryQueryRequest(BaseModel):
 async def ingest_memory(request: MemoryIngestRequest):
     try:
         # Determine if the request is targeting a local model
-        is_local_model = request.model and any(kw in request.model.lower() for kw in ["gemma", "phi", "llama", "local", "model2vec", "qwen", "ollama"])
+        normalized_model = normalize_local_model_id(request.model)
+        is_local_model = is_local_model_request(normalized_model)
         
         # Ingest into BOTH Minds if cloud is requested, otherwise stick to Local/HDC
         # 1. Local Mind (Zero Cost History)
@@ -1561,7 +1578,7 @@ async def ingest_memory(request: MemoryIngestRequest):
         # 2. Cloud Mind (High Quality Context) - Skip if local model is requested
         cloud_rag = None
         if not is_local_model:
-            cloud_rag = await get_rag(mind_type="cloud", model_id=request.model)
+            cloud_rag = await get_rag(mind_type="cloud", model_id=normalized_model)
         
         if not local_rag and not cloud_rag:
             raise HTTPException(status_code=503, detail="RAG system not initialized")
@@ -1593,12 +1610,13 @@ async def query_memory(request: MemoryQueryRequest):
         # Get QueryParam class from lazy loader
         _, QueryParam_Class, _, _, _, _ = lazy_import_lightrag()
         
-        is_local_model = request.model and any(kw in request.model.lower() for kw in ["gemma", "phi", "llama", "local", "model2vec", "qwen", "ollama"])
+        normalized_model = normalize_local_model_id(request.model)
+        is_local_model = is_local_model_request(normalized_model)
         
         local_rag = await get_rag(mind_type="local")
         cloud_rag = None
         if not is_local_model:
-            cloud_rag = await get_rag(mind_type="cloud", model_id=request.model)
+            cloud_rag = await get_rag(mind_type="cloud", model_id=normalized_model)
         
         mode_map = {"local": "local", "global": "global", "hybrid": "hybrid", "naive": "naive"}
         query_mode = mode_map.get(request.mode, "naive")
@@ -2037,6 +2055,55 @@ class TTSRequest(BaseModel):
     voice: str = "amy"
     speed: float = 1.0
 
+@app.post("/stt/transcribe")
+async def stt_transcribe_endpoint(
+    file: UploadFile = File(...),
+    model: str = Form("whisper-tiny"),
+):
+    try:
+        audio_bytes = await file.read()
+        requested_model = (model or "whisper-tiny").strip()
+
+        model_config = MODEL_PATHS.get(requested_model)
+        if not model_config or model_config.get("category") != "stt":
+            requested_model = "whisper-tiny"
+            model_config = MODEL_PATHS.get(requested_model)
+
+        if not model_config:
+            raise HTTPException(status_code=503, detail="No local STT model is configured")
+
+        model_path = model_config["path"]
+        is_downloaded = (
+            os.path.isdir(model_path) and len(os.listdir(model_path)) > 0
+            if model_config.get("is_folder")
+            else os.path.isfile(model_path)
+        )
+        if not is_downloaded:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Local STT model not downloaded: {requested_model}",
+            )
+
+        loop = asyncio.get_running_loop()
+        transcript = await loop.run_in_executor(
+            None,
+            voice_agent.local_stt.transcribe,
+            audio_bytes,
+            model_path,
+        )
+
+        return {
+            "text": transcript or "",
+            "confidence": 1.0 if transcript else 0.0,
+            "model_used": requested_model,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[CORTEX] /stt/transcribe Error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
 class PiperTTSWrapper:
     def __init__(self, models_dir=None):
         import sys
@@ -2382,19 +2449,31 @@ class VisionAgentRequest(BaseModel):
     screen_width: int = 1920
     screen_height: int = 1080
     prompt: Optional[str] = None
+    model: Optional[str] = None
 
 @app.post("/vision/analyze_live")
 async def analyze_live_endpoint(request: VisionAgentRequest):
+    prompt = request.prompt or request.target
+    requested_model = normalize_local_model_id(request.model)
+
+    # If a specific local vision model was selected, honor it via the general vision agent.
+    if requested_model and requested_model not in {"smolvlm-500m", "HuggingFaceTB/SmolVLM-500M-Instruct"}:
+        agent = get_vision_agent()
+        if agent and VISION_AGENT_AVAILABLE and agent.is_downloaded(requested_model):
+            model_arg = MODEL_PATHS.get(requested_model, {}).get("path", requested_model)
+            analysis = agent.process_screenshot(request.image_base64, prompt, model_arg)
+            if analysis and not analysis.startswith("Error:"):
+                return {"status": "success", "analysis": analysis, "model_used": requested_model}
+
+    # Default fast local path uses the live SmolVLM agent.
     if not LIVE_VISION_AVAILABLE:
         raise HTTPException(status_code=503, detail="Local Live Vision Agent not available")
-    
-    # Use custom prompt if provided, else use default logic
     agent = get_live_vision_agent()
     if not agent:
         raise HTTPException(status_code=503, detail="Live Vision Agent not available")
-    analysis = agent.analyze(request.image_base64, request.prompt or request.target)
+    analysis = agent.analyze(request.image_base64, prompt)
     if analysis:
-        return {"status": "success", "analysis": analysis}
+        return {"status": "success", "analysis": analysis, "model_used": "smolvlm-500m"}
     else:
         raise HTTPException(status_code=500, detail="Live analysis failed")
 

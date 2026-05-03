@@ -349,7 +349,7 @@ export const controlDeviceTool: FunctionDeclaration = {
 export const systemDoctorTool: FunctionDeclaration = {
   name: "system_doctor",
   description:
-    "L.U.C.A DOCTOR: Run a comprehensive, production-grade system audit. This checks environmental integrity, hardware status, AI provider connectivity, and resource health. Use this to troubleshoot issues across all sectors (Finance, Gov, Industrial) or for proactive self-healing. Returns a detailed status report with suggested fixes.",
+    "L.U.C.A DOCTOR: Run a comprehensive, production-grade system audit. This checks environmental integrity, hardware status, AI provider connectivity, and resource health. It can also produce a tactical internal support snapshot for advanced diagnostics.",
   parameters: {
     type: SchemaType.OBJECT,
     properties: {
@@ -358,6 +358,12 @@ export const systemDoctorTool: FunctionDeclaration = {
         description:
           'Level of audit: "quick" (default) or "deep". Deep audit includes security and infrastructure verification.',
         enum: ["quick", "deep"], format: "enum",
+      },
+      reportType: {
+        type: SchemaType.STRING,
+        description:
+          'Report type: "audit" for the standard doctor report, or "snapshot" for the internal support snapshot export.',
+        enum: ["audit", "snapshot"], format: "enum",
       },
     },
     required: ["scanLevel"],

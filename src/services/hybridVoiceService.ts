@@ -381,9 +381,12 @@ class HybridVoiceService {
             systemInstruction: voiceInstruction,
           });
           await this.streamPlayer?.playStream(ttsStream, signal);
-          console.log(
-            `[VOICE] TTS Start-Speaking Latency: ${Date.now() - startSpeaking}ms`,
-          );
+          const ttsLatency = Date.now() - startSpeaking;
+          console.log(`[VOICE] TTS Start-Speaking Latency: ${ttsLatency}ms`);
+          
+          eventBus.emit("telemetry-update", {
+            tts: { latency: ttsLatency, source: "local" }
+          });
         } else if (this.ttsProvider) {
           const audioBuffer = await this.ttsProvider.synthesize(text, {
             abortSignal: signal,
@@ -415,9 +418,12 @@ class HybridVoiceService {
         playSentence(sentenceBuffer.trim());
       }
 
-      console.log(
-        `[VOICE] Brain Thinking took: ${Date.now() - startThinking}ms`,
-      );
+      const brainLatency = Date.now() - startThinking;
+      console.log(`[VOICE] Brain Thinking took: ${brainLatency}ms`);
+      
+      eventBus.emit("telemetry-update", {
+        brain: { ttft: brainLatency, path: this.config.brainProvider || "default" }
+      });
 
       if (this.activeRequestId === requestId) {
         this.config.onStatusUpdate?.("Ready");

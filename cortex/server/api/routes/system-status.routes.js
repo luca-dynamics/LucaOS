@@ -1,5 +1,6 @@
 import express from 'express';
 import { systemControlService } from '../../services/systemControlService.js';
+import { serverDiagnosticsService } from '../../services/diagnosticsService.js';
 
 const router = express.Router();
 
@@ -37,6 +38,20 @@ router.get('/monitor', async (req, res) => {
     try {
         const stats = await systemControlService.getRealtimeStats();
         res.json({ success: true, ...stats });
+    } catch (error) {
+        res.status(500).json({ success: false, result: error.message });
+    }
+});
+
+router.post('/doctor', async (req, res) => {
+    try {
+        const { reportType = 'audit', scanLevel = 'quick' } = req.body || {};
+        const result = await serverDiagnosticsService.runDoctor({
+            reportType,
+            scanLevel,
+            buildType: process.env.VITE_LUCA_BUILD_TYPE || 'PUBLIC',
+        });
+        res.json(result);
     } catch (error) {
         res.status(500).json({ success: false, result: error.message });
     }

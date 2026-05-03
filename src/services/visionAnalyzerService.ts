@@ -128,9 +128,14 @@ Return JSON:
         intent,
       );
       return this.parseAnalysis(result.prediction, base64Image);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[VISION_ANALYZER] Analysis failed:", error);
-      return [];
+      return [{
+         type: "dev_error",
+         priority: "CRITICAL",
+         message: `Vision Subsystem Offline: ${error.message}`,
+         context: { timestamp: Date.now(), screenshot: "" }
+      }];
     }
   }
 

@@ -12,9 +12,7 @@ interface MessageBubbleProps {
  */
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, theme }) => {
   const isLuca = message.role === "luca";
-  const isLight =
-    theme?.hex === "#111827" ||
-    theme?.themeName?.toLowerCase() === "lucagent";
+  const accent = theme?.hex || "var(--app-primary)";
 
   // Format timestamp
   const getTimeAgo = (date: Date) => {
@@ -44,50 +42,35 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, theme }) => {
         `}
         style={{
           backgroundColor: isLuca
-            ? isLight
-              ? "rgba(0,0,0,0.1)"
-              : "rgba(255,255,255,0.1)"
-            : isLight
-              ? "rgba(37,99,235,0.1)"
-              : "rgba(59,130,246,0.2)",
+            ? "var(--app-bg-tint)"
+            : `${accent}1a`,
           borderColor: isLuca
-            ? isLight
-              ? "rgba(0,0,0,0.2)"
-              : "rgba(255,255,255,0.2)"
-            : isLight
-              ? "rgba(59,130,246,0.2)"
-              : "rgba(96,165,250,0.3)",
+            ? "var(--app-border-main)"
+            : `${accent}55`,
         }}
       >
         {/* Role label */}
         <div
-          className={`text-xs font-bold uppercase tracking-wider mb-2 ${
-            isLuca
-              ? isLight
-                ? "text-black/60"
-                : "text-white/80"
-              : isLight
-                ? "text-blue-700/80"
-                : "text-blue-300/80"
-          }`}
+          className="text-xs font-bold uppercase tracking-wider mb-2"
+          style={{
+            color: isLuca ? "var(--app-text-muted)" : accent,
+          }}
         >
           {isLuca ? "Luca" : "You"}
         </div>
  
         {/* Message content */}
         <div
-          className={`text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
-            isLight ? "text-gray-900" : "text-white"
-          }`}
+          className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap"
+          style={{ color: "var(--app-text-main)" }}
         >
           {message.content}
         </div>
  
         {/* Timestamp */}
         <div
-          className={`text-[10px] mt-2 ${
-            isLight ? "text-black/60" : "text-white/60"
-          }`}
+          className="text-[10px] mt-2"
+          style={{ color: "var(--app-text-muted)" }}
         >
           {getTimeAgo(message.timestamp)}
         </div>

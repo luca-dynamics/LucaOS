@@ -5,7 +5,7 @@ import { settingsService } from "../../settingsService";
 export class CortexTtsProvider implements ITtsProvider {
   async synthesize(
     text: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: { abortSignal?: AbortSignal; voiceId?: string },
   ): Promise<ArrayBuffer> {
     const url = cortexUrl("/tts");
     const settings = settingsService.getSettings();
@@ -14,6 +14,7 @@ export class CortexTtsProvider implements ITtsProvider {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
         text,
+        voice: options?.voiceId || settings.voice.voiceId || "en_US-amy-medium",
         speed: settings.voice.rate || 1.0
       }),
       signal: options?.abortSignal,
@@ -41,7 +42,7 @@ export class CortexTtsProvider implements ITtsProvider {
 
   async *synthesizeStream(
     text: string,
-    options?: { abortSignal?: AbortSignal },
+    options?: { abortSignal?: AbortSignal; voiceId?: string },
   ): AsyncIterable<ArrayBuffer> {
     // The Cortex /tts backend currently does not support native binary streaming.
     // It returns a full JSON object. We yield the buffered result as a single chunk

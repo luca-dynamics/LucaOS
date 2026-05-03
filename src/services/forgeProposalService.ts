@@ -7,7 +7,7 @@ export interface ForgeProposal {
     title: string;
     problem: string;
     remediation: string;
-    type: 'PROMPT_MUTATION' | 'PARAM_TUNING' | 'CAPABILITY_GAP';
+    type: 'PROMPT_MUTATION' | 'PARAM_TUNING' | 'CAPABILITY_GAP' | 'URBAN_INHABITATION';
     status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'APPLIED';
     impactScore: number;
     createdAt: number;
@@ -80,9 +80,21 @@ class ForgeProposalService extends EventEmitter {
         
         // --- PHASE 14: TELEMETRY (HIVE MIND) ---
         telemetryService.broadcastEvolution(proposal);
-        
+
+        // --- URBAN INHABITATION: Trigger Signage Ceremony ---
+        if (proposal.type === 'URBAN_INHABITATION' && proposal.meta?.targetIp) {
+          console.log(`[FORGE] 🌆 Urban Inhabitation APPROVED — launching ceremony for ${proposal.meta.targetIp}`);
+          import("./substrateHandlers/SignageTakeoverOrchestrator").then(({ signageTakeoverOrchestrator }) => {
+            signageTakeoverOrchestrator.run(
+              proposal.meta.targetIp,
+              proposal.meta.simulate ?? true
+            ).then(result => {
+              console.log(`[FORGE] 🏙️ Takeover ${result.success ? "SUCCEEDED" : "FAILED"} in ${result.duration}ms`);
+            });
+          });
+        }
+
         // --- PHASE 12: EXECUTION (Placeholder for JIT mutation) ---
-        // In a real scenario, this triggers a prompt update or config write.
         console.log(`[FORGE] Remediation APPROVED and BROADCAST: ${proposal.title}`);
         
         proposal.status = 'APPLIED';

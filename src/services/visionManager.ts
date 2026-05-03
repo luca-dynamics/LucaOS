@@ -5,7 +5,7 @@ import { BRAIN_CONFIG } from "../config/brain.config";
 export type VisionIntent = "planning" | "insight" | "action";
 
 export interface VisionProviderConfig {
-  provider: "gemini" | "ui-tars" | "openai" | "claude";
+  provider: "gemini" | "ui-tars" | "openai" | "claude" | "ollama";
   model: string;
   apiKey?: string;
   baseUrl: string;
@@ -36,18 +36,23 @@ export class VisionManager {
     const { brain } = settingsService.getSettings();
     const geminiApiKey = brain.geminiApiKey || "";
 
-    // Industrial Vision Routing:
-    // We prioritize the specific vision model setting.
-    // If it's a local model (e.g. ui-tars), we use CORTEX_URL.
     const selectedVisionModel =
       brain.visionModel || brain.model || BRAIN_CONFIG.defaults.vision;
     const isLocal = settingsService.isModelLocal(selectedVisionModel);
+
+    // Hard-stop local fallback (Zero-Cloud Intercept)
+    const localFallback: VisionProviderConfig = {
+      provider: "ollama",
+      model: "moondream",
+      baseUrl: "http://127.0.0.1:11434",
+    };
 
     const defaultCloud: VisionProviderConfig = {
       provider: "gemini",
       model: selectedVisionModel,
       apiKey: geminiApiKey,
       baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+      fallback: localFallback,
     };
 
     return {
@@ -182,6 +187,46 @@ export class VisionManager {
         model: "ui-tars",
         intent: "action",
       };
+    }
+
+    // NEW: Ollama (Local Vision Fallback)
+    if (config.provider as string === "ollama") {
+      const { ollamaUrl } = await import("../config/api");
+      const model = config.model || "moondream"; // Default to moondream for speed
+      
+      try {
+        const resp = await fetch(ollamaUrl("/api/generate"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: model,
+            prompt: prompt,
+            images: [screenshot.replace(/^data:image\/\w+;base64,/, "")],
+            stream: false,
+            format: "json"
+          }),
+        });
+
+        if (!resp.ok) {
+           const errText = await resp.text();
+           if (errText.includes("not found") || resp.status === 404) {
+               throw new Error(`Local model '${model}' is missing. Would you like me to install it now? (Reply: 'pull moondream')`);
+           }
+           throw new Error(`Ollama API error: ${resp.statusText}`);
+        }
+        
+        const data = await resp.json();
+        return {
+          prediction: data.response,
+          model: `ollama/${model}`,
+          intent,
+        };
+      } catch (e: any) {
+          if (e.message.includes("fetch") || e.message.includes("Failed to fetch") || e.code === "ECONNREFUSED") {
+              throw new Error("Ollama service is not running. Please start Ollama for offline vision fallback.");
+          }
+          throw e;
+      }
     }
 
     throw new Error(`Unsupported provider: ${config.provider}`);

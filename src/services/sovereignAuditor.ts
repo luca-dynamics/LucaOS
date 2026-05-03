@@ -30,11 +30,17 @@ export class SovereignAuditor {
    * Determine if a tool call requires a Sovereign Audit.
    * High-risk tools in FINANCE or SYSTEM scopes are audited by default.
    */
-  public shouldAuditTool(name: string): boolean {
+  public shouldAuditTool(name: string, isAutonomous: boolean = false): boolean {
     const level = ToolRegistry.getSecurityLevel(name);
     const scope = ToolRegistry.getMissionScope(name);
+    const settings = settingsService.getSettings();
 
-    // Audit Level 2+ or Financial/System missions
+    // If autonomous missions are enabled, audit level 1+
+    if (isAutonomous || settings.autonomy?.backgroundMissionsEnabled) {
+       return level >= SecurityLevel.LEVEL_1 || scope !== MissionScope.NONE;
+    }
+
+    // Standard Audit: Level 2+ or Financial/System missions
     return (
       level >= SecurityLevel.LEVEL_2 ||
       scope === MissionScope.FINANCE ||
@@ -87,7 +93,12 @@ export class SovereignAuditor {
     diff: string,
     context?: any
   ): Promise<{ allowed: boolean; reason?: string; feedback?: string }> {
-    if (!this.isDevMode) return { allowed: true };
+    const autonomySettings = settingsService.getSettings().autonomy;
+    
+    // Safety Fallback: Always audit if consensus is mandated by user or if in Dev Mode
+    const forceAudit = autonomySettings?.doubleBrainConsensus || this.isDevMode;
+    
+    if (!forceAudit) return { allowed: true };
 
     loggerService.info("SOVEREIGN", `Initiating Recursive Audit for action: ${action}`, { context });
 

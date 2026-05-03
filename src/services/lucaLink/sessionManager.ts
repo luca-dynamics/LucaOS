@@ -196,6 +196,19 @@ export class SessionManager {
   }
 
   /**
+   * Recover a session by device ID (load from storage and decrypt secret)
+   */
+  async recoverSessionByDevice(deviceId: string): Promise<{
+    session: Session;
+    sharedSecret: Uint8Array;
+  } | null> {
+    const session = await this.getSessionByDevice(deviceId);
+    if (!session) return null;
+
+    return this.recoverSession(session.sessionId);
+  }
+
+  /**
    * Recover all sessions from storage
    */
   private async loadStoredSessions(): Promise<void> {

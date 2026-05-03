@@ -67,29 +67,25 @@ async def execute_agent_tool(request: ToolExecutionRequest):
 @router.get("/api/agent/tools/available")
 async def list_available_tools():
     """
-    List all available tools
-    Phase 8B will dynamically generate this from schemas
+    List the tools actually implemented by the Python agent executor.
     """
+    from real_tool_delegator import real_tool_delegator
+
     return {
-        "totalTools": 200,
-        "categories": {
-            "file": ["readFile", "writeProjectFile", "createOrUpdateFile"],
-            "terminal": ["executeTerminalCommand", "runPythonScript"],
-            "osint": ["osintUsernameSearch", "osintDomainIntel", "osintDarkWebScan"],
-            "security": ["auditSourceCode", "runNmapScan", "runBurpSuite"]
-        }
+        "totalTools": len(real_tool_delegator.get_supported_tools()),
+        "categories": real_tool_delegator.get_tool_categories(),
+        "tools": real_tool_delegator.get_supported_tools(),
     }
 
 
 @router.get("/api/agent/tools/stats")
 async def get_tool_stats():
-    """Get tool usage statistics"""
+    """Get truthful backend support statistics for the Python agent executor."""
+    from real_tool_delegator import real_tool_delegator
+
+    supported_tools = real_tool_delegator.get_supported_tools()
+
     return {
-        "totalTools": 200,
-        "toolsByPersona": {
-            "ENGINEER": 25,
-            "HACKER": 30,
-            "ASSISTANT": 40,
-            "RUTHLESS": 200
-        }
+        "totalTools": len(supported_tools),
+        "categories": real_tool_delegator.get_tool_categories(),
     }

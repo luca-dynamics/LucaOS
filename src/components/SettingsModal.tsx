@@ -25,6 +25,7 @@ import SettingsAboutTab from "./settings/SettingsAboutTab";
 import OperatorProfilePanel from "./settings/OperatorProfilePanel";
 import PersonalityDashboard from "./settings/PersonalityDashboard";
 import KnowledgeBridgeTab from "./settings/KnowledgeBridgeTab";
+import SettingsAutonomyTab from "./settings/SettingsAutonomyTab";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -65,6 +66,12 @@ const TABS = [
     id: "personality",
     label: "Personality",
     icon: "User",
+    platforms: ["desktop", "mobile"],
+  },
+  {
+    id: "autonomy",
+    label: "Autonomy",
+    icon: "Ghost",
     platforms: ["desktop", "mobile"],
   },
   {
@@ -440,6 +447,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 theme={liveTheme}
                 config={personaConfig}
                 onUpdate={updatePersonaConfig}
+                isMobile={isMobile}
+              />
+            )}
+            {activeTab === "autonomy" && (
+              <SettingsAutonomyTab
+                settings={settings}
+                onUpdate={updateSetting}
+                theme={liveTheme}
                 isMobile={isMobile}
               />
             )}
