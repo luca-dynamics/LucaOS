@@ -1,0 +1,21 @@
+# LucaOS Glossary
+
+- **LUCA**: Large Universal Control Agents; the persistent agent runtime identity.
+- **LucaOS**: The operating layer that coordinates missions, memory, tools, skills, and embodiments.
+- **Mission**: A user-aligned objective executed as a multi-step runtime workflow.
+- **Mission Tape**: Structured execution record containing intent, context, tools, outcomes, and learnings.
+- **Checkpoint**: Restorable snapshot of mission state for recovery/rollback.
+- **Recovery Plan**: Procedure to continue execution from last valid state after fault.
+- **Reflection**: Post-mission evaluation that proposes improvements.
+- **Evolution Patch**: Validated operational improvement applied to prompts/rules/skill behaviors.
+- **Skill**: Packaged capability definition (instructions, tools, permissions, policies).
+- **Skill Adapter**: Normalizer that converts external skill formats into Luca-native schema.
+- **Protocol Skill**: Runtime-executable skill handled by `ProtocolSkillEngine`.
+- **MCP**: Model Context Protocol servers and tools integrated through `mcpClientManager`.
+- **Guard**: Security decision boundary that evaluates requested actions against policy.
+- **Risk Level**: Action/skill sensitivity class (safe/sensitive/dangerous).
+- **LucaLink**: Cross-device synchronization and delegation channel (the embodiment nervous system).
+- **Ghost Browser**: Browser-use subsystem with automation, capture, and controlled action surfaces.
+- **Computer Use**: Host-level action capability (files, apps, automation, control planes).
+- **Operational Memory**: Persistent context used to continue missions and improve behavior.
+- **Route Selection**: Model/provider choice for a given task based on policy/capability/cost/latency.
