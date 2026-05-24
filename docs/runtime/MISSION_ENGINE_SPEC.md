@@ -1,31 +1,52 @@
 # Mission Engine Spec
 
 ## Purpose
-Define LucaOS mission execution semantics for durable, recoverable, auditable work.
+Define Luca's deterministic mission execution lifecycle across chat, voice, browser, and host-control workloads.
 
-## Mission Record Minimum Fields
-- mission_id, user_intent, created_at
-- plan_steps, selected_model_route
-- tools/skills invoked
-- policy checks and guard outcomes
-- artifacts and outputs
-- success/failure state
-- reflection summary
+## Canonical Pipeline
+`intent → context scan → requirements extraction → plan → risk check → approval (if required) → execute atomic steps → verify each step → recover/retry if needed → final verify → record mission tape → report`
 
-## Execution Phases
-1. **Intake**: normalize user intent and constraints.
-2. **Planning**: decompose into bounded steps.
-3. **Preflight Guard**: evaluate required permissions/risk profile.
-4. **Execution**: invoke model + tools + skills.
-5. **Checkpointing**: save resumable state for long operations.
-6. **Completion**: return result and persist tape.
-7. **Reflection**: emit learning candidates.
+## Role Separation
+- **Planner**: converts intent into atomic operations and explicit verification contracts.
+- **Executor**: runs approved operations through tools, MCP, plugins, browser body, or host controls.
+- **Verifier**: enforces deterministic checks (tests/build/smoke/assertions/file checks).
+- **Recovery**: restores checkpoint state, retries safely, or escalates.
+- **Recorder**: persists mission tape, score, lessons, and trajectory metadata.
 
-## Reliability Rules
-- Long-running missions must checkpoint before risky/irreversible actions.
-- Recovery resumes from last successful checkpoint.
-- Any failure path must preserve traceability.
+## Atomic Operation Contract
+Each atomic step MUST define:
+- `step_id`
+- `goal`
+- `tool_or_runtime`
+- `expected_output`
+- `verification`
+- `rollback`
+- `risk_level`
 
-## Current Code Anchors
-- `cortex/server/services/cortexService.js`
-- `cortex/server/services/evolutionService.js`
+## Checkpointing & Rollback
+For long-running or risky missions, checkpoint includes:
+- active plan index
+- tool/runtime context
+- relevant file/state snapshots
+- model route
+- latest successful verification
+- recovery branch
+
+## Status Lifecycle
+`queued → planned → awaiting_approval | executing → verifying → recovered → completed | failed | aborted`
+
+## Guard & Approval Gates
+- Sensitive actions require Luca Guard policy evaluation.
+- Dangerous actions require explicit approval or policy deny.
+- Untrusted skill/browser flows default to sandbox lane.
+
+## Completion Criteria
+A mission can be marked complete only when:
+1. deterministic verification passes OR approved override exists,
+2. mission tape is recorded,
+3. result is reported with outcome + evidence.
+
+## Acceptance Scenarios
+1. Failure mid-task restores prior checkpoint and resumes.
+2. Build/test failure triggers autonomous diagnosis + retry.
+3. Risky action pauses for guard decision and approval path.
