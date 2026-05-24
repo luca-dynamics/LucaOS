@@ -1,28 +1,18 @@
-# LucaLink Protocol (Embodiment)
+# LucaLink Protocol
 
-## Role
-LucaLink is the cross-host nervous system that keeps LUCA mission/memory continuity across devices and channels.
+## Mission
+Maintain one coherent Luca cognition across multiple host bodies.
 
-## Protocol Goals
-- synchronize mission context and allowed capabilities
-- support delegation between host bodies
-- keep policy and permission state coherent
-- preserve continuity during disconnection/reconnect
+## Protocol Domains
+- Device registry and trust profile
+- Pairing/handshake
+- Heartbeat and liveness
+- Active state sync (NOW layer)
+- Memory sync (policy-scoped)
+- Mission delegation/handoff
+- Conflict resolution and recovery
 
-## Conceptual Message Types
-- `context.sync`
-- `mission.delegate`
-- `mission.resume`
-- `permission.update`
-- `artifact.transfer`
-- `health.heartbeat`
-
-## Consistency Rules
-- last-writer wins only for non-critical metadata
-- critical mission state requires monotonic revision control
-- reconnect flow must reconcile checkpoints before execution continues
-
-## Repo Touchpoints
-- `src/hooks/useLucaLinkState.ts`
-- `src/hooks/useLucaLinkDelegation.ts`
-- `cortex/server/services/socketService.js`
+## Continuity Rules
+- One canonical active mission state with deterministic ownership transfer.
+- State deltas are signed and ordered.
+- On disconnect, preserve local checkpoint and reconcile on reconnect.

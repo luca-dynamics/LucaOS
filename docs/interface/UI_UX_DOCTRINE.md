@@ -1,24 +1,15 @@
 # UI/UX Doctrine
 
-## UX Mission
-Present LUCA as a dependable operator: clear intent capture, visible execution state, explicit safety boundaries, and transparent outcomes.
+## Core Principle
+LucaOS UI is **software inhabited by persistent AI cognition**, not a chatbot shell.
 
-## Interaction Tenets
-- show mission status, not just chat text
-- expose tool/skill actions before and after execution
-- make guard/security decisions understandable
-- keep memory usage transparent and controllable
-- support interruption, resume, and recovery UX
+## Surface Doctrine
+- Shared cognition across dashboard, voice, widgets, and lightweight surfaces.
+- Fast low-friction entry for Core Mode users.
+- Advanced observability/control in Tactical Mode.
+- Creator/internal control in Origin Mode.
 
-## Required Interface Elements
-- mission timeline
-- active model/route indicator
-- capability permission prompts
-- checkpoint/recovery notices
-- post-mission reflection summary
-
-## Code Anchors
-- `src/hooks/app/useChatController.ts`
-- `src/hooks/app/useToolOrchestrator.ts`
-- `src/hooks/useDiagnostics.ts`
-- `src/tools/ToolRegistry.ts`
+## Experience Rules
+- Avoid overwhelming users with operator complexity in Core Mode.
+- Preserve continuity when switching chat/voice/surfaces.
+- Keep mission state and persona continuity visible and explainable.

@@ -1,26 +1,21 @@
 # Model Routing Spec
 
-## Objective
-Route missions to the best available model/provider while preserving policy, cost, latency, and capability constraints.
+## Goal
+Model-neutral task routing across Luca Prime, local models, and BYOK providers.
 
 ## Routing Inputs
-- task type and complexity
-- required tools/modalities (text, code, vision, automation)
-- privacy/security requirements
-- budget and latency targets
-- fallback availability
+- Task type (coding, reasoning, memory, vision, voice)
+- Privacy requirements
+- Latency and cost constraints
+- Host capability and availability
+- User preference and overrides
+- Historical success rates
 
 ## Routing Policy
-1. Select primary route by capability-policy fit.
-2. Validate provider compatibility with guard/security rules.
-3. Execute with telemetry.
-4. On degradation/failure, fail over to approved secondary route.
+- Prefer privacy-preserving local paths when requirements permit.
+- Escalate to stronger frontier models when task complexity demands.
+- Maintain fallback chains per modality.
+- Record route decisions into mission tape for evaluation.
 
-## Guarantees
-- Route changes must not bypass permission/guard checks.
-- Critical missions should support deterministic fallback tiers.
-
-## Code Touchpoints
-- `src/tools/providerSurfaceRegistry.ts`
-- `cortex/server/services/cortexService.js`
-- `cortex/python/list_models.py`
+## Provisioning Notes
+Runtime should support compatibility checks and local model provisioning workflows where available.
