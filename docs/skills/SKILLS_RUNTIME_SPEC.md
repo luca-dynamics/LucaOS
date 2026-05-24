@@ -1,25 +1,16 @@
 # Skills Runtime Spec
 
-## Goal
-Standardize skill lifecycle: ingest, normalize, validate, execute, observe, and evolve.
+## Scope
+Unified execution/runtime policy for Luca-native skills, MCP tools, plugins, and imported skill formats.
 
-## Luca Skill Contract (Canonical)
-- id, name, source, version
-- description + capability declarations
-- permissions and risk level
-- memory policy
-- tool bindings
-- sandbox requirement
+## Skill Contract (Normalized)
+`id, source, permissions, tools, prompts, memory_policy, risk_level, sandbox, version`.
 
-## Lifecycle
-1. Import (internal/external)
-2. Normalize into Luca schema
-3. Validate signature/metadata/policy compatibility
-4. Register to execution engine
-5. Execute with telemetry + guard checks
-6. Record outcomes for refinement
+## Runtime Rules
+- All skill execution is permission scoped.
+- Sensitive/untrusted skills run sandboxed.
+- Skill invocations are logged into mission tape/audit channels.
+- Skill updates support versioning and rollback.
 
-## Existing Components
-- `cortex/server/services/ProtocolSkillEngine.js`
-- `cortex/server/services/SkillDropService.js`
-- `cortex/server/services/mcpClientManager.js`
+## Evolution
+Skill refinements are allowed only via guarded evolution workflow (Origin Mode + verification).
