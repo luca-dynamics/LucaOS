@@ -35,3 +35,22 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
 - Adapter matching requires execution-mode compatibility and action-type support.
 - For untrusted or `prefersSandbox` plans, `direct_host` adapters are not selected unless explicitly requested.
 - Metadata always indicates this scaffold itself does not perform system API calls.
+
+
+## ComputerUseVerifier + ComputerUseRecovery scaffold
+
+- `ComputerUseVerifier` verifies execution outcomes without screenshots or system API calls.
+- `observe` actions that are skipped are marked `inconclusive` and require follow-up observation planning.
+- Any result metadata indicating `systemApisCalled: true` fails verification immediately in this scaffold.
+- `ComputerUseRecovery` only plans safe recovery strategy (observe again, sandbox retry, guard approval, or user escalation).
+- Sandbox retry is suggested only when verification failed and actual `executionMode` is known to be non-`sandbox`; unknown mode escalates instead of blind retry.
+- No real rollback, host actions, or system calls are performed by recovery in this phase.
+
+
+## ComputerUseMissionTapeBridge scaffold
+
+- `ComputerUseMissionTapeBridge` maps focus, planning, execution, verification, and recovery outputs into mission-tape-compatible event records.
+- Bridge uses in-memory events only in this phase and does not write storage.
+- Bridge does not import MissionTape service yet (scaffold boundary).
+- `type_text` payloads are redacted by default and can only be unredacted with `redactSensitiveText: false`.
+- Event and record metadata explicitly state scaffold-only mode and `storageWritesEnabled: false`.
