@@ -117,3 +117,50 @@ export interface ComputerUseActionPlanningInput {
   focusContext: ComputerUseFocusContext;
   textPayload?: string;
 }
+
+export type ComputerUseExecutionStatus =
+  | "pending"
+  | "approved"
+  | "denied"
+  | "executed"
+  | "failed"
+  | "skipped";
+
+export interface ComputerUseExecutionRequest {
+  executionMode?: ComputerUseExecutionMode;
+  guardApprovalProvided?: boolean;
+}
+
+export interface ComputerUseExecutionResult {
+  status: ComputerUseExecutionStatus;
+  action: ComputerUsePlannedAction;
+  metadata?: {
+    reason?: string;
+    adapterId?: string;
+    systemApisCalled: false;
+    delegatesOnly: true;
+    noDirectSystemCalls: true;
+    executorKind: "scaffold";
+    adapterCount?: number;
+    defaultExecutionMode?: ComputerUseExecutionMode;
+  };
+}
+
+export interface ComputerUseExecutorAdapter {
+  id: string;
+  mode: ComputerUseExecutionMode;
+  supportedActionTypes: ComputerUseActionType[];
+  canExecute?: (context: {
+    action: ComputerUsePlannedAction;
+    plan: Pick<ComputerUseActionPlan, "prefersSandbox">;
+    request: ComputerUseExecutionRequest;
+  }) => boolean;
+  execute: (
+    action: ComputerUsePlannedAction,
+    request: ComputerUseExecutionRequest,
+  ) => Promise<ComputerUseExecutionResult>;
+}
+
+export interface ComputerUseExecutorOptions {
+  defaultExecutionMode?: ComputerUseExecutionMode;
+}

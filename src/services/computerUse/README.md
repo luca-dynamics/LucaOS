@@ -24,3 +24,14 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
 - No mouse or keyboard actions are executed.
 - No system API calls are performed.
 - This service is context modeling and planning only.
+
+## ComputerUseExecutor scaffold
+
+`ComputerUseExecutor` defines execution contracts for planned actions while intentionally avoiding real mouse/keyboard/system calls.
+
+- Execution delegates only to registered `ComputerUseExecutorAdapter` implementations.
+- `observe` actions are skipped and never executed.
+- Guard-gated actions are denied when approval is missing.
+- Adapter matching requires execution-mode compatibility and action-type support.
+- For untrusted or `prefersSandbox` plans, `direct_host` adapters are not selected unless explicitly requested.
+- Metadata always indicates this scaffold itself does not perform system API calls.
