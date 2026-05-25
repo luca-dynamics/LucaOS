@@ -26,7 +26,7 @@ const baseInput: ComputerUseRecoveryInput = {
   },
   attemptCount: 1,
   dangerousContext: false,
-  prefersSandbox: false,
+  executionMode: "direct_host",
 };
 
 describe("ComputerUseRecovery", () => {
@@ -58,18 +58,34 @@ describe("ComputerUseRecovery", () => {
     expect(plan.strategy).toBe("request_guard_approval");
   });
 
-  it("recovery suggests retry_sandbox for failed non-sandbox action", () => {
+  it("failed action with executionMode direct_host suggests retry_sandbox", () => {
     const recovery = new ComputerUseRecovery();
-    const plan = recovery.createRecoveryPlan(baseInput);
+    const plan = recovery.createRecoveryPlan({ ...baseInput, executionMode: "direct_host" });
 
     expect(plan.strategy).toBe("retry_sandbox");
+  });
+
+  it("failed action with executionMode sandbox does not suggest retry_sandbox", () => {
+    const recovery = new ComputerUseRecovery();
+    const plan = recovery.createRecoveryPlan({ ...baseInput, executionMode: "sandbox" });
+
+    expect(plan.strategy).not.toBe("retry_sandbox");
+    expect(plan.strategy).toBe("none");
+  });
+
+  it("failed action with unknown executionMode does not blindly suggest retry_sandbox", () => {
+    const recovery = new ComputerUseRecovery();
+    const plan = recovery.createRecoveryPlan({ ...baseInput, executionMode: undefined });
+
+    expect(plan.strategy).not.toBe("retry_sandbox");
+    expect(plan.strategy).toBe("escalate_to_user");
   });
 
   it("recovery escalates for dangerous/repeated failure", () => {
     const recovery = new ComputerUseRecovery({ maxRetriesBeforeEscalation: 2 });
 
-    const repeatedPlan = recovery.createRecoveryPlan({ ...baseInput, attemptCount: 3 });
-    const dangerousPlan = recovery.createRecoveryPlan({ ...baseInput, dangerousContext: true });
+    const repeatedPlan = recovery.createRecoveryPlan({ ...baseInput, attemptCount: 3, executionMode: "direct_host" });
+    const dangerousPlan = recovery.createRecoveryPlan({ ...baseInput, dangerousContext: true, executionMode: "direct_host" });
 
     expect(repeatedPlan.strategy).toBe("escalate_to_user");
     expect(dangerousPlan.strategy).toBe("escalate_to_user");

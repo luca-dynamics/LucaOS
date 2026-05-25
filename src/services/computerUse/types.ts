@@ -137,7 +137,7 @@ export interface ComputerUseExecutionResult {
   metadata?: {
     reason?: string;
     adapterId?: string;
-    systemApisCalled: false;
+    systemApisCalled: boolean;
     delegatesOnly: true;
     noDirectSystemCalls: true;
     executorKind: "scaffold";
@@ -187,7 +187,7 @@ export interface ComputerUseVerificationResult {
   reason: string;
   metadata: {
     verifierKind: "scaffold";
-    systemApisCalled: false;
+    systemApisCalled: boolean;
     screenshotsCaptured: false;
   };
 }
@@ -197,7 +197,7 @@ export interface ComputerUseRecoveryInput {
   executionResult: ComputerUseExecutionResult;
   attemptCount?: number;
   dangerousContext?: boolean;
-  prefersSandbox?: boolean;
+  executionMode?: ComputerUseExecutionMode;
 }
 
 export interface ComputerUseRecoveryPlan {

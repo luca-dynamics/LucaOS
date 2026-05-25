@@ -29,27 +29,15 @@ export class ComputerUseRecovery {
   }
 
   selectStrategy(input: ComputerUseRecoveryInput): ComputerUseRecoveryStrategy {
-    if (this.shouldEscalateToUser(input)) {
-      return "escalate_to_user";
-    }
-
-    if (input.verification.status === "inconclusive" && input.executionResult.action.type === "observe") {
-      return "observe_again";
-    }
-
-    if (this.shouldRequestApproval(input)) {
-      return "request_guard_approval";
-    }
-
-    if (this.shouldRetryInSandbox(input)) {
-      return "retry_sandbox";
-    }
-
+    if (this.shouldEscalateToUser(input)) return "escalate_to_user";
+    if (input.verification.status === "inconclusive" && input.executionResult.action.type === "observe") return "observe_again";
+    if (this.shouldRequestApproval(input)) return "request_guard_approval";
+    if (this.shouldRetryInSandbox(input)) return "retry_sandbox";
     return "none";
   }
 
   shouldRetryInSandbox(input: ComputerUseRecoveryInput): boolean {
-    return input.verification.status === "failed" && input.prefersSandbox === false;
+    return input.verification.status === "failed" && input.executionMode !== undefined && input.executionMode !== "sandbox";
   }
 
   shouldRequestApproval(input: ComputerUseRecoveryInput): boolean {
@@ -61,7 +49,9 @@ export class ComputerUseRecovery {
 
   shouldEscalateToUser(input: ComputerUseRecoveryInput): boolean {
     const maxAttempts = this.options.maxRetriesBeforeEscalation ?? 2;
-    return Boolean(input.dangerousContext || (input.attemptCount ?? 1) > maxAttempts);
+    if (input.dangerousContext || (input.attemptCount ?? 1) > maxAttempts) return true;
+
+    return input.verification.status === "failed" && input.executionMode === undefined;
   }
 
   reset(): void {
@@ -72,7 +62,7 @@ export class ComputerUseRecovery {
     if (strategy === "observe_again") return "Verification is inconclusive; observe again.";
     if (strategy === "request_guard_approval") return "Action was denied for approval; request guard approval.";
     if (strategy === "retry_sandbox") return "Action failed outside sandbox; retry in sandbox.";
-    if (strategy === "escalate_to_user") return "Repeated failures or dangerous context require user escalation.";
+    if (strategy === "escalate_to_user") return "Repeated failures, dangerous context, or unknown execution mode require user escalation.";
     return "No recovery action needed.";
   }
 }

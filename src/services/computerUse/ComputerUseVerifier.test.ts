@@ -47,6 +47,36 @@ describe("ComputerUseVerifier", () => {
     expect(verification.status).toBe("failed");
   });
 
+
+
+  it("pending verifies inconclusive", () => {
+    const verifier = new ComputerUseVerifier();
+    const result = buildResult({ status: "pending" });
+
+    const verification = verifier.verifyExecutionResult({ result, results: [result] });
+
+    expect(verification.status).toBe("inconclusive");
+  });
+
+  it("approved verifies inconclusive", () => {
+    const verifier = new ComputerUseVerifier();
+    const result = buildResult({ status: "approved" });
+
+    const verification = verifier.verifyExecutionResult({ result, results: [result] });
+
+    expect(verification.status).toBe("inconclusive");
+  });
+
+  it("skipped non-observe verifies inconclusive", () => {
+    const verifier = new ComputerUseVerifier();
+    const result = buildResult({ status: "skipped", action: clickAction });
+
+    const verification = verifier.verifyExecutionResult({ result, results: [result] });
+
+    expect(verification.status).toBe("inconclusive");
+    expect(verification.followUpObservationRequired).toBe(false);
+  });
+
   it("skipped observe verifies inconclusive + follow-up observation", () => {
     const verifier = new ComputerUseVerifier();
     const result = buildResult({ status: "skipped", action: observeAction });

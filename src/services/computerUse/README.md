@@ -43,4 +43,5 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
 - `observe` actions that are skipped are marked `inconclusive` and require follow-up observation planning.
 - Any result metadata indicating `systemApisCalled: true` fails verification immediately in this scaffold.
 - `ComputerUseRecovery` only plans safe recovery strategy (observe again, sandbox retry, guard approval, or user escalation).
+- Sandbox retry is suggested only when verification failed and actual `executionMode` is known to be non-`sandbox`; unknown mode escalates instead of blind retry.
 - No real rollback, host actions, or system calls are performed by recovery in this phase.
