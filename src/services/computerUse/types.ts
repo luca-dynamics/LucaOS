@@ -80,3 +80,40 @@ export interface ComputerUseFocusContextBuilderOptions {
   guardApprovalProvided?: boolean;
   now?: () => string;
 }
+
+export type ComputerUseActionType = "click" | "type_text" | "hotkey" | "scroll" | "wait" | "observe";
+
+export interface ComputerUsePlannedAction {
+  type: ComputerUseActionType;
+  target?: {
+    description?: string;
+    cursorPoint?: CursorPoint;
+    region?: ScreenRegion;
+    role?: string;
+    label?: string;
+    selectorHint?: string;
+  };
+  text?: string;
+  reason: string;
+  requiresGuardApproval: boolean;
+}
+
+export interface ComputerUseActionPlan {
+  actions: ComputerUsePlannedAction[];
+  requiresGuardApproval: boolean;
+  prefersSandbox: boolean;
+  metadata: {
+    planningOnly: true;
+    actionsExecuted: false;
+    systemApisUsed: false;
+  };
+}
+
+export interface ComputerUseActionPlannerOptions {
+  now?: () => string;
+}
+
+export interface ComputerUseActionPlanningInput {
+  focusContext: ComputerUseFocusContext;
+  textPayload?: string;
+}
