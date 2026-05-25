@@ -249,3 +249,68 @@ export interface ComputerUseMissionTapeBridgeOptions {
   redactSensitiveText?: boolean;
   now?: () => string;
 }
+
+
+export interface ComputerUsePipelineInput {
+  missionId: string;
+  textPayload?: string;
+  cursorPoint?: CursorPoint;
+  screenRegion?: ScreenRegion;
+  focusedElement?: FocusedElement;
+  screenshotReference?: ScreenshotReference;
+  userPointedTarget?: UserPointedTarget;
+  executionRequest?: ComputerUseExecutionRequest;
+  attemptCount?: number;
+}
+
+export interface ComputerUsePipelineResult {
+  missionId: string;
+  focusContext: ComputerUseFocusContext;
+  actionPlan: ComputerUseActionPlan;
+  executionResults: ComputerUseExecutionResult[];
+  verificationResults: ComputerUseVerificationResult[];
+  recoveryPlan: ComputerUseRecoveryPlan;
+  metadata: {
+    pipelineKind: "scaffold";
+    systemApisCalled: false;
+  };
+}
+
+export interface ComputerUsePipelineOptions {
+  focusContextBuilder: {
+    reset: () => unknown;
+    withCursorPoint: (cursorPoint: CursorPoint) => unknown;
+    withScreenRegion: (screenRegion: ScreenRegion) => unknown;
+    withFocusedElement: (focusedElement: FocusedElement) => unknown;
+    withScreenshotReference: (screenshotReference: ScreenshotReference) => unknown;
+    withUserPointedTarget: (userPointedTarget: UserPointedTarget) => unknown;
+    build: () => ComputerUseFocusContext;
+  };
+  actionPlanner: {
+    createPlan: (input: ComputerUseActionPlanningInput) => ComputerUseActionPlan;
+    reset: () => unknown;
+  };
+  executor: {
+    executePlan: (
+      plan: ComputerUseActionPlan,
+      request?: ComputerUseExecutionRequest,
+    ) => Promise<ComputerUseExecutionResult[]>;
+    reset: () => unknown;
+  };
+  verifier: {
+    verifyPlanResults: (input: ComputerUseVerificationInput) => ComputerUseVerificationResult[];
+    reset: () => unknown;
+  };
+  recovery: {
+    createRecoveryPlan: (input: ComputerUseRecoveryInput) => ComputerUseRecoveryPlan;
+    reset: () => unknown;
+  };
+  tapeBridge: {
+    recordFocusContext: (missionId: string, payload: ComputerUseFocusContext) => unknown;
+    recordActionPlan: (missionId: string, payload: ComputerUseActionPlan) => unknown;
+    recordExecutionResult: (missionId: string, payload: ComputerUseExecutionResult) => unknown;
+    recordVerificationResult: (missionId: string, payload: ComputerUseVerificationResult) => unknown;
+    recordRecoveryPlan: (missionId: string, payload: ComputerUseRecoveryPlan) => unknown;
+    reset: () => unknown;
+  };
+}
