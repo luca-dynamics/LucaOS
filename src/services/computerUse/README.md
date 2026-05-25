@@ -18,6 +18,7 @@ Minimal context-modeling and planning scaffold for computer-use signals.
 - If no reliable focus target exists, planner returns `observe` rather than click/type.
 - User-pointed target can produce a candidate `click` action.
 - Focused input with payload can produce a candidate `type_text` action.
+- Non-observe actions inherit guard-approval requirement from context.
 - No mouse or keyboard actions are executed.
 - No system API calls are performed.
 - This service is context modeling and planning only.

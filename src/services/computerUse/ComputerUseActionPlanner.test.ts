@@ -51,6 +51,37 @@ describe("ComputerUseActionPlanner", () => {
     expect(typeAction?.text).toBe("hello");
   });
 
+  it("dangerous context + userPointedTarget creates click action with requiresGuardApproval true", () => {
+    const planner = new ComputerUseActionPlanner();
+    const plan = planner.planFromFocusContext({
+      context: {
+        ...baseContext,
+        riskLevel: "dangerous",
+        requiresGuardApproval: true,
+        userPointedTarget: { description: "High-risk click" },
+      },
+    });
+
+    const clickAction = plan.actions.find((action) => action.type === "click");
+    expect(clickAction?.requiresGuardApproval).toBe(true);
+  });
+
+  it("dangerous context + focused input creates type_text action with requiresGuardApproval true", () => {
+    const planner = new ComputerUseActionPlanner();
+    const plan = planner.planFromFocusContext({
+      context: {
+        ...baseContext,
+        riskLevel: "dangerous",
+        requiresGuardApproval: true,
+        focusedElement: { role: "input", label: "Password" },
+      },
+      textPayload: "secret",
+    });
+
+    const typeAction = plan.actions.find((action) => action.type === "type_text");
+    expect(typeAction?.requiresGuardApproval).toBe(true);
+  });
+
   it("dangerous plan requires guard approval", () => {
     const planner = new ComputerUseActionPlanner();
     const plan = planner.planFromFocusContext({
@@ -62,6 +93,20 @@ describe("ComputerUseActionPlanner", () => {
     });
 
     expect(plan.requiresGuardApproval).toBe(true);
+  });
+
+  it("observe fallback remains requiresGuardApproval false", () => {
+    const planner = new ComputerUseActionPlanner();
+    const plan = planner.planFromFocusContext({
+      context: {
+        ...baseContext,
+        riskLevel: "dangerous",
+        requiresGuardApproval: true,
+      },
+    });
+
+    expect(plan.actions[0].type).toBe("observe");
+    expect(plan.actions[0].requiresGuardApproval).toBe(false);
   });
 
   it("untrusted plan prefers sandbox", () => {

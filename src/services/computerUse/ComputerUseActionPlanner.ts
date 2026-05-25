@@ -35,13 +35,17 @@ export class ComputerUseActionPlanner {
     const { context, textPayload } = input;
     const actions: ComputerUsePlannedAction[] = [];
 
+    const actionRequiresGuardApproval = this.requiresGuardApproval(context);
+
     if (context.userPointedTarget) {
-      actions.push(this.createClickAction("Candidate click from user-pointed target"));
+      actions.push(
+        this.createClickAction("Candidate click from user-pointed target", actionRequiresGuardApproval),
+      );
     }
 
     const focusedInput = context.focusedElement?.role === "textbox" || context.focusedElement?.role === "input";
     if (focusedInput && textPayload) {
-      actions.push(this.createTypeTextAction(textPayload));
+      actions.push(this.createTypeTextAction(textPayload, actionRequiresGuardApproval));
     }
 
     if (actions.length === 0) {
@@ -67,20 +71,20 @@ export class ComputerUseActionPlanner {
     };
   }
 
-  createClickAction(reason: string): ComputerUsePlannedAction {
+  createClickAction(reason: string, requiresGuardApproval: boolean): ComputerUsePlannedAction {
     return {
       type: "click",
       reason,
-      requiresGuardApproval: false,
+      requiresGuardApproval,
     };
   }
 
-  createTypeTextAction(text: string): ComputerUsePlannedAction {
+  createTypeTextAction(text: string, requiresGuardApproval: boolean): ComputerUsePlannedAction {
     return {
       type: "type_text",
       text,
       reason: "Candidate type action from focused input",
-      requiresGuardApproval: false,
+      requiresGuardApproval,
     };
   }
 
