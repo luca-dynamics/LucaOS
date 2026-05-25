@@ -143,6 +143,7 @@ export interface ComputerUseExecutionResult {
     executorKind: "scaffold";
     adapterCount?: number;
     defaultExecutionMode?: ComputerUseExecutionMode;
+    executionMode?: ComputerUseExecutionMode;
   };
 }
 

@@ -112,6 +112,46 @@ describe("ComputerUsePipeline", () => {
     expect(tapeBridge.listEvents()).toEqual([]);
   });
 
+
+
+  it("uses execution result metadata.executionMode for recovery when request mode is undefined", async () => {
+    const adapterExecutor = new ComputerUseExecutor();
+    adapterExecutor.registerAdapter({
+      id: "direct-click",
+      mode: "direct_host",
+      supportedActionTypes: ["click"],
+      execute: async (action) => ({
+        status: "failed",
+        action,
+        metadata: {
+          reason: "Adapter simulated failure",
+          adapterId: "direct-click",
+          systemApisCalled: false,
+          delegatesOnly: true,
+          noDirectSystemCalls: true,
+          executorKind: "scaffold",
+        },
+      }),
+    });
+
+    const pipeline = new ComputerUsePipeline({
+      focusContextBuilder: new ComputerUseFocusContextBuilder(),
+      actionPlanner: new ComputerUseActionPlanner(),
+      executor: adapterExecutor,
+      verifier: new ComputerUseVerifier(),
+      recovery: new ComputerUseRecovery(),
+      tapeBridge: new ComputerUseMissionTapeBridge(),
+    });
+
+    const result = await pipeline.run({
+      missionId: "mission-8",
+      userPointedTarget: { description: "Primary action" },
+    });
+
+    expect(result.executionResults[0].metadata?.executionMode).toBe("direct_host");
+    expect(result.recoveryPlan.strategy).toBe("retry_sandbox");
+  });
+
   it("metadata says systemApisCalled false", async () => {
     const { pipeline } = createPipeline();
 

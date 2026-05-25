@@ -109,7 +109,7 @@ export class ComputerUsePipeline {
           executionResult: params.executionResults[0],
           attemptCount: params.input.attemptCount,
           dangerousContext: params.focusContext.requiresGuardApproval,
-          executionMode: params.input.executionRequest?.executionMode,
+          executionMode: this.resolveExecutionMode(params.executionResults[0], params.input),
         }),
       );
     }
@@ -120,9 +120,17 @@ export class ComputerUsePipeline {
         executionResult: params.executionResults[firstFailureIdx],
         attemptCount: params.input.attemptCount,
         dangerousContext: params.focusContext.requiresGuardApproval,
-        executionMode: params.input.executionRequest?.executionMode,
+        executionMode: this.resolveExecutionMode(params.executionResults[firstFailureIdx], params.input),
       }),
     );
+  }
+
+
+  private resolveExecutionMode(
+    executionResult: ComputerUseExecutionResult,
+    input: Pick<ComputerUsePipelineInput, "executionRequest">,
+  ) {
+    return executionResult.metadata?.executionMode ?? input.executionRequest?.executionMode;
   }
 
   recordTapeEvents(args: {
