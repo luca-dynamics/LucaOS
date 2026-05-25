@@ -36,6 +36,30 @@ describe("ComputerUseActionPlanner", () => {
     expect(result.actions[0].text).toBe("hello world");
   });
 
+  it('focused textbox with textPayload "  hello  " preserves exact text', () => {
+    const planner = new ComputerUseActionPlanner();
+    const focusContext = new ComputerUseFocusContextBuilder()
+      .withFocusedElement({ role: "textbox", label: "Search" })
+      .build();
+
+    const result = planner.createPlan({ focusContext, textPayload: "  hello  " });
+
+    expect(result.actions[0].type).toBe("type_text");
+    expect(result.actions[0].text).toBe("  hello  ");
+  });
+
+  it('focused textbox with textPayload "   " still creates a type_text action with exact whitespace', () => {
+    const planner = new ComputerUseActionPlanner();
+    const focusContext = new ComputerUseFocusContextBuilder()
+      .withFocusedElement({ role: "textbox", label: "Search" })
+      .build();
+
+    const result = planner.createPlan({ focusContext, textPayload: "   " });
+
+    expect(result.actions[0].type).toBe("type_text");
+    expect(result.actions[0].text).toBe("   ");
+  });
+
   it("dangerous context + userPointedTarget creates click action with requiresGuardApproval: true", () => {
     const planner = new ComputerUseActionPlanner();
     const focusContext = new ComputerUseFocusContextBuilder({ riskLevel: "dangerous" })
@@ -46,6 +70,15 @@ describe("ComputerUseActionPlanner", () => {
 
     expect(result.actions[0].type).toBe("click");
     expect(result.actions[0].requiresGuardApproval).toBe(true);
+  });
+
+  it("empty userPointedTarget returns observe plan, not click", () => {
+    const planner = new ComputerUseActionPlanner();
+    const focusContext = new ComputerUseFocusContextBuilder().withUserPointedTarget({}).build();
+
+    const result = planner.createPlan({ focusContext });
+
+    expect(result.actions[0].type).toBe("observe");
   });
 
   it("dangerous context + focused input creates type_text action with requiresGuardApproval: true", () => {

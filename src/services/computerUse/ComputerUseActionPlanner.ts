@@ -65,6 +65,13 @@ export class ComputerUseActionPlanner {
     if (!userPointedTarget) {
       return undefined;
     }
+    const hasReliableGrounding =
+      userPointedTarget.description !== undefined ||
+      userPointedTarget.cursorPoint !== undefined ||
+      userPointedTarget.region !== undefined;
+    if (!hasReliableGrounding) {
+      return undefined;
+    }
 
     return {
       type: "click",
@@ -82,8 +89,7 @@ export class ComputerUseActionPlanner {
     focusContext: ComputerUseFocusContext,
     textPayload?: string,
   ): ComputerUsePlannedAction | undefined {
-    const text = textPayload?.trim();
-    if (!text) {
+    if (textPayload === undefined) {
       return undefined;
     }
 
@@ -99,7 +105,7 @@ export class ComputerUseActionPlanner {
         label: focusedElement.label,
         selectorHint: focusedElement.selectorHint,
       },
-      text,
+      text: textPayload,
       reason: "Focused text input and text payload are available.",
       requiresGuardApproval: focusContext.requiresGuardApproval,
     };
