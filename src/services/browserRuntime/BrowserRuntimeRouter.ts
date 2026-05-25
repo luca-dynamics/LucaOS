@@ -29,12 +29,17 @@ export class BrowserRuntimeRouter {
     }
 
     const lane = this.pickLane(context);
-    const provider = this.laneProviders.find(
-      (candidate) => candidate.lane === lane && candidate.isAvailable(request, context),
-    );
 
-    if (provider) {
-      return provider.route(request, context);
+    if (this.laneProviders.length > 0) {
+      const provider = this.laneProviders.find(
+        (candidate) => candidate.lane === lane && candidate.isAvailable(request, context),
+      );
+
+      if (provider) {
+        return provider.route(request, context);
+      }
+
+      return this.deniedUnknown("No browser runtime lane provider matched request", false);
     }
 
     const adapter = this.adapters.find((candidate) => candidate.canHandle(request));
@@ -70,14 +75,14 @@ export class BrowserRuntimeRouter {
   }
 
   private pickLane(context: BrowserRouteContext): BrowserRuntimeLane {
+    if (context.trustTier === "untrusted" || context.riskLevel !== "safe") {
+      return "sandbox_browser";
+    }
+
     if (context.preferredLane === "remote_linked_browser") {
       return context.linkedDeviceTrusted && context.linkedDeviceAvailable
         ? "remote_linked_browser"
         : "unknown";
-    }
-
-    if (context.trustTier === "untrusted" || context.riskLevel !== "safe") {
-      return "sandbox_browser";
     }
 
     if (context.requiresAuthentication) {

@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BrowserRuntimeRouter } from "./BrowserRuntimeRouter";
 import {
-  BrowserRouteContext,
+  BrowserRuntimeAdapter,
   BrowserRuntimeLane,
   BrowserRuntimeLaneProvider,
   BrowserRuntimeRequest,
@@ -80,6 +80,22 @@ describe("BrowserRuntimeRouter guard-aware lanes", () => {
     expect(result.lane).toBe("sandbox_browser");
   });
 
+  it("untrusted preferred remote linked still routes to sandbox", async () => {
+    const router = new BrowserRuntimeRouter([], [provider("sandbox_browser"), provider("remote_linked_browser")]);
+
+    const result = await router.route({
+      ...baseRequest,
+      trustTier: "untrusted",
+      riskLevel: "safe",
+      preferredLane: "remote_linked_browser",
+      linkedDeviceTrusted: true,
+      linkedDeviceAvailable: true,
+    });
+
+    expect(result.accepted).toBe(true);
+    expect(result.lane).toBe("sandbox_browser");
+  });
+
   it("authenticated direct host requires trusted plus approval", async () => {
     const router = new BrowserRuntimeRouter([], [provider("direct_host_browser"), provider("sandbox_browser")]);
 
@@ -120,6 +136,47 @@ describe("BrowserRuntimeRouter guard-aware lanes", () => {
     });
     expect(allowed.accepted).toBe(true);
     expect(allowed.lane).toBe("remote_linked_browser");
+  });
+
+  it("lane provider unavailable does not fallback to adapter when lane providers exist", async () => {
+    const adapterExecute = vi.fn(async () => ({
+      accepted: true,
+      lane: "custom" as const,
+      runtime: "custom" as const,
+    }));
+
+    const adapter: BrowserRuntimeAdapter = {
+      canHandle: () => true,
+      execute: adapterExecute,
+    };
+
+    const router = new BrowserRuntimeRouter([adapter], [unavailableProvider("ghost_browser")]);
+    const result = await router.route({
+      ...baseRequest,
+      trustTier: "trusted",
+      riskLevel: "safe",
+    });
+
+    expect(result.accepted).toBe(false);
+    expect(result.lane).toBe("unknown");
+    expect(adapterExecute).not.toHaveBeenCalled();
+  });
+
+  it("adapter fallback works when no lane providers are configured", async () => {
+    const adapter: BrowserRuntimeAdapter = {
+      canHandle: () => true,
+      execute: async () => ({
+        accepted: true,
+        lane: "custom",
+        runtime: "custom",
+      }),
+    };
+
+    const router = new BrowserRuntimeRouter([adapter], []);
+    const result = await router.route(baseRequest);
+
+    expect(result.accepted).toBe(true);
+    expect(result.lane).toBe("custom");
   });
 
   it("returns denied unknown route when no provider exists", async () => {
