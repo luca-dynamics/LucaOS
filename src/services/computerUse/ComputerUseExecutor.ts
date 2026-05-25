@@ -70,6 +70,7 @@ export class ComputerUseExecutor {
         delegatesOnly: true,
         noDirectSystemCalls: true,
         executorKind: "scaffold",
+        executionMode: adapterMetadata?.executionMode ?? adapter.mode,
       },
     };
   }

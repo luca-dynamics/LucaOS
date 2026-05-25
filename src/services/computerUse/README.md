@@ -58,3 +58,15 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
   - `bridgeKind: "scaffold"`
   - `storageWritesEnabled: false`
   - `missionTapeIntegrationEnabled: false`
+
+## ComputerUsePipeline scaffold
+
+- `ComputerUsePipeline` orchestrates focus context building, action planning, adapter-delegated execution, verification, recovery planning, and mission-tape recording.
+- Pipeline execution remains non-invasive: no real mouse/keyboard/system APIs are called directly.
+- If no matching executor adapter exists, pipeline fails safely and generates a recovery plan.
+- Tape bridge records lifecycle events in order: focus context, action plan, execution results, verification results, and recovery plan.
+- Redaction defaults are preserved for `type_text` payloads written to tape events.
+- Dangerous contexts propagate guard-approval requirements through plan/execution/recovery.
+- Pipeline result metadata always reports:
+  - `pipelineKind: "scaffold"`
+  - `systemApisCalled: false`

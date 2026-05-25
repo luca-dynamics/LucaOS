@@ -81,6 +81,24 @@ describe("ComputerUseRecovery", () => {
     expect(plan.strategy).toBe("escalate_to_user");
   });
 
+
+
+  it("dangerous denied approval requests guard approval before escalation", () => {
+    const recovery = new ComputerUseRecovery();
+    const plan = recovery.createRecoveryPlan({
+      ...baseInput,
+      dangerousContext: true,
+      executionResult: {
+        ...baseInput.executionResult,
+        status: "denied",
+        metadata: { ...baseInput.executionResult.metadata!, reason: "Guard approval required" },
+      },
+    });
+
+    expect(plan.strategy).toBe("request_guard_approval");
+    expect(plan.requiresGuardApprovalRequest).toBe(true);
+  });
+
   it("recovery escalates for dangerous/repeated failure", () => {
     const recovery = new ComputerUseRecovery({ maxRetriesBeforeEscalation: 2 });
 

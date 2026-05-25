@@ -236,6 +236,32 @@ describe("ComputerUseExecutor", () => {
     expect(result.metadata?.executorKind).toBe("scaffold");
   });
 
+
+
+  it("includes resolved adapter executionMode metadata", async () => {
+    const executor = new ComputerUseExecutor();
+    executor.registerAdapter({
+      id: "direct-click",
+      mode: "direct_host",
+      supportedActionTypes: ["click"],
+      execute: vi.fn().mockResolvedValue({
+        status: "executed",
+        action: clickAction,
+        metadata: {
+          adapterId: "direct-click",
+          systemApisCalled: false,
+          delegatesOnly: true,
+          noDirectSystemCalls: true,
+          executorKind: "scaffold",
+        },
+      }),
+    });
+
+    const result = await executor.executeAction(clickAction, basePlan);
+
+    expect(result.metadata?.executionMode).toBe("direct_host");
+  });
+
   it("executor metadata says systemApisCalled false", async () => {
     const executor = new ComputerUseExecutor();
     const result = await executor.executeAction(
