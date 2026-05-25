@@ -35,3 +35,12 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
 - Adapter matching requires execution-mode compatibility and action-type support.
 - For untrusted or `prefersSandbox` plans, `direct_host` adapters are not selected unless explicitly requested.
 - Metadata always indicates this scaffold itself does not perform system API calls.
+
+
+## ComputerUseVerifier + ComputerUseRecovery scaffold
+
+- `ComputerUseVerifier` verifies execution outcomes without screenshots or system API calls.
+- `observe` actions that are skipped are marked `inconclusive` and require follow-up observation planning.
+- Any result metadata indicating `systemApisCalled: true` fails verification immediately in this scaffold.
+- `ComputerUseRecovery` only plans safe recovery strategy (observe again, sandbox retry, guard approval, or user escalation).
+- No real rollback, host actions, or system calls are performed by recovery in this phase.
