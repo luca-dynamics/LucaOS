@@ -219,3 +219,98 @@ export interface ComputerUseVerifierOptions {
 export interface ComputerUseRecoveryOptions {
   maxRetriesBeforeEscalation?: number;
 }
+
+
+export type ComputerUseTapeEventType =
+  | "focus_context"
+  | "action_plan"
+  | "execution_result"
+  | "verification_result"
+  | "recovery_plan";
+
+export interface ComputerUseTapeEvent {
+  missionId: string;
+  timestamp: string;
+  eventType: ComputerUseTapeEventType;
+  payload: unknown;
+}
+
+export interface ComputerUseTapeRecord {
+  missionId: string;
+  events: ComputerUseTapeEvent[];
+  metadata: {
+    bridgeKind: "scaffold";
+    storageWritesEnabled: false;
+    missionTapeIntegrationEnabled: false;
+  };
+}
+
+export interface ComputerUseMissionTapeBridgeOptions {
+  redactSensitiveText?: boolean;
+  now?: () => string;
+}
+
+
+export interface ComputerUsePipelineInput {
+  missionId: string;
+  textPayload?: string;
+  cursorPoint?: CursorPoint;
+  screenRegion?: ScreenRegion;
+  focusedElement?: FocusedElement;
+  screenshotReference?: ScreenshotReference;
+  userPointedTarget?: UserPointedTarget;
+  guardApprovalProvided?: boolean;
+  attemptCount?: number;
+}
+
+export interface ComputerUsePipelineResult {
+  missionId: string;
+  focusContext: ComputerUseFocusContext;
+  plan: ComputerUseActionPlan;
+  executionResults: ComputerUseExecutionResult[];
+  verificationResults: ComputerUseVerificationResult[];
+  recoveryPlan: ComputerUseRecoveryPlan;
+  tapeRecord: ComputerUseTapeRecord;
+  metadata: {
+    pipelineKind: "scaffold";
+    systemApisCalled: false;
+  };
+}
+
+export interface ComputerUsePipelineOptions {
+  focusContextBuilder?: {
+    build: () => ComputerUseFocusContext;
+    reset: () => unknown;
+    withCursorPoint: (cursorPoint: CursorPoint) => unknown;
+    withScreenRegion: (screenRegion: ScreenRegion) => unknown;
+    withFocusedElement: (focusedElement: FocusedElement) => unknown;
+    withScreenshotReference: (screenshotReference: ScreenshotReference) => unknown;
+    withUserPointedTarget: (userPointedTarget: UserPointedTarget) => unknown;
+  };
+  actionPlanner?: {
+    createPlan: (input: ComputerUseActionPlanningInput) => ComputerUseActionPlan;
+    reset: () => void;
+  };
+  executor?: {
+    executePlan: (plan: ComputerUseActionPlan, request?: ComputerUseExecutionRequest) => Promise<ComputerUseExecutionResult[]>;
+    reset: () => void;
+  };
+  verifier?: {
+    verifyExecutionResult: (input: ComputerUseVerificationInput) => ComputerUseVerificationResult;
+    reset: () => void;
+  };
+  recovery?: {
+    createRecoveryPlan: (input: ComputerUseRecoveryInput) => ComputerUseRecoveryPlan;
+    reset: () => void;
+  };
+  tapeBridge?: {
+    recordFocusContext: (missionId: string, payload: ComputerUseFocusContext) => ComputerUseTapeEvent;
+    recordActionPlan: (missionId: string, payload: ComputerUseActionPlan) => ComputerUseTapeEvent;
+    recordExecutionResult: (missionId: string, payload: ComputerUseExecutionResult) => ComputerUseTapeEvent;
+    recordVerificationResult: (missionId: string, payload: ComputerUseVerificationResult) => ComputerUseTapeEvent;
+    recordRecoveryPlan: (missionId: string, payload: ComputerUseRecoveryPlan) => ComputerUseTapeEvent;
+    createTapeRecord: (missionId: string) => ComputerUseTapeRecord;
+    reset: () => void;
+  };
+  tapeBridgeOptions?: ComputerUseMissionTapeBridgeOptions;
+}

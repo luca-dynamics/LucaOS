@@ -45,3 +45,28 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
 - `ComputerUseRecovery` only plans safe recovery strategy (observe again, sandbox retry, guard approval, or user escalation).
 - Sandbox retry is suggested only when verification failed and actual `executionMode` is known to be non-`sandbox`; unknown mode escalates instead of blind retry.
 - No real rollback, host actions, or system calls are performed by recovery in this phase.
+
+
+## ComputerUseMissionTapeBridge scaffold
+
+- `ComputerUseMissionTapeBridge` converts focus/planning/execution/verification/recovery outputs into mission-tape-compatible event records.
+- Events are stored in-memory only for this scaffold phase.
+- No storage writes are performed.
+- No MissionTape service imports or integration are performed yet.
+- `type_text` payload text is redacted by default and can be disabled only with `redactSensitiveText: false`.
+- Tape record metadata always reports:
+  - `bridgeKind: "scaffold"`
+  - `storageWritesEnabled: false`
+  - `missionTapeIntegrationEnabled: false`
+
+
+## ComputerUsePipeline scaffold
+
+- `ComputerUsePipeline` orchestrates the safe scaffold flow: focus context -> action plan -> delegated execution -> verification -> recovery -> mission-tape bridge records.
+- The pipeline composes `ComputerUseFocusContextBuilder`, `ComputerUseActionPlanner`, `ComputerUseExecutor`, `ComputerUseVerifier`, `ComputerUseRecovery`, and `ComputerUseMissionTapeBridge`.
+- The pipeline does not call real mouse, keyboard, or host system APIs.
+- Execution still depends on `ComputerUseExecutor` adapter delegation and fails safely when no adapter matches.
+- Tape events include focus context, action plan, execution result(s), verification result(s), and recovery plan.
+- Pipeline metadata always reports:
+  - `pipelineKind: "scaffold"`
+  - `systemApisCalled: false`
