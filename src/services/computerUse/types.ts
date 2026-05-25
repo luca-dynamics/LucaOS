@@ -137,7 +137,7 @@ export interface ComputerUseExecutionResult {
   metadata?: {
     reason?: string;
     adapterId?: string;
-    systemApisCalled: false;
+    systemApisCalled: boolean;
     delegatesOnly: true;
     noDirectSystemCalls: true;
     executorKind: "scaffold";
@@ -163,4 +163,59 @@ export interface ComputerUseExecutorAdapter {
 
 export interface ComputerUseExecutorOptions {
   defaultExecutionMode?: ComputerUseExecutionMode;
+}
+
+
+export type ComputerUseVerificationStatus = "passed" | "failed" | "inconclusive";
+
+export type ComputerUseRecoveryStrategy =
+  | "observe_again"
+  | "retry_sandbox"
+  | "request_guard_approval"
+  | "rollback"
+  | "escalate_to_user"
+  | "none";
+
+export interface ComputerUseVerificationInput {
+  result: ComputerUseExecutionResult;
+  results: ComputerUseExecutionResult[];
+}
+
+export interface ComputerUseVerificationResult {
+  status: ComputerUseVerificationStatus;
+  followUpObservationRequired: boolean;
+  reason: string;
+  metadata: {
+    verifierKind: "scaffold";
+    systemApisCalled: boolean;
+    screenshotsCaptured: false;
+  };
+}
+
+export interface ComputerUseRecoveryInput {
+  verification: ComputerUseVerificationResult;
+  executionResult: ComputerUseExecutionResult;
+  attemptCount?: number;
+  dangerousContext?: boolean;
+  executionMode?: ComputerUseExecutionMode;
+}
+
+export interface ComputerUseRecoveryPlan {
+  strategy: ComputerUseRecoveryStrategy;
+  requiresGuardApprovalRequest: boolean;
+  shouldEscalateToUser: boolean;
+  reason: string;
+  metadata: {
+    recoveryKind: "scaffold";
+    noRollbackPerformed: true;
+    noSystemActionsPerformed: true;
+  };
+}
+
+export interface ComputerUseVerifierOptions {
+  now?: () => string;
+}
+
+export interface ComputerUseRecoveryOptions {
+  maxRetriesBeforeEscalation?: number;
 }
