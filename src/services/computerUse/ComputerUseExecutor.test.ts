@@ -162,6 +162,80 @@ describe("ComputerUseExecutor", () => {
     expect(sandboxExecute).toHaveBeenCalledTimes(1);
   });
 
+  it("defaultExecutionMode selects sandbox adapter when request executionMode is missing", async () => {
+    const directExecute = vi.fn().mockResolvedValue({
+      status: "executed",
+      action: clickAction,
+      metadata: {
+        adapterId: "direct",
+        systemApisCalled: false,
+        delegatesOnly: true,
+        noDirectSystemCalls: true,
+        executorKind: "scaffold",
+      },
+    });
+    const sandboxExecute = vi.fn().mockResolvedValue({
+      status: "executed",
+      action: clickAction,
+      metadata: {
+        adapterId: "sandbox",
+        systemApisCalled: false,
+        delegatesOnly: true,
+        noDirectSystemCalls: true,
+        executorKind: "scaffold",
+      },
+    });
+
+    const executor = new ComputerUseExecutor({ defaultExecutionMode: "sandbox" });
+    executor.registerAdapter({
+      id: "direct",
+      mode: "direct_host",
+      supportedActionTypes: ["click"],
+      execute: directExecute,
+    });
+    executor.registerAdapter({
+      id: "sandbox",
+      mode: "sandbox",
+      supportedActionTypes: ["click"],
+      execute: sandboxExecute,
+    });
+
+    const result = await executor.executeAction(clickAction, basePlan, {});
+
+    expect(result.status).toBe("executed");
+    expect(directExecute).not.toHaveBeenCalled();
+    expect(sandboxExecute).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves adapter metadata reason while enforcing scaffold safety metadata", async () => {
+    const executor = new ComputerUseExecutor();
+    executor.registerAdapter({
+      id: "sandbox-click",
+      mode: "sandbox",
+      supportedActionTypes: ["click"],
+      execute: vi.fn().mockResolvedValue({
+        status: "executed",
+        action: clickAction,
+        metadata: {
+          reason: "adapter-provided reason",
+          adapterId: "sandbox-click",
+          systemApisCalled: false,
+          delegatesOnly: true,
+          noDirectSystemCalls: true,
+          executorKind: "scaffold",
+        },
+      }),
+    });
+
+    const result = await executor.executeAction(clickAction, basePlan);
+
+    expect(result.metadata?.reason).toBe("adapter-provided reason");
+    expect(result.metadata?.systemApisCalled).toBe(false);
+    expect(result.metadata?.delegatesOnly).toBe(true);
+    expect(result.metadata?.noDirectSystemCalls).toBe(true);
+    expect(result.metadata?.executorKind).toBe("scaffold");
+  });
+
   it("executor metadata says systemApisCalled false", async () => {
     const executor = new ComputerUseExecutor();
     const result = await executor.executeAction(

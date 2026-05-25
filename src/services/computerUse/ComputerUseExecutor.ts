@@ -53,12 +53,23 @@ export class ComputerUseExecutor {
     }
 
     const result = await adapter.execute(action, request);
+    const scaffoldMetadata = this.baseMetadata();
+    const adapterMetadata = result.metadata;
 
     return {
       ...result,
       metadata: {
-        ...(result.metadata ?? {}),
-        ...this.baseMetadata(),
+        ...(adapterMetadata ?? {}),
+        ...(scaffoldMetadata.defaultExecutionMode !== undefined
+          ? { defaultExecutionMode: scaffoldMetadata.defaultExecutionMode }
+          : {}),
+        ...(scaffoldMetadata.adapterCount !== undefined
+          ? { adapterCount: scaffoldMetadata.adapterCount }
+          : {}),
+        systemApisCalled: false,
+        delegatesOnly: true,
+        noDirectSystemCalls: true,
+        executorKind: "scaffold",
       },
     };
   }
@@ -72,14 +83,14 @@ export class ComputerUseExecutor {
     plan: Pick<ComputerUseActionPlan, "prefersSandbox">,
     request: ComputerUseExecutionRequest,
   ): ComputerUseExecutorAdapter | undefined {
-    const requestedMode = request.executionMode;
+    const selectedMode = request.executionMode ?? this.options.defaultExecutionMode;
 
     return this.adapters.find((adapter) => {
-      if (requestedMode && adapter.mode !== requestedMode) {
+      if (selectedMode && adapter.mode !== selectedMode) {
         return false;
       }
 
-      if (!requestedMode && plan.prefersSandbox && adapter.mode === "direct_host") {
+      if (!selectedMode && plan.prefersSandbox && adapter.mode === "direct_host") {
         return false;
       }
 
