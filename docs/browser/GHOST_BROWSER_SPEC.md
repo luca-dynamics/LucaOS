@@ -1,22 +1,13 @@
 # Ghost Browser Spec
 
-## Purpose
-Define LucaOS browser-use subsystem for controlled navigation, extraction, and interaction.
+## Definition
+Ghost Browser is a **browser body/runtime** for Luca embodiment, not a standalone bot persona.
 
-## Capabilities
-- page navigation and session management
-- content extraction/snapshotting
-- bounded interactions (click/type/select)
-- artifact capture and replay traces
+## Responsibilities
+- Execute browser missions with guard-gated actions.
+- Support both direct-host and sandbox browser execution lanes.
+- Produce replayable trajectories and verifiable artifacts.
+- Integrate with mission engine lifecycle and memory recording.
 
-## Security & Policy
-- browser actions are guard-evaluated like host actions
-- sensitive workflows should run under constrained profiles
-- snapshots must respect redaction policy when persisted
-
-## Existing Implementations
-- `mcp-servers/luca-chrome-mcp/src/browser.ts`
-- `mcp-servers/luca-chrome-mcp/src/tools/navigation.ts`
-- `mcp-servers/luca-chrome-mcp/src/tools/interaction.ts`
-- `mcp-servers/luca-chrome-mcp/src/tools/snapshot.ts`
-- `cortex/server/services/chromeProfileService.js`
+## Security
+High-risk browsing actions require Luca Guard policy checks and may be forced into sandbox mode.

@@ -1,23 +1,22 @@
 # Evolution Core Spec
 
-## Purpose
-Codify LucaOS closed-loop operational improvement from mission outcomes.
+## Scope
+Guarded self-improvement of prompts, workflows, routing heuristics, and skill instructions.
 
-## Loop
-Mission Tape → Reflection → Candidate Improvement → Sandbox Verification → Approval Gate → Controlled Activation
+## Hard Boundary
+Self-evolution is allowed only in **Origin Mode** with policy gates, sandbox testing, verification, and rollback.
 
-## Improvement Targets
-- prompt templates
-- tool invocation sequencing
-- skill instructions
-- error recovery playbooks
-- model routing decisions
+## Evolution Loop
+Mission Tape Analysis → Reflection → Proposed Delta → Sandbox Validation → Verification Gates → Approval → Controlled Promotion
 
-## Safety for Evolution
-- all candidate patches are versioned
-- high-impact changes require explicit approval threshold
-- failed verifications auto-reject and archive rationale
-- rollback pointer must remain available
+## Allowed Mutation Zones
+- Prompt/rule tuning
+- Recovery policies
+- Tool descriptions
+- Routing heuristics
+- Skill instruction refinements
 
-## Existing Anchor
-- `cortex/server/services/evolutionService.js`
+## Blocked Zones (without explicit creator approval)
+- Security bypass behavior
+- Permission model weakening
+- Unverified production self-mutation
