@@ -219,3 +219,33 @@ export interface ComputerUseVerifierOptions {
 export interface ComputerUseRecoveryOptions {
   maxRetriesBeforeEscalation?: number;
 }
+
+
+export type ComputerUseTapeEventType =
+  | "focus_context"
+  | "action_plan"
+  | "execution_result"
+  | "verification_result"
+  | "recovery_plan";
+
+export interface ComputerUseTapeEvent {
+  missionId: string;
+  timestamp: string;
+  eventType: ComputerUseTapeEventType;
+  payload: unknown;
+}
+
+export interface ComputerUseTapeRecord {
+  missionId: string;
+  events: ComputerUseTapeEvent[];
+  metadata: {
+    bridgeKind: "scaffold";
+    storageWritesEnabled: false;
+    missionTapeIntegrationEnabled: false;
+  };
+}
+
+export interface ComputerUseMissionTapeBridgeOptions {
+  redactSensitiveText?: boolean;
+  now?: () => string;
+}
