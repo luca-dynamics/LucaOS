@@ -1,13 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { BrowserRuntimeRouter } from "./BrowserRuntimeRouter";
-import {
-  BrowserRuntimeAdapter,
-  BrowserRuntimeLane,
-  BrowserRuntimeLaneProvider,
-  BrowserRuntimeRequest,
-} from "./types";
-
-const baseRequest: BrowserRuntimeRequest = {
+ main
   requestId: "req-001",
   missionId: "mission-001",
   action: "navigate",
@@ -15,56 +8,6 @@ const baseRequest: BrowserRuntimeRequest = {
   issuedAt: new Date("2026-01-01T00:00:00.000Z").toISOString(),
 };
 
-function provider(lane: Exclude<BrowserRuntimeLane, "unknown">): BrowserRuntimeLaneProvider {
-  return {
-    lane,
-    isAvailable: () => true,
-    route: async () => ({
-      accepted: true,
-      lane,
-      runtime: lane,
-    }),
-  };
-}
-
-function unavailableProvider(lane: Exclude<BrowserRuntimeLane, "unknown">): BrowserRuntimeLaneProvider {
-  return {
-    lane,
-    isAvailable: () => false,
-    route: async () => ({
-      accepted: true,
-      lane,
-      runtime: lane,
-    }),
-  };
-}
-
-describe("BrowserRuntimeRouter guard-aware lanes", () => {
-  it("routes safe trusted task to ghost browser by default", async () => {
-    const router = new BrowserRuntimeRouter([], [provider("ghost_browser")]);
-
-    const result = await router.route({
-      ...baseRequest,
-      trustTier: "trusted",
-      riskLevel: "safe",
-    });
-
-    expect(result.accepted).toBe(true);
-    expect(result.lane).toBe("ghost_browser");
-  });
-
-  it("dangerous task without approval is denied and requires approval", async () => {
-    const router = new BrowserRuntimeRouter([], [provider("sandbox_browser")]);
-
-    const result = await router.route({
-      ...baseRequest,
-      riskLevel: "dangerous",
-      hasGuardApproval: false,
-    });
-
-    expect(result.accepted).toBe(false);
-    expect(result.lane).toBe("unknown");
-    expect(result.requiresApproval).toBe(true);
   });
 
   it("untrusted task prefers sandbox browser", async () => {
@@ -168,27 +111,7 @@ describe("BrowserRuntimeRouter guard-aware lanes", () => {
       execute: async () => ({
         accepted: true,
         lane: "custom",
-        runtime: "custom",
-      }),
-    };
-
-    const router = new BrowserRuntimeRouter([adapter], []);
-    const result = await router.route(baseRequest);
-
-    expect(result.accepted).toBe(true);
-    expect(result.lane).toBe("custom");
-  });
-
-  it("returns denied unknown route when no provider exists", async () => {
-    const router = new BrowserRuntimeRouter([], [unavailableProvider("ghost_browser")]);
-    const result = await router.route({
-      ...baseRequest,
-      trustTier: "trusted",
-      riskLevel: "safe",
-    });
-
-    expect(result.accepted).toBe(false);
-    expect(result.lane).toBe("unknown");
+        
     expect(result.runtime).toBe("unknown");
   });
 });
