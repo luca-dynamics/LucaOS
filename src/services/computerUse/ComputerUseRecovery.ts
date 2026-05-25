@@ -29,9 +29,9 @@ export class ComputerUseRecovery {
   }
 
   selectStrategy(input: ComputerUseRecoveryInput): ComputerUseRecoveryStrategy {
+    if (this.shouldRequestApproval(input)) return "request_guard_approval";
     if (this.shouldEscalateToUser(input)) return "escalate_to_user";
     if (input.verification.status === "inconclusive" && input.executionResult.action.type === "observe") return "observe_again";
-    if (this.shouldRequestApproval(input)) return "request_guard_approval";
     if (this.shouldRetryInSandbox(input)) return "retry_sandbox";
     return "none";
   }

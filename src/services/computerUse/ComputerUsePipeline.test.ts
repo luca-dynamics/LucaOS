@@ -87,6 +87,7 @@ describe("ComputerUsePipeline", () => {
     expect(result.actionPlan.requiresGuardApproval).toBe(true);
     expect(result.actionPlan.actions[0].requiresGuardApproval).toBe(true);
     expect(result.executionResults[0].status).toBe("denied");
+    expect(result.recoveryPlan.strategy).toBe("request_guard_approval");
     expect(result.recoveryPlan.requiresGuardApprovalRequest).toBe(true);
   });
 

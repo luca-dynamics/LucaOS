@@ -1,9 +1,4 @@
-import { ComputerUseActionPlanner } from "./ComputerUseActionPlanner";
-import { ComputerUseExecutor } from "./ComputerUseExecutor";
-import { ComputerUseFocusContextBuilder } from "./ComputerUseFocusContext";
-import { ComputerUseMissionTapeBridge } from "./ComputerUseMissionTapeBridge";
-import { ComputerUseRecovery } from "./ComputerUseRecovery";
-import { ComputerUseVerifier, toRecoveryInput } from "./ComputerUseVerifier";
+import { toRecoveryInput } from "./ComputerUseVerifier";
 import {
   ComputerUseActionPlan,
   ComputerUseExecutionResult,
@@ -16,12 +11,12 @@ import {
 } from "./types";
 
 export class ComputerUsePipeline {
-  private readonly focusContextBuilder: ComputerUseFocusContextBuilder;
-  private readonly actionPlanner: ComputerUseActionPlanner;
-  private readonly executor: ComputerUseExecutor;
-  private readonly verifier: ComputerUseVerifier;
-  private readonly recovery: ComputerUseRecovery;
-  private readonly tapeBridge: ComputerUseMissionTapeBridge;
+  private readonly focusContextBuilder: ComputerUsePipelineOptions["focusContextBuilder"];
+  private readonly actionPlanner: ComputerUsePipelineOptions["actionPlanner"];
+  private readonly executor: ComputerUsePipelineOptions["executor"];
+  private readonly verifier: ComputerUsePipelineOptions["verifier"];
+  private readonly recovery: ComputerUsePipelineOptions["recovery"];
+  private readonly tapeBridge: ComputerUsePipelineOptions["tapeBridge"];
 
   private lastResult?: ComputerUsePipelineResult;
 
