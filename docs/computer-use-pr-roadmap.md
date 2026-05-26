@@ -1,6 +1,6 @@
 # Computer-use Runtime PR Roadmap
 
-This roadmap captures the merged mission/runtime/computer-use PR progression and recommends the next sequence after **PR #37**.
+This roadmap captures the merged mission/runtime/computer-use PR progression and recommends the next sequence after **PR #38**.
 
 ## Merged PRs (mission/runtime/computer-use track)
 
@@ -21,31 +21,35 @@ Ordered by merge sequence:
 13. **PR #35** — add BrowserRuntime adapter event recording.
 14. **PR #36** — add mission context to BrowserRuntime adapter events.
 15. **PR #37** — refresh computer-use runtime map.
+16. **PR #38** — Discover BrowserRuntime contract for computer-use.
 
-## Current status after PR #37
+## Current status after PR #38
 
 - Runtime layering and scaffold boundaries are documented and refreshed.
-- BrowserRuntime adapter boundary exists and records events with mission context, while browser/playwright/system execution paths remain non-live by default.
-- Mission routing, guard bridge, and Mission Tape bridge scaffolds are integrated, but key production contracts are intentionally still staged.
-- Cloud-agent validation constraints and scoped validation workflow are documented and should continue to gate risky rollout steps.
+- BrowserRuntime contract discovery is complete.
+- A type-only BrowserRuntime contract and no-op discovery probe now exist under `src/services/computerUse`.
+- Real BrowserRuntime is still not imported or executed.
+- Mission routing, guard bridge, and Mission Tape bridge scaffolds remain integrated, while key production runtime paths are intentionally staged.
+- Next implementation should target a sandbox browser adapter behind an explicit feature flag.
+- Cloud-agent validation constraints and scoped validation workflow remain required to gate risky rollout steps.
 
 ## Next 5 recommended PRs (strict sequence)
 
-1. **BrowserRuntime contract discovery**
-   - Define and lock the concrete BrowserRuntime contract for LucaOS mission/runtime integration.
-   - Produce acceptance criteria for adapter capability probing and unsupported-runtime behavior.
-
-2. **Sandbox browser adapter behind feature flag**
+1. **Sandbox browser adapter behind feature flag**
    - Introduce a sandbox-backed browser adapter implementation gated behind an explicit feature flag.
    - Keep current scaffold default behavior unchanged when the flag is disabled.
 
-3. **Real MissionTape sink injection**
+2. **Real MissionTape sink injection**
    - Add injectable real MissionTape sink path for runtime event persistence.
    - Preserve redaction defaults and keep in-memory sink as fallback/compatibility mode.
 
-4. **Guard approval policy hardening**
+3. **Guard approval policy hardening**
    - Strengthen approval-required outcomes, policy reasons, and deny/allow audit shape.
    - Add strict tests for high-risk action classes and policy edge cases.
+
+4. **BrowserRuntime router bridge integration/conformance tests**
+   - Add router bridge integration coverage to verify contract conformance across discovery, routing, and adapter boundaries.
+   - Require explicit assertions for unsupported-runtime handling and mission-scoped event continuity.
 
 5. **Direct-host executor only after sandbox stability**
    - Defer direct-host executor enablement until sandbox adapter stability criteria are met.
