@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import { ComputerUseActionPlanner } from "./ComputerUseActionPlanner";
 import { ComputerUseExecutor } from "./ComputerUseExecutor";
 import { ComputerUseFocusContextBuilder } from "./ComputerUseFocusContext";
+import { ComputerUseGuardBridge } from "./ComputerUseGuardBridge";
 import { ComputerUseMissionTapeBridge } from "./ComputerUseMissionTapeBridge";
 import { ComputerUsePipeline } from "./ComputerUsePipeline";
 import { ComputerUseRecovery } from "./ComputerUseRecovery";
+import { ComputerUseSandboxExecutorAdapter } from "./ComputerUseSandboxExecutorAdapter";
 import { ComputerUseVerifier } from "./ComputerUseVerifier";
 
 function createPipeline(options?: { riskLevel?: "safe" | "sensitive" | "dangerous" }) {
@@ -159,5 +161,48 @@ describe("ComputerUsePipeline", () => {
 
     expect(result.metadata.pipelineKind).toBe("scaffold");
     expect(result.metadata.systemApisCalled).toBe(false);
+  });
+
+  it("guard bridge requires approval before executor runs", async () => {
+    const executor = new ComputerUseExecutor();
+    executor.registerAdapter(new ComputerUseSandboxExecutorAdapter());
+    const pipeline = new ComputerUsePipeline({
+      focusContextBuilder: new ComputerUseFocusContextBuilder(),
+      actionPlanner: new ComputerUseActionPlanner(),
+      executor,
+      guardBridge: new ComputerUseGuardBridge(),
+      verifier: new ComputerUseVerifier(),
+      recovery: new ComputerUseRecovery(),
+      tapeBridge: new ComputerUseMissionTapeBridge(),
+    });
+
+    const result = await pipeline.run({
+      missionId: "mission-guard-1",
+      userPointedTarget: { description: "Delete item" },
+      executionRequest: { guardApprovalProvided: false },
+    });
+
+    expect(result.executionResults[0].status).toBe("denied");
+  });
+
+  it("guard allowed lets sandbox adapter execute", async () => {
+    const executor = new ComputerUseExecutor();
+    executor.registerAdapter(new ComputerUseSandboxExecutorAdapter());
+    const pipeline = new ComputerUsePipeline({
+      focusContextBuilder: new ComputerUseFocusContextBuilder({ riskLevel: "dangerous" }),
+      actionPlanner: new ComputerUseActionPlanner(),
+      executor,
+      guardBridge: new ComputerUseGuardBridge(),
+      verifier: new ComputerUseVerifier(),
+      recovery: new ComputerUseRecovery(),
+      tapeBridge: new ComputerUseMissionTapeBridge(),
+    });
+    const result = await pipeline.run({
+      missionId: "mission-guard-2",
+      userPointedTarget: { description: "Confirm" },
+      executionRequest: { guardApprovalProvided: true },
+    });
+    expect(result.executionResults[0].status).toBe("executed");
+    expect(result.executionResults[0].metadata?.executionMode).toBe("sandbox");
   });
 });

@@ -1,6 +1,7 @@
 import { toRecoveryInput } from "./ComputerUseVerifier";
 import {
   ComputerUseActionPlan,
+  ComputerUseGuardDecision,
   ComputerUseExecutionResult,
   ComputerUseFocusContext,
   ComputerUsePipelineInput,
@@ -17,6 +18,7 @@ export class ComputerUsePipeline {
   private readonly verifier: ComputerUsePipelineOptions["verifier"];
   private readonly recovery: ComputerUsePipelineOptions["recovery"];
   private readonly tapeBridge: ComputerUsePipelineOptions["tapeBridge"];
+  private readonly guardBridge?: NonNullable<ComputerUsePipelineOptions["guardBridge"]>;
 
   private lastResult?: ComputerUsePipelineResult;
 
@@ -27,12 +29,13 @@ export class ComputerUsePipeline {
     this.verifier = options.verifier;
     this.recovery = options.recovery;
     this.tapeBridge = options.tapeBridge;
+    this.guardBridge = options.guardBridge;
   }
 
   async run(input: ComputerUsePipelineInput): Promise<ComputerUsePipelineResult> {
     const focusContext = this.buildFocusContext(input);
     const actionPlan = this.planActions({ ...input, focusContext });
-    const executionResults = await this.executePlan(actionPlan, input);
+    const executionResults = await this.executePlan(actionPlan, { ...input, focusContext });
     const verificationResults = this.verifyResults(executionResults);
     const recoveryPlan = this.planRecovery({ input, focusContext, actionPlan, executionResults, verificationResults });
 
@@ -82,8 +85,40 @@ export class ComputerUsePipeline {
 
   async executePlan(
     actionPlan: ComputerUseActionPlan,
-    input: Pick<ComputerUsePipelineInput, "executionRequest">,
+    input: Pick<ComputerUsePipelineInput, "executionRequest"> & { focusContext?: ComputerUseFocusContext },
   ): Promise<ComputerUseExecutionResult[]> {
+    const planDecision = this.guardBridge?.evaluatePlan({
+      plan: actionPlan,
+      request: input.executionRequest,
+      dangerousContext: input.focusContext?.requiresGuardApproval ?? false,
+    });
+    if (planDecision && planDecision.status !== "allowed") {
+      return actionPlan.actions.map((action) => this.deniedResult(action, planDecision));
+    }
+
+    if (this.guardBridge) {
+      const guardedResults: ComputerUseExecutionResult[] = [];
+      for (const action of actionPlan.actions) {
+        const actionDecision = this.guardBridge.evaluateAction({
+          action,
+          plan: actionPlan,
+          request: input.executionRequest,
+          dangerousContext: input.focusContext?.requiresGuardApproval ?? false,
+        });
+        if (actionDecision.status !== "allowed") {
+          guardedResults.push(this.deniedResult(action, actionDecision));
+          continue;
+        }
+        if (this.executor.executeAction) {
+          guardedResults.push(await this.executor.executeAction(action, actionPlan, input.executionRequest));
+        } else {
+          const [result] = await this.executor.executePlan({ ...actionPlan, actions: [action] }, input.executionRequest);
+          guardedResults.push(result);
+        }
+      }
+      return guardedResults;
+    }
+
     return this.executor.executePlan(actionPlan, input.executionRequest);
   }
 
@@ -155,6 +190,21 @@ export class ComputerUsePipeline {
     this.verifier.reset();
     this.recovery.reset();
     this.tapeBridge.reset();
+    this.guardBridge?.reset();
     this.lastResult = undefined;
+  }
+
+  private deniedResult(action: ComputerUseExecutionResult["action"], decision: ComputerUseGuardDecision): ComputerUseExecutionResult {
+    return {
+      status: "denied",
+      action,
+      metadata: {
+        reason: decision.reason,
+        systemApisCalled: false,
+        delegatesOnly: true,
+        noDirectSystemCalls: true,
+        executorKind: "scaffold",
+      },
+    };
   }
 }

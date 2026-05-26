@@ -144,6 +144,7 @@ export interface ComputerUseExecutionResult {
     adapterCount?: number;
     defaultExecutionMode?: ComputerUseExecutionMode;
     executionMode?: ComputerUseExecutionMode;
+    sandboxSimulated?: boolean;
   };
 }
 
@@ -164,6 +165,39 @@ export interface ComputerUseExecutorAdapter {
 
 export interface ComputerUseExecutorOptions {
   defaultExecutionMode?: ComputerUseExecutionMode;
+}
+
+export type ComputerUseGuardDecisionStatus = "allowed" | "denied" | "requires_approval";
+
+export interface ComputerUseGuardDecision {
+  status: ComputerUseGuardDecisionStatus;
+  reason: string;
+  metadata: {
+    guardBridgeKind: "scaffold";
+    externalGuardCalled: false;
+  };
+}
+
+export interface ComputerUseGuardBridgeInput {
+  action?: ComputerUsePlannedAction;
+  plan?: Pick<ComputerUseActionPlan, "actions" | "requiresGuardApproval">;
+  request?: Pick<ComputerUseExecutionRequest, "guardApprovalProvided">;
+  dangerousContext?: boolean;
+}
+
+export interface ComputerUseGuardBridgeOptions {
+  denyActions?: ComputerUseActionType[];
+}
+
+export interface ComputerUseSandboxExecutionLog {
+  actionType: ComputerUseActionType;
+  status: ComputerUseExecutionStatus;
+  timestamp: string;
+}
+
+export interface ComputerUseSandboxExecutorAdapterOptions {
+  adapterId?: string;
+  now?: () => string;
 }
 
 
@@ -292,10 +326,20 @@ export interface ComputerUsePipelineOptions {
     reset: () => unknown;
   };
   executor: {
+    executeAction?: (
+      action: ComputerUsePlannedAction,
+      plan: Pick<ComputerUseActionPlan, "prefersSandbox">,
+      request?: ComputerUseExecutionRequest,
+    ) => Promise<ComputerUseExecutionResult>;
     executePlan: (
       plan: ComputerUseActionPlan,
       request?: ComputerUseExecutionRequest,
     ) => Promise<ComputerUseExecutionResult[]>;
+    reset: () => unknown;
+  };
+  guardBridge?: {
+    evaluatePlan: (input: ComputerUseGuardBridgeInput) => ComputerUseGuardDecision;
+    evaluateAction: (input: ComputerUseGuardBridgeInput) => ComputerUseGuardDecision;
     reset: () => unknown;
   };
   verifier: {
