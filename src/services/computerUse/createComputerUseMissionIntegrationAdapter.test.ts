@@ -9,6 +9,9 @@ describe("createComputerUseMissionIntegrationAdapter", () => {
     expect(x.adapter).toBeDefined();
     expect(typeof x.dispatch).toBe("function");
     expect(typeof x.canHandle).toBe("function");
+    expect(x.tapeSink).toBeDefined();
+    expect(x.eventBridge).toBeDefined();
+    expect(typeof x.getTapeSnapshot).toBe("function");
     expect(typeof x.reset).toBe("function");
   });
 
@@ -21,10 +24,13 @@ describe("createComputerUseMissionIntegrationAdapter", () => {
 
     x.reset();
     expect(x.adapter.getSnapshot().lastInput).toBeUndefined();
+    expect(x.getTapeSnapshot().records).toEqual([]);
   });
 
   it("barrel exports include mission integration adapter + factory", () => {
     expect(computerUse.ComputerUseMissionIntegrationAdapter).toBeDefined();
     expect(computerUse.createComputerUseMissionIntegrationAdapter).toBeDefined();
+    expect(computerUse.ComputerUseInMemoryMissionTapeSink).toBeDefined();
+    expect(computerUse.ComputerUseRuntimeEventBridge).toBeDefined();
   });
 });

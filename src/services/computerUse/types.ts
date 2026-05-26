@@ -679,6 +679,9 @@ export interface ComputerUseMissionIntegrationResult {
     systemApisCalled: false;
     missionEngineImported: false;
     requiresExplicitOptIn: true;
+    recordingAttempted?: boolean;
+    recordingFailed?: boolean;
+    recordingFailureReason?: string;
   };
 }
 
@@ -702,5 +705,77 @@ export interface ComputerUseMissionIntegrationAdapterOptions {
       reason?: string;
     }>;
     reset: () => unknown;
+  };
+  recording?: ComputerUseMissionIntegrationRecordingOptions;
+}
+
+export type ComputerUseRuntimeEventType =
+  | "computer_use_dispatch_started"
+  | "computer_use_dispatch_completed"
+  | "computer_use_dispatch_rejected"
+  | "computer_use_step_result";
+
+export interface ComputerUseMissionTapeSinkRecord {
+  missionId: string;
+  timestamp: string;
+  eventType: ComputerUseRuntimeEventType;
+  payload: Record<string, unknown>;
+  metadata: {
+    tapeSinkKind: "scaffold";
+    eventBridgeKind: "scaffold";
+    storageWritesEnabled: false;
+    missionTapeImported: false;
+    systemApisCalled: false;
+  };
+}
+
+export interface ComputerUseMissionTapeSinkSnapshot {
+  records: ComputerUseMissionTapeSinkRecord[];
+  metadata: {
+    tapeSinkKind: "scaffold";
+    storageWritesEnabled: false;
+    missionTapeImported: false;
+    systemApisCalled: false;
+  };
+}
+
+export interface ComputerUseMissionTapeSink {
+  record: (record: ComputerUseMissionTapeSinkRecord) => ComputerUseMissionTapeSinkRecord;
+  listRecords: (missionId?: string) => ComputerUseMissionTapeSinkRecord[];
+  getSnapshot: (missionId?: string) => ComputerUseMissionTapeSinkSnapshot;
+  reset: () => void;
+}
+
+export interface ComputerUseRuntimeEventBridgeOptions {
+  tapeSink: ComputerUseMissionTapeSink;
+  redactSensitiveText?: boolean;
+  now?: () => string;
+}
+
+export interface ComputerUseRuntimeEventBridgeRecordInput {
+  missionId: string;
+  stepId?: string;
+  kind?: string;
+}
+
+export interface ComputerUseRuntimeEventBridgeResult {
+  ok: boolean;
+  record?: ComputerUseMissionTapeSinkRecord;
+  reason?: string;
+  metadata: {
+    eventBridgeKind: "scaffold";
+    storageWritesEnabled: false;
+    missionTapeImported: false;
+    systemApisCalled: false;
+  };
+}
+
+export interface ComputerUseMissionIntegrationRecordingOptions {
+  eventBridge: {
+    recordDispatchStarted: (input: ComputerUseRuntimeEventBridgeRecordInput) => ComputerUseRuntimeEventBridgeResult;
+    recordIntegrationResult: (result: ComputerUseMissionIntegrationResult) => ComputerUseRuntimeEventBridgeResult;
+    recordStepResult: (result: ComputerUseMissionStepAdapterResult) => ComputerUseRuntimeEventBridgeResult;
+    getSnapshot: (missionId?: string) => ComputerUseMissionTapeSinkSnapshot;
+    reset: () => void;
   };
 }

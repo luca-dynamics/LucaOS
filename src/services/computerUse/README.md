@@ -147,3 +147,11 @@ import {
 - `createComputerUseMissionIntegrationAdapter()` composes the mission runtime dispatcher with the integration adapter and exposes a stable integration surface (`dispatch`, `canHandle`, `reset`).
 - This phase remains scaffold-only and does **not** execute real browser/OS/system actions.
 - This phase does **not** import real MissionEngine APIs directly; it integrates only against local runtime dispatch scaffolds.
+
+## Mission Tape Event Bridge
+
+- `ComputerUseRuntimeEventBridge` and `ComputerUseInMemoryMissionTapeSink` provide a scaffold persistence boundary for computer-use mission integration/runtime events.
+- By default, events are recorded into an in-memory sink only, with metadata explicitly preserving scaffold guarantees (`tapeSinkKind: "scaffold"`, `eventBridgeKind: "scaffold"`, `storageWritesEnabled: false`, `missionTapeImported: false`, `systemApisCalled: false`).
+- This layer does **not** import or write to real MissionTape storage yet.
+- Future MissionTape integration should inject/replace the sink with a stable local adapter surface.
+- Sensitive text should remain redacted by default in event payload handling.
