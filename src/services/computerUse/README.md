@@ -175,3 +175,12 @@ import {
 - Recording remains scaffold-only and in-memory by default; no storage writes are performed.
 - No real BrowserRuntime imports, Playwright calls, browser API calls, or system/OS API calls are performed in this phase.
 - Future real BrowserRuntime-backed adapter implementations should preserve the same event contract so observability stays stable across scaffold and production integrations.
+
+
+## Sandbox Browser Adapter (feature-flagged scaffold)
+
+- `ComputerUseSandboxBrowserAdapter` adds a dedicated `sandbox_browser` adapter path that maps browser adapter requests into a BrowserRuntime-shaped target request/result while staying fully simulated.
+- Explicit opt-in is required via `sandboxBrowserAdapterEnabled` or `enableSandboxBrowserAdapter`.
+- Default behavior remains safe scaffold mode: no BrowserRuntime runtime import, no Playwright/browser/system calls, and no direct-host allowance.
+- Metadata remains explicit for safety/conformance (`adapterKind: "sandbox_browser_scaffold"`, `realBrowserExecutionEnabled: false`, `directHostAllowed: false`, `requiresExplicitOptIn: true`).
+- Event recording contract is preserved (`started`, `completed`, `rejected`, `failed`) and mission context is forwarded when available.

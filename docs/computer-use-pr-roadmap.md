@@ -22,36 +22,33 @@ Ordered by merge sequence:
 14. **PR #36** — add mission context to BrowserRuntime adapter events.
 15. **PR #37** — refresh computer-use runtime map.
 16. **PR #38** — Discover BrowserRuntime contract for computer-use.
+17. **PR #40** — Add sandbox browser adapter behind explicit feature flag.
 
-## Current status after PR #38
+## Current status after PR #40
 
 - Runtime layering and scaffold boundaries are documented and refreshed.
 - BrowserRuntime contract discovery is complete.
 - A type-only BrowserRuntime contract and no-op discovery probe now exist under `src/services/computerUse`.
 - Real BrowserRuntime is still not imported or executed.
 - Mission routing, guard bridge, and Mission Tape bridge scaffolds remain integrated, while key production runtime paths are intentionally staged.
-- Next implementation should target a sandbox browser adapter behind an explicit feature flag.
+- Sandbox browser adapter scaffold now exists behind explicit opt-in and remains simulation-only with real execution disabled by default.
 - Cloud-agent validation constraints and scoped validation workflow remain required to gate risky rollout steps.
 
-## Next 5 recommended PRs (strict sequence)
+## Next recommended PRs (strict sequence)
 
-1. **Sandbox browser adapter behind feature flag**
-   - Introduce a sandbox-backed browser adapter implementation gated behind an explicit feature flag.
-   - Keep current scaffold default behavior unchanged when the flag is disabled.
-
-2. **Real MissionTape sink injection**
+1. **Real MissionTape sink injection**
    - Add injectable real MissionTape sink path for runtime event persistence.
    - Preserve redaction defaults and keep in-memory sink as fallback/compatibility mode.
 
-3. **Guard approval policy hardening**
+2. **Guard approval policy hardening**
    - Strengthen approval-required outcomes, policy reasons, and deny/allow audit shape.
    - Add strict tests for high-risk action classes and policy edge cases.
 
-4. **BrowserRuntime router bridge integration/conformance tests**
+3. **BrowserRuntime router bridge integration/conformance tests**
    - Add router bridge integration coverage to verify contract conformance across discovery, routing, and adapter boundaries.
    - Require explicit assertions for unsupported-runtime handling and mission-scoped event continuity.
 
-5. **Direct-host executor only after sandbox stability**
+4. **Direct-host executor only after sandbox stability**
    - Defer direct-host executor enablement until sandbox adapter stability criteria are met.
    - Require explicit stability sign-off and rollback plan before any direct-host rollout.
 

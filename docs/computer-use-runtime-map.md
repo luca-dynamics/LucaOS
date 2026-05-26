@@ -29,7 +29,7 @@ Mission-like input
 | Mission runtime registry/dispatcher | `src/services/computerUse/ComputerUseMissionRuntimeRegistry.ts`, `src/services/computerUse/ComputerUseMissionRuntimeDispatcher.ts`, `src/services/computerUse/createComputerUseMissionRuntimeDispatcher.ts` | **Wired composition** with safe rejection paths | Normalized rejection metadata for unsupported kinds; computer-use-only route | No | Integrate with broader mission routing contracts |
 | Mission integration adapter | `src/services/computerUse/ComputerUseMissionIntegrationAdapter.ts`, `src/services/computerUse/createComputerUseMissionIntegrationAdapter.ts` | **Feature-flagged boundary** + scaffold behavior | Explicit opt-in required (`computerUseEnabled` / `enableComputerUseDispatch`) | No | Promote as canonical entrypoint once mission orchestration is ready |
 | Mission tape event bridge | `src/services/computerUse/ComputerUseRuntimeEventBridge.ts`, `src/services/computerUse/ComputerUseInMemoryMissionTapeSink.ts` | **Scaffold persistence boundary** | In-memory sink only, scaffold tags, storage disabled by default | No | Swap in real MissionTape sink injection path |
-| BrowserRuntime adapter boundary | `src/services/computerUse/ComputerUseBrowserRuntimeAdapter.ts`, `src/services/computerUse/createComputerUseBrowserRuntimeAdapter.ts`, `src/services/computerUse/ComputerUseBrowserRuntimeBridge.ts` | **Wired scaffold boundary + event recording merged** | Explicit bridge opt-in; event stream is recorded at adapter boundary while browser/playwright/system calls remain false in this phase | No | Contract discovery/type-only boundary completed; next: implement sandbox browser real adapter behind feature flag after contract review |
+| BrowserRuntime adapter boundary | `src/services/computerUse/ComputerUseBrowserRuntimeAdapter.ts`, `src/services/computerUse/createComputerUseBrowserRuntimeAdapter.ts`, `src/services/computerUse/ComputerUseBrowserRuntimeBridge.ts` | **Wired scaffold boundary + event recording merged** | Explicit bridge opt-in; event stream is recorded at adapter boundary while browser/playwright/system calls remain false in this phase | No | Contract discovery/type-only boundary completed; sandbox adapter scaffold behind explicit flag merged; next: BrowserRuntime router conformance or MissionTape sink injection |
 | Cloud-agent validation docs/helper | `docs/cloud-agent-testing-environment.md`, `ops/scripts/cloud-agent-validate-computer-use.sh` | **Wired developer workflow support** | Documents install blockers, scoped validation discipline, explicit failure reporting | N/A (docs/helper scope) | Keep updated with runtime test lanes and environment diagnostics |
 
 ## What not to do yet
@@ -46,7 +46,7 @@ Mission-like input
 0. ✅ BrowserRuntime adapter event recording (merged).
 1. ✅ Mission context propagation for browser adapter events (PR #36 merged).
 2. ✅ Real BrowserRuntime adapter contract discovery (documented + local type/probe boundary).
-3. implement sandbox browser real adapter behind feature flag after contract review.
+3. ✅ Sandbox browser adapter scaffold behind explicit feature flag (no real execution by default).
 4. MissionTape real sink injection.
 5. Guard approval policy hardening.
 6. Direct-host executor only after sandbox/browser safety is stable.
