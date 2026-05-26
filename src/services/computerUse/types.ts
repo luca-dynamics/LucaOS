@@ -214,6 +214,60 @@ export type ComputerUseRecoveryStrategy =
   | "escalate_to_user"
   | "none";
 
+
+
+export type ComputerUseBrowserRuntimeLane =
+  | "ghost_browser"
+  | "sandbox_browser"
+  | "authenticated_direct_host"
+  | "remote_linked_browser";
+
+export interface ComputerUseBrowserRouteRequest {
+  lane: ComputerUseBrowserRuntimeLane;
+  action: ComputerUsePlannedAction;
+  metadata: {
+    bridgeKind: "scaffold";
+    browserRuntimeImported: false;
+  };
+}
+
+export interface ComputerUseBrowserRouteResult {
+  status: "executed" | "failed";
+  action: ComputerUsePlannedAction;
+  metadata: {
+    reason?: string;
+    bridgeKind: "scaffold";
+    browserRuntimeImported: false;
+  };
+}
+
+export interface ComputerUseBrowserRuntimeBridgeOptions {
+  browserRuntimeImportPlanned?: true;
+  defaultBrowserLane?: ComputerUseBrowserRuntimeLane;
+  defaultBrowserContext?: boolean;
+}
+
+export interface ComputerUseSandboxBrowserProviderOptions {
+  providerId?: string;
+}
+
+export interface ComputerUseSandboxBrowserProviderResult {
+  status: "executed" | "failed";
+  action: ComputerUsePlannedAction;
+  metadata: {
+    reason?: string;
+    providerKind: "scaffold";
+    browserApisCalled: false;
+    sandboxSimulated: true;
+  };
+}
+
+
+
+export interface ComputerUseSandboxBrowserRouteRecord {
+  route: ComputerUseBrowserRouteRequest;
+  result: ComputerUseSandboxBrowserProviderResult;
+}
 export interface ComputerUseVerificationInput {
   result: ComputerUseExecutionResult;
   results: ComputerUseExecutionResult[];
