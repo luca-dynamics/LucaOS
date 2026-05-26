@@ -164,3 +164,11 @@ import {
 - The adapter does **not** import real BrowserRuntime and does **not** call Playwright in this phase.
 - The adapter returns simulated scaffold-only delegation results and keeps side-effect metadata explicit (`browserRuntimeImported: false`, `playwrightCalled: false`, `browserApisCalled: false`, `systemApisCalled: false`).
 - Future PRs can replace or inject a real BrowserRuntime-backed adapter implementation behind the same contract.
+
+## BrowserRuntime Adapter Event Recording
+
+- BrowserRuntime adapter attempts are now observable through `ComputerUseRuntimeEventBridge` using browser adapter event types (`started`, `completed`, `rejected`, `failed`).
+- `createComputerUseBrowserRuntimeAdapter()` now exposes default in-memory `tapeSink`, `eventBridge`, and `getTapeSnapshot()` accessors unless recording is explicitly disabled.
+- Recording remains scaffold-only and in-memory by default; no storage writes are performed.
+- No real BrowserRuntime imports, Playwright calls, browser API calls, or system/OS API calls are performed in this phase.
+- Future real BrowserRuntime-backed adapter implementations should preserve the same event contract so observability stays stable across scaffold and production integrations.

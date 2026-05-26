@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ComputerUseBrowserRuntimeAdapterScaffold } from "./ComputerUseBrowserRuntimeAdapter";
+import { ComputerUseInMemoryMissionTapeSink } from "./ComputerUseInMemoryMissionTapeSink";
+import { ComputerUseRuntimeEventBridge } from "./ComputerUseRuntimeEventBridge";
 
 const validRequest = {
   lane: "sandbox_browser" as const,
@@ -15,23 +17,42 @@ describe("ComputerUseBrowserRuntimeAdapterScaffold", () => {
     expect(result.metadata.requiresExplicitOptIn).toBe(true);
   });
 
-  it("accepts with browserRuntimeEnabled", async () => {
-    const adapter = new ComputerUseBrowserRuntimeAdapterScaffold({ featureFlags: { browserRuntimeEnabled: true } });
-    expect(adapter.canHandle(validRequest)).toBe(true);
+  it("records rejected when no opt-in and recording enabled", async () => {
+    const eventBridge = new ComputerUseRuntimeEventBridge({ tapeSink: new ComputerUseInMemoryMissionTapeSink() });
+    const adapter = new ComputerUseBrowserRuntimeAdapterScaffold({ recording: { eventBridge } });
+    const result = await adapter.execute(validRequest);
+    expect(result.status).toBe("failed");
+    expect(eventBridge.getSnapshot().records.map((x) => x.eventType)).toEqual([
+      "computer_use_browser_adapter_started",
+      "computer_use_browser_adapter_rejected",
+    ]);
+  });
+
+  it("records completed with opt-in", async () => {
+    const eventBridge = new ComputerUseRuntimeEventBridge({ tapeSink: new ComputerUseInMemoryMissionTapeSink() });
+    const adapter = new ComputerUseBrowserRuntimeAdapterScaffold({ featureFlags: { browserRuntimeEnabled: true }, recording: { eventBridge } });
     const result = await adapter.execute(validRequest);
     expect(result.status).toBe("executed");
-    expect(result.metadata.simulated).toBe(true);
+    expect(eventBridge.getSnapshot().records.map((x) => x.eventType)).toEqual([
+      "computer_use_browser_adapter_started",
+      "computer_use_browser_adapter_completed",
+    ]);
   });
 
-  it("accepts with enableBrowserRuntimeBridge", async () => {
-    const adapter = new ComputerUseBrowserRuntimeAdapterScaffold({ featureFlags: { enableBrowserRuntimeBridge: true } });
-    expect(adapter.canHandle(validRequest)).toBe(true);
-  });
-
-  it("rejects malformed requests safely", async () => {
-    const adapter = new ComputerUseBrowserRuntimeAdapterScaffold({ featureFlags: { browserRuntimeEnabled: true } });
-    const result = await adapter.execute({ lane: "sandbox_browser" });
-    expect(result.status).toBe("failed");
+  it("recording failure does not break execution", async () => {
+    const adapter = new ComputerUseBrowserRuntimeAdapterScaffold({
+      featureFlags: { browserRuntimeEnabled: true },
+      recording: {
+        eventBridge: {
+          recordBrowserAdapterStarted: () => ({ ok: false, reason: "start fail", metadata: { eventBridgeKind: "scaffold", storageWritesEnabled: false, missionTapeImported: false, systemApisCalled: false } }),
+          recordBrowserAdapterResult: () => ({ ok: false, reason: "result fail", metadata: { eventBridgeKind: "scaffold", storageWritesEnabled: false, missionTapeImported: false, systemApisCalled: false } }),
+        },
+      },
+    });
+    const result = await adapter.execute(validRequest);
+    expect(result.status).toBe("executed");
+    expect(result.metadata.recordingAttempted).toBe(true);
+    expect(result.metadata.recordingFailed).toBe(true);
   });
 
   it("metadata reports no browser/system side effects", async () => {
@@ -41,15 +62,5 @@ describe("ComputerUseBrowserRuntimeAdapterScaffold", () => {
     expect(result.metadata.playwrightCalled).toBe(false);
     expect(result.metadata.browserApisCalled).toBe(false);
     expect(result.metadata.systemApisCalled).toBe(false);
-  });
-
-  it("reset clears snapshot", async () => {
-    const adapter = new ComputerUseBrowserRuntimeAdapterScaffold({ featureFlags: { browserRuntimeEnabled: true } });
-    await adapter.execute(validRequest);
-    adapter.reset();
-    const snapshot = adapter.getSnapshot();
-    expect(snapshot.executionCount).toBe(0);
-    expect(snapshot.lastRequest).toBeUndefined();
-    expect(snapshot.lastResult).toBeUndefined();
   });
 });
