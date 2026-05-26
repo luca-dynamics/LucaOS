@@ -29,7 +29,7 @@ Mission-like input
 | Mission runtime registry/dispatcher | `src/services/computerUse/ComputerUseMissionRuntimeRegistry.ts`, `src/services/computerUse/ComputerUseMissionRuntimeDispatcher.ts`, `src/services/computerUse/createComputerUseMissionRuntimeDispatcher.ts` | **Wired composition** with safe rejection paths | Normalized rejection metadata for unsupported kinds; computer-use-only route | No | Integrate with broader mission routing contracts |
 | Mission integration adapter | `src/services/computerUse/ComputerUseMissionIntegrationAdapter.ts`, `src/services/computerUse/createComputerUseMissionIntegrationAdapter.ts` | **Feature-flagged boundary** + scaffold behavior | Explicit opt-in required (`computerUseEnabled` / `enableComputerUseDispatch`) | No | Promote as canonical entrypoint once mission orchestration is ready |
 | Mission tape event bridge | `src/services/computerUse/ComputerUseRuntimeEventBridge.ts`, `src/services/computerUse/ComputerUseInMemoryMissionTapeSink.ts` | **Scaffold persistence boundary** | In-memory sink only, scaffold tags, storage disabled by default | No | Swap in real MissionTape sink injection path |
-| BrowserRuntime adapter boundary | `src/services/computerUse/ComputerUseBrowserRuntimeAdapter.ts`, `src/services/computerUse/createComputerUseBrowserRuntimeAdapter.ts`, `src/services/computerUse/ComputerUseBrowserRuntimeBridge.ts` | **Feature-flagged scaffold boundary** | Explicit bridge opt-in; metadata keeps browser/playwright/system calls false in this phase | No | Discover/lock real BrowserRuntime contract and implement guarded adapter |
+| BrowserRuntime adapter boundary | `src/services/computerUse/ComputerUseBrowserRuntimeAdapter.ts`, `src/services/computerUse/createComputerUseBrowserRuntimeAdapter.ts`, `src/services/computerUse/ComputerUseBrowserRuntimeBridge.ts` | **Wired scaffold boundary + event recording merged** | Explicit bridge opt-in; event stream is recorded at adapter boundary while browser/playwright/system calls remain false in this phase | No | Mission-scope browser adapter events (PR #36 if merged; otherwise keep as next in-progress upgrade) |
 | Cloud-agent validation docs/helper | `docs/cloud-agent-testing-environment.md`, `ops/scripts/cloud-agent-validate-computer-use.sh` | **Wired developer workflow support** | Documents install blockers, scoped validation discipline, explicit failure reporting | N/A (docs/helper scope) | Keep updated with runtime test lanes and environment diagnostics |
 
 ## What not to do yet
@@ -43,7 +43,8 @@ Mission-like input
 
 ## Suggested next PR sequence
 
-1. BrowserRuntime adapter event recording.
+0. ✅ BrowserRuntime adapter event recording (merged).
+1. Mission context propagation for browser adapter events (**mission-scoped events**; lands with PR #36 if it merges first, otherwise remains in-progress/next).
 2. Real BrowserRuntime adapter contract discovery.
 3. Sandbox browser real adapter behind feature flag.
 4. MissionTape real sink injection.
