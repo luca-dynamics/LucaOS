@@ -1,15 +1,16 @@
 import {
   ComputerUseBrowserRouteRequest,
+  ComputerUseBrowserRuntimeAdapter,
   ComputerUseSandboxBrowserProviderOptions,
   ComputerUseSandboxBrowserProviderResult,
   ComputerUseSandboxBrowserRouteRecord,
 } from "./types";
 
 export class ComputerUseSandboxBrowserProvider {
-  private readonly options: ComputerUseSandboxBrowserProviderOptions;
+  private readonly options: ComputerUseSandboxBrowserProviderOptions & { adapter?: ComputerUseBrowserRuntimeAdapter };
   private readonly routeHistory: ComputerUseSandboxBrowserRouteRecord[] = [];
 
-  constructor(options: ComputerUseSandboxBrowserProviderOptions = {}) {
+  constructor(options: ComputerUseSandboxBrowserProviderOptions & { adapter?: ComputerUseBrowserRuntimeAdapter } = {}) {
     this.options = options;
   }
 
@@ -34,16 +35,30 @@ export class ComputerUseSandboxBrowserProvider {
     } else {
       const action = route.action.type === "type_text" ? { ...route.action, text: route.action.text } : route.action;
 
-      result = {
-        status: "executed",
-        action,
-        metadata: {
-          reason: "Sandbox browser provider simulated route execution.",
-          providerKind: "scaffold",
-          browserApisCalled: false,
-          sandboxSimulated: true,
-        },
-      };
+      if (this.options.adapter?.canHandle({ lane: route.lane, action: route.action })) {
+        const adapterResult = await this.options.adapter.execute({ lane: route.lane, action: route.action });
+        result = {
+          status: adapterResult.status,
+          action: adapterResult.action ?? route.action,
+          metadata: {
+            reason: adapterResult.metadata.reason,
+            providerKind: "scaffold",
+            browserApisCalled: false,
+            sandboxSimulated: true,
+          },
+        };
+      } else {
+        result = {
+          status: "executed",
+          action,
+          metadata: {
+            reason: "Sandbox browser provider simulated route execution.",
+            providerKind: "scaffold",
+            browserApisCalled: false,
+            sandboxSimulated: true,
+          },
+        };
+      }
     }
 
     this.routeHistory.push({ route, result });

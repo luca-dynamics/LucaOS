@@ -155,3 +155,12 @@ import {
 - This layer does **not** import or write to real MissionTape storage yet.
 - Future MissionTape integration should inject/replace the sink with a stable local adapter surface.
 - Sensitive text should remain redacted by default in event payload handling.
+
+
+## BrowserRuntime Adapter Boundary
+
+- `ComputerUseBrowserRuntimeAdapter` defines a feature-flag-gated adapter boundary for future BrowserRuntime/Ghost Browser/sandbox browser integrations.
+- The scaffold adapter requires explicit opt-in (`browserRuntimeEnabled` or `enableBrowserRuntimeBridge`) before it can handle or execute browser-runtime requests.
+- The adapter does **not** import real BrowserRuntime and does **not** call Playwright in this phase.
+- The adapter returns simulated scaffold-only delegation results and keeps side-effect metadata explicit (`browserRuntimeImported: false`, `playwrightCalled: false`, `browserApisCalled: false`, `systemApisCalled: false`).
+- Future PRs can replace or inject a real BrowserRuntime-backed adapter implementation behind the same contract.
