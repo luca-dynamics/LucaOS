@@ -138,3 +138,12 @@ import {
 - The registry includes a default `computer_use` handler and only routes those steps into the composed runtime (`createComputerUseRuntime().runComputerUseStep(step)`).
 - Unsupported mission step kinds are rejected safely with normalized scaffold metadata.
 - This PR does not import or call real MissionEngine APIs, BrowserRuntime APIs, Playwright, robotjs, or OS/system action APIs.
+
+## Mission Integration Adapter
+
+- `ComputerUseMissionIntegrationAdapter` is the safe boundary that future MissionEngine/task/orchestrator wiring should call when routing mission-like steps into computer-use runtime dispatch.
+- This adapter only routes `kind: "computer_use"` steps and requires explicit opt-in via `featureFlags.computerUseEnabled` or `featureFlags.enableComputerUseDispatch`.
+- Non-`computer_use` kinds, malformed steps, and non-opted-in requests are rejected safely with scaffold metadata.
+- `createComputerUseMissionIntegrationAdapter()` composes the mission runtime dispatcher with the integration adapter and exposes a stable integration surface (`dispatch`, `canHandle`, `reset`).
+- This phase remains scaffold-only and does **not** execute real browser/OS/system actions.
+- This phase does **not** import real MissionEngine APIs directly; it integrates only against local runtime dispatch scaffolds.
