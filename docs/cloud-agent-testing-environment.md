@@ -1,10 +1,12 @@
-# Codex Testing Environment Guidance
+# Cloud-Agent Testing Environment Guidance
 
 ## Purpose
-This document describes known Codex Cloud validation constraints for LucaOS and a safe fallback workflow for PRs that touch scoped TypeScript/Vitest areas (especially `src/services/computerUse`).
+This document describes known cloud-agent validation constraints for LucaOS and a safe fallback workflow for PRs that touch scoped TypeScript/Vitest areas (especially `src/services/computerUse`).
 
-## Known Codex Cloud blocker
-In Codex Cloud, `npm ci` may fail before JavaScript/TypeScript tooling is installed.
+Although this guide was introduced after Codex Cloud failures, it applies to any coding agent or temporary cloud environment where native dependencies may fail to build.
+
+## Known cloud-agent blocker
+In cloud/ephemeral coding agents such as Codex Cloud, Claude Code, Cursor agents, GitHub Codespaces, and similar environments, `npm ci` may fail before JavaScript/TypeScript tooling is installed.
 
 Common failure chain:
 1. `npm ci` installs dependency tree from `package-lock.json`.
@@ -23,24 +25,24 @@ If `npm ci` fails early, follow-on commands can fail for environmental reasons r
 These are **environment bootstrap failures**, not necessarily regressions introduced by the current PR.
 
 ## Repo-wide vs PR-local signal
-Use this framing in Codex PR summaries:
+Use this framing in agent PR summaries:
 - **Repo-wide/bootstrap failure**: package install fails due to native dependency toolchain constraints (e.g., `robotjs`/`node-gyp`/Python `distutils`).
 - **PR-local failure**: install succeeds, but scoped tests or type checks fail in files changed by the PR.
 
 Only treat failures as PR-local after dependency installation succeeds.
 
-## Recommended validation order in Codex
+## Recommended validation order in cloud agents
 1. Run `npm ci`.
 2. If install succeeds, run `npm run type-check`.
 3. If install succeeds, run scoped tests for computer-use changes:
    - `npm test -- --run src/services/computerUse`
 
 Optional helper script:
-- `ops/scripts/codex-validate-computer-use.sh`
+- `ops/scripts/cloud-agent-validate-computer-use.sh`
 - This script runs the same sequence and exits non-zero on failure without masking errors.
 
 ## PR summary reporting template
-When install fails in Codex Cloud, report clearly:
+When install fails in cloud/ephemeral coding agents such as Codex Cloud, Claude Code, Cursor agents, GitHub Codespaces, and similar environments, report clearly:
 1. Exact failing command (`npm ci`).
 2. Native/toolchain root cause (`robotjs` -> `node-gyp` -> missing Python `distutils`).
 3. Consequence (`vitest` unavailable, scoped tests cannot execute in this environment).
@@ -48,4 +50,4 @@ When install fails in Codex Cloud, report clearly:
 5. Next action for maintainers (rerun in environment with native build prerequisites).
 
 Example wording:
-- "`npm ci` failed in Codex Cloud during native dependency build (`robotjs` via `node-gyp`) due to missing Python `distutils`; as a result `vitest` was unavailable and scoped `src/services/computerUse` tests could not run in this environment."
+- "`npm ci` failed in cloud/ephemeral coding agents such as Codex Cloud, Claude Code, Cursor agents, GitHub Codespaces, and similar environments during native dependency build (`robotjs` via `node-gyp`) due to missing Python `distutils`; as a result `vitest` was unavailable and scoped `src/services/computerUse` tests could not run in this environment."
