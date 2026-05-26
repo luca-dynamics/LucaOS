@@ -303,6 +303,8 @@ export interface ComputerUseBrowserRuntimeAdapterOptions {
 export interface CreateComputerUseBrowserRuntimeAdapterOptions extends ComputerUseBrowserRuntimeAdapterOptions {
   recordingEnabled?: boolean;
   tapeSink?: ComputerUseMissionTapeSink;
+  externalMissionTapeSink?: ComputerUseMissionTapeExternalSink;
+  enableExternalMissionTapeSink?: boolean;
   eventBridge?: {
     recordBrowserAdapterStarted: (input: ComputerUseBrowserRuntimeAdapterEventInput) => ComputerUseRuntimeEventBridgeResult;
     recordBrowserAdapterResult: (
@@ -892,6 +894,44 @@ export interface ComputerUseMissionTapeSinkSnapshot {
     missionTapeImported: false;
     systemApisCalled: false;
   };
+}
+
+
+export interface ComputerUseMissionTapeExternalSinkResult {
+  ok: boolean;
+  reason?: string;
+}
+
+export interface ComputerUseMissionTapeExternalSink {
+  record: (record: ComputerUseMissionTapeSinkRecord) => ComputerUseMissionTapeExternalSinkResult | Promise<ComputerUseMissionTapeExternalSinkResult>;
+  getSnapshot?: (missionId?: string) => unknown;
+  reset?: () => void;
+}
+
+export interface ComputerUseMissionTapeExternalSinkMetadata {
+  sinkKind: "external_adapter";
+  storageWritesEnabled: boolean;
+  missionTapeImported: boolean;
+  systemApisCalled: false;
+  requiresExplicitOptIn: true;
+}
+
+export interface ComputerUseMissionTapeSinkAdapterOptions {
+  externalSink: ComputerUseMissionTapeExternalSink;
+  enableExternalMissionTapeSink?: boolean;
+  storageWritesEnabled?: boolean;
+  missionTapeImported?: boolean;
+}
+
+export interface ComputerUseMissionTapeSinkAdapterSnapshot {
+  records: ComputerUseMissionTapeSinkRecord[];
+  forwardedCount: number;
+  acceptedCount: number;
+  rejectedCount: number;
+  failedCount: number;
+  lastResult?: ComputerUseMissionTapeExternalSinkResult;
+  externalSnapshot?: unknown;
+  metadata: ComputerUseMissionTapeExternalSinkMetadata;
 }
 
 export interface ComputerUseMissionTapeSink {

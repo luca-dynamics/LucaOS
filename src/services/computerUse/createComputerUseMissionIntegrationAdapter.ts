@@ -1,12 +1,16 @@
+import { ComputerUseMissionTapeExternalSink } from "./types";
 import { ComputerUseMissionIntegrationAdapter } from "./ComputerUseMissionIntegrationAdapter";
 import { ComputerUseInMemoryMissionTapeSink } from "./ComputerUseInMemoryMissionTapeSink";
+import { ComputerUseMissionTapeSinkAdapter } from "./ComputerUseMissionTapeSinkAdapter";
 import { ComputerUseRuntimeEventBridge } from "./ComputerUseRuntimeEventBridge";
 import { createComputerUseMissionRuntimeDispatcher } from "./createComputerUseMissionRuntimeDispatcher";
 import { ComputerUseMissionIntegrationInput } from "./types";
 
-export function createComputerUseMissionIntegrationAdapter() {
+export function createComputerUseMissionIntegrationAdapter(options: { externalMissionTapeSink?: ComputerUseMissionTapeExternalSink; enableExternalMissionTapeSink?: boolean } = {}) {
   const missionRuntime = createComputerUseMissionRuntimeDispatcher();
-  const tapeSink = new ComputerUseInMemoryMissionTapeSink();
+  const tapeSink = options.externalMissionTapeSink
+    ? new ComputerUseMissionTapeSinkAdapter({ externalSink: options.externalMissionTapeSink, enableExternalMissionTapeSink: options.enableExternalMissionTapeSink })
+    : new ComputerUseInMemoryMissionTapeSink();
   const eventBridge = new ComputerUseRuntimeEventBridge({ tapeSink });
   const adapter = new ComputerUseMissionIntegrationAdapter({ dispatcher: missionRuntime.dispatcher, recording: { eventBridge } });
 

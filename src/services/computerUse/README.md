@@ -194,3 +194,11 @@ import {
 - Real browser execution remains disabled (`realBrowserExecutionEnabled: false`) and direct-host remains disallowed (`directHostAllowed: false`).
 - No Playwright/browser/system APIs are called in this phase.
 - Next step options remain: Real MissionTape sink injection or BrowserRuntime router bridge integration based on risk/stability preference.
+
+
+### MissionTape external sink adapter
+- Computer-use runtime event recording now supports an injected MissionTape-compatible external sink boundary via `ComputerUseMissionTapeSinkAdapter`.
+- In-memory sink remains the default when no external sink is injected and explicitly enabled.
+- External sink forwarding requires explicit `enableExternalMissionTapeSink: true` opt-in.
+- This phase does not perform real filesystem/database/localStorage writes by default.
+- A future PR can wire the stable LucaOS MissionTape interface into this adapter boundary once contract stability is confirmed.
