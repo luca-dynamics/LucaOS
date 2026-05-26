@@ -12,11 +12,15 @@ describe("ComputerUseBrowserRuntimeBridge", () => {
     expect(bridge.selectLaneFromExecutionMode("browser_body")).toBe("ghost_browser");
   });
 
+  it("direct_host maps to authenticated_direct_host", () => {
+    expect(bridge.selectLaneFromExecutionMode("direct_host")).toBe("authenticated_direct_host");
+  });
+
   it("observe does not require browser runtime", () => {
     expect(bridge.requiresBrowserRuntime({ type: "observe", reason: "scan", requiresGuardApproval: false })).toBe(false);
   });
 
-  it("click target with only role button does NOT require browser runtime", () => {
+  it("click target with only role button does not require browser runtime", () => {
     expect(
       bridge.requiresBrowserRuntime({
         type: "click",
@@ -27,7 +31,7 @@ describe("ComputerUseBrowserRuntimeBridge", () => {
     ).toBe(false);
   });
 
-  it("click target with only label Save does NOT require browser runtime", () => {
+  it("click target with only label Save does not require browser runtime", () => {
     expect(
       bridge.requiresBrowserRuntime({
         type: "click",
@@ -38,7 +42,7 @@ describe("ComputerUseBrowserRuntimeBridge", () => {
     ).toBe(false);
   });
 
-  it("click target with description browser tab DOES require browser runtime", () => {
+  it("click target with description browser tab requires browser runtime", () => {
     expect(
       bridge.requiresBrowserRuntime({
         type: "click",
@@ -49,7 +53,7 @@ describe("ComputerUseBrowserRuntimeBridge", () => {
     ).toBe(true);
   });
 
-  it("type_text target with selectorHint #email DOES require browser runtime", () => {
+  it("type_text target with selectorHint requires browser runtime", () => {
     expect(
       bridge.requiresBrowserRuntime({
         type: "type_text",
@@ -59,6 +63,25 @@ describe("ComputerUseBrowserRuntimeBridge", () => {
         target: { selectorHint: "#email" },
       }),
     ).toBe(true);
+  });
+
+  it("scroll/wait/hotkey with browser-specific context requires browser runtime", () => {
+    expect(bridge.requiresBrowserRuntime({ type: "scroll", reason: "scroll web page", requiresGuardApproval: false })).toBe(true);
+    expect(bridge.requiresBrowserRuntime({ type: "wait", reason: "wait for browser tab", requiresGuardApproval: false })).toBe(true);
+    expect(bridge.requiresBrowserRuntime({ type: "hotkey", reason: "open page search", requiresGuardApproval: false })).toBe(true);
+  });
+
+  it("scroll/wait/hotkey with no browser-specific context does not require browser runtime", () => {
+    expect(bridge.requiresBrowserRuntime({ type: "scroll", reason: "scroll list", requiresGuardApproval: false })).toBe(false);
+    expect(bridge.requiresBrowserRuntime({ type: "wait", reason: "wait briefly", requiresGuardApproval: false })).toBe(false);
+    expect(bridge.requiresBrowserRuntime({ type: "hotkey", reason: "shortcut", requiresGuardApproval: false })).toBe(false);
+  });
+
+  it("scroll/wait/hotkey can require browser runtime with explicit default browser context option", () => {
+    const browserContextBridge = new ComputerUseBrowserRuntimeBridge({ defaultBrowserContext: true });
+    expect(browserContextBridge.requiresBrowserRuntime({ type: "scroll", reason: "scroll", requiresGuardApproval: false })).toBe(true);
+    expect(browserContextBridge.requiresBrowserRuntime({ type: "wait", reason: "wait", requiresGuardApproval: false })).toBe(true);
+    expect(browserContextBridge.requiresBrowserRuntime({ type: "hotkey", reason: "press", requiresGuardApproval: false })).toBe(true);
   });
 
   it("metadata browserRuntimeImported false", () => {

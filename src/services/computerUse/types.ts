@@ -219,7 +219,7 @@ export type ComputerUseRecoveryStrategy =
 export type ComputerUseBrowserRuntimeLane =
   | "ghost_browser"
   | "sandbox_browser"
-  | "direct_host_browser"
+  | "authenticated_direct_host"
   | "remote_linked_browser";
 
 export interface ComputerUseBrowserRouteRequest {
@@ -243,6 +243,8 @@ export interface ComputerUseBrowserRouteResult {
 
 export interface ComputerUseBrowserRuntimeBridgeOptions {
   browserRuntimeImportPlanned?: true;
+  defaultBrowserLane?: ComputerUseBrowserRuntimeLane;
+  defaultBrowserContext?: boolean;
 }
 
 export interface ComputerUseSandboxBrowserProviderOptions {

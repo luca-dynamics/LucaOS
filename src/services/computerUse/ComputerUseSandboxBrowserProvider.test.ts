@@ -7,9 +7,9 @@ describe("ComputerUseSandboxBrowserProvider", () => {
     expect(provider.canHandle({ lane: "sandbox_browser" })).toBe(true);
   });
 
-  it("rejects direct_host_browser", () => {
+  it("rejects authenticated_direct_host", () => {
     const provider = new ComputerUseSandboxBrowserProvider();
-    expect(provider.canHandle({ lane: "direct_host_browser" })).toBe(false);
+    expect(provider.canHandle({ lane: "authenticated_direct_host" })).toBe(false);
   });
 
   it("executeRoute simulates success", async () => {

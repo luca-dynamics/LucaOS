@@ -7,7 +7,7 @@ import {
 } from "./types";
 
 const BROWSER_LIKE_ACTIONS: Array<ComputerUsePlannedAction["type"]> = ["click", "type_text", "hotkey", "scroll", "wait"];
-const BROWSER_KEYWORDS = ["browser", "web", "dom", "page", "tab", "url", "href", "http", "https"];
+const BROWSER_KEYWORDS = ["browser", "web", "dom", "page", "tab", "url"];
 
 export class ComputerUseBrowserRuntimeBridge {
   private readonly options: ComputerUseBrowserRuntimeBridgeOptions;
@@ -45,11 +45,11 @@ export class ComputerUseBrowserRuntimeBridge {
       case "browser_body":
         return "ghost_browser" as const;
       case "direct_host":
-        return "direct_host_browser" as const;
+        return "authenticated_direct_host" as const;
       case "remote_linked":
         return "remote_linked_browser" as const;
       default:
-        return "sandbox_browser" as const;
+        return this.options.defaultBrowserLane ?? ("sandbox_browser" as const);
     }
   }
 
@@ -66,7 +66,16 @@ export class ComputerUseBrowserRuntimeBridge {
       return true;
     }
 
-    return this.containsBrowserKeyword(target?.description, target?.label, action.reason);
+    const hasBrowserTextContext = this.containsBrowserKeyword(target?.description, target?.label, action.reason);
+    if (hasBrowserTextContext) {
+      return true;
+    }
+
+    if (action.type === "hotkey" || action.type === "scroll" || action.type === "wait") {
+      return Boolean(this.options.defaultBrowserContext || this.options.defaultBrowserLane);
+    }
+
+    return false;
   }
 
   reset(): void {
