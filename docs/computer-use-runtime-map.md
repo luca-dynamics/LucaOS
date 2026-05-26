@@ -57,3 +57,11 @@ Mission-like input
 - Avoid overlapping edits to `types.ts`, `index.ts`, and `README.md` across parallel tasks whenever possible.
 - Use `docs/cloud-agent-testing-environment.md` and `ops/scripts/cloud-agent-validate-computer-use.sh` for testing/install blocker reporting.
 - Document exact environment failures verbatim (command, error text, and scope impact) when validation is blocked.
+
+## BrowserRuntime conformance hardening update
+
+- Added a local BrowserRuntime conformance matrix for computer-use sandbox mapping.
+- Sandbox adapter action mapping is now explicit and validated per action type; broad fallback-to-click behavior is removed.
+- Unsupported/direct-host lanes remain rejected; `directHostAllowed` and `realBrowserExecutionEnabled` remain `false`.
+- This phase still does not import/execute real BrowserRuntime/Playwright/browser/system actions.
+- Next upgrade can prioritize either real MissionTape sink injection or BrowserRuntime router bridge integration depending on risk appetite.

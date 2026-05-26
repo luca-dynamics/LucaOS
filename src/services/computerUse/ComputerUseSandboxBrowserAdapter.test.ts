@@ -10,6 +10,43 @@ const validRequest = {
 };
 
 describe("ComputerUseSandboxBrowserAdapter", () => {
+  it("maps click/type_text/observe explicitly and does not fallback unknown to click", async () => {
+    const adapter = new ComputerUseSandboxBrowserAdapter({ featureFlags: { sandboxBrowserAdapterEnabled: true } });
+
+    const click = await adapter.execute(validRequest);
+    expect(click.metadata.mappedTargetRequest?.action).toBe("click");
+
+    const typed = await adapter.execute({
+      ...validRequest,
+      action: { type: "type_text", reason: "type", requiresGuardApproval: false, text: "hello" },
+    });
+    expect(typed.status).toBe("executed");
+    expect(typed.metadata.mappedTargetRequest?.action).toBe("type");
+
+    const observed = await adapter.execute({
+      ...validRequest,
+      action: { type: "observe", reason: "observe", requiresGuardApproval: false },
+    });
+    expect(observed.metadata.mappedTargetRequest?.action).toBe("extract");
+
+    const unsupported = await adapter.execute({
+      ...validRequest,
+      action: { type: "hotkey", reason: "unsupported", requiresGuardApproval: false },
+    });
+    expect(unsupported.status).toBe("failed");
+    expect(unsupported.metadata.reason).toContain("Hotkey is rejected");
+  });
+
+  it("wait/scroll are explicit no-op mappings to extract-compatible simulated route", async () => {
+    const adapter = new ComputerUseSandboxBrowserAdapter({ featureFlags: { sandboxBrowserAdapterEnabled: true } });
+    const wait = await adapter.execute({ ...validRequest, action: { type: "wait", reason: "wait", requiresGuardApproval: false } });
+    const scroll = await adapter.execute({ ...validRequest, action: { type: "scroll", reason: "scroll", requiresGuardApproval: false } });
+    expect(wait.status).toBe("executed");
+    expect(scroll.status).toBe("executed");
+    expect(wait.metadata.mappedTargetRequest?.action).toBe("extract");
+    expect(scroll.metadata.mappedTargetRequest?.action).toBe("extract");
+  });
+
   it("rejects without sandbox feature flag", async () => {
     const adapter = new ComputerUseSandboxBrowserAdapter();
     expect(adapter.canHandle(validRequest)).toBe(false);

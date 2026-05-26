@@ -10,6 +10,8 @@ describe("createComputerUseSandboxBrowserAdapter", () => {
     expect(typeof created.canHandle).toBe("function");
     const result = await created.execute({ lane: "sandbox_browser", action: { type: "wait", reason: "wait", requiresGuardApproval: false } });
     expect(result.status).toBe("executed");
+    const hotkey = await created.execute({ lane: "sandbox_browser", action: { type: "hotkey", reason: "hotkey", requiresGuardApproval: false } });
+    expect(hotkey.status).toBe("failed");
     expect(created.getTapeSnapshot()?.records.length).toBeGreaterThan(0);
   });
 
@@ -24,5 +26,6 @@ describe("createComputerUseSandboxBrowserAdapter", () => {
   it("barrel exports include sandbox adapter and factory", () => {
     expect(barrel.ComputerUseSandboxBrowserAdapter).toBeDefined();
     expect(barrel.createComputerUseSandboxBrowserAdapter).toBeDefined();
+    expect(barrel.getComputerUseBrowserRuntimeConformanceMatrix).toBeDefined();
   });
 });

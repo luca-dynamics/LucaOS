@@ -24,7 +24,7 @@ Ordered by merge sequence:
 16. **PR #38** — Discover BrowserRuntime contract for computer-use.
 17. **PR #40** — Add sandbox browser adapter behind explicit feature flag.
 
-## Current status after PR #40
+## Current status after PR #40 + conformance hardening
 
 - Runtime layering and scaffold boundaries are documented and refreshed.
 - BrowserRuntime contract discovery is complete.
@@ -32,6 +32,7 @@ Ordered by merge sequence:
 - Real BrowserRuntime is still not imported or executed.
 - Mission routing, guard bridge, and Mission Tape bridge scaffolds remain integrated, while key production runtime paths are intentionally staged.
 - Sandbox browser adapter scaffold now exists behind explicit opt-in and remains simulation-only with real execution disabled by default.
+- BrowserRuntime conformance matrix coverage now validates explicit sandbox action mapping and safe rejection/no-op dispositions for unsupported or not-yet-contracted actions.
 - Cloud-agent validation constraints and scoped validation workflow remain required to gate risky rollout steps.
 
 ## Next recommended PRs (strict sequence)

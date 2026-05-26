@@ -184,3 +184,13 @@ import {
 - Default behavior remains safe scaffold mode: no BrowserRuntime runtime import, no Playwright/browser/system calls, and no direct-host allowance.
 - Metadata remains explicit for safety/conformance (`adapterKind: "sandbox_browser_scaffold"`, `realBrowserExecutionEnabled: false`, `directHostAllowed: false`, `requiresExplicitOptIn: true`).
 - Event recording contract is preserved (`started`, `completed`, `rejected`, `failed`) and mission context is forwarded when available.
+
+## BrowserRuntime Conformance Matrix (sandbox bridge hardening)
+
+- `BrowserRuntimeConformance.ts` now defines explicit computer-use action conformance for BrowserRuntime-shaped mapping.
+- Mapping is explicit (`click -> click`, `type_text -> type`, `observe -> extract`) and does **not** fallback unknown actions to `click`.
+- `wait` and `scroll` are explicit scaffold no-op mappings; `hotkey` is explicitly rejected in this phase.
+- `ComputerUseSandboxBrowserAdapter` now validates through the conformance matrix before emitting simulated BrowserRuntime-shaped metadata.
+- Real browser execution remains disabled (`realBrowserExecutionEnabled: false`) and direct-host remains disallowed (`directHostAllowed: false`).
+- No Playwright/browser/system APIs are called in this phase.
+- Next step options remain: Real MissionTape sink injection or BrowserRuntime router bridge integration based on risk/stability preference.
