@@ -26,6 +26,7 @@ export class ComputerUseBrowserRuntimeAdapterScaffold implements ComputerUseBrow
   async execute(routeOrAction: ComputerUseBrowserRuntimeAdapterRequest): Promise<ComputerUseBrowserRuntimeAdapterResult> {
     this.lastRequest = routeOrAction;
     let result: ComputerUseBrowserRuntimeAdapterResult;
+    const recordStart = this.recordStarted(routeOrAction);
 
     if (!this.isOptedIn()) {
       result = this.fail("BrowserRuntime adapter requires explicit opt-in feature flags.");
@@ -48,6 +49,21 @@ export class ComputerUseBrowserRuntimeAdapterScaffold implements ComputerUseBrow
         },
       };
     }
+
+    const recordEnd = this.recordResult(result, routeOrAction);
+    result = {
+      ...result,
+      metadata: {
+        ...result.metadata,
+        recordingAttempted: Boolean(this.options.recording),
+        recordingFailed: !recordStart.ok || !recordEnd.ok,
+        recordingFailureReason: !recordStart.ok
+          ? recordStart.reason
+          : !recordEnd.ok
+            ? recordEnd.reason
+            : undefined,
+      },
+    };
 
     this.lastResult = result;
     this.executionCount += 1;
@@ -101,5 +117,23 @@ export class ComputerUseBrowserRuntimeAdapterScaffold implements ComputerUseBrow
         requiresExplicitOptIn: true,
       },
     };
+  }
+
+  private recordStarted(routeOrAction: ComputerUseBrowserRuntimeAdapterRequest): { ok: boolean; reason?: string } {
+    if (!this.options.recording) return { ok: true };
+    const output = this.options.recording.eventBridge.recordBrowserAdapterStarted({
+      lane: routeOrAction.lane,
+      actionType: routeOrAction.action?.type,
+    });
+    return { ok: output.ok, reason: output.reason };
+  }
+
+  private recordResult(
+    result: ComputerUseBrowserRuntimeAdapterResult,
+    routeOrAction: ComputerUseBrowserRuntimeAdapterRequest,
+  ): { ok: boolean; reason?: string } {
+    if (!this.options.recording) return { ok: true };
+    const output = this.options.recording.eventBridge.recordBrowserAdapterResult(result, routeOrAction);
+    return { ok: output.ok, reason: output.reason };
   }
 }

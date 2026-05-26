@@ -1,4 +1,7 @@
 import {
+  ComputerUseBrowserRuntimeAdapterEventInput,
+  ComputerUseBrowserRuntimeAdapterRequest,
+  ComputerUseBrowserRuntimeAdapterResult,
   ComputerUseMissionIntegrationResult,
   ComputerUseMissionTapeSinkRecord,
   ComputerUseMissionTapeSinkSnapshot,
@@ -46,6 +49,37 @@ export class ComputerUseRuntimeEventBridge {
       kind: result.kind,
       status: result.status,
       reason: result.reason,
+    });
+  }
+
+  recordBrowserAdapterStarted(input: ComputerUseBrowserRuntimeAdapterEventInput): ComputerUseRuntimeEventBridgeResult {
+    return this.writeRecord("computer_use_browser_adapter_started", input.missionId ?? "unknown", {
+      missionId: input.missionId,
+      lane: input.lane,
+      actionType: input.actionType,
+      reason: input.reason,
+    });
+  }
+
+  recordBrowserAdapterResult(
+    result: ComputerUseBrowserRuntimeAdapterResult,
+    request?: ComputerUseBrowserRuntimeAdapterRequest,
+  ): ComputerUseRuntimeEventBridgeResult {
+    const reason = result.metadata.reason ?? "";
+    const isRejected = reason.toLowerCase().includes("opt-in") || reason.toLowerCase().includes("unsupported");
+    const eventType: ComputerUseRuntimeEventType =
+      result.status === "executed"
+        ? "computer_use_browser_adapter_completed"
+        : isRejected
+          ? "computer_use_browser_adapter_rejected"
+          : "computer_use_browser_adapter_failed";
+    return this.writeRecord(eventType, "unknown", {
+      lane: request?.lane,
+      actionType: request?.action?.type,
+      status: result.status,
+      reason,
+      simulated: result.metadata.simulated,
+      adapterKind: result.metadata.adapterKind,
     });
   }
 

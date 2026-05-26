@@ -255,6 +255,9 @@ export interface ComputerUseBrowserRuntimeAdapterMetadata {
   browserApisCalled: false;
   systemApisCalled: false;
   requiresExplicitOptIn: true;
+  recordingAttempted?: boolean;
+  recordingFailed?: boolean;
+  recordingFailureReason?: string;
 }
 
 export interface ComputerUseBrowserRuntimeAdapterRequest {
@@ -286,6 +289,49 @@ export interface ComputerUseBrowserRuntimeAdapter {
 
 export interface ComputerUseBrowserRuntimeAdapterOptions {
   featureFlags?: ComputerUseBrowserRuntimeFeatureFlags;
+  recording?: ComputerUseBrowserRuntimeAdapterRecordingOptions;
+}
+
+export interface CreateComputerUseBrowserRuntimeAdapterOptions extends ComputerUseBrowserRuntimeAdapterOptions {
+  recordingEnabled?: boolean;
+  tapeSink?: ComputerUseMissionTapeSink;
+  eventBridge?: {
+    recordBrowserAdapterStarted: (input: ComputerUseBrowserRuntimeAdapterEventInput) => ComputerUseRuntimeEventBridgeResult;
+    recordBrowserAdapterResult: (
+      result: ComputerUseBrowserRuntimeAdapterResult,
+      request?: ComputerUseBrowserRuntimeAdapterRequest,
+    ) => ComputerUseRuntimeEventBridgeResult;
+    getSnapshot: (missionId?: string) => ComputerUseMissionTapeSinkSnapshot;
+    reset: () => void;
+  };
+}
+
+export interface ComputerUseBrowserRuntimeAdapterEventInput {
+  missionId?: string;
+  lane?: ComputerUseBrowserRuntimeLane;
+  actionType?: ComputerUseActionType;
+  reason?: string;
+}
+
+export interface ComputerUseBrowserRuntimeAdapterRecordingMetadata {
+  adapterKind: "scaffold";
+  eventBridgeKind: "scaffold";
+  storageWritesEnabled: false;
+  browserRuntimeImported: false;
+  playwrightCalled: false;
+  browserApisCalled: false;
+  systemApisCalled: false;
+  requiresExplicitOptIn: true;
+}
+
+export interface ComputerUseBrowserRuntimeAdapterRecordingOptions {
+  eventBridge: {
+    recordBrowserAdapterStarted: (input: ComputerUseBrowserRuntimeAdapterEventInput) => ComputerUseRuntimeEventBridgeResult;
+    recordBrowserAdapterResult: (
+      result: ComputerUseBrowserRuntimeAdapterResult,
+      request?: ComputerUseBrowserRuntimeAdapterRequest,
+    ) => ComputerUseRuntimeEventBridgeResult;
+  };
 }
 
 export interface ComputerUseBrowserRuntimeBridgeOptions {
@@ -760,7 +806,11 @@ export type ComputerUseRuntimeEventType =
   | "computer_use_dispatch_started"
   | "computer_use_dispatch_completed"
   | "computer_use_dispatch_rejected"
-  | "computer_use_step_result";
+  | "computer_use_step_result"
+  | "computer_use_browser_adapter_started"
+  | "computer_use_browser_adapter_completed"
+  | "computer_use_browser_adapter_rejected"
+  | "computer_use_browser_adapter_failed";
 
 export interface ComputerUseMissionTapeSinkRecord {
   missionId: string;
@@ -822,6 +872,11 @@ export interface ComputerUseMissionIntegrationRecordingOptions {
     recordDispatchStarted: (input: ComputerUseRuntimeEventBridgeRecordInput) => ComputerUseRuntimeEventBridgeResult;
     recordIntegrationResult: (result: ComputerUseMissionIntegrationResult) => ComputerUseRuntimeEventBridgeResult;
     recordStepResult: (result: ComputerUseMissionStepAdapterResult) => ComputerUseRuntimeEventBridgeResult;
+    recordBrowserAdapterStarted: (input: ComputerUseBrowserRuntimeAdapterEventInput) => ComputerUseRuntimeEventBridgeResult;
+    recordBrowserAdapterResult: (
+      result: ComputerUseBrowserRuntimeAdapterResult,
+      request?: ComputerUseBrowserRuntimeAdapterRequest,
+    ) => ComputerUseRuntimeEventBridgeResult;
     getSnapshot: (missionId?: string) => ComputerUseMissionTapeSinkSnapshot;
     reset: () => void;
   };
