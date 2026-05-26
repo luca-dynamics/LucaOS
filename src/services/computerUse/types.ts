@@ -345,6 +345,53 @@ export interface ComputerUseBrowserRuntimeAdapterRecordingOptions {
   };
 }
 
+
+export interface ComputerUseSandboxBrowserAdapterFeatureFlags {
+  sandboxBrowserAdapterEnabled?: boolean;
+  enableSandboxBrowserAdapter?: boolean;
+}
+
+export interface ComputerUseSandboxBrowserAdapterMetadata extends Omit<ComputerUseBrowserRuntimeAdapterMetadata, "adapterKind"> {
+  adapterKind: "sandbox_browser_scaffold";
+  sandboxBrowserAdapterEnabled: boolean;
+  realBrowserExecutionEnabled: false;
+  directHostAllowed: false;
+  mappedTargetRequest?: {
+    requestId: string;
+    missionId: string;
+    action: "navigate" | "click" | "type" | "extract" | "screenshot";
+    target?: string;
+    payload?: Record<string, unknown>;
+    issuedAt: string;
+    riskLevel: "safe" | "sensitive" | "dangerous";
+    trustTier: "trusted" | "untrusted";
+    preferredLane?: "sandbox_browser";
+    hasGuardApproval?: boolean;
+  };
+  mappedTargetResult?: {
+    accepted: boolean;
+    lane: "sandbox_browser" | "unknown";
+    runtime: "playwright" | "bidi" | "unknown";
+    reason?: string;
+  };
+}
+
+export interface ComputerUseSandboxBrowserAdapterResult extends Omit<ComputerUseBrowserRuntimeAdapterResult, "metadata"> {
+  metadata: ComputerUseSandboxBrowserAdapterMetadata & { reason: string };
+}
+
+export interface ComputerUseSandboxBrowserAdapterSnapshot {
+  featureFlags: Required<ComputerUseSandboxBrowserAdapterFeatureFlags>;
+  executionCount: number;
+  lastRequest?: ComputerUseBrowserRuntimeAdapterRequest;
+  lastResult?: ComputerUseSandboxBrowserAdapterResult;
+}
+
+export interface ComputerUseSandboxBrowserAdapterOptions {
+  featureFlags?: ComputerUseSandboxBrowserAdapterFeatureFlags;
+  recording?: ComputerUseBrowserRuntimeAdapterRecordingOptions;
+}
+
 export interface ComputerUseBrowserRuntimeBridgeOptions {
   browserRuntimeImportPlanned?: true;
   defaultBrowserLane?: ComputerUseBrowserRuntimeLane;
