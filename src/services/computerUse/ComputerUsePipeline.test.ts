@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ComputerUseActionPlanner } from "./ComputerUseActionPlanner";
 import { ComputerUseExecutor } from "./ComputerUseExecutor";
 import { ComputerUseFocusContextBuilder } from "./ComputerUseFocusContext";
@@ -165,9 +165,11 @@ describe("ComputerUsePipeline", () => {
 
   it("guard bridge requires approval before executor runs", async () => {
     const executor = new ComputerUseExecutor();
-    executor.registerAdapter(new ComputerUseSandboxExecutorAdapter());
+    const sandboxAdapter = new ComputerUseSandboxExecutorAdapter();
+    const sandboxExecuteSpy = vi.spyOn(sandboxAdapter, "execute");
+    executor.registerAdapter(sandboxAdapter);
     const pipeline = new ComputerUsePipeline({
-      focusContextBuilder: new ComputerUseFocusContextBuilder(),
+      focusContextBuilder: new ComputerUseFocusContextBuilder({ riskLevel: "dangerous" }),
       actionPlanner: new ComputerUseActionPlanner(),
       executor,
       guardBridge: new ComputerUseGuardBridge(),
@@ -183,6 +185,10 @@ describe("ComputerUsePipeline", () => {
     });
 
     expect(result.executionResults[0].status).toBe("denied");
+    expect(result.executionResults[0].metadata?.reason).toContain("Guard approval");
+    expect(result.executionResults[0].metadata?.guardDecisionStatus).toBe("requires_approval");
+    expect(result.executionResults[0].metadata?.externalGuardCalled).toBe(false);
+    expect(sandboxExecuteSpy).not.toHaveBeenCalled();
   });
 
   it("guard allowed lets sandbox adapter execute", async () => {
@@ -204,5 +210,34 @@ describe("ComputerUsePipeline", () => {
     });
     expect(result.executionResults[0].status).toBe("executed");
     expect(result.executionResults[0].metadata?.executionMode).toBe("sandbox");
+  });
+
+  it("sandbox adapter execution records lifecycle tape events", async () => {
+    const executor = new ComputerUseExecutor();
+    executor.registerAdapter(new ComputerUseSandboxExecutorAdapter());
+    const tapeBridge = new ComputerUseMissionTapeBridge();
+    const pipeline = new ComputerUsePipeline({
+      focusContextBuilder: new ComputerUseFocusContextBuilder({ riskLevel: "dangerous" }),
+      actionPlanner: new ComputerUseActionPlanner(),
+      executor,
+      guardBridge: new ComputerUseGuardBridge(),
+      verifier: new ComputerUseVerifier(),
+      recovery: new ComputerUseRecovery(),
+      tapeBridge,
+    });
+    await pipeline.run({
+      missionId: "mission-guard-3",
+      userPointedTarget: { description: "Submit form" },
+      executionRequest: { guardApprovalProvided: true },
+    });
+
+    const eventTypes = tapeBridge.listEvents("mission-guard-3").map((event) => event.eventType);
+    expect(eventTypes).toEqual([
+      "focus_context",
+      "action_plan",
+      "execution_result",
+      "verification_result",
+      "recovery_plan",
+    ]);
   });
 });

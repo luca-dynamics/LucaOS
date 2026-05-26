@@ -137,6 +137,9 @@ export interface ComputerUseExecutionResult {
   metadata?: {
     reason?: string;
     adapterId?: string;
+    guardDecisionStatus?: ComputerUseGuardDecisionStatus;
+    guardBridgeKind?: "scaffold";
+    externalGuardCalled?: false;
     systemApisCalled: boolean;
     delegatesOnly: true;
     noDirectSystemCalls: true;
