@@ -240,4 +240,28 @@ describe("ComputerUsePipeline", () => {
       "recovery_plan",
     ]);
   });
+
+  it("dangerous context with no actionable target keeps observe-only flow", async () => {
+    const executor = new ComputerUseExecutor();
+    executor.registerAdapter(new ComputerUseSandboxExecutorAdapter());
+    const pipeline = new ComputerUsePipeline({
+      focusContextBuilder: new ComputerUseFocusContextBuilder({ riskLevel: "dangerous" }),
+      actionPlanner: new ComputerUseActionPlanner(),
+      executor,
+      guardBridge: new ComputerUseGuardBridge(),
+      verifier: new ComputerUseVerifier(),
+      recovery: new ComputerUseRecovery(),
+      tapeBridge: new ComputerUseMissionTapeBridge(),
+    });
+
+    const result = await pipeline.run({
+      missionId: "mission-guard-4",
+      executionRequest: { guardApprovalProvided: false },
+    });
+
+    expect(result.actionPlan.actions[0].type).toBe("observe");
+    expect(result.executionResults[0].status).toBe("skipped");
+    expect(result.verificationResults[0].status).toBe("inconclusive");
+    expect(result.recoveryPlan.strategy).toBe("observe_again");
+  });
 });

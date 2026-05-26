@@ -14,6 +14,7 @@ export class ComputerUseGuardBridge {
 
   evaluatePlan(input: ComputerUseGuardBridgeInput): ComputerUseGuardDecision {
     const actions = input.plan?.actions ?? [];
+    const hasNonObserveActions = actions.some((action) => action.type !== "observe");
 
     for (const action of actions) {
       const decision = this.evaluateAction({ ...input, action });
@@ -22,11 +23,15 @@ export class ComputerUseGuardBridge {
       }
     }
 
+    if (!hasNonObserveActions) {
+      return this.allow("Observe-only plan is always allowed.");
+    }
+
     if (input.plan?.requiresGuardApproval && !input.request?.guardApprovalProvided) {
       return this.requiresApproval("Guard approval required for planned actions.");
     }
 
-    if (input.dangerousContext && !input.request?.guardApprovalProvided) {
+    if (hasNonObserveActions && input.dangerousContext && !input.request?.guardApprovalProvided) {
       return this.requiresApproval("Guard approval required for dangerous context.");
     }
 

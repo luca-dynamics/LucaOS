@@ -44,4 +44,17 @@ describe("ComputerUseGuardBridge", () => {
     });
     expect(decision.metadata.externalGuardCalled).toBe(false);
   });
+
+  it("dangerous context + observe-only plan is allowed", () => {
+    const bridge = new ComputerUseGuardBridge();
+    const decision = bridge.evaluatePlan({
+      dangerousContext: true,
+      request: { guardApprovalProvided: false },
+      plan: {
+        actions: [{ type: "observe", reason: "look first", requiresGuardApproval: true }],
+        requiresGuardApproval: true,
+      },
+    });
+    expect(decision.status).toBe("allowed");
+  });
 });
