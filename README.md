@@ -192,3 +192,9 @@ Luca OS includes advanced offensive security and autonomous capabilities. **Use 
 ## ⚖️ License
 
 MIT License. See [LICENSE](LICENSE) for details.
+
+## 🧪 Cloud Agent Validation Notes
+
+For cloud-agent install/test constraints and the recommended scoped validation sequence, see:
+- `docs/cloud-agent-testing-environment.md`
+- Optional helper: `ops/scripts/cloud-agent-validate-computer-use.sh`
