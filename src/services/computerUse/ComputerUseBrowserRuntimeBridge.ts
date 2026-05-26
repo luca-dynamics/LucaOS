@@ -7,6 +7,7 @@ import {
 } from "./types";
 
 const BROWSER_LIKE_ACTIONS: Array<ComputerUsePlannedAction["type"]> = ["click", "type_text", "hotkey", "scroll", "wait"];
+const BROWSER_KEYWORDS = ["browser", "web", "dom", "page", "tab", "url", "href", "http", "https"];
 
 export class ComputerUseBrowserRuntimeBridge {
   private readonly options: ComputerUseBrowserRuntimeBridgeOptions;
@@ -59,11 +60,21 @@ export class ComputerUseBrowserRuntimeBridge {
     if (!BROWSER_LIKE_ACTIONS.includes(action.type)) {
       return false;
     }
-    const t = action.target;
-    return Boolean(t?.selectorHint || t?.role || t?.label || t?.description?.toLowerCase().includes("browser"));
+
+    const target = action.target;
+    if (target?.selectorHint) {
+      return true;
+    }
+
+    return this.containsBrowserKeyword(target?.description, target?.label, action.reason);
   }
 
   reset(): void {
     void this.options;
+  }
+
+  private containsBrowserKeyword(...parts: Array<string | undefined>): boolean {
+    const text = parts.filter(Boolean).join(" ").toLowerCase();
+    return BROWSER_KEYWORDS.some((word) => text.includes(word));
   }
 }

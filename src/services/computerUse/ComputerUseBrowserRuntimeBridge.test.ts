@@ -16,22 +16,47 @@ describe("ComputerUseBrowserRuntimeBridge", () => {
     expect(bridge.requiresBrowserRuntime({ type: "observe", reason: "scan", requiresGuardApproval: false })).toBe(false);
   });
 
-  it("browser-like click/type_text requires browser runtime", () => {
+  it("click target with only role button does NOT require browser runtime", () => {
     expect(
       bridge.requiresBrowserRuntime({
         type: "click",
-        reason: "click browser tab",
+        reason: "click primary CTA",
         requiresGuardApproval: false,
-        target: { role: "button", label: "Tab", description: "browser tab" },
+        target: { role: "button" },
+      }),
+    ).toBe(false);
+  });
+
+  it("click target with only label Save does NOT require browser runtime", () => {
+    expect(
+      bridge.requiresBrowserRuntime({
+        type: "click",
+        reason: "save file",
+        requiresGuardApproval: false,
+        target: { label: "Save" },
+      }),
+    ).toBe(false);
+  });
+
+  it("click target with description browser tab DOES require browser runtime", () => {
+    expect(
+      bridge.requiresBrowserRuntime({
+        type: "click",
+        reason: "switch target",
+        requiresGuardApproval: false,
+        target: { description: "browser tab" },
       }),
     ).toBe(true);
+  });
+
+  it("type_text target with selectorHint #email DOES require browser runtime", () => {
     expect(
       bridge.requiresBrowserRuntime({
         type: "type_text",
         reason: "type",
         requiresGuardApproval: false,
         text: "hello",
-        target: { selectorHint: "#browser-input" },
+        target: { selectorHint: "#email" },
       }),
     ).toBe(true);
   });

@@ -260,6 +260,12 @@ export interface ComputerUseSandboxBrowserProviderResult {
   };
 }
 
+
+
+export interface ComputerUseSandboxBrowserRouteRecord {
+  route: ComputerUseBrowserRouteRequest;
+  result: ComputerUseSandboxBrowserProviderResult;
+}
 export interface ComputerUseVerificationInput {
   result: ComputerUseExecutionResult;
   results: ComputerUseExecutionResult[];

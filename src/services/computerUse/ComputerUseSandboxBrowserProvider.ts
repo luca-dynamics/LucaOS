@@ -2,10 +2,12 @@ import {
   ComputerUseBrowserRouteRequest,
   ComputerUseSandboxBrowserProviderOptions,
   ComputerUseSandboxBrowserProviderResult,
+  ComputerUseSandboxBrowserRouteRecord,
 } from "./types";
 
 export class ComputerUseSandboxBrowserProvider {
   private readonly options: ComputerUseSandboxBrowserProviderOptions;
+  private readonly routeHistory: ComputerUseSandboxBrowserRouteRecord[] = [];
 
   constructor(options: ComputerUseSandboxBrowserProviderOptions = {}) {
     this.options = options;
@@ -16,8 +18,10 @@ export class ComputerUseSandboxBrowserProvider {
   }
 
   async executeRoute(route: ComputerUseBrowserRouteRequest): Promise<ComputerUseSandboxBrowserProviderResult> {
+    let result: ComputerUseSandboxBrowserProviderResult;
+
     if (!this.canHandle(route)) {
-      return {
+      result = {
         status: "failed",
         action: route.action,
         metadata: {
@@ -27,27 +31,31 @@ export class ComputerUseSandboxBrowserProvider {
           sandboxSimulated: true,
         },
       };
+    } else {
+      const action = route.action.type === "type_text" ? { ...route.action, text: route.action.text } : route.action;
+
+      result = {
+        status: "executed",
+        action,
+        metadata: {
+          reason: "Sandbox browser provider simulated route execution.",
+          providerKind: "scaffold",
+          browserApisCalled: false,
+          sandboxSimulated: true,
+        },
+      };
     }
 
-    const action = route.action.type === "type_text" ? { ...route.action, text: route.action.text } : route.action;
-
-    return {
-      status: "executed",
-      action,
-      metadata: {
-        reason: "Sandbox browser provider simulated route execution.",
-        providerKind: "scaffold",
-        browserApisCalled: false,
-        sandboxSimulated: true,
-      },
-    };
+    this.routeHistory.push({ route, result });
+    return result;
   }
 
-  listRoutes() {
-    return ["sandbox_browser"] as const;
+  listRoutes(): ComputerUseSandboxBrowserRouteRecord[] {
+    return [...this.routeHistory];
   }
 
   reset(): void {
+    this.routeHistory.length = 0;
     void this.options;
   }
 }
