@@ -19,5 +19,7 @@ export { createComputerUseRuntime } from "./createComputerUseRuntime";
 export { ComputerUseMissionRuntimeRegistry } from "./ComputerUseMissionRuntimeRegistry";
 export { ComputerUseMissionRuntimeDispatcher } from "./ComputerUseMissionRuntimeDispatcher";
 export { createComputerUseMissionRuntimeDispatcher } from "./createComputerUseMissionRuntimeDispatcher";
+export { ComputerUseMissionIntegrationAdapter } from "./ComputerUseMissionIntegrationAdapter";
+export { createComputerUseMissionIntegrationAdapter } from "./createComputerUseMissionIntegrationAdapter";
 
 export * from "./types";

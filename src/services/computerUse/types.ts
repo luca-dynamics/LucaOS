@@ -658,3 +658,49 @@ export interface ComputerUseRuntime {
   runMissionSteps: (steps: ComputerUseMissionStepInput[]) => Promise<ComputerUseMissionRunnerResult>;
   reset: () => void;
 }
+
+export interface ComputerUseMissionIntegrationFeatureFlags {
+  computerUseEnabled?: boolean;
+  enableComputerUseDispatch?: boolean;
+}
+
+export interface ComputerUseMissionIntegrationInput {
+  step?: Partial<ComputerUseMissionStepInput> | null;
+  featureFlags?: ComputerUseMissionIntegrationFeatureFlags;
+}
+
+export interface ComputerUseMissionIntegrationResult {
+  ok: boolean;
+  step?: ComputerUseMissionStepInput;
+  stepResult?: ComputerUseMissionStepAdapterResult;
+  reason?: string;
+  metadata: {
+    integrationKind: "scaffold";
+    systemApisCalled: false;
+    missionEngineImported: false;
+    requiresExplicitOptIn: true;
+  };
+}
+
+export interface ComputerUseMissionIntegrationSnapshot {
+  canHandleLastInput: boolean;
+  lastInput?: ComputerUseMissionIntegrationInput;
+  metadata: {
+    integrationKind: "scaffold";
+    systemApisCalled: false;
+    missionEngineImported: false;
+    requiresExplicitOptIn: true;
+  };
+}
+
+export interface ComputerUseMissionIntegrationAdapterOptions {
+  dispatcher: {
+    dispatch: (input: { step: ComputerUseMissionStepInput }) => Promise<{
+      ok: boolean;
+      step: ComputerUseMissionStepInput;
+      stepResult?: ComputerUseMissionStepAdapterResult;
+      reason?: string;
+    }>;
+    reset: () => unknown;
+  };
+}
