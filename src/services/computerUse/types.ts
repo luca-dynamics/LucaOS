@@ -565,3 +565,50 @@ export interface ComputerUseMissionRunnerOptions {
     reset: () => unknown;
   };
 }
+
+export interface CreateComputerUseRuntimeOptions {
+  pipelineOptions?: {
+    registerDefaultSandboxAdapter?: boolean;
+    riskLevel?: ComputerUseRiskLevel;
+  };
+  missionEngineBridgeOptions?: ComputerUseMissionEngineBridgeOptions;
+  missionTapeAdapter?: {
+    recordStepResult: (result: ComputerUseMissionStepResult) => ComputerUseMissionTapeStepRecord;
+    recordVerificationResult: (missionId: string, payload: unknown) => ComputerUseMissionTapeVerificationRecord;
+    recordRecoveryPlan: (missionId: string, payload: unknown) => ComputerUseMissionTapeRecoveryRecord;
+    getSnapshot: (missionId: string) => ComputerUseMissionTapeSnapshot;
+    reset: () => unknown;
+  };
+}
+
+export interface ComputerUseRuntime {
+  pipeline: { run: (input: ComputerUsePipelineInput) => Promise<ComputerUsePipelineResult>; reset: () => unknown };
+  missionEngineBridge: {
+    isComputerUseStep: (step: { kind?: string }) => boolean;
+    toMissionStepInput: (step: ComputerUseMissionStepInput) => ComputerUseMissionStepInput;
+    toMissionStepResult: (input: { missionStep: ComputerUseMissionStepInput; pipelineResult: ComputerUsePipelineResult }) => ComputerUseMissionStepResult;
+    reset: () => unknown;
+  };
+  missionStepAdapter: { executeStep: (step: ComputerUseMissionStepInput) => Promise<ComputerUseMissionStepAdapterResult>; reset: () => unknown };
+  runtimeEntrypoint: {
+    runComputerUseStep: (step: ComputerUseMissionStepInput) => Promise<ComputerUseRuntimeEntrypointResult>;
+    runPipelineInput: (input: ComputerUseRuntimeEntrypointInput) => Promise<ComputerUseRuntimeEntrypointResult>;
+    reset: () => unknown;
+  };
+  missionRunner: {
+    runStep: (step: ComputerUseMissionStepInput, index?: number) => Promise<ComputerUseMissionRunnerStepRecord>;
+    runSteps: (steps: ComputerUseMissionStepInput[]) => Promise<ComputerUseMissionRunnerResult>;
+    reset: () => unknown;
+  };
+  missionTapeAdapter: {
+    recordStepResult: (result: ComputerUseMissionStepResult) => ComputerUseMissionTapeStepRecord;
+    recordVerificationResult: (missionId: string, payload: unknown) => ComputerUseMissionTapeVerificationRecord;
+    recordRecoveryPlan: (missionId: string, payload: unknown) => ComputerUseMissionTapeRecoveryRecord;
+    getSnapshot: (missionId: string) => ComputerUseMissionTapeSnapshot;
+    reset: () => unknown;
+  };
+  runComputerUseStep: (step: ComputerUseMissionStepInput) => Promise<ComputerUseMissionStepAdapterResult>;
+  runPipelineInput: (input: ComputerUsePipelineInput) => Promise<ComputerUseRuntimeEntrypointResult>;
+  runMissionSteps: (steps: ComputerUseMissionStepInput[]) => Promise<ComputerUseMissionRunnerResult>;
+  reset: () => void;
+}
