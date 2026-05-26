@@ -14,10 +14,12 @@ export class ComputerUseMissionStepAdapter {
 
   async executeStep(step: ComputerUseMissionStepInput): Promise<ComputerUseMissionStepAdapterResult> {
     if (!this.canHandleStep(step)) return this.createStepResult(step, undefined, "failed", "unsupported step kind");
+
     const missionStep = this.options.missionEngineBridge.toMissionStepInput(step);
-    const pipelineResult = await this.options.pipeline.run({ missionId: missionStep.missionId, ...(missionStep.input ?? {}) });
+    const pipelineResult = await this.options.pipeline.run({ ...(missionStep.input ?? {}), missionId: missionStep.missionId });
     const bridged = this.options.missionEngineBridge.toMissionStepResult({ missionStep, pipelineResult });
-    return this.createStepResult(step, pipelineResult, bridged.status, bridged.reason);
+
+    return this.createStepResult(missionStep, pipelineResult, bridged.status, bridged.reason);
   }
 
   createStepResult(
@@ -33,7 +35,7 @@ export class ComputerUseMissionStepAdapter {
       status,
       pipelineResult,
       reason,
-      metadata: { adapterKind: "scaffold", systemApisCalled: false },
+      metadata: { adapterKind: "scaffold", systemApisCalled: false, stepId: step.stepId },
     };
   }
 

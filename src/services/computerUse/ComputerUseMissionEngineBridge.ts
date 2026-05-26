@@ -14,14 +14,27 @@ export class ComputerUseMissionEngineBridge {
   }
 
   fromPipelineResult(pipelineResult: ComputerUsePipelineResult): Pick<ComputerUseMissionStepResult, "status" | "reason"> {
-    const execution = pipelineResult.executionResults[0];
-    const verification = pipelineResult.verificationResults[0];
+    const hasFailedExecution = pipelineResult.executionResults.some(
+      (execution) => execution.status === "failed" || execution.status === "denied",
+    );
+    if (hasFailedExecution) return { status: "failed", reason: "execution failed" };
 
-    if (execution?.status === "failed" || execution?.status === "denied") return { status: "failed", reason: "execution failed" };
-    if (execution?.status === "executed" && verification?.status === "passed") return { status: "completed", reason: "execution completed" };
-    if (execution?.action.type === "observe" && execution?.status === "skipped" && verification?.status === "inconclusive") {
-      return { status: "inconclusive", reason: "observation inconclusive" };
-    }
+    const hasObserveSkippedInconclusive = pipelineResult.executionResults.some(
+      (execution, index) =>
+        execution.action.type === "observe" &&
+        execution.status === "skipped" &&
+        pipelineResult.verificationResults[index]?.status === "inconclusive",
+    );
+
+    const hasAnyExecution = pipelineResult.executionResults.length > 0;
+    const pairedCount = Math.min(pipelineResult.executionResults.length, pipelineResult.verificationResults.length);
+    const allExecutedPassed =
+      hasAnyExecution &&
+      pairedCount === pipelineResult.executionResults.length &&
+      pipelineResult.executionResults.every((execution, index) => execution.status === "executed" && pipelineResult.verificationResults[index]?.status === "passed");
+
+    if (allExecutedPassed) return { status: "completed", reason: "execution completed" };
+    if (hasObserveSkippedInconclusive) return { status: "inconclusive", reason: "observation inconclusive" };
 
     return { status: "inconclusive", reason: "result inconclusive" };
   }

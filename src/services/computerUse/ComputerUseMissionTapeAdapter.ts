@@ -12,19 +12,37 @@ export class ComputerUseMissionTapeAdapter {
   private readonly recoveryRecords: ComputerUseMissionTapeRecoveryRecord[] = [];
 
   toMissionTapeStepRecord(event: ComputerUseTapeEvent): ComputerUseMissionTapeStepRecord {
-    const record: ComputerUseMissionTapeStepRecord = { ...event, eventType: "action_plan", metadata: { adapterKind: "scaffold", missionTapeImported: false } };
+    if (event.eventType !== "action_plan") throw new Error("Expected action_plan event");
+
+    const record: ComputerUseMissionTapeStepRecord = {
+      ...event,
+      eventType: "action_plan",
+      metadata: { adapterKind: "scaffold", missionTapeImported: false },
+    };
     this.stepRecords.push(record);
     return record;
   }
 
   toMissionTapeVerificationRecord(event: ComputerUseTapeEvent): ComputerUseMissionTapeVerificationRecord {
-    const record: ComputerUseMissionTapeVerificationRecord = { ...event, eventType: "verification_result", metadata: { adapterKind: "scaffold", missionTapeImported: false } };
+    if (event.eventType !== "verification_result") throw new Error("Expected verification_result event");
+
+    const record: ComputerUseMissionTapeVerificationRecord = {
+      ...event,
+      eventType: "verification_result",
+      metadata: { adapterKind: "scaffold", missionTapeImported: false },
+    };
     this.verificationRecords.push(record);
     return record;
   }
 
   toMissionTapeRecoveryRecord(event: ComputerUseTapeEvent): ComputerUseMissionTapeRecoveryRecord {
-    const record: ComputerUseMissionTapeRecoveryRecord = { ...event, eventType: "recovery_plan", metadata: { adapterKind: "scaffold", missionTapeImported: false } };
+    if (event.eventType !== "recovery_plan") throw new Error("Expected recovery_plan event");
+
+    const record: ComputerUseMissionTapeRecoveryRecord = {
+      ...event,
+      eventType: "recovery_plan",
+      metadata: { adapterKind: "scaffold", missionTapeImported: false },
+    };
     this.recoveryRecords.push(record);
     return record;
   }

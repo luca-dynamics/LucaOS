@@ -455,6 +455,7 @@ export interface ComputerUseMissionStepAdapterResult {
   metadata: {
     adapterKind: "scaffold";
     systemApisCalled: false;
+    stepId: string;
   };
 }
 
