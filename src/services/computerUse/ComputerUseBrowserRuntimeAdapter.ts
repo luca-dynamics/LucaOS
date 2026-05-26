@@ -122,6 +122,10 @@ export class ComputerUseBrowserRuntimeAdapterScaffold implements ComputerUseBrow
   private recordStarted(routeOrAction: ComputerUseBrowserRuntimeAdapterRequest): { ok: boolean; reason?: string } {
     if (!this.options.recording) return { ok: true };
     const output = this.options.recording.eventBridge.recordBrowserAdapterStarted({
+      missionId: routeOrAction.context?.missionId,
+      stepId: routeOrAction.context?.stepId,
+      traceId: routeOrAction.context?.traceId,
+      source: routeOrAction.context?.source,
       lane: routeOrAction.lane,
       actionType: routeOrAction.action?.type,
     });

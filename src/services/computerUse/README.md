@@ -168,6 +168,9 @@ import {
 ## BrowserRuntime Adapter Event Recording
 
 - BrowserRuntime adapter attempts are now observable through `ComputerUseRuntimeEventBridge` using browser adapter event types (`started`, `completed`, `rejected`, `failed`).
+- Browser adapter requests can carry optional mission context (`missionId`, `stepId`, `traceId`, `source`) via request context metadata.
+- Runtime event bridge uses request mission context to group adapter records by `missionId` when present.
+- Missing mission context still falls back to `missionId: "unknown"` for compatibility.
 - `createComputerUseBrowserRuntimeAdapter()` now exposes default in-memory `tapeSink`, `eventBridge`, and `getTapeSnapshot()` accessors unless recording is explicitly disabled.
 - Recording remains scaffold-only and in-memory by default; no storage writes are performed.
 - No real BrowserRuntime imports, Playwright calls, browser API calls, or system/OS API calls are performed in this phase.
