@@ -559,6 +559,52 @@ export interface ComputerUseMissionRunnerResult {
   };
 }
 
+export type ComputerUseMissionRuntimeHandler = (
+  input: ComputerUseMissionRuntimeDispatchInput,
+) => Promise<ComputerUseMissionRuntimeDispatchResult>;
+
+export interface ComputerUseMissionRuntimeRegistrySnapshot {
+  handlers: string[];
+  metadata: {
+    registryKind: "scaffold";
+    systemApisCalled: false;
+    missionEngineImported: false;
+  };
+}
+
+export interface ComputerUseMissionRuntimeRegistry {
+  registerHandler: (
+    kind: string,
+    handler: ComputerUseMissionRuntimeHandler,
+    options?: { overwrite?: boolean },
+  ) => void;
+  canHandle: (step: Pick<ComputerUseMissionStepInput, "kind">) => boolean;
+  getHandler: (kind: string) => ComputerUseMissionRuntimeHandler | undefined;
+  listHandlers: () => string[];
+  getSnapshot: () => ComputerUseMissionRuntimeRegistrySnapshot;
+  reset: () => void;
+}
+
+export interface ComputerUseMissionRuntimeDispatcherOptions {
+  registry: ComputerUseMissionRuntimeRegistry;
+}
+
+export interface ComputerUseMissionRuntimeDispatchInput {
+  step: ComputerUseMissionStepInput;
+}
+
+export interface ComputerUseMissionRuntimeDispatchResult {
+  ok: boolean;
+  step: ComputerUseMissionStepInput;
+  stepResult?: ComputerUseMissionStepAdapterResult;
+  reason: string;
+  metadata: {
+    dispatcherKind: "scaffold";
+    systemApisCalled: false;
+    missionEngineImported: false;
+  };
+}
+
 export interface ComputerUseMissionRunnerOptions {
   runtimeEntrypoint: {
     runComputerUseStep: (step: ComputerUseMissionStepInput) => Promise<ComputerUseRuntimeEntrypointResult>;

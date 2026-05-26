@@ -131,3 +131,10 @@ import {
 - **Wired composition (this phase):** component composition, delegation paths, stable runtime object, and barrel exports.
 - **Still scaffold/simulated:** guard/runtime/mission-tape/browser/system integrations remain mocked/scaffolded with metadata flags (for example `missionEngineImported: false`, `missionTapeImported: false`, `browserRuntimeImported: false`, `systemApisCalled: false`).
 - **Not included yet:** direct MissionEngine API calls, MissionTape storage writes, BrowserRuntime imports, or OS-level action execution.
+
+## Mission Runtime Registry / Dispatcher
+
+- `ComputerUseMissionRuntimeRegistry` and `ComputerUseMissionRuntimeDispatcher` provide a safe adapter surface that future MissionEngine wiring can call.
+- The registry includes a default `computer_use` handler and only routes those steps into the composed runtime (`createComputerUseRuntime().runComputerUseStep(step)`).
+- Unsupported mission step kinds are rejected safely with normalized scaffold metadata.
+- This PR does not import or call real MissionEngine APIs, BrowserRuntime APIs, Playwright, robotjs, or OS/system action APIs.
