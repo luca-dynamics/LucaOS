@@ -27,6 +27,7 @@ export { createComputerUseMissionRuntimeDispatcher } from "./createComputerUseMi
 export { ComputerUseMissionIntegrationAdapter } from "./ComputerUseMissionIntegrationAdapter";
 export { createComputerUseMissionIntegrationAdapter } from "./createComputerUseMissionIntegrationAdapter";
 export { ComputerUseInMemoryMissionTapeSink } from "./ComputerUseInMemoryMissionTapeSink";
+export { ComputerUseMissionTapeSinkAdapter } from "./ComputerUseMissionTapeSinkAdapter";
 export { ComputerUseRuntimeEventBridge } from "./ComputerUseRuntimeEventBridge";
 export { createBrowserRuntimeContractProbe, getDiscoverySnapshot, DISCOVERED_BROWSER_RUNTIME_CANDIDATES } from "./createBrowserRuntimeContractProbe";
 export type { ComputerUseBrowserRuntimeTarget, ComputerUseBrowserRuntimeTargetMetadata, ComputerUseBrowserRuntimeTargetRequest, ComputerUseBrowserRuntimeTargetResult } from "./BrowserRuntimeContract";

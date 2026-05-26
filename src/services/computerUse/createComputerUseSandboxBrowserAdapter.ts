@@ -1,4 +1,5 @@
 import { ComputerUseInMemoryMissionTapeSink } from "./ComputerUseInMemoryMissionTapeSink";
+import { ComputerUseMissionTapeSinkAdapter } from "./ComputerUseMissionTapeSinkAdapter";
 import { ComputerUseRuntimeEventBridge } from "./ComputerUseRuntimeEventBridge";
 import { ComputerUseSandboxBrowserAdapter } from "./ComputerUseSandboxBrowserAdapter";
 import { ComputerUseSandboxBrowserAdapterOptions, CreateComputerUseBrowserRuntimeAdapterOptions } from "./types";
@@ -7,11 +8,16 @@ export interface CreateComputerUseSandboxBrowserAdapterOptions extends ComputerU
   recordingEnabled?: boolean;
   tapeSink?: CreateComputerUseBrowserRuntimeAdapterOptions["tapeSink"];
   eventBridge?: CreateComputerUseBrowserRuntimeAdapterOptions["eventBridge"];
+  externalMissionTapeSink?: CreateComputerUseBrowserRuntimeAdapterOptions["externalMissionTapeSink"];
+  enableExternalMissionTapeSink?: CreateComputerUseBrowserRuntimeAdapterOptions["enableExternalMissionTapeSink"];
 }
 
 export const createComputerUseSandboxBrowserAdapter = (options: CreateComputerUseSandboxBrowserAdapterOptions = {}) => {
   const recordingEnabled = options.recordingEnabled ?? true;
-  const tapeSink = options.tapeSink ?? (recordingEnabled ? new ComputerUseInMemoryMissionTapeSink() : undefined);
+  const tapeSink = options.tapeSink
+    ?? (options.externalMissionTapeSink
+      ? new ComputerUseMissionTapeSinkAdapter({ externalSink: options.externalMissionTapeSink, enableExternalMissionTapeSink: options.enableExternalMissionTapeSink })
+      : (recordingEnabled ? new ComputerUseInMemoryMissionTapeSink() : undefined));
   const eventBridge = options.eventBridge ?? (tapeSink ? new ComputerUseRuntimeEventBridge({ tapeSink }) : undefined);
   const adapter = new ComputerUseSandboxBrowserAdapter({
     featureFlags: options.featureFlags,

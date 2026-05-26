@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as barrel from "./index";
 import { createComputerUseBrowserRuntimeAdapter } from "./createComputerUseBrowserRuntimeAdapter";
 
@@ -35,4 +35,17 @@ describe("createComputerUseBrowserRuntimeAdapter", () => {
     expect(barrel.ComputerUseBrowserRuntimeAdapter).toBeDefined();
     expect(barrel.createComputerUseBrowserRuntimeAdapter).toBeDefined();
   });
+});
+
+
+it("uses in-memory sink by default even without external sink", () => {
+  const created = createComputerUseBrowserRuntimeAdapter();
+  expect(created.tapeSink?.constructor.name).toBe("ComputerUseInMemoryMissionTapeSink");
+});
+
+it("can inject external sink adapter when explicitly enabled", async () => {
+  const external = { record: vi.fn().mockResolvedValue({ ok: true }) };
+  const created = createComputerUseBrowserRuntimeAdapter({ externalMissionTapeSink: external, enableExternalMissionTapeSink: true });
+  await created.execute({ lane: "sandbox_browser", action: { type: "wait", reason: "wait", requiresGuardApproval: false }, context: { missionId: "m-ext" } });
+  expect(external.record).toHaveBeenCalled();
 });

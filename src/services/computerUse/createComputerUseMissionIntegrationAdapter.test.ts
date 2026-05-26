@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as computerUse from "./index";
 import { createComputerUseMissionIntegrationAdapter } from "./createComputerUseMissionIntegrationAdapter";
 
@@ -33,4 +33,15 @@ describe("createComputerUseMissionIntegrationAdapter", () => {
     expect(computerUse.ComputerUseInMemoryMissionTapeSink).toBeDefined();
     expect(computerUse.ComputerUseRuntimeEventBridge).toBeDefined();
   });
+});
+
+
+it("uses external sink only when explicitly enabled", async () => {
+  const external = { record: vi.fn().mockResolvedValue({ ok: true }) };
+  const x = createComputerUseMissionIntegrationAdapter({ externalMissionTapeSink: external });
+  await x.dispatch({ step: { missionId: "m1", stepId: "s1", kind: "computer_use" }, featureFlags: { computerUseEnabled: true } });
+  expect(external.record).not.toHaveBeenCalled();
+  const y = createComputerUseMissionIntegrationAdapter({ externalMissionTapeSink: external, enableExternalMissionTapeSink: true });
+  await y.dispatch({ step: { missionId: "m2", stepId: "s2", kind: "computer_use" }, featureFlags: { computerUseEnabled: true } });
+  expect(external.record).toHaveBeenCalled();
 });

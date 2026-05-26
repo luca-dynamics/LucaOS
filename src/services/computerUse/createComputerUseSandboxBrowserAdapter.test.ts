@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as barrel from "./index";
 import { createComputerUseSandboxBrowserAdapter } from "./createComputerUseSandboxBrowserAdapter";
 
@@ -28,4 +28,12 @@ describe("createComputerUseSandboxBrowserAdapter", () => {
     expect(barrel.createComputerUseSandboxBrowserAdapter).toBeDefined();
     expect(barrel.getComputerUseBrowserRuntimeConformanceMatrix).toBeDefined();
   });
+});
+
+
+it("can inject external sink adapter with explicit opt-in", async () => {
+  const external = { record: vi.fn().mockResolvedValue({ ok: true }) };
+  const created = createComputerUseSandboxBrowserAdapter({ featureFlags: { sandboxBrowserAdapterEnabled: true }, externalMissionTapeSink: external, enableExternalMissionTapeSink: true });
+  await created.execute({ lane: "sandbox_browser", action: { type: "wait", reason: "wait", requiresGuardApproval: false }, context: { missionId: "m-sb" } });
+  expect(external.record).toHaveBeenCalled();
 });

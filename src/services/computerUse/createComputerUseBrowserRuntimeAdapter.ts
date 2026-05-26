@@ -1,11 +1,15 @@
 import { ComputerUseBrowserRuntimeAdapterScaffold } from "./ComputerUseBrowserRuntimeAdapter";
 import { ComputerUseInMemoryMissionTapeSink } from "./ComputerUseInMemoryMissionTapeSink";
+import { ComputerUseMissionTapeSinkAdapter } from "./ComputerUseMissionTapeSinkAdapter";
 import { ComputerUseRuntimeEventBridge } from "./ComputerUseRuntimeEventBridge";
 import { CreateComputerUseBrowserRuntimeAdapterOptions } from "./types";
 
 export const createComputerUseBrowserRuntimeAdapter = (options: CreateComputerUseBrowserRuntimeAdapterOptions = {}) => {
   const recordingEnabled = options.recordingEnabled ?? true;
-  const tapeSink = options.tapeSink ?? (recordingEnabled ? new ComputerUseInMemoryMissionTapeSink() : undefined);
+  const tapeSink = options.tapeSink
+    ?? (options.externalMissionTapeSink
+      ? new ComputerUseMissionTapeSinkAdapter({ externalSink: options.externalMissionTapeSink, enableExternalMissionTapeSink: options.enableExternalMissionTapeSink })
+      : (recordingEnabled ? new ComputerUseInMemoryMissionTapeSink() : undefined));
   const eventBridge = options.eventBridge ?? (tapeSink ? new ComputerUseRuntimeEventBridge({ tapeSink }) : undefined);
   const adapter = new ComputerUseBrowserRuntimeAdapterScaffold({
     featureFlags: options.featureFlags,

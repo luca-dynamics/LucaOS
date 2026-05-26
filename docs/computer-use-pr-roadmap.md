@@ -71,3 +71,11 @@ Before and during the next sequence, follow the cloud-agent validation guide and
 - `ops/scripts/cloud-agent-validate-computer-use.sh`
 
 Treat cloud-agent install/test constraints as first-class release risk for mission/runtime/computer-use changes.
+
+
+### MissionTape external sink adapter
+- Computer-use runtime event recording now supports an injected MissionTape-compatible external sink boundary via `ComputerUseMissionTapeSinkAdapter`.
+- In-memory sink remains the default when no external sink is injected and explicitly enabled.
+- External sink forwarding requires explicit `enableExternalMissionTapeSink: true` opt-in.
+- This phase does not perform real filesystem/database/localStorage writes by default.
+- A future PR can wire the stable LucaOS MissionTape interface into this adapter boundary once contract stability is confirmed.
