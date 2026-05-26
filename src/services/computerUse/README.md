@@ -70,3 +70,22 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
 - Pipeline result metadata always reports:
   - `pipelineKind: "scaffold"`
   - `systemApisCalled: false`
+
+## Browser bridge + sandbox browser provider scaffold
+
+- `ComputerUseBrowserRuntimeBridge` maps computer-use actions/execution modes into browser-runtime-style route requests.
+- It does not import BrowserRuntime yet and always reports scaffold metadata with `browserRuntimeImported: false`.
+- `ComputerUseSandboxBrowserProvider` simulates sandbox-browser route execution only for `sandbox_browser` lanes.
+- No real browser APIs are called; metadata reports `browserApisCalled: false` and `sandboxSimulated: true`.
+
+## Default pipeline factory scaffold
+
+- `createComputerUsePipeline()` returns a ready scaffold pipeline composed of:
+  - focus context builder
+  - action planner
+  - guard bridge
+  - executor + sandbox executor adapter
+  - verifier
+  - recovery
+  - mission tape bridge
+- The sandbox executor adapter is registered by default and can only be disabled via explicit factory option.

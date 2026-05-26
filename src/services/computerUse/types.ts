@@ -137,6 +137,9 @@ export interface ComputerUseExecutionResult {
   metadata?: {
     reason?: string;
     adapterId?: string;
+    guardDecisionStatus?: ComputerUseGuardDecisionStatus;
+    guardBridgeKind?: "scaffold";
+    externalGuardCalled?: false;
     systemApisCalled: boolean;
     delegatesOnly: true;
     noDirectSystemCalls: true;
@@ -144,6 +147,7 @@ export interface ComputerUseExecutionResult {
     adapterCount?: number;
     defaultExecutionMode?: ComputerUseExecutionMode;
     executionMode?: ComputerUseExecutionMode;
+    sandboxSimulated?: boolean;
   };
 }
 
@@ -164,6 +168,83 @@ export interface ComputerUseExecutorAdapter {
 
 export interface ComputerUseExecutorOptions {
   defaultExecutionMode?: ComputerUseExecutionMode;
+}
+
+export type ComputerUseGuardDecisionStatus = "allowed" | "denied" | "requires_approval";
+
+export interface ComputerUseGuardDecision {
+  status: ComputerUseGuardDecisionStatus;
+  reason: string;
+  metadata: {
+    guardBridgeKind: "scaffold";
+    externalGuardCalled: false;
+  };
+}
+
+export interface ComputerUseGuardBridgeInput {
+  action?: ComputerUsePlannedAction;
+  plan?: Pick<ComputerUseActionPlan, "actions" | "requiresGuardApproval">;
+  request?: Pick<ComputerUseExecutionRequest, "guardApprovalProvided">;
+  dangerousContext?: boolean;
+}
+
+export interface ComputerUseGuardBridgeOptions {
+  denyActions?: ComputerUseActionType[];
+}
+
+export interface ComputerUseSandboxExecutionLog {
+  actionType: ComputerUseActionType;
+  status: ComputerUseExecutionStatus;
+  timestamp: string;
+}
+
+export interface ComputerUseSandboxExecutorAdapterOptions {
+  adapterId?: string;
+  now?: () => string;
+}
+
+export type ComputerUseBrowserRuntimeLane =
+  | "ghost_browser"
+  | "sandbox_browser"
+  | "direct_host_browser"
+  | "remote_linked_browser";
+
+export interface ComputerUseBrowserRouteRequest {
+  lane: ComputerUseBrowserRuntimeLane;
+  action: ComputerUsePlannedAction;
+  executionMode: ComputerUseExecutionMode;
+  metadata: {
+    bridgeKind: "scaffold";
+    browserRuntimeImported: false;
+  };
+}
+
+export interface ComputerUseBrowserRouteResult {
+  status: "executed" | "failed" | "denied" | "skipped";
+  action: ComputerUsePlannedAction;
+  metadata: {
+    reason?: string;
+    bridgeKind: "scaffold";
+    browserRuntimeImported: false;
+  };
+}
+
+export interface ComputerUseBrowserRuntimeBridgeOptions {
+  browserHints?: string[];
+}
+
+export interface ComputerUseSandboxBrowserProviderOptions {
+  now?: () => string;
+}
+
+export interface ComputerUseSandboxBrowserProviderResult {
+  status: "executed" | "failed";
+  request: ComputerUseBrowserRouteRequest;
+  metadata: {
+    providerKind: "scaffold";
+    browserApisCalled: false;
+    sandboxSimulated: true;
+  };
 }
 
 
@@ -292,10 +373,20 @@ export interface ComputerUsePipelineOptions {
     reset: () => unknown;
   };
   executor: {
+    executeAction?: (
+      action: ComputerUsePlannedAction,
+      plan: Pick<ComputerUseActionPlan, "prefersSandbox">,
+      request?: ComputerUseExecutionRequest,
+    ) => Promise<ComputerUseExecutionResult>;
     executePlan: (
       plan: ComputerUseActionPlan,
       request?: ComputerUseExecutionRequest,
     ) => Promise<ComputerUseExecutionResult[]>;
+    reset: () => unknown;
+  };
+  guardBridge?: {
+    evaluatePlan: (input: ComputerUseGuardBridgeInput) => ComputerUseGuardDecision;
+    evaluateAction: (input: ComputerUseGuardBridgeInput) => ComputerUseGuardDecision;
     reset: () => unknown;
   };
   verifier: {
@@ -314,4 +405,15 @@ export interface ComputerUsePipelineOptions {
     recordRecoveryPlan: (missionId: string, payload: ComputerUseRecoveryPlan) => unknown;
     reset: () => unknown;
   };
+}
+
+export interface CreateComputerUsePipelineOptions {
+  focusContextBuilderOptions?: ComputerUseFocusContextBuilderOptions;
+  missionTapeBridgeOptions?: ComputerUseMissionTapeBridgeOptions;
+  recoveryOptions?: ComputerUseRecoveryOptions;
+  verifierOptions?: ComputerUseVerifierOptions;
+  guardBridgeOptions?: ComputerUseGuardBridgeOptions;
+  sandboxAdapterOptions?: ComputerUseSandboxExecutorAdapterOptions;
+  executorOptions?: ComputerUseExecutorOptions;
+  disableDefaultSandboxAdapter?: boolean;
 }
