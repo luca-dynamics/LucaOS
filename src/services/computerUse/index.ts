@@ -13,6 +13,7 @@ export { ComputerUseBrowserRuntimeAdapterScaffold as ComputerUseBrowserRuntimeAd
 export { createComputerUseBrowserRuntimeAdapter } from "./createComputerUseBrowserRuntimeAdapter";
 export { ComputerUseSandboxBrowserAdapter } from "./ComputerUseSandboxBrowserAdapter";
 export { createComputerUseSandboxBrowserAdapter } from "./createComputerUseSandboxBrowserAdapter";
+export { COMPUTER_USE_BROWSER_RUNTIME_ACTION_MAPPING, getComputerUseBrowserRuntimeConformanceMatrix, validateComputerUseBrowserRuntimeMapping } from "./BrowserRuntimeConformance";
 export { createComputerUsePipeline } from "./createComputerUsePipeline";
 export { ComputerUseMissionEngineBridge } from "./ComputerUseMissionEngineBridge";
 export { ComputerUseMissionStepAdapter } from "./ComputerUseMissionStepAdapter";

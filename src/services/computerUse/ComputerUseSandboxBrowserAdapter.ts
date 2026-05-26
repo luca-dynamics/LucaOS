@@ -6,9 +6,9 @@ import {
   ComputerUseSandboxBrowserAdapterResult,
   ComputerUseSandboxBrowserAdapterSnapshot,
 } from "./types";
+import { validateComputerUseBrowserRuntimeMapping } from "./BrowserRuntimeConformance";
 
 const SANDBOX_LANE = "sandbox_browser" as const;
-const SUPPORTED_ACTIONS = new Set(["click", "type_text", "hotkey", "scroll", "wait", "observe"]);
 
 export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRuntimeAdapter {
   private executionCount = 0;
@@ -21,7 +21,8 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
     if (!this.isEnabled()) return false;
     if (!routeOrAction || typeof routeOrAction !== "object") return false;
     if (routeOrAction.lane !== SANDBOX_LANE) return false;
-    return Boolean(routeOrAction.action && SUPPORTED_ACTIONS.has(routeOrAction.action.type));
+    if (!routeOrAction.action) return false;
+    return validateComputerUseBrowserRuntimeMapping({ actionType: routeOrAction.action.type }).ok;
   }
 
   async execute(routeOrAction: ComputerUseBrowserRuntimeAdapterRequest): Promise<ComputerUseSandboxBrowserAdapterResult> {
@@ -33,49 +34,58 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
       result = this.fail("Sandbox browser adapter requires explicit opt-in feature flags.");
     } else if (!routeOrAction || routeOrAction.lane !== SANDBOX_LANE) {
       result = this.fail("Sandbox browser adapter accepts only lane sandbox_browser.");
-    } else if (!routeOrAction.action || !SUPPORTED_ACTIONS.has(routeOrAction.action.type)) {
+    } else if (!routeOrAction.action) {
       result = this.fail("Sandbox browser adapter requires a valid action.");
     } else {
-      result = {
-        status: "executed",
-        action: routeOrAction.action,
-        metadata: {
-          reason: `Sandbox scaffold mapped action ${routeOrAction.action.type} to BrowserRuntime request shape.`,
-          adapterKind: "sandbox_browser_scaffold",
-          sandboxBrowserAdapterEnabled: true,
-          delegatedToBrowserRuntime: false,
-          simulated: true,
-          browserRuntimeImported: false,
-          playwrightCalled: false,
-          browserApisCalled: false,
-          systemApisCalled: false,
-          directHostAllowed: false,
-          realBrowserExecutionEnabled: false,
-          requiresExplicitOptIn: true,
-          mappedTargetRequest: {
-            requestId: `sandbox-${this.executionCount + 1}`,
-            missionId: routeOrAction.context?.missionId ?? "unknown",
-            action: this.mapAction(routeOrAction.action.type),
-            target: routeOrAction.action.target?.selectorHint ?? routeOrAction.action.target?.description,
-            payload: {
-              text: routeOrAction.action.text,
-              sourceActionType: routeOrAction.action.type,
-              sourceLane: routeOrAction.lane,
+      const mappingValidation = validateComputerUseBrowserRuntimeMapping({ actionType: routeOrAction.action.type });
+      if (!mappingValidation.ok) {
+        result = this.fail(mappingValidation.reason);
+      } else if (mappingValidation.entry.disposition === "rejected") {
+        result = this.fail(mappingValidation.entry.reason);
+      } else {
+        result = {
+          status: "executed",
+          action: routeOrAction.action,
+          metadata: {
+            reason: `Sandbox scaffold ${mappingValidation.entry.disposition} action ${routeOrAction.action.type} to BrowserRuntime request shape.`,
+            adapterKind: "sandbox_browser_scaffold",
+            sandboxBrowserAdapterEnabled: true,
+            delegatedToBrowserRuntime: false,
+            simulated: true,
+            browserRuntimeImported: false,
+            playwrightCalled: false,
+            browserApisCalled: false,
+            systemApisCalled: false,
+            directHostAllowed: false,
+            realBrowserExecutionEnabled: false,
+            requiresExplicitOptIn: true,
+            mappedTargetRequest: {
+              requestId: `sandbox-${this.executionCount + 1}`,
+              missionId: routeOrAction.context?.missionId ?? "unknown",
+              action: mappingValidation.entry.targetAction ?? "extract",
+              target: routeOrAction.action.target?.selectorHint ?? routeOrAction.action.target?.description,
+              payload: {
+                text: routeOrAction.action.text,
+                sourceActionType: routeOrAction.action.type,
+                sourceDisposition: mappingValidation.entry.disposition,
+                conformanceReason: mappingValidation.entry.reason,
+                sourceLane: routeOrAction.lane,
+              },
+              issuedAt: new Date().toISOString(),
+              riskLevel: routeOrAction.action.requiresGuardApproval ? "sensitive" : "safe",
+              trustTier: "untrusted",
+              preferredLane: SANDBOX_LANE,
+              hasGuardApproval: !routeOrAction.action.requiresGuardApproval,
             },
-            issuedAt: new Date().toISOString(),
-            riskLevel: routeOrAction.action.requiresGuardApproval ? "sensitive" : "safe",
-            trustTier: "untrusted",
-            preferredLane: SANDBOX_LANE,
-            hasGuardApproval: !routeOrAction.action.requiresGuardApproval,
+            mappedTargetResult: {
+              accepted: true,
+              lane: SANDBOX_LANE,
+              runtime: "unknown",
+              reason: "Simulated sandbox route only; real browser runtime execution remains disabled.",
+            },
           },
-          mappedTargetResult: {
-            accepted: true,
-            lane: SANDBOX_LANE,
-            runtime: "unknown",
-            reason: "Simulated sandbox route only; real browser runtime execution remains disabled.",
-          },
-        },
-      };
+        };
+      }
     }
 
     const recordEnd = this.recordResult(result, routeOrAction);
@@ -114,12 +124,6 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
 
   private isEnabled(): boolean {
     return Boolean(this.options.featureFlags?.sandboxBrowserAdapterEnabled || this.options.featureFlags?.enableSandboxBrowserAdapter);
-  }
-
-  private mapAction(type: string): "navigate" | "click" | "type" | "extract" | "screenshot" {
-    if (type === "type_text") return "type";
-    if (type === "observe") return "extract";
-    return "click";
   }
 
   private fail(reason: string): ComputerUseSandboxBrowserAdapterResult {
