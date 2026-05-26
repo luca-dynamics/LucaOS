@@ -416,3 +416,152 @@ export interface ComputerUsePipelineOptions {
     reset: () => unknown;
   };
 }
+
+export type ComputerUseMissionStepKind = "computer_use";
+
+export interface ComputerUseMissionStepInput {
+  missionId: string;
+  stepId: string;
+  kind: string;
+  input?: Omit<ComputerUsePipelineInput, "missionId">;
+}
+
+export type ComputerUseMissionStepStatus = "completed" | "failed" | "inconclusive";
+
+export interface ComputerUseMissionStepResult {
+  missionId: string;
+  stepId: string;
+  kind: ComputerUseMissionStepKind;
+  status: ComputerUseMissionStepStatus;
+  pipelineResult?: ComputerUsePipelineResult;
+  reason: string;
+  metadata: {
+    bridgeKind: "scaffold";
+    missionEngineImported: false;
+  };
+}
+
+export interface ComputerUseMissionEngineBridgeOptions {
+  defaultReasonByStatus?: Partial<Record<ComputerUseMissionStepStatus, string>>;
+}
+
+export interface ComputerUseMissionStepAdapterResult {
+  missionId: string;
+  stepId: string;
+  kind: ComputerUseMissionStepKind;
+  status: ComputerUseMissionStepStatus;
+  pipelineResult?: ComputerUsePipelineResult;
+  reason: string;
+  metadata: {
+    adapterKind: "scaffold";
+    systemApisCalled: false;
+    stepId: string;
+  };
+}
+
+export interface ComputerUseMissionStepAdapterOptions {
+  pipeline: { run: (input: ComputerUsePipelineInput) => Promise<ComputerUsePipelineResult>; reset: () => unknown };
+  missionEngineBridge: {
+    isComputerUseStep: (step: { kind?: string }) => boolean;
+    toMissionStepInput: (step: ComputerUseMissionStepInput) => ComputerUseMissionStepInput;
+    toMissionStepResult: (input: { missionStep: ComputerUseMissionStepInput; pipelineResult: ComputerUsePipelineResult }) => ComputerUseMissionStepResult;
+    reset: () => unknown;
+  };
+}
+
+export interface ComputerUseMissionTapeStepRecord {
+  missionId: string;
+  timestamp: string;
+  eventType: "action_plan";
+  payload: unknown;
+  metadata: {
+    adapterKind: "scaffold";
+    missionTapeImported: false;
+  };
+}
+
+export interface ComputerUseMissionTapeVerificationRecord {
+  missionId: string;
+  timestamp: string;
+  eventType: "verification_result";
+  payload: unknown;
+  metadata: {
+    adapterKind: "scaffold";
+    missionTapeImported: false;
+  };
+}
+
+export interface ComputerUseMissionTapeRecoveryRecord {
+  missionId: string;
+  timestamp: string;
+  eventType: "recovery_plan";
+  payload: unknown;
+  metadata: {
+    adapterKind: "scaffold";
+    missionTapeImported: false;
+  };
+}
+
+export interface ComputerUseMissionTapeSnapshot {
+  missionId: string;
+  stepRecords: ComputerUseMissionTapeStepRecord[];
+  verificationRecords: ComputerUseMissionTapeVerificationRecord[];
+  recoveryRecords: ComputerUseMissionTapeRecoveryRecord[];
+  metadata: {
+    adapterKind: "scaffold";
+    missionTapeImported: false;
+  };
+}
+
+export interface ComputerUseRuntimeEntrypointInput {
+  missionStepInput?: ComputerUseMissionStepInput;
+  pipelineInput?: ComputerUsePipelineInput;
+}
+
+export interface ComputerUseRuntimeEntrypointResult {
+  ok: boolean;
+  stepResult?: ComputerUseMissionStepAdapterResult;
+  pipelineResult?: ComputerUsePipelineResult;
+  reason?: string;
+  metadata: {
+    entrypointKind: "scaffold";
+    systemApisCalled: false;
+  };
+}
+
+export interface ComputerUseRuntimeEntrypointOptions {
+  pipeline: { run: (input: ComputerUsePipelineInput) => Promise<ComputerUsePipelineResult>; reset: () => unknown };
+  missionStepAdapter: { executeStep: (step: ComputerUseMissionStepInput) => Promise<ComputerUseMissionStepAdapterResult>; reset: () => unknown };
+}
+
+export interface ComputerUseMissionRunnerStepRecord {
+  index: number;
+  missionId: string;
+  stepId: string;
+  kind: string;
+  status: ComputerUseMissionStepStatus;
+  reason: string;
+}
+
+export interface ComputerUseMissionRunnerSummary {
+  total: number;
+  completed: number;
+  failed: number;
+  inconclusive: number;
+}
+
+export interface ComputerUseMissionRunnerResult {
+  results: ComputerUseMissionRunnerStepRecord[];
+  summary: ComputerUseMissionRunnerSummary;
+  metadata: {
+    runnerKind: "scaffold";
+    systemApisCalled: false;
+  };
+}
+
+export interface ComputerUseMissionRunnerOptions {
+  runtimeEntrypoint: {
+    runComputerUseStep: (step: ComputerUseMissionStepInput) => Promise<ComputerUseRuntimeEntrypointResult>;
+    reset: () => unknown;
+  };
+}
