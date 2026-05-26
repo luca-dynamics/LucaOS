@@ -192,3 +192,9 @@ Luca OS includes advanced offensive security and autonomous capabilities. **Use 
 ## ⚖️ License
 
 MIT License. See [LICENSE](LICENSE) for details.
+
+## 🧪 Codex Cloud Validation Notes
+
+For Codex Cloud install/test constraints and the recommended scoped validation sequence, see:
+- `docs/codex-testing-environment.md`
+- Optional helper: `ops/scripts/codex-validate-computer-use.sh`
