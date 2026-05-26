@@ -16,5 +16,8 @@ export { ComputerUseMissionTapeAdapter } from "./ComputerUseMissionTapeAdapter";
 export { ComputerUseRuntimeEntrypoint } from "./ComputerUseRuntimeEntrypoint";
 export { ComputerUseMissionRunner } from "./ComputerUseMissionRunner";
 export { createComputerUseRuntime } from "./createComputerUseRuntime";
+export { ComputerUseMissionRuntimeRegistry } from "./ComputerUseMissionRuntimeRegistry";
+export { ComputerUseMissionRuntimeDispatcher } from "./ComputerUseMissionRuntimeDispatcher";
+export { createComputerUseMissionRuntimeDispatcher } from "./createComputerUseMissionRuntimeDispatcher";
 
 export * from "./types";
