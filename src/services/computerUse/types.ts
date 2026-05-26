@@ -241,6 +241,53 @@ export interface ComputerUseBrowserRouteResult {
   };
 }
 
+export interface ComputerUseBrowserRuntimeFeatureFlags {
+  browserRuntimeEnabled?: boolean;
+  enableBrowserRuntimeBridge?: boolean;
+}
+
+export interface ComputerUseBrowserRuntimeAdapterMetadata {
+  adapterKind: "scaffold";
+  delegatedToBrowserRuntime: false;
+  simulated: true;
+  browserRuntimeImported: false;
+  playwrightCalled: false;
+  browserApisCalled: false;
+  systemApisCalled: false;
+  requiresExplicitOptIn: true;
+}
+
+export interface ComputerUseBrowserRuntimeAdapterRequest {
+  lane?: ComputerUseBrowserRuntimeLane;
+  action?: ComputerUsePlannedAction;
+}
+
+export interface ComputerUseBrowserRuntimeAdapterResult {
+  status: "executed" | "failed";
+  action?: ComputerUsePlannedAction;
+  metadata: ComputerUseBrowserRuntimeAdapterMetadata & {
+    reason: string;
+  };
+}
+
+export interface ComputerUseBrowserRuntimeAdapterSnapshot {
+  featureFlags: Required<ComputerUseBrowserRuntimeFeatureFlags>;
+  executionCount: number;
+  lastRequest?: ComputerUseBrowserRuntimeAdapterRequest;
+  lastResult?: ComputerUseBrowserRuntimeAdapterResult;
+}
+
+export interface ComputerUseBrowserRuntimeAdapter {
+  canHandle: (routeOrAction: ComputerUseBrowserRuntimeAdapterRequest) => boolean;
+  execute: (routeOrAction: ComputerUseBrowserRuntimeAdapterRequest) => Promise<ComputerUseBrowserRuntimeAdapterResult>;
+  getSnapshot: () => ComputerUseBrowserRuntimeAdapterSnapshot;
+  reset: () => void;
+}
+
+export interface ComputerUseBrowserRuntimeAdapterOptions {
+  featureFlags?: ComputerUseBrowserRuntimeFeatureFlags;
+}
+
 export interface ComputerUseBrowserRuntimeBridgeOptions {
   browserRuntimeImportPlanned?: true;
   defaultBrowserLane?: ComputerUseBrowserRuntimeLane;

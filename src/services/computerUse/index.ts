@@ -9,6 +9,8 @@ export { ComputerUseSandboxExecutorAdapter } from "./ComputerUseSandboxExecutorA
 export { ComputerUseMissionTapeBridge } from "./ComputerUseMissionTapeBridge";
 export { ComputerUseBrowserRuntimeBridge } from "./ComputerUseBrowserRuntimeBridge";
 export { ComputerUseSandboxBrowserProvider } from "./ComputerUseSandboxBrowserProvider";
+export { ComputerUseBrowserRuntimeAdapterScaffold as ComputerUseBrowserRuntimeAdapter } from "./ComputerUseBrowserRuntimeAdapter";
+export { createComputerUseBrowserRuntimeAdapter } from "./createComputerUseBrowserRuntimeAdapter";
 export { createComputerUsePipeline } from "./createComputerUsePipeline";
 export { ComputerUseMissionEngineBridge } from "./ComputerUseMissionEngineBridge";
 export { ComputerUseMissionStepAdapter } from "./ComputerUseMissionStepAdapter";
