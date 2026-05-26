@@ -260,9 +260,17 @@ export interface ComputerUseBrowserRuntimeAdapterMetadata {
   recordingFailureReason?: string;
 }
 
+export type ComputerUseBrowserRuntimeAdapterRequestSource = "mission" | "pipeline" | "browser_provider" | "manual";
+
 export interface ComputerUseBrowserRuntimeAdapterRequest {
   lane?: ComputerUseBrowserRuntimeLane;
   action?: ComputerUsePlannedAction;
+  context?: {
+    missionId?: string;
+    stepId?: string;
+    traceId?: string;
+    source?: ComputerUseBrowserRuntimeAdapterRequestSource;
+  };
 }
 
 export interface ComputerUseBrowserRuntimeAdapterResult {
@@ -308,6 +316,9 @@ export interface CreateComputerUseBrowserRuntimeAdapterOptions extends ComputerU
 
 export interface ComputerUseBrowserRuntimeAdapterEventInput {
   missionId?: string;
+  stepId?: string;
+  traceId?: string;
+  source?: ComputerUseBrowserRuntimeAdapterRequestSource;
   lane?: ComputerUseBrowserRuntimeLane;
   actionType?: ComputerUseActionType;
   reason?: string;

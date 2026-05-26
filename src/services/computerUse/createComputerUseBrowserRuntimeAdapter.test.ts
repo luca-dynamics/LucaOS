@@ -9,7 +9,7 @@ describe("createComputerUseBrowserRuntimeAdapter", () => {
     expect(created.tapeSink).toBeDefined();
     expect(created.eventBridge).toBeDefined();
     expect(typeof created.getTapeSnapshot).toBe("function");
-    const result = await created.execute({ lane: "sandbox_browser", action: { type: "wait", reason: "wait", requiresGuardApproval: false } });
+    const result = await created.execute({ lane: "sandbox_browser", action: { type: "wait", reason: "wait", requiresGuardApproval: false }, context: { missionId: "m-create", stepId: "s-create", traceId: "t-create", source: "pipeline" } });
     expect(result.metadata.simulated).toBe(true);
     expect(created.getTapeSnapshot()?.records.length).toBeGreaterThan(0);
   });

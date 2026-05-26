@@ -17,7 +17,7 @@ describe("ComputerUseRuntimeEventBridge", () => {
 
   it("records browser adapter started/completed and redacts sensitive text", () => {
     const bridge = new ComputerUseRuntimeEventBridge({ tapeSink: new ComputerUseInMemoryMissionTapeSink() });
-    bridge.recordBrowserAdapterStarted({ missionId: "m2", lane: "sandbox_browser", actionType: "type_text", reason: "text payload" });
+    bridge.recordBrowserAdapterStarted({ missionId: "m2", stepId: "s22", traceId: "t22", source: "mission", lane: "sandbox_browser", actionType: "type_text", reason: "text payload" });
     bridge.recordBrowserAdapterResult(
       {
         status: "executed",
@@ -33,20 +33,26 @@ describe("ComputerUseRuntimeEventBridge", () => {
           requiresExplicitOptIn: true,
         },
       },
-      { lane: "sandbox_browser", action: { type: "type_text", reason: "secret text", requiresGuardApproval: false } },
+      { lane: "sandbox_browser", action: { type: "type_text", reason: "secret text", requiresGuardApproval: false }, context: { missionId: "m2", stepId: "s22", traceId: "t22", source: "mission" } },
     );
     const records = bridge.getSnapshot().records;
     expect(records.map((x) => x.eventType)).toEqual(["computer_use_browser_adapter_started", "computer_use_browser_adapter_completed"]);
     expect(records[0].payload.reason).toBe("[REDACTED]");
+    expect(records[1].missionId).toBe("m2");
+    expect(records[1].payload.stepId).toBe("s22");
+    expect(records[1].payload.traceId).toBe("t22");
+    expect(records[1].payload.source).toBe("mission");
   });
 
   it("records browser adapter rejected and failed", () => {
     const bridge = new ComputerUseRuntimeEventBridge({ tapeSink: new ComputerUseInMemoryMissionTapeSink() });
     bridge.recordBrowserAdapterResult({ status: "failed", metadata: { reason: "requires explicit opt-in", adapterKind: "scaffold", delegatedToBrowserRuntime: false, simulated: true, browserRuntimeImported: false, playwrightCalled: false, browserApisCalled: false, systemApisCalled: false, requiresExplicitOptIn: true } });
     bridge.recordBrowserAdapterResult({ status: "failed", metadata: { reason: "unexpected adapter failure", adapterKind: "scaffold", delegatedToBrowserRuntime: false, simulated: true, browserRuntimeImported: false, playwrightCalled: false, browserApisCalled: false, systemApisCalled: false, requiresExplicitOptIn: true } });
-    expect(bridge.getSnapshot().records.map((x) => x.eventType)).toEqual([
+    const records = bridge.getSnapshot().records;
+    expect(records.map((x) => x.eventType)).toEqual([
       "computer_use_browser_adapter_rejected",
       "computer_use_browser_adapter_failed",
     ]);
+    expect(records[0].missionId).toBe("unknown");
   });
 });

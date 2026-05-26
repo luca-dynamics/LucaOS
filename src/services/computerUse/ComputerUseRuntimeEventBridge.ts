@@ -55,6 +55,9 @@ export class ComputerUseRuntimeEventBridge {
   recordBrowserAdapterStarted(input: ComputerUseBrowserRuntimeAdapterEventInput): ComputerUseRuntimeEventBridgeResult {
     return this.writeRecord("computer_use_browser_adapter_started", input.missionId ?? "unknown", {
       missionId: input.missionId,
+      stepId: input.stepId,
+      traceId: input.traceId,
+      source: input.source,
       lane: input.lane,
       actionType: input.actionType,
       reason: input.reason,
@@ -73,7 +76,12 @@ export class ComputerUseRuntimeEventBridge {
         : isRejected
           ? "computer_use_browser_adapter_rejected"
           : "computer_use_browser_adapter_failed";
-    return this.writeRecord(eventType, "unknown", {
+    const missionId = request?.context?.missionId ?? "unknown";
+    return this.writeRecord(eventType, missionId, {
+      missionId: request?.context?.missionId,
+      stepId: request?.context?.stepId,
+      traceId: request?.context?.traceId,
+      source: request?.context?.source,
       lane: request?.lane,
       actionType: request?.action?.type,
       status: result.status,
