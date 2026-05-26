@@ -33,21 +33,22 @@ export class ComputerUseMissionIntegrationAdapter {
   async dispatch(input: ComputerUseMissionIntegrationInput): Promise<ComputerUseMissionIntegrationResult> {
     this.lastInput = input;
     const step = this.normalizeStep(input);
+    this.recordStarted(step);
 
     if (!step) {
-      return this.rejected("Missing or malformed mission step");
+      return this.withRecording(this.rejected("Missing or malformed mission step"));
     }
 
     if (step.kind !== "computer_use") {
-      return this.rejected(`Unsupported mission step kind: ${step.kind}`, step);
+      return this.withRecording(this.rejected(`Unsupported mission step kind: ${step.kind}`, step));
     }
 
     if (!this.canHandle(input)) {
-      return this.rejected("Computer-use dispatch requires explicit opt-in", step);
+      return this.withRecording(this.rejected("Computer-use dispatch requires explicit opt-in", step));
     }
 
     const dispatched = await this.options.dispatcher.dispatch({ step });
-    return {
+    return this.withRecording({
       ok: dispatched.ok,
       step,
       stepResult: dispatched.stepResult,
@@ -58,7 +59,7 @@ export class ComputerUseMissionIntegrationAdapter {
         missionEngineImported: false,
         requiresExplicitOptIn: true,
       },
-    };
+    });
   }
 
   getSnapshot(): ComputerUseMissionIntegrationSnapshot {
@@ -89,6 +90,27 @@ export class ComputerUseMissionIntegrationAdapter {
         systemApisCalled: false,
         missionEngineImported: false,
         requiresExplicitOptIn: true,
+      },
+    };
+  }
+
+  private recordStarted(step?: ComputerUseMissionStepInput): void {
+    if (!step) return;
+    this.options.recording?.eventBridge.recordDispatchStarted({ missionId: step.missionId, stepId: step.stepId, kind: step.kind });
+  }
+
+  private withRecording(result: ComputerUseMissionIntegrationResult): ComputerUseMissionIntegrationResult {
+    const bridge = this.options.recording?.eventBridge;
+    if (!bridge) return result;
+    const recorded = bridge.recordIntegrationResult(result);
+    if (result.stepResult) bridge.recordStepResult(result.stepResult);
+    return {
+      ...result,
+      metadata: {
+        ...result.metadata,
+        recordingAttempted: true,
+        recordingFailed: !recorded.ok,
+        recordingFailureReason: recorded.reason,
       },
     };
   }

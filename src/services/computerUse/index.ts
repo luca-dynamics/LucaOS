@@ -21,5 +21,7 @@ export { ComputerUseMissionRuntimeDispatcher } from "./ComputerUseMissionRuntime
 export { createComputerUseMissionRuntimeDispatcher } from "./createComputerUseMissionRuntimeDispatcher";
 export { ComputerUseMissionIntegrationAdapter } from "./ComputerUseMissionIntegrationAdapter";
 export { createComputerUseMissionIntegrationAdapter } from "./createComputerUseMissionIntegrationAdapter";
+export { ComputerUseInMemoryMissionTapeSink } from "./ComputerUseInMemoryMissionTapeSink";
+export { ComputerUseRuntimeEventBridge } from "./ComputerUseRuntimeEventBridge";
 
 export * from "./types";
