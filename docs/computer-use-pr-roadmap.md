@@ -71,3 +71,7 @@ Before and during the next sequence, follow the cloud-agent validation guide and
 - `ops/scripts/cloud-agent-validate-computer-use.sh`
 
 Treat cloud-agent install/test constraints as first-class release risk for mission/runtime/computer-use changes.
+
+## Parallel absorb track
+
+- Parallel absorb track: **LucaOS Voice Runtime** (see `docs/voice-runtime-absorb-plan.md`).
