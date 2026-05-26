@@ -91,3 +91,43 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
   - `ComputerUseMissionTapeBridge`
 - No `direct_host` adapter is registered by default.
 - No direct real system/browser API calls are performed by the factory itself.
+
+## Composed Computer-use Runtime
+
+This module now exposes a first public import surface for assembling computer-use runtime components without reaching into individual implementation files.
+
+### Public import surface
+
+Use the barrel export at `src/services/computerUse/index.ts`:
+
+```ts
+import {
+  createComputerUseRuntime,
+  createComputerUsePipeline,
+  ComputerUseRuntimeEntrypoint,
+  ComputerUseMissionRunner,
+  type ComputerUseRuntime,
+} from "src/services/computerUse";
+```
+
+### Composed runtime factory
+
+`createComputerUseRuntime()` composes scaffold runtime pieces into a stable object surface:
+
+- `pipeline` from `createComputerUsePipeline()`
+- `missionEngineBridge` from `ComputerUseMissionEngineBridge`
+- `missionStepAdapter` from `ComputerUseMissionStepAdapter`
+- `runtimeEntrypoint` from `ComputerUseRuntimeEntrypoint`
+- `missionRunner` from `ComputerUseMissionRunner`
+- `missionTapeAdapter` from `ComputerUseMissionTapeAdapter` (or injected override)
+- convenience methods:
+  - `runComputerUseStep(step)`
+  - `runPipelineInput(input)`
+  - `runMissionSteps(steps)`
+  - `reset()`
+
+### Scaffold vs wired status
+
+- **Wired composition (this phase):** component composition, delegation paths, stable runtime object, and barrel exports.
+- **Still scaffold/simulated:** guard/runtime/mission-tape/browser/system integrations remain mocked/scaffolded with metadata flags (for example `missionEngineImported: false`, `missionTapeImported: false`, `browserRuntimeImported: false`, `systemApisCalled: false`).
+- **Not included yet:** direct MissionEngine API calls, MissionTape storage writes, BrowserRuntime imports, or OS-level action execution.
