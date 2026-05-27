@@ -106,3 +106,11 @@ Treat cloud-agent install/test constraints as first-class release risk for missi
 - Safety metadata explicitly confirms no real BrowserRuntime router import/instantiation/call and no Playwright/browser/system/direct-host execution.
 - Optional started/completed/failed dry-run event callback support added with non-fatal recording failure handling.
 - Next recommended step: feature-flagged real BrowserRuntimeRouter invocation behind explicit opt-in once dry-run event + guard confirmation stability is verified.
+
+## New design milestone: BrowserRuntime real invocation guard contract
+
+- Added `docs/browser-runtime-router-invocation-guard.md` to define required safety gates for any future feature-flagged real `BrowserRuntimeRouter` invocation path.
+- Confirms current state remains execution-disabled while router bridge + dry-run lanes provide readiness evidence only.
+- Gate contract requires: sandbox adapter + router bridge + dry-run readiness + explicit real-router opt-in + allowed guard decision + no direct-host + no critical risk + risky-action confirmation + tape/event availability + route validation + rollback path.
+- This milestone is docs/types-only safety design and does not import/instantiate/call real `BrowserRuntimeRouter`.
+- Recommended next PR: implement a side-effect-free readiness evaluator that returns `blocked` / `dry_run_required` / `needs_confirmation` / `ready` without invoking browser/router/system APIs.

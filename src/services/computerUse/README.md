@@ -250,3 +250,14 @@ import {
   - Never imports/instantiates/calls real `BrowserRuntimeRouter` and never calls Playwright/browser/system APIs.
 - Optional dry-run event callbacks can record started/completed/failed events; callback failures are non-fatal.
 - Real browser execution remains disabled in this phase; next step can feature-flag real router invocation once dry-run event/guard stability is confirmed.
+
+## BrowserRuntime real-router invocation guard design
+
+- Added a dedicated design contract in `docs/browser-runtime-router-invocation-guard.md` for future feature-flagged real BrowserRuntimeRouter invocation.
+- Current merged lanes include router bridge contract mapping and dry-run adapter simulation only.
+- Real router invocation remains disabled in this phase; no BrowserRuntimeRouter runtime import/instantiation/call, no Playwright/browser/system calls, and no direct-host lane enablement are introduced.
+- Readiness for any future real invocation requires all gates to pass (flags, guard decision, dry-run evidence, confirmation, route validation, mission tape/event availability, and rollback path).
+- Invocation guard contract types are now available in `types.ts` to standardize readiness reporting:
+  - `ComputerUseBrowserRuntimeRouterInvocationReadinessStatus`
+  - `ComputerUseBrowserRuntimeRouterInvocationGate`
+  - `ComputerUseBrowserRuntimeRouterInvocationReadinessResult`
