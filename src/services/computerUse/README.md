@@ -213,3 +213,12 @@ import {
 - External sink forwarding requires explicit `enableExternalMissionTapeSink: true` opt-in.
 - This phase does not perform real filesystem/database/localStorage writes by default.
 - A future PR can wire the stable LucaOS MissionTape interface into this adapter boundary once contract stability is confirmed.
+
+## Guard Confirmation Bridge scaffold
+
+- `ComputerUseGuardConfirmationBridge` now provides an in-memory confirmation-token bridge for `needs_confirmation` guard outcomes.
+- The bridge creates confirmation requests (with mission/step/action/risk/reason context), tracks status (`pending`/`approved`/`rejected`/`expired`), and exposes explicit approve/reject helpers.
+- Optional required-phrase enforcement is supported for explicit operator confirmation UX contracts.
+- Confirmation requests and approval tokens are scaffold-only and stored in memory only (no filesystem/database/localStorage writes).
+- Safety metadata remains explicit (`bridgeKind: "guard_confirmation_scaffold"`, `systemApisCalled: false`, `directHostAllowed: false`, `storageWritesEnabled: false`, `requiresExplicitOptIn: true`).
+- Runtime event recording can carry `confirmationId` when available, while real browser/direct-host execution remains disabled in this phase.

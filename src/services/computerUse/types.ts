@@ -218,6 +218,50 @@ export interface ComputerUseGuardBridgeInput {
   dangerousContext?: boolean;
 }
 
+
+export type ComputerUseGuardConfirmationStatus = "pending" | "approved" | "rejected" | "expired";
+
+export interface ComputerUseGuardConfirmationRequest {
+  confirmationId: string;
+  missionId?: string;
+  stepId?: string;
+  actionType?: ComputerUseActionType;
+  riskLevel: ComputerUseGuardRiskLevel;
+  reason: string;
+  requiredPhrase?: string;
+  createdAt: string;
+  expiresAt?: string;
+  status: ComputerUseGuardConfirmationStatus;
+  metadata: {
+    bridgeKind: "guard_confirmation_scaffold";
+    systemApisCalled: false;
+    directHostAllowed: false;
+    storageWritesEnabled: false;
+    requiresExplicitOptIn: true;
+  };
+}
+
+export interface ComputerUseGuardConfirmationResult {
+  ok: boolean;
+  status: ComputerUseGuardConfirmationStatus;
+  confirmationId: string;
+  approval?: ComputerUseGuardApprovalContext;
+  reason?: string;
+  metadata: ComputerUseGuardConfirmationRequest["metadata"];
+}
+
+export interface ComputerUseGuardConfirmationBridgeOptions {
+  now?: () => string;
+  defaultExpiresInMs?: number;
+  enforceRequiredPhrase?: boolean;
+  requiredPhrase?: string;
+}
+
+export interface ComputerUseGuardConfirmationBridgeSnapshot {
+  requests: ComputerUseGuardConfirmationRequest[];
+  metadata: ComputerUseGuardConfirmationRequest["metadata"];
+}
+
 export interface ComputerUseGuardBridgeOptions {
   denyActions?: ComputerUseActionType[];
 }
@@ -1001,6 +1045,7 @@ export interface ComputerUseGuardDecisionEventInput {
   approvalRequirement: ComputerUseGuardApprovalRequirement;
   approvedBy?: ComputerUseGuardApprovalContext["approvedBy"];
   guardPolicyKind: ComputerUseGuardDecisionMetadata["guardPolicyKind"];
+  confirmationId?: string;
 }
 
 export interface ComputerUseRuntimeEventBridgeResult {
