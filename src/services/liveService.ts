@@ -34,6 +34,7 @@ import {
   VoiceRuntimeProviderPolicyRouteMetadata,
 } from "./voice/VoiceRuntimeProviderPolicy";
 import { VoiceRouteShadowEvaluation, evaluateVoiceRouteShadow } from "./voice/VoiceRouteShadowEvaluator";
+import { VoiceRouteAuthorityDecision, evaluateVoiceRouteAuthority } from "./voice/VoiceRouteAuthorityGate";
 
 export interface LiveConfig {
   onToolCall: (name: string, args: any) => Promise<any>;
@@ -83,6 +84,7 @@ class LucaLiveService {
   private currentRouteKind: VoiceSessionRoute["kind"] | null = null;
   private currentRouteProviderPolicy: VoiceRuntimeProviderPolicyRouteMetadata | null = null;
   private currentRouteShadowEvaluation: VoiceRouteShadowEvaluation | null = null;
+  private currentRouteAuthorityDecision: VoiceRouteAuthorityDecision | null = null;
 
   constructor() {
     // We defer AI initialization to connect() to ensure we have the latest key
@@ -151,6 +153,15 @@ class LucaLiveService {
       providerPolicy,
       settings: voiceSettings ?? undefined,
       metadata: { owner: "liveService", shadowOnly: true },
+    });
+    this.currentRouteAuthorityDecision = evaluateVoiceRouteAuthority({
+      mode: "existing_resolver",
+      existingRoute: liveRoute,
+      shadowEvaluation: this.currentRouteShadowEvaluation,
+      providerPolicy,
+      featureFlags: {
+        enableRuntimeRouteAuthority: false,
+      },
     });
     if (liveRoute.kind !== "CLOUD_BIDI") {
       const reason =
@@ -1103,6 +1114,12 @@ class LucaLiveService {
     routeShadowMatched: boolean | null;
     routeShadowSeverity: VoiceRouteShadowEvaluation["severity"] | null;
     routeShadowRecommendation: VoiceRouteShadowEvaluation["recommendation"] | null;
+    routeAuthority: VoiceRouteAuthorityDecision | null;
+    routeAuthorityMode: string;
+    routeAuthorityActive: VoiceRouteAuthorityDecision["activeAuthority"];
+    routeAuthoritySelectedRoute: VoiceSessionRoute | null;
+    routeAuthorityCanPromoteRuntimeRoute: boolean;
+    routeAuthorityPromotionBlockedReasons: string[];
   } {
     return {
       providerPolicy: this.currentRouteProviderPolicy,
@@ -1113,6 +1130,12 @@ class LucaLiveService {
       routeShadowMatched: this.currentRouteShadowEvaluation?.matched ?? null,
       routeShadowSeverity: this.currentRouteShadowEvaluation?.severity ?? null,
       routeShadowRecommendation: this.currentRouteShadowEvaluation?.recommendation ?? null,
+      routeAuthority: this.currentRouteAuthorityDecision,
+      routeAuthorityMode: (this.currentRouteAuthorityDecision?.metadata?.mode as string | undefined) ?? "existing_resolver",
+      routeAuthorityActive: this.currentRouteAuthorityDecision?.activeAuthority ?? "existing_resolver",
+      routeAuthoritySelectedRoute: this.currentRouteAuthorityDecision?.selectedRoute ?? null,
+      routeAuthorityCanPromoteRuntimeRoute: this.currentRouteAuthorityDecision?.canPromoteRuntimeRoute ?? false,
+      routeAuthorityPromotionBlockedReasons: this.currentRouteAuthorityDecision?.promotionBlockedReasons ?? [],
     };
   }
 

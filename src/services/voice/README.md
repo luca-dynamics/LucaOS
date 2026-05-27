@@ -183,3 +183,9 @@ Future direction:
 - `VoiceRouteShadowEvaluator` compares the existing `liveService` route with provider-policy/router shadow suggestions.
 - Shadow results are advisory-only (`shadowOnly: true`) and never change live route/provider/model selection.
 - A future PR can promote runtime router authority behind a feature flag once shadow telemetry is trusted.
+
+## VoiceRouteAuthorityGate
+- `VoiceRouteAuthorityGate` prepares future promotion of runtime router authority.
+- Default authority remains the existing resolver (`resolveVoiceSessionRoute`).
+- Runtime router authority is feature-flagged and not active by default.
+- Shadow evaluation remains the safe comparison layer for advisory-only route analysis.

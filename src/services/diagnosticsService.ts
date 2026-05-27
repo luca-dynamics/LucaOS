@@ -12,6 +12,7 @@ import { realtimeVoiceUiBridge } from "./voice/realtimeVoiceUiBridge";
 import { getVoiceStatePrecedenceSnapshot } from "./voice/VoiceRuntimeStatePrecedence";
 import { getVoiceRuntimeProviderPolicySnapshot, VoiceRuntimeProviderPolicyRouteMetadata } from "./voice/VoiceRuntimeProviderPolicy";
 import { VoiceRouteShadowEvaluation } from "./voice/VoiceRouteShadowEvaluator";
+import { VoiceRouteAuthorityDecision } from "./voice/VoiceRouteAuthorityGate";
 import os from "os";
 import {
   calculateOverallAuditStatus,
@@ -107,10 +108,12 @@ export interface SupportSnapshot {
       providerPolicyAdvisoryOnly?: true;
       providerPolicyAppliedToRouting?: false;
       shadowEvaluation?: VoiceRouteShadowEvaluation | null;
+      authority?: VoiceRouteAuthorityDecision | null;
     };
     providerPolicy?: ReturnType<typeof getVoiceRuntimeProviderPolicySnapshot>;
     routeProviderPolicy?: VoiceRuntimeProviderPolicyRouteMetadata | null;
     shadowEvaluation?: VoiceRouteShadowEvaluation | null;
+    authority?: VoiceRouteAuthorityDecision | null;
     realtimeBridge?: ReturnType<typeof realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot>;
     operatorState?: ReturnType<typeof getVoiceStatePrecedenceSnapshot>["operatorState"];
   };
@@ -189,6 +192,7 @@ class DiagnosticsService {
           providerPolicyAdvisoryOnly: routeMetadata.providerPolicyAdvisoryOnly,
           providerPolicyAppliedToRouting: routeMetadata.providerPolicyAppliedToRouting,
           shadowEvaluation: routeMetadata.routeShadowEvaluation,
+          authority: routeMetadata.routeAuthority,
         },
         orchestrator: {
           connected: voiceSessionOrchestrator.connected,
@@ -203,6 +207,7 @@ class DiagnosticsService {
           providerPolicyAdvisoryOnly: routeMetadata.providerPolicyAdvisoryOnly,
           providerPolicyAppliedToRouting: routeMetadata.providerPolicyAppliedToRouting,
           shadowEvaluation: routeMetadata.routeShadowEvaluation,
+          authority: routeMetadata.routeAuthority,
         },
         realtimeBridge: realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot(),
         operatorState: getVoiceStatePrecedenceSnapshot({
@@ -214,6 +219,7 @@ class DiagnosticsService {
             adaptiveRouteApplied: voiceSessionOrchestrator.adaptiveRouteApplied,
             routeKind: voiceSessionOrchestrator.routeKind,
             routeShadowEvaluation: routeMetadata.routeShadowEvaluation,
+            routeAuthority: routeMetadata.routeAuthority,
           },
           realtimeBridge: realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot(),
           settings,
@@ -224,6 +230,7 @@ class DiagnosticsService {
         }),
         routeProviderPolicy: routeMetadata.providerPolicy,
         shadowEvaluation: routeMetadata.routeShadowEvaluation,
+        authority: routeMetadata.routeAuthority,
       },
       diagnostics: {
         recentLogs: loggerService.getRecentLogs().slice(-50),
