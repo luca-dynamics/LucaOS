@@ -58,3 +58,10 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - The bridge tracks in-memory HUD visibility, mode, runtime status, transcript/response, command, confirmation, and error state for future UI wiring.
 - No React/UI components are touched; no microphone/audio APIs, STT/TTS providers, heavy model loads, system APIs, or persistent storage writes are used.
 - This prepares future Voice HUD / Voice Center integration so UI layers can subscribe to and drive a stable runtime bridge contract.
+
+## Voice computer-use confirmation bridge (scaffold)
+
+- `VoiceComputerUseConfirmationBridge` and `createVoiceComputerUseConfirmationBridge` provide a scaffold-only contract for voice-driven confirmation handoff before computer-use actions.
+- The bridge tracks pending confirmation requests and last decision state in memory only, with explicit safety metadata.
+- No UI components, no microphone/audio APIs, no STT/TTS providers, no heavy model loading, no system APIs, and no persistent storage writes are used.
+- This prepares future guarded integration between Voice Runtime confirmation flow and computer-use execution orchestration.

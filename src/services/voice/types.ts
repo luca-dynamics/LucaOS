@@ -66,6 +66,50 @@ export interface LucaVoiceHudControlResult {
   metadata: LucaVoiceHudMetadata;
 }
 
+export interface LucaVoiceComputerUseConfirmationMetadata {
+  bridgeKind: "voice_computer_use_confirmation_scaffold";
+  audioApisCalled: false;
+  sttApisCalled: false;
+  ttsApisCalled: false;
+  systemApisCalled: false;
+  heavyModelsLoaded: false;
+  requiresExplicitOptIn: true;
+}
+
+export interface LucaVoiceComputerUseConfirmationRequest {
+  confirmationId: string;
+  riskLevel: LucaVoiceRiskLevel;
+  prompt: string;
+  commandText?: string;
+  requiredPhrase?: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface LucaVoiceComputerUseConfirmationDecision {
+  confirmationId: string;
+  accepted: boolean;
+  reason?: string;
+}
+
+export interface LucaVoiceComputerUseConfirmationState {
+  pendingRequest?: LucaVoiceComputerUseConfirmationRequest;
+  lastDecision?: {
+    confirmationId: string;
+    accepted: boolean;
+    reason?: string;
+    decidedAt: string;
+  };
+  metadata: LucaVoiceComputerUseConfirmationMetadata;
+}
+
+export interface LucaVoiceComputerUseConfirmationResult {
+  ok: boolean;
+  accepted: boolean;
+  reason?: string;
+  state: LucaVoiceComputerUseConfirmationState;
+  metadata: LucaVoiceComputerUseConfirmationMetadata;
+}
+
 export type LucaVoiceOnboardingStep =
   | "welcome"
   | "name"
