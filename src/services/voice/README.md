@@ -163,3 +163,9 @@ Future direction:
 - `LiveVoiceRuntimeBridge` connects the new realtime runtime model with the existing `liveService`, `VoiceHud`, and diagnostics stack.
 - Existing `liveService` remains the real voice session owner.
 - `RealtimeVoiceSessionController`-compatible state is mirrored/normalized for future agent/runtime/UI integrations without creating a competing session owner.
+
+## Voice runtime state precedence
+
+- `VoiceRuntimeStatePrecedence` prevents split-brain status between `liveService`, HUD, diagnostics, and realtime runtime.
+- `liveService` remains the source of truth for real sessions.
+- realtime runtime mirrors and enriches state for future agent/runtime operations without replacing live ownership.
