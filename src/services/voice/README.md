@@ -178,3 +178,8 @@ Future direction:
 - `liveService` now records provider policy on live route metadata (`providerPolicy`, `providerPolicyAdvisoryOnly`, `providerPolicyAppliedToRouting`) strictly for observability.
 - Diagnostics snapshots surface the provider policy route metadata while preserving existing provider policy fields from settings mapping.
 - Future work can allow `liveService` route selection to consult `VoiceProviderRouter` / readiness gates behind feature flags when real provider gates are intentionally opened.
+
+## Voice Route Shadow Evaluator
+- `VoiceRouteShadowEvaluator` compares the existing `liveService` route with provider-policy/router shadow suggestions.
+- Shadow results are advisory-only (`shadowOnly: true`) and never change live route/provider/model selection.
+- A future PR can promote runtime router authority behind a feature flag once shadow telemetry is trusted.
