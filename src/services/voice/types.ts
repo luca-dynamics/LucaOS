@@ -19,8 +19,23 @@ export interface LucaVoiceRuntimeMetadata {
   ttsApisCalled: false;
   systemApisCalled: false;
   heavyModelsLoaded: false;
+  storageWritesEnabled: false;
   requiresExplicitOptIn: true;
 }
+export type LucaVoiceRuntimeEventType =
+  | "voice_session_started"
+  | "voice_session_stopped"
+  | "voice_text_input_received"
+  | "voice_transcript_received"
+  | "voice_command_handled"
+  | "voice_command_needs_confirmation"
+  | "voice_command_rejected"
+  | "voice_command_failed"
+  | "voice_confirmation_requested"
+  | "voice_confirmation_completed"
+  | "voice_output_started"
+  | "voice_output_completed"
+  | "voice_output_interrupted";
 
 export interface LucaVoiceSession {
   sessionId: string;
@@ -116,6 +131,37 @@ export interface LucaVoiceTapeEvent {
   timestamp: string;
   payload: Record<string, unknown>;
   metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceTapeRecord {
+  eventType: LucaVoiceRuntimeEventType;
+  sessionId: string;
+  timestamp: string;
+  payload: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceTapeSinkSnapshot {
+  sessionId?: string;
+  totalRecords: number;
+  records: LucaVoiceTapeRecord[];
+}
+
+export interface LucaVoiceTapeSink {
+  record(record: LucaVoiceTapeRecord): void;
+  listRecords(sessionId?: string): LucaVoiceTapeRecord[];
+  getSnapshot(sessionId?: string): LucaVoiceTapeSinkSnapshot;
+  reset(): void;
+}
+
+export interface LucaVoiceRuntimeEventBridgeResult {
+  ok: boolean;
+  error?: string;
+}
+
+export interface LucaVoiceRuntimeRecordingOptions {
+  enabled?: boolean;
+  sink?: LucaVoiceTapeSink;
 }
 
 export interface LucaSTTTranscribeInput {

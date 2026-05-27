@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { VoiceBackendRegistry } from "./VoiceBackendRegistry";
+import { VoiceInMemoryTapeSink } from "./VoiceInMemoryTapeSink";
+import { VoiceRuntimeEventBridge } from "./VoiceRuntimeEventBridge";
 import { VoiceRuntime } from "./VoiceRuntime";
 
 describe("VoiceRuntime scaffold", () => {
   it("starts and stops sessions", () => {
-    const runtime = new VoiceRuntime(new VoiceBackendRegistry());
+    const sink = new VoiceInMemoryTapeSink();
+    const runtime = new VoiceRuntime(
+      new VoiceBackendRegistry(),
+      { recording: { enabled: true, sink } },
+      new VoiceRuntimeEventBridge(sink),
+    );
 
     const session = runtime.startSession({ mode: "voice", language: "en" });
     expect(session.mode).toBe("voice");
@@ -13,6 +20,10 @@ describe("VoiceRuntime scaffold", () => {
     runtime.stopSession();
     expect(runtime.getState().status).toBe("idle");
     expect(runtime.getState().session).toBeUndefined();
+    expect(sink.getSnapshot(session.sessionId).records.map((r) => r.eventType)).toEqual([
+      "voice_session_started",
+      "voice_session_stopped",
+    ]);
   });
 
   it("text input and transcript input share scaffold command path", () => {
@@ -35,7 +46,12 @@ describe("VoiceRuntime scaffold", () => {
   });
 
   it("supports confirmation flow for risky commands", () => {
-    const runtime = new VoiceRuntime(new VoiceBackendRegistry());
+    const sink = new VoiceInMemoryTapeSink();
+    const runtime = new VoiceRuntime(
+      new VoiceBackendRegistry(),
+      { recording: { enabled: true, sink } },
+      new VoiceRuntimeEventBridge(sink),
+    );
     runtime.startSession();
 
     const risky = runtime.handleTextInput({ text: "delete all logs" });
@@ -50,6 +66,10 @@ describe("VoiceRuntime scaffold", () => {
       confirmed: true,
     });
     expect(done.status).toBe("handled");
+    const types = sink.getSnapshot().records.map((record) => record.eventType);
+    expect(types).toContain("voice_command_needs_confirmation");
+    expect(types).toContain("voice_confirmation_requested");
+    expect(types).toContain("voice_confirmation_completed");
   });
 
   it("metadata preserves no-audio/no-stt/no-tts/no-system flags", () => {
@@ -62,11 +82,17 @@ describe("VoiceRuntime scaffold", () => {
     expect(result.metadata.ttsApisCalled).toBe(false);
     expect(result.metadata.systemApisCalled).toBe(false);
     expect(result.metadata.heavyModelsLoaded).toBe(false);
+    expect(result.metadata.storageWritesEnabled).toBe(false);
     expect(result.metadata.requiresExplicitOptIn).toBe(true);
   });
 
   it("reset clears runtime state", () => {
-    const runtime = new VoiceRuntime(new VoiceBackendRegistry());
+    const sink = new VoiceInMemoryTapeSink();
+    const runtime = new VoiceRuntime(
+      new VoiceBackendRegistry(),
+      { recording: { enabled: true, sink } },
+      new VoiceRuntimeEventBridge(sink),
+    );
     runtime.startSession();
     runtime.handleTextInput({ text: "open panel" });
     runtime.reset();
@@ -75,5 +101,6 @@ describe("VoiceRuntime scaffold", () => {
     expect(state.status).toBe("idle");
     expect(state.session).toBeUndefined();
     expect(state.pendingConfirmation).toBeUndefined();
+    expect(sink.getSnapshot().totalRecords).toBe(0);
   });
 });

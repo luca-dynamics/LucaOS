@@ -6,8 +6,10 @@ import {
   LucaVoiceRuntimeStatus,
   LucaVoiceSafetyConfirmation,
   LucaVoiceSession,
+  LucaVoiceRuntimeRecordingOptions,
   LucaVoiceTranscriptEvent,
 } from "./types";
+import { VoiceRuntimeEventBridge } from "./VoiceRuntimeEventBridge";
 
 export interface VoiceRuntimeState {
   status: LucaVoiceRuntimeStatus;
@@ -19,6 +21,7 @@ export interface VoiceRuntimeState {
 export interface VoiceRuntimeOptions {
   defaultLanguage?: string;
   defaultMode?: LucaVoiceMode;
+  recording?: LucaVoiceRuntimeRecordingOptions;
 }
 
 const defaultMetadata: LucaVoiceRuntimeMetadata = {
@@ -28,6 +31,7 @@ const defaultMetadata: LucaVoiceRuntimeMetadata = {
   ttsApisCalled: false,
   systemApisCalled: false,
   heavyModelsLoaded: false,
+  storageWritesEnabled: false,
   requiresExplicitOptIn: true,
 };
 
@@ -40,6 +44,7 @@ export class VoiceRuntime {
   constructor(
     private readonly registry: VoiceBackendRegistry,
     private readonly options: VoiceRuntimeOptions = {},
+    private readonly bridge?: VoiceRuntimeEventBridge,
   ) {}
 
   getState(): VoiceRuntimeState {
@@ -70,25 +75,43 @@ export class VoiceRuntime {
       session,
       pendingConfirmation: undefined,
     };
+    if (this.options.recording?.enabled !== false) {
+      this.bridge?.recordSessionStarted(session);
+    }
 
     return session;
   }
 
   stopSession(): void {
+    const currentSession = this.state.session;
     this.state = {
       ...this.state,
       status: "idle",
       session: undefined,
       pendingConfirmation: undefined,
     };
+    if (currentSession && this.options.recording?.enabled !== false) {
+      this.bridge?.recordSessionStopped(currentSession);
+    }
   }
 
   handleTextInput(input: { text: string; sessionId?: string; metadata?: Record<string, unknown> }): LucaVoiceCommandResult {
-    return this.processCommandText(input.text, input.sessionId, input.metadata);
+    if (this.options.recording?.enabled !== false) {
+      this.bridge?.recordTextInput({
+        kind: "text_input",
+        sessionId: input.sessionId ?? this.state.session?.sessionId ?? "unknown",
+        timestamp: new Date().toISOString(),
+        metadata: input.metadata,
+      });
+    }
+    return this.processCommandText(input.text, input.sessionId, input.metadata, "text_input");
   }
 
   handleTranscript(input: LucaVoiceTranscriptEvent & { sessionId?: string; metadata?: Record<string, unknown> }): LucaVoiceCommandResult {
-    return this.processCommandText(input.transcript, input.sessionId, input.metadata);
+    if (this.options.recording?.enabled !== false) {
+      this.bridge?.recordTranscript(input);
+    }
+    return this.processCommandText(input.transcript, input.sessionId, input.metadata, "transcript");
   }
 
   requestConfirmation(input: { prompt: string; reason: string; riskLevel?: LucaVoiceSafetyConfirmation["riskLevel"]; requiredPhrase?: string }): LucaVoiceSafetyConfirmation {
@@ -102,34 +125,56 @@ export class VoiceRuntime {
     };
 
     this.state = { ...this.state, status: "confirming", pendingConfirmation: confirmation };
+    if (this.options.recording?.enabled !== false) {
+      this.bridge?.recordConfirmationRequested(confirmation, { sessionId: this.state.session?.sessionId });
+    }
     return confirmation;
   }
 
   confirmAction(input: { confirmationId: string; phrase?: string; confirmed: boolean }): LucaVoiceCommandResult {
     const pending = this.state.pendingConfirmation;
     if (!pending || pending.confirmationId !== input.confirmationId) {
-      return this.makeResult("failed", "No matching pending confirmation.");
+      const failed = this.makeResult("failed", "No matching pending confirmation.");
+      if (this.options.recording?.enabled !== false) {
+        this.bridge?.recordConfirmationCompleted(failed, { sessionId: this.state.session?.sessionId, confirmationId: input.confirmationId });
+      }
+      return failed;
     }
 
     if (!input.confirmed) {
       this.state = { ...this.state, status: "idle", pendingConfirmation: undefined };
-      return this.makeResult("rejected", "Action was not confirmed.");
+      const rejected = this.makeResult("rejected", "Action was not confirmed.");
+      if (this.options.recording?.enabled !== false) {
+        this.bridge?.recordConfirmationCompleted(rejected, { sessionId: this.state.session?.sessionId, confirmationId: input.confirmationId });
+      }
+      return rejected;
     }
 
     if (pending.requiredPhrase && pending.requiredPhrase !== input.phrase) {
-      return this.makeResult("failed", "Required confirmation phrase mismatch.");
+      const failed = this.makeResult("failed", "Required confirmation phrase mismatch.");
+      if (this.options.recording?.enabled !== false) {
+        this.bridge?.recordConfirmationCompleted(failed, { sessionId: this.state.session?.sessionId, confirmationId: input.confirmationId });
+      }
+      return failed;
     }
 
     this.state = { ...this.state, status: "acting", pendingConfirmation: undefined };
-    return this.makeResult("handled", "Confirmation accepted. Scaffold action marked handled.");
+    const handled = this.makeResult("handled", "Confirmation accepted. Scaffold action marked handled.");
+    if (this.options.recording?.enabled !== false) {
+      this.bridge?.recordConfirmationCompleted(handled, { sessionId: this.state.session?.sessionId, confirmationId: input.confirmationId });
+    }
+    return handled;
   }
 
   reset(): void {
     this.registry.reset();
+    if (this.options.recording?.enabled !== false) {
+      this.options.recording?.sink?.reset();
+    }
     this.state = { status: "idle", metadata: defaultMetadata };
   }
 
-  private processCommandText(text: string, sessionId?: string, metadata?: Record<string, unknown>): LucaVoiceCommandResult {
+  private processCommandText(text: string, sessionId?: string, metadata?: Record<string, unknown>, source?: string): LucaVoiceCommandResult {
     const now = new Date().toISOString();
     if (this.state.session) {
       this.state = {
@@ -152,16 +197,24 @@ export class VoiceRuntime {
         riskLevel: "high",
       });
 
-      return this.makeResult("needs_confirmation", "Confirmation required before executing action.", {
+      const result = this.makeResult("needs_confirmation", "Confirmation required before executing action.", {
         confirmationId: confirmation.confirmationId,
       });
+      if (this.options.recording?.enabled !== false) {
+        this.bridge?.recordCommandResult(result, { sessionId: sessionId ?? this.state.session?.sessionId, source });
+      }
+      return result;
     }
 
     this.state = { ...this.state, status: "acting" };
-    return this.makeResult("handled", "Scaffold command accepted.", {
+    const result = this.makeResult("handled", "Scaffold command accepted.", {
       commandText: text,
       commandPath: "shared_scaffold_command_path",
     });
+    if (this.options.recording?.enabled !== false) {
+      this.bridge?.recordCommandResult(result, { sessionId: sessionId ?? this.state.session?.sessionId, source });
+    }
+    return result;
   }
 
   private makeResult(status: LucaVoiceCommandResult["status"], textResponse: string, extras: Record<string, unknown> = {}): LucaVoiceCommandResult {
