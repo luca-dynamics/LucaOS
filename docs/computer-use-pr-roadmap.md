@@ -76,3 +76,10 @@ Before and during the next sequence, follow the cloud-agent validation guide and
 - `ops/scripts/cloud-agent-validate-computer-use.sh`
 
 Treat cloud-agent install/test constraints as first-class release risk for mission/runtime/computer-use changes.
+
+## Latest scaffold addition
+
+- Added a guard confirmation bridge scaffold for `needs_confirmation` outcomes with explicit in-memory approval token flow (`pending`/`approved`/`rejected`/`expired`).
+- Added bridge helper/factory surface and tests for approve/reject/phrase/expiry/snapshot/reset behavior.
+- Confirmation flow is audit-ready and event-ready (`confirmationId` payload support) without enabling real browser/direct-host/system execution.
+- Future UI/Voice confirmation transport should wire to this contract before any production execution unlock.

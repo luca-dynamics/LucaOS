@@ -79,3 +79,11 @@ Mission-like input
 - Guard decisions are now emitted through the runtime event bridge as both generic and status-specific mission tape events.
 - `allowed`, `denied`, and `needs_confirmation` decisions are auditable even when execution is blocked, with mission/step/action/risk/status context preserved.
 - Event metadata remains scaffold-safe (`systemApisCalled: false`, `directHostAllowed: false`, `requiresExplicitOptIn: true`) and no real browser/direct-host/system APIs are called in this phase.
+
+## Guard confirmation bridge update
+
+- `needs_confirmation` guard outcomes now have a scaffold confirmation contract via `ComputerUseGuardConfirmationBridge`.
+- Confirmation requests and approval tokens are in-memory only and resettable; no real storage writes are introduced.
+- Runtime guard decision payloads are confirmation-ready via optional `confirmationId` propagation where available.
+- Real browser execution and direct-host execution remain disabled in this phase.
+- Future UI/Voice confirmation surfaces can integrate by using the same confirmation request/result token contract.

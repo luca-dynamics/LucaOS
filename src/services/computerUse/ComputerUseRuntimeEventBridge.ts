@@ -105,6 +105,7 @@ export class ComputerUseRuntimeEventBridge {
       approvalRequirement: input.approvalRequirement,
       approvedBy: input.approvedBy,
       guardPolicyKind: input.guardPolicyKind,
+      confirmationId: input.confirmationId,
       storageWritesEnabled: false,
       systemApisCalled: false,
       directHostAllowed: false,

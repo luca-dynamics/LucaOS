@@ -5,6 +5,8 @@ export { ComputerUseVerifier } from "./ComputerUseVerifier";
 export { ComputerUseRecovery } from "./ComputerUseRecovery";
 export { ComputerUsePipeline } from "./ComputerUsePipeline";
 export { ComputerUseGuardBridge } from "./ComputerUseGuardBridge";
+export { ComputerUseGuardConfirmationBridge } from "./ComputerUseGuardConfirmationBridge";
+export { createComputerUseGuardConfirmationBridge } from "./createComputerUseGuardConfirmationBridge";
 export { ComputerUseSandboxExecutorAdapter } from "./ComputerUseSandboxExecutorAdapter";
 export { ComputerUseMissionTapeBridge } from "./ComputerUseMissionTapeBridge";
 export { ComputerUseBrowserRuntimeBridge } from "./ComputerUseBrowserRuntimeBridge";
