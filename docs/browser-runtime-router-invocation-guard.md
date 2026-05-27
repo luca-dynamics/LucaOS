@@ -121,3 +121,11 @@ Future real-invocation PR should include at minimum:
 4. Add feature-flagged real invocation implementation behind guard evaluator.
 5. Add rollback/failure integration tests + staged rollout plan.
 6. Keep default state execution-disabled until stability sign-off.
+
+## Implementation update (May 27, 2026)
+
+- Added `BrowserRuntimeRouterInvocationGuard` helper in `src/services/computerUse/BrowserRuntimeRouterInvocationGuard.ts`.
+- `evaluateBrowserRuntimeRouterInvocationReadiness(input)` now performs side-effect-free gate evaluation and returns `blocked`, `dry_run_required`, `needs_confirmation`, or `ready`.
+- Added `createBrowserRuntimeRouterInvocationReadinessInputFromSandboxResult()` for metadata-only input shaping from sandbox adapter output.
+- Guard metadata is fixed to execution-disabled safety posture (`realBrowserExecutionEnabled: false`, `browserRuntimeRouterCalled: false`, `playwrightCalled: false`, `browserApisCalled: false`, `systemApisCalled: false`, `directHostAllowed: false`).
+- Real router invocation remains disabled; this helper does not import, instantiate, or call `BrowserRuntimeRouter`.
