@@ -157,3 +157,9 @@ Future direction:
 - Event recording and HUD synchronization are non-fatal best-effort hooks so controller state always remains primary and stable.
 - This controller does not call microphone APIs, audio output APIs, real STT/TTS/provider/network APIs, system APIs, or model loaders.
 - Future UI/runtime/provider integrations should use this controller as the central operational layer for realtime voice orchestration.
+
+## Live voice runtime bridge
+
+- `LiveVoiceRuntimeBridge` connects the new realtime runtime model with the existing `liveService`, `VoiceHud`, and diagnostics stack.
+- Existing `liveService` remains the real voice session owner.
+- `RealtimeVoiceSessionController`-compatible state is mirrored/normalized for future agent/runtime/UI integrations without creating a competing session owner.

@@ -79,6 +79,13 @@ interface VoiceHudProps {
   isLocalCoreConnected?: boolean;
   localCoreReadinessLevel?: "ready" | "limited" | "offline";
   localCoreReadinessReason?: string;
+  realtimeStatus?: string;
+  realtimeSessionId?: string | null;
+  realtimeCanInterrupt?: boolean;
+  realtimeLastError?: string | null;
+  runtimeRouteHealth?: string | null;
+  runtimeLatency?: number | null;
+  runtimeFallbackActive?: boolean;
 }
 
 const VoiceHud: React.FC<VoiceHudProps> = ({
