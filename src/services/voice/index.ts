@@ -7,3 +7,5 @@ export * from "./createVoiceRuntime";
 
 export * from "./VoiceOnboardingBridge";
 export * from "./createVoiceOnboardingBridge";
+export * from "./VoiceHudRuntimeBridge";
+export * from "./createVoiceHudRuntimeBridge";

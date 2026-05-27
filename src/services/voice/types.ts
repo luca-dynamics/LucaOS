@@ -23,6 +23,49 @@ export interface LucaVoiceRuntimeMetadata {
   requiresExplicitOptIn: true;
 }
 
+export interface LucaVoiceHudMetadata {
+  bridgeKind: "voice_hud_scaffold";
+  audioApisCalled: false;
+  microphoneApisCalled: false;
+  sttApisCalled: false;
+  ttsApisCalled: false;
+  systemApisCalled: false;
+  heavyModelsLoaded: false;
+  requiresExplicitOptIn: true;
+}
+
+export interface LucaVoiceHudState {
+  visible: boolean;
+  mode: LucaVoiceMode;
+  status: LucaVoiceRuntimeStatus;
+  activeSessionId?: string;
+  detectedLanguage?: string;
+  currentTranscript?: string;
+  currentResponse?: string;
+  activeCommand?: string;
+  confirmationId?: string;
+  error?: string;
+  metadata: LucaVoiceHudMetadata;
+}
+
+export type LucaVoiceHudControl =
+  | "show"
+  | "hide"
+  | "toggle"
+  | "start_listening"
+  | "stop_listening"
+  | "set_text_mode"
+  | "set_voice_mode"
+  | "interrupt"
+  | "clear";
+
+export interface LucaVoiceHudControlResult {
+  ok: boolean;
+  state: LucaVoiceHudState;
+  reason?: string;
+  metadata: LucaVoiceHudMetadata;
+}
+
 export type LucaVoiceOnboardingStep =
   | "welcome"
   | "name"

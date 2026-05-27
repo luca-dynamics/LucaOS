@@ -51,3 +51,10 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - The bridge mirrors Text Mode onboarding intent parsing (name, theme, opacity, model mode, local scan request flag, preferences) without UI runtime integration.
 - No microphone APIs, no real STT/TTS providers, no model manager calls, and no local model scans are executed.
 - Future PRs can wire this bridge into onboarding UI state and model manager orchestration once those integrations are approved.
+
+## Voice HUD runtime bridge (scaffold)
+
+- `VoiceHudRuntimeBridge` and `createVoiceHudRuntimeBridge` provide a service-level HUD state/control contract only.
+- The bridge tracks in-memory HUD visibility, mode, runtime status, transcript/response, command, confirmation, and error state for future UI wiring.
+- No React/UI components are touched; no microphone/audio APIs, STT/TTS providers, heavy model loads, system APIs, or persistent storage writes are used.
+- This prepares future Voice HUD / Voice Center integration so UI layers can subscribe to and drive a stable runtime bridge contract.
