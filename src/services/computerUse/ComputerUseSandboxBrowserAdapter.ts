@@ -1,4 +1,8 @@
 import {
+  createBrowserRuntimeRouterBridgeRequest,
+  validateBrowserRuntimeRouterBridgeRequest,
+} from "./BrowserRuntimeRouterBridge";
+import {
   ComputerUseBrowserRuntimeAdapter,
   ComputerUseBrowserRuntimeAdapterRequest,
   ComputerUseBrowserRuntimeAdapterResult,
@@ -43,6 +47,25 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
       } else if (mappingValidation.entry.disposition === "rejected") {
         result = this.fail(mappingValidation.entry.reason);
       } else {
+        let routerBridgeRequest: ComputerUseSandboxBrowserAdapterResult["metadata"]["routerBridgeRequest"];
+        const bridgeEnabled = this.isRouterBridgeEnabled();
+        if (bridgeEnabled) {
+          const bridgeOutput = createBrowserRuntimeRouterBridgeRequest(routeOrAction);
+          if (!bridgeOutput.ok) {
+            result = this.fail(bridgeOutput.reason);
+          } else {
+            const bridgeValidation = validateBrowserRuntimeRouterBridgeRequest(bridgeOutput.request);
+            if (!bridgeValidation.ok) {
+              result = this.fail(bridgeValidation.reason);
+            } else {
+              routerBridgeRequest = bridgeOutput.request;
+            }
+          }
+        }
+
+        if (result?.status === "failed") {
+          // no-op, result already set to safe failed state above
+        } else {
         result = {
           status: "executed",
           action: routeOrAction.action,
@@ -50,9 +73,12 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
             reason: `Sandbox scaffold ${mappingValidation.entry.disposition} action ${routeOrAction.action.type} to BrowserRuntime request shape.`,
             adapterKind: "sandbox_browser_scaffold",
             sandboxBrowserAdapterEnabled: true,
+            browserRuntimeRouterBridgeEnabled: bridgeEnabled,
             delegatedToBrowserRuntime: false,
             simulated: true,
             browserRuntimeImported: false,
+            browserRuntimeRouterImported: false,
+            browserRuntimeRouterCalled: false,
             playwrightCalled: false,
             browserApisCalled: false,
             systemApisCalled: false,
@@ -83,8 +109,10 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
               runtime: "unknown",
               reason: "Simulated sandbox route only; real browser runtime execution remains disabled.",
             },
+            routerBridgeRequest,
           },
         };
+        }
       }
     }
 
@@ -109,11 +137,17 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
       featureFlags: {
         sandboxBrowserAdapterEnabled: Boolean(this.options.featureFlags?.sandboxBrowserAdapterEnabled),
         enableSandboxBrowserAdapter: Boolean(this.options.featureFlags?.enableSandboxBrowserAdapter),
+        browserRuntimeRouterBridgeEnabled: Boolean(this.options.featureFlags?.browserRuntimeRouterBridgeEnabled),
+        enableBrowserRuntimeRouterBridge: Boolean(this.options.featureFlags?.enableBrowserRuntimeRouterBridge),
       },
       executionCount: this.executionCount,
       lastRequest: this.lastRequest,
       lastResult: this.lastResult,
     };
+  }
+
+  private isRouterBridgeEnabled(): boolean {
+    return Boolean(this.options.featureFlags?.browserRuntimeRouterBridgeEnabled || this.options.featureFlags?.enableBrowserRuntimeRouterBridge);
   }
 
   reset(): void {
@@ -133,9 +167,12 @@ export class ComputerUseSandboxBrowserAdapter implements ComputerUseBrowserRunti
         reason,
         adapterKind: "sandbox_browser_scaffold",
         sandboxBrowserAdapterEnabled: this.isEnabled(),
+        browserRuntimeRouterBridgeEnabled: this.isRouterBridgeEnabled(),
         delegatedToBrowserRuntime: false,
         simulated: true,
         browserRuntimeImported: false,
+        browserRuntimeRouterImported: false,
+        browserRuntimeRouterCalled: false,
         playwrightCalled: false,
         browserApisCalled: false,
         systemApisCalled: false,

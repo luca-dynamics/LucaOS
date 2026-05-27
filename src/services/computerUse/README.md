@@ -233,3 +233,12 @@ import {
   - `validateBrowserRuntimeRouterBridgeRequest()`
 - Contract tests cover action mapping/disposition behavior, unsupported-action rejection, mission-context preservation, and explicit no-real-execution metadata assertions.
 - Real BrowserRuntime router execution remains disabled in this phase; next step can introduce a feature-flagged adapter that consumes this tested bridge request contract.
+
+
+## Sandbox Browser Adapter router bridge integration (feature-flagged)
+
+- `ComputerUseSandboxBrowserAdapter` now supports an additional explicit opt-in flag (`browserRuntimeRouterBridgeEnabled` or alias `enableBrowserRuntimeRouterBridge`).
+- When both sandbox adapter and router bridge flags are enabled, the adapter generates a validated `BrowserRuntimeRouterBridgeRequest` and exposes it in adapter metadata/snapshots only.
+- This integration does **not** instantiate or call `BrowserRuntimeRouter`, does **not** execute browser actions, and does **not** call Playwright/browser/system APIs.
+- If bridge request validation fails, execution fails safely while preserving existing runtime event recording behavior.
+- Real BrowserRuntime execution remains disabled (`realBrowserExecutionEnabled: false`); a future phase can gate real router invocation behind additional guard/tape validation.
