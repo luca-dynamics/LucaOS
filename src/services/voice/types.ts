@@ -11,6 +11,7 @@ export type LucaVoiceRuntimeStatus =
   | "error";
 
 export type LucaVoiceProviderKind = "local" | "cloud" | "byok";
+export type LucaVoiceProviderTransportKind = "mock" | "fetch" | "custom";
 export type LucaVoiceProviderPreference = LucaVoiceProviderKind | "auto";
 export type LucaVoiceProviderAdapterKind =
   | "local_adapter"
@@ -228,6 +229,65 @@ export interface LucaVoiceAudioVoiceListResult {
   ok: boolean;
   voices: Array<Record<string, unknown>>;
   metadata: LucaVoiceAudioApiMetadata;
+}
+
+export interface LucaVoiceProviderTransportRequest {
+  requestId: string;
+  method: "POST" | "GET";
+  path: string;
+  headers?: Record<string, string>;
+  body?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceProviderTransportResult {
+  ok: boolean;
+  status?: number;
+  body?: Record<string, unknown>;
+  error?: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface LucaVoiceProviderTransport {
+  kind: LucaVoiceProviderTransportKind;
+  send(request: LucaVoiceProviderTransportRequest): Promise<LucaVoiceProviderTransportResult>;
+  getSnapshot?(): Record<string, unknown>;
+}
+
+export interface LucaVoiceOpenAICompatibleProviderOptions {
+  baseUrl?: string;
+  apiKey?: string;
+  organizationId?: string;
+  projectId?: string;
+  enableNetworkProviderCalls?: boolean;
+  transport?: LucaVoiceProviderTransport;
+  allowUnauthenticatedMock?: boolean;
+  defaultSpeechModel?: string;
+  defaultTranscriptionModel?: string;
+  defaultVoice?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceOpenAICompatibleProviderSnapshot {
+  providerKind: "cloud";
+  adapterKind: "openai_compatible_voice_provider";
+  counters: {
+    speechRequests: number;
+    transcriptionRequests: number;
+    voiceListRequests: number;
+    transportCalls: number;
+    blockedInvocations: number;
+  };
+  metadata: {
+    adapterKind: "openai_compatible_voice_provider";
+    networkProviderCallsEnabled: boolean;
+    providerApisCalled: boolean;
+    audioApisCalled: false;
+    microphoneApisCalled: false;
+    systemApisCalled: false;
+    heavyModelsLoaded: false;
+    requiresExplicitOptIn: true;
+  } & Record<string, unknown>;
 }
 
 export type LucaVoiceOnboardingStep =
