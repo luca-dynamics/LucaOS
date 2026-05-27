@@ -5,6 +5,7 @@ import { VoiceProviderRouter } from "./VoiceProviderRouter";
 import { VoiceRuntime } from "./VoiceRuntime";
 import { VoiceRuntimeEventBridge } from "./VoiceRuntimeEventBridge";
 import { VoiceStreamingRuntime } from "./VoiceStreamingRuntime";
+import { createRealtimeVoiceSessionController } from "./createRealtimeVoiceSessionController";
 import { createVoiceProviderAdapters } from "./createVoiceProviderAdapters";
 import { createVoiceRealProviderAdapterShell } from "./createVoiceRealProviderAdapterShell";
 import { evaluateVoiceProviderReadiness } from "./VoiceProviderReadiness";
@@ -30,6 +31,11 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
   const runtime = new VoiceRuntime(registry, { recording: { enabled: options.enableInMemoryTape ?? true, sink: tapeSink } }, eventBridge);
   const streamingRuntime = new VoiceStreamingRuntime(providerRouter, eventBridge);
   const audioApi = new VoiceOpenAICompatibleAudioApi(providerRouter, registry);
+  const realtimeVoiceController = createRealtimeVoiceSessionController({
+    runtime,
+    streamingRuntime,
+    eventBridge,
+  }).controller;
 
   const flags = {
     registerScaffoldProviderAdapters: options.registerScaffoldProviderAdapters ?? true,
@@ -107,6 +113,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
     audioApi,
     tapeSink,
     eventBridge,
+    realtimeVoiceController,
     providerAdapters,
     realProviderAdapterShell,
     getSnapshot: () => {
@@ -122,6 +129,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
         runtimeState: runtime.getState(),
         streamingSnapshot: streamingRuntime.getSnapshot(),
         audioApiSnapshot: audioApi.getSnapshot(),
+        realtimeVoiceControllerSnapshot: realtimeVoiceController.getSnapshot(),
         tapeSnapshot: (options.enableInMemoryTape ?? true) ? tapeSink.getSnapshot() : undefined,
         metadata: {
           factoryKind: "luca_voice_runtime_scaffold" as const,
@@ -145,6 +153,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
       if (options.enableInMemoryTape ?? true) {
         tapeSink.reset();
       }
+      realtimeVoiceController.reset();
       providerAdapters.reset();
       realProviderAdapterShell.reset();
       registerEnabledAdapters();
