@@ -1128,3 +1128,32 @@ export interface ComputerUseBrowserRuntimeRouterDryRunOptions {
   now?: () => string;
   onEvent?: (event: ComputerUseBrowserRuntimeRouterDryRunEvent) => void;
 }
+
+export type ComputerUseBrowserRuntimeRouterInvocationReadinessStatus =
+  | "blocked"
+  | "ready"
+  | "needs_confirmation"
+  | "dry_run_required";
+
+export interface ComputerUseBrowserRuntimeRouterInvocationGate {
+  gate: string;
+  passed: boolean;
+  reason: string;
+}
+
+export interface ComputerUseBrowserRuntimeRouterInvocationReadinessResult {
+  status: ComputerUseBrowserRuntimeRouterInvocationReadinessStatus;
+  gates: ComputerUseBrowserRuntimeRouterInvocationGate[];
+  metadata: {
+    guardKind: "browser_runtime_router_invocation_guard";
+    realBrowserExecutionEnabled: false;
+    browserRuntimeRouterImported: false;
+    browserRuntimeRouterInstantiated: false;
+    browserRuntimeRouterCalled: false;
+    playwrightCalled: false;
+    browserApisCalled: false;
+    systemApisCalled: false;
+    directHostAllowed: false;
+    requiresExplicitOptIn: true;
+  };
+}

@@ -110,3 +110,21 @@ Mission-like input
 - Snapshot/counter metadata now exposes dry-run readiness signals while preserving safety defaults (`playwrightCalled/browserApisCalled/systemApisCalled/directHostAllowed` remain `false`).
 - Optional dry-run event callback hooks support mission-tape-friendly started/completed/failed records; callback write failures are non-fatal.
 - Real browser execution remains disabled; next integration step can be feature-flagged real router invocation after dry-run guardrails are stable.
+
+## BrowserRuntime real-router invocation guard design (current phase)
+
+- BrowserRuntime router bridge mapping + validation and router dry-run adapter are available.
+- Real BrowserRuntimeRouter invocation remains disabled by default in this phase.
+- New guard-design contract requires all readiness gates to pass before any future real invocation path is enabled:
+  - sandbox browser adapter enabled
+  - router bridge enabled
+  - dry-run enabled or prior dry-run pass evidence
+  - explicit real-router feature flag enabled
+  - guard decision `allowed`
+  - no direct-host lane
+  - no critical-risk action
+  - risky-action confirmation approved
+  - mission tape/event bridge availability
+  - router route validation pass
+  - rollback/failure result path available
+- Direct-host remains forbidden and real browser execution remains off until a future dedicated adapter PR lands with tests.
