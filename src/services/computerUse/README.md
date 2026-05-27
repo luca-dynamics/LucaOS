@@ -159,6 +159,13 @@ import {
 - This layer does **not** import or write to real MissionTape storage yet.
 - Future MissionTape integration should inject/replace the sink with a stable local adapter surface.
 - Sensitive text should remain redacted by default in event payload handling.
+- Guard decisions are now recorded as mission-tape runtime events before any real browser/direct-host execution path:
+  - Generic: `computer_use_guard_decision`
+  - Status-specific: `computer_use_guard_allowed`, `computer_use_guard_denied`, `computer_use_guard_needs_confirmation`
+- Confirmation-required guard outcomes are auditable through mission tape event streams.
+- Missing mission context falls back to `missionId: "unknown"` for compatibility/safety.
+- Guard-decision recording remains non-fatal; runtime execution flow does not crash when recording fails.
+- Direct-host remains forbidden and system APIs remain disabled in guard decision event metadata.
 
 
 ## BrowserRuntime Adapter Boundary

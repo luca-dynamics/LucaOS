@@ -19,6 +19,7 @@ export class ComputerUsePipeline {
   private readonly recovery: ComputerUsePipelineOptions["recovery"];
   private readonly tapeBridge: ComputerUsePipelineOptions["tapeBridge"];
   private readonly guardBridge?: NonNullable<ComputerUsePipelineOptions["guardBridge"]>;
+  private readonly eventBridge?: NonNullable<ComputerUsePipelineOptions["recording"]>["eventBridge"];
 
   private lastResult?: ComputerUsePipelineResult;
 
@@ -30,6 +31,7 @@ export class ComputerUsePipeline {
     this.recovery = options.recovery;
     this.tapeBridge = options.tapeBridge;
     this.guardBridge = options.guardBridge;
+    this.eventBridge = options.recording?.eventBridge;
   }
 
   async run(input: ComputerUsePipelineInput): Promise<ComputerUsePipelineResult> {
@@ -92,6 +94,10 @@ export class ComputerUsePipeline {
       request: input.executionRequest,
       dangerousContext: input.focusContext?.requiresGuardApproval ?? false,
     });
+    this.recordGuardDecision(planDecision, {
+      missionId: input.executionRequest?.missionId,
+      stepId: input.executionRequest?.stepId,
+    });
     if (planDecision && planDecision.status !== "allowed") {
       return actionPlan.actions.map((action) => this.deniedResult(action, planDecision));
     }
@@ -104,6 +110,11 @@ export class ComputerUsePipeline {
           plan: actionPlan,
           request: input.executionRequest,
           dangerousContext: input.focusContext?.requiresGuardApproval ?? false,
+        });
+        this.recordGuardDecision(actionDecision, {
+          missionId: input.executionRequest?.missionId,
+          stepId: input.executionRequest?.stepId,
+          actionType: action.type,
         });
         if (actionDecision.status !== "allowed") {
           guardedResults.push(this.deniedResult(action, actionDecision));
@@ -209,5 +220,28 @@ export class ComputerUsePipeline {
         executorKind: "scaffold",
       },
     };
+  }
+
+  private recordGuardDecision(
+    decision: ComputerUseGuardDecision | undefined,
+    context: { missionId?: string; stepId?: string; actionType?: ComputerUseExecutionResult["action"]["type"] },
+  ): void {
+    if (!decision || !this.eventBridge) return;
+    try {
+      this.eventBridge.recordGuardDecision({
+        missionId: context.missionId,
+        stepId: context.stepId,
+        actionType: context.actionType,
+        riskLevel: decision.metadata.riskLevel,
+        status: decision.status,
+        reason: decision.reason,
+        confirmationRequired: decision.metadata.confirmationRequired,
+        approvalRequirement: decision.metadata.approvalRequirement,
+        approvedBy: undefined,
+        guardPolicyKind: decision.metadata.guardPolicyKind,
+      });
+    } catch {
+      // Non-fatal by design: guard decision recording must never block execution.
+    }
   }
 }

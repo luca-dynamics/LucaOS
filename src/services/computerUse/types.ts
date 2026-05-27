@@ -598,6 +598,9 @@ export interface ComputerUsePipelineOptions {
     recordRecoveryPlan: (missionId: string, payload: ComputerUseRecoveryPlan) => unknown;
     reset: () => unknown;
   };
+  recording?: {
+    eventBridge: Pick<ComputerUseMissionIntegrationRecordingOptions["eventBridge"], "recordGuardDecision">;
+  };
 }
 
 export type ComputerUseMissionStepKind = "computer_use";
@@ -900,7 +903,11 @@ export type ComputerUseRuntimeEventType =
   | "computer_use_browser_adapter_started"
   | "computer_use_browser_adapter_completed"
   | "computer_use_browser_adapter_rejected"
-  | "computer_use_browser_adapter_failed";
+  | "computer_use_browser_adapter_failed"
+  | "computer_use_guard_decision"
+  | "computer_use_guard_allowed"
+  | "computer_use_guard_denied"
+  | "computer_use_guard_needs_confirmation";
 
 export interface ComputerUseMissionTapeSinkRecord {
   missionId: string;
@@ -983,6 +990,19 @@ export interface ComputerUseRuntimeEventBridgeRecordInput {
   kind?: string;
 }
 
+export interface ComputerUseGuardDecisionEventInput {
+  missionId?: string;
+  stepId?: string;
+  actionType?: ComputerUseActionType;
+  riskLevel: ComputerUseGuardRiskLevel;
+  status: ComputerUseGuardDecisionStatus;
+  reason: string;
+  confirmationRequired: boolean;
+  approvalRequirement: ComputerUseGuardApprovalRequirement;
+  approvedBy?: ComputerUseGuardApprovalContext["approvedBy"];
+  guardPolicyKind: ComputerUseGuardDecisionMetadata["guardPolicyKind"];
+}
+
 export interface ComputerUseRuntimeEventBridgeResult {
   ok: boolean;
   record?: ComputerUseMissionTapeSinkRecord;
@@ -1005,6 +1025,7 @@ export interface ComputerUseMissionIntegrationRecordingOptions {
       result: ComputerUseBrowserRuntimeAdapterResult,
       request?: ComputerUseBrowserRuntimeAdapterRequest,
     ) => ComputerUseRuntimeEventBridgeResult;
+    recordGuardDecision: (input: ComputerUseGuardDecisionEventInput) => ComputerUseRuntimeEventBridgeResult;
     getSnapshot: (missionId?: string) => ComputerUseMissionTapeSinkSnapshot;
     reset: () => void;
   };

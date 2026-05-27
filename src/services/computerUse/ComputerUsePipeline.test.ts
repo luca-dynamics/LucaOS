@@ -264,4 +264,53 @@ describe("ComputerUsePipeline", () => {
     expect(result.verificationResults[0].status).toBe("inconclusive");
     expect(result.recoveryPlan.strategy).toBe("observe_again");
   });
+
+  it("records denied guard decision via runtime event bridge without executor side effects", async () => {
+    const guardEvents: string[] = [];
+    const recordGuardDecision = vi.fn((input: { status: string }) => {
+      guardEvents.push(input.status);
+      return { ok: true, metadata: { eventBridgeKind: "scaffold", storageWritesEnabled: false, missionTapeImported: false, systemApisCalled: false } };
+    });
+    const executor = new ComputerUseExecutor();
+    const sandboxAdapter = new ComputerUseSandboxExecutorAdapter();
+    const sandboxExecuteSpy = vi.spyOn(sandboxAdapter, "execute");
+    executor.registerAdapter(sandboxAdapter);
+
+    const pipeline = new ComputerUsePipeline({
+      focusContextBuilder: new ComputerUseFocusContextBuilder({ riskLevel: "dangerous" }),
+      actionPlanner: new ComputerUseActionPlanner(),
+      executor,
+      guardBridge: new ComputerUseGuardBridge(),
+      verifier: new ComputerUseVerifier(),
+      recovery: new ComputerUseRecovery(),
+      tapeBridge: new ComputerUseMissionTapeBridge(),
+      recording: { eventBridge: { recordGuardDecision } },
+    });
+    await pipeline.run({
+      missionId: "mission-guard-recording-1",
+      userPointedTarget: { description: "Delete item" },
+      executionRequest: { guardApprovalProvided: false },
+    });
+    expect(guardEvents).toContain("needs_confirmation");
+    expect(sandboxExecuteSpy).not.toHaveBeenCalled();
+  });
+
+  it("guard decision recording failures are non-fatal", async () => {
+    const pipeline = new ComputerUsePipeline({
+      focusContextBuilder: new ComputerUseFocusContextBuilder({ riskLevel: "dangerous" }),
+      actionPlanner: new ComputerUseActionPlanner(),
+      executor: new ComputerUseExecutor(),
+      guardBridge: new ComputerUseGuardBridge(),
+      verifier: new ComputerUseVerifier(),
+      recovery: new ComputerUseRecovery(),
+      tapeBridge: new ComputerUseMissionTapeBridge(),
+      recording: { eventBridge: { recordGuardDecision: () => { throw new Error("sink down"); } } },
+    });
+    const result = await pipeline.run({
+      missionId: "mission-guard-recording-2",
+      userPointedTarget: { description: "Delete item" },
+      executionRequest: { guardApprovalProvided: false },
+    });
+    expect(result.executionResults[0].status).toBe("denied");
+  });
 });

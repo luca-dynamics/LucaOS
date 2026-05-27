@@ -5,6 +5,7 @@ import {
   ComputerUseMissionIntegrationResult,
   ComputerUseMissionTapeSinkRecord,
   ComputerUseMissionTapeSinkSnapshot,
+  ComputerUseGuardDecisionEventInput,
   ComputerUseMissionStepAdapterResult,
   ComputerUseRuntimeEventBridgeOptions,
   ComputerUseRuntimeEventBridgeRecordInput,
@@ -89,6 +90,32 @@ export class ComputerUseRuntimeEventBridge {
       simulated: result.metadata.simulated,
       adapterKind: result.metadata.adapterKind,
     });
+  }
+
+  recordGuardDecision(input: ComputerUseGuardDecisionEventInput): ComputerUseRuntimeEventBridgeResult {
+    const missionId = input.missionId ?? "unknown";
+    const payload = {
+      missionId: input.missionId,
+      stepId: input.stepId,
+      actionType: input.actionType,
+      riskLevel: input.riskLevel,
+      status: input.status,
+      reason: input.reason,
+      confirmationRequired: input.confirmationRequired,
+      approvalRequirement: input.approvalRequirement,
+      approvedBy: input.approvedBy,
+      guardPolicyKind: input.guardPolicyKind,
+      storageWritesEnabled: false,
+      systemApisCalled: false,
+      directHostAllowed: false,
+      requiresExplicitOptIn: true,
+    };
+    const generic = this.writeRecord("computer_use_guard_decision", missionId, payload);
+    if (!generic.ok) return generic;
+    if (input.status === "allowed") this.writeRecord("computer_use_guard_allowed", missionId, payload);
+    if (input.status === "denied") this.writeRecord("computer_use_guard_denied", missionId, payload);
+    if (input.status === "needs_confirmation") this.writeRecord("computer_use_guard_needs_confirmation", missionId, payload);
+    return generic;
   }
 
   getSnapshot(missionId?: string): ComputerUseMissionTapeSinkSnapshot {

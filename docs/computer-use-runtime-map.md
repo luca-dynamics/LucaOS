@@ -73,3 +73,9 @@ Mission-like input
 - External sink forwarding requires explicit `enableExternalMissionTapeSink: true` opt-in.
 - This phase does not perform real filesystem/database/localStorage writes by default.
 - A future PR can wire the stable LucaOS MissionTape interface into this adapter boundary once contract stability is confirmed.
+
+## Guard decision tape observability update
+
+- Guard decisions are now emitted through the runtime event bridge as both generic and status-specific mission tape events.
+- `allowed`, `denied`, and `needs_confirmation` decisions are auditable even when execution is blocked, with mission/step/action/risk/status context preserved.
+- Event metadata remains scaffold-safe (`systemApisCalled: false`, `directHostAllowed: false`, `requiresExplicitOptIn: true`) and no real browser/direct-host/system APIs are called in this phase.
