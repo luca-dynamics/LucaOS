@@ -98,3 +98,11 @@ Treat cloud-agent install/test constraints as first-class release risk for missi
 - Default behavior remains unchanged when router bridge flags are off.
 - Real BrowserRuntimeRouter execution remains disabled; no Playwright/browser/system/direct-host calls are enabled.
 - Next phase can introduce optional real router invocation behind additional explicit guard/tape validation gates.
+
+## Newly completed: BrowserRuntime router invocation dry-run adapter
+
+- Added BrowserRuntime router invocation dry-run adapter and factory under `src/services/computerUse/*`.
+- Dry-run adapter validates the bridge request contract, emits simulated invoke results, and tracks snapshot counters.
+- Safety metadata explicitly confirms no real BrowserRuntime router import/instantiation/call and no Playwright/browser/system/direct-host execution.
+- Optional started/completed/failed dry-run event callback support added with non-fatal recording failure handling.
+- Next recommended step: feature-flagged real BrowserRuntimeRouter invocation behind explicit opt-in once dry-run event + guard confirmation stability is verified.

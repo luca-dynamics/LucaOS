@@ -102,3 +102,11 @@ Mission-like input
 - The bridge path is metadata-only and keeps all no-real-execution guardrails intact (`browserRuntimeRouterImported: false`, `browserRuntimeRouterCalled: false`, `playwrightCalled: false`, `browserApisCalled: false`, `systemApisCalled: false`, `directHostAllowed: false`).
 - If bridge validation fails, adapter rejects safely without enabling runtime/browser/host side effects.
 - Future step: feature-flagged real BrowserRuntimeRouter invocation only after additional guard + tape validation gates are approved.
+
+## BrowserRuntime router dry-run adapter update
+
+- Added `BrowserRuntimeRouterDryRunAdapter` + factory wiring for side-effect-free router invocation simulation.
+- Dry-run validates the tested router bridge contract and returns simulated invocation results without importing or instantiating `BrowserRuntimeRouter`.
+- Snapshot/counter metadata now exposes dry-run readiness signals while preserving safety defaults (`playwrightCalled/browserApisCalled/systemApisCalled/directHostAllowed` remain `false`).
+- Optional dry-run event callback hooks support mission-tape-friendly started/completed/failed records; callback write failures are non-fatal.
+- Real browser execution remains disabled; next integration step can be feature-flagged real router invocation after dry-run guardrails are stable.
