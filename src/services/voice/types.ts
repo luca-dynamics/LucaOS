@@ -60,6 +60,67 @@ export interface LucaVoiceRuntimeMetadata {
   requiresExplicitOptIn: true;
 }
 
+export interface LucaVoiceAudioApiMetadata {
+  apiKind: "openai_compatible_audio_scaffold";
+  httpServerStarted: false;
+  audioApisCalled: false;
+  microphoneApisCalled: false;
+  sttApisCalled: false;
+  ttsApisCalled: false;
+  providerApisCalled: false;
+  heavyModelsLoaded: false;
+  systemApisCalled: false;
+  requiresExplicitOptIn: true;
+}
+
+export interface LucaVoiceAudioSpeechRequest {
+  model: string;
+  input: string;
+  voice?: string;
+  response_format?: "mp3" | "opus" | "aac" | "flac" | "wav" | "pcm";
+  speed?: number;
+  providerPreference?: LucaVoiceProviderPreference;
+  language?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceAudioSpeechResult {
+  ok: boolean;
+  requestId: string;
+  selectedBackendId?: string;
+  selectedProviderKind?: LucaVoiceProviderKind;
+  audioPlaceholder?: string;
+  reason?: string;
+  metadata: LucaVoiceAudioApiMetadata;
+}
+
+export interface LucaVoiceAudioTranscriptionRequest {
+  model?: string;
+  filePlaceholder?: string;
+  language?: string;
+  prompt?: string;
+  response_format?: "json" | "text" | "srt" | "verbose_json" | "vtt";
+  providerPreference?: LucaVoiceProviderPreference;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceAudioTranscriptionResult {
+  ok: boolean;
+  requestId: string;
+  selectedBackendId?: string;
+  selectedProviderKind?: LucaVoiceProviderKind;
+  text?: string;
+  segments?: Array<Record<string, unknown>>;
+  reason?: string;
+  metadata: LucaVoiceAudioApiMetadata;
+}
+
+export interface LucaVoiceAudioVoiceListResult {
+  ok: boolean;
+  voices: Array<Record<string, unknown>>;
+  metadata: LucaVoiceAudioApiMetadata;
+}
+
 export type LucaVoiceOnboardingStep =
   | "welcome"
   | "name"
