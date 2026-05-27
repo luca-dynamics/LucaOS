@@ -118,3 +118,12 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 ## Runtime UI bridge scaffolds
 
 Service-level UI bridge contracts are available for Voice Mode, Voice HUD subscriptions, and onboarding state. These bridges keep in-memory listener registries and expose snapshot/getState APIs for future UI subscribers. They do not import React/UI components and do not enable microphone, STT, TTS, provider, browser, or OS execution.
+
+## Runtime readiness and validation docs
+
+- [Luca runtime readiness report](../../../docs/luca-runtime-readiness-report.md)
+- [Runtime validation environment guide](../../../docs/runtime-validation-environment.md)
+- [Runtime targeted validation checklist](../../../docs/runtime-targeted-validation-checklist.md)
+- [Luca runtime foundation map](../../../docs/luca-runtime-foundation-map.md)
+- [Future real integration safety checklist](../../../docs/future-real-integration-safety-checklist.md)
+- [Runtime UI bridge map](../../../docs/runtime-ui-bridge-map.md)

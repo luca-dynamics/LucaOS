@@ -276,3 +276,12 @@ import {
 ## Confirmation UI bridge scaffold
 
 `ComputerUseConfirmationUiBridge` exposes subscription-friendly state for pending confirmations and in-memory approve/reject results. It does not execute browser/runtime actions and keeps direct-host/system/storage flags disabled.
+
+## Runtime readiness and validation docs
+
+- [Luca runtime readiness report](../../../docs/luca-runtime-readiness-report.md)
+- [Runtime validation environment guide](../../../docs/runtime-validation-environment.md)
+- [Runtime targeted validation checklist](../../../docs/runtime-targeted-validation-checklist.md)
+- [Luca runtime foundation map](../../../docs/luca-runtime-foundation-map.md)
+- [Future real integration safety checklist](../../../docs/future-real-integration-safety-checklist.md)
+- [Runtime UI bridge map](../../../docs/runtime-ui-bridge-map.md)
