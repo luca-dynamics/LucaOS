@@ -33,6 +33,7 @@ import {
   deriveVoiceRuntimeProviderPolicy,
   VoiceRuntimeProviderPolicyRouteMetadata,
 } from "./voice/VoiceRuntimeProviderPolicy";
+import { VoiceRouteShadowEvaluation, evaluateVoiceRouteShadow } from "./voice/VoiceRouteShadowEvaluator";
 
 export interface LiveConfig {
   onToolCall: (name: string, args: any) => Promise<any>;
@@ -81,6 +82,7 @@ class LucaLiveService {
   private currentStatus = "IDLE";
   private currentRouteKind: VoiceSessionRoute["kind"] | null = null;
   private currentRouteProviderPolicy: VoiceRuntimeProviderPolicyRouteMetadata | null = null;
+  private currentRouteShadowEvaluation: VoiceRouteShadowEvaluation | null = null;
 
   constructor() {
     // We defer AI initialization to connect() to ensure we have the latest key
@@ -134,17 +136,22 @@ class LucaLiveService {
     const liveRoute = resolveVoiceSessionRoute();
     this.currentRouteKind = liveRoute.kind;
     const voiceSettings = settingsService.get("voice");
-    this.currentRouteProviderPolicy = createVoiceRuntimeProviderPolicyRouteMetadata(
-      deriveVoiceRuntimeProviderPolicy({
-        preset: voiceSettings?.preset,
-        provider: voiceSettings?.provider,
-        sttModel: voiceSettings?.sttModel,
-        allowCloudFallback: voiceSettings?.allowCloudFallback,
-        allowByok: voiceSettings?.allowByok,
-        cloudEnabled: voiceSettings?.cloudEnabled,
-        byokEnabled: voiceSettings?.byokEnabled,
-      }),
-    );
+    const providerPolicy = deriveVoiceRuntimeProviderPolicy({
+      preset: voiceSettings?.preset,
+      provider: voiceSettings?.provider,
+      sttModel: voiceSettings?.sttModel,
+      allowCloudFallback: voiceSettings?.allowCloudFallback,
+      allowByok: voiceSettings?.allowByok,
+      cloudEnabled: voiceSettings?.cloudEnabled,
+      byokEnabled: voiceSettings?.byokEnabled,
+    });
+    this.currentRouteProviderPolicy = createVoiceRuntimeProviderPolicyRouteMetadata(providerPolicy);
+    this.currentRouteShadowEvaluation = evaluateVoiceRouteShadow({
+      existingRoute: { ...liveRoute, routeKind: liveRoute.kind },
+      providerPolicy,
+      settings: voiceSettings ?? undefined,
+      metadata: { owner: "liveService", shadowOnly: true },
+    });
     if (liveRoute.kind !== "CLOUD_BIDI") {
       const reason =
         liveRoute.reason ||
@@ -1091,11 +1098,21 @@ class LucaLiveService {
     providerPolicy: VoiceRuntimeProviderPolicyRouteMetadata | null;
     providerPolicyAdvisoryOnly: true;
     providerPolicyAppliedToRouting: false;
+    routeShadowEvaluation: VoiceRouteShadowEvaluation | null;
+    routeShadowOnly: true;
+    routeShadowMatched: boolean | null;
+    routeShadowSeverity: VoiceRouteShadowEvaluation["severity"] | null;
+    routeShadowRecommendation: VoiceRouteShadowEvaluation["recommendation"] | null;
   } {
     return {
       providerPolicy: this.currentRouteProviderPolicy,
       providerPolicyAdvisoryOnly: true,
       providerPolicyAppliedToRouting: false,
+      routeShadowEvaluation: this.currentRouteShadowEvaluation,
+      routeShadowOnly: true,
+      routeShadowMatched: this.currentRouteShadowEvaluation?.matched ?? null,
+      routeShadowSeverity: this.currentRouteShadowEvaluation?.severity ?? null,
+      routeShadowRecommendation: this.currentRouteShadowEvaluation?.recommendation ?? null,
     };
   }
 
