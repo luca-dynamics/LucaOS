@@ -8,6 +8,8 @@ export * from "./VoiceRuntime";
 export * from "./createVoiceRuntime";
 export * from "./VoiceStreamingRuntime";
 export * from "./createVoiceStreamingRuntime";
+export * from "./VoiceOpenAICompatibleAudioApi";
+export * from "./createVoiceOpenAICompatibleAudioApi";
 
 export * from "./VoiceOnboardingBridge";
 export * from "./createVoiceOnboardingBridge";

@@ -83,3 +83,11 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - This router only evaluates backend metadata and registry snapshots; it does not call provider APIs.
 - No microphone/audio/system API calls, no real STT/TTS invocations, and no heavy model loading are performed.
 - This prepares Luca Prime / Local / BYOK routing paths so future PRs can add real OpenAI-compatible audio and streaming contracts behind stable interfaces.
+
+## OpenAI-compatible audio API scaffold
+
+- `VoiceOpenAICompatibleAudioApi` and `createVoiceOpenAICompatibleAudioApi` provide LucaOS-native service-level contracts aligned to `/v1/audio/speech`, `/v1/audio/transcriptions`, and voices listing behavior.
+- This scaffold does **not** start an HTTP server and does **not** expose network endpoints directly; it is an internal service contract layer only.
+- The implementation returns placeholder speech/transcription payloads only and does not call real providers, audio output APIs, microphone APIs, STT/TTS APIs, or model runtimes.
+- No heavy models are loaded, no system APIs are called, and no storage is written.
+- The contract is inspired by OmniVoice-style compatibility patterns, but implemented as LucaOS-native scaffold-only types and service boundaries for future local LucaOS voice server compatibility.
