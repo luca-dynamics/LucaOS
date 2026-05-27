@@ -63,6 +63,7 @@ import {
   startKernelBootSequence,
   waitForOnboardingDelay,
 } from "../../services/onboarding/OnboardingLifecycleService";
+import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
 
 type Step = OnboardingStep;
 
@@ -591,6 +592,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   };
 
   const handleModeSelect = async (mode: ConversationMode) => {
+    realtimeVoiceUiBridge.modeBridge.setMode(mode);
+    if (mode === "voice") {
+      realtimeVoiceUiBridge.modeBridge.startVoiceSession();
+      realtimeVoiceUiBridge.controller.startSession({ metadata: { source: "onboarding_mode_select" } });
+    } else {
+      realtimeVoiceUiBridge.modeBridge.stopVoiceSession();
+      realtimeVoiceUiBridge.controller.stopSession("text_mode_selected");
+    }
     setConversationMode(mode);
     soundService.play("KEYSTROKE");
 
