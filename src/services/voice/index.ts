@@ -6,6 +6,8 @@ export * from "./VoiceInMemoryTapeSink";
 export * from "./VoiceRuntimeEventBridge";
 export * from "./VoiceRuntime";
 export * from "./createVoiceRuntime";
+export * from "./VoiceStreamingRuntime";
+export * from "./createVoiceStreamingRuntime";
 
 export * from "./VoiceOnboardingBridge";
 export * from "./createVoiceOnboardingBridge";

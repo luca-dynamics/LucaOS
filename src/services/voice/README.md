@@ -15,6 +15,7 @@ The `src/services/voice` module is the first contract layer for LucaOS Voice Mod
 - `VoiceProviderRouter` scaffold and `createVoiceProviderRouter` factory for local/cloud/BYOK provider selection planning.
 - In-memory backend registry for provider registration/selection.
 - Voice runtime scaffold with session lifecycle, shared command intake, and confirmation flow.
+- Voice streaming runtime scaffold (`VoiceStreamingRuntime` and `createVoiceStreamingRuntime`) for in-memory STT/TTS stream contract handling.
 - Voice session tape bridge with in-memory recording for runtime events and command flow.
 - Factory helper for safe runtime wiring.
 
@@ -22,6 +23,7 @@ The `src/services/voice` module is the first contract layer for LucaOS Voice Mod
 
 - Real microphone/audio capture APIs.
 - Real STT/TTS provider integrations.
+- Real streaming STT/TTS transport/provider integrations.
 - Heavy model dependencies.
 - Direct system API calls.
 - Computer-use execution.
@@ -41,9 +43,16 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 ## Future work
 
 1. OpenAI-compatible audio API scaffold
-2. Streaming STT/TTS contracts
+2. Real streaming STT/TTS provider adapters behind feature flags
 3. Real provider-specific adapters under local/cloud/BYOK
 4. Voice-to-computer-use bridge hardening
+
+## Voice streaming runtime scaffold
+
+- `VoiceStreamingRuntime` and `createVoiceStreamingRuntime` are contract-only scaffold components for opening/pausing/completing/interruption/failure flow of STT/TTS streams.
+- Streams, chunks, and metadata are maintained in-memory only; this is intentionally non-production transport behavior.
+- No microphone APIs, no audio output APIs, no real STT/TTS provider calls, no WebSocket servers/connections, and no heavy model loading are performed.
+- A future PR can add OpenAI-compatible audio API scaffolding or real provider adapters behind explicit feature flags while preserving current service contracts.
 
 ## Voice Mode onboarding bridge (scaffold)
 

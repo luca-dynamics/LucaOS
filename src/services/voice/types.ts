@@ -406,3 +406,49 @@ export interface LucaVoiceProviderRouter {
   selectTTSBackend(request: LucaTTSSelectRequest): LucaTTSBackend | undefined;
   getSnapshot(): LucaVoiceProviderRouterSnapshot;
 }
+
+export type LucaVoiceStreamKind = "stt" | "tts";
+
+export type LucaVoiceStreamStatus =
+  | "idle"
+  | "opening"
+  | "streaming"
+  | "paused"
+  | "completed"
+  | "interrupted"
+  | "failed";
+
+export interface LucaVoiceStreamChunk {
+  streamId: string;
+  kind: LucaVoiceStreamKind;
+  sequence: number;
+  text?: string;
+  audioChunk?: string;
+  isFinal?: boolean;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceStreamingSession {
+  streamId: string;
+  kind: LucaVoiceStreamKind;
+  status: LucaVoiceStreamStatus;
+  providerPreference?: LucaVoiceProviderPreference;
+  selectedBackendId?: string;
+  language?: string;
+  startedAt: string;
+  completedAt?: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface LucaVoiceStreamingRuntimeMetadata {
+  runtimeKind: "voice_streaming_scaffold";
+  audioApisCalled: false;
+  microphoneApisCalled: false;
+  sttApisCalled: false;
+  ttsApisCalled: false;
+  websocketOpened: false;
+  heavyModelsLoaded: false;
+  systemApisCalled: false;
+  requiresExplicitOptIn: true;
+}
