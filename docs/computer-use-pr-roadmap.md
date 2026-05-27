@@ -124,3 +124,5 @@ Treat cloud-agent install/test constraints as first-class release risk for missi
 
 - [x] Added BrowserRuntimeRouter guarded adapter shell (non-executing): evaluates invocation readiness and reports shell-only status.
 - [ ] Future PR: optional real BrowserRuntimeRouter execution behind explicit opt-in + full guard/confirmation/dry-run gates.
+
+- Added runtime-to-UI prep scaffold for computer-use confirmations via service-level subscription bridge (no UI components, no browser execution enabled).

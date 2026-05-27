@@ -43,3 +43,6 @@ export { createBrowserRuntimeContractProbe, getDiscoverySnapshot, DISCOVERED_BRO
 export type { ComputerUseBrowserRuntimeTarget, ComputerUseBrowserRuntimeTargetMetadata, ComputerUseBrowserRuntimeTargetRequest, ComputerUseBrowserRuntimeTargetResult } from "./BrowserRuntimeContract";
 
 export * from "./types";
+
+export { ComputerUseConfirmationUiBridge } from "./ComputerUseConfirmationUiBridge";
+export { createComputerUseConfirmationUiBridge } from "./createComputerUseConfirmationUiBridge";

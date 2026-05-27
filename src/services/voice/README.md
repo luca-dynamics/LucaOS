@@ -114,3 +114,7 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - `VoiceProviderReadiness` adds explicit feature-flag gate evaluation for Local, Luca Prime Cloud, and BYOK provider lanes.
 - Readiness results are scaffold-only and in-memory; they do not call real providers, networks, microphones, audio APIs, or model loaders.
 - `createLucaVoiceRuntime().getSnapshot()` now includes real-provider feature flags and readiness summaries so future real STT/TTS integrations can be enabled only through explicit opt-in gates.
+
+## Runtime UI bridge scaffolds
+
+Service-level UI bridge contracts are available for Voice Mode, Voice HUD subscriptions, and onboarding state. These bridges keep in-memory listener registries and expose snapshot/getState APIs for future UI subscribers. They do not import React/UI components and do not enable microphone, STT, TTS, provider, browser, or OS execution.
