@@ -34,6 +34,9 @@ Ordered by merge sequence:
 - Sandbox browser adapter scaffold now exists behind explicit opt-in and remains simulation-only with real execution disabled by default.
 - BrowserRuntime conformance matrix coverage now validates explicit sandbox action mapping and safe rejection/no-op dispositions for unsupported or not-yet-contracted actions.
 - Cloud-agent validation constraints and scoped validation workflow remain required to gate risky rollout steps.
+- Guard decisions now flow into mission tape runtime event recording (`decision`, `allowed`, `denied`, `needs_confirmation`) for pre-execution observability/auditability.
+- Confirmation-required outcomes are now explicitly visible in tape before any real browser/direct-host execution path.
+- Direct-host remains forbidden in scaffold mode.
 
 ## Next recommended PRs (strict sequence)
 

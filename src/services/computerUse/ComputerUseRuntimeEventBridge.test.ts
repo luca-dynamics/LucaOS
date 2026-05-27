@@ -55,4 +55,56 @@ describe("ComputerUseRuntimeEventBridge", () => {
     ]);
     expect(records[0].missionId).toBe("unknown");
   });
+
+  it("records guard decision generic and status-specific events", () => {
+    const bridge = new ComputerUseRuntimeEventBridge({ tapeSink: new ComputerUseInMemoryMissionTapeSink() });
+    bridge.recordGuardDecision({
+      missionId: "m-guard",
+      stepId: "s-guard",
+      actionType: "click",
+      riskLevel: "high",
+      status: "allowed",
+      reason: "Approved by policy",
+      confirmationRequired: false,
+      approvalRequirement: "none",
+      approvedBy: "policy",
+      guardPolicyKind: "scaffold",
+    });
+    const records = bridge.getSnapshot("m-guard").records;
+    expect(records.map((x) => x.eventType)).toEqual(["computer_use_guard_decision", "computer_use_guard_allowed"]);
+    expect(records[0].payload.stepId).toBe("s-guard");
+    expect(records[0].payload.actionType).toBe("click");
+    expect(records[0].payload.riskLevel).toBe("high");
+    expect(records[0].payload.status).toBe("allowed");
+    expect(records[0].payload.systemApisCalled).toBe(false);
+    expect(records[0].payload.directHostAllowed).toBe(false);
+  });
+
+  it("guard decision falls back missionId to unknown and captures denied/needs_confirmation", () => {
+    const bridge = new ComputerUseRuntimeEventBridge({ tapeSink: new ComputerUseInMemoryMissionTapeSink() });
+    bridge.recordGuardDecision({
+      status: "denied",
+      riskLevel: "critical",
+      reason: "Blocked by policy",
+      confirmationRequired: false,
+      approvalRequirement: "guard_approval",
+      guardPolicyKind: "scaffold",
+    });
+    bridge.recordGuardDecision({
+      status: "needs_confirmation",
+      riskLevel: "medium",
+      reason: "Needs approval",
+      confirmationRequired: true,
+      approvalRequirement: "user_confirmation_required",
+      guardPolicyKind: "scaffold",
+    });
+    const records = bridge.getSnapshot().records;
+    expect(records.map((x) => x.eventType)).toEqual([
+      "computer_use_guard_decision",
+      "computer_use_guard_denied",
+      "computer_use_guard_decision",
+      "computer_use_guard_needs_confirmation",
+    ]);
+    expect(records[0].missionId).toBe("unknown");
+  });
 });
