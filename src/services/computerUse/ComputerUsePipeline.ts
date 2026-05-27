@@ -201,7 +201,7 @@ export class ComputerUsePipeline {
       metadata: {
         reason: decision.reason,
         guardDecisionStatus: decision.status,
-        guardBridgeKind: decision.metadata.guardBridgeKind,
+        guardBridgeKind: decision.metadata.guardPolicyKind,
         externalGuardCalled: decision.metadata.externalGuardCalled,
         systemApisCalled: false,
         delegatesOnly: true,

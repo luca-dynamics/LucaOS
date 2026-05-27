@@ -163,7 +163,7 @@ describe("ComputerUsePipeline", () => {
     expect(result.metadata.systemApisCalled).toBe(false);
   });
 
-  it("guard bridge requires approval before executor runs", async () => {
+  it("guard bridge requires confirmation before executor runs", async () => {
     const executor = new ComputerUseExecutor();
     const sandboxAdapter = new ComputerUseSandboxExecutorAdapter();
     const sandboxExecuteSpy = vi.spyOn(sandboxAdapter, "execute");
@@ -186,7 +186,7 @@ describe("ComputerUsePipeline", () => {
 
     expect(result.executionResults[0].status).toBe("denied");
     expect(result.executionResults[0].metadata?.reason).toContain("Guard approval");
-    expect(result.executionResults[0].metadata?.guardDecisionStatus).toBe("requires_approval");
+    expect(result.executionResults[0].metadata?.guardDecisionStatus).toBe("needs_confirmation");
     expect(result.executionResults[0].metadata?.externalGuardCalled).toBe(false);
     expect(sandboxExecuteSpy).not.toHaveBeenCalled();
   });

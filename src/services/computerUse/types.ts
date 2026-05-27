@@ -170,21 +170,51 @@ export interface ComputerUseExecutorOptions {
   defaultExecutionMode?: ComputerUseExecutionMode;
 }
 
-export type ComputerUseGuardDecisionStatus = "allowed" | "denied" | "requires_approval";
+export type ComputerUseGuardDecisionStatus = "allowed" | "denied" | "needs_confirmation";
+
+export type ComputerUseGuardRiskLevel = "low" | "medium" | "high" | "critical";
+
+export type ComputerUseGuardApprovalRequirement =
+  | "none"
+  | "guard_approval"
+  | "user_confirmation_required";
+
+export interface ComputerUseGuardApprovalContext {
+  userConfirmed?: boolean;
+  approvalToken?: string;
+  approvedBy?: "user" | "policy" | "system";
+  approvalReason?: string;
+}
+
+export interface ComputerUseGuardDecisionMetadata {
+  guardPolicyKind: "scaffold";
+  externalGuardCalled: false;
+  systemApisCalled: false;
+  directHostAllowed: false;
+  requiresExplicitOptIn: true;
+  missionId?: string;
+  stepId?: string;
+  actionType?: ComputerUseActionType;
+  riskLevel: ComputerUseGuardRiskLevel;
+  status: ComputerUseGuardDecisionStatus;
+  confirmationRequired: boolean;
+  approvalRequirement: ComputerUseGuardApprovalRequirement;
+}
 
 export interface ComputerUseGuardDecision {
   status: ComputerUseGuardDecisionStatus;
   reason: string;
-  metadata: {
-    guardBridgeKind: "scaffold";
-    externalGuardCalled: false;
-  };
+  metadata: ComputerUseGuardDecisionMetadata;
 }
 
 export interface ComputerUseGuardBridgeInput {
   action?: ComputerUsePlannedAction;
   plan?: Pick<ComputerUseActionPlan, "actions" | "requiresGuardApproval">;
-  request?: Pick<ComputerUseExecutionRequest, "guardApprovalProvided">;
+  request?: Pick<ComputerUseExecutionRequest, "guardApprovalProvided"> & {
+    approval?: ComputerUseGuardApprovalContext;
+    missionId?: string;
+    stepId?: string;
+  };
   dangerousContext?: boolean;
 }
 
