@@ -7,9 +7,10 @@ import { modelManager } from "./ModelManagerService";
 import { resolveVoiceSessionRoute } from "./voiceSessionRouter";
 import { voiceSessionOrchestrator } from "./voiceSessionOrchestrator";
 import { loggerService } from "./loggerService";
+import { liveService } from "./liveService";
 import { realtimeVoiceUiBridge } from "./voice/realtimeVoiceUiBridge";
 import { getVoiceStatePrecedenceSnapshot } from "./voice/VoiceRuntimeStatePrecedence";
-import { getVoiceRuntimeProviderPolicySnapshot } from "./voice/VoiceRuntimeProviderPolicy";
+import { getVoiceRuntimeProviderPolicySnapshot, VoiceRuntimeProviderPolicyRouteMetadata } from "./voice/VoiceRuntimeProviderPolicy";
 import os from "os";
 import {
   calculateOverallAuditStatus,
@@ -101,10 +102,14 @@ export interface SupportSnapshot {
       responseSpeedLabel: string | null;
       routingHealth: string;
       adaptiveRouteApplied: boolean;
+      providerPolicy?: VoiceRuntimeProviderPolicyRouteMetadata | null;
+      providerPolicyAdvisoryOnly?: true;
+      providerPolicyAppliedToRouting?: false;
     };
+    providerPolicy?: ReturnType<typeof getVoiceRuntimeProviderPolicySnapshot>;
+    routeProviderPolicy?: VoiceRuntimeProviderPolicyRouteMetadata | null;
     realtimeBridge?: ReturnType<typeof realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot>;
     operatorState?: ReturnType<typeof getVoiceStatePrecedenceSnapshot>["operatorState"];
-    providerPolicy?: ReturnType<typeof getVoiceRuntimeProviderPolicySnapshot>;
   };
   diagnostics: {
     recentLogs: ReturnType<typeof loggerService.getRecentLogs>;
@@ -121,6 +126,7 @@ class DiagnosticsService {
     const allModels = modelManager.getAllModels();
     const ollama = await modelManager.getOllamaModels();
     const route = resolveVoiceSessionRoute(settings);
+    const routeMetadata = liveService.routeMetadata;
     const localProvisioningResume = this.readLocalProvisioningResume();
 
     const byCategory = allModels.reduce<SupportSnapshot["localModels"]["byCategory"]>(
@@ -174,7 +180,12 @@ class DiagnosticsService {
         models: (ollama?.models || []).map((m: any) => m.name || String(m)),
       },
       voice: {
-        route,
+        route: {
+          ...route,
+          providerPolicy: routeMetadata.providerPolicy,
+          providerPolicyAdvisoryOnly: routeMetadata.providerPolicyAdvisoryOnly,
+          providerPolicyAppliedToRouting: routeMetadata.providerPolicyAppliedToRouting,
+        },
         orchestrator: {
           connected: voiceSessionOrchestrator.connected,
           status: voiceSessionOrchestrator.status,
@@ -184,6 +195,9 @@ class DiagnosticsService {
           responseSpeedLabel: voiceSessionOrchestrator.responseSpeedLabel,
           routingHealth: voiceSessionOrchestrator.routingHealth,
           adaptiveRouteApplied: voiceSessionOrchestrator.adaptiveRouteApplied,
+          providerPolicy: routeMetadata.providerPolicy,
+          providerPolicyAdvisoryOnly: routeMetadata.providerPolicyAdvisoryOnly,
+          providerPolicyAppliedToRouting: routeMetadata.providerPolicyAppliedToRouting,
         },
         realtimeBridge: realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot(),
         operatorState: getVoiceStatePrecedenceSnapshot({
@@ -202,6 +216,7 @@ class DiagnosticsService {
           provider: settings.voice?.provider,
           sttModel: settings.voice?.sttModel,
         }),
+        routeProviderPolicy: routeMetadata.providerPolicy,
       },
       diagnostics: {
         recentLogs: loggerService.getRecentLogs().slice(-50),

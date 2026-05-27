@@ -32,6 +32,22 @@ export interface VoiceRuntimeProviderPolicy {
   metadata: Record<string, unknown>;
 }
 
+export interface VoiceRuntimeProviderPolicyRouteMetadata {
+  preset: VoicePreset;
+  policyProviderPreference: LucaVoiceProviderPreference;
+  latencyMode: VoiceLatencyMode;
+  privacyMode: VoicePrivacyMode;
+  fallbackAllowed: boolean;
+  networkAllowed: boolean;
+  localModelPreferred: boolean;
+  enableStreaming: boolean;
+  routePreference: LucaVoiceProviderPreference;
+  featureFlagsPreview: LucaVoiceRealProviderFeatureFlags;
+  advisoryOnly: true;
+  appliedToRouting: false;
+  metadata: Record<string, unknown>;
+}
+
 export const inferVoicePreset = (input: Pick<VoiceRuntimeProviderPolicyInput, "provider" | "sttModel" | "preset">): VoicePreset => {
   if (input.preset) return input.preset;
   const provider = input.provider || "";
@@ -108,6 +124,24 @@ export function getVoiceRuntimeProviderPolicySnapshot(input: VoiceRuntimeProvide
     ...policy,
     routeRequestPreference: policyToRoutePreference(policy),
     realProviderFeatureFlags: policyToFeatureFlags(policy),
+  };
+}
+
+export function createVoiceRuntimeProviderPolicyRouteMetadata(policy: VoiceRuntimeProviderPolicy): VoiceRuntimeProviderPolicyRouteMetadata {
+  return {
+    preset: policy.preset,
+    policyProviderPreference: policy.preferredProviderKind,
+    latencyMode: policy.latencyMode,
+    privacyMode: policy.privacyMode,
+    fallbackAllowed: policy.fallbackAllowed,
+    networkAllowed: policy.networkAllowed,
+    localModelPreferred: policy.localModelPreferred,
+    enableStreaming: policy.enableStreaming,
+    routePreference: policyToRoutePreference(policy),
+    featureFlagsPreview: policyToFeatureFlags(policy),
+    advisoryOnly: true,
+    appliedToRouting: false,
+    metadata: { ...policy.metadata },
   };
 }
 

@@ -28,6 +28,11 @@ import {
   resolveVoiceSessionRoute,
   VoiceSessionRoute,
 } from "./voiceSessionRouter";
+import {
+  createVoiceRuntimeProviderPolicyRouteMetadata,
+  deriveVoiceRuntimeProviderPolicy,
+  VoiceRuntimeProviderPolicyRouteMetadata,
+} from "./voice/VoiceRuntimeProviderPolicy";
 
 export interface LiveConfig {
   onToolCall: (name: string, args: any) => Promise<any>;
@@ -75,6 +80,7 @@ class LucaLiveService {
   private readonly KEEP_ALIVE_INTERVAL_MS = 15000; // Send heartbeat every 15 seconds
   private currentStatus = "IDLE";
   private currentRouteKind: VoiceSessionRoute["kind"] | null = null;
+  private currentRouteProviderPolicy: VoiceRuntimeProviderPolicyRouteMetadata | null = null;
 
   constructor() {
     // We defer AI initialization to connect() to ensure we have the latest key
@@ -127,6 +133,18 @@ class LucaLiveService {
 
     const liveRoute = resolveVoiceSessionRoute();
     this.currentRouteKind = liveRoute.kind;
+    const voiceSettings = settingsService.get("voice");
+    this.currentRouteProviderPolicy = createVoiceRuntimeProviderPolicyRouteMetadata(
+      deriveVoiceRuntimeProviderPolicy({
+        preset: voiceSettings?.preset,
+        provider: voiceSettings?.provider,
+        sttModel: voiceSettings?.sttModel,
+        allowCloudFallback: voiceSettings?.allowCloudFallback,
+        allowByok: voiceSettings?.allowByok,
+        cloudEnabled: voiceSettings?.cloudEnabled,
+        byokEnabled: voiceSettings?.byokEnabled,
+      }),
+    );
     if (liveRoute.kind !== "CLOUD_BIDI") {
       const reason =
         liveRoute.reason ||
@@ -973,6 +991,7 @@ class LucaLiveService {
     this.activeSession = null;
     this.currentStatus = "DISCONNECTED";
     this.currentRouteKind = null;
+    this.currentRouteProviderPolicy = null;
     this.interrupt(); // Clear audio queue
 
     // 4. Cleanup Input Node (Worker)
@@ -1066,6 +1085,18 @@ class LucaLiveService {
 
   get routeKind(): VoiceSessionRoute["kind"] | null {
     return this.currentRouteKind;
+  }
+
+  get routeMetadata(): {
+    providerPolicy: VoiceRuntimeProviderPolicyRouteMetadata | null;
+    providerPolicyAdvisoryOnly: true;
+    providerPolicyAppliedToRouting: false;
+  } {
+    return {
+      providerPolicy: this.currentRouteProviderPolicy,
+      providerPolicyAdvisoryOnly: true,
+      providerPolicyAppliedToRouting: false,
+    };
   }
 
   get canBargeIn(): boolean {
