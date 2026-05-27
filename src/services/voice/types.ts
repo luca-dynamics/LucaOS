@@ -22,6 +22,53 @@ export interface LucaVoiceRuntimeMetadata {
   storageWritesEnabled: false;
   requiresExplicitOptIn: true;
 }
+
+export type LucaVoiceOnboardingStep =
+  | "welcome"
+  | "name"
+  | "theme"
+  | "background_opacity"
+  | "model_mode"
+  | "local_model_scan"
+  | "preferences"
+  | "complete";
+
+export interface LucaVoiceOnboardingCommand {
+  step: LucaVoiceOnboardingStep;
+  transcript: string;
+  intent: string;
+  value?: unknown;
+  confidence: number;
+  metadata: Record<string, unknown>;
+}
+
+export interface LucaVoiceOnboardingState {
+  currentStep: LucaVoiceOnboardingStep;
+  userName?: string;
+  theme?: string;
+  backgroundOpacity?: number;
+  modelMode?: "luca_prime" | "local_models" | "byok";
+  localModelScanRequested?: boolean;
+  preferences?: string[];
+  completed: boolean;
+  metadata: {
+    bridgeKind: "voice_onboarding_scaffold";
+    audioApisCalled: false;
+    sttApisCalled: false;
+    ttsApisCalled: false;
+    systemApisCalled: false;
+    heavyModelsLoaded: false;
+    requiresExplicitOptIn: true;
+  };
+}
+
+export interface LucaVoiceOnboardingBridgeResult {
+  status: "handled" | "needs_clarification" | "rejected" | "complete";
+  state: LucaVoiceOnboardingState;
+  spokenResponse: string;
+  textResponse: string;
+  metadata: LucaVoiceOnboardingState["metadata"];
+}
 export type LucaVoiceRuntimeEventType =
   | "voice_session_started"
   | "voice_session_stopped"
