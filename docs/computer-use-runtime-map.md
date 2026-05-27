@@ -87,3 +87,10 @@ Mission-like input
 - Runtime guard decision payloads are confirmation-ready via optional `confirmationId` propagation where available.
 - Real browser execution and direct-host execution remain disabled in this phase.
 - Future UI/Voice confirmation surfaces can integrate by using the same confirmation request/result token contract.
+
+## BrowserRuntime router bridge contract tests update
+
+- Added `BrowserRuntimeRouterBridge` scaffold contract and tests in `src/services/computerUse`.
+- Bridge maps sandbox computer-use actions to BrowserRuntimeRouter-compatible request shape without invoking real router execution.
+- Explicit safety metadata confirms no BrowserRuntimeRouter runtime import/instantiation, no Playwright/browser/system calls, and no direct-host allowance.
+- Current phase remains scaffold-only; a future feature-flagged router bridge adapter can consume this contract.

@@ -222,3 +222,14 @@ import {
 - Confirmation requests and approval tokens are scaffold-only and stored in memory only (no filesystem/database/localStorage writes).
 - Safety metadata remains explicit (`bridgeKind: "guard_confirmation_scaffold"`, `systemApisCalled: false`, `directHostAllowed: false`, `storageWritesEnabled: false`, `requiresExplicitOptIn: true`).
 - Runtime event recording can carry `confirmationId` when available, while real browser/direct-host execution remains disabled in this phase.
+
+## BrowserRuntime router bridge scaffold contract
+
+- `BrowserRuntimeRouterBridge.ts` adds a side-effect-free contract mapper from computer-use sandbox browser requests into BrowserRuntimeRouter-compatible request shape.
+- This bridge is scaffold-only and does **not** instantiate/import `BrowserRuntimeRouter` for execution, does **not** call Playwright/browser/system APIs, and does **not** enable direct-host execution.
+- Contract helpers now include:
+  - `mapComputerUseActionToBrowserRuntimeRoute()`
+  - `createBrowserRuntimeRouterBridgeRequest()`
+  - `validateBrowserRuntimeRouterBridgeRequest()`
+- Contract tests cover action mapping/disposition behavior, unsupported-action rejection, mission-context preservation, and explicit no-real-execution metadata assertions.
+- Real BrowserRuntime router execution remains disabled in this phase; next step can introduce a feature-flagged adapter that consumes this tested bridge request contract.
