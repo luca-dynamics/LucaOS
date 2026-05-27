@@ -11,6 +11,43 @@ export type LucaVoiceRuntimeStatus =
   | "error";
 
 export type LucaVoiceProviderKind = "local" | "cloud" | "byok";
+export type LucaVoiceProviderPreference = LucaVoiceProviderKind | "auto";
+export type LucaVoiceProviderCapability =
+  | "stt"
+  | "tts"
+  | "streaming_stt"
+  | "streaming_tts"
+  | "voice_clone"
+  | "emotion"
+  | "multilingual"
+  | "low_latency";
+
+export interface LucaVoiceProviderRouteRequest {
+  capability: LucaVoiceProviderCapability;
+  preference?: LucaVoiceProviderPreference;
+  language?: string;
+  requiresStreaming?: boolean;
+  requiresVoiceClone?: boolean;
+  requiresEmotion?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceProviderRouteResult {
+  ok: boolean;
+  selectedBackendId?: string;
+  selectedProviderKind?: LucaVoiceProviderKind;
+  reason?: string;
+  fallbackUsed: boolean;
+  metadata: {
+    routerKind: "voice_provider_router_scaffold";
+    audioApisCalled: false;
+    sttApisCalled: false;
+    ttsApisCalled: false;
+    systemApisCalled: false;
+    heavyModelsLoaded: false;
+    requiresExplicitOptIn: true;
+  } & Record<string, unknown>;
+}
 
 export interface LucaVoiceRuntimeMetadata {
   runtimeKind: "voice_scaffold";
