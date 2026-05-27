@@ -7,6 +7,8 @@ export * from "./VoiceLucaPrimeProviderAdapter";
 export * from "./VoiceByokProviderAdapter";
 export * from "./createVoiceProviderAdapters";
 export * from "./VoiceProviderReadiness";
+export * from "./VoiceRealProviderAdapterShell";
+export * from "./createVoiceRealProviderAdapterShell";
 
 export * from "./VoiceInMemoryTapeSink";
 export * from "./VoiceRuntimeEventBridge";

@@ -37,6 +37,51 @@ export interface LucaVoiceProviderReadinessGate {
   reason: string;
 }
 
+export type LucaVoiceRealProviderAdapterKind =
+  | "openai_compatible"
+  | "elevenlabs_compatible"
+  | "local_model"
+  | "custom_byok";
+
+export type LucaVoiceRealProviderAdapterStatus =
+  | "disabled"
+  | "blocked"
+  | "ready"
+  | "invocation_disabled";
+
+export interface LucaVoiceRealProviderAdapterRequest {
+  providerKind: "local" | "cloud" | "byok";
+  capability: "stt" | "tts" | "streaming_stt" | "streaming_tts";
+  adapterKind: LucaVoiceRealProviderAdapterKind;
+  inputPlaceholder?: string;
+  language?: string;
+  voiceId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceRealProviderAdapterResult {
+  ok: boolean;
+  status: LucaVoiceRealProviderAdapterStatus;
+  selectedBackendId?: string;
+  selectedProviderKind?: LucaVoiceProviderKind;
+  reason?: string;
+  outputPlaceholder?: string;
+  metadata: {
+    adapterKind: "voice_real_provider_adapter_shell";
+    shellOnly: true;
+    realProviderExecutionEnabled: false;
+    audioApisCalled: false;
+    microphoneApisCalled: false;
+    sttApisCalled: false;
+    ttsApisCalled: false;
+    providerApisCalled: false;
+    networkApisCalled: false;
+    heavyModelsLoaded: false;
+    systemApisCalled: false;
+    requiresExplicitOptIn: true;
+  } & Record<string, unknown>;
+}
+
 export interface LucaVoiceProviderReadinessResult {
   status: LucaVoiceProviderReadinessStatus;
   providerKind: LucaVoiceProviderKind;

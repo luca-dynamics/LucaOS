@@ -6,6 +6,7 @@ import { VoiceRuntime } from "./VoiceRuntime";
 import { VoiceRuntimeEventBridge } from "./VoiceRuntimeEventBridge";
 import { VoiceStreamingRuntime } from "./VoiceStreamingRuntime";
 import { createVoiceProviderAdapters } from "./createVoiceProviderAdapters";
+import { createVoiceRealProviderAdapterShell } from "./createVoiceRealProviderAdapterShell";
 import { evaluateVoiceProviderReadiness } from "./VoiceProviderReadiness";
 import { type LucaVoiceRealProviderFeatureFlags } from "./types";
 
@@ -46,6 +47,9 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
   registerEnabledAdapters();
 
   const realProviderFeatureFlags = options.realProviderFeatureFlags ?? {};
+  const realProviderAdapterShell = createVoiceRealProviderAdapterShell(providerRouter, {
+    featureFlags: realProviderFeatureFlags,
+  });
 
   const getProviderReadinessSummary = () => ({
     local: {
@@ -102,6 +106,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
     tapeSink,
     eventBridge,
     providerAdapters,
+    realProviderAdapterShell,
     getSnapshot: () => {
       const registrySnapshot = registry.getSnapshot();
       return {
@@ -110,6 +115,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
         providerAdapterSnapshots: providerAdapters.getSnapshots(),
         realProviderFeatureFlags,
         providerReadinessSummary: getProviderReadinessSummary(),
+        realProviderAdapterShellSnapshot: realProviderAdapterShell.getSnapshot(),
         routerSnapshot: providerRouter.getSnapshot(),
         runtimeState: runtime.getState(),
         streamingSnapshot: streamingRuntime.getSnapshot(),
@@ -138,6 +144,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
         tapeSink.reset();
       }
       providerAdapters.reset();
+      realProviderAdapterShell.reset();
       registerEnabledAdapters();
     },
   };
