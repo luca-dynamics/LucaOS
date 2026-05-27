@@ -51,3 +51,11 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - The bridge mirrors Text Mode onboarding intent parsing (name, theme, opacity, model mode, local scan request flag, preferences) without UI runtime integration.
 - No microphone APIs, no real STT/TTS providers, no model manager calls, and no local model scans are executed.
 - Future PRs can wire this bridge into onboarding UI state and model manager orchestration once those integrations are approved.
+
+
+## Voice-to-computer-use confirmation bridge (scaffold)
+
+- `VoiceComputerUseConfirmationBridge` and `createVoiceComputerUseConfirmationBridge` map voice transcript/text confirmation phrases to pending computer-use guard confirmation tokens.
+- The bridge only approves/rejects scaffold confirmation requests; it does **not** execute computer-use actions.
+- No browser APIs, no direct-host/system actions, and no microphone/STT/TTS provider calls are performed.
+- This contract is designed so a future Voice HUD can safely submit confirmation phrases for guarded computer-use workflows.

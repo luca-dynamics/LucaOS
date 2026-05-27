@@ -69,6 +69,37 @@ export interface LucaVoiceOnboardingBridgeResult {
   textResponse: string;
   metadata: LucaVoiceOnboardingState["metadata"];
 }
+
+
+export type LucaVoiceComputerUseConfirmationIntent = "approve" | "reject" | "unknown";
+
+export interface LucaVoiceComputerUseConfirmationInput {
+  transcript: string;
+  confirmationId?: string;
+  sessionId?: string;
+  requiredPhrase?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaVoiceComputerUseConfirmationResult {
+  status: "approved" | "rejected" | "needs_clarification" | "failed";
+  intent: LucaVoiceComputerUseConfirmationIntent;
+  confirmationId?: string;
+  approval?: Record<string, unknown>;
+  spokenResponse: string;
+  textResponse: string;
+  reason?: string;
+  metadata: {
+    bridgeKind: "voice_computer_use_confirmation_scaffold";
+    audioApisCalled: false;
+    sttApisCalled: false;
+    ttsApisCalled: false;
+    systemApisCalled: false;
+    directHostAllowed: false;
+    browserApisCalled: false;
+    requiresExplicitOptIn: true;
+  } & Record<string, unknown>;
+}
 export type LucaVoiceRuntimeEventType =
   | "voice_session_started"
   | "voice_session_stopped"
