@@ -272,3 +272,7 @@ import {
 
 - Added **BrowserRuntimeRouterGuardedAdapter shell** for invocation-readiness evaluation only. It can return `blocked`, `dry_run_required`, `needs_confirmation`, or `ready_but_not_invoked`, and never executes BrowserRuntimeRouter in this phase.
 - Real BrowserRuntimeRouter invocation remains disabled; a future PR may add explicit opt-in execution behind all readiness gates and feature flags.
+
+## Confirmation UI bridge scaffold
+
+`ComputerUseConfirmationUiBridge` exposes subscription-friendly state for pending confirmations and in-memory approve/reject results. It does not execute browser/runtime actions and keeps direct-host/system/storage flags disabled.

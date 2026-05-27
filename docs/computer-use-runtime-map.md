@@ -137,3 +137,7 @@ Mission-like input
 - This phase remains execution-disabled: no BrowserRuntimeRouter import/instantiation/call, no Playwright/browser/system calls, and no direct-host enablement.
 
 - BrowserRuntimeRouter guarded adapter shell added under `src/services/computerUse` for readiness gating only (`blocked`/`dry_run_required`/`needs_confirmation`/`ready_but_not_invoked`). Real browser invocation remains disabled.
+
+## UI bridge prep layer
+
+Computer-use runtime now includes a service-level confirmation UI bridge scaffold that wraps the guard confirmation bridge and exposes subscription-oriented state for pending approvals/rejections, without browser or host execution.
