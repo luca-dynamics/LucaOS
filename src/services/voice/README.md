@@ -107,3 +107,10 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - Streaming runtime and OpenAI-compatible audio API both route through the shared provider router, so scaffold provider selection works consistently across text/transcript, streaming, and audio API paths.
 - Snapshot/reset APIs are included for scaffold observability and testability. Metadata explicitly confirms no real microphone/audio/provider/system APIs are called and no heavy models are loaded.
 - This remains scaffold-only: no network/provider calls, no real model loading, no microphone/audio runtime integration. Future PRs can replace the adapter stubs with real, feature-flagged provider implementations.
+
+
+## Voice provider readiness interface (scaffold)
+
+- `VoiceProviderReadiness` adds explicit feature-flag gate evaluation for Local, Luca Prime Cloud, and BYOK provider lanes.
+- Readiness results are scaffold-only and in-memory; they do not call real providers, networks, microphones, audio APIs, or model loaders.
+- `createLucaVoiceRuntime().getSnapshot()` now includes real-provider feature flags and readiness summaries so future real STT/TTS integrations can be enabled only through explicit opt-in gates.

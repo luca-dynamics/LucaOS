@@ -17,6 +17,45 @@ export type LucaVoiceProviderAdapterKind =
   | "luca_prime_cloud_adapter"
   | "byok_adapter";
 
+
+export interface LucaVoiceRealProviderFeatureFlags {
+  enableRealLocalVoiceProvider?: boolean;
+  enableRealLucaPrimeVoiceProvider?: boolean;
+  enableRealByokVoiceProvider?: boolean;
+  enableRealStt?: boolean;
+  enableRealTts?: boolean;
+  enableRealStreaming?: boolean;
+  enableNetworkProviderCalls?: boolean;
+  enableLocalModelLoading?: boolean;
+}
+
+export type LucaVoiceProviderReadinessStatus = "blocked" | "scaffold_only" | "ready";
+
+export interface LucaVoiceProviderReadinessGate {
+  gate: string;
+  passed: boolean;
+  reason: string;
+}
+
+export interface LucaVoiceProviderReadinessResult {
+  status: LucaVoiceProviderReadinessStatus;
+  providerKind: LucaVoiceProviderKind;
+  capability: "stt" | "tts" | "streaming_stt" | "streaming_tts";
+  gates: LucaVoiceProviderReadinessGate[];
+  metadata: {
+    readinessKind: "voice_provider_readiness_scaffold";
+    audioApisCalled: false;
+    microphoneApisCalled: false;
+    sttApisCalled: false;
+    ttsApisCalled: false;
+    providerApisCalled: false;
+    networkApisCalled: false;
+    heavyModelsLoaded: false;
+    systemApisCalled: false;
+    requiresExplicitOptIn: true;
+  };
+}
+
 export interface LucaVoiceProviderAdapterMetadata {
   adapterKind: LucaVoiceProviderAdapterKind;
   providerKind: LucaVoiceProviderKind;

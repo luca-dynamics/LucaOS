@@ -33,6 +33,7 @@ describe("createLucaVoiceRuntime", () => {
       sttApisCalled: false,
       ttsApisCalled: false,
       providerApisCalled: false,
+      networkApisCalled: false,
       heavyModelsLoaded: false,
       systemApisCalled: false,
       requiresExplicitOptIn: true,
@@ -54,5 +55,35 @@ describe("createLucaVoiceRuntime", () => {
     expect(composed.registry.selectSTTBackend({ providerKind: "local" })).toBeDefined();
     expect(composed.registry.selectSTTBackend({ providerKind: "cloud" })).toBeDefined();
     expect(composed.registry.selectSTTBackend({ providerKind: "byok" })).toBeUndefined();
+  });
+
+  it("snapshot exposes readiness summary and no-call readiness metadata", () => {
+    const composed = createLucaVoiceRuntime({
+      realProviderFeatureFlags: {
+        enableRealLocalVoiceProvider: true,
+        enableRealLucaPrimeVoiceProvider: true,
+        enableRealByokVoiceProvider: true,
+        enableRealStt: true,
+        enableRealTts: true,
+      },
+    });
+
+    const snapshot = composed.getSnapshot();
+    expect(snapshot.providerReadinessSummary.local.stt.status).toBe("scaffold_only");
+    expect(snapshot.providerReadinessSummary.cloud.tts.status).toBe("scaffold_only");
+    expect(snapshot.providerReadinessSummary.byok.stt.status).toBe("scaffold_only");
+
+    expect(snapshot.providerReadinessSummary.local.stt.metadata).toMatchObject({
+      readinessKind: "voice_provider_readiness_scaffold",
+      audioApisCalled: false,
+      microphoneApisCalled: false,
+      sttApisCalled: false,
+      ttsApisCalled: false,
+      providerApisCalled: false,
+      networkApisCalled: false,
+      heavyModelsLoaded: false,
+      systemApisCalled: false,
+      requiresExplicitOptIn: true,
+    });
   });
 });
