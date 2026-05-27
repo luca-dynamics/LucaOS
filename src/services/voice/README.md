@@ -44,3 +44,10 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 3. STT/TTS provider router
 4. Streaming STT/TTS contracts
 5. Voice-to-computer-use bridge
+
+## Voice Mode onboarding bridge (scaffold)
+
+- `VoiceOnboardingBridge` and `createVoiceOnboardingBridge` provide scaffold-only onboarding flow for transcript/text command events.
+- The bridge mirrors Text Mode onboarding intent parsing (name, theme, opacity, model mode, local scan request flag, preferences) without UI runtime integration.
+- No microphone APIs, no real STT/TTS providers, no model manager calls, and no local model scans are executed.
+- Future PRs can wire this bridge into onboarding UI state and model manager orchestration once those integrations are approved.
