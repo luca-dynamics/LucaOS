@@ -6,6 +6,8 @@ import { VoiceRuntime } from "./VoiceRuntime";
 import { VoiceRuntimeEventBridge } from "./VoiceRuntimeEventBridge";
 import { VoiceStreamingRuntime } from "./VoiceStreamingRuntime";
 import { createVoiceProviderAdapters } from "./createVoiceProviderAdapters";
+import { evaluateVoiceProviderReadiness } from "./VoiceProviderReadiness";
+import { type LucaVoiceRealProviderFeatureFlags } from "./types";
 
 export interface LucaVoiceRuntimeFactoryOptions {
   registerScaffoldProviderAdapters?: boolean;
@@ -13,6 +15,7 @@ export interface LucaVoiceRuntimeFactoryOptions {
   enableLucaPrimeVoiceAdapter?: boolean;
   enableByokVoiceAdapter?: boolean;
   enableInMemoryTape?: boolean;
+  realProviderFeatureFlags?: LucaVoiceRealProviderFeatureFlags;
 }
 
 export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions = {}) {
@@ -42,6 +45,54 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
 
   registerEnabledAdapters();
 
+  const realProviderFeatureFlags = options.realProviderFeatureFlags ?? {};
+
+  const getProviderReadinessSummary = () => ({
+    local: {
+      stt: evaluateVoiceProviderReadiness({
+        providerKind: "local",
+        capability: "stt",
+        featureFlags: realProviderFeatureFlags,
+        backendAvailable: registry.selectSTTBackend({ providerKind: "local" }) !== undefined,
+      }),
+      tts: evaluateVoiceProviderReadiness({
+        providerKind: "local",
+        capability: "tts",
+        featureFlags: realProviderFeatureFlags,
+        backendAvailable: registry.selectTTSBackend({ providerKind: "local" }) !== undefined,
+      }),
+    },
+    cloud: {
+      stt: evaluateVoiceProviderReadiness({
+        providerKind: "cloud",
+        capability: "stt",
+        featureFlags: realProviderFeatureFlags,
+        backendAvailable: registry.selectSTTBackend({ providerKind: "cloud" }) !== undefined,
+      }),
+      tts: evaluateVoiceProviderReadiness({
+        providerKind: "cloud",
+        capability: "tts",
+        featureFlags: realProviderFeatureFlags,
+        backendAvailable: registry.selectTTSBackend({ providerKind: "cloud" }) !== undefined,
+      }),
+    },
+    byok: {
+      stt: evaluateVoiceProviderReadiness({
+        providerKind: "byok",
+        capability: "stt",
+        featureFlags: realProviderFeatureFlags,
+        backendAvailable: registry.selectSTTBackend({ providerKind: "byok" }) !== undefined,
+      }),
+      tts: evaluateVoiceProviderReadiness({
+        providerKind: "byok",
+        capability: "tts",
+        featureFlags: realProviderFeatureFlags,
+        backendAvailable: registry.selectTTSBackend({ providerKind: "byok" }) !== undefined,
+      }),
+    },
+  });
+
+
   return {
     registry,
     providerRouter,
@@ -57,6 +108,8 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
         registeredSttBackendCount: registrySnapshot.sttBackends.length,
         registeredTtsBackendCount: registrySnapshot.ttsBackends.length,
         providerAdapterSnapshots: providerAdapters.getSnapshots(),
+        realProviderFeatureFlags,
+        providerReadinessSummary: getProviderReadinessSummary(),
         routerSnapshot: providerRouter.getSnapshot(),
         runtimeState: runtime.getState(),
         streamingSnapshot: streamingRuntime.getSnapshot(),
@@ -69,6 +122,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
           sttApisCalled: false as const,
           ttsApisCalled: false as const,
           providerApisCalled: false as const,
+          networkApisCalled: false as const,
           heavyModelsLoaded: false as const,
           systemApisCalled: false as const,
           requiresExplicitOptIn: true as const,
