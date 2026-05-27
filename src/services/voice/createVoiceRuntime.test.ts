@@ -12,6 +12,7 @@ describe("createVoiceRuntime", () => {
     expect(typeof voice.handleTextInput).toBe("function");
     expect(typeof voice.handleTranscript).toBe("function");
     expect(typeof voice.getState).toBe("function");
+    expect(typeof voice.getTapeSnapshot).toBe("function");
     expect(typeof voice.reset).toBe("function");
   });
 
@@ -28,7 +29,9 @@ describe("createVoiceRuntime", () => {
     });
 
     expect(result.status).toBe("handled");
+    expect(voice.getTapeSnapshot().totalRecords).toBeGreaterThan(0);
     voice.reset();
     expect(voice.getState().status).toBe("idle");
+    expect(voice.getTapeSnapshot().totalRecords).toBe(0);
   });
 });
