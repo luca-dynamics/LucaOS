@@ -147,3 +147,13 @@ Testing & scaffolding:
 
 Future direction:
 - Realtime provider execution and transport-specific integrations will build on this adapter boundary.
+
+## Realtime Voice Session Controller
+
+- `RealtimeVoiceSessionController` is a service-level, in-memory operational controller for Voice Mode turn-taking.
+- It manages realtime session status transitions (`idle` → `listening` → `transcribing` → `thinking` → `speaking`) and supports interruption and recovery paths.
+- It tracks partial and final transcript flow, current response lifecycle, counters, latency budget metadata, and deterministic snapshots for observability.
+- It can optionally mirror transcript/response/error updates into HUD bridges and record tape-oriented events through `VoiceRuntimeEventBridge` without making those dependencies mandatory.
+- Event recording and HUD synchronization are non-fatal best-effort hooks so controller state always remains primary and stable.
+- This controller does not call microphone APIs, audio output APIs, real STT/TTS/provider/network APIs, system APIs, or model loaders.
+- Future UI/runtime/provider integrations should use this controller as the central operational layer for realtime voice orchestration.

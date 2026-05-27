@@ -411,6 +411,86 @@ export interface LucaVoiceHudControlResult {
   metadata: LucaVoiceHudMetadata;
 }
 
+export type LucaRealtimeVoiceSessionStatus =
+  | "idle"
+  | "listening"
+  | "transcribing"
+  | "thinking"
+  | "speaking"
+  | "interrupted"
+  | "recovering"
+  | "failed";
+
+export type LucaRealtimeVoiceTurnStatus =
+  | "open"
+  | "partial"
+  | "final"
+  | "cancelled"
+  | "failed";
+
+export type LucaRealtimeVoiceEventType =
+  | "session_started"
+  | "session_stopped"
+  | "listening_started"
+  | "listening_stopped"
+  | "partial_transcript"
+  | "final_transcript"
+  | "thinking_started"
+  | "speaking_started"
+  | "speaking_completed"
+  | "barge_in_detected"
+  | "interrupted"
+  | "recovery_started"
+  | "recovery_completed"
+  | "session_failed";
+
+export interface LucaRealtimeVoiceTurn {
+  turnId: string;
+  sessionId: string;
+  status: LucaRealtimeVoiceTurnStatus;
+  partialTranscript?: string;
+  finalTranscript?: string;
+  responseText?: string;
+  startedAt: string;
+  completedAt?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaRealtimeVoiceLatencyBudget {
+  targetFirstPartialMs?: number;
+  targetFinalTranscriptMs?: number;
+  targetFirstAudioMs?: number;
+  targetTurnCompleteMs?: number;
+}
+
+export interface LucaRealtimeVoiceControllerMetadata {
+  controllerKind: "realtime_voice_session_controller";
+  microphoneApisCalled: false;
+  audioOutputApisCalled: false;
+  sttApisCalled: false;
+  ttsApisCalled: false;
+  providerApisCalled: false;
+  networkApisCalled: false;
+  heavyModelsLoaded: false;
+  systemApisCalled: false;
+  requiresExplicitOptIn: true;
+}
+
+export interface LucaRealtimeVoiceSessionState {
+  sessionId?: string;
+  status: LucaRealtimeVoiceSessionStatus;
+  activeTurn?: LucaRealtimeVoiceTurn;
+  currentTranscript?: string;
+  currentResponse?: string;
+  isListening: boolean;
+  isSpeaking: boolean;
+  canInterrupt: boolean;
+  lastError?: string;
+  latencyBudget: LucaRealtimeVoiceLatencyBudget;
+  counters: Record<string, unknown>;
+  metadata: LucaRealtimeVoiceControllerMetadata & Record<string, unknown>;
+}
+
 export type LucaVoiceRuntimeEventType =
   | "voice_session_started"
   | "voice_session_stopped"

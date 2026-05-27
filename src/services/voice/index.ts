@@ -22,6 +22,8 @@ export * from "./VoiceMockProviderTransport";
 export * from "./VoiceOpenAICompatibleProviderAdapter";
 export * from "./createVoiceOpenAICompatibleProviderAdapter";
 export * from "./createLucaVoiceRuntime";
+export * from "./RealtimeVoiceSessionController";
+export * from "./createRealtimeVoiceSessionController";
 
 
 export * from "./VoiceOnboardingBridge";
