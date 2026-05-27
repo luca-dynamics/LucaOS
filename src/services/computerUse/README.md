@@ -269,3 +269,6 @@ import {
 - `createBrowserRuntimeRouterInvocationReadinessInputFromSandboxResult(result, options)` can build invocation-readiness input from sandbox adapter metadata only.
 - This helper does not import/instantiate/call `BrowserRuntimeRouter` and does not execute browser/system/direct-host actions.
 - Real router invocation remains disabled in this phase and requires a future explicit opt-in execution PR.
+
+- Added **BrowserRuntimeRouterGuardedAdapter shell** for invocation-readiness evaluation only. It can return `blocked`, `dry_run_required`, `needs_confirmation`, or `ready_but_not_invoked`, and never executes BrowserRuntimeRouter in this phase.
+- Real BrowserRuntimeRouter invocation remains disabled; a future PR may add explicit opt-in execution behind all readiness gates and feature flags.

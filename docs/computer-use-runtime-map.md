@@ -135,3 +135,5 @@ Mission-like input
 - Readiness now uses explicit gates over feature flags, bridge request presence, dry-run results, guard decisions, confirmation status, lane, and risk level.
 - Added optional input-shaping helper from sandbox adapter metadata for lightweight integration.
 - This phase remains execution-disabled: no BrowserRuntimeRouter import/instantiation/call, no Playwright/browser/system calls, and no direct-host enablement.
+
+- BrowserRuntimeRouter guarded adapter shell added under `src/services/computerUse` for readiness gating only (`blocked`/`dry_run_required`/`needs_confirmation`/`ready_but_not_invoked`). Real browser invocation remains disabled.
