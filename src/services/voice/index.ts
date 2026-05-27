@@ -45,3 +45,5 @@ export * from "./createLucaRuntimeUiBridgeSnapshot";
 
 export * from "./LiveVoiceRuntimeBridge";
 export * from "./createLiveVoiceRuntimeBridge";
+
+export * from "./VoiceRuntimeStatePrecedence";

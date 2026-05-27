@@ -111,6 +111,12 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
   isLocalCoreConnected,
   localCoreReadinessLevel,
   localCoreReadinessReason,
+  realtimeStatus,
+  realtimeCanInterrupt,
+  realtimeLastError,
+  runtimeRouteHealth,
+  runtimeLatency,
+  runtimeFallbackActive,
 }) => {
   const [localAmplitude, setLocalAmplitude] = useState(amplitude);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -713,6 +719,20 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
           <Icon name="Zap" size={10} className="md:w-3 md:h-3" variant="Linear" />
           CORE: OK
         </div>
+        <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
+          <Icon name="Activity" size={10} className="md:w-3 md:h-3" variant="Linear" />
+          VOICE: {(realtimeStatus || "idle").toUpperCase()}
+        </div>
+        <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
+          <Icon name="ShieldTick" size={10} className="md:w-3 md:h-3" variant="Linear" />
+          ROUTE: {(runtimeRouteHealth || "stable").toUpperCase()}{runtimeFallbackActive ? " · FALLBACK" : ""}
+        </div>
+        <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap">
+          <Icon name="Timer1" size={10} className="md:w-3 md:h-3" variant="Linear" />
+          RTT: {runtimeLatency ?? responseLatency ?? 0}ms
+        </div>
+        {realtimeLastError ? <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap text-red-400">ERR: {realtimeLastError}</div> : null}
+        {!realtimeCanInterrupt ? <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap text-yellow-300">INTERRUPT LOCKED</div> : null}
       </div>
     </div>
   );

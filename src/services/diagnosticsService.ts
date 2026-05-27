@@ -8,6 +8,7 @@ import { resolveVoiceSessionRoute } from "./voiceSessionRouter";
 import { voiceSessionOrchestrator } from "./voiceSessionOrchestrator";
 import { loggerService } from "./loggerService";
 import { realtimeVoiceUiBridge } from "./voice/realtimeVoiceUiBridge";
+import { getVoiceStatePrecedenceSnapshot } from "./voice/VoiceRuntimeStatePrecedence";
 import os from "os";
 import {
   calculateOverallAuditStatus,
@@ -101,6 +102,7 @@ export interface SupportSnapshot {
       adaptiveRouteApplied: boolean;
     };
     realtimeBridge?: ReturnType<typeof realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot>;
+    operatorState?: ReturnType<typeof getVoiceStatePrecedenceSnapshot>["operatorState"];
   };
   diagnostics: {
     recentLogs: ReturnType<typeof loggerService.getRecentLogs>;
@@ -182,6 +184,18 @@ class DiagnosticsService {
           adaptiveRouteApplied: voiceSessionOrchestrator.adaptiveRouteApplied,
         },
         realtimeBridge: realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot(),
+        operatorState: getVoiceStatePrecedenceSnapshot({
+          diagnostics: {
+            ...voiceSessionOrchestrator,
+            status: voiceSessionOrchestrator.status,
+            routingHealth: voiceSessionOrchestrator.routingHealth,
+            responseLatencyMs: voiceSessionOrchestrator.responseLatencyMs,
+            adaptiveRouteApplied: voiceSessionOrchestrator.adaptiveRouteApplied,
+            routeKind: voiceSessionOrchestrator.routeKind,
+          },
+          realtimeBridge: realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot(),
+          settings,
+        }).operatorState,
       },
       diagnostics: {
         recentLogs: loggerService.getRecentLogs().slice(-50),

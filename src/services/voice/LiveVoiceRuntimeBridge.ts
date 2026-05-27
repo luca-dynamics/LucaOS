@@ -1,9 +1,11 @@
 import { LucaRealtimeVoiceSessionState } from "./types";
+import { deriveVoiceOperatorState } from "./VoiceRuntimeStatePrecedence";
 
 type RealtimeStatus = LucaRealtimeVoiceSessionState["status"];
 
 export interface LiveVoiceRuntimeBridgeSnapshot {
   realtime: LucaRealtimeVoiceSessionState;
+  operatorState?: ReturnType<typeof deriveVoiceOperatorState>;
   metadata: {
     routeKind?: string | null;
     provider?: string | null;
@@ -83,6 +85,7 @@ export class LiveVoiceRuntimeBridge {
       lastError: session.error ? String(session.error) : this.snapshot.metadata.lastError,
     };
 
+    this.snapshot.operatorState = deriveVoiceOperatorState({ realtimeBridge: this.snapshot, liveSession: session });
     return this.getSnapshot();
   }
 
@@ -100,6 +103,7 @@ export class LiveVoiceRuntimeBridge {
       this.snapshot.realtime = { ...this.snapshot.realtime, status: "recovering" };
     }
 
+    this.snapshot.operatorState = deriveVoiceOperatorState({ realtimeBridge: this.snapshot, diagnostics: orchestrator });
     return this.getSnapshot();
   }
 
@@ -112,6 +116,7 @@ export class LiveVoiceRuntimeBridge {
       isListening: propsLike.isVadActive ?? this.snapshot.realtime.isListening,
       isSpeaking: propsLike.isSpeaking ?? this.snapshot.realtime.isSpeaking,
     };
+    this.snapshot.operatorState = deriveVoiceOperatorState({ realtimeBridge: this.snapshot, hudState: propsLike });
     return this.getSnapshot();
   }
 
@@ -128,12 +133,17 @@ export class LiveVoiceRuntimeBridge {
       responseModality: voice.responseModality ?? this.snapshot.metadata.responseModality,
     };
 
+    this.snapshot.operatorState = deriveVoiceOperatorState({ realtimeBridge: this.snapshot, settings: voice });
     return this.getSnapshot();
   }
 
   getRealtimeState() { return JSON.parse(JSON.stringify(this.snapshot.realtime)); }
   getSnapshot() { return JSON.parse(JSON.stringify(this.snapshot)); }
-  reset() { this.snapshot = { realtime: initialRealtime(), metadata: {} }; return this.getSnapshot(); }
+  reset() {
+    this.snapshot = { realtime: initialRealtime(), metadata: {} };
+    this.snapshot.operatorState = deriveVoiceOperatorState({ realtimeBridge: this.snapshot });
+    return this.getSnapshot();
+  }
 
   private resolveStatus(input: Record<string, any>): RealtimeStatus {
     if (input.error || input.status === "ERROR" || input.status === "FAILED") return "failed";

@@ -401,6 +401,9 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     });
   }, [voiceStatus, realtimeHud.activeSessionId, voiceBackend, localVadActive, isVadActive, realtimeHud.isSpeaking, voiceTranscriptSource, realtimeHud.currentTranscript, voiceTranscript, realtimeHud.currentResponse, voiceModel, persona, realtimeHud.canInterrupt, realtimeHud.lastError, voiceHubError]);
 
+  const runtimeSnapshot = realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot();
+  const operatorState = runtimeSnapshot.operatorState;
+
   return (
     <>
       {/* --- GLOBAL LIQUID BACKGROUND (Default) --- */}
@@ -577,13 +580,13 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         isLocalCoreConnected={isLocalCoreConnected}
         localCoreReadinessLevel={localCoreReadinessLevel}
         localCoreReadinessReason={localCoreReadinessReason}
-        realtimeStatus={realtimeVoiceUiBridge.liveRuntimeBridge.getRealtimeState().status}
-        realtimeSessionId={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.realtimeSessionId || null}
-        realtimeCanInterrupt={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.canInterrupt}
-        realtimeLastError={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.lastError || null}
-        runtimeRouteHealth={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.routingHealth || null}
-        runtimeLatency={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.latencyMs || null}
-        runtimeFallbackActive={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.adaptiveFallbackActive}
+        realtimeStatus={operatorState?.status || runtimeSnapshot.realtime.status}
+        realtimeSessionId={runtimeSnapshot.metadata.realtimeSessionId || null}
+        realtimeCanInterrupt={operatorState?.canInterrupt ?? runtimeSnapshot.metadata.canInterrupt}
+        realtimeLastError={runtimeSnapshot.metadata.lastError || null}
+        runtimeRouteHealth={operatorState?.routeHealth ?? runtimeSnapshot.metadata.routingHealth || null}
+        runtimeLatency={operatorState?.latency ?? runtimeSnapshot.metadata.latencyMs || null}
+        runtimeFallbackActive={operatorState?.fallbackActive ?? runtimeSnapshot.metadata.adaptiveFallbackActive}
         statusMessage={
           realtimeHud.lastError
             ? `VOICE SYSTEM ERROR: ${realtimeHud.lastError}`
