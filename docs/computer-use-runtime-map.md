@@ -94,3 +94,11 @@ Mission-like input
 - Bridge maps sandbox computer-use actions to BrowserRuntimeRouter-compatible request shape without invoking real router execution.
 - Explicit safety metadata confirms no BrowserRuntimeRouter runtime import/instantiation, no Playwright/browser/system calls, and no direct-host allowance.
 - Current phase remains scaffold-only; a future feature-flagged router bridge adapter can consume this contract.
+
+
+## Router bridge adapter update (feature-flagged)
+
+- Sandbox browser adapter now supports feature-flagged BrowserRuntime router-bridge request generation only.
+- The bridge path is metadata-only and keeps all no-real-execution guardrails intact (`browserRuntimeRouterImported: false`, `browserRuntimeRouterCalled: false`, `playwrightCalled: false`, `browserApisCalled: false`, `systemApisCalled: false`, `directHostAllowed: false`).
+- If bridge validation fails, adapter rejects safely without enabling runtime/browser/host side effects.
+- Future step: feature-flagged real BrowserRuntimeRouter invocation only after additional guard + tape validation gates are approved.

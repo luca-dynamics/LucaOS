@@ -15,6 +15,8 @@ describe("ComputerUseSandboxBrowserAdapter", () => {
 
     const click = await adapter.execute(validRequest);
     expect(click.metadata.mappedTargetRequest?.action).toBe("click");
+    expect(click.metadata.browserRuntimeRouterBridgeEnabled).toBe(false);
+    expect(click.metadata.routerBridgeRequest).toBeUndefined();
 
     const typed = await adapter.execute({
       ...validRequest,
@@ -90,7 +92,37 @@ describe("ComputerUseSandboxBrowserAdapter", () => {
     expect(result.metadata.systemApisCalled).toBe(false);
     expect(result.metadata.directHostAllowed).toBe(false);
     expect(result.metadata.realBrowserExecutionEnabled).toBe(false);
+    expect(result.metadata.browserRuntimeRouterImported).toBe(false);
+    expect(result.metadata.browserRuntimeRouterCalled).toBe(false);
     expect(result.metadata.mappedTargetRequest?.preferredLane).toBe("sandbox_browser");
+  });
+
+  it("adds router bridge request metadata only when router bridge flag is enabled", async () => {
+    const adapter = new ComputerUseSandboxBrowserAdapter({
+      featureFlags: { sandboxBrowserAdapterEnabled: true, browserRuntimeRouterBridgeEnabled: true },
+    });
+    const result = await adapter.execute(validRequest);
+    expect(result.status).toBe("executed");
+    expect(result.metadata.browserRuntimeRouterBridgeEnabled).toBe(true);
+    expect(result.metadata.routerBridgeRequest?.action).toBe("click");
+    expect(result.metadata.routerBridgeRequest?.metadata.browserRuntimeRouterImported).toBe(false);
+    expect(result.metadata.playwrightCalled).toBe(false);
+    expect(result.metadata.browserApisCalled).toBe(false);
+    expect(result.metadata.systemApisCalled).toBe(false);
+    expect(result.metadata.directHostAllowed).toBe(false);
+  });
+
+  it("fails safely on router bridge validation failure while preserving event recording", async () => {
+    const eventBridge = new ComputerUseRuntimeEventBridge({ tapeSink: new ComputerUseInMemoryMissionTapeSink() });
+    const adapter = new ComputerUseSandboxBrowserAdapter({
+      featureFlags: { sandboxBrowserAdapterEnabled: true, browserRuntimeRouterBridgeEnabled: true },
+      recording: { eventBridge },
+    });
+    const result = await adapter.execute({ ...validRequest, action: { ...validRequest.action, target: undefined } });
+    expect(result.status).toBe("failed");
+    expect(result.metadata.reason).toContain("Missing BrowserRuntime router bridge target");
+    const records = eventBridge.getSnapshot("mission-sb").records;
+    expect(records.map((x) => x.eventType)).toEqual(["computer_use_browser_adapter_started", "computer_use_browser_adapter_completed"]);
   });
 
   it("recording failure remains non-fatal and reset clears snapshot", async () => {

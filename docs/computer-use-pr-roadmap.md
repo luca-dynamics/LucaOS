@@ -90,3 +90,11 @@ Treat cloud-agent install/test constraints as first-class release risk for missi
 - Mapping behavior is explicitly tested for `click`/`type_text`/`observe`, with guarded no-op mapping for `wait`/`scroll`, and safe rejection for `hotkey`/unsupported actions.
 - Bridge remains side-effect-free and execution-disabled; no real BrowserRuntime router, Playwright, browser API, or OS/system action execution is enabled.
 - Recommended next step: feature-flagged router bridge adapter integration that uses this contract while preserving current safety metadata guarantees.
+
+
+## New milestone: feature-flagged router bridge adapter wiring
+
+- Added feature-flagged sandbox adapter wiring that generates BrowserRuntimeRouter bridge-compatible requests in metadata only.
+- Default behavior remains unchanged when router bridge flags are off.
+- Real BrowserRuntimeRouter execution remains disabled; no Playwright/browser/system/direct-host calls are enabled.
+- Next phase can introduce optional real router invocation behind additional explicit guard/tape validation gates.

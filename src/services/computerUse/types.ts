@@ -425,13 +425,18 @@ export interface ComputerUseBrowserRuntimeAdapterRecordingOptions {
 export interface ComputerUseSandboxBrowserAdapterFeatureFlags {
   sandboxBrowserAdapterEnabled?: boolean;
   enableSandboxBrowserAdapter?: boolean;
+  browserRuntimeRouterBridgeEnabled?: boolean;
+  enableBrowserRuntimeRouterBridge?: boolean;
 }
 
 export interface ComputerUseSandboxBrowserAdapterMetadata extends Omit<ComputerUseBrowserRuntimeAdapterMetadata, "adapterKind"> {
   adapterKind: "sandbox_browser_scaffold";
   sandboxBrowserAdapterEnabled: boolean;
+  browserRuntimeRouterBridgeEnabled: boolean;
   realBrowserExecutionEnabled: false;
   directHostAllowed: false;
+  browserRuntimeRouterImported: false;
+  browserRuntimeRouterCalled: false;
   mappedTargetRequest?: {
     requestId: string;
     missionId: string;
@@ -450,6 +455,7 @@ export interface ComputerUseSandboxBrowserAdapterMetadata extends Omit<ComputerU
     runtime: "playwright" | "bidi" | "unknown";
     reason?: string;
   };
+  routerBridgeRequest?: import("./BrowserRuntimeRouterBridge").BrowserRuntimeRouterBridgeRequest;
 }
 
 export interface ComputerUseSandboxBrowserAdapterResult extends Omit<ComputerUseBrowserRuntimeAdapterResult, "metadata"> {

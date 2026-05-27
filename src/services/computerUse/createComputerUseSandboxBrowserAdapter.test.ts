@@ -23,6 +23,21 @@ describe("createComputerUseSandboxBrowserAdapter", () => {
     expect(created.getSnapshot().executionCount).toBe(0);
   });
 
+  it("passes router bridge flags through and includes bridge request metadata", async () => {
+    const created = createComputerUseSandboxBrowserAdapter({
+      featureFlags: { sandboxBrowserAdapterEnabled: true, enableBrowserRuntimeRouterBridge: true },
+    });
+    const result = await created.execute({
+      lane: "sandbox_browser",
+      action: { type: "type_text", reason: "type", requiresGuardApproval: false, target: { description: "input" }, text: "hello" },
+      context: { missionId: "m-sb", stepId: "s-sb", traceId: "t-sb", source: "mission" },
+    });
+    expect(result.status).toBe("executed");
+    expect(result.metadata.browserRuntimeRouterBridgeEnabled).toBe(true);
+    expect(result.metadata.routerBridgeRequest?.action).toBe("type");
+    expect(created.getSnapshot().featureFlags.enableBrowserRuntimeRouterBridge).toBe(true);
+  });
+
   it("barrel exports include sandbox adapter and factory", () => {
     expect(barrel.ComputerUseSandboxBrowserAdapter).toBeDefined();
     expect(barrel.createComputerUseSandboxBrowserAdapter).toBeDefined();
