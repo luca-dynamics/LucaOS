@@ -99,3 +99,11 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - These adapters only produce metadata/snapshots and in-memory backend registration; they do **not** call microphone/audio/STT/TTS/provider APIs.
 - No provider SDKs, no network calls, no API keys, no local model loading, and no system hardware inspection are performed.
 - `createVoiceProviderAdapters` offers factory wiring (`registerAll`, `getSnapshots`, `reset`) so future PRs can replace stubs with real implementations behind explicit feature flags.
+
+## Composed Luca Voice runtime scaffold
+
+- `createLucaVoiceRuntime` composes `VoiceBackendRegistry`, provider adapter stubs, `VoiceProviderRouter`, `VoiceRuntime`, `VoiceStreamingRuntime`, `VoiceOpenAICompatibleAudioApi`, `VoiceRuntimeEventBridge`, and `VoiceInMemoryTapeSink` in one factory surface.
+- By default, Local / Luca Prime Cloud / BYOK scaffold lanes are registered for STT/TTS and become immediately routable through provider preferences (`local`, `cloud`, `byok`, `auto`).
+- Streaming runtime and OpenAI-compatible audio API both route through the shared provider router, so scaffold provider selection works consistently across text/transcript, streaming, and audio API paths.
+- Snapshot/reset APIs are included for scaffold observability and testability. Metadata explicitly confirms no real microphone/audio/provider/system APIs are called and no heavy models are loaded.
+- This remains scaffold-only: no network/provider calls, no real model loading, no microphone/audio runtime integration. Future PRs can replace the adapter stubs with real, feature-flagged provider implementations.
