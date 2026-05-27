@@ -83,3 +83,10 @@ Treat cloud-agent install/test constraints as first-class release risk for missi
 - Added bridge helper/factory surface and tests for approve/reject/phrase/expiry/snapshot/reset behavior.
 - Confirmation flow is audit-ready and event-ready (`confirmationId` payload support) without enabling real browser/direct-host/system execution.
 - Future UI/Voice confirmation transport should wire to this contract before any production execution unlock.
+
+## Router bridge contract test milestone
+
+- BrowserRuntime router bridge contract scaffolding and conformance tests are now in place.
+- Mapping behavior is explicitly tested for `click`/`type_text`/`observe`, with guarded no-op mapping for `wait`/`scroll`, and safe rejection for `hotkey`/unsupported actions.
+- Bridge remains side-effect-free and execution-disabled; no real BrowserRuntime router, Playwright, browser API, or OS/system action execution is enabled.
+- Recommended next step: feature-flagged router bridge adapter integration that uses this contract while preserving current safety metadata guarantees.

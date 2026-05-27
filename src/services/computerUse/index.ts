@@ -16,6 +16,8 @@ export { createComputerUseBrowserRuntimeAdapter } from "./createComputerUseBrows
 export { ComputerUseSandboxBrowserAdapter } from "./ComputerUseSandboxBrowserAdapter";
 export { createComputerUseSandboxBrowserAdapter } from "./createComputerUseSandboxBrowserAdapter";
 export { COMPUTER_USE_BROWSER_RUNTIME_ACTION_MAPPING, getComputerUseBrowserRuntimeConformanceMatrix, validateComputerUseBrowserRuntimeMapping } from "./BrowserRuntimeConformance";
+export { createBrowserRuntimeRouterBridgeRequest, mapComputerUseActionToBrowserRuntimeRoute, validateBrowserRuntimeRouterBridgeRequest } from "./BrowserRuntimeRouterBridge";
+export type { BrowserRuntimeRouterBridgeMetadata, BrowserRuntimeRouterBridgeRequest, BrowserRuntimeRouterBridgeRoute } from "./BrowserRuntimeRouterBridge";
 export { createComputerUsePipeline } from "./createComputerUsePipeline";
 export { ComputerUseMissionEngineBridge } from "./ComputerUseMissionEngineBridge";
 export { ComputerUseMissionStepAdapter } from "./ComputerUseMissionStepAdapter";
