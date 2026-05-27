@@ -59,3 +59,11 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - The bridge only approves/rejects scaffold confirmation requests; it does **not** execute computer-use actions.
 - No browser APIs, no direct-host/system actions, and no microphone/STT/TTS provider calls are performed.
 - This contract is designed so a future Voice HUD can safely submit confirmation phrases for guarded computer-use workflows.
+
+
+## Voice HUD runtime bridge (scaffold)
+
+- `VoiceHudRuntimeBridge` and `createVoiceHudRuntimeBridge` provide a service-level HUD/Voice Center state-and-control contract for future UI wiring.
+- This is scaffold-only state management and transition handling; no React/UI components are modified.
+- No microphone APIs, no STT/TTS provider integrations, and no audio output providers are called.
+- Future UI layers can subscribe to this bridge state and send controls without changing runtime safety boundaries.
