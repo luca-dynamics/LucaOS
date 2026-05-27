@@ -47,3 +47,5 @@ export * from "./LiveVoiceRuntimeBridge";
 export * from "./createLiveVoiceRuntimeBridge";
 
 export * from "./VoiceRuntimeStatePrecedence";
+
+export * from "./VoiceRuntimeProviderPolicy";
