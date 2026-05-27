@@ -128,3 +128,10 @@ Mission-like input
   - router route validation pass
   - rollback/failure result path available
 - Direct-host remains forbidden and real browser execution remains off until a future dedicated adapter PR lands with tests.
+
+## BrowserRuntime invocation readiness helper update (May 27, 2026)
+
+- Added `BrowserRuntimeRouterInvocationGuard` helper to evaluate future real-router readiness without side effects.
+- Readiness now uses explicit gates over feature flags, bridge request presence, dry-run results, guard decisions, confirmation status, lane, and risk level.
+- Added optional input-shaping helper from sandbox adapter metadata for lightweight integration.
+- This phase remains execution-disabled: no BrowserRuntimeRouter import/instantiation/call, no Playwright/browser/system calls, and no direct-host enablement.

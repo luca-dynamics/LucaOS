@@ -261,3 +261,11 @@ import {
   - `ComputerUseBrowserRuntimeRouterInvocationReadinessStatus`
   - `ComputerUseBrowserRuntimeRouterInvocationGate`
   - `ComputerUseBrowserRuntimeRouterInvocationReadinessResult`
+
+## BrowserRuntime invocation readiness helper
+
+- `BrowserRuntimeRouterInvocationGuard` now provides a side-effect-free readiness evaluator for future real BrowserRuntime router invocation.
+- `evaluateBrowserRuntimeRouterInvocationReadiness(input)` evaluates gates across feature flags, bridge request, dry-run result, guard decision, confirmation status, lane, and risk.
+- `createBrowserRuntimeRouterInvocationReadinessInputFromSandboxResult(result, options)` can build invocation-readiness input from sandbox adapter metadata only.
+- This helper does not import/instantiate/call `BrowserRuntimeRouter` and does not execute browser/system/direct-host actions.
+- Real router invocation remains disabled in this phase and requires a future explicit opt-in execution PR.

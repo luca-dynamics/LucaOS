@@ -114,3 +114,10 @@ Treat cloud-agent install/test constraints as first-class release risk for missi
 - Gate contract requires: sandbox adapter + router bridge + dry-run readiness + explicit real-router opt-in + allowed guard decision + no direct-host + no critical risk + risky-action confirmation + tape/event availability + route validation + rollback path.
 - This milestone is docs/types-only safety design and does not import/instantiate/call real `BrowserRuntimeRouter`.
 - Recommended next PR: implement a side-effect-free readiness evaluator that returns `blocked` / `dry_run_required` / `needs_confirmation` / `ready` without invoking browser/router/system APIs.
+
+## New milestone: BrowserRuntime invocation readiness helper
+
+- Added side-effect-free `BrowserRuntimeRouterInvocationGuard` helper and tests for readiness status evaluation.
+- Added optional helper to build readiness input from sandbox adapter metadata plus dry-run/guard overrides.
+- Readiness metadata explicitly confirms no real BrowserRuntimeRouter/Playwright/browser/system/direct-host execution.
+- Real BrowserRuntime router execution remains disabled until a future dedicated feature-flagged execution PR.
