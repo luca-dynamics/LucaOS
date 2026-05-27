@@ -12,6 +12,7 @@ The `src/services/voice` module is the first contract layer for LucaOS Voice Mod
 
 - Core voice runtime/event/session types.
 - STT/TTS backend interfaces and provider router contract.
+- `VoiceProviderRouter` scaffold and `createVoiceProviderRouter` factory for local/cloud/BYOK provider selection planning.
 - In-memory backend registry for provider registration/selection.
 - Voice runtime scaffold with session lifecycle, shared command intake, and confirmation flow.
 - Voice session tape bridge with in-memory recording for runtime events and command flow.
@@ -39,11 +40,10 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 
 ## Future work
 
-1. Voice Mode onboarding bridge
-2. Voice HUD runtime bridge
-3. STT/TTS provider router
-4. Streaming STT/TTS contracts
-5. Voice-to-computer-use bridge
+1. OpenAI-compatible audio API scaffold
+2. Streaming STT/TTS contracts
+3. Real provider-specific adapters under local/cloud/BYOK
+4. Voice-to-computer-use bridge hardening
 
 ## Voice Mode onboarding bridge (scaffold)
 
@@ -67,3 +67,10 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - This is scaffold-only state management and transition handling; no React/UI components are modified.
 - No microphone APIs, no STT/TTS provider integrations, and no audio output providers are called.
 - Future UI layers can subscribe to this bridge state and send controls without changing runtime safety boundaries.
+
+## Voice provider router scaffold
+
+- `VoiceProviderRouter` and `createVoiceProviderRouter` are scaffold-only routing helpers that choose candidate STT/TTS backends by capability and preference (`local`, `cloud`, `byok`, `auto`).
+- This router only evaluates backend metadata and registry snapshots; it does not call provider APIs.
+- No microphone/audio/system API calls, no real STT/TTS invocations, and no heavy model loading are performed.
+- This prepares Luca Prime / Local / BYOK routing paths so future PRs can add real OpenAI-compatible audio and streaming contracts behind stable interfaces.

@@ -1,5 +1,7 @@
 export * from "./types";
 export * from "./VoiceBackendRegistry";
+export * from "./VoiceProviderRouter";
+export * from "./createVoiceProviderRouter";
 export * from "./VoiceInMemoryTapeSink";
 export * from "./VoiceRuntimeEventBridge";
 export * from "./VoiceRuntime";
