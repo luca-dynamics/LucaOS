@@ -12,6 +12,31 @@ export type LucaVoiceRuntimeStatus =
 
 export type LucaVoiceProviderKind = "local" | "cloud" | "byok";
 export type LucaVoiceProviderPreference = LucaVoiceProviderKind | "auto";
+export type LucaVoiceProviderAdapterKind =
+  | "local_adapter"
+  | "luca_prime_cloud_adapter"
+  | "byok_adapter";
+
+export interface LucaVoiceProviderAdapterMetadata {
+  adapterKind: LucaVoiceProviderAdapterKind;
+  providerKind: LucaVoiceProviderKind;
+  audioApisCalled: false;
+  microphoneApisCalled: false;
+  sttApisCalled: false;
+  ttsApisCalled: false;
+  providerApisCalled: false;
+  heavyModelsLoaded: false;
+  systemApisCalled: false;
+  requiresExplicitOptIn: true;
+}
+
+export interface LucaVoiceProviderAdapterSnapshot {
+  adapterKind: LucaVoiceProviderAdapterKind;
+  providerKind: LucaVoiceProviderKind;
+  registeredBackends: string[];
+  metadata: LucaVoiceProviderAdapterMetadata;
+}
+
 export type LucaVoiceProviderCapability =
   | "stt"
   | "tts"

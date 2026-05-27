@@ -91,3 +91,11 @@ This scaffold prepares future local/cloud/BYOK provider routing by defining stab
 - The implementation returns placeholder speech/transcription payloads only and does not call real providers, audio output APIs, microphone APIs, STT/TTS APIs, or model runtimes.
 - No heavy models are loaded, no system APIs are called, and no storage is written.
 - The contract is inspired by OmniVoice-style compatibility patterns, but implemented as LucaOS-native scaffold-only types and service boundaries for future local LucaOS voice server compatibility.
+
+## Voice provider adapter stubs (local / Luca Prime / BYOK)
+
+- `VoiceLocalProviderAdapter`, `VoiceLucaPrimeProviderAdapter`, and `VoiceByokProviderAdapter` are scaffold-only adapter classes.
+- They register scaffold STT/TTS backends in `VoiceBackendRegistry` for local, Luca Prime Cloud, and BYOK routing lanes.
+- These adapters only produce metadata/snapshots and in-memory backend registration; they do **not** call microphone/audio/STT/TTS/provider APIs.
+- No provider SDKs, no network calls, no API keys, no local model loading, and no system hardware inspection are performed.
+- `createVoiceProviderAdapters` offers factory wiring (`registerAll`, `getSnapshots`, `reset`) so future PRs can replace stubs with real implementations behind explicit feature flags.
