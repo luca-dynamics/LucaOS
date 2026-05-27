@@ -51,3 +51,5 @@ export * from "./VoiceRuntimeStatePrecedence";
 export * from "./VoiceRuntimeProviderPolicy";
 
 export * from "./VoiceRouteShadowEvaluator";
+
+export * from "./VoiceRouteAuthorityGate";
