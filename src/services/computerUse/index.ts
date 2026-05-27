@@ -20,6 +20,8 @@ export { createBrowserRuntimeRouterBridgeRequest, mapComputerUseActionToBrowserR
 export type { BrowserRuntimeRouterBridgeMetadata, BrowserRuntimeRouterBridgeRequest, BrowserRuntimeRouterBridgeRoute } from "./BrowserRuntimeRouterBridge";
 export { BrowserRuntimeRouterDryRunAdapter } from "./BrowserRuntimeRouterDryRunAdapter";
 export { createBrowserRuntimeRouterDryRunAdapter } from "./createBrowserRuntimeRouterDryRunAdapter";
+export { BrowserRuntimeRouterGuardedAdapter } from "./BrowserRuntimeRouterGuardedAdapter";
+export { createBrowserRuntimeRouterGuardedAdapter } from "./createBrowserRuntimeRouterGuardedAdapter";
 export { evaluateBrowserRuntimeRouterInvocationReadiness, createBrowserRuntimeRouterInvocationGate, createBrowserRuntimeRouterInvocationReadinessInputFromSandboxResult } from "./BrowserRuntimeRouterInvocationGuard";
 export type { BrowserRuntimeRouterInvocationReadinessFeatureFlags, BrowserRuntimeRouterInvocationReadinessInput, BrowserRuntimeRouterInvocationReadinessFromSandboxOptions } from "./BrowserRuntimeRouterInvocationGuard";
 export { createComputerUsePipeline } from "./createComputerUsePipeline";

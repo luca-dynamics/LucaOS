@@ -1157,3 +1157,66 @@ export interface ComputerUseBrowserRuntimeRouterInvocationReadinessResult {
     requiresExplicitOptIn: true;
   };
 }
+
+export type ComputerUseBrowserRuntimeRouterGuardedAdapterMetadata = {
+  adapterKind: "browser_runtime_router_guarded_shell";
+  shellOnly: true;
+  realBrowserExecutionEnabled: false;
+  browserRuntimeRouterImported: false;
+  browserRuntimeRouterInstantiated: false;
+  browserRuntimeRouterCalled: false;
+  playwrightCalled: false;
+  browserApisCalled: false;
+  systemApisCalled: false;
+  directHostAllowed: false;
+  requiresExplicitOptIn: true;
+};
+
+export interface ComputerUseBrowserRuntimeRouterGuardedAdapterOptions {
+  now?: () => string;
+  onEvent?: (event: {
+    eventType: "browser_runtime_router_guarded_shell_invoked";
+    timestamp: string;
+    status: ComputerUseBrowserRuntimeRouterGuardedInvocationResult["status"];
+    requestId?: string;
+    missionId?: string;
+    action?: string;
+    target?: string;
+    reason?: string;
+  }) => void;
+}
+
+export interface ComputerUseBrowserRuntimeRouterGuardedInvocationInput {
+  readinessInput?: import("./BrowserRuntimeRouterInvocationGuard").BrowserRuntimeRouterInvocationReadinessInput;
+  bridgeRequest?: import("./BrowserRuntimeRouterBridge").BrowserRuntimeRouterBridgeRequest;
+  dryRunResult?: ComputerUseBrowserRuntimeRouterDryRunResult;
+  guardDecision?: Pick<ComputerUseGuardDecision, "status" | "reason">;
+  confirmationResult?: Pick<ComputerUseGuardConfirmationResult, "status">;
+  featureFlags?: import("./BrowserRuntimeRouterInvocationGuard").BrowserRuntimeRouterInvocationReadinessFeatureFlags;
+  lane?: ComputerUseBrowserRuntimeLane;
+  riskLevel?: ComputerUseGuardRiskLevel;
+  missionTapeReady?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ComputerUseBrowserRuntimeRouterGuardedInvocationResult {
+  status: "blocked" | "dry_run_required" | "needs_confirmation" | "ready_but_not_invoked";
+  requestId?: string;
+  missionId?: string;
+  action?: string;
+  target?: string;
+  reason: string;
+  gates: ComputerUseBrowserRuntimeRouterInvocationGate[];
+  readinessStatus: ComputerUseBrowserRuntimeRouterInvocationReadinessStatus;
+  metadata: ComputerUseBrowserRuntimeRouterGuardedAdapterMetadata;
+}
+
+export interface ComputerUseBrowserRuntimeRouterGuardedAdapterSnapshot {
+  invocationCount: number;
+  blockedCount: number;
+  dryRunRequiredCount: number;
+  needsConfirmationCount: number;
+  readyButNotInvokedCount: number;
+  lastInvocationAt?: string;
+  lastResult?: ComputerUseBrowserRuntimeRouterGuardedInvocationResult;
+}

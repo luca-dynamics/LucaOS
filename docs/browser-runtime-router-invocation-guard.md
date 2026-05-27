@@ -129,3 +129,10 @@ Future real-invocation PR should include at minimum:
 - Added `createBrowserRuntimeRouterInvocationReadinessInputFromSandboxResult()` for metadata-only input shaping from sandbox adapter output.
 - Guard metadata is fixed to execution-disabled safety posture (`realBrowserExecutionEnabled: false`, `browserRuntimeRouterCalled: false`, `playwrightCalled: false`, `browserApisCalled: false`, `systemApisCalled: false`, `directHostAllowed: false`).
 - Real router invocation remains disabled; this helper does not import, instantiate, or call `BrowserRuntimeRouter`.
+
+
+## Guarded adapter shell status (current PR stage)
+
+- `BrowserRuntimeRouterGuardedAdapter` is now available as a guarded shell that evaluates invocation readiness and returns shell statuses only.
+- Even when readiness is `ready`, the adapter returns `ready_but_not_invoked`; real BrowserRuntimeRouter execution is intentionally disabled.
+- Future work can wire optional real invocation behind explicit feature flags and all invocation guard gates.

@@ -121,3 +121,6 @@ Treat cloud-agent install/test constraints as first-class release risk for missi
 - Added optional helper to build readiness input from sandbox adapter metadata plus dry-run/guard overrides.
 - Readiness metadata explicitly confirms no real BrowserRuntimeRouter/Playwright/browser/system/direct-host execution.
 - Real BrowserRuntime router execution remains disabled until a future dedicated feature-flagged execution PR.
+
+- [x] Added BrowserRuntimeRouter guarded adapter shell (non-executing): evaluates invocation readiness and reports shell-only status.
+- [ ] Future PR: optional real BrowserRuntimeRouter execution behind explicit opt-in + full guard/confirmation/dry-run gates.
