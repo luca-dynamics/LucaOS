@@ -175,4 +175,6 @@ Future direction:
 - `VoiceRuntimeProviderPolicy` maps `SettingsVoiceTab` presets (`performance`, `speedster`, `balanced`, `privacy`) into runtime provider-policy metadata.
 - Presets remain existing UX controls and keep current behavior in settings/live flows.
 - The provider policy is advisory-only metadata for routing/readiness/diagnostics and does not itself enable provider/network/audio execution.
-- Future work can let `liveService` and provider router consume the policy more directly when real provider gates are intentionally opened.
+- `liveService` now records provider policy on live route metadata (`providerPolicy`, `providerPolicyAdvisoryOnly`, `providerPolicyAppliedToRouting`) strictly for observability.
+- Diagnostics snapshots surface the provider policy route metadata while preserving existing provider policy fields from settings mapping.
+- Future work can allow `liveService` route selection to consult `VoiceProviderRouter` / readiness gates behind feature flags when real provider gates are intentionally opened.

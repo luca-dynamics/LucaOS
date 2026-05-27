@@ -61,6 +61,20 @@ describe("LiveVoiceRuntimeBridge", () => {
     expect(snap.metadata.adaptiveFallbackActive).toBe(true);
   });
 
+  it("preserves provider policy metadata as advisory", () => {
+    const bridge = new LiveVoiceRuntimeBridge();
+    bridge.syncFromLiveSession({
+      routeKind: "CLOUD_BIDI",
+      providerPolicy: { preset: "balanced" },
+      providerPolicyAdvisoryOnly: true,
+      providerPolicyAppliedToRouting: false,
+    });
+    const snap = bridge.getSnapshot();
+    expect(snap.metadata.providerPolicy).toMatchObject({ preset: "balanced" });
+    expect(snap.metadata.providerPolicyAdvisoryOnly).toBe(true);
+    expect(snap.metadata.providerPolicyAppliedToRouting).toBe(false);
+  });
+
   it("preserves wake-word and preset metadata", () => {
     const bridge = new LiveVoiceRuntimeBridge();
     bridge.syncFromSettings({ voice: { wakeWordEnabled: true, preset: "balanced", sttModel: "cloud-gemini" } });

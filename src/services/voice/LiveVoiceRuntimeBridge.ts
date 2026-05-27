@@ -82,6 +82,9 @@ export class LiveVoiceRuntimeBridge {
       vadActive: session.isVadActive ?? session.isListening ?? this.snapshot.metadata.vadActive,
       realtimeSessionId: session.sessionId ?? this.snapshot.metadata.realtimeSessionId,
       canInterrupt: session.canInterrupt ?? this.snapshot.metadata.canInterrupt,
+      providerPolicy: session.providerPolicy ?? this.snapshot.metadata.providerPolicy,
+      providerPolicyAdvisoryOnly: session.providerPolicyAdvisoryOnly ?? this.snapshot.metadata.providerPolicyAdvisoryOnly,
+      providerPolicyAppliedToRouting: session.providerPolicyAppliedToRouting ?? this.snapshot.metadata.providerPolicyAppliedToRouting,
       lastError: session.error ? String(session.error) : this.snapshot.metadata.lastError,
     };
 
@@ -97,6 +100,9 @@ export class LiveVoiceRuntimeBridge {
       routingHealth: orchestrator.routingHealth ?? this.snapshot.metadata.routingHealth,
       adaptiveFallbackActive: orchestrator.adaptiveRouteApplied ?? diagnostics.adaptiveFallbackActive ?? this.snapshot.metadata.adaptiveFallbackActive,
       routeKind: orchestrator.routeKind ?? this.snapshot.metadata.routeKind,
+      providerPolicy: orchestrator.providerPolicy ?? diagnostics.providerPolicy ?? diagnostics.voice?.route?.providerPolicy ?? this.snapshot.metadata.providerPolicy,
+      providerPolicyAdvisoryOnly: orchestrator.providerPolicyAdvisoryOnly ?? diagnostics.providerPolicyAdvisoryOnly ?? diagnostics.voice?.route?.providerPolicyAdvisoryOnly ?? this.snapshot.metadata.providerPolicyAdvisoryOnly,
+      providerPolicyAppliedToRouting: orchestrator.providerPolicyAppliedToRouting ?? diagnostics.providerPolicyAppliedToRouting ?? diagnostics.voice?.route?.providerPolicyAppliedToRouting ?? this.snapshot.metadata.providerPolicyAppliedToRouting,
     };
 
     if (orchestrator.status === "RECONNECTING" || orchestrator.routingHealth === "unstable") {

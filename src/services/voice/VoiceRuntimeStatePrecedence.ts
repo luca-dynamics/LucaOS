@@ -123,6 +123,9 @@ export function deriveVoiceOperatorState(input: VoiceRuntimeStatePrecedenceInput
       liveServiceOwnership: true,
       realtimeEnrichmentOnly: true,
       diagnosticsObserved: Boolean(input.diagnostics),
+      providerPolicy: live.providerPolicy ?? diagnostics.providerPolicy ?? bridgeMeta.providerPolicy ?? null,
+      providerPolicyAdvisoryOnly: live.providerPolicyAdvisoryOnly ?? diagnostics.providerPolicyAdvisoryOnly ?? bridgeMeta.providerPolicyAdvisoryOnly ?? null,
+      providerPolicyAppliedToRouting: live.providerPolicyAppliedToRouting ?? diagnostics.providerPolicyAppliedToRouting ?? bridgeMeta.providerPolicyAppliedToRouting ?? false,
     },
   };
 }

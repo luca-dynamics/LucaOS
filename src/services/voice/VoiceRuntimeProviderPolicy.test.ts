@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { deriveVoiceRuntimeProviderPolicy, getVoiceRuntimeProviderPolicySnapshot, policyToRoutePreference } from "./VoiceRuntimeProviderPolicy";
+import {
+  createVoiceRuntimeProviderPolicyRouteMetadata,
+  deriveVoiceRuntimeProviderPolicy,
+  getVoiceRuntimeProviderPolicySnapshot,
+  policyToRoutePreference,
+} from "./VoiceRuntimeProviderPolicy";
 
 describe("VoiceRuntimeProviderPolicy", () => {
   it("maps performance to quality cloud route", () => {
@@ -52,5 +57,15 @@ describe("VoiceRuntimeProviderPolicy", () => {
       microphoneApisCalled: false,
       audioOutputApisCalled: false,
     });
+  });
+
+  it("creates advisory route metadata without applying routing changes", () => {
+    const policy = deriveVoiceRuntimeProviderPolicy({ preset: "speedster" });
+    const routeMetadata = createVoiceRuntimeProviderPolicyRouteMetadata(policy);
+    expect(routeMetadata.policyProviderPreference).toBe("auto");
+    expect(routeMetadata.routePreference).toBe("auto");
+    expect(routeMetadata.advisoryOnly).toBe(true);
+    expect(routeMetadata.appliedToRouting).toBe(false);
+    expect(routeMetadata.featureFlagsPreview.enableNetworkProviderCalls).toBe(true);
   });
 });

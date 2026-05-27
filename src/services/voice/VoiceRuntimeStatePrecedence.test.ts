@@ -60,4 +60,17 @@ describe("VoiceRuntimeStatePrecedence", () => {
     expect(state.metadata.liveServiceOwnership).toBe(true);
     expect(state.metadata.realtimeEnrichmentOnly).toBe(true);
   });
+
+  it("preserves advisory provider policy metadata", () => {
+    const state = deriveVoiceOperatorState({
+      liveSession: {
+        providerPolicy: { preset: "privacy" },
+        providerPolicyAdvisoryOnly: true,
+        providerPolicyAppliedToRouting: false,
+      },
+    });
+    expect(state.metadata.providerPolicy).toMatchObject({ preset: "privacy" });
+    expect(state.metadata.providerPolicyAdvisoryOnly).toBe(true);
+    expect(state.metadata.providerPolicyAppliedToRouting).toBe(false);
+  });
 });
