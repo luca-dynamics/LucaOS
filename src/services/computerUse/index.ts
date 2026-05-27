@@ -22,6 +22,8 @@ export { BrowserRuntimeRouterDryRunAdapter } from "./BrowserRuntimeRouterDryRunA
 export { createBrowserRuntimeRouterDryRunAdapter } from "./createBrowserRuntimeRouterDryRunAdapter";
 export { BrowserRuntimeRouterGuardedAdapter } from "./BrowserRuntimeRouterGuardedAdapter";
 export { createBrowserRuntimeRouterGuardedAdapter } from "./createBrowserRuntimeRouterGuardedAdapter";
+export { BrowserRuntimeRouterRealInvocationShell } from "./BrowserRuntimeRouterRealInvocationShell";
+export { createBrowserRuntimeRouterRealInvocationShell } from "./createBrowserRuntimeRouterRealInvocationShell";
 export { evaluateBrowserRuntimeRouterInvocationReadiness, createBrowserRuntimeRouterInvocationGate, createBrowserRuntimeRouterInvocationReadinessInputFromSandboxResult } from "./BrowserRuntimeRouterInvocationGuard";
 export type { BrowserRuntimeRouterInvocationReadinessFeatureFlags, BrowserRuntimeRouterInvocationReadinessInput, BrowserRuntimeRouterInvocationReadinessFromSandboxOptions } from "./BrowserRuntimeRouterInvocationGuard";
 export { createComputerUsePipeline } from "./createComputerUsePipeline";

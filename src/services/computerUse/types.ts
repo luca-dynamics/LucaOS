@@ -1211,6 +1211,63 @@ export interface ComputerUseBrowserRuntimeRouterGuardedInvocationResult {
   metadata: ComputerUseBrowserRuntimeRouterGuardedAdapterMetadata;
 }
 
+
+export type ComputerUseBrowserRuntimeRealInvocationShellMetadata = {
+  adapterKind: "browser_runtime_real_invocation_shell";
+  shellOnly: true;
+  realBrowserExecutionEnabled: false;
+  browserRuntimeRouterImported: false;
+  browserRuntimeRouterInstantiated: false;
+  browserRuntimeRouterCalled: false;
+  playwrightCalled: false;
+  browserApisCalled: false;
+  systemApisCalled: false;
+  directHostAllowed: false;
+  requiresExplicitOptIn: true;
+};
+
+export interface ComputerUseBrowserRuntimeRealInvocationShellOptions {
+  now?: () => string;
+  guardedAdapter?: import("./BrowserRuntimeRouterGuardedAdapter").BrowserRuntimeRouterGuardedAdapter;
+  onEvent?: (event: {
+    eventType: "browser_runtime_real_invocation_shell_invoked";
+    timestamp: string;
+    status: ComputerUseBrowserRuntimeRealInvocationResult["status"];
+    requestId?: string;
+    missionId?: string;
+    action?: string;
+    target?: string;
+    reason?: string;
+  }) => void;
+}
+
+export interface ComputerUseBrowserRuntimeRealInvocationInput
+  extends ComputerUseBrowserRuntimeRouterGuardedInvocationInput {
+  guardedInput?: ComputerUseBrowserRuntimeRouterGuardedInvocationInput;
+}
+
+export interface ComputerUseBrowserRuntimeRealInvocationResult {
+  status: "blocked" | "dry_run_required" | "needs_confirmation" | "ready_but_real_invocation_disabled";
+  guardedStatus: ComputerUseBrowserRuntimeRouterGuardedInvocationResult["status"];
+  requestId?: string;
+  missionId?: string;
+  action?: string;
+  target?: string;
+  reason: string;
+  gates: ComputerUseBrowserRuntimeRouterInvocationGate[];
+  readinessStatus: ComputerUseBrowserRuntimeRouterInvocationReadinessStatus;
+  metadata: ComputerUseBrowserRuntimeRealInvocationShellMetadata;
+}
+
+export interface ComputerUseBrowserRuntimeRealInvocationSnapshot {
+  invocationCount: number;
+  blockedCount: number;
+  dryRunRequiredCount: number;
+  needsConfirmationCount: number;
+  readyButRealInvocationDisabledCount: number;
+  lastInvocationAt?: string;
+  lastResult?: ComputerUseBrowserRuntimeRealInvocationResult;
+}
 export interface ComputerUseBrowserRuntimeRouterGuardedAdapterSnapshot {
   invocationCount: number;
   blockedCount: number;
