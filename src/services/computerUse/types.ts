@@ -1081,3 +1081,50 @@ export interface ComputerUseMissionIntegrationRecordingOptions {
     reset: () => void;
   };
 }
+
+export type ComputerUseBrowserRuntimeRouterDryRunMetadata = {
+  adapterKind: "browser_runtime_router_dry_run";
+  dryRun: true;
+  realBrowserExecutionEnabled: false;
+  browserRuntimeRouterImported: false;
+  browserRuntimeRouterInstantiated: false;
+  browserRuntimeRouterCalled: false;
+  playwrightCalled: false;
+  browserApisCalled: false;
+  systemApisCalled: false;
+  directHostAllowed: false;
+  requiresExplicitOptIn: true;
+};
+
+export interface ComputerUseBrowserRuntimeRouterDryRunResult {
+  ok: boolean;
+  requestId?: string;
+  action?: string;
+  target?: string;
+  missionId?: string;
+  reason?: string;
+  metadata: ComputerUseBrowserRuntimeRouterDryRunMetadata;
+}
+
+export interface ComputerUseBrowserRuntimeRouterDryRunSnapshot {
+  invocationCount: number;
+  successCount: number;
+  failureCount: number;
+  lastInvocationAt?: string;
+  lastResult?: ComputerUseBrowserRuntimeRouterDryRunResult;
+}
+
+export interface ComputerUseBrowserRuntimeRouterDryRunEvent {
+  eventType: "browser_runtime_router_dry_run_started" | "browser_runtime_router_dry_run_completed" | "browser_runtime_router_dry_run_failed";
+  timestamp: string;
+  requestId?: string;
+  missionId?: string;
+  action?: string;
+  target?: string;
+  reason?: string;
+}
+
+export interface ComputerUseBrowserRuntimeRouterDryRunOptions {
+  now?: () => string;
+  onEvent?: (event: ComputerUseBrowserRuntimeRouterDryRunEvent) => void;
+}

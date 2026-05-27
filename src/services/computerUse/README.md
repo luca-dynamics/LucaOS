@@ -242,3 +242,11 @@ import {
 - This integration does **not** instantiate or call `BrowserRuntimeRouter`, does **not** execute browser actions, and does **not** call Playwright/browser/system APIs.
 - If bridge request validation fails, execution fails safely while preserving existing runtime event recording behavior.
 - Real BrowserRuntime execution remains disabled (`realBrowserExecutionEnabled: false`); a future phase can gate real router invocation behind additional guard/tape validation.
+- `BrowserRuntimeRouterDryRunAdapter` now provides a dedicated dry-run invocation boundary for BrowserRuntime router bridge requests.
+- Dry-run adapter behavior:
+  - Validates `BrowserRuntimeRouterBridgeRequest` via `validateBrowserRuntimeRouterBridgeRequest()`.
+  - Returns a simulated invocation result containing `ok`, `requestId`, `missionId`, `action`, `target`, `reason`, and explicit dry-run metadata.
+  - Tracks invocation counters and latest snapshot state for observability and readiness checks.
+  - Never imports/instantiates/calls real `BrowserRuntimeRouter` and never calls Playwright/browser/system APIs.
+- Optional dry-run event callbacks can record started/completed/failed events; callback failures are non-fatal.
+- Real browser execution remains disabled in this phase; next step can feature-flag real router invocation once dry-run event/guard stability is confirmed.
