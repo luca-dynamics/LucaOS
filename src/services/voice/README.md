@@ -169,3 +169,10 @@ Future direction:
 - `VoiceRuntimeStatePrecedence` prevents split-brain status between `liveService`, HUD, diagnostics, and realtime runtime.
 - `liveService` remains the source of truth for real sessions.
 - realtime runtime mirrors and enriches state for future agent/runtime operations without replacing live ownership.
+
+## Voice runtime provider policy mapping
+
+- `VoiceRuntimeProviderPolicy` maps `SettingsVoiceTab` presets (`performance`, `speedster`, `balanced`, `privacy`) into runtime provider-policy metadata.
+- Presets remain existing UX controls and keep current behavior in settings/live flows.
+- The provider policy is advisory-only metadata for routing/readiness/diagnostics and does not itself enable provider/network/audio execution.
+- Future work can let `liveService` and provider router consume the policy more directly when real provider gates are intentionally opened.

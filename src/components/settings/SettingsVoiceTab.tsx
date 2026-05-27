@@ -8,6 +8,7 @@ import {
   voiceCloneService,
   ClonedVoice,
 } from "../../services/VoiceCloneService";
+import { deriveVoiceRuntimeProviderPolicy, inferVoicePreset } from "../../services/voice";
 
 interface SettingsVoiceTabProps {
   settings: LucaSettings;
@@ -166,6 +167,12 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
     }
   };
 
+  const runtimePolicy = deriveVoiceRuntimeProviderPolicy({
+    preset: inferVoicePreset({ provider: settings.voice.provider, sttModel: settings.voice.sttModel }),
+    provider: settings.voice.provider,
+    sttModel: settings.voice.sttModel,
+  });
+
   const handleActivateVoice = (voice: ClonedVoice) => {
     onUpdate("voice", "activeClonedVoiceId", voice.id);
     onUpdate("voice", "clonedVoiceName", voice.name);
@@ -274,6 +281,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               </button>
             );
           })}
+        </div>
+        <div className="mt-2 rounded-md border px-3 py-2 text-[10px] uppercase tracking-wider" style={{ borderColor: "var(--app-border-main, rgba(255,255,255,0.1))", color: "var(--app-text-muted)" }}>
+          Runtime Policy: {runtimePolicy.preferredProviderKind} · {runtimePolicy.latencyMode} · {runtimePolicy.privacyMode} · fallback {runtimePolicy.fallbackAllowed ? "on" : "off"} · network {runtimePolicy.networkAllowed ? "on" : "off"} · local preferred {runtimePolicy.localModelPreferred ? "yes" : "no"}
         </div>
       </motion.div>
 

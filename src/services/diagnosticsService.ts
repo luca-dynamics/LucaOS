@@ -9,6 +9,7 @@ import { voiceSessionOrchestrator } from "./voiceSessionOrchestrator";
 import { loggerService } from "./loggerService";
 import { realtimeVoiceUiBridge } from "./voice/realtimeVoiceUiBridge";
 import { getVoiceStatePrecedenceSnapshot } from "./voice/VoiceRuntimeStatePrecedence";
+import { getVoiceRuntimeProviderPolicySnapshot } from "./voice/VoiceRuntimeProviderPolicy";
 import os from "os";
 import {
   calculateOverallAuditStatus,
@@ -103,6 +104,7 @@ export interface SupportSnapshot {
     };
     realtimeBridge?: ReturnType<typeof realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot>;
     operatorState?: ReturnType<typeof getVoiceStatePrecedenceSnapshot>["operatorState"];
+    providerPolicy?: ReturnType<typeof getVoiceRuntimeProviderPolicySnapshot>;
   };
   diagnostics: {
     recentLogs: ReturnType<typeof loggerService.getRecentLogs>;
@@ -196,6 +198,10 @@ class DiagnosticsService {
           realtimeBridge: realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot(),
           settings,
         }).operatorState,
+        providerPolicy: getVoiceRuntimeProviderPolicySnapshot({
+          provider: settings.voice?.provider,
+          sttModel: settings.voice?.sttModel,
+        }),
       },
       diagnostics: {
         recentLogs: loggerService.getRecentLogs().slice(-50),
