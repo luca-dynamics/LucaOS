@@ -14,6 +14,7 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
 - Default execution mode is `sandbox`.
 - Untrusted contexts prefer and force `sandbox` execution mode.
 - Dangerous contexts mark `requiresGuardApproval` when approval metadata is not provided.
+- Guard decisions now return explicit statuses: `allowed`, `denied`, or `needs_confirmation`.
 - User-pointed targets are recorded as high-value grounding signals.
 - If no reliable focus target exists, planner falls back to `observe`.
 - User-pointed targets can produce `click` candidates.
@@ -67,6 +68,9 @@ Minimal context-modeling and planning scaffold for computer-use focus signals an
 - Tape bridge records lifecycle events in order: focus context, action plan, execution results, verification results, and recovery plan.
 - Redaction defaults are preserved for `type_text` payloads written to tape events.
 - Dangerous contexts propagate guard-approval requirements through plan/execution/recovery.
+- Guard bridge classifies action risk (`low`, `medium`, `high`, `critical`) and preserves scaffold-only safety metadata (`guardPolicyKind: "scaffold"`, `systemApisCalled: false`, `directHostAllowed: false`, `requiresExplicitOptIn: true`).
+- Risky write-like actions (for example `click`/`type_text`) require explicit confirmation unless approval context is present.
+- Critical/system-like actions (for example `hotkey` with terminal/delete/credential intent) are denied in scaffold mode.
 - Pipeline result metadata always reports:
   - `pipelineKind: "scaffold"`
   - `systemApisCalled: false`

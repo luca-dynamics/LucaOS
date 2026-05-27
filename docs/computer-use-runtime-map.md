@@ -20,7 +20,7 @@ Mission-like input
 | Focus Context | `src/services/computerUse/ComputerUseFocusContext.ts` | **Scaffold** (context modeling only) | Default sandbox bias, dangerous/untrusted context propagation, guard-required annotations | No | Add richer multimodal grounding and confidence contracts |
 | Action Planner | `src/services/computerUse/ComputerUseActionPlanner.ts` | **Scaffold** (plan candidates only) | Preserves guard requirement, observe fallback, no side effects | No | Add stronger planning heuristics and deterministic plan traces |
 | Executor Interface | `src/services/computerUse/ComputerUseExecutor.ts` | **Wired composition** over adapters with scaffold semantics | Deny/skip guard-gated or observe-only paths; metadata keeps non-invasive contract explicit | No (direct) | Expand adapter contract coverage and failure taxonomy |
-| Guard Bridge | `src/services/computerUse/ComputerUseGuardBridge.ts` | **Scaffold + wired in pipeline** | Explicit approval-required outcomes and policy placeholders | No | Harden approval policy + richer policy reasons |
+| Guard Bridge | `src/services/computerUse/ComputerUseGuardBridge.ts` | **Scaffold + wired in pipeline** | Explicit `allowed` / `denied` / `needs_confirmation` outcomes with risk + confirmation metadata; direct-host/system calls remain forbidden | No | Expand policy sources/token validation while preserving scaffold safety |
 | Sandbox Executor Adapter | `src/services/computerUse/ComputerUseSandboxExecutorAdapter.ts` | **Feature-safe scaffold adapter** (default enabled in factory) | Sandbox-only routing and scaffold metadata; no host control calls | No | Replace simulated execution with guarded sandbox browser-backed actions |
 | Verification + Recovery | `src/services/computerUse/ComputerUseVerifier.ts`, `src/services/computerUse/ComputerUseRecovery.ts` | **Scaffold** | Verification blocks unsafe metadata; recovery proposes safe next steps only | No | Add deterministic verification plugins + bounded retry strategies |
 | Mission Tape Bridge | `src/services/computerUse/ComputerUseMissionTapeBridge.ts` | **Scaffold** | Redaction-on by default, append-style event shaping, no persistence writes | No | Add injectable real sink contract behind explicit opt-in |
@@ -48,7 +48,7 @@ Mission-like input
 2. ✅ Real BrowserRuntime adapter contract discovery (documented + local type/probe boundary).
 3. ✅ Sandbox browser adapter scaffold behind explicit feature flag (no real execution by default).
 4. MissionTape real sink injection.
-5. Guard approval policy hardening.
+5. ✅ Guard approval policy hardening.
 6. Direct-host executor only after sandbox/browser safety is stable.
 
 ## Agent workflow for parallel runtime work

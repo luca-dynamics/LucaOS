@@ -41,9 +41,11 @@ Ordered by merge sequence:
    - Add injectable real MissionTape sink path for runtime event persistence.
    - Preserve redaction defaults and keep in-memory sink as fallback/compatibility mode.
 
-2. **Guard approval policy hardening**
-   - Strengthen approval-required outcomes, policy reasons, and deny/allow audit shape.
-   - Add strict tests for high-risk action classes and policy edge cases.
+2. ✅ **Guard approval policy hardening** (completed in current branch)
+   - Guard outcomes are explicit: `allowed`, `denied`, `needs_confirmation`.
+   - Risk classification is explicit (`low`/`medium`/`high`/`critical`) with mission-tape-ready metadata fields (`missionId`, `stepId`, `actionType`, `riskLevel`, `status`, `reason`, `confirmationRequired`).
+   - Write-like actions require confirmation by default, explicit approval context can allow in scaffold mode, and critical/system-like actions are denied.
+   - Direct-host/system APIs remain forbidden in scaffold mode (`systemApisCalled: false`, `directHostAllowed: false`).
 
 3. **BrowserRuntime router bridge integration/conformance tests**
    - Add router bridge integration coverage to verify contract conformance across discovery, routing, and adapter boundaries.
@@ -71,4 +73,3 @@ Before and during the next sequence, follow the cloud-agent validation guide and
 - `ops/scripts/cloud-agent-validate-computer-use.sh`
 
 Treat cloud-agent install/test constraints as first-class release risk for mission/runtime/computer-use changes.
-

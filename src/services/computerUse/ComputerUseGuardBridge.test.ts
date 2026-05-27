@@ -10,21 +10,26 @@ describe("ComputerUseGuardBridge", () => {
     expect(decision.status).toBe("allowed");
   });
 
-  it("dangerous non-observe without approval requires approval", () => {
+  it("click/type_text require confirmation by default", () => {
     const bridge = new ComputerUseGuardBridge();
-    const decision = bridge.evaluateAction({
+    const clickDecision = bridge.evaluateAction({
       action: { type: "click", reason: "delete", requiresGuardApproval: false },
       dangerousContext: true,
       request: { guardApprovalProvided: false },
     });
-    expect(decision.status).toBe("requires_approval");
+    const typeDecision = bridge.evaluateAction({
+      action: { type: "type_text", reason: "fill form", requiresGuardApproval: false },
+      request: { guardApprovalProvided: false },
+    });
+    expect(clickDecision.status).toBe("needs_confirmation");
+    expect(typeDecision.status).toBe("needs_confirmation");
   });
 
-  it("non-observe with approval allowed", () => {
+  it("click/type_text allowed with explicit approval context", () => {
     const bridge = new ComputerUseGuardBridge();
     const decision = bridge.evaluateAction({
       action: { type: "click", reason: "save", requiresGuardApproval: true },
-      request: { guardApprovalProvided: true },
+      request: { approval: { userConfirmed: true, approvedBy: "user", approvalReason: "confirmed in UI" } },
     });
     expect(decision.status).toBe("allowed");
   });
@@ -37,12 +42,15 @@ describe("ComputerUseGuardBridge", () => {
     expect(decision.status).toBe("denied");
   });
 
-  it("metadata externalGuardCalled false", () => {
+  it("metadata preserves scaffold safety flags", () => {
     const bridge = new ComputerUseGuardBridge();
     const decision = bridge.evaluatePlan({
       plan: { actions: [], requiresGuardApproval: false },
     });
     expect(decision.metadata.externalGuardCalled).toBe(false);
+    expect(decision.metadata.systemApisCalled).toBe(false);
+    expect(decision.metadata.directHostAllowed).toBe(false);
+    expect(decision.metadata.requiresExplicitOptIn).toBe(true);
   });
 
   it("dangerous context + observe-only plan is allowed", () => {
@@ -56,5 +64,14 @@ describe("ComputerUseGuardBridge", () => {
       },
     });
     expect(decision.status).toBe("allowed");
+  });
+
+  it("hotkey/system-like actions are denied as critical risk", () => {
+    const bridge = new ComputerUseGuardBridge();
+    const decision = bridge.evaluateAction({
+      action: { type: "hotkey", reason: "open terminal and delete file", requiresGuardApproval: false },
+    });
+    expect(decision.status).toBe("denied");
+    expect(decision.metadata.riskLevel).toBe("critical");
   });
 });
