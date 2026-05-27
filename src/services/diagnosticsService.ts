@@ -7,6 +7,7 @@ import { modelManager } from "./ModelManagerService";
 import { resolveVoiceSessionRoute } from "./voiceSessionRouter";
 import { voiceSessionOrchestrator } from "./voiceSessionOrchestrator";
 import { loggerService } from "./loggerService";
+import { realtimeVoiceUiBridge } from "./voice/realtimeVoiceUiBridge";
 import os from "os";
 import {
   calculateOverallAuditStatus,
@@ -99,6 +100,7 @@ export interface SupportSnapshot {
       routingHealth: string;
       adaptiveRouteApplied: boolean;
     };
+    realtimeBridge?: ReturnType<typeof realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot>;
   };
   diagnostics: {
     recentLogs: ReturnType<typeof loggerService.getRecentLogs>;
@@ -179,6 +181,7 @@ class DiagnosticsService {
           routingHealth: voiceSessionOrchestrator.routingHealth,
           adaptiveRouteApplied: voiceSessionOrchestrator.adaptiveRouteApplied,
         },
+        realtimeBridge: realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot(),
       },
       diagnostics: {
         recentLogs: loggerService.getRecentLogs().slice(-50),

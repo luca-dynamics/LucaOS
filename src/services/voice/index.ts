@@ -42,3 +42,6 @@ export * from "./createVoiceHudSubscriptionBridge";
 export * from "./VoiceOnboardingUiBridge";
 export * from "./createVoiceOnboardingUiBridge";
 export * from "./createLucaRuntimeUiBridgeSnapshot";
+
+export * from "./LiveVoiceRuntimeBridge";
+export * from "./createLiveVoiceRuntimeBridge";

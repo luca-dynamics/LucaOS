@@ -375,6 +375,32 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
     }
   }, [showVoiceHud]);
 
+  useEffect(() => {
+    realtimeVoiceUiBridge.liveRuntimeBridge.syncFromLiveSession({
+      status: voiceStatus,
+      sessionId: realtimeHud.activeSessionId,
+      isVadActive: voiceBackend === "local" ? localVadActive : isVadActive,
+      isSpeaking: realtimeHud.isSpeaking || voiceTranscriptSource === "model",
+      partialTranscript: realtimeHud.currentTranscript || undefined,
+      finalTranscript: voiceTranscriptSource === "user" ? voiceTranscript : undefined,
+      currentResponse: realtimeHud.currentResponse,
+      routeKind: voiceSessionOrchestrator.routeKind,
+      model: voiceModel,
+      persona,
+      canInterrupt: realtimeHud.canInterrupt,
+      error: realtimeHud.lastError || voiceHubError || undefined,
+    });
+
+    realtimeVoiceUiBridge.liveRuntimeBridge.syncFromDiagnostics({
+      orchestrator: {
+        responseLatencyMs: voiceSessionOrchestrator.responseLatencyMs,
+        routingHealth: voiceSessionOrchestrator.routingHealth,
+        adaptiveRouteApplied: voiceSessionOrchestrator.adaptiveRouteApplied,
+        routeKind: voiceSessionOrchestrator.routeKind,
+      },
+    });
+  }, [voiceStatus, realtimeHud.activeSessionId, voiceBackend, localVadActive, isVadActive, realtimeHud.isSpeaking, voiceTranscriptSource, realtimeHud.currentTranscript, voiceTranscript, realtimeHud.currentResponse, voiceModel, persona, realtimeHud.canInterrupt, realtimeHud.lastError, voiceHubError]);
+
   return (
     <>
       {/* --- GLOBAL LIQUID BACKGROUND (Default) --- */}
@@ -551,6 +577,13 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         isLocalCoreConnected={isLocalCoreConnected}
         localCoreReadinessLevel={localCoreReadinessLevel}
         localCoreReadinessReason={localCoreReadinessReason}
+        realtimeStatus={realtimeVoiceUiBridge.liveRuntimeBridge.getRealtimeState().status}
+        realtimeSessionId={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.realtimeSessionId || null}
+        realtimeCanInterrupt={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.canInterrupt}
+        realtimeLastError={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.lastError || null}
+        runtimeRouteHealth={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.routingHealth || null}
+        runtimeLatency={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.latencyMs || null}
+        runtimeFallbackActive={realtimeVoiceUiBridge.liveRuntimeBridge.getSnapshot().metadata.adaptiveFallbackActive}
         statusMessage={
           realtimeHud.lastError
             ? `VOICE SYSTEM ERROR: ${realtimeHud.lastError}`
