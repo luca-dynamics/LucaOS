@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Icon } from "../ui/Icon";
 import { PresenceMonitor } from "../Awareness/PresenceMonitor";
 import { ScreenShare } from "../ScreenShare";
@@ -17,6 +17,8 @@ import { LucaRecorder } from "../LucaRecorder";
 import HumanInputModal from "../HumanInputModal";
 import OriginOverlayPanels from "../../surfaces/origin/OriginOverlayPanels";
 import SharedOverlayPanels from "../../surfaces/shared/SharedOverlayPanels";
+import { useRealtimeVoiceHudState } from "../../services/voice/useRealtimeVoiceHudState";
+import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
 
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
@@ -361,6 +363,18 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
   const personaLabel = normalizePersonaDisplay(persona);
   const thoughtNodes = parseToolLogsToThoughtNodes(toolLogs);
 
+  useEffect(() => {
+    if (showVoiceHud) {
+      realtimeVoiceUiBridge.modeBridge.setMode("voice");
+      realtimeHud.startSession({ metadata: { source: "dashboard_voice_hud" } });
+      realtimeHud.startListening();
+    } else {
+      realtimeVoiceUiBridge.modeBridge.setMode("text");
+      realtimeHud.stopListening();
+      realtimeHud.stopSession("hud_hidden");
+    }
+  }, [showVoiceHud]);
+
   return (
     <>
       {/* --- GLOBAL LIQUID BACKGROUND (Default) --- */}
@@ -519,14 +533,14 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
       <VoiceHud
         isActive={isVoiceMode}
         isVisible={showVoiceHud}
-        onClose={toggleVoiceMode}
-        transcript={voiceTranscript}
-        transcriptSource={voiceTranscriptSource as any}
-        isVadActive={voiceBackend === "local" ? localVadActive : isVadActive}
+        onClose={() => { realtimeHud.stopListening(); realtimeHud.stopSession("user_closed_hud"); toggleVoiceMode(); }}
+        transcript={realtimeHud.currentTranscript || realtimeHud.currentResponse || voiceTranscript}
+        transcriptSource={(realtimeHud.currentResponse ? "model" : voiceTranscriptSource) as any}
+        isVadActive={realtimeHud.isListening || (voiceBackend === "local" ? localVadActive : isVadActive)}
         searchResults={voiceSearchResults}
         visualData={visualData}
         onClearVisualData={() => setVisualData(null)}
-        isSpeaking={voiceTranscriptSource === "model"}
+        isSpeaking={realtimeHud.isSpeaking || voiceTranscriptSource === "model"}
         paused={showCamera}
         persona={persona as any}
         modelName={getFriendlyVoiceModelLabel(
@@ -538,11 +552,11 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         localCoreReadinessLevel={localCoreReadinessLevel}
         localCoreReadinessReason={localCoreReadinessReason}
         statusMessage={
-          voiceHubError
-            ? `VOICE SYSTEM ERROR: ${voiceHubError}`
-            : presenceMode === "SENTRY"
-              ? "SENTRY MODE ACTIVE - LISTENING FOR 'HEY LUCA'"
-              : voiceStatus || "Cloud Voice is active"
+          realtimeHud.lastError
+            ? `VOICE SYSTEM ERROR: ${realtimeHud.lastError}`
+            : voiceHubError
+              ? `VOICE SYSTEM ERROR: ${voiceHubError}`
+              : `VOICE SESSION ${realtimeHud.activeSessionId ? "ACTIVE" : "READY"} · ${String(realtimeHud.status).toUpperCase()}`
         }
         onTranscriptChange={(text) => {
           setVoiceTranscript(text);
