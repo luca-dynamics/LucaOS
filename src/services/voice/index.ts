@@ -10,3 +10,6 @@ export * from "./createVoiceOnboardingBridge";
 
 export * from "./VoiceComputerUseConfirmationBridge";
 export * from "./createVoiceComputerUseConfirmationBridge";
+
+export * from "./VoiceHudRuntimeBridge";
+export * from "./createVoiceHudRuntimeBridge";
