@@ -2,6 +2,11 @@ export * from "./types";
 export * from "./VoiceBackendRegistry";
 export * from "./VoiceProviderRouter";
 export * from "./createVoiceProviderRouter";
+export * from "./VoiceLocalProviderAdapter";
+export * from "./VoiceLucaPrimeProviderAdapter";
+export * from "./VoiceByokProviderAdapter";
+export * from "./createVoiceProviderAdapters";
+
 export * from "./VoiceInMemoryTapeSink";
 export * from "./VoiceRuntimeEventBridge";
 export * from "./VoiceRuntime";
