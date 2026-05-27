@@ -1,7 +1,11 @@
 import { evaluateVoiceProviderReadiness } from "./VoiceProviderReadiness";
 import { VoiceProviderRouter } from "./VoiceProviderRouter";
 import {
+  VoiceOpenAICompatibleProviderAdapter,
+} from "./VoiceOpenAICompatibleProviderAdapter";
+import {
   type LucaVoiceProviderReadinessResult,
+  type LucaVoiceOpenAICompatibleProviderOptions,
   type LucaVoiceRealProviderAdapterRequest,
   type LucaVoiceRealProviderAdapterResult,
   type LucaVoiceRealProviderFeatureFlags,
@@ -31,6 +35,7 @@ export interface VoiceRealProviderAdapterShellOptions {
     networkAllowed?: boolean;
     localModelLoadingAllowed?: boolean;
   };
+  openAICompatibleProviderOptions?: LucaVoiceOpenAICompatibleProviderOptions;
 }
 
 export interface VoiceRealProviderAdapterShellSnapshot {
@@ -38,6 +43,7 @@ export interface VoiceRealProviderAdapterShellSnapshot {
   totalInvocations: number;
   statusCounts: Record<LucaVoiceRealProviderAdapterResult["status"], number>;
   lastResult?: LucaVoiceRealProviderAdapterResult;
+  openAICompatibleProviderAdapterSnapshot?: ReturnType<VoiceOpenAICompatibleProviderAdapter["getSnapshot"]>;
   metadata: typeof REAL_PROVIDER_ADAPTER_SHELL_METADATA;
 }
 
@@ -51,11 +57,16 @@ export class VoiceRealProviderAdapterShell {
   };
 
   private lastResult?: LucaVoiceRealProviderAdapterResult;
+  private readonly openAICompatibleProviderAdapter?: VoiceOpenAICompatibleProviderAdapter;
 
   constructor(
     private readonly providerRouter: VoiceProviderRouter,
     private readonly options: VoiceRealProviderAdapterShellOptions = {},
-  ) {}
+  ) {
+    if (options.openAICompatibleProviderOptions) {
+      this.openAICompatibleProviderAdapter = new VoiceOpenAICompatibleProviderAdapter(options.openAICompatibleProviderOptions);
+    }
+  }
 
   invoke(request: LucaVoiceRealProviderAdapterRequest): LucaVoiceRealProviderAdapterResult {
     this.totalInvocations += 1;
@@ -104,6 +115,7 @@ export class VoiceRealProviderAdapterShell {
       statusCounts: { ...this.statusCounts },
       lastResult: this.lastResult,
       metadata: REAL_PROVIDER_ADAPTER_SHELL_METADATA,
+      openAICompatibleProviderAdapterSnapshot: this.openAICompatibleProviderAdapter?.getSnapshot(),
     };
   }
 
@@ -116,6 +128,7 @@ export class VoiceRealProviderAdapterShell {
       ready: 0,
       invocation_disabled: 0,
     };
+    this.openAICompatibleProviderAdapter?.reset();
   }
 
   private evaluateReadiness(

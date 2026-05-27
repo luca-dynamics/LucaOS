@@ -8,7 +8,7 @@ import { VoiceStreamingRuntime } from "./VoiceStreamingRuntime";
 import { createVoiceProviderAdapters } from "./createVoiceProviderAdapters";
 import { createVoiceRealProviderAdapterShell } from "./createVoiceRealProviderAdapterShell";
 import { evaluateVoiceProviderReadiness } from "./VoiceProviderReadiness";
-import { type LucaVoiceRealProviderFeatureFlags } from "./types";
+import { type LucaVoiceOpenAICompatibleProviderOptions, type LucaVoiceRealProviderFeatureFlags } from "./types";
 
 export interface LucaVoiceRuntimeFactoryOptions {
   registerScaffoldProviderAdapters?: boolean;
@@ -17,6 +17,7 @@ export interface LucaVoiceRuntimeFactoryOptions {
   enableByokVoiceAdapter?: boolean;
   enableInMemoryTape?: boolean;
   realProviderFeatureFlags?: LucaVoiceRealProviderFeatureFlags;
+  openAICompatibleProviderOptions?: LucaVoiceOpenAICompatibleProviderOptions;
 }
 
 export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions = {}) {
@@ -49,6 +50,7 @@ export function createLucaVoiceRuntime(options: LucaVoiceRuntimeFactoryOptions =
   const realProviderFeatureFlags = options.realProviderFeatureFlags ?? {};
   const realProviderAdapterShell = createVoiceRealProviderAdapterShell(providerRouter, {
     featureFlags: realProviderFeatureFlags,
+    openAICompatibleProviderOptions: options.openAICompatibleProviderOptions,
   });
 
   const getProviderReadinessSummary = () => ({

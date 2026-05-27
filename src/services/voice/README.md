@@ -127,3 +127,23 @@ Service-level UI bridge contracts are available for Voice Mode, Voice HUD subscr
 - [Luca runtime foundation map](../../../docs/luca-runtime-foundation-map.md)
 - [Future real integration safety checklist](../../../docs/future-real-integration-safety-checklist.md)
 - [Runtime UI bridge map](../../../docs/runtime-ui-bridge-map.md)
+
+## OpenAI-compatible provider adapter (safe by default)
+
+`VoiceOpenAICompatibleProviderAdapter` provides a real-provider-ready boundary for mapping LucaOS speech/transcription requests into OpenAI-compatible request shapes:
+
+- `POST /v1/audio/speech`
+- `POST /v1/audio/transcriptions`
+
+Safety defaults:
+- Network provider calls are disabled unless `enableNetworkProviderCalls` is explicitly enabled.
+- No network calls occur unless a transport is explicitly injected.
+- The adapter never calls global `fetch` directly.
+- No microphone/audio output APIs, system APIs, or model loading are performed.
+
+Testing & scaffolding:
+- `VoiceMockProviderTransport` records requests in memory and returns configurable mock results.
+- The mock transport supports deterministic tests and safe local scaffolding.
+
+Future direction:
+- Realtime provider execution and transport-specific integrations will build on this adapter boundary.

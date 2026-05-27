@@ -18,6 +18,9 @@ export * from "./VoiceStreamingRuntime";
 export * from "./createVoiceStreamingRuntime";
 export * from "./VoiceOpenAICompatibleAudioApi";
 export * from "./createVoiceOpenAICompatibleAudioApi";
+export * from "./VoiceMockProviderTransport";
+export * from "./VoiceOpenAICompatibleProviderAdapter";
+export * from "./createVoiceOpenAICompatibleProviderAdapter";
 export * from "./createLucaVoiceRuntime";
 
 
