@@ -26,6 +26,7 @@ describe("createLucaVoiceRuntime", () => {
     const snapshot = composed.getSnapshot();
     expect(snapshot.registeredSttBackendCount).toBe(3);
     expect(snapshot.registeredTtsBackendCount).toBe(3);
+    expect(snapshot.realProviderAdapterShellSnapshot.totalInvocations).toBe(0);
     expect(snapshot.metadata).toMatchObject({
       factoryKind: "luca_voice_runtime_scaffold",
       audioApisCalled: false,
@@ -44,6 +45,7 @@ describe("createLucaVoiceRuntime", () => {
     expect(composed.streamingRuntime.getSnapshot().totalSessions).toBe(0);
     expect(composed.audioApi.getSnapshot().speechRequests).toBe(0);
     expect(composed.providerRouter.getSnapshot().totalRoutes).toBe(0);
+    expect(composed.realProviderAdapterShell.getSnapshot().totalInvocations).toBe(0);
     expect(composed.tapeSink.getSnapshot().totalRecords).toBe(0);
     expect(composed.registry.listSTTBackends()).toHaveLength(3);
     expect(composed.registry.listTTSBackends()).toHaveLength(3);
