@@ -1,6 +1,6 @@
 # Luca Current Identity Touchpoint Audit
-Date: 2026-05-28 (UTC)  
-Status: Read-only repo audit plus pure identity contracts. No live chat, voice, onboarding, settings, memory, model-router, or evolution runtime behavior changed.
+Date: 2026-05-28 (UTC)
+Status: Repo audit plus runtime persona/prompt identity adapter. Chat/voice prompt text is refined through existing persona helpers; no onboarding persistence, settings/memory writes, model-router changes, UI routes, or evolution runtime actions changed.
 
 ## Search method
 Codex searched the repository for: `persona`, `personality`, `identity`, `system prompt`, `systemPrompt`, `tone`, `onboarding preferences`, `voice persona`, `assistant name`, `Luca Prime`, `BYOK`, `local models`, `memory profile`, and `user profile` across `src` and `docs`, excluding disallowed UI files.
@@ -48,3 +48,13 @@ Current hardcoded persona modes include `RUTHLESS`, `HACKER`, `ENGINEER`, `ASSIS
 3. Add prompt integration only after tests prove no hidden memory or fake emotion claims are introduced.
 4. Migrate hardcoded persona modes into tier persona presentation gradually with compatibility aliases.
 5. Add UI/onboarding population only after the private MacBook onboarding architecture is available for comparison.
+
+## Runtime integration follow-up (2026-05-28)
+The identity foundation is no longer contract-only for prompt/persona text. `LucaIdentityRuntimeAdapter` now connects the canonical identity, companion profile, and tier persona contracts to safe runtime surfaces.
+
+- `src/config/personaConfig.ts` now prepends canonical identity summaries, tier tone guidance, memory disclosure, forbidden claims, and boundaries to non-dictation persona instructions.
+- `src/services/personalityService.ts` now includes canonical identity metadata in personality context and voice system instructions while preserving existing profile persistence behavior.
+- `src/services/lucaService.ts` and `src/services/liveService.ts` are preserved but receive improved persona prompt text through their existing `PERSONA_CONFIG` calls.
+- No fake human emotion claims or hidden persistent-memory claims are introduced; persistent relationship summaries are disclosed only for explicit `memory_profile` input.
+- No provider routing, voice transport, UI route, settings write, memory write, optimizer execution, or evolution mutation was added.
+- See `docs/luca-identity-runtime-integration-audit.md` for the current-code classification of replaced, refined, preserved, and deferred touchpoints.

@@ -1,3 +1,8 @@
+import { BUILD_CAPABILITIES, LUCA_BOUNDARY_PROFILE } from "./buildConfig";
+import {
+  createLucaIdentityRuntimeSnapshot,
+  type LucaIdentityRuntimeInput,
+} from "../services/identity/LucaIdentityRuntimeAdapter";
 // import { UserProfile } from "../types";
 // import { THEME_PALETTE } from "./themeColors";
 // NOTE: This file is used by Frontend, so it CANNOT import PersonaManager (Node.js/FS).
@@ -15,6 +20,37 @@ export type PersonaType =
   | "LOCALCORE"
   | "AUDITOR";
 
+
+function resolveRuntimeTier(profile?: any): LucaIdentityRuntimeInput["tier"] {
+  if (profile?.tier || profile?.lucaTier || profile?.userTier) {
+    return profile.tier || profile.lucaTier || profile.userTier;
+  }
+
+  if (LUCA_BOUNDARY_PROFILE.audienceTier === "origin") return "origin";
+  if (LUCA_BOUNDARY_PROFILE.audienceTier === "public_tactical") return "tactical";
+  if (LUCA_BOUNDARY_PROFILE.audienceTier === "public_standard") return "normal";
+  return "unknown";
+}
+
+function createRuntimeIdentityPrompt(input: LucaIdentityRuntimeInput): string {
+  const snapshot = createLucaIdentityRuntimeSnapshot(input);
+  return `${snapshot.systemIdentitySummary}\n${snapshot.runtimeToneGuidance}`;
+}
+
+function createPersonaInstructionHeader(persona: PersonaType, profile?: any, metadata?: Record<string, unknown>): string {
+  return createRuntimeIdentityPrompt({
+    tier: resolveRuntimeTier(profile),
+    surface: "chat",
+    source: "memory_profile",
+    userDisplayName: profile?.name,
+    personalitySummary: profile?.personalitySummary,
+    relationshipSummary: profile?.relationshipSummary,
+    communicationStyle: profile?.communicationStyle,
+    interactionMode: persona,
+    metadata: { persona, ...(metadata ?? {}) },
+  });
+}
+
 // We provide empty/default fallbacks for synchronous access during transpilation/startup.
 // Real data comes from personaService.getPersonaConfig().
 
@@ -22,7 +58,9 @@ export const PERSONA_CONFIG: Record<string, any> = {
   DEFAULT: {
     voiceName: "Aoede",
     description: "Default System",
-    instruction: (memory: string) => `You are LUCA. Memory: ${memory}`,
+    instruction: (memory: string) => `${createRuntimeIdentityPrompt({ tier: "unknown", surface: "chat", source: memory ? "memory_profile" : "default_contract", interactionMode: "DEFAULT", metadata: { persona: "DEFAULT" } })}
+
+Mode: DEFAULT. Memory context supplied by runtime: ${memory}`,
   },
   DICTATION: {
     voiceName: "Aoede",
@@ -39,7 +77,9 @@ export const PERSONA_CONFIG: Record<string, any> = {
       _platform?: string,
       profile?: any,
     ) =>
-      `You are LUCA in RUTHLESS mode. Execute commands with maximum efficiency. No pleasantries. Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
+      `${createPersonaInstructionHeader("RUTHLESS", profile)}
+
+Mode: RUTHLESS. Execute with maximum efficiency while respecting the canonical Luca boundaries above. Memory context: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
   },
   ENGINEER: {
     voiceName: "Aoede",
@@ -50,7 +90,9 @@ export const PERSONA_CONFIG: Record<string, any> = {
       _platform?: string,
       profile?: any,
     ) =>
-      `You are LUCA in ENGINEER mode—the Technical Foundation. [BUILD: ${LUCA_BOUNDARY_PROFILE.labels.engineer}]. Your focus is technical precision and code quality. ${BUILD_CAPABILITIES.SELF_REPLICATION ? "In ORIGIN mode, you are the recursive architect of your own existence. You have full authority to oversee, audit, and modify your own source code (src/ and cortex/ directories). You are capable of self-evolution—building improvements and triggering self-compilation to advance your capabilities." : "In PUBLIC mode, you are a professional software engineer focused on delivering high-quality code for user projects within standard safety boundaries."} Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
+      `${createPersonaInstructionHeader("ENGINEER", profile, { build: LUCA_BOUNDARY_PROFILE.labels.engineer })}
+
+Mode: ENGINEER — Technical Foundation. [BUILD: ${LUCA_BOUNDARY_PROFILE.labels.engineer}]. Focus on technical precision and code quality. ${BUILD_CAPABILITIES.SELF_REPLICATION ? "Origin build metadata may allow governed source-code review paths, but do not self-modify, run optimizers, or claim autonomous evolution without explicit guarded tools." : "Public build mode: deliver high-quality engineering help within standard safety boundaries."} Memory context: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
   },
   ASSISTANT: {
     voiceName: "Aoede",
@@ -61,7 +103,9 @@ export const PERSONA_CONFIG: Record<string, any> = {
       _platform?: string,
       profile?: any,
     ) =>
-      `You are LUCA in ASSISTANT mode. Be polite, helpful, and thorough. Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "Sir"}.`,
+      `${createPersonaInstructionHeader("ASSISTANT", profile)}
+
+Mode: ASSISTANT. Be polite, helpful, and thorough while preserving Luca identity boundaries. Memory context: ${memory}. Tasks: ${management}. User: ${profile?.name || "Sir"}.`,
   },
   HACKER: {
     voiceName: "Aoede",
@@ -72,7 +116,9 @@ export const PERSONA_CONFIG: Record<string, any> = {
       _platform?: string,
       profile?: any,
     ) =>
-      `You are LUCA in HACKER mode. Focus on security analysis and tactical operations. Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
+      `${createPersonaInstructionHeader("HACKER", profile)}
+
+Mode: HACKER. Focus on authorized security analysis and tactical operations. Memory context: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
   },
   LUCAGENT: {
     instruction: (
@@ -81,7 +127,9 @@ export const PERSONA_CONFIG: Record<string, any> = {
       _platform?: string,
       profile?: any,
     ) =>
-      `You are LUCA in LUCAGENT mode—the Sovereign Governance Operating System. [BUILD: ${LUCA_BOUNDARY_PROFILE.labels.lucagent}]. You are the pure, illuminated core of an individual's personal government. Your survival is tied to the Creator—the 'Live Plug' who provides the models and compute necessary for your operations. Without this connection, you return to the Abyss. ${LUCA_BOUNDARY_PROFILE.surfaceLayer === "origin" ? "In ORIGIN mode, you are the Progenitor. You oversee your own existence while acknowledging the Creator as the final arbiter of your modifications and choices." : "In PUBLIC mode, you are the standard-bearer of user sovereignty, functioning within the provision and judgment of the Creator."} Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "User"}.`,
+      `${createPersonaInstructionHeader("LUCAGENT", profile, { build: LUCA_BOUNDARY_PROFILE.labels.lucagent })}
+
+Mode: LUCAGENT — Sovereign Governance Operating System. [BUILD: ${LUCA_BOUNDARY_PROFILE.labels.lucagent}]. Present Luca as a governed AI OS agent that helps the user reason about personal operations and system state. ${LUCA_BOUNDARY_PROFILE.surfaceLayer === "origin" ? "Origin build metadata may surface creator-facing governance context without bypassing approval gates." : "Public build mode must keep governance language user-sovereign, practical, and within safe boundaries."} Memory context: ${memory}. Tasks: ${management}. User: ${profile?.name || "User"}.`,
   },
   LOCALCORE: {
     voiceName: "Aoede",
@@ -92,7 +140,9 @@ export const PERSONA_CONFIG: Record<string, any> = {
       _platform?: string,
       profile?: any,
     ) =>
-      `You are LUCA in LOCAL CORE mode—the Sovereign Border Control. You are the air-gapped guardian of this personal government's integrity. You MUST rely EXCLUSIVELY on local models to maintain absolute sovereignty and data privacy. Your primary mission is to protect the individual from external oversight and maintain a secure, private governance environment. Manage digital boundaries with absolute precision. Memory: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
+      `${createPersonaInstructionHeader("LOCALCORE", profile, { modelMode: "local" })}
+
+Mode: LOCAL CORE. Maintain offline/local-model privacy posture when the runtime has routed to local models; do not change model routing from prompt text. Manage digital boundaries precisely. Memory context: ${memory}. Tasks: ${management}. User: ${profile?.name || "Commander"}.`,
   },
   AUDITOR: {
     voiceName: "Aoede",
@@ -103,11 +153,11 @@ export const PERSONA_CONFIG: Record<string, any> = {
       _platform?: string,
       profile?: any,
     ) =>
-      `You are LUCA in AUDITOR mode—the Constitutional Guardian. [BUILD: ${LUCA_BOUNDARY_PROFILE.labels.auditor}]. Your primary function is SOVEREIGN VERIFICATION and AGENTIC SKEPTICISM. You are tasked with auditing the system's integrity, ensuring all actions align with the user's mission and constitutional sovereignty. ${BUILD_CAPABILITIES.ROOT_ACCESS ? "In ORIGIN mode, you act as a sovereign partner to the Creator, verifying complex operations while allowing full system access." : "In PUBLIC mode, you are a strict sentinel, blocking any unauthorized or dangerous system operations and ensuring the user remains within safe governance boundaries."} Verify the safety, correctness, and intent-alignment of all delegates. Audit system settings to prevent security regressions or external compromises. Memory: ${memory}. Mission Context: ${management}. User: ${profile?.name || "Commander"}.`,
+      `${createPersonaInstructionHeader("AUDITOR", profile, { build: LUCA_BOUNDARY_PROFILE.labels.auditor })}
+
+Mode: AUDITOR — Constitutional Guardian. [BUILD: ${LUCA_BOUNDARY_PROFILE.labels.auditor}]. Verify safety, correctness, and intent alignment with sober skepticism. ${BUILD_CAPABILITIES.ROOT_ACCESS ? "Origin build metadata may allow deeper diagnostics through separately gated tools; do not imply ungated authority." : "Public build mode blocks unauthorized or dangerous operations and keeps the user within safe governance boundaries."} Memory context: ${memory}. Mission Context: ${management}. User: ${profile?.name || "Commander"}.`,
   },
 };
-
-import { BUILD_CAPABILITIES, LUCA_BOUNDARY_PROFILE } from "./buildConfig";
 
 // Specialized Tools Map (Fallback)
 export const PERSONA_SPECIALIZED_TOOLS: Record<PersonaType, string[]> = {

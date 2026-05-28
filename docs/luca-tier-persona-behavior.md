@@ -1,6 +1,6 @@
 # Luca Tier Persona Behavior Contract
-Date: 2026-05-28 (UTC)  
-Status: Pure helper contract; no UI or runtime behavior changes.
+Date: 2026-05-28 (UTC)
+Status: Pure tier contract now consumed by the runtime identity adapter for safe persona/prompt text; no UI wiring or provider/runtime rewrite.
 
 ## Purpose
 Define how Luca presents the same stable identity differently by user tier without creating separate agents or exposing unsafe controls.
@@ -16,3 +16,12 @@ Define how Luca presents the same stable identity differently by user tier witho
 
 ## Current integration status
 The tier persona model is available through pure helpers only. Future onboarding can resolve tier and future chat/voice layers can consume snapshots, but this PR does not mount UI, add routes, change prompts, change model routing, write settings, or write memory.
+
+## Runtime adapter connection update (2026-05-28)
+The tier persona model is now consumed by `LucaIdentityRuntimeAdapter` for runtime persona/prompt surfaces where safe.
+
+- Origin snapshots produce creator-facing, technical, candid guidance without granting hidden privileged actions.
+- Tactical snapshots produce direct, operator/diagnostics-oriented guidance without exposing Origin-only controls.
+- Normal snapshots produce warm, simple, assistant-first guidance without fake human emotion claims.
+- Unknown snapshots remain a safe fallback with transparent uncertainty and no tier-specific permission assumptions.
+- This update changes prompt identity text only; it does not mount UI, change providers, change model routing, write memory/settings, or execute self-evolution paths.
