@@ -28,3 +28,11 @@
 
 ## Next phase
 - Unify trace + mission tape ingestion into canonical trace tier entries with stable linking IDs.
+
+## Trace/tape mapping bridge (added 2026-05-28)
+- Added pure trace/tape mapping contracts in `src/services/memory/TraceMemoryMapping.ts`.
+- Added `TraceMemoryAdapter` mapping shell in `src/services/memory/TraceMemoryAdapter.ts`.
+- Bridge maps existing `LucaTracing` events and `MissionTapeRecorder`/mission tape records into canonical `LucaMemoryItem` objects (trace + operational tiers).
+- Mapping is adapter-only and does not replace existing tracing/tape systems.
+- No write-path redirection, no persistence migration, and no runtime behavior change by default.
+- Future PR can route mapped trace/tape entries into unified memory ingestion/storage behind explicit flags.
