@@ -66,3 +66,11 @@ No UI wiring was added and no runtime behavior changed.
 ## Tier-to-Shell Routing Companion Contract
 
 A companion contract now exists at `docs/luca-tier-routing-shell-contract.md` and `src/types/lucaTierRouting.ts` to map `LucaUserTier` into intended shell mode without UI wiring. This preserves the current user-tier safety posture while preparing future private MacBook UI migration steps.
+
+## 2026-05-28 migration bridge update
+- Tier shell stubs are isolated-only placeholders (not mounted).
+- Tier routing preview adapter is pure metadata only.
+- Onboarding handoff is contract-only.
+- Origin dashboard snapshot adapter is read-only display data only.
+- Private UI import map guides future MacBook migration.
+- No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.

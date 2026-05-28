@@ -53,3 +53,11 @@ All tactical/normal/unknown decisions must return `false`.
 ## Future Work
 
 A future PR may introduce isolated shell components and connect this contract into UI wiring after migration gates are explicitly approved.
+
+## 2026-05-28 migration bridge update
+- Tier shell stubs are isolated-only placeholders (not mounted).
+- Tier routing preview adapter is pure metadata only.
+- Onboarding handoff is contract-only.
+- Origin dashboard snapshot adapter is read-only display data only.
+- Private UI import map guides future MacBook migration.
+- No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.
