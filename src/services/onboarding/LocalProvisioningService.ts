@@ -124,7 +124,13 @@ const pickOllamaBrainModel = (modelNames: string[]): string => {
 
 const isSupportedLocalModel = (id: string): boolean => {
   const model = modelManager.getModel(id);
-  return !!model && model.status !== "unsupported";
+  return (
+    !!model &&
+    model.status !== "unsupported" &&
+    model.catalogStatus !== "planned" &&
+    model.catalogStatus !== "experimental" &&
+    model.catalogStatus !== "unknown"
+  );
 };
 
 const selectSupportedLocalModel = (
@@ -133,6 +139,16 @@ const selectSupportedLocalModel = (
 ): string => {
   return candidates.find((id) => isSupportedLocalModel(id)) || fallback;
 };
+const isVerifiedDownloadTarget = (id: string): boolean => {
+  const model = modelManager.getModel(id);
+  return (
+    !!model &&
+    model.catalogStatus !== "planned" &&
+    model.catalogStatus !== "experimental" &&
+    model.catalogStatus !== "unknown"
+  );
+};
+
 
 export const isRecoverableLocalStep = (
   value: string,
@@ -330,7 +346,12 @@ export const startLocalProvisioning = (
 
   modelsToEnsure.forEach((id) => {
     const model = modelManager.getModel(id);
-    if (model && model.status !== "ready" && model.status !== "downloading") {
+    if (
+      model &&
+      isVerifiedDownloadTarget(id) &&
+      model.status !== "ready" &&
+      model.status !== "downloading"
+    ) {
       modelManager.downloadModel(id);
     }
   });
@@ -471,6 +492,7 @@ export const retryProvisionTargets = (
     const model = modelManager.getModel(id);
     if (
       model &&
+      isVerifiedDownloadTarget(id) &&
       model.status !== "ready" &&
       model.status !== "downloading"
     ) {

@@ -1,6 +1,7 @@
 import { personalityService } from "../personalityService";
 import { settingsService } from "../settingsService";
 import { requestVoicePermission } from "../../utils/voicePermissions";
+import { onboardingModelModeCoordinator } from "./OnboardingModelModeCoordinator";
 
 export type OnboardingByokProvider =
   | "gemini"
@@ -31,52 +32,19 @@ export const saveFaceScanData = (faceData: string | null) => {
   settingsService.saveFaceData(faceData);
 };
 
-export const applyCloudOnboardingConfiguration = (options: {
+export const applyCloudOnboardingConfiguration = async (options: {
   showByok: boolean;
   provider: OnboardingByokProvider;
   apiKey: string;
 }) => {
-  const currentBrain = settingsService.get("brain");
-  const currentVoice = settingsService.get("voice");
-  const brainSettings: any = {
-    ...currentBrain,
-    useCustomApiKey: options.showByok && !!options.apiKey,
-  };
-
-  if (options.showByok && options.apiKey) {
-    if (options.provider === "gemini") {
-      brainSettings.geminiApiKey = options.apiKey;
-      brainSettings.model = "gemini-3-flash-preview";
-    } else if (options.provider === "openai") {
-      brainSettings.openaiApiKey = options.apiKey;
-      brainSettings.model = "gpt-4.1-mini";
-    } else if (options.provider === "anthropic") {
-      brainSettings.anthropicApiKey = options.apiKey;
-      brainSettings.model = "claude-sonnet-4-5";
-    } else if (options.provider === "xai") {
-      brainSettings.xaiApiKey = options.apiKey;
-      brainSettings.model = "grok-beta";
-    }
-  } else {
-    brainSettings.model = "gemini-3-flash-preview";
+  if (options.showByok) {
+    return onboardingModelModeCoordinator.selectByokMode({
+      provider: options.provider,
+      apiKey: options.apiKey,
+    });
   }
 
-  settingsService.saveSettings({
-    brain: {
-      ...brainSettings,
-      embeddingModel: (
-        options.showByok && options.provider === "gemini"
-          ? "gemini-2.1-flash"
-          : "local/nomic-embed-text"
-      ) as any,
-    },
-    voice: {
-      ...currentVoice,
-      provider: "gemini-genai",
-      voiceId: "Aoede",
-      sttModel: "cloud-gemini",
-    },
-  });
+  return onboardingModelModeCoordinator.selectLucaPrimeMode();
 };
 
 export const resolveOnboardingConversationMode = async (

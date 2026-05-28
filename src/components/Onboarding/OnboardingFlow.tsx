@@ -64,6 +64,10 @@ import {
   waitForOnboardingDelay,
 } from "../../services/onboarding/OnboardingLifecycleService";
 import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
+import {
+  onboardingModelModeCoordinator,
+  type OnboardingModelReadiness,
+} from "../../services/onboarding/OnboardingModelModeCoordinator";
 
 type Step = OnboardingStep;
 
@@ -134,6 +138,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     useState<ProvisioningOutcome>(null);
   const [failedProvisionKeys, setFailedProvisionKeys] = useState<string[]>([]);
   const [resumeChecked, setResumeChecked] = useState(false);
+  const [modelReadiness, setModelReadiness] =
+    useState<OnboardingModelReadiness | null>(null);
+  const [routeWarnings, setRouteWarnings] = useState<string[]>([]);
   const provisionAutoAdvanceRef = useRef(false);
 
   // Boot Sequence Animation
@@ -536,20 +543,24 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     resetLocalProvisioningDraft();
     soundService.play("SUCCESS");
     await waitForOnboardingDelay(1500);
-    applyCloudOnboardingConfiguration({
+    const readiness = await applyCloudOnboardingConfiguration({
       showByok,
       provider: byokProvider,
       apiKey: showByok ? byokKeys[byokProvider] : "",
     });
+    setModelReadiness(readiness);
+    setRouteWarnings(readiness.warnings.map((warning) => warning.reason));
 
     setIsActivating(false);
     setStep(onboardingController.afterCloudActivation());
   };
 
-  const handleGoLocal = () => {
+  const handleGoLocal = async () => {
     soundService.play("SUCCESS");
     resetLocalProvisioningDraft();
-    settingsService.setLocalDiscoveryOverride(true);
+    const readiness = await onboardingModelModeCoordinator.selectLocalMode();
+    setModelReadiness(readiness);
+    setRouteWarnings(readiness.warnings.map((warning) => warning.reason));
     setStep(onboardingController.afterGoLocal());
   };
 
@@ -618,7 +629,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       alert(resolvedMode.fallbackMessage);
     }
 
-    setStep(onboardingController.afterModeSelection(mode));
+    const readiness = await onboardingModelModeCoordinator.getOnboardingModelReadiness({
+      includeVoice: resolvedMode.mode === "voice",
+      includeEmbedding: true,
+    });
+    setModelReadiness(readiness);
+    const warnings = readiness.warnings.map((warning) => warning.reason);
+    setRouteWarnings(warnings);
+    if (resolvedMode.mode === "voice" && warnings.length > 0) {
+      alert(`Voice/model route needs attention:\n\n${warnings.join("\n")}`);
+    }
+    setStep(onboardingController.afterModeSelection(resolvedMode.mode));
   };
 
   useEffect(() => {
@@ -631,8 +652,21 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     if (step === "COMPLETE") {
       soundService.play("SUCCESS");
       return scheduleOnboardingDelay(() => {
-        // Pass the selected conversation mode to the completion handler
-        onComplete(profile || undefined, conversationMode || undefined);
+        const finish = async () => {
+          const readiness =
+            await onboardingModelModeCoordinator.confirmSelectedModelRoute({
+              voiceSelected: conversationMode === "voice",
+              memoryEnabled: true,
+            });
+          setModelReadiness(readiness);
+          setRouteWarnings(readiness.warnings.map((warning) => warning.reason));
+          // Pass the selected conversation mode to the completion handler.
+          onComplete(profile || undefined, conversationMode || undefined);
+        };
+        finish().catch((error) => {
+          console.warn("[Onboarding] Route readiness confirmation failed", error);
+          onComplete(profile || undefined, conversationMode || undefined);
+        });
       }, 1500);
     }
   }, [step, onComplete, profile, conversationMode, isDownloadingLocal]);
@@ -775,7 +809,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         )}
 
         {step === "MODE_SELECT" && (
-          <ModeSelect onSelect={handleModeSelect} isLightTheme={isLightTheme} />
+          <ModeSelect
+            onSelect={handleModeSelect}
+            isLightTheme={isLightTheme}
+            modelReadiness={modelReadiness}
+            routeWarnings={routeWarnings}
+          />
         )}
 
         {step === "CONVERSATION" && conversationMode && (
