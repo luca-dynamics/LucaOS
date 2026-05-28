@@ -50,3 +50,7 @@ LucaOS now defines explicit external artifact envelope contracts and validation 
 - explicit no-auto-promote/no-runtime-auto-apply snapshot flags.
 
 This extension remains adapter/contract-only and does not execute optimizers in LucaOS core.
+
+## 2026-05 PR-back metadata verifier extension
+
+A pure PR-back metadata verifier is now part of the governance contract for external lab candidate intake. It validates repo trust metadata and PR references, requires Origin review flags, warns on missing finalized commit SHA data, blocks untrusted source repo inputs, and keeps auto-merge disabled (`canAutoMerge=false`) for all PR-back candidates.
