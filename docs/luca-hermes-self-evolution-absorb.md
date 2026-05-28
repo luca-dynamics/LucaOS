@@ -317,3 +317,7 @@ Governance posture:
 ## Governance-safe run artifacts (2026-05)
 
 LucaOS now includes canonical run/candidate contracts to ingest external lab optimization outcomes without running optimizer engines in production runtime. External lab PR-back and proposal creation paths remain Origin-reviewed and cannot auto-promote.
+
+## Repo boundary reference (2026-05-28)
+- Canonical LucaOS core vs external lab split: `docs/lucaos-self-evolution-repo-boundary.md`.
+

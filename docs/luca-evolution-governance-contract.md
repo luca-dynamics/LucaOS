@@ -35,3 +35,7 @@ This change is contract + gate + adapter only. It does not replace `evolutionSer
 - Added dataset/eval references, constraint gate result records, optimizer engine metadata, and PR-back metadata.
 - External lab outputs are represented as metadata-only inputs; optimizer execution remains disabled inside LucaOS core.
 - Origin review is required for external lab PR-back proposal paths.
+
+## Repo boundary reference (2026-05-28)
+- Canonical LucaOS core vs external lab split: `docs/lucaos-self-evolution-repo-boundary.md`.
+
