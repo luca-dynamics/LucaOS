@@ -206,3 +206,15 @@ These docs should treat this boundary plan as the canonical split contract for L
 ## 2026-05-28 External artifact envelope alignment
 
 LucaOS core now declares canonical external artifact envelopes and validation rules for lab exchange. This formalizes the boundary with required `schemaVersion`, mandatory Origin review, high-risk capability signals, candidate eval completeness checks, PR-back rollback metadata requirements for medium+ risk, and explicit no auto-promotion/runtime apply behavior.
+
+---
+
+## 2026-05-28 Origin dashboard shell note
+
+A non-functional, read-only Origin Creator UI shell was added at `src/components/origin/OriginEvolutionDashboardShell.tsx`.
+
+This addition is interface-only and preserves the boundary contract above:
+- Origin-only posture.
+- `mockOnly: true` and `runtimeBehaviorChanged: false`.
+- No `evolutionService` mutate/commit wiring.
+- No network calls, approvals/promotions, optimizer execution, or auto-apply behavior.
