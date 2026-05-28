@@ -321,3 +321,7 @@ LucaOS now includes canonical run/candidate contracts to ingest external lab opt
 ## Repo boundary reference (2026-05-28)
 - Canonical LucaOS core vs external lab split: `docs/lucaos-self-evolution-repo-boundary.md`.
 
+
+## 2026-05 Contract update: external lab artifact envelopes
+
+To support Hermes-style repo separation while keeping LucaOS safety posture, LucaOS now includes contract-only external artifact envelopes (`run_request`, `context_bundle`, `candidate_bundle`, eval/constraint/PR-back/rollback reports) with mandatory Origin review and no auto-promotion/runtime auto-apply semantics.

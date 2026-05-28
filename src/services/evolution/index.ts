@@ -6,3 +6,6 @@ export * from "./EvolutionRun";
 export * from "./EvolutionRunMapping";
 export * from "./EvolutionRunGate";
 export * from "./EvolutionRunAdapter";
+export * from "./ExternalEvolutionArtifacts";
+export * from "./ExternalEvolutionArtifactMapping";
+export * from "./ExternalEvolutionArtifactGate";

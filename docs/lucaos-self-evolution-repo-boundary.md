@@ -202,3 +202,7 @@ This boundary plan aligns with and extends:
 - `docs/luca-self-evolution-memory-audit.md`
 
 These docs should treat this boundary plan as the canonical split contract for LucaOS core vs external self-evolution lab responsibilities.
+
+## 2026-05-28 External artifact envelope alignment
+
+LucaOS core now declares canonical external artifact envelopes and validation rules for lab exchange. This formalizes the boundary with required `schemaVersion`, mandatory Origin review, high-risk capability signals, candidate eval completeness checks, PR-back rollback metadata requirements for medium+ risk, and explicit no auto-promotion/runtime apply behavior.
