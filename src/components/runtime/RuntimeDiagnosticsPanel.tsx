@@ -6,6 +6,7 @@ import {
   runtimeDiagnosticsService,
   type RuntimeDiagnostics,
   type RuntimeDiagnosticsAudience,
+  type RuntimeGovernanceDiagnostics,
   type RuntimeMemoryDiagnostics,
   type RuntimeReadinessSeverity,
   type RuntimeRouteDiagnostics,
@@ -87,6 +88,125 @@ const RouteCard: React.FC<{
           <div>Runtime: {formatValue(route.runtime)}</div>
           <div>Capability: {formatValue(route.capability)}</div>
         </div>
+      )}
+    </div>
+  );
+};
+
+
+function metricValue(value: unknown): string {
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (value === undefined || value === null) return "0";
+  return String(value);
+}
+
+function provenanceMetric(
+  governance: RuntimeGovernanceDiagnostics,
+  key: "totalRecords" | "pendingApprovals" | "quarantinedRecords" | "revokedRecords" | "expiredRecords",
+): number {
+  const value = governance.provenance[key as keyof typeof governance.provenance];
+  return typeof value === "number" ? value : 0;
+}
+
+export function getGovernancePendingApprovalCount(governance: RuntimeGovernanceDiagnostics): number {
+  return (
+    governance.runtimeContinuity.pendingApprovalCount +
+    governance.scheduler.pendingApprovals +
+    provenanceMetric(governance, "pendingApprovals")
+  );
+}
+
+const GovernanceContinuityCard: React.FC<{
+  governance: RuntimeGovernanceDiagnostics;
+  audience: RuntimeDiagnosticsAudience;
+}> = ({ governance, audience }) => {
+  const isOrigin = audience === "origin";
+  const isTactical = audience === "tactical" || isOrigin;
+  const quarantinedGovernanceItems =
+    governance.scheduler.quarantinedJobs +
+    governance.skills.quarantinedSkills +
+    governance.memoryGovernance.quarantinedRecords;
+
+  return (
+    <div
+      className="rounded-xl border p-3"
+      style={{
+        borderColor: "var(--app-border-main)",
+        backgroundColor: "var(--app-bg-tint)",
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--app-text-main)" }}>
+            Governance / Continuity
+          </div>
+          <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
+            {governance.safeSummary}
+          </p>
+        </div>
+        {isTactical && (
+          <span className="shrink-0 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-[9px] font-mono uppercase text-cyan-300">
+            {governance.visibility}
+          </span>
+        )}
+      </div>
+
+      {isTactical && !isOrigin && (
+        <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-[9px] uppercase tracking-widest" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)" }}>
+          <div>Pending approvals: {metricValue(getGovernancePendingApprovalCount(governance))}</div>
+          <div>Scheduler jobs: {metricValue(governance.scheduler.totalJobs)}</div>
+          <div>Due dry runs: {metricValue(governance.scheduler.dueJobs)}</div>
+          <div>Dry-run only: {formatValue(governance.scheduler.dryRunOnly)}</div>
+          <div>Quarantined jobs: {metricValue(governance.scheduler.quarantinedJobs)}</div>
+          <div>Quarantined skills: {metricValue(governance.skills.quarantinedSkills)}</div>
+          <div>Quarantined memories: {metricValue(governance.memoryGovernance.quarantinedRecords)}</div>
+          <div>Memory review: {metricValue(governance.memoryGovernance.pendingReviewRecords)}</div>
+        </div>
+      )}
+
+      {isOrigin && (
+        <div className="mt-3 space-y-3 border-t pt-3 text-[9px] uppercase tracking-widest" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)" }}>
+          <div className="grid grid-cols-2 gap-2">
+            <div>Lifecycle: {formatValue(governance.runtimeContinuity.lifecycleState)}</div>
+            <div>Can resume: {formatValue(governance.runtimeContinuity.canSafelyResume)}</div>
+            <div>Runtime approvals: {metricValue(governance.runtimeContinuity.pendingApprovalCount)}</div>
+            <div>Runtime quarantine: {metricValue(governance.runtimeContinuity.quarantinedItemCount)}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 border-t pt-3" style={{ borderColor: "var(--app-border-main)" }}>
+            <div>Scheduler total: {metricValue(governance.scheduler.totalJobs)}</div>
+            <div>Enabled: {metricValue(governance.scheduler.enabledJobs)}</div>
+            <div>Due: {metricValue(governance.scheduler.dueJobs)}</div>
+            <div>Risky: {metricValue(governance.scheduler.riskyJobs)}</div>
+            <div>Dry-run only: {formatValue(governance.scheduler.dryRunOnly)}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 border-t pt-3" style={{ borderColor: "var(--app-border-main)" }}>
+            <div>Provenance total: {metricValue(provenanceMetric(governance, "totalRecords"))}</div>
+            <div>Pending: {metricValue(provenanceMetric(governance, "pendingApprovals"))}</div>
+            <div>Quarantined: {metricValue(provenanceMetric(governance, "quarantinedRecords"))}</div>
+            <div>Revoked: {metricValue(provenanceMetric(governance, "revokedRecords"))}</div>
+            <div>Expired: {metricValue(provenanceMetric(governance, "expiredRecords"))}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 border-t pt-3" style={{ borderColor: "var(--app-border-main)" }}>
+            <div>Skills total: {metricValue(governance.skills.totalSkills)}</div>
+            <div>Enabled: {metricValue(governance.skills.enabledSkills)}</div>
+            <div>Quarantined: {metricValue(governance.skills.quarantinedSkills)}</div>
+            <div>Missing provenance: {metricValue(governance.skills.skillsMissingProvenance)}</div>
+            <div>High risk: {metricValue(governance.skills.highRiskSkills)}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 border-t pt-3" style={{ borderColor: "var(--app-border-main)" }}>
+            <div>Memory total: {metricValue(governance.memoryGovernance.totalRecords)}</div>
+            <div>Quarantined: {metricValue(governance.memoryGovernance.quarantinedRecords)}</div>
+            <div>Pending review: {metricValue(governance.memoryGovernance.pendingReviewRecords)}</div>
+            <div>Approval writes: {metricValue(governance.memoryGovernance.approvalRequiredWrites)}</div>
+            <div>Rejected: {metricValue(governance.memoryGovernance.rejectedRecords)}</div>
+          </div>
+        </div>
+      )}
+
+      {isTactical && quarantinedGovernanceItems > 0 && (
+        <p className="mt-3 text-[10px] leading-relaxed text-amber-300">
+          Quarantined governance items cannot run until reviewed.
+        </p>
       )}
     </div>
   );
@@ -193,7 +313,7 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
     ? getVisibleMemoryDiagnosticsForAudience(diagnostics.memory, audience)
     : null;
 
-  if (audience === "normal" && diagnostics?.summary.severity === "ready" && diagnostics.onboardingWarnings.length === 0) {
+  if (audience === "normal" && diagnostics?.summary.severity === "ready" && diagnostics.onboardingWarnings.length === 0 && !diagnostics.governance) {
     return null;
   }
 
@@ -239,6 +359,10 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
           )}
         </div>
       </div>
+
+      {diagnostics?.governance && (
+        <GovernanceContinuityCard governance={diagnostics.governance} audience={audience} />
+      )}
 
       {visibleRoutes.length > 0 || visibleMemory ? (
         <div className="space-y-2">
