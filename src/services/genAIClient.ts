@@ -23,16 +23,10 @@ export const getApiKey = () => {
     return settingsKey;
   }
 
-  // 2. Check LocalStorage Backup (Redundant Check)
-  if (typeof localStorage !== "undefined") {
-    const backupKey = localStorage.getItem("GEMINI_API_KEY");
-    if (isValidGeminiKey(backupKey)) {
-      // console.log("[genAIClient] Found Valid API Key in Backup LocalStorage");
-      return backupKey;
-    }
-  }
+  // 2. Try Vite environment variable (browser context).
+  // Raw provider keys are intentionally not recovered from localStorage here;
+  // settingsService migrates user keys into secureVault and keeps storage redacted.
 
-  // 3. Try Vite environment variable (browser context)
   if (typeof import.meta !== "undefined" && import.meta.env) {
     const key =
       import.meta.env.VITE_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || "";
@@ -42,7 +36,7 @@ export const getApiKey = () => {
     }
   }
 
-  // 4. Try ALL possible environment variable sources (comprehensive check)
+  // 3. Try ALL possible environment variable sources (comprehensive check)
   let envKey = "";
 
   if (typeof import.meta !== "undefined" && import.meta.env) {
@@ -133,9 +127,9 @@ const initClient = (key: string): GoogleAI.GoogleGenerativeAI => {
   currentKey = key;
   currentBaseUrl = baseUrl;
 
-  const clientConfig: any = { 
+  const clientConfig: any = {
     apiKey: key,
-    apiVersion: "v1beta" 
+    apiVersion: "v1beta",
   };
   if (baseUrl) {
     clientConfig.baseUrl = baseUrl;

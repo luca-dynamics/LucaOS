@@ -62,6 +62,7 @@ export interface LucaSettings {
     deepseekApiKey: string; // New
     deepseekBaseUrl?: string; // Appended for Dev Cloud Support
     groqApiKey: string; // New
+    openRouterApiKey?: string;
     groqBaseUrl?: string; // Appended for Dev Cloud Support
     model: string;
     provider: "local-luca" | "cloud-managed" | "byok";
@@ -89,6 +90,7 @@ export interface LucaSettings {
       | "openai"
       | "deepgram";
     googleApiKey: string;
+    deepgramApiKey?: string;
     voiceId: string; // e.g., 'Google US English' or specific ID
     rate: number;
     pitch: number;
@@ -245,6 +247,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     xaiBaseUrl: "",
     deepseekApiKey: "",
     groqApiKey: "",
+    openRouterApiKey: "",
     groqBaseUrl: "https://api.groq.com/openai/v1",
     model: BRAIN_CONFIG.defaults.brain,
     provider: "local-luca",
@@ -267,6 +270,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     provider: "local-luca", // Default to Local Luca
     googleApiKey:
       getEnvVar("VITE_GOOGLE_CLOUD_KEY") || getEnvVar("VITE_API_KEY") || "",
+    deepgramApiKey: "",
     voiceId: "en_US-amy-medium",
     rate: 1.0,
     pitch: 1.0,
@@ -387,7 +391,9 @@ class SettingsService extends EventEmitter {
           { section: "brain", key: "xaiApiKey" },
           { section: "brain", key: "deepseekApiKey" },
           { section: "brain", key: "groqApiKey" },
+          { section: "brain", key: "openRouterApiKey" },
           { section: "voice", key: "googleApiKey" },
+          { section: "voice", key: "deepgramApiKey" },
           { section: "iot", key: "haToken" },
         ];
 
@@ -417,20 +423,25 @@ class SettingsService extends EventEmitter {
             ) {
               // 2. Not in vault, but in localStorage (Migration Phase)
               const plainValue = (merged as any)[item.section][item.key];
-              console.log(`[SECURITY] Migrating ${item.key} to secure vault...`);
+              console.log(
+                `[SECURITY] Migrating ${item.key} to secure vault...`,
+              );
               await secureVault.store(vaultKey, item.key, plainValue);
               // Redact immediately in parsed for next write
               parsed[item.section][item.key] = "[SECURED]";
             }
           } catch (e) {
-            console.error(`[SECURITY] Vault recovery failed for ${item.key}:`, e);
+            console.error(
+              `[SECURITY] Vault recovery failed for ${item.key}:`,
+              e,
+            );
           }
         }
 
         // Update localStorage with redacted values if we modified 'parsed'
         localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
 
-      this.settings = merged;
+        this.settings = merged;
 
         // HARDWARE-AWARE MIGRATION (One-time correction)
         // ... (existing logic continues here)
@@ -533,7 +544,9 @@ class SettingsService extends EventEmitter {
         // This block previously wiped all keys, which was too aggressive.
         // Now it only marks the migration as done without destroying user data.
         if (!(merged as any).byokSanitized_v3) {
-          console.log("[SETTINGS] v3 BYOK migration complete (preserving existing keys).");
+          console.log(
+            "[SETTINGS] v3 BYOK migration complete (preserving existing keys).",
+          );
           (merged as any).byokSanitized_v3 = true;
           // Note: We intentionally do NOT wipe keys here. The vault handles proper
           // redaction during save. If the user has a valid key, keep it.
@@ -544,7 +557,6 @@ class SettingsService extends EventEmitter {
         // them via the UI, make sure nothing silently zeroed them out again.
         // The vault recovery block above handles re-populating from secure storage.
         // This guard is a no-op for healthy installs.
-
 
         // --- DEPRECATED MODEL HOTFIX (March 2026 Update) ---
         // Ensure users are not stuck on deprecated 1.5, 2.0, or 2.5 models.
@@ -670,7 +682,9 @@ class SettingsService extends EventEmitter {
         { section: "brain", key: "xaiApiKey" },
         { section: "brain", key: "deepseekApiKey" },
         { section: "brain", key: "groqApiKey" },
+        { section: "brain", key: "openRouterApiKey" },
         { section: "voice", key: "googleApiKey" },
+        { section: "voice", key: "deepgramApiKey" },
         { section: "iot", key: "haToken" },
       ];
 
@@ -678,7 +692,11 @@ class SettingsService extends EventEmitter {
         if (!(this.settings as any)[item.section]) continue;
         const value = (this.settings as any)[item.section][item.key];
         // Always update vault to match current state (even if empty)
-        if (typeof value === "string" && value !== "[SECURED]" && value !== "") {
+        if (
+          typeof value === "string" &&
+          value !== "[SECURED]" &&
+          value !== ""
+        ) {
           await secureVault.store(
             `setting:${item.section}:${item.key}`,
             item.key,
@@ -748,7 +766,8 @@ class SettingsService extends EventEmitter {
   private async syncEmbeddingModel(model: string) {
     try {
       // 1. Check if this is a local model (Full Privacy Trigger)
-      const { isLocalModelId, LOCAL_EMBEDDING_MODEL_IDS } = await import("./ModelManagerService");
+      const { isLocalModelId, LOCAL_EMBEDDING_MODEL_IDS } =
+        await import("./ModelManagerService");
       const normalizedModel = model.startsWith("local/")
         ? model.split("/")[1] || model
         : model;
@@ -959,7 +978,14 @@ class SettingsService extends EventEmitter {
    * Check if the user has configured valid API keys for peer cloud providers
    */
   public hasValidCloudKeys(
-    provider?: "openai" | "anthropic" | "gemini" | "xai" | "deepseek" | "groq",
+    provider?:
+      | "openai"
+      | "anthropic"
+      | "gemini"
+      | "xai"
+      | "deepseek"
+      | "groq"
+      | "openrouter",
   ): boolean {
     const { brain } = this.settings;
     if (provider) {
@@ -974,6 +1000,10 @@ class SettingsService extends EventEmitter {
           return !!brain.groqApiKey && brain.groqApiKey !== "[SECURED]";
         case "gemini":
           return !!brain.geminiApiKey && brain.geminiApiKey !== "[SECURED]";
+        case "openrouter":
+          return (
+            !!brain.openRouterApiKey && brain.openRouterApiKey !== "[SECURED]"
+          );
         case "xai":
           return !!brain.xaiApiKey && brain.xaiApiKey !== "[SECURED]";
         case "deepseek":
@@ -985,7 +1015,8 @@ class SettingsService extends EventEmitter {
       this.hasValidCloudKeys("anthropic") ||
       this.hasValidCloudKeys("gemini") ||
       this.hasValidCloudKeys("xai") ||
-      this.hasValidCloudKeys("deepseek")
+      this.hasValidCloudKeys("deepseek") ||
+      this.hasValidCloudKeys("openrouter")
     );
   }
 
@@ -1017,9 +1048,9 @@ class SettingsService extends EventEmitter {
     // 1. Initialize memory settings if they somehow became corrupted or missing
     if (!this.settings.memory) {
       this.settings.memory = {
-         provider: "local-luca",
-         model: "phi-3-mini",
-         sovereignFacts: []
+        provider: "local-luca",
+        model: "phi-3-mini",
+        sovereignFacts: [],
       };
     }
 
@@ -1034,7 +1065,7 @@ class SettingsService extends EventEmitter {
 
     // 2. Simple deduplication: don't add the same content twice in the same session
     const exists = this.settings.memory.sovereignFacts.some(
-      (f) => f.content.toLowerCase() === newFact.content.toLowerCase()
+      (f) => f.content.toLowerCase() === newFact.content.toLowerCase(),
     );
     if (exists) return;
 
@@ -1042,8 +1073,10 @@ class SettingsService extends EventEmitter {
     this.settings.memory.sovereignFacts.push(newFact);
     await this.saveSettings(this.settings);
     this.emit("settings-changed", this.settings);
-    
-    console.log(`[SETTINGS] 🧠 Sovereign Fact Indexed: ${newFact.content.substring(0, 30)}...`);
+
+    console.log(
+      `[SETTINGS] 🧠 Sovereign Fact Indexed: ${newFact.content.substring(0, 30)}...`,
+    );
   }
 }
 
