@@ -252,3 +252,7 @@ LucaOS already has meaningful building blocks for memory, skills/tools, traces, 
 - Evolution run contracts now include explicit dataset references and eval-case references tied to trace memory and mission tape IDs.
 - Constraint gate records and PR-back metadata are persisted as auditable artifacts.
 - Local optimizer execution and autonomous promotion remain disabled in LucaOS core by default.
+
+## Repo boundary reference (2026-05-28)
+- Canonical LucaOS core vs external lab split: `docs/lucaos-self-evolution-repo-boundary.md`.
+
