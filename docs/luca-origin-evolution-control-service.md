@@ -53,3 +53,7 @@ No `approve`, `promote`, `apply`, or `execute` methods are exposed.
 This service is adapter-only and governance-only. Runtime behavior is unchanged.
 
 A future PR can wire this service into the Origin Evolution Dashboard after explicit UI integration work.
+
+## User-tier integration reference
+- Canonical UI-tier integration contract: `docs/luca-user-tier-ui-integration-contract.md`.
+- This service is intended for Origin-scoped surfaces only; Tactical/Normal must not receive direct control wiring from this layer.

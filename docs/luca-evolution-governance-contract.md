@@ -86,3 +86,7 @@ The Origin evolution control service composes existing governance and verifier p
 This layer is adapter-only and does not call mutation/commit paths or `evolutionService`. It does not execute optimizers, does not auto-apply proposals, does not persist state beyond in-memory inbox data, and does not perform network/GitHub PR verification.
 
 Dashboard note: future Origin dashboard wiring can consume this service in a dedicated UI integration PR; this contract update does not change runtime behavior.
+
+## User-tier UI integration contract reference (2026-05-28)
+- Canonical bridge doc: `docs/luca-user-tier-ui-integration-contract.md`.
+- Governance + UI integration must preserve Origin-only control authority while public repo UI remains behind private tier-routing/onboarding architecture.
