@@ -1,6 +1,6 @@
 # Luca Current Identity Touchpoint Audit
-Date: 2026-05-28 (UTC)  
-Status: Read-only repo audit plus pure identity contracts. No live chat, voice, onboarding, settings, memory, model-router, or evolution runtime behavior changed.
+Date: 2026-05-28 (UTC)
+Status: Repo audit plus runtime persona/prompt identity adapter. Chat/voice prompt text is refined through existing persona helpers; no onboarding persistence, settings/memory writes, model-router changes, UI routes, or evolution runtime actions changed.
 
 ## Search method
 Codex searched the repository for: `persona`, `personality`, `identity`, `system prompt`, `systemPrompt`, `tone`, `onboarding preferences`, `voice persona`, `assistant name`, `Luca Prime`, `BYOK`, `local models`, `memory profile`, and `user profile` across `src` and `docs`, excluding disallowed UI files.
@@ -26,8 +26,8 @@ Codex searched the repository for: `persona`, `personality`, `identity`, `system
 - Awareness fallback greetings duplicate persona mode behavior with hardcoded strings instead of a shared contract.
 
 ## Unsafe or unclear claims to review later
-- Persona runtime language such as “evolving personality,” “relationship persist,” and local fallback phrasing can be acceptable only with visible memory/source disclosure and careful boundaries.
-- Fallback greetings that say “I’m fully here” or “local core is synchronized” should be reviewed before becoming part of canonical companion UX.
+- Persona runtime language such as “evolving personality,” “profile continuity,” and local fallback phrasing can be acceptable only with visible memory/source disclosure and careful boundaries.
+- Fallback greetings with over-personified availability or unsupported local-control phrasing should be reviewed before becoming part of canonical companion UX.
 - Any “relationship” language should avoid emotional dependency, romance, fake longing, or claims of human feelings.
 
 ## Hardcoded persona strings
@@ -48,3 +48,22 @@ Current hardcoded persona modes include `RUTHLESS`, `HACKER`, `ENGINEER`, `ASSIS
 3. Add prompt integration only after tests prove no hidden memory or fake emotion claims are introduced.
 4. Migrate hardcoded persona modes into tier persona presentation gradually with compatibility aliases.
 5. Add UI/onboarding population only after the private MacBook onboarding architecture is available for comparison.
+
+## Runtime integration follow-up (2026-05-28)
+The identity foundation is no longer contract-only for prompt/persona text. `LucaIdentityRuntimeAdapter` now connects the canonical identity, companion profile, and tier persona contracts to safe runtime surfaces.
+
+- `src/config/personaConfig.ts` now prepends canonical identity summaries, tier tone guidance, memory disclosure, forbidden claims, and boundaries to non-dictation persona instructions.
+- `src/services/personalityService.ts` now includes canonical identity metadata in personality context and voice system instructions while preserving existing profile persistence behavior.
+- `src/services/lucaService.ts` and `src/services/liveService.ts` are preserved but receive improved persona prompt text through their existing `PERSONA_CONFIG` calls.
+- No fake human emotion claims or hidden persistent-memory claims are introduced; persistent relationship summaries are disclosed only for explicit `memory_profile` input.
+- No provider routing, voice transport, UI route, settings write, memory write, optimizer execution, or evolution mutation was added.
+- See `docs/luca-identity-runtime-integration-audit.md` for the current-code classification of replaced, refined, preserved, and deferred touchpoints.
+
+
+## Awareness and personality refinement follow-up (2026-05-28)
+- `src/services/personalityService.ts` now captures previous `lastSeen` before updating it, so return-after-time-away tone changes are based on the actual prior interaction timestamp.
+- Personality prompt context keeps the existing evolving profile system but wraps it with canonical Luca identity boundaries, memory disclosure, no hidden memory claims, and no fake human emotion/dependency language.
+- Relationship-stage wording now uses safer phrases such as “High-context working relationship” and “Continuity is based on stored/profiled interaction context where available.”
+- `src/services/awarenessService.ts` local fallback greetings and awakening prompts now describe Luca as an AI OS agent interface coming online, local fallback as available, and actions as guided/permitted rather than autonomous control.
+- Suggestion prompts for Notion, Google Drive, and AI memory import now ask Luca to guide or prepare steps and require permission before browser/system action.
+- `src/services/personalityService.test.ts` adds regression coverage for canonical identity context, voice guidance, prior-`lastSeen` calculation order, unsafe wording removal, and softened autonomous-action suggestions.

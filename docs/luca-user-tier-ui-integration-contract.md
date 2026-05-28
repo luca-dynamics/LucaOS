@@ -124,3 +124,9 @@ Those docs should reference this user-tier UI integration contract as the canoni
 - The public repo UI remains unchanged: no `App.tsx` edits, no mounted identity UI, and no new routes.
 - Future private MacBook migration should map onboarding personality/preferences into identity snapshots before wiring chat or voice.
 - Normal UI should consume warm/simple assistant-first profile data; Tactical should consume direct diagnostics-oriented data; Origin should consume creator-facing strategic data.
+
+## Runtime persona identity connection (2026-05-28)
+- The canonical identity foundation is now connected to runtime persona/prompt text through `LucaIdentityRuntimeAdapter`.
+- Tier-aware UX behavior now has a single prompt-facing source of truth for Origin, Tactical, Normal, and Unknown tone guidance.
+- Prompt integration does not expose Origin-only UI controls to Tactical/Normal users and does not mount new routes or change `App.tsx`.
+- No persistence, memory/settings write, voice/model provider rewrite, optimizer execution, or evolution mutation was added.

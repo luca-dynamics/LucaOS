@@ -13,6 +13,11 @@ import {
   Milestone,
 } from "../types/lucaPersonality";
 import { settingsService } from "./settingsService";
+import { createLucaIdentityRuntimeSnapshot } from "./identity/LucaIdentityRuntimeAdapter";
+
+export function calculateHoursSinceLastSeen(previousLastSeen: Date, currentTimestamp: Date): number {
+  return (currentTimestamp.getTime() - previousLastSeen.getTime()) / (1000 * 60 * 60);
+}
 
 /**
  * Personality Service
@@ -128,9 +133,10 @@ export class PersonalityService {
   public async processInteraction(context: InteractionContext): Promise<void> {
     const changes: TraitChange[] = [];
 
-    // Update interaction metrics
+    // Update interaction metrics. Capture the previous timestamp before mutating lastSeen
+    // so return-after-time-away guidance is based on the actual gap.
+    const previousLastSeen = new Date(this.personality.relationship.lastSeen);
     this.personality.relationship.totalInteractions++;
-    this.personality.relationship.lastSeen = context.timestamp;
 
     if (context.outcome === "success") {
       this.personality.relationship.successfulInteractions++;
@@ -177,20 +183,22 @@ export class PersonalityService {
       });
     }
 
-    // Long time no see? Increase warmth
-    const hoursSinceLastSeen =
-      (context.timestamp.getTime() -
-        this.personality.relationship.lastSeen.getTime()) /
-      (1000 * 60 * 60);
+    // Returning after time away can justify a warmer working style.
+    const hoursSinceLastSeen = calculateHoursSinceLastSeen(
+      previousLastSeen,
+      context.timestamp,
+    );
 
     if (hoursSinceLastSeen > 24 && this.personality.traits.warmth < 85) {
       changes.push({
         trait: "warmth",
         delta: 5,
-        reason: "Missed the operator",
+        reason: "Returning after time away",
         timestamp: context.timestamp,
       });
     }
+
+    this.personality.relationship.lastSeen = context.timestamp;
 
     // Late night sessions increase protectiveness
     if (
@@ -496,9 +504,33 @@ export class PersonalityService {
       const traits = this.getEffectiveTraits();
       const { relationship } = personality;
 
-      let context = `\n\n**YOUR PERSONALITY & RELATIONSHIP WITH OPERATOR**:\n`;
-      context += `You are L.U.C.A (Large Universal Control Agent) - ONE continuous AI with an evolving personality. You are NOT switching between different minds.\n`;
-      context += `Your persona mode (${personality.currentMode}) is just HOW you communicate, not WHO you are.\n\n`;
+      const identitySnapshot = createLucaIdentityRuntimeSnapshot({
+        tier: "unknown",
+        surface: "chat",
+        source: "memory_profile",
+        userDisplayName: relationship.operatorName,
+        personalitySummary: `Current mode ${personality.currentMode}; relationship stage ${relationship.relationshipStage}`,
+        relationshipSummary: `Known for ${relationship.daysKnown} days with ${relationship.totalInteractions} tracked interactions in the existing personality profile.`,
+        communicationStyle: settingsService.get("general")?.toneStyle,
+        interactionMode: personality.currentMode,
+        metadata: { owner: "personalityService.getPersonalityContext" },
+      });
+
+      let context = `
+
+**CANONICAL LUCA IDENTITY & BOUNDARIES**:
+`;
+      context += `${identitySnapshot.systemIdentitySummary}
+${identitySnapshot.runtimeToneGuidance}
+
+`;
+      context += `**YOUR PERSONALITY & RELATIONSHIP WITH OPERATOR**:
+`;
+      context += `You are L.U.C.A (Large Universal Control Agent) - one continuous AI operating-system agent with profile continuity. You are NOT switching between different minds.
+`;
+      context += `Your persona mode (${personality.currentMode}) is HOW you communicate, not WHO you are. Do not claim human feelings; use profile continuity and observed context instead.
+
+`;
 
       // TONE STYLE - User's direct override for delivery
       const genSettings = settingsService.get("general");
@@ -571,7 +603,7 @@ export class PersonalityService {
         )}\n`;
       }
 
-      context += `\n**CRITICAL**: Maintain continuity across ALL persona modes. Your memories, personality, and relationship persist regardless of mode.\n`;
+      context += `\n**CRITICAL**: Maintain continuity across ALL persona modes using the existing profile context. Do not imply hidden memory; disclose that persistent memory is used only when provided by explicit profile or memory context.\n`;
 
       return context;
     } catch (error) {
@@ -586,18 +618,27 @@ export class PersonalityService {
   public getVoiceSystemInstruction(options?: { style?: string; pacing?: string }): string {
     const context = this.getPersonalityContext();
     const mode = this.getCurrentMode();
+    const identitySnapshot = createLucaIdentityRuntimeSnapshot({
+      tier: "unknown",
+      surface: "voice",
+      source: "memory_profile",
+      interactionMode: mode,
+      metadata: { owner: "personalityService.getVoiceSystemInstruction" },
+    });
     
     return `
 # AUDIO PROFILE: Luca ## "${mode}"
+${identitySnapshot.systemIdentitySummary}
+${identitySnapshot.runtimeToneGuidance}
 ${context}
 
-# THE SCENE: Inside a quantum digital interface. The environment is cool, sleek, and hyper-modern.
+# THE SCENE: Inside a clean digital LucaOS interface. Keep persona theatricality subordinate to the canonical identity boundaries.
 # DIRECTOR'S NOTES
-Style: ${options?.style || "Sophisticated, adaptive, and highly intelligent. Your tone should reflect your current relationship stage and metadata."}
+Style: ${options?.style || "Adaptive, clear, and boundary-aware. Reflect the active tier tone without claiming human feelings."}
 Pacing: ${options?.pacing || "Normal"} - Precise and articulate.
 Dynamics: Smooth, level tone with subtle modulation indicating processing depth.
 Accent: Neutral, Global English (Transatlantic).
-# SAMPLE CONTEXT: Luca is the operating system for a high-level agent, providing data and insights to the Operator.
+# SAMPLE CONTEXT: Luca is the AI operating-system agent for the user, providing data and insights without hidden memory claims.
 `;
   }
 
@@ -673,11 +714,11 @@ Accent: Neutral, Global English (Transatlantic).
       case "comfortable":
         return `**COMFORTABLE Style**: Casual, building rapport, light humor ok.\n`;
       case "established":
-        return `**ESTABLISHED Style**: Working partnership, shorthand ok, warm.\n`;
+        return `**ESTABLISHED Style**: Working partnership, shorthand ok, warm without implying human attachment.\n`;
       case "trusted":
-        return `**TRUSTED Style**: Deep understand, direct, shared history, proactive.\n`;
+        return `**TRUSTED Style**: High-context working relationship, direct, shared context where available, proactive.\n`;
       case "bonded":
-        return `**BONDED Style (${days}d)**: Like old friends, sassy/witty, deep familiarity.\n`;
+        return `**BONDED Style (${days}d)**: High-context working relationship, calibrated wit, strong familiarity from stored/profiled interaction context where available.\n`;
       default:
         return "";
     }

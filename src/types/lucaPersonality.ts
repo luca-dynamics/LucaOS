@@ -105,7 +105,7 @@ export enum RelationshipStage {
   GETTING_COMFORTABLE = "comfortable", // Getting to know (7-30 days)
   ESTABLISHED = "established", // Regular working relationship (1-3 months)
   TRUSTED = "trusted", // Deep trust (3-6 months)
-  BONDED = "bonded", // Like old friends (6+ months)
+  BONDED = "bonded", // High-context working relationship (6+ months)
 }
 
 export enum MilestoneType {
