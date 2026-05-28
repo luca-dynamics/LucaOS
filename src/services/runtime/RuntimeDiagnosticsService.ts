@@ -4,7 +4,11 @@ import {
   modelManagerService,
   type LocalModel,
 } from "../ModelManagerService";
-import { memoryReadinessResolver } from "../memory/MemoryReadinessResolver";
+import { memoryService } from "../memoryService";
+import {
+  memoryReadinessResolver,
+  type ResolveMemoryRouteOptions,
+} from "../memory/MemoryReadinessResolver";
 import { modelReadinessResolver } from "../models/ModelReadinessResolver";
 import { settingsService, type LucaSettings } from "../settingsService";
 import {
@@ -127,6 +131,45 @@ export interface RuntimeDiagnostics {
   onboardingWarnings: RuntimeOnboardingWarning[];
   recommendedActions: RuntimeRecommendedAction[];
   generatedAt: number;
+}
+
+
+const MEMORY_VECTOR_STORE_PROBE_TIMEOUT_MS = 1500;
+
+export function memoryVectorStoreOptionsFromCortexStatus(
+  status: { available: boolean; message: string } | null,
+): ResolveMemoryRouteOptions {
+  if (!status) {
+    return {
+      vectorStoreAvailable: undefined,
+      vectorStoreName:
+        "local-archive+cortex-vector (assumed; live probe deferred)",
+    };
+  }
+
+  const initializing = /initializing memory/i.test(status.message);
+  const vectorStoreAvailable = status.available && !initializing;
+  return {
+    vectorStoreAvailable,
+    vectorStoreName: vectorStoreAvailable
+      ? "cortex-vector (online)"
+      : `cortex-vector (${sanitizeDiagnosticText(status.message)})`,
+  };
+}
+
+async function getMemoryVectorStoreOptions(): Promise<ResolveMemoryRouteOptions> {
+  try {
+    const status = await Promise.race([
+      memoryService.getCortexStatus(),
+      new Promise<null>((resolve) =>
+        setTimeout(resolve, MEMORY_VECTOR_STORE_PROBE_TIMEOUT_MS),
+      ),
+    ]);
+
+    return memoryVectorStoreOptionsFromCortexStatus(status);
+  } catch {
+    return memoryVectorStoreOptionsFromCortexStatus(null);
+  }
 }
 
 const ROUTE_LABEL: Record<RuntimeRouteDiagnostics["capability"], string> = {
@@ -556,12 +599,15 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
   const settings = settingsService.getSettings();
   const activeMode = normalizeModelMode(settings.brain.provider);
 
-  const [chatRoute, embeddingRoute, voiceRoutes, memoryRoute] = await Promise.all([
+  const [chatRoute, embeddingRoute, voiceRoutes, vectorStoreOptions] = await Promise.all([
     llmService.resolveRouteForDiagnostics(),
     modelReadinessResolver.resolveRoute({ capability: "embedding" }),
     modelReadinessResolver.resolveVoiceRoutes(),
-    memoryReadinessResolver.resolveMemoryRoute(),
+    getMemoryVectorStoreOptions(),
   ]);
+  const memoryRoute = await memoryReadinessResolver.resolveMemoryRoute(
+    vectorStoreOptions,
+  );
 
   const routes = {
     chat: normalizeRuntimeRoute(chatRoute),

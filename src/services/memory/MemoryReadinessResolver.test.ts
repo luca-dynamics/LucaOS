@@ -192,6 +192,17 @@ describe("MemoryReadinessResolver pure route logic", () => {
     expect(decision.capabilities.embed.warnings.join(" ")).toContain("will not fall back to cloud");
   });
 
+
+  it("documents assumed vector-store availability when no live probe is passed", () => {
+    const decision = resolveMemoryRouteFromSnapshot({
+      settings: makeSettings(),
+      embeddingRoute: makeEmbeddingRoute(),
+    });
+
+    expect(decision.readiness).toBe("ready");
+    expect(decision.warnings.join(" ")).toContain("not live-probed");
+  });
+
   it("returns degraded memory with safe warnings when vector store is unavailable", () => {
     const decision = resolveMemoryRouteFromSnapshot({
       settings: makeSettings(),

@@ -145,10 +145,19 @@ export function resolveMemoryRouteFromSnapshot(
   const mode = normalizeProviderMode(snapshot.settings);
   const privacy = privacyForMode(mode);
   const embeddingModel = selectedEmbeddingModel(snapshot.settings);
+  // If no caller passes a live vector/RAG health probe, keep the existing
+  // conservative behavior: assume the local archive/Cortex vector store is
+  // available and annotate diagnostics so reviewers know probing was deferred.
+  const vectorStoreProbeDeferred = snapshot.vectorStoreAvailable === undefined;
   const vectorStoreAvailable = snapshot.vectorStoreAvailable !== false;
   const vectorStore = snapshot.vectorStoreName ||
     (vectorStoreAvailable ? "local-archive+cortex-vector" : "unavailable");
   const warnings = snapshot.embeddingRoute.warnings.slice();
+  if (vectorStoreProbeDeferred) {
+    warnings.push(
+      "Vector/RAG store availability was not live-probed; assuming local archive/Cortex vector store is available.",
+    );
+  }
   const embeddingReadiness = memoryReadinessFromEmbedding(snapshot.embeddingRoute);
   const localOnlyBlockedCloudFallback =
     mode === "local" &&

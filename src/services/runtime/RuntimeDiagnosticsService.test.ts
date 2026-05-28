@@ -5,6 +5,7 @@ import {
   detectRuntimeDiagnosticsAudience,
   getVisibleMemoryDiagnosticsForAudience,
   getVisibleRuntimeRoutesForAudience,
+  memoryVectorStoreOptionsFromCortexStatus,
   normalizeRuntimeMemory,
   normalizeRuntimeRoute,
   selectRecommendedActions,
@@ -255,6 +256,34 @@ describe("RuntimeDiagnosticsService pure logic", () => {
     expect(detectRuntimeDiagnosticsAudience(makeSettings())).toBe("normal");
     expect(detectRuntimeDiagnosticsAudience(makeSettings({ debugMode: true }))).toBe("tactical");
     expect(detectRuntimeDiagnosticsAudience(makeSettings({ experimentalMode: true }))).toBe("origin");
+  });
+
+
+  it("maps Cortex health into explicit memory vector-store options", () => {
+    expect(
+      memoryVectorStoreOptionsFromCortexStatus({
+        available: true,
+        message: "Cortex is online and ready",
+      }),
+    ).toEqual({
+      vectorStoreAvailable: true,
+      vectorStoreName: "cortex-vector (online)",
+    });
+
+    expect(
+      memoryVectorStoreOptionsFromCortexStatus({
+        available: true,
+        message: "Cortex is online (Initializing memory...)",
+      }),
+    ).toEqual({
+      vectorStoreAvailable: false,
+      vectorStoreName: "cortex-vector (Cortex is online (Initializing memory...))",
+    });
+
+    expect(memoryVectorStoreOptionsFromCortexStatus(null)).toEqual({
+      vectorStoreAvailable: undefined,
+      vectorStoreName: "local-archive+cortex-vector (assumed; live probe deferred)",
+    });
   });
 
   it("includes memory readiness in summaries when route diagnostics are otherwise ready", () => {
