@@ -15,6 +15,10 @@ import {
 import { settingsService } from "./settingsService";
 import { createLucaIdentityRuntimeSnapshot } from "./identity/LucaIdentityRuntimeAdapter";
 
+export function calculateHoursSinceLastSeen(previousLastSeen: Date, currentTimestamp: Date): number {
+  return (currentTimestamp.getTime() - previousLastSeen.getTime()) / (1000 * 60 * 60);
+}
+
 /**
  * Personality Service
  * Core engine for Luca's evolving personality system
@@ -129,9 +133,10 @@ export class PersonalityService {
   public async processInteraction(context: InteractionContext): Promise<void> {
     const changes: TraitChange[] = [];
 
-    // Update interaction metrics
+    // Update interaction metrics. Capture the previous timestamp before mutating lastSeen
+    // so return-after-time-away guidance is based on the actual gap.
+    const previousLastSeen = new Date(this.personality.relationship.lastSeen);
     this.personality.relationship.totalInteractions++;
-    this.personality.relationship.lastSeen = context.timestamp;
 
     if (context.outcome === "success") {
       this.personality.relationship.successfulInteractions++;
@@ -178,20 +183,22 @@ export class PersonalityService {
       });
     }
 
-    // Long time no see? Increase warmth
-    const hoursSinceLastSeen =
-      (context.timestamp.getTime() -
-        this.personality.relationship.lastSeen.getTime()) /
-      (1000 * 60 * 60);
+    // Returning after time away can justify a warmer working style.
+    const hoursSinceLastSeen = calculateHoursSinceLastSeen(
+      previousLastSeen,
+      context.timestamp,
+    );
 
     if (hoursSinceLastSeen > 24 && this.personality.traits.warmth < 85) {
       changes.push({
         trait: "warmth",
         delta: 5,
-        reason: "Long gap since last interaction",
+        reason: "Returning after time away",
         timestamp: context.timestamp,
       });
     }
+
+    this.personality.relationship.lastSeen = context.timestamp;
 
     // Late night sessions increase protectiveness
     if (
@@ -707,11 +714,11 @@ Accent: Neutral, Global English (Transatlantic).
       case "comfortable":
         return `**COMFORTABLE Style**: Casual, building rapport, light humor ok.\n`;
       case "established":
-        return `**ESTABLISHED Style**: Working partnership, shorthand ok, warm.\n`;
+        return `**ESTABLISHED Style**: Working partnership, shorthand ok, warm without implying human attachment.\n`;
       case "trusted":
-        return `**TRUSTED Style**: Deep understand, direct, shared history, proactive.\n`;
+        return `**TRUSTED Style**: High-context working relationship, direct, shared context where available, proactive.\n`;
       case "bonded":
-        return `**BONDED Style (${days}d)**: Like old friends, sassy/witty, deep familiarity.\n`;
+        return `**BONDED Style (${days}d)**: High-context working relationship, calibrated wit, strong familiarity from stored/profiled interaction context where available.\n`;
       default:
         return "";
     }
