@@ -74,3 +74,11 @@ A companion contract now exists at `docs/luca-tier-routing-shell-contract.md` an
 - Origin dashboard snapshot adapter is read-only display data only.
 - Private UI import map guides future MacBook migration.
 - No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.
+
+## 2026-05 Deterministic execution absorb extension
+Deterministic execution now consumes the Origin/Tactical/Normal tier contract as a pure actor-tier input for plan and gate representation.
+- Normal tier cannot trigger high-risk computer-use, filesystem, network, or self-evolution execution paths.
+- Tactical tier can request high-risk deterministic execution review but cannot approve high-risk execution.
+- Origin tier can review high-risk deterministic execution plans, while live execution remains disabled in this architecture PR.
+
+Future voice, tools/skills, computer-use, memory, self-evolution, external lab, and robot/device embodiment integrations should route risky actions through deterministic execution gates before any runtime action is considered.

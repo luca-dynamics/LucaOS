@@ -259,3 +259,8 @@ Boundary constraints remain unchanged: no optimizer execution, no autonomous mut
 
 ## Private MacBook UI migration audit checklist reference (2026-05-28)
 - Use `docs/luca-private-ui-migration-audit-checklist.md` before importing private onboarding/tiered UI architecture into public repo.
+
+## Deterministic execution boundary addendum (2026-05)
+The LucaOS core repo may define deterministic execution contracts, verification gates, and receipt/evidence models. It must not become the optimizer or autonomous mutation runtime for self-evolution candidates.
+
+External self-evolution lab outputs should cross into LucaOS as proposal metadata, deterministic plans, verification summaries, and receipt-compatible evidence references. LucaOS core must keep promotion Origin-reviewed, receipt-backed, rollback-aware, and disabled for live autonomous execution until a separate audited runtime change explicitly authorizes it.
