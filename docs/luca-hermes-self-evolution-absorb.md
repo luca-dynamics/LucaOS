@@ -313,3 +313,7 @@ Implications:
 Governance posture:
 - New governance contract/gate should sit in front of any future invocation path.
 - Raw mutate/commit capabilities must remain Origin-governed and must not be exposed to Normal or Tactical user actions.
+
+## Governance-safe run artifacts (2026-05)
+
+LucaOS now includes canonical run/candidate contracts to ingest external lab optimization outcomes without running optimizer engines in production runtime. External lab PR-back and proposal creation paths remain Origin-reviewed and cannot auto-promote.
