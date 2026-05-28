@@ -3,15 +3,19 @@ import type { LucaSettings } from "../settingsService";
 import {
   buildRuntimeDiagnosticsSummary,
   detectRuntimeDiagnosticsAudience,
+  getVisibleMemoryDiagnosticsForAudience,
   getVisibleRuntimeRoutesForAudience,
+  normalizeRuntimeMemory,
   normalizeRuntimeRoute,
   selectRecommendedActions,
+  severityFromMemoryReadiness,
   severityFromReadiness,
   sanitizeDiagnosticText,
   summarizeKeyReadiness,
   type RuntimeLocalRuntimeDiagnostics,
 } from "./RuntimeDiagnosticsService";
 import type { ModelRouteDecision } from "../../types/modelRouting";
+import type { MemoryRouteDecision } from "../../types/memoryRouting";
 
 function makeRoute(
   overrides: Partial<ModelRouteDecision> = {},
@@ -28,6 +32,35 @@ function makeRoute(
     fallbackPolicy: "no_fallback",
     networkAllowed: false,
     runtime: "ollama",
+    ...overrides,
+  };
+}
+
+function makeMemoryRoute(overrides: Partial<MemoryRouteDecision> = {}): MemoryRouteDecision {
+  const baseStatus = {
+    readiness: "ready" as const,
+    reason: "Memory local route is ready.",
+    warnings: [],
+    canRun: true,
+  };
+  return {
+    mode: "local",
+    provider: "local-luca",
+    embeddingModel: "nomic-embed-text",
+    vectorStore: "local-archive+cortex-vector",
+    readiness: "ready",
+    reason: "Memory local route is ready.",
+    warnings: [],
+    networkAllowed: false,
+    fallbackPolicy: "no_fallback",
+    privacy: "local_only",
+    capabilities: {
+      store: { capability: "store", ...baseStatus },
+      retrieve: { capability: "retrieve", ...baseStatus },
+      embed: { capability: "embed", ...baseStatus },
+      summarize: { capability: "summarize", ...baseStatus },
+      hydrate_context: { capability: "hydrate_context", ...baseStatus },
+    },
     ...overrides,
   };
 }
@@ -141,6 +174,8 @@ describe("RuntimeDiagnosticsService pure logic", () => {
     expect(severityFromReadiness("ready")).toBe("ready");
     expect(severityFromReadiness("missing_key")).toBe("blocked");
     expect(severityFromReadiness("downloading")).toBe("warning");
+    expect(severityFromMemoryReadiness("missing_embedding_model")).toBe("blocked");
+    expect(severityFromMemoryReadiness("degraded")).toBe("warning");
   });
 
   it("generates friendly summaries for blocked routes", () => {
@@ -221,4 +256,45 @@ describe("RuntimeDiagnosticsService pure logic", () => {
     expect(detectRuntimeDiagnosticsAudience(makeSettings({ debugMode: true }))).toBe("tactical");
     expect(detectRuntimeDiagnosticsAudience(makeSettings({ experimentalMode: true }))).toBe("origin");
   });
+
+  it("includes memory readiness in summaries when route diagnostics are otherwise ready", () => {
+    const ready = normalizeRuntimeRoute(makeRoute());
+    const memory = normalizeRuntimeMemory(makeMemoryRoute({
+      readiness: "missing_embedding_model",
+      reason: "Memory requires the selected embedding model to be installed or made available.",
+    }));
+
+    const summary = buildRuntimeDiagnosticsSummary({
+      activeMode: "local",
+      routes: [ready],
+      onboardingWarnings: [],
+      memory,
+    });
+
+    expect(summary.severity).toBe("blocked");
+    expect(summary.headline).toBe("Local · Memory blocked");
+  });
+
+  it("hides advanced memory route details from normal users", () => {
+    const memory = normalizeRuntimeMemory(makeMemoryRoute({
+      provider: "openai",
+      embeddingModel: "text-embedding-3-small",
+      vectorStore: "cortex-vector",
+      readiness: "missing_key",
+      reason: "Memory requires a configured provider key before cloud embedding or RAG calls are allowed.",
+      warnings: ["openai BYOK key is missing or still redacted without [SECURED]."],
+      networkAllowed: false,
+    }));
+
+    const normal = getVisibleMemoryDiagnosticsForAudience(memory, "normal");
+    const origin = getVisibleMemoryDiagnosticsForAudience(memory, "origin");
+
+    expect(normal?.provider).toBe("memory");
+    expect(normal?.embeddingModel).toBe("hidden");
+    expect(normal?.vectorStore).toBe("hidden");
+    expect(JSON.stringify(normal)).not.toContain("[SECURED]");
+    expect(origin?.provider).toBe("openai");
+    expect(origin?.embeddingModel).toBe("text-embedding-3-small");
+  });
+
 });

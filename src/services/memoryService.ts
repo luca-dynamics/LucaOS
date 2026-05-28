@@ -5,6 +5,7 @@ import { LOCAL_EMBEDDING_MODEL_IDS } from "./ModelManagerService";
 import { BRAIN_CONFIG } from "../config/brain.config";
 import { eventBus } from "./eventBus";
 import { creditService } from "./creditService";
+import { memoryReadinessResolver } from "./memory/MemoryReadinessResolver";
 
 // API Key sourced from environment variable
 // For Vite/browser: VITE_API_KEY, For Node.js: API_KEY
@@ -370,9 +371,16 @@ export const memoryService = {
     const settings = settingsService.get("brain");
     const memoryModel = getSelectedEmbeddingModel();
     const normalizedMemoryModel = normalizeLocalModelId(memoryModel);
+    const route = await memoryReadinessResolver.resolveMemoryRoute();
+    const embedStatus = route.capabilities.embed;
+
+    if (!embedStatus.canRun || route.readiness === "missing_key" || route.readiness === "missing_runtime" || route.readiness === "missing_embedding_model") {
+      console.warn(`[MEMORY] Embedding skipped: ${embedStatus.reason}`);
+      return [];
+    }
 
     // Check if using local embedding model (IDs from ModelManagerService - single source of truth)
-    const isLocalModel = LOCAL_EMBEDDING_MODEL_IDS.some(
+    const isLocalModel = route.mode === "local" || LOCAL_EMBEDDING_MODEL_IDS.some(
       (id: string) =>
         normalizedMemoryModel === id || normalizedMemoryModel.includes(id),
     );
@@ -399,16 +407,18 @@ export const memoryService = {
           const data = await response.json();
           // Cortex returns { embeddings: [[...]], model, dimension }
           return data.embeddings?.[0] || [];
-        } else {
-          console.warn(
-            `[MEMORY] Local embedding failed (${response.status}), falling back to Cloud`,
-          );
         }
+        console.warn(`[MEMORY] Local embedding failed (${response.status}); cloud fallback blocked by memory route.`);
+        return [];
       } catch (e: any) {
-        console.warn(
-          `[MEMORY] Local embedding error: ${e.message}, falling back to Cloud`,
-        );
+        console.warn(`[MEMORY] Local embedding error: ${e.message}; cloud fallback blocked by memory route.`);
+        return [];
       }
+    }
+
+    if (!route.networkAllowed) {
+      console.warn("[MEMORY] Cloud embedding skipped because the memory route does not allow network calls.");
+      return [];
     }
 
     // --- CLOUD EMBEDDING PATH (Provider Agnostic) ---
@@ -881,6 +891,13 @@ export const memoryService = {
   },
 
   async saveToCortex(text: string, category?: string) {
+    const route = await memoryReadinessResolver.resolveMemoryRoute();
+    const storeStatus = route.capabilities.store;
+    if (!storeStatus.canRun || route.readiness === "missing_key" || route.readiness === "missing_runtime" || route.readiness === "missing_embedding_model") {
+      console.warn(`[MEMORY] Cortex ingestion skipped: ${storeStatus.reason}`);
+      return;
+    }
+
     // Check health first to avoid unnecessary errors
     const isHealthy = await this.checkCortexHealth();
 
@@ -939,6 +956,13 @@ export const memoryService = {
   },
 
   async queryCortex(query: string) {
+    const route = await memoryReadinessResolver.resolveMemoryRoute();
+    const retrieveStatus = route.capabilities.retrieve;
+    if (!retrieveStatus.canRun || route.readiness === "missing_key" || route.readiness === "missing_runtime" || route.readiness === "missing_embedding_model") {
+      console.warn(`[MEMORY] Cortex query skipped: ${retrieveStatus.reason}`);
+      return null;
+    }
+
     // Check health first to avoid unnecessary errors
     const isHealthy = await this.checkCortexHealth();
 
@@ -995,6 +1019,16 @@ export const memoryService = {
   async ingestConversation(
     messages: Array<{ sender: string; text: string; timestamp?: number }>,
   ): Promise<void> {
+    const route = await memoryReadinessResolver.resolveMemoryRoute();
+    const hydrateStatus = route.capabilities.hydrate_context;
+    if (!hydrateStatus.canRun || route.readiness === "missing_key" || route.readiness === "missing_runtime" || route.readiness === "missing_embedding_model") {
+      if (!_cortexUnavailableLogged) {
+        console.log(`[CORTEX] Conversation ingestion skipped: ${hydrateStatus.reason}`);
+        _cortexUnavailableLogged = true;
+      }
+      return;
+    }
+
     // Check if Cortex is available first
     const isHealthy = await this.checkCortexHealth();
     if (!isHealthy) {

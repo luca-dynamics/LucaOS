@@ -4,6 +4,7 @@ import {
   modelManagerService,
   type LocalModel,
 } from "../ModelManagerService";
+import { memoryReadinessResolver } from "../memory/MemoryReadinessResolver";
 import { modelReadinessResolver } from "../models/ModelReadinessResolver";
 import { settingsService, type LucaSettings } from "../settingsService";
 import {
@@ -17,6 +18,7 @@ import {
   type ModelReadinessState,
   type ModelRouteDecision,
 } from "../../types/modelRouting";
+import type { MemoryReadinessState, MemoryRouteDecision } from "../../types/memoryRouting";
 
 export type RuntimeReadinessSeverity =
   | "ready"
@@ -56,6 +58,23 @@ export interface RuntimeRouteDiagnostics {
   fallbackPolicy: ModelRouteDecision["fallbackPolicy"];
   keySource: NonNullable<ModelRouteDecision["keySource"]> | "none";
   runtime: NonNullable<ModelRouteDecision["runtime"]> | "unknown";
+}
+
+export interface RuntimeMemoryDiagnostics {
+  label: string;
+  mode: MemoryRouteDecision["mode"];
+  provider: string;
+  embeddingModel: string;
+  vectorStore: string;
+  readiness: MemoryReadinessState;
+  severity: RuntimeReadinessSeverity;
+  reason: string;
+  warnings: string[];
+  privacy: MemoryRouteDecision["privacy"];
+  networkAllowed: boolean;
+  fallbackPolicy: MemoryRouteDecision["fallbackPolicy"];
+  localEmbeddingModelInstalled?: boolean;
+  localRuntimeAvailable?: boolean;
 }
 
 export interface RuntimeLocalRuntimeDiagnostics {
@@ -102,6 +121,7 @@ export interface RuntimeDiagnostics {
     stt: RuntimeRouteDiagnostics;
     tts: RuntimeRouteDiagnostics;
   };
+  memory: RuntimeMemoryDiagnostics;
   localRuntime: RuntimeLocalRuntimeDiagnostics;
   keyReadiness: RuntimeKeyReadinessSummary;
   onboardingWarnings: RuntimeOnboardingWarning[];
@@ -175,6 +195,17 @@ const BLOCKED_STATES: ModelReadinessState[] = [
 
 const WARNING_STATES: ModelReadinessState[] = ["downloading", "unknown"];
 
+const MEMORY_BLOCKED_STATES: MemoryReadinessState[] = [
+  "missing_embedding_model",
+  "missing_runtime",
+  "missing_vector_store",
+  "missing_key",
+  "disabled",
+  "error",
+];
+
+const MEMORY_WARNING_STATES: MemoryReadinessState[] = ["degraded", "unknown"];
+
 export function severityFromReadiness(
   readiness: ModelReadinessState,
 ): RuntimeReadinessSeverity {
@@ -184,18 +215,29 @@ export function severityFromReadiness(
   return "unknown";
 }
 
+export function severityFromMemoryReadiness(
+  readiness: MemoryReadinessState,
+): RuntimeReadinessSeverity {
+  if (readiness === "ready") return "ready";
+  if (MEMORY_BLOCKED_STATES.includes(readiness)) return "blocked";
+  if (MEMORY_WARNING_STATES.includes(readiness)) return "warning";
+  return "unknown";
+}
+
 function aggregateSeverity(
   routes: RuntimeRouteDiagnostics[],
   onboardingWarnings: RuntimeOnboardingWarning[],
+  memory?: RuntimeMemoryDiagnostics,
 ): RuntimeReadinessSeverity {
-  if (routes.some((route) => route.severity === "blocked")) return "blocked";
+  if (routes.some((route) => route.severity === "blocked") || memory?.severity === "blocked") return "blocked";
   if (
     onboardingWarnings.length > 0 ||
-    routes.some((route) => route.severity === "warning")
+    routes.some((route) => route.severity === "warning") ||
+    memory?.severity === "warning"
   ) {
     return "warning";
   }
-  if (routes.every((route) => route.severity === "ready")) return "ready";
+  if (routes.every((route) => route.severity === "ready") && (!memory || memory.severity === "ready")) return "ready";
   return "unknown";
 }
 
@@ -240,15 +282,57 @@ export function normalizeRuntimeRoute(
   };
 }
 
+
+export function normalizeRuntimeMemory(
+  route: MemoryRouteDecision,
+): RuntimeMemoryDiagnostics {
+  return {
+    label: "Memory / RAG",
+    mode: route.mode,
+    provider: sanitizeDiagnosticText(route.provider),
+    embeddingModel: sanitizeDiagnosticText(route.embeddingModel),
+    vectorStore: sanitizeDiagnosticText(route.vectorStore),
+    readiness: route.readiness,
+    severity: severityFromMemoryReadiness(route.readiness),
+    reason: sanitizeDiagnosticText(route.reason),
+    warnings: route.warnings.map(sanitizeDiagnosticText),
+    privacy: route.privacy,
+    networkAllowed: route.networkAllowed,
+    fallbackPolicy: route.fallbackPolicy,
+    localEmbeddingModelInstalled: route.localEmbeddingModelInstalled,
+    localRuntimeAvailable: route.localRuntimeAvailable,
+  };
+}
 export function buildRuntimeDiagnosticsSummary(input: {
   activeMode: ModelMode;
   routes: RuntimeRouteDiagnostics[];
   onboardingWarnings: RuntimeOnboardingWarning[];
+  memory?: RuntimeMemoryDiagnostics;
 }): RuntimeDiagnosticsSummary {
-  const severity = aggregateSeverity(input.routes, input.onboardingWarnings);
+  const severity = aggregateSeverity(input.routes, input.onboardingWarnings, input.memory);
   const activeLabel = activeModeLabel(input.activeMode);
   const firstBlocked = input.routes.find((route) => route.severity === "blocked");
   const firstWarning = input.routes.find((route) => route.severity === "warning");
+
+  if (!firstBlocked && input.memory?.severity === "blocked") {
+    return {
+      activeMode: input.activeMode,
+      activeModeLabel: activeLabel,
+      headline: `${activeLabel} · Memory blocked`,
+      severity,
+      description: input.memory.reason,
+    };
+  }
+
+  if (!firstWarning && input.memory?.severity === "warning") {
+    return {
+      activeMode: input.activeMode,
+      activeModeLabel: activeLabel,
+      headline: `${activeLabel} · Memory warning`,
+      severity,
+      description: input.memory.reason,
+    };
+  }
 
   if (firstBlocked) {
     return {
@@ -310,11 +394,41 @@ export function getVisibleRuntimeRoutesForAudience(
   return routes.filter((route) => route.severity !== "ready");
 }
 
+export function getVisibleMemoryDiagnosticsForAudience(
+  memory: RuntimeMemoryDiagnostics,
+  audience: RuntimeDiagnosticsAudience,
+): RuntimeMemoryDiagnostics | null {
+  if (audience !== "normal") return memory;
+  if (memory.severity === "ready") return null;
+  return {
+    ...memory,
+    provider: "memory",
+    embeddingModel: "hidden",
+    vectorStore: "hidden",
+    fallbackPolicy: "no_fallback",
+    networkAllowed: memory.networkAllowed,
+    warnings: memory.warnings.slice(0, 2),
+  };
+}
+
 export function selectRecommendedActions(input: {
   routes: RuntimeRouteDiagnostics[];
   localRuntime: RuntimeLocalRuntimeDiagnostics;
+  memory?: RuntimeMemoryDiagnostics;
 }): RuntimeRecommendedAction[] {
   const ids: RuntimeRecommendedActionId[] = [];
+
+  if (input.memory?.readiness === "missing_key") ids.push("add_byok_key");
+  if (
+    input.memory?.readiness === "missing_embedding_model" ||
+    input.memory?.readiness === "missing_vector_store"
+  ) {
+    ids.push("open_model_manager");
+  }
+  if (input.memory?.readiness === "missing_runtime") ids.push("open_model_manager");
+  if (input.memory?.readiness === "unknown" || input.memory?.readiness === "degraded") {
+    ids.push("retry_route_check");
+  }
 
   for (const route of input.routes) {
     if (route.readiness === "missing_key") ids.push("add_byok_key");
@@ -442,10 +556,11 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
   const settings = settingsService.getSettings();
   const activeMode = normalizeModelMode(settings.brain.provider);
 
-  const [chatRoute, embeddingRoute, voiceRoutes] = await Promise.all([
+  const [chatRoute, embeddingRoute, voiceRoutes, memoryRoute] = await Promise.all([
     llmService.resolveRouteForDiagnostics(),
     modelReadinessResolver.resolveRoute({ capability: "embedding" }),
     modelReadinessResolver.resolveVoiceRoutes(),
+    memoryReadinessResolver.resolveMemoryRoute(),
   ]);
 
   const routes = {
@@ -455,6 +570,7 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
     tts: normalizeRuntimeRoute(voiceRoutes.tts),
   };
   const routeList = Object.values(routes);
+  const memory = normalizeRuntimeMemory(memoryRoute);
   const onboardingWarnings = getOnboardingWarnings(settings);
   const localRuntime = await getLocalRuntimeDiagnostics(routeList);
 
@@ -463,15 +579,18 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
       activeMode,
       routes: routeList,
       onboardingWarnings,
+      memory,
     }),
     audience: detectRuntimeDiagnosticsAudience(settings),
     routes,
+    memory,
     localRuntime,
     keyReadiness: summarizeKeyReadiness(routeList),
     onboardingWarnings,
     recommendedActions: selectRecommendedActions({
       routes: routeList,
       localRuntime,
+      memory,
     }),
     generatedAt: Date.now(),
   };

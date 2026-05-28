@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Icon } from "../ui/Icon";
 import {
+  getVisibleMemoryDiagnosticsForAudience,
   getVisibleRuntimeRoutesForAudience,
   runtimeDiagnosticsService,
   type RuntimeDiagnostics,
   type RuntimeDiagnosticsAudience,
+  type RuntimeMemoryDiagnostics,
   type RuntimeReadinessSeverity,
   type RuntimeRouteDiagnostics,
 } from "../../services/runtime/RuntimeDiagnosticsService";
@@ -90,6 +92,68 @@ const RouteCard: React.FC<{
   );
 };
 
+const MemoryCard: React.FC<{
+  memory: RuntimeMemoryDiagnostics;
+  audience: RuntimeDiagnosticsAudience;
+}> = ({ memory, audience }) => {
+  const showAdvanced = audience === "origin";
+  const showTactical = audience === "tactical" || audience === "origin";
+
+  return (
+    <div
+      className="rounded-xl border p-3"
+      style={{
+        borderColor: "var(--app-border-main)",
+        backgroundColor: "var(--app-bg-tint)",
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--app-text-main)" }}>
+            {memory.label}
+          </div>
+          <div className="mt-1 text-[10px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
+            {showTactical
+              ? `${memory.mode} · ${memory.provider} · ${memory.embeddingModel}`
+              : memory.reason}
+          </div>
+        </div>
+        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase ${BADGE_CLASS[memory.severity]}`}>
+          {memory.readiness.replace(/_/g, " ")}
+        </span>
+      </div>
+
+      {showTactical && (
+        <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
+          {memory.reason}
+        </p>
+      )}
+
+      {memory.warnings.length > 0 && (
+        <ul className="mt-2 space-y-1 text-[10px]" style={{ color: "var(--app-text-muted)" }}>
+          {memory.warnings.map((warning, index) => (
+            <li key={`memory-warning-${index}`} className="flex gap-2">
+              <span className="text-amber-300">•</span>
+              <span>{warning}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {showAdvanced && (
+        <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-[9px] uppercase tracking-widest" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)" }}>
+          <div>Privacy: {formatValue(memory.privacy)}</div>
+          <div>Network: {formatValue(memory.networkAllowed)}</div>
+          <div>Fallback: {formatValue(memory.fallbackPolicy)}</div>
+          <div>Vector: {formatValue(memory.vectorStore)}</div>
+          <div>Local model: {formatValue(memory.localEmbeddingModelInstalled)}</div>
+          <div>Runtime: {formatValue(memory.localRuntimeAvailable)}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = ({
   audience: forcedAudience,
   diagnostics: externalDiagnostics,
@@ -125,6 +189,9 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
   const audience = forcedAudience || diagnostics?.audience || "normal";
   const routes = useMemo(() => (diagnostics ? Object.values(diagnostics.routes) : []), [diagnostics]);
   const visibleRoutes = getVisibleRuntimeRoutesForAudience(routes, audience);
+  const visibleMemory = diagnostics
+    ? getVisibleMemoryDiagnosticsForAudience(diagnostics.memory, audience)
+    : null;
 
   if (audience === "normal" && diagnostics?.summary.severity === "ready" && diagnostics.onboardingWarnings.length === 0) {
     return null;
@@ -173,8 +240,9 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
         </div>
       </div>
 
-      {visibleRoutes.length > 0 ? (
+      {visibleRoutes.length > 0 || visibleMemory ? (
         <div className="space-y-2">
+          {visibleMemory && <MemoryCard memory={visibleMemory} audience={audience} />}
           {visibleRoutes.map((route) => (
             <RouteCard key={route.capability} route={route} audience={audience} />
           ))}
