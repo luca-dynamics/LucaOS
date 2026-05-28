@@ -94,3 +94,10 @@ This contract should be read alongside:
 - `docs/luca-evolution-governance-contract.md`
 
 Those docs should reference this user-tier UI integration contract as the canonical bridge between current public-repo UI reality and intended private-tier architecture.
+
+
+## 9) Canonical pure tier contract reference (2026-05-28)
+- Source contract: `src/types/lucaUserTier.ts` (pure types + helpers).
+- Primary spec: `docs/luca-user-tier-contract.md`.
+- This integration document remains UI-planning only; no UI wiring is introduced in this contract-layer PR.
+- Origin/Tactical/Normal UI migration remains future work after onboarding/tier resolution is aligned with private MacBook architecture.
