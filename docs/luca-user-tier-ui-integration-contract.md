@@ -103,3 +103,10 @@ Those docs should reference this user-tier UI integration contract as the canoni
 - Origin/Tactical/Normal UI migration remains future work after onboarding/tier resolution is aligned with private MacBook architecture.
 
 - See `docs/luca-private-ui-migration-audit-checklist.md` for pre-import private MacBook UI migration audit workflow.
+
+## Tier Routing Shell Contract Preparation (2026-05-28)
+
+- Added a pure routing contract in `src/types/lucaTierRouting.ts` to resolve intended shell mode from `LucaUserTier` plus onboarding/migration context.
+- This work prepares private MacBook UI migration while keeping runtime behavior unchanged and UI wiring untouched.
+- No `App.tsx` changes were made and no Origin controls are exposed in this step.
+- Future PRs can add isolated shell components after this contract layer.

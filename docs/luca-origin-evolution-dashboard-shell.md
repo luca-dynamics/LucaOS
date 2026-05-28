@@ -52,3 +52,7 @@ This shell **does not**:
 ## User-tier integration reference
 - Canonical tier placement contract: `docs/luca-user-tier-ui-integration-contract.md`.
 - `OriginEvolutionDashboardShell` remains Origin-only and read-only until tier gating + governed action wiring are explicitly implemented.
+
+## Routing Contract Alignment (2026-05-28)
+
+Origin dashboard shell mounting remains gated and is now described in the tier routing contract helper. The helper allows mount intent only when tier resolves to Origin shell and explicit Origin gate marker is true. Tactical/Normal/Unknown remain non-mounting paths. This update does not wire UI and does not modify `App.tsx`.

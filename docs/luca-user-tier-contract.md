@@ -62,3 +62,7 @@ No UI wiring was added and no runtime behavior changed.
 
 ## Private MacBook UI migration audit reference (2026-05-28)
 - Pre-import checklist: `docs/luca-private-ui-migration-audit-checklist.md`.
+
+## Tier-to-Shell Routing Companion Contract
+
+A companion contract now exists at `docs/luca-tier-routing-shell-contract.md` and `src/types/lucaTierRouting.ts` to map `LucaUserTier` into intended shell mode without UI wiring. This preserves the current user-tier safety posture while preparing future private MacBook UI migration steps.
