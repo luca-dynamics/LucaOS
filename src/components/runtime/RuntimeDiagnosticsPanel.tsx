@@ -157,6 +157,8 @@ const GovernanceContinuityCard: React.FC<{
           <div>Scheduler jobs: {metricValue(governance.scheduler.totalJobs)}</div>
           <div>Due dry runs: {metricValue(governance.scheduler.dueJobs)}</div>
           <div>Dry-run only: {formatValue(governance.scheduler.dryRunOnly)}</div>
+          <div>Loop running: {formatValue(governance.runtimeContinuity.loopStatus?.running)}</div>
+          <div>Last tick: {formatValue(governance.runtimeContinuity.loopStatus?.lastTickAt)}</div>
           <div>Quarantined jobs: {metricValue(governance.scheduler.quarantinedJobs)}</div>
           <div>Quarantined skills: {metricValue(governance.skills.quarantinedSkills)}</div>
           <div>Quarantined memories: {metricValue(governance.memoryGovernance.quarantinedRecords)}</div>
@@ -171,6 +173,12 @@ const GovernanceContinuityCard: React.FC<{
             <div>Can resume: {formatValue(governance.runtimeContinuity.canSafelyResume)}</div>
             <div>Runtime approvals: {metricValue(governance.runtimeContinuity.pendingApprovalCount)}</div>
             <div>Runtime quarantine: {metricValue(governance.runtimeContinuity.quarantinedItemCount)}</div>
+            <div>Loop running: {formatValue(governance.runtimeContinuity.loopStatus?.running)}</div>
+            <div>In flight: {formatValue(governance.runtimeContinuity.loopStatus?.inFlight)}</div>
+            <div>Last tick: {formatValue(governance.runtimeContinuity.loopStatus?.lastTickAt)}</div>
+            <div>Next tick: {formatValue(governance.runtimeContinuity.loopStatus?.nextTickAt)}</div>
+            <div>Due dry runs: {metricValue(governance.runtimeContinuity.loopStatus?.dueDryRunJobs)}</div>
+            <div>Loop dry-run: {formatValue(governance.runtimeContinuity.loopStatus?.dryRunOnly)}</div>
           </div>
           <div className="grid grid-cols-2 gap-2 border-t pt-3" style={{ borderColor: "var(--app-border-main)" }}>
             <div>Scheduler total: {metricValue(governance.scheduler.totalJobs)}</div>

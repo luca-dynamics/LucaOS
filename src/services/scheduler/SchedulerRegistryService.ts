@@ -72,6 +72,18 @@ export class SchedulerRegistryService {
     };
   }
 
+  getDueJobCount(at: string = nowIso()): number {
+    return this.jobs.filter((job) => this.dryRunJob(job, at).due).length;
+  }
+
+  getPendingApprovalCount(): number {
+    return this.jobs.filter((job) => ["required", "pending"].includes(job.requiredApproval)).length;
+  }
+
+  getQuarantinedJobCount(): number {
+    return this.jobs.filter((job) => job.status === "quarantined" || job.provenance.quarantineState === "quarantined").length;
+  }
+
   getDiagnosticsSummary(at: string = nowIso()): SchedulerDiagnosticsSummary {
     const dryRuns = this.jobs.map((job) => this.dryRunJob(job, at));
     return { totalJobs: this.jobs.length, enabledJobs: this.jobs.filter((job) => job.enabled).length, disabledJobs: this.jobs.filter((job) => !job.enabled).length, dueJobs: dryRuns.filter((run) => run.due).length, pendingApprovals: this.jobs.filter((job) => ["required", "pending"].includes(job.requiredApproval)).length, quarantinedJobs: this.jobs.filter((job) => job.status === "quarantined" || job.provenance.quarantineState === "quarantined").length, riskyJobs: this.jobs.filter((job) => this.isRisky(job.allowedCapabilities)).length, dryRunOnly: true };

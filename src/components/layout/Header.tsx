@@ -4,6 +4,7 @@ import { Icon } from "../ui/Icon";
 import AmbientVisionIndicator from "../AmbientVisionIndicator";
 import AlwaysOnControls from "../AlwaysOnControls";
 import RuntimeStatusChip from "../runtime/RuntimeStatusChip";
+import RuntimeContinuityBootstrap from "../runtime/RuntimeContinuityBootstrap";
 import { awarenessService } from "../../services/awarenessService";
 import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
@@ -97,6 +98,7 @@ const Header: React.FC<HeaderProps> = ({
         color: "var(--app-text-main, #ffffff)"
       }}
     >
+      <RuntimeContinuityBootstrap />
       <div className={`flex items-center gap-3 app-region-no-drag`}>
         {/* Holographic Face Icon - 3D with Theme Colors */}
         <div
