@@ -203,6 +203,15 @@ function activeModeLabel(mode: ModelMode): string {
   return MODE_LABEL[mode] || mode;
 }
 
+export function sanitizeDiagnosticText(value: string): string {
+  return value
+    .replace(/\[SECURED\]/gi, "[redacted]")
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, "[redacted]")
+    .replace(/\bsk-ant-[A-Za-z0-9_-]{8,}\b/g, "[redacted]")
+    .replace(/\bAIza[A-Za-z0-9_-]{12,}\b/g, "[redacted]")
+    .replace(/\bgh[pousr]_[A-Za-z0-9_]{12,}\b/g, "[redacted]");
+}
+
 export function normalizeRuntimeRoute(
   route: ModelRouteDecision,
 ): RuntimeRouteDiagnostics {
@@ -218,11 +227,11 @@ export function normalizeRuntimeRoute(
     label: ROUTE_LABEL[safeCapability],
     mode: route.mode,
     provider: route.provider,
-    model: route.model,
+    model: sanitizeDiagnosticText(route.model),
     readiness: route.readiness,
     severity: severityFromReadiness(route.readiness),
-    reason: route.reason,
-    warnings: [...route.warnings],
+    reason: sanitizeDiagnosticText(route.reason),
+    warnings: route.warnings.map(sanitizeDiagnosticText),
     privacy: route.privacy,
     networkAllowed: route.networkAllowed,
     fallbackPolicy: route.fallbackPolicy,
@@ -424,8 +433,8 @@ function getOnboardingWarnings(
     mode: warning.mode,
     provider: warning.provider,
     readiness: warning.readiness,
-    reason: warning.reason,
-    warnings: [...(warning.warnings || [])],
+    reason: sanitizeDiagnosticText(warning.reason),
+    warnings: (warning.warnings || []).map(sanitizeDiagnosticText),
   }));
 }
 

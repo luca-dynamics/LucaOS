@@ -7,6 +7,7 @@ import {
   normalizeRuntimeRoute,
   selectRecommendedActions,
   severityFromReadiness,
+  sanitizeDiagnosticText,
   summarizeKeyReadiness,
   type RuntimeLocalRuntimeDiagnostics,
 } from "./RuntimeDiagnosticsService";
@@ -156,14 +157,22 @@ describe("RuntimeDiagnosticsService pure logic", () => {
     expect(summary.headline).toBe("BYOK · Missing key");
   });
 
+  it("redacts raw-key-looking diagnostic text", () => {
+    expect(sanitizeDiagnosticText("token sk-1234567890abcdef and [SECURED]")).toBe(
+      "token [redacted] and [redacted]",
+    );
+    expect(sanitizeDiagnosticText("gemini AIza1234567890abcdef"))
+      .toBe("gemini [redacted]");
+  });
+
   it("selects add-key action for missing BYOK keys without exposing raw keys", () => {
     const route = normalizeRuntimeRoute(
       makeRoute({
         readiness: "missing_key",
         provider: "openai",
         mode: "byok",
-        reason: "BYOK openai route requires a vault-backed key.",
-        warnings: ["openai BYOK key is missing or still redacted without a vault entry."],
+        reason: "BYOK openai route requires a vault-backed key sk-1234567890abcdef.",
+        warnings: ["openai BYOK key is missing or still redacted without [SECURED]."],
         keySource: "none",
       }),
     );

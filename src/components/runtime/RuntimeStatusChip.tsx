@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../ui/Icon";
 import {
   runtimeDiagnosticsService,
@@ -39,6 +39,7 @@ export const RuntimeStatusChip: React.FC<RuntimeStatusChipProps> = ({
     externalDiagnostics || null,
   );
   const [loading, setLoading] = useState(!externalDiagnostics);
+  const refreshingRef = useRef(false);
 
   useEffect(() => {
     if (externalDiagnostics) setDiagnostics(externalDiagnostics);
@@ -50,6 +51,8 @@ export const RuntimeStatusChip: React.FC<RuntimeStatusChipProps> = ({
     let intervalId: ReturnType<typeof setInterval> | undefined;
 
     const refresh = async () => {
+      if (refreshingRef.current) return;
+      refreshingRef.current = true;
       try {
         setLoading(true);
         const next = await runtimeDiagnosticsService.getDiagnostics();
@@ -59,6 +62,7 @@ export const RuntimeStatusChip: React.FC<RuntimeStatusChipProps> = ({
       } catch (error) {
         console.warn("[RuntimeStatusChip] Failed to refresh diagnostics", error);
       } finally {
+        refreshingRef.current = false;
         if (!cancelled) setLoading(false);
       }
     };
