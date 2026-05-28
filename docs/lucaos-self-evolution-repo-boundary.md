@@ -264,3 +264,9 @@ Boundary constraints remain unchanged: no optimizer execution, no autonomous mut
 The LucaOS core repo may define deterministic execution contracts, verification gates, and receipt/evidence models. It must not become the optimizer or autonomous mutation runtime for self-evolution candidates.
 
 External self-evolution lab outputs should cross into LucaOS as proposal metadata, deterministic plans, verification summaries, and receipt-compatible evidence references. LucaOS core must keep promotion Origin-reviewed, receipt-backed, rollback-aware, and disabled for live autonomous execution until a separate audited runtime change explicitly authorizes it.
+
+## 2026-05-28 identity companion boundary
+- Luca identity and companion UX contracts are pure architecture helpers, not self-evolution action surfaces.
+- Origin identity may expose architecture/evolution status summaries in future UI, but this PR adds no privileged actions and calls no `evolutionService` mutate/commit path.
+- Tactical and Normal persona behavior must not expose raw self-evolution controls.
+- Identity/profile helpers do not persist settings, write memory, execute optimizers, or alter chat/voice/model routing behavior.

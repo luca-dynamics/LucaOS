@@ -118,3 +118,9 @@ Those docs should reference this user-tier UI integration contract as the canoni
 - Origin dashboard snapshot adapter is read-only display data only.
 - Private UI import map guides future MacBook migration.
 - No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.
+
+## 10) Identity companion contract alignment (2026-05-28)
+- `src/services/identity/*` now defines a pure Luca identity, companion profile, and tier persona contract for future UI/onboarding use.
+- The public repo UI remains unchanged: no `App.tsx` edits, no mounted identity UI, and no new routes.
+- Future private MacBook migration should map onboarding personality/preferences into identity snapshots before wiring chat or voice.
+- Normal UI should consume warm/simple assistant-first profile data; Tactical should consume direct diagnostics-oriented data; Origin should consume creator-facing strategic data.

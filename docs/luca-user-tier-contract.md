@@ -82,3 +82,9 @@ Deterministic execution now consumes the Origin/Tactical/Normal tier contract as
 - Origin tier can review high-risk deterministic execution plans, while live execution remains disabled in this architecture PR.
 
 Future voice, tools/skills, computer-use, memory, self-evolution, external lab, and robot/device embodiment integrations should route risky actions through deterministic execution gates before any runtime action is considered.
+
+## 2026-05-28 identity companion contract alignment
+- The pure identity layer now maps `origin`, `tactical`, `normal`, and `unknown` tiers into Luca identity/persona snapshots without changing runtime behavior.
+- Future onboarding can populate identity/profile inputs, but this PR adds no persistence, settings writes, memory writes, routes, or UI wiring.
+- Future chat and voice layers may consume identity snapshots only after an explicit integration PR confirms safe prompt behavior.
+- The identity layer preserves the existing tier safety posture: Origin is creator-facing, Tactical is operator/diagnostics-oriented, Normal is simple/warm assistant-first, and Unknown is safe fallback.

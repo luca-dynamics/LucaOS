@@ -135,3 +135,10 @@ Future UI migration must preserve:
 - Origin review for high-risk execution and self-evolution promotion,
 - receipt/evidence display before trust elevation,
 - live execution disabled unless a later audited runtime PR changes that posture.
+
+## Identity/companion migration checks (2026-05-28)
+- [ ] Map private onboarding identity fields to `LucaAgentIdentity` and `LucaCompanionProfile` inputs.
+- [ ] Confirm private UI does not imply Luca has human feelings or hidden memory.
+- [ ] Confirm memory-backed relationship summaries disclose their source as explicit memory/profile context.
+- [ ] Confirm Normal/Tactical/Origin surfaces consume tier persona snapshots without exposing Origin controls to non-Origin tiers.
+- [ ] Keep chat/voice runtime integration deferred until prompt behavior can be reviewed safely.
