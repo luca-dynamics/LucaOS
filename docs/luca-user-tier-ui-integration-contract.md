@@ -110,3 +110,11 @@ Those docs should reference this user-tier UI integration contract as the canoni
 - This work prepares private MacBook UI migration while keeping runtime behavior unchanged and UI wiring untouched.
 - No `App.tsx` changes were made and no Origin controls are exposed in this step.
 - Future PRs can add isolated shell components after this contract layer.
+
+## 2026-05-28 migration bridge update
+- Tier shell stubs are isolated-only placeholders (not mounted).
+- Tier routing preview adapter is pure metadata only.
+- Onboarding handoff is contract-only.
+- Origin dashboard snapshot adapter is read-only display data only.
+- Private UI import map guides future MacBook migration.
+- No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.

@@ -116,3 +116,11 @@ This checklist should be read with and linked from:
 - ✅ No `App.tsx` modifications.
 - ✅ No Origin controls exposed.
 - ✅ Future private MacBook migration can bind shell components to this contract in a later isolated PR.
+
+## 2026-05-28 migration bridge update
+- Tier shell stubs are isolated-only placeholders (not mounted).
+- Tier routing preview adapter is pure metadata only.
+- Onboarding handoff is contract-only.
+- Origin dashboard snapshot adapter is read-only display data only.
+- Private UI import map guides future MacBook migration.
+- No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.

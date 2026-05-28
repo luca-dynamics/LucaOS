@@ -56,3 +56,11 @@ This shell **does not**:
 ## Routing Contract Alignment (2026-05-28)
 
 Origin dashboard shell mounting remains gated and is now described in the tier routing contract helper. The helper allows mount intent only when tier resolves to Origin shell and explicit Origin gate marker is true. Tactical/Normal/Unknown remain non-mounting paths. This update does not wire UI and does not modify `App.tsx`.
+
+## 2026-05-28 migration bridge update
+- Tier shell stubs are isolated-only placeholders (not mounted).
+- Tier routing preview adapter is pure metadata only.
+- Onboarding handoff is contract-only.
+- Origin dashboard snapshot adapter is read-only display data only.
+- Private UI import map guides future MacBook migration.
+- No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.
