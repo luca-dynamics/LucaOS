@@ -23,6 +23,16 @@ import {
   type ModelRouteDecision,
 } from "../../types/modelRouting";
 import type { MemoryReadinessState, MemoryRouteDecision } from "../../types/memoryRouting";
+import { runtimeContinuityService } from "./RuntimeContinuityService";
+import { schedulerRegistryService } from "../scheduler/SchedulerRegistryService";
+import { provenanceGateService } from "../provenance/ProvenanceGateService";
+import { skillRegistryService } from "../skills/SkillRegistryService";
+import { memoryGovernanceService } from "../memory/MemoryGovernanceService";
+import type { RuntimeContinuitySummary } from "../../types/runtimeContinuity";
+import type { SchedulerDiagnosticsSummary } from "../../types/scheduler";
+import type { ProvenanceDiagnosticsSummary } from "../../types/provenance";
+import type { SkillRegistryDiagnosticsSummary } from "../../types/skillContinuity";
+import type { MemoryGovernanceDiagnosticsSummary } from "../../types/memoryGovernance";
 
 export type RuntimeReadinessSeverity =
   | "ready"
@@ -116,6 +126,16 @@ export interface RuntimeDiagnosticsSummary {
   description: string;
 }
 
+export interface RuntimeGovernanceDiagnostics {
+  runtimeContinuity: RuntimeContinuitySummary;
+  scheduler: SchedulerDiagnosticsSummary;
+  provenance: ProvenanceDiagnosticsSummary | { pendingApprovals: number };
+  skills: SkillRegistryDiagnosticsSummary;
+  memoryGovernance: MemoryGovernanceDiagnosticsSummary;
+  visibility: "friendly" | "compact" | "full";
+  safeSummary: string;
+}
+
 export interface RuntimeDiagnostics {
   summary: RuntimeDiagnosticsSummary;
   audience: RuntimeDiagnosticsAudience;
@@ -130,6 +150,7 @@ export interface RuntimeDiagnostics {
   keyReadiness: RuntimeKeyReadinessSummary;
   onboardingWarnings: RuntimeOnboardingWarning[];
   recommendedActions: RuntimeRecommendedAction[];
+  governance: RuntimeGovernanceDiagnostics;
   generatedAt: number;
 }
 
@@ -454,6 +475,44 @@ export function getVisibleMemoryDiagnosticsForAudience(
   };
 }
 
+export function buildGovernanceDiagnosticsForAudience(input: {
+  audience: RuntimeDiagnosticsAudience;
+  runtimeContinuity: RuntimeContinuitySummary;
+  scheduler: SchedulerDiagnosticsSummary;
+  provenance: ProvenanceDiagnosticsSummary;
+  skills: SkillRegistryDiagnosticsSummary;
+  memoryGovernance: MemoryGovernanceDiagnosticsSummary;
+}): RuntimeGovernanceDiagnostics {
+  const pendingApprovals =
+    input.runtimeContinuity.pendingApprovalCount +
+    input.scheduler.pendingApprovals +
+    input.provenance.pendingApprovals;
+  const quarantinedItems =
+    input.runtimeContinuity.quarantinedItemCount +
+    input.scheduler.quarantinedJobs +
+    input.skills.quarantinedSkills +
+    input.memoryGovernance.quarantinedRecords +
+    input.provenance.quarantinedRecords;
+  const visibility = input.audience === "origin" ? "full" : input.audience === "tactical" ? "compact" : "friendly";
+  const safeSummary = quarantinedItems > 0
+    ? `${quarantinedItems} governed item(s) need review before autonomous continuity can expand.`
+    : pendingApprovals > 0
+      ? `${pendingApprovals} approval(s) are waiting before risky actions can proceed.`
+      : "Runtime continuity foundations are safe and dry-run only.";
+
+  return {
+    runtimeContinuity: input.runtimeContinuity,
+    scheduler: input.scheduler,
+    provenance: input.audience === "normal"
+      ? { pendingApprovals: input.provenance.pendingApprovals }
+      : input.provenance,
+    skills: input.skills,
+    memoryGovernance: input.memoryGovernance,
+    visibility,
+    safeSummary: sanitizeDiagnosticText(safeSummary),
+  };
+}
+
 export function selectRecommendedActions(input: {
   routes: RuntimeRouteDiagnostics[];
   localRuntime: RuntimeLocalRuntimeDiagnostics;
@@ -619,6 +678,15 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
   const memory = normalizeRuntimeMemory(memoryRoute);
   const onboardingWarnings = getOnboardingWarnings(settings);
   const localRuntime = await getLocalRuntimeDiagnostics(routeList);
+  const audience = detectRuntimeDiagnosticsAudience(settings);
+  const governance = buildGovernanceDiagnosticsForAudience({
+    audience,
+    runtimeContinuity: runtimeContinuityService.getDiagnosticsSummary(),
+    scheduler: schedulerRegistryService.getDiagnosticsSummary(),
+    provenance: provenanceGateService.getDiagnosticsSummary(),
+    skills: skillRegistryService.getDiagnosticsSummary(),
+    memoryGovernance: memoryGovernanceService.getDiagnosticsSummary(),
+  });
 
   return {
     summary: buildRuntimeDiagnosticsSummary({
@@ -627,7 +695,7 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
       onboardingWarnings,
       memory,
     }),
-    audience: detectRuntimeDiagnosticsAudience(settings),
+    audience,
     routes,
     memory,
     localRuntime,
@@ -638,6 +706,7 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
       localRuntime,
       memory,
     }),
+    governance,
     generatedAt: Date.now(),
   };
 }
