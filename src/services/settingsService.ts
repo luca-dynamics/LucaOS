@@ -182,6 +182,17 @@ export interface LucaSettings {
     resourceAwareThrottling: boolean;
     idleThresholdMinutes: number;
   };
+  onboarding?: {
+    modelRouteWarnings?: Array<{
+      capability: string;
+      mode: string;
+      provider: string;
+      readiness: string;
+      reason: string;
+      warnings: string[];
+    }>;
+    modelRouteWarningUpdatedAt?: number;
+  };
 }
 
 const getEnvVar = (key: string) => {

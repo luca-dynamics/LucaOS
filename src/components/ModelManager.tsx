@@ -10,6 +10,8 @@ import {
   LocalModel,
 } from "../services/ModelManagerService";
 import { settingsService } from "../services/settingsService";
+import { modelReadinessResolver } from "../services/models/ModelReadinessResolver";
+import type { ModelRouteDecision } from "../types/modelRouting";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -34,6 +36,18 @@ const getCategoryIcon = (category: LocalModel["category"]) => {
     default: return <Icon name="Widget" size={iconSize} variant="BoldDuotone" />;
   }
 };
+
+const getCatalogBadgeClass = (status?: LocalModel["catalogStatus"]) => {
+  if (status === "verified" || status === "installable") return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+  if (status === "experimental") return "bg-purple-500/10 text-purple-300 border-purple-500/20";
+  if (status === "planned") return "bg-amber-500/10 text-amber-300 border-amber-500/20";
+  return "bg-white/5 text-[var(--app-text-muted)] border-white/10";
+};
+
+const isCatalogInstallable = (model: LocalModel) =>
+  !model.catalogStatus ||
+  model.catalogStatus === "verified" ||
+  model.catalogStatus === "installable";
 
 interface RenderGridProps {
   title: string;
@@ -164,6 +178,17 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                       {model.description}
                     </p>
 
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                      <span className={`text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.12em] ${getCatalogBadgeClass(model.catalogStatus)}`}>
+                        {model.catalogStatus || "verified"}
+                      </span>
+                      {model.catalogWarning && (
+                        <span className="text-[8px] text-amber-300 truncate max-w-[220px]" title={model.catalogWarning}>
+                          {model.catalogWarning}
+                        </span>
+                      )}
+                    </div>
+
                     {model.status === "ready" && model.canary && (
                       <div className={`flex items-center gap-1.5 px-1.5 py-1 rounded-md text-[8px] font-mono mt-1 ${model.canary.passed ? "bg-emerald-500/10 text-emerald-400" : "bg-yellow-500/10 text-yellow-400"}`}>
                         {model.canary.passed ? <Icon name="Zap" size={8} variant="BoldDuotone" /> : <Icon name="Danger" size={8} variant="BoldDuotone" />}
@@ -185,6 +210,8 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                   <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t" style={{ borderColor: "var(--app-border-main)" }}>
                     {model.status === "unsupported" ? (
                       <div className="flex-1 text-center text-[9px] text-yellow-500 italic">⚠️ {model.unsupportedReason || "Hardware mismatch"}</div>
+                    ) : model.status === "not_downloaded" && !isCatalogInstallable(model) ? (
+                      <div className="flex-1 text-center text-[9px] text-amber-300 italic">Planned / not verified</div>
                     ) : model.status === "not_downloaded" ? (
                       <button 
                         type="button"
@@ -265,6 +292,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
   const [activeEmbedId, setActiveEmbedId] = useState<string | null>(null);
   const [isOllamaRunning, setIsOllamaRunning] = useState(false);
   const [platform, setPlatform] = useState<"desktop" | "mobile">("desktop");
+  const [routeStatus, setRouteStatus] = useState<ModelRouteDecision | null>(null);
   
   useEffect(() => {
     const updatePlatform = () => {
@@ -302,6 +330,8 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
 
         const ollama = await modelManagerService.getOllamaModels();
         setIsOllamaRunning(ollama.available);
+        const route = await modelReadinessResolver.resolveRoute({ capability: "chat" });
+        setRouteStatus(route);
       } catch (e) {
         console.warn("Failed to fetch system specs in UI:", e);
       }
@@ -462,6 +492,17 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        {routeStatus && (
+          <div className="mb-4 rounded-xl border p-3" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)" }}>
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--app-text-main)" }}>Active chat route</span>
+              <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono ${routeStatus.readiness === "ready" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-300"}`}>
+                {routeStatus.mode} / {routeStatus.readiness}
+              </span>
+            </div>
+            <p className="text-[10px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>{routeStatus.reason}</p>
+          </div>
+        )}
         <RenderGrid 
           title="Chat Brain (via Ollama)" 
           items={brainModels} 
