@@ -207,6 +207,20 @@ These docs should treat this boundary plan as the canonical split contract for L
 
 LucaOS core now declares canonical external artifact envelopes and validation rules for lab exchange. This formalizes the boundary with required `schemaVersion`, mandatory Origin review, high-risk capability signals, candidate eval completeness checks, PR-back rollback metadata requirements for medium+ risk, and explicit no auto-promotion/runtime apply behavior.
 
+ 
 ## 2026-05-28 PR-back metadata verifier alignment
 
 LucaOS core now includes a pure PR-back metadata verifier contract for external lab candidate intake. The verifier enforces repo/PR/finalization metadata completeness, requires `requiresOriginReview=true`, marks untrusted source repositories as blocked for intake, and explicitly keeps `canAutoMerge=false` to prevent autonomous merge behavior.
+
+## 2026-05-28 Constraint gate report verifier alignment
+
+Constraint gate reports returned from the future external lab are now verified in LucaOS core with a pure verifier contract before Origin review workflows proceed.
+
+This keeps boundary authority in LucaOS core by ensuring:
+- report completeness and required gate presence checks happen in core,
+- blocking conditions are deterministic and auditable,
+- policy-capability signals requiring Origin review are preserved,
+- no optimizer/runtime side-effects occur during verification.
+
+Reference: `docs/luca-constraint-gate-report-verifier.md`.
+ 
