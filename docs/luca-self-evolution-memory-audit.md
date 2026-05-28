@@ -237,3 +237,12 @@ LucaOS already has meaningful building blocks for memory, skills/tools, traces, 
 - Added non-invasive adapter shell `src/services/skills/SkillManifestAdapter.ts` and exports at `src/services/skills/index.ts`.
 - Added tests validating mapping, metadata preservation, tier/risk gates, and adapter safety metadata.
 - Runtime behavior remains unchanged; autonomous self-modification remains disabled.
+
+## Evolution governance contract addition (2026-05-28)
+
+- Added canonical Luca evolution proposal contract and governance gate under `src/services/evolution/`.
+- Added proposal lifecycle representation (`draft -> submitted -> under_review -> approved/rejected -> promoted/rolled_back -> archived`) with typed evidence/eval/risk/approval/rollback fields.
+- Added Origin/Tactical/Normal permission enforcement in policy gate evaluation.
+- Added explicit external lab and LucaOS-self-evolution-repo proposal source path with mandatory Origin approval.
+- Added adapter shell that does not replace existing `evolutionService` and does not change runtime behavior.
+- Autonomous self-modification remains disabled and runtime auto-apply remains false by default.
