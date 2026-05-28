@@ -28,6 +28,21 @@ describe("SchedulerRegistryService", () => {
     expect(dryRun.blockedBy).toContain("approval_required");
   });
 
+  it("creates safe reminder jobs and advances delivered reminders without enabling risky execution", () => {
+    const storage = new MemoryStorage();
+    const prov = new ProvenanceGateService(storage).createProvenanceRecord({ sourceType: "scheduled_job", sourceId: "reminder", approvalState: "not_required" });
+    const scheduler = new SchedulerRegistryService(storage);
+    const job = scheduler.createReminderJob({ title: "Reminder", description: "Safe", schedule: { kind: "interval", intervalMs: 60_000 }, nextRunAt: "2026-05-28T00:00:00.000Z", provenance: prov });
+    expect(job.allowedCapabilities).toEqual(["notify"]);
+    expect(scheduler.getSafeDueNotifyJobs("2026-05-28T00:01:00.000Z")).toHaveLength(1);
+    scheduler.markJobDelivered(job.jobId, "2026-05-28T00:01:00.000Z");
+    const updated = scheduler.listJobs()[0];
+    expect(updated.lastRunAt).toBe("2026-05-28T00:01:00.000Z");
+    expect(updated.nextRunAt).toBe("2026-05-28T00:02:00.000Z");
+    scheduler.createJob({ title: "Shell", description: "Risky", schedule: { kind: "once", runAt: "2026-05-28T00:00:00.000Z" }, provenance: prov, allowedCapabilities: ["shell"] });
+    expect(scheduler.detectDueJobsDryRun("2026-05-28T00:01:00.000Z").some((run) => run.dryRunOnly)).toBe(true);
+  });
+
   it("blocks disabled and quarantined jobs", () => {
     const storage = new MemoryStorage();
     const prov = new ProvenanceGateService(storage).createProvenanceRecord({ sourceType: "scheduled_job", sourceId: "job" });

@@ -8,6 +8,16 @@ function nowIso(): string { return new Date().toISOString(); }
 function storage(): StorageLike | undefined { if (typeof window !== "undefined" && window.localStorage) return window.localStorage; if (typeof localStorage !== "undefined") return localStorage; return undefined; }
 function readJobs(store: StorageLike | undefined): SchedulerJob[] { try { const raw = store?.getItem(STORAGE_KEY); const parsed = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed : []; } catch { return []; } }
 function nextRunFrom(schedule: SchedulerJobSchedule, from = Date.now()): string | undefined { if (schedule.kind === "once") return schedule.runAt; if (schedule.kind === "interval" && schedule.intervalMs) return new Date(from + schedule.intervalMs).toISOString(); return undefined; }
+function safeNotifyCapabilities(capabilities: SchedulerCapability[]): boolean { return capabilities.length > 0 && capabilities.every((capability) => capability === "notify" || capability === "memory_read") && capabilities.includes("notify") && !capabilities.some((capability) => RISKY_CAPABILITIES.includes(capability)); }
+
+export interface CreateReminderJobInput extends Omit<Partial<SchedulerJob>, "provenance" | "dryRunOnly" | "allowedCapabilities" | "deliveryTarget" | "requiredApproval"> {
+  title: string;
+  description: string;
+  schedule: SchedulerJobSchedule;
+  provenance: ProvenanceMetadata;
+  allowedCapabilities?: Array<"notify" | "memory_read">;
+  deliveryTarget?: "in_app" | "notification";
+}
 
 export class SchedulerRegistryService {
   private jobs: SchedulerJob[];
@@ -37,6 +47,15 @@ export class SchedulerRegistryService {
     this.jobs = [...this.jobs.filter((item) => item.jobId !== job.jobId), job];
     this.persist();
     return job;
+  }
+
+  createReminderJob(input: CreateReminderJobInput): SchedulerJob {
+    return this.createJob({
+      ...input,
+      allowedCapabilities: input.allowedCapabilities ?? ["notify"],
+      deliveryTarget: input.deliveryTarget ?? "in_app",
+      requiredApproval: "not_required",
+    });
   }
 
   listJobs(): SchedulerJob[] { return [...this.jobs]; }
@@ -76,6 +95,28 @@ export class SchedulerRegistryService {
     return this.jobs.filter((job) => this.dryRunJob(job, at).due).length;
   }
 
+  getSafeDueNotifyJobs(at: string = nowIso()): SchedulerJob[] {
+    return this.jobs.filter((job) => {
+      const due = Boolean(job.nextRunAt && Date.parse(job.nextRunAt) <= Date.parse(at));
+      return due
+        && job.enabled
+        && safeNotifyCapabilities(job.allowedCapabilities)
+        && ["not_required", "approved_once"].includes(job.requiredApproval)
+        && ["in_app", "notification"].includes(job.deliveryTarget)
+        && job.provenance.quarantineState !== "quarantined"
+        && job.provenance.revocationState !== "revoked"
+        && job.status !== "quarantined";
+    });
+  }
+
+  markJobDelivered(jobId: string, deliveredAt: string = nowIso()): SchedulerJob | undefined {
+    return this.updateJob(jobId, { lastRunAt: deliveredAt, nextRunAt: this.advanceNextRunValue(jobId, deliveredAt), status: "idle" });
+  }
+
+  advanceNextRun(jobId: string, fromTime: string = nowIso()): SchedulerJob | undefined {
+    return this.updateJob(jobId, { nextRunAt: this.advanceNextRunValue(jobId, fromTime) });
+  }
+
   getPendingApprovalCount(): number {
     return this.jobs.filter((job) => ["required", "pending"].includes(job.requiredApproval)).length;
   }
@@ -90,6 +131,7 @@ export class SchedulerRegistryService {
   }
 
   private isRisky(capabilities: SchedulerCapability[]): boolean { return capabilities.some((capability) => RISKY_CAPABILITIES.includes(capability)); }
+  private advanceNextRunValue(jobId: string, fromTime: string): string | undefined { const job = this.jobs.find((item) => item.jobId === jobId); if (!job) return undefined; if (job.schedule.kind === "once") return undefined; return nextRunFrom(job.schedule, Date.parse(fromTime)); }
   private persist(): void { this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.jobs)); }
 }
 

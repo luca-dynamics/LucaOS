@@ -25,6 +25,7 @@ export class RuntimeContinuityService {
       activeMemoryRouteSummary: input.activeMemoryRouteSummary ?? "Memory route not summarized yet.",
       activeToolScopes: input.activeToolScopes ? [...input.activeToolScopes] : [],
       pendingApprovalCount: input.pendingApprovalCount ?? 0,
+      deliveredReminderCount: input.deliveredReminderCount ?? 0,
       scheduledJobCount: input.scheduledJobCount ?? 0,
       quarantinedItemCount: input.quarantinedItemCount ?? 0,
       lastHeartbeatAt: input.lastHeartbeatAt,
@@ -89,6 +90,7 @@ export class RuntimeContinuityService {
         canSafelyResume: true,
         userSafeStatus: "Runtime continuity is ready to initialize; no background actions are enabled.",
         pendingApprovalCount: 0,
+        deliveredReminderCount: 0,
         scheduledJobCount: 0,
         quarantinedItemCount: 0,
         degradedReasons: [],
@@ -108,6 +110,7 @@ export class RuntimeContinuityService {
           ? "Runtime continuity can resume in degraded mode after review."
           : "Runtime continuity snapshot is safe to resume; no autonomous execution is enabled.",
       pendingApprovalCount: snapshot.pendingApprovalCount,
+      deliveredReminderCount: snapshot.deliveredReminderCount ?? 0,
       scheduledJobCount: snapshot.scheduledJobCount,
       quarantinedItemCount: snapshot.quarantinedItemCount,
       degradedReasons: [...snapshot.degradedReasons],

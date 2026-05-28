@@ -2,7 +2,11 @@ import { eventBus } from "../eventBus";
 import { memoryGovernanceService } from "../memory/MemoryGovernanceService";
 import { provenanceGateService } from "../provenance/ProvenanceGateService";
 import { schedulerRegistryService } from "../scheduler/SchedulerRegistryService";
-import type { SchedulerDiagnosticsSummary, SchedulerDryRunResult } from "../../types/scheduler";
+import { reminderDeliveryService } from "../scheduler/ReminderDeliveryService";
+import { approvalRequestCenterService } from "../provenance/ApprovalRequestCenterService";
+import { runtimeInboxService } from "./RuntimeInboxService";
+import { agentSessionContinuityService } from "./AgentSessionContinuityService";
+import type { SchedulerDiagnosticsSummary, SchedulerDryRunResult, SchedulerJob } from "../../types/scheduler";
 import type { MemoryGovernanceDiagnosticsSummary } from "../../types/memoryGovernance";
 import type { ProvenanceDiagnosticsSummary } from "../../types/provenance";
 import type {
@@ -28,8 +32,12 @@ interface RuntimeContinuityLoopDependencies {
   continuity: RuntimeContinuityService;
   scheduler: Pick<
     typeof schedulerRegistryService,
-    "detectDueJobsDryRun" | "getDiagnosticsSummary"
+    "detectDueJobsDryRun" | "getDiagnosticsSummary" | "listJobs"
   >;
+  reminders: Pick<typeof reminderDeliveryService, "deliverDueNotifyJobs" | "getDiagnosticsSummary">;
+  approvals: Pick<typeof approvalRequestCenterService, "getDiagnosticsSummary" | "createApprovalRequest">;
+  inbox: Pick<typeof runtimeInboxService, "getDiagnosticsSummary">;
+  sessions: Pick<typeof agentSessionContinuityService, "getDiagnosticsSummary">;
   provenance: Pick<typeof provenanceGateService, "getDiagnosticsSummary">;
   memoryGovernance: Pick<typeof memoryGovernanceService, "getDiagnosticsSummary">;
   bus: Pick<typeof eventBus, "emitEvent" | "emit">;
@@ -76,10 +84,15 @@ export class RuntimeContinuityLoopService {
   private listeners = new Set<LoopListener>();
   private status: RuntimeContinuityLoopStatus;
   private dueDryRunJobs: SchedulerDryRunResult[] = [];
+  private deliveredReminderCount = 0;
 
   constructor(private readonly deps: RuntimeContinuityLoopDependencies = {
     continuity: runtimeContinuityService,
     scheduler: schedulerRegistryService,
+    reminders: reminderDeliveryService,
+    approvals: approvalRequestCenterService,
+    inbox: runtimeInboxService,
+    sessions: agentSessionContinuityService,
     provenance: provenanceGateService,
     memoryGovernance: memoryGovernanceService,
     bus: eventBus,
@@ -167,10 +180,17 @@ export class RuntimeContinuityLoopService {
 
       const dueDryRuns = this.deps.scheduler.detectDueJobsDryRun(tickAt);
       this.dueDryRunJobs = dueDryRuns.filter((run) => run.due);
+      const reminderDeliveries = this.deps.reminders.deliverDueNotifyJobs(tickAt);
+      const createdApprovalRequests = this.createApprovalRequestsForRiskyDueJobs(dueDryRuns, tickAt);
+      this.deliveredReminderCount += reminderDeliveries.filter((delivery) => delivery.status === "delivered").length;
+      const reminderSummary = this.deps.reminders.getDiagnosticsSummary();
       const schedulerSummary = this.deps.scheduler.getDiagnosticsSummary(tickAt);
       const provenanceSummary = this.deps.provenance.getDiagnosticsSummary();
+      const approvalSummary = this.deps.approvals.getDiagnosticsSummary();
+      const inboxSummary = this.deps.inbox.getDiagnosticsSummary();
+      const sessionSummary = this.deps.sessions.getDiagnosticsSummary();
       const memorySummary = this.deps.memoryGovernance.getDiagnosticsSummary();
-      const pendingApprovalCount = this.pendingApprovalCount(schedulerSummary, provenanceSummary, dueDryRuns);
+      const pendingApprovalCount = this.pendingApprovalCount(schedulerSummary, provenanceSummary, dueDryRuns) + approvalSummary.pendingRequests;
       const quarantinedItemCount = this.quarantinedItemCount(schedulerSummary, provenanceSummary, memorySummary);
       const degradedReasons = this.degradedReasons(schedulerSummary, provenanceSummary, memorySummary, dueDryRuns);
       const lifecycleState = quarantinedItemCount > 0
@@ -183,6 +203,7 @@ export class RuntimeContinuityLoopService {
         lifecycleState,
         scheduledJobCount: schedulerSummary.totalJobs,
         pendingApprovalCount,
+        deliveredReminderCount: reminderSummary.deliveredCount,
         quarantinedItemCount,
         degradedReasons,
         lastHeartbeatAt: heartbeat.lastHeartbeatAt,
@@ -193,8 +214,50 @@ export class RuntimeContinuityLoopService {
         schedulerJobCount: schedulerSummary.totalJobs,
         pendingApprovalCount,
         quarantinedItemCount,
+        deliveredReminderCount: reminderSummary.deliveredCount,
+        createdApprovalRequests,
         dryRunOnly: true,
       });
+
+
+
+      for (const delivery of reminderDeliveries) {
+        this.emitEnvelope(
+          delivery.status === "delivered" ? "reminder_delivered" : "reminder_blocked",
+          updated,
+          delivery.status === "delivered" ? "Safe local reminder delivered." : "Reminder delivery was blocked by governance.",
+          {
+            jobId: delivery.jobId,
+            deliveryId: delivery.deliveryId,
+            status: delivery.status,
+            reason: delivery.reason,
+            dryRunOnly: delivery.dryRunOnly,
+          },
+        );
+      }
+
+
+
+      if (inboxSummary.unreadEvents > 0) {
+        this.emitEnvelope("inbox_event_ingested", updated, "Continuity inbox has unread inert event records.", {
+          unreadEvents: inboxSummary.unreadEvents,
+          dryRunOnly: true,
+        });
+      }
+
+      if (sessionSummary.safeToResumeSessions > 0) {
+        this.emitEnvelope("session_resume_available", updated, "A safe resumable agent session is available.", {
+          safeToResumeSessions: sessionSummary.safeToResumeSessions,
+          dryRunOnly: true,
+        });
+      }
+
+      if (createdApprovalRequests > 0) {
+        this.emitEnvelope("approval_request_created", updated, "Risky due scheduler work was converted into approval request records only.", {
+          createdApprovalRequests,
+          dryRunOnly: true,
+        });
+      }
 
       if (this.dueDryRunJobs.length > 0) {
         this.emitEnvelope("scheduler_due_detected", updated, "Due scheduler work was observed; no job was executed.", {
@@ -204,9 +267,10 @@ export class RuntimeContinuityLoopService {
         });
       }
 
-      if (dueDryRuns.some((run) => run.blockedBy.includes("approval_required"))) {
+      if (dueDryRuns.some((run) => run.blockedBy.includes("approval_required")) || approvalSummary.pendingRequests > 0) {
         this.emitEnvelope("approval_pending", updated, "Scheduled work is waiting for approval before any risky action can proceed.", {
           pendingApprovalCount,
+          approvalRequestCount: approvalSummary.pendingRequests,
           dryRunOnly: true,
         });
       }
@@ -244,6 +308,7 @@ export class RuntimeContinuityLoopService {
     return {
       ...this.status,
       dueDryRunJobs: this.dueDryRunJobs.length,
+      deliveredReminderCount: this.deliveredReminderCount,
       degradedReasons: [...this.status.degradedReasons],
     };
   }
@@ -276,6 +341,38 @@ export class RuntimeContinuityLoopService {
     if (!this.intervalId) return;
     this.deps.clearIntervalFn(this.intervalId);
     this.intervalId = undefined;
+  }
+
+
+  private createApprovalRequestsForRiskyDueJobs(dueDryRuns: SchedulerDryRunResult[], tickAt: string): number {
+    const jobsById = new Map(this.deps.scheduler.listJobs().map((job: SchedulerJob) => [job.jobId, job]));
+    let created = 0;
+    for (const run of dueDryRuns) {
+      if (!run.due || !run.blockedBy.includes("approval_required")) continue;
+      const job = jobsById.get(run.jobId);
+      if (!job?.provenance?.provenanceId) continue;
+      this.deps.approvals.createApprovalRequest(
+        {
+          actionInstanceId: `scheduler:${job.jobId}:${job.nextRunAt ?? tickAt}`,
+          actionType: "scheduled_job",
+          target: job.jobId,
+          parameters: { allowedCapabilities: job.allowedCapabilities, deliveryTarget: job.deliveryTarget },
+          provenanceChain: [job.provenance.provenanceId],
+          timestampBucket: tickAt.slice(0, 16),
+        },
+        {
+          title: `Approval required: ${job.title}`,
+          description: "Risky scheduled work is request-only; no tool, shell, filesystem, network, or skill action was executed.",
+          riskLevel: "high",
+          requestedBy: LOOP_SOURCE,
+          sourceType: "scheduler",
+          sourceId: job.jobId,
+          actionPreview: { title: job.title, allowedCapabilities: job.allowedCapabilities, deliveryTarget: job.deliveryTarget },
+        },
+      );
+      created += 1;
+    }
+    return created;
   }
 
   private pendingApprovalCount(
@@ -325,6 +422,7 @@ export class RuntimeContinuityLoopService {
       nextTickAt: this.intervalId ? new Date(now.getTime() + this.intervalMs).toISOString() : undefined,
       dueDryRunJobs: this.dueDryRunJobs.length,
       pendingApprovalCount: snapshot?.pendingApprovalCount ?? 0,
+      deliveredReminderCount: snapshot?.deliveredReminderCount ?? this.deliveredReminderCount,
       scheduledJobCount: snapshot?.scheduledJobCount ?? 0,
       quarantinedItemCount: snapshot?.quarantinedItemCount ?? 0,
       degradedReasons: snapshot?.degradedReasons ? [...snapshot.degradedReasons] : [],

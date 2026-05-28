@@ -143,6 +143,9 @@ const GovernanceContinuityCard: React.FC<{
           <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
             {governance.safeSummary}
           </p>
+          <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>
+            You have {governance.reminders.deliveredCount} reminders / {governance.approvalCenter.pendingRequests} pending approvals / {governance.sessions.safeToResumeSessions} resumable sessions.
+          </p>
         </div>
         {isTactical && (
           <span className="shrink-0 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-[9px] font-mono uppercase text-cyan-300">
@@ -154,6 +157,10 @@ const GovernanceContinuityCard: React.FC<{
       {isTactical && !isOrigin && (
         <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-[9px] uppercase tracking-widest" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)" }}>
           <div>Pending approvals: {metricValue(getGovernancePendingApprovalCount(governance))}</div>
+          <div>Reminders delivered: {metricValue(governance.reminders.deliveredCount)}</div>
+          <div>Inbox unread: {metricValue(governance.inbox.unreadEvents)}</div>
+          <div>Resumable sessions: {metricValue(governance.sessions.safeToResumeSessions)}</div>
+          <div>Governed requests: {metricValue(governance.governedRequests.totalRequests)}</div>
           <div>Scheduler jobs: {metricValue(governance.scheduler.totalJobs)}</div>
           <div>Due dry runs: {metricValue(governance.scheduler.dueJobs)}</div>
           <div>Dry-run only: {formatValue(governance.scheduler.dryRunOnly)}</div>
@@ -179,6 +186,12 @@ const GovernanceContinuityCard: React.FC<{
             <div>Next tick: {formatValue(governance.runtimeContinuity.loopStatus?.nextTickAt)}</div>
             <div>Due dry runs: {metricValue(governance.runtimeContinuity.loopStatus?.dueDryRunJobs)}</div>
             <div>Loop dry-run: {formatValue(governance.runtimeContinuity.loopStatus?.dryRunOnly)}</div>
+            <div>Delivered reminders: {metricValue(governance.reminders.deliveredCount)}</div>
+            <div>Blocked reminders: {metricValue(governance.reminders.blockedCount)}</div>
+            <div>Inbox unread: {metricValue(governance.inbox.unreadEvents)}</div>
+            <div>Resumable sessions: {metricValue(governance.sessions.safeToResumeSessions)}</div>
+            <div>Approval center pending: {metricValue(governance.approvalCenter.pendingRequests)}</div>
+            <div>Governed requests: {metricValue(governance.governedRequests.totalRequests)}</div>
           </div>
           <div className="grid grid-cols-2 gap-2 border-t pt-3" style={{ borderColor: "var(--app-border-main)" }}>
             <div>Scheduler total: {metricValue(governance.scheduler.totalJobs)}</div>

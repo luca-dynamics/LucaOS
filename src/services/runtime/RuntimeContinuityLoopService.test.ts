@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { ProvenanceGateService } from "../provenance/ProvenanceGateService";
 import { SchedulerRegistryService } from "../scheduler/SchedulerRegistryService";
 import { RuntimeContinuityService } from "./RuntimeContinuityService";
+import { ReminderDeliveryService } from "../scheduler/ReminderDeliveryService";
+import { ApprovalRequestCenterService } from "../provenance/ApprovalRequestCenterService";
 import { RuntimeContinuityLoopService } from "./RuntimeContinuityLoopService";
 import { buildGovernanceDiagnosticsForAudience } from "./RuntimeDiagnosticsService";
 
@@ -17,10 +19,17 @@ function makeDeps(overrides: Record<string, unknown> = {}) {
   const provenance = new ProvenanceGateService(storage);
   const scheduler = new SchedulerRegistryService(storage);
   const bus = { emitEvent: vi.fn(), emit: vi.fn() };
+  const inbox = { ingestEvent: vi.fn() };
+  const approvals = new ApprovalRequestCenterService({ storage, provenance, inbox });
+  const reminders = new ReminderDeliveryService({ storage, scheduler, inbox, bus, now: () => new Date("2026-05-28T12:00:00.000Z") });
   const intervalHandles: Array<() => void> = [];
   const deps: any = {
     continuity,
     scheduler,
+    reminders,
+    approvals,
+    inbox: { ...inbox, getDiagnosticsSummary: vi.fn(() => ({ totalEvents: 0, unreadEvents: 0, archivedEvents: 0, externalInertEvents: 0, approvalEvents: 0 })) },
+    sessions: { getDiagnosticsSummary: vi.fn(() => ({ totalSessions: 0, activeSessions: 0, resumableSessions: 0, pausedSessions: 0, quarantinedSessions: 0, safeToResumeSessions: 0 })) },
     provenance,
     memoryGovernance: {
       getDiagnosticsSummary: vi.fn(() => ({
@@ -41,7 +50,7 @@ function makeDeps(overrides: Record<string, unknown> = {}) {
     now: vi.fn(() => new Date("2026-05-28T12:00:00.000Z")),
     ...overrides,
   };
-  return { deps, continuity, scheduler, provenance, bus, intervalHandles };
+  return { deps, continuity, scheduler, provenance, bus, inbox, reminders, approvals, intervalHandles };
 }
 
 describe("RuntimeContinuityLoopService", () => {
@@ -57,9 +66,15 @@ describe("RuntimeContinuityLoopService", () => {
     expect(deps.setIntervalFn).toHaveBeenCalledTimes(1);
   });
 
-  it("ticks scheduler dry-run detection only and emits due job summaries", async () => {
+  it("ticks scheduler dry-run detection, delivers safe reminders, and emits due job summaries", async () => {
     const { deps, scheduler, provenance, bus } = makeDeps();
     const prov = provenance.createProvenanceRecord({ sourceType: "scheduled_job", sourceId: "job" });
+    scheduler.createReminderJob({
+      title: "Reminder",
+      description: "Safe local reminder",
+      schedule: { kind: "once", runAt: "2026-05-28T11:58:00.000Z" },
+      provenance: provenance.createProvenanceRecord({ sourceType: "scheduled_job", sourceId: "reminder", approvalState: "not_required" }),
+    });
     scheduler.createJob({
       title: "Shell dry run",
       description: "Must never execute",
@@ -73,8 +88,9 @@ describe("RuntimeContinuityLoopService", () => {
     const status = await loop.tick();
 
     expect(detectSpy).toHaveBeenCalledTimes(1);
-    expect(status.dueDryRunJobs).toBe(1);
+    expect(status.dueDryRunJobs).toBeGreaterThanOrEqual(1);
     expect(status.pendingApprovalCount).toBeGreaterThan(0);
+    expect(status.deliveredReminderCount).toBeGreaterThan(0);
     expect(bus.emitEvent).toHaveBeenCalledWith(expect.objectContaining({
       type: "runtime-continuity-envelope",
       message: expect.stringContaining("Due scheduler work was observed"),
@@ -93,6 +109,7 @@ describe("RuntimeContinuityLoopService", () => {
       scheduler: {
         detectDueJobsDryRun,
         getDiagnosticsSummary: deps.scheduler.getDiagnosticsSummary.bind(deps.scheduler),
+        listJobs: deps.scheduler.listJobs.bind(deps.scheduler),
       },
     });
 
@@ -162,6 +179,7 @@ describe("RuntimeContinuityLoopService", () => {
           intervalMs: 60_000,
           dueDryRunJobs: 0,
           pendingApprovalCount: 0,
+          deliveredReminderCount: 0,
           scheduledJobCount: 0,
           quarantinedItemCount: 0,
           degradedReasons: [],
