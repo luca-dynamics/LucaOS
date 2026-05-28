@@ -52,6 +52,11 @@ LucaOS now defines explicit external artifact envelope contracts and validation 
 This extension remains adapter/contract-only and does not execute optimizers in LucaOS core.
 
  
+## 2026-05 PR-back metadata verifier extension
+
+A pure PR-back metadata verifier is now part of the governance contract for external lab candidate intake. It validates repo trust metadata and PR references, requires Origin review flags, warns on missing finalized commit SHA data, blocks untrusted source repo inputs, and keeps auto-merge disabled (`canAutoMerge=false`) for all PR-back candidates.
+
+ 
 ## 2026-05 Constraint Gate Report Verifier Extension
 
 LucaOS now defines a dedicated pure constraint-gate-report verifier to validate lab-returned gate results prior to Origin candidate review.
@@ -82,4 +87,5 @@ Added an in-memory `EvolutionProposalInbox` adapter layer for proposal intake + 
   - `persistenceEnabled: false`
   - `autonomousSelfModificationEnabled: false`
   - `existingEvolutionServiceCalled: false`
+ 
  
