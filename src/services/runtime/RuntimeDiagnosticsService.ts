@@ -24,6 +24,7 @@ import {
 } from "../../types/modelRouting";
 import type { MemoryReadinessState, MemoryRouteDecision } from "../../types/memoryRouting";
 import { runtimeContinuityService } from "./RuntimeContinuityService";
+import { runtimeContinuityLoopService } from "./RuntimeContinuityLoopService";
 import { schedulerRegistryService } from "../scheduler/SchedulerRegistryService";
 import { provenanceGateService } from "../provenance/ProvenanceGateService";
 import { skillRegistryService } from "../skills/SkillRegistryService";
@@ -679,9 +680,13 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
   const onboardingWarnings = getOnboardingWarnings(settings);
   const localRuntime = await getLocalRuntimeDiagnostics(routeList);
   const audience = detectRuntimeDiagnosticsAudience(settings);
+  const runtimeContinuity = {
+    ...runtimeContinuityService.getDiagnosticsSummary(),
+    loopStatus: runtimeContinuityLoopService.getLoopStatus(),
+  };
   const governance = buildGovernanceDiagnosticsForAudience({
     audience,
-    runtimeContinuity: runtimeContinuityService.getDiagnosticsSummary(),
+    runtimeContinuity,
     scheduler: schedulerRegistryService.getDiagnosticsSummary(),
     provenance: provenanceGateService.getDiagnosticsSummary(),
     skills: skillRegistryService.getDiagnosticsSummary(),

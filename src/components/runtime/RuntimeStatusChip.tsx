@@ -76,11 +76,22 @@ export const RuntimeStatusChip: React.FC<RuntimeStatusChipProps> = ({
     };
   }, [externalDiagnostics, onDiagnosticsChange, refreshMs]);
 
-  const severity = diagnostics?.summary.severity || "unknown";
+  const continuityState = diagnostics?.governance.runtimeContinuity.lifecycleState;
+  const governanceQuarantine = (diagnostics?.governance.runtimeContinuity.quarantinedItemCount ?? 0) > 0;
+  const governancePending = (diagnostics?.governance.runtimeContinuity.pendingApprovalCount ?? 0) > 0;
+  const severity: RuntimeReadinessSeverity = governanceQuarantine || continuityState === "quarantined"
+    ? "blocked"
+    : governancePending || continuityState === "degraded"
+      ? "warning"
+      : diagnostics?.summary.severity || "unknown";
   const label =
     loading && !diagnostics
       ? "Runtime check"
-      : diagnostics?.summary.headline || "Runtime unknown";
+      : governanceQuarantine || continuityState === "quarantined"
+        ? "Runtime review"
+        : governancePending || continuityState === "degraded"
+          ? "Runtime approval"
+          : diagnostics?.summary.headline || "Runtime unknown";
 
   return (
     <div
