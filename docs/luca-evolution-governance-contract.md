@@ -39,3 +39,14 @@ This change is contract + gate + adapter only. It does not replace `evolutionSer
 ## Repo boundary reference (2026-05-28)
 - Canonical LucaOS core vs external lab split: `docs/lucaos-self-evolution-repo-boundary.md`.
 
+
+## 2026-05 External Artifact Envelope Extension
+
+LucaOS now defines explicit external artifact envelope contracts and validation gates for future lab exchange:
+- canonical artifact kind taxonomy,
+- required schema version and origin-review defaults,
+- risky-capability detection signals,
+- candidate and PR-back rollback completeness checks,
+- explicit no-auto-promote/no-runtime-auto-apply snapshot flags.
+
+This extension remains adapter/contract-only and does not execute optimizers in LucaOS core.
