@@ -124,3 +124,14 @@ This checklist should be read with and linked from:
 - Origin dashboard snapshot adapter is read-only display data only.
 - Private UI import map guides future MacBook migration.
 - No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.
+
+## Deterministic execution migration checkpoint (2026-05)
+Before private MacBook UI execution controls are migrated, the UI must prove that it only displays or requests deterministic execution plans and never silently triggers filesystem, network, computer-use, skill, device, memory, or self-evolution mutation.
+
+Future UI migration must preserve:
+- no `App.tsx` wiring until a dedicated UI PR,
+- no Origin control exposure in public UI by default,
+- explicit confirmation for privacy-sensitive and medium-risk actions,
+- Origin review for high-risk execution and self-evolution promotion,
+- receipt/evidence display before trust elevation,
+- live execution disabled unless a later audited runtime PR changes that posture.

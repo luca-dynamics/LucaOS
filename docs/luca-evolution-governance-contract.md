@@ -111,3 +111,8 @@ Compatibility outcome:
 - Existing evolution imports that reference `LucaTier` continue to compile.
 - Tier gate behavior is unchanged (Normal restrictions, Tactical high-risk limits, Origin-only external review gates).
 - No UI wiring, route changes, persistence, mutation/commit calls, or optimizer execution were added.
+
+## 2026-05 Deterministic execution absorb extension
+Self-evolution governance now has a deterministic execution foundation to reference for future proposal review. Evolution candidates should be represented as plans/steps when they imply file, network, optimizer, memory, or behavior-promotion effects. Promotion remains forbidden without verification gates, rollback/correction paths, and receipt/evidence references.
+
+This update is architecture-only: no optimizer execution, no `evolutionService` mutate/commit calls, no persistence, no GitHub/network calls, and no runtime behavior change. External self-evolution lab artifacts should eventually map to execution receipts and verification summaries before Origin review.

@@ -71,3 +71,8 @@ No UI wiring was added in this update.
 - Origin dashboard snapshot adapter is read-only display data only.
 - Private UI import map guides future MacBook migration.
 - No App.tsx wiring, no Origin control exposure expansion, no runtime behavior change.
+
+## Deterministic execution absorb mapping (2026-05)
+The Origin evolution control service should eventually consume deterministic execution plans for high-risk proposal review. Origin can review self-evolution, filesystem, network, tool/skill, and computer-use implications, but deterministic execution snapshots keep `liveExecutionAllowed: false` and promotion disabled by default.
+
+Receipts from tests, evals, constraint gates, PR-back metadata, manual notes, or external lab outputs should be attached as evidence before any future promotion workflow is considered. This document update does not expose Origin controls or wire UI.
