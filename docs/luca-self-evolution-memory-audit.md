@@ -200,3 +200,12 @@ Key conclusion: do **not** add a new standalone memory/evolution stack yet. Firs
 
 ## Bottom line
 LucaOS already has meaningful building blocks for memory, skills/tools, traces, and guarded evolution. The immediate priority is **architectural unification and governance**, not adding another parallel stack. Once unified, a GEPA-style optimizer and self-evolution loop can be added safely without duplication.
+
+
+## Implementation started (2026-05-28)
+- Shared Luca memory contracts were added under `src/services/memory/MemoryContracts.ts` with canonical tier/scope/item/query/result/adapter interfaces.
+- Tier mapping + legacy conversion helpers were added under `src/services/memory/MemoryTierMapping.ts` as pure functions only (no storage writes/migrations).
+- Adapter shells were added for frontend memoryService, backend memoryStore, AgentMemoryService, and WorkflowMemory under `src/services/memory/MemoryAdapters.ts`.
+- Adapters are opt-in and marked adapter-only; runtime behavior remains unchanged by default.
+- No storage migration is included in this phase.
+- A future PR will unify trace/mission-tape ingestion into canonical trace-tier memory entries.
