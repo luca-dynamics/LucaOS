@@ -53,5 +53,9 @@ This contract exists to unblock future migration of the latest private MacBook a
 - No optimizer execution.
 - No persistence.
 
-## Future consolidation note
-If legacy/adjacent tier types (for example `LucaTier`) overlap, a future PR should perform safe consolidation/re-export harmonization without changing behavior.
+## Evolution consolidation status (2026-05-28)
+Evolution governance services now consume the canonical `LucaUserTier` contract through a compatibility alias (`LucaTier = Exclude<LucaUserTier, "unknown">`) in `src/services/evolution/EvolutionProposal.ts`.
+
+This preserves existing `LucaTier` imports for compatibility while aligning evolution contracts to the shared tier source of truth.
+
+No UI wiring was added and no runtime behavior changed.
