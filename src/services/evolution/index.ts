@@ -24,6 +24,5 @@ export * from "./ConstraintGateReportMapping";
 
 export * from "./EvolutionProposalInbox";
 export * from "./createEvolutionProposalInbox";
- 
-
- 
+export * from "./OriginEvolutionControlService";
+export * from "./createOriginEvolutionControlService";

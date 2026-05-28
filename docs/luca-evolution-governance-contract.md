@@ -78,3 +78,11 @@ All imported external artifacts are governance-subordinate to Origin.
 - unsupported schema/kind -> blocked.
 - tactical high-risk import -> blocked.
 - normal import -> blocked.
+
+## Origin evolution control service composition
+
+The Origin evolution control service composes existing governance and verifier pieces (`EvolutionProposalInbox`, `ExternalEvolutionImportAdapter`, `verifyConstraintGateReport`, and `verifyPrBackMetadata`) as a safe, Origin-operated control surface.
+
+This layer is adapter-only and does not call mutation/commit paths or `evolutionService`. It does not execute optimizers, does not auto-apply proposals, does not persist state beyond in-memory inbox data, and does not perform network/GitHub PR verification.
+
+Dashboard note: future Origin dashboard wiring can consume this service in a dedicated UI integration PR; this contract update does not change runtime behavior.
