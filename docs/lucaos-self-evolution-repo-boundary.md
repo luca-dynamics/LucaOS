@@ -252,3 +252,7 @@ Reference: `docs/luca-constraint-gate-report-verifier.md`.
 The `OriginEvolutionControlService` is inside repo boundary as a composition-only orchestration layer. It can submit/review/archive/reject proposals and import external artifacts into review-only proposal records, while preserving Origin governance restrictions.
 
 Boundary constraints remain unchanged: no optimizer execution, no autonomous mutation/commit/apply behavior, no `evolutionService` mutation pipeline calls, no file writes for evolution execution, and no network/GitHub auto-merge behavior.
+
+## User-tier UI integration reference (2026-05-28)
+- Canonical user-tier integration bridge: `docs/luca-user-tier-ui-integration-contract.md`.
+- Treat current public repo UI as behind the latest private Origin/Tactical/Normal architecture until onboarding + tier routing are migrated.
