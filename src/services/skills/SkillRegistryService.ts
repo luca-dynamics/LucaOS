@@ -63,6 +63,10 @@ export class SkillRegistryService {
     const blockedBy: string[] = [];
     if (!skill) return { allowed: false, userSafeReason: "Skill is not registered.", blockedBy: ["missing_skill"] };
     if (!skill.provenance) blockedBy.push("missing_provenance");
+    if (skill.diagnostics.requiresProvenanceApproval) blockedBy.push("approval_required");
+    if (skill.provenance && !["not_required", "approved_once"].includes(skill.provenance.approvalState)) {
+      blockedBy.push("provenance_approval_required");
+    }
     if (skill.lifecycleState !== "enabled") blockedBy.push(`lifecycle_${skill.lifecycleState}`);
     if (skill.lifecycleState === "quarantined" || skill.provenance?.quarantineState === "quarantined") blockedBy.push("quarantined");
     if (skill.provenance?.revocationState === "revoked") blockedBy.push("revoked_provenance");

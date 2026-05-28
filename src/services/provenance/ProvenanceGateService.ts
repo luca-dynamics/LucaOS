@@ -39,6 +39,11 @@ export function stableStringify(value: unknown): string {
 }
 
 export function deterministicDigest(value: unknown): string {
+  // Deterministic placeholder for the foundation PR. This is intentionally
+  // stable for tests/offline storage, but it is not cryptographically strong.
+  // TODO(runtime-security): replace action approval digests with SHA-256 via
+  // WebCrypto/SubtleCrypto where available, retaining this only as a legacy
+  // deterministic fallback for environments without crypto support.
   const input = stableStringify(value);
   let hash = 0x811c9dc5;
   for (let index = 0; index < input.length; index += 1) {

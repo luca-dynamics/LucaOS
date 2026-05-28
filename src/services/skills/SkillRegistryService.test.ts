@@ -14,6 +14,20 @@ describe("SkillRegistryService", () => {
     expect(registry.disableSkill(skill.skillId)?.lifecycleState).toBe("disabled");
   });
 
+  it("blocks skills with required or pending provenance approval", () => {
+    const requiredStorage = new MemoryStorage();
+    const requiredProv = new ProvenanceGateService(requiredStorage).createProvenanceRecord({ sourceType: "skill", sourceId: "skill-required", approvalState: "required" });
+    const requiredRegistry = new SkillRegistryService(requiredStorage);
+    requiredRegistry.registerSkill({ skillId: "skill-required", name: "Required", version: "1.0.0", manifest: { id: "skill-required" }, provenance: requiredProv, lifecycleState: "enabled", riskLevel: "low" });
+    expect(requiredRegistry.checkWhetherSkillCanBeUsed("skill-required").blockedBy).toContain("provenance_approval_required");
+
+    const pendingStorage = new MemoryStorage();
+    const pendingProv = new ProvenanceGateService(pendingStorage).createProvenanceRecord({ sourceType: "skill", sourceId: "skill-pending", approvalState: "pending" });
+    const pendingRegistry = new SkillRegistryService(pendingStorage);
+    pendingRegistry.registerSkill({ skillId: "skill-pending", name: "Pending", version: "1.0.0", manifest: { id: "skill-pending" }, provenance: pendingProv, lifecycleState: "enabled", riskLevel: "low" });
+    expect(pendingRegistry.checkWhetherSkillCanBeUsed("skill-pending").blockedBy).toContain("provenance_approval_required");
+  });
+
   it("blocks quarantined skills and skills missing provenance", () => {
     const registry = new SkillRegistryService(new MemoryStorage());
     registry.registerSkill({ skillId: "skill-1", name: "Planner", version: "1.0.0", manifest: { id: "skill-1" }, lifecycleState: "enabled", riskLevel: "low" });

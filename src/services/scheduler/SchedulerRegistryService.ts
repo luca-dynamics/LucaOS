@@ -56,7 +56,20 @@ export class SchedulerRegistryService {
     if (job.provenance.quarantineState === "quarantined" || job.status === "quarantined") blockedBy.push("quarantined");
     if (job.provenance.revocationState === "revoked") blockedBy.push("revoked_provenance");
     if (risky && !["approved_once", "not_required"].includes(job.requiredApproval)) blockedBy.push("approval_required");
-    return { jobId: job.jobId, title: job.title, due, wouldRun: due && blockedBy.length === 0, dryRunOnly: true, requiredApproval: job.requiredApproval, userSafeReason: blockedBy.length > 0 ? "Scheduled work is dry-run only and blocked until approvals/provenance are safe." : "Scheduled work is due, but this PR only reports a dry run.", blockedBy };
+    const wouldRunIfExecutionEnabled = due && blockedBy.length === 0;
+    return {
+      jobId: job.jobId,
+      title: job.title,
+      due,
+      wouldRun: wouldRunIfExecutionEnabled,
+      wouldRunIfExecutionEnabled,
+      dryRunOnly: true,
+      requiredApproval: job.requiredApproval,
+      userSafeReason: blockedBy.length > 0
+        ? "Dry-run only: no job executed. This scheduled work is blocked until approvals/provenance are safe."
+        : "Dry-run only: no job executed. This job would be eligible only if execution is enabled by a future gated runtime.",
+      blockedBy,
+    };
   }
 
   getDiagnosticsSummary(at: string = nowIso()): SchedulerDiagnosticsSummary {

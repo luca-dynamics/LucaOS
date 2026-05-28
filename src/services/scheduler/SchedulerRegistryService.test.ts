@@ -23,6 +23,8 @@ describe("SchedulerRegistryService", () => {
     const [dryRun] = scheduler.detectDueJobsDryRun("2026-05-28T00:01:00.000Z");
     expect(dryRun.dryRunOnly).toBe(true);
     expect(dryRun.wouldRun).toBe(false);
+    expect(dryRun.wouldRunIfExecutionEnabled).toBe(false);
+    expect(dryRun.userSafeReason).toContain("no job executed");
     expect(dryRun.blockedBy).toContain("approval_required");
   });
 

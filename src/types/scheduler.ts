@@ -35,6 +35,7 @@ export interface SchedulerDryRunResult {
   title: string;
   due: boolean;
   wouldRun: boolean;
+  wouldRunIfExecutionEnabled: boolean;
   dryRunOnly: true;
   requiredApproval: ProvenanceApprovalState;
   userSafeReason: string;
