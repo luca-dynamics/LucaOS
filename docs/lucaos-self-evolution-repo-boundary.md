@@ -246,3 +246,9 @@ This keeps boundary authority in LucaOS core by ensuring:
 - no optimizer/runtime side-effects occur during verification.
 
 Reference: `docs/luca-constraint-gate-report-verifier.md`.
+
+## Origin control service boundary
+
+The `OriginEvolutionControlService` is inside repo boundary as a composition-only orchestration layer. It can submit/review/archive/reject proposals and import external artifacts into review-only proposal records, while preserving Origin governance restrictions.
+
+Boundary constraints remain unchanged: no optimizer execution, no autonomous mutation/commit/apply behavior, no `evolutionService` mutation pipeline calls, no file writes for evolution execution, and no network/GitHub auto-merge behavior.
