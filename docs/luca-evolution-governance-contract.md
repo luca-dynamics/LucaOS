@@ -90,3 +90,16 @@ Dashboard note: future Origin dashboard wiring can consume this service in a ded
 ## User-tier UI integration contract reference (2026-05-28)
 - Canonical bridge doc: `docs/luca-user-tier-ui-integration-contract.md`.
 - Governance + UI integration must preserve Origin-only control authority while public repo UI remains behind private tier-routing/onboarding architecture.
+
+
+## 2026-05 Pure user-tier contract layer extension
+A canonical shared user-tier contract is now defined for governance-adjacent consumers in `src/types/lucaUserTier.ts`, with documentation in `docs/luca-user-tier-contract.md`.
+
+This extension is type/helper only:
+- no runtime behavior changes,
+- no UI mounting/wiring,
+- no Origin control exposure,
+- no `evolutionService` mutate/commit calls,
+- no persistence.
+
+It prepares migration alignment between this public repo and the latest private MacBook Origin/Tactical/Normal onboarding architecture.
