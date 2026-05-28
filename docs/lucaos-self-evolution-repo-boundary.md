@@ -207,6 +207,19 @@ These docs should treat this boundary plan as the canonical split contract for L
 
 LucaOS core now declares canonical external artifact envelopes and validation rules for lab exchange. This formalizes the boundary with required `schemaVersion`, mandatory Origin review, high-risk capability signals, candidate eval completeness checks, PR-back rollback metadata requirements for medium+ risk, and explicit no auto-promotion/runtime apply behavior.
 
+ 
+## External Lab Import Boundary (Adapter-only)
+External lab outputs may be ingested only through `ExternalEvolutionImportAdapter` as inert review objects.
+
+Boundary guarantees:
+- ingest/translate only (no execute/apply);
+- no optimizer execution;
+- no `mutate`/`commit` side effects;
+- no runtime behavior replacement;
+- no persistence at import time.
+
+Any promotion or application remains a separate Origin-governed step outside this adapter.
+
 ---
 
 ## 2026-05-28 Origin dashboard shell note
@@ -235,5 +248,6 @@ This keeps boundary authority in LucaOS core by ensuring:
 - no optimizer/runtime side-effects occur during verification.
 
 Reference: `docs/luca-constraint-gate-report-verifier.md`.
+ 
  
  

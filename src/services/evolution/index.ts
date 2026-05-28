@@ -11,6 +11,11 @@ export * from "./ExternalEvolutionArtifactMapping";
 export * from "./ExternalEvolutionArtifactGate";
  
 
+export * from "./ExternalEvolutionImportMapping";
+export * from "./ExternalEvolutionImportAdapter";
+
+ 
+
 export * from "./PrBackMetadataVerifier";
 
  
@@ -21,3 +26,4 @@ export * from "./EvolutionProposalInbox";
 export * from "./createEvolutionProposalInbox";
  
 
+ 
