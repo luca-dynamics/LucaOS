@@ -256,3 +256,6 @@ Boundary constraints remain unchanged: no optimizer execution, no autonomous mut
 ## User-tier UI integration reference (2026-05-28)
 - Canonical user-tier integration bridge: `docs/luca-user-tier-ui-integration-contract.md`.
 - Treat current public repo UI as behind the latest private Origin/Tactical/Normal architecture until onboarding + tier routing are migrated.
+
+## Private MacBook UI migration audit checklist reference (2026-05-28)
+- Use `docs/luca-private-ui-migration-audit-checklist.md` before importing private onboarding/tiered UI architecture into public repo.

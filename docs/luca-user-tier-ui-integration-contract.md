@@ -101,3 +101,5 @@ Those docs should reference this user-tier UI integration contract as the canoni
 - Primary spec: `docs/luca-user-tier-contract.md`.
 - This integration document remains UI-planning only; no UI wiring is introduced in this contract-layer PR.
 - Origin/Tactical/Normal UI migration remains future work after onboarding/tier resolution is aligned with private MacBook architecture.
+
+- See `docs/luca-private-ui-migration-audit-checklist.md` for pre-import private MacBook UI migration audit workflow.

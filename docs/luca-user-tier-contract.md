@@ -59,3 +59,6 @@ Evolution governance services now consume the canonical `LucaUserTier` contract 
 This preserves existing `LucaTier` imports for compatibility while aligning evolution contracts to the shared tier source of truth.
 
 No UI wiring was added and no runtime behavior changed.
+
+## Private MacBook UI migration audit reference (2026-05-28)
+- Pre-import checklist: `docs/luca-private-ui-migration-audit-checklist.md`.
