@@ -51,6 +51,22 @@ LucaOS now defines explicit external artifact envelope contracts and validation 
 
 This extension remains adapter/contract-only and does not execute optimizers in LucaOS core.
 
+ 
+## 2026-05 Constraint Gate Report Verifier Extension
+
+LucaOS now defines a dedicated pure constraint-gate-report verifier to validate lab-returned gate results prior to Origin candidate review.
+
+Verifier rules include:
+- safety failure blocks,
+- regression failure blocks candidate selection,
+- medium+ risk requires rollback gate presence,
+- eval-required workflows require passing eval gate,
+- policy-touching gate kinds force Origin review flags,
+- unknown gate kinds warn by default,
+- no auto-promotion.
+
+Reference: `docs/luca-constraint-gate-report-verifier.md`.
+
 ## 2026-05 Origin Proposal Inbox Adapter Extension
 
 Added an in-memory `EvolutionProposalInbox` adapter layer for proposal intake + governance-safe review decisions.
@@ -66,3 +82,4 @@ Added an in-memory `EvolutionProposalInbox` adapter layer for proposal intake + 
   - `persistenceEnabled: false`
   - `autonomousSelfModificationEnabled: false`
   - `existingEvolutionServiceCalled: false`
+ 
