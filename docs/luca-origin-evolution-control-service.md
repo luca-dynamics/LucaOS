@@ -57,3 +57,9 @@ A future PR can wire this service into the Origin Evolution Dashboard after expl
 ## User-tier integration reference
 - Canonical UI-tier integration contract: `docs/luca-user-tier-ui-integration-contract.md`.
 - This service is intended for Origin-scoped surfaces only; Tactical/Normal must not receive direct control wiring from this layer.
+
+
+## Tier type alignment (2026-05-28)
+`OriginEvolutionControlService` and its evolution collaborators now use the canonical `LucaUserTier` contract through the preserved `LucaTier` compatibility alias in evolution contracts. This keeps existing call signatures stable and preserves Origin/Tactical/Normal gate behavior.
+
+No UI wiring was added in this update.

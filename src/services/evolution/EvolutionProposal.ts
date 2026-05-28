@@ -1,4 +1,6 @@
-export type LucaTier = "origin" | "tactical" | "normal";
+import type { LucaUserTier } from "../../types/lucaUserTier";
+
+export type LucaTier = Exclude<LucaUserTier, "unknown">;
 
 export type LucaEvolutionProposalKind =
   | "skill_update"

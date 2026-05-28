@@ -103,3 +103,11 @@ This extension is type/helper only:
 - no persistence.
 
 It prepares migration alignment between this public repo and the latest private MacBook Origin/Tactical/Normal onboarding architecture.
+
+## 2026-05 Tier-type consolidation update
+Evolution services now align to the canonical tier contract in `src/types/lucaUserTier.ts` via a compatibility alias (`LucaTier`) retained in evolution contracts.
+
+Compatibility outcome:
+- Existing evolution imports that reference `LucaTier` continue to compile.
+- Tier gate behavior is unchanged (Normal restrictions, Tactical high-risk limits, Origin-only external review gates).
+- No UI wiring, route changes, persistence, mutation/commit calls, or optimizer execution were added.
