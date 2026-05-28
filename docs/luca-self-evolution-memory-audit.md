@@ -209,3 +209,23 @@ LucaOS already has meaningful building blocks for memory, skills/tools, traces, 
 - Adapters are opt-in and marked adapter-only; runtime behavior remains unchanged by default.
 - No storage migration is included in this phase.
 - A future PR will unify trace/mission-tape ingestion into canonical trace-tier memory entries.
+
+## Trace/tape mapping bridge update (2026-05-28)
+- Added pure, mapping-only bridge helpers in `src/services/memory/TraceMemoryMapping.ts` to map:
+  - `LucaTracing` events (`src/services/agent/LucaTracing.ts`) into canonical trace-tier memory items.
+  - `MissionTapeRecord` shapes (`src/services/missionTape/types.ts`) into canonical mission trace items plus step-level operational items.
+  - Mission-engine `MissionTape` compatibility records (`src/services/missionEngine/types.ts`) through the same mapper.
+- Added `TraceMemoryAdapter` (`src/services/memory/TraceMemoryAdapter.ts`) with snapshot metadata proving adapter-only behavior:
+  - `adapterOnly: true`
+  - `runtimeBehaviorChanged: false`
+  - `traceWritesRedirected: false`
+  - `tapeWritesRedirected: false`
+  - `migrationRequired: false`
+- Existing runtime behavior remains unchanged:
+  - `LucaTracing` remains in-memory (`Map`) with localStorage export (`luca_trace_*`) on trace end.
+  - `MissionTapeRecorderService` default storage remains in-memory (`Map`) via `InMemoryMissionTapeStorageAdapter`.
+  - No redirection of production writes; no persistence migration.
+- Current consumption paths remain as-is:
+  - Trace events are consumed via `tracingService.getTrace()` / `getAllTraces()` and localStorage export for inspection.
+  - Mission tapes are consumed via `MissionTapeRecorderService.getTape()` / `listTapes()` and mission-engine recorder hook.
+- Next safe step (future PR): opt-in ingestion path that writes mapped trace/tape memory items into canonical memory store interfaces behind feature flags.
