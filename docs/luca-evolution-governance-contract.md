@@ -1,0 +1,30 @@
+# Luca Evolution Governance Contract
+
+Date: 2026-05-28 (UTC)
+
+## Purpose
+This contract defines a canonical, non-autonomous governance layer for self-evolution proposals in LucaOS.
+
+## Lifecycle
+`draft -> submitted -> under_review -> approved/rejected -> promoted/rolled_back -> archived`
+
+## Tier permissions
+- **Normal:** may contribute evidence/feedback but cannot submit raw proposals or approve/promote/rollback.
+- **Tactical:** may submit improvement proposals but cannot approve/promote high-risk or core capability proposals.
+- **Origin:** required for external lab candidates and all high-risk/core capability promotions.
+
+## Core gate constraints
+- Autonomous self-modification is disabled.
+- Runtime auto-apply is false by default.
+- Promotion is blocked on regressions.
+- Promotion for medium+ risk requires rollback availability.
+- Runtime/computer-use/filesystem/network/voice policy touching proposals require Origin approval.
+
+## External lab PR-back model
+External proposals are represented as `external_lab_candidate` (or source `lucaos_self_evolution_repo`) and routed into Origin review before any approval/promotion decision. This models PR-back workflows without runtime auto-apply.
+
+## Difference from Hermes-only scope
+LucaOS governance must span broader surfaces than Hermes: UI/UX, public distribution modes, voice behavior policy, computer-use boundaries, memory policy, and runtime policy constraints. Governance is therefore explicit about user-tier permissions and high-risk capability gates.
+
+## Runtime behavior posture
+This change is contract + gate + adapter only. It does not replace `evolutionService`, does not auto-mutate runtime code, and does not alter skill/tool registration execution paths.

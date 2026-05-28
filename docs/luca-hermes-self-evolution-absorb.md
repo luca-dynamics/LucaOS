@@ -285,3 +285,31 @@ Do not move foundational contracts out of LucaOS core. Keep canonical schemas/in
 
 ## Final stance
 LucaOS should absorb Hermes’ **process architecture** (dataset-driven reflective optimization + strong constraints + PR-mediated promotion), but not copy implementation choices blindly. The safest path is contract-first unification in LucaOS, then a separated evolution lab that proposes changes back into mainline under strict guardrails.
+
+## Evolution governance contract update (2026-05-28)
+
+- Added canonical proposal contract under `src/services/evolution/EvolutionProposal.ts` to represent governed evolution intents across skill, prompt, tool metadata, memory policy, voice policy, runtime policy, and external lab candidate classes.
+- Added pure proposal mapping helpers (`EvolutionProposalMapping.ts`) so trace reflection, tactical requests, and external-lab candidates can be represented without mutating runtime behavior.
+- Added governance gate (`EvolutionGovernanceGate.ts`) enforcing Origin/Tactical/Normal boundaries and promotion guardrails (evals, regression blocks, rollback requirements).
+- Added adapter shell (`EvolutionGovernanceAdapter.ts`) with explicit metadata proving adapter-only rollout and no replacement of existing `evolutionService`.
+- External LucaOS-self-evolution repo pathway is now formally represented via `external_lab_candidate` and `lucaos_self_evolution_repo` sources, with mandatory Origin approval.
+- Runtime behavior remains unchanged; autonomous self-modification stays disabled.
+
+### Existing `evolutionService` relation (inspection)
+
+Path: `src/services/evolutionService.ts`.
+
+Current flow remains dev-only sandbox/mutate/verify/commit:
+1. `createSandbox` copies a target file into temp sandbox directory.
+2. `applyMutation` writes mutated code to the sandbox file.
+3. `verifyMutation` executes a verification shell command (`npx tsc ...` by default).
+4. `commitEvolution` writes backup (`.bak`) and copies sandbox result over target file.
+
+Implications:
+- It can write files and run shell commands.
+- It does not call remote APIs by default, but can execute arbitrary verification commands supplied to it.
+- It can overwrite source files in-place after verification and create backups.
+
+Governance posture:
+- New governance contract/gate should sit in front of any future invocation path.
+- Raw mutate/commit capabilities must remain Origin-governed and must not be exposed to Normal or Tactical user actions.
