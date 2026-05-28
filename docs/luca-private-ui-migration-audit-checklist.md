@@ -108,3 +108,11 @@ This checklist should be read with and linked from:
 - `docs/luca-user-tier-ui-integration-contract.md`
 - `docs/luca-user-tier-contract.md`
 - `docs/lucaos-self-evolution-repo-boundary.md`
+
+## Tier Routing Shell Contract Checkpoint (2026-05-28)
+
+- ✅ Routing contract added for Origin/Tactical/Normal/Unknown shell intent mapping.
+- ✅ Contract-only helper layer (no render path integration).
+- ✅ No `App.tsx` modifications.
+- ✅ No Origin controls exposed.
+- ✅ Future private MacBook migration can bind shell components to this contract in a later isolated PR.
