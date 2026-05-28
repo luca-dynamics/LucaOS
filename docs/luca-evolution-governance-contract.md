@@ -28,3 +28,10 @@ LucaOS governance must span broader surfaces than Hermes: UI/UX, public distribu
 
 ## Runtime behavior posture
 This change is contract + gate + adapter only. It does not replace `evolutionService`, does not auto-mutate runtime code, and does not alter skill/tool registration execution paths.
+
+## 2026-05 Evolution Run/Candidate Contract Extension
+
+- Added canonical `EvolutionRun` and `CandidateVariant` contracts for external-lab-compatible evolution artifacts.
+- Added dataset/eval references, constraint gate result records, optimizer engine metadata, and PR-back metadata.
+- External lab outputs are represented as metadata-only inputs; optimizer execution remains disabled inside LucaOS core.
+- Origin review is required for external lab PR-back proposal paths.

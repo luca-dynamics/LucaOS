@@ -246,3 +246,9 @@ LucaOS already has meaningful building blocks for memory, skills/tools, traces, 
 - Added explicit external lab and LucaOS-self-evolution-repo proposal source path with mandatory Origin approval.
 - Added adapter shell that does not replace existing `evolutionService` and does not change runtime behavior.
 - Autonomous self-modification remains disabled and runtime auto-apply remains false by default.
+
+## Evolution run memory/audit alignment (2026-05)
+
+- Evolution run contracts now include explicit dataset references and eval-case references tied to trace memory and mission tape IDs.
+- Constraint gate records and PR-back metadata are persisted as auditable artifacts.
+- Local optimizer execution and autonomous promotion remain disabled in LucaOS core by default.
