@@ -14,6 +14,9 @@ import { BRAIN_CONFIG } from "../config/brain.config";
 import { getApiKey } from "./genAIClient";
 import { settingsService } from "./settingsService";
 import { environmentSentinel } from "./environmentSentinel";
+import { modelReadinessResolver } from "./models/ModelReadinessResolver";
+import { getProviderApiKey } from "./models/ProviderKeyService";
+import type { ModelRouteDecision } from "../types/modelRouting";
 
 // --- LLM PROVIDER INTERFACE ---
 export interface LLMProvider {
@@ -33,6 +36,7 @@ export interface LLMGenerateOptions {
   maxTokens?: number;
   functions?: FunctionDeclaration[];
   systemPrompt?: string;
+  routeDecision?: ModelRouteDecision;
 }
 
 export interface LLMMessage {
@@ -46,9 +50,9 @@ class GeminiProvider implements LLMProvider {
   model: string;
   private apiKey: string;
 
-  constructor(model: string = BRAIN_CONFIG.defaults.brain) {
+  constructor(model: string = BRAIN_CONFIG.defaults.brain, apiKey?: string) {
     this.model = model;
-    this.apiKey = getApiKey();
+    this.apiKey = apiKey || getApiKey();
   }
 
   supportsFunctions = true;
@@ -63,7 +67,7 @@ class GeminiProvider implements LLMProvider {
     try {
       // Use fetch API directly for now (simpler than SDK)
       const brainSettings = settingsService.get("brain");
-      const apiKey = getApiKey();
+      const apiKey = this.apiKey || getApiKey();
       const baseUrl =
         brainSettings?.geminiBaseUrl || BRAIN_CONFIG.providers.gemini.baseUrl;
 
@@ -102,7 +106,7 @@ class GeminiProvider implements LLMProvider {
   ): AsyncGenerator<string> {
     try {
       const brainSettings = settingsService.get("brain");
-      const apiKey = getApiKey();
+      const apiKey = this.apiKey || getApiKey();
       const baseUrl =
         brainSettings?.geminiBaseUrl || BRAIN_CONFIG.providers.gemini.baseUrl;
 
@@ -169,7 +173,7 @@ class GeminiProvider implements LLMProvider {
     const systemMessage = messages.find((msg) => msg.role === "system");
 
     const brainSettings = settingsService.get("brain");
-    const apiKey = getApiKey();
+    const apiKey = this.apiKey || getApiKey();
     const baseUrl =
       brainSettings?.geminiBaseUrl || BRAIN_CONFIG.providers.gemini.baseUrl;
 
@@ -671,23 +675,29 @@ class OpenRouterProvider implements LLMProvider {
     this.apiKey = apiKey || process.env.VITE_OPENROUTER_API_KEY || "";
   }
 
-  async generate(prompt: string, options?: LLMGenerateOptions): Promise<string> {
+  async generate(
+    prompt: string,
+    options?: LLMGenerateOptions,
+  ): Promise<string> {
     if (!this.apiKey) throw new Error("OpenRouter API key not configured.");
-    
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://luca-os.com",
-        "X-Title": "Luca OS Sovereign"
+
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://luca-os.com",
+          "X-Title": "Luca OS Sovereign",
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: options?.temperature ?? 0.7,
+        }),
       },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [{ role: "user", content: prompt }],
-        temperature: options?.temperature ?? 0.7,
-      }),
-    });
+    );
 
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "";
@@ -705,21 +715,27 @@ class GroqProvider implements LLMProvider {
     this.apiKey = apiKey || process.env.VITE_GROQ_API_KEY || "";
   }
 
-  async generate(prompt: string, options?: LLMGenerateOptions): Promise<string> {
+  async generate(
+    prompt: string,
+    options?: LLMGenerateOptions,
+  ): Promise<string> {
     if (!this.apiKey) throw new Error("Groq API key not configured.");
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json"
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: options?.temperature ?? 0.7,
+        }),
       },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [{ role: "user", content: prompt }],
-        temperature: options?.temperature ?? 0.7,
-      }),
-    });
+    );
 
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "";
@@ -757,15 +773,71 @@ class LLMService {
       this.registerProvider(new OllamaProvider("llama3.1"));
     }
 
-    const openRouterKey = process.env.VITE_OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
+    const openRouterKey =
+      process.env.VITE_OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
     if (openRouterKey) {
-      this.registerProvider(new OpenRouterProvider("openrouter/auto", openRouterKey));
+      this.registerProvider(
+        new OpenRouterProvider("openrouter/auto", openRouterKey),
+      );
     }
 
     const groqKey = process.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY;
     if (groqKey) {
       this.registerProvider(new GroqProvider("llama3-70b-8192", groqKey));
     }
+  }
+
+  private async getProviderForRoute(
+    route: ModelRouteDecision,
+  ): Promise<LLMProvider> {
+    const settings = settingsService.getSettings();
+    const model = route.model;
+
+    if (route.readiness !== "ready") {
+      throw new Error(`[LLM_SERVICE] Route blocked: ${route.reason}`);
+    }
+
+    if (
+      (route.mode === "byok" || route.mode === "luca-prime") &&
+      !route.networkAllowed
+    ) {
+      throw new Error(
+        `[LLM_SERVICE] Route blocked: network calls are not allowed for ${route.mode}.`,
+      );
+    }
+
+    switch (route.provider) {
+      case "ollama":
+        return new OllamaProvider(model);
+      case "openai": {
+        const key = await getProviderApiKey("openai", settings);
+        return new OpenAIProvider(model, key);
+      }
+      case "anthropic": {
+        const key = await getProviderApiKey("anthropic", settings);
+        return new ClaudeProvider(model, key);
+      }
+      case "groq": {
+        const key = await getProviderApiKey("groq", settings);
+        return new GroqProvider(model, key);
+      }
+      case "openrouter": {
+        const key = await getProviderApiKey("openrouter", settings);
+        return new OpenRouterProvider(model || "openrouter/auto", key);
+      }
+      case "luca-prime":
+      case "gemini":
+      default: {
+        const key = await getProviderApiKey("gemini", settings, {
+          allowEnvironmentFallback: route.mode === "luca-prime",
+        });
+        return new GeminiProvider(model, key || getApiKey());
+      }
+    }
+  }
+
+  public async resolveRouteForDiagnostics(): Promise<ModelRouteDecision> {
+    return modelReadinessResolver.resolveRoute({ capability: "chat" });
   }
 
   registerProvider(provider: LLMProvider) {
@@ -781,11 +853,16 @@ class LLMService {
     // --- BODY AWARENESS CHECK ---
     // If we are asking for Ollama but the sentinel says her neural organs are restricted, fallback immediately.
     if (providerName === "ollama") {
-      const isOllamaOnline = environmentSentinel.getAwarenessPulse().includes("OLLAMA: OK");
+      const isOllamaOnline = environmentSentinel
+        .getAwarenessPulse()
+        .includes("OLLAMA: OK");
       if (!isOllamaOnline) {
-        console.warn("[LLM_SERVICE] Body Scan: Ollama is offline. Falling back to Cloud Synapse.");
+        console.warn(
+          "[LLM_SERVICE] Body Scan: Ollama is offline. Falling back to Cloud Synapse.",
+        );
         providerName = "openrouter"; // Prefer OpenRouter as the elite fallback
-        if (!this.providers.has(providerName)) providerName = this.defaultProvider;
+        if (!this.providers.has(providerName))
+          providerName = this.defaultProvider;
       }
     }
 
@@ -804,17 +881,26 @@ class LLMService {
     }
 
     // Apply preferred model if this is the preferred provider and no model was specified
-    if (!name && providerName === this.preferredProvider && this.preferredModel) {
+    if (
+      !name &&
+      providerName === this.preferredProvider &&
+      this.preferredModel
+    ) {
       provider.model = this.preferredModel;
     }
 
     return provider;
   }
 
-  setPreferredModel(modelId: string | null, providerName: string | null = "ollama") {
+  setPreferredModel(
+    modelId: string | null,
+    providerName: string | null = "ollama",
+  ) {
     this.preferredModel = modelId;
     this.preferredProvider = providerName;
-    console.log(`[LLM_SERVICE] Preferred model set to: ${modelId} via ${providerName}`);
+    console.log(
+      `[LLM_SERVICE] Preferred model set to: ${modelId} via ${providerName}`,
+    );
   }
 
   listProviders(): Array<{ name: string; model: string; available: boolean }> {
@@ -865,31 +951,36 @@ class LLMService {
     prompt: string,
     options?: LLMGenerateOptions,
   ): Promise<string> {
-    if (this.preferredModel && this.preferredProvider) {
-      try {
-        const provider = this.getProvider(this.preferredProvider);
-        // Temporarily set model for this provider if it's dynamic like Ollama
-        const originalModel = provider.model;
-        provider.model = this.preferredModel;
-        const result = await provider.generate(prompt, options);
-        provider.model = originalModel; // Restore
-        return result;
-      } catch (error) {
-        console.warn(`[LLM_SERVICE] Preferred model "${this.preferredModel}" failed, falling back to default.`, error);
-      }
-    }
-    return this.getProvider().generate(prompt, options);
+    const route =
+      options?.routeDecision ||
+      (await modelReadinessResolver.resolveRoute({
+        capability: "chat",
+        requestedModel: this.preferredModel || undefined,
+      }));
+    const provider = await this.getProviderForRoute(route);
+    console.info(
+      `[LLM_SERVICE] Route selected provider=${route.provider} model=${route.model} mode=${route.mode} readiness=${route.readiness}`,
+    );
+    return provider.generate(prompt, options);
   }
 
   async chat(
     messages: LLMMessage[],
     options?: LLMGenerateOptions,
   ): Promise<string> {
-    const provider = this.getProvider();
+    const route =
+      options?.routeDecision ||
+      (await modelReadinessResolver.resolveRoute({
+        capability: "chat",
+        requestedModel: this.preferredModel || undefined,
+      }));
+    const provider = await this.getProviderForRoute(route);
+    console.info(
+      `[LLM_SERVICE] Chat route selected provider=${route.provider} model=${route.model} mode=${route.mode} readiness=${route.readiness}`,
+    );
     if (provider.chat) {
       return provider.chat(messages, options);
     }
-    // Fallback if chat is not supported
     const prompt = messages.map((m) => `${m.role}: ${m.content}`).join("\n");
     return provider.generate(prompt, options);
   }

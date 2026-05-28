@@ -26,6 +26,13 @@ export interface LocalModel {
   policyReason?: string;
   runtime: "ollama" | "internal";
   ollamaTag?: string; // Central runtime tag for Ollama modules
+  catalogStatus?:
+    | "verified"
+    | "installable"
+    | "planned"
+    | "experimental"
+    | "unknown";
+  catalogWarning?: string;
   canary?: {
     passed: boolean;
     response: string;
@@ -36,12 +43,58 @@ export interface LocalModel {
 }
 
 // Model definitions
+const VERIFIED_OLLAMA_TAGS = new Set([
+  "llama3.2:1b",
+  "qwen2.5:7b",
+  "deepseek-r1:7b",
+  "mistral:7b",
+  "hermes3:8b",
+  "qwen2.5:1.5b",
+  "hermes3:3b",
+  "deepseek-r1:14b",
+]);
+
+const KNOWN_INTERNAL_MODEL_IDS = new Set([
+  "whisper-tiny",
+  "whisper-v3-turbo",
+  "piper-amy",
+  "kokoro-82m",
+  "nomic-embed-text",
+  "bge-large-en",
+]);
+
+function inferCatalogStatus(
+  def: Omit<LocalModel, "status" | "downloadProgress">,
+): NonNullable<LocalModel["catalogStatus"]> {
+  if (def.catalogStatus) return def.catalogStatus;
+  if (def.runtime === "ollama") {
+    if (def.ollamaTag && VERIFIED_OLLAMA_TAGS.has(def.ollamaTag))
+      return "verified";
+    return "planned";
+  }
+  if (KNOWN_INTERNAL_MODEL_IDS.has(def.id)) return "verified";
+  return "planned";
+}
+
+function catalogWarningFor(
+  status: NonNullable<LocalModel["catalogStatus"]>,
+  def: Omit<LocalModel, "status" | "downloadProgress">,
+): string | undefined {
+  if (status === "verified" || status === "installable") return undefined;
+  if (status === "planned")
+    return `${def.name} is in Luca's catalog but its runtime tag/artifact is not verified; it is treated as planned until detected locally.`;
+  if (status === "experimental")
+    return `${def.name} is experimental and should be treated as opt-in.`;
+  return `${def.name} has unknown distribution readiness.`;
+}
+
 const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   // ===== BRAIN MODELS (Chat & Reasoning) =====
   {
     id: "gemma-4b",
     name: "Gemma 4B (Agentic)",
-    description: "Google's 2026 breakthrough. Native tool-calling support in a compact 4B frame. (Sovereign Tools Ready).",
+    description:
+      "Google's 2026 breakthrough. Native tool-calling support in a compact 4B frame. (Sovereign Tools Ready).",
     size: 4_200_000_000,
     sizeFormatted: "4.2 GB",
     category: "brain",
@@ -54,11 +107,12 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "gemma-2b",
     name: "Gemma 2B",
-    description: "Google's lightweight brain for mobile. Optimized for low-latency offline conversations.",
+    description:
+      "Google's lightweight brain for mobile. Optimized for low-latency offline conversations.",
     size: 2_200_000_000,
     sizeFormatted: "2.1 GB",
     category: "brain",
-    platforms: ["mobile"], 
+    platforms: ["mobile"],
     performanceRank: 6,
     memoryRequirement: 4_000_000_000,
     runtime: "internal",
@@ -66,7 +120,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "phi-3-mini",
     name: "Phi-3 Mini 3.8B",
-    description: "Microsoft's reasoning specialist for mobile. High performance, zero-gate access.",
+    description:
+      "Microsoft's reasoning specialist for mobile. High performance, zero-gate access.",
     size: 2_300_000_000,
     sizeFormatted: "2.3 GB",
     category: "brain",
@@ -78,7 +133,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "llama-3.2-1b",
     name: "Llama 3.2 1B",
-    description: "Meta's efficient small model. Exceptional at native tool-calling and system automation tasks.",
+    description:
+      "Meta's efficient small model. Exceptional at native tool-calling and system automation tasks.",
     size: 1_000_000_000,
     sizeFormatted: "1.0 GB",
     category: "brain",
@@ -91,7 +147,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "smollm2-1.7b",
     name: "SmolLM2 1.7B",
-    description: "HuggingFace's ultra-lightweight mobile brain. Exceptional speed on constrained hardware.",
+    description:
+      "HuggingFace's ultra-lightweight mobile brain. Exceptional speed on constrained hardware.",
     size: 1_200_000_000,
     sizeFormatted: "1.2 GB",
     category: "brain",
@@ -103,7 +160,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "qwen-2.5-7b",
     name: "Qwen 2.5 7B",
-    description: "Alibaba's SOTA coding & reasoning model. Premier choice for complex multi-tool agentic workflows.",
+    description:
+      "Alibaba's SOTA coding & reasoning model. Premier choice for complex multi-tool agentic workflows.",
     size: 4_700_000_000,
     sizeFormatted: "4.7 GB",
     category: "brain",
@@ -116,7 +174,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "deepseek-r1-distill-7b",
     name: "DeepSeek R1 Distill 7B",
-    description: "DeepSeek's distilled reasoning model. Exceptional logic & math.",
+    description:
+      "DeepSeek's distilled reasoning model. Exceptional logic & math.",
     size: 4_900_000_000,
     sizeFormatted: "4.9 GB",
     category: "brain",
@@ -129,7 +188,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "gemma-4-e2b",
     name: "Gemma 4 E2B (Mobile Optimized)",
-    description: "Google's ultra-fast efficient model. Optimized for mobile and edge inference.",
+    description:
+      "Google's ultra-fast efficient model. Optimized for mobile and edge inference.",
     size: 1_200_000_000,
     sizeFormatted: "1.2 GB",
     category: "brain",
@@ -142,7 +202,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "gemma-4-31b",
     name: "Gemma 4 31B (Heavy Reasoning)",
-    description: "DeepMind's state-of-the-art reasoning model for agentic workflows.",
+    description:
+      "DeepMind's state-of-the-art reasoning model for agentic workflows.",
     size: 18_000_000_000,
     sizeFormatted: "18.0 GB",
     category: "brain",
@@ -168,7 +229,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "qwopus-3.5-27b",
     name: "Qwopus 3.5 27B (Opus Reasoning)",
-    description: "Qwen 3.5 enhanced with Claude 4.6 Opus reasoning trajectories.",
+    description:
+      "Qwen 3.5 enhanced with Claude 4.6 Opus reasoning trajectories.",
     size: 16_500_000_000,
     sizeFormatted: "16.5 GB",
     category: "brain",
@@ -181,7 +243,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "mistral-7b",
     name: "Mistral 7B v0.3",
-    description: "The classic open-weight standard for efficiency and performance. Versatile and reliable.",
+    description:
+      "The classic open-weight standard for efficiency and performance. Versatile and reliable.",
     size: 4_100_000_000,
     sizeFormatted: "4.1 GB",
     category: "brain",
@@ -194,7 +257,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "hermes-3-8b",
     name: "Hermes 3 (8B)",
-    description: "Nous Research fine-tune of Llama 3.1. Exceptional instruction following and sovereign persona alignment.",
+    description:
+      "Nous Research fine-tune of Llama 3.1. Exceptional instruction following and sovereign persona alignment.",
     size: 4_700_000_000,
     sizeFormatted: "4.7 GB",
     category: "brain",
@@ -207,7 +271,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "qwen-2.5-1.5b",
     name: "Qwen 2.5 1.5B (Edge Optimized)",
-    description: "Highly accurate even on lower-end hardware. Perfect for 8GB RAM systems and Intel Macs.",
+    description:
+      "Highly accurate even on lower-end hardware. Perfect for 8GB RAM systems and Intel Macs.",
     size: 1_600_000_000,
     sizeFormatted: "1.6 GB",
     category: "brain",
@@ -220,7 +285,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "hermes-3-3b",
     name: "Hermes 3 (3B)",
-    description: "The lightweight sovereign persona specialist. Based on Llama 3.2. Runs smoothly on 8GB RAM.",
+    description:
+      "The lightweight sovereign persona specialist. Based on Llama 3.2. Runs smoothly on 8GB RAM.",
     size: 2_200_000_000,
     sizeFormatted: "2.2 GB",
     category: "brain",
@@ -233,7 +299,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "glm-5-9b",
     name: "GLM-5 9B (Agentic Specialist)",
-    description: "Zhipu AI's 2026 breakthrough in long-horizon reasoning. Exceptional at complex tool-use and systems engineering.",
+    description:
+      "Zhipu AI's 2026 breakthrough in long-horizon reasoning. Exceptional at complex tool-use and systems engineering.",
     size: 5_800_000_000,
     sizeFormatted: "5.8 GB",
     category: "brain",
@@ -246,7 +313,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "qwen-3-32b",
     name: "Qwen 3 32B (Balanced Standard)",
-    description: "The 2026 gold standard for local inference. Superior coding and multilingual reasoning for pro rigs.",
+    description:
+      "The 2026 gold standard for local inference. Superior coding and multilingual reasoning for pro rigs.",
     size: 19_200_000_000,
     sizeFormatted: "19.2 GB",
     category: "brain",
@@ -259,7 +327,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "kimi-k2.5-12b",
     name: "Kimi K2.5 12B (Visual Designer)",
-    description: "Moonshot AI's specialist in visual-to-code generation and UI design agentic workflows.",
+    description:
+      "Moonshot AI's specialist in visual-to-code generation and UI design agentic workflows.",
     size: 7_900_000_000,
     sizeFormatted: "7.9 GB",
     category: "brain",
@@ -272,7 +341,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "deepseek-r1-distill-14b",
     name: "DeepSeek R1 Distill 14B",
-    description: "The logic powerhouse. Fine-tuned for mathematical certainty and zero-error reasoning trajectories.",
+    description:
+      "The logic powerhouse. Fine-tuned for mathematical certainty and zero-error reasoning trajectories.",
     size: 9_100_000_000,
     sizeFormatted: "9.1 GB",
     category: "brain",
@@ -287,7 +357,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "smolvlm-500m",
     name: "SmolVLM 500M",
-    description: "Ultra-fast vision model for background sensing and HDC semantic snapshots.",
+    description:
+      "Ultra-fast vision model for background sensing and HDC semantic snapshots.",
     size: 500_000_000,
     sizeFormatted: "500 MB",
     category: "vision",
@@ -299,7 +370,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "qwen2.5-vl-3b",
     name: "Qwen 2.5 VL 3B",
-    description: "State-of-the-art vision reasoning for agentic UI automation and complex RAG expansion.",
+    description:
+      "State-of-the-art vision reasoning for agentic UI automation and complex RAG expansion.",
     size: 3_200_000_000,
     sizeFormatted: "3.2 GB",
     category: "vision",
@@ -311,7 +383,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "moondream2",
     name: "Moondream2",
-    description: "High-fidelity semantic visual describer. Excellent for deep memory expansion.",
+    description:
+      "High-fidelity semantic visual describer. Excellent for deep memory expansion.",
     size: 1_600_000_000,
     sizeFormatted: "1.6 GB",
     category: "vision",
@@ -323,7 +396,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "ui-tars-2b",
     name: "UI-TARS 2B",
-    description: "Vision-language model specialized in intelligent UI navigation and clicking.",
+    description:
+      "Vision-language model specialized in intelligent UI navigation and clicking.",
     size: 2_000_000_000,
     sizeFormatted: "2.0 GB",
     category: "vision",
@@ -349,7 +423,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "kokoro-82m",
     name: "Kokoro 82M",
-    description: "Breakout 2026 model. Near-human local speech with ultra-lightweight footprint.",
+    description:
+      "Breakout 2026 model. Near-human local speech with ultra-lightweight footprint.",
     size: 82_000_000,
     sizeFormatted: "82 MB",
     category: "tts",
@@ -361,7 +436,8 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   {
     id: "qwen3-tts",
     name: "Qwen 3 TTS 0.6B",
-    description: "Alibaba's 2026 vocal powerhouse. Zero-shot voice cloning and streaming excellence.",
+    description:
+      "Alibaba's 2026 vocal powerhouse. Zero-shot voice cloning and streaming excellence.",
     size: 600_000_000,
     sizeFormatted: "600 MB",
     category: "tts",
@@ -460,14 +536,24 @@ const MODEL_DEFINITIONS: Omit<LocalModel, "status" | "downloadProgress">[] = [
   },
 ];
 
-export const LOCAL_BRAIN_MODEL_IDS = MODEL_DEFINITIONS.filter(m => m.category === "brain").map(m => m.id);
-export const LOCAL_VISION_MODEL_IDS = MODEL_DEFINITIONS.filter(m => m.category === "vision").map(m => m.id);
-export const LOCAL_TTS_MODEL_IDS = MODEL_DEFINITIONS.filter(m => m.category === "tts").map(m => m.id);
-export const LOCAL_STT_MODEL_IDS = MODEL_DEFINITIONS.filter(m => m.category === "stt").map(m => m.id);
-export const LOCAL_EMBEDDING_MODEL_IDS = MODEL_DEFINITIONS.filter(m => m.category === "embedding").map(m => m.id);
+export const LOCAL_BRAIN_MODEL_IDS = MODEL_DEFINITIONS.filter(
+  (m) => m.category === "brain",
+).map((m) => m.id);
+export const LOCAL_VISION_MODEL_IDS = MODEL_DEFINITIONS.filter(
+  (m) => m.category === "vision",
+).map((m) => m.id);
+export const LOCAL_TTS_MODEL_IDS = MODEL_DEFINITIONS.filter(
+  (m) => m.category === "tts",
+).map((m) => m.id);
+export const LOCAL_STT_MODEL_IDS = MODEL_DEFINITIONS.filter(
+  (m) => m.category === "stt",
+).map((m) => m.id);
+export const LOCAL_EMBEDDING_MODEL_IDS = MODEL_DEFINITIONS.filter(
+  (m) => m.category === "embedding",
+).map((m) => m.id);
 
 export function isLocalModelId(modelId: string): boolean {
-  return MODEL_DEFINITIONS.some(m => m.id === modelId);
+  return MODEL_DEFINITIONS.some((m) => m.id === modelId);
 }
 
 class ModelManagerService {
@@ -479,7 +565,13 @@ class ModelManagerService {
 
   constructor() {
     MODEL_DEFINITIONS.forEach((def) => {
-      this.models.set(def.id, { ...def, status: "not_downloaded" });
+      const catalogStatus = inferCatalogStatus(def);
+      this.models.set(def.id, {
+        ...def,
+        catalogStatus,
+        catalogWarning: catalogWarningFor(catalogStatus, def),
+        status: "not_downloaded",
+      });
     });
 
     if (typeof window !== "undefined") {
@@ -491,13 +583,23 @@ class ModelManagerService {
   }
 
   private async getCortexUrl(): Promise<string> {
-    if (!this._isConfigured && typeof window !== "undefined" && (window as any).electron) {
+    if (
+      !this._isConfigured &&
+      typeof window !== "undefined" &&
+      (window as any).electron
+    ) {
       try {
-        const config = await (window as any).electron.ipcRenderer.invoke("get-cortex-config");
-        if (config?.port) this._cortexBaseUrl = `http://127.0.0.1:${config.port}`;
+        const config = await (window as any).electron.ipcRenderer.invoke(
+          "get-cortex-config",
+        );
+        if (config?.port)
+          this._cortexBaseUrl = `http://127.0.0.1:${config.port}`;
         this._isConfigured = true;
       } catch (err) {
-        console.warn("[ModelManager] Failed to get Cortex config, using default", err);
+        console.warn(
+          "[ModelManager] Failed to get Cortex config, using default",
+          err,
+        );
       }
     }
     return this._cortexBaseUrl;
@@ -520,7 +622,9 @@ class ModelManagerService {
   async getSystemSpecs(): Promise<any> {
     if (this._systemSpecs) return this._systemSpecs;
     if (typeof window !== "undefined" && (window as any).electron) {
-      this._systemSpecs = await (window as any).electron.ipcRenderer.invoke("get-system-specs");
+      this._systemSpecs = await (window as any).electron.ipcRenderer.invoke(
+        "get-system-specs",
+      );
     }
     return this._systemSpecs;
   }
@@ -530,7 +634,7 @@ class ModelManagerService {
 
     try {
       // 1. Get Hardware Info
-      const specs = await this.getSystemSpecs() || {};
+      const specs = (await this.getSystemSpecs()) || {};
       const totalRAM = specs.memory?.total || 8_000_000_000;
       const isIntelMac = specs.isIntelMac;
 
@@ -541,7 +645,10 @@ class ModelManagerService {
         const resp = await fetch(url);
         if (resp.ok) cortexData = await resp.json();
       } catch (err) {
-        console.warn("[ModelManager] Cortex status fetch failed (offline?)", err);
+        console.warn(
+          "[ModelManager] Cortex status fetch failed (offline?)",
+          err,
+        );
       }
 
       let ollamaNames: string[] = [];
@@ -552,7 +659,10 @@ class ModelManagerService {
           ollamaNames = (data.models || []).map((m: any) => m.name);
         }
       } catch (err) {
-        console.warn("[ModelManager] Ollama status check failed (offline?)", err);
+        console.warn(
+          "[ModelManager] Ollama status check failed (offline?)",
+          err,
+        );
       }
 
       const OLLAMA_TAG_MAP: Record<string, string[]> = {
@@ -583,22 +693,48 @@ class ModelManagerService {
 
         // A. Runtime Check
         if (model.runtime === "ollama") {
-          const tags = OLLAMA_TAG_MAP[id] || [id];
-          const pulled = ollamaNames.some(n => tags.some(t => n.startsWith(t)));
+          const tags = OLLAMA_TAG_MAP[id] || [model.ollamaTag || id];
+          const pulled = ollamaNames.some((n) =>
+            tags.some((t) => n.startsWith(t)),
+          );
           model.status = pulled ? "ready" : "not_downloaded";
-          if (pulled) model.downloadProgress = 100;
+          if (pulled) {
+            model.downloadProgress = 100;
+          } else if (
+            model.catalogStatus === "planned" ||
+            model.catalogStatus === "experimental" ||
+            model.catalogStatus === "unknown"
+          ) {
+            model.unsupportedReason = model.catalogWarning;
+          }
         } else {
           const status = cortexData.models[id];
           model.status = status?.downloaded ? "ready" : "not_downloaded";
+          if (
+            !status?.downloaded &&
+            (model.catalogStatus === "planned" ||
+              model.catalogStatus === "experimental" ||
+              model.catalogStatus === "unknown")
+          ) {
+            model.unsupportedReason = model.catalogWarning;
+          }
         }
 
         // B. Hardware Gating (Universal)
-        if (model.memoryRequirement && totalRAM < model.memoryRequirement * 0.9) {
+        if (
+          model.memoryRequirement &&
+          totalRAM < model.memoryRequirement * 0.9
+        ) {
           model.status = "unsupported";
           model.unsupportedReason = `Requires ${Math.round(model.memoryRequirement / 1e9)}GB RAM`;
-        } else if (isIntelMac && model.category === "brain" && (model.performanceRank || 0) >= 8) {
+        } else if (
+          isIntelMac &&
+          model.category === "brain" &&
+          (model.performanceRank || 0) >= 8
+        ) {
           model.status = "unsupported";
-          model.unsupportedReason = "Intel Mac with Integrated Graphics is too slow for local inference of this model. Switch to Cloud Mode for optimal performance.";
+          model.unsupportedReason =
+            "Intel Mac with Integrated Graphics is too slow for local inference of this model. Switch to Cloud Mode for optimal performance.";
         }
 
         // C. VRAM Guard
@@ -626,7 +762,7 @@ class ModelManagerService {
           isIntelMac,
           isWindows: (window as any).luca?.isWindows || false,
           diskFreeGB: 50, // Placeholder
-          cpuLoad: 0
+          cpuLoad: 0,
         });
 
         model.policyRecommendation = rec.status;
@@ -646,13 +782,37 @@ class ModelManagerService {
 
   getVRAMGuardRecommendation(id: string) {
     const model = this.models.get(id);
-    if (!model || model.vramStatus === "safe") return { shouldWarn: false, message: "" };
-    return { shouldWarn: true, message: model.vramWarning || "High RAM usage detected." };
+    if (!model || model.vramStatus === "safe")
+      return { shouldWarn: false, message: "" };
+    return {
+      shouldWarn: true,
+      message: model.vramWarning || "High RAM usage detected.",
+    };
   }
 
-  async downloadModel(id: string, onProgress?: (step: string, p: number) => void): Promise<boolean> {
+  async downloadModel(
+    id: string,
+    onProgress?: (step: string, p: number) => void,
+  ): Promise<boolean> {
     const model = this.models.get(id);
     if (!model) return false;
+
+    if (
+      model.runtime === "ollama" &&
+      (model.catalogStatus === "planned" || model.catalogStatus === "unknown")
+    ) {
+      const message =
+        model.catalogWarning ||
+        `${model.name} is not verified as installable yet.`;
+      console.warn(
+        `[ModelManager] Refusing unverified Ollama tag download for ${id}: ${message}`,
+      );
+      model.status = "error";
+      model.unsupportedReason = message;
+      this.notifyListeners();
+      onProgress?.(message, 0);
+      return false;
+    }
 
     if (model.runtime === "ollama") {
       return await this.setupOllamaForModel(id, (step, p) => {
@@ -673,7 +833,7 @@ class ModelManagerService {
       // Backend expects GET /models/download/{id} and returns SSE stream
       const url = await this.getUrl(`/models/download/${id}`);
       const resp = await fetch(url, { method: "GET" });
-      
+
       if (resp.ok) {
         const reader = resp.body?.getReader();
         if (!reader) {
@@ -686,7 +846,9 @@ class ModelManagerService {
 
         while (true) {
           const { value, done } = await reader.read();
-          buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+          buffer += decoder.decode(value || new Uint8Array(), {
+            stream: !done,
+          });
 
           const events = buffer.split("\n\n");
           buffer = events.pop() || "";
@@ -701,7 +863,10 @@ class ModelManagerService {
 
             try {
               const payload = JSON.parse(dataLines.join("\n"));
-              const progress = typeof payload.progress === "number" ? payload.progress : model.downloadProgress || 0;
+              const progress =
+                typeof payload.progress === "number"
+                  ? payload.progress
+                  : model.downloadProgress || 0;
               const status = payload.status || "downloading";
 
               model.downloadProgress = progress;
@@ -720,7 +885,10 @@ class ModelManagerService {
                 sawComplete = true;
               }
             } catch (parseError) {
-              console.warn(`[ModelManager] Failed to parse download event for ${id}:`, parseError);
+              console.warn(
+                `[ModelManager] Failed to parse download event for ${id}:`,
+                parseError,
+              );
             }
           }
 
@@ -755,22 +923,22 @@ class ModelManagerService {
         const tag = this.getOllamaTagForModel(id);
         const resp = await fetch("http://127.0.0.1:11434/api/delete", {
           method: "DELETE",
-          body: JSON.stringify({ name: tag })
+          body: JSON.stringify({ name: tag }),
         });
         if (resp.ok) {
-           model.status = "not_downloaded";
-           model.downloadProgress = 0;
-           this.notifyListeners();
-           return true;
+          model.status = "not_downloaded";
+          model.downloadProgress = 0;
+          this.notifyListeners();
+          return true;
         }
       } else {
         const url = await this.getUrl(`/models/${id}`);
         const resp = await fetch(url, { method: "DELETE" });
         if (resp.ok) {
-            model.status = "not_downloaded";
-            model.downloadProgress = 0;
-            this.notifyListeners();
-            return true;
+          model.status = "not_downloaded";
+          model.downloadProgress = 0;
+          this.notifyListeners();
+          return true;
         }
       }
     } catch (e) {
@@ -779,10 +947,16 @@ class ModelManagerService {
     return false;
   }
 
-  async setupOllamaForModel(id: string, onStatus: (step: string, progress?: number) => void): Promise<boolean> {
-    if (typeof window === "undefined" || !(window as any).electron) return false;
+  async setupOllamaForModel(
+    id: string,
+    onStatus: (step: string, progress?: number) => void,
+  ): Promise<boolean> {
+    if (typeof window === "undefined" || !(window as any).electron)
+      return false;
     try {
-      const isRunning = await (window as any).electron.ipcRenderer.invoke("is-ollama-running");
+      const isRunning = await (window as any).electron.ipcRenderer.invoke(
+        "is-ollama-running",
+      );
       if (!isRunning) {
         onStatus("Booting Intelligence Daemon...", 0);
         const started = await this.ensureOllamaRunning();
@@ -791,25 +965,28 @@ class ModelManagerService {
           return false;
         }
         // Brief wait for daemon to stabilize
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, 2000));
       }
 
       const tag = this.getOllamaTagForModel(id);
-      
+
       const ipc = (window as any).electron.ipcRenderer;
       const statusHandler = (_: any, data: any) => {
         if (data && data.step) {
           onStatus(data.step, data.progress);
         }
       };
-      
+
       ipc.on("ollama-setup-status", statusHandler);
 
-      const success = await (window as any).electron.ipcRenderer.invoke("setup-ollama-for-model", { modelId: id, tag });
-      
+      const success = await (window as any).electron.ipcRenderer.invoke(
+        "setup-ollama-for-model",
+        { modelId: id, tag },
+      );
+
       // Cleanup listener properly
       ipc.removeListener("ollama-setup-status", statusHandler);
-      
+
       return success;
     } catch (err) {
       console.error("[Ollama Setup] Failed:", err);
@@ -831,8 +1008,11 @@ class ModelManagerService {
   }
 
   async isOllamaInstalled(): Promise<boolean> {
-    if (typeof window === "undefined" || !(window as any).electron) return false;
-    return await (window as any).electron.ipcRenderer.invoke("is-ollama-installed");
+    if (typeof window === "undefined" || !(window as any).electron)
+      return false;
+    return await (window as any).electron.ipcRenderer.invoke(
+      "is-ollama-installed",
+    );
   }
 
   /**
@@ -865,12 +1045,14 @@ class ModelManagerService {
   }
 
   async startOllama(): Promise<boolean> {
-    if (typeof window === "undefined" || !(window as any).electron) return false;
+    if (typeof window === "undefined" || !(window as any).electron)
+      return false;
     return await (window as any).electron.ipcRenderer.invoke("start-ollama");
   }
 
   async installOllama(): Promise<{ success: boolean; message?: string }> {
-    if (typeof window === "undefined" || !(window as any).electron) return { success: false, message: "Electron required" };
+    if (typeof window === "undefined" || !(window as any).electron)
+      return { success: false, message: "Electron required" };
     return await (window as any).electron.ipcRenderer.invoke("install-ollama");
   }
 
@@ -883,13 +1065,24 @@ class ModelManagerService {
   }
 
   getModelsByCategory(category: LocalModel["category"]): LocalModel[] {
-    return Array.from(this.models.values()).filter(m => m.category === category);
+    return Array.from(this.models.values()).filter(
+      (m) => m.category === category,
+    );
   }
 
-  async getOptimalModel(category: LocalModel["category"], strategy: "performance" | "efficiency" | "accuracy" | "balanced" = "balanced"): Promise<LocalModel | null> {
-    const available = Array.from(this.models.values()).filter(m => m.category === category && m.status === "ready");
+  async getOptimalModel(
+    category: LocalModel["category"],
+    strategy:
+      | "performance"
+      | "efficiency"
+      | "accuracy"
+      | "balanced" = "balanced",
+  ): Promise<LocalModel | null> {
+    const available = Array.from(this.models.values()).filter(
+      (m) => m.category === category && m.status === "ready",
+    );
     if (available.length === 0) return null;
-    
+
     if (strategy === "performance" || strategy === "accuracy") {
       return available.sort((a, b) => (b.size || 0) - (a.size || 0))[0];
     }
@@ -909,13 +1102,14 @@ class ModelManagerService {
           body: JSON.stringify({
             model: tag,
             messages: [{ role: "user", content: "Say 'Luca Test Passed'" }],
-            stream: false
-          })
+            stream: false,
+          }),
         });
         const data = await resp.json();
-        
+
         // Handle specific Ollama error cases
-        let displayResponse = data.message?.content || data.response || "No response";
+        let displayResponse =
+          data.message?.content || data.response || "No response";
         if (resp.status === 404) displayResponse = "Model not found in Ollama";
         else if (data.error) displayResponse = data.error;
 
@@ -923,7 +1117,7 @@ class ModelManagerService {
           passed: resp.ok && !data.error && displayResponse !== "No response",
           response: displayResponse,
           latency_ms: Date.now() - start,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
         this.notifyListeners();
         return resp.ok && !data.error;
@@ -932,65 +1126,78 @@ class ModelManagerService {
       const url = await this.getUrl(`/models/${id}/canary`);
       const resp = await fetch(url, { method: "POST" });
       const data = await resp.json();
-      
+
       model.canary = {
         passed: data.passed,
         response: data.response,
         latency_ms: data.latency_ms,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
+
       this.notifyListeners();
       return data.passed;
     } catch (e) {
       console.error("[Service] Canary failed:", e);
-      model.canary = { 
-        passed: false, 
-        response: "Connection Failed", 
+      model.canary = {
+        passed: false,
+        response: "Connection Failed",
         latency_ms: 0,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       this.notifyListeners();
       return false;
     }
   }
 
-  async activateModel(id: string | null, category: LocalModel["category"]): Promise<boolean> {
+  async activateModel(
+    id: string | null,
+    category: LocalModel["category"],
+  ): Promise<boolean> {
     if (category === "brain") {
       const current = settingsService.getSettings();
       if (id) {
-          const model = this.models.get(id);
-          const modelString = model?.runtime === "ollama" ? this.getOllamaTagForModel(id) : `local/${id}`;
-          settingsService.saveSettings({
-              ...current,
-              brain: { ...current.brain, useCustomApiKey: false, model: modelString },
-              general: { ...current.general, activeBrainId: id }
-          });
+        const model = this.models.get(id);
+        const modelString =
+          model?.runtime === "ollama"
+            ? this.getOllamaTagForModel(id)
+            : `local/${id}`;
+        settingsService.saveSettings({
+          ...current,
+          brain: {
+            ...current.brain,
+            useCustomApiKey: false,
+            model: modelString,
+          },
+          general: { ...current.general, activeBrainId: id },
+        });
       } else {
-          // Fallback to Cloud or default
-          settingsService.saveSettings({
-              ...current,
-              brain: { ...current.brain, model: "gemini-3-flash-preview" },
-              general: { ...current.general, activeBrainId: null }
-          });
+        // Fallback to Cloud or default
+        settingsService.saveSettings({
+          ...current,
+          brain: { ...current.brain, model: "gemini-3-flash-preview" },
+          general: { ...current.general, activeBrainId: null },
+        });
       }
     } else if (category === "embedding") {
-        const current = settingsService.getSettings();
-        if (id) {
-            settingsService.saveSettings({
-                ...current,
-                brain: { ...current.brain, embeddingModel: id },
-                general: { ...current.general, activeEmbedId: id }
-            });
-        }
+      const current = settingsService.getSettings();
+      if (id) {
+        settingsService.saveSettings({
+          ...current,
+          brain: { ...current.brain, embeddingModel: id },
+          general: { ...current.general, activeEmbedId: id },
+        });
+      }
     }
 
     // Push to Cortex immediately if available
     try {
-        const url = await this.getUrl("/config/sync");
-        await fetch(url, { method: "POST" });
+      const url = await this.getUrl("/config/sync");
+      await fetch(url, { method: "POST" });
     } catch (e) {
-        console.warn("[ModelManager] Failed to sync config to Cortex directly:", e);
+      console.warn(
+        "[ModelManager] Failed to sync config to Cortex directly:",
+        e,
+      );
     }
 
     return true;
@@ -1031,7 +1238,7 @@ class ModelManagerService {
 
   private notifyListeners() {
     const models = Array.from(this.models.values());
-    this.listeners.forEach(cb => cb(models));
+    this.listeners.forEach((cb) => cb(models));
   }
 }
 

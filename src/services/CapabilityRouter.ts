@@ -14,8 +14,8 @@ import { GeminiTtsProvider } from "./voice/providers/GeminiTtsProvider";
 import { GeminiSttProvider } from "./voice/providers/GeminiSttProvider";
 import { GoogleTtsProvider } from "./voice/providers/GoogleTtsProvider";
 import { LucaLocalSttProvider } from "./voice/providers/LucaLocalSttProvider";
-import { DEEPGRAM_API_KEY, cortexUrl } from "../config/api";
-import { LOCAL_STT_MODEL_IDS, LOCAL_TTS_MODEL_IDS } from "./ModelManagerService";
+import { modelReadinessResolver } from "./models/ModelReadinessResolver";
+import type { ModelRouteDecision } from "../types/modelRouting";
 
 /**
  * CapabilityRouter: The intelligent routing layer for Luca OS.
@@ -37,41 +37,31 @@ class CapabilityRouter {
    * Priority: Deepgram (WS) > OpenAI (Whisper) > Groq (Whisper) > Local (Cortex)
    */
   public async getSttProvider(): Promise<IStreamingSttProvider> {
-    const settings = settingsService.getSettings();
-    const { voice } = settings;
+    const route = await modelReadinessResolver.resolveRoute({
+      capability: "stt",
+    });
+    this.logVoiceRoute("STT", route);
 
-    // 1. LOCAL CHECK: If explicitly chosen a local model
-    if (LOCAL_STT_MODEL_IDS.includes(voice.sttModel) || settingsService.isModelLocal(voice.sttModel)) {
-      const healthy = await this.checkLocalHealth();
-      if (healthy) return new LucaLocalSttProvider();
-    }
-
-    // 2. SMART HIERARCHY - GEMINI NATIVE
-    if (
-      voice.sttModel === "cloud-gemini" ||
-      voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" ||
-      voice.sttModel.toLowerCase().includes("gemini")
-    ) {
-      return new GeminiSttProvider(voice.sttModel);
-    }
-
-    // 3. USER CHOICE - CLOUD PROVIDERS
-    if (voice.sttModel === "whisper-1" && settingsService.hasValidCloudKeys("openai")) {
-      return new OpenAiSttProvider();
-    }
-    if (voice.sttModel === "deepgram-nova-2" && (localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY)) {
-      return new DeepgramSttProvider();
+    if (route.readiness === "ready") {
+      if (route.provider === "cortex" || route.provider === "local") {
+        return new LucaLocalSttProvider();
+      }
+      if (route.provider === "gemini" || route.provider === "luca-prime") {
+        return new GeminiSttProvider(route.model);
+      }
+      if (route.provider === "openai") {
+        return new OpenAiSttProvider();
+      }
+      if (route.provider === "deepgram") {
+        return new DeepgramSttProvider();
+      }
     }
 
-    // 4. FALLBACKS
-    if (localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY) {
-      return new DeepgramSttProvider();
-    }
-    if (settingsService.hasValidCloudKeys("openai")) {
-      return new OpenAiSttProvider();
-    }
-
-    return new LucaLocalSttProvider(); 
+    // Safe fallback: local-only routes never jump to cloud here. Cloud/BYOK routes may
+    // fall back to the local adapter, which preserves existing voice pipeline behavior
+    // without making an unapproved network call.
+    console.warn(`[CapabilityRouter] STT route not ready: ${route.reason}`);
+    return new LucaLocalSttProvider();
   }
 
   /**
@@ -87,56 +77,40 @@ class CapabilityRouter {
    * Smart Hierarchy: Choice -> User Cloud -> Luca Prime
    */
   public async getTtsProvider(): Promise<ITtsProvider> {
-    const settings = settingsService.getSettings();
-    const { brain, voice } = settings;
+    const route = await modelReadinessResolver.resolveRoute({
+      capability: "tts",
+    });
+    this.logVoiceRoute("TTS", route);
 
-    // 1. EXPLICIT LOCAL CHOICE
-    if (voice.provider === "local-luca" || LOCAL_TTS_MODEL_IDS.includes(voice.voiceId)) {
-      const healthy = await this.checkLocalHealth();
-      if (healthy) return new CortexTtsProvider();
-    }
-
-    // 2. MULTIMODAL LOOP ENFORCEMENT (Unified Tunnel Path)
-    // We only force the Gemini Loop if the user has specifically chosen a 'Live' or 'Loop' model.
-    // Choice 1 (Gemini 2.0 Flash Native Audio) is NOT locked, allowing modular TTS.
-    if (
-      (voice.sttModel.toLowerCase().includes("live") || 
-       voice.sttModel.toLowerCase().includes("loop")) &&
-      (voice.provider === "gemini-genai" || !voice.provider)
-    ) {
-      const ttsModel =
-        voice.sttModel.includes("native-audio") ||
-        voice.sttModel.includes("live")
-          ? voice.sttModel
-          : brain.voiceModel || brain.model;
-      return new GeminiTtsProvider(ttsModel);
+    if (route.readiness === "ready") {
+      if (route.provider === "cortex" || route.provider === "local") {
+        return new CortexTtsProvider();
+      }
+      if (route.provider === "openai") {
+        return new OpenAiTtsProvider();
+      }
+      if (route.provider === "deepgram") {
+        return new DeepgramTtsProvider();
+      }
+      if (route.provider === "google") {
+        return new GoogleTtsProvider();
+      }
+      if (route.provider === "gemini" || route.provider === "luca-prime") {
+        return new GeminiTtsProvider(route.model);
+      }
     }
 
-    // 3. USER CHOICE (Modular Plugin Path)
-    if (
-      voice.provider === "openai" &&
-      settingsService.hasValidCloudKeys("openai")
-    ) {
-      return new OpenAiTtsProvider();
-    }
-    if (
-      voice.provider === "deepgram" &&
-      (localStorage.getItem("DEEPGRAM_API_KEY") || DEEPGRAM_API_KEY)
-    ) {
-      return new DeepgramTtsProvider();
-    }
-    if (voice.provider === "google") {
-      return new GoogleTtsProvider();
-    }
-
-    // 4. LUCA PRIME (Enterprise Cloud / Gemini default)
-    // Final check for Gemini's own engine as a base standard.
-    if (brain.geminiApiKey) {
-      return new GeminiTtsProvider(brain.voiceModel || brain.model);
-    }
-
-    // Final Sovereign Last Resort
+    console.warn(`[CapabilityRouter] TTS route not ready: ${route.reason}`);
     return new CortexTtsProvider();
+  }
+
+  private logVoiceRoute(label: "STT" | "TTS", route: ModelRouteDecision): void {
+    console.info(
+      `[CapabilityRouter] ${label} route provider=${route.provider} model=${route.model} mode=${route.mode} readiness=${route.readiness} network=${route.networkAllowed}`,
+    );
+    for (const warning of route.warnings) {
+      console.warn(`[CapabilityRouter] ${label} warning: ${warning}`);
+    }
   }
 
   private lastHealthCheck: boolean | null = null;
@@ -147,12 +121,15 @@ class CapabilityRouter {
    */
   private async checkLocalHealth(): Promise<boolean> {
     const now = Date.now();
-    if (this.lastHealthCheck !== null && now - this.lastHealthCheckTime < 5000) {
+    if (
+      this.lastHealthCheck !== null &&
+      now - this.lastHealthCheckTime < 5000
+    ) {
       return this.lastHealthCheck;
     }
 
     try {
-      const resp = await fetch(cortexUrl("/health"), {
+      const resp = await fetch("http://127.0.0.1:8765/health", {
         signal: AbortSignal.timeout(5000), // Increased to 5s for Intel Mac stability
       });
       this.lastHealthCheck = resp.ok;

@@ -1,3 +1,48 @@
+export interface TranscriptResult {
+  text: string;
+  isFinal: boolean;
+  confidence?: number;
+}
+
+export interface IStreamingSttProvider {
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  sendAudio(frame: Float32Array): void;
+  onTranscript(callback: (result: TranscriptResult) => void): void;
+  onError(callback: (error: Error) => void): void;
+  transcribeBuffer?(): Promise<void>;
+}
+
+export interface ChatChunk {
+  text: string;
+  isFinal?: boolean;
+  done?: boolean;
+}
+
+export interface IReasoningProvider {
+  chatStream(
+    text: string,
+    options?: {
+      systemInstruction?: string;
+      abortSignal?: AbortSignal;
+      useVision?: boolean;
+      model?: string;
+      provider?: string;
+    },
+  ): AsyncGenerator<ChatChunk>;
+}
+
+export interface ITtsProvider {
+  synthesize(
+    text: string,
+    options?: { abortSignal?: AbortSignal; voiceId?: string },
+  ): Promise<ArrayBuffer>;
+  synthesizeStream?(
+    text: string,
+    options?: { abortSignal?: AbortSignal; voiceId?: string },
+  ): AsyncIterable<ArrayBuffer>;
+}
+
 export type LucaVoiceMode = "text" | "voice";
 
 export type LucaVoiceRuntimeStatus =
@@ -18,7 +63,6 @@ export type LucaVoiceProviderAdapterKind =
   | "luca_prime_cloud_adapter"
   | "byok_adapter";
 
-
 export interface LucaVoiceRealProviderFeatureFlags {
   enableRealLocalVoiceProvider?: boolean;
   enableRealLucaPrimeVoiceProvider?: boolean;
@@ -30,7 +74,10 @@ export interface LucaVoiceRealProviderFeatureFlags {
   enableLocalModelLoading?: boolean;
 }
 
-export type LucaVoiceProviderReadinessStatus = "blocked" | "scaffold_only" | "ready";
+export type LucaVoiceProviderReadinessStatus =
+  | "blocked"
+  | "scaffold_only"
+  | "ready";
 
 export interface LucaVoiceProviderReadinessGate {
   gate: string;
@@ -250,7 +297,9 @@ export interface LucaVoiceProviderTransportResult {
 
 export interface LucaVoiceProviderTransport {
   kind: LucaVoiceProviderTransportKind;
-  send(request: LucaVoiceProviderTransportRequest): Promise<LucaVoiceProviderTransportResult>;
+  send(
+    request: LucaVoiceProviderTransportRequest,
+  ): Promise<LucaVoiceProviderTransportResult>;
   getSnapshot?(): Record<string, unknown>;
 }
 
@@ -337,8 +386,10 @@ export interface LucaVoiceOnboardingBridgeResult {
   metadata: LucaVoiceOnboardingState["metadata"];
 }
 
-
-export type LucaVoiceComputerUseConfirmationIntent = "approve" | "reject" | "unknown";
+export type LucaVoiceComputerUseConfirmationIntent =
+  | "approve"
+  | "reject"
+  | "unknown";
 
 export interface LucaVoiceComputerUseConfirmationInput {
   transcript: string;
