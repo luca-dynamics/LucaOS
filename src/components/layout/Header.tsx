@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon";
 // Holographic icon removed in favor of static branding
 import AmbientVisionIndicator from "../AmbientVisionIndicator";
 import AlwaysOnControls from "../AlwaysOnControls";
+import RuntimeStatusChip from "../runtime/RuntimeStatusChip";
 import { awarenessService } from "../../services/awarenessService";
 import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
@@ -192,6 +193,8 @@ const Header: React.FC<HeaderProps> = ({
               </span>
               <span className="w-1 h-1 rounded-full bg-current animate-pulse"></span>
             </button>
+
+            {!isMobile && <RuntimeStatusChip compact />}
 
             {/* SETTINGS BUTTON */}
             <button

@@ -1,6 +1,7 @@
 import React from "react";
 import { Icon } from "../ui/Icon";
 import { ModelManager } from "../ModelManager";
+import RuntimeDiagnosticsPanel from "../runtime/RuntimeDiagnosticsPanel";
 
 interface SettingsModelManagerTabProps {
   theme: {
@@ -26,6 +27,8 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
           Response Dynamic Controls
         </h5>
       </div>
+
+      <RuntimeDiagnosticsPanel title="Runtime Status" />
 
       <ModelManager theme={theme} isMobile={isMobile} />
 

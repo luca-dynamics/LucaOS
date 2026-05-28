@@ -2,6 +2,7 @@ import React from "react";
 import { Icon } from "../ui/Icon";
 import SystemMonitor from "../SystemMonitor";
 import SmartDeviceCard from "../SmartDeviceCard";
+import RuntimeDiagnosticsPanel from "../runtime/RuntimeDiagnosticsPanel";
 import { soundService } from "../../services/soundService";
 import { apiUrl } from "../../config/api";
 
@@ -125,6 +126,28 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
 
       {/* Devices & Ops Grid */}
       <div className="flex-1 p-4 overflow-y-auto space-y-6 no-scrollbar">
+        {!isMobile && (
+          <RuntimeDiagnosticsPanel
+            title="Runtime Status"
+            onAction={(actionId) => {
+              if (
+                [
+                  "open_model_manager",
+                  "add_byok_key",
+                  "switch_to_luca_prime",
+                  "start_ollama",
+                  "install_ollama",
+                ].includes(actionId)
+              ) {
+                window.dispatchEvent(
+                  new CustomEvent("luca:open-settings", {
+                    detail: { tab: "model-manager" },
+                  }),
+                );
+              }
+            }}
+          />
+        )}
         {/* Agent Operations */}
         <div
           className="p-5 rounded-lg relative overflow-hidden group tech-border glass-blur bg-black/20 shadow-xl animate-in slide-in-from-left duration-700"
