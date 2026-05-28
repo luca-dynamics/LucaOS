@@ -229,3 +229,11 @@ LucaOS already has meaningful building blocks for memory, skills/tools, traces, 
   - Trace events are consumed via `tracingService.getTrace()` / `getAllTraces()` and localStorage export for inspection.
   - Mission tapes are consumed via `MissionTapeRecorderService.getTape()` / `listTapes()` and mission-engine recorder hook.
 - Next safe step (future PR): opt-in ingestion path that writes mapped trace/tape memory items into canonical memory store interfaces behind feature flags.
+
+## Skill manifest/lifecycle contract update (2026-05-28)
+- Added canonical skill manifest contracts under `src/services/skills/SkillManifest.ts` covering identity, lifecycle, tier access, safety, eval, promotion, rollback, and governance metadata.
+- Added pure legacy mapping helpers under `src/services/skills/SkillManifestMapping.ts` to bridge current toolRegistry-style entries without executing or registering tools.
+- Added lifecycle gate policy helper under `src/services/skills/SkillLifecycleGate.ts` with Origin/Tactical/Normal guardrails and promotion/evolution/rollback restrictions.
+- Added non-invasive adapter shell `src/services/skills/SkillManifestAdapter.ts` and exports at `src/services/skills/index.ts`.
+- Added tests validating mapping, metadata preservation, tier/risk gates, and adapter safety metadata.
+- Runtime behavior remains unchanged; autonomous self-modification remains disabled.
