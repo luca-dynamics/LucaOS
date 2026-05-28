@@ -50,3 +50,19 @@ LucaOS now defines explicit external artifact envelope contracts and validation 
 - explicit no-auto-promote/no-runtime-auto-apply snapshot flags.
 
 This extension remains adapter/contract-only and does not execute optimizers in LucaOS core.
+
+## 2026-05 Origin Proposal Inbox Adapter Extension
+
+Added an in-memory `EvolutionProposalInbox` adapter layer for proposal intake + governance-safe review decisions.
+
+- Actions supported: submit, review, reject, archive.
+- All actions are checked through `EvolutionGovernanceGate`.
+- External lab candidates require Origin review.
+- Tactical may submit low-risk requests but inbox intentionally has no approve/promote API.
+- No persistence, no runtime mutation, no execution, and no `evolutionService` mutate/commit calls.
+- Snapshot metadata guarantees:
+  - `adapterOnly: true`
+  - `runtimeBehaviorChanged: false`
+  - `persistenceEnabled: false`
+  - `autonomousSelfModificationEnabled: false`
+  - `existingEvolutionServiceCalled: false`
