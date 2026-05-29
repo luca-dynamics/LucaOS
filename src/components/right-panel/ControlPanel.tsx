@@ -12,6 +12,7 @@ import { intentRoutingService } from "../../services/runtime/IntentRoutingServic
 import { intentRoutingModeService } from "../../services/runtime/IntentRoutingModeService";
 import { skillRegistryService } from "../../services/skills/SkillRegistryService";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
+import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -65,6 +66,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const reminders = reminderDeliveryService.getDiagnosticsSummary();
   const skillRegistry = skillRegistryService.getDiagnosticsSummary();
   const skillGovernance = skillGovernanceService.getDiagnosticsSummary();
+  const gateway = browserDesktopGatewayService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -115,6 +117,24 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Memory</span>
             <div>{diagnostics?.memory.label ?? "Memory route loading"} · {diagnostics?.memory.readiness ?? "unknown"}</div>
           </div>
+        </div>
+      </RightPanelSection>
+
+      <RightPanelSection title="Gateway research" subtitle="Browser/Desktop/Device policy only. No control is enabled.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Gateway requests" value={formatCount("request", gateway.totalRequests)} />
+          <RightPanelMetric label="Dry-run only" value={formatCount("request", gateway.dryRunRequests)} />
+          <RightPanelMetric label="Blocked" value={formatCount("request", gateway.blockedRequests)} />
+          <RightPanelMetric label="High / critical" value={formatCount("request", gateway.highRiskRequests + gateway.criticalRiskRequests)} />
+        </div>
+        <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-red-200">Gateway research only</span>
+            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Execution off</span>
+          </div>
+          <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+            No browser, desktop, device, app, file, network, wallet, or MCP control is enabled. Records are blocked or dry-run-only policy research.
+          </p>
         </div>
       </RightPanelSection>
 

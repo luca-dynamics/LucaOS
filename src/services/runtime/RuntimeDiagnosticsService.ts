@@ -41,8 +41,10 @@ import { governedMemoryWriteService } from "../memory/GovernedMemoryWriteService
 import { agentPlanningCheckpointService } from "./AgentPlanningCheckpointService";
 import { runtimePlanService } from "./RuntimePlanService";
 import { intentRoutingService } from "./IntentRoutingService";
+import { browserDesktopGatewayService } from "./BrowserDesktopGatewayService";
 import type { RuntimePlanDiagnosticsSummary } from "../../types/runtimePlan";
 import type { IntentRoutingDiagnosticsSummary } from "../../types/intentRouting";
+import type { GatewayDiagnosticsSummary } from "../../types/browserDesktopGateway";
 import type { RuntimeContinuitySummary } from "../../types/runtimeContinuity";
 import type { SchedulerDiagnosticsSummary } from "../../types/scheduler";
 import type { ProvenanceDiagnosticsSummary } from "../../types/provenance";
@@ -165,6 +167,7 @@ export interface RuntimeGovernanceDiagnostics {
   memoryProposals: MemoryProposalDiagnosticsSummary;
   memoryWrites: MemoryWriteDiagnosticsSummary;
   skillGovernance: SkillGovernanceDiagnosticsSummary;
+  gateway: GatewayDiagnosticsSummary;
   planningCheckpoints: AgentPlanningCheckpointDiagnosticsSummary;
   runtimePlans: RuntimePlanDiagnosticsSummary;
   intentRouting: IntentRoutingDiagnosticsSummary;
@@ -534,6 +537,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   memoryProposals?: MemoryProposalDiagnosticsSummary;
   memoryWrites?: MemoryWriteDiagnosticsSummary;
   skillGovernance?: SkillGovernanceDiagnosticsSummary;
+  gateway?: GatewayDiagnosticsSummary;
   planningCheckpoints?: AgentPlanningCheckpointDiagnosticsSummary;
   runtimePlans?: RuntimePlanDiagnosticsSummary;
   intentRouting?: IntentRoutingDiagnosticsSummary;
@@ -547,6 +551,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   const memoryProposals = input.memoryProposals ?? { totalProposals: 0, proposedProposals: 0, approvalRequiredProposals: 0, approvedWaitingWriteProposals: 0, writtenProposals: 0, rejectedProposals: 0, blockedProposals: 0, revokedProposals: 0, expiredProposals: 0 };
   const memoryWrites = input.memoryWrites ?? { totalWrites: 0, succeededWrites: 0, blockedWrites: 0, failedWrites: 0 };
   const skillGovernance = input.skillGovernance ?? { totalRequests: 0, proposedRequests: 0, approvalRequiredRequests: 0, approvedWaitingRequests: 0, rejectedRequests: 0, blockedRequests: 0, revokedRequests: 0, expiredRequests: 0, canAutoExecute: false as const };
+  const gateway = input.gateway ?? { totalRequests: 0, dryRunRequests: 0, blockedRequests: 0, waitingUserRequests: 0, highRiskRequests: 0, criticalRiskRequests: 0, executionEnabled: false as const, dryRunOnly: true as const };
   const planningCheckpoints = input.planningCheckpoints ?? { totalCheckpoints: 0, proposedCheckpoints: 0, approvedCheckpoints: 0, rejectedCheckpoints: 0, blockedCheckpoints: 0, completedCheckpoints: 0, archivedCheckpoints: 0, canAutoExecute: false as const };
   const runtimePlans = input.runtimePlans ?? { totalPlans: 0, activePlans: 0, proposedPlans: 0, waitingPlans: 0, blockedPlans: 0, completedPlans: 0, totalPlanSteps: 0, blockedRiskySteps: 0, pendingPlanApprovals: 0, planArtifactsCreated: 0, orchestrationEnabled: true as const, riskyExecutionEnabled: false as const };
   const intentRouting: IntentRoutingDiagnosticsSummary = input.intentRouting ?? { currentRoutingMode: "auto", totalRoutingDecisions: 0, fastResponses: 0, plannedRoutes: 0, memoryProposalRoutes: 0, governedRequestRoutes: 0, skillRequestRoutes: 0, blockedRoutes: 0, askUserRoutes: 0, lastRouteAt: null, routingEnabled: true as const, autoExecutionEnabled: false as const, riskyExecutionEnabled: false as const };
@@ -556,7 +561,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   const pendingSkillRequests = skillGovernance.proposedRequests + skillGovernance.approvalRequiredRequests;
   const approvedSkillRequestsWaiting = skillGovernance.approvedWaitingRequests;
   const pendingPlanningCheckpoints = planningCheckpoints.proposedCheckpoints;
-  const blockedGovernanceItems = memoryProposals.blockedProposals + memoryWrites.blockedWrites + skillGovernance.blockedRequests + planningCheckpoints.blockedCheckpoints;
+  const blockedGovernanceItems = memoryProposals.blockedProposals + memoryWrites.blockedWrites + skillGovernance.blockedRequests + gateway.blockedRequests + planningCheckpoints.blockedCheckpoints;
   const pendingApprovals =
     input.runtimeContinuity.pendingApprovalCount +
     input.scheduler.pendingApprovals +
@@ -592,6 +597,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
     memoryProposals,
     memoryWrites,
     skillGovernance,
+    gateway,
     planningCheckpoints,
     runtimePlans,
     intentRouting,
@@ -793,6 +799,7 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
     memoryProposals: memoryProposalService.getDiagnosticsSummary(),
     memoryWrites: governedMemoryWriteService.getDiagnosticsSummary(),
     skillGovernance: skillGovernanceService.getDiagnosticsSummary(),
+    gateway: browserDesktopGatewayService.getDiagnosticsSummary(),
     planningCheckpoints: agentPlanningCheckpointService.getDiagnosticsSummary(),
     runtimePlans: runtimePlanService.getDiagnosticsSummary(),
     intentRouting: intentRoutingService.getDiagnosticsSummary(),

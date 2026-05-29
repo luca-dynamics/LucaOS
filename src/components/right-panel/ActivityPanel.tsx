@@ -7,6 +7,7 @@ import { governedToolExecutionService } from "../../services/runtime/GovernedToo
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
 import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
+import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -130,6 +131,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       reminders: reminderDeliveryService.listDeliveries(),
       loop: runtimeContinuityLoopService.getLoopStatus(),
       memoryProposals: memoryProposalService.listProposals(),
+      gatewayRequests: browserDesktopGatewayService.listGatewayRequests(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -187,6 +189,49 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
             ))}
           </div>
         )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Gateway requests" subtitle="Research-only browser/desktop/device gateway records. No execution, approval, or control is enabled.">
+        {(() => {
+          const recent = data.gatewayRequests.filter((request) => request.status !== "archived").slice(0, 5);
+          if (recent.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No gateway research requests.</div>;
+          return (
+            <div className="space-y-2">
+              {recent.map((request) => (
+                <div key={request.gatewayRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{request.title}</div>
+                      <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
+                    </div>
+                    <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${request.status === "blocked" ? "border-red-500/30 text-red-200" : "border-amber-500/30 text-amber-200"}`}>
+                      {request.status.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-1 text-[9px]">
+                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Surface: {request.surface}</span>
+                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Capability: {request.capability.replace(/_/g, " ")}</span>
+                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Risk: {request.riskLevel}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    {request.policyDecision.requiresApproval && <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">approval required</span>}
+                    {request.policyDecision.requiresSandbox && <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">sandbox required</span>}
+                    {request.policyDecision.requiresHumanConfirmation && <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">human confirmation</span>}
+                    {request.policyDecision.requiresCredentialBoundary && <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">credential boundary</span>}
+                    {request.policyDecision.requiresAuditLog && <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">audit required</span>}
+                  </div>
+                  {request.blockedBy && request.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] leading-relaxed text-red-200">Blocked by: {request.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {request.status !== "blocked" && <Button tone="danger" onClick={() => { browserDesktopGatewayService.blockGatewayRequest(request.gatewayRequestId, "Blocked from Activity panel."); refresh(); }}>block</Button>}
+                    <Button onClick={() => { browserDesktopGatewayService.archiveGatewayRequest(request.gatewayRequestId); refresh(); }}>archive</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </RightPanelSection>
 
       <RightPanelSection title="Memory proposals" subtitle="Approving a memory does not write it. Saving requires a second explicit click and a one-time approval.">

@@ -10,10 +10,10 @@ import { governedActionRequestService, type GovernedActionRequestService } from 
 import { skillGovernanceService, type SkillGovernanceService } from "../skills/SkillGovernanceService";
 import { agentPlanningCheckpointService, type AgentPlanningCheckpointService } from "./AgentPlanningCheckpointService";
 import { intentRoutingModeService, type IntentRoutingModeService } from "./IntentRoutingModeService";
+import { browserDesktopGatewayService, type BrowserDesktopGatewayService } from "./BrowserDesktopGatewayService";
 import {
   classifyIntent,
   sanitizeIntentInput,
-  blockIfSecretLike,
   detectLocalPanelTarget,
 } from "./IntentRoutingPolicy";
 import { getTargetCapability, getSafeLocalPanelLabel } from "./SafeLocalPanelTargets";
@@ -68,6 +68,7 @@ export interface IntentRoutingServiceDependencies {
   memoryProposals: Pick<MemoryProposalService, "createProposal">;
   governedRequests: Pick<GovernedActionRequestService, "createRequest">;
   skillGovernance: Pick<SkillGovernanceService, "createSkillRequest">;
+  gatewayRequests: Pick<BrowserDesktopGatewayService, "createGatewayRequest">;
   checkpoints: Pick<AgentPlanningCheckpointService, "createCheckpoint">;
   inbox: Pick<RuntimeInboxService, "ingestEvent">;
   bus: Pick<typeof eventBus, "emitEvent" | "emit">;
@@ -88,6 +89,7 @@ export class IntentRoutingService {
       memoryProposals: memoryProposalService,
       governedRequests: governedActionRequestService,
       skillGovernance: skillGovernanceService,
+      gatewayRequests: browserDesktopGatewayService,
       checkpoints: agentPlanningCheckpointService,
       inbox: runtimeInboxService,
       bus: eventBus,
@@ -117,7 +119,7 @@ export class IntentRoutingService {
       metadata: { ...draft.metadata, source: sanitized.source, sourceId: sanitized.sourceId },
     };
 
-    const artifacts = this.createArtifactsForRoute(decision, sanitized);
+    this.createArtifactsForRoute(decision, sanitized);
 
     this.upsert(decision);
     this.emitRouteEvent(decision);
@@ -217,7 +219,6 @@ export class IntentRoutingService {
 
   private degradeToAskUserForMissingProvenance(
     decision: LucaIntentRoutingDecision,
-    input: LucaIntentRoutingInput,
   ): void {
     decision.route = "ask_user";
     decision.reason = `missing_provenance_for_governed_artifact — original route was ${decision.route}. ${decision.reason}`;
@@ -268,7 +269,7 @@ export class IntentRoutingService {
       IntentRoutingService.ARTIFACT_CREATING_ROUTES.has(decision.route) &&
       !this.hasRealProvenance(input)
     ) {
-      this.degradeToAskUserForMissingProvenance(decision, input);
+      this.degradeToAskUserForMissingProvenance(decision);
       return;
     }
 
@@ -362,6 +363,16 @@ export class IntentRoutingService {
 
       case "blocked_risky_action": {
         const localProv = provenanceIds.length > 0 ? provenanceIds : [];
+        try {
+          this.deps.gatewayRequests.createGatewayRequest({
+            title: `Gateway research record: ${decision.userIntentSummary.slice(0, 100)}`,
+            summary: decision.reason,
+            source: "intent_routing",
+            sourceId: decision.decisionId,
+            provenanceIds: localProv,
+            metadata: { route: decision.route, riskLevel: decision.riskLevel, signals: decision.signals.join(",") },
+          });
+        } catch { /* gateway research record is best-effort and never executes */ }
         try {
           const event = this.deps.inbox.ingestEvent({
             source: "intent_routing",

@@ -4,6 +4,7 @@ export type ProvenanceSourceType =
   | "scheduled_job"
   | "tool_action"
   | "runtime_snapshot"
+  | "intent_routing"
   | "external_input";
 
 export type ProvenanceTrustLevel = "trusted" | "user_approved" | "local" | "untrusted" | "unknown";

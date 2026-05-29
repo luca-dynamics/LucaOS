@@ -10,6 +10,7 @@ import { memoryGovernanceService } from "../../services/memory/MemoryGovernanceS
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
 import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
+import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -94,6 +95,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       loop: runtimeContinuityLoopService.getLoopStatus(),
       memoryProposals: memoryProposalService.listProposals(),
       memoryWrites: governedMemoryWriteService.listMemoryWrites(),
+      gatewayRequests: browserDesktopGatewayService.listGatewayRequests(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -129,6 +131,34 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
             ))}
           </div>
         )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Gateway trace" subtitle="Audit-like gateway research records. Execution remains disabled.">
+        {trace.gatewayRequests.length === 0 ? <EmptyState>No gateway requests.</EmptyState> : [...trace.gatewayRequests]
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+          .slice(0, 6)
+          .map((request) => (
+            <div key={request.gatewayRequestId} className={`mb-2 rounded-xl border p-3 ${request.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                    {request.status.replace(/_/g, " ")} · {request.surface}/{request.capability.replace(/_/g, " ")}
+                  </div>
+                  <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
+                </div>
+                <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{request.riskLevel}</span>
+              </div>
+              {request.blockedBy && request.blockedBy.length > 0 && (
+                <p className="mt-2 text-[9px] text-red-200">Blocked by: {request.blockedBy.join(", ")}</p>
+              )}
+              <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                <span>created {compactTimestamp(request.createdAt)}</span>
+                <span>updated {compactTimestamp(request.updatedAt)}</span>
+                <span>dry-run only: {String(request.policyDecision.allowedForDryRun)}</span>
+                <span>execution enabled: false</span>
+              </div>
+            </div>
+          ))}
       </RightPanelSection>
 
       <RightPanelSection title="Runtime events" subtitle="Current continuity-loop trace state. Stored event history can be connected later without inventing events.">
