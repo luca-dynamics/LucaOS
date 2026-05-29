@@ -97,4 +97,33 @@ describe("ChatIntentRouterBridge", () => {
     expect((bridge as any).runTool).toBeUndefined();
     expect((bridge as any).executeTool).toBeUndefined();
   });
+
+  it("does not synthesize provenance — passes empty array when none supplied", () => {
+    const mockRouting = {
+      routeUserMessage: vi.fn().mockReturnValue(makeMockResult()),
+      getDefaultMode: vi.fn().mockReturnValue("auto" as const),
+    };
+    const mockMode = { getMode: vi.fn().mockReturnValue("auto" as const) };
+    const bridge = new ChatIntentRouterBridge({ routing: mockRouting, modeService: mockMode });
+
+    bridge.maybeRouteMessageBeforeResponse({ message: "hello" });
+
+    expect(mockRouting.routeUserMessage).toHaveBeenCalledTimes(1);
+    const callArg = mockRouting.routeUserMessage.mock.calls[0][0];
+    expect(callArg.provenanceIds).toEqual([]);
+  });
+
+  it("passes through real provenance when supplied", () => {
+    const mockRouting = {
+      routeUserMessage: vi.fn().mockReturnValue(makeMockResult()),
+      getDefaultMode: vi.fn().mockReturnValue("auto" as const),
+    };
+    const mockMode = { getMode: vi.fn().mockReturnValue("auto" as const) };
+    const bridge = new ChatIntentRouterBridge({ routing: mockRouting, modeService: mockMode });
+
+    bridge.maybeRouteMessageBeforeResponse({ message: "hello", provenanceIds: ["prov:real:123"] });
+
+    const callArg = mockRouting.routeUserMessage.mock.calls[0][0];
+    expect(callArg.provenanceIds).toEqual(["prov:real:123"]);
+  });
 });

@@ -57,7 +57,7 @@ export class ChatIntentRouterBridge {
       source: input.source ?? "chat",
       sourceId: input.sourceId,
       sessionId: input.sessionId,
-      provenanceIds: input.provenanceIds ?? [`chat:${Date.now()}`],
+      provenanceIds: input.provenanceIds ?? [],
     };
 
     const result = this.deps.routing.routeUserMessage(routingInput);

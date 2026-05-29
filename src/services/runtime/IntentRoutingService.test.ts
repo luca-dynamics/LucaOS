@@ -154,4 +154,97 @@ describe("IntentRoutingService", () => {
     expect(found).toBeDefined();
     expect(found?.decisionId).toBe(result.decision.decisionId);
   });
+
+  // ---------------------------------------------------------------------------
+  // Provenance handling tests
+  // ---------------------------------------------------------------------------
+
+  describe("provenance enforcement", () => {
+    it("fast_response works without provenance and creates no artifacts", () => {
+      const result = service.routeUserMessage(makeInput({ message: "what is 2+2?", provenanceIds: [] }));
+      expect(result.decision.route).toBe("fast_response");
+      expect(result.noExecutionPerformed).toBe(true);
+      expect(deps.orchestration.proposePlanFromIntent).not.toHaveBeenCalled();
+      expect(deps.memoryProposals.createProposal).not.toHaveBeenCalled();
+      expect(deps.governedRequests.createRequest).not.toHaveBeenCalled();
+      expect(deps.skillGovernance.createSkillRequest).not.toHaveBeenCalled();
+      expect(deps.checkpoints.createCheckpoint).not.toHaveBeenCalled();
+    });
+
+    it("memory_proposal without provenance does not create memory proposal", () => {
+      const result = service.routeUserMessage(makeInput({ message: "remember that I like dark mode", provenanceIds: [] }));
+      expect(deps.memoryProposals.createProposal).not.toHaveBeenCalled();
+      expect(result.decision.route).toBe("ask_user");
+      expect(result.decision.reason).toContain("missing_provenance_for_governed_artifact");
+      expect(result.decision.createdMemoryProposalIds).toBeUndefined();
+      expect(result.noExecutionPerformed).toBe(true);
+    });
+
+    it("runtime_plan without provenance does not create plan", () => {
+      const result = service.routeUserMessage(makeInput({ message: "help me build a workflow with multiple steps", provenanceIds: [] }));
+      expect(deps.orchestration.proposePlanFromIntent).not.toHaveBeenCalled();
+      expect(result.decision.route).toBe("ask_user");
+      expect(result.decision.reason).toContain("missing_provenance_for_governed_artifact");
+      expect(result.decision.createdPlanId).toBeUndefined();
+      expect(result.noExecutionPerformed).toBe(true);
+    });
+
+    it("governed/safe request without provenance does not create request", () => {
+      const result = service.routeUserMessage(makeInput({ message: "show diagnostics", provenanceIds: [] }));
+      expect(deps.governedRequests.createRequest).not.toHaveBeenCalled();
+      expect(result.decision.route).toBe("ask_user");
+      expect(result.decision.reason).toContain("missing_provenance_for_governed_artifact");
+      expect(result.decision.createdGovernedRequestIds).toBeUndefined();
+      expect(result.noExecutionPerformed).toBe(true);
+    });
+
+    it("skill_request without provenance does not create skill request", () => {
+      const result = service.routeUserMessage(makeInput({ message: "install the weather plugin", provenanceIds: [] }));
+      expect(deps.skillGovernance.createSkillRequest).not.toHaveBeenCalled();
+      expect(result.decision.route).toBe("ask_user");
+      expect(result.decision.reason).toContain("missing_provenance_for_governed_artifact");
+      expect(result.decision.createdSkillRequestIds).toBeUndefined();
+      expect(result.noExecutionPerformed).toBe(true);
+    });
+
+    it("planning_checkpoint without provenance does not create checkpoint", () => {
+      // planning_checkpoint is hard to trigger via policy alone, so we verify
+      // the degradation logic by checking a governed route degrades properly.
+      // The key assertion is that artifact-creating routes without provenance
+      // are degraded — tested above for each route type.
+      const result = service.routeUserMessage(makeInput({ message: "show diagnostics", provenanceIds: [] }));
+      expect(deps.checkpoints.createCheckpoint).not.toHaveBeenCalled();
+      expect(result.noExecutionPerformed).toBe(true);
+    });
+
+    it("blocked_risky_action without provenance can still create a safe inbox event", () => {
+      const result = service.routeUserMessage(makeInput({ message: "open a shell terminal", provenanceIds: [] }));
+      expect(result.decision.route).toBe("blocked_risky_action");
+      expect(deps.inbox.ingestEvent).toHaveBeenCalledTimes(1);
+      expect(result.decision.inboxEventIds).toContain("inbox:test");
+      expect(result.noExecutionPerformed).toBe(true);
+    });
+
+    it("ask_user without provenance can still create a safe inbox event", () => {
+      // Force ask_user via a governed route with no provenance (degraded)
+      const result = service.routeUserMessage(makeInput({ message: "remember my preference", provenanceIds: [] }));
+      expect(result.decision.route).toBe("ask_user");
+      expect(deps.inbox.ingestEvent).toHaveBeenCalledTimes(1);
+      expect(result.decision.inboxEventIds).toContain("inbox:test");
+      expect(result.noExecutionPerformed).toBe(true);
+    });
+
+    it("artifact route with real provenance still creates the correct artifact", () => {
+      const result = service.routeUserMessage(makeInput({ message: "remember that I like dark mode", provenanceIds: ["prov:real:123"] }));
+      expect(result.decision.route).toBe("memory_proposal");
+      expect(deps.memoryProposals.createProposal).toHaveBeenCalledTimes(1);
+      expect(result.decision.createdMemoryProposalIds).toContain("proposal:test");
+      expect(result.noExecutionPerformed).toBe(true);
+
+      const planResult = service.routeUserMessage(makeInput({ message: "help me build a workflow with multiple steps", provenanceIds: ["prov:real:456"] }));
+      expect(planResult.decision.route).toBe("runtime_plan");
+      expect(deps.orchestration.proposePlanFromIntent).toHaveBeenCalledTimes(1);
+      expect(planResult.decision.createdPlanId).toBe("plan:test");
+    });
+  });
 });

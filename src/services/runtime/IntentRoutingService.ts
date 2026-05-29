@@ -196,11 +196,81 @@ export class IntentRoutingService {
   // Private: artifact creation per route
   // -----------------------------------------------------------------------
 
+  // -----------------------------------------------------------------------
+  // Private: routes that require real provenance to create artifacts
+  // -----------------------------------------------------------------------
+
+  private static readonly ARTIFACT_CREATING_ROUTES: ReadonlySet<string> = new Set([
+    "memory_proposal",
+    "runtime_plan",
+    "governed_action_request",
+    "safe_execution_request",
+    "skill_request",
+    "planning_checkpoint",
+  ]);
+
+  private hasRealProvenance(input: LucaIntentRoutingInput): boolean {
+    return Array.isArray(input.provenanceIds) && input.provenanceIds.length > 0;
+  }
+
+  private degradeToAskUserForMissingProvenance(
+    decision: LucaIntentRoutingDecision,
+    input: LucaIntentRoutingInput,
+  ): void {
+    decision.route = "ask_user";
+    decision.reason = `missing_provenance_for_governed_artifact — original route was ${decision.route}. ${decision.reason}`;
+    decision.shouldCreatePlan = false;
+    decision.shouldCreateMemoryProposal = false;
+    decision.shouldCreateGovernedRequest = false;
+    decision.shouldCreateSkillRequest = false;
+    decision.shouldCreateCheckpoint = false;
+    decision.shouldAskUser = true;
+
+    try {
+      const event = this.deps.inbox.ingestEvent({
+        source: "intent_routing",
+        sourceTrustLevel: "local",
+        title: "Governed artifact blocked — missing provenance",
+        body: `Cannot create governed artifact without valid provenance IDs. Original intent: ${decision.userIntentSummary.slice(0, 200)}.`,
+        eventType: "intent_routed_ask_user",
+        requiresApproval: false,
+        metadata: sanitizeRuntimeMetadata({ route: decision.route, riskLevel: decision.riskLevel, degradedFrom: "missing_provenance" }),
+        provenance: {
+          provenanceId: decision.decisionId,
+          sourceType: "intent_routing",
+          sourceId: decision.decisionId,
+          sourceTrustLevel: "local",
+          createdBy: "intent-routing-service",
+          createdAt: decision.createdAt,
+          digest: decision.decisionId,
+          parentProvenanceIds: [],
+          quarantineState: "clear",
+          approvalState: "not_required",
+          revocationState: "active",
+        },
+      });
+      decision.inboxEventIds = [event.inboxEventId];
+    } catch { /* swallow */ }
+  }
+
+  // -----------------------------------------------------------------------
+  // Private: artifact creation per route
+  // -----------------------------------------------------------------------
+
   private createArtifactsForRoute(
     decision: LucaIntentRoutingDecision,
     input: LucaIntentRoutingInput,
   ): void {
-    const provenanceIds = input.provenanceIds.length > 0 ? input.provenanceIds : [`intent-route:${decision.decisionId}`];
+    // Artifact-creating routes require real provenance. If missing, degrade.
+    if (
+      IntentRoutingService.ARTIFACT_CREATING_ROUTES.has(decision.route) &&
+      !this.hasRealProvenance(input)
+    ) {
+      this.degradeToAskUserForMissingProvenance(decision, input);
+      return;
+    }
+
+    const provenanceIds = input.provenanceIds;
 
     switch (decision.route) {
       case "fast_response":
@@ -283,6 +353,7 @@ export class IntentRoutingService {
       }
 
       case "blocked_risky_action": {
+        const localProv = provenanceIds.length > 0 ? provenanceIds : [];
         try {
           const event = this.deps.inbox.ingestEvent({
             source: "intent_routing",
@@ -293,14 +364,14 @@ export class IntentRoutingService {
             requiresApproval: false,
             metadata: sanitizeRuntimeMetadata({ route: decision.route, riskLevel: decision.riskLevel, signals: decision.signals.join(",") }),
             provenance: {
-              provenanceId: provenanceIds[0],
+              provenanceId: decision.decisionId,
               sourceType: "intent_routing",
               sourceId: decision.decisionId,
               sourceTrustLevel: "local",
               createdBy: "intent-routing-service",
               createdAt: decision.createdAt,
               digest: decision.decisionId,
-              parentProvenanceIds: provenanceIds,
+              parentProvenanceIds: localProv,
               quarantineState: "clear",
               approvalState: "not_required",
               revocationState: "active",
@@ -312,6 +383,7 @@ export class IntentRoutingService {
       }
 
       case "ask_user": {
+        const localProv = provenanceIds.length > 0 ? provenanceIds : [];
         try {
           const event = this.deps.inbox.ingestEvent({
             source: "intent_routing",
@@ -322,14 +394,14 @@ export class IntentRoutingService {
             requiresApproval: false,
             metadata: sanitizeRuntimeMetadata({ route: decision.route, riskLevel: decision.riskLevel }),
             provenance: {
-              provenanceId: provenanceIds[0],
+              provenanceId: decision.decisionId,
               sourceType: "intent_routing",
               sourceId: decision.decisionId,
               sourceTrustLevel: "local",
               createdBy: "intent-routing-service",
               createdAt: decision.createdAt,
               digest: decision.decisionId,
-              parentProvenanceIds: provenanceIds,
+              parentProvenanceIds: localProv,
               quarantineState: "clear",
               approvalState: "not_required",
               revocationState: "active",
