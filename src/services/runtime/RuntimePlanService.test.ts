@@ -164,4 +164,95 @@ describe("RuntimePlanService", () => {
     service.completePlan(plan.planId);
     expect(inbox.ingestEvent.mock.calls.length).toBeGreaterThanOrEqual(3);
   });
+
+  it("createArtifactsForPlan is idempotent for explain steps", () => {
+    const { service, inbox } = createStack();
+    const steps: StepDraft[] = [{ title: "Explain approach", summary: "Describe the plan", suggestedKind: "explain" }];
+    const plan = service.createPlan(basePlanInput(steps));
+    const callsBefore = inbox.ingestEvent.mock.calls.length;
+    service.createArtifactsForPlan(plan.planId);
+    const callsAfterFirst = inbox.ingestEvent.mock.calls.length;
+    expect(callsAfterFirst).toBeGreaterThan(callsBefore);
+    service.createArtifactsForPlan(plan.planId);
+    const callsAfterSecond = inbox.ingestEvent.mock.calls.length;
+    expect(callsAfterSecond).toBe(callsAfterFirst);
+  });
+
+  it("createArtifactsForPlan is idempotent for ask_user steps", () => {
+    const { service, inbox } = createStack();
+    const steps: StepDraft[] = [{ title: "Ask user preference", summary: "What color do you prefer?", suggestedKind: "ask_user" }];
+    const plan = service.createPlan(basePlanInput(steps));
+    const callsBefore = inbox.ingestEvent.mock.calls.length;
+    service.createArtifactsForPlan(plan.planId);
+    const callsAfterFirst = inbox.ingestEvent.mock.calls.length;
+    expect(callsAfterFirst).toBeGreaterThan(callsBefore);
+    service.createArtifactsForPlan(plan.planId);
+    expect(inbox.ingestEvent.mock.calls.length).toBe(callsAfterFirst);
+  });
+
+  it("createArtifactsForPlan is idempotent for inbox_event steps", () => {
+    const { service, inbox } = createStack();
+    const steps: StepDraft[] = [{ title: "Log event", summary: "Create an inbox event", suggestedKind: "inbox_event" }];
+    const plan = service.createPlan(basePlanInput(steps));
+    const callsBefore = inbox.ingestEvent.mock.calls.length;
+    service.createArtifactsForPlan(plan.planId);
+    const callsAfterFirst = inbox.ingestEvent.mock.calls.length;
+    expect(callsAfterFirst).toBeGreaterThan(callsBefore);
+    service.createArtifactsForPlan(plan.planId);
+    expect(inbox.ingestEvent.mock.calls.length).toBe(callsAfterFirst);
+  });
+
+  it("createArtifactsForPlan is idempotent for other steps", () => {
+    const { service, inbox } = createStack();
+    const steps: StepDraft[] = [{ title: "Misc action", summary: "Some other step", suggestedKind: "other" }];
+    const plan = service.createPlan(basePlanInput(steps));
+    const callsBefore = inbox.ingestEvent.mock.calls.length;
+    service.createArtifactsForPlan(plan.planId);
+    const callsAfterFirst = inbox.ingestEvent.mock.calls.length;
+    expect(callsAfterFirst).toBeGreaterThan(callsBefore);
+    service.createArtifactsForPlan(plan.planId);
+    expect(inbox.ingestEvent.mock.calls.length).toBe(callsAfterFirst);
+  });
+
+  it("explain/ask_user steps are not logged as blocked", () => {
+    const { service, inbox } = createStack();
+    const steps: StepDraft[] = [
+      { title: "Explain approach", summary: "Describe the plan", suggestedKind: "explain" },
+      { title: "Ask user preference", summary: "What color?", suggestedKind: "ask_user" },
+    ];
+    const plan = service.createPlan(basePlanInput(steps));
+    service.createArtifactsForPlan(plan.planId);
+    const eventTypes = inbox.ingestEvent.mock.calls.map((call: unknown[]) => (call[0] as Record<string, unknown>).eventType);
+    expect(eventTypes).not.toContain("runtime_plan_step_blocked");
+    expect(eventTypes).toContain("runtime_plan_step_notice");
+    expect(eventTypes).toContain("runtime_plan_step_waiting_user");
+  });
+
+  it("explain step gets completed status, ask_user gets waiting_user status, reminder gets proposed", () => {
+    const { service } = createStack();
+    const steps: StepDraft[] = [
+      { title: "Explain approach", summary: "Describe the plan", suggestedKind: "explain" },
+      { title: "Ask user preference", summary: "What color?", suggestedKind: "ask_user" },
+      { title: "Set a reminder", summary: "Reminder for later", suggestedKind: "reminder" },
+    ];
+    const plan = service.createPlan(basePlanInput(steps));
+    service.createArtifactsForPlan(plan.planId);
+    const updated = service.getPlan(plan.planId);
+    expect(updated?.steps[0].status).toBe("completed");
+    expect(updated?.steps[1].status).toBe("waiting_user");
+    expect(updated?.steps[2].status).toBe("proposed");
+  });
+
+  it("explain/ask_user steps get relatedInboxEventId set", () => {
+    const { service } = createStack();
+    const steps: StepDraft[] = [
+      { title: "Explain approach", summary: "Describe the plan", suggestedKind: "explain" },
+      { title: "Ask user preference", summary: "What color?", suggestedKind: "ask_user" },
+    ];
+    const plan = service.createPlan(basePlanInput(steps));
+    service.createArtifactsForPlan(plan.planId);
+    const updated = service.getPlan(plan.planId);
+    expect(updated?.steps[0].relatedInboxEventId).toBeDefined();
+    expect(updated?.steps[1].relatedInboxEventId).toBeDefined();
+  });
 });

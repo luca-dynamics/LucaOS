@@ -393,12 +393,43 @@ export class RuntimePlanService {
           break;
         }
 
-        case "explain":
-        case "ask_user":
-        case "inbox_event":
-        case "reminder":
+        case "explain": {
+          if (step.relatedInboxEventId) break;
+          const explainEvent = this.emitInboxEventForStep(plan, "runtime_plan_step_notice", `Step: ${step.title}`);
+          steps[i] = { ...step, relatedInboxEventId: explainEvent, status: "completed", updatedAt: nowIso() };
+          changed = true;
+          break;
+        }
+
+        case "ask_user": {
+          if (step.relatedInboxEventId) break;
+          const askEvent = this.emitInboxEventForStep(plan, "runtime_plan_step_waiting_user", `Waiting for user: ${step.title}`);
+          steps[i] = { ...step, relatedInboxEventId: askEvent, status: "waiting_user", updatedAt: nowIso() };
+          changed = true;
+          break;
+        }
+
+        case "inbox_event": {
+          if (step.relatedInboxEventId) break;
+          const inboxStepEvent = this.emitInboxEventForStep(plan, "runtime_plan_step_notice", `Inbox event: ${step.title}`);
+          steps[i] = { ...step, relatedInboxEventId: inboxStepEvent, status: "completed", updatedAt: nowIso() };
+          changed = true;
+          break;
+        }
+
+        case "reminder": {
+          if (step.relatedInboxEventId) break;
+          const reminderEvent = this.emitInboxEventForStep(plan, "runtime_plan_step_notice", `Reminder: ${step.title}`);
+          steps[i] = { ...step, relatedInboxEventId: reminderEvent, status: "proposed", updatedAt: nowIso() };
+          changed = true;
+          break;
+        }
+
         case "other": {
-          this.emitInboxEvent(plan, "runtime_plan_step_blocked", `Step: ${step.title} (${step.kind})`);
+          if (step.relatedInboxEventId) break;
+          const otherEvent = this.emitInboxEventForStep(plan, "runtime_plan_step_skipped", `Step skipped: ${step.title}`);
+          steps[i] = { ...step, relatedInboxEventId: otherEvent, status: "skipped", updatedAt: nowIso() };
+          changed = true;
           break;
         }
       }
@@ -501,6 +532,35 @@ export class RuntimePlanService {
     if (!plan.inboxEventIds.includes(event.inboxEventId)) {
       plan.inboxEventIds.push(event.inboxEventId);
     }
+  }
+
+  private emitInboxEventForStep(plan: RuntimePlanRecord, eventType: string, body: string): string {
+    const event = this.deps.inbox.ingestEvent({
+      source: "system",
+      sourceTrustLevel: "local",
+      title: plan.title,
+      body: body.slice(0, 2_000),
+      eventType,
+      provenance: {
+        provenanceId: plan.provenanceIds[0] ?? "missing",
+        sourceType: "runtime_snapshot",
+        sourceId: plan.planId,
+        sourceTrustLevel: "local",
+        createdBy: "luca-runtime-planner",
+        createdAt: plan.updatedAt,
+        digest: plan.planId,
+        parentProvenanceIds: plan.provenanceIds,
+        quarantineState: "clear",
+        approvalState: "pending",
+        revocationState: "active",
+      },
+      requiresApproval: false,
+      metadata: { planId: plan.planId, eventType },
+    });
+    if (!plan.inboxEventIds.includes(event.inboxEventId)) {
+      plan.inboxEventIds.push(event.inboxEventId);
+    }
+    return event.inboxEventId;
   }
 
   private emitBusEvent(type: string, plan: RuntimePlanRecord): void {

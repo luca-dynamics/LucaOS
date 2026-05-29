@@ -19,6 +19,7 @@ export type RuntimePlanStepStatus =
   | "approved_waiting_action"
   | "waiting_memory_write"
   | "waiting_skill_bridge"
+  | "waiting_user"
   | "blocked"
   | "completed"
   | "skipped";
@@ -56,6 +57,7 @@ export interface RuntimePlanStep {
   relatedMemoryProposalId?: string;
   relatedSkillRequestId?: string;
   relatedExecutionRequestId?: string;
+  relatedInboxEventId?: string;
   blockedBy?: string[];
   createdAt: string;
   updatedAt: string;
