@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEVICE_COLLAPSE_THRESHOLD,
   LEFT_PANEL_TOOLS,
   LEFT_PANEL_TOOL_GROUPS,
   buildToolLauncherGroups,
   getDefaultExpandedGroups,
   getPreviewTools,
+  shouldCollapseDevicesByDefault,
   type ToolGroupId,
 } from "./leftPanelModel";
 
@@ -101,5 +103,11 @@ describe("leftPanelModel", () => {
     for (const group of groups) {
       expect(group.tools.every((t) => t.group === group.id)).toBe(true);
     }
+  });
+
+  it("only collapses the devices section once the list is long", () => {
+    expect(shouldCollapseDevicesByDefault(0)).toBe(false);
+    expect(shouldCollapseDevicesByDefault(DEVICE_COLLAPSE_THRESHOLD)).toBe(false);
+    expect(shouldCollapseDevicesByDefault(DEVICE_COLLAPSE_THRESHOLD + 1)).toBe(true);
   });
 });

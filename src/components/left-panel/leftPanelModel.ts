@@ -184,3 +184,14 @@ export function buildToolLauncherGroups(
 export function getPreviewTools(): LeftPanelToolItem[] {
   return LEFT_PANEL_TOOLS.filter((tool) => tool.preview === true);
 }
+
+/** Above this many devices the DEVICES grid collapses by default. */
+export const DEVICE_COLLAPSE_THRESHOLD = 4;
+
+/**
+ * Whether the DEVICES section should start collapsed: only when the list is
+ * long enough to crowd the rail. Short lists stay expanded.
+ */
+export function shouldCollapseDevicesByDefault(deviceCount: number): boolean {
+  return deviceCount > DEVICE_COLLAPSE_THRESHOLD;
+}

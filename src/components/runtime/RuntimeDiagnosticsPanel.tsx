@@ -18,6 +18,10 @@ interface RuntimeDiagnosticsPanelProps {
   title?: string;
   onAction?: (actionId: string) => void;
   className?: string;
+  /** When true, the detail body can be collapsed behind a chevron header. */
+  collapsible?: boolean;
+  /** Start collapsed on first render (only meaningful with collapsible). */
+  defaultCollapsed?: boolean;
 }
 
 const BADGE_CLASS: Record<RuntimeReadinessSeverity, string> = {
@@ -301,11 +305,14 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
   title = "Runtime Status",
   onAction,
   className = "",
+  collapsible = false,
+  defaultCollapsed = false,
 }) => {
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(
     externalDiagnostics || null,
   );
   const [loading, setLoading] = useState(!externalDiagnostics);
+  const [collapsed, setCollapsed] = useState(collapsible && defaultCollapsed);
 
   const refresh = async () => {
     try {
@@ -348,22 +355,44 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
         }}
       >
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Icon name="Activity" size={14} variant="BoldDuotone" />
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--app-text-main)" }}>
-              {title}
-            </h3>
-          </div>
           <button
             type="button"
-            onClick={refresh}
-            className="rounded-full border px-2 py-1 text-[9px] font-bold uppercase tracking-widest transition hover:bg-white/5"
-            style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)" }}
+            onClick={collapsible ? () => setCollapsed((prev) => !prev) : undefined}
+            aria-expanded={collapsible ? !collapsed : undefined}
+            disabled={!collapsible}
+            className="flex items-center gap-2 min-w-0 text-left disabled:cursor-default"
           >
-            {loading ? "Checking" : "Retry"}
+            <Icon name="Activity" size={14} variant="BoldDuotone" />
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] truncate" style={{ color: "var(--app-text-main)" }}>
+              {title}
+            </h3>
+            {collapsible && (
+              <Icon
+                name={collapsed ? "AltArrowDown" : "AltArrowUp"}
+                size={12}
+                variant="BoldDuotone"
+                className="opacity-60"
+              />
+            )}
           </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {collapsible && collapsed && diagnostics && (
+              <span className={`rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase ${BADGE_CLASS[diagnostics.summary.severity]}`}>
+                {diagnostics.summary.severity}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={refresh}
+              className="rounded-full border px-2 py-1 text-[9px] font-bold uppercase tracking-widest transition hover:bg-white/5"
+              style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)" }}
+            >
+              {loading ? "Checking" : "Retry"}
+            </button>
+          </div>
         </div>
 
+        {!collapsed && (
         <div className="mt-3 flex items-center justify-between gap-3">
           <div>
             <div className="text-[12px] font-black uppercase tracking-widest" style={{ color: "var(--app-text-main)" }}>
@@ -379,8 +408,11 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
             </span>
           )}
         </div>
+        )}
       </div>
 
+      {!collapsed && (
+      <>
       {diagnostics?.governance && (
         <GovernanceContinuityCard governance={diagnostics.governance} audience={audience} />
       )}
@@ -395,7 +427,7 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
       ) : (
         audience === "normal" && diagnostics && (
           <div className="rounded-xl border p-3 text-[10px]" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)", color: "var(--app-text-muted)" }}>
-            Luca's runtime routes look ready. No setup action is needed.
+            Luca&apos;s runtime routes look ready. No setup action is needed.
           </div>
         )
       )}
@@ -455,6 +487,8 @@ export const RuntimeDiagnosticsPanel: React.FC<RuntimeDiagnosticsPanelProps> = (
             ))}
           </div>
         </div>
+      )}
+      </>
       )}
     </section>
   );

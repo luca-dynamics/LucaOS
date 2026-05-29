@@ -25,6 +25,8 @@ const SystemRailSection: React.FC<SystemRailSectionProps> = ({
       {!isMobile && (
         <RuntimeDiagnosticsPanel
           title="Runtime Status"
+          collapsible
+          defaultCollapsed
           onAction={(actionId) => {
             if (
               [
