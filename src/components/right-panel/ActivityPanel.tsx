@@ -8,6 +8,7 @@ import { memoryProposalService } from "../../services/memory/MemoryProposalServi
 import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
+import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { schedulerRegistryService } from "../../services/scheduler/SchedulerRegistryService";
 import { reminderDeliveryService } from "../../services/scheduler/ReminderDeliveryService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
@@ -78,6 +79,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       memoryProposals: memoryProposalService.listProposals(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
+      plans: runtimePlanService.listPlans(),
     };
   }, [revision]);
 
@@ -211,6 +213,56 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
               </div>
             );
           });
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Runtime plans" subtitle="Plans are state-only records. Activating or creating governed items does not execute anything.">
+        {(() => {
+          const proposed = data.plans.filter((p) => p.status === "proposed" || p.status === "waiting_approval" || p.status === "waiting_user");
+          const active = data.plans.filter((p) => p.status === "active");
+          const blocked = data.plans.filter((p) => p.status === "blocked");
+          if (proposed.length === 0 && active.length === 0 && blocked.length === 0) {
+            return <div className="text-[10px] italic text-[var(--app-text-muted)]">No runtime plans.</div>;
+          }
+          return (
+            <div className="space-y-2">
+              {proposed.map((plan) => (
+                <div key={plan.planId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">Plan proposed · {plan.title}</div>
+                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{plan.summary}</p>
+                  <p className="mt-1 text-[9px] uppercase tracking-widest text-amber-200">{plan.riskLevel} · {plan.steps.length} steps · no execution</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button tone="good" onClick={() => { runtimePlanService.activatePlan(plan.planId); refresh(); }}>activate plan</Button>
+                    <Button onClick={() => { runtimePlanService.createArtifactsForPlan(plan.planId); refresh(); }}>Create governed items</Button>
+                    <Button tone="danger" onClick={() => { runtimePlanService.rejectPlan(plan.planId); refresh(); }}>reject</Button>
+                    <Button onClick={() => { runtimePlanService.archivePlan(plan.planId); refresh(); }}>archive</Button>
+                  </div>
+                </div>
+              ))}
+              {active.map((plan) => (
+                <div key={plan.planId} className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
+                  <div className="text-[10px] font-bold text-emerald-200">Active plan · {plan.title}</div>
+                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{plan.summary}</p>
+                  <p className="mt-1 text-[9px] uppercase tracking-widest text-emerald-300">{plan.riskLevel} · {plan.steps.length} steps</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button onClick={() => { runtimePlanService.createArtifactsForPlan(plan.planId); refresh(); }}>Create governed items</Button>
+                    <Button onClick={() => { runtimePlanService.completePlan(plan.planId); refresh(); }}>complete</Button>
+                    <Button onClick={() => { runtimePlanService.archivePlan(plan.planId); refresh(); }}>archive</Button>
+                  </div>
+                </div>
+              ))}
+              {blocked.map((plan) => (
+                <div key={plan.planId} className="rounded-xl border border-red-500/20 bg-red-500/5 p-2">
+                  <div className="text-[10px] font-bold text-red-200">Blocked for safety · {plan.title}</div>
+                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{plan.summary}</p>
+                  {plan.blockedBy && plan.blockedBy.length > 0 && <p className="mt-1 text-[9px] uppercase tracking-widest text-red-300">{plan.blockedBy.join(", ")}</p>}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button onClick={() => { runtimePlanService.archivePlan(plan.planId); refresh(); }}>archive</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
         })()}
       </RightPanelSection>
 

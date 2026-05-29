@@ -11,6 +11,7 @@ import { memoryProposalService } from "../../services/memory/MemoryProposalServi
 import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
+import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
 import { Icon } from "../ui/Icon";
 import RightPanelSection from "./RightPanelSection";
@@ -41,6 +42,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       memoryWrites: governedMemoryWriteService.listMemoryWrites(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
+      plans: runtimePlanService.listPlans(),
     };
   }, [toolLogs.length]);
 
@@ -162,6 +164,23 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
             <div className="font-bold text-[var(--app-text-main)]">{request.status} · {request.skillName}</div>
             <div>{request.requestType} · risk: {request.riskLevel}</div>
             {request.blockedBy && request.blockedBy.length > 0 && <div className="text-red-200">Blocked: {request.blockedBy.join(", ")}</div>}
+          </div>
+        ))}
+      </RightPanelSection>
+
+      <RightPanelSection title="Plan trace" subtitle="Runtime plan lifecycle trace. Plans create governed records; nothing executes.">
+        {trace.plans.length === 0 ? <EmptyState>No runtime plans.</EmptyState> : trace.plans.slice(0, 8).map((plan) => (
+          <div key={plan.planId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">{plan.status} · {plan.title}</div>
+            <div>risk: {plan.riskLevel} · {plan.steps.length} steps · {new Date(plan.updatedAt).toLocaleString()}</div>
+            {plan.checkpointIds.length > 0 && <div>Checkpoints: {plan.checkpointIds.length}</div>}
+            {plan.memoryProposalIds.length > 0 && <div>Memory proposals: {plan.memoryProposalIds.length}</div>}
+            {plan.governedRequestIds.length > 0 && <div>Governed requests: {plan.governedRequestIds.length}</div>}
+            {plan.skillRequestIds.length > 0 && <div>Skill requests: {plan.skillRequestIds.length}</div>}
+            {plan.blockedBy && plan.blockedBy.length > 0 && <div className="text-red-200">Blocked: {plan.blockedBy.join(", ")}</div>}
+            {plan.steps.filter((s) => s.kind === "blocked_risky_action" || s.status === "blocked").length > 0 && (
+              <div className="text-red-200">Blocked risky steps: {plan.steps.filter((s) => s.kind === "blocked_risky_action" || s.status === "blocked").length}</div>
+            )}
           </div>
         ))}
       </RightPanelSection>
