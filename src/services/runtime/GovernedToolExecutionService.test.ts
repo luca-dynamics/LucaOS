@@ -409,4 +409,112 @@ describe("GovernedToolExecutionService", () => {
     expect(result.status).toBe("succeeded");
     expect(result.resultSummary).toContain("Inbox summary");
   });
+
+  it("approval consumption failure blocks execution and does not dispatch", () => {
+    const stack = createTestStack();
+    const { request } = createSafeApprovedRequest(stack);
+
+    const result1 = stack.executionService.executeApprovedRequest(request.requestId);
+    expect(result1.status).toBe("succeeded");
+    expect(result1.consumedApproval).toBe(true);
+
+    const prov2 = stack.provenance.createProvenanceRecord({
+      sourceType: "tool_action",
+      sourceId: "test-tool-2",
+      sourceTrustLevel: "local",
+      createdBy: "test",
+    });
+    const request2 = stack.requests.createRequest({
+      kind: "tool",
+      title: "Second notify",
+      description: "Another notification",
+      requestedCapability: "notify",
+      target: "notification",
+      provenanceIds: [prov2.provenanceId],
+      riskLevel: "low",
+    });
+    stack.approvals.approveOnce(request2.approvalRequestId!);
+    stack.requests.markApprovedWaitingExecution(request2.requestId);
+
+    stack.approvals.revoke(request2.approvalRequestId!);
+
+    const result2 = stack.executionService.executeApprovedRequest(request2.requestId);
+    expect(result2.status).toBe("blocked");
+    expect(result2.consumedApproval).toBe(false);
+  });
+
+  it("approved_waiting_execution request that fails policy does not qualify as executable", () => {
+    const stack = createTestStack();
+    const prov = stack.provenance.createProvenanceRecord({
+      sourceType: "tool_action",
+      sourceId: "test-tool",
+      sourceTrustLevel: "local",
+      createdBy: "test",
+    });
+    const request = stack.requests.createRequest({
+      kind: "tool",
+      title: "Action with secrets",
+      description: "Has secret params",
+      requestedCapability: "notify",
+      target: "notification",
+      parametersPreview: { token: "secret-value" },
+      provenanceIds: [prov.provenanceId],
+      riskLevel: "low",
+    });
+    stack.approvals.approveOnce(request.approvalRequestId!);
+    stack.requests.markApprovedWaitingExecution(request.requestId);
+
+    const canExec = stack.executionService.canExecuteRequest(request.requestId);
+    expect(canExec.allowed).toBe(false);
+  });
+
+  it("approval sync marks governed request approved_waiting_execution", () => {
+    const stack = createTestStack();
+    const prov = stack.provenance.createProvenanceRecord({
+      sourceType: "tool_action",
+      sourceId: "test-tool",
+      sourceTrustLevel: "local",
+      createdBy: "test",
+    });
+    const request = stack.requests.createRequest({
+      kind: "tool",
+      title: "Notify action",
+      description: "Send notification",
+      requestedCapability: "notify",
+      target: "notification",
+      provenanceIds: [prov.provenanceId],
+      riskLevel: "low",
+    });
+
+    expect(request.status).toBe("approval_required");
+    stack.approvals.approveOnce(request.approvalRequestId!);
+
+    const approval = stack.approvals.getRequest(request.approvalRequestId!);
+    expect(approval).toBeDefined();
+    expect(approval!.sourceType).toBe("tool");
+
+    if (approval!.sourceType === "tool" && approval!.sourceId) {
+      const governed = stack.requests.getRequest(approval!.sourceId);
+      if (governed && governed.status === "approval_required") {
+        stack.requests.markApprovedWaitingExecution(approval!.sourceId);
+      }
+    }
+
+    const updated = stack.requests.getRequest(request.requestId);
+    expect(updated?.status).toBe("approved_waiting_execution");
+
+    const executions = stack.executionService.listExecutions();
+    expect(executions.length).toBe(0);
+  });
+
+  it("approval still does not execute automatically after sync", () => {
+    const stack = createTestStack();
+    const { request } = createSafeApprovedRequest(stack);
+
+    const executionsBefore = stack.executionService.listExecutions();
+    expect(executionsBefore.length).toBe(0);
+
+    const updatedRequest = stack.requests.getRequest(request.requestId);
+    expect(updatedRequest?.status).toBe("approved_waiting_execution");
+  });
 });

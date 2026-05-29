@@ -6,15 +6,14 @@ import { governedActionRequestService, type GovernedActionRequestService } from 
 import { evaluate, mapCapability, sanitizePreview } from "./GovernedToolExecutionPolicy";
 import type { GovernedActionRequest } from "../../types/governedActionRequest";
 import type { ActionInstanceIdentity } from "../../types/provenance";
+import { GOVERNED_EXECUTION_ALLOWED_PANELS } from "../../types/governedToolExecution";
 import type {
   GovernedExecutionCapability,
+  GovernedExecutionAllowedPanel,
   GovernedToolExecutionRequest,
   GovernedToolExecutionResult,
   GovernedToolExecutionDiagnosticsSummary,
-  GOVERNED_EXECUTION_ALLOWED_PANELS,
 } from "../../types/governedToolExecution";
-
-type AllowedPanel = typeof GOVERNED_EXECUTION_ALLOWED_PANELS[number];
 
 interface StorageLike {
   getItem(key: string): string | null;
@@ -68,7 +67,7 @@ function readExecutions(store: StorageLike | undefined): GovernedToolExecutionRe
   }
 }
 
-const ALLOWED_PANELS = new Set<AllowedPanel>(["control", "activity", "memory", "logs", "model-manager"]);
+const ALLOWED_PANELS = new Set<GovernedExecutionAllowedPanel>(GOVERNED_EXECUTION_ALLOWED_PANELS);
 
 export class GovernedToolExecutionService {
   private executions: GovernedToolExecutionRequest[];
@@ -220,7 +219,29 @@ export class GovernedToolExecutionService {
 
     const actionIdentity = this.buildActionIdentity(request);
     const consumeResult = this.deps.provenance.checkWhetherActionCanRun(actionIdentity);
-    const consumedApproval = consumeResult.allowed;
+
+    if (!consumeResult.allowed) {
+      const execution = this.createExecutionFromRequest(requestId);
+      if (execution) {
+        execution.status = "blocked";
+        execution.blockedBy = consumeResult.blockedBy;
+        this.upsert(execution);
+      }
+      const reason = consumeResult.userSafeReason || "Approval consumption failed.";
+      this.emitBlockedEvent(request, consumeResult.blockedBy, reason);
+      this.createInboxEvent(request, "blocked", reason);
+      return {
+        executionId: execution?.executionId ?? `exec:blocked:${nowIso()}`,
+        requestId,
+        status: "blocked",
+        resultSummary: reason,
+        resultPreview: {},
+        startedAt: nowIso(),
+        completedAt: nowIso(),
+        consumedApproval: false,
+        blockedBy: consumeResult.blockedBy,
+      };
+    }
 
     const startedAt = nowIso();
     const execution = this.createExecutionFromRequest(requestId);
@@ -257,7 +278,7 @@ export class GovernedToolExecutionService {
         resultPreview: sanitizePreview(dispatchResult.preview),
         startedAt,
         completedAt,
-        consumedApproval,
+        consumedApproval: true,
         traceEventId: execution?.executionId,
         inboxEventId: inboxEvent?.inboxEventId,
       };
@@ -282,7 +303,7 @@ export class GovernedToolExecutionService {
         resultPreview: {},
         startedAt,
         completedAt,
-        consumedApproval,
+        consumedApproval: true,
         errorMessage,
       };
     }
@@ -383,7 +404,7 @@ export class GovernedToolExecutionService {
 
   private dispatchOpenPanel(request: GovernedActionRequest): { summary: string; preview: Record<string, unknown> } {
     const target = request.target.replace(/^panel:/, "").toLowerCase().trim();
-    if (!ALLOWED_PANELS.has(target as AllowedPanel)) {
+    if (!ALLOWED_PANELS.has(target as GovernedExecutionAllowedPanel)) {
       throw new Error(`Panel target "${target}" is not in the governed allowlist.`);
     }
 
