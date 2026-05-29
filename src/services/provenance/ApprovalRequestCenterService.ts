@@ -43,6 +43,9 @@ export class ApprovalRequestCenterService {
     }
   }
   listRequests(): ApprovalRequest[] { return [...this.requests]; }
+  getRequest(approvalRequestId: string): ApprovalRequest | undefined { return this.requests.find((item) => item.approvalRequestId === approvalRequestId); }
+  findRequestByActionDigest(actionDigest: string): ApprovalRequest | undefined { return this.requests.find((item) => item.actionDigest === actionDigest); }
+  hasApprovedOnce(approvalRequestId: string): boolean { const request = this.requests.find((item) => item.approvalRequestId === approvalRequestId); return request?.status === "approved_once"; }
   findPendingRequestByActionDigest(actionDigest: string, sourceType?: ApprovalRequest["sourceType"], sourceId?: string): ApprovalRequest | undefined {
     return this.requests.find((item) => item.status === "pending"
       && item.actionDigest === actionDigest

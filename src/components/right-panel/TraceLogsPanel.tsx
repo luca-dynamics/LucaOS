@@ -3,6 +3,7 @@ import type { ToolExecutionLog } from "../../types";
 import { approvalRequestCenterService } from "../../services/provenance/ApprovalRequestCenterService";
 import { runtimeInboxService } from "../../services/runtime/RuntimeInboxService";
 import { governedActionRequestService } from "../../services/runtime/GovernedActionRequestService";
+import { governedToolExecutionService } from "../../services/runtime/GovernedToolExecutionService";
 import { schedulerRegistryService } from "../../services/scheduler/SchedulerRegistryService";
 import { reminderDeliveryService } from "../../services/scheduler/ReminderDeliveryService";
 import { memoryGovernanceService } from "../../services/memory/MemoryGovernanceService";
@@ -27,6 +28,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       approvals: approvalRequestCenterService.listRequests(),
       inbox: runtimeInboxService.listEvents(),
       governed: governedActionRequestService.listRequests(),
+      executions: governedToolExecutionService.listExecutions(),
       scheduler: schedulerRegistryService.detectDueJobsDryRun(now),
       reminders: reminderDeliveryService.listDeliveries(),
       memory: memoryGovernanceService.listGovernanceSummaries(),
@@ -106,6 +108,20 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
           <div key={event.inboxEventId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{event.eventType} · {event.title}</div>
             <div>{new Date(event.createdAt).toLocaleString()}</div>
+          </div>
+        ))}
+      </RightPanelSection>
+
+      <RightPanelSection title="Governed executions" subtitle="Safe action execution audit trail.">
+        {trace.executions.length === 0 ? <EmptyState>No governed executions recorded.</EmptyState> : trace.executions.slice(0, 8).map((execution) => (
+          <div key={execution.executionId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">
+              <span className={execution.status === "succeeded" ? "text-emerald-300" : execution.status === "blocked" ? "text-red-300" : "text-amber-300"}>{execution.status}</span>
+              {" "}&middot; {execution.title}
+            </div>
+            <div>{execution.capability} &middot; risk: {execution.riskLevel}</div>
+            {execution.completedAt && <div>{new Date(execution.completedAt).toLocaleString()}</div>}
+            {execution.blockedBy && execution.blockedBy.length > 0 && <div className="text-red-200">Blocked: {execution.blockedBy.join(", ")}</div>}
           </div>
         ))}
       </RightPanelSection>
