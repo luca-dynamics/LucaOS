@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Icon } from "../ui/Icon";
+import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
+import { skillRegistryService } from "../../services/skills/SkillRegistryService";
+import { getSkillSummaryLine } from "../runtime/skillGovernanceLabels";
 import ToolLauncherButton from "./ToolLauncherButton";
 import {
   buildToolLauncherGroups,
@@ -30,6 +33,16 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
     () => buildToolLauncherGroups(installedModules),
     [installedModules],
   );
+  const skillRegistry = skillRegistryService.getDiagnosticsSummary();
+  const skillGovernance = skillGovernanceService.getDiagnosticsSummary();
+  const pendingSkillRequests = skillGovernance.proposedRequests + skillGovernance.approvalRequiredRequests;
+  const skillSummaryLine = getSkillSummaryLine({
+    registeredSkills: skillRegistry.totalSkills,
+    pendingRequests: pendingSkillRequests,
+    approvedWaitingRequests: skillGovernance.approvedWaitingRequests,
+    blockedRequests: skillGovernance.blockedRequests,
+    rejectedRevokedRequests: skillGovernance.rejectedRequests + skillGovernance.revokedRequests,
+  });
   const [expanded, setExpanded] = useState<Record<ToolGroupId, boolean>>(
     getDefaultExpandedGroups,
   );
@@ -46,6 +59,19 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
       >
         <Icon name="Widget" size={18} variant="BoldDuotone" />
         <h2 className="font-black tracking-widest text-xs uppercase">Tools</h2>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--app-text-main)]">Skills</div>
+          <span className="rounded-full border border-sky-500/20 bg-sky-500/5 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-sky-200">State-only</span>
+        </div>
+        <p className="text-[9px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>{skillSummaryLine}</p>
+        <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[9px] font-black uppercase tracking-widest">
+          <div className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-main)]">{skillRegistry.totalSkills}<span className="block text-[7px] text-[var(--app-text-muted)]">registered</span></div>
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-2 py-1 text-amber-200">{pendingSkillRequests}<span className="block text-[7px] text-[var(--app-text-muted)]">pending</span></div>
+          <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-2 py-1 text-red-200">{skillGovernance.blockedRequests}<span className="block text-[7px] text-[var(--app-text-muted)]">blocked</span></div>
+        </div>
       </div>
 
       <div className="space-y-3">
