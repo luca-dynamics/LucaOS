@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
 import { MemoryNode, Task, CalendarEvent, Goal } from "../types";
+import type { RightPanelMode } from "../components/right-panel/rightPanelModel";
 
 export function useManagementState() {
-  const [rightPanelMode, setRightPanelMode] = useState<
-    "LOGS" | "MEMORY" | "MANAGE" | "CLOUD"
-  >("MANAGE");
+  const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>("CONTROL");
   const [memories, setMemories] = useState<MemoryNode[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);

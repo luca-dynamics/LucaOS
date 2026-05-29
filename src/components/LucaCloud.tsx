@@ -17,7 +17,7 @@ import * as THREE from "three";
 import { setHexAlpha } from "../config/themeColors";
 
 interface Props {
-  memories: MemoryNode[]; // Keep for fallback if graph unavailable
+  memories: MemoryNode[]; // Archive count only; graph rendering uses memoryService.getGraphData().
   theme?: any;
 }
 
@@ -62,96 +62,34 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
       : "59, 130, 246";
   }, [theme]);
 
-  // Use raw memories to generate dummy graph data if no graph service is active
-  const fallbackGraphData = useMemo(() => {
-    // 1. Cluster Similar Memories
-    const clusters = new Map<
-      string,
-      { memory: (typeof memories)[0]; count: number }
-    >();
-
-    memories.forEach((m) => {
-      // Normalize text to group highly similar messages (strip timestamps and roles)
-      let coreText = m.value
-        .replace(/\[?\d{4}-\d{2}-\d{2}T.*?Z\]?\s*/g, "") // Remove ISO
-        .replace(/\[?\d{2}:\d{2}\.\d{3}Z\]?\s*/g, "") // Remove short times
-        .replace(/^(User|LUCA|System):\s*/gi, "") // Remove Role
-        .trim();
-
-      if (!coreText) coreText = m.value;
-
-      // Group by the first 60 characters to catch identical repeated prompts
-      const clusterKey = coreText.substring(0, 60).toLowerCase();
-
-      if (clusters.has(clusterKey)) {
-        clusters.get(clusterKey)!.count += 1;
-      } else {
-        clusters.set(clusterKey, { memory: m, count: 1 });
-      }
-    });
-
-    // 2. Map clustered memory objects to graph nodes
-    let clusteredMemories = Array.from(clusters.values()).map((c) => {
-      const displayValue =
-        c.count > 1
-          ? `[CLUSTERED x${c.count}]\n${c.memory.value}`
-          : c.memory.value;
-      return {
-        ...c.memory,
-        value: displayValue,
-        // Scale nodes physically larger if they represent a massive cluster
-        _clusterCount: c.count,
-      };
-    });
-
-    // 3. Cap display to max 250 most recent clusters to prevent lag and overlap
-    clusteredMemories = clusteredMemories.slice(-250);
-
-    const nodes: GraphNode[] = clusteredMemories.map((m) => ({
-      id: m.id,
-      label: m.value,
-      type: m.category === "USER_STATE" ? "ENTITY" : "CONCEPT",
-      created: m.timestamp,
-      _isMemoryText: true, // Flag to render as big bubble
-      _clusterCount: m._clusterCount,
-    }));
-
-    // Generate random connections for visual flair on pure memories
-    const edges: GraphEdge[] = [];
-    if (nodes.length > 1) {
-      for (let i = 0; i < nodes.length; i++) {
-        if (Math.random() > 0.5 && i > 0) {
-          edges.push({
-            source: nodes[i].id,
-            target: nodes[Math.floor(Math.random() * i)].id,
-            relation: "ASSOCIATES",
-            weight: 1,
-            created: Date.now(),
-          });
-        }
-      }
-    }
-
-    return { nodes, edges };
-  }, [memories]);
+  // The memory graph should only render real graph/RAG data from the graph service.
+  // Raw archive memories are intentionally not converted into fake nodes/edges here.
+  const archiveMemoryCount = memories.length;
 
   // Fetch Graph Data from Backend
   const fetchGraph = async () => {
     setLoading(true);
-    const data = await memoryService.getGraphData();
+    try {
+      const data = await memoryService.getGraphData();
 
-    if (data && Object.keys(data.nodes).length > 0) {
-      const nodesArr: GraphNode[] = Object.values(data.nodes);
-      setGraphNodes(nodesArr);
-      setGraphEdges(data.edges);
-      setIsGraphMode(true);
-    } else {
-      // Fallback Visualizer using 3D ForceGraph with raw memories
-      setGraphNodes(fallbackGraphData.nodes);
-      setGraphEdges(fallbackGraphData.edges);
+      if (data && Object.keys(data.nodes).length > 0) {
+        const nodesArr: GraphNode[] = Object.values(data.nodes);
+        setGraphNodes(nodesArr);
+        setGraphEdges(data.edges);
+        setIsGraphMode(true);
+      } else {
+        setGraphNodes([]);
+        setGraphEdges([]);
+        setIsGraphMode(false);
+      }
+    } catch (error) {
+      console.warn("[LucaCloud] Unable to load real graph data", error);
+      setGraphNodes([]);
+      setGraphEdges([]);
       setIsGraphMode(false);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Initial Load
@@ -159,7 +97,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
     fetchGraph();
     const interval = setInterval(fetchGraph, 7000); // Poll slower for 3D
     return () => clearInterval(interval);
-  }, [fallbackGraphData]);
+  }, [archiveMemoryCount]);
 
   // Handle Resize
   useEffect(() => {
@@ -428,7 +366,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
           {loading && <Icon name="RefreshCw" size={10} className="animate-spin" />}
           {isGraphMode
             ? "PROJECT SYNAPSE V2 (3D)"
-            : "LUCA MEMORY CLUSTERS (3D)"}
+            : "MEMORY GRAPH WAITING FOR REAL DATA"}
         </div>
         <div className="text-[9px] opacity-60">
           NODES: {graphNodes.length} | EDGES: {graphEdges.length}
@@ -506,6 +444,20 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
           }}
         />
       </div>
+
+      {!loading && graphNodes.length === 0 && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+          <div className="max-w-xs rounded-2xl border border-white/10 bg-black/70 p-4 text-center font-mono">
+            <Icon name="BrainCircuit" size={28} className="mx-auto mb-3" style={{ color: theme?.hex || "#8b5cf6" }} />
+            <p className="text-xs leading-relaxed text-slate-300">
+              Memory Cluster view will visualize semantic/RAG memory nodes, provenance, and relationships.
+            </p>
+            <p className="mt-2 text-[10px] uppercase tracking-widest text-slate-500">
+              No real graph data is available yet; Luca is not fabricating nodes from {archiveMemoryCount} archive memories.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Control Hint Overlay */}
       <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1 text-[9px] font-mono text-slate-300 bg-black/60 px-2 py-1 rounded border border-white/5 pointer-events-none">
