@@ -3,6 +3,8 @@ import { approvalRequestCenterService } from "../../services/provenance/Approval
 import { runtimeInboxService } from "../../services/runtime/RuntimeInboxService";
 import { agentSessionContinuityService } from "../../services/runtime/AgentSessionContinuityService";
 import { governedActionRequestService } from "../../services/runtime/GovernedActionRequestService";
+import { governedToolExecutionService } from "../../services/runtime/GovernedToolExecutionService";
+import { evaluate as evaluateExecutionPolicy, mapCapability } from "../../services/runtime/GovernedToolExecutionPolicy";
 import { schedulerRegistryService } from "../../services/scheduler/SchedulerRegistryService";
 import { reminderDeliveryService } from "../../services/scheduler/ReminderDeliveryService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
@@ -39,6 +41,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       inbox: runtimeInboxService.listEvents(),
       sessions: agentSessionContinuityService.listSessions(),
       governed: governedActionRequestService.listRequests(),
+      executions: governedToolExecutionService.listExecutions(),
       dueJobs: schedulerRegistryService.detectDueJobsDryRun(now),
       reminders: reminderDeliveryService.listDeliveries(),
       loop: runtimeContinuityLoopService.getLoopStatus(),
@@ -138,7 +141,62 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         ))}
       </RightPanelSection>
 
-      <RightPanelSection title="Governed action requests" subtitle="Risky requests remain request-only. There is no execute button in this panel.">
+      <RightPanelSection title="Governed execution bridge" subtitle="Safe approved actions can be executed once. Risky actions remain blocked.">
+        {(() => {
+          const eligible = data.governed.filter((request) => {
+            const decision = evaluateExecutionPolicy(request);
+            return decision.allowed || request.status === "approved_waiting_execution";
+          });
+          const ineligible = data.governed.filter((request) => {
+            const decision = evaluateExecutionPolicy(request);
+            return !decision.allowed && request.status !== "approved_waiting_execution" && ["proposed", "approval_required"].includes(request.status);
+          });
+          const executed = data.executions.filter((execution) => execution.status === "succeeded").slice(0, 3);
+          return (
+            <div className="space-y-2">
+              {eligible.length === 0 && executed.length === 0 && <div className="text-[10px] italic text-[var(--app-text-muted)]">No safe governed actions ready to run.</div>}
+              {eligible.map((request) => {
+                const decision = evaluateExecutionPolicy(request);
+                const capability = mapCapability(request);
+                const alreadyExecuted = data.executions.some((ex) => ex.requestId === request.requestId && ex.status === "succeeded");
+                return (
+                  <div key={request.requestId} className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
+                    <div className="text-[10px] font-bold text-emerald-200">Approved — ready to run · {request.title}</div>
+                    <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{request.description}</p>
+                    <p className="mt-1 text-[9px] uppercase tracking-widest text-emerald-300">{capability ?? "safe"} · {decision.riskLevel}</p>
+                    <div className="mt-2 flex gap-2">
+                      {alreadyExecuted ? (
+                        <span className="text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">Already executed</span>
+                      ) : (
+                        <Button tone="good" onClick={() => { governedToolExecutionService.executeApprovedRequest(request.requestId); refresh(); }}>Run once</Button>
+                      )}
+                      <Button tone="danger" onClick={() => { governedActionRequestService.blockRequest(request.requestId); refresh(); }}>block</Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {ineligible.slice(0, 4).map((request) => {
+                const decision = evaluateExecutionPolicy(request);
+                return (
+                  <div key={request.requestId} className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-2">
+                    <div className="text-[10px] font-bold text-amber-200">Approval only — execution bridge unavailable · {request.title}</div>
+                    <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{decision.userSafeReason}</p>
+                    <p className="mt-1 text-[9px] uppercase tracking-widest text-amber-300">Blocked for safety · {decision.riskLevel}</p>
+                  </div>
+                );
+              })}
+              {executed.map((execution) => (
+                <div key={execution.executionId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">Executed · {execution.title}</div>
+                  <p className="mt-1 text-[9px] uppercase tracking-widest text-emerald-300">succeeded · {execution.capability}</p>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Governed action requests" subtitle="Risky requests remain request-only. This action needs a future secure bridge.">
         {waitingRequests.length === 0 ? (
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No governed action requests waiting.</div>
         ) : waitingRequests.map((request) => (

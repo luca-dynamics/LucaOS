@@ -31,6 +31,7 @@ import { runtimeInboxService } from "./RuntimeInboxService";
 import { agentSessionContinuityService } from "./AgentSessionContinuityService";
 import { approvalRequestCenterService } from "../provenance/ApprovalRequestCenterService";
 import { governedActionRequestService } from "./GovernedActionRequestService";
+import { governedToolExecutionService } from "./GovernedToolExecutionService";
 import { provenanceGateService } from "../provenance/ProvenanceGateService";
 import { skillRegistryService } from "../skills/SkillRegistryService";
 import { memoryGovernanceService } from "../memory/MemoryGovernanceService";
@@ -44,6 +45,7 @@ import type { RuntimeInboxDiagnosticsSummary } from "../../types/runtimeInbox";
 import type { AgentSessionContinuityDiagnosticsSummary } from "../../types/agentSessionContinuity";
 import type { ApprovalRequestDiagnosticsSummary } from "../../types/approvalCenter";
 import type { GovernedActionRequestDiagnosticsSummary } from "../../types/governedActionRequest";
+import type { GovernedToolExecutionDiagnosticsSummary } from "../../types/governedToolExecution";
 
 export type RuntimeReadinessSeverity =
   | "ready"
@@ -148,6 +150,7 @@ export interface RuntimeGovernanceDiagnostics {
   sessions: AgentSessionContinuityDiagnosticsSummary;
   approvalCenter: ApprovalRequestDiagnosticsSummary;
   governedRequests: GovernedActionRequestDiagnosticsSummary;
+  governedExecutions: GovernedToolExecutionDiagnosticsSummary;
   visibility: "friendly" | "compact" | "full";
   safeSummary: string;
 }
@@ -503,12 +506,14 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   sessions?: AgentSessionContinuityDiagnosticsSummary;
   approvalCenter?: ApprovalRequestDiagnosticsSummary;
   governedRequests?: GovernedActionRequestDiagnosticsSummary;
+  governedExecutions?: GovernedToolExecutionDiagnosticsSummary;
 }): RuntimeGovernanceDiagnostics {
   const reminders = input.reminders ?? { totalDeliveries: 0, deliveredCount: 0, blockedCount: 0, failedCount: 0, pendingCount: 0, safeLoopDeliveryEnabled: true };
   const inbox = input.inbox ?? { totalEvents: 0, unreadEvents: 0, archivedEvents: 0, externalInertEvents: 0, approvalEvents: 0 };
   const sessions = input.sessions ?? { totalSessions: 0, activeSessions: 0, resumableSessions: 0, pausedSessions: 0, quarantinedSessions: 0, safeToResumeSessions: 0 };
   const approvalCenter = input.approvalCenter ?? { totalRequests: 0, pendingRequests: 0, approvedOnceRequests: 0, rejectedRequests: 0, expiredRequests: 0, revokedRequests: 0 };
   const governedRequests = input.governedRequests ?? { totalRequests: 0, proposedRequests: 0, approvalRequiredRequests: 0, approvedWaitingExecutionRequests: 0, rejectedRequests: 0, blockedRequests: 0, dryRunOnly: true as const };
+  const governedExecutions = input.governedExecutions ?? { totalExecutions: 0, succeededExecutions: 0, blockedExecutions: 0, failedExecutions: 0, queuedExecutions: 0, safeExecutionEnabled: true as const, riskyExecutionEnabled: false as const };
   const pendingApprovals =
     input.runtimeContinuity.pendingApprovalCount +
     input.scheduler.pendingApprovals +
@@ -540,6 +545,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
     sessions,
     approvalCenter,
     governedRequests,
+    governedExecutions,
     visibility,
     safeSummary: sanitizeDiagnosticText(safeSummary),
   };
@@ -727,6 +733,7 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
     sessions: agentSessionContinuityService.getDiagnosticsSummary(),
     approvalCenter: approvalRequestCenterService.getDiagnosticsSummary(),
     governedRequests: governedActionRequestService.getDiagnosticsSummary(),
+    governedExecutions: governedToolExecutionService.getDiagnosticsSummary(),
   });
 
   return {
