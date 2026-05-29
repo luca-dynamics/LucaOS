@@ -35,7 +35,7 @@ interface RuntimeContinuityLoopDependencies {
     "detectDueJobsDryRun" | "getDiagnosticsSummary" | "listJobs"
   >;
   reminders: Pick<typeof reminderDeliveryService, "deliverDueNotifyJobs" | "getDiagnosticsSummary">;
-  approvals: Pick<typeof approvalRequestCenterService, "getDiagnosticsSummary" | "createApprovalRequest">;
+  approvals: Pick<typeof approvalRequestCenterService, "getDiagnosticsSummary" | "createApprovalRequest" | "listRequests">;
   inbox: Pick<typeof runtimeInboxService, "getDiagnosticsSummary">;
   sessions: Pick<typeof agentSessionContinuityService, "getDiagnosticsSummary">;
   provenance: Pick<typeof provenanceGateService, "getDiagnosticsSummary">;
@@ -351,14 +351,16 @@ export class RuntimeContinuityLoopService {
       if (!run.due || !run.blockedBy.includes("approval_required")) continue;
       const job = jobsById.get(run.jobId);
       if (!job?.provenance?.provenanceId) continue;
+      const occurrenceAt = job.nextRunAt ?? job.schedule.runAt ?? tickAt;
+      const beforeRequestCount = this.deps.approvals.listRequests().length;
       this.deps.approvals.createApprovalRequest(
         {
-          actionInstanceId: `scheduler:${job.jobId}:${job.nextRunAt ?? tickAt}`,
+          actionInstanceId: `scheduler:${job.jobId}:${occurrenceAt}`,
           actionType: "scheduled_job",
           target: job.jobId,
           parameters: { allowedCapabilities: job.allowedCapabilities, deliveryTarget: job.deliveryTarget },
           provenanceChain: [job.provenance.provenanceId],
-          timestampBucket: tickAt.slice(0, 16),
+          timestampBucket: job.nextRunAt ?? undefined,
         },
         {
           title: `Approval required: ${job.title}`,
@@ -370,7 +372,7 @@ export class RuntimeContinuityLoopService {
           actionPreview: { title: job.title, allowedCapabilities: job.allowedCapabilities, deliveryTarget: job.deliveryTarget },
         },
       );
-      created += 1;
+      if (this.deps.approvals.listRequests().length > beforeRequestCount) created += 1;
     }
     return created;
   }

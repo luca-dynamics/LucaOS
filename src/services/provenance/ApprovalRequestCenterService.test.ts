@@ -17,4 +17,22 @@ describe("ApprovalRequestCenterService", () => {
     const second = service.createApprovalRequest({ actionInstanceId: "b", actionType: "tool", target: "tool", parameters: {}, provenanceChain: [prov.provenanceId] }, { title: "Tool", description: "Needs approval", sourceType: "tool", sourceId: "tool:1" });
     expect(service.reject(second.approvalRequestId)?.status).toBe("rejected");
   });
+
+  it("deduplicates pending approval requests and approval inbox events by action source digest", () => {
+    const storage = new MemoryStorage();
+    const provenance = new ProvenanceGateService(storage);
+    const prov = provenance.createProvenanceRecord({ sourceType: "scheduled_job", sourceId: "job" });
+    const inbox = { ingestEvent: vi.fn() };
+    const service = new ApprovalRequestCenterService({ storage, provenance, inbox });
+    const identity = { actionInstanceId: "scheduler:job:2026-05-28T12:00:00.000Z", actionType: "scheduled_job", target: "job", parameters: { capability: "shell" }, provenanceChain: [prov.provenanceId], timestampBucket: "2026-05-28T12:00:00.000Z" };
+
+    const first = service.createApprovalRequest(identity, { title: "Risky schedule", description: "Request only", sourceType: "scheduler", sourceId: "job" });
+    const second = service.createApprovalRequest(identity, { title: "Risky schedule", description: "Request only", sourceType: "scheduler", sourceId: "job" });
+
+    expect(second.approvalRequestId).toBe(first.approvalRequestId);
+    expect(service.listRequests()).toHaveLength(1);
+    expect(inbox.ingestEvent).toHaveBeenCalledTimes(1);
+    expect(service.findPendingRequestByActionDigest(first.actionDigest, "scheduler", "job")?.approvalRequestId).toBe(first.approvalRequestId);
+  });
+
 });

@@ -97,6 +97,35 @@ describe("RuntimeContinuityLoopService", () => {
     }));
   });
 
+
+  it("deduplicates risky due scheduler approval requests across ticks but allows new occurrences", async () => {
+    const { deps, scheduler, provenance, approvals, inbox } = makeDeps();
+    const prov = provenance.createProvenanceRecord({ sourceType: "scheduled_job", sourceId: "repeat-risky" });
+    const job = scheduler.createJob({
+      title: "Risky repeat",
+      description: "Must stay request-only",
+      schedule: { kind: "once", runAt: "2026-05-28T11:59:00.000Z" },
+      provenance: prov,
+      allowedCapabilities: ["shell"],
+    });
+    const loop = new RuntimeContinuityLoopService(deps);
+
+    await loop.tick();
+    deps.now.mockReturnValue(new Date("2026-05-28T12:01:00.000Z"));
+    await loop.tick();
+
+    expect(approvals.listRequests()).toHaveLength(1);
+    expect(inbox.ingestEvent).toHaveBeenCalledTimes(1);
+
+    scheduler.updateJob(job.jobId, { nextRunAt: "2026-05-28T12:02:00.000Z" });
+    deps.now.mockReturnValue(new Date("2026-05-28T12:03:00.000Z"));
+    await loop.tick();
+
+    expect(approvals.listRequests()).toHaveLength(2);
+    expect(inbox.ingestEvent).toHaveBeenCalledTimes(2);
+    expect(new Set(approvals.listRequests().map((request) => request.actionDigest)).size).toBe(2);
+  });
+
   it("prevents overlapping ticks with an in-flight guard", async () => {
     const { deps } = makeDeps();
     let loop: RuntimeContinuityLoopService;

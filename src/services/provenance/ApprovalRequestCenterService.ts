@@ -13,16 +13,23 @@ export class ApprovalRequestCenterService {
   private requests: ApprovalRequest[];
   constructor(private readonly deps: { storage?: StorageLike; provenance: Pick<ProvenanceGateService, "requestApproval" | "approveOnce" | "reject" | "computeActionDigest">; inbox: Pick<RuntimeInboxService, "ingestEvent"> } = { storage: storage(), provenance: provenanceGateService, inbox: runtimeInboxService }) { this.requests = readRequests(deps.storage); }
   createApprovalRequest(actionIdentity: ActionInstanceIdentity, metadata: CreateApprovalRequestMetadata): ApprovalRequest {
+    const actionDigest = this.deps.provenance.computeActionDigest(actionIdentity);
+    const existing = this.findPendingRequestByActionDigest(actionDigest, metadata.sourceType, metadata.sourceId);
+    if (existing) return existing;
     const approval = this.deps.provenance.requestApproval(actionIdentity, metadata.userSafeReason ?? "Owner approval is required before any future gated bridge can run this action.");
     const timestamp = nowIso();
-    const existing = this.requests.find((item) => item.actionDigest === approval.actionDigest && item.status === "pending");
-    if (existing) return existing;
     const request: ApprovalRequest = { approvalRequestId: `approval-request:${approval.actionDigest.slice(-8)}:${timestamp}`, actionDigest: approval.actionDigest, title: metadata.title, description: metadata.description, riskLevel: metadata.riskLevel ?? "high", requestedBy: metadata.requestedBy ?? "luca-runtime", sourceType: metadata.sourceType, sourceId: metadata.sourceId, provenanceIds: [...actionIdentity.provenanceChain], status: "pending", createdAt: timestamp, expiresAt: metadata.expiresAt, userSafeReason: approval.userSafeReason, actionPreview: sanitizeRuntimeMetadata(metadata.actionPreview ?? actionIdentity.parameters) };
     this.upsert(request);
     this.deps.inbox.ingestEvent({ source: metadata.sourceType === "skill" ? "skill" : metadata.sourceType === "tool" ? "tool_request" : "system", sourceTrustLevel: "local", title: request.title, body: request.description, eventType: "approval_request_created", provenance: { provenanceId: actionIdentity.provenanceChain[0] ?? "missing", sourceType: "runtime_snapshot", sourceId: request.approvalRequestId, sourceTrustLevel: "local", createdBy: request.requestedBy, createdAt: timestamp, digest: request.actionDigest, parentProvenanceIds: actionIdentity.provenanceChain, quarantineState: "clear", approvalState: "pending", revocationState: "active" }, requiresApproval: true, metadata: { approvalRequestId: request.approvalRequestId, riskLevel: request.riskLevel } });
     return request;
   }
   listRequests(): ApprovalRequest[] { return [...this.requests]; }
+  findPendingRequestByActionDigest(actionDigest: string, sourceType?: ApprovalRequest["sourceType"], sourceId?: string): ApprovalRequest | undefined {
+    return this.requests.find((item) => item.status === "pending"
+      && item.actionDigest === actionDigest
+      && (sourceType ? item.sourceType === sourceType : true)
+      && (sourceId ? item.sourceId === sourceId : true));
+  }
   approveOnce(requestId: string): ApprovalRequest | undefined { const request = this.requests.find((item) => item.approvalRequestId === requestId); if (!request) return undefined; const approved = this.deps.provenance.approveOnce(request.actionDigest); if (!approved) return undefined; return this.update(requestId, { status: "approved_once", decidedAt: approved.decidedAt ?? nowIso() }); }
   reject(requestId: string): ApprovalRequest | undefined { const request = this.requests.find((item) => item.approvalRequestId === requestId); if (!request) return undefined; this.deps.provenance.reject(request.actionDigest); return this.update(requestId, { status: "rejected", decidedAt: nowIso() }); }
   revoke(requestId: string): ApprovalRequest | undefined { return this.update(requestId, { status: "revoked", decidedAt: nowIso() }); }
