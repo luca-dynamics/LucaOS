@@ -20,7 +20,12 @@ export type RuntimeContinuityEventType =
   | "degraded"
   | "quarantined"
   | "approval_pending"
-  | "scheduler_due_detected";
+  | "scheduler_due_detected"
+  | "reminder_delivered"
+  | "reminder_blocked"
+  | "inbox_event_ingested"
+  | "session_resume_available"
+  | "approval_request_created";
 
 export type RuntimeContinuityEventSeverity = "info" | "warning" | "blocked";
 
@@ -47,6 +52,7 @@ export interface RuntimeContinuityLoopStatus {
   nextTickAt?: string;
   dueDryRunJobs: number;
   pendingApprovalCount: number;
+  deliveredReminderCount?: number;
   scheduledJobCount: number;
   quarantinedItemCount: number;
   degradedReasons: string[];
@@ -66,6 +72,7 @@ export interface RuntimeContinuitySnapshot {
   activeMemoryRouteSummary: string;
   activeToolScopes: string[];
   pendingApprovalCount: number;
+  deliveredReminderCount?: number;
   scheduledJobCount: number;
   quarantinedItemCount: number;
   lastHeartbeatAt?: string;
@@ -83,6 +90,7 @@ export interface RuntimeContinuitySummary {
   canSafelyResume: boolean;
   userSafeStatus: string;
   pendingApprovalCount: number;
+  deliveredReminderCount: number;
   scheduledJobCount: number;
   quarantinedItemCount: number;
   degradedReasons: string[];

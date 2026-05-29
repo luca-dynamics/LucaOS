@@ -26,6 +26,11 @@ import type { MemoryReadinessState, MemoryRouteDecision } from "../../types/memo
 import { runtimeContinuityService } from "./RuntimeContinuityService";
 import { runtimeContinuityLoopService } from "./RuntimeContinuityLoopService";
 import { schedulerRegistryService } from "../scheduler/SchedulerRegistryService";
+import { reminderDeliveryService } from "../scheduler/ReminderDeliveryService";
+import { runtimeInboxService } from "./RuntimeInboxService";
+import { agentSessionContinuityService } from "./AgentSessionContinuityService";
+import { approvalRequestCenterService } from "../provenance/ApprovalRequestCenterService";
+import { governedActionRequestService } from "./GovernedActionRequestService";
 import { provenanceGateService } from "../provenance/ProvenanceGateService";
 import { skillRegistryService } from "../skills/SkillRegistryService";
 import { memoryGovernanceService } from "../memory/MemoryGovernanceService";
@@ -34,6 +39,11 @@ import type { SchedulerDiagnosticsSummary } from "../../types/scheduler";
 import type { ProvenanceDiagnosticsSummary } from "../../types/provenance";
 import type { SkillRegistryDiagnosticsSummary } from "../../types/skillContinuity";
 import type { MemoryGovernanceDiagnosticsSummary } from "../../types/memoryGovernance";
+import type { ReminderDeliveryDiagnosticsSummary } from "../../types/reminderDelivery";
+import type { RuntimeInboxDiagnosticsSummary } from "../../types/runtimeInbox";
+import type { AgentSessionContinuityDiagnosticsSummary } from "../../types/agentSessionContinuity";
+import type { ApprovalRequestDiagnosticsSummary } from "../../types/approvalCenter";
+import type { GovernedActionRequestDiagnosticsSummary } from "../../types/governedActionRequest";
 
 export type RuntimeReadinessSeverity =
   | "ready"
@@ -133,6 +143,11 @@ export interface RuntimeGovernanceDiagnostics {
   provenance: ProvenanceDiagnosticsSummary | { pendingApprovals: number };
   skills: SkillRegistryDiagnosticsSummary;
   memoryGovernance: MemoryGovernanceDiagnosticsSummary;
+  reminders: ReminderDeliveryDiagnosticsSummary;
+  inbox: RuntimeInboxDiagnosticsSummary;
+  sessions: AgentSessionContinuityDiagnosticsSummary;
+  approvalCenter: ApprovalRequestDiagnosticsSummary;
+  governedRequests: GovernedActionRequestDiagnosticsSummary;
   visibility: "friendly" | "compact" | "full";
   safeSummary: string;
 }
@@ -483,11 +498,22 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   provenance: ProvenanceDiagnosticsSummary;
   skills: SkillRegistryDiagnosticsSummary;
   memoryGovernance: MemoryGovernanceDiagnosticsSummary;
+  reminders?: ReminderDeliveryDiagnosticsSummary;
+  inbox?: RuntimeInboxDiagnosticsSummary;
+  sessions?: AgentSessionContinuityDiagnosticsSummary;
+  approvalCenter?: ApprovalRequestDiagnosticsSummary;
+  governedRequests?: GovernedActionRequestDiagnosticsSummary;
 }): RuntimeGovernanceDiagnostics {
+  const reminders = input.reminders ?? { totalDeliveries: 0, deliveredCount: 0, blockedCount: 0, failedCount: 0, pendingCount: 0, safeLoopDeliveryEnabled: true };
+  const inbox = input.inbox ?? { totalEvents: 0, unreadEvents: 0, archivedEvents: 0, externalInertEvents: 0, approvalEvents: 0 };
+  const sessions = input.sessions ?? { totalSessions: 0, activeSessions: 0, resumableSessions: 0, pausedSessions: 0, quarantinedSessions: 0, safeToResumeSessions: 0 };
+  const approvalCenter = input.approvalCenter ?? { totalRequests: 0, pendingRequests: 0, approvedOnceRequests: 0, rejectedRequests: 0, expiredRequests: 0, revokedRequests: 0 };
+  const governedRequests = input.governedRequests ?? { totalRequests: 0, proposedRequests: 0, approvalRequiredRequests: 0, approvedWaitingExecutionRequests: 0, rejectedRequests: 0, blockedRequests: 0, dryRunOnly: true as const };
   const pendingApprovals =
     input.runtimeContinuity.pendingApprovalCount +
     input.scheduler.pendingApprovals +
-    input.provenance.pendingApprovals;
+    input.provenance.pendingApprovals +
+    approvalCenter.pendingRequests;
   const quarantinedItems =
     input.runtimeContinuity.quarantinedItemCount +
     input.scheduler.quarantinedJobs +
@@ -499,7 +525,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
     ? `${quarantinedItems} governed item(s) need review before autonomous continuity can expand.`
     : pendingApprovals > 0
       ? `${pendingApprovals} approval(s) are waiting before risky actions can proceed.`
-      : "Runtime continuity foundations are safe and dry-run only.";
+      : `You have ${reminders.deliveredCount} reminder(s), ${approvalCenter.pendingRequests} pending approval(s), and ${sessions.safeToResumeSessions} resumable session(s).`;
 
   return {
     runtimeContinuity: input.runtimeContinuity,
@@ -509,6 +535,11 @@ export function buildGovernanceDiagnosticsForAudience(input: {
       : input.provenance,
     skills: input.skills,
     memoryGovernance: input.memoryGovernance,
+    reminders,
+    inbox,
+    sessions,
+    approvalCenter,
+    governedRequests,
     visibility,
     safeSummary: sanitizeDiagnosticText(safeSummary),
   };
@@ -691,6 +722,11 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
     provenance: provenanceGateService.getDiagnosticsSummary(),
     skills: skillRegistryService.getDiagnosticsSummary(),
     memoryGovernance: memoryGovernanceService.getDiagnosticsSummary(),
+    reminders: reminderDeliveryService.getDiagnosticsSummary(),
+    inbox: runtimeInboxService.getDiagnosticsSummary(),
+    sessions: agentSessionContinuityService.getDiagnosticsSummary(),
+    approvalCenter: approvalRequestCenterService.getDiagnosticsSummary(),
+    governedRequests: governedActionRequestService.getDiagnosticsSummary(),
   });
 
   return {
