@@ -39,6 +39,8 @@ import { memoryGovernanceService } from "../memory/MemoryGovernanceService";
 import { memoryProposalService } from "../memory/MemoryProposalService";
 import { governedMemoryWriteService } from "../memory/GovernedMemoryWriteService";
 import { agentPlanningCheckpointService } from "./AgentPlanningCheckpointService";
+import { runtimePlanService } from "./RuntimePlanService";
+import type { RuntimePlanDiagnosticsSummary } from "../../types/runtimePlan";
 import type { RuntimeContinuitySummary } from "../../types/runtimeContinuity";
 import type { SchedulerDiagnosticsSummary } from "../../types/scheduler";
 import type { ProvenanceDiagnosticsSummary } from "../../types/provenance";
@@ -162,6 +164,7 @@ export interface RuntimeGovernanceDiagnostics {
   memoryWrites: MemoryWriteDiagnosticsSummary;
   skillGovernance: SkillGovernanceDiagnosticsSummary;
   planningCheckpoints: AgentPlanningCheckpointDiagnosticsSummary;
+  runtimePlans: RuntimePlanDiagnosticsSummary;
   pendingMemoryProposals: number;
   approvedMemoryWritesWaiting: number;
   completedMemoryWrites: number;
@@ -529,6 +532,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   memoryWrites?: MemoryWriteDiagnosticsSummary;
   skillGovernance?: SkillGovernanceDiagnosticsSummary;
   planningCheckpoints?: AgentPlanningCheckpointDiagnosticsSummary;
+  runtimePlans?: RuntimePlanDiagnosticsSummary;
 }): RuntimeGovernanceDiagnostics {
   const reminders = input.reminders ?? { totalDeliveries: 0, deliveredCount: 0, blockedCount: 0, failedCount: 0, pendingCount: 0, safeLoopDeliveryEnabled: true };
   const inbox = input.inbox ?? { totalEvents: 0, unreadEvents: 0, archivedEvents: 0, externalInertEvents: 0, approvalEvents: 0 };
@@ -540,6 +544,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   const memoryWrites = input.memoryWrites ?? { totalWrites: 0, succeededWrites: 0, blockedWrites: 0, failedWrites: 0 };
   const skillGovernance = input.skillGovernance ?? { totalRequests: 0, proposedRequests: 0, approvalRequiredRequests: 0, approvedWaitingRequests: 0, rejectedRequests: 0, blockedRequests: 0, revokedRequests: 0, expiredRequests: 0, canAutoExecute: false as const };
   const planningCheckpoints = input.planningCheckpoints ?? { totalCheckpoints: 0, proposedCheckpoints: 0, approvedCheckpoints: 0, rejectedCheckpoints: 0, blockedCheckpoints: 0, completedCheckpoints: 0, archivedCheckpoints: 0, canAutoExecute: false as const };
+  const runtimePlans = input.runtimePlans ?? { totalPlans: 0, activePlans: 0, proposedPlans: 0, waitingPlans: 0, blockedPlans: 0, completedPlans: 0, totalPlanSteps: 0, blockedRiskySteps: 0, pendingPlanApprovals: 0, planArtifactsCreated: 0, orchestrationEnabled: true as const, riskyExecutionEnabled: false as const };
   const pendingMemoryProposals = memoryProposals.proposedProposals + memoryProposals.approvalRequiredProposals;
   const approvedMemoryWritesWaiting = memoryProposals.approvedWaitingWriteProposals;
   const completedMemoryWrites = memoryWrites.succeededWrites;
@@ -583,6 +588,7 @@ export function buildGovernanceDiagnosticsForAudience(input: {
     memoryWrites,
     skillGovernance,
     planningCheckpoints,
+    runtimePlans,
     pendingMemoryProposals,
     approvedMemoryWritesWaiting,
     completedMemoryWrites,
@@ -782,6 +788,7 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
     memoryWrites: governedMemoryWriteService.getDiagnosticsSummary(),
     skillGovernance: skillGovernanceService.getDiagnosticsSummary(),
     planningCheckpoints: agentPlanningCheckpointService.getDiagnosticsSummary(),
+    runtimePlans: runtimePlanService.getDiagnosticsSummary(),
   });
 
   return {

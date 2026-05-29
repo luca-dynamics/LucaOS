@@ -7,6 +7,7 @@ import { reminderDeliveryService } from "../../services/scheduler/ReminderDelive
 import { approvalRequestCenterService } from "../../services/provenance/ApprovalRequestCenterService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
+import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -51,6 +52,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
+  const activePlan = runtimePlanService.getActivePlan() ?? runtimePlanService.listPlans().find((p) => p.status === "proposed" || p.status === "waiting_approval");
+  const planDiag = runtimePlanService.getDiagnosticsSummary();
   const pendingTasks = tasks.filter((task) => ["PENDING", "IN_PROGRESS", "BLOCKED"].includes(task.status)).slice(0, 4);
   const activeGoals = goals.filter((goal) => ["PENDING", "SCHEDULED", "IN_PROGRESS"].includes(goal.status)).slice(0, 4);
   const upcomingEvents = events.filter((event) => event.startTime >= Date.now()).slice(0, 3);
@@ -110,6 +113,26 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No session continuity record available.</div>
         )}
       </RightPanelSection>
+
+      {activePlan && (
+        <RightPanelSection title="Current plan" subtitle="Runtime plan record. Approving or activating a plan does not execute anything.">
+          <div className="space-y-1 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">{activePlan.title}</div>
+            <div>{activePlan.summary}</div>
+            <div className="uppercase tracking-widest">{activePlan.status} · risk: {activePlan.riskLevel}</div>
+            {activePlan.currentStepId && (() => {
+              const currentStep = activePlan.steps.find((s) => s.stepId === activePlan.currentStepId);
+              return currentStep ? <div>Next safe step: {currentStep.title} · {currentStep.status}</div> : null;
+            })()}
+            <div className="grid grid-cols-2 gap-1 pt-1">
+              <RightPanelMetric label="Waiting approval" value={planDiag.pendingPlanApprovals} tone={planDiag.pendingPlanApprovals > 0 ? "warn" : "good"} />
+              <RightPanelMetric label="Blocked for safety" value={planDiag.blockedRiskySteps} tone={planDiag.blockedRiskySteps > 0 ? "danger" : "good"} />
+              <RightPanelMetric label="Governed items ready" value={planDiag.planArtifactsCreated} tone="neutral" />
+              <RightPanelMetric label="Plan steps" value={activePlan.steps.length} tone="neutral" />
+            </div>
+          </div>
+        </RightPanelSection>
+      )}
 
       {activeCheckpoint && (
         <RightPanelSection title="Planning checkpoint" subtitle="State-only plan record. Approving a checkpoint never runs tools or skills.">
