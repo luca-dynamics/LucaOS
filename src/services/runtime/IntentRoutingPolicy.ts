@@ -311,9 +311,8 @@ export function chooseRoute(
   signals: LucaIntentSignal[],
   risk: LucaIntentRiskLevel,
 ): LucaIntentRoute {
-  if (risk === "critical" || risk === "high") {
-    if (hasRiskySignals(signals)) return "blocked_risky_action";
-  }
+  if (risk === "critical") return "blocked_risky_action";
+  if (risk === "high" && hasRiskySignals(signals)) return "blocked_risky_action";
 
   if (signals.includes("unclear_consequential")) return "ask_user";
 
@@ -402,11 +401,11 @@ export function shouldStayFast(
 // ---------------------------------------------------------------------------
 
 export function classifyIntent(input: LucaIntentRoutingInput): Omit<LucaIntentRoutingDecision, "decisionId" | "createdAt" | "createdPlanId" | "createdMemoryProposalIds" | "createdGovernedRequestIds" | "createdSkillRequestIds" | "createdCheckpointIds" | "inboxEventIds"> {
+  const risk = detectRisk(input.message);
   const sanitized = sanitizeIntentInput(input);
   const message = sanitized.message;
   const mode = sanitized.mode;
   const signals = detectSignals(message);
-  const risk = detectRisk(message);
   const route = chooseRoute(mode, signals, risk);
 
   const shouldCreatePlan = route === "runtime_plan";
