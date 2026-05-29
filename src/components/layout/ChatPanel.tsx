@@ -10,6 +10,9 @@ import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
 import { apiUrl } from "../../config/api";
 import IntentRoutingModeSelector from "../runtime/IntentRoutingModeSelector";
+import { chatIntentRouterBridge } from "../../services/runtime/ChatIntentRouterBridge";
+import { chatIntentProvenanceService } from "../../services/runtime/ChatIntentProvenanceService";
+import type { ChatRoutingResult } from "../../services/runtime/ChatIntentRouterBridge";
 
 interface ChatPanelProps {
   messages: any[];
@@ -437,6 +440,87 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   }, [persona, bootSequence, messages.length, setAmbientSuggestions, setShowSuggestionChips, userName, handleSendMessage]);
 
+  // --- Intent Routing Integration (PR #124) ---
+  const buildRouteHintText = (result: ChatRoutingResult): string => {
+    switch (result.routeType) {
+      case "runtime_plan":
+        return "I created a governed plan for this. Review it in ACTIVITY → Runtime Plans. No action has been executed.";
+      case "memory_proposal":
+        return "I created a memory proposal. It has not been saved yet.";
+      case "skill_request":
+        return "I created a skill request. It is state-only and will not install or run anything.";
+      case "blocked_risky_action":
+        return "I recorded this as blocked for safety.";
+      case "ask_user":
+        return "I need one clarification before creating a governed plan or request.";
+      case "governed_action_request":
+      case "safe_execution_request":
+        return "I created a governed action request. It requires approval before anything runs.";
+      case "planning_checkpoint":
+        return "I created a planning checkpoint. No action has been executed.";
+      default:
+        return "";
+    }
+  };
+
+  const handleRoutedSend = () => {
+    const trimmed = input.trim();
+    if (!trimmed) {
+      handleSend();
+      return;
+    }
+    if (isProcessing) {
+      handleSend();
+      return;
+    }
+    if (
+      !chatIntentProvenanceService.shouldRouteMessage({
+        message: trimmed,
+        senderType: "user",
+        isHidden: false,
+        isAwakening: false,
+      })
+    ) {
+      handleSend();
+      return;
+    }
+
+    let routeResult: ChatRoutingResult | undefined;
+    try {
+      const { provenanceIds } = chatIntentProvenanceService.createChatProvenance({
+        message: trimmed,
+      });
+      routeResult = chatIntentRouterBridge.maybeRouteMessageBeforeResponse({
+        message: trimmed,
+        source: "chat",
+        provenanceIds,
+      });
+    } catch (err) {
+      console.warn("[ChatPanel] Intent routing failed, sending normally:", err);
+    }
+
+    handleSend();
+
+    if (routeResult && routeResult.routed && routeResult.routeType !== "fast_response") {
+      const hintText = buildRouteHintText(routeResult);
+      if (hintText) {
+        startTransition(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `route-hint-${Date.now()}`,
+              text: hintText,
+              sender: Sender.SYSTEM,
+              timestamp: Date.now(),
+              isStreaming: false,
+              isRouteHint: true,
+            },
+          ]);
+        });
+      }
+    }
+  };
+
   const sharedInputArea = (
     <div>
       {/* Attachment preview */}
@@ -480,15 +564,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         <div className="mb-1 flex justify-end px-1">
           <IntentRoutingModeSelector theme={theme} compact />
         </div>
-        {/* TODO PR #124+: Wire chatIntentRouterBridge.maybeRouteMessageBeforeResponse
-            here before handleSend() to route user intent through the Intent Routing
-            Layer without forcing every message into a plan. */}
         <ChatWidgetInput
           input={input}
           setInput={setInput}
           onSubmit={(e: React.FormEvent) => {
             e.preventDefault();
-            handleSend();
+            handleRoutedSend();
           }}
           isProcessing={isProcessing}
           primaryColor={theme.hex}
