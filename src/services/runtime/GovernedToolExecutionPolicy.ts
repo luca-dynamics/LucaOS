@@ -4,6 +4,7 @@ import type {
   GovernedExecutionPolicyDecision,
   GovernedExecutionRiskLevel,
 } from "../../types/governedToolExecution";
+import { isSafeLocalPanelTarget } from "./SafeLocalPanelTargets";
 
 const SECRET_KEY_PATTERNS = [
   /token/i,
@@ -58,6 +59,11 @@ const ALLOWED_SAFE_TARGETS = new Set([
   "panel:memory",
   "panel:logs",
   "panel:model-manager",
+  "view:runtime-diagnostics",
+  "view:memory-proposals",
+  "view:skill-requests",
+  "view:current-plan",
+  "view:routing-decisions",
   "runtime:diagnostics",
   "runtime:status",
   "memory:summary",
@@ -129,6 +135,7 @@ export function mapCapability(request: GovernedActionRequest): GovernedExecution
   if (cap && cap in CAPABILITY_MAP) return CAPABILITY_MAP[cap];
   const target = request.target?.toLowerCase().replace(/-/g, "_");
   if (target?.startsWith("panel:")) return "open_panel";
+  if (target?.startsWith("view:")) return "open_panel";
   if (target?.startsWith("runtime:")) return "runtime_read";
   if (target?.startsWith("memory:")) return "memory_read";
   if (target?.startsWith("inbox:")) return "inbox_read";
@@ -141,8 +148,10 @@ export function mapCapability(request: GovernedActionRequest): GovernedExecution
 export function isAllowedTarget(target: string): boolean {
   const normalized = target.toLowerCase().trim();
   if (ALLOWED_SAFE_TARGETS.has(normalized)) return true;
+  if (isSafeLocalPanelTarget(normalized)) return true;
   if (BLOCKED_TARGET_PATTERNS.some((pattern) => pattern.test(normalized))) return false;
   if (normalized.startsWith("panel:")) return ALLOWED_SAFE_TARGETS.has(normalized);
+  if (normalized.startsWith("view:")) return ALLOWED_SAFE_TARGETS.has(normalized);
   return false;
 }
 

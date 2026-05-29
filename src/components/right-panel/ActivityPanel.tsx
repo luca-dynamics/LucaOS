@@ -18,6 +18,7 @@ import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteToneBorder, getRouteToneBg, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
+import { isSafeLocalPanelTarget, getSafeLocalPanelLabel } from "../../services/runtime/SafeLocalPanelTargets";
 
 interface ActivityPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -380,17 +381,27 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
           return (
             <div className="space-y-2">
               {eligible.length === 0 && executed.length === 0 && alreadyDone.length === 0 && <div className="text-[10px] italic text-[var(--app-text-muted)]">No safe governed actions ready to run.</div>}
-              {eligible.map(({ request, canExec }) => (
-                <div key={request.requestId} className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
-                  <div className="text-[10px] font-bold text-emerald-200">Approved — ready to run · {request.title}</div>
-                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{request.description}</p>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-emerald-300">{canExec.capability ?? "safe"} · {request.riskLevel ?? "low"}</p>
-                  <div className="mt-2 flex gap-2">
-                    <Button tone="good" onClick={() => { governedToolExecutionService.executeApprovedRequest(request.requestId); refresh(); }}>Run once</Button>
-                    <Button tone="danger" onClick={() => { governedActionRequestService.blockRequest(request.requestId); refresh(); }}>block</Button>
+              {eligible.map(({ request, canExec }) => {
+                const isPanelAction = isSafeLocalPanelTarget(request.target);
+                const panelLabel = isPanelAction ? getSafeLocalPanelLabel(request.target) : null;
+                return (
+                  <div key={request.requestId} className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
+                    <div className="text-[10px] font-bold text-emerald-200">
+                      {isPanelAction ? `Ready to open ${panelLabel}` : `Approved — ready to run · ${request.title}`}
+                    </div>
+                    <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">
+                      {isPanelAction ? "This only changes local LucaOS UI." : request.description}
+                    </p>
+                    <p className="mt-1 text-[9px] uppercase tracking-widest text-emerald-300">{canExec.capability ?? "safe"} · {request.riskLevel ?? "low"}</p>
+                    <div className="mt-2 flex gap-2">
+                      <Button tone="good" onClick={() => { governedToolExecutionService.executeApprovedRequest(request.requestId); refresh(); }}>
+                        {isPanelAction ? `Run once to open ${panelLabel}` : "Run once"}
+                      </Button>
+                      <Button tone="danger" onClick={() => { governedActionRequestService.blockRequest(request.requestId); refresh(); }}>block</Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {approvedButBlocked.map(({ request, canExec }) => (
                 <div key={request.requestId} className="rounded-xl border border-red-500/20 bg-red-500/5 p-2">
                   <div className="text-[10px] font-bold text-red-200">Blocked for safety · {request.title}</div>

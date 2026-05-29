@@ -14,7 +14,9 @@ import {
   classifyIntent,
   sanitizeIntentInput,
   blockIfSecretLike,
+  detectLocalPanelTarget,
 } from "./IntentRoutingPolicy";
+import { getTargetCapability, getSafeLocalPanelLabel } from "./SafeLocalPanelTargets";
 import type {
   LucaRoutingMode,
   LucaIntentRoutingDecision,
@@ -310,12 +312,18 @@ export class IntentRoutingService {
       case "governed_action_request":
       case "safe_execution_request": {
         try {
+          const panelTarget = detectLocalPanelTarget(input.message);
+          const capability = panelTarget ? getTargetCapability(panelTarget) : (decision.route === "safe_execution_request" ? "runtime_read" : "notify");
+          const target = panelTarget ?? (decision.route === "safe_execution_request" ? "runtime:diagnostics" : "notification");
+          const title = panelTarget
+            ? `Open ${getSafeLocalPanelLabel(panelTarget)}`
+            : `Action from intent: ${decision.userIntentSummary.slice(0, 100)}`;
           const request = this.deps.governedRequests.createRequest({
             kind: "tool",
-            title: `Action from intent: ${decision.userIntentSummary.slice(0, 100)}`,
+            title,
             description: decision.reason,
-            requestedCapability: decision.route === "safe_execution_request" ? "runtime_read" : "notify",
-            target: decision.route === "safe_execution_request" ? "runtime:diagnostics" : "notification",
+            requestedCapability: capability,
+            target,
             provenanceIds,
             riskLevel: decision.riskLevel === "safe" || decision.riskLevel === "low" ? "low" : "high",
           });

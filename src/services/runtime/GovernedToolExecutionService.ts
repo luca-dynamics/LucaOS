@@ -14,6 +14,7 @@ import type {
   GovernedToolExecutionResult,
   GovernedToolExecutionDiagnosticsSummary,
 } from "../../types/governedToolExecution";
+import { isSafeLocalPanelTarget, getTargetPanelTab } from "./SafeLocalPanelTargets";
 
 interface StorageLike {
   getItem(key: string): string | null;
@@ -403,14 +404,33 @@ export class GovernedToolExecutionService {
   }
 
   private dispatchOpenPanel(request: GovernedActionRequest): { summary: string; preview: Record<string, unknown> } {
-    const target = request.target.replace(/^panel:/, "").toLowerCase().trim();
+    const rawTarget = request.target.toLowerCase().trim();
+
+    // Handle view: targets by mapping to the correct panel tab
+    if (rawTarget.startsWith("view:") && isSafeLocalPanelTarget(rawTarget)) {
+      const panelTab = getTargetPanelTab(rawTarget);
+      if (panelTab && typeof window !== "undefined") {
+        if (panelTab === "model-manager") {
+          window.dispatchEvent(new CustomEvent("luca:open-settings", { detail: { tab: "model-manager" } }));
+        } else {
+          window.dispatchEvent(new CustomEvent("luca:open-right-panel", { detail: { panel: panelTab, source: "governed-tool-execution", viewTarget: rawTarget } }));
+        }
+      }
+      return {
+        summary: `View opened: ${rawTarget}`,
+        preview: { viewTarget: rawTarget, panel: panelTab, dispatched: true },
+      };
+    }
+
+    // Handle panel: targets
+    const target = rawTarget.replace(/^panel:/, "");
     if (!ALLOWED_PANELS.has(target as GovernedExecutionAllowedPanel)) {
       throw new Error(`Panel target "${target}" is not in the governed allowlist.`);
     }
 
     if (typeof window !== "undefined") {
       const panelEvent = target === "model-manager" ? "luca:open-settings" : "luca:open-right-panel";
-      window.dispatchEvent(new CustomEvent(panelEvent, { detail: { panel: target } }));
+      window.dispatchEvent(new CustomEvent(panelEvent, { detail: { panel: target === "model-manager" ? target : target.toUpperCase(), source: "governed-tool-execution" } }));
     }
 
     return {
