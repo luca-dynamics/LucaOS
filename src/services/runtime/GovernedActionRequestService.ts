@@ -6,6 +6,7 @@ import type { ApprovalRequestRiskLevel } from "../../types/approvalCenter";
 
 interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void; }
 const STORAGE_KEY = "LUCA_GOVERNED_ACTION_REQUESTS_V1";
+const MAX_REQUESTS = 500;
 function nowIso(): string { return new Date().toISOString(); }
 function storage(): StorageLike | undefined { if (typeof window !== "undefined" && window.localStorage) return window.localStorage; if (typeof localStorage !== "undefined") return localStorage; return undefined; }
 function readRequests(store: StorageLike | undefined): GovernedActionRequest[] { try { const raw = store?.getItem(STORAGE_KEY); const parsed = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed : []; } catch { return []; } }
@@ -46,6 +47,6 @@ export class GovernedActionRequestService {
   markRejected(requestId: string): GovernedActionRequest | undefined { return this.update(requestId, { status: "rejected" }); }
   getDiagnosticsSummary(): GovernedActionRequestDiagnosticsSummary { return { totalRequests: this.requests.length, proposedRequests: this.requests.filter((item) => item.status === "proposed").length, approvalRequiredRequests: this.requests.filter((item) => item.status === "approval_required").length, approvedWaitingExecutionRequests: this.requests.filter((item) => item.status === "approved_waiting_execution").length, rejectedRequests: this.requests.filter((item) => item.status === "rejected").length, blockedRequests: this.requests.filter((item) => item.status === "blocked").length, dryRunOnly: true }; }
   private update(requestId: string, update: Partial<GovernedActionRequest>): GovernedActionRequest | undefined { const existing = this.requests.find((item) => item.requestId === requestId); if (!existing) return undefined; const next = { ...existing, ...update, requestId: existing.requestId, createdAt: existing.createdAt, dryRunOnly: true as const, updatedAt: nowIso() }; this.upsert(next); return next; }
-  private upsert(request: GovernedActionRequest): void { this.requests = [request, ...this.requests.filter((item) => item.requestId !== request.requestId)]; this.deps.storage?.setItem(STORAGE_KEY, JSON.stringify(this.requests)); }
+  private upsert(request: GovernedActionRequest): void { this.requests = [request, ...this.requests.filter((item) => item.requestId !== request.requestId)]; if (this.requests.length > MAX_REQUESTS) this.requests = this.requests.slice(0, MAX_REQUESTS); this.deps.storage?.setItem(STORAGE_KEY, JSON.stringify(this.requests)); }
 }
 export const governedActionRequestService = new GovernedActionRequestService();

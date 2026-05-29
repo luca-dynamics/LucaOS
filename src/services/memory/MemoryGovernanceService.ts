@@ -3,6 +3,7 @@ import type { ProvenanceMetadata } from "../../types/provenance";
 
 interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void; }
 const STORAGE_KEY = "LUCA_MEMORY_GOVERNANCE_V1";
+const MAX_RECORDS = 1000;
 function nowIso(): string { return new Date().toISOString(); }
 function storage(): StorageLike | undefined { if (typeof window !== "undefined" && window.localStorage) return window.localStorage; if (typeof localStorage !== "undefined") return localStorage; return undefined; }
 function readRecords(store: StorageLike | undefined): MemoryGovernanceRecord[] { try { const raw = store?.getItem(STORAGE_KEY); const parsed = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed : []; } catch { return []; } }
@@ -60,7 +61,7 @@ export class MemoryGovernanceService {
     return { memoryId: String(memory.id ?? memory.memoryId ?? `existing:${timestamp}`), memoryType: "unknown", category: String(memory.category ?? "legacy"), source: String(memory.source ?? "existing_memory"), confidence: typeof memory.confidence === "number" ? memory.confidence : 0.5, userVisible: true, editable: true, deletable: true, quarantined: false, writePolicy: "local_only", retrievalPolicy: "normal", reviewState: "unreviewed", createdAt: timestamp, updatedAt: timestamp };
   }
 
-  private persist(): void { this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.records)); }
+  private persist(): void { if (this.records.length > MAX_RECORDS) this.records = this.records.slice(0, MAX_RECORDS); this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.records)); }
 }
 
 export const memoryGovernanceService = new MemoryGovernanceService();

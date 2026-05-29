@@ -106,7 +106,7 @@ export class RuntimeContinuityLoopService {
   }
 
   start(options: RuntimeContinuityLoopStartOptions = {}): RuntimeContinuityLoopStatus {
-    this.disposed = false;
+    if (this.disposed) throw new Error("Cannot start a disposed RuntimeContinuityLoopService. Create a new instance.");
     this.intervalMs = options.intervalMs ?? this.intervalMs ?? DEFAULT_INTERVAL_MS;
     const snapshot = this.ensureSnapshot();
     this.setStatus({
@@ -131,7 +131,7 @@ export class RuntimeContinuityLoopService {
   }
 
   resume(reason = "resume"): RuntimeContinuityLoopStatus {
-    this.disposed = false;
+    if (this.disposed) throw new Error("Cannot resume a disposed RuntimeContinuityLoopService. Create a new instance.");
     const snapshot = this.ensureSnapshot();
     this.setStatus({
       ...this.statusFromSnapshot(snapshot, "resuming"),
@@ -165,6 +165,7 @@ export class RuntimeContinuityLoopService {
   }
 
   async tick(): Promise<RuntimeContinuityLoopStatus> {
+    if (this.disposed) return this.getLoopStatus();
     if (this.inFlight) {
       console.warn(`${LOG_PREFIX} Tick skipped — previous tick still in flight at ${this.deps.now().toISOString()}`);
       this.setStatus({ ...this.status, inFlight: true });
