@@ -8,6 +8,12 @@ import InlineActionFlow from "./chat/InlineActionFlow";
 import ChartRenderer from "./chat/ChartRenderer";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import {
+  getRouteToneColor,
+  getRouteToneBorder,
+  getRouteToneBg,
+  type RouteTone,
+} from "./runtime/intentRoutingLabels";
 
 interface ChatMessageBubbleProps {
   text: string;
@@ -30,6 +36,9 @@ interface ChatMessageBubbleProps {
     logs: TacticalLog[];
     title?: string;
   };
+  isRouteHint?: boolean;
+  routeLabel?: string;
+  routeTone?: RouteTone;
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
@@ -47,6 +56,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   actions,
   onActionClick,
   tacticalData,
+  isRouteHint,
+  routeLabel,
+  routeTone,
 }) => {
   const isUser = sender === "user";
   const isSystem = sender === "system";
@@ -57,6 +69,34 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     setCopiedCodeBlock(index);
     setTimeout(() => setCopiedCodeBlock(null), 2000);
   };
+
+  // Route hint messages (compact card from Intent Routing Layer)
+  if (isSystem && isRouteHint && routeTone) {
+    const toneColor = getRouteToneColor(routeTone);
+    const toneBorder = getRouteToneBorder(routeTone);
+    const toneBg = getRouteToneBg(routeTone);
+    const noExecLabel = routeTone === "blocked" ? "Blocked" : routeTone === "attention" ? "Waiting" : routeTone === "memory" ? "Not saved" : routeTone === "approval" ? "Needs approval" : "No execution";
+    return (
+      <div className="flex justify-center my-2 animate-in fade-in zoom-in duration-300 w-full">
+        <div
+          className={`font-mono px-4 py-2.5 rounded-xl border flex flex-col gap-1 max-w-[90%] shadow-sm glass-blur ${toneBorder} ${toneBg}`}
+          style={{
+            backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+            color: "var(--app-text-muted, #94a3b8)",
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <Icon name="Route" size={11} className={toneColor} variant="BoldDuotone" />
+            {routeLabel && (
+              <span className={`text-[9px] font-black uppercase tracking-widest ${toneColor}`}>{routeLabel}</span>
+            )}
+            <span className="ml-auto text-[8px] uppercase tracking-widest opacity-60">{noExecLabel}</span>
+          </div>
+          <span className="text-[10px] leading-relaxed">{text}</span>
+        </div>
+      </div>
+    );
+  }
 
   // System messages (errors, status updates, notifications)
   if (isSystem) {

@@ -16,6 +16,8 @@ import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeCont
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
+import type { LucaIntentRoute } from "../../types/intentRouting";
+import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteToneBorder, getRouteToneBg, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
 
 interface ActivityPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -224,17 +226,30 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
           if (nonFast.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No routing decisions besides fast responses.</div>;
           return (
             <div className="space-y-2">
-              {nonFast.map((d) => (
-                <div key={d.decisionId} className="rounded-xl border border-white/10 bg-black/10 p-2">
-                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">{d.route} · {d.mode} mode</div>
-                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{d.reason}</p>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-amber-200">risk: {d.riskLevel} · no execution</p>
-                  {d.createdPlanId && <p className="text-[9px] text-[var(--app-text-muted)]">Plan: {d.createdPlanId}</p>}
-                  {(d.createdMemoryProposalIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Memory proposals: {d.createdMemoryProposalIds?.length}</p>}
-                  {(d.createdGovernedRequestIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Governed requests: {d.createdGovernedRequestIds?.length}</p>}
-                  {(d.createdSkillRequestIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Skill requests: {d.createdSkillRequestIds?.length}</p>}
-                </div>
-              ))}
+              {nonFast.map((d) => {
+                const route = d.route as LucaIntentRoute;
+                const tone = getRouteTone(route);
+                const toneColor = getRouteToneColor(tone);
+                const toneBorder = getRouteToneBorder(tone);
+                const toneBg = getRouteToneBg(tone);
+                return (
+                  <div key={d.decisionId} className={`rounded-xl border p-2 ${toneBorder} ${toneBg}`}>
+                    <div className="flex items-center gap-1.5 text-[10px]">
+                      <span className={`font-bold ${toneColor}`}>{getRouteLabel(route)}</span>
+                      <span className="text-[var(--app-text-muted)]">· {d.mode} mode</span>
+                    </div>
+                    <p className="mt-1 text-[10px] text-[var(--app-text-muted)] truncate">{d.reason.slice(0, 200)}</p>
+                    <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                      {getRouteNoExecutionText(route)} · risk: {d.riskLevel}
+                    </p>
+                    <p className="mt-0.5 text-[9px] text-[var(--app-text-muted)]">{getRouteNextAction(route)}</p>
+                    {d.createdPlanId && <p className="text-[9px] text-[var(--app-text-muted)]">Plan: {d.createdPlanId}</p>}
+                    {(d.createdMemoryProposalIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Memory proposals: {d.createdMemoryProposalIds?.length}</p>}
+                    {(d.createdGovernedRequestIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Governed requests: {d.createdGovernedRequestIds?.length}</p>}
+                    {(d.createdSkillRequestIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Skill requests: {d.createdSkillRequestIds?.length}</p>}
+                  </div>
+                );
+              })}
             </div>
           );
         })()}
