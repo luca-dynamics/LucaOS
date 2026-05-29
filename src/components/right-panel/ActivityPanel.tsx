@@ -9,6 +9,7 @@ import { governedMemoryWriteService } from "../../services/memory/GovernedMemory
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
+import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
 import { schedulerRegistryService } from "../../services/scheduler/SchedulerRegistryService";
 import { reminderDeliveryService } from "../../services/scheduler/ReminderDeliveryService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
@@ -80,6 +81,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
+      routingDecisions: intentRoutingService.listRoutingDecisions(),
     };
   }, [revision]);
 
@@ -213,6 +215,28 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
               </div>
             );
           });
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Intent routing" subtitle="Recent non-fast routing decisions. Routing does not execute anything.">
+        {(() => {
+          const nonFast = data.routingDecisions.filter((d) => d.route !== "fast_response").slice(0, 5);
+          if (nonFast.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No routing decisions besides fast responses.</div>;
+          return (
+            <div className="space-y-2">
+              {nonFast.map((d) => (
+                <div key={d.decisionId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">{d.route} · {d.mode} mode</div>
+                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{d.reason}</p>
+                  <p className="mt-1 text-[9px] uppercase tracking-widest text-amber-200">risk: {d.riskLevel} · no execution</p>
+                  {d.createdPlanId && <p className="text-[9px] text-[var(--app-text-muted)]">Plan: {d.createdPlanId}</p>}
+                  {(d.createdMemoryProposalIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Memory proposals: {d.createdMemoryProposalIds?.length}</p>}
+                  {(d.createdGovernedRequestIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Governed requests: {d.createdGovernedRequestIds?.length}</p>}
+                  {(d.createdSkillRequestIds?.length ?? 0) > 0 && <p className="text-[9px] text-[var(--app-text-muted)]">Skill requests: {d.createdSkillRequestIds?.length}</p>}
+                </div>
+              ))}
+            </div>
+          );
         })()}
       </RightPanelSection>
 

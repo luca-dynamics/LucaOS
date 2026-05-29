@@ -9,6 +9,7 @@ import { Sender } from "../../types";
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
 import { apiUrl } from "../../config/api";
+import IntentRoutingModeSelector from "../runtime/IntentRoutingModeSelector";
 
 interface ChatPanelProps {
   messages: any[];
@@ -476,6 +477,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             : undefined,
         }}
       >
+        <div className="mb-1 flex justify-end px-1">
+          <IntentRoutingModeSelector theme={theme} compact />
+        </div>
+        {/* TODO PR #124+: Wire chatIntentRouterBridge.maybeRouteMessageBeforeResponse
+            here before handleSend() to route user intent through the Intent Routing
+            Layer without forcing every message into a plan. */}
         <ChatWidgetInput
           input={input}
           setInput={setInput}

@@ -12,6 +12,7 @@ import { governedMemoryWriteService } from "../../services/memory/GovernedMemory
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
+import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
 import { Icon } from "../ui/Icon";
 import RightPanelSection from "./RightPanelSection";
@@ -43,6 +44,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
+      routingDecisions: intentRoutingService.listRoutingDecisions(),
     };
   }, [toolLogs.length]);
 
@@ -191,6 +193,23 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
             <div className="font-bold text-[var(--app-text-main)]">{checkpoint.status} · {checkpoint.title}</div>
             <div>risk: {checkpoint.riskLevel} · {new Date(checkpoint.updatedAt).toLocaleString()}</div>
             {checkpoint.blockedBy && checkpoint.blockedBy.length > 0 && <div className="text-red-200">Blocked: {checkpoint.blockedBy.join(", ")}</div>}
+          </div>
+        ))}
+      </RightPanelSection>
+
+      <RightPanelSection title="Intent routing trace" subtitle="Routing decisions and mode/risk/reason audit. Routing does not execute anything.">
+        {trace.routingDecisions.length === 0 ? <EmptyState>No routing decisions.</EmptyState> : trace.routingDecisions.slice(0, 8).map((decision) => (
+          <div key={decision.decisionId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">
+              <span className={decision.route === "blocked_risky_action" ? "text-red-300" : decision.route === "fast_response" ? "text-slate-400" : "text-amber-300"}>{decision.route}</span>
+              {" "}&middot; {decision.mode} mode &middot; risk: {decision.riskLevel}
+            </div>
+            <div>{decision.reason}</div>
+            {decision.createdPlanId && <div>Plan: {decision.createdPlanId}</div>}
+            {(decision.createdMemoryProposalIds?.length ?? 0) > 0 && <div>Memory proposals: {decision.createdMemoryProposalIds?.length}</div>}
+            {(decision.createdGovernedRequestIds?.length ?? 0) > 0 && <div>Governed requests: {decision.createdGovernedRequestIds?.length}</div>}
+            {(decision.createdSkillRequestIds?.length ?? 0) > 0 && <div>Skill requests: {decision.createdSkillRequestIds?.length}</div>}
+            <div className="text-[9px] uppercase tracking-widest">no execution performed &middot; {new Date(decision.createdAt).toLocaleString()}</div>
           </div>
         ))}
       </RightPanelSection>

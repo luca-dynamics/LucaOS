@@ -8,6 +8,9 @@ import { approvalRequestCenterService } from "../../services/provenance/Approval
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
+import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
+import { intentRoutingModeService } from "../../services/runtime/IntentRoutingModeService";
+import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -144,6 +147,34 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           </div>
         </RightPanelSection>
       )}
+
+      <RightPanelSection title="Intent routing" subtitle="Current routing mode and last route decision. Routing does not execute anything.">
+        {(() => {
+          const routingMode = intentRoutingModeService.getMode();
+          const lastDecision = intentRoutingService.getLastDecision();
+          const routingDiag = intentRoutingService.getDiagnosticsSummary();
+          return (
+            <div className="space-y-1 text-[10px] text-[var(--app-text-muted)]">
+              <div className="font-bold text-[var(--app-text-main)]">
+                Mode: {ROUTING_MODE_SHORT_LABELS[routingMode]} · No execution
+              </div>
+              {lastDecision ? (
+                <>
+                  <div>Last route: {lastDecision.route} · risk: {lastDecision.riskLevel}</div>
+                  <div>{lastDecision.reason}</div>
+                  {lastDecision.createdPlanId && <div>Created plan: {lastDecision.createdPlanId}</div>}
+                </>
+              ) : (
+                <div className="italic">No routing decisions yet.</div>
+              )}
+              <div className="grid grid-cols-2 gap-1 pt-1">
+                <RightPanelMetric label="Total routes" value={routingDiag.totalRoutingDecisions} tone="neutral" />
+                <RightPanelMetric label="Blocked" value={routingDiag.blockedRoutes} tone={routingDiag.blockedRoutes > 0 ? "danger" : "good"} />
+              </div>
+            </div>
+          );
+        })()}
+      </RightPanelSection>
 
       <RightPanelSection title="Decisions" subtitle="Safe queues that need user attention.">
         <div className="grid grid-cols-2 gap-2">
