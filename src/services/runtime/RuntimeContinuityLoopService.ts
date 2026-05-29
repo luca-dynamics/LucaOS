@@ -48,6 +48,7 @@ interface RuntimeContinuityLoopDependencies {
 
 const DEFAULT_INTERVAL_MS = 60_000;
 const LOOP_SOURCE = "runtime-continuity-loop";
+const LOG_PREFIX = "[RuntimeContinuityLoop]";
 const SECRET_PATTERNS = [
   /sk-[A-Za-z0-9_-]{8,}/g,
   /sk-ant-[A-Za-z0-9_-]{8,}/g,
@@ -165,6 +166,7 @@ export class RuntimeContinuityLoopService {
 
   async tick(): Promise<RuntimeContinuityLoopStatus> {
     if (this.inFlight) {
+      console.warn(`${LOG_PREFIX} Tick skipped — previous tick still in flight at ${this.deps.now().toISOString()}`);
       this.setStatus({ ...this.status, inFlight: true });
       return this.getLoopStatus();
     }
@@ -352,8 +354,8 @@ export class RuntimeContinuityLoopService {
       const job = jobsById.get(run.jobId);
       if (!job?.provenance?.provenanceId) continue;
       const occurrenceAt = job.nextRunAt ?? job.schedule.runAt ?? tickAt;
-      const beforeRequestCount = this.deps.approvals.listRequests().length;
-      this.deps.approvals.createApprovalRequest(
+      const existingIds = new Set(this.deps.approvals.listRequests().map((r) => r.approvalRequestId));
+      const result = this.deps.approvals.createApprovalRequest(
         {
           actionInstanceId: `scheduler:${job.jobId}:${occurrenceAt}`,
           actionType: "scheduled_job",
@@ -372,7 +374,12 @@ export class RuntimeContinuityLoopService {
           actionPreview: { title: job.title, allowedCapabilities: job.allowedCapabilities, deliveryTarget: job.deliveryTarget },
         },
       );
-      if (this.deps.approvals.listRequests().length > beforeRequestCount) created += 1;
+      if (!existingIds.has(result.approvalRequestId)) {
+        console.info(`${LOG_PREFIX} Created approval request for job=${job.jobId} requestId=${result.approvalRequestId}`);
+        created += 1;
+      } else {
+        console.info(`${LOG_PREFIX} Deduplicated approval request for job=${job.jobId} existingId=${result.approvalRequestId}`);
+      }
     }
     return created;
   }
