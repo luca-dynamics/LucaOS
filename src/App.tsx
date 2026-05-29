@@ -92,7 +92,7 @@ import ControlPanel from "./components/right-panel/ControlPanel";
 import ActivityPanel from "./components/right-panel/ActivityPanel";
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
 import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
-import { MOBILE_RIGHT_PANEL_LABELS, RIGHT_PANEL_MODES } from "./components/right-panel/rightPanelModel";
+import { MOBILE_RIGHT_PANEL_LABELS, RIGHT_PANEL_MODES, isRightPanelMode } from "./components/right-panel/rightPanelModel";
 
 // --- Mock Initial State ---
 
@@ -1026,6 +1026,19 @@ function AppContent() {
     window.addEventListener("luca:open-settings", handleOpenSettings);
     return () => window.removeEventListener("luca:open-settings", handleOpenSettings);
   }, []);
+
+  // Listen for governed panel-open events dispatched by GovernedToolExecutionService
+  useEffect(() => {
+    const handleOpenRightPanel = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const panel = detail?.panel;
+      if (typeof panel === "string" && isRightPanelMode(panel)) {
+        setRightPanelMode(panel);
+      }
+    };
+    window.addEventListener("luca:open-right-panel", handleOpenRightPanel);
+    return () => window.removeEventListener("luca:open-right-panel", handleOpenRightPanel);
+  }, [setRightPanelMode]);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   // NEW: GHOST CURSOR STATE (COMPUTER USE VISUALIZATION)

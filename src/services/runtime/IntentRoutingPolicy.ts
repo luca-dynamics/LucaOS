@@ -17,6 +17,8 @@ import {
   INTENT_ROUTING_MAX_METADATA_KEYS,
   INTENT_ROUTING_MAX_METADATA_VALUE_LENGTH,
 } from "../../types/intentRouting";
+import { normalizeSafeLocalPanelTarget } from "./SafeLocalPanelTargets";
+import type { SafeLocalPanelTarget } from "./SafeLocalPanelTargets";
 
 // ---------------------------------------------------------------------------
 // Secret / forbidden patterns (aligned with RuntimePlanPolicy)
@@ -122,6 +124,21 @@ const SAFE_ACTION_PATTERNS = [
   /\bshow\s*(status|diagnostics|summary)\b/i,
   /\bread\s*(memory|inbox|session|runtime)\b/i,
   /\bdisplay\b/i,
+];
+
+// Local panel/view phrase patterns for safe_local_action detection
+const LOCAL_PANEL_PATTERNS = [
+  /^open\s+(control|activity|memory|logs?)\b/i,
+  /^show\s+(control|activity|memory|logs?)\b/i,
+  /^open\s+model\s*manager\b/i,
+  /^show\s+model\s*manager\b/i,
+  /^show\s+(runtime\s+)?diagnostics\b/i,
+  /^open\s+diagnostics\b/i,
+  /^show\s+memory\s+proposals?\b/i,
+  /^show\s+skill\s+requests?\b/i,
+  /^show\s+(current\s+)?plan\b/i,
+  /^show\s+runtime\s+plan\b/i,
+  /^show\s+routing\s+decisions?\b/i,
 ];
 
 const SKILL_PATTERNS = [
@@ -249,6 +266,9 @@ export function detectSignals(message: string): LucaIntentSignal[] {
 
   if (MEMORY_PATTERNS.some((p) => p.test(message))) signals.push("memory_candidate");
   if (SAFE_ACTION_PATTERNS.some((p) => p.test(message))) signals.push("safe_local_action");
+  if (LOCAL_PANEL_PATTERNS.some((p) => p.test(message))) {
+    if (!signals.includes("safe_local_action")) signals.push("safe_local_action");
+  }
   if (SKILL_PATTERNS.some((p) => p.test(message))) signals.push("skill_or_plugin");
   if (MULTI_STEP_PATTERNS.some((p) => p.test(message))) signals.push("multi_step_task");
   if (FUTURE_CONTINUITY_PATTERNS.some((p) => p.test(message))) signals.push("future_continuity");
@@ -394,6 +414,15 @@ export function shouldStayFast(
 ): boolean {
   const route = chooseRoute(mode, signals, risk);
   return route === "fast_response";
+}
+
+/**
+ * Detect the safe local panel target from user message text.
+ * Returns null if the message doesn't match any known local panel phrase.
+ */
+export function detectLocalPanelTarget(message: string): SafeLocalPanelTarget | null {
+  if (!LOCAL_PANEL_PATTERNS.some((p) => p.test(message))) return null;
+  return normalizeSafeLocalPanelTarget(message);
 }
 
 // ---------------------------------------------------------------------------
