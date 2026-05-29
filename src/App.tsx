@@ -19,7 +19,6 @@ import {
 } from "./services/lucaService";
 import { SafeComponent } from "./components/SafeComponent";
 import { liveService } from "./services/liveService";
-import { memoryService } from "./services/memoryService";
 import {
   awarenessService,
   AwarenessSuggestion,
@@ -48,7 +47,7 @@ import {
 } from "./types";
 
 import { Icon } from "./components/ui/Icon";
-import { setHexAlpha, getDynamicContrast } from "./config/themeColors";
+import { getDynamicContrast } from "./config/themeColors";
 
 import GhostBrowser from "./components/GhostBrowser";
 import { watchGateway } from "./services/watchGateway";
@@ -58,12 +57,10 @@ import { lucaLink as lucaLinkService } from "./services/lucaLinkService"; // Gue
 
 import type { ScreenShareHandle } from "./components/ScreenShare";
 import conversationService from "./services/conversationService";
-import ManagementDashboard from "./components/ManagementDashboard";
 import { SettingsModal } from "./components/SettingsModal";
 import ChatWidgetMode from "./components/ChatWidgetMode";
 import WidgetMode from "./components/WidgetMode";
 import HologramMode from "./components/HologramMode";
-import LucaCloud from "./components/LucaCloud";
 
 // Helper for device capability check removed temporarily as it's unused
 
@@ -91,95 +88,17 @@ import OnboardingFlow from "./components/Onboarding/OnboardingFlow";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
 import { THEME_PALETTE } from "./config/themeColors";
 import { isElectron as checkElectron, isWeb } from "./utils/env";
+import ControlPanel from "./components/right-panel/ControlPanel";
+import ActivityPanel from "./components/right-panel/ActivityPanel";
+import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
+import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
+import { MOBILE_RIGHT_PANEL_LABELS, RIGHT_PANEL_MODES } from "./components/right-panel/rightPanelModel";
 
 // --- Mock Initial State ---
 
 // Silencing unused imports/globals
 
 // CHAT_STORAGE_KEY and MAX_HISTORY_LIMIT are now in useChatController
-
-// --- Memory Display Formatter ---
-/**
- * Converts a raw memory value (which may be JSON) into a human-readable string.
- * For known trading/equity structures, extracts key fields for HUD display.
- */
-function formatMemoryValue(value: string): {
-  label: string;
-  summary: string;
-  isStructured: boolean;
-} {
-  const trimmed = value.trim();
-
-  // Attempt to parse as JSON
-  try {
-    const parsed = JSON.parse(trimmed);
-
-    // Array of equity snapshots (e.g., EQUITY_HISTORY)
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      const snapshot = parsed[parsed.length - 1];
-      const equity =
-        snapshot.totalEquity ?? snapshot.equity ?? snapshot.balance ?? "?";
-      const available = snapshot.availableBalance ?? snapshot.available ?? "?";
-      const unrealizedPnl = snapshot.unrealizedPnl ?? snapshot.pnl ?? null;
-      let s = `EQUITY: $${Number(equity).toFixed(2)}   AVAILABLE: $${Number(available).toFixed(2)}`;
-      if (unrealizedPnl !== null)
-        s += `   UNREALIZED PNL: $${Number(unrealizedPnl).toFixed(2)}`;
-      return { label: "EQUITY SNAPSHOT", summary: s, isStructured: true };
-    }
-
-    // Single trade commit object
-    if (parsed && typeof parsed === "object") {
-      const symbol = parsed.symbol ?? parsed.asset ?? "";
-      const action = (parsed.action ?? parsed.side ?? parsed.type ?? "")
-        .toString()
-        .toUpperCase()
-        .replace(/_/g, " ");
-      const strategy = parsed.strategy ?? parsed.strategyName ?? "";
-      const confidence =
-        parsed.confidence != null
-          ? `${Math.round(Number(parsed.confidence) * 100)}%`
-          : null;
-      const size = parsed.size ?? parsed.quantity ?? null;
-      let s = symbol ? `${symbol}` : "";
-      if (action) s += s ? ` · ${action}` : action;
-      if (confidence) s += `   CONF: ${confidence}`;
-      if (size) s += `   SIZE: ${size}`;
-      if (strategy) s += `\n${strategy}`;
-      return {
-        label: symbol || "TRADE",
-        summary: s || JSON.stringify(parsed).slice(0, 120),
-        isStructured: true,
-      };
-    }
-  } catch {
-    // Not JSON — check for mixed content (JSON prepended by text)
-    const jsonStart = trimmed.indexOf("{");
-    if (jsonStart > 0) {
-      const prefix = trimmed.slice(0, jsonStart).trim();
-      const rest = trimmed.slice(jsonStart);
-      try {
-        const parsed = JSON.parse(rest);
-        const symbol = parsed.symbol ?? parsed.asset ?? "";
-        const action = (parsed.action ?? parsed.side ?? "")
-          .toString()
-          .toUpperCase()
-          .replace(/_/g, " ");
-        let s = symbol ? `${symbol}` : "";
-        if (action) s += s ? ` · ${action}` : action;
-        return {
-          label: prefix.slice(0, 50),
-          summary: s || prefix,
-          isStructured: true,
-        };
-      } catch {
-        /* fall through */
-      }
-    }
-  }
-
-  // Plain text — truncate gracefully
-  return { label: "", summary: trimmed, isStructured: false };
-}
 
 function normalizePersonaValue(value: unknown): PersonaType {
   if (typeof value === "string" && value.trim()) {
@@ -2807,229 +2726,48 @@ function AppContent() {
                 }}
               >
                 <div className="flex flex-col h-full w-full overflow-hidden">
-                  {/* Content rendered inline to avoid duplicating code across Mobile/Desktop */}
-                  <div
-                    className="flex flex-none"
-                    style={{
-                      borderBottom: `1px solid ${setHexAlpha(theme.hex, 0.2)}`,
-                    }}
-                  >
-                    <button
-                      onClick={() => {
-                        setRightPanelMode("MANAGE");
-                        soundService.play("KEYSTROKE");
-                      }}
-                      className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors relative ${
-                        rightPanelMode === "MANAGE"
-                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
-                      }`}
-                    >
-                      MANAGE
-                      <div className="absolute top-0.5 right-1.5 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse border border-emerald-400/50 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                        <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setRightPanelMode("LOGS");
-                        soundService.play("KEYSTROKE");
-                      }}
-                      className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
-                        rightPanelMode === "LOGS"
-                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
-                      }`}
-                    >
-                      LOGS
-                    </button>
-                    <button
-                      onClick={() => {
-                        setRightPanelMode("MEMORY");
-                        soundService.play("KEYSTROKE");
-                      }}
-                      className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
-                        rightPanelMode === "MEMORY"
-                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
-                      }`}
-                    >
-                      MEMORY
-                    </button>
-                    <button
-                      onClick={() => {
-                        setRightPanelMode("CLOUD");
-                        soundService.play("KEYSTROKE");
-                      }}
-                      className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
-                        rightPanelMode === "CLOUD"
-                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
-                      }`}
-                    >
-                      <Icon name="BrainCircuit" size={14} className="mx-auto" />
-                    </button>
+                  <div className="flex flex-none border-b border-white/10">
+                    {RIGHT_PANEL_MODES.map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => {
+                          setRightPanelMode(mode);
+                          soundService.play("KEYSTROKE");
+                        }}
+                        className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors relative ${
+                          rightPanelMode === mode
+                            ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
+                            : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
+                        }`}
+                      >
+                        {mode}
+                        {mode === "CONTROL" && rightPanelMode === "CONTROL" && (
+                          <div className="absolute top-0.5 right-1.5 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse border border-emerald-400/50 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                            <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
+                          </div>
+                        )}
+                      </button>
+                    ))}
                   </div>
 
                   <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
-                    {rightPanelMode === "MANAGE" && (
-                      <div className="space-y-1">
-                        <ManagementDashboard theme={theme} />
-                      </div>
+                    {rightPanelMode === "CONTROL" && (
+                      <ControlPanel theme={theme} tasks={management.tasks} events={management.events} goals={management.goals} />
                     )}
-
-                    {rightPanelMode === "LOGS" && (
-                      <div className="space-y-1">
-                        {toolLogs.length === 0 && (
-                          <div className="text-[var(--app-text-muted)] opacity-50 italic">
-                            System idle.
-                          </div>
-                        )}
-                        {toolLogs.map((log, i) => (
-                          <div
-                            key={i}
-                            className={`border-l border-slate-800 pl-2 py-1 hover:bg-white/5 transition-colors group font-mono text-[10px]`}
-                          >
-                            <div className="flex justify-between opacity-50 mb-0.5 text-[var(--app-text-muted)]">
-                              <span
-                                className={`font-bold group-hover:text-white transition-colors ${
-                                  log.toolName === "SENTINEL_LOOP"
-                                    ? "text-slate-500"
-                                    : theme.primary
-                                }`}
-                              >
-                                {log.toolName}
-                              </span>
-                              <span>
-                                {new Date(log.timestamp).toLocaleTimeString()}
-                              </span>
-                            </div>
-                            <div
-                              className={`font-bold ${
-                                log.result.startsWith("ERROR") ||
-                                log.result.startsWith("ACTION ABORTED")
-                                  ? "text-red-500"
-                                  : log.result.includes("SENTINEL")
-                                    ? "text-slate-500"
-                                    : "text-white"
-                              }`}
-                            >
-                              {log.result.substring(0, 100)}
-                              {log.result.length > 100 && "..."}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
+                    {rightPanelMode === "ACTIVITY" && <ActivityPanel theme={theme} />}
                     {rightPanelMode === "MEMORY" && (
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span
-                            style={{ color: theme.hex }}
-                            className="font-bold uppercase tracking-wider"
-                          >
-                            LUCA ARCHIVE
-                          </span>
-                          <button
-                            onClick={async () => {
-                              soundService.play("KEYSTROKE");
-                              await memoryService.wipeMemory();
-                              setMemories([]);
-                            }}
-                            className="text-red-500 hover:text-white transition-colors p-1 rounded hover:bg-red-500/10"
-                            title="Format Memory"
-                          >
-                            <Icon name="Trash2" size={14} />
-                          </button>
-                        </div>
-                        {memories.filter(
-                          (mem) =>
-                            !mem.value.includes("[AMBIENT VISION") &&
-                            !mem.value.includes("[SYSTEM INSTRUCTION") &&
-                            !mem.key.includes("SYSTEM_INSTRUCTION"),
-                        ).length === 0 && (
-                          <div className="text-slate-700 italic">
-                            Memory banks empty.
-                          </div>
-                        )}
-                        {memories
-                          .filter(
-                            (mem) =>
-                              !mem.value.includes("[AMBIENT VISION") &&
-                              !mem.value.includes("[SYSTEM INSTRUCTION") &&
-                              !mem.key.includes("SYSTEM_INSTRUCTION"),
-                          )
-                          .map((mem) => (
-                            <div
-                              key={mem.id}
-                              className="p-3 rounded transition-all group/mem relative bg-white/5 border"
-                              style={{
-                                borderColor: setHexAlpha(theme.hex, 0.2),
-                                backgroundColor: setHexAlpha(theme.hex, 0.05),
-                              }}
-                            >
-                              <div className="flex justify-between text-[9px] mb-2 opacity-60">
-                                <div className="flex gap-2">
-                                  <span className="font-bold tracking-widest text-slate-300">
-                                    {new Date(mem.timestamp).toLocaleString()}
-                                  </span>
-                                </div>
-                                <button
-                                  onClick={async () => {
-                                    soundService.play("KEYSTROKE");
-                                    const success =
-                                      await memoryService.deleteMemory(mem.id);
-                                    if (success) {
-                                      setMemories((prev) =>
-                                        prev.filter((m) => m.id !== mem.id),
-                                      );
-                                    }
-                                  }}
-                                  className="opacity-0 group-hover/mem:opacity-100 text-red-500 hover:text-white transition-all p-1"
-                                  title="Delete Segment"
-                                >
-                                  <Icon name="Trash" size={10} />
-                                </button>
-                              </div>
-                              {(() => {
-                                const fmt = formatMemoryValue(mem.value);
-                                return fmt.isStructured ? (
-                                  <div className="space-y-0.5">
-                                    {fmt.label && (
-                                      <div
-                                        className="text-[9px] font-bold uppercase tracking-widest opacity-60"
-                                        style={{ color: theme.hex }}
-                                      >
-                                        {fmt.label}
-                                      </div>
-                                    )}
-                                    <div className="text-slate-200 text-[10px] font-mono leading-snug whitespace-pre-wrap">
-                                      {fmt.summary}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="text-slate-400 opacity-80 max-h-32 overflow-hidden text-ellipsis whitespace-pre-wrap text-[10px]">
-                                    {fmt.summary}
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          ))}
-                      </div>
+                      <MemoryControlPanel theme={theme} memories={memories} setMemories={setMemories} />
                     )}
-
-                    {rightPanelMode === "CLOUD" && (
-                      <LucaCloud memories={memories} theme={theme} />
-                    )}
+                    {rightPanelMode === "LOGS" && <TraceLogsPanel theme={theme} toolLogs={toolLogs} />}
                   </div>
                 </div>
               </section>
             </>
           )}
 
-          {/* Mobile Right Panel or Data Panel */}
+          {/* Mobile DATA keeps minimal access to the same safe, state-only panels without redesigning the mobile shell. */}
           {isMobile && activeMobileTab === "DATA" && (
             <section
               className={`flex-1 flex-col h-full border-l border-white/10 relative overflow-hidden flex ${
@@ -3045,209 +2783,35 @@ function AppContent() {
               }}
             >
               <div className="flex flex-col h-full w-full overflow-hidden">
-                <div
-                  className="flex flex-none"
-                  style={{
-                    borderBottom: `1px solid ${setHexAlpha(theme.hex, 0.2)}`,
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      setRightPanelMode("MANAGE");
-                      soundService.play("KEYSTROKE");
-                    }}
-                    className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
-                      rightPanelMode === "MANAGE"
-                        ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                        : "text-slate-600 hover:text-slate-400"
-                    }`}
-                  >
-                    MANAGE
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRightPanelMode("LOGS");
-                      soundService.play("KEYSTROKE");
-                    }}
-                    className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
-                      rightPanelMode === "LOGS"
-                        ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                        : "text-slate-600 hover:text-slate-400"
-                    }`}
-                  >
-                    LOGS
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRightPanelMode("MEMORY");
-                      soundService.play("KEYSTROKE");
-                    }}
-                    className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
-                      rightPanelMode === "MEMORY"
-                        ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                        : "text-slate-600 hover:text-slate-400"
-                    }`}
-                  >
-                    MEMORY
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRightPanelMode("CLOUD");
-                      soundService.play("KEYSTROKE");
-                    }}
-                    className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors ${
-                      rightPanelMode === "CLOUD"
-                        ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                        : "text-slate-600 hover:text-slate-400"
-                    }`}
-                  >
-                    <Icon name="BrainCircuit" size={14} className="mx-auto" />
-                  </button>
+                <div className="flex flex-none border-b border-white/10">
+                  {RIGHT_PANEL_MODES.map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => {
+                        setRightPanelMode(mode);
+                        soundService.play("KEYSTROKE");
+                      }}
+                      className={`flex-1 py-3 text-[10px] font-bold tracking-widest transition-colors ${
+                        rightPanelMode === mode
+                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
+                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
+                      }`}
+                    >
+                      {MOBILE_RIGHT_PANEL_LABELS[mode]}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
-                  {rightPanelMode === "MANAGE" && (
-                    <div className="space-y-1">
-                      <ManagementDashboard theme={theme} />
-                    </div>
+                  {rightPanelMode === "CONTROL" && (
+                    <ControlPanel theme={theme} tasks={management.tasks} events={management.events} goals={management.goals} />
                   )}
-
-                  {rightPanelMode === "LOGS" && (
-                    <div className="space-y-1">
-                      {toolLogs.length === 0 && (
-                        <div className="text-slate-700 italic">
-                          System idle.
-                        </div>
-                      )}
-                      {toolLogs.map((log, i) => (
-                        <div
-                          key={i}
-                          className={`border-l border-slate-800 pl-2 py-1 hover:bg-white/5 transition-colors group font-mono text-[10px]`}
-                        >
-                          <div className="flex justify-between opacity-50 mb-0.5 text-slate-400">
-                            <span
-                              className={`font-bold group-hover:text-white transition-colors ${
-                                log.toolName === "SENTINEL_LOOP"
-                                  ? "text-slate-500"
-                                  : theme.primary
-                              }`}
-                            >
-                              {log.toolName}
-                            </span>
-                            <span>
-                              {new Date(log.timestamp).toLocaleTimeString()}
-                            </span>
-                          </div>
-                          <div
-                            className={`font-bold ${
-                              log.result.startsWith("ERROR") ||
-                              log.result.startsWith("ACTION ABORTED")
-                                ? "text-red-500"
-                                : log.result.includes("SENTINEL")
-                                  ? "text-slate-500"
-                                  : "text-white"
-                            }`}
-                          >
-                            {log.result.substring(0, 100)}
-                            {log.result.length > 100 && "..."}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
+                  {rightPanelMode === "ACTIVITY" && <ActivityPanel theme={theme} />}
                   {rightPanelMode === "MEMORY" && (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span
-                          style={{ color: theme.hex }}
-                          className="font-bold uppercase tracking-wider"
-                        >
-                          NEURAL ARCHIVE
-                        </span>
-                        <button
-                          onClick={async () => {
-                            soundService.play("KEYSTROKE");
-                            await memoryService.wipeMemory();
-                            setMemories([]);
-                          }}
-                          className="text-red-500 hover:text-white transition-colors p-1 rounded hover:bg-red-500/10"
-                          title="Format Memory"
-                        >
-                          <Icon name="Trash2" size={14} />
-                        </button>
-                      </div>
-                      {memories.filter(
-                        (mem) => !mem.value.includes("[AMBIENT VISION"),
-                      ).length === 0 && (
-                        <div className="text-slate-700 italic">
-                          Memory banks empty.
-                        </div>
-                      )}
-                      {memories
-                        .filter((mem) => !mem.value.includes("[AMBIENT VISION"))
-                        .map((mem) => (
-                          <div
-                            key={mem.id}
-                            className="p-3 rounded transition-all group/mem relative bg-white/5 border"
-                            style={{
-                              borderColor: setHexAlpha(theme.hex, 0.2),
-                              backgroundColor: setHexAlpha(theme.hex, 0.05),
-                            }}
-                          >
-                            <div className="flex justify-between text-[9px] mb-2 opacity-60">
-                              <div className="flex gap-2">
-                                <span className="font-bold tracking-widest text-slate-300">
-                                  {new Date(mem.timestamp).toLocaleString()}
-                                </span>
-                              </div>
-                              <button
-                                onClick={async () => {
-                                  soundService.play("KEYSTROKE");
-                                  const success =
-                                    await memoryService.deleteMemory(mem.id);
-                                  if (success) {
-                                    setMemories((prev) =>
-                                      prev.filter((m) => m.id !== mem.id),
-                                    );
-                                  }
-                                }}
-                                className="opacity-0 group-hover/mem:opacity-100 text-red-500 hover:text-white transition-all p-1"
-                                title="Delete Segment"
-                              >
-                                <Icon name="Trash" size={10} />
-                              </button>
-                            </div>
-                            {(() => {
-                              const fmt = formatMemoryValue(mem.value);
-                              return fmt.isStructured ? (
-                                <div className="space-y-0.5">
-                                  {fmt.label && (
-                                    <div
-                                      className="text-[9px] font-bold uppercase tracking-widest opacity-60"
-                                      style={{ color: theme.hex }}
-                                    >
-                                      {fmt.label}
-                                    </div>
-                                  )}
-                                  <div className="text-slate-200 text-[10px] font-mono leading-snug whitespace-pre-wrap">
-                                    {fmt.summary}
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="text-slate-400 opacity-80 max-h-32 overflow-hidden text-ellipsis whitespace-pre-wrap text-[10px]">
-                                  {fmt.summary}
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        ))}
-                    </div>
+                    <MemoryControlPanel theme={theme} memories={memories} setMemories={setMemories} />
                   )}
-
-                  {rightPanelMode === "CLOUD" && (
-                    <LucaCloud memories={memories} theme={theme} />
-                  )}
+                  {rightPanelMode === "LOGS" && <TraceLogsPanel theme={theme} toolLogs={toolLogs} />}
                 </div>
               </div>
             </section>
