@@ -158,6 +158,28 @@ export class SkillGovernanceService {
       return this.blockSkillRequest(skillRequestId, "Cannot approve: request includes risky capabilities.");
     }
     if (request.approvalRequestId) this.deps.approvals.approveOnce(request.approvalRequestId);
+    return this.markApprovedWaiting(skillRequestId);
+  }
+
+  /**
+   * Sync the request to approved_waiting_* when its ApprovalRequest was already
+   * approved elsewhere (e.g. the generic Pending approvals list). This does NOT
+   * call approveOnce again and NEVER installs, enables, updates, removes, or
+   * runs a skill — approval remains strictly state-only.
+   */
+  syncApprovedFromApprovalRequest(skillRequestId: string): SkillGovernanceRequest | undefined {
+    const request = this.getSkillRequest(skillRequestId);
+    if (!request) return undefined;
+    if (request.blockedBy && request.blockedBy.length > 0) {
+      return this.blockSkillRequest(skillRequestId, "Cannot approve: request includes risky capabilities.");
+    }
+    if (["rejected", "revoked", "blocked", "expired"].includes(request.status)) return request;
+    return this.markApprovedWaiting(skillRequestId);
+  }
+
+  private markApprovedWaiting(skillRequestId: string): SkillGovernanceRequest | undefined {
+    const request = this.getSkillRequest(skillRequestId);
+    if (!request) return undefined;
     const nextStatus = request.requestType === "install" ? "approved_waiting_install" : "approved_waiting_execution";
     const updated = this.update(skillRequestId, { status: nextStatus });
     if (updated) {

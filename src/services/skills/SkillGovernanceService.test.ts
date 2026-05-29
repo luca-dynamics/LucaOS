@@ -55,6 +55,31 @@ describe("SkillGovernanceService", () => {
     expect(flagRiskyCapabilities(["read_notes", "network.fetch", "wallet.sign"]).sort()).toEqual(["network.fetch", "wallet.sign"]);
   });
 
+  it("generic approval (approveOnce + sync) moves the request to approved_waiting_* without executing or installing", () => {
+    const stack = createStack();
+    const prov = makeProvenance(stack);
+    const installReq = stack.service.createSkillRequest({ skillId: "s-install", skillName: "Calendar", requestType: "install", title: "Install Calendar", description: "Install calendar skill", requestedCapabilities: ["read_calendar"], provenanceIds: [prov.provenanceId] });
+    const runReq = stack.service.createSkillRequest({ skillId: "s-run", skillName: "Summarizer", requestType: "run", title: "Run Summarizer", description: "Run the summarizer", requestedCapabilities: ["read_notes"], provenanceIds: [prov.provenanceId] });
+
+    stack.approvals.approveOnce(installReq.approvalRequestId!);
+    stack.approvals.approveOnce(runReq.approvalRequestId!);
+    const approveOnceSpy = vi.spyOn(stack.approvals, "approveOnce");
+
+    expect(stack.service.syncApprovedFromApprovalRequest(installReq.skillRequestId)?.status).toBe("approved_waiting_install");
+    expect(stack.service.syncApprovedFromApprovalRequest(runReq.skillRequestId)?.status).toBe("approved_waiting_execution");
+    // sync must not re-approve, and no execution/install method even exists.
+    expect(approveOnceSpy).not.toHaveBeenCalled();
+    expect((stack.service as unknown as Record<string, unknown>).runSkill).toBeUndefined();
+    expect((stack.service as unknown as Record<string, unknown>).installSkill).toBeUndefined();
+  });
+
+  it("sync still blocks risky requests instead of approving them", () => {
+    const stack = createStack();
+    const prov = makeProvenance(stack);
+    const risky = stack.service.createSkillRequest({ skillId: "s-risky", skillName: "ShellRunner", requestType: "run", title: "Run shell", description: "shell", requestedCapabilities: ["shell.exec"], provenanceIds: [prov.provenanceId] });
+    expect(stack.service.syncApprovedFromApprovalRequest(risky.skillRequestId)?.status).toBe("blocked");
+  });
+
   it("rejects and revokes requests", () => {
     const stack = createStack();
     const prov = makeProvenance(stack);

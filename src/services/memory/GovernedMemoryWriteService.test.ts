@@ -128,6 +128,22 @@ describe("GovernedMemoryWriteService", () => {
     expect(stack.savedKeys[0]?.value).not.toContain("plaintextsecretvalue");
   });
 
+  it("generic-queue approval (approveOnce + sync) yields a write-ready proposal that still requires an explicit write", async () => {
+    const stack = createStack();
+    const prov = makeProvenance(stack);
+    const proposal = stack.proposals.createProposal(baseInput(prov.provenanceId));
+    // Approve via the generic Pending approvals path, then sync the source record.
+    stack.approvals.approveOnce(proposal.approvalRequestId!);
+    stack.proposals.syncApprovedFromApprovalRequest(proposal.proposalId);
+    expect(stack.proposals.getProposal(proposal.proposalId)?.status).toBe("approved_waiting_write");
+    // Approval alone never writes.
+    expect(stack.savedKeys).toHaveLength(0);
+    // The explicit write still works because the one-shot approval is intact.
+    const result = await stack.writeService.writeApprovedProposal(proposal.proposalId);
+    expect(result.status).toBe("succeeded");
+    expect(stack.savedKeys).toHaveLength(1);
+  });
+
   it("produces a diagnostics summary", async () => {
     const stack = createStack();
     const { proposal } = approvedProposal(stack);

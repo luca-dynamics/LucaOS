@@ -207,6 +207,25 @@ export class MemoryProposalService {
     if (proposal.approvalRequestId) {
       this.deps.approvals.approveOnce(proposal.approvalRequestId);
     }
+    return this.markApprovedWaitingWrite(proposalId);
+  }
+
+  /**
+   * Sync the proposal to approved_waiting_write when its ApprovalRequest was
+   * already approved elsewhere (e.g. the generic Pending approvals list).
+   * This intentionally does NOT call approveOnce again — the one-shot approval
+   * has already been granted — and never writes memory.
+   */
+  syncApprovedFromApprovalRequest(proposalId: string): MemoryProposalRecord | undefined {
+    const proposal = this.getProposal(proposalId);
+    if (!proposal) return undefined;
+    if (proposal.status === "blocked" || proposal.status === "rejected" || proposal.status === "revoked" || proposal.status === "written") {
+      return proposal;
+    }
+    return this.markApprovedWaitingWrite(proposalId);
+  }
+
+  private markApprovedWaitingWrite(proposalId: string): MemoryProposalRecord | undefined {
     const updated = this.update(proposalId, { status: "approved_waiting_write" });
     if (updated) {
       this.deps.memoryGovernance.markProposalApproved(updated.proposalId);

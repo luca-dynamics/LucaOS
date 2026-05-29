@@ -37,6 +37,33 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
   const [revision, setRevision] = useState(0);
   const refresh = () => setRevision((value) => value + 1);
 
+  // Approve an ApprovalRequest from the generic queue and sync its source record
+  // to the matching approved-waiting state. This is strictly state-only: it never
+  // writes memory, runs/installs skills, or executes tools.
+  const approveRequestAndSyncSource = (request: { approvalRequestId: string; sourceType: string; sourceId?: string }) => {
+    approvalRequestCenterService.approveOnce(request.approvalRequestId);
+    if (request.sourceId) {
+      switch (request.sourceType) {
+        case "tool": {
+          const governed = governedActionRequestService.getRequest(request.sourceId);
+          if (governed && governed.status === "approval_required") {
+            governedActionRequestService.markApprovedWaitingExecution(request.sourceId);
+          }
+          break;
+        }
+        case "memory_write":
+          memoryProposalService.syncApprovedFromApprovalRequest(request.sourceId);
+          break;
+        case "skill":
+          skillGovernanceService.syncApprovedFromApprovalRequest(request.sourceId);
+          break;
+        default:
+          break;
+      }
+    }
+    refresh();
+  };
+
   const data = useMemo(() => {
     const now = new Date().toISOString();
     return {
@@ -96,16 +123,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <Button tone="good" onClick={() => {
-                    approvalRequestCenterService.approveOnce(request.approvalRequestId);
-                    if (request.sourceType === "tool" && request.sourceId) {
-                      const governed = governedActionRequestService.getRequest(request.sourceId);
-                      if (governed && governed.status === "approval_required") {
-                        governedActionRequestService.markApprovedWaitingExecution(request.sourceId);
-                      }
-                    }
-                    refresh();
-                  }}>approve once</Button>
+                  <Button tone="good" onClick={() => approveRequestAndSyncSource(request)}>approve once</Button>
                   <Button tone="danger" onClick={() => { approvalRequestCenterService.reject(request.approvalRequestId); refresh(); }}>reject</Button>
                   <Button onClick={() => { approvalRequestCenterService.revoke(request.approvalRequestId); refresh(); }}>revoke</Button>
                 </div>

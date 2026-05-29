@@ -100,6 +100,29 @@ describe("MemoryProposalService", () => {
     expect(stack.proposals.listProposals().length).toBeLessThanOrEqual(500);
   });
 
+  it("generic approval (approveOnce + sync) moves the proposal to approved_waiting_write without writing memory", () => {
+    const stack = createStack();
+    const prov = makeProvenance(stack);
+    const proposal = stack.proposals.createProposal(baseInput(prov.provenanceId));
+    // Simulate approving from the generic Pending approvals list.
+    stack.approvals.approveOnce(proposal.approvalRequestId!);
+    const approveOnceSpy = vi.spyOn(stack.approvals, "approveOnce");
+    const synced = stack.proposals.syncApprovedFromApprovalRequest(proposal.proposalId);
+    expect(synced?.status).toBe("approved_waiting_write");
+    // sync must not re-approve (no double-approve / recursion).
+    expect(approveOnceSpy).not.toHaveBeenCalled();
+    // no memory was written during approval.
+    expect(stack.memoryWrites).toHaveLength(0);
+  });
+
+  it("sync does not resurrect a rejected proposal", () => {
+    const stack = createStack();
+    const prov = makeProvenance(stack);
+    const proposal = stack.proposals.createProposal(baseInput(prov.provenanceId));
+    stack.proposals.rejectProposal(proposal.proposalId);
+    expect(stack.proposals.syncApprovedFromApprovalRequest(proposal.proposalId)?.status).toBe("rejected");
+  });
+
   it("produces a diagnostics summary", () => {
     const stack = createStack();
     const prov = makeProvenance(stack);
