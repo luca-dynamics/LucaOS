@@ -4,6 +4,10 @@ import path from 'path';
 import { exec } from 'child_process';
 import os from 'os';
 import { MACROS_DIR } from '../../config/constants.js';
+import securityManager from '../../services/securityManager.js';
+import { isCommandSafe } from '../../config/StandardActions.js';
+
+const sanitizeMacroName = (name) => name.replace(/[^a-zA-Z0-9_\-]/g, '');
 
 const router = express.Router();
 
@@ -26,6 +30,18 @@ router.post('/execute', async (req, res) => {
         try {
             if (method === 'shell.run') {
                 const { message, path: workPath, venv } = params;
+
+                if (securityManager.isGodMode() && !isCommandSafe(message)) {
+                    results.push({ method, success: false, error: 'Command blocked by security policy in God Mode.' });
+                    continue;
+                }
+
+                const blocked = ['rm -rf /', ':(){ :|:& };:'];
+                if (blocked.some(b => message.includes(b))) {
+                    results.push({ method, success: false, error: 'Command blocked by safety filter.' });
+                    continue;
+                }
+
                 const cwd = workPath ? path.resolve(process.cwd(), workPath) : process.cwd();
                 
                 const result = await new Promise((resolve, reject) => {
@@ -74,8 +90,11 @@ router.post('/execute', async (req, res) => {
 
 router.post('/macro/save', (req, res) => {
     const { name, script } = req.body;
+    if (!name || typeof name !== 'string') return res.status(400).json({ error: 'Macro name required' });
+    const safeName = sanitizeMacroName(name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid macro name' });
     try {
-        const macroPath = path.join(MACROS_DIR, `${name}.json`);
+        const macroPath = path.join(MACROS_DIR, `${safeName}.json`);
         fs.writeFileSync(macroPath, JSON.stringify({ name, script }, null, 2));
         res.json({ success: true });
     } catch (e) {
@@ -94,8 +113,10 @@ router.get('/macro/list', (req, res) => {
 });
 
 router.get('/macro/:name', (req, res) => {
+    const safeName = sanitizeMacroName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid macro name' });
     try {
-        const macroPath = path.join(MACROS_DIR, `${req.params.name}.json`);
+        const macroPath = path.join(MACROS_DIR, `${safeName}.json`);
         if (!fs.existsSync(macroPath)) {
             return res.status(404).json({ error: 'Macro not found' });
         }

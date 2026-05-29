@@ -141,7 +141,14 @@ try {
 app.set('socketService', socketService);
 
 // --- MIDDLEWARE ---
-app.use(cors());
+const ALLOWED_ORIGINS = (process.env.LUCA_CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000').split(',');
+app.use(cors({
+    origin: (origin, cb) => {
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+        cb(new Error('Blocked by CORS'));
+    },
+    credentials: true,
+}));
 app.use(express.json({ limit: '50mb' }));
 
 // --- GLOBAL SECURITY LAYER ---

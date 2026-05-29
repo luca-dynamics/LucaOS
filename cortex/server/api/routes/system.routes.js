@@ -61,8 +61,7 @@ const safeExec = (command, callback) => {
 router.post('/execute', (req, res) => {
     const { command } = req.body;
     // --- SECURITY FILTERING ---
-    const isBypassed = req.headers['x-luca-bypass'] === 'true';
-    if (securityManager.isGodMode() && !isBypassed) {
+    if (securityManager.isGodMode()) {
         if (!isCommandSafe(command)) {
             console.warn(`[SECURITY] Blocked restricted command: ${command}`);
             return res.status(403).json({ 
@@ -98,8 +97,7 @@ router.post('/script', (req, res) => {
     }
 
     // --- SECURITY FILTERING ---
-    const isBypassed = req.headers['x-luca-bypass'] === 'true';
-    if (securityManager.isGodMode() && !isBypassed) {
+    if (securityManager.isGodMode()) {
         console.warn(`[SECURITY] Blocked script execution attempt: ${language}`);
         return res.status(403).json({ 
             error: 'Restricted Access', 
@@ -228,13 +226,16 @@ router.post('/control', (req, res) => {
     if (action === "SET_VOLUME" || action === "VOLUME_SET") {
         const volumeLevel = level || value;
         let cmd = '';
-        if (platform === 'darwin') cmd = `osascript -e "set volume output volume ${volumeLevel}"`;
-        else if (platform === 'win32') cmd = `nircmd.exe setsysvolume ${Math.round(volumeLevel * 655.35)}`; // Assuming nircmd is in path
+        const safeVolumeLevel = parseInt(volumeLevel, 10);
+        if (isNaN(safeVolumeLevel) || safeVolumeLevel < 0 || safeVolumeLevel > 100) {
+            return res.status(400).json({ error: 'Volume level must be an integer between 0 and 100' });
+        }
+        if (platform === 'darwin') cmd = `osascript -e "set volume output volume ${safeVolumeLevel}"`;
+        else if (platform === 'win32') cmd = `nircmd.exe setsysvolume ${Math.round(safeVolumeLevel * 655.35)}`;
         
         if (cmd) {
             try {
-                // Use safeExec for volume control too
-                safeExec(cmd, (err) => res.json({ success: !err, result: err ? err.message : `Volume set to ${volumeLevel}%` }));
+                safeExec(cmd, (err) => res.json({ success: !err, result: err ? err.message : `Volume set to ${safeVolumeLevel}%` }));
             } catch (e) {
                  return res.json({ success: false, error: "Volume set failed to spawn", details: e.message });
             }
@@ -277,7 +278,10 @@ router.post('/hotspot', (req, res) => {
         
         if (action === 'on') {
              // Basic netsh fallback (requires Admin)
-             psCmd = 'netsh wlan set hostednetwork mode=allow ssid=Luca_Secure key=LucaTrust123; netsh wlan start hostednetwork';
+             const hsSSID = process.env.LUCA_HOTSPOT_SSID || 'Luca_Secure';
+             const hsKey = process.env.LUCA_HOTSPOT_KEY;
+             if (!hsKey) return res.status(400).json({ success: false, error: 'LUCA_HOTSPOT_KEY env var is required for hotspot activation.' });
+             psCmd = `netsh wlan set hostednetwork mode=allow ssid=${hsSSID} key=${hsKey}; netsh wlan start hostednetwork`;
         } else if (action === 'off') {
              psCmd = 'netsh wlan stop hostednetwork';
         } else {
@@ -296,7 +300,10 @@ router.post('/hotspot', (req, res) => {
         
         if (action === 'on') {
             // Create and activate hotspot profile
-            cmd = 'nmcli device wifi hotspot ifname wlan0 ssid Luca_Secure password LucaTrust123';
+            const hsSSIDLinux = process.env.LUCA_HOTSPOT_SSID || 'Luca_Secure';
+            const hsKeyLinux = process.env.LUCA_HOTSPOT_KEY;
+            if (!hsKeyLinux) return res.status(400).json({ success: false, error: 'LUCA_HOTSPOT_KEY env var is required for hotspot activation.' });
+            cmd = `nmcli device wifi hotspot ifname wlan0 ssid ${hsSSIDLinux} password ${hsKeyLinux}`;
         } else if (action === 'off') {
             cmd = 'nmcli connection down "Luca_Secure"'; // Assuming profile name matches
         }
@@ -415,13 +422,14 @@ router.post('/apps/close', (req, res) => {
     const { appName } = req.body;
     const platform = os.platform();
     
+    const sanitizedAppName = appName.replace(/[^a-zA-Z0-9 _.\-]/g, '');
     if (platform === 'darwin') {
-        exec(`osascript -e 'quit app "${appName}"'`, (err) => {
+        exec(`osascript -e 'quit app "${sanitizedAppName}"'`, (err) => {
             if (err) return res.json({ success: false, error: err.message });
             res.json({ success: true });
         });
     } else if (platform === 'win32') {
-        exec(`taskkill /IM "${appName}.exe" /F`, (err) => {
+        exec(`taskkill /IM "${sanitizedAppName}.exe" /F`, (err) => {
             if (err) return res.json({ success: false, error: err.message });
             res.json({ success: true });
         });

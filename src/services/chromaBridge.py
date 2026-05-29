@@ -58,7 +58,10 @@ class ChromaHandler(BaseHTTPRequestHandler):
             
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
+            allowed_origins = os.environ.get('LUCA_CORS_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
+            request_origin = self.headers.get('Origin', '')
+            if request_origin in allowed_origins:
+                self.send_header('Access-Control-Allow-Origin', request_origin)
             self.end_headers()
             self.wfile.write(json.dumps(result).encode())
             

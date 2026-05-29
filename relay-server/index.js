@@ -14,10 +14,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
+const RELAY_ALLOWED_ORIGINS = (process.env.LUCA_CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000').split(',');
 const io = new Server(httpServer, {
   cors: {
-    origin: '*', // In production, restrict to your domains
-    methods: ['GET', 'POST']
+    origin: (origin, cb) => {
+      if (!origin || RELAY_ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+      cb(new Error('Blocked by CORS'));
+    },
+    methods: ['GET', 'POST'],
+    credentials: true
   },
   pingTimeout: 60000,
   pingInterval: 25000
@@ -42,7 +47,13 @@ const stats = {
 };
 
 // Express middleware
-app.use(cors());
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || RELAY_ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    cb(new Error('Blocked by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // Serve static files (guest.html)

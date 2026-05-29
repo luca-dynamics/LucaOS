@@ -15,7 +15,7 @@ const ALLOWED_ROOTS = [
 
 const isJailed = (targetPath, req) => {
     if (!securityManager.isGodMode()) return false;
-    if (req && req.headers['x-luca-bypass'] === 'true') return false;
+    // x-luca-bypass header removed — security checks cannot be skipped via headers
     return !ALLOWED_ROOTS.some(root => isPathWithinDirectory(root, targetPath) || targetPath === root);
 };
 
@@ -169,6 +169,16 @@ router.get('/read', (req, res) => {
     if (!filePath) return res.status(400).json({error: "No path provided"});
     
     const targetPath = path.resolve(currentWorkingDirectory, filePath);
+
+    if (isJailed(targetPath, req)) {
+        return res.status(403).json({ 
+            error: 'Restricted Access', 
+            code: 'PERMISSION_REQUIRED',
+            action: 'FS_READ',
+            metadata: { path: targetPath },
+            message: 'Path is outside of allowed directories.' 
+        });
+    }
     try {
         if (fs.existsSync(targetPath) && fs.statSync(targetPath).isFile()) {
             const content = fs.readFileSync(targetPath, 'utf8');
