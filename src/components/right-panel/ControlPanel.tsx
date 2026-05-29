@@ -10,6 +10,8 @@ import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlan
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
 import { intentRoutingModeService } from "../../services/runtime/IntentRoutingModeService";
+import { skillRegistryService } from "../../services/skills/SkillRegistryService";
+import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -19,6 +21,7 @@ import {
   getCheckpointContinuityLabel, getCheckpointContinuityTone, getCheckpointNextAction,
   getContinuityToneColor, getContinuitySummaryLine, compactTimestamp,
 } from "../runtime/continuityLabels";
+import { getSkillSummaryLine } from "../runtime/skillGovernanceLabels";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -60,6 +63,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const resumableCount = agentSessionContinuityService.listResumableSessions().length;
   const approvals = approvalRequestCenterService.getDiagnosticsSummary();
   const reminders = reminderDeliveryService.getDiagnosticsSummary();
+  const skillRegistry = skillRegistryService.getDiagnosticsSummary();
+  const skillGovernance = skillGovernanceService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -136,6 +141,32 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
                 <RightPanelMetric label="Reminders" value={reminders.deliveredCount} tone={reminders.deliveredCount > 0 ? "good" : "neutral"} />
               </div>
               <div className="text-[9px] uppercase tracking-widest opacity-70">No execution happens from this panel</div>
+            </div>
+          );
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Skill governance" subtitle="Registry and request state only. No skill installs or runs from this panel.">
+        {(() => {
+          const pendingSkillRequests = skillGovernance.proposedRequests + skillGovernance.approvalRequiredRequests;
+          const rejectedRevokedSkillRequests = skillGovernance.rejectedRequests + skillGovernance.revokedRequests;
+          const summaryLine = getSkillSummaryLine({
+            registeredSkills: skillRegistry.totalSkills,
+            pendingRequests: pendingSkillRequests,
+            approvedWaitingRequests: skillGovernance.approvedWaitingRequests,
+            blockedRequests: skillGovernance.blockedRequests,
+            rejectedRevokedRequests: rejectedRevokedSkillRequests,
+          });
+          return (
+            <div className="space-y-2 text-[10px] text-[var(--app-text-muted)]">
+              <div className="font-bold text-[var(--app-text-main)]">{summaryLine}</div>
+              <div className="grid grid-cols-2 gap-1">
+                <RightPanelMetric label="Registered" value={skillRegistry.totalSkills} tone={skillRegistry.totalSkills > 0 ? "good" : "neutral"} />
+                <RightPanelMetric label="Pending" value={pendingSkillRequests} tone={pendingSkillRequests > 0 ? "warn" : "good"} />
+                <RightPanelMetric label="Waiting" value={skillGovernance.approvedWaitingRequests} tone={skillGovernance.approvedWaitingRequests > 0 ? "warn" : "neutral"} />
+                <RightPanelMetric label="Blocked" value={skillGovernance.blockedRequests} tone={skillGovernance.blockedRequests > 0 ? "danger" : "good"} />
+              </div>
+              <div className="text-[9px] uppercase tracking-widest opacity-70">Skill approvals are state-only · No skill installs or runs from this panel</div>
             </div>
           );
         })()}

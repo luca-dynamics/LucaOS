@@ -27,6 +27,17 @@ import {
   getContinuityToneColor, getContinuityToneBorder, getContinuityToneBg,
   getContinuityNoExecutionText, compactTimestamp,
 } from "../runtime/continuityLabels";
+import {
+  getSkillCapabilityLabel,
+  getSkillRequestLabel,
+  getSkillRequestNextAction,
+  getSkillRequestNoExecutionText,
+  getSkillRequestTone,
+  getSkillRequestTypeLabel,
+  getSkillRiskLabel,
+  getSkillRiskTone,
+  type SkillGovernanceTone,
+} from "../runtime/skillGovernanceLabels";
 
 interface ActivityPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -45,6 +56,36 @@ const Button: React.FC<{ children: React.ReactNode; onClick: () => void; tone?: 
     {children}
   </button>
 );
+
+const getSkillToneColor = (tone: SkillGovernanceTone): string => {
+  switch (tone) {
+    case "good": return "text-emerald-300";
+    case "warn": return "text-amber-300";
+    case "danger": return "text-red-300";
+    case "info": return "text-sky-300";
+    case "neutral": return "text-[var(--app-text-muted)]";
+  }
+};
+
+const getSkillToneBorder = (tone: SkillGovernanceTone): string => {
+  switch (tone) {
+    case "good": return "border-emerald-500/20";
+    case "warn": return "border-amber-500/20";
+    case "danger": return "border-red-500/20";
+    case "info": return "border-sky-500/20";
+    case "neutral": return "border-white/10";
+  }
+};
+
+const getSkillToneBg = (tone: SkillGovernanceTone): string => {
+  switch (tone) {
+    case "good": return "bg-emerald-500/5";
+    case "warn": return "bg-amber-500/5";
+    case "danger": return "bg-red-500/5";
+    case "info": return "bg-sky-500/5";
+    case "neutral": return "bg-black/10";
+  }
+};
 
 const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
   const [revision, setRevision] = useState(0);
@@ -205,22 +246,44 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         })()}
       </RightPanelSection>
 
-      <RightPanelSection title="Skill requests" subtitle="Skill approval is state-only. No skill installs, enables, updates, or runs in this state.">
+      <RightPanelSection title="Skill requests" subtitle="Skill approval is state-only. No skill installs, enables, updates, removes, or runs in this state.">
         {(() => {
           const active = data.skillRequests.filter((request) => request.status !== "expired");
           if (active.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No skill requests.</div>;
           return active.slice(0, 6).map((request) => {
             const approved = request.status === "approved_waiting_install" || request.status === "approved_waiting_execution";
             const pending = request.status === "proposed" || request.status === "approval_required";
+            const statusTone = getSkillRequestTone(request.status);
+            const riskTone = getSkillRiskTone(request.riskLevel);
+            const hasSafetyFlags = (request.blockedBy?.length ?? 0) > 0;
             return (
-              <div key={request.skillRequestId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2">
-                <div className="text-[10px] font-bold text-[var(--app-text-main)]">{approved ? "Approved — waiting future secure bridge" : request.status === "blocked" ? "Blocked for safety" : "Skill request"} · {request.skillName}</div>
-                <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{request.description}</p>
-                <p className="mt-1 text-[9px] uppercase tracking-widest text-amber-200">{request.requestType} · {request.riskLevel} · {request.status} · no execution</p>
-                {request.blockedBy && request.blockedBy.length > 0 && <p className="mt-1 text-[9px] uppercase tracking-widest text-red-300">{request.blockedBy.join(", ")}</p>}
+              <div key={request.skillRequestId} className={`mb-2 rounded-xl border p-2 ${getSkillToneBorder(statusTone)} ${getSkillToneBg(statusTone)}`}>
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                  <span className={`font-bold ${getSkillToneColor(statusTone)}`}>{getSkillRequestLabel(request.status)}</span>
+                  <span className="font-bold text-[var(--app-text-main)]">· {request.skillName}</span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1.5 text-[9px] font-bold uppercase tracking-widest">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[var(--app-text-muted)]">{getSkillRequestTypeLabel(request.requestType)}</span>
+                  <span className={`rounded-full border px-2 py-0.5 ${getSkillToneBorder(riskTone)} ${getSkillToneColor(riskTone)}`}>{getSkillRiskLabel(request.riskLevel)}</span>
+                  <span className="rounded-full border border-sky-500/20 bg-sky-500/5 px-2 py-0.5 text-sky-200">State-only</span>
+                </div>
+                <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.description}</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {request.requestedCapabilities.length === 0 ? (
+                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[9px] text-[var(--app-text-muted)]">No capabilities requested</span>
+                  ) : request.requestedCapabilities.map((capability) => (
+                    <span key={capability} className="rounded-full border border-white/10 bg-black/10 px-2 py-0.5 text-[9px] text-[var(--app-text-muted)]">
+                      {getSkillCapabilityLabel(capability)}
+                    </span>
+                  ))}
+                </div>
+                {hasSafetyFlags && <p className="mt-1 text-[9px] uppercase tracking-widest text-red-300">Blocked reason: {request.blockedBy?.map(getSkillCapabilityLabel).join(", ")}</p>}
+                <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">{getSkillRequestNextAction(request.status, request.requestType)}</p>
+                <p className="mt-0.5 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">{getSkillRequestNoExecutionText()}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {pending && <Button tone="good" onClick={() => { skillGovernanceService.approveSkillRequest(request.skillRequestId); refresh(); }}>approve (state-only)</Button>}
+                  {pending && !hasSafetyFlags && <Button tone="good" onClick={() => { skillGovernanceService.approveSkillRequest(request.skillRequestId); refresh(); }}>approve request</Button>}
                   {pending && <Button tone="danger" onClick={() => { skillGovernanceService.rejectSkillRequest(request.skillRequestId); refresh(); }}>reject</Button>}
+                  {pending && hasSafetyFlags && <Button onClick={() => { skillGovernanceService.blockSkillRequest(request.skillRequestId, "Request includes risky capabilities."); refresh(); }}>block</Button>}
                   {approved && <Button onClick={() => { skillGovernanceService.revokeSkillRequest(request.skillRequestId); refresh(); }}>revoke</Button>}
                 </div>
               </div>

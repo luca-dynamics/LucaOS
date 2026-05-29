@@ -28,6 +28,17 @@ import {
   getContinuityToneColor, getContinuityToneBorder, getContinuityToneBg,
   getContinuityNoExecutionText, compactTimestamp,
 } from "../runtime/continuityLabels";
+import {
+  getSkillCapabilityLabel,
+  getSkillRequestLabel,
+  getSkillRequestNextAction,
+  getSkillRequestNoExecutionText,
+  getSkillRequestTone,
+  getSkillRequestTypeLabel,
+  getSkillRiskLabel,
+  getSkillRiskTone,
+  type SkillGovernanceTone,
+} from "../runtime/skillGovernanceLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -37,6 +48,36 @@ interface TraceLogsPanelProps {
 function EmptyState({ children }: { children: React.ReactNode }) {
   return <div className="text-[10px] italic text-[var(--app-text-muted)] opacity-70">{children}</div>;
 }
+
+const getSkillToneColor = (tone: SkillGovernanceTone): string => {
+  switch (tone) {
+    case "good": return "text-emerald-300";
+    case "warn": return "text-amber-300";
+    case "danger": return "text-red-300";
+    case "info": return "text-sky-300";
+    case "neutral": return "text-[var(--app-text-muted)]";
+  }
+};
+
+const getSkillToneBorder = (tone: SkillGovernanceTone): string => {
+  switch (tone) {
+    case "good": return "border-emerald-500/20";
+    case "warn": return "border-amber-500/20";
+    case "danger": return "border-red-500/20";
+    case "info": return "border-sky-500/20";
+    case "neutral": return "border-white/10";
+  }
+};
+
+const getSkillToneBg = (tone: SkillGovernanceTone): string => {
+  switch (tone) {
+    case "good": return "bg-emerald-500/5";
+    case "warn": return "bg-amber-500/5";
+    case "danger": return "bg-red-500/5";
+    case "info": return "bg-sky-500/5";
+    case "neutral": return "bg-black/10";
+  }
+};
 
 const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
   const trace = useMemo(() => {
@@ -196,14 +237,31 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
         ))}
       </RightPanelSection>
 
-      <RightPanelSection title="Skill requests" subtitle="Skill governance request trace. Approval is state-only; no execution happens.">
-        {trace.skillRequests.length === 0 ? <EmptyState>No skill requests.</EmptyState> : trace.skillRequests.slice(0, 8).map((request) => (
-          <div key={request.skillRequestId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
-            <div className="font-bold text-[var(--app-text-main)]">{request.status} · {request.skillName}</div>
-            <div>{request.requestType} · risk: {request.riskLevel}</div>
-            {request.blockedBy && request.blockedBy.length > 0 && <div className="text-red-200">Blocked: {request.blockedBy.join(", ")}</div>}
-          </div>
-        ))}
+      <RightPanelSection title="Skill requests" subtitle="Latest skill governance records. Approval is state-only; no execution happens.">
+        {trace.skillRequests.length === 0 ? <EmptyState>No skill requests.</EmptyState> : [...trace.skillRequests]
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+          .slice(0, 8)
+          .map((request) => {
+            const statusTone = getSkillRequestTone(request.status);
+            const riskTone = getSkillRiskTone(request.riskLevel);
+            return (
+              <div key={request.skillRequestId} className={`mb-2 rounded-xl border p-2 text-[10px] text-[var(--app-text-muted)] ${getSkillToneBorder(statusTone)} ${getSkillToneBg(statusTone)}`}>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={`font-bold ${getSkillToneColor(statusTone)}`}>{getSkillRequestLabel(request.status)}</span>
+                  <span className="font-bold text-[var(--app-text-main)]">&middot; {request.skillName}</span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1.5 text-[9px] font-bold uppercase tracking-widest">
+                  <span>{getSkillRequestTypeLabel(request.requestType)}</span>
+                  <span className={getSkillToneColor(riskTone)}>&middot; {getSkillRiskLabel(request.riskLevel)}</span>
+                  <span>&middot; {compactTimestamp(request.updatedAt)}</span>
+                </div>
+                <div className="mt-1">Capabilities: {request.requestedCapabilities.length === 0 ? "none requested" : request.requestedCapabilities.map(getSkillCapabilityLabel).join(", ")}</div>
+                {request.blockedBy && request.blockedBy.length > 0 && <div className="text-red-200">Blocked reason: {request.blockedBy.map(getSkillCapabilityLabel).join(", ")}</div>}
+                <div>{getSkillRequestNextAction(request.status, request.requestType)}</div>
+                <div className="text-[9px] uppercase tracking-widest opacity-70">{getSkillRequestNoExecutionText()}</div>
+              </div>
+            );
+          })}
       </RightPanelSection>
 
       <RightPanelSection title="Plan trace" subtitle="Runtime plan lifecycle trace. Plans create governed records; nothing executes.">
