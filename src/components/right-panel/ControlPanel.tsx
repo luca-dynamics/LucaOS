@@ -11,6 +11,8 @@ import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
 import { intentRoutingModeService } from "../../services/runtime/IntentRoutingModeService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
+import type { LucaIntentRoute } from "../../types/intentRouting";
+import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -153,22 +155,38 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           const routingMode = intentRoutingModeService.getMode();
           const lastDecision = intentRoutingService.getLastDecision();
           const routingDiag = intentRoutingService.getDiagnosticsSummary();
+          const lastRoute = lastDecision?.route as LucaIntentRoute | undefined;
+          const lastTone = lastRoute ? getRouteTone(lastRoute) : undefined;
+          const lastToneColor = lastTone ? getRouteToneColor(lastTone) : "";
           return (
             <div className="space-y-1 text-[10px] text-[var(--app-text-muted)]">
               <div className="font-bold text-[var(--app-text-main)]">
                 Mode: {ROUTING_MODE_SHORT_LABELS[routingMode]} · No execution
               </div>
-              {lastDecision ? (
+              {lastDecision && lastRoute ? (
                 <>
-                  <div>Last route: {lastDecision.route} · risk: {lastDecision.riskLevel}</div>
-                  <div>{lastDecision.reason}</div>
-                  {lastDecision.createdPlanId && <div>Created plan: {lastDecision.createdPlanId}</div>}
+                  <div className="flex items-center gap-1.5">
+                    <span className={`font-bold ${lastToneColor}`}>{getRouteLabel(lastRoute)}</span>
+                    <span>· risk: {lastDecision.riskLevel}</span>
+                  </div>
+                  <div className="truncate">{lastDecision.reason.slice(0, 200)}</div>
+                  {lastRoute !== "fast_response" && (
+                    <div className="text-[9px] uppercase tracking-widest opacity-70">
+                      {getRouteNoExecutionText(lastRoute)} · {getRouteNextAction(lastRoute)}
+                    </div>
+                  )}
+                  {lastDecision.createdPlanId && <div>Plan: {lastDecision.createdPlanId}</div>}
+                  {(lastDecision.createdMemoryProposalIds?.length ?? 0) > 0 && <div>Memory proposals: {lastDecision.createdMemoryProposalIds?.length}</div>}
+                  {(lastDecision.createdGovernedRequestIds?.length ?? 0) > 0 && <div>Governed requests: {lastDecision.createdGovernedRequestIds?.length}</div>}
+                  {(lastDecision.createdSkillRequestIds?.length ?? 0) > 0 && <div>Skill requests: {lastDecision.createdSkillRequestIds?.length}</div>}
                 </>
               ) : (
                 <div className="italic">No routing decisions yet.</div>
               )}
               <div className="grid grid-cols-2 gap-1 pt-1">
                 <RightPanelMetric label="Total routes" value={routingDiag.totalRoutingDecisions} tone="neutral" />
+                <RightPanelMetric label="Fast" value={routingDiag.fastResponses} tone="neutral" />
+                <RightPanelMetric label="Plans" value={routingDiag.plannedRoutes} tone={routingDiag.plannedRoutes > 0 ? "warn" : "neutral"} />
                 <RightPanelMetric label="Blocked" value={routingDiag.blockedRoutes} tone={routingDiag.blockedRoutes > 0 ? "danger" : "good"} />
               </div>
             </div>

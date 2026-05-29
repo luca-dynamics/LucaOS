@@ -13,6 +13,7 @@ import IntentRoutingModeSelector from "../runtime/IntentRoutingModeSelector";
 import { chatIntentRouterBridge } from "../../services/runtime/ChatIntentRouterBridge";
 import { chatIntentProvenanceService } from "../../services/runtime/ChatIntentProvenanceService";
 import type { ChatRoutingResult } from "../../services/runtime/ChatIntentRouterBridge";
+import { getRouteHintText, getRouteLabel, getRouteTone, shouldAppendRouteHint } from "../runtime/intentRoutingLabels";
 
 interface ChatPanelProps {
   messages: any[];
@@ -440,29 +441,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   }, [persona, bootSequence, messages.length, setAmbientSuggestions, setShowSuggestionChips, userName, handleSendMessage]);
 
-  // --- Intent Routing Integration (PR #124) ---
-  const buildRouteHintText = (result: ChatRoutingResult): string => {
-    switch (result.routeType) {
-      case "runtime_plan":
-        return "I created a governed plan for this. Review it in ACTIVITY → Runtime Plans. No action has been executed.";
-      case "memory_proposal":
-        return "I created a memory proposal. It has not been saved yet.";
-      case "skill_request":
-        return "I created a skill request. It is state-only and will not install or run anything.";
-      case "blocked_risky_action":
-        return "I recorded this as blocked for safety.";
-      case "ask_user":
-        return "I need one clarification before creating a governed plan or request.";
-      case "governed_action_request":
-      case "safe_execution_request":
-        return "I created a governed action request. It requires approval before anything runs.";
-      case "planning_checkpoint":
-        return "I created a planning checkpoint. No action has been executed.";
-      default:
-        return "";
-    }
-  };
-
+  // --- Intent Routing Integration (PR #124 + PR #125 polish) ---
   const handleRoutedSend = () => {
     const trimmed = input.trim();
     if (!trimmed) {
@@ -502,8 +481,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     handleSend();
 
     if (routeResult && routeResult.routed && routeResult.routeType !== "fast_response") {
-      const hintText = buildRouteHintText(routeResult);
-      if (hintText) {
+      const hintText = getRouteHintText(routeResult.routeType);
+      if (hintText && shouldAppendRouteHint(messages, hintText)) {
+        const tone = getRouteTone(routeResult.routeType);
+        const label = getRouteLabel(routeResult.routeType);
         startTransition(() => {
           setMessages((prev) => [
             ...prev,
@@ -514,6 +495,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               timestamp: Date.now(),
               isStreaming: false,
               isRouteHint: true,
+              routeLabel: label,
+              routeTone: tone,
             },
           ]);
         });
@@ -861,7 +844,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 <ChatMessageBubble
                   key={msg.id || index}
                   text={msg.text}
-                  sender={msg.sender === Sender.USER ? "user" : "luca"}
+                  sender={msg.sender === Sender.USER ? "user" : msg.sender === Sender.SYSTEM ? "system" : "luca"}
+                  isRouteHint={msg.isRouteHint}
+                  routeLabel={msg.routeLabel}
+                  routeTone={msg.routeTone}
                   timestamp={msg.timestamp}
                   persona={persona as any}
                   primaryColor={

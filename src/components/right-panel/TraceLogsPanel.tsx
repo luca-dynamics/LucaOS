@@ -17,6 +17,8 @@ import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeCont
 import { Icon } from "../ui/Icon";
 import RightPanelSection from "./RightPanelSection";
 import { summarizeToolLog } from "./rightPanelModel";
+import type { LucaIntentRoute } from "../../types/intentRouting";
+import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteToneBorder, getRouteToneBg, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -198,20 +200,27 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       </RightPanelSection>
 
       <RightPanelSection title="Intent routing trace" subtitle="Routing decisions and mode/risk/reason audit. Routing does not execute anything.">
-        {trace.routingDecisions.length === 0 ? <EmptyState>No routing decisions.</EmptyState> : trace.routingDecisions.slice(0, 8).map((decision) => (
-          <div key={decision.decisionId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
-            <div className="font-bold text-[var(--app-text-main)]">
-              <span className={decision.route === "blocked_risky_action" ? "text-red-300" : decision.route === "fast_response" ? "text-slate-400" : "text-amber-300"}>{decision.route}</span>
-              {" "}&middot; {decision.mode} mode &middot; risk: {decision.riskLevel}
+        {trace.routingDecisions.length === 0 ? <EmptyState>No routing decisions.</EmptyState> : trace.routingDecisions.slice(0, 8).map((decision) => {
+          const route = decision.route as LucaIntentRoute;
+          const tone = getRouteTone(route);
+          const toneColor = getRouteToneColor(tone);
+          const toneBorder = getRouteToneBorder(tone);
+          const toneBg = getRouteToneBg(tone);
+          return (
+            <div key={decision.decisionId} className={`mb-2 rounded-xl border p-2 text-[10px] text-[var(--app-text-muted)] ${toneBorder} ${toneBg}`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`font-bold ${toneColor}`}>{getRouteLabel(route)}</span>
+                <span>&middot; {decision.mode} mode &middot; risk: {decision.riskLevel}</span>
+              </div>
+              <div className="mt-0.5 truncate">{decision.reason.slice(0, 200)}</div>
+              {decision.createdPlanId && <div className="mt-0.5">Route → Plan: {decision.createdPlanId}</div>}
+              {(decision.createdMemoryProposalIds?.length ?? 0) > 0 && <div className="mt-0.5">Route → Memory proposals: {decision.createdMemoryProposalIds?.length}</div>}
+              {(decision.createdGovernedRequestIds?.length ?? 0) > 0 && <div className="mt-0.5">Route → Governed requests: {decision.createdGovernedRequestIds?.length}</div>}
+              {(decision.createdSkillRequestIds?.length ?? 0) > 0 && <div className="mt-0.5">Route → Skill requests: {decision.createdSkillRequestIds?.length}</div>}
+              <div className="mt-0.5 text-[9px] uppercase tracking-widest opacity-70">{getRouteNoExecutionText(route)} &middot; {new Date(decision.createdAt).toLocaleString()}</div>
             </div>
-            <div>{decision.reason}</div>
-            {decision.createdPlanId && <div>Plan: {decision.createdPlanId}</div>}
-            {(decision.createdMemoryProposalIds?.length ?? 0) > 0 && <div>Memory proposals: {decision.createdMemoryProposalIds?.length}</div>}
-            {(decision.createdGovernedRequestIds?.length ?? 0) > 0 && <div>Governed requests: {decision.createdGovernedRequestIds?.length}</div>}
-            {(decision.createdSkillRequestIds?.length ?? 0) > 0 && <div>Skill requests: {decision.createdSkillRequestIds?.length}</div>}
-            <div className="text-[9px] uppercase tracking-widest">no execution performed &middot; {new Date(decision.createdAt).toLocaleString()}</div>
-          </div>
-        ))}
+          );
+        })}
       </RightPanelSection>
 
       <RightPanelSection title="Governed requests / memory governance" subtitle="Requests Luca blocked, asked approval for, or held for review.">
