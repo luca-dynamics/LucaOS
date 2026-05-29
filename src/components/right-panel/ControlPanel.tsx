@@ -6,6 +6,7 @@ import { agentSessionContinuityService } from "../../services/runtime/AgentSessi
 import { reminderDeliveryService } from "../../services/scheduler/ReminderDeliveryService";
 import { approvalRequestCenterService } from "../../services/provenance/ApprovalRequestCenterService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
+import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -48,6 +49,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const approvals = approvalRequestCenterService.getDiagnosticsSummary();
   const reminders = reminderDeliveryService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
+  const checkpoints = agentPlanningCheckpointService.listCheckpoints();
+  const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
   const pendingTasks = tasks.filter((task) => ["PENDING", "IN_PROGRESS", "BLOCKED"].includes(task.status)).slice(0, 4);
   const activeGoals = goals.filter((goal) => ["PENDING", "SCHEDULED", "IN_PROGRESS"].includes(goal.status)).slice(0, 4);
   const upcomingEvents = events.filter((event) => event.startTime >= Date.now()).slice(0, 3);
@@ -107,6 +110,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No session continuity record available.</div>
         )}
       </RightPanelSection>
+
+      {activeCheckpoint && (
+        <RightPanelSection title="Planning checkpoint" subtitle="State-only plan record. Approving a checkpoint never runs tools or skills.">
+          <div className="space-y-1 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">{activeCheckpoint.title}</div>
+            <div>{activeCheckpoint.summary}</div>
+            <div className="uppercase tracking-widest">{activeCheckpoint.status} · risk: {activeCheckpoint.riskLevel}</div>
+            {activeCheckpoint.proposedNextSteps.length > 0 && <div>Next: {activeCheckpoint.proposedNextSteps.slice(0, 3).join(" · ")}</div>}
+          </div>
+        </RightPanelSection>
+      )}
 
       <RightPanelSection title="Decisions" subtitle="Safe queues that need user attention.">
         <div className="grid grid-cols-2 gap-2">

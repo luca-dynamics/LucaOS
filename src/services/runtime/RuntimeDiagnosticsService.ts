@@ -34,7 +34,11 @@ import { governedActionRequestService } from "./GovernedActionRequestService";
 import { governedToolExecutionService } from "./GovernedToolExecutionService";
 import { provenanceGateService } from "../provenance/ProvenanceGateService";
 import { skillRegistryService } from "../skills/SkillRegistryService";
+import { skillGovernanceService } from "../skills/SkillGovernanceService";
 import { memoryGovernanceService } from "../memory/MemoryGovernanceService";
+import { memoryProposalService } from "../memory/MemoryProposalService";
+import { governedMemoryWriteService } from "../memory/GovernedMemoryWriteService";
+import { agentPlanningCheckpointService } from "./AgentPlanningCheckpointService";
 import type { RuntimeContinuitySummary } from "../../types/runtimeContinuity";
 import type { SchedulerDiagnosticsSummary } from "../../types/scheduler";
 import type { ProvenanceDiagnosticsSummary } from "../../types/provenance";
@@ -46,6 +50,9 @@ import type { AgentSessionContinuityDiagnosticsSummary } from "../../types/agent
 import type { ApprovalRequestDiagnosticsSummary } from "../../types/approvalCenter";
 import type { GovernedActionRequestDiagnosticsSummary } from "../../types/governedActionRequest";
 import type { GovernedToolExecutionDiagnosticsSummary } from "../../types/governedToolExecution";
+import type { MemoryProposalDiagnosticsSummary, MemoryWriteDiagnosticsSummary } from "../../types/memoryProposal";
+import type { SkillGovernanceDiagnosticsSummary } from "../../types/skillGovernance";
+import type { AgentPlanningCheckpointDiagnosticsSummary } from "../../types/agentPlanningCheckpoint";
 
 export type RuntimeReadinessSeverity =
   | "ready"
@@ -151,6 +158,17 @@ export interface RuntimeGovernanceDiagnostics {
   approvalCenter: ApprovalRequestDiagnosticsSummary;
   governedRequests: GovernedActionRequestDiagnosticsSummary;
   governedExecutions: GovernedToolExecutionDiagnosticsSummary;
+  memoryProposals: MemoryProposalDiagnosticsSummary;
+  memoryWrites: MemoryWriteDiagnosticsSummary;
+  skillGovernance: SkillGovernanceDiagnosticsSummary;
+  planningCheckpoints: AgentPlanningCheckpointDiagnosticsSummary;
+  pendingMemoryProposals: number;
+  approvedMemoryWritesWaiting: number;
+  completedMemoryWrites: number;
+  pendingSkillRequests: number;
+  approvedSkillRequestsWaiting: number;
+  pendingPlanningCheckpoints: number;
+  blockedGovernanceItems: number;
   visibility: "friendly" | "compact" | "full";
   safeSummary: string;
 }
@@ -507,6 +525,10 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   approvalCenter?: ApprovalRequestDiagnosticsSummary;
   governedRequests?: GovernedActionRequestDiagnosticsSummary;
   governedExecutions?: GovernedToolExecutionDiagnosticsSummary;
+  memoryProposals?: MemoryProposalDiagnosticsSummary;
+  memoryWrites?: MemoryWriteDiagnosticsSummary;
+  skillGovernance?: SkillGovernanceDiagnosticsSummary;
+  planningCheckpoints?: AgentPlanningCheckpointDiagnosticsSummary;
 }): RuntimeGovernanceDiagnostics {
   const reminders = input.reminders ?? { totalDeliveries: 0, deliveredCount: 0, blockedCount: 0, failedCount: 0, pendingCount: 0, safeLoopDeliveryEnabled: true };
   const inbox = input.inbox ?? { totalEvents: 0, unreadEvents: 0, archivedEvents: 0, externalInertEvents: 0, approvalEvents: 0 };
@@ -514,6 +536,17 @@ export function buildGovernanceDiagnosticsForAudience(input: {
   const approvalCenter = input.approvalCenter ?? { totalRequests: 0, pendingRequests: 0, approvedOnceRequests: 0, rejectedRequests: 0, expiredRequests: 0, revokedRequests: 0 };
   const governedRequests = input.governedRequests ?? { totalRequests: 0, proposedRequests: 0, approvalRequiredRequests: 0, approvedWaitingExecutionRequests: 0, rejectedRequests: 0, blockedRequests: 0, dryRunOnly: true as const };
   const governedExecutions = input.governedExecutions ?? { totalExecutions: 0, succeededExecutions: 0, blockedExecutions: 0, failedExecutions: 0, queuedExecutions: 0, safeExecutionEnabled: true as const, riskyExecutionEnabled: false as const };
+  const memoryProposals = input.memoryProposals ?? { totalProposals: 0, proposedProposals: 0, approvalRequiredProposals: 0, approvedWaitingWriteProposals: 0, writtenProposals: 0, rejectedProposals: 0, blockedProposals: 0, revokedProposals: 0, expiredProposals: 0 };
+  const memoryWrites = input.memoryWrites ?? { totalWrites: 0, succeededWrites: 0, blockedWrites: 0, failedWrites: 0 };
+  const skillGovernance = input.skillGovernance ?? { totalRequests: 0, proposedRequests: 0, approvalRequiredRequests: 0, approvedWaitingRequests: 0, rejectedRequests: 0, blockedRequests: 0, revokedRequests: 0, expiredRequests: 0, canAutoExecute: false as const };
+  const planningCheckpoints = input.planningCheckpoints ?? { totalCheckpoints: 0, proposedCheckpoints: 0, approvedCheckpoints: 0, rejectedCheckpoints: 0, blockedCheckpoints: 0, completedCheckpoints: 0, archivedCheckpoints: 0, canAutoExecute: false as const };
+  const pendingMemoryProposals = memoryProposals.proposedProposals + memoryProposals.approvalRequiredProposals;
+  const approvedMemoryWritesWaiting = memoryProposals.approvedWaitingWriteProposals;
+  const completedMemoryWrites = memoryWrites.succeededWrites;
+  const pendingSkillRequests = skillGovernance.proposedRequests + skillGovernance.approvalRequiredRequests;
+  const approvedSkillRequestsWaiting = skillGovernance.approvedWaitingRequests;
+  const pendingPlanningCheckpoints = planningCheckpoints.proposedCheckpoints;
+  const blockedGovernanceItems = memoryProposals.blockedProposals + memoryWrites.blockedWrites + skillGovernance.blockedRequests + planningCheckpoints.blockedCheckpoints;
   const pendingApprovals =
     input.runtimeContinuity.pendingApprovalCount +
     input.scheduler.pendingApprovals +
@@ -546,6 +579,17 @@ export function buildGovernanceDiagnosticsForAudience(input: {
     approvalCenter,
     governedRequests,
     governedExecutions,
+    memoryProposals,
+    memoryWrites,
+    skillGovernance,
+    planningCheckpoints,
+    pendingMemoryProposals,
+    approvedMemoryWritesWaiting,
+    completedMemoryWrites,
+    pendingSkillRequests,
+    approvedSkillRequestsWaiting,
+    pendingPlanningCheckpoints,
+    blockedGovernanceItems,
     visibility,
     safeSummary: sanitizeDiagnosticText(safeSummary),
   };
@@ -734,6 +778,10 @@ export async function buildRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
     approvalCenter: approvalRequestCenterService.getDiagnosticsSummary(),
     governedRequests: governedActionRequestService.getDiagnosticsSummary(),
     governedExecutions: governedToolExecutionService.getDiagnosticsSummary(),
+    memoryProposals: memoryProposalService.getDiagnosticsSummary(),
+    memoryWrites: governedMemoryWriteService.getDiagnosticsSummary(),
+    skillGovernance: skillGovernanceService.getDiagnosticsSummary(),
+    planningCheckpoints: agentPlanningCheckpointService.getDiagnosticsSummary(),
   });
 
   return {

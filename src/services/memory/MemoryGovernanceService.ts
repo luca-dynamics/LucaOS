@@ -1,5 +1,19 @@
-import type { MemoryGovernanceDiagnosticsSummary, MemoryGovernanceRecord, MemoryGovernanceReviewState, MemoryGovernanceWritePolicy, MemoryWriteRiskInput } from "../../types/memoryGovernance";
+import type { MemoryGovernanceDiagnosticsSummary, MemoryGovernanceRecord, MemoryGovernanceReviewState, MemoryGovernanceType, MemoryGovernanceWritePolicy, MemoryWriteRiskInput } from "../../types/memoryGovernance";
 import type { ProvenanceMetadata } from "../../types/provenance";
+import type { MemoryProposalKind, MemoryProposalRecord } from "../../types/memoryProposal";
+
+function proposalGovernanceId(proposalId: string): string { return `proposal:${proposalId}`; }
+function memoryTypeForProposalKind(kind: MemoryProposalKind): MemoryGovernanceType {
+  switch (kind) {
+    case "user_fact": return "profile";
+    case "preference": return "preference";
+    case "project_context": return "artifact";
+    case "session_summary":
+    case "reminder_context": return "conversation";
+    case "agent_state": return "operational";
+    default: return "unknown";
+  }
+}
 
 interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void; }
 const STORAGE_KEY = "LUCA_MEMORY_GOVERNANCE_V1";
@@ -36,6 +50,33 @@ export class MemoryGovernanceService {
       .filter((memory) => !this.records.some((record) => record.memoryId === String(memory.id ?? memory.memoryId)))
       .map((memory) => this.compatibleSummaryFromExisting(memory));
     return [...this.records, ...synthesized];
+  }
+
+  createGovernanceRecordForProposal(proposal: MemoryProposalRecord): MemoryGovernanceRecord {
+    return this.attachGovernanceRecord({
+      memoryId: proposalGovernanceId(proposal.proposalId),
+      source: proposal.source,
+      memoryType: memoryTypeForProposalKind(proposal.kind),
+      category: `proposal:${proposal.kind}`,
+      confidence: proposal.confidence,
+      writePolicy: "approval_required",
+      retrievalPolicy: "approval_required",
+      reviewState: "unreviewed",
+      userVisible: true,
+      editable: false,
+      deletable: true,
+    });
+  }
+  markProposalApproved(proposalId: string): MemoryGovernanceRecord | undefined { return this.updateReview(proposalGovernanceId(proposalId), { reviewState: "user_approved" }); }
+  markProposalWritten(proposalId: string, memoryId: string): MemoryGovernanceRecord | undefined { return this.updateReview(proposalGovernanceId(proposalId), { reviewState: "user_approved", retrievalPolicy: "normal", writePolicy: "local_only", category: `written:${memoryId}` }); }
+  markProposalRejected(proposalId: string): MemoryGovernanceRecord | undefined { return this.updateReview(proposalGovernanceId(proposalId), { reviewState: "rejected", retrievalPolicy: "never_retrieve" }); }
+  getProposalGovernanceSummary(): { totalProposalRecords: number; approvedProposalRecords: number; rejectedProposalRecords: number } {
+    const proposalRecords = this.records.filter((record) => record.memoryId.startsWith("proposal:"));
+    return {
+      totalProposalRecords: proposalRecords.length,
+      approvedProposalRecords: proposalRecords.filter((record) => record.reviewState === "user_approved").length,
+      rejectedProposalRecords: proposalRecords.filter((record) => record.reviewState === "rejected").length,
+    };
   }
 
   markQuarantined(memoryId: string): MemoryGovernanceRecord | undefined { return this.updateReview(memoryId, { quarantined: true }); }
