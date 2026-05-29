@@ -5,6 +5,7 @@ import {
   friendlyRuntimeHeadline,
   hasRealGraphData,
   isRenderableMemory,
+  MOBILE_RIGHT_PANEL_LABELS,
   normalizeRightPanelMode,
   RIGHT_PANEL_MODES,
   summarizeToolLog,
@@ -28,6 +29,15 @@ describe("right panel control plane model", () => {
     expect(RIGHT_PANEL_MODES).not.toContain("MANAGE");
     expect(RIGHT_PANEL_MODES).not.toContain("CLOUD");
     expect(normalizeRightPanelMode("CLOUD")).toBe("CONTROL");
+  });
+
+  it("keeps compact labels for the mobile DATA tab row", () => {
+    expect(MOBILE_RIGHT_PANEL_LABELS).toEqual({
+      CONTROL: "CTRL",
+      ACTIVITY: "ACT",
+      MEMORY: "MEM",
+      LOGS: "LOGS",
+    });
   });
 
   it("keeps normal-friendly runtime copy", () => {

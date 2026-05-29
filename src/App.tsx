@@ -92,7 +92,7 @@ import ControlPanel from "./components/right-panel/ControlPanel";
 import ActivityPanel from "./components/right-panel/ActivityPanel";
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
 import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
-import { RIGHT_PANEL_MODES } from "./components/right-panel/rightPanelModel";
+import { MOBILE_RIGHT_PANEL_LABELS, RIGHT_PANEL_MODES } from "./components/right-panel/rightPanelModel";
 
 // --- Mock Initial State ---
 
@@ -2798,7 +2798,7 @@ function AppContent() {
                           : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                       }`}
                     >
-                      {mode}
+                      {MOBILE_RIGHT_PANEL_LABELS[mode]}
                     </button>
                   ))}
                 </div>
