@@ -94,7 +94,8 @@ router.get('/:id/export', (req, res) => {
     if (active && active.results) {
         const csv = backtestService.getCSV(active.results);
         res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename=backtest_${req.params.id}.csv`);
+        const safeId = req.params.id.replace(/[^a-zA-Z0-9_\-]/g, '');
+        res.setHeader('Content-Disposition', `attachment; filename=backtest_${safeId}.csv`);
         res.send(csv);
     } else {
         res.status(404).json({ error: 'Results not found' });

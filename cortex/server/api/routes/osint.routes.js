@@ -8,6 +8,11 @@ const router = express.Router();
 // OSINT Domain Intel
 router.post('/domain', async (req, res) => {
     const { domain } = req.body;
+
+    if (!domain || typeof domain !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain)) {
+        return res.status(400).json({ error: 'Invalid domain name.' });
+    }
+
     console.log(`[OSINT] Deep Analysis for domain: ${domain}...`);
 
     try {

@@ -16,10 +16,15 @@ class SocketService {
         // Start mDNS advertisement
         discoveryService.start();
 
+        const SOCKET_ALLOWED_ORIGINS = (process.env.LUCA_CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000').split(',');
         this.io = new SocketIOServer(WS_PORT, {
             cors: {
-                origin: "*", // Allow connections from mobile web app
-                methods: ["GET", "POST"]
+                origin: (origin, cb) => {
+                    if (!origin || SOCKET_ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+                    cb(new Error('Blocked by CORS'));
+                },
+                methods: ["GET", "POST"],
+                credentials: true
             },
             path: '/mobile/socket.io'
         });

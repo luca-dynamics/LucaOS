@@ -12,8 +12,13 @@ try {
     console.warn('[VAULT] Electron safeStorage not available, using software fallback.');
 }
 
-// Default Master Key for Dev Fallback (In Prod, this is only used if safeStorage fails)
-const MASTER_KEY_HEX = process.env.LUCA_VAULT_KEY || '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f';
+// Master Key: MUST be set via LUCA_VAULT_KEY env var in production.
+// Falls back to a randomly generated ephemeral key if unset (logged as warning).
+let MASTER_KEY_HEX = process.env.LUCA_VAULT_KEY;
+if (!MASTER_KEY_HEX) {
+    MASTER_KEY_HEX = crypto.randomBytes(32).toString('hex');
+    console.warn('[VAULT] WARNING: LUCA_VAULT_KEY not set — using ephemeral random key. Encrypted data will NOT survive restarts. Set LUCA_VAULT_KEY in your environment for persistence.');
+}
 
 export class SecureVault {
     constructor(masterKey = null) {
