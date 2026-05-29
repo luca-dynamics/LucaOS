@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import type { MemoryNode } from "../../types";
 import { memoryService } from "../../services/memoryService";
 import { memoryGovernanceService } from "../../services/memory/MemoryGovernanceService";
+import { memoryProposalService } from "../../services/memory/MemoryProposalService";
+import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
 import { runtimeDiagnosticsService, type RuntimeDiagnostics } from "../../services/runtime/RuntimeDiagnosticsService";
 import { Icon } from "../ui/Icon";
 import LucaCloud from "../LucaCloud";
@@ -16,7 +18,7 @@ interface MemoryControlPanelProps {
   setMemories: React.Dispatch<React.SetStateAction<MemoryNode[]>>;
 }
 
-type MemoryViewMode = "Archive" | "Governance" | "Graph";
+type MemoryViewMode = "Archive" | "Governance" | "Proposals" | "Graph";
 
 const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories, setMemories }) => {
   const [viewMode, setViewMode] = useState<MemoryViewMode>("Archive");
@@ -25,6 +27,8 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
   const visibleMemories = useMemo(() => memories.filter(isRenderableMemory), [memories]);
   const governanceRecords = useMemo(() => memoryGovernanceService.listGovernanceSummaries(memories as unknown as Array<Record<string, unknown>>), [memories, revision]);
   const governanceSummary = useMemo(() => memoryGovernanceService.getDiagnosticsSummary(memories as unknown as Array<Record<string, unknown>>), [memories, revision]);
+  const proposals = useMemo(() => memoryProposalService.listProposals(), [revision]);
+  const proposalSummary = useMemo(() => memoryProposalService.getDiagnosticsSummary(), [revision]);
 
   React.useEffect(() => {
     let mounted = true;
@@ -68,10 +72,12 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
         <RightPanelMetric label="Archive" value={visibleMemories.length} tone="neutral" />
         <RightPanelMetric label="Review" value={governanceSummary.pendingReviewRecords} tone={governanceSummary.pendingReviewRecords > 0 ? "warn" : "good"} />
         <RightPanelMetric label="Quarantine" value={governanceSummary.quarantinedRecords} tone={governanceSummary.quarantinedRecords > 0 ? "danger" : "good"} />
+        <RightPanelMetric label="Proposals" value={proposalSummary.proposedProposals + proposalSummary.approvalRequiredProposals} tone={proposalSummary.proposedProposals + proposalSummary.approvalRequiredProposals > 0 ? "warn" : "good"} />
+        <RightPanelMetric label="To save" value={proposalSummary.approvedWaitingWriteProposals} tone={proposalSummary.approvedWaitingWriteProposals > 0 ? "warn" : "good"} />
       </div>
 
       <div className="flex rounded-xl border border-white/10 bg-white/[0.03] p-1">
-        {(["Archive", "Governance", "Graph"] as MemoryViewMode[]).map((mode) => (
+        {(["Archive", "Governance", "Proposals", "Graph"] as MemoryViewMode[]).map((mode) => (
           <button
             key={mode}
             type="button"
@@ -148,6 +154,37 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </RightPanelSection>
+      )}
+
+      {viewMode === "Proposals" && (
+        <RightPanelSection title="Memory proposals" subtitle="Proposals pending approval, approved waiting write, and written history. Approving never writes; saving requires a separate click.">
+          {proposals.length === 0 ? (
+            <div className="text-[10px] italic text-[var(--app-text-muted)]">No memory proposals.</div>
+          ) : (
+            <div className="space-y-2">
+              {proposals.slice(0, 24).map((proposal) => {
+                const canWrite = proposal.status === "approved_waiting_write" ? governedMemoryWriteService.canWriteProposal(proposal.proposalId) : null;
+                return (
+                  <div key={proposal.proposalId} className="rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+                    <div className="font-bold text-[var(--app-text-main)]">{proposal.title}</div>
+                    <div className="mt-1">{proposal.summary}</div>
+                    <div className="mt-1 uppercase tracking-widest">{proposal.kind} · {proposal.riskLevel} · {proposal.status}</div>
+                    {proposal.status === "approved_waiting_write" && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {canWrite?.allowed ? (
+                          <button type="button" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-200" onClick={() => { void governedMemoryWriteService.writeApprovedProposal(proposal.proposalId).then(refresh); }}>Save memory once</button>
+                        ) : (
+                          <span className="text-[9px] uppercase tracking-widest text-red-300">Blocked for safety: {canWrite?.reason}</span>
+                        )}
+                      </div>
+                    )}
+                    {proposal.blockedBy && proposal.blockedBy.length > 0 && <div className="mt-1 text-red-200">Blocked: {proposal.blockedBy.join(", ")}</div>}
+                  </div>
+                );
+              })}
             </div>
           )}
         </RightPanelSection>

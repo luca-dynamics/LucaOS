@@ -7,6 +7,10 @@ import { governedToolExecutionService } from "../../services/runtime/GovernedToo
 import { schedulerRegistryService } from "../../services/scheduler/SchedulerRegistryService";
 import { reminderDeliveryService } from "../../services/scheduler/ReminderDeliveryService";
 import { memoryGovernanceService } from "../../services/memory/MemoryGovernanceService";
+import { memoryProposalService } from "../../services/memory/MemoryProposalService";
+import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
+import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
+import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
 import { Icon } from "../ui/Icon";
 import RightPanelSection from "./RightPanelSection";
@@ -33,6 +37,10 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       reminders: reminderDeliveryService.listDeliveries(),
       memory: memoryGovernanceService.listGovernanceSummaries(),
       loop: runtimeContinuityLoopService.getLoopStatus(),
+      memoryProposals: memoryProposalService.listProposals(),
+      memoryWrites: governedMemoryWriteService.listMemoryWrites(),
+      skillRequests: skillGovernanceService.listSkillRequests(),
+      checkpoints: agentPlanningCheckpointService.listCheckpoints(),
     };
   }, [toolLogs.length]);
 
@@ -122,6 +130,48 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
             <div>{execution.capability} &middot; risk: {execution.riskLevel}</div>
             {execution.completedAt && <div>{new Date(execution.completedAt).toLocaleString()}</div>}
             {execution.blockedBy && execution.blockedBy.length > 0 && <div className="text-red-200">Blocked: {execution.blockedBy.join(", ")}</div>}
+          </div>
+        ))}
+      </RightPanelSection>
+
+      <RightPanelSection title="Memory proposals" subtitle="Memory proposal lifecycle trace. No raw secrets are stored.">
+        {trace.memoryProposals.length === 0 ? <EmptyState>No memory proposals.</EmptyState> : trace.memoryProposals.slice(0, 8).map((proposal) => (
+          <div key={proposal.proposalId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">{proposal.status} · {proposal.title}</div>
+            <div>{proposal.kind} · risk: {proposal.riskLevel} · {new Date(proposal.updatedAt).toLocaleString()}</div>
+            {proposal.blockedBy && proposal.blockedBy.length > 0 && <div className="text-red-200">Blocked: {proposal.blockedBy.join(", ")}</div>}
+          </div>
+        ))}
+      </RightPanelSection>
+
+      <RightPanelSection title="Memory writes" subtitle="Governed memory write audit. One-time approval is consumed at write time.">
+        {trace.memoryWrites.length === 0 ? <EmptyState>No memory writes recorded.</EmptyState> : trace.memoryWrites.slice(0, 8).map((write) => (
+          <div key={write.writeId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">
+              <span className={write.status === "succeeded" ? "text-emerald-300" : write.status === "blocked" ? "text-red-300" : "text-amber-300"}>{write.status}</span> · risk: {write.riskLevel}
+            </div>
+            <div>{write.summary}</div>
+            {write.blockedBy && write.blockedBy.length > 0 && <div className="text-red-200">Blocked: {write.blockedBy.join(", ")}</div>}
+          </div>
+        ))}
+      </RightPanelSection>
+
+      <RightPanelSection title="Skill requests" subtitle="Skill governance request trace. Approval is state-only; no execution happens.">
+        {trace.skillRequests.length === 0 ? <EmptyState>No skill requests.</EmptyState> : trace.skillRequests.slice(0, 8).map((request) => (
+          <div key={request.skillRequestId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">{request.status} · {request.skillName}</div>
+            <div>{request.requestType} · risk: {request.riskLevel}</div>
+            {request.blockedBy && request.blockedBy.length > 0 && <div className="text-red-200">Blocked: {request.blockedBy.join(", ")}</div>}
+          </div>
+        ))}
+      </RightPanelSection>
+
+      <RightPanelSection title="Planning checkpoints" subtitle="Planning checkpoint trace. State-only; nothing executes.">
+        {trace.checkpoints.length === 0 ? <EmptyState>No planning checkpoints.</EmptyState> : trace.checkpoints.slice(0, 8).map((checkpoint) => (
+          <div key={checkpoint.checkpointId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+            <div className="font-bold text-[var(--app-text-main)]">{checkpoint.status} · {checkpoint.title}</div>
+            <div>risk: {checkpoint.riskLevel} · {new Date(checkpoint.updatedAt).toLocaleString()}</div>
+            {checkpoint.blockedBy && checkpoint.blockedBy.length > 0 && <div className="text-red-200">Blocked: {checkpoint.blockedBy.join(", ")}</div>}
           </div>
         ))}
       </RightPanelSection>

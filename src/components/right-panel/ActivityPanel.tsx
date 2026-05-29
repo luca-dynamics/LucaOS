@@ -4,6 +4,10 @@ import { runtimeInboxService } from "../../services/runtime/RuntimeInboxService"
 import { agentSessionContinuityService } from "../../services/runtime/AgentSessionContinuityService";
 import { governedActionRequestService } from "../../services/runtime/GovernedActionRequestService";
 import { governedToolExecutionService } from "../../services/runtime/GovernedToolExecutionService";
+import { memoryProposalService } from "../../services/memory/MemoryProposalService";
+import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
+import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
+import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { schedulerRegistryService } from "../../services/scheduler/SchedulerRegistryService";
 import { reminderDeliveryService } from "../../services/scheduler/ReminderDeliveryService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
@@ -44,6 +48,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       dueJobs: schedulerRegistryService.detectDueJobsDryRun(now),
       reminders: reminderDeliveryService.listDeliveries(),
       loop: runtimeContinuityLoopService.getLoopStatus(),
+      memoryProposals: memoryProposalService.listProposals(),
+      skillRequests: skillGovernanceService.listSkillRequests(),
+      checkpoints: agentPlanningCheckpointService.listCheckpoints(),
     };
   }, [revision]);
 
@@ -106,6 +113,105 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
             ))}
           </div>
         )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Memory proposals" subtitle="Approving a memory does not write it. Saving requires a second explicit click and a one-time approval.">
+        {(() => {
+          const pending = data.memoryProposals.filter((proposal) => proposal.status === "proposed" || proposal.status === "approval_required");
+          const waiting = data.memoryProposals.filter((proposal) => proposal.status === "approved_waiting_write");
+          const written = data.memoryProposals.filter((proposal) => proposal.status === "written").slice(0, 3);
+          const rejectedOrBlocked = data.memoryProposals.filter((proposal) => proposal.status === "rejected" || proposal.status === "blocked" || proposal.status === "revoked").slice(0, 3);
+          if (pending.length === 0 && waiting.length === 0 && written.length === 0 && rejectedOrBlocked.length === 0) {
+            return <div className="text-[10px] italic text-[var(--app-text-muted)]">No memory proposals.</div>;
+          }
+          return (
+            <div className="space-y-2">
+              {pending.map((proposal) => (
+                <div key={proposal.proposalId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">Memory proposed · {proposal.title}</div>
+                  <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{proposal.summary}</p>
+                  <p className="mt-1 text-[9px] uppercase tracking-widest text-amber-200">{proposal.kind} · {proposal.riskLevel} · approving does not write</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button tone="good" onClick={() => { memoryProposalService.approveProposal(proposal.proposalId); refresh(); }}>Approve memory</Button>
+                    <Button tone="danger" onClick={() => { memoryProposalService.rejectProposal(proposal.proposalId); refresh(); }}>reject</Button>
+                    <Button onClick={() => { memoryProposalService.revokeProposal(proposal.proposalId); refresh(); }}>revoke</Button>
+                  </div>
+                </div>
+              ))}
+              {waiting.map((proposal) => {
+                const canWrite = governedMemoryWriteService.canWriteProposal(proposal.proposalId);
+                return (
+                  <div key={proposal.proposalId} className={`rounded-xl border p-2 ${canWrite.allowed ? "border-emerald-500/20 bg-emerald-500/5" : "border-red-500/20 bg-red-500/5"}`}>
+                    <div className={`text-[10px] font-bold ${canWrite.allowed ? "text-emerald-200" : "text-red-200"}`}>{canWrite.allowed ? "Approved — ready to save" : "Blocked for safety"} · {proposal.title}</div>
+                    <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{canWrite.allowed ? proposal.summary : canWrite.reason}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {canWrite.allowed ? (
+                        <Button tone="good" onClick={() => { void governedMemoryWriteService.writeApprovedProposal(proposal.proposalId).then(refresh); }}>Save memory once</Button>
+                      ) : (
+                        <span className="text-[9px] uppercase tracking-widest text-red-300">{canWrite.blockedBy.join(", ") || "cannot write"}</span>
+                      )}
+                      <Button tone="danger" onClick={() => { memoryProposalService.revokeProposal(proposal.proposalId); refresh(); }}>revoke</Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {written.map((proposal) => (
+                <div key={proposal.proposalId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">Memory saved · {proposal.title}</div>
+                  <p className="mt-1 text-[9px] uppercase tracking-widest text-emerald-300">written with provenance</p>
+                </div>
+              ))}
+              {rejectedOrBlocked.map((proposal) => (
+                <div key={proposal.proposalId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">{proposal.status === "blocked" ? "Blocked for safety" : "Rejected"} · {proposal.title}</div>
+                  {proposal.blockedBy && proposal.blockedBy.length > 0 && <p className="mt-1 text-[9px] uppercase tracking-widest text-red-300">{proposal.blockedBy.join(", ")}</p>}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Skill requests" subtitle="Skill approval is state-only. No skill installs, enables, updates, or runs in this state.">
+        {(() => {
+          const active = data.skillRequests.filter((request) => request.status !== "expired");
+          if (active.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No skill requests.</div>;
+          return active.slice(0, 6).map((request) => {
+            const approved = request.status === "approved_waiting_install" || request.status === "approved_waiting_execution";
+            const pending = request.status === "proposed" || request.status === "approval_required";
+            return (
+              <div key={request.skillRequestId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2">
+                <div className="text-[10px] font-bold text-[var(--app-text-main)]">{approved ? "Approved — waiting future secure bridge" : request.status === "blocked" ? "Blocked for safety" : "Skill request"} · {request.skillName}</div>
+                <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{request.description}</p>
+                <p className="mt-1 text-[9px] uppercase tracking-widest text-amber-200">{request.requestType} · {request.riskLevel} · {request.status} · no execution</p>
+                {request.blockedBy && request.blockedBy.length > 0 && <p className="mt-1 text-[9px] uppercase tracking-widest text-red-300">{request.blockedBy.join(", ")}</p>}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {pending && <Button tone="good" onClick={() => { skillGovernanceService.approveSkillRequest(request.skillRequestId); refresh(); }}>approve (state-only)</Button>}
+                  {pending && <Button tone="danger" onClick={() => { skillGovernanceService.rejectSkillRequest(request.skillRequestId); refresh(); }}>reject</Button>}
+                  {approved && <Button onClick={() => { skillGovernanceService.revokeSkillRequest(request.skillRequestId); refresh(); }}>revoke</Button>}
+                </div>
+              </div>
+            );
+          });
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Planning checkpoints" subtitle="Checkpoints are state-only. Approving a plan never runs tools or skills.">
+        {(() => {
+          const pending = data.checkpoints.filter((checkpoint) => checkpoint.status === "proposed");
+          if (pending.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No pending planning checkpoints.</div>;
+          return pending.slice(0, 5).map((checkpoint) => (
+            <div key={checkpoint.checkpointId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2">
+              <div className="text-[10px] font-bold text-[var(--app-text-main)]">Plan proposed · {checkpoint.title}</div>
+              <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{checkpoint.summary}</p>
+              {checkpoint.proposedNextSteps.length > 0 && <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">Next: {checkpoint.proposedNextSteps.slice(0, 3).join(" · ")}</p>}
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button tone="good" onClick={() => { agentPlanningCheckpointService.approveCheckpoint(checkpoint.checkpointId); refresh(); }}>approve plan (no execution)</Button>
+                <Button tone="danger" onClick={() => { agentPlanningCheckpointService.rejectCheckpoint(checkpoint.checkpointId); refresh(); }}>reject</Button>
+              </div>
+            </div>
+          ));
+        })()}
       </RightPanelSection>
 
       <RightPanelSection title="Reminders" subtitle="Safe reminders delivered by the dry-run continuity loop.">
