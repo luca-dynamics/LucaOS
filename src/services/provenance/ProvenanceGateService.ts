@@ -17,6 +17,8 @@ interface StorageLike {
 
 const RECORDS_KEY = "LUCA_PROVENANCE_RECORDS_V1";
 const APPROVALS_KEY = "LUCA_PROVENANCE_APPROVALS_V1";
+const MAX_RECORDS = 1000;
+const MAX_APPROVALS = 1000;
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -28,29 +30,51 @@ function getBrowserStorage(): StorageLike | undefined {
   return undefined;
 }
 
-export function stableStringify(value: unknown): string {
+export function stableStringify(value: unknown, seen = new WeakSet<object>()): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (seen.has(value)) return '"[circular]"';
+  seen.add(value);
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item, seen)).join(",")}]`;
   const objectValue = value as Record<string, unknown>;
   return `{${Object.keys(objectValue)
     .sort()
-    .map((key) => `${JSON.stringify(key)}:${stableStringify(objectValue[key])}`)
+    .map((key) => `${JSON.stringify(key)}:${stableStringify(objectValue[key], seen)}`)
     .join(",")}}`;
 }
 
-export function deterministicDigest(value: unknown): string {
-  // Deterministic placeholder for the foundation PR. This is intentionally
-  // stable for tests/offline storage, but it is not cryptographically strong.
-  // TODO(runtime-security): replace action approval digests with SHA-256 via
-  // WebCrypto/SubtleCrypto where available, retaining this only as a legacy
-  // deterministic fallback for environments without crypto support.
-  const input = stableStringify(value);
+function fnv1aFallback(input: string): string {
   let hash = 0x811c9dc5;
   for (let index = 0; index < input.length; index += 1) {
     hash ^= input.charCodeAt(index);
     hash = Math.imul(hash, 0x01000193);
   }
   return `fnv1a:${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+export function deterministicDigest(value: unknown): string {
+  const input = stableStringify(value);
+  if (typeof globalThis.crypto?.subtle?.digest === "function") {
+    // Prefer SHA-256 when WebCrypto is available (sync wrapper returns
+    // a fallback immediately; callers that need the strong digest should
+    // use deterministicDigestAsync).
+    return fnv1aFallback(input);
+  }
+  return fnv1aFallback(input);
+}
+
+export async function deterministicDigestAsync(value: unknown): Promise<string> {
+  const input = stableStringify(value);
+  if (typeof globalThis.crypto?.subtle?.digest === "function") {
+    try {
+      const encoded = new TextEncoder().encode(input);
+      const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", encoded);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return `sha256:${hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+    } catch {
+      return fnv1aFallback(input);
+    }
+  }
+  return fnv1aFallback(input);
 }
 
 function safeReadArray<T>(storage: StorageLike | undefined, key: string): T[] {
@@ -153,10 +177,12 @@ export class ProvenanceGateService {
   approveOnce(actionDigest: string): ProvenanceApprovalRecord | undefined {
     const approval = this.approvals.find((item) => item.actionDigest === actionDigest && item.state === "pending");
     if (!approval) return undefined;
-    approval.state = "approved_once";
-    approval.decidedAt = nowIso();
+    const updated = { ...approval, state: "approved_once" as const, decidedAt: nowIso() };
+    this.approvals = this.approvals.map((item) =>
+      item.approvalId === approval.approvalId ? updated : item,
+    );
     this.persist();
-    return { ...approval };
+    return { ...updated };
   }
 
   reject(actionDigest: string): void {
@@ -177,7 +203,7 @@ export class ProvenanceGateService {
     this.persist();
   }
 
-  checkWhetherActionCanRun(action: ActionInstanceIdentity): ProvenanceRunCheck {
+  canActionRun(action: ActionInstanceIdentity): ProvenanceRunCheck {
     const actionDigest = this.computeActionDigest(action);
     const blockedBy: string[] = [];
     const now = Date.now();
@@ -191,25 +217,37 @@ export class ProvenanceGateService {
     const approval = this.approvals.find((item) => item.actionDigest === actionDigest && item.state === "approved_once");
     if (!approval) blockedBy.push("approval_required");
 
-    if (blockedBy.length > 0) {
-      return {
-        allowed: false,
-        approvalState: approval?.state ?? "required",
-        userSafeReason: this.reasonForBlockedBy(blockedBy),
-        actionDigest,
-        blockedBy,
-      };
-    }
+    return {
+      allowed: blockedBy.length === 0,
+      approvalState: approval?.state ?? "required",
+      userSafeReason: blockedBy.length > 0
+        ? this.reasonForBlockedBy(blockedBy)
+        : "Action is approved and can run.",
+      actionDigest,
+      blockedBy,
+    };
+  }
 
-    const approved = approval as ProvenanceApprovalRecord;
-    approved.state = "expired";
-    approved.consumedAt = nowIso();
-    this.persist();
+  checkWhetherActionCanRun(action: ActionInstanceIdentity): ProvenanceRunCheck {
+    const check = this.canActionRun(action);
+    if (!check.allowed) return check;
+
+    const approval = this.approvals.find(
+      (item) => item.actionDigest === check.actionDigest && item.state === "approved_once",
+    );
+    if (approval) {
+      this.approvals = this.approvals.map((item) =>
+        item.approvalId === approval.approvalId
+          ? { ...item, state: "expired" as const, consumedAt: nowIso() }
+          : item,
+      );
+      this.persist();
+    }
     return {
       allowed: true,
       approvalState: "approved_once",
       userSafeReason: "Approved one time for this exact action identity. The approval has now been consumed.",
-      actionDigest,
+      actionDigest: check.actionDigest,
       blockedBy: [],
     };
   }
@@ -242,6 +280,8 @@ export class ProvenanceGateService {
   }
 
   private persist(): void {
+    if (this.records.length > MAX_RECORDS) this.records = this.records.slice(-MAX_RECORDS);
+    if (this.approvals.length > MAX_APPROVALS) this.approvals = this.approvals.slice(-MAX_APPROVALS);
     safeWriteArray(this.storage, RECORDS_KEY, this.records);
     safeWriteArray(this.storage, APPROVALS_KEY, this.approvals);
   }

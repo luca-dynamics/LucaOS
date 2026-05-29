@@ -6,6 +6,7 @@ import type { SchedulerCapability, SchedulerJob } from "../../types/scheduler";
 
 interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void; }
 const STORAGE_KEY = "LUCA_REMINDER_DELIVERIES_V1";
+const MAX_DELIVERIES = 500;
 const RISKY_CAPABILITIES: SchedulerCapability[] = ["tool", "network", "shell", "filesystem", "skill", "memory_write"];
 function nowIso(): string { return new Date().toISOString(); }
 function storage(): StorageLike | undefined { if (typeof window !== "undefined" && window.localStorage) return window.localStorage; if (typeof localStorage !== "undefined") return localStorage; return undefined; }
@@ -74,6 +75,6 @@ export class ReminderDeliveryService {
   markDelivered(deliveryId: string, deliveredAt = this.deps.now().toISOString()): ReminderDeliveryRecord | undefined { const record = this.deliveries.find((item) => item.deliveryId === deliveryId); if (!record) return undefined; const next = { ...record, status: "delivered" as const, deliveredAt, updatedAt: deliveredAt, dryRunOnly: false }; this.upsert(next); return next; }
   getDiagnosticsSummary(): ReminderDeliveryDiagnosticsSummary { const delivered = this.deliveries.filter((item) => item.status === "delivered"); return { totalDeliveries: this.deliveries.length, deliveredCount: delivered.length, blockedCount: this.deliveries.filter((item) => item.status === "blocked").length, failedCount: this.deliveries.filter((item) => item.status === "failed").length, pendingCount: this.deliveries.filter((item) => item.status === "pending").length, lastDeliveredAt: delivered[delivered.length - 1]?.deliveredAt, safeLoopDeliveryEnabled: true }; }
   private findDelivery(job: SchedulerJob): ReminderDeliveryRecord | undefined { const dueAt = job.nextRunAt; return this.deliveries.find((item) => item.jobId === job.jobId && item.dueAt === dueAt); }
-  private upsert(record: ReminderDeliveryRecord): void { this.deliveries = [record, ...this.deliveries.filter((item) => item.deliveryId !== record.deliveryId)]; this.deps.storage?.setItem(STORAGE_KEY, JSON.stringify(this.deliveries)); }
+  private upsert(record: ReminderDeliveryRecord): void { this.deliveries = [record, ...this.deliveries.filter((item) => item.deliveryId !== record.deliveryId)]; if (this.deliveries.length > MAX_DELIVERIES) this.deliveries = this.deliveries.slice(0, MAX_DELIVERIES); this.deps.storage?.setItem(STORAGE_KEY, JSON.stringify(this.deliveries)); }
 }
 export const reminderDeliveryService = new ReminderDeliveryService();

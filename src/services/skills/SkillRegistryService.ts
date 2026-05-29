@@ -4,6 +4,7 @@ import type { LucaSkillManifest, LucaSkillRiskLevel } from "./SkillManifest";
 
 interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void; }
 const STORAGE_KEY = "LUCA_SKILL_REGISTRY_V1";
+const MAX_SKILLS = 500;
 function nowIso(): string { return new Date().toISOString(); }
 function storage(): StorageLike | undefined { if (typeof window !== "undefined" && window.localStorage) return window.localStorage; if (typeof localStorage !== "undefined") return localStorage; return undefined; }
 function readRecords(store: StorageLike | undefined): SkillRegistryRecord[] { try { const raw = store?.getItem(STORAGE_KEY); const parsed = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed : []; } catch { return []; } }
@@ -78,7 +79,7 @@ export class SkillRegistryService {
     return { totalSkills: this.records.length, enabledSkills: this.records.filter((skill) => skill.lifecycleState === "enabled").length, disabledSkills: this.records.filter((skill) => skill.lifecycleState === "disabled").length, quarantinedSkills: this.records.filter((skill) => skill.lifecycleState === "quarantined" || skill.provenance?.quarantineState === "quarantined").length, skillsMissingProvenance: this.records.filter((skill) => !skill.provenance).length, highRiskSkills: this.records.filter((skill) => skill.riskLevel === "high" || skill.riskLevel === "critical").length };
   }
 
-  private persist(): void { this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.records)); }
+  private persist(): void { if (this.records.length > MAX_SKILLS) this.records = this.records.slice(0, MAX_SKILLS); this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.records)); }
 }
 
 export const skillRegistryService = new SkillRegistryService();

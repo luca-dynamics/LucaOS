@@ -2,6 +2,7 @@ import type { AgentSessionContinuityDiagnosticsSummary, AgentSessionContinuityRe
 
 interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void; }
 const STORAGE_KEY = "LUCA_AGENT_SESSION_CONTINUITY_V1";
+const MAX_SESSIONS = 200;
 function nowIso(): string { return new Date().toISOString(); }
 function storage(): StorageLike | undefined { if (typeof window !== "undefined" && window.localStorage) return window.localStorage; if (typeof localStorage !== "undefined") return localStorage; return undefined; }
 function readSessions(store: StorageLike | undefined): AgentSessionContinuityRecord[] { try { const raw = store?.getItem(STORAGE_KEY); const parsed = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed : []; } catch { return []; } }
@@ -24,6 +25,6 @@ export class AgentSessionContinuityService {
   listSessions(): AgentSessionContinuityRecord[] { return [...this.sessions]; }
   listResumableSessions(): AgentSessionContinuityRecord[] { return this.sessions.filter(safeToResume); }
   getDiagnosticsSummary(): AgentSessionContinuityDiagnosticsSummary { return { totalSessions: this.sessions.length, activeSessions: this.sessions.filter((item) => item.lifecycleState === "active").length, resumableSessions: this.sessions.filter((item) => item.lifecycleState === "resumable").length, pausedSessions: this.sessions.filter((item) => item.lifecycleState === "paused").length, quarantinedSessions: this.sessions.filter((item) => item.lifecycleState === "quarantined").length, safeToResumeSessions: this.listResumableSessions().length }; }
-  private upsert(record: AgentSessionContinuityRecord): void { this.sessions = [record, ...this.sessions.filter((item) => item.sessionId !== record.sessionId)]; this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.sessions)); }
+  private upsert(record: AgentSessionContinuityRecord): void { this.sessions = [record, ...this.sessions.filter((item) => item.sessionId !== record.sessionId)]; if (this.sessions.length > MAX_SESSIONS) this.sessions = this.sessions.slice(0, MAX_SESSIONS); this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.sessions)); }
 }
 export const agentSessionContinuityService = new AgentSessionContinuityService();

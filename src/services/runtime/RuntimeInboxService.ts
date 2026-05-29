@@ -2,6 +2,7 @@ import type { RuntimeInboxDiagnosticsSummary, RuntimeInboxEvent } from "../../ty
 
 interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void; }
 const STORAGE_KEY = "LUCA_RUNTIME_INBOX_EVENTS_V1";
+const MAX_EVENTS = 500;
 const SECRET_PATTERNS = [/sk-[A-Za-z0-9_-]{8,}/g, /gh[pousr]_[A-Za-z0-9_]{12,}/g, /AIza[A-Za-z0-9_-]{12,}/g, /token[:=][^\s]+/gi];
 function nowIso(): string { return new Date().toISOString(); }
 function storage(): StorageLike | undefined { if (typeof window !== "undefined" && window.localStorage) return window.localStorage; if (typeof localStorage !== "undefined") return localStorage; return undefined; }
@@ -45,6 +46,6 @@ export class RuntimeInboxService {
   getUnreadCount(): number { return this.events.filter((event) => !event.readAt && !event.archivedAt).length; }
   getDiagnosticsSummary(): RuntimeInboxDiagnosticsSummary { return { totalEvents: this.events.length, unreadEvents: this.getUnreadCount(), archivedEvents: this.events.filter((event) => event.archivedAt).length, externalInertEvents: this.events.filter((event) => event.source === "external_stub" && event.metadata.inert === true).length, approvalEvents: this.events.filter((event) => event.requiresApproval).length }; }
   private update(inboxEventId: string, update: Partial<RuntimeInboxEvent>): RuntimeInboxEvent | undefined { const event = this.events.find((item) => item.inboxEventId === inboxEventId); if (!event) return undefined; const next = sanitizeEvent({ ...event, ...update }); this.events = this.events.map((item) => item.inboxEventId === inboxEventId ? next : item); this.persist(); return next; }
-  private persist(): void { this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.events)); }
+  private persist(): void { if (this.events.length > MAX_EVENTS) this.events = this.events.slice(0, MAX_EVENTS); this.backingStorage?.setItem(STORAGE_KEY, JSON.stringify(this.events)); }
 }
 export const runtimeInboxService = new RuntimeInboxService();

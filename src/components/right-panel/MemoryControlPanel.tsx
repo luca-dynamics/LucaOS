@@ -50,6 +50,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
           <button
             type="button"
             onClick={async () => {
+              if (!window.confirm("This will permanently erase all memories. Are you sure?")) return;
               await memoryService.wipeMemory();
               setMemories([]);
               refresh();
