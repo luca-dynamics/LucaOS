@@ -7,6 +7,7 @@ export type RuntimeInboxEventSource =
   | "memory"
   | "skill"
   | "tool_request"
+  | "intent_routing"
   | "external_stub";
 
 export interface RuntimeInboxEvent {

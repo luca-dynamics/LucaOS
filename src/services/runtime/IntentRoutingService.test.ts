@@ -29,6 +29,9 @@ function makeMockDeps() {
     skillGovernance: {
       createSkillRequest: vi.fn().mockReturnValue({ skillRequestId: "skill:test" }),
     },
+    gatewayRequests: {
+      createGatewayRequest: vi.fn().mockReturnValue({ gatewayRequestId: "gateway:test" }),
+    },
     checkpoints: {
       createCheckpoint: vi.fn().mockReturnValue({ checkpointId: "checkpoint:test" }),
     },
@@ -103,9 +106,10 @@ describe("IntentRoutingService", () => {
     expect(result.noExecutionPerformed).toBe(true);
   });
 
-  it("blocked route creates inbox/log event only, no execution", () => {
+  it("blocked route creates gateway research and inbox records only, no execution", () => {
     const result = service.routeUserMessage(makeInput({ message: "open a shell terminal" }));
     expect(result.decision.route).toBe("blocked_risky_action");
+    expect(deps.gatewayRequests.createGatewayRequest).toHaveBeenCalledTimes(1);
     expect(deps.inbox.ingestEvent).toHaveBeenCalledTimes(1);
     expect(result.decision.inboxEventIds).toContain("inbox:test");
     expect(result.noExecutionPerformed).toBe(true);
@@ -220,6 +224,7 @@ describe("IntentRoutingService", () => {
     it("blocked_risky_action without provenance can still create a safe inbox event", () => {
       const result = service.routeUserMessage(makeInput({ message: "open a shell terminal", provenanceIds: [] }));
       expect(result.decision.route).toBe("blocked_risky_action");
+      expect(deps.gatewayRequests.createGatewayRequest).toHaveBeenCalledTimes(1);
       expect(deps.inbox.ingestEvent).toHaveBeenCalledTimes(1);
       expect(result.decision.inboxEventIds).toContain("inbox:test");
       expect(result.noExecutionPerformed).toBe(true);
