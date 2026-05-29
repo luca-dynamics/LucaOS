@@ -19,6 +19,14 @@ import RightPanelSection from "./RightPanelSection";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteToneBorder, getRouteToneBg, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
 import { isSafeLocalPanelTarget, getSafeLocalPanelLabel } from "../../services/runtime/SafeLocalPanelTargets";
+import {
+  getSessionContinuityLabel, getSessionContinuityTone, getSessionNextAction,
+  getReminderDeliveryLabel, getReminderDeliveryTone, getReminderNextAction,
+  getPlanContinuityLabel, getPlanContinuityTone, getPlanNextAction,
+  getCheckpointContinuityLabel, getCheckpointContinuityTone, getCheckpointNextAction,
+  getContinuityToneColor, getContinuityToneBorder, getContinuityToneBg,
+  getContinuityNoExecutionText, compactTimestamp,
+} from "../runtime/continuityLabels";
 
 interface ActivityPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -258,81 +266,103 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
 
       <RightPanelSection title="Runtime plans" subtitle="Plans are state-only records. Activating or creating governed items does not execute anything.">
         {(() => {
-          const proposed = data.plans.filter((p) => p.status === "proposed" || p.status === "waiting_approval" || p.status === "waiting_user");
-          const active = data.plans.filter((p) => p.status === "active");
-          const blocked = data.plans.filter((p) => p.status === "blocked");
-          if (proposed.length === 0 && active.length === 0 && blocked.length === 0) {
+          const visible = data.plans.filter((p) => p.status !== "archived" && p.status !== "rejected");
+          if (visible.length === 0) {
             return <div className="text-[10px] italic text-[var(--app-text-muted)]">No runtime plans.</div>;
           }
           return (
             <div className="space-y-2">
-              {proposed.map((plan) => (
-                <div key={plan.planId} className="rounded-xl border border-white/10 bg-black/10 p-2">
-                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">Plan proposed · {plan.title}</div>
-                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{plan.summary}</p>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-amber-200">{plan.riskLevel} · {plan.steps.length} steps · no execution</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button tone="good" onClick={() => { runtimePlanService.activatePlan(plan.planId); refresh(); }}>activate plan</Button>
-                    <Button onClick={() => { runtimePlanService.createArtifactsForPlan(plan.planId); refresh(); }}>Create governed items</Button>
-                    <Button tone="danger" onClick={() => { runtimePlanService.rejectPlan(plan.planId); refresh(); }}>reject</Button>
-                    <Button onClick={() => { runtimePlanService.archivePlan(plan.planId); refresh(); }}>archive</Button>
+              {visible.map((plan) => {
+                const tone = getPlanContinuityTone(plan.status);
+                const currentStep = plan.currentStepId ? plan.steps.find((s) => s.stepId === plan.currentStepId) : undefined;
+                return (
+                  <div key={plan.planId} className={`rounded-xl border p-2 ${getContinuityToneBorder(tone)} ${getContinuityToneBg(tone)}`}>
+                    <div className="flex items-center gap-1.5 text-[10px]">
+                      <span className={`font-bold ${getContinuityToneColor(tone)}`}>{getPlanContinuityLabel(plan.status)}</span>
+                      <span className="font-bold text-[var(--app-text-main)]">· {plan.title}</span>
+                    </div>
+                    <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{plan.summary}</p>
+                    <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                      {plan.riskLevel} · {plan.steps.length} steps · {getContinuityNoExecutionText("plan")}
+                    </p>
+                    <p className="mt-0.5 text-[9px] text-[var(--app-text-muted)]">{getPlanNextAction(plan.status)}</p>
+                    {currentStep && <p className="text-[9px] text-[var(--app-text-muted)]">Next safe step: {currentStep.title} · {currentStep.status}</p>}
+                    {plan.blockedBy && plan.blockedBy.length > 0 && <p className="mt-1 text-[9px] text-red-300">Blocked: {plan.blockedBy.join(", ")}</p>}
+                    {plan.updatedAt && <div className="text-[9px] text-[var(--app-text-muted)] opacity-70">{compactTimestamp(plan.updatedAt)}</div>}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(plan.status === "proposed" || plan.status === "waiting_approval" || plan.status === "waiting_user") && (
+                        <>
+                          <Button tone="good" onClick={() => { runtimePlanService.activatePlan(plan.planId); refresh(); }}>activate plan</Button>
+                          <Button onClick={() => { runtimePlanService.createArtifactsForPlan(plan.planId); refresh(); }}>Create governed items</Button>
+                          <Button tone="danger" onClick={() => { runtimePlanService.rejectPlan(plan.planId); refresh(); }}>reject</Button>
+                        </>
+                      )}
+                      {plan.status === "active" && (
+                        <>
+                          <Button onClick={() => { runtimePlanService.createArtifactsForPlan(plan.planId); refresh(); }}>Create governed items</Button>
+                          <Button onClick={() => { runtimePlanService.completePlan(plan.planId); refresh(); }}>complete</Button>
+                        </>
+                      )}
+                      <Button onClick={() => { runtimePlanService.archivePlan(plan.planId); refresh(); }}>archive</Button>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {active.map((plan) => (
-                <div key={plan.planId} className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2">
-                  <div className="text-[10px] font-bold text-emerald-200">Active plan · {plan.title}</div>
-                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{plan.summary}</p>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-emerald-300">{plan.riskLevel} · {plan.steps.length} steps</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button onClick={() => { runtimePlanService.createArtifactsForPlan(plan.planId); refresh(); }}>Create governed items</Button>
-                    <Button onClick={() => { runtimePlanService.completePlan(plan.planId); refresh(); }}>complete</Button>
-                    <Button onClick={() => { runtimePlanService.archivePlan(plan.planId); refresh(); }}>archive</Button>
-                  </div>
-                </div>
-              ))}
-              {blocked.map((plan) => (
-                <div key={plan.planId} className="rounded-xl border border-red-500/20 bg-red-500/5 p-2">
-                  <div className="text-[10px] font-bold text-red-200">Blocked for safety · {plan.title}</div>
-                  <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{plan.summary}</p>
-                  {plan.blockedBy && plan.blockedBy.length > 0 && <p className="mt-1 text-[9px] uppercase tracking-widest text-red-300">{plan.blockedBy.join(", ")}</p>}
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button onClick={() => { runtimePlanService.archivePlan(plan.planId); refresh(); }}>archive</Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}
       </RightPanelSection>
 
-      <RightPanelSection title="Planning checkpoints" subtitle="Checkpoints are state-only. Approving a plan never runs tools or skills.">
+      <RightPanelSection title="Planning checkpoints" subtitle="Checkpoints are state-only. Approving a checkpoint never runs tools or skills.">
         {(() => {
-          const pending = data.checkpoints.filter((checkpoint) => checkpoint.status === "proposed");
-          if (pending.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No pending planning checkpoints.</div>;
-          return pending.slice(0, 5).map((checkpoint) => (
-            <div key={checkpoint.checkpointId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2">
-              <div className="text-[10px] font-bold text-[var(--app-text-main)]">Plan proposed · {checkpoint.title}</div>
-              <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{checkpoint.summary}</p>
-              {checkpoint.proposedNextSteps.length > 0 && <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">Next: {checkpoint.proposedNextSteps.slice(0, 3).join(" · ")}</p>}
-              <div className="mt-2 flex flex-wrap gap-2">
-                <Button tone="good" onClick={() => { agentPlanningCheckpointService.approveCheckpoint(checkpoint.checkpointId); refresh(); }}>approve plan (no execution)</Button>
-                <Button tone="danger" onClick={() => { agentPlanningCheckpointService.rejectCheckpoint(checkpoint.checkpointId); refresh(); }}>reject</Button>
+          const active = data.checkpoints.filter((c) => c.status !== "archived" && c.status !== "completed");
+          if (active.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No planning checkpoints need attention.</div>;
+          return active.slice(0, 5).map((checkpoint) => {
+            const tone = getCheckpointContinuityTone(checkpoint.status);
+            return (
+              <div key={checkpoint.checkpointId} className={`mb-2 rounded-xl border p-2 ${getContinuityToneBorder(tone)} ${getContinuityToneBg(tone)}`}>
+                <div className="flex items-center gap-1.5 text-[10px]">
+                  <span className={`font-bold ${getContinuityToneColor(tone)}`}>{getCheckpointContinuityLabel(checkpoint.status)}</span>
+                  <span className="font-bold text-[var(--app-text-main)]">· {checkpoint.title}</span>
+                </div>
+                <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{checkpoint.summary}</p>
+                <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                  {getCheckpointNextAction(checkpoint.status)} · {getContinuityNoExecutionText("checkpoint")}
+                </p>
+                {checkpoint.proposedNextSteps.length > 0 && <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">Next: {checkpoint.proposedNextSteps.slice(0, 3).join(" · ")}</p>}
+                {checkpoint.blockedBy && checkpoint.blockedBy.length > 0 && <p className="mt-1 text-[9px] text-red-300">Blocked: {checkpoint.blockedBy.join(", ")}</p>}
+                {checkpoint.updatedAt && <div className="text-[9px] text-[var(--app-text-muted)] opacity-70">{compactTimestamp(checkpoint.updatedAt)}</div>}
+                {checkpoint.status === "proposed" && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button tone="good" onClick={() => { agentPlanningCheckpointService.approveCheckpoint(checkpoint.checkpointId); refresh(); }}>approve (no execution)</Button>
+                    <Button tone="danger" onClick={() => { agentPlanningCheckpointService.rejectCheckpoint(checkpoint.checkpointId); refresh(); }}>reject</Button>
+                  </div>
+                )}
               </div>
-            </div>
-          ));
+            );
+          });
         })()}
       </RightPanelSection>
 
-      <RightPanelSection title="Reminders" subtitle="Safe reminders delivered by the dry-run continuity loop.">
+      <RightPanelSection title="Reminders" subtitle="Safe reminders delivered by the dry-run continuity loop. No execution.">
         {data.reminders.length === 0 ? (
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No reminder deliveries.</div>
-        ) : data.reminders.slice(0, 5).map((reminder) => (
-          <div key={reminder.deliveryId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
-            <div className="font-bold text-[var(--app-text-main)]">Reminder {reminder.status}: {reminder.title}</div>
-            <div>{reminder.message}</div>
-          </div>
-        ))}
+        ) : data.reminders.slice(0, 5).map((reminder) => {
+          const tone = getReminderDeliveryTone(reminder.status);
+          return (
+            <div key={reminder.deliveryId} className={`mb-2 rounded-xl border p-2 text-[10px] text-[var(--app-text-muted)] ${getContinuityToneBorder(tone)} ${getContinuityToneBg(tone)}`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`font-bold ${getContinuityToneColor(tone)}`}>{getReminderDeliveryLabel(reminder.status)}</span>
+                <span className="font-bold text-[var(--app-text-main)]">· {reminder.title}</span>
+              </div>
+              <div className="mt-1">{reminder.message}</div>
+              <div className="mt-1 text-[9px] uppercase tracking-widest opacity-70">
+                {getReminderNextAction(reminder.status)} · {getContinuityNoExecutionText("reminder")}
+              </div>
+              {reminder.dueAt && <div className="text-[9px] opacity-70">Due: {compactTimestamp(reminder.dueAt)}</div>}
+            </div>
+          );
+        })}
       </RightPanelSection>
 
       <RightPanelSection title="Inbox" subtitle="Runtime inbox items can be marked read or archived.">
@@ -351,18 +381,30 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       </RightPanelSection>
 
       <RightPanelSection title="Sessions" subtitle="Safe-to-resume state is shown; no session is auto-started here.">
-        {resumableSessions.length === 0 ? (
-          <div className="text-[10px] italic text-[var(--app-text-muted)]">No sessions can resume.</div>
-        ) : resumableSessions.map((session) => (
-          <div key={session.sessionId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2">
-            <div className="text-[10px] font-bold text-[var(--app-text-main)]">Session can resume · {session.title}</div>
-            <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{session.lastUserIntentSummary}</p>
-            <div className="mt-2 flex gap-2">
-              <Button onClick={() => { agentSessionContinuityService.completeSession(session.sessionId); refresh(); }}>mark complete</Button>
-              <Button onClick={() => { agentSessionContinuityService.archiveSession(session.sessionId); refresh(); }}>archive</Button>
-            </div>
-          </div>
-        ))}
+        {(() => {
+          const visible = data.sessions.filter((s) => s.userVisible && s.lifecycleState !== "archived");
+          if (visible.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No sessions need attention.</div>;
+          return visible.slice(0, 6).map((session) => {
+            const tone = getSessionContinuityTone(session.lifecycleState);
+            return (
+              <div key={session.sessionId} className={`mb-2 rounded-xl border p-2 ${getContinuityToneBorder(tone)} ${getContinuityToneBg(tone)}`}>
+                <div className="flex items-center gap-1.5 text-[10px]">
+                  <span className={`font-bold ${getContinuityToneColor(tone)}`}>{getSessionContinuityLabel(session.lifecycleState)}</span>
+                  <span className="font-bold text-[var(--app-text-main)]">· {session.title}</span>
+                </div>
+                <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{session.lastUserIntentSummary}</p>
+                <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                  {getSessionNextAction(session.lifecycleState, session.safeToResume)} · {getContinuityNoExecutionText("session")}
+                </p>
+                {session.updatedAt && <div className="text-[9px] text-[var(--app-text-muted)] opacity-70">{compactTimestamp(session.updatedAt)}</div>}
+                <div className="mt-2 flex gap-2">
+                  <Button onClick={() => { agentSessionContinuityService.completeSession(session.sessionId); refresh(); }}>mark complete</Button>
+                  <Button onClick={() => { agentSessionContinuityService.archiveSession(session.sessionId); refresh(); }}>archive</Button>
+                </div>
+              </div>
+            );
+          });
+        })()}
       </RightPanelSection>
 
       <RightPanelSection title="Governed execution bridge" subtitle="Safe approved actions can be executed once. Risky actions remain blocked.">

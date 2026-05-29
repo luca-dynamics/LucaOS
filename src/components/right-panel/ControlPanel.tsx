@@ -13,6 +13,12 @@ import { intentRoutingModeService } from "../../services/runtime/IntentRoutingMo
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
+import {
+  getSessionContinuityLabel, getSessionContinuityTone, getSessionNextAction,
+  getPlanContinuityLabel, getPlanContinuityTone, getPlanNextAction,
+  getCheckpointContinuityLabel, getCheckpointContinuityTone, getCheckpointNextAction,
+  getContinuityToneColor, getContinuitySummaryLine, compactTimestamp,
+} from "../runtime/continuityLabels";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -107,12 +113,47 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </div>
       </RightPanelSection>
 
+      <RightPanelSection title="Continuity" subtitle="Sessions, plans, checkpoints, and reminders that need attention. No execution from this panel.">
+        {(() => {
+          const pendingCheckpoints = checkpoints.filter((c) => c.status === "proposed").length;
+          const pendingReminders = reminders.pendingCount ?? 0;
+          const blockedPlans = planDiag.blockedPlans ?? 0;
+          const summaryLine = getContinuitySummaryLine({
+            resumableSessions: resumableCount,
+            activePlans: planDiag.activePlans,
+            pendingCheckpoints,
+            pendingReminders,
+            pendingApprovals: approvals.pendingRequests,
+            blockedItems: blockedPlans,
+          });
+          return (
+            <div className="space-y-2 text-[10px] text-[var(--app-text-muted)]">
+              <div className="font-bold text-[var(--app-text-main)]">{summaryLine}</div>
+              <div className="grid grid-cols-2 gap-1">
+                <RightPanelMetric label="Can resume" value={resumableCount} tone={resumableCount > 0 ? "warn" : "neutral"} />
+                <RightPanelMetric label="Active plans" value={planDiag.activePlans} tone={planDiag.activePlans > 0 ? "good" : "neutral"} />
+                <RightPanelMetric label="Checkpoints" value={pendingCheckpoints} tone={pendingCheckpoints > 0 ? "warn" : "neutral"} />
+                <RightPanelMetric label="Reminders" value={reminders.deliveredCount} tone={reminders.deliveredCount > 0 ? "good" : "neutral"} />
+              </div>
+              <div className="text-[9px] uppercase tracking-widest opacity-70">No execution happens from this panel</div>
+            </div>
+          );
+        })()}
+      </RightPanelSection>
+
       <RightPanelSection title="Session" subtitle={activeSession ? "Current active or latest resumable session." : "No persisted agent session yet."}>
         {activeSession ? (
           <div className="space-y-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{activeSession.title}</div>
             <div>{activeSession.lastAgentStateSummary}</div>
-            <div className="uppercase tracking-widest">{activeSession.lifecycleState} · {activeSession.safeToResume ? "safe to resume" : "review before resume"}</div>
+            <div className="flex items-center gap-1.5">
+              <span className={`font-bold ${getContinuityToneColor(getSessionContinuityTone(activeSession.lifecycleState))}`}>
+                {getSessionContinuityLabel(activeSession.lifecycleState)}
+              </span>
+              <span>·</span>
+              <span>{getSessionNextAction(activeSession.lifecycleState, activeSession.safeToResume)}</span>
+            </div>
+            {activeSession.updatedAt && <div className="text-[9px] opacity-70">{compactTimestamp(activeSession.updatedAt)}</div>}
           </div>
         ) : (
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No session continuity record available.</div>
@@ -124,7 +165,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <div className="space-y-1 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{activePlan.title}</div>
             <div>{activePlan.summary}</div>
-            <div className="uppercase tracking-widest">{activePlan.status} · risk: {activePlan.riskLevel}</div>
+            <div className="flex items-center gap-1.5">
+              <span className={`font-bold ${getContinuityToneColor(getPlanContinuityTone(activePlan.status))}`}>
+                {getPlanContinuityLabel(activePlan.status)}
+              </span>
+              <span>· risk: {activePlan.riskLevel}</span>
+            </div>
+            <div className="text-[9px] uppercase tracking-widest opacity-70">{getPlanNextAction(activePlan.status)}</div>
             {activePlan.currentStepId && (() => {
               const currentStep = activePlan.steps.find((s) => s.stepId === activePlan.currentStepId);
               return currentStep ? <div>Next safe step: {currentStep.title} · {currentStep.status}</div> : null;
@@ -144,7 +191,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <div className="space-y-1 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{activeCheckpoint.title}</div>
             <div>{activeCheckpoint.summary}</div>
-            <div className="uppercase tracking-widest">{activeCheckpoint.status} · risk: {activeCheckpoint.riskLevel}</div>
+            <div className="flex items-center gap-1.5">
+              <span className={`font-bold ${getContinuityToneColor(getCheckpointContinuityTone(activeCheckpoint.status))}`}>
+                {getCheckpointContinuityLabel(activeCheckpoint.status)}
+              </span>
+              <span>· risk: {activeCheckpoint.riskLevel}</span>
+            </div>
+            <div className="text-[9px] uppercase tracking-widest opacity-70">{getCheckpointNextAction(activeCheckpoint.status)}</div>
             {activeCheckpoint.proposedNextSteps.length > 0 && <div>Next: {activeCheckpoint.proposedNextSteps.slice(0, 3).join(" · ")}</div>}
           </div>
         </RightPanelSection>

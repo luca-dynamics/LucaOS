@@ -19,6 +19,15 @@ import RightPanelSection from "./RightPanelSection";
 import { summarizeToolLog } from "./rightPanelModel";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteToneBorder, getRouteToneBg, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
+import { agentSessionContinuityService } from "../../services/runtime/AgentSessionContinuityService";
+import {
+  getSessionContinuityLabel, getSessionContinuityTone,
+  getReminderDeliveryLabel, getReminderDeliveryTone,
+  getPlanContinuityLabel, getPlanContinuityTone,
+  getCheckpointContinuityLabel, getCheckpointContinuityTone,
+  getContinuityToneColor, getContinuityToneBorder, getContinuityToneBg,
+  getContinuityNoExecutionText, compactTimestamp,
+} from "../runtime/continuityLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -35,6 +44,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
     return {
       approvals: approvalRequestCenterService.listRequests(),
       inbox: runtimeInboxService.listEvents(),
+      sessions: agentSessionContinuityService.listSessions(),
       governed: governedActionRequestService.listRequests(),
       executions: governedToolExecutionService.listExecutions(),
       scheduler: schedulerRegistryService.detectDueJobsDryRun(now),
@@ -99,13 +109,37 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
         ))}
       </RightPanelSection>
 
-      <RightPanelSection title="Reminder delivery trace" subtitle="Safe reminder delivery records.">
-        {trace.reminders.length === 0 ? <EmptyState>No reminder deliveries.</EmptyState> : trace.reminders.slice(0, 8).map((reminder) => (
-          <div key={reminder.deliveryId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
-            <div className="font-bold text-[var(--app-text-main)]">{reminder.status} · {reminder.title}</div>
-            <div>{reminder.reason}</div>
-          </div>
-        ))}
+      <RightPanelSection title="Session continuity trace" subtitle="Session lifecycle audit. State-only; no autonomous resume.">
+        {trace.sessions.length === 0 ? <EmptyState>No session continuity records.</EmptyState> : trace.sessions.filter((s) => s.userVisible).slice(0, 8).map((session) => {
+          const tone = getSessionContinuityTone(session.lifecycleState);
+          return (
+            <div key={session.sessionId} className={`mb-2 rounded-xl border p-2 text-[10px] text-[var(--app-text-muted)] ${getContinuityToneBorder(tone)} ${getContinuityToneBg(tone)}`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`font-bold ${getContinuityToneColor(tone)}`}>{getSessionContinuityLabel(session.lifecycleState)}</span>
+                <span className="font-bold text-[var(--app-text-main)]">&middot; {session.title}</span>
+              </div>
+              <div>{session.mode} &middot; {compactTimestamp(session.updatedAt)}</div>
+              <div className="text-[9px] uppercase tracking-widest opacity-70">{getContinuityNoExecutionText("session")}</div>
+            </div>
+          );
+        })}
+      </RightPanelSection>
+
+      <RightPanelSection title="Reminder delivery trace" subtitle="Safe reminder delivery records. No execution.">
+        {trace.reminders.length === 0 ? <EmptyState>No reminder deliveries.</EmptyState> : trace.reminders.slice(0, 8).map((reminder) => {
+          const tone = getReminderDeliveryTone(reminder.status);
+          return (
+            <div key={reminder.deliveryId} className={`mb-2 rounded-xl border p-2 text-[10px] text-[var(--app-text-muted)] ${getContinuityToneBorder(tone)} ${getContinuityToneBg(tone)}`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`font-bold ${getContinuityToneColor(tone)}`}>{getReminderDeliveryLabel(reminder.status)}</span>
+                <span className="font-bold text-[var(--app-text-main)]">&middot; {reminder.title}</span>
+              </div>
+              <div>{reminder.reason}</div>
+              {reminder.dueAt && <div className="text-[9px] opacity-70">Due: {compactTimestamp(reminder.dueAt)}</div>}
+              <div className="text-[9px] uppercase tracking-widest opacity-70">{getContinuityNoExecutionText("reminder")}</div>
+            </div>
+          );
+        })}
       </RightPanelSection>
 
       <RightPanelSection title="Scheduler observations" subtitle="Dry-run due-job and blocked-job observations.">
@@ -173,30 +207,44 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       </RightPanelSection>
 
       <RightPanelSection title="Plan trace" subtitle="Runtime plan lifecycle trace. Plans create governed records; nothing executes.">
-        {trace.plans.length === 0 ? <EmptyState>No runtime plans.</EmptyState> : trace.plans.slice(0, 8).map((plan) => (
-          <div key={plan.planId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
-            <div className="font-bold text-[var(--app-text-main)]">{plan.status} · {plan.title}</div>
-            <div>risk: {plan.riskLevel} · {plan.steps.length} steps · {new Date(plan.updatedAt).toLocaleString()}</div>
-            {plan.checkpointIds.length > 0 && <div>Checkpoints: {plan.checkpointIds.length}</div>}
-            {plan.memoryProposalIds.length > 0 && <div>Memory proposals: {plan.memoryProposalIds.length}</div>}
-            {plan.governedRequestIds.length > 0 && <div>Governed requests: {plan.governedRequestIds.length}</div>}
-            {plan.skillRequestIds.length > 0 && <div>Skill requests: {plan.skillRequestIds.length}</div>}
-            {plan.blockedBy && plan.blockedBy.length > 0 && <div className="text-red-200">Blocked: {plan.blockedBy.join(", ")}</div>}
-            {plan.steps.filter((s) => s.kind === "blocked_risky_action" || s.status === "blocked").length > 0 && (
-              <div className="text-red-200">Blocked risky steps: {plan.steps.filter((s) => s.kind === "blocked_risky_action" || s.status === "blocked").length}</div>
-            )}
-          </div>
-        ))}
+        {trace.plans.length === 0 ? <EmptyState>No runtime plans.</EmptyState> : trace.plans.slice(0, 8).map((plan) => {
+          const tone = getPlanContinuityTone(plan.status);
+          return (
+            <div key={plan.planId} className={`mb-2 rounded-xl border p-2 text-[10px] text-[var(--app-text-muted)] ${getContinuityToneBorder(tone)} ${getContinuityToneBg(tone)}`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`font-bold ${getContinuityToneColor(tone)}`}>{getPlanContinuityLabel(plan.status)}</span>
+                <span className="font-bold text-[var(--app-text-main)]">&middot; {plan.title}</span>
+              </div>
+              <div>risk: {plan.riskLevel} &middot; {plan.steps.length} steps &middot; {compactTimestamp(plan.updatedAt)}</div>
+              {plan.checkpointIds.length > 0 && <div>Checkpoints: {plan.checkpointIds.length}</div>}
+              {plan.memoryProposalIds.length > 0 && <div>Memory proposals: {plan.memoryProposalIds.length}</div>}
+              {plan.governedRequestIds.length > 0 && <div>Governed requests: {plan.governedRequestIds.length}</div>}
+              {plan.skillRequestIds.length > 0 && <div>Skill requests: {plan.skillRequestIds.length}</div>}
+              {plan.blockedBy && plan.blockedBy.length > 0 && <div className="text-red-200">Blocked: {plan.blockedBy.join(", ")}</div>}
+              {plan.steps.filter((s) => s.kind === "blocked_risky_action" || s.status === "blocked").length > 0 && (
+                <div className="text-red-200">Blocked risky steps: {plan.steps.filter((s) => s.kind === "blocked_risky_action" || s.status === "blocked").length}</div>
+              )}
+              <div className="text-[9px] uppercase tracking-widest opacity-70">{getContinuityNoExecutionText("plan")}</div>
+            </div>
+          );
+        })}
       </RightPanelSection>
 
       <RightPanelSection title="Planning checkpoints" subtitle="Planning checkpoint trace. State-only; nothing executes.">
-        {trace.checkpoints.length === 0 ? <EmptyState>No planning checkpoints.</EmptyState> : trace.checkpoints.slice(0, 8).map((checkpoint) => (
-          <div key={checkpoint.checkpointId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
-            <div className="font-bold text-[var(--app-text-main)]">{checkpoint.status} · {checkpoint.title}</div>
-            <div>risk: {checkpoint.riskLevel} · {new Date(checkpoint.updatedAt).toLocaleString()}</div>
-            {checkpoint.blockedBy && checkpoint.blockedBy.length > 0 && <div className="text-red-200">Blocked: {checkpoint.blockedBy.join(", ")}</div>}
-          </div>
-        ))}
+        {trace.checkpoints.length === 0 ? <EmptyState>No planning checkpoints.</EmptyState> : trace.checkpoints.slice(0, 8).map((checkpoint) => {
+          const tone = getCheckpointContinuityTone(checkpoint.status);
+          return (
+            <div key={checkpoint.checkpointId} className={`mb-2 rounded-xl border p-2 text-[10px] text-[var(--app-text-muted)] ${getContinuityToneBorder(tone)} ${getContinuityToneBg(tone)}`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`font-bold ${getContinuityToneColor(tone)}`}>{getCheckpointContinuityLabel(checkpoint.status)}</span>
+                <span className="font-bold text-[var(--app-text-main)]">&middot; {checkpoint.title}</span>
+              </div>
+              <div>risk: {checkpoint.riskLevel} &middot; {compactTimestamp(checkpoint.updatedAt)}</div>
+              {checkpoint.blockedBy && checkpoint.blockedBy.length > 0 && <div className="text-red-200">Blocked: {checkpoint.blockedBy.join(", ")}</div>}
+              <div className="text-[9px] uppercase tracking-widest opacity-70">{getContinuityNoExecutionText("checkpoint")}</div>
+            </div>
+          );
+        })}
       </RightPanelSection>
 
       <RightPanelSection title="Intent routing trace" subtitle="Routing decisions and mode/risk/reason audit. Routing does not execute anything.">
