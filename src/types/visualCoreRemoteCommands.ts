@@ -80,7 +80,8 @@ export interface VisualCoreRemoteCommandRecord {
   governanceApplied: true;
   recordOnly: true;
   executionChanged: false;
-  browserGoverned: false;
+  /** PR #143 — true for BROWSER_NAVIGATE when the governed adapter is connected. */
+  browserGoverned: boolean;
   captureEnabled: false;
   automationEnabled: false;
   externalActionEnabled: false;
@@ -101,11 +102,12 @@ export interface VisualCoreRemoteCommandDiagnosticsSummary {
   ignoredCommands: number;
   browserNavigateCommands: number;
   lastCommandAt: string | null;
-  // Remote-command governance posture — fixed, never toggled here.
+  // Remote-command governance posture.
   governanceApplied: true;
   recordOnly: true;
   executionChanged: false;
-  browserGoverned: false;
+  /** PR #143 — true now that the governed LucaBrowser adapter is connected. */
+  browserGoverned: true;
   captureEnabled: false;
   automationEnabled: false;
   externalActionEnabled: false;

@@ -188,17 +188,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </p>
       </RightPanelSection>
 
-      <RightPanelSection title="VisualCore remote commands" subtitle="Remote commands are audited first. Browser navigation and sensitive commands require dedicated governance.">
+      <RightPanelSection title="VisualCore remote commands" subtitle="Remote commands are audited first. Browser navigation uses governed LucaBrowser adapter. Sensitive commands require dedicated governance.">
         <div className="grid grid-cols-2 gap-2">
           <RightPanelMetric label="Total commands" value={formatCount("command", visualRemoteCommands.totalCommands)} />
           <RightPanelMetric label="Allowed record-only" value={formatCount("command", visualRemoteCommands.allowedRecordOnlyCommands)} tone={visualRemoteCommands.allowedRecordOnlyCommands > 0 ? "good" : "neutral"} />
           <RightPanelMetric label="Blocked" value={formatCount("command", visualRemoteCommands.blockedCommands)} tone={visualRemoteCommands.blockedCommands > 0 ? "danger" : "neutral"} />
           <RightPanelMetric label="Needs approval" value={formatCount("command", visualRemoteCommands.needsApprovalCommands)} tone={visualRemoteCommands.needsApprovalCommands > 0 ? "warn" : "neutral"} />
           <RightPanelMetric label="Ignored" value={formatCount("command", visualRemoteCommands.ignoredCommands)} tone="neutral" />
-          <RightPanelMetric label="Browser navigate" value={formatCount("request", visualRemoteCommands.browserNavigateCommands)} tone={visualRemoteCommands.browserNavigateCommands > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Browser navigate" value={formatCount("request", visualRemoteCommands.browserNavigateCommands)} tone={visualRemoteCommands.browserNavigateCommands > 0 ? "good" : "neutral"} />
           <RightPanelMetric label="Governance applied" value="true" tone="good" />
           <RightPanelMetric label="Execution changed" value="false" tone="neutral" />
-          <RightPanelMetric label="Browser governed" value="false" tone="neutral" />
+          <RightPanelMetric label="Browser governed" value="true" tone="good" />
           <RightPanelMetric label="Capture enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
           <RightPanelMetric label="External action" value="false" tone="neutral" />
@@ -207,7 +207,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="Wireless" value="false" tone="neutral" />
         </div>
         <p className="mt-3 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
-          VisualCore remote commands are audited first. Browser navigation and sensitive commands still require dedicated governance before execution.
+          VisualCore remote commands are audited first. Browser navigation is governed via the LucaBrowser adapter (PR #143). Sensitive commands still require dedicated governance before execution.
         </p>
       </RightPanelSection>
 

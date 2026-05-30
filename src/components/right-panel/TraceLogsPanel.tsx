@@ -513,7 +513,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
         )}
       </RightPanelSection>
 
-      <RightPanelSection title="VisualCore remote command trace" subtitle="Remote commands audited before driving VisualCore: received / allowed_record_only / needs_approval / blocked. Browser navigation and sensitive commands need dedicated governance. No capture, automation, external action, file, messaging, or wireless.">
+      <RightPanelSection title="VisualCore remote command trace" subtitle="Remote commands audited before driving VisualCore: received / allowed_record_only / needs_approval / blocked. Browser navigation governed via LucaBrowser adapter. Sensitive commands need dedicated governance. No capture, automation, external action, file, messaging, or wireless.">
         {trace.visualRemoteCommands.length === 0 ? <EmptyState>No VisualCore remote commands.</EmptyState> : (
           <div className="space-y-2">
             {[...trace.visualRemoteCommands]
@@ -541,7 +541,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   </div>
                   <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
                     <span>execution changed: false</span>
-                    <span>browser governed: false</span>
+                    <span>browser governed: {command.browserGoverned ? "true" : "false"}</span>
                     <span>capture: false</span>
                     <span>automation: false</span>
                     <span>external action: false</span>

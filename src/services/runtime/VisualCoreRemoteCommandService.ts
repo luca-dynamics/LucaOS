@@ -53,21 +53,20 @@ export interface VisualCoreRemoteCommandServiceDependencies {
 
 const STORAGE_KEY = "LUCA_VISUAL_CORE_REMOTE_COMMANDS_V1";
 
-// Remote-command audit posture applied to every record. Never toggled.
+// Remote-command audit posture applied to every record.
 const SAFETY_FLAGS = {
-  governanceApplied: true,
-  recordOnly: true,
-  executionChanged: false,
-  browserGoverned: false,
-  captureEnabled: false,
-  automationEnabled: false,
-  externalActionEnabled: false,
-  credentialSensitive: false,
-  fileAccessEnabled: false,
-  messagingEnabled: false,
-  wirelessControlEnabled: false,
-  walletPaymentEnabled: false,
-} as const;
+  governanceApplied: true as const,
+  recordOnly: true as const,
+  executionChanged: false as const,
+  captureEnabled: false as const,
+  automationEnabled: false as const,
+  externalActionEnabled: false as const,
+  credentialSensitive: false as const,
+  fileAccessEnabled: false as const,
+  messagingEnabled: false as const,
+  wirelessControlEnabled: false as const,
+  walletPaymentEnabled: false as const,
+};
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -117,6 +116,9 @@ export class VisualCoreRemoteCommandService {
 
     const record: VisualCoreRemoteCommandRecord = {
       ...SAFETY_FLAGS,
+      // PR #143 — browserGoverned is true for BROWSER_NAVIGATE now that the
+      // governed LucaBrowser adapter is connected.
+      browserGoverned: decision.kind === "BROWSER_NAVIGATE",
       commandRecordId: input.commandRecordId?.trim() || newId(),
       kind: decision.kind,
       status: decision.status,
@@ -151,6 +153,7 @@ export class VisualCoreRemoteCommandService {
 
     const record: VisualCoreRemoteCommandRecord = {
       ...SAFETY_FLAGS,
+      browserGoverned: decision.kind === "BROWSER_NAVIGATE",
       commandRecordId: input.commandRecordId?.trim() || newId(),
       kind: decision.kind,
       status: "blocked",
@@ -198,7 +201,7 @@ export class VisualCoreRemoteCommandService {
       governanceApplied: true,
       recordOnly: true,
       executionChanged: false,
-      browserGoverned: false,
+      browserGoverned: true,
       captureEnabled: false,
       automationEnabled: false,
       externalActionEnabled: false,
@@ -242,7 +245,7 @@ export class VisualCoreRemoteCommandService {
         governanceApplied: true,
         recordOnly: true,
         executionChanged: false,
-        browserGoverned: false,
+        browserGoverned: true,
         captureEnabled: false,
         automationEnabled: false,
         externalActionEnabled: false,

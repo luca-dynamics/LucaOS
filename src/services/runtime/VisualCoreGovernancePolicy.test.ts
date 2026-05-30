@@ -52,15 +52,18 @@ describe("VisualCoreGovernancePolicy", () => {
     }
   });
 
-  it("classifies BROWSER as opening a browser and needing governed LucaBrowser later", () => {
+  it("classifies BROWSER as governed via the LucaBrowser adapter (PR #143)", () => {
     const browser = getVisualCoreSurfacePolicy("BROWSER");
     expect(browser.category).toBe("browser_surface");
     expect(browser.capabilities.opensBrowser).toBe(true);
     expect(browser.capabilities.remoteControlCapable).toBe(true);
-    expect(browser.readiness).toBe("needs_runtime_adapter");
+    expect(browser.readiness).toBe("ready_for_display_governance");
+    expect(browser.riskLevel).toBe("elevated");
+    expect(browser.sensitive).toBe(false);
     const notes = (browser.notes ?? []).join(" ");
-    expect(notes).toMatch(/EMBEDDED/);
-    expect(notes).toMatch(/governed LucaBrowser/i);
+    expect(notes).toMatch(/GOVERNED/);
+    expect(notes).toMatch(/governed adapter/i);
+    expect(notes).toMatch(/No automation/);
   });
 
   it("lists low-risk display modes via the ready-for-display helper", () => {
@@ -114,7 +117,7 @@ describe("VisualCoreGovernancePolicy", () => {
       expect(getVisualCoreGovernanceRecommendation(mode).length).toBeGreaterThan(0);
     }
     expect(getVisualCoreGovernanceRecommendation("BROWSER")).toMatch(
-      /adapter/i,
+      /display/i,
     );
   });
 });
