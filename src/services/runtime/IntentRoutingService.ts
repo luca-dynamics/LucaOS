@@ -11,6 +11,7 @@ import { skillGovernanceService, type SkillGovernanceService } from "../skills/S
 import { agentPlanningCheckpointService, type AgentPlanningCheckpointService } from "./AgentPlanningCheckpointService";
 import { intentRoutingModeService, type IntentRoutingModeService } from "./IntentRoutingModeService";
 import { browserDesktopGatewayService, type BrowserDesktopGatewayService } from "./BrowserDesktopGatewayService";
+import { screenObservationService, type ScreenObservationService } from "./ScreenObservationService";
 import {
   classifyIntent,
   sanitizeIntentInput,
@@ -36,6 +37,10 @@ interface StorageLike {
 }
 
 const STORAGE_KEY = "LUCA_INTENT_ROUTING_DECISIONS_V1";
+
+// Obvious "look at / observe my screen" phrases that should also create a
+// dry-run screen observation permission record. No capture is ever performed.
+const SCREEN_OBSERVATION_HINT = /look at (my|the|this) (screen|window|app|tab)|observe (my|the|this)? ?(screen|window|app|tab|region|area)|watch (my|this|the) (screen|window|app|tab|region|area)|read (the )?(text|screen)|see (my|the) screen|detect (sensitive|ui|layout|text)|understand (the )?screen/i;
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -69,6 +74,7 @@ export interface IntentRoutingServiceDependencies {
   governedRequests: Pick<GovernedActionRequestService, "createRequest">;
   skillGovernance: Pick<SkillGovernanceService, "createSkillRequest">;
   gatewayRequests: Pick<BrowserDesktopGatewayService, "createGatewayRequest">;
+  screenObservation: Pick<ScreenObservationService, "createObservationRequest">;
   checkpoints: Pick<AgentPlanningCheckpointService, "createCheckpoint">;
   inbox: Pick<RuntimeInboxService, "ingestEvent">;
   bus: Pick<typeof eventBus, "emitEvent" | "emit">;
@@ -90,6 +96,7 @@ export class IntentRoutingService {
       governedRequests: governedActionRequestService,
       skillGovernance: skillGovernanceService,
       gatewayRequests: browserDesktopGatewayService,
+      screenObservation: screenObservationService,
       checkpoints: agentPlanningCheckpointService,
       inbox: runtimeInboxService,
       bus: eventBus,
@@ -373,6 +380,18 @@ export class IntentRoutingService {
             metadata: { route: decision.route, riskLevel: decision.riskLevel, signals: decision.signals.join(",") },
           });
         } catch { /* gateway research record is best-effort and never executes */ }
+        if (SCREEN_OBSERVATION_HINT.test(decision.userIntentSummary)) {
+          try {
+            this.deps.screenObservation.createObservationRequest({
+              title: `Screen observation request: ${decision.userIntentSummary.slice(0, 90)}`,
+              summary: decision.userIntentSummary.slice(0, 300),
+              source: "intent_routing",
+              sourceId: decision.decisionId,
+              provenanceIds: localProv,
+              metadata: { route: decision.route, riskLevel: decision.riskLevel },
+            });
+          } catch { /* screen observation record is dry-run only and never captures */ }
+        }
         try {
           const event = this.deps.inbox.ingestEvent({
             source: "intent_routing",

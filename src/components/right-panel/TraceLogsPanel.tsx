@@ -11,6 +11,7 @@ import { memoryProposalService } from "../../services/memory/MemoryProposalServi
 import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
+import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -49,6 +50,14 @@ import {
   getGatewayStatusLabel,
   getGatewaySurfaceLabel,
 } from "../runtime/gatewayPermissionLabels";
+import {
+  getScreenObservationCapabilityLabel,
+  getScreenObservationConsentLabel,
+  getScreenObservationNoCaptureText,
+  getScreenObservationRiskLabel,
+  getScreenObservationStatusLabel,
+  getScreenObservationSurfaceLabel,
+} from "../runtime/screenObservationLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -105,6 +114,8 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       memoryProposals: memoryProposalService.listProposals(),
       memoryWrites: governedMemoryWriteService.listMemoryWrites(),
       gatewayRequests: browserDesktopGatewayService.listGatewayRequests(),
+      observationRequests: screenObservationService.listObservationRequests(),
+      observationSessions: screenObservationService.listObservationSessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -180,6 +191,57 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               </div>
             );
           })}
+      </RightPanelSection>
+
+      <RightPanelSection title="Screen observation trace" subtitle="Audit-like screen observation permission records. Capture and vision analysis remain disabled.">
+        {trace.observationRequests.length === 0 && trace.observationSessions.length === 0 ? <EmptyState>No screen observation records.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.observationRequests]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 6)
+              .map((request) => (
+                <div key={request.observationRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                        {getScreenObservationStatusLabel(request.status)} · {getScreenObservationSurfaceLabel(request.surface)} / {getScreenObservationCapabilityLabel(request.capability)}
+                      </div>
+                      <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getScreenObservationRiskLabel(request.riskLevel)}</span>
+                  </div>
+                  {request.blockedBy && request.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] text-red-200">Blocked by: {request.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>{getScreenObservationConsentLabel(request.consentState)}</span>
+                    <span>created {compactTimestamp(request.createdAt)}</span>
+                    <span>updated {compactTimestamp(request.updatedAt)}</span>
+                    <span>capture enabled: false</span>
+                    <span>vision model enabled: false</span>
+                  </div>
+                  <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
+                </div>
+              ))}
+            {[...trace.observationSessions]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 4)
+              .map((session) => (
+                <div key={session.observationSessionId} className="rounded-xl border border-white/10 bg-black/10 p-3">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                    Session · {getScreenObservationStatusLabel(session.status)} · {getScreenObservationSurfaceLabel(session.surface)} / {getScreenObservationCapabilityLabel(session.capability)}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>{getScreenObservationConsentLabel(session.consentState)}</span>
+                    <span>{getScreenObservationRiskLabel(session.riskLevel)}</span>
+                    <span>created {compactTimestamp(session.createdAt)}</span>
+                    {session.revokedAt && <span>revoked {compactTimestamp(session.revokedAt)}</span>}
+                  </div>
+                  <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">Dry-run permission session only. {getScreenObservationNoCaptureText()}</p>
+                </div>
+              ))}
+          </div>
+        )}
       </RightPanelSection>
 
       <RightPanelSection title="Runtime events" subtitle="Current continuity-loop trace state. Stored event history can be connected later without inventing events.">
