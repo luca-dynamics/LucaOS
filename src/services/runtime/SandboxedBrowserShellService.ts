@@ -19,14 +19,18 @@ import { runtimeInboxService, type RuntimeInboxService, sanitizeRuntimeMetadata 
 import {
   validateSandboxedBrowserUrl,
   redactUrlForAudit,
+  classifyUrlRisk,
 } from "./SandboxedBrowserUrlPolicy";
 import type {
   SandboxedBrowserShellDiagnosticsSummary,
+  SandboxedBrowserShellNavigationRecord,
+  SandboxedBrowserShellNavigationSource,
   SandboxedBrowserShellOpenEventDetail,
   SandboxedBrowserShellSessionRecord,
   SandboxedBrowserShellStatus,
 } from "../../types/sandboxedBrowserShell";
 import {
+  MAX_SANDBOXED_BROWSER_SHELL_NAVIGATIONS,
   MAX_SANDBOXED_BROWSER_SHELL_SESSIONS,
   SANDBOXED_BROWSER_SHELL_OPEN_EVENT,
 } from "../../types/sandboxedBrowserShell";
@@ -45,6 +49,14 @@ export interface OpenApprovedSafeUrlInput {
   metadata?: Record<string, unknown>;
 }
 
+export interface RecordNavigationAttemptInput {
+  shellSessionId: string;
+  toUrl: string;
+  fromUrl?: string;
+  source?: SandboxedBrowserShellNavigationSource;
+  metadata?: Record<string, unknown>;
+}
+
 export interface SandboxedBrowserShellServiceDependencies {
   storage?: StorageLike;
   inbox: Pick<RuntimeInboxService, "ingestEvent">;
@@ -52,6 +64,7 @@ export interface SandboxedBrowserShellServiceDependencies {
 }
 
 const SESSIONS_STORAGE_KEY = "LUCA_SANDBOXED_BROWSER_SHELL_SESSIONS_V1";
+const NAVIGATIONS_STORAGE_KEY = "LUCA_SANDBOXED_BROWSER_SHELL_NAVIGATIONS_V1";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -75,6 +88,7 @@ function readArray<T>(store: StorageLike | undefined, key: string): T[] {
 
 export class SandboxedBrowserShellService {
   private sessions: SandboxedBrowserShellSessionRecord[];
+  private navigations: SandboxedBrowserShellNavigationRecord[];
 
   constructor(
     private readonly deps: SandboxedBrowserShellServiceDependencies = {
@@ -84,6 +98,7 @@ export class SandboxedBrowserShellService {
     },
   ) {
     this.sessions = readArray<SandboxedBrowserShellSessionRecord>(this.deps.storage, SESSIONS_STORAGE_KEY);
+    this.navigations = readArray<SandboxedBrowserShellNavigationRecord>(this.deps.storage, NAVIGATIONS_STORAGE_KEY);
   }
 
   /**
@@ -182,6 +197,134 @@ export class SandboxedBrowserShellService {
     return this.updateSession(shellSessionId, update, "sandboxed_browser_shell_opened");
   }
 
+  // -----------------------------------------------------------------------
+  // PR #136 — navigation governance + session lifecycle
+  // -----------------------------------------------------------------------
+
+  /**
+   * Validate and record a single governed navigation attempt. The URL string is
+   * checked through SandboxedBrowserUrlPolicy; only redacted audit URLs are
+   * stored. Allowed navigations move the session to `navigating`; blocked
+   * navigations move it to `navigation_blocked` and emit an audit event.
+   *
+   * Never fetches the URL, inspects the DOM, or touches cookies/session data.
+   */
+  recordNavigationAttempt(input: RecordNavigationAttemptInput): SandboxedBrowserShellNavigationRecord {
+    const validation = validateSandboxedBrowserUrl(input.toUrl ?? "");
+    const toAuditUrl = validation.auditUrl || redactUrlForAudit(input.toUrl ?? "");
+    const fromAuditUrl = input.fromUrl ? redactUrlForAudit(input.fromUrl) : undefined;
+    const source = input.source ?? "luca_browser_webview";
+
+    if (!validation.allowed) {
+      return this.pushBlockedNavigation({
+        shellSessionId: input.shellSessionId,
+        toAuditUrl,
+        fromAuditUrl,
+        riskLevel: validation.riskLevel,
+        blockedBy: validation.blockedBy.length > 0 ? [...validation.blockedBy] : ["blocked_url"],
+        userSafeReason: validation.userSafeReason,
+        source,
+        metadata: input.metadata,
+      });
+    }
+
+    const record = this.buildNavigationRecord({
+      shellSessionId: input.shellSessionId,
+      toAuditUrl,
+      fromAuditUrl,
+      // Long-lived nav records keep redacted audit URLs only — never the raw
+      // normalized URL, which can still carry query/hash params.
+      normalizedUrl: toAuditUrl,
+      status: "allowed",
+      riskLevel: validation.riskLevel,
+      userSafeReason: validation.userSafeReason,
+      source,
+      metadata: input.metadata,
+    });
+    this.upsertNavigation(record);
+    // Allowed navigation: reflect a transient navigating state if the session is
+    // currently open-ish. Never reactivate a closed/revoked/paused session.
+    const existing = this.getShellSession(input.shellSessionId);
+    if (existing && (existing.status === "open" || existing.status === "open_requested" || existing.status === "navigation_blocked" || existing.status === "navigating")) {
+      this.updateSession(input.shellSessionId, { status: "navigating" }, "sandboxed_browser_shell_navigating");
+    }
+    return record;
+  }
+
+  /**
+   * Explicitly record a blocked navigation for a session (e.g. when the shell
+   * surface detects a disallowed attempt). Redacts the attempted URL.
+   */
+  markNavigationBlocked(
+    shellSessionId: string,
+    reason: string,
+    attemptedUrl?: string,
+  ): SandboxedBrowserShellNavigationRecord {
+    const toAuditUrl = attemptedUrl ? redactUrlForAudit(attemptedUrl) : "(blocked navigation)";
+    const riskLevel = attemptedUrl ? classifyUrlRisk(attemptedUrl) : "high";
+    return this.pushBlockedNavigation({
+      shellSessionId,
+      toAuditUrl,
+      riskLevel,
+      blockedBy: ["blocked_url"],
+      userSafeReason: reason,
+      source: "system",
+    });
+  }
+
+  listNavigationRecords(shellSessionId?: string): SandboxedBrowserShellNavigationRecord[] {
+    if (!shellSessionId) return [...this.navigations];
+    return this.navigations.filter((nav) => nav.shellSessionId === shellSessionId);
+  }
+
+  getNavigationRecordsForSession(shellSessionId: string): SandboxedBrowserShellNavigationRecord[] {
+    return this.listNavigationRecords(shellSessionId);
+  }
+
+  /**
+   * Mark a session as actively navigating (called on did-start-loading). Only
+   * transitions from an already-open/navigating-ish state; never resurrects a
+   * paused, closed, or revoked session.
+   */
+  markShellNavigating(shellSessionId: string): SandboxedBrowserShellSessionRecord | undefined {
+    const existing = this.getShellSession(shellSessionId);
+    if (!existing) return undefined;
+    if (existing.status !== "open" && existing.status !== "open_requested" && existing.status !== "navigation_blocked") {
+      return existing;
+    }
+    return this.updateSession(shellSessionId, { status: "navigating" }, "sandboxed_browser_shell_navigating");
+  }
+
+  /**
+   * Settle a session back to `open` once loading stops (did-stop-loading). Only
+   * transitions out of the transient `navigating` state; leaves paused/blocked
+   * states untouched.
+   */
+  markShellSettled(shellSessionId: string): SandboxedBrowserShellSessionRecord | undefined {
+    const existing = this.getShellSession(shellSessionId);
+    if (!existing) return undefined;
+    if (existing.status !== "navigating") return existing;
+    return this.updateSession(shellSessionId, { status: "open" }, "sandboxed_browser_shell_open");
+  }
+
+  pauseShellSession(shellSessionId: string, reason = "Paused by user."): SandboxedBrowserShellSessionRecord | undefined {
+    const existing = this.getShellSession(shellSessionId);
+    if (!existing) return undefined;
+    if (existing.status === "closed" || existing.status === "revoked") return existing;
+    return this.updateSession(
+      shellSessionId,
+      { status: "paused", metadata: sanitizeRuntimeMetadata({ ...existing.metadata, pauseReason: reason }) },
+      "sandboxed_browser_shell_paused",
+    );
+  }
+
+  resumeShellSession(shellSessionId: string): SandboxedBrowserShellSessionRecord | undefined {
+    const existing = this.getShellSession(shellSessionId);
+    if (!existing) return undefined;
+    if (existing.status !== "paused") return existing;
+    return this.updateSession(shellSessionId, { status: "open" }, "sandboxed_browser_shell_resumed");
+  }
+
   /**
    * Mark a session as adapter_unavailable when the runtime cannot mount a shell.
    */
@@ -219,16 +362,26 @@ export class SandboxedBrowserShellService {
     const count = (status: SandboxedBrowserShellStatus): number =>
       this.sessions.filter((session) => session.status === status).length;
     const last = this.sessions[0];
+    const allowedNavigations = this.navigations.filter((nav) => nav.status === "allowed").length;
+    const blockedNavigations = this.navigations.filter((nav) => nav.status === "blocked").length;
     return {
       totalSessions: this.sessions.length,
       proposedSessions: count("proposed"),
       openRequestedSessions: count("open_requested"),
       openSessions: count("open"),
+      navigatingSessions: count("navigating"),
+      navigationBlockedSessions: count("navigation_blocked"),
+      pausedSessions: count("paused"),
       blockedSessions: count("blocked"),
       closedSessions: count("closed"),
       revokedSessions: count("revoked"),
       adapterUnavailableSessions: count("adapter_unavailable"),
+      navigationEvents: this.navigations.length,
+      allowedNavigations,
+      blockedNavigations,
+      lastNavigationAt: this.navigations[0]?.createdAt ?? null,
       launchMode: "approved_safe_url_only",
+      navigationGovernanceEnabled: true,
       automationEnabled: false,
       domReadEnabled: false,
       credentialsEnabled: false,
@@ -267,6 +420,78 @@ export class SandboxedBrowserShellService {
       ...this.sessions.filter((session) => session.shellSessionId !== record.shellSessionId),
     ].slice(0, MAX_SANDBOXED_BROWSER_SHELL_SESSIONS);
     this.deps.storage?.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(this.sessions));
+  }
+
+  private buildNavigationRecord(input: {
+    shellSessionId: string;
+    toAuditUrl: string;
+    fromAuditUrl?: string;
+    normalizedUrl?: string;
+    status: SandboxedBrowserShellNavigationRecord["status"];
+    riskLevel: SandboxedBrowserShellNavigationRecord["riskLevel"];
+    blockedBy?: string[];
+    userSafeReason: string;
+    source: SandboxedBrowserShellNavigationSource;
+    metadata?: Record<string, unknown>;
+  }): SandboxedBrowserShellNavigationRecord {
+    const timestamp = nowIso();
+    return {
+      navigationId: `sandboxed-browser-nav:${timestamp}:${Math.random().toString(36).slice(2, 8)}`,
+      shellSessionId: input.shellSessionId,
+      fromAuditUrl: input.fromAuditUrl,
+      toAuditUrl: input.toAuditUrl,
+      normalizedUrl: input.normalizedUrl,
+      status: input.status,
+      riskLevel: input.riskLevel,
+      blockedBy: input.blockedBy && input.blockedBy.length > 0 ? [...input.blockedBy] : undefined,
+      userSafeReason: input.userSafeReason,
+      createdAt: timestamp,
+      source: input.source,
+      metadata: input.metadata
+        ? sanitizeRuntimeMetadata({ ...input.metadata, automationEnabled: false, domReadEnabled: false })
+        : { automationEnabled: false, domReadEnabled: false },
+    };
+  }
+
+  private pushBlockedNavigation(input: {
+    shellSessionId: string;
+    toAuditUrl: string;
+    fromAuditUrl?: string;
+    riskLevel: SandboxedBrowserShellNavigationRecord["riskLevel"];
+    blockedBy: string[];
+    userSafeReason: string;
+    source: SandboxedBrowserShellNavigationSource;
+    metadata?: Record<string, unknown>;
+  }): SandboxedBrowserShellNavigationRecord {
+    const record = this.buildNavigationRecord({ ...input, status: "blocked" });
+    this.upsertNavigation(record);
+    // A blocked governed navigation freezes the session so it stops accepting
+    // further audited navigation until the user resumes/closes/revokes.
+    const existing = this.getShellSession(input.shellSessionId);
+    if (existing && existing.status !== "closed" && existing.status !== "revoked" && existing.status !== "paused") {
+      this.updateSession(input.shellSessionId, { status: "navigation_blocked" }, "sandboxed_browser_shell_navigation_blocked");
+    }
+    this.deps.bus.emitEvent({
+      type: "sandboxed_browser_shell_navigation_blocked",
+      message: `Browser navigation blocked: ${record.toAuditUrl}`,
+      priority: "HIGH",
+      context: {
+        shellSessionId: record.shellSessionId,
+        toAuditUrl: record.toAuditUrl,
+        riskLevel: record.riskLevel,
+        blockedBy: record.blockedBy ?? [],
+        automationEnabled: false,
+        domReadEnabled: false,
+        credentialsEnabled: false,
+      },
+    });
+    return record;
+  }
+
+  private upsertNavigation(record: SandboxedBrowserShellNavigationRecord): void {
+    this.navigations = [record, ...this.navigations].slice(0, MAX_SANDBOXED_BROWSER_SHELL_NAVIGATIONS);
+    this.deps.storage?.setItem(NAVIGATIONS_STORAGE_KEY, JSON.stringify(this.navigations));
+    this.deps.bus.emit("sandboxed_browser_shell_navigation", record);
   }
 
   private emitSessionEvent(record: SandboxedBrowserShellSessionRecord, eventType?: string): void {

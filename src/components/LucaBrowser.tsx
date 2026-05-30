@@ -7,6 +7,7 @@ import {
   getLucaBrowserModeLabel,
   type LucaBrowserMode,
 } from "./browser/lucaBrowserAdapter";
+import { sandboxedBrowserShellService } from "../services/runtime/SandboxedBrowserShellService";
 
 interface Props {
   url: string;
@@ -46,6 +47,12 @@ const LucaBrowser: React.FC<Props> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isMaximized, setIsMaximized] = useState(false);
 
+  // PR #136 — governed navigation lifecycle state (governed mode only).
+  const isGoverned = browserMode === "GOVERNED";
+  const lastAllowedUrlRef = useRef<string>(url);
+  const [navBlockedReason, setNavBlockedReason] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
   // Agent overlay state
   const [agentState, setAgentState] = useState<any>(null);
   const [showAgentOverlay, setShowAgentOverlay] = useState(false);
@@ -65,16 +72,60 @@ const LucaBrowser: React.FC<Props> = ({
     const handleDidStartLoading = () => {
       console.log("[LucaBrowser] did-start-loading");
       setIsLoading(true);
+      // Governed: reflect the transient navigating lifecycle state.
+      if (isGoverned && shellSessionId) {
+        sandboxedBrowserShellService.markShellNavigating(shellSessionId);
+      }
     };
 
     const handleDidStopLoading = () => {
       console.log("[LucaBrowser] did-stop-loading");
       setIsLoading(false);
+      // Governed: settle back to open once loading finishes (unless blocked).
+      if (isGoverned && shellSessionId) {
+        sandboxedBrowserShellService.markShellSettled(shellSessionId);
+      }
     };
 
     const handleDidNavigate = (e: any) => {
       const navUrl = e.url;
       console.log("[LucaBrowser] did-navigate:", navUrl);
+
+      // PR #136 — governed navigation governance. Every navigation is validated
+      // through the shared URL policy and audited with a redacted URL. Luca
+      // never reads the DOM or automates the page here.
+      if (isGoverned && shellSessionId) {
+        const record = sandboxedBrowserShellService.recordNavigationAttempt({
+          shellSessionId,
+          toUrl: navUrl,
+          fromUrl: lastAllowedUrlRef.current,
+          source: "luca_browser_webview",
+        });
+        if (record.status === "blocked") {
+          // Freeze the unsafe navigation: stop loading and return to the last
+          // allowed URL. No external browser is ever opened.
+          setNavBlockedReason(record.userSafeReason || "Navigation blocked by Luca Browser governance.");
+          try {
+            webview.stop?.();
+            if (webview.canGoBack && webview.canGoBack()) {
+              webview.goBack();
+            } else if (typeof webview.loadURL === "function") {
+              webview.loadURL(lastAllowedUrlRef.current);
+            }
+          } catch {
+            /* best-effort freeze; never throws into execution */
+          }
+          return;
+        }
+        setNavBlockedReason(null);
+        lastAllowedUrlRef.current = navUrl;
+        setCurrentUrl(navUrl);
+        if (webview.canGoBack) setCanGoBack(webview.canGoBack());
+        if (webview.canGoForward) setCanGoForward(webview.canGoForward());
+        if (onNavigate) onNavigate(navUrl);
+        return;
+      }
+
       setCurrentUrl(navUrl);
 
       // Update canGoBack/forward
@@ -145,7 +196,7 @@ const LucaBrowser: React.FC<Props> = ({
       webview.removeEventListener("did-fail-load", handleDidFailLoad);
       clearInterval(navInterval);
     };
-  }, [onClose, onNavigate]);
+  }, [onClose, onNavigate, isGoverned, shellSessionId]);
 
   // Agent state polling (if sessionId provided)
   useEffect(() => {
@@ -209,6 +260,22 @@ const LucaBrowser: React.FC<Props> = ({
     setIsMaximized(!isMaximized);
   };
 
+  // PR #136 — governed session lifecycle controls.
+  const handlePause = () => {
+    if (shellSessionId) sandboxedBrowserShellService.pauseShellSession(shellSessionId, "Paused from Luca Browser.");
+    setIsPaused(true);
+  };
+
+  const handleResume = () => {
+    if (shellSessionId) sandboxedBrowserShellService.resumeShellSession(shellSessionId);
+    setIsPaused(false);
+    setNavBlockedReason(null);
+  };
+
+  const handleDismissBlocked = () => {
+    setNavBlockedReason(null);
+  };
+
   // PR #135 — Governed mode: approved safe URL only. URL is read-only, there is
   // no Open-External control, popups are disabled, and the partition is
   // non-persistent. Luca never automates the page or reads its DOM.
@@ -254,9 +321,26 @@ const LucaBrowser: React.FC<Props> = ({
                 >
                   <Icon name="RefreshCw" size={16} className={isLoading ? "animate-spin" : ""} />
                 </button>
+                {isPaused ? (
+                  <button
+                    onClick={handleResume}
+                    className="ml-1 rounded-lg border border-emerald-500/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/10"
+                    title="Resume governed session"
+                  >
+                    Resume
+                  </button>
+                ) : (
+                  <button
+                    onClick={handlePause}
+                    className="ml-1 rounded-lg border border-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-200 hover:bg-white/10"
+                    title="Pause governed session"
+                  >
+                    Pause
+                  </button>
+                )}
                 <button
                   onClick={onClose}
-                  className="ml-1 rounded-lg border border-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-200 hover:bg-white/10"
+                  className="rounded-lg border border-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-200 hover:bg-white/10"
                   title="Close"
                 >
                   Close
@@ -302,6 +386,38 @@ const LucaBrowser: React.FC<Props> = ({
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 glass-blur">
                 <div className="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+            {navBlockedReason && (
+              <div className="absolute inset-x-0 top-0 z-30 border-b border-red-500/40 bg-red-950/90 px-4 py-3 glass-blur">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-black uppercase tracking-widest text-red-200">
+                      Navigation blocked by Luca Browser governance
+                    </div>
+                    <p className="mt-1 text-[10px] leading-relaxed text-red-100/80">{navBlockedReason}</p>
+                  </div>
+                  <button
+                    onClick={handleDismissBlocked}
+                    className="shrink-0 rounded-lg border border-white/20 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-slate-200 hover:bg-white/10"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
+            {isPaused && (
+              <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-black/80 glass-blur">
+                <div className="text-sm font-black uppercase tracking-[0.18em] text-amber-200">Session paused</div>
+                <p className="max-w-md px-6 text-center text-[11px] leading-relaxed text-slate-400">
+                  Governed navigation auditing is paused. Resume to continue, or close/revoke to end the session.
+                </p>
+                <button
+                  onClick={handleResume}
+                  className="rounded-lg border border-emerald-500/40 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/10"
+                >
+                  Resume
+                </button>
               </div>
             )}
             <webview

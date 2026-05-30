@@ -9,10 +9,44 @@ export type SandboxedBrowserShellStatus =
   | "proposed"
   | "open_requested"
   | "open"
+  | "navigating"
+  | "navigation_blocked"
+  | "paused"
   | "blocked"
   | "closed"
   | "revoked"
   | "adapter_unavailable";
+
+// PR #136: governed navigation events. Records describe a single attempted
+// navigation inside an already-open governed browser session. Only redacted
+// audit URLs are stored — never page content, DOM, cookies, or session data.
+export type SandboxedBrowserShellNavigationStatus =
+  | "requested"
+  | "allowed"
+  | "blocked"
+  | "redacted"
+  | "ignored";
+
+export type SandboxedBrowserShellNavigationSource =
+  | "luca_browser_webview"
+  | "iframe_fallback"
+  | "manual_user_navigation"
+  | "system";
+
+export interface SandboxedBrowserShellNavigationRecord {
+  navigationId: string;
+  shellSessionId: string;
+  fromAuditUrl?: string;
+  toAuditUrl: string;
+  normalizedUrl?: string;
+  status: SandboxedBrowserShellNavigationStatus;
+  riskLevel: SandboxedBrowserUrlRiskLevel;
+  blockedBy?: string[];
+  userSafeReason: string;
+  createdAt: string;
+  source: SandboxedBrowserShellNavigationSource;
+  metadata?: Record<string, unknown>;
+}
 
 export interface SandboxedBrowserShellSessionRecord {
   shellSessionId: string;
@@ -36,11 +70,19 @@ export interface SandboxedBrowserShellDiagnosticsSummary {
   proposedSessions: number;
   openRequestedSessions: number;
   openSessions: number;
+  navigatingSessions: number;
+  navigationBlockedSessions: number;
+  pausedSessions: number;
   blockedSessions: number;
   closedSessions: number;
   revokedSessions: number;
   adapterUnavailableSessions: number;
+  navigationEvents: number;
+  allowedNavigations: number;
+  blockedNavigations: number;
+  lastNavigationAt: string | null;
   launchMode: "approved_safe_url_only";
+  navigationGovernanceEnabled: true;
   automationEnabled: false;
   domReadEnabled: false;
   credentialsEnabled: false;
@@ -61,3 +103,6 @@ export interface SandboxedBrowserShellOpenEventDetail {
 }
 
 export const MAX_SANDBOXED_BROWSER_SHELL_SESSIONS = 50;
+
+// PR #136: bounded navigation-event history across all shell sessions.
+export const MAX_SANDBOXED_BROWSER_SHELL_NAVIGATIONS = 300;

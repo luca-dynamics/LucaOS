@@ -105,3 +105,136 @@ describe("SandboxedBrowserShellService", () => {
     }
   });
 });
+
+describe("SandboxedBrowserShellService — navigation governance + lifecycle (PR #136)", () => {
+  it("records an allowed navigation for a safe https URL and moves the session to navigating", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId);
+    const nav = service.recordNavigationAttempt({
+      shellSessionId: session.shellSessionId,
+      toUrl: "https://example.com/docs",
+      fromUrl: "https://example.com",
+    });
+    expect(nav.status).toBe("allowed");
+    expect(nav.toAuditUrl).toBe("https://example.com/docs");
+    expect(nav.source).toBe("luca_browser_webview");
+    expect(service.getShellSession(session.shellSessionId)?.status).toBe("navigating");
+    expect(service.getNavigationRecordsForSession(session.shellSessionId)).toHaveLength(1);
+  });
+
+  it("blocks navigation to a javascript/data/file scheme and freezes the session", () => {
+    const { service, busEvents } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId);
+    const nav = service.recordNavigationAttempt({
+      shellSessionId: session.shellSessionId,
+      toUrl: "javascript:alert(1)",
+    });
+    expect(nav.status).toBe("blocked");
+    expect(nav.blockedBy).toContain("blocked_scheme");
+    expect(service.getShellSession(session.shellSessionId)?.status).toBe("navigation_blocked");
+    expect(busEvents.some((e) => e.type === "sandboxed_browser_shell_navigation_blocked")).toBe(true);
+  });
+
+  it("blocks navigation to URLs with token/password/session params", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    const nav = service.recordNavigationAttempt({
+      shellSessionId: session.shellSessionId,
+      toUrl: "https://example.com/login?token=supersecret&session=abc",
+    });
+    expect(nav.status).toBe("blocked");
+    expect(nav.blockedBy).toContain("secret_like_params");
+    expect(JSON.stringify(nav)).not.toContain("supersecret");
+  });
+
+  it("blocks navigation to wallet/payment routes", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    const nav = service.recordNavigationAttempt({
+      shellSessionId: session.shellSessionId,
+      toUrl: "https://example.com/wallet/withdraw",
+    });
+    expect(nav.status).toBe("blocked");
+    expect(nav.blockedBy).toContain("wallet_or_payment_route");
+  });
+
+  it("blocks navigation to download/upload routes", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    const nav = service.recordNavigationAttempt({
+      shellSessionId: session.shellSessionId,
+      toUrl: "https://example.com/download/report.zip",
+    });
+    expect(nav.status).toBe("blocked");
+    expect(nav.blockedBy).toContain("download_or_upload_route");
+  });
+
+  it("stores only redacted audit URLs in navigation records (no raw query/hash)", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    const nav = service.recordNavigationAttempt({
+      shellSessionId: session.shellSessionId,
+      toUrl: "https://example.com/page?ref=campaign123#frag",
+    });
+    expect(nav.status).toBe("allowed");
+    expect(nav.toAuditUrl).toBe("https://example.com/page?[redacted]#[redacted]");
+    expect(JSON.stringify(nav)).not.toContain("campaign123");
+  });
+
+  it("markNavigationBlocked records a blocked record and freezes the session", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId);
+    const nav = service.markNavigationBlocked(session.shellSessionId, "Blocked by governance.", "https://evil.test/wallet");
+    expect(nav.status).toBe("blocked");
+    expect(nav.source).toBe("system");
+    expect(service.getShellSession(session.shellSessionId)?.status).toBe("navigation_blocked");
+  });
+
+  it("pauseShellSession and resumeShellSession update status and metadata", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId);
+    const paused = service.pauseShellSession(session.shellSessionId, "Paused from Luca Browser.");
+    expect(paused?.status).toBe("paused");
+    expect(paused?.metadata.pauseReason).toBe("Paused from Luca Browser.");
+    const resumed = service.resumeShellSession(session.shellSessionId);
+    expect(resumed?.status).toBe("open");
+  });
+
+  it("markShellNavigating/markShellSettled transition transient state only", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId);
+    expect(service.markShellNavigating(session.shellSessionId)?.status).toBe("navigating");
+    expect(service.markShellSettled(session.shellSessionId)?.status).toBe("open");
+    // Settling a paused session does nothing.
+    service.pauseShellSession(session.shellSessionId);
+    expect(service.markShellSettled(session.shellSessionId)?.status).toBe("paused");
+  });
+
+  it("diagnostics include navigation counts", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.recordNavigationAttempt({ shellSessionId: session.shellSessionId, toUrl: "https://example.com/a" });
+    service.recordNavigationAttempt({ shellSessionId: session.shellSessionId, toUrl: "javascript:alert(1)" });
+    const diag = service.getDiagnosticsSummary();
+    expect(diag.navigationEvents).toBe(2);
+    expect(diag.allowedNavigations).toBe(1);
+    expect(diag.blockedNavigations).toBe(1);
+    expect(diag.navigationGovernanceEnabled).toBe(true);
+    expect(diag.lastNavigationAt).toBeTruthy();
+  });
+
+  it("bounds navigation records to the maximum and never resurrects closed sessions", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.closeShellSession(session.shellSessionId);
+    const nav = service.recordNavigationAttempt({ shellSessionId: session.shellSessionId, toUrl: "https://example.com/a" });
+    expect(nav.status).toBe("allowed");
+    // A closed session must NOT be reactivated by an allowed navigation.
+    expect(service.getShellSession(session.shellSessionId)?.status).toBe("closed");
+  });
+});

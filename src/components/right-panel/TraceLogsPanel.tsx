@@ -135,6 +135,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       browserRequests: sandboxedBrowserService.listBrowserRequests(),
       browserSessions: sandboxedBrowserService.listBrowserSessions(),
       browserShellSessions: sandboxedBrowserShellService.listShellSessions(),
+      browserShellNavigations: sandboxedBrowserShellService.listNavigationRecords(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -352,6 +353,37 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>credentials: false</span>
                   </div>
                   <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">Approved safe URL only. Luca cannot automate the page, read the DOM, or handle credentials.</p>
+                </div>
+              ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Browser navigation trace" subtitle="Governed navigation events with redacted audit URLs only. Allowed/blocked per attempt — no DOM, no automation, no raw secrets.">
+        {trace.browserShellNavigations.length === 0 ? <EmptyState>No browser navigation records.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.browserShellNavigations]
+              .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+              .slice(0, 10)
+              .map((nav) => (
+                <div key={nav.navigationId} className={`rounded-xl border p-3 ${nav.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-emerald-500/20 bg-emerald-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">Nav · {nav.status}</div>
+                      {nav.fromAuditUrl && <p className="mt-1 truncate font-mono text-[9px] text-[var(--app-text-muted)] opacity-70">from {nav.fromAuditUrl}</p>}
+                      <p className="mt-1 truncate font-mono text-[10px] text-[var(--app-text-muted)]">to {nav.toAuditUrl || "(no audit URL)"}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{nav.riskLevel}</span>
+                  </div>
+                  {nav.blockedBy && nav.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] text-red-200">Blocked by: {nav.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>{nav.source}</span>
+                    <span>{compactTimestamp(nav.createdAt)}</span>
+                    <span>automation: false</span>
+                    <span>DOM read: false</span>
+                  </div>
                 </div>
               ))}
           </div>
