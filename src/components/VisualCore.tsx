@@ -149,14 +149,22 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
   // PR #145 — governed mode transition guard. Every setMode() call passes
   // through this helper so transitions are policy-evaluated and audited.
+  // PR #147 — carries the correlation/trace ID of the most recent transition so
+  // a display session created as a result of that mode change can share it.
+  const lastTransitionCorrelationRef = useRef<{ mode: VisualCoreMode; correlationId?: string } | null>(null);
+
   const requestModeTransition = React.useCallback(
-    (toMode: VisualCoreMode, source: VisualCoreModeTransitionSource) => {
+    (toMode: VisualCoreMode, source: VisualCoreModeTransitionSource, correlationId?: string) => {
       const record = visualCoreModeTransitionService.recordTransition({
         fromMode: mode,
         toMode,
         source,
         hasBrowserSession: !!browserShellSessionIdRef.current,
+        correlationId,
+        browserShellSessionId: browserShellSessionIdRef.current ?? undefined,
       });
+      // PR #147 — remember the trace ID for the display-session effect to reuse.
+      lastTransitionCorrelationRef.current = { mode: toMode, correlationId: record.correlationId };
       if (isTransitionAllowed(record.status)) {
         setMode(toMode);
       }
@@ -248,7 +256,9 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
       // PR #142 — govern/audit every remote command BEFORE any existing
       // behavior. Records only; never executes or drives VisualCore.
-      recordRemoteCommand({
+      // PR #147 — the command record's correlation/trace ID is carried into the
+      // mode transition it triggers so the chain can be traced together.
+      const commandRecord = recordRemoteCommand({
         type: command?.type,
         value: command?.value,
         source: "ipc_remote_control",
@@ -269,7 +279,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           });
           if (result.status === "open" || result.status === "open_requested") {
             browserShellSessionIdRef.current = result.shellSessionId;
-            requestModeTransition("BROWSER", "remote_command");
+            requestModeTransition("BROWSER", "remote_command", commandRecord.correlationId);
             setCurrentBrowserUrl(command.value);
           }
         }
@@ -486,7 +496,13 @@ const VisualCore: React.FC<VisualCoreProps> = ({
     }
 
     closeCurrent();
-    const record = createDisplaySession({ mode, source: "prop_update" });
+    // PR #147 — reuse the trace ID from the mode transition that produced this
+    // mode so the display session correlates with the rest of the chain.
+    const correlationId =
+      lastTransitionCorrelationRef.current?.mode === mode
+        ? lastTransitionCorrelationRef.current.correlationId
+        : undefined;
+    const record = createDisplaySession({ mode, source: "prop_update", correlationId });
     markDisplaySessionOpen(record.visualSessionId);
     displaySessionIdRef.current = record.visualSessionId;
     displaySessionModeRef.current = mode;

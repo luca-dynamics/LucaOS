@@ -17,6 +17,7 @@
 // wireless method on this service.
 
 import { eventBus } from "../eventBus";
+import { resolveVisualCoreTraceId } from "./visualCoreTraceCorrelation";
 import {
   evaluateVisualCoreRemoteCommand,
   type VisualCoreRemoteCommandInput,
@@ -40,6 +41,12 @@ export interface RecordRemoteCommandInput extends VisualCoreRemoteCommandInput {
   source?: VisualCoreRemoteCommandSource;
   commandRecordId?: string;
   metadata?: Record<string, unknown>;
+  /**
+   * PR #147 — correlation/trace ID linking this command to the mode transition
+   * / display session it triggers. Sanitized; a fresh ID is generated when
+   * absent or invalid.
+   */
+  correlationId?: string;
 }
 
 export interface BlockRemoteCommandInput extends RecordRemoteCommandInput {
@@ -130,6 +137,7 @@ export class VisualCoreRemoteCommandService {
       userSafeReason: decision.userSafeReason,
       receivedAt: timestamp,
       updatedAt: timestamp,
+      correlationId: resolveVisualCoreTraceId(input.correlationId),
       metadata: input.metadata ? { ...input.metadata } : undefined,
     };
 
@@ -165,6 +173,7 @@ export class VisualCoreRemoteCommandService {
       userSafeReason: decision.userSafeReason,
       receivedAt: timestamp,
       updatedAt: timestamp,
+      correlationId: resolveVisualCoreTraceId(input.correlationId),
       metadata: input.metadata ? { ...input.metadata } : undefined,
     };
 
@@ -245,6 +254,7 @@ export class VisualCoreRemoteCommandService {
         targetMode: record.targetMode,
         targetAuditUrl: record.targetAuditUrl,
         blockedBy: record.blockedBy ?? [],
+        correlationId: record.correlationId,
         governanceApplied: true,
         recordOnly: true,
         executionChanged: false,

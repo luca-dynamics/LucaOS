@@ -19,6 +19,7 @@ import { getVisualCoreDisplayGovernanceBoundaryLabels } from "../../services/run
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { getVisualCoreRemoteCommandBoundaryLabels } from "../../services/runtime/VisualCoreRemoteCommandPolicy";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
+import { formatVisualCoreTraceLabel } from "../../services/runtime/visualCoreTraceCorrelation";
 import {
   getVisualCoreModeTransitionBoundaryLabels,
   getVisualCoreModeTransitionSafetyFlagSummary,
@@ -742,6 +743,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span>source: {session.source}</span>
                       <span>opened: {compactTimestamp(session.openedAt)}</span>
                       <span>updated: {compactTimestamp(session.updatedAt)}</span>
+                      {session.correlationId && <span>{formatVisualCoreTraceLabel(session.correlationId)}</span>}
                     </div>
                     {session.blockedBy && session.blockedBy.length > 0 && (
                       <p className="mt-1 text-[9px] text-red-200">Blocked by: {session.blockedBy.join(", ")}</p>
@@ -790,6 +792,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span>source: {command.source}</span>
                       {command.targetMode && <span>target: {command.targetMode}</span>}
                       <span>updated: {compactTimestamp(command.updatedAt)}</span>
+                      {command.correlationId && <span>{formatVisualCoreTraceLabel(command.correlationId)}</span>}
                     </div>
                     {command.targetAuditUrl && (
                       <p className="mt-1 truncate text-[9px] text-[var(--app-text-muted)]">audit url: {command.targetAuditUrl}</p>
@@ -843,6 +846,8 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
                       <span>source: {getVisualCoreModeTransitionSourceLabel(transition.source)}</span>
                       <span>updated: {compactTimestamp(transition.timestamp)}</span>
+                      {transition.correlationId && <span>{formatVisualCoreTraceLabel(transition.correlationId)}</span>}
+                      {transition.browserShellSessionId && <span>shell: {transition.browserShellSessionId.slice(-6)}</span>}
                     </div>
                     {transition.blockedBy && transition.blockedBy.length > 0 && (
                       <p className="mt-1 text-[9px] text-red-200">Blocked by: {transition.blockedBy.join(", ")}</p>

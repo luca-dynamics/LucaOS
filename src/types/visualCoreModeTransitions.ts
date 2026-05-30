@@ -54,6 +54,18 @@ export interface VisualCoreModeTransitionRecord {
   userSafeReason: string;
   blockedBy?: string[];
   timestamp: string;
+  /**
+   * PR #147 — audit-safe correlation/trace ID linking this transition to the
+   * remote command / display session it belongs to. Opaque, never derived
+   * from URLs, tokens, hashes, or sensitive values.
+   */
+  correlationId?: string;
+  /**
+   * PR #147 — safe local reference to the governed LucaBrowser shell session
+   * for BROWSER transitions. A local opaque session ID only — never a URL,
+   * token, hash, DOM, screenshot, or page content.
+   */
+  browserShellSessionId?: string;
   // Hard safety flags — every capability disabled.
   governanceApplied: true;
   transitionOnly: true;

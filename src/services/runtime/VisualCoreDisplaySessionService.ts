@@ -17,6 +17,7 @@
 // caps storage at 100 records, and emits an eventBus audit event.
 
 import { eventBus } from "../eventBus";
+import { resolveVisualCoreTraceId } from "./visualCoreTraceCorrelation";
 import {
   getVisualCoreDisplaySessionReason,
   shouldRecordVisualCoreDisplaySession,
@@ -46,6 +47,12 @@ export interface CreateVisualCoreDisplaySessionInput {
   visualSessionId?: string;
   label?: string;
   metadata?: Record<string, unknown>;
+  /**
+   * PR #147 — correlation/trace ID linking this display session to the mode
+   * transition / remote command that created it. Sanitized; a fresh ID is
+   * generated when absent or invalid.
+   */
+  correlationId?: string;
 }
 
 export interface BlockVisualCoreDisplaySessionInput {
@@ -141,6 +148,7 @@ export class VisualCoreDisplaySessionService {
       updatedAt: timestamp,
       blockedBy,
       userSafeReason: getVisualCoreDisplaySessionReason(input.mode),
+      correlationId: resolveVisualCoreTraceId(input.correlationId),
       metadata: input.metadata ? { ...input.metadata } : undefined,
     };
 

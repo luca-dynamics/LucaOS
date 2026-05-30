@@ -75,6 +75,12 @@ export interface VisualCoreRemoteCommandRecord {
   userSafeReason: string;
   receivedAt: string;
   updatedAt: string;
+  /**
+   * PR #147 — audit-safe correlation/trace ID linking this command to the mode
+   * transition / display session it triggers. Opaque, never derived from URLs,
+   * tokens, hashes, or sensitive values.
+   */
+  correlationId?: string;
   metadata?: Record<string, unknown>;
   // Hard guarantees — remote-command audit only, every capability disabled.
   governanceApplied: true;
