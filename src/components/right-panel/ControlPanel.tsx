@@ -198,7 +198,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="Browser navigate" value={formatCount("request", visualRemoteCommands.browserNavigateCommands)} tone={visualRemoteCommands.browserNavigateCommands > 0 ? "good" : "neutral"} />
           <RightPanelMetric label="Governance applied" value="true" tone="good" />
           <RightPanelMetric label="Execution changed" value="false" tone="neutral" />
-          <RightPanelMetric label="Browser governed" value="true" tone="good" />
+          <RightPanelMetric label="Browser governance available" value="true" tone="good" />
+          <RightPanelMetric label="Browser governed commands" value={formatCount("request", visualRemoteCommands.browserGovernedCommandCount)} tone={visualRemoteCommands.browserGovernedCommandSeen ? "good" : "neutral"} />
           <RightPanelMetric label="Capture enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
           <RightPanelMetric label="External action" value="false" tone="neutral" />

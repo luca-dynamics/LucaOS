@@ -106,8 +106,12 @@ export interface VisualCoreRemoteCommandDiagnosticsSummary {
   governanceApplied: true;
   recordOnly: true;
   executionChanged: false;
-  /** PR #143 — true now that the governed LucaBrowser adapter is connected. */
-  browserGoverned: true;
+  /** PR #144 — capability: the governed LucaBrowser adapter path exists. Always true post-PR #143. */
+  browserGovernanceAvailable: true;
+  /** PR #144 — observation: at least one recorded command has browserGoverned: true. */
+  browserGovernedCommandSeen: boolean;
+  /** PR #144 — count of records with browserGoverned: true. */
+  browserGovernedCommandCount: number;
   captureEnabled: false;
   automationEnabled: false;
   externalActionEnabled: false;

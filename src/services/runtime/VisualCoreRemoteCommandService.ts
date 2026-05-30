@@ -189,6 +189,7 @@ export class VisualCoreRemoteCommandService {
   getDiagnosticsSummary(): VisualCoreRemoteCommandDiagnosticsSummary {
     const count = (status: VisualCoreRemoteCommandStatus) =>
       this.records.filter((r) => r.status === status).length;
+    const governedCount = this.records.filter((r) => r.browserGoverned).length;
     return {
       totalCommands: this.records.length,
       receivedCommands: count("received"),
@@ -201,7 +202,9 @@ export class VisualCoreRemoteCommandService {
       governanceApplied: true,
       recordOnly: true,
       executionChanged: false,
-      browserGoverned: true,
+      browserGovernanceAvailable: true,
+      browserGovernedCommandSeen: governedCount > 0,
+      browserGovernedCommandCount: governedCount,
       captureEnabled: false,
       automationEnabled: false,
       externalActionEnabled: false,
@@ -245,7 +248,8 @@ export class VisualCoreRemoteCommandService {
         governanceApplied: true,
         recordOnly: true,
         executionChanged: false,
-        browserGoverned: true,
+        browserGovernanceAvailable: true,
+        browserGovernedCommandSeen: record.browserGoverned,
         captureEnabled: false,
         automationEnabled: false,
         externalActionEnabled: false,
