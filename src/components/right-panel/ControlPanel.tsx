@@ -172,15 +172,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Capture disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
-            Screen observation is permission-mode only. Luca cannot capture, view, OCR, or analyze the screen.
+            Screen observation is permission-mode only. Luca cannot capture, view, OCR, store, or analyze your screen.
           </p>
-          <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Explicit consent</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Visible indicator</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Region boundary</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Sensitive-content filter</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Credential boundary</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Revocable</span>
+          <div className="mt-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Future-readiness checklist — required before any observation</div>
+          <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+            {["Explicit consent required", "Visible indicator required", "Region boundary required", "Sensitive-content filter required", "Credential boundary required", "Human confirmation required", "Audit log required", "Revocable"].map((item) => (
+              <span key={item} className="rounded-full border border-amber-500/30 px-2 py-0.5 text-amber-200">✓ {item}</span>
+            ))}
           </div>
           <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
         </div>

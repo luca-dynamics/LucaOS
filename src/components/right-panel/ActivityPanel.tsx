@@ -64,6 +64,18 @@ import {
   getScreenObservationSummary,
   getScreenObservationSurfaceLabel,
 } from "../runtime/screenObservationLabels";
+import {
+  getObservationRequestTimeline,
+  getObservationSessionBoundaryCopy,
+  getObservationSessionConsentCopy,
+  getObservationSessionCredentialBoundaryCopy,
+  getObservationSessionLifecycleLabel,
+  getObservationSessionNoCaptureBadge,
+  getObservationSessionRevocationCopy,
+  getObservationSessionSensitiveContentCopy,
+  getObservationSessionTimeline,
+  getObservationSessionVisibleIndicatorCopy,
+} from "../runtime/screenObservationSessionUx";
 
 interface ActivityPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -333,6 +345,19 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     {request.blockedBy && request.blockedBy.length > 0 && (
                       <p className="mt-2 text-[9px] leading-relaxed text-red-200">Blocked by: {request.blockedBy.join(", ")}</p>
                     )}
+                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-2">
+                      <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Lifecycle</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
+                        {getObservationRequestTimeline(request).map((step, index) => (
+                          <React.Fragment key={step.key}>
+                            {index > 0 && <span className="text-[var(--app-text-muted)] opacity-40">→</span>}
+                            <span className={`rounded-full border px-2 py-0.5 ${step.state === "current" ? "border-amber-500/30 text-amber-200" : "border-white/10 text-[var(--app-text-muted)]"}`}>
+                              {step.label}{step.at ? ` · ${compactTimestamp(step.at)}` : ""}
+                            </span>
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    </div>
                     <p className="mt-2 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{futureReadiness}</p>
                     <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Next action: {nextAction}</p>
                     <p className="mt-1 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
@@ -348,9 +373,33 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 );
               })}
               {data.observationSessions.filter((session) => session.status !== "archived").slice(0, 3).map((session) => (
-                <div key={session.observationSessionId} className="rounded-xl border border-white/10 bg-black/10 p-2">
-                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getScreenObservationStatusLabel(session.status)} · {getScreenObservationSummary(session)}</div>
-                  <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{getScreenObservationConsentLabel(session.consentState)} · dry-run permission session only.</p>
+                <div key={session.observationSessionId} className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{getObservationSessionLifecycleLabel(session)}</div>
+                      <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{getScreenObservationSummary(session)}</p>
+                      {session.requestId && <p className="mt-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Linked request: {session.requestId}</p>}
+                    </div>
+                    <span className="shrink-0 rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getObservationSessionNoCaptureBadge()}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
+                    {getObservationSessionTimeline(session).map((step, index) => (
+                      <React.Fragment key={step.key}>
+                        {index > 0 && <span className="text-[var(--app-text-muted)] opacity-40">→</span>}
+                        <span className={`rounded-full border px-2 py-0.5 ${step.state === "current" ? "border-sky-500/30 text-sky-200" : "border-white/10 text-[var(--app-text-muted)]"}`}>
+                          {step.label}{step.at ? ` · ${compactTimestamp(step.at)}` : ""}
+                        </span>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div className="mt-2 space-y-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">
+                    <p>{getObservationSessionConsentCopy(session)}</p>
+                    <p>{getObservationSessionVisibleIndicatorCopy()}</p>
+                    <p>{getObservationSessionBoundaryCopy()}</p>
+                    <p>{getObservationSessionSensitiveContentCopy()}</p>
+                    <p>{getObservationSessionCredentialBoundaryCopy()}</p>
+                    <p className="text-[var(--app-text-muted)] opacity-80">{getObservationSessionRevocationCopy(session)}</p>
+                  </div>
                   {session.status !== "revoked" && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Button onClick={() => { screenObservationService.revokeObservationSession(session.observationSessionId, "Revoked from Activity panel."); refresh(); }}>revoke session</Button>
