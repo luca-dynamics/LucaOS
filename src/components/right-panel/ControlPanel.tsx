@@ -20,6 +20,7 @@ import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowse
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
+import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -84,6 +85,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const browserActionExecution = lucaBrowserActionExecutionService.getDiagnosticsSummary();
   const visualDisplaySessions = visualCoreDisplaySessionService.getDiagnosticsSummary();
   const visualRemoteCommands = visualCoreRemoteCommandService.getDiagnosticsSummary();
+  const visualModeTransitions = visualCoreModeTransitionService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -210,6 +212,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         <p className="mt-3 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
           VisualCore remote commands are audited first. Browser navigation is governed via the LucaBrowser adapter (PR #143). Sensitive commands still require dedicated governance before execution.
         </p>
+      </RightPanelSection>
+
+      <RightPanelSection title="VisualCore mode transitions" subtitle="Mode switching is centralized and audited via the governed transition guard (PR #145).">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Total transitions" value={formatCount("transition", visualModeTransitions.totalTransitions)} />
+          <RightPanelMetric label="Allowed" value={formatCount("transition", visualModeTransitions.allowedTransitions)} tone={visualModeTransitions.allowedTransitions > 0 ? "good" : "neutral"} />
+          <RightPanelMetric label="Governed browser" value={formatCount("transition", visualModeTransitions.allowedGovernedBrowserTransitions)} tone={visualModeTransitions.allowedGovernedBrowserTransitions > 0 ? "good" : "neutral"} />
+          <RightPanelMetric label="Blocked sensitive" value={formatCount("transition", visualModeTransitions.blockedSensitiveTransitions)} tone={visualModeTransitions.blockedSensitiveTransitions > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Blocked unknown" value={formatCount("transition", visualModeTransitions.blockedUnknownTransitions)} tone={visualModeTransitions.blockedUnknownTransitions > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Governance applied" value="true" tone="good" />
+          <RightPanelMetric label="Transition only" value="true" tone="good" />
+          <RightPanelMetric label="Execution changed" value="false" tone="neutral" />
+        </div>
       </RightPanelSection>
 
       <RightPanelSection title="Screen observation" subtitle="Permission-mode only. Luca cannot capture, view, OCR, or analyze the screen.">
