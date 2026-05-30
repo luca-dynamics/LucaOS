@@ -190,6 +190,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       browserSessions: sandboxedBrowserService.listBrowserSessions(),
       browserShellSessions: sandboxedBrowserShellService.listShellSessions(),
       browserShellNavigations: sandboxedBrowserShellService.listNavigationRecords(),
+      browserShellObservations: sandboxedBrowserShellService.listObservationSnapshots(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -529,7 +530,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         })()}
       </RightPanelSection>
 
-      <RightPanelSection title="Browser shell sessions" subtitle="Approved safe URL only, after approval + Run once. Luca audits governed navigation but cannot automate the page, read the DOM, handle credentials, or download/upload.">
+      <RightPanelSection title="Browser shell sessions" subtitle="Approved safe URL only, after approval + Run once. Luca audits governed navigation and observes session metadata only — it cannot automate the page, read the DOM/page content, take screenshots, run OCR/vision, handle credentials, or download/upload.">
         {(() => {
           const shellSessions = data.browserShellSessions.slice(0, 6);
           if (shellSessions.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No browser shell sessions.</div>;
@@ -540,6 +541,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 const navs = data.browserShellNavigations.filter((nav) => nav.shellSessionId === session.shellSessionId);
                 const blockedNavs = navs.filter((nav) => nav.status === "blocked");
                 const lastNav = navs[0];
+                const observation = data.browserShellObservations.find((obs) => obs.shellSessionId === session.shellSessionId);
                 const isActive = isActiveStatus(session.status);
                 const isPaused = session.status === "paused";
                 return (
@@ -572,6 +574,28 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     </div>
                     {lastNav && (
                       <p className="mt-2 truncate font-mono text-[9px] text-[var(--app-text-muted)] opacity-80">last nav: {lastNav.toAuditUrl}</p>
+                    )}
+                    {observation && (
+                      <div className="mt-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-2">
+                        <div className="flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
+                          <span className="rounded-full border border-cyan-500/30 px-2 py-0.5 text-cyan-200">obs: {observation.status}</span>
+                          <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{observation.isLoading ? "loading" : "idle"}</span>
+                          <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">back {observation.canGoBack ? "yes" : "no"}</span>
+                          <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">fwd {observation.canGoForward ? "yes" : "no"}</span>
+                        </div>
+                        {observation.currentAuditUrl && (
+                          <p className="mt-1 truncate font-mono text-[9px] text-[var(--app-text-muted)] opacity-80">current: {observation.currentAuditUrl}</p>
+                        )}
+                        {observation.lastBlockedAuditUrl && (
+                          <p className="mt-1 truncate font-mono text-[9px] text-red-200/80">last blocked: {observation.lastBlockedAuditUrl}{observation.lastBlockedReason ? ` — ${observation.lastBlockedReason}` : ""}</p>
+                        )}
+                        <div className="mt-1 flex flex-wrap gap-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                          <span>no page content</span>
+                          <span>no screenshot</span>
+                          <span>no OCR</span>
+                          <span>no vision</span>
+                        </div>
+                      </div>
                     )}
                     <div className="mt-2 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
                       <span>requested {session.createdAt.slice(0, 16).replace("T", " ")}</span>

@@ -220,7 +220,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </div>
       </RightPanelSection>
 
-      <RightPanelSection title="Browser shell" subtitle="Approved safe URL only. Luca audits governed navigation but cannot automate the page, read the DOM, handle credentials, or download/upload.">
+      <RightPanelSection title="Browser shell" subtitle="Approved safe URL only. Luca audits governed navigation and observes session metadata only — it cannot automate the page, read the DOM/page content, screenshot, OCR, handle credentials, or download/upload.">
         <div className="grid grid-cols-2 gap-2">
           <RightPanelMetric label="Shell sessions" value={formatCount("session", browserShell.totalSessions)} />
           <RightPanelMetric label="Open sessions" value={formatCount("session", browserShell.openSessions + browserShell.openRequestedSessions + browserShell.navigatingSessions)} tone={browserShell.openSessions + browserShell.openRequestedSessions + browserShell.navigatingSessions > 0 ? "warn" : "neutral"} />
@@ -228,16 +228,24 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="Closed/revoked" value={formatCount("session", browserShell.closedSessions + browserShell.revokedSessions)} tone="neutral" />
           <RightPanelMetric label="Navigation events" value={formatCount("event", browserShell.navigationEvents)} tone="neutral" />
           <RightPanelMetric label="Blocked navigations" value={formatCount("attempt", browserShell.blockedNavigations + browserShell.blockedSessions)} tone={browserShell.blockedNavigations + browserShell.blockedSessions > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Observation snapshots" value={formatCount("snapshot", browserShell.observationSnapshots)} tone="neutral" />
+          <RightPanelMetric label="Active observations" value={formatCount("snapshot", browserShell.activeObservationSnapshots)} tone={browserShell.activeObservationSnapshots > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Stale observations" value={formatCount("snapshot", browserShell.staleObservationSnapshots)} tone="neutral" />
           <RightPanelMetric label="Launch mode" value="approved safe URL only" tone="neutral" />
           <RightPanelMetric label="Navigation governance" value="enabled" tone="neutral" />
+          <RightPanelMetric label="Observation metadata" value="enabled" tone="neutral" />
           <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
           <RightPanelMetric label="DOM read enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Page content read enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Screenshot enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="OCR enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Vision enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Credentials enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Download/upload enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Wallet/payment enabled" value="false" tone="neutral" />
         </div>
         <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">
-          LucaBrowser can open approved safe URLs and audit governed navigation. It cannot automate, read DOM, handle credentials, or download/upload.
+          LucaBrowser can observe governed session metadata only. Luca cannot read page content, DOM, screenshots, OCR, credentials, or automate the page.
         </p>
       </RightPanelSection>
 

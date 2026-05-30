@@ -48,6 +48,51 @@ export interface SandboxedBrowserShellNavigationRecord {
   metadata?: Record<string, unknown>;
 }
 
+// PR #137: read-only observation metadata. A snapshot describes the *governed*
+// browser session state (status, adapter, audit URLs, nav counts, loading +
+// back/forward availability). It is metadata only — never DOM, page content,
+// title-from-DOM, screenshots, OCR, vision, cookies, or credentials.
+export type SandboxedBrowserShellObservationStatus =
+  | "observed"
+  | "stale"
+  | "paused"
+  | "blocked"
+  | "closed"
+  | "revoked"
+  | "unavailable";
+
+export interface SandboxedBrowserShellObservationSnapshot {
+  observationId: string;
+  shellSessionId: string;
+  status: SandboxedBrowserShellObservationStatus;
+  sessionStatus: SandboxedBrowserShellStatus;
+  adapter?: "luca_browser_webview" | "iframe_fallback" | "adapter_unavailable";
+  currentAuditUrl?: string;
+  lastAllowedAuditUrl?: string;
+  lastBlockedAuditUrl?: string;
+  lastBlockedReason?: string;
+  navigationCount: number;
+  blockedNavigationCount: number;
+  isLoading: boolean;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  isPaused: boolean;
+  isRevoked: boolean;
+  isClosed: boolean;
+  automationEnabled: false;
+  domReadEnabled: false;
+  pageContentReadEnabled: false;
+  screenshotEnabled: false;
+  ocrEnabled: false;
+  visionModelEnabled: false;
+  credentialsEnabled: false;
+  downloadUploadEnabled: false;
+  walletPaymentEnabled: false;
+  createdAt: string;
+  updatedAt: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface SandboxedBrowserShellSessionRecord {
   shellSessionId: string;
   sourceRequestId?: string;
@@ -81,10 +126,19 @@ export interface SandboxedBrowserShellDiagnosticsSummary {
   allowedNavigations: number;
   blockedNavigations: number;
   lastNavigationAt: string | null;
+  observationSnapshots: number;
+  activeObservationSnapshots: number;
+  staleObservationSnapshots: number;
+  lastObservationAt: string | null;
   launchMode: "approved_safe_url_only";
   navigationGovernanceEnabled: true;
+  observationMetadataEnabled: true;
   automationEnabled: false;
   domReadEnabled: false;
+  pageContentReadEnabled: false;
+  screenshotEnabled: false;
+  ocrEnabled: false;
+  visionModelEnabled: false;
   credentialsEnabled: false;
   downloadUploadEnabled: false;
   walletPaymentEnabled: false;
@@ -106,3 +160,6 @@ export const MAX_SANDBOXED_BROWSER_SHELL_SESSIONS = 50;
 
 // PR #136: bounded navigation-event history across all shell sessions.
 export const MAX_SANDBOXED_BROWSER_SHELL_NAVIGATIONS = 300;
+
+// PR #137: bounded read-only observation snapshots across all shell sessions.
+export const MAX_SANDBOXED_BROWSER_SHELL_OBSERVATIONS = 100;
