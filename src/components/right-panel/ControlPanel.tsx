@@ -13,6 +13,7 @@ import { intentRoutingModeService } from "../../services/runtime/IntentRoutingMo
 import { skillRegistryService } from "../../services/skills/SkillRegistryService";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
+import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -24,6 +25,7 @@ import {
 } from "../runtime/continuityLabels";
 import { getSkillSummaryLine } from "../runtime/skillGovernanceLabels";
 import { getGatewayNoExecutionText } from "../runtime/gatewayPermissionLabels";
+import { getScreenObservationNoCaptureText } from "../runtime/screenObservationLabels";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -68,6 +70,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const skillRegistry = skillRegistryService.getDiagnosticsSummary();
   const skillGovernance = skillGovernanceService.getDiagnosticsSummary();
   const gateway = browserDesktopGatewayService.getDiagnosticsSummary();
+  const screenObservation = screenObservationService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -149,6 +152,37 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Audit log</span>
           </div>
           <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getGatewayNoExecutionText()}</p>
+        </div>
+      </RightPanelSection>
+
+      <RightPanelSection title="Screen observation" subtitle="Permission-mode only. Luca cannot capture, view, OCR, or analyze the screen.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Observation requests" value={formatCount("request", screenObservation.totalRequests)} />
+          <RightPanelMetric label="Consent required" value={formatCount("request", screenObservation.consentRequiredRequests)} tone={screenObservation.consentRequiredRequests > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Dry-run requests" value={formatCount("request", screenObservation.dryRunRequests)} tone={screenObservation.dryRunRequests > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Blocked" value={formatCount("request", screenObservation.blockedRequests)} tone={screenObservation.blockedRequests > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Dry-run sessions" value={formatCount("session", screenObservation.dryRunSessions)} tone={screenObservation.dryRunSessions > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Revoked sessions" value={formatCount("session", screenObservation.revokedSessions)} tone="neutral" />
+          <RightPanelMetric label="Capture enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Vision model enabled" value="false" tone="neutral" />
+        </div>
+        <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-red-200">Screen observation permission mode</span>
+            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Capture disabled</span>
+          </div>
+          <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+            Screen observation is permission-mode only. Luca cannot capture, view, OCR, or analyze the screen.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Explicit consent</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Visible indicator</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Region boundary</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Sensitive-content filter</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Credential boundary</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Revocable</span>
+          </div>
+          <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
         </div>
       </RightPanelSection>
 

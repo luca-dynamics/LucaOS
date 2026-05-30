@@ -8,6 +8,7 @@ import { memoryProposalService } from "../../services/memory/MemoryProposalServi
 import { governedMemoryWriteService } from "../../services/memory/GovernedMemoryWriteService";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
+import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -51,6 +52,18 @@ import {
   getGatewayStatusLabel,
   getGatewaySurfaceLabel,
 } from "../runtime/gatewayPermissionLabels";
+import {
+  getScreenObservationCapabilityLabel,
+  getScreenObservationConsentLabel,
+  getScreenObservationFutureReadinessText,
+  getScreenObservationNextAction,
+  getScreenObservationNoCaptureText,
+  getScreenObservationRiskLabel,
+  getScreenObservationSafeguardLabels,
+  getScreenObservationStatusLabel,
+  getScreenObservationSummary,
+  getScreenObservationSurfaceLabel,
+} from "../runtime/screenObservationLabels";
 
 interface ActivityPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -144,6 +157,8 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       loop: runtimeContinuityLoopService.getLoopStatus(),
       memoryProposals: memoryProposalService.listProposals(),
       gatewayRequests: browserDesktopGatewayService.listGatewayRequests(),
+      observationRequests: screenObservationService.listObservationRequests(),
+      observationSessions: screenObservationService.listObservationSessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -263,6 +278,87 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   </div>
                 );
               })}
+            </div>
+          );
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Screen observation" subtitle="Permission-model records only. Luca cannot capture, view, OCR, or analyze the screen.">
+        {(() => {
+          const recent = data.observationRequests.filter((request) => request.status !== "archived").slice(0, 5);
+          if (recent.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No screen observation requests.</div>;
+          return (
+            <div className="space-y-2">
+              {recent.map((request) => {
+                const safeguards = getScreenObservationSafeguardLabels(request.policyDecision);
+                const statusLabel = getScreenObservationStatusLabel(request.status);
+                const surfaceLabel = getScreenObservationSurfaceLabel(request.surface);
+                const capabilityLabel = getScreenObservationCapabilityLabel(request.capability);
+                const riskLabel = getScreenObservationRiskLabel(request.riskLevel);
+                const consentLabel = getScreenObservationConsentLabel(request.consentState);
+                const summary = getScreenObservationSummary(request);
+                const nextAction = getScreenObservationNextAction(request);
+                const futureReadiness = getScreenObservationFutureReadinessText(request);
+                return (
+                  <div key={request.observationRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{request.title}</div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{summary}</p>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${request.status === "blocked" ? "border-red-500/30 text-red-200" : "border-amber-500/30 text-amber-200"}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-1 text-[9px]">
+                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Surface: {surfaceLabel}</span>
+                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
+                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
+                    </div>
+                    <p className="mt-2 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">{consentLabel}</p>
+                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-2">
+                      <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Safeguards checklist</div>
+                      <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                        {safeguards.map((safeguard) => (
+                          <span
+                            key={safeguard.key}
+                            className={`rounded-full border px-2 py-0.5 ${safeguard.required ? "border-amber-500/30 text-amber-200" : "border-white/10 text-[var(--app-text-muted)] opacity-60"}`}
+                          >
+                            {safeguard.required ? "✓ " : "○ "}{safeguard.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {request.blockedBy && request.blockedBy.length > 0 && (
+                      <p className="mt-2 text-[9px] leading-relaxed text-red-200">Blocked by: {request.blockedBy.join(", ")}</p>
+                    )}
+                    <p className="mt-2 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{futureReadiness}</p>
+                    <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Next action: {nextAction}</p>
+                    <p className="mt-1 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(request.status === "dry_run_only" || request.status === "consent_required") && (
+                        <Button onClick={() => { screenObservationService.createDryRunSessionFromRequest(request.observationRequestId); refresh(); }}>Create dry-run permission session</Button>
+                      )}
+                      {request.status !== "blocked" && <Button tone="danger" onClick={() => { screenObservationService.blockObservationRequest(request.observationRequestId, "Blocked from Activity panel."); refresh(); }}>block</Button>}
+                      {request.status !== "revoked" && <Button onClick={() => { screenObservationService.revokeObservationRequest(request.observationRequestId, "Revoked from Activity panel."); refresh(); }}>revoke</Button>}
+                      <Button onClick={() => { screenObservationService.archiveObservationRequest(request.observationRequestId); refresh(); }}>archive</Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {data.observationSessions.filter((session) => session.status !== "archived").slice(0, 3).map((session) => (
+                <div key={session.observationSessionId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                  <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getScreenObservationStatusLabel(session.status)} · {getScreenObservationSummary(session)}</div>
+                  <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{getScreenObservationConsentLabel(session.consentState)} · dry-run permission session only.</p>
+                  {session.status !== "revoked" && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button onClick={() => { screenObservationService.revokeObservationSession(session.observationSessionId, "Revoked from Activity panel."); refresh(); }}>revoke session</Button>
+                      <Button onClick={() => { screenObservationService.archiveObservationSession(session.observationSessionId); refresh(); }}>archive session</Button>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           );
         })()}

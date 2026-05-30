@@ -32,6 +32,9 @@ function makeMockDeps() {
     gatewayRequests: {
       createGatewayRequest: vi.fn().mockReturnValue({ gatewayRequestId: "gateway:test" }),
     },
+    screenObservation: {
+      createObservationRequest: vi.fn().mockReturnValue({ observationRequestId: "screen-observation:test" }),
+    },
     checkpoints: {
       createCheckpoint: vi.fn().mockReturnValue({ checkpointId: "checkpoint:test" }),
     },
