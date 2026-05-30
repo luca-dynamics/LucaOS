@@ -220,13 +220,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </div>
       </RightPanelSection>
 
-      <RightPanelSection title="Browser shell" subtitle="Approved safe URL only. Luca cannot automate the page, read the DOM, handle credentials, or download/upload.">
+      <RightPanelSection title="Browser shell" subtitle="Approved safe URL only. Luca audits governed navigation but cannot automate the page, read the DOM, handle credentials, or download/upload.">
         <div className="grid grid-cols-2 gap-2">
           <RightPanelMetric label="Shell sessions" value={formatCount("session", browserShell.totalSessions)} />
-          <RightPanelMetric label="Open sessions" value={formatCount("session", browserShell.openSessions + browserShell.openRequestedSessions)} tone={browserShell.openSessions + browserShell.openRequestedSessions > 0 ? "warn" : "neutral"} />
-          <RightPanelMetric label="Blocked URL attempts" value={formatCount("attempt", browserShell.blockedSessions)} tone={browserShell.blockedSessions > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Open sessions" value={formatCount("session", browserShell.openSessions + browserShell.openRequestedSessions + browserShell.navigatingSessions)} tone={browserShell.openSessions + browserShell.openRequestedSessions + browserShell.navigatingSessions > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Paused sessions" value={formatCount("session", browserShell.pausedSessions)} tone={browserShell.pausedSessions > 0 ? "warn" : "neutral"} />
           <RightPanelMetric label="Closed/revoked" value={formatCount("session", browserShell.closedSessions + browserShell.revokedSessions)} tone="neutral" />
+          <RightPanelMetric label="Navigation events" value={formatCount("event", browserShell.navigationEvents)} tone="neutral" />
+          <RightPanelMetric label="Blocked navigations" value={formatCount("attempt", browserShell.blockedNavigations + browserShell.blockedSessions)} tone={browserShell.blockedNavigations + browserShell.blockedSessions > 0 ? "danger" : "neutral"} />
           <RightPanelMetric label="Launch mode" value="approved safe URL only" tone="neutral" />
+          <RightPanelMetric label="Navigation governance" value="enabled" tone="neutral" />
           <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
           <RightPanelMetric label="DOM read enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Credentials enabled" value="false" tone="neutral" />
@@ -234,7 +237,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="Wallet/payment enabled" value="false" tone="neutral" />
         </div>
         <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">
-          Browser shell can only open an approved safe URL after approval + Run once. Luca cannot automate the page.
+          LucaBrowser can open approved safe URLs and audit governed navigation. It cannot automate, read DOM, handle credentials, or download/upload.
         </p>
       </RightPanelSection>
 

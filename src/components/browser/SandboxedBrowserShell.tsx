@@ -172,6 +172,9 @@ const SandboxedBrowserShell: React.FC = () => {
               Site cannot be embedded; opening in an external browser is not enabled.
             </p>
           )}
+          <p className="text-[9px] font-black uppercase tracking-widest text-amber-200/80">
+            Navigation audit limited in iframe fallback
+          </p>
           <p className="text-[9px] italic leading-relaxed text-[var(--app-text-muted,#9ca3af)] opacity-80">
             Luca cannot automate this page, read its content, handle credentials/cookies, download/upload files, or touch
             wallet/payment flows. Browsing here is manual and user-owned. Close or Revoke to end the session.
