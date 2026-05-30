@@ -76,7 +76,7 @@ export function evaluateModeTransition(
   // Look up target mode governance policy.
   const policy = getVisualCoreSurfacePolicy(toMode as never);
 
-  // BROWSER mode — allowed only when governed session context is present.
+  // BROWSER mode — allowed ONLY when a governed browser shell session exists.
   if (toMode === "BROWSER") {
     if (hasBrowserSession) {
       return {
@@ -85,16 +85,6 @@ export function evaluateModeTransition(
         status: "allowed_governed_browser",
         source,
         userSafeReason: `Transition to BROWSER allowed — governed LucaBrowser session active.`,
-      };
-    }
-    // Allow prop-driven and local UI transitions that will create a session.
-    if (source === "prop_update" || source === "local_ui" || source === "remote_command") {
-      return {
-        fromMode,
-        toMode,
-        status: "allowed_governed_browser",
-        source,
-        userSafeReason: `Transition to BROWSER allowed — governed session will be created by ${source}.`,
       };
     }
     return {

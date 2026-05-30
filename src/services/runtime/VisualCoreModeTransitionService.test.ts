@@ -80,34 +80,50 @@ describe("PR #145 — VisualCore Governed Mode Transition Guard", () => {
   // =========================================================================
   describe("BROWSER transitions", () => {
     it("allows BROWSER when governed browser session is active", () => {
-      const decision = evaluateModeTransition({
-        fromMode: "IDLE",
-        toMode: "BROWSER",
-        source: "remote_command",
-        hasBrowserSession: true,
-      });
-      expect(decision.status).toBe("allowed_governed_browser");
-      expect(isTransitionAllowed(decision.status)).toBe(true);
+      for (const source of ["remote_command", "prop_update", "local_ui", "system"] as const) {
+        const decision = evaluateModeTransition({
+          fromMode: "IDLE",
+          toMode: "BROWSER",
+          source,
+          hasBrowserSession: true,
+        });
+        expect(decision.status, `${source} with session should be allowed`).toBe("allowed_governed_browser");
+        expect(isTransitionAllowed(decision.status)).toBe(true);
+      }
     });
 
-    it("allows BROWSER from prop_update even without existing session", () => {
-      const decision = evaluateModeTransition({
-        fromMode: "IDLE",
-        toMode: "BROWSER",
-        source: "prop_update",
-        hasBrowserSession: false,
-      });
-      expect(decision.status).toBe("allowed_governed_browser");
-    });
-
-    it("allows BROWSER from local_ui even without existing session", () => {
+    it("blocks BROWSER from local_ui without governed session", () => {
       const decision = evaluateModeTransition({
         fromMode: "IDLE",
         toMode: "BROWSER",
         source: "local_ui",
         hasBrowserSession: false,
       });
-      expect(decision.status).toBe("allowed_governed_browser");
+      expect(decision.status).toBe("blocked_browser_no_session");
+      expect(isTransitionAllowed(decision.status)).toBe(false);
+      expect(decision.blockedBy).toContain("browser_no_governed_session");
+    });
+
+    it("blocks BROWSER from prop_update without governed session", () => {
+      const decision = evaluateModeTransition({
+        fromMode: "IDLE",
+        toMode: "BROWSER",
+        source: "prop_update",
+        hasBrowserSession: false,
+      });
+      expect(decision.status).toBe("blocked_browser_no_session");
+      expect(isTransitionAllowed(decision.status)).toBe(false);
+    });
+
+    it("blocks BROWSER from remote_command without governed session", () => {
+      const decision = evaluateModeTransition({
+        fromMode: "IDLE",
+        toMode: "BROWSER",
+        source: "remote_command",
+        hasBrowserSession: false,
+      });
+      expect(decision.status).toBe("blocked_browser_no_session");
+      expect(isTransitionAllowed(decision.status)).toBe(false);
     });
 
     it("blocks BROWSER from system source without session", () => {

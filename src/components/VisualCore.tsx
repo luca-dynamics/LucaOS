@@ -596,7 +596,21 @@ const VisualCore: React.FC<VisualCoreProps> = ({
             style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
           >
             <button
-              onClick={() => requestModeTransition("BROWSER", "local_ui")}
+              onClick={() => {
+                // PR #145 — create a governed browser session before transitioning.
+                if (!browserShellSessionIdRef.current) {
+                  const defaultUrl = currentBrowserUrl || "https://google.com";
+                  const result = sandboxedBrowserShellService.openApprovedSafeUrl({
+                    url: defaultUrl,
+                    title: "VisualCore governed browser session",
+                    source: "visual_core_local_ui",
+                  });
+                  if (result.status === "open" || result.status === "open_requested") {
+                    browserShellSessionIdRef.current = result.shellSessionId;
+                  }
+                }
+                requestModeTransition("BROWSER", "local_ui");
+              }}
               className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold transition-all`}
               style={
                 mode === "BROWSER"
