@@ -19,6 +19,7 @@ import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBr
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
+import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -82,6 +83,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const browserActions = lucaBrowserActionQueueService.getDiagnosticsSummary();
   const browserActionExecution = lucaBrowserActionExecutionService.getDiagnosticsSummary();
   const visualDisplaySessions = visualCoreDisplaySessionService.getDiagnosticsSummary();
+  const visualRemoteCommands = visualCoreRemoteCommandService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -183,6 +185,29 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </div>
         <p className="mt-3 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
           VisualCore governance currently records low-risk display sessions only. Sensitive modes remain blocked until dedicated policy.
+        </p>
+      </RightPanelSection>
+
+      <RightPanelSection title="VisualCore remote commands" subtitle="Remote commands are audited first. Browser navigation and sensitive commands require dedicated governance.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Total commands" value={formatCount("command", visualRemoteCommands.totalCommands)} />
+          <RightPanelMetric label="Allowed record-only" value={formatCount("command", visualRemoteCommands.allowedRecordOnlyCommands)} tone={visualRemoteCommands.allowedRecordOnlyCommands > 0 ? "good" : "neutral"} />
+          <RightPanelMetric label="Blocked" value={formatCount("command", visualRemoteCommands.blockedCommands)} tone={visualRemoteCommands.blockedCommands > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Needs approval" value={formatCount("command", visualRemoteCommands.needsApprovalCommands)} tone={visualRemoteCommands.needsApprovalCommands > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Ignored" value={formatCount("command", visualRemoteCommands.ignoredCommands)} tone="neutral" />
+          <RightPanelMetric label="Browser navigate" value={formatCount("request", visualRemoteCommands.browserNavigateCommands)} tone={visualRemoteCommands.browserNavigateCommands > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Governance applied" value="true" tone="good" />
+          <RightPanelMetric label="Execution changed" value="false" tone="neutral" />
+          <RightPanelMetric label="Browser governed" value="false" tone="neutral" />
+          <RightPanelMetric label="Capture enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="External action" value="false" tone="neutral" />
+          <RightPanelMetric label="File access" value="false" tone="neutral" />
+          <RightPanelMetric label="Messaging" value="false" tone="neutral" />
+          <RightPanelMetric label="Wireless" value="false" tone="neutral" />
+        </div>
+        <p className="mt-3 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+          VisualCore remote commands are audited first. Browser navigation and sensitive commands still require dedicated governance before execution.
         </p>
       </RightPanelSection>
 

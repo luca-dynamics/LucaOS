@@ -6,6 +6,8 @@ import {
   closeDisplaySession,
 } from "../services/runtime/VisualCoreDisplaySessionService";
 import { shouldRecordVisualCoreDisplaySession } from "../services/runtime/VisualCoreDisplayGovernance";
+import { recordRemoteCommand } from "../services/runtime/VisualCoreRemoteCommandService";
+import type { VisualCoreRemoteCommandKind, VisualCoreRemoteCommandSource } from "../types/visualCoreRemoteCommands";
 import VisualDataPresenter from "./VisualDataPresenter";
 import CinemaPlayer from "./CinemaPlayer";
 import CastPicker from "./CastPicker";
@@ -70,6 +72,13 @@ export type VisualCoreMode =
   | "INGESTION"
   | "TACTICAL";
 
+// PR #142 — VisualCore remote command governance. Default OFF: a remote
+// BROWSER_NAVIGATE command is recorded for governance (needs_approval) and does
+// NOT auto-switch VisualCore into embedded-browser mode. Flipping this to true
+// restores the legacy auto-switch behavior (still embedded LucaBrowser, not the
+// governed adapter) and is gated here until a governed LucaBrowser adapter lands.
+const VISUAL_CORE_REMOTE_BROWSER_NAVIGATION_ENABLED = false;
+
 interface VisualCoreProps {
   isVisible: boolean;
   onClose: () => void;
@@ -127,6 +136,11 @@ const VisualCore: React.FC<VisualCoreProps> = ({
   const displaySessionIdRef = useRef<string | null>(null);
   const displaySessionModeRef = useRef<VisualCoreMode | null>(null);
 
+  // PR #142 — throttle high-frequency telemetry recording (sync/voice) so the
+  // bounded remote-command audit buffer is not flooded. Discrete remote
+  // commands are recorded unthrottled.
+  const telemetryThrottleRef = useRef<Record<string, number>>({});
+
   // Sovereign Sync States
   const [syncState, setSyncState] = useState({
     persona: persona || "ASSISTANT",
@@ -172,12 +186,29 @@ const VisualCore: React.FC<VisualCoreProps> = ({
   useEffect(() => {
     if (!window.electron?.ipcRenderer) return;
 
+    // PR #142 — throttle helper (inlined here to keep the effect dependency-free).
+    const recordTelemetry = (
+      kind: VisualCoreRemoteCommandKind,
+      source: VisualCoreRemoteCommandSource,
+      intervalMs: number,
+    ) => {
+      const now = Date.now();
+      const last = telemetryThrottleRef.current[kind] ?? 0;
+      if (now - last < intervalMs) return;
+      telemetryThrottleRef.current[kind] = now;
+      recordRemoteCommand({ kind, source });
+    };
+
     const handleSync = (state: any) => {
       console.log("[VisualCore] Received Sovereign State Sync:", state);
+      // PR #142 — record-only telemetry audit; no execution change.
+      recordTelemetry("SYNC_APP_STATE", "app_state_sync", 5000);
       setSyncState((prev) => ({ ...prev, ...state }));
     };
 
     const handleVoice = (data: { amplitude: number }) => {
+      // PR #142 — record-only telemetry audit; throttled to avoid flooding.
+      recordTelemetry("WIDGET_VOICE_DATA", "voice_widget", 5000);
       setSyncState((prev) => ({ ...prev, amplitude: data.amplitude }));
     };
 
@@ -186,12 +217,27 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
     const handleRemoteControl = (command: any) => {
       console.log("[VisualCore] Received Remote Command:", command);
-      
+
+      // PR #142 — govern/audit every remote command BEFORE any existing
+      // behavior. Records only; never executes or drives VisualCore.
+      recordRemoteCommand({
+        type: command?.type,
+        value: command?.value,
+        source: "ipc_remote_control",
+        metadata: {
+          legacyBehaviorStillActive: VISUAL_CORE_REMOTE_BROWSER_NAVIGATION_ENABLED,
+        },
+      });
+
       if (command.type === "BROWSER_NAVIGATE") {
-        setMode("BROWSER");
-        setCurrentBrowserUrl(command.value);
+        // BROWSER mode still uses embedded LucaBrowser (not the governed
+        // adapter). Default OFF: record for governance and do NOT auto-switch.
+        if (VISUAL_CORE_REMOTE_BROWSER_NAVIGATION_ENABLED) {
+          setMode("BROWSER");
+          setCurrentBrowserUrl(command.value);
+        }
       }
-      
+
       setRemoteCommand(command);
       // Auto-clear after a delay if it's a one-shot command
       if (command.type !== "PERSISTENT") {
@@ -408,6 +454,18 @@ const VisualCore: React.FC<VisualCoreProps> = ({
 
   // [INTERACTION] Feedback to Brain
   const handleInteraction = (type: string, details: any) => {
+    // PR #142 — record-only interaction-feedback audit; throttled, no execution
+    // change. Existing IPC send behavior is unchanged.
+    const now = Date.now();
+    const last = telemetryThrottleRef.current.VISUAL_CORE_INTERACTION ?? 0;
+    if (now - last >= 1000) {
+      telemetryThrottleRef.current.VISUAL_CORE_INTERACTION = now;
+      recordRemoteCommand({
+        kind: "VISUAL_CORE_INTERACTION",
+        source: "visual_interaction",
+        metadata: { interactionType: type },
+      });
+    }
     if (window.electron?.ipcRenderer) {
       window.electron.ipcRenderer.send("visual-core-interaction", {
         type,
