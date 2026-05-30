@@ -14,6 +14,7 @@ import { skillRegistryService } from "../../services/skills/SkillRegistryService
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
+import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -26,6 +27,7 @@ import {
 import { getSkillSummaryLine } from "../runtime/skillGovernanceLabels";
 import { getGatewayNoExecutionText } from "../runtime/gatewayPermissionLabels";
 import { getScreenObservationNoCaptureText } from "../runtime/screenObservationLabels";
+import { getSandboxedBrowserNoLaunchText } from "../runtime/sandboxedBrowserLabels";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -71,6 +73,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const skillGovernance = skillGovernanceService.getDiagnosticsSummary();
   const gateway = browserDesktopGatewayService.getDiagnosticsSummary();
   const screenObservation = screenObservationService.getDiagnosticsSummary();
+  const sandboxedBrowser = sandboxedBrowserService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -181,6 +184,37 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             ))}
           </div>
           <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
+        </div>
+      </RightPanelSection>
+
+      <RightPanelSection title="Sandboxed browser" subtitle="Research-mode only. Luca cannot launch, read, click, type, submit, scrape, download, upload, or automate a browser.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Browser requests" value={formatCount("request", sandboxedBrowser.totalRequests)} />
+          <RightPanelMetric label="Dry-run requests" value={formatCount("request", sandboxedBrowser.dryRunRequests)} tone={sandboxedBrowser.dryRunRequests > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Blocked" value={formatCount("request", sandboxedBrowser.blockedRequests)} tone={sandboxedBrowser.blockedRequests > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Waiting user" value={formatCount("request", sandboxedBrowser.waitingUserRequests)} tone={sandboxedBrowser.waitingUserRequests > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Dry-run sessions" value={formatCount("session", sandboxedBrowser.dryRunSessions)} tone={sandboxedBrowser.dryRunSessions > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Revoked sessions" value={formatCount("session", sandboxedBrowser.revokedSessions)} tone="neutral" />
+          <RightPanelMetric label="Launch enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="DOM read enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Network request enabled" value="false" tone="neutral" />
+        </div>
+        <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-red-200">Sandboxed browser research mode</span>
+            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Launch disabled</span>
+          </div>
+          <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+            Sandboxed browser is research-mode only. Luca cannot launch, read, click, type, submit, scrape, download, upload, or automate a browser.
+          </p>
+          <div className="mt-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Future-readiness checklist — required before any browser control</div>
+          <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+            {["Explicit approval", "Visible browser boundary", "Sandbox", "Human confirmation", "Credential boundary", "Audit log", "Downloads/uploads blocked", "Wallet/payment blocked", "Revocable"].map((item) => (
+              <span key={item} className="rounded-full border border-amber-500/30 px-2 py-0.5 text-amber-200">✓ {item}</span>
+            ))}
+          </div>
+          <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getSandboxedBrowserNoLaunchText()}</p>
         </div>
       </RightPanelSection>
 

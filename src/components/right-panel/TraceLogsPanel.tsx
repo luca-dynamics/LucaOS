@@ -12,6 +12,7 @@ import { governedMemoryWriteService } from "../../services/memory/GovernedMemory
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
+import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -63,6 +64,15 @@ import {
   getObservationSessionLifecycleLabel,
   getObservationSessionTimeline,
 } from "../runtime/screenObservationSessionUx";
+import {
+  getSandboxedBrowserCapabilityLabel,
+  getSandboxedBrowserCredentialBoundaryLabel,
+  getSandboxedBrowserNavigationRiskLabel,
+  getSandboxedBrowserNoLaunchText,
+  getSandboxedBrowserRiskLabel,
+  getSandboxedBrowserStatusLabel,
+  getSandboxedBrowserSurfaceLabel,
+} from "../runtime/sandboxedBrowserLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -121,6 +131,8 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       gatewayRequests: browserDesktopGatewayService.listGatewayRequests(),
       observationRequests: screenObservationService.listObservationRequests(),
       observationSessions: screenObservationService.listObservationSessions(),
+      browserRequests: sandboxedBrowserService.listBrowserRequests(),
+      browserSessions: sandboxedBrowserService.listBrowserSessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -247,6 +259,64 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   </div>
                   <p className="mt-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">{getObservationSessionLifecycleLabel(session)} · {getObservationSessionTimeline(session).map((step) => step.label).join(" → ")}</p>
                   <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">Dry-run permission session only. {getScreenObservationNoCaptureText()}</p>
+                </div>
+              ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Sandboxed browser trace" subtitle="Audit-like sandboxed browser permission records. Launch, automation, DOM read, and network requests remain disabled.">
+        {trace.browserRequests.length === 0 && trace.browserSessions.length === 0 ? <EmptyState>No sandboxed browser records.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.browserRequests]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 6)
+              .map((request) => (
+                <div key={request.browserRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                        {getSandboxedBrowserStatusLabel(request.status)} · {getSandboxedBrowserSurfaceLabel(request.surface)} / {getSandboxedBrowserCapabilityLabel(request.capability)}
+                      </div>
+                      <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getSandboxedBrowserRiskLabel(request.riskLevel)}</span>
+                  </div>
+                  {request.blockedBy && request.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] text-red-200">Blocked by: {request.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>nav: {getSandboxedBrowserNavigationRiskLabel(request.navigationRisk)}</span>
+                    <span>{getSandboxedBrowserCredentialBoundaryLabel(request.credentialBoundary)}</span>
+                    <span>created {compactTimestamp(request.createdAt)}</span>
+                    <span>updated {compactTimestamp(request.updatedAt)}</span>
+                    <span>launch enabled: false</span>
+                    <span>automation enabled: false</span>
+                    <span>DOM read enabled: false</span>
+                    <span>network request enabled: false</span>
+                  </div>
+                  <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getSandboxedBrowserNoLaunchText()}</p>
+                </div>
+              ))}
+            {[...trace.browserSessions]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 4)
+              .map((session) => (
+                <div key={session.browserSessionId} className="rounded-xl border border-white/10 bg-black/10 p-3">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                    Session · {getSandboxedBrowserStatusLabel(session.status)} · {getSandboxedBrowserSurfaceLabel(session.surface)} / {getSandboxedBrowserCapabilityLabel(session.capability)}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>nav: {getSandboxedBrowserNavigationRiskLabel(session.navigationRisk)}</span>
+                    <span>{getSandboxedBrowserRiskLabel(session.riskLevel)}</span>
+                    <span>created {compactTimestamp(session.createdAt)}</span>
+                    {session.revokedAt && <span>revoked {compactTimestamp(session.revokedAt)}</span>}
+                    <span>launch enabled: false</span>
+                    <span>automation enabled: false</span>
+                    <span>DOM read enabled: false</span>
+                    <span>network request enabled: false</span>
+                  </div>
+                  <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">Dry-run browser permission session only. {getSandboxedBrowserNoLaunchText()}</p>
                 </div>
               ))}
           </div>
