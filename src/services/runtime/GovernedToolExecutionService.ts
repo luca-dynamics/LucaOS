@@ -33,6 +33,20 @@ interface SessionProvider {
   getDiagnosticsSummary(): { totalSessions: number; activeSessions: number; resumableSessions: number };
 }
 
+// PR #134: minimal surface of the sandbox browser shell service the execution
+// bridge is allowed to call. Deliberately limited to opening one safe URL —
+// no click/type/read/submit/download/upload methods are exposed here.
+interface BrowserShellProvider {
+  openApprovedSafeUrl(input: {
+    url: string;
+    title?: string;
+    sourceRequestId?: string;
+    provenanceIds?: string[];
+    source?: string;
+    metadata?: Record<string, unknown>;
+  }): { shellSessionId: string; status: string; auditUrl: string; normalizedUrl: string; blockedBy?: string[] };
+}
+
 export interface GovernedToolExecutionDependencies {
   storage?: StorageLike;
   requests: Pick<GovernedActionRequestService, "listRequests" | "getRequest" | "markApprovedWaitingExecution" | "markExecutedElsewhere" | "markBlocked">;
@@ -43,6 +57,7 @@ export interface GovernedToolExecutionDependencies {
   diagnostics?: DiagnosticsProvider;
   memoryGovernance?: MemoryGovernanceProvider;
   sessions?: SessionProvider;
+  browserShell?: BrowserShellProvider;
 }
 
 const STORAGE_KEY = "LUCA_GOVERNED_TOOL_EXECUTIONS_V1";
@@ -115,6 +130,17 @@ export class GovernedToolExecutionService {
       this._sessionsCache = require("./AgentSessionContinuityService").agentSessionContinuityService;
     }
     return this._sessionsCache!;
+  }
+
+  private _browserShellCache?: BrowserShellProvider;
+
+  private getBrowserShellProvider(): BrowserShellProvider {
+    if (this.deps.browserShell) return this.deps.browserShell;
+    if (!this._browserShellCache) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      this._browserShellCache = require("./SandboxedBrowserShellService").sandboxedBrowserShellService;
+    }
+    return this._browserShellCache!;
   }
 
   listExecutions(): GovernedToolExecutionRequest[] {
@@ -361,9 +387,50 @@ export class GovernedToolExecutionService {
         return this.dispatchSessionRead();
       case "dry_run_confirm":
         return this.dispatchDryRunConfirm();
+      case "open_approved_safe_url":
+        return this.dispatchOpenApprovedSafeUrl(request);
       default:
         throw new Error(`Unknown governed execution capability: ${capability as string}`);
     }
+  }
+
+  // PR #134: run once for an approved safe URL calls ONLY the shell service.
+  // No generic browser launch, automation, click/type/read/submit, or
+  // download/upload is ever performed here.
+  private dispatchOpenApprovedSafeUrl(request: GovernedActionRequest): { summary: string; preview: Record<string, unknown> } {
+    const params = request.parametersPreview ?? {};
+    const url = typeof params.safeUrl === "string"
+      ? params.safeUrl
+      : typeof params.url === "string"
+        ? params.url
+        : "";
+    const shell = this.getBrowserShellProvider();
+    const session = shell.openApprovedSafeUrl({
+      url,
+      title: request.title,
+      sourceRequestId: request.requestId,
+      provenanceIds: request.provenanceIds,
+      source: "governed-tool-execution",
+    });
+
+    const summary = session.status === "blocked"
+      ? `Safe URL blocked by browser shell policy: ${session.auditUrl}`
+      : session.status === "adapter_unavailable"
+        ? `Browser shell adapter unavailable for: ${session.auditUrl}`
+        : `Sandbox browser shell open requested: ${session.auditUrl}`;
+
+    return {
+      summary,
+      preview: {
+        shellSessionId: session.shellSessionId,
+        status: session.status,
+        auditUrl: session.auditUrl,
+        launchMode: "approved_safe_url_only",
+        automationEnabled: false,
+        domReadEnabled: false,
+        credentialsEnabled: false,
+      },
+    };
   }
 
   private dispatchNotify(request: GovernedActionRequest): { summary: string; preview: Record<string, unknown> } {

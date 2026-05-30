@@ -13,6 +13,7 @@ import { skillGovernanceService } from "../../services/skills/SkillGovernanceSer
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
+import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -133,6 +134,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       observationSessions: screenObservationService.listObservationSessions(),
       browserRequests: sandboxedBrowserService.listBrowserRequests(),
       browserSessions: sandboxedBrowserService.listBrowserSessions(),
+      browserShellSessions: sandboxedBrowserShellService.listShellSessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -317,6 +319,39 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>network request enabled: false</span>
                   </div>
                   <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">Dry-run browser permission session only. {getSandboxedBrowserNoLaunchText()}</p>
+                </div>
+              ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Browser shell trace" subtitle="Approved safe URL open requests, opens/closes/revokes, and blocked URL attempts. Audit URL only — no raw secrets.">
+        {trace.browserShellSessions.length === 0 ? <EmptyState>No browser shell records.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.browserShellSessions]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 8)
+              .map((session) => (
+                <div key={session.shellSessionId} className={`rounded-xl border p-3 ${session.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">Shell · {session.status}</div>
+                      <p className="mt-1 truncate font-mono text-[10px] text-[var(--app-text-muted)]">{session.auditUrl || "(no audit URL)"}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{session.riskLevel}</span>
+                  </div>
+                  {session.blockedBy && session.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] text-red-200">Blocked by: {session.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>requested {compactTimestamp(session.createdAt)}</span>
+                    {session.closedAt && <span>closed {compactTimestamp(session.closedAt)}</span>}
+                    {session.revokedAt && <span>revoked {compactTimestamp(session.revokedAt)}</span>}
+                    <span>automation: false</span>
+                    <span>DOM read: false</span>
+                    <span>credentials: false</span>
+                  </div>
+                  <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">Approved safe URL only. Luca cannot automate the page, read the DOM, or handle credentials.</p>
                 </div>
               ))}
           </div>

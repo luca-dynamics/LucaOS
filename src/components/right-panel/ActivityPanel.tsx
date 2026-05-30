@@ -10,6 +10,7 @@ import { skillGovernanceService } from "../../services/skills/SkillGovernanceSer
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
+import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -187,6 +188,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       observationSessions: screenObservationService.listObservationSessions(),
       browserRequests: sandboxedBrowserService.listBrowserRequests(),
       browserSessions: sandboxedBrowserService.listBrowserSessions(),
+      browserShellSessions: sandboxedBrowserShellService.listShellSessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -521,6 +523,52 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   )}
                 </div>
               ))}
+            </div>
+          );
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Browser shell sessions" subtitle="Approved safe URL only, after approval + Run once. Luca cannot automate the page, read the DOM, handle credentials, or download/upload.">
+        {(() => {
+          const shellSessions = data.browserShellSessions.slice(0, 6);
+          if (shellSessions.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No browser shell sessions.</div>;
+          return (
+            <div className="space-y-2">
+              {shellSessions.map((session) => {
+                const isOpen = session.status === "open" || session.status === "open_requested" || session.status === "proposed";
+                return (
+                  <div key={session.shellSessionId} className={`rounded-xl border p-3 ${session.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{session.title}</div>
+                        <p className="mt-1 truncate font-mono text-[10px] text-[var(--app-text-muted)]">{session.auditUrl || "(no audit URL)"}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${session.status === "blocked" ? "border-red-500/30 text-red-200" : "border-amber-500/30 text-amber-200"}`}>
+                        {session.status}
+                      </span>
+                    </div>
+                    {session.blockedBy && session.blockedBy.length > 0 && (
+                      <p className="mt-2 text-[9px] leading-relaxed text-red-200">Blocked by: {session.blockedBy.join(", ")}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No automation</span>
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No DOM read</span>
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No credentials</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                      <span>requested {session.createdAt.slice(0, 16).replace("T", " ")}</span>
+                      {session.closedAt && <span>closed {session.closedAt.slice(0, 16).replace("T", " ")}</span>}
+                      {session.revokedAt && <span>revoked {session.revokedAt.slice(0, 16).replace("T", " ")}</span>}
+                    </div>
+                    {isOpen && session.status !== "blocked" && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Button onClick={() => { sandboxedBrowserShellService.closeShellSession(session.shellSessionId); refresh(); }}>close shell</Button>
+                        <Button tone="danger" onClick={() => { sandboxedBrowserShellService.revokeShellSession(session.shellSessionId, "Revoked from Activity panel."); refresh(); }}>revoke shell</Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
         })()}

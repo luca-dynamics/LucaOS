@@ -15,6 +15,7 @@ import { skillGovernanceService } from "../../services/skills/SkillGovernanceSer
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
+import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -74,6 +75,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const gateway = browserDesktopGatewayService.getDiagnosticsSummary();
   const screenObservation = screenObservationService.getDiagnosticsSummary();
   const sandboxedBrowser = sandboxedBrowserService.getDiagnosticsSummary();
+  const browserShell = sandboxedBrowserShellService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -216,6 +218,24 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           </div>
           <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getSandboxedBrowserNoLaunchText()}</p>
         </div>
+      </RightPanelSection>
+
+      <RightPanelSection title="Browser shell" subtitle="Approved safe URL only. Luca cannot automate the page, read the DOM, handle credentials, or download/upload.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Shell sessions" value={formatCount("session", browserShell.totalSessions)} />
+          <RightPanelMetric label="Open sessions" value={formatCount("session", browserShell.openSessions + browserShell.openRequestedSessions)} tone={browserShell.openSessions + browserShell.openRequestedSessions > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Blocked URL attempts" value={formatCount("attempt", browserShell.blockedSessions)} tone={browserShell.blockedSessions > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Closed/revoked" value={formatCount("session", browserShell.closedSessions + browserShell.revokedSessions)} tone="neutral" />
+          <RightPanelMetric label="Launch mode" value="approved safe URL only" tone="neutral" />
+          <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="DOM read enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Credentials enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Download/upload enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Wallet/payment enabled" value="false" tone="neutral" />
+        </div>
+        <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">
+          Browser shell can only open an approved safe URL after approval + Run once. Luca cannot automate the page.
+        </p>
       </RightPanelSection>
 
       <RightPanelSection title="Continuity" subtitle="Sessions, plans, checkpoints, and reminders that need attention. No execution from this panel.">

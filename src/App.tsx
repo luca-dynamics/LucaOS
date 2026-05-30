@@ -58,6 +58,7 @@ import { lucaLink as lucaLinkService } from "./services/lucaLinkService"; // Gue
 import type { ScreenShareHandle } from "./components/ScreenShare";
 import conversationService from "./services/conversationService";
 import { SettingsModal } from "./components/SettingsModal";
+import SandboxedBrowserShell from "./components/browser/SandboxedBrowserShell";
 import ChatWidgetMode from "./components/ChatWidgetMode";
 import WidgetMode from "./components/WidgetMode";
 import HologramMode from "./components/HologramMode";
@@ -2899,6 +2900,9 @@ function AppContent() {
             theme={theme}
           />
         )}
+        {/* PR #134: gated browser shell. Self-managed; only surfaces after an
+            approved open_approved_safe_url governed execution (approval + Run once). */}
+        <SandboxedBrowserShell />
       </div>
     </>
   );
