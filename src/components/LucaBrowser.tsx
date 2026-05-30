@@ -8,6 +8,10 @@ import {
   type LucaBrowserMode,
 } from "./browser/lucaBrowserAdapter";
 import { sandboxedBrowserShellService } from "../services/runtime/SandboxedBrowserShellService";
+import {
+  LUCA_BROWSER_SAFE_CONTROL_EVENT,
+  type LucaBrowserSafeControlEventDetail,
+} from "../types/lucaBrowserActions";
 
 interface Props {
   url: string;
@@ -270,6 +274,37 @@ const LucaBrowser: React.FC<Props> = ({
 
     return () => clearInterval(interval);
   }, [sessionId]);
+
+  // PR #139: GOVERNED-only safe nav-control listener. A confirmed safe
+  // lifecycle action (back/forward/refresh) is dispatched by
+  // LucaBrowserActionExecutionService as a DOM event; the mounted governed
+  // browser performs ONLY the matching nav-control. No click/type/scroll, no
+  // DOM read, no executeJavaScript, no screenshot/OCR.
+  useEffect(() => {
+    if (!isGoverned || !shellSessionId) return;
+    const handleSafeControl = (event: Event) => {
+      const detail = (event as CustomEvent<LucaBrowserSafeControlEventDetail>).detail;
+      if (!detail || detail.shellSessionId !== shellSessionId) return;
+      const webview = webviewRef.current;
+      if (!webview) return;
+      switch (detail.kind) {
+        case "propose_back":
+          if (typeof webview.canGoBack === "function" && webview.canGoBack()) webview.goBack?.();
+          break;
+        case "propose_forward":
+          if (typeof webview.canGoForward === "function" && webview.canGoForward()) webview.goForward?.();
+          break;
+        case "propose_refresh":
+          webview.reload?.();
+          break;
+        default:
+          // Ignore any non nav-control kind — never click/type/scroll.
+          break;
+      }
+    };
+    window.addEventListener(LUCA_BROWSER_SAFE_CONTROL_EVENT, handleSafeControl);
+    return () => window.removeEventListener(LUCA_BROWSER_SAFE_CONTROL_EVENT, handleSafeControl);
+  }, [isGoverned, shellSessionId]);
 
   const handleGoBack = () => {
     webviewRef.current?.goBack();

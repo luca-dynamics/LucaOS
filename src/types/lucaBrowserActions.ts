@@ -171,3 +171,87 @@ export const MAX_LUCA_BROWSER_ACTION_REQUESTS = 200;
 export const MAX_LUCA_BROWSER_TYPED_TEXT_PREVIEW = 80;
 
 export const LUCA_BROWSER_ACTION_EVENT = "luca_browser_action_request";
+
+// ---------------------------------------------------------------------------
+// PR #139 — LucaBrowser Final Safe Lifecycle Execution.
+//
+// Only confirmed *safe lifecycle/control* actions can execute (back/forward/
+// refresh/pause/resume/close/revoke). Page-level automation (click/type/scroll)
+// and every blocked category stay disabled — this layer never clicks, types,
+// scrolls, reads the DOM/page content, screenshots, OCRs, or touches
+// credentials/downloads/wallets/payments.
+// ---------------------------------------------------------------------------
+
+export type LucaBrowserActionExecutionStatus =
+  | "not_executable"
+  | "executed"
+  | "blocked"
+  | "failed"
+  | "unsupported";
+
+export interface LucaBrowserActionExecutionResult {
+  executionResultId: string;
+  actionRequestId: string;
+  shellSessionId: string;
+  kind: LucaBrowserActionKind;
+  status: LucaBrowserActionExecutionStatus;
+  message: string;
+  executedAt: string;
+  blockedBy?: string[];
+  automationEnabled: false;
+  domReadEnabled: false;
+  pageContentReadEnabled: false;
+  screenshotEnabled: false;
+  ocrEnabled: false;
+  credentialsEnabled: false;
+  downloadUploadEnabled: false;
+  walletPaymentEnabled: false;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LucaBrowserActionExecutionDiagnosticsSummary {
+  totalExecutionResults: number;
+  executedResults: number;
+  blockedResults: number;
+  failedResults: number;
+  unsupportedResults: number;
+  notExecutableResults: number;
+  lastExecutionAt: string | null;
+  /** Only back/forward/refresh/pause/resume/close/revoke can execute. */
+  safeLifecycleExecutionEnabled: true;
+  /** Click/type/scroll and all page-level automation stay disabled. */
+  pageActionExecutionEnabled: false;
+  humanConfirmationRequired: true;
+  automationEnabled: false;
+  domReadEnabled: false;
+  pageContentReadEnabled: false;
+  screenshotEnabled: false;
+  ocrEnabled: false;
+  credentialsEnabled: false;
+  downloadUploadEnabled: false;
+  walletPaymentEnabled: false;
+}
+
+/** Safe lifecycle/control kinds that PR #139 can execute after confirmation. */
+export const LUCA_BROWSER_SAFE_LIFECYCLE_EXECUTION_KINDS: LucaBrowserActionKind[] =
+  LUCA_BROWSER_LIFECYCLE_ACTION_KINDS;
+
+/** Safe nav-control kinds dispatched to the mounted governed LucaBrowser. */
+export const LUCA_BROWSER_SAFE_CONTROL_NAV_KINDS: LucaBrowserActionKind[] = [
+  "propose_back",
+  "propose_forward",
+  "propose_refresh",
+];
+
+export const MAX_LUCA_BROWSER_ACTION_EXECUTION_RESULTS = 200;
+
+export const LUCA_BROWSER_ACTION_EXECUTION_EVENT = "luca_browser_action_execution";
+
+/** DOM CustomEvent name the governed LucaBrowser listens for. */
+export const LUCA_BROWSER_SAFE_CONTROL_EVENT = "luca:luca-browser-safe-control-action";
+
+export interface LucaBrowserSafeControlEventDetail {
+  actionRequestId: string;
+  shellSessionId: string;
+  kind: LucaBrowserActionKind;
+}
