@@ -23,6 +23,7 @@ import {
   getContinuityToneColor, getContinuitySummaryLine, compactTimestamp,
 } from "../runtime/continuityLabels";
 import { getSkillSummaryLine } from "../runtime/skillGovernanceLabels";
+import { getGatewayNoExecutionText } from "../runtime/gatewayPermissionLabels";
 import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
@@ -123,18 +124,31 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
       <RightPanelSection title="Gateway research" subtitle="Browser/Desktop/Device policy only. No control is enabled.">
         <div className="grid grid-cols-2 gap-2">
           <RightPanelMetric label="Gateway requests" value={formatCount("request", gateway.totalRequests)} />
-          <RightPanelMetric label="Dry-run only" value={formatCount("request", gateway.dryRunRequests)} />
-          <RightPanelMetric label="Blocked" value={formatCount("request", gateway.blockedRequests)} />
-          <RightPanelMetric label="High / critical" value={formatCount("request", gateway.highRiskRequests + gateway.criticalRiskRequests)} />
+          <RightPanelMetric label="Dry-run only" value={formatCount("request", gateway.dryRunRequests)} tone={gateway.dryRunRequests > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Blocked" value={formatCount("request", gateway.blockedRequests)} tone={gateway.blockedRequests > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="High risk" value={formatCount("request", gateway.highRiskRequests)} tone={gateway.highRiskRequests > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Critical risk" value={formatCount("request", gateway.criticalRiskRequests)} tone={gateway.criticalRiskRequests > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Execution enabled" value="false" tone="neutral" />
         </div>
         <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-red-200">Gateway research only</span>
-            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Execution off</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-red-200">Gateway research mode</span>
+            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Control disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
-            No browser, desktop, device, app, file, network, wallet, or MCP control is enabled. Records are blocked or dry-run-only policy research.
+            Gateway control is disabled. Luca can only record blocked/dry-run requests while the permission model is being designed.
           </p>
+          <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+            Future permissions not yet enabled
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Approval</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Sandbox</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Human confirmation</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Credential boundary</span>
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Audit log</span>
+          </div>
+          <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getGatewayNoExecutionText()}</p>
         </div>
       </RightPanelSection>
 
