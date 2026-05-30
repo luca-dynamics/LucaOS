@@ -9,7 +9,7 @@ export const DISCOVERED_BROWSER_RUNTIME_CANDIDATES = [
   { name: "BrowserRuntime types", path: "src/services/browserRuntime/types.ts", side: "runtime" as const },
   { name: "BrowserRuntime router", path: "src/services/browserRuntime/BrowserRuntimeRouter.ts", side: "runtime" as const },
   { name: "BrowserRuntime README", path: "src/services/browserRuntime/README.md", side: "docs" as const },
-  { name: "Ghost Browser UI", path: "src/components/GhostBrowser.tsx", side: "electron_browser" as const },
+  { name: "Luca Browser UI", path: "src/components/LucaBrowser.tsx", side: "electron_browser" as const },
   { name: "Browser runtime router spec", path: "docs/browser/BROWSER_RUNTIME_ROUTER_SPEC.md", side: "docs" as const },
   { name: "Ghost browser spec", path: "docs/browser/GHOST_BROWSER_SPEC.md", side: "docs" as const },
 ] as const;

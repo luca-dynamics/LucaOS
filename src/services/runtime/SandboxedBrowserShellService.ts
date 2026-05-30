@@ -169,11 +169,17 @@ export class SandboxedBrowserShellService {
    * Mark a session as visibly open (called by the shell UI when it mounts the
    * approved URL). Only transitions from a pre-open state.
    */
-  markShellOpened(shellSessionId: string): SandboxedBrowserShellSessionRecord | undefined {
+  markShellOpened(shellSessionId: string, adapter?: string): SandboxedBrowserShellSessionRecord | undefined {
     const existing = this.getShellSession(shellSessionId);
     if (!existing) return undefined;
     if (existing.status !== "open_requested" && existing.status !== "proposed") return existing;
-    return this.updateSession(shellSessionId, { status: "open" }, "sandboxed_browser_shell_opened");
+    const update: Partial<SandboxedBrowserShellSessionRecord> = { status: "open" };
+    if (adapter) {
+      // Record which adapter surfaced the session (luca_browser_webview |
+      // iframe_fallback). This is metadata only; capability flags stay false.
+      update.metadata = sanitizeRuntimeMetadata({ ...existing.metadata, adapter });
+    }
+    return this.updateSession(shellSessionId, update, "sandboxed_browser_shell_opened");
   }
 
   /**

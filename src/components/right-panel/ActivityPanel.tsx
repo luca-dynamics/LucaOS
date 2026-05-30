@@ -551,6 +551,11 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <p className="mt-2 text-[9px] leading-relaxed text-red-200">Blocked by: {session.blockedBy.join(", ")}</p>
                     )}
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      {typeof session.metadata?.adapter === "string" && (
+                        <span className="rounded-full border border-cyan-500/30 bg-cyan-500/5 px-2 py-0.5 text-cyan-200">
+                          {session.metadata.adapter === "luca_browser_webview" ? "Luca Browser" : "Iframe fallback"}
+                        </span>
+                      )}
                       <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No automation</span>
                       <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No DOM read</span>
                       <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No credentials</span>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import GhostBrowser from "./GhostBrowser";
+import LucaBrowser from "./LucaBrowser";
 import VisualDataPresenter from "./VisualDataPresenter";
 import CinemaPlayer from "./CinemaPlayer";
 import CastPicker from "./CastPicker";
@@ -1098,7 +1098,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           }`}
         >
           {mode === "BROWSER" && (
-            <GhostBrowser
+            <LucaBrowser
               url={currentBrowserUrl || "https://google.com"}
               onClose={() => setMode("IDLE")}
               mode="EMBEDDED"

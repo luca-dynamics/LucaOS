@@ -17,6 +17,11 @@ import {
   SANDBOXED_BROWSER_SHELL_OPEN_EVENT,
   type SandboxedBrowserShellOpenEventDetail,
 } from "../../types/sandboxedBrowserShell";
+import LucaBrowser from "../LucaBrowser";
+import {
+  getPreferredBrowserShellAdapter,
+  type LucaBrowserShellAdapter,
+} from "./lucaBrowserAdapter";
 
 const BOUNDARY_LABELS = [
   "Luca Sandbox Browser",
@@ -32,6 +37,7 @@ interface ActiveShell {
   shellSessionId: string;
   url: string;
   auditUrl: string;
+  adapter: LucaBrowserShellAdapter;
 }
 
 const SandboxedBrowserShell: React.FC = () => {
@@ -48,13 +54,17 @@ const SandboxedBrowserShell: React.FC = () => {
       const validation = validateSandboxedBrowserUrl(detail.url);
       if (!validation.allowed || !validation.normalizedUrl) return;
       setEmbedNotice(false);
+      // Prefer the LucaBrowser webview surface on desktop; fall back to the
+      // strict iframe shell on web/no-webview runtimes.
+      const adapter = getPreferredBrowserShellAdapter();
       setActive({
         shellSessionId: detail.shellSessionId,
         url: validation.normalizedUrl,
         auditUrl: validation.auditUrl,
+        adapter,
       });
       if (detail.shellSessionId) {
-        sandboxedBrowserShellService.markShellOpened(detail.shellSessionId);
+        sandboxedBrowserShellService.markShellOpened(detail.shellSessionId, adapter);
       }
     };
     window.addEventListener(SANDBOXED_BROWSER_SHELL_OPEN_EVENT, handleOpen);
@@ -73,6 +83,22 @@ const SandboxedBrowserShell: React.FC = () => {
     setActive(null);
   };
 
+  // Desktop/Electron: surface the approved URL inside LucaBrowser governed mode
+  // (read-only URL, no external open, popups disabled, non-persistent partition).
+  if (active.adapter === "luca_browser_webview") {
+    return (
+      <LucaBrowser
+        url={active.url}
+        auditUrl={active.auditUrl}
+        shellSessionId={active.shellSessionId}
+        browserMode="GOVERNED"
+        onClose={close}
+        onRevoke={revoke}
+      />
+    );
+  }
+
+  // Web / no-webview runtimes: keep the PR #134 strict iframe fallback shell.
   return (
     <div
       className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4"
