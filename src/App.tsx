@@ -49,7 +49,7 @@ import {
 import { Icon } from "./components/ui/Icon";
 import { getDynamicContrast } from "./config/themeColors";
 
-import GhostBrowser from "./components/GhostBrowser";
+import LucaBrowser from "./components/LucaBrowser";
 import { watchGateway } from "./services/watchGateway";
 
 import { lucaLinkManager } from "./services/lucaLink/manager";
@@ -2128,7 +2128,7 @@ function AppContent() {
   if (appMode === "browser") {
     return (
       <div className="w-full h-screen bg-black/90 border border-slate-700 rounded-xl overflow-hidden shadow-2xl flex flex-col">
-        <GhostBrowser
+        <LucaBrowser
           url={ghostBrowserUrl}
           onClose={() => {
             if (window.electron)

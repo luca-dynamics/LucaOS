@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
 import io from "socket.io-client";
 import CinemaPlayer from "./CinemaPlayer";
-import GhostBrowser from "./GhostBrowser";
+import LucaBrowser from "./LucaBrowser";
 
 // Import Refactored Components
 import TVDataRoom from "./visual/TVDataRoom";
@@ -104,7 +104,7 @@ const TVReceiver = () => {
   if (mode === "BROWSER" && browserUrl) {
     return (
       <div className="h-screen w-screen bg-black overflow-hidden relative">
-        <GhostBrowser
+        <LucaBrowser
           url={browserUrl}
           onClose={() => {}}
           sessionId="tv-session"

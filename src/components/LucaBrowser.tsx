@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
+import {
+  getGovernedBrowserBoundaryLabels,
+  getGovernedWebviewProps,
+  getLucaBrowserModeLabel,
+  type LucaBrowserMode,
+} from "./browser/lucaBrowserAdapter";
 
 interface Props {
   url: string;
@@ -8,20 +14,30 @@ interface Props {
   onClose: () => void;
   onNavigate?: (url: string) => void;
   sessionId?: string; // Optional: Web Navigator session ID for agent overlay
-  mode?: "STANDALONE" | "EMBEDDED"; // NEW: Support embedded mode
+  mode?: "STANDALONE" | "EMBEDDED"; // Legacy layout mode (manual standalone vs embedded)
+  // PR #135: governed adapter surface. GOVERNED restricts the browser to an
+  // approved safe URL with no URL editing, no external open, and no popups.
+  browserMode?: LucaBrowserMode;
+  auditUrl?: string;
+  shellSessionId?: string;
+  onRevoke?: () => void;
 }
 
 // Technical: Electron webview is not a standard HTML element in React's types.
 // We use a global declaration to prevent TS errors while adhering to module standards.
 // Webview is handled via type casting in the render block to avoid declaration conflicts.
 
-const GhostBrowser: React.FC<Props> = ({
+const LucaBrowser: React.FC<Props> = ({
   url,
-  title = "Ghost Browser",
+  title = "Luca Browser",
   onClose,
   onNavigate,
   sessionId,
   mode = "STANDALONE",
+  browserMode = "MANUAL",
+  auditUrl,
+  shellSessionId,
+  onRevoke,
 }) => {
   const webviewRef = useRef<any>(null);
   const [canGoBack, setCanGoBack] = useState(false);
@@ -40,25 +56,25 @@ const GhostBrowser: React.FC<Props> = ({
   useEffect(() => {
     const webview = webviewRef.current;
     if (!webview) {
-      console.warn("[GhostBrowser] Webview ref not found on mount");
+      console.warn("[LucaBrowser] Webview ref not found on mount");
       return;
     }
 
-    console.log("[GhostBrowser] Attaching listeners to webview");
+    console.log("[LucaBrowser] Attaching listeners to webview");
 
     const handleDidStartLoading = () => {
-      console.log("[GhostBrowser] did-start-loading");
+      console.log("[LucaBrowser] did-start-loading");
       setIsLoading(true);
     };
 
     const handleDidStopLoading = () => {
-      console.log("[GhostBrowser] did-stop-loading");
+      console.log("[LucaBrowser] did-stop-loading");
       setIsLoading(false);
     };
 
     const handleDidNavigate = (e: any) => {
       const navUrl = e.url;
-      console.log("[GhostBrowser] did-navigate:", navUrl);
+      console.log("[LucaBrowser] did-navigate:", navUrl);
       setCurrentUrl(navUrl);
 
       // Update canGoBack/forward
@@ -74,7 +90,7 @@ const GhostBrowser: React.FC<Props> = ({
         navUrl.includes("twitter.com/home")
       ) {
         console.log(
-          "[GhostBrowser] Auth callback URL detected, will close in 3s:",
+          "[LucaBrowser] Auth callback URL detected, will close in 3s:",
           navUrl
         );
         setTimeout(() => {
@@ -89,7 +105,7 @@ const GhostBrowser: React.FC<Props> = ({
 
     const handleDidFailLoad = (e: any) => {
       console.error(
-        "[GhostBrowser] Webview load failed:",
+        "[LucaBrowser] Webview load failed:",
         e.errorCode,
         e.errorDescription,
         "URL:",
@@ -100,7 +116,7 @@ const GhostBrowser: React.FC<Props> = ({
 
     // Use dom-ready to know when we can safely call webview methods
     const handleDomReady = () => {
-      console.log("[GhostBrowser] DOM ready, initial nav check");
+      console.log("[LucaBrowser] DOM ready, initial nav check");
       if (webview.canGoBack) setCanGoBack(webview.canGoBack());
       if (webview.canGoForward) setCanGoForward(webview.canGoForward());
     };
@@ -192,6 +208,128 @@ const GhostBrowser: React.FC<Props> = ({
   const handleMaximize = () => {
     setIsMaximized(!isMaximized);
   };
+
+  // PR #135 — Governed mode: approved safe URL only. URL is read-only, there is
+  // no Open-External control, popups are disabled, and the partition is
+  // non-persistent. Luca never automates the page or reads its DOM.
+  if (browserMode === "GOVERNED") {
+    const governedProps = getGovernedWebviewProps(shellSessionId);
+    const boundaryLabels = getGovernedBrowserBoundaryLabels();
+    const displayUrl = auditUrl || url;
+    return (
+      <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 font-mono p-4 sm:p-20">
+        <div className="relative w-full h-full bg-[#0d0d0d] flex flex-col overflow-hidden border border-amber-500/40 shadow-2xl rounded-lg">
+          {/* Safety banner */}
+          <div className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-sm font-black uppercase tracking-[0.18em] text-amber-200">
+                  {getLucaBrowserModeLabel("GOVERNED")}
+                </div>
+                <p className="mt-1 truncate text-[11px] text-slate-400">
+                  Audit URL: <span className="font-mono">{displayUrl}</span>
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  onClick={handleGoBack}
+                  disabled={!canGoBack}
+                  className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Go Back"
+                >
+                  <Icon name="ArrowLeft" size={16} />
+                </button>
+                <button
+                  onClick={handleGoForward}
+                  disabled={!canGoForward}
+                  className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Go Forward"
+                >
+                  <Icon name="ArrowRight" size={16} />
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  className="p-1.5 text-slate-400 hover:text-white transition-colors"
+                  title="Refresh"
+                >
+                  <Icon name="RefreshCw" size={16} className={isLoading ? "animate-spin" : ""} />
+                </button>
+                <button
+                  onClick={onClose}
+                  className="ml-1 rounded-lg border border-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-200 hover:bg-white/10"
+                  title="Close"
+                >
+                  Close
+                </button>
+                {onRevoke && (
+                  <button
+                    onClick={onRevoke}
+                    className="rounded-lg border border-red-500/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-red-200 hover:bg-red-500/10"
+                    title="Revoke"
+                  >
+                    Revoke
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {boundaryLabels.map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full border border-amber-500/30 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-amber-200"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Read-only approved URL bar — no arbitrary URL entry in governed mode */}
+          <div className="flex items-center gap-2 border-b border-white/10 bg-black/30 px-4 py-2">
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Approved URL</span>
+            <input
+              type="text"
+              value={displayUrl}
+              readOnly
+              aria-readonly="true"
+              tabIndex={-1}
+              className="min-w-0 flex-1 truncate bg-transparent font-mono text-[11px] text-slate-200 outline-none cursor-default"
+            />
+          </div>
+
+          {/* Controlled webview content (non-persistent partition, popups disabled) */}
+          <div className="flex-1 relative bg-black">
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 glass-blur">
+                <div className="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+            <webview
+              ref={webviewRef}
+              src={url}
+              style={{ width: "100%", height: "100%" }}
+              {...({
+                partition: governedProps.partition,
+                webpreferences: governedProps.webpreferences,
+              } as any)}
+            />
+          </div>
+
+          {/* Footer */}
+          <div className="h-auto border-t border-white/10 bg-[#080808] px-4 py-2 flex items-center justify-between gap-4 text-[10px] text-slate-500">
+            <p className="italic leading-relaxed opacity-80 min-w-0 flex-1">
+              Luca cannot automate this page, read its DOM, handle credentials/cookies, download/upload files, or touch
+              wallet/payment flows. Browsing is manual and user-owned.
+            </p>
+            <div className="flex items-center gap-3 shrink-0">
+              <span>ENGINE: WEBVIEW</span>
+              <span>MODE: GOVERNED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (mode === "EMBEDDED") {
     // NOTE: themeHex is not defined in the provided context. Assuming it's defined elsewhere or will be added.
@@ -472,4 +610,4 @@ const GhostBrowser: React.FC<Props> = ({
   );
 };
 
-export default GhostBrowser;
+export default LucaBrowser;
