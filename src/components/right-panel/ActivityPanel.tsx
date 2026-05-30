@@ -16,6 +16,8 @@ import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBr
 import { isLucaBrowserSafeLifecycleExecutionKind } from "../../services/runtime/LucaBrowserActionPolicy";
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { getVisualCoreDisplayGovernanceBoundaryLabels } from "../../services/runtime/VisualCoreDisplayGovernance";
+import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
+import { getVisualCoreRemoteCommandBoundaryLabels } from "../../services/runtime/VisualCoreRemoteCommandPolicy";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -205,6 +207,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       browserShellObservations: sandboxedBrowserShellService.listObservationSnapshots(),
       browserShellActions: lucaBrowserActionQueueService.listActionRequests(),
       visualDisplaySessions: visualCoreDisplaySessionService.listDisplaySessions(),
+      visualRemoteCommands: visualCoreRemoteCommandService.listRemoteCommandRecords(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -747,6 +750,59 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         {session.status !== "revoked" && <Button tone="danger" onClick={() => { visualCoreDisplaySessionService.revokeDisplaySession(session.visualSessionId, "Revoked from Activity panel."); refresh(); }}>revoke</Button>}
                       </div>
                     )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="VisualCore remote commands" subtitle="Remote commands are audited before they can drive VisualCore. Browser navigation and sensitive commands require dedicated governance. No execute/run — records only.">
+        {data.visualRemoteCommands.length === 0 ? (
+          <div className="text-[10px] italic text-[var(--app-text-muted)]">No VisualCore remote commands.</div>
+        ) : (
+          <div className="space-y-2">
+            {[...data.visualRemoteCommands]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 8)
+              .map((command) => {
+                const blocked = command.status === "blocked";
+                const needsApproval = command.status === "needs_approval";
+                return (
+                  <div key={command.commandRecordId} className={`rounded-xl border p-2 ${blocked ? "border-red-500/20 bg-red-500/5" : needsApproval ? "border-amber-500/20 bg-amber-500/5" : command.status === "allowed_record_only" ? "border-emerald-500/20 bg-emerald-500/5" : "border-white/10 bg-black/10"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-bold text-[var(--app-text-main)]">{command.kind} · {command.status}</div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{command.userSafeReason}</p>
+                      </div>
+                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{command.riskLevel}</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                      <span>source: {command.source}</span>
+                      {command.targetMode && <span>target: {command.targetMode}</span>}
+                      <span>updated: {compactTimestamp(command.updatedAt)}</span>
+                    </div>
+                    {command.targetAuditUrl && (
+                      <p className="mt-1 truncate text-[9px] text-[var(--app-text-muted)]">audit url: {command.targetAuditUrl}</p>
+                    )}
+                    {command.blockedBy && command.blockedBy.length > 0 && (
+                      <p className="mt-1 text-[9px] text-red-200">Blocked by: {command.blockedBy.join(", ")}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      {getVisualCoreRemoteCommandBoundaryLabels().map((label) => (
+                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                      ))}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                      <span>execution changed: false</span>
+                      <span>browser governed: false</span>
+                      <span>capture: false</span>
+                      <span>automation: false</span>
+                      <span>external action: false</span>
+                      <span>file: false</span>
+                      <span>messaging: false</span>
+                      <span>wireless: false</span>
+                    </div>
                   </div>
                 );
               })}

@@ -17,6 +17,7 @@ import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBr
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
+import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -143,6 +144,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       browserShellActions: lucaBrowserActionQueueService.listActionRequests(),
       browserShellActionExecutions: lucaBrowserActionExecutionService.listExecutionResults(),
       visualDisplaySessions: visualCoreDisplaySessionService.listDisplaySessions(),
+      visualRemoteCommands: visualCoreRemoteCommandService.listRemoteCommandRecords(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -498,6 +500,48 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>{compactTimestamp(session.updatedAt)}</span>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <span>capture: false</span>
+                    <span>automation: false</span>
+                    <span>external action: false</span>
+                    <span>file: false</span>
+                    <span>messaging: false</span>
+                    <span>wireless: false</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="VisualCore remote command trace" subtitle="Remote commands audited before driving VisualCore: received / allowed_record_only / needs_approval / blocked. Browser navigation and sensitive commands need dedicated governance. No capture, automation, external action, file, messaging, or wireless.">
+        {trace.visualRemoteCommands.length === 0 ? <EmptyState>No VisualCore remote commands.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.visualRemoteCommands]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 10)
+              .map((command) => (
+                <div key={command.commandRecordId} className={`rounded-xl border p-3 ${command.status === "blocked" ? "border-red-500/20 bg-red-500/5" : command.status === "needs_approval" ? "border-amber-500/20 bg-amber-500/5" : command.status === "allowed_record_only" ? "border-emerald-500/20 bg-emerald-500/5" : "border-indigo-500/20 bg-indigo-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{command.kind} · {command.status} · {command.commandRecordId.slice(-6)}</div>
+                      <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{command.userSafeReason}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{command.riskLevel}</span>
+                  </div>
+                  {command.targetAuditUrl && (
+                    <p className="mt-2 truncate text-[9px] text-[var(--app-text-muted)]">audit url: {command.targetAuditUrl}</p>
+                  )}
+                  {command.blockedBy && command.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] text-red-200">Blocked by: {command.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>source: {command.source}</span>
+                    {command.targetMode && <span>target: {command.targetMode}</span>}
+                    <span>{compactTimestamp(command.updatedAt)}</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <span>execution changed: false</span>
+                    <span>browser governed: false</span>
                     <span>capture: false</span>
                     <span>automation: false</span>
                     <span>external action: false</span>
