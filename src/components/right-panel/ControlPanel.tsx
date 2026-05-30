@@ -16,6 +16,7 @@ import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesk
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
+import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -76,6 +77,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const screenObservation = screenObservationService.getDiagnosticsSummary();
   const sandboxedBrowser = sandboxedBrowserService.getDiagnosticsSummary();
   const browserShell = sandboxedBrowserShellService.getDiagnosticsSummary();
+  const browserActions = lucaBrowserActionQueueService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -246,6 +248,28 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </div>
         <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">
           LucaBrowser can observe governed session metadata only. Luca cannot read page content, DOM, screenshots, OCR, credentials, or automate the page.
+        </p>
+      </RightPanelSection>
+
+      <RightPanelSection title="Browser action queue" subtitle="Proposed governed browser actions, queued for human review only. Execution is still disabled.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Action requests" value={formatCount("request", browserActions.totalActionRequests)} />
+          <RightPanelMetric label="Waiting confirmation" value={formatCount("request", browserActions.waitingConfirmationRequests)} tone={browserActions.waitingConfirmationRequests > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Confirmed for future" value={formatCount("request", browserActions.confirmedForFutureExecutionRequests)} tone={browserActions.confirmedForFutureExecutionRequests > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Blocked" value={formatCount("request", browserActions.blockedRequests)} tone={browserActions.blockedRequests > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Revoked" value={formatCount("request", browserActions.revokedRequests)} tone="neutral" />
+          <RightPanelMetric label="Archived" value={formatCount("request", browserActions.archivedRequests)} tone="neutral" />
+          <RightPanelMetric label="Execution enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Human confirmation required" value="true" tone="neutral" />
+          <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="DOM read enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Page content read enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Screenshot/OCR enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Credentials enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Download/wallet enabled" value="false" tone="neutral" />
+        </div>
+        <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">
+          LucaBrowser actions are queued for review only. Execution is still disabled.
         </p>
       </RightPanelSection>
 
