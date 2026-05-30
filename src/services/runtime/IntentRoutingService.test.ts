@@ -259,3 +259,45 @@ describe("IntentRoutingService", () => {
     });
   });
 });
+
+describe("IntentRoutingService — PR #134 safe URL browser open", () => {
+  let deps: ReturnType<typeof makeMockDeps>;
+  let service: IntentRoutingService;
+
+  beforeEach(() => {
+    deps = makeMockDeps();
+    service = new IntentRoutingService(deps);
+  });
+
+  it("'open <safe URL> in Luca browser' creates a governed open_approved_safe_url request only", () => {
+    const result = service.routeUserMessage(
+      makeInput({ message: "open https://example.com in Luca browser", provenanceIds: ["prov:real:1"] }),
+    );
+    expect(result.decision.route).toBe("governed_action_request");
+    expect(deps.governedRequests.createRequest).toHaveBeenCalledTimes(1);
+    expect(deps.governedRequests.createRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestedCapability: "open_approved_safe_url",
+        target: "browser-shell:safe-url",
+        parametersPreview: { safeUrl: "https://example.com/" },
+      }),
+    );
+    expect(result.noExecutionPerformed).toBe(true);
+  });
+
+  it("unsafe URL routes to blocked_risky_action, not a safe-url governed request", () => {
+    const result = service.routeUserMessage(
+      makeInput({ message: "open https://example.com/wallet in Luca browser", provenanceIds: ["prov:real:2"] }),
+    );
+    expect(result.decision.route).toBe("blocked_risky_action");
+    expect(deps.governedRequests.createRequest).not.toHaveBeenCalled();
+  });
+
+  it("browser-open intent without a URL routes to ask_user", () => {
+    const result = service.routeUserMessage(
+      makeInput({ message: "open this safe url in the sandbox browser", provenanceIds: ["prov:real:3"] }),
+    );
+    expect(result.decision.route).toBe("ask_user");
+    expect(deps.governedRequests.createRequest).not.toHaveBeenCalled();
+  });
+});

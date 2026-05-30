@@ -19,6 +19,8 @@ import {
   detectLocalPanelTarget,
 } from "./IntentRoutingPolicy";
 import { getTargetCapability, getSafeLocalPanelLabel } from "./SafeLocalPanelTargets";
+import { validateSandboxedBrowserUrl } from "./SandboxedBrowserUrlPolicy";
+import { SAFE_URL_BROWSER_TARGET } from "./GovernedToolExecutionPolicy";
 import type {
   LucaRoutingMode,
   LucaIntentRoutingDecision,
@@ -46,6 +48,16 @@ const SCREEN_OBSERVATION_HINT = /look at (my|the|this) (screen|window|app|tab)|o
 // When intent routing detects obvious browser-control phrases, it mirrors them into a
 // blocked / dry-run sandboxed browser record. No browser is launched, automated, or controlled.
 const SANDBOXED_BROWSER_HINT = /open (this |the |a )?(website|url|chrome|browser|tab|page)|go to (this |the )?(url|site|website|page)|navigate to|click (this |the |that )?(button|link|element)|type into|fill (in |out )?(this |the )?(form|field|input)|submit (this |the )?form|log ?in|sign ?in|download (this |the |a )?file|upload (this |the |a )?file|connect wallet|check ?out|\bpay\b|scrape (this |the )?page|read (the )?dom/i;
+
+// PR #134: phrases that explicitly ask to open a URL inside the Luca sandbox
+// browser shell. Only routes to a governed approval request (never direct open).
+const SAFE_URL_BROWSER_OPEN_HINT = /open (this |the |a )?(safe )?(url|website|site|page|link)( in)?|open .*in (the )?(luca |sandbox(ed)? )?browser|open (the )?website in (the )?sandbox|in (the )?luca browser|in (the )?sandbox(ed)? browser/i;
+
+// Extracts the first http(s) URL from a message. Pure string parsing only.
+function extractFirstUrl(message: string): string | null {
+  const match = message.match(/https?:\/\/[^\s"'<>]+/i);
+  return match ? match[0] : null;
+}
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -132,6 +144,11 @@ export class IntentRoutingService {
       createdAt: timestamp,
       metadata: { ...draft.metadata, source: sanitized.source, sourceId: sanitized.sourceId },
     };
+
+    // PR #134: redirect explicit "open <safe URL> in Luca browser" phrases to a
+    // governed approval request (open_approved_safe_url). Unsafe/missing URLs are
+    // degraded to a blocked/ask route. Never opens the shell directly from chat.
+    this.applySafeUrlBrowserRouting(decision, sanitized);
 
     this.createArtifactsForRoute(decision, sanitized);
 
@@ -271,6 +288,46 @@ export class IntentRoutingService {
   }
 
   // -----------------------------------------------------------------------
+  // PR #134: safe URL browser-open routing (approval-gated, never direct)
+  // -----------------------------------------------------------------------
+
+  private applySafeUrlBrowserRouting(
+    decision: LucaIntentRoutingDecision,
+    input: LucaIntentRoutingInput,
+  ): void {
+    const message = input.message ?? "";
+    if (!SAFE_URL_BROWSER_OPEN_HINT.test(message)) return;
+
+    const rawUrl = extractFirstUrl(message);
+    if (!rawUrl) {
+      // Browser-open intent without a URL → ask the user for the URL.
+      decision.route = "ask_user";
+      decision.reason = `safe_url_browser_open_missing_url. ${decision.reason}`;
+      return;
+    }
+
+    const validation = validateSandboxedBrowserUrl(rawUrl);
+    if (!validation.allowed || !validation.normalizedUrl) {
+      // Unsafe URL → blocked risky action (creates a blocked sandboxed record).
+      decision.route = "blocked_risky_action";
+      decision.reason = `safe_url_browser_open_unsafe_url: ${validation.userSafeReason}. ${decision.reason}`;
+      return;
+    }
+
+    // Safe URL → governed approval request only. The shell opens after the user
+    // approves and clicks Run once; chat never opens it directly.
+    decision.route = "governed_action_request";
+    decision.riskLevel = validation.riskLevel === "low" ? "low" : "elevated";
+    decision.reason = `safe_url_browser_open_governed_request. ${decision.reason}`;
+    decision.metadata = {
+      ...decision.metadata,
+      safeUrlBrowserOpen: true,
+      safeUrl: validation.normalizedUrl,
+      auditUrl: validation.auditUrl,
+    };
+  }
+
+  // -----------------------------------------------------------------------
   // Private: artifact creation per route
   // -----------------------------------------------------------------------
 
@@ -327,6 +384,24 @@ export class IntentRoutingService {
       case "governed_action_request":
       case "safe_execution_request": {
         try {
+          // PR #134: approved safe URL open request takes precedence.
+          const safeUrl = decision.metadata?.safeUrlBrowserOpen === true && typeof decision.metadata?.safeUrl === "string"
+            ? (decision.metadata.safeUrl as string)
+            : null;
+          if (safeUrl) {
+            const request = this.deps.governedRequests.createRequest({
+              kind: "tool",
+              title: `Open approved safe URL: ${typeof decision.metadata?.auditUrl === "string" ? decision.metadata.auditUrl : safeUrl}`,
+              description: decision.reason,
+              requestedCapability: "open_approved_safe_url",
+              target: SAFE_URL_BROWSER_TARGET,
+              parametersPreview: { safeUrl },
+              provenanceIds,
+              riskLevel: decision.riskLevel === "low" ? "low" : "medium",
+            });
+            decision.createdGovernedRequestIds = [request.requestId];
+            break;
+          }
           const panelTarget = detectLocalPanelTarget(input.message);
           const capability = panelTarget ? getTargetCapability(panelTarget) : (decision.route === "safe_execution_request" ? "runtime_read" : "notify");
           const target = panelTarget ?? (decision.route === "safe_execution_request" ? "runtime:diagnostics" : "notification");

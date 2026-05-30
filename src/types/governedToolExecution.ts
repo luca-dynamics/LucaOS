@@ -5,7 +5,11 @@ export type GovernedExecutionCapability =
   | "memory_read"
   | "inbox_read"
   | "session_read"
-  | "dry_run_confirm";
+  | "dry_run_confirm"
+  // PR #134: narrowly-scoped capability to open ONE user-approved safe URL in
+  // the Luca sandbox browser shell. No automation, DOM read, credentials,
+  // downloads/uploads, or wallet/payment are ever permitted by this capability.
+  | "open_approved_safe_url";
 
 export type GovernedExecutionStatus =
   | "queued"

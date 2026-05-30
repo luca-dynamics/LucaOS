@@ -5,6 +5,10 @@ import type {
   GovernedExecutionRiskLevel,
 } from "../../types/governedToolExecution";
 import { isSafeLocalPanelTarget } from "./SafeLocalPanelTargets";
+import { validateSandboxedBrowserUrl } from "./SandboxedBrowserUrlPolicy";
+
+// PR #134: the ONLY target accepted for the gated browser shell capability.
+export const SAFE_URL_BROWSER_TARGET = "browser-shell:safe-url";
 
 const SECRET_KEY_PATTERNS = [
   /token/i,
@@ -106,6 +110,10 @@ const CAPABILITY_MAP: Record<string, GovernedExecutionCapability> = {
   session_list: "session_read",
   dry_run_confirm: "dry_run_confirm",
   dry_run: "dry_run_confirm",
+  // PR #134: narrowly-scoped safe URL open. Not added to SAFE_CAPABILITIES —
+  // it is evaluated by its own dedicated, stricter branch in evaluate().
+  open_approved_safe_url: "open_approved_safe_url",
+  open_safe_url: "open_approved_safe_url",
 };
 
 function mapRiskLevel(riskLevel: string): GovernedExecutionRiskLevel {
@@ -142,7 +150,55 @@ export function mapCapability(request: GovernedActionRequest): GovernedExecution
   if (target?.startsWith("session:")) return "session_read";
   if (target === "notification" || target === "display" || target === "ui:notify") return "notify";
   if (target === "dry-run:confirm") return "dry_run_confirm";
+  if (target === "browser_shell:safe_url") return "open_approved_safe_url";
   return null;
+}
+
+function extractSafeUrl(params: Record<string, unknown>): string {
+  const value = params?.safeUrl ?? params?.url;
+  return typeof value === "string" ? value : "";
+}
+
+// PR #134: dedicated, strict evaluation for opening ONE user-approved safe URL
+// in the sandbox browser shell. Deliberately separate from the generic safe
+// path so it never widens the generic allowlist or the PR #133 research policy.
+function evaluateOpenApprovedSafeUrl(
+  request: GovernedActionRequest,
+  riskLevel: GovernedExecutionRiskLevel,
+): GovernedExecutionPolicyDecision {
+  const blockedBy: string[] = [];
+
+  const normalizedTarget = request.target?.toLowerCase().trim();
+  if (normalizedTarget !== SAFE_URL_BROWSER_TARGET) blockedBy.push("invalid_browser_shell_target");
+
+  if (!request.provenanceIds || request.provenanceIds.length === 0) blockedBy.push("missing_provenance");
+
+  // Only low or elevated risk may open a shell; high/critical are blocked.
+  if (riskLevel === "high" || riskLevel === "critical") blockedBy.push("high_risk_browser_url");
+
+  if (hasSecretKeys(request.parametersPreview)) blockedBy.push("secret_in_parameters");
+
+  const urlResult = validateSandboxedBrowserUrl(extractSafeUrl(request.parametersPreview));
+  if (!urlResult.allowed) blockedBy.push("unsafe_url");
+
+  if (request.status === "rejected" || request.status === "blocked" || request.status === "expired" || request.status === "executed_elsewhere") {
+    blockedBy.push("request_terminal_state");
+  }
+
+  const needsApproval = request.status === "approval_required" || request.status === "proposed";
+  const isApprovedWaiting = request.status === "approved_waiting_execution";
+  if (needsApproval && !isApprovedWaiting) blockedBy.push("approval_not_granted");
+
+  const allowed = blockedBy.length === 0;
+  return {
+    allowed,
+    capability: "open_approved_safe_url",
+    riskLevel,
+    blockedBy,
+    userSafeReason: allowed
+      ? "Approved safe URL can be opened in the Luca sandbox browser shell. Luca cannot automate the page, read the DOM, handle credentials, or download/upload."
+      : buildBlockedReason(blockedBy),
+  };
 }
 
 export function isAllowedTarget(target: string): boolean {
@@ -165,6 +221,13 @@ export function evaluate(request: GovernedActionRequest): GovernedExecutionPolic
   const blockedBy: string[] = [];
   const capability = mapCapability(request);
   const riskLevel = mapRiskLevel(request.riskLevel);
+
+  // PR #134: the gated browser shell capability has its own strict branch and
+  // must bypass the generic capability/target allowlists (which intentionally
+  // block anything matching /browser/).
+  if (capability === "open_approved_safe_url") {
+    return evaluateOpenApprovedSafeUrl(request, riskLevel);
+  }
 
   if (!capability) {
     blockedBy.push("unmapped_capability");
@@ -229,5 +292,8 @@ function buildBlockedReason(blockedBy: string[]): string {
   if (blockedBy.includes("secret_in_parameters")) return "This action's parameters contain secret-like keys and cannot be executed through the safe bridge.";
   if (blockedBy.includes("request_terminal_state")) return "This action request is in a terminal state (rejected/blocked/expired/executed).";
   if (blockedBy.includes("approval_not_granted")) return "This action requires approval before it can be executed.";
+  if (blockedBy.includes("invalid_browser_shell_target")) return "This browser shell action does not target the approved safe-URL shell.";
+  if (blockedBy.includes("high_risk_browser_url")) return "This URL's risk level is too high for the sandbox browser shell.";
+  if (blockedBy.includes("unsafe_url")) return "This URL failed safe-URL validation and cannot be opened in the sandbox browser shell.";
   return "This action is blocked by governance policy.";
 }
