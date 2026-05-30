@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
 import {
@@ -53,6 +53,35 @@ const LucaBrowser: React.FC<Props> = ({
   const [navBlockedReason, setNavBlockedReason] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
 
+  // PR #137 — read-only observation metadata. Records a governed session
+  // snapshot (status, adapter, audit URLs, nav counts, loading + back/forward)
+  // from safe webview signals only. Never reads the DOM, page content, title,
+  // screenshots, OCR, vision, cookies, or credentials.
+  const recordGovernedObservation = useCallback(
+    (overrides?: { isLoading?: boolean }) => {
+      if (!isGoverned || !shellSessionId) return;
+      const webview = webviewRef.current;
+      let back = false;
+      let forward = false;
+      try {
+        back = typeof webview?.canGoBack === "function" ? webview.canGoBack() : false;
+        forward = typeof webview?.canGoForward === "function" ? webview.canGoForward() : false;
+      } catch {
+        /* best-effort metadata read; never throws into execution */
+      }
+      sandboxedBrowserShellService.recordObservationSnapshot({
+        shellSessionId,
+        adapter: "luca_browser_webview",
+        currentUrl: lastAllowedUrlRef.current,
+        lastAllowedUrl: lastAllowedUrlRef.current,
+        isLoading: overrides?.isLoading ?? false,
+        canGoBack: back,
+        canGoForward: forward,
+      });
+    },
+    [isGoverned, shellSessionId],
+  );
+
   // Agent overlay state
   const [agentState, setAgentState] = useState<any>(null);
   const [showAgentOverlay, setShowAgentOverlay] = useState(false);
@@ -75,6 +104,7 @@ const LucaBrowser: React.FC<Props> = ({
       // Governed: reflect the transient navigating lifecycle state.
       if (isGoverned && shellSessionId) {
         sandboxedBrowserShellService.markShellNavigating(shellSessionId);
+        recordGovernedObservation({ isLoading: true });
       }
     };
 
@@ -84,6 +114,7 @@ const LucaBrowser: React.FC<Props> = ({
       // Governed: settle back to open once loading finishes (unless blocked).
       if (isGoverned && shellSessionId) {
         sandboxedBrowserShellService.markShellSettled(shellSessionId);
+        recordGovernedObservation({ isLoading: false });
       }
     };
 
@@ -115,6 +146,7 @@ const LucaBrowser: React.FC<Props> = ({
           } catch {
             /* best-effort freeze; never throws into execution */
           }
+          recordGovernedObservation({ isLoading: false });
           return;
         }
         setNavBlockedReason(null);
@@ -122,6 +154,7 @@ const LucaBrowser: React.FC<Props> = ({
         setCurrentUrl(navUrl);
         if (webview.canGoBack) setCanGoBack(webview.canGoBack());
         if (webview.canGoForward) setCanGoForward(webview.canGoForward());
+        recordGovernedObservation({ isLoading: false });
         if (onNavigate) onNavigate(navUrl);
         return;
       }
@@ -170,6 +203,10 @@ const LucaBrowser: React.FC<Props> = ({
       console.log("[LucaBrowser] DOM ready, initial nav check");
       if (webview.canGoBack) setCanGoBack(webview.canGoBack());
       if (webview.canGoForward) setCanGoForward(webview.canGoForward());
+      // Governed: record an initial observation snapshot once the shell mounts.
+      if (isGoverned && shellSessionId) {
+        recordGovernedObservation({ isLoading: false });
+      }
     };
 
     webview.addEventListener("dom-ready", handleDomReady);
@@ -196,7 +233,7 @@ const LucaBrowser: React.FC<Props> = ({
       webview.removeEventListener("did-fail-load", handleDidFailLoad);
       clearInterval(navInterval);
     };
-  }, [onClose, onNavigate, isGoverned, shellSessionId]);
+  }, [onClose, onNavigate, isGoverned, shellSessionId, recordGovernedObservation]);
 
   // Agent state polling (if sessionId provided)
   useEffect(() => {
@@ -262,12 +299,18 @@ const LucaBrowser: React.FC<Props> = ({
 
   // PR #136 — governed session lifecycle controls.
   const handlePause = () => {
-    if (shellSessionId) sandboxedBrowserShellService.pauseShellSession(shellSessionId, "Paused from Luca Browser.");
+    if (shellSessionId) {
+      sandboxedBrowserShellService.pauseShellSession(shellSessionId, "Paused from Luca Browser.");
+      recordGovernedObservation({ isLoading: false });
+    }
     setIsPaused(true);
   };
 
   const handleResume = () => {
-    if (shellSessionId) sandboxedBrowserShellService.resumeShellSession(shellSessionId);
+    if (shellSessionId) {
+      sandboxedBrowserShellService.resumeShellSession(shellSessionId);
+      recordGovernedObservation({ isLoading: false });
+    }
     setIsPaused(false);
     setNavBlockedReason(null);
   };

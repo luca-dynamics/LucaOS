@@ -65,6 +65,23 @@ const SandboxedBrowserShell: React.FC = () => {
       });
       if (detail.shellSessionId) {
         sandboxedBrowserShellService.markShellOpened(detail.shellSessionId, adapter);
+        // PR #137: iframe fallback can only provide limited observation
+        // metadata (no reliable loading/back/forward signals, no DOM read).
+        if (adapter === "iframe_fallback") {
+          sandboxedBrowserShellService.recordObservationSnapshot({
+            shellSessionId: detail.shellSessionId,
+            adapter: "iframe_fallback",
+            currentUrl: validation.normalizedUrl,
+            lastAllowedUrl: validation.normalizedUrl,
+            isLoading: false,
+            canGoBack: false,
+            canGoForward: false,
+            metadata: {
+              observationLimited: true,
+              reason: "iframe fallback cannot provide full browser metadata",
+            },
+          });
+        }
       }
     };
     window.addEventListener(SANDBOXED_BROWSER_SHELL_OPEN_EVENT, handleOpen);
@@ -162,6 +179,22 @@ const SandboxedBrowserShell: React.FC = () => {
             referrerPolicy="no-referrer"
             className="h-full w-full border-0"
             onError={() => setEmbedNotice(true)}
+            onLoad={() => {
+              // Settle the limited iframe observation (no DOM is ever read).
+              sandboxedBrowserShellService.recordObservationSnapshot({
+                shellSessionId: active.shellSessionId,
+                adapter: "iframe_fallback",
+                currentUrl: active.url,
+                lastAllowedUrl: active.url,
+                isLoading: false,
+                canGoBack: false,
+                canGoForward: false,
+                metadata: {
+                  observationLimited: true,
+                  reason: "iframe fallback cannot provide full browser metadata",
+                },
+              });
+            }}
           />
         </div>
 

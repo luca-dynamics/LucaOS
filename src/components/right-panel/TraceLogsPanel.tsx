@@ -136,6 +136,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       browserSessions: sandboxedBrowserService.listBrowserSessions(),
       browserShellSessions: sandboxedBrowserShellService.listShellSessions(),
       browserShellNavigations: sandboxedBrowserShellService.listNavigationRecords(),
+      browserShellObservations: sandboxedBrowserShellService.listObservationSnapshots(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -383,6 +384,46 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>{compactTimestamp(nav.createdAt)}</span>
                     <span>automation: false</span>
                     <span>DOM read: false</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Browser observation trace" subtitle="Read-only governed session metadata with redacted audit URLs only. Status, adapter, nav counts, loading + back/forward — no DOM, no page content, no screenshots, no OCR, no vision.">
+        {trace.browserShellObservations.length === 0 ? <EmptyState>No browser observation snapshots.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.browserShellObservations]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 10)
+              .map((obs) => (
+                <div key={obs.observationId} className={`rounded-xl border p-3 ${obs.status === "blocked" || obs.status === "revoked" ? "border-red-500/20 bg-red-500/5" : "border-cyan-500/20 bg-cyan-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">Obs · {obs.status} · {obs.shellSessionId.slice(-6)}</div>
+                      <p className="mt-1 truncate font-mono text-[10px] text-[var(--app-text-muted)]">{obs.currentAuditUrl || "(no audit URL)"}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{obs.adapter ?? "unknown"}</span>
+                  </div>
+                  {obs.lastBlockedReason && (
+                    <p className="mt-2 text-[9px] text-red-200">Last blocked: {obs.lastBlockedReason}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>nav {obs.navigationCount}</span>
+                    <span>blocked {obs.blockedNavigationCount}</span>
+                    <span>{obs.isLoading ? "loading" : "idle"}</span>
+                    <span>back {obs.canGoBack ? "yes" : "no"}</span>
+                    <span>fwd {obs.canGoForward ? "yes" : "no"}</span>
+                    <span>{compactTimestamp(obs.updatedAt)}</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <span>automation: false</span>
+                    <span>DOM: false</span>
+                    <span>page content: false</span>
+                    <span>screenshot: false</span>
+                    <span>OCR: false</span>
+                    <span>vision: false</span>
                   </div>
                 </div>
               ))}

@@ -238,3 +238,132 @@ describe("SandboxedBrowserShellService — navigation governance + lifecycle (PR
     expect(service.getShellSession(session.shellSessionId)?.status).toBe("closed");
   });
 });
+
+describe("SandboxedBrowserShellService — read-only observation metadata (PR #137)", () => {
+  it("records an observation snapshot for an open session with all-false capability flags", () => {
+    const { service, bus } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId, "luca_browser_webview");
+    const snap = service.recordObservationSnapshot({
+      shellSessionId: session.shellSessionId,
+      adapter: "luca_browser_webview",
+      currentUrl: "https://example.com/docs",
+      isLoading: false,
+      canGoBack: true,
+      canGoForward: false,
+    });
+    expect(snap?.status).toBe("observed");
+    expect(snap?.adapter).toBe("luca_browser_webview");
+    expect(snap?.canGoBack).toBe(true);
+    expect(snap?.automationEnabled).toBe(false);
+    expect(snap?.domReadEnabled).toBe(false);
+    expect(snap?.pageContentReadEnabled).toBe(false);
+    expect(snap?.screenshotEnabled).toBe(false);
+    expect(snap?.ocrEnabled).toBe(false);
+    expect(snap?.visionModelEnabled).toBe(false);
+    expect(snap?.credentialsEnabled).toBe(false);
+    expect(snap?.downloadUploadEnabled).toBe(false);
+    expect(snap?.walletPaymentEnabled).toBe(false);
+    expect(bus.emit).toHaveBeenCalledWith("sandboxed_browser_shell_observation_snapshot", expect.objectContaining({ shellSessionId: session.shellSessionId }));
+  });
+
+  it("stores only redacted audit URLs in observation snapshots", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    const snap = service.recordObservationSnapshot({
+      shellSessionId: session.shellSessionId,
+      currentUrl: "https://example.com/page?token=supersecret#frag",
+    });
+    expect(snap?.currentAuditUrl).toBe("https://example.com/page?[redacted]#[redacted]");
+    expect(JSON.stringify(snap)).not.toContain("supersecret");
+  });
+
+  it("counts navigation records and surfaces the last blocked navigation for the session", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId);
+    service.recordNavigationAttempt({ shellSessionId: session.shellSessionId, toUrl: "https://example.com/a" });
+    service.recordNavigationAttempt({ shellSessionId: session.shellSessionId, toUrl: "javascript:alert(1)" });
+    const snap = service.recordObservationSnapshot({ shellSessionId: session.shellSessionId });
+    expect(snap?.navigationCount).toBe(2);
+    expect(snap?.blockedNavigationCount).toBe(1);
+    expect(snap?.lastBlockedReason).toBeTruthy();
+  });
+
+  it("derives status from session lifecycle (paused/revoked/closed/blocked)", () => {
+    const { service } = createService();
+    const paused = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(paused.shellSessionId);
+    service.pauseShellSession(paused.shellSessionId);
+    expect(service.recordObservationSnapshot({ shellSessionId: paused.shellSessionId })?.status).toBe("paused");
+
+    const revoked = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.revokeShellSession(revoked.shellSessionId, "test");
+    expect(service.recordObservationSnapshot({ shellSessionId: revoked.shellSessionId })?.status).toBe("revoked");
+
+    const closed = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.closeShellSession(closed.shellSessionId);
+    expect(service.recordObservationSnapshot({ shellSessionId: closed.shellSessionId })?.status).toBe("closed");
+
+    const blocked = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(blocked.shellSessionId);
+    service.recordNavigationAttempt({ shellSessionId: blocked.shellSessionId, toUrl: "javascript:alert(1)" });
+    expect(service.recordObservationSnapshot({ shellSessionId: blocked.shellSessionId })?.status).toBe("blocked");
+  });
+
+  it("records an iframe fallback snapshot with observationLimited metadata", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId, "iframe_fallback");
+    const snap = service.recordObservationSnapshot({
+      shellSessionId: session.shellSessionId,
+      adapter: "iframe_fallback",
+      currentUrl: "https://example.com",
+      metadata: { observationLimited: true, reason: "iframe fallback cannot provide full browser metadata" },
+    });
+    expect(snap?.adapter).toBe("iframe_fallback");
+    expect(snap?.metadata?.observationLimited).toBe(true);
+  });
+
+  it("upserts a single snapshot per session and supports markObservationStale/clear", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId);
+    const first = service.recordObservationSnapshot({ shellSessionId: session.shellSessionId, currentUrl: "https://example.com/a" });
+    const second = service.recordObservationSnapshot({ shellSessionId: session.shellSessionId, currentUrl: "https://example.com/b" });
+    expect(service.getObservationSnapshotsForSession(session.shellSessionId)).toHaveLength(1);
+    expect(first?.observationId).toBe(second?.observationId); // same observation, updated in place
+    expect(service.markObservationStale(session.shellSessionId, "tab hidden")?.status).toBe("stale");
+    service.clearObservationSnapshot(session.shellSessionId);
+    expect(service.getObservationSnapshot(session.shellSessionId)).toBeUndefined();
+  });
+
+  it("returns undefined for an unknown session", () => {
+    const { service } = createService();
+    expect(service.recordObservationSnapshot({ shellSessionId: "does-not-exist" })).toBeUndefined();
+  });
+
+  it("diagnostics include observation counts and metadata-enabled flags", () => {
+    const { service } = createService();
+    const session = service.openApprovedSafeUrl({ url: "https://example.com" });
+    service.markShellOpened(session.shellSessionId);
+    service.recordObservationSnapshot({ shellSessionId: session.shellSessionId, currentUrl: "https://example.com/a" });
+    const diag = service.getDiagnosticsSummary();
+    expect(diag.observationSnapshots).toBe(1);
+    expect(diag.activeObservationSnapshots).toBe(1);
+    expect(diag.observationMetadataEnabled).toBe(true);
+    expect(diag.pageContentReadEnabled).toBe(false);
+    expect(diag.screenshotEnabled).toBe(false);
+    expect(diag.ocrEnabled).toBe(false);
+    expect(diag.visionModelEnabled).toBe(false);
+    expect(diag.lastObservationAt).toBeTruthy();
+  });
+
+  it("exposes no screenshot/ocr/readDom/pageContent observation methods", () => {
+    const { service } = createService();
+    const forbidden = ["screenshot", "captureScreenshot", "ocr", "readDom", "readPageContent", "extractText", "getPageTitle", "vision"];
+    for (const name of forbidden) {
+      expect((service as unknown as Record<string, unknown>)[name], name).toBeUndefined();
+    }
+  });
+});

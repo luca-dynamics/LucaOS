@@ -25,12 +25,15 @@ import type {
   SandboxedBrowserShellDiagnosticsSummary,
   SandboxedBrowserShellNavigationRecord,
   SandboxedBrowserShellNavigationSource,
+  SandboxedBrowserShellObservationSnapshot,
+  SandboxedBrowserShellObservationStatus,
   SandboxedBrowserShellOpenEventDetail,
   SandboxedBrowserShellSessionRecord,
   SandboxedBrowserShellStatus,
 } from "../../types/sandboxedBrowserShell";
 import {
   MAX_SANDBOXED_BROWSER_SHELL_NAVIGATIONS,
+  MAX_SANDBOXED_BROWSER_SHELL_OBSERVATIONS,
   MAX_SANDBOXED_BROWSER_SHELL_SESSIONS,
   SANDBOXED_BROWSER_SHELL_OPEN_EVENT,
 } from "../../types/sandboxedBrowserShell";
@@ -57,6 +60,17 @@ export interface RecordNavigationAttemptInput {
   metadata?: Record<string, unknown>;
 }
 
+export interface RecordObservationSnapshotInput {
+  shellSessionId: string;
+  adapter?: SandboxedBrowserShellObservationSnapshot["adapter"];
+  currentUrl?: string;
+  lastAllowedUrl?: string;
+  isLoading?: boolean;
+  canGoBack?: boolean;
+  canGoForward?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
 export interface SandboxedBrowserShellServiceDependencies {
   storage?: StorageLike;
   inbox: Pick<RuntimeInboxService, "ingestEvent">;
@@ -65,6 +79,7 @@ export interface SandboxedBrowserShellServiceDependencies {
 
 const SESSIONS_STORAGE_KEY = "LUCA_SANDBOXED_BROWSER_SHELL_SESSIONS_V1";
 const NAVIGATIONS_STORAGE_KEY = "LUCA_SANDBOXED_BROWSER_SHELL_NAVIGATIONS_V1";
+const OBSERVATIONS_STORAGE_KEY = "LUCA_SANDBOXED_BROWSER_SHELL_OBSERVATIONS_V1";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -89,6 +104,7 @@ function readArray<T>(store: StorageLike | undefined, key: string): T[] {
 export class SandboxedBrowserShellService {
   private sessions: SandboxedBrowserShellSessionRecord[];
   private navigations: SandboxedBrowserShellNavigationRecord[];
+  private observations: SandboxedBrowserShellObservationSnapshot[];
 
   constructor(
     private readonly deps: SandboxedBrowserShellServiceDependencies = {
@@ -99,6 +115,7 @@ export class SandboxedBrowserShellService {
   ) {
     this.sessions = readArray<SandboxedBrowserShellSessionRecord>(this.deps.storage, SESSIONS_STORAGE_KEY);
     this.navigations = readArray<SandboxedBrowserShellNavigationRecord>(this.deps.storage, NAVIGATIONS_STORAGE_KEY);
+    this.observations = readArray<SandboxedBrowserShellObservationSnapshot>(this.deps.storage, OBSERVATIONS_STORAGE_KEY);
   }
 
   /**
@@ -325,6 +342,105 @@ export class SandboxedBrowserShellService {
     return this.updateSession(shellSessionId, { status: "open" }, "sandboxed_browser_shell_resumed");
   }
 
+  // -----------------------------------------------------------------------
+  // PR #137 — read-only observation metadata
+  // -----------------------------------------------------------------------
+
+  /**
+   * Record a read-only observation snapshot describing the *governed* browser
+   * session state (status, adapter, audit URLs, nav counts, loading +
+   * back/forward). Metadata only — never reads the DOM, page content, title,
+   * screenshots, OCR, vision, cookies, or credentials. All URLs are redacted.
+   */
+  recordObservationSnapshot(input: RecordObservationSnapshotInput): SandboxedBrowserShellObservationSnapshot | undefined {
+    const session = this.getShellSession(input.shellSessionId);
+    if (!session) return undefined;
+
+    const sessionNavigations = this.navigations.filter((nav) => nav.shellSessionId === input.shellSessionId);
+    const blockedNavigations = sessionNavigations.filter((nav) => nav.status === "blocked");
+    const lastBlocked = blockedNavigations[0];
+
+    const adapter = input.adapter
+      ?? (typeof session.metadata.adapter === "string"
+        ? (session.metadata.adapter as SandboxedBrowserShellObservationSnapshot["adapter"])
+        : undefined);
+
+    const currentAuditUrl = input.currentUrl ? redactUrlForAudit(input.currentUrl) : session.auditUrl || undefined;
+    const lastAllowedAuditUrl = input.lastAllowedUrl ? redactUrlForAudit(input.lastAllowedUrl) : session.auditUrl || undefined;
+
+    const existing = this.getObservationSnapshot(input.shellSessionId);
+    const timestamp = nowIso();
+    const snapshot: SandboxedBrowserShellObservationSnapshot = {
+      observationId: existing?.observationId
+        ?? `sandboxed-browser-obs:${timestamp}:${Math.random().toString(36).slice(2, 8)}`,
+      shellSessionId: input.shellSessionId,
+      status: this.deriveObservationStatus(session.status, adapter),
+      sessionStatus: session.status,
+      adapter,
+      currentAuditUrl,
+      lastAllowedAuditUrl,
+      lastBlockedAuditUrl: lastBlocked?.toAuditUrl,
+      lastBlockedReason: lastBlocked?.userSafeReason,
+      navigationCount: sessionNavigations.length,
+      blockedNavigationCount: blockedNavigations.length,
+      isLoading: input.isLoading ?? false,
+      canGoBack: input.canGoBack ?? false,
+      canGoForward: input.canGoForward ?? false,
+      isPaused: session.status === "paused",
+      isRevoked: session.status === "revoked",
+      isClosed: session.status === "closed",
+      automationEnabled: false,
+      domReadEnabled: false,
+      pageContentReadEnabled: false,
+      screenshotEnabled: false,
+      ocrEnabled: false,
+      visionModelEnabled: false,
+      credentialsEnabled: false,
+      downloadUploadEnabled: false,
+      walletPaymentEnabled: false,
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
+      metadata: input.metadata
+        ? sanitizeRuntimeMetadata({ ...input.metadata })
+        : undefined,
+    };
+    this.upsertObservation(snapshot);
+    return snapshot;
+  }
+
+  getObservationSnapshot(shellSessionId: string): SandboxedBrowserShellObservationSnapshot | undefined {
+    return this.observations.find((obs) => obs.shellSessionId === shellSessionId);
+  }
+
+  listObservationSnapshots(): SandboxedBrowserShellObservationSnapshot[] {
+    return [...this.observations];
+  }
+
+  getObservationSnapshotsForSession(shellSessionId: string): SandboxedBrowserShellObservationSnapshot[] {
+    return this.observations.filter((obs) => obs.shellSessionId === shellSessionId);
+  }
+
+  markObservationStale(shellSessionId: string, reason?: string): SandboxedBrowserShellObservationSnapshot | undefined {
+    const existing = this.getObservationSnapshot(shellSessionId);
+    if (!existing) return undefined;
+    const next: SandboxedBrowserShellObservationSnapshot = {
+      ...existing,
+      status: "stale",
+      updatedAt: nowIso(),
+      metadata: reason ? sanitizeRuntimeMetadata({ ...existing.metadata, staleReason: reason }) : existing.metadata,
+    };
+    this.upsertObservation(next);
+    return next;
+  }
+
+  clearObservationSnapshot(shellSessionId: string): void {
+    const before = this.observations.length;
+    this.observations = this.observations.filter((obs) => obs.shellSessionId !== shellSessionId);
+    if (this.observations.length !== before) {
+      this.deps.storage?.setItem(OBSERVATIONS_STORAGE_KEY, JSON.stringify(this.observations));
+    }
+  }
+
   /**
    * Mark a session as adapter_unavailable when the runtime cannot mount a shell.
    */
@@ -364,6 +480,8 @@ export class SandboxedBrowserShellService {
     const last = this.sessions[0];
     const allowedNavigations = this.navigations.filter((nav) => nav.status === "allowed").length;
     const blockedNavigations = this.navigations.filter((nav) => nav.status === "blocked").length;
+    const activeObservationSnapshots = this.observations.filter((obs) => obs.status === "observed").length;
+    const staleObservationSnapshots = this.observations.filter((obs) => obs.status === "stale").length;
     return {
       totalSessions: this.sessions.length,
       proposedSessions: count("proposed"),
@@ -380,10 +498,19 @@ export class SandboxedBrowserShellService {
       allowedNavigations,
       blockedNavigations,
       lastNavigationAt: this.navigations[0]?.createdAt ?? null,
+      observationSnapshots: this.observations.length,
+      activeObservationSnapshots,
+      staleObservationSnapshots,
+      lastObservationAt: this.observations[0]?.updatedAt ?? null,
       launchMode: "approved_safe_url_only",
       navigationGovernanceEnabled: true,
+      observationMetadataEnabled: true,
       automationEnabled: false,
       domReadEnabled: false,
+      pageContentReadEnabled: false,
+      screenshotEnabled: false,
+      ocrEnabled: false,
+      visionModelEnabled: false,
       credentialsEnabled: false,
       downloadUploadEnabled: false,
       walletPaymentEnabled: false,
@@ -492,6 +619,27 @@ export class SandboxedBrowserShellService {
     this.navigations = [record, ...this.navigations].slice(0, MAX_SANDBOXED_BROWSER_SHELL_NAVIGATIONS);
     this.deps.storage?.setItem(NAVIGATIONS_STORAGE_KEY, JSON.stringify(this.navigations));
     this.deps.bus.emit("sandboxed_browser_shell_navigation", record);
+  }
+
+  private deriveObservationStatus(
+    sessionStatus: SandboxedBrowserShellStatus,
+    adapter: SandboxedBrowserShellObservationSnapshot["adapter"],
+  ): SandboxedBrowserShellObservationStatus {
+    if (sessionStatus === "closed") return "closed";
+    if (sessionStatus === "revoked") return "revoked";
+    if (sessionStatus === "paused") return "paused";
+    if (sessionStatus === "navigation_blocked") return "blocked";
+    if (sessionStatus === "adapter_unavailable" || adapter === "adapter_unavailable") return "unavailable";
+    return "observed";
+  }
+
+  private upsertObservation(snapshot: SandboxedBrowserShellObservationSnapshot): void {
+    this.observations = [
+      snapshot,
+      ...this.observations.filter((obs) => obs.shellSessionId !== snapshot.shellSessionId),
+    ].slice(0, MAX_SANDBOXED_BROWSER_SHELL_OBSERVATIONS);
+    this.deps.storage?.setItem(OBSERVATIONS_STORAGE_KEY, JSON.stringify(this.observations));
+    this.deps.bus.emit("sandboxed_browser_shell_observation_snapshot", snapshot);
   }
 
   private emitSessionEvent(record: SandboxedBrowserShellSessionRecord, eventType?: string): void {
