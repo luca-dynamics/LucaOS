@@ -236,11 +236,12 @@ export function evaluateVisualCoreRemoteCommand(
 
   switch (kind) {
     case "BROWSER_NAVIGATE": {
-      // BROWSER mode still renders embedded LucaBrowser, not the governed
-      // adapter — so navigation must not proceed without dedicated governance.
-      status = "needs_approval";
-      riskLevel = "high";
-      blockedBy = ["browser_mode_uses_embedded_lucabrowser"];
+      // PR #143 — BROWSER mode now uses the governed LucaBrowser adapter.
+      // Navigation intent is allowed (record-only audit) through the governed
+      // session path. No automation, no DOM read, no click/type/scroll.
+      status = "allowed_record_only";
+      riskLevel = "elevated";
+      blockedBy = undefined;
       break;
     }
     case "SET_MODE": {
@@ -305,9 +306,11 @@ export function evaluateVisualCoreRemoteCommand(
 export function getVisualCoreRemoteCommandBoundaryLabels(): string[] {
   return [
     "Remote command audit only",
-    "No browser navigation approval yet",
+    "Browser navigation governed via LucaBrowser adapter",
     "No capture",
     "No automation",
+    "No DOM read",
+    "No click/type/scroll",
     "No external action",
     "No file access",
     "No messaging",

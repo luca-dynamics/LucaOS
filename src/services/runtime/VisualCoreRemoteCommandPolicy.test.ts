@@ -8,15 +8,15 @@ import {
 } from "./VisualCoreRemoteCommandPolicy";
 
 describe("VisualCoreRemoteCommandPolicy", () => {
-  it("classifies BROWSER_NAVIGATE as high risk + needs_approval (embedded browser)", () => {
+  it("classifies BROWSER_NAVIGATE as elevated risk + allowed_record_only (governed adapter)", () => {
     const decision = evaluateVisualCoreRemoteCommand({
       type: "BROWSER_NAVIGATE",
       value: "https://example.com/page",
     });
     expect(decision.kind).toBe("BROWSER_NAVIGATE");
-    expect(decision.riskLevel).toBe("high");
-    expect(["needs_approval", "blocked"]).toContain(decision.status);
-    expect(decision.blockedBy?.[0]).toMatch(/embedded_lucabrowser/);
+    expect(decision.riskLevel).toBe("elevated");
+    expect(decision.status).toBe("allowed_record_only");
+    expect(decision.blockedBy).toBeUndefined();
     expect(decision.targetAuditUrl).toBe("https://example.com/page");
   });
 
@@ -103,7 +103,7 @@ describe("VisualCoreRemoteCommandPolicy", () => {
   it("exposes fixed boundary labels and a consistent user-safe reason", () => {
     const labels = getVisualCoreRemoteCommandBoundaryLabels();
     expect(labels).toContain("Remote command audit only");
-    expect(labels).toContain("No browser navigation approval yet");
+    expect(labels).toContain("Browser navigation governed via LucaBrowser adapter");
 
     const reason = getVisualCoreRemoteCommandUserSafeReason({
       kind: "SET_MODE",

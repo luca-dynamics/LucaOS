@@ -6,6 +6,10 @@ import {
   closeDisplaySession,
 } from "../services/runtime/VisualCoreDisplaySessionService";
 import { shouldRecordVisualCoreDisplaySession } from "../services/runtime/VisualCoreDisplayGovernance";
+import {
+  sandboxedBrowserShellService,
+} from "../services/runtime/SandboxedBrowserShellService";
+import { toVisualCoreAuditSafeUrl } from "../services/runtime/VisualCoreRemoteCommandPolicy";
 import { recordRemoteCommand } from "../services/runtime/VisualCoreRemoteCommandService";
 import type { VisualCoreRemoteCommandKind, VisualCoreRemoteCommandSource } from "../types/visualCoreRemoteCommands";
 import VisualDataPresenter from "./VisualDataPresenter";
@@ -72,12 +76,11 @@ export type VisualCoreMode =
   | "INGESTION"
   | "TACTICAL";
 
-// PR #142 — VisualCore remote command governance. Default OFF: a remote
-// BROWSER_NAVIGATE command is recorded for governance (needs_approval) and does
-// NOT auto-switch VisualCore into embedded-browser mode. Flipping this to true
-// restores the legacy auto-switch behavior (still embedded LucaBrowser, not the
-// governed adapter) and is gated here until a governed LucaBrowser adapter lands.
-const VISUAL_CORE_REMOTE_BROWSER_NAVIGATION_ENABLED = false;
+// PR #143 — VisualCore BROWSER mode now uses the governed LucaBrowser adapter.
+// Remote BROWSER_NAVIGATE commands create/bind to a governed shell session and
+// switch VisualCore into BROWSER mode via the governed path. No automation,
+// no DOM read, no click/type/scroll, no screenshot/OCR/vision.
+const VISUAL_CORE_REMOTE_BROWSER_NAVIGATION_ENABLED = true;
 
 interface VisualCoreProps {
   isVisible: boolean;
@@ -135,6 +138,9 @@ const VisualCore: React.FC<VisualCoreProps> = ({
   // PR #141 — record-only governed display session tracking (no behavior change).
   const displaySessionIdRef = useRef<string | null>(null);
   const displaySessionModeRef = useRef<VisualCoreMode | null>(null);
+
+  // PR #143 — governed LucaBrowser adapter session for BROWSER mode.
+  const browserShellSessionIdRef = useRef<string | null>(null);
 
   // PR #142 — throttle high-frequency telemetry recording (sync/voice) so the
   // bounded remote-command audit buffer is not flooded. Discrete remote
@@ -230,11 +236,20 @@ const VisualCore: React.FC<VisualCoreProps> = ({
       });
 
       if (command.type === "BROWSER_NAVIGATE") {
-        // BROWSER mode still uses embedded LucaBrowser (not the governed
-        // adapter). Default OFF: record for governance and do NOT auto-switch.
-        if (VISUAL_CORE_REMOTE_BROWSER_NAVIGATION_ENABLED) {
-          setMode("BROWSER");
-          setCurrentBrowserUrl(command.value);
+        // PR #143 — governed LucaBrowser adapter path. Opens a governed
+        // shell session for the URL and switches VisualCore to BROWSER mode.
+        // No automation, no DOM read, no click/type/scroll.
+        if (VISUAL_CORE_REMOTE_BROWSER_NAVIGATION_ENABLED && typeof command.value === "string" && command.value.trim()) {
+          const result = sandboxedBrowserShellService.openApprovedSafeUrl({
+            url: command.value,
+            title: "VisualCore governed browser session",
+            source: "visual_core_remote_browser_navigate",
+          });
+          if (result.status === "open" || result.status === "open_requested") {
+            browserShellSessionIdRef.current = result.shellSessionId;
+            setMode("BROWSER");
+            setCurrentBrowserUrl(command.value);
+          }
         }
       }
 
@@ -310,12 +325,23 @@ const VisualCore: React.FC<VisualCoreProps> = ({
       isVisible,
     );
 
-    // BROWSER mode takes priority when a valid URL is provided
+    // BROWSER mode takes priority when a valid URL is provided.
+    // PR #143 — create a governed shell session for the prop-driven URL.
     if (browserUrl && browserUrl !== "about:blank" && browserUrl !== "") {
       console.log(
-        "[VisualCore] Switching to BROWSER mode with URL:",
+        "[VisualCore] Switching to governed BROWSER mode with URL:",
         browserUrl,
       );
+      if (!browserShellSessionIdRef.current) {
+        const result = sandboxedBrowserShellService.openApprovedSafeUrl({
+          url: browserUrl,
+          title: "VisualCore governed browser session",
+          source: "visual_core_prop_update",
+        });
+        if (result.status === "open" || result.status === "open_requested") {
+          browserShellSessionIdRef.current = result.shellSessionId;
+        }
+      }
       setMode("BROWSER");
       return;
     }
@@ -546,7 +572,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               className={`text-[10px] font-mono font-bold tracking-[0.4em] uppercase ${isLight ? "text-slate-900" : "text-white/90"}`}
             >
               {mode === "BROWSER"
-                ? "GHOST_BROWSER_OVERLAY"
+                ? "LUCA_BROWSER_GOVERNED"
                 : "LUCA_TACTICAL_HUD"}
             </span>
           </div>
@@ -1205,8 +1231,25 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           {mode === "BROWSER" && (
             <LucaBrowser
               url={currentBrowserUrl || "https://google.com"}
-              onClose={() => setMode("IDLE")}
+              onClose={() => {
+                // PR #143 — close the governed shell session when leaving BROWSER mode.
+                if (browserShellSessionIdRef.current) {
+                  sandboxedBrowserShellService.closeShellSession(browserShellSessionIdRef.current);
+                  browserShellSessionIdRef.current = null;
+                }
+                setMode("IDLE");
+              }}
               mode="EMBEDDED"
+              browserMode="GOVERNED"
+              auditUrl={toVisualCoreAuditSafeUrl(currentBrowserUrl) ?? currentBrowserUrl}
+              shellSessionId={browserShellSessionIdRef.current ?? undefined}
+              onRevoke={() => {
+                if (browserShellSessionIdRef.current) {
+                  sandboxedBrowserShellService.revokeShellSession(browserShellSessionIdRef.current);
+                  browserShellSessionIdRef.current = null;
+                }
+                setMode("IDLE");
+              }}
             />
           )}
         </div>

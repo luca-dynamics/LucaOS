@@ -795,7 +795,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
                       <span>execution changed: false</span>
-                      <span>browser governed: false</span>
+                      <span>browser governed: {command.browserGoverned ? "true" : "false"}</span>
                       <span>capture: false</span>
                       <span>automation: false</span>
                       <span>external action: false</span>

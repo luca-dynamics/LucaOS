@@ -31,19 +31,31 @@ describe("VisualCoreRemoteCommandService", () => {
     expect(bus.emitEvent).toHaveBeenCalled();
   });
 
+  it("sets browserGoverned true for BROWSER_NAVIGATE records", () => {
+    const record = service.recordRemoteCommand({
+      type: "BROWSER_NAVIGATE",
+      value: "https://gov.test/page",
+      source: "ipc_remote_control",
+    });
+    expect(record.browserGoverned).toBe(true);
+    expect(record.kind).toBe("BROWSER_NAVIGATE");
+    expect(record.captureEnabled).toBe(false);
+    expect(record.automationEnabled).toBe(false);
+  });
+
   it("records a blocked command", () => {
     const record = service.recordRemoteCommand({ type: "CAST_SELECT", source: "ipc_remote_control" });
     expect(record.status).toBe("blocked");
     expect(record.blockedBy && record.blockedBy.length).toBeGreaterThan(0);
   });
 
-  it("records a needs_approval command (BROWSER_NAVIGATE) without storing a raw token URL", () => {
+  it("records an allowed_record_only BROWSER_NAVIGATE without storing a raw token URL", () => {
     const record = service.recordRemoteCommand({
       type: "BROWSER_NAVIGATE",
       value: "https://x.test/p?token=abc123secret",
       source: "ipc_remote_control",
     });
-    expect(record.status).toBe("needs_approval");
+    expect(record.status).toBe("allowed_record_only");
     expect(record.kind).toBe("BROWSER_NAVIGATE");
     expect(record.targetAuditUrl).toBeDefined();
     expect(record.targetAuditUrl).not.toMatch(/abc123secret/);
@@ -82,14 +94,14 @@ describe("VisualCoreRemoteCommandService", () => {
     service.recordRemoteCommand({ type: "CAST_SELECT", source: "ipc_remote_control" });
     const diag = service.getDiagnosticsSummary();
     expect(diag.totalCommands).toBe(3);
-    expect(diag.allowedRecordOnlyCommands).toBe(1);
-    expect(diag.needsApprovalCommands).toBe(1);
+    expect(diag.allowedRecordOnlyCommands).toBe(2);
+    expect(diag.needsApprovalCommands).toBe(0);
     expect(diag.blockedCommands).toBe(1);
     expect(diag.browserNavigateCommands).toBe(1);
     expect(diag.governanceApplied).toBe(true);
     expect(diag.recordOnly).toBe(true);
     expect(diag.executionChanged).toBe(false);
-    expect(diag.browserGoverned).toBe(false);
+    expect(diag.browserGoverned).toBe(true);
     expect(diag.captureEnabled).toBe(false);
     expect(diag.automationEnabled).toBe(false);
     expect(diag.externalActionEnabled).toBe(false);
