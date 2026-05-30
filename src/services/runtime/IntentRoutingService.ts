@@ -12,6 +12,7 @@ import { agentPlanningCheckpointService, type AgentPlanningCheckpointService } f
 import { intentRoutingModeService, type IntentRoutingModeService } from "./IntentRoutingModeService";
 import { browserDesktopGatewayService, type BrowserDesktopGatewayService } from "./BrowserDesktopGatewayService";
 import { screenObservationService, type ScreenObservationService } from "./ScreenObservationService";
+import { sandboxedBrowserService, type SandboxedBrowserService } from "./SandboxedBrowserService";
 import {
   classifyIntent,
   sanitizeIntentInput,
@@ -41,6 +42,10 @@ const STORAGE_KEY = "LUCA_INTENT_ROUTING_DECISIONS_V1";
 // Obvious "look at / observe my screen" phrases that should also create a
 // dry-run screen observation permission record. No capture is ever performed.
 const SCREEN_OBSERVATION_HINT = /look at (my|the|this) (screen|window|app|tab)|observe (my|the|this)? ?(screen|window|app|tab|region|area)|watch (my|this|the) (screen|window|app|tab|region|area)|read (the )?(text|screen)|see (my|the) screen|detect (sensitive|ui|layout|text)|understand (the )?screen/i;
+
+// When intent routing detects obvious browser-control phrases, it mirrors them into a
+// blocked / dry-run sandboxed browser record. No browser is launched, automated, or controlled.
+const SANDBOXED_BROWSER_HINT = /open (this |the |a )?(website|url|chrome|browser|tab|page)|go to (this |the )?(url|site|website|page)|navigate to|click (this |the |that )?(button|link|element)|type into|fill (in |out )?(this |the )?(form|field|input)|submit (this |the )?form|log ?in|sign ?in|download (this |the |a )?file|upload (this |the |a )?file|connect wallet|check ?out|\bpay\b|scrape (this |the )?page|read (the )?dom/i;
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -75,6 +80,7 @@ export interface IntentRoutingServiceDependencies {
   skillGovernance: Pick<SkillGovernanceService, "createSkillRequest">;
   gatewayRequests: Pick<BrowserDesktopGatewayService, "createGatewayRequest">;
   screenObservation: Pick<ScreenObservationService, "createObservationRequest">;
+  sandboxedBrowser: Pick<SandboxedBrowserService, "createBrowserRequest">;
   checkpoints: Pick<AgentPlanningCheckpointService, "createCheckpoint">;
   inbox: Pick<RuntimeInboxService, "ingestEvent">;
   bus: Pick<typeof eventBus, "emitEvent" | "emit">;
@@ -97,6 +103,7 @@ export class IntentRoutingService {
       skillGovernance: skillGovernanceService,
       gatewayRequests: browserDesktopGatewayService,
       screenObservation: screenObservationService,
+      sandboxedBrowser: sandboxedBrowserService,
       checkpoints: agentPlanningCheckpointService,
       inbox: runtimeInboxService,
       bus: eventBus,
@@ -391,6 +398,18 @@ export class IntentRoutingService {
               metadata: { route: decision.route, riskLevel: decision.riskLevel },
             });
           } catch { /* screen observation record is dry-run only and never captures */ }
+        }
+        if (SANDBOXED_BROWSER_HINT.test(decision.userIntentSummary)) {
+          try {
+            this.deps.sandboxedBrowser.createBrowserRequest({
+              title: `Sandboxed browser request: ${decision.userIntentSummary.slice(0, 90)}`,
+              summary: decision.userIntentSummary.slice(0, 300),
+              source: "intent_routing",
+              sourceId: decision.decisionId,
+              provenanceIds: localProv,
+              metadata: { route: decision.route, riskLevel: decision.riskLevel },
+            });
+          } catch { /* sandboxed browser record is research/dry-run only and never launches */ }
         }
         try {
           const event = this.deps.inbox.ingestEvent({

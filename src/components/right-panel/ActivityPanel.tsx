@@ -9,6 +9,7 @@ import { governedMemoryWriteService } from "../../services/memory/GovernedMemory
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesktopGatewayService";
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
+import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -76,6 +77,19 @@ import {
   getObservationSessionTimeline,
   getObservationSessionVisibleIndicatorCopy,
 } from "../runtime/screenObservationSessionUx";
+import {
+  getSandboxedBrowserCapabilityLabel,
+  getSandboxedBrowserCredentialBoundaryLabel,
+  getSandboxedBrowserFutureReadinessText,
+  getSandboxedBrowserNavigationRiskLabel,
+  getSandboxedBrowserNextAction,
+  getSandboxedBrowserNoLaunchText,
+  getSandboxedBrowserRiskLabel,
+  getSandboxedBrowserSafeguardLabels,
+  getSandboxedBrowserStatusLabel,
+  getSandboxedBrowserSummary,
+  getSandboxedBrowserSurfaceLabel,
+} from "../runtime/sandboxedBrowserLabels";
 
 interface ActivityPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -171,6 +185,8 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       gatewayRequests: browserDesktopGatewayService.listGatewayRequests(),
       observationRequests: screenObservationService.listObservationRequests(),
       observationSessions: screenObservationService.listObservationSessions(),
+      browserRequests: sandboxedBrowserService.listBrowserRequests(),
+      browserSessions: sandboxedBrowserService.listBrowserSessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -404,6 +420,103 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Button onClick={() => { screenObservationService.revokeObservationSession(session.observationSessionId, "Revoked from Activity panel."); refresh(); }}>revoke session</Button>
                       <Button onClick={() => { screenObservationService.archiveObservationSession(session.observationSessionId); refresh(); }}>archive session</Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Sandboxed browser" subtitle="Research/design records only. Luca cannot launch, read, click, type, submit, scrape, download, upload, or automate a browser.">
+        {(() => {
+          const recent = data.browserRequests.filter((request) => request.status !== "archived").slice(0, 5);
+          if (recent.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No sandboxed browser requests.</div>;
+          return (
+            <div className="space-y-2">
+              {recent.map((request) => {
+                const safeguards = getSandboxedBrowserSafeguardLabels(request.policyDecision);
+                const statusLabel = getSandboxedBrowserStatusLabel(request.status);
+                const surfaceLabel = getSandboxedBrowserSurfaceLabel(request.surface);
+                const capabilityLabel = getSandboxedBrowserCapabilityLabel(request.capability);
+                const riskLabel = getSandboxedBrowserRiskLabel(request.riskLevel);
+                const navigationRiskLabel = getSandboxedBrowserNavigationRiskLabel(request.navigationRisk);
+                const credentialBoundaryLabel = getSandboxedBrowserCredentialBoundaryLabel(request.credentialBoundary);
+                const summary = getSandboxedBrowserSummary(request);
+                const nextAction = getSandboxedBrowserNextAction(request);
+                const futureReadiness = getSandboxedBrowserFutureReadinessText(request);
+                return (
+                  <div key={request.browserRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{request.title}</div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{summary}</p>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${request.status === "blocked" ? "border-red-500/30 text-red-200" : "border-amber-500/30 text-amber-200"}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-1 text-[9px]">
+                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Surface: {surfaceLabel}</span>
+                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
+                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-1 text-[9px]">
+                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Navigation: {navigationRiskLabel}</span>
+                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">{credentialBoundaryLabel}</span>
+                    </div>
+                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-2">
+                      <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Safeguards checklist</div>
+                      <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                        {safeguards.map((safeguard) => (
+                          <span
+                            key={safeguard.key}
+                            className={`rounded-full border px-2 py-0.5 ${safeguard.required ? "border-amber-500/30 text-amber-200" : "border-white/10 text-[var(--app-text-muted)] opacity-60"}`}
+                          >
+                            {safeguard.required ? "✓ " : "○ "}{safeguard.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {request.blockedBy && request.blockedBy.length > 0 && (
+                      <p className="mt-2 text-[9px] leading-relaxed text-red-200">Blocked by: {request.blockedBy.join(", ")}</p>
+                    )}
+                    <p className="mt-2 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{futureReadiness}</p>
+                    <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Next action: {nextAction}</p>
+                    <p className="mt-1 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getSandboxedBrowserNoLaunchText()}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(request.status === "dry_run_only" || request.status === "waiting_user") && (
+                        <Button onClick={() => { sandboxedBrowserService.createDryRunSessionFromRequest(request.browserRequestId); refresh(); }}>Create dry-run browser permission session</Button>
+                      )}
+                      {request.status !== "blocked" && <Button tone="danger" onClick={() => { sandboxedBrowserService.blockBrowserRequest(request.browserRequestId, "Blocked from Activity panel."); refresh(); }}>block</Button>}
+                      {request.status !== "blocked" && <Button onClick={() => { sandboxedBrowserService.revokeBrowserRequest(request.browserRequestId, "Revoked from Activity panel."); refresh(); }}>revoke</Button>}
+                      <Button onClick={() => { sandboxedBrowserService.archiveBrowserRequest(request.browserRequestId); refresh(); }}>archive</Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {data.browserSessions.filter((session) => session.status !== "archived").slice(0, 3).map((session) => (
+                <div key={session.browserSessionId} className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{getSandboxedBrowserStatusLabel(session.status)}</div>
+                      <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{getSandboxedBrowserSummary(session)}</p>
+                      {session.requestId && <p className="mt-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Linked request: {session.requestId}</p>}
+                    </div>
+                    <span className="shrink-0 rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">No launch · no automation</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1 text-[9px]">
+                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Surface: {getSandboxedBrowserSurfaceLabel(session.surface)}</span>
+                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Capability: {getSandboxedBrowserCapabilityLabel(session.capability)}</span>
+                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Navigation: {getSandboxedBrowserNavigationRiskLabel(session.navigationRisk)}</span>
+                  </div>
+                  <p className="mt-2 text-[9px] leading-relaxed text-[var(--app-text-muted)]">Dry-run browser permission session only. No browser is launched, automated, read, or controlled.</p>
+                  {session.status !== "revoked" && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button onClick={() => { sandboxedBrowserService.revokeBrowserSession(session.browserSessionId, "Revoked from Activity panel."); refresh(); }}>revoke session</Button>
+                      <Button onClick={() => { sandboxedBrowserService.archiveBrowserSession(session.browserSessionId); refresh(); }}>archive session</Button>
                     </div>
                   )}
                 </div>

@@ -35,6 +35,9 @@ function makeMockDeps() {
     screenObservation: {
       createObservationRequest: vi.fn().mockReturnValue({ observationRequestId: "screen-observation:test" }),
     },
+    sandboxedBrowser: {
+      createBrowserRequest: vi.fn().mockReturnValue({ browserRequestId: "sandboxed-browser:test" }),
+    },
     checkpoints: {
       createCheckpoint: vi.fn().mockReturnValue({ checkpointId: "checkpoint:test" }),
     },
