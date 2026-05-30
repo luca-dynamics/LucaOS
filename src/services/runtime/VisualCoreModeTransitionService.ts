@@ -16,6 +16,10 @@
 
 import { getVisualCoreSurfacePolicy } from "./VisualCoreGovernancePolicy";
 import { eventBus } from "../eventBus";
+import {
+  resolveVisualCoreTraceId,
+  sanitizeVisualCoreLocalRef,
+} from "./visualCoreTraceCorrelation";
 import type {
   VisualCoreModeTransitionDecision,
   VisualCoreModeTransitionDiagnosticsSummary,
@@ -39,6 +43,20 @@ export interface EvaluateModeTransitionInput {
   source: VisualCoreModeTransitionSource;
   /** Whether a governed browser shell session is active (for BROWSER mode). */
   hasBrowserSession?: boolean;
+}
+
+export interface RecordModeTransitionInput extends EvaluateModeTransitionInput {
+  /**
+   * PR #147 — correlation/trace ID to link this transition to the originating
+   * remote command and any resulting display session. Sanitized; a fresh ID is
+   * generated when absent or invalid.
+   */
+  correlationId?: string;
+  /**
+   * PR #147 — safe local reference to the governed LucaBrowser shell session
+   * for BROWSER transitions. Sanitized to an opaque local ID; never a URL.
+   */
+  browserShellSessionId?: string;
 }
 
 /**
@@ -189,7 +207,7 @@ export class VisualCoreModeTransitionService {
    * if `decision.status` starts with `"allowed"`.
    */
   recordTransition(
-    input: EvaluateModeTransitionInput,
+    input: RecordModeTransitionInput,
   ): VisualCoreModeTransitionRecord {
     const decision = evaluateModeTransition(input);
     const timestamp = nowIso();
@@ -204,6 +222,8 @@ export class VisualCoreModeTransitionService {
       userSafeReason: decision.userSafeReason,
       blockedBy: decision.blockedBy,
       timestamp,
+      correlationId: resolveVisualCoreTraceId(input.correlationId),
+      browserShellSessionId: sanitizeVisualCoreLocalRef(input.browserShellSessionId),
     };
 
     this.upsert(record);
@@ -262,6 +282,8 @@ export class VisualCoreModeTransitionService {
         status: record.status,
         source: record.source,
         blockedBy: record.blockedBy ?? [],
+        correlationId: record.correlationId,
+        browserShellSessionId: record.browserShellSessionId,
         ...SAFETY_FLAGS,
       },
     });

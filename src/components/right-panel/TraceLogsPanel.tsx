@@ -19,6 +19,7 @@ import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBr
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
+import { formatVisualCoreTraceLabel } from "../../services/runtime/visualCoreTraceCorrelation";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -506,6 +507,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>source: {session.source}</span>
                     <span>readiness: {session.readiness}</span>
                     <span>{compactTimestamp(session.updatedAt)}</span>
+                    {session.correlationId && <span>{formatVisualCoreTraceLabel(session.correlationId)}</span>}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
                     <span>capture: false</span>
@@ -546,6 +548,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>source: {command.source}</span>
                     {command.targetMode && <span>target: {command.targetMode}</span>}
                     <span>{compactTimestamp(command.updatedAt)}</span>
+                    {command.correlationId && <span>{formatVisualCoreTraceLabel(command.correlationId)}</span>}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
                     <span>execution changed: false</span>
@@ -588,6 +591,8 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
                       <span>source: {getVisualCoreModeTransitionSourceLabel(transition.source)}</span>
                       <span>{compactTimestamp(transition.timestamp)}</span>
+                      {transition.correlationId && <span>{formatVisualCoreTraceLabel(transition.correlationId)}</span>}
+                      {transition.browserShellSessionId && <span>shell: {transition.browserShellSessionId.slice(-6)}</span>}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
                       {getVisualCoreModeTransitionSafetyFlagSummary(transition).map((flag) => (

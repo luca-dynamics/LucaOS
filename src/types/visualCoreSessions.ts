@@ -53,6 +53,12 @@ export interface VisualCoreDisplaySessionRecord {
   revokedAt?: string;
   blockedBy?: string[];
   userSafeReason: string;
+  /**
+   * PR #147 — audit-safe correlation/trace ID linking this display session to
+   * the mode transition / remote command that created it. Opaque, never
+   * derived from URLs, tokens, hashes, or sensitive values.
+   */
+  correlationId?: string;
   metadata?: Record<string, unknown>;
   // Hard guarantees — display-only governance, every capability disabled.
   governanceApplied: true;
