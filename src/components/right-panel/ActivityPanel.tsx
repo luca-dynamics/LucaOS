@@ -14,6 +14,8 @@ import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBr
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { isLucaBrowserSafeLifecycleExecutionKind } from "../../services/runtime/LucaBrowserActionPolicy";
+import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
+import { getVisualCoreDisplayGovernanceBoundaryLabels } from "../../services/runtime/VisualCoreDisplayGovernance";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -202,6 +204,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       browserShellNavigations: sandboxedBrowserShellService.listNavigationRecords(),
       browserShellObservations: sandboxedBrowserShellService.listObservationSnapshots(),
       browserShellActions: lucaBrowserActionQueueService.listActionRequests(),
+      visualDisplaySessions: visualCoreDisplaySessionService.listDisplaySessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -699,6 +702,56 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
             </div>
           );
         })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="VisualCore display sessions" subtitle="Governed display-only records for low-risk VisualCore modes. Actions update records only — they do not open/close VisualCore. Sensitive modes stay blocked.">
+        {data.visualDisplaySessions.length === 0 ? (
+          <div className="text-[10px] italic text-[var(--app-text-muted)]">No VisualCore display sessions.</div>
+        ) : (
+          <div className="space-y-2">
+            {[...data.visualDisplaySessions]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 8)
+              .map((session) => {
+                const blocked = session.status === "blocked";
+                const active = session.status === "open" || session.status === "open_requested";
+                const closedOrGone = session.status === "closed" || session.status === "revoked";
+                return (
+                  <div key={session.visualSessionId} className={`rounded-xl border p-2 ${blocked || session.status === "revoked" ? "border-red-500/20 bg-red-500/5" : session.status === "open" ? "border-emerald-500/20 bg-emerald-500/5" : "border-white/10 bg-black/10"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-bold text-[var(--app-text-main)]">{session.mode} · {session.status}</div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{session.userSafeReason}</p>
+                      </div>
+                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{session.riskLevel}</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                      <span>readiness: {session.readiness}</span>
+                      <span>source: {session.source}</span>
+                      <span>opened: {compactTimestamp(session.openedAt)}</span>
+                      <span>updated: {compactTimestamp(session.updatedAt)}</span>
+                    </div>
+                    {session.blockedBy && session.blockedBy.length > 0 && (
+                      <p className="mt-1 text-[9px] text-red-200">Blocked by: {session.blockedBy.join(", ")}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      {getVisualCoreDisplayGovernanceBoundaryLabels().map((label) => (
+                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                      ))}
+                    </div>
+                    {!blocked && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {active && <Button onClick={() => { visualCoreDisplaySessionService.pauseDisplaySession(session.visualSessionId, "Paused from Activity panel."); refresh(); }}>pause</Button>}
+                        {session.status === "paused" && <Button tone="good" onClick={() => { visualCoreDisplaySessionService.resumeDisplaySession(session.visualSessionId); refresh(); }}>resume</Button>}
+                        {!closedOrGone && <Button onClick={() => { visualCoreDisplaySessionService.closeDisplaySession(session.visualSessionId); refresh(); }}>close</Button>}
+                        {session.status !== "revoked" && <Button tone="danger" onClick={() => { visualCoreDisplaySessionService.revokeDisplaySession(session.visualSessionId, "Revoked from Activity panel."); refresh(); }}>revoke</Button>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </RightPanelSection>
 
       <RightPanelSection title="Memory proposals" subtitle="Approving a memory does not write it. Saving requires a second explicit click and a one-time approval.">

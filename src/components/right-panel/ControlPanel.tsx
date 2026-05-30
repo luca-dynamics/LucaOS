@@ -18,6 +18,7 @@ import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowser
 import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
+import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -80,6 +81,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const browserShell = sandboxedBrowserShellService.getDiagnosticsSummary();
   const browserActions = lucaBrowserActionQueueService.getDiagnosticsSummary();
   const browserActionExecution = lucaBrowserActionExecutionService.getDiagnosticsSummary();
+  const visualDisplaySessions = visualCoreDisplaySessionService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -162,6 +164,26 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           </div>
           <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getGatewayNoExecutionText()}</p>
         </div>
+      </RightPanelSection>
+
+      <RightPanelSection title="VisualCore display governance" subtitle="Records low-risk display sessions only. Sensitive modes remain blocked.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Display sessions" value={formatCount("session", visualDisplaySessions.totalSessions)} />
+          <RightPanelMetric label="Open" value={formatCount("session", visualDisplaySessions.openSessions)} tone={visualDisplaySessions.openSessions > 0 ? "good" : "neutral"} />
+          <RightPanelMetric label="Paused" value={formatCount("session", visualDisplaySessions.pausedSessions)} tone={visualDisplaySessions.pausedSessions > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Closed" value={formatCount("session", visualDisplaySessions.closedSessions)} tone="neutral" />
+          <RightPanelMetric label="Revoked" value={formatCount("session", visualDisplaySessions.revokedSessions)} tone="neutral" />
+          <RightPanelMetric label="Blocked" value={formatCount("session", visualDisplaySessions.blockedSessions)} tone={visualDisplaySessions.blockedSessions > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Ready display modes" value={visualDisplaySessions.readyDisplayModeCount} tone="neutral" />
+          <RightPanelMetric label="Sensitive modes" value={visualDisplaySessions.sensitiveModeCount} tone={visualDisplaySessions.sensitiveModeCount > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Governance applied" value="true" tone="good" />
+          <RightPanelMetric label="Capture enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="External action" value="false" tone="neutral" />
+        </div>
+        <p className="mt-3 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+          VisualCore governance currently records low-risk display sessions only. Sensitive modes remain blocked until dedicated policy.
+        </p>
       </RightPanelSection>
 
       <RightPanelSection title="Screen observation" subtitle="Permission-mode only. Luca cannot capture, view, OCR, or analyze the screen.">

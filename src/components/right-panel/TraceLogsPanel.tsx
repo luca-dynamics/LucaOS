@@ -16,6 +16,7 @@ import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowser
 import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
+import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -141,6 +142,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       browserShellObservations: sandboxedBrowserShellService.listObservationSnapshots(),
       browserShellActions: lucaBrowserActionQueueService.listActionRequests(),
       browserShellActionExecutions: lucaBrowserActionExecutionService.listExecutionResults(),
+      visualDisplaySessions: visualCoreDisplaySessionService.listDisplaySessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -465,6 +467,43 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>page content: false</span>
                     <span>screenshot/OCR: false</span>
                     <span>credentials: false</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="VisualCore display session trace" subtitle="Governed display-only session records for low-risk VisualCore modes. Created/opened/paused/resumed/closed/revoked/blocked. No capture, automation, external action, file, messaging, or wireless.">
+        {trace.visualDisplaySessions.length === 0 ? <EmptyState>No VisualCore display sessions.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.visualDisplaySessions]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 10)
+              .map((session) => (
+                <div key={session.visualSessionId} className={`rounded-xl border p-3 ${session.status === "blocked" || session.status === "revoked" ? "border-red-500/20 bg-red-500/5" : session.status === "open" ? "border-emerald-500/20 bg-emerald-500/5" : "border-indigo-500/20 bg-indigo-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{session.mode} · {session.status} · {session.visualSessionId.slice(-6)}</div>
+                      <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{session.userSafeReason}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{session.riskLevel}</span>
+                  </div>
+                  {session.blockedBy && session.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] text-red-200">Blocked by: {session.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <span>source: {session.source}</span>
+                    <span>readiness: {session.readiness}</span>
+                    <span>{compactTimestamp(session.updatedAt)}</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <span>capture: false</span>
+                    <span>automation: false</span>
+                    <span>external action: false</span>
+                    <span>file: false</span>
+                    <span>messaging: false</span>
+                    <span>wireless: false</span>
                   </div>
                 </div>
               ))}
