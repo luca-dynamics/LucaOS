@@ -7,7 +7,7 @@
 // 3. Sensitive VisualCore modes remain untouched/blocked/gated.
 // 4. No automation/capture/file/messaging/wireless flags are enabled.
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   evaluateVisualCoreRemoteCommand,
   getVisualCoreRemoteCommandBoundaryLabels,
@@ -124,11 +124,37 @@ describe("PR #143 — VisualCore Browser Mode Governed LucaBrowser Adapter", () 
       expect(record.browserGoverned).toBe(false);
     });
 
-    it("diagnostics show browserGoverned: true", () => {
+    it("diagnostics show browserGovernanceAvailable: true always", () => {
+      const { service } = makeService();
+      const diag = service.getDiagnosticsSummary();
+      expect(diag.browserGovernanceAvailable).toBe(true);
+    });
+
+    it("diagnostics show browserGovernedCommandSeen: false when no browser commands exist", () => {
       const { service } = makeService();
       service.recordRemoteCommand({ kind: "SYNC_APP_STATE", source: "app_state_sync" });
       const diag = service.getDiagnosticsSummary();
-      expect(diag.browserGoverned).toBe(true);
+      expect(diag.browserGovernedCommandSeen).toBe(false);
+      expect(diag.browserGovernedCommandCount).toBe(0);
+    });
+
+    it("diagnostics show browserGovernedCommandSeen: true after BROWSER_NAVIGATE", () => {
+      const { service } = makeService();
+      service.recordRemoteCommand({ type: "BROWSER_NAVIGATE", value: "https://x.test", source: "ipc_remote_control" });
+      const diag = service.getDiagnosticsSummary();
+      expect(diag.browserGovernedCommandSeen).toBe(true);
+      expect(diag.browserGovernedCommandCount).toBe(1);
+    });
+
+    it("browserGovernedCommandCount increments only for BROWSER_NAVIGATE", () => {
+      const { service } = makeService();
+      service.recordRemoteCommand({ kind: "SYNC_APP_STATE", source: "app_state_sync" });
+      service.recordRemoteCommand({ type: "BROWSER_NAVIGATE", value: "https://a.test", source: "ipc_remote_control" });
+      service.recordRemoteCommand({ kind: "WIDGET_VOICE_DATA", source: "voice_widget" });
+      service.recordRemoteCommand({ type: "BROWSER_NAVIGATE", value: "https://b.test", source: "ipc_remote_control" });
+      const diag = service.getDiagnosticsSummary();
+      expect(diag.browserGovernedCommandCount).toBe(2);
+      expect(diag.browserGovernedCommandSeen).toBe(true);
     });
 
     it("boundary labels mention governed LucaBrowser adapter", () => {

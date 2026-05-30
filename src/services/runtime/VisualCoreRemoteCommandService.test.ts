@@ -101,7 +101,9 @@ describe("VisualCoreRemoteCommandService", () => {
     expect(diag.governanceApplied).toBe(true);
     expect(diag.recordOnly).toBe(true);
     expect(diag.executionChanged).toBe(false);
-    expect(diag.browserGoverned).toBe(true);
+    expect(diag.browserGovernanceAvailable).toBe(true);
+    expect(diag.browserGovernedCommandSeen).toBe(true);
+    expect(diag.browserGovernedCommandCount).toBe(1);
     expect(diag.captureEnabled).toBe(false);
     expect(diag.automationEnabled).toBe(false);
     expect(diag.externalActionEnabled).toBe(false);
