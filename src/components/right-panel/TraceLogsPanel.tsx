@@ -18,6 +18,7 @@ import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowse
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
+import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -78,6 +79,12 @@ import {
   getSandboxedBrowserStatusLabel,
   getSandboxedBrowserSurfaceLabel,
 } from "../runtime/sandboxedBrowserLabels";
+import {
+  getVisualCoreModeTransitionSafetyFlagSummary,
+  getVisualCoreModeTransitionSourceLabel,
+  getVisualCoreModeTransitionStatusLabel,
+  isVisualCoreModeTransitionBlocked,
+} from "../runtime/visualCoreModeTransitionLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -145,6 +152,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       browserShellActionExecutions: lucaBrowserActionExecutionService.listExecutionResults(),
       visualDisplaySessions: visualCoreDisplaySessionService.listDisplaySessions(),
       visualRemoteCommands: visualCoreRemoteCommandService.listRemoteCommandRecords(),
+      visualModeTransitions: visualCoreModeTransitionService.listTransitionRecords(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -551,6 +559,44 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   </div>
                 </div>
               ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="VisualCore mode transition trace" subtitle="Audit trail of VisualCore mode switches: allowed / allowed (governed browser) / blocked (sensitive / unknown / no browser session). Visibility only — blocked transitions stay blocked, no approve/run/execute. Does not change transition policy or VisualCore behavior. No capture, automation, DOM read, screenshot/OCR, external action, file, messaging, or wireless.">
+        {trace.visualModeTransitions.length === 0 ? <EmptyState>No VisualCore mode transitions.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.visualModeTransitions]
+              .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+              .slice(0, 10)
+              .map((transition) => {
+                const blocked = isVisualCoreModeTransitionBlocked(transition.status);
+                const browserGoverned = transition.status === "allowed_governed_browser";
+                const warn = transition.status === "blocked_browser_no_session";
+                return (
+                  <div key={transition.transitionId} className={`rounded-xl border p-3 ${warn ? "border-amber-500/20 bg-amber-500/5" : blocked ? "border-red-500/20 bg-red-500/5" : browserGoverned ? "border-sky-500/20 bg-sky-500/5" : "border-emerald-500/20 bg-emerald-500/5"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{transition.fromMode} → {transition.toMode} · {transition.transitionId.slice(-6)}</div>
+                        <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{transition.userSafeReason}</p>
+                      </div>
+                      <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest ${blocked ? "text-red-200" : "text-[var(--app-text-muted)]"}`}>{getVisualCoreModeTransitionStatusLabel(transition.status)}</span>
+                    </div>
+                    {transition.blockedBy && transition.blockedBy.length > 0 && (
+                      <p className="mt-2 text-[9px] text-red-200">Blocked by: {transition.blockedBy.join(", ")}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                      <span>source: {getVisualCoreModeTransitionSourceLabel(transition.source)}</span>
+                      <span>{compactTimestamp(transition.timestamp)}</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                      {getVisualCoreModeTransitionSafetyFlagSummary(transition).map((flag) => (
+                        <span key={flag}>{flag}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         )}
       </RightPanelSection>
