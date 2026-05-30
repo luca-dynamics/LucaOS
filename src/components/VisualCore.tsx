@@ -11,6 +11,11 @@ import {
 } from "../services/runtime/SandboxedBrowserShellService";
 import { toVisualCoreAuditSafeUrl } from "../services/runtime/VisualCoreRemoteCommandPolicy";
 import { recordRemoteCommand } from "../services/runtime/VisualCoreRemoteCommandService";
+import {
+  visualCoreModeTransitionService,
+  isTransitionAllowed,
+} from "../services/runtime/VisualCoreModeTransitionService";
+import type { VisualCoreModeTransitionSource } from "../types/visualCoreModeTransitions";
 import type { VisualCoreRemoteCommandKind, VisualCoreRemoteCommandSource } from "../types/visualCoreRemoteCommands";
 import VisualDataPresenter from "./VisualDataPresenter";
 import CinemaPlayer from "./CinemaPlayer";
@@ -142,6 +147,23 @@ const VisualCore: React.FC<VisualCoreProps> = ({
   // PR #143 — governed LucaBrowser adapter session for BROWSER mode.
   const browserShellSessionIdRef = useRef<string | null>(null);
 
+  // PR #145 — governed mode transition guard. Every setMode() call passes
+  // through this helper so transitions are policy-evaluated and audited.
+  const requestModeTransition = React.useCallback(
+    (toMode: VisualCoreMode, source: VisualCoreModeTransitionSource) => {
+      const record = visualCoreModeTransitionService.recordTransition({
+        fromMode: mode,
+        toMode,
+        source,
+        hasBrowserSession: !!browserShellSessionIdRef.current,
+      });
+      if (isTransitionAllowed(record.status)) {
+        setMode(toMode);
+      }
+    },
+    [mode],
+  );
+
   // PR #142 — throttle high-frequency telemetry recording (sync/voice) so the
   // bounded remote-command audit buffer is not flooded. Discrete remote
   // commands are recorded unthrottled.
@@ -247,7 +269,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           });
           if (result.status === "open" || result.status === "open_requested") {
             browserShellSessionIdRef.current = result.shellSessionId;
-            setMode("BROWSER");
+            requestModeTransition("BROWSER", "remote_command");
             setCurrentBrowserUrl(command.value);
           }
         }
@@ -342,104 +364,96 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           browserShellSessionIdRef.current = result.shellSessionId;
         }
       }
-      setMode("BROWSER");
+      requestModeTransition("BROWSER", "prop_update");
       return;
     }
 
     if (visualData) {
       if (visualData.topic === "DATA_ROOM" || visualData.type === "DATA_ROOM") {
-        setMode("DATA");
+        requestModeTransition("DATA", "prop_update");
       } else if (visualData.type === "CINEMA") {
-        setMode("CINEMA");
+        requestModeTransition("CINEMA", "prop_update");
       } else if (
         visualData.topic === "SECURITY" ||
         visualData.type === "SECURITY"
       ) {
-        setMode("SECURITY");
+        requestModeTransition("SECURITY", "prop_update");
       } else if (
         visualData.topic === "GLOBAL_SOVEREIGNTY" ||
         visualData.type === "SOVEREIGNTY"
       ) {
-        setMode("SOVEREIGNTY");
+        requestModeTransition("SOVEREIGNTY", "prop_update");
       } else if (
         visualData.type === "OSINT" ||
         visualData.type === "INTELLIGENCE" // Map generalized type to OSINT mode
       ) {
-        setMode("OSINT");
+        requestModeTransition("OSINT", "prop_update");
       } else if (
         visualData.type === "STOCKS" ||
         visualData.type === "FINANCE" // Map generalized type to STOCKS mode
       ) {
-        setMode("STOCKS");
+        requestModeTransition("STOCKS", "prop_update");
       } else if (visualData.type === "AUTONOMY") {
-        setMode("AUTONOMY");
+        requestModeTransition("AUTONOMY", "prop_update");
       } else if (visualData.type === "SUBSYSTEMS") {
-        setMode("SUBSYSTEMS");
+        requestModeTransition("SUBSYSTEMS", "prop_update");
       } else if (visualData.type === "CODE_EDITOR") {
-        setMode("CODE_EDITOR");
+        requestModeTransition("CODE_EDITOR", "prop_update");
       } else if (visualData.type === "SKILLS") {
-        setMode("SKILLS");
+        requestModeTransition("SKILLS", "prop_update");
       } else if (visualData.type === "CRYPTO") {
-        setMode("CRYPTO");
+        requestModeTransition("CRYPTO", "prop_update");
       } else if (visualData.type === "FOREX") {
-        setMode("FOREX");
+        requestModeTransition("FOREX", "prop_update");
       } else if (visualData.type === "PREDICTIONS") {
-        setMode("PREDICTIONS");
+        requestModeTransition("PREDICTIONS", "prop_update");
       } else if (visualData.type === "NETWORK") {
-        setMode("NETWORK");
+        requestModeTransition("NETWORK", "prop_update");
       } else if (visualData.type === "HACKING") {
-        setMode("HACKING");
+        requestModeTransition("HACKING", "prop_update");
       } else if (visualData.type === "REPORTS") {
-        setMode("REPORTS");
+        requestModeTransition("REPORTS", "prop_update");
       } else if (visualData.type === "GEO") {
-        setMode("GEO");
+        requestModeTransition("GEO", "prop_update");
       } else if (visualData.type === "LIVE") {
-        setMode("LIVE");
+        requestModeTransition("LIVE", "prop_update");
       } else if (visualData.type === "FILES") {
-        setMode("FILES");
+        requestModeTransition("FILES", "prop_update");
       } else if (visualData.type === "VISION") {
-        setMode("VISION");
+        requestModeTransition("VISION", "prop_update");
       } else if (visualData.type === "RECORDER") {
-        setMode("RECORDER");
+        requestModeTransition("RECORDER", "prop_update");
       } else if (visualData.type === "TELEGRAM") {
-        setMode("TELEGRAM");
+        requestModeTransition("TELEGRAM", "prop_update");
       } else if (visualData.type === "WHATSAPP") {
-        setMode("WHATSAPP");
+        requestModeTransition("WHATSAPP", "prop_update");
       } else if (visualData.type === "WIRELESS") {
-        setMode("WIRELESS");
+        requestModeTransition("WIRELESS", "prop_update");
       } else if (visualData.type === "INGESTION") {
-        setMode("INGESTION");
+        requestModeTransition("INGESTION", "prop_update");
       } else if (
         visualData.type === "TACTICAL" ||
         visualData.type === "SYSTEM" // Map generalized type to TACTICAL mode (Blue Theme)
       ) {
-        setMode("TACTICAL");
+        requestModeTransition("TACTICAL", "prop_update");
       } else if (visualData.type === "SHOW_DISPLAY") {
-        // Force show the last valid mode or default to DATA
-        // This relies on the fact that visualData might have other props,
-        // OR we need a way to know what was last shown.
-        // For now, let's assume the tool sends the TYPE along with SHOW_DISPLAY
-        // but if it's just a signal, we might need a history.
-        // SIMPLER APPROACH: The tool should send the FULL data object again but with summonHUD: true.
-        // But the provider doesn't have the full data.
-        // SO: We will use a special prop "forceShow" in visualData.
-        setMode("DATA");
+        requestModeTransition("DATA", "prop_update");
       } else {
-        setMode("DATA");
+        requestModeTransition("DATA", "prop_update");
       }
       return;
     }
 
     // Auto-switch to CINEMA when a cinema URL or videoStream is provided
     if (cinemaUrl || videoStream) {
-      setMode("CINEMA");
+      requestModeTransition("CINEMA", "prop_update");
       return;
     }
 
     if (isVisible && !browserUrl && !visualData && !cinemaUrl && !videoStream) {
-      setMode("IDLE");
+      requestModeTransition("IDLE", "system");
     }
-  }, [visualData, browserUrl, isVisible, cinemaUrl, videoStream]);
+  }, [visualData, browserUrl, isVisible, cinemaUrl, videoStream, requestModeTransition]);
 
   // [DISPLAY GOVERNANCE] PR #141 — record-only governed display sessions for
   // low-risk display modes (IDLE/DATA/DATA_ROOM/REPORTS/SUBSYSTEMS/SOVEREIGNTY).
@@ -582,7 +596,21 @@ const VisualCore: React.FC<VisualCoreProps> = ({
             style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
           >
             <button
-              onClick={() => setMode("BROWSER")}
+              onClick={() => {
+                // PR #145 — create a governed browser session before transitioning.
+                if (!browserShellSessionIdRef.current) {
+                  const defaultUrl = currentBrowserUrl || "https://google.com";
+                  const result = sandboxedBrowserShellService.openApprovedSafeUrl({
+                    url: defaultUrl,
+                    title: "VisualCore governed browser session",
+                    source: "visual_core_local_ui",
+                  });
+                  if (result.status === "open" || result.status === "open_requested") {
+                    browserShellSessionIdRef.current = result.shellSessionId;
+                  }
+                }
+                requestModeTransition("BROWSER", "local_ui");
+              }}
               className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold transition-all`}
               style={
                 mode === "BROWSER"
@@ -599,7 +627,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               Ghost
             </button>
             <button
-              onClick={() => setMode("DATA")}
+              onClick={() => requestModeTransition("DATA", "local_ui")}
               className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold transition-all`}
               style={
                 mode === "DATA"
@@ -616,7 +644,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
               Data
             </button>
             <button
-              onClick={() => setMode("CINEMA")}
+              onClick={() => requestModeTransition("CINEMA", "local_ui")}
               className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold transition-all`}
               style={
                 mode === "CINEMA"
@@ -764,7 +792,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "CINEMA" && (
             <CinemaPlayer
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               videoUrl={
                 cinemaUrl ||
                 visualData?.data?.url ||
@@ -832,7 +860,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           {mode === "OSINT" && visualData?.profile && (
             <OsintDossier
               profile={visualData.profile}
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               theme={{
                 hex: themeColor,
                 primary: `text-[${themeColor}]`,
@@ -853,7 +881,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "STOCKS" && (
             <StockTerminal
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               initialSymbol={visualData?.symbol}
               theme={{
                 hex: themeColor,
@@ -874,7 +902,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           }`}
         >
           {mode === "AUTONOMY" && (
-            <AutonomyDashboard onClose={() => setMode("IDLE")} />
+            <AutonomyDashboard onClose={() => requestModeTransition("IDLE", "component_close")} />
           )}
         </div>
 
@@ -888,7 +916,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "SUBSYSTEMS" && (
             <SubsystemDashboard
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               theme={{
                 hex: themeColor,
                 primary: `text-[${themeColor}]`,
@@ -908,7 +936,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "CODE_EDITOR" && (
             <CodeEditor
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               initialCwd={visualData?.cwd || "/"}
               theme={{
                 hex: themeColor,
@@ -930,7 +958,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "SKILLS" && (
             <SkillsMatrix
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               onExecute={() => {}}
               theme={{
                 hex: themeColor,
@@ -952,7 +980,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "CRYPTO" && (
             <CryptoTerminal
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               theme={{
                 hex: themeColor,
                 primary: `text-[${themeColor}]`,
@@ -973,7 +1001,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "FOREX" && (
             <ForexTerminal
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               theme={{
                 hex: themeColor,
                 primary: `text-[${themeColor}]`,
@@ -994,7 +1022,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "PREDICTIONS" && (
             <PredictionTerminal
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               positions={[]}
               onBet={() => {}}
               theme={{
@@ -1016,7 +1044,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           }`}
         >
           {mode === "NETWORK" && (
-            <NetworkMap onClose={() => setMode("IDLE")} theme={theme} />
+            <NetworkMap onClose={() => requestModeTransition("IDLE", "component_close")} theme={theme} />
           )}
         </div>
 
@@ -1030,7 +1058,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "HACKING" && (
             <HackingTerminal
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               toolLogs={[]}
               themeId={persona as any}
             />
@@ -1046,7 +1074,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "REPORTS" && (
             <InvestigationReports
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               theme={{
                 hex: themeColor,
                 primary: `text-[${themeColor}]`,
@@ -1067,7 +1095,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "GEO" && (
             <GeoTacticalView
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               targetName={visualData?.targetName || "Unknown"}
               markers={visualData?.markers || []}
             />
@@ -1084,7 +1112,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "LIVE" && (
             <LiveContentDisplay
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               content={visualData?.content || {}}
             />
           )}
@@ -1099,7 +1127,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           }`}
         >
           {mode === "FILES" && (
-            <MobileFileBrowser onClose={() => setMode("IDLE")} />
+            <MobileFileBrowser onClose={() => requestModeTransition("IDLE", "component_close")} />
           )}
         </div>
 
@@ -1126,7 +1154,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "RECORDER" && (
             <LucaRecorder
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               onSave={() => {}}
               theme={{
                 hex: themeColor,
@@ -1148,7 +1176,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "TELEGRAM" && (
             <TelegramManager
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               theme={{
                 hex: themeColor,
                 primary: `text-[${themeColor}]`,
@@ -1169,7 +1197,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "WHATSAPP" && (
             <WhatsAppManager
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               theme={{
                 hex: themeColor,
                 primary: `text-[${themeColor}]`,
@@ -1190,7 +1218,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "WIRELESS" && (
             <WirelessManager
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               activeTab="WIFI"
               onConnect={() => {}}
               theme={theme}
@@ -1208,7 +1236,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
         >
           {mode === "INGESTION" && (
             <IngestionModal
-              onClose={() => setMode("IDLE")}
+              onClose={() => requestModeTransition("IDLE", "component_close")}
               onIngest={() => {}}
               theme={{
                 hex: themeColor,
@@ -1237,7 +1265,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
                   sandboxedBrowserShellService.closeShellSession(browserShellSessionIdRef.current);
                   browserShellSessionIdRef.current = null;
                 }
-                setMode("IDLE");
+                requestModeTransition("IDLE", "browser_close");
               }}
               mode="EMBEDDED"
               browserMode="GOVERNED"
@@ -1248,7 +1276,7 @@ const VisualCore: React.FC<VisualCoreProps> = ({
                   sandboxedBrowserShellService.revokeShellSession(browserShellSessionIdRef.current);
                   browserShellSessionIdRef.current = null;
                 }
-                setMode("IDLE");
+                requestModeTransition("IDLE", "browser_revoke");
               }}
             />
           )}
