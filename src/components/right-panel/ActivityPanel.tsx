@@ -12,6 +12,8 @@ import { screenObservationService } from "../../services/runtime/ScreenObservati
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
+import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
+import { isLucaBrowserSafeLifecycleExecutionKind } from "../../services/runtime/LucaBrowserActionPolicy";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -678,6 +680,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <div className="mt-2 flex flex-wrap gap-2">
                         {isWaiting && action.policyDecision.allowedForFutureHumanConfirmedExecution && (
                           <Button tone="good" onClick={() => { lucaBrowserActionQueueService.confirmActionRequestForFutureExecution(action.actionRequestId); refresh(); }}>confirm for future execution</Button>
+                        )}
+                        {isConfirmed && isLucaBrowserSafeLifecycleExecutionKind(action.kind) && (
+                          <Button tone="good" onClick={() => { lucaBrowserActionExecutionService.executeConfirmedSafeLifecycleAction(action.actionRequestId); refresh(); }}>execute safe control</Button>
                         )}
                         <Button tone="danger" onClick={() => { lucaBrowserActionQueueService.revokeActionRequest(action.actionRequestId, "Revoked from Activity panel."); refresh(); }}>revoke</Button>
                         <Button onClick={() => { lucaBrowserActionQueueService.archiveActionRequest(action.actionRequestId); refresh(); }}>archive</Button>

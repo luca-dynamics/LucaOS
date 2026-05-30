@@ -3,9 +3,13 @@ import {
   classifyLucaBrowserAction,
   detectCredentialLikeText,
   evaluateLucaBrowserActionRequest,
+  isLucaBrowserSafeLifecycleExecutionKind,
   sanitizeBrowserActionInput,
 } from "./LucaBrowserActionPolicy";
-import { MAX_LUCA_BROWSER_TYPED_TEXT_PREVIEW } from "../../types/lucaBrowserActions";
+import {
+  MAX_LUCA_BROWSER_TYPED_TEXT_PREVIEW,
+  type LucaBrowserActionKind,
+} from "../../types/lucaBrowserActions";
 
 describe("LucaBrowserActionPolicy", () => {
   it("treats propose_click as eligible for future execution but never executable", () => {
@@ -96,5 +100,41 @@ describe("LucaBrowserActionPolicy", () => {
     const out = sanitizeBrowserActionInput(long);
     expect(typeof out).toBe("string");
     expect((out as string).length).toBeLessThanOrEqual(MAX_LUCA_BROWSER_TYPED_TEXT_PREVIEW);
+  });
+
+  it("isLucaBrowserSafeLifecycleExecutionKind is true only for safe lifecycle/control kinds", () => {
+    const safe: LucaBrowserActionKind[] = [
+      "propose_back",
+      "propose_forward",
+      "propose_refresh",
+      "propose_close",
+      "propose_pause",
+      "propose_resume",
+      "propose_revoke",
+    ];
+    for (const kind of safe) {
+      expect(isLucaBrowserSafeLifecycleExecutionKind(kind)).toBe(true);
+    }
+
+    const notSafe: LucaBrowserActionKind[] = [
+      "propose_click",
+      "propose_type",
+      "propose_scroll",
+      "submit_form",
+      "login",
+      "enter_password",
+      "payment",
+      "wallet_connect",
+      "download",
+      "upload",
+      "read_dom",
+      "scrape",
+      "screenshot",
+      "ocr",
+      "execute_script",
+    ];
+    for (const kind of notSafe) {
+      expect(isLucaBrowserSafeLifecycleExecutionKind(kind)).toBe(false);
+    }
   });
 });

@@ -12,6 +12,7 @@
 import {
   LUCA_BROWSER_BLOCKED_ACTION_KINDS,
   LUCA_BROWSER_LIFECYCLE_ACTION_KINDS,
+  LUCA_BROWSER_SAFE_LIFECYCLE_EXECUTION_KINDS,
   MAX_LUCA_BROWSER_TYPED_TEXT_PREVIEW,
   type LucaBrowserActionKind,
   type LucaBrowserActionPolicyDecision,
@@ -174,4 +175,14 @@ export function evaluateLucaBrowserActionRequest(
 /** Stable user-facing reason string for a decision. */
 export function getLucaBrowserActionUserSafeReason(decision: LucaBrowserActionPolicyDecision): string {
   return decision.userSafeReason;
+}
+
+/**
+ * PR #139 — true only for safe lifecycle/control kinds that may execute after
+ * human confirmation (back/forward/refresh/close/pause/resume/revoke). Always
+ * false for click/type/scroll and every blocked category — those stay disabled.
+ */
+export function isLucaBrowserSafeLifecycleExecutionKind(kind: LucaBrowserActionKind): boolean {
+  if (LUCA_BROWSER_BLOCKED_ACTION_KINDS.includes(kind)) return false;
+  return LUCA_BROWSER_SAFE_LIFECYCLE_EXECUTION_KINDS.includes(kind);
 }

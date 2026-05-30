@@ -15,6 +15,7 @@ import { screenObservationService } from "../../services/runtime/ScreenObservati
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
+import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -139,6 +140,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       browserShellNavigations: sandboxedBrowserShellService.listNavigationRecords(),
       browserShellObservations: sandboxedBrowserShellService.listObservationSnapshots(),
       browserShellActions: lucaBrowserActionQueueService.listActionRequests(),
+      browserShellActionExecutions: lucaBrowserActionExecutionService.listExecutionResults(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -461,6 +463,38 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>automation: false</span>
                     <span>DOM: false</span>
                     <span>page content: false</span>
+                    <span>screenshot/OCR: false</span>
+                    <span>credentials: false</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Browser action execution trace" subtitle="Results of confirmed safe lifecycle/control executions (back/forward/refresh/pause/resume/close/revoke). Click/type/scroll and all page-level automation stay disabled — no DOM read, no page content, no screenshot/OCR, no credentials.">
+        {trace.browserShellActionExecutions.length === 0 ? <EmptyState>No browser action executions.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.browserShellActionExecutions]
+              .sort((a, b) => b.executedAt.localeCompare(a.executedAt))
+              .slice(0, 10)
+              .map((result) => (
+                <div key={result.executionResultId} className={`rounded-xl border p-3 ${result.status === "blocked" || result.status === "failed" ? "border-red-500/20 bg-red-500/5" : result.status === "executed" ? "border-emerald-500/20 bg-emerald-500/5" : "border-indigo-500/20 bg-indigo-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{result.kind} · {result.status} · {result.shellSessionId.slice(-6)}</div>
+                      <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{result.message}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{compactTimestamp(result.executedAt)}</span>
+                  </div>
+                  {result.blockedBy && result.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] text-red-200">Blocked by: {result.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <span>safe lifecycle exec: true</span>
+                    <span>click/type/scroll exec: false</span>
+                    <span>automation: false</span>
+                    <span>DOM: false</span>
                     <span>screenshot/OCR: false</span>
                     <span>credentials: false</span>
                   </div>

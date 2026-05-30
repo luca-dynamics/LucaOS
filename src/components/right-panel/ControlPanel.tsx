@@ -17,6 +17,7 @@ import { screenObservationService } from "../../services/runtime/ScreenObservati
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
+import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
 import type { LucaIntentRoute } from "../../types/intentRouting";
 import { getRouteLabel, getRouteTone, getRouteToneColor, getRouteNextAction, getRouteNoExecutionText } from "../runtime/intentRoutingLabels";
@@ -78,6 +79,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const sandboxedBrowser = sandboxedBrowserService.getDiagnosticsSummary();
   const browserShell = sandboxedBrowserShellService.getDiagnosticsSummary();
   const browserActions = lucaBrowserActionQueueService.getDiagnosticsSummary();
+  const browserActionExecution = lucaBrowserActionExecutionService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
   const checkpoints = agentPlanningCheckpointService.listCheckpoints();
   const activeCheckpoint = checkpoints.find((checkpoint) => checkpoint.status === "proposed" || checkpoint.status === "approved");
@@ -259,7 +261,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="Blocked" value={formatCount("request", browserActions.blockedRequests)} tone={browserActions.blockedRequests > 0 ? "danger" : "neutral"} />
           <RightPanelMetric label="Revoked" value={formatCount("request", browserActions.revokedRequests)} tone="neutral" />
           <RightPanelMetric label="Archived" value={formatCount("request", browserActions.archivedRequests)} tone="neutral" />
-          <RightPanelMetric label="Execution enabled" value="false" tone="neutral" />
+          <RightPanelMetric label="Safe lifecycle executed" value={formatCount("action", browserActionExecution.executedResults)} tone={browserActionExecution.executedResults > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Safe lifecycle execution enabled" value="true" tone="neutral" />
+          <RightPanelMetric label="Click/type/scroll execution enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Human confirmation required" value="true" tone="neutral" />
           <RightPanelMetric label="Automation enabled" value="false" tone="neutral" />
           <RightPanelMetric label="DOM read enabled" value="false" tone="neutral" />
@@ -269,7 +273,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="Download/wallet enabled" value="false" tone="neutral" />
         </div>
         <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">
-          LucaBrowser actions are queued for review only. Execution is still disabled.
+          Only confirmed safe lifecycle/control actions (back/forward/refresh/pause/resume/close/revoke) can execute. Click, type, scroll, and all page-level automation stay disabled.
         </p>
       </RightPanelSection>
 
