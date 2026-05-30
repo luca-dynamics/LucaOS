@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import LucaBrowser from "./LucaBrowser";
+import {
+  createDisplaySession,
+  markDisplaySessionOpen,
+  closeDisplaySession,
+} from "../services/runtime/VisualCoreDisplaySessionService";
+import { shouldRecordVisualCoreDisplaySession } from "../services/runtime/VisualCoreDisplayGovernance";
 import VisualDataPresenter from "./VisualDataPresenter";
 import CinemaPlayer from "./CinemaPlayer";
 import CastPicker from "./CastPicker";
@@ -116,6 +122,10 @@ const VisualCore: React.FC<VisualCoreProps> = ({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [remoteCommand, setRemoteCommand] = useState<any>(null);
   const [currentBrowserUrl, setCurrentBrowserUrl] = useState(browserUrl || "");
+
+  // PR #141 — record-only governed display session tracking (no behavior change).
+  const displaySessionIdRef = useRef<string | null>(null);
+  const displaySessionModeRef = useRef<VisualCoreMode | null>(null);
 
   // Sovereign Sync States
   const [syncState, setSyncState] = useState({
@@ -358,6 +368,43 @@ const VisualCore: React.FC<VisualCoreProps> = ({
       setMode("IDLE");
     }
   }, [visualData, browserUrl, isVisible, cinemaUrl, videoStream]);
+
+  // [DISPLAY GOVERNANCE] PR #141 — record-only governed display sessions for
+  // low-risk display modes (IDLE/DATA/DATA_ROOM/REPORTS/SUBSYSTEMS/SOVEREIGNTY).
+  // This only writes audit/lifecycle records; it NEVER changes mode switching,
+  // rendering, IPC, or browser behavior, and NEVER governs sensitive modes.
+  useEffect(() => {
+    const closeCurrent = () => {
+      if (displaySessionIdRef.current) {
+        closeDisplaySession(displaySessionIdRef.current);
+        displaySessionIdRef.current = null;
+        displaySessionModeRef.current = null;
+      }
+    };
+
+    if (!isVisible) {
+      closeCurrent();
+      return;
+    }
+
+    // Sensitive / non-ready modes are never governed here — just close any
+    // prior low-risk display session record.
+    if (!shouldRecordVisualCoreDisplaySession(mode)) {
+      closeCurrent();
+      return;
+    }
+
+    // Already recording this mode — nothing to do.
+    if (displaySessionModeRef.current === mode && displaySessionIdRef.current) {
+      return;
+    }
+
+    closeCurrent();
+    const record = createDisplaySession({ mode, source: "prop_update" });
+    markDisplaySessionOpen(record.visualSessionId);
+    displaySessionIdRef.current = record.visualSessionId;
+    displaySessionModeRef.current = mode;
+  }, [mode, isVisible]);
 
   // [INTERACTION] Feedback to Brain
   const handleInteraction = (type: string, details: any) => {
