@@ -58,6 +58,11 @@ import {
   getScreenObservationStatusLabel,
   getScreenObservationSurfaceLabel,
 } from "../runtime/screenObservationLabels";
+import {
+  getObservationRequestTimeline,
+  getObservationSessionLifecycleLabel,
+  getObservationSessionTimeline,
+} from "../runtime/screenObservationSessionUx";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -220,6 +225,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>capture enabled: false</span>
                     <span>vision model enabled: false</span>
                   </div>
+                  <p className="mt-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Lifecycle: {getObservationRequestTimeline(request).map((step) => step.label).join(" → ")}</p>
                   <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
                 </div>
               ))}
@@ -236,7 +242,10 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>{getScreenObservationRiskLabel(session.riskLevel)}</span>
                     <span>created {compactTimestamp(session.createdAt)}</span>
                     {session.revokedAt && <span>revoked {compactTimestamp(session.revokedAt)}</span>}
+                    <span>capture enabled: false</span>
+                    <span>vision model enabled: false</span>
                   </div>
+                  <p className="mt-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">{getObservationSessionLifecycleLabel(session)} · {getObservationSessionTimeline(session).map((step) => step.label).join(" → ")}</p>
                   <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">Dry-run permission session only. {getScreenObservationNoCaptureText()}</p>
                 </div>
               ))}
