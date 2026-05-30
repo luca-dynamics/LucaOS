@@ -14,6 +14,7 @@ import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesk
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
+import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -137,6 +138,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       browserShellSessions: sandboxedBrowserShellService.listShellSessions(),
       browserShellNavigations: sandboxedBrowserShellService.listNavigationRecords(),
       browserShellObservations: sandboxedBrowserShellService.listObservationSnapshots(),
+      browserShellActions: lucaBrowserActionQueueService.listActionRequests(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -424,6 +426,43 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>screenshot: false</span>
                     <span>OCR: false</span>
                     <span>vision: false</span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Browser action queue trace" subtitle="Proposed governed browser actions queued for human review only. Execution is disabled — no click/type/scroll, no DOM read, no page content, no screenshot/OCR, no credentials.">
+        {trace.browserShellActions.length === 0 ? <EmptyState>No browser action requests.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.browserShellActions]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 10)
+              .map((action) => (
+                <div key={action.actionRequestId} className={`rounded-xl border p-3 ${action.status === "blocked" || action.status === "revoked" ? "border-red-500/20 bg-red-500/5" : action.status === "confirmed_for_future_execution" ? "border-emerald-500/20 bg-emerald-500/5" : "border-indigo-500/20 bg-indigo-500/5"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{action.kind} · {action.status} · {action.shellSessionId.slice(-6)}</div>
+                      <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{action.summary}</p>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{action.riskLevel}</span>
+                  </div>
+                  {action.blockedBy && action.blockedBy.length > 0 && (
+                    <p className="mt-2 text-[9px] text-red-200">Blocked by: {action.blockedBy.join(", ")}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    {action.targetDescriptor && <span>target: {action.targetDescriptor}</span>}
+                    {action.typedTextPreview && <span>text: “{action.typedTextPreview}”</span>}
+                    <span>{compactTimestamp(action.updatedAt)}</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <span>execution: false</span>
+                    <span>automation: false</span>
+                    <span>DOM: false</span>
+                    <span>page content: false</span>
+                    <span>screenshot/OCR: false</span>
+                    <span>credentials: false</span>
                   </div>
                 </div>
               ))}

@@ -11,6 +11,7 @@ import { browserDesktopGatewayService } from "../../services/runtime/BrowserDesk
 import { screenObservationService } from "../../services/runtime/ScreenObservationService";
 import { sandboxedBrowserService } from "../../services/runtime/SandboxedBrowserService";
 import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBrowserShellService";
+import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
 import { intentRoutingService } from "../../services/runtime/IntentRoutingService";
@@ -31,6 +32,13 @@ import {
   getContinuityToneColor, getContinuityToneBorder, getContinuityToneBg,
   getContinuityNoExecutionText, compactTimestamp,
 } from "../runtime/continuityLabels";
+import {
+  getLucaBrowserActionKindLabel,
+  getLucaBrowserActionStatusLabel,
+  getLucaBrowserActionRiskLabel,
+  getLucaBrowserActionNextAction,
+  getLucaBrowserActionNoExecutionText,
+} from "../runtime/lucaBrowserActionLabels";
 import {
   getSkillCapabilityLabel,
   getSkillRequestLabel,
@@ -191,6 +199,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       browserShellSessions: sandboxedBrowserShellService.listShellSessions(),
       browserShellNavigations: sandboxedBrowserShellService.listNavigationRecords(),
       browserShellObservations: sandboxedBrowserShellService.listObservationSnapshots(),
+      browserShellActions: lucaBrowserActionQueueService.listActionRequests(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -617,6 +626,66 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <div className="mt-2 flex flex-wrap gap-2">
                         <Button onClick={() => { sandboxedBrowserShellService.resumeShellSession(session.shellSessionId); refresh(); }}>resume</Button>
                         <Button tone="danger" onClick={() => { sandboxedBrowserShellService.revokeShellSession(session.shellSessionId, "Revoked from Activity panel."); refresh(); }}>revoke shell</Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="LucaBrowser action queue" subtitle="Proposed governed browser actions, queued for human review only. Execution is disabled — Luca cannot click, type, scroll, submit, read the DOM, screenshot, OCR, or automate the page. Confirming only records intent for a future, separately-gated execution PR.">
+        {(() => {
+          const actions = data.browserShellActions.slice(0, 8);
+          if (actions.length === 0) return <div className="text-[10px] italic text-[var(--app-text-muted)]">No LucaBrowser action requests.</div>;
+          return (
+            <div className="space-y-2">
+              {actions.map((action) => {
+                const isBlocked = action.status === "blocked";
+                const isWaiting = action.status === "waiting_user_confirmation";
+                const isConfirmed = action.status === "confirmed_for_future_execution";
+                return (
+                  <div key={action.actionRequestId} className={`rounded-xl border p-3 ${isBlocked ? "border-red-500/20 bg-red-500/5" : isConfirmed ? "border-emerald-500/20 bg-emerald-500/5" : "border-indigo-500/20 bg-indigo-500/5"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{getLucaBrowserActionKindLabel(action.kind)}</div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{action.summary}</p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1 text-[8px] font-black uppercase tracking-widest">
+                        <span className={isBlocked ? "text-red-200" : isConfirmed ? "text-emerald-200" : "text-amber-200"}>{getLucaBrowserActionStatusLabel(action.status)}</span>
+                        <span className="text-[var(--app-text-muted)]">{getLucaBrowserActionRiskLabel(action.riskLevel)}</span>
+                      </div>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                      <span>session {action.shellSessionId.slice(-6)}</span>
+                      {action.targetDescriptor && <span>target: {action.targetDescriptor}</span>}
+                      {action.typedTextPreview && <span>text: “{action.typedTextPreview}”</span>}
+                    </div>
+                    {action.blockedBy && action.blockedBy.length > 0 && (
+                      <p className="mt-1 text-[9px] text-red-200">Blocked by: {action.blockedBy.join(", ")}</p>
+                    )}
+                    <p className="mt-1 text-[9px] italic text-[var(--app-text-muted)] opacity-80">{getLucaBrowserActionNextAction(action)}</p>
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">No execution</span>
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">No DOM read</span>
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">No screenshot/OCR</span>
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">No credentials</span>
+                    </div>
+                    <p className="mt-1 text-[9px] italic text-[var(--app-text-muted)] opacity-70">{getLucaBrowserActionNoExecutionText()}</p>
+                    {(isWaiting || isConfirmed) && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {isWaiting && action.policyDecision.allowedForFutureHumanConfirmedExecution && (
+                          <Button tone="good" onClick={() => { lucaBrowserActionQueueService.confirmActionRequestForFutureExecution(action.actionRequestId); refresh(); }}>confirm for future execution</Button>
+                        )}
+                        <Button tone="danger" onClick={() => { lucaBrowserActionQueueService.revokeActionRequest(action.actionRequestId, "Revoked from Activity panel."); refresh(); }}>revoke</Button>
+                        <Button onClick={() => { lucaBrowserActionQueueService.archiveActionRequest(action.actionRequestId); refresh(); }}>archive</Button>
+                      </div>
+                    )}
+                    {isBlocked && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Button onClick={() => { lucaBrowserActionQueueService.archiveActionRequest(action.actionRequestId); refresh(); }}>archive</Button>
                       </div>
                     )}
                   </div>
