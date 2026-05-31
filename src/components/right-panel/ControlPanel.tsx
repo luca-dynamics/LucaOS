@@ -20,6 +20,7 @@ import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowse
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
+import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
@@ -86,6 +87,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const browserActionExecution = lucaBrowserActionExecutionService.getDiagnosticsSummary();
   const visualDisplaySessions = visualCoreDisplaySessionService.getDiagnosticsSummary();
   const overlaySessions = overlayManagerSessionService.getDiagnosticsSummary();
+  const overlayApprovalResolutions = overlayApprovalResolutionService.getDiagnosticsSummary();
   const visualRemoteCommands = visualCoreRemoteCommandService.getDiagnosticsSummary();
   const visualModeTransitions = visualCoreModeTransitionService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
@@ -385,6 +387,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             </div>
           );
         })()}
+      </RightPanelSection>
+
+      <RightPanelSection title="Overlay approvals" subtitle="VoiceHud and SecurityGate approval-resolution audit only. No tool execution or overlay behavior changes.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Records" value={formatCount("record", overlayApprovalResolutions.totalRecords)} tone="neutral" />
+          <RightPanelMetric label="Resolved" value={formatCount("attempt", overlayApprovalResolutions.resolvedAttempts)} tone={overlayApprovalResolutions.resolvedAttempts > 0 ? "good" : "neutral"} />
+          <RightPanelMetric label="VoiceHud" value={formatCount("attempt", overlayApprovalResolutions.voiceHudAttempts)} tone={overlayApprovalResolutions.voiceHudAttempts > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Blocked" value={formatCount("attempt", overlayApprovalResolutions.blockedNoPendingRequestAttempts + overlayApprovalResolutions.blockedUnrecognizedDecisionAttempts)} tone={overlayApprovalResolutions.blockedNoPendingRequestAttempts + overlayApprovalResolutions.blockedUnrecognizedDecisionAttempts > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Resolution only" value="true" tone="good" />
+          <RightPanelMetric label="Tool execution" value="false" tone="neutral" />
+        </div>
       </RightPanelSection>
 
       <RightPanelSection title="Skill governance" subtitle="Registry and request state only. No skill installs or runs from this panel.">

@@ -12,6 +12,7 @@ import {
   getFriendlyVoiceStatus,
 } from "../../utils/voiceDisplay";
 import { eventBus } from "../../services/eventBus";
+import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 
 interface UseVoiceEngineProps {
   executeTool: (toolName: string, args: any) => Promise<any>;
@@ -434,15 +435,29 @@ export function useVoiceEngine({
     );
 
     if (isApprove) {
-      console.log("[VOICE-SAFETY] ✅ User APPROVED via voice");
+      console.log("[VOICE-SAFETY] User APPROVED via voice");
       soundService.play("SUCCESS");
-      approvalRequest.resolve(true);
-      setApprovalRequest(null);
+      overlayApprovalResolutionService.resolveApproval({
+        source: "voice_hud",
+        decision: "approve",
+        approvalRequest,
+        clearApprovalRequest: () => setApprovalRequest(null),
+      });
     } else if (isDeny) {
-      console.log("[VOICE-SAFETY] ❌ User DENIED via voice");
+      console.log("[VOICE-SAFETY] User DENIED via voice");
       soundService.play("ALERT");
-      approvalRequest.resolve(false);
-      setApprovalRequest(null);
+      overlayApprovalResolutionService.resolveApproval({
+        source: "voice_hud",
+        decision: "deny",
+        approvalRequest,
+        clearApprovalRequest: () => setApprovalRequest(null),
+      });
+    } else {
+      overlayApprovalResolutionService.resolveApproval({
+        source: "voice_hud",
+        decision: "unknown",
+        approvalRequest,
+      });
     }
   }, [voiceTranscript, approvalRequest, setApprovalRequest]);
 
