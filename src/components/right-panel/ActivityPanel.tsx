@@ -19,7 +19,16 @@ import { getVisualCoreDisplayGovernanceBoundaryLabels } from "../../services/run
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { getVisualCoreRemoteCommandBoundaryLabels } from "../../services/runtime/VisualCoreRemoteCommandPolicy";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
+import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
 import { formatVisualCoreTraceLabel } from "../../services/runtime/visualCoreTraceCorrelation";
+import {
+  getOverlaySessionBoundaryLabels,
+  getOverlaySessionPostureSummary,
+  getOverlaySessionSafetyFlagSummary,
+  getOverlaySessionSourceLabel,
+  getOverlaySessionStatusLabel,
+  isOverlaySessionBlocked,
+} from "../runtime/overlayManagerSessionLabels";
 import {
   getVisualCoreModeTransitionBoundaryLabels,
   getVisualCoreModeTransitionSafetyFlagSummary,
@@ -218,6 +227,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       visualDisplaySessions: visualCoreDisplaySessionService.listDisplaySessions(),
       visualRemoteCommands: visualCoreRemoteCommandService.listRemoteCommandRecords(),
       visualModeTransitions: visualCoreModeTransitionService.listTransitionRecords(),
+      overlaySessions: overlayManagerSessionService.listOverlaySessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -761,6 +771,53 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         {session.status !== "revoked" && <Button tone="danger" onClick={() => { visualCoreDisplaySessionService.revokeDisplaySession(session.visualSessionId, "Revoked from Activity panel."); refresh(); }}>revoke</Button>}
                       </div>
                     )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="OverlayManager sessions" subtitle="Record-only session records for low-risk display-only overlays (PR #149). Visibility only — no open/close/approve/run controls. Sensitive/ineligible overlays render as blocked. Does not change OverlayManager behavior.">
+        {data.overlaySessions.length === 0 ? (
+          <div className="text-[10px] italic text-[var(--app-text-muted)]">No OverlayManager sessions.</div>
+        ) : (
+          <div className="space-y-2">
+            {[...data.overlaySessions]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 8)
+              .map((session) => {
+                const blocked = isOverlaySessionBlocked(session.status);
+                return (
+                  <div key={session.overlaySessionId} className={`rounded-xl border p-2 ${blocked ? "border-red-500/20 bg-red-500/5" : session.status === "open" ? "border-emerald-500/20 bg-emerald-500/5" : "border-white/10 bg-black/10"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-bold text-[var(--app-text-main)]">{session.label} · {getOverlaySessionStatusLabel(session.status)}</div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{session.userSafeReason}</p>
+                      </div>
+                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{session.riskLevel}</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                      <span>surface: {session.overlaySurfaceId}</span>
+                      <span>source: {getOverlaySessionSourceLabel(session.source)}</span>
+                      <span>postures: {getOverlaySessionPostureSummary(session)}</span>
+                      <span>opened: {compactTimestamp(session.openedAt)}</span>
+                      <span>updated: {compactTimestamp(session.updatedAt)}</span>
+                      {session.closedAt && <span>closed: {compactTimestamp(session.closedAt)}</span>}
+                    </div>
+                    {session.blockedBy && session.blockedBy.length > 0 && (
+                      <p className="mt-1 text-[9px] text-red-200">Blocked by: {session.blockedBy.join(", ")}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      {getOverlaySessionBoundaryLabels().map((label) => (
+                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                      ))}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                      {getOverlaySessionSafetyFlagSummary(session).map((flag) => (
+                        <span key={flag}>{flag}</span>
+                      ))}
+                    </div>
                   </div>
                 );
               })}

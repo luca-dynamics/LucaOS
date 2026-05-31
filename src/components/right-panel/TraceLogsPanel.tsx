@@ -19,6 +19,7 @@ import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBr
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
+import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
 import { formatVisualCoreTraceLabel } from "../../services/runtime/visualCoreTraceCorrelation";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
@@ -86,6 +87,14 @@ import {
   getVisualCoreModeTransitionStatusLabel,
   isVisualCoreModeTransitionBlocked,
 } from "../runtime/visualCoreModeTransitionLabels";
+import {
+  getOverlaySessionBoundaryLabels,
+  getOverlaySessionPostureSummary,
+  getOverlaySessionSafetyFlagSummary,
+  getOverlaySessionSourceLabel,
+  getOverlaySessionStatusLabel,
+  isOverlaySessionBlocked,
+} from "../runtime/overlayManagerSessionLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -154,6 +163,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       visualDisplaySessions: visualCoreDisplaySessionService.listDisplaySessions(),
       visualRemoteCommands: visualCoreRemoteCommandService.listRemoteCommandRecords(),
       visualModeTransitions: visualCoreModeTransitionService.listTransitionRecords(),
+      overlaySessions: overlayManagerSessionService.listOverlaySessions(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -597,6 +607,52 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
                       {getVisualCoreModeTransitionSafetyFlagSummary(transition).map((flag) => (
                         <span key={flag}>{flag}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="OverlayManager session trace" subtitle="Record-only overlay session records for low-risk display-only overlays (PR #149): open requested / open / closed / blocked. Visibility only — blocked sensitive/ineligible overlays stay blocked, no approve/run/execute/open/close. Does not change OverlayManager behavior, show/hide, z-index, focus, or pointer-events. No capture, automation, DOM read, screenshot/OCR, external action, file, messaging, wireless, or tool execution.">
+        {trace.overlaySessions.length === 0 ? <EmptyState>No OverlayManager sessions.</EmptyState> : (
+          <div className="space-y-2">
+            {[...trace.overlaySessions]
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .slice(0, 10)
+              .map((session) => {
+                const blocked = isOverlaySessionBlocked(session.status);
+                return (
+                  <div key={session.overlaySessionId} className={`rounded-xl border p-3 ${blocked ? "border-red-500/20 bg-red-500/5" : session.status === "open" ? "border-emerald-500/20 bg-emerald-500/5" : "border-white/10 bg-black/10"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{session.overlaySurfaceId} · {session.overlaySessionId.slice(-6)}</div>
+                        <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{session.userSafeReason}</p>
+                      </div>
+                      <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest ${blocked ? "text-red-200" : "text-[var(--app-text-muted)]"}`}>{getOverlaySessionStatusLabel(session.status)}</span>
+                    </div>
+                    {session.blockedBy && session.blockedBy.length > 0 && (
+                      <p className="mt-2 text-[9px] text-red-200">Blocked by: {session.blockedBy.join(", ")}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                      <span>label: {session.label}</span>
+                      <span>risk: {session.riskLevel}</span>
+                      <span>source: {getOverlaySessionSourceLabel(session.source)}</span>
+                      <span>postures: {getOverlaySessionPostureSummary(session)}</span>
+                      <span>opened: {compactTimestamp(session.openedAt)}</span>
+                      <span>updated: {compactTimestamp(session.updatedAt)}</span>
+                      {session.closedAt && <span>closed: {compactTimestamp(session.closedAt)}</span>}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                      {getOverlaySessionSafetyFlagSummary(session).map((flag) => (
+                        <span key={flag}>{flag}</span>
+                      ))}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-50">
+                      {getOverlaySessionBoundaryLabels().map((label) => (
+                        <span key={label}>{label}</span>
                       ))}
                     </div>
                   </div>
