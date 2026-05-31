@@ -21,6 +21,7 @@ import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBr
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
 import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
+import { overlayCaptureActivationGateService } from "../../services/runtime/OverlayCaptureActivationGateService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
@@ -88,6 +89,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const visualDisplaySessions = visualCoreDisplaySessionService.getDiagnosticsSummary();
   const overlaySessions = overlayManagerSessionService.getDiagnosticsSummary();
   const overlayApprovalResolutions = overlayApprovalResolutionService.getDiagnosticsSummary();
+  const overlayCaptureGate = overlayCaptureActivationGateService.getDiagnosticsSummary();
   const visualRemoteCommands = visualCoreRemoteCommandService.getDiagnosticsSummary();
   const visualModeTransitions = visualCoreModeTransitionService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
@@ -140,6 +142,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Memory</span>
             <div>{diagnostics?.memory.label ?? "Memory route loading"} · {diagnostics?.memory.readiness ?? "unknown"}</div>
           </div>
+        </div>
+      </RightPanelSection>
+
+      <RightPanelSection title="Overlay capture gate" subtitle="Capture-surface policy/stub diagnostics only. No capture starts/stops, permission requests, or OverlayManager behavior changes.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Mapped" value={formatCount("surface", overlayCaptureGate.surfaces.length)} tone="warn" />
+          <RightPanelMetric label="Attempts" value={formatCount("attempt", overlayCaptureGate.totalRecords)} tone={overlayCaptureGate.totalRecords > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Stub only" value="true" tone="good" />
+          <RightPanelMetric label="Capture started" value="false" tone="neutral" />
+          <RightPanelMetric label="Permission" value="false" tone="neutral" />
+          <RightPanelMetric label="Tool execution" value="false" tone="neutral" />
         </div>
       </RightPanelSection>
 
