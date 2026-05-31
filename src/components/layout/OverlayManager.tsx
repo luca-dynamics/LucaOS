@@ -19,6 +19,7 @@ import OriginOverlayPanels from "../../surfaces/origin/OriginOverlayPanels";
 import SharedOverlayPanels from "../../surfaces/shared/SharedOverlayPanels";
 import { useRealtimeVoiceHudState } from "../../services/voice/useRealtimeVoiceHudState";
 import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
+import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
@@ -362,6 +363,14 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
   } = props;
   const personaLabel = normalizePersonaDisplay(persona);
   const thoughtNodes = parseToolLogsToThoughtNodes(toolLogs);
+  const realtimeHud = useRealtimeVoiceHudState();
+  const resolveApproval = (decision: "approve" | "deny", source: "voice_hud" | "security_gate") =>
+    overlayApprovalResolutionService.resolveApproval({
+      source,
+      decision,
+      approvalRequest,
+      clearApprovalRequest: () => setApprovalRequest(null),
+    });
 
   useEffect(() => {
     if (showVoiceHud) {
@@ -512,8 +521,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
           }
           persona={persona as any}
           theme={theme}
-          onApprove={() => approvalRequest.resolve(true)}
-          onDeny={() => approvalRequest.resolve(false)}
+          onApprove={() => resolveApproval("approve", "security_gate")}
+          onDeny={() => resolveApproval("deny", "security_gate")}
         />
       )}
 
@@ -584,8 +593,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         realtimeSessionId={runtimeSnapshot.metadata.realtimeSessionId || null}
         realtimeCanInterrupt={operatorState?.canInterrupt ?? runtimeSnapshot.metadata.canInterrupt}
         realtimeLastError={runtimeSnapshot.metadata.lastError || null}
-        runtimeRouteHealth={operatorState?.routeHealth ?? runtimeSnapshot.metadata.routingHealth || null}
-        runtimeLatency={operatorState?.latency ?? runtimeSnapshot.metadata.latencyMs || null}
+        runtimeRouteHealth={(operatorState?.routeHealth ?? runtimeSnapshot.metadata.routingHealth) || null}
+        runtimeLatency={(operatorState?.latency ?? runtimeSnapshot.metadata.latencyMs) || null}
         runtimeFallbackActive={operatorState?.fallbackActive ?? runtimeSnapshot.metadata.adaptiveFallbackActive}
         statusMessage={
           realtimeHud.lastError
@@ -602,9 +611,15 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
           if (!text || text.trim().length === 0) return;
           setVoiceTranscript(text);
           setVoiceTranscriptSource("user");
+          const lower = text.toLowerCase().trim();
+          const noPendingDecision =
+            ["yes", "confirm", "approve", "affirmative"].includes(lower)
+              ? "approve"
+              : ["no", "deny", "negative"].includes(lower)
+                ? "deny"
+                : null;
 
           if (approvalRequest) {
-            const lower = text.toLowerCase().trim();
             const affirmative = [
               "yes",
               "confirm",
@@ -624,17 +639,29 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
             ];
 
             if (affirmative.some((w) => lower.includes(w))) {
-              approvalRequest.resolve(true);
-              setApprovalRequest(null);
+              resolveApproval("approve", "voice_hud");
               soundService.play("SUCCESS");
               return;
             }
             if (negative.some((w) => lower.includes(w))) {
-              approvalRequest.resolve(false);
-              setApprovalRequest(null);
+              resolveApproval("deny", "voice_hud");
               soundService.play("ALERT");
               return;
             }
+            overlayApprovalResolutionService.resolveApproval({
+              source: "voice_hud",
+              decision: "unknown",
+              approvalRequest,
+            });
+            return;
+          }
+
+          if (noPendingDecision) {
+            overlayApprovalResolutionService.resolveApproval({
+              source: "voice_hud",
+              decision: noPendingDecision,
+              approvalRequest: null,
+            });
             return;
           }
 
