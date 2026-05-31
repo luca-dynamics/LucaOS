@@ -20,6 +20,7 @@ import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCor
 import { getVisualCoreRemoteCommandBoundaryLabels } from "../../services/runtime/VisualCoreRemoteCommandPolicy";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
+import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 import { formatVisualCoreTraceLabel } from "../../services/runtime/visualCoreTraceCorrelation";
 import {
   getOverlaySessionBoundaryLabels,
@@ -29,6 +30,14 @@ import {
   getOverlaySessionStatusLabel,
   isOverlaySessionBlocked,
 } from "../runtime/overlayManagerSessionLabels";
+import {
+  getOverlayApprovalResolutionBoundaryLabels,
+  getOverlayApprovalResolutionDecisionLabel,
+  getOverlayApprovalResolutionSafetyFlagSummary,
+  getOverlayApprovalResolutionSourceLabel,
+  getOverlayApprovalResolutionStatusLabel,
+  isOverlayApprovalResolutionBlocked,
+} from "../runtime/overlayApprovalResolutionLabels";
 import {
   getVisualCoreModeTransitionBoundaryLabels,
   getVisualCoreModeTransitionSafetyFlagSummary,
@@ -228,6 +237,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       visualRemoteCommands: visualCoreRemoteCommandService.listRemoteCommandRecords(),
       visualModeTransitions: visualCoreModeTransitionService.listTransitionRecords(),
       overlaySessions: overlayManagerSessionService.listOverlaySessions(),
+      overlayApprovalResolutions: overlayApprovalResolutionService.listRecords(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -283,6 +293,52 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Overlay approval resolutions" subtitle="Read-only audit records for governed VoiceHud/SecurityGate approval resolution (PR #151). Visibility only — no approve/deny/run/execute controls and no behavior changes.">
+        {data.overlayApprovalResolutions.length === 0 ? (
+          <div className="text-[10px] italic text-[var(--app-text-muted)]">No overlay approval resolutions.</div>
+        ) : (
+          <div className="space-y-2">
+            {[...data.overlayApprovalResolutions]
+              .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+              .slice(0, 8)
+              .map((record) => {
+                const blocked = isOverlayApprovalResolutionBlocked(record.status);
+                return (
+                  <div key={record.approvalResolutionId} className={`rounded-xl border p-2 ${blocked ? "border-red-500/20 bg-red-500/5" : record.status === "resolved" ? "border-emerald-500/20 bg-emerald-500/5" : "border-white/10 bg-black/10"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getOverlayApprovalResolutionStatusLabel(record.status)}</div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
+                      </div>
+                      <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest ${blocked ? "text-red-200" : "text-[var(--app-text-muted)]"}`}>{getOverlayApprovalResolutionSourceLabel(record.source)}</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                      <span>id: {record.approvalResolutionId}</span>
+                      <span>source: {getOverlayApprovalResolutionSourceLabel(record.source)}</span>
+                      <span>decision: {getOverlayApprovalResolutionDecisionLabel(record.decision)}</span>
+                      <span>status: {record.status}</span>
+                      <span>time: {compactTimestamp(record.timestamp)}</span>
+                    </div>
+                    {record.blockedBy && record.blockedBy.length > 0 && (
+                      <p className="mt-1 text-[9px] text-red-200">Blocked by: {record.blockedBy.join(", ")}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      {getOverlayApprovalResolutionBoundaryLabels().map((label) => (
+                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                      ))}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                      {getOverlayApprovalResolutionSafetyFlagSummary(record).map((flag) => (
+                        <span key={flag}>{flag}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         )}
       </RightPanelSection>
