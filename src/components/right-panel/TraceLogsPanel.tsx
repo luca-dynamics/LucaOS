@@ -23,6 +23,7 @@ import { overlayManagerSessionService } from "../../services/runtime/OverlayMana
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 import { overlayCaptureActivationGateService } from "../../services/runtime/OverlayCaptureActivationGateService";
 import { androidNativeOverlayForwardingGateService } from "../../services/runtime/AndroidNativeOverlayForwardingGateService";
+import { originOverlayCriticalControlGateService } from "../../services/runtime/OriginOverlayCriticalControlGateService";
 import { formatVisualCoreTraceLabel } from "../../services/runtime/visualCoreTraceCorrelation";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
@@ -124,6 +125,19 @@ import {
   getAndroidNativeOverlayForwardingStatusTone,
   isAndroidNativeOverlayForwardingBlocked,
 } from "../runtime/androidNativeOverlayForwardingLabels";
+import {
+  getOriginOverlayCriticalControlApprovalTypeLabel,
+  getOriginOverlayCriticalControlBoundaryLabels,
+  getOriginOverlayCriticalControlCapabilitySummary,
+  getOriginOverlayCriticalControlIdLabel,
+  getOriginOverlayCriticalControlKindLabel,
+  getOriginOverlayCriticalControlRiskLabel,
+  getOriginOverlayCriticalControlSafetyFlagSummary,
+  getOriginOverlayCriticalControlSourceComponent,
+  getOriginOverlayCriticalControlStatusLabel,
+  getOriginOverlayCriticalControlStatusTone,
+  isOriginOverlayCriticalControlBlocked,
+} from "../runtime/originOverlayCriticalControlLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -196,6 +210,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       overlayApprovalResolutions: overlayApprovalResolutionService.listRecords(),
       overlayCaptureGateRecords: overlayCaptureActivationGateService.listRecords(),
       androidNativeOverlayForwardingRecords: androidNativeOverlayForwardingGateService.listRecords(),
+      originOverlayCriticalControlRecords: originOverlayCriticalControlGateService.listRecords(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -273,6 +288,63 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
                       {getAndroidNativeOverlayForwardingSafetyFlagSummary(record).map((flag) => (
+                        <span key={flag}>{flag}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Origin critical control trace" subtitle="Read-only trace of PR #157 Origin critical-control gate records. Blocked/stub-only records are non-actionable audit evidence. No approve/execute/grant-root/override-lockdown/control-device/run-skill controls, OriginOverlayPanels behavior change, root/admin grant, lockdown override, destructive tool execution, device control, custom skill execution, tool execution, browser automation, screenshot/OCR/vision, file access, messaging execution, wireless/device control, wallet/payment, or sensitive-surface enablement.">
+        {trace.originOverlayCriticalControlRecords.length === 0 ? (
+          <div className="text-[10px] italic text-[var(--app-text-muted)]">No Origin critical-control records.</div>
+        ) : (
+          <div className="space-y-2">
+            {[...trace.originOverlayCriticalControlRecords]
+              .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+              .slice(0, 8)
+              .map((record) => {
+                const blocked = isOriginOverlayCriticalControlBlocked(record.status);
+                const tone = getOriginOverlayCriticalControlStatusTone(record.status);
+                return (
+                  <div key={record.originOverlayControlGateRecordId} className={`rounded-xl border p-2 ${getSkillToneBorder(tone)} ${getSkillToneBg(tone)}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className={`text-[10px] font-black uppercase tracking-[0.14em] ${getSkillToneColor(tone)}`}>
+                          {getOriginOverlayCriticalControlIdLabel(record.controlId)} · {getOriginOverlayCriticalControlStatusLabel(record.status)}
+                        </div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
+                        <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">Future approval copy: {record.recommendedFutureApprovalCopy}</p>
+                      </div>
+                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-red-200">{blocked ? "blocked" : "audit"}</span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-1 text-[9px] text-[var(--app-text-muted)]">
+                      <span>id: {record.originOverlayControlGateRecordId}</span>
+                      <span>control: {record.controlId}</span>
+                      <span>kind: {getOriginOverlayCriticalControlKindLabel(record.controlKind)}</span>
+                      <span>risk: {getOriginOverlayCriticalControlRiskLabel(record.riskLevel)}</span>
+                      <span>status: {record.status}</span>
+                      <span>allowed: {String(record.allowed)}</span>
+                      <span>source: {getOriginOverlayCriticalControlSourceComponent(record.controlId)}</span>
+                      <span>approval: {getOriginOverlayCriticalControlApprovalTypeLabel(record.requiredFutureApprovalType)}</span>
+                      <span>blockedBy: {record.blockedBy.join(", ")}</span>
+                      <span>time: {compactTimestamp(record.timestamp)}</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                      {getOriginOverlayCriticalControlCapabilitySummary(record.controlId).map((chip) => (
+                        <span key={chip}>{chip}</span>
+                      ))}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      {getOriginOverlayCriticalControlBoundaryLabels().map((label) => (
+                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                      ))}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                      {getOriginOverlayCriticalControlSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
                     </div>
