@@ -22,6 +22,7 @@ import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCo
 import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 import { overlayCaptureActivationGateService } from "../../services/runtime/OverlayCaptureActivationGateService";
+import { androidNativeOverlayForwardingGateService } from "../../services/runtime/AndroidNativeOverlayForwardingGateService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
@@ -90,6 +91,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const overlaySessions = overlayManagerSessionService.getDiagnosticsSummary();
   const overlayApprovalResolutions = overlayApprovalResolutionService.getDiagnosticsSummary();
   const overlayCaptureGate = overlayCaptureActivationGateService.getDiagnosticsSummary();
+  const nativeOverlayForwardingGate = androidNativeOverlayForwardingGateService.getDiagnosticsSummary();
   const visualRemoteCommands = visualCoreRemoteCommandService.getDiagnosticsSummary();
   const visualModeTransitions = visualCoreModeTransitionService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
@@ -142,6 +144,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Memory</span>
             <div>{diagnostics?.memory.label ?? "Memory route loading"} · {diagnostics?.memory.readiness ?? "unknown"}</div>
           </div>
+        </div>
+      </RightPanelSection>
+
+      <RightPanelSection title="Native overlay forwarding gate" subtitle="Android LucaOverlay policy/stub diagnostics only. No forwarding, native permission request, voice capture, wake-word, rendering, or plugin behavior changes.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Mapped" value={formatCount("surface", nativeOverlayForwardingGate.surfaces.length)} tone="warn" />
+          <RightPanelMetric label="Attempts" value={formatCount("attempt", nativeOverlayForwardingGate.totalRecords)} tone={nativeOverlayForwardingGate.totalRecords > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Stub only" value="true" tone="good" />
+          <RightPanelMetric label="Forwarding" value="false" tone="neutral" />
+          <RightPanelMetric label="Permission" value="false" tone="neutral" />
+          <RightPanelMetric label="Voice started" value="false" tone="neutral" />
         </div>
       </RightPanelSection>
 
