@@ -19,6 +19,7 @@ import { sandboxedBrowserShellService } from "../../services/runtime/SandboxedBr
 import { lucaBrowserActionQueueService } from "../../services/runtime/LucaBrowserActionQueueService";
 import { lucaBrowserActionExecutionService } from "../../services/runtime/LucaBrowserActionExecutionService";
 import { visualCoreDisplaySessionService } from "../../services/runtime/VisualCoreDisplaySessionService";
+import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
@@ -84,6 +85,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const browserActions = lucaBrowserActionQueueService.getDiagnosticsSummary();
   const browserActionExecution = lucaBrowserActionExecutionService.getDiagnosticsSummary();
   const visualDisplaySessions = visualCoreDisplaySessionService.getDiagnosticsSummary();
+  const overlaySessions = overlayManagerSessionService.getDiagnosticsSummary();
   const visualRemoteCommands = visualCoreRemoteCommandService.getDiagnosticsSummary();
   const visualModeTransitions = visualCoreModeTransitionService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
@@ -187,6 +189,23 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </div>
         <p className="mt-3 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
           VisualCore governance currently records low-risk display sessions only. Sensitive modes remain blocked until dedicated policy.
+        </p>
+      </RightPanelSection>
+
+      <RightPanelSection title="OverlayManager session records" subtitle="Records low-risk display-only overlays only. Sensitive overlays remain blocked. No behavior changed.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Overlay sessions" value={formatCount("session", overlaySessions.totalSessions)} />
+          <RightPanelMetric label="Open" value={formatCount("session", overlaySessions.openSessions)} tone={overlaySessions.openSessions > 0 ? "good" : "neutral"} />
+          <RightPanelMetric label="Closed" value={formatCount("session", overlaySessions.closedSessions)} tone="neutral" />
+          <RightPanelMetric label="Blocked/ignored" value={formatCount("session", overlaySessions.blockedSessions)} tone={overlaySessions.blockedSessions > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Eligible surfaces" value={overlaySessions.eligibleSurfaceCount} tone="neutral" />
+          <RightPanelMetric label="Sensitive surfaces" value={overlaySessions.sensitiveSurfaceCount} tone={overlaySessions.sensitiveSurfaceCount > 0 ? "warn" : "neutral"} />
+          <RightPanelMetric label="Governance applied" value="true" tone="good" />
+          <RightPanelMetric label="Record only" value="true" tone="good" />
+          <RightPanelMetric label="Execution changed" value="false" tone="neutral" />
+        </div>
+        <p className="mt-3 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+          Record-only overlay session governance for low-risk display-only surfaces. Sensitive overlays are recorded as blocked and remain ungoverned until dedicated policy.
         </p>
       </RightPanelSection>
 
