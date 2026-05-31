@@ -22,6 +22,7 @@ import { visualCoreModeTransitionService } from "../../services/runtime/VisualCo
 import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 import { overlayCaptureActivationGateService } from "../../services/runtime/OverlayCaptureActivationGateService";
+import { androidNativeOverlayForwardingGateService } from "../../services/runtime/AndroidNativeOverlayForwardingGateService";
 import { formatVisualCoreTraceLabel } from "../../services/runtime/visualCoreTraceCorrelation";
 import {
   getOverlaySessionBoundaryLabels,
@@ -47,6 +48,14 @@ import {
   getOverlayCaptureSurfaceLabel,
   isOverlayCaptureGateBlocked,
 } from "../runtime/overlayCaptureGateLabels";
+import {
+  getAndroidNativeOverlayForwardingBoundaryLabels,
+  getAndroidNativeOverlayForwardingKindLabel,
+  getAndroidNativeOverlayForwardingSafetyFlagSummary,
+  getAndroidNativeOverlayForwardingSourceLabel,
+  getAndroidNativeOverlayForwardingStatusLabel,
+  isAndroidNativeOverlayForwardingBlocked,
+} from "../runtime/androidNativeOverlayForwardingLabels";
 import {
   getVisualCoreModeTransitionBoundaryLabels,
   getVisualCoreModeTransitionSafetyFlagSummary,
@@ -248,6 +257,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
       overlaySessions: overlayManagerSessionService.listOverlaySessions(),
       overlayApprovalResolutions: overlayApprovalResolutionService.listRecords(),
       overlayCaptureGateRecords: overlayCaptureActivationGateService.listRecords(),
+      androidNativeOverlayForwardingRecords: androidNativeOverlayForwardingGateService.listRecords(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -303,6 +313,53 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Android native overlay forwarding" subtitle="Read-only native forwarding-gate records from PR #155. Visibility only — no approve/forward/start-voice/stop-voice/request-permission controls and no native overlay behavior changes.">
+        {data.androidNativeOverlayForwardingRecords.length === 0 ? (
+          <div className="text-[10px] italic text-[var(--app-text-muted)]">No Android native overlay forwarding records.</div>
+        ) : (
+          <div className="space-y-2">
+            {[...data.androidNativeOverlayForwardingRecords]
+              .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+              .slice(0, 8)
+              .map((record) => {
+                const blocked = isAndroidNativeOverlayForwardingBlocked(record.status);
+                return (
+                  <div key={record.nativeOverlayForwardingId} className={`rounded-xl border p-2 ${blocked ? "border-red-500/20 bg-red-500/5" : "border-white/10 bg-black/10"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getAndroidNativeOverlayForwardingSourceLabel(record.source)} · {getAndroidNativeOverlayForwardingStatusLabel(record.status)}</div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
+                        <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">{record.recommendedFutureApprovalCopy}</p>
+                      </div>
+                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-red-200">blocked</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                      <span>id: {record.nativeOverlayForwardingId}</span>
+                      <span>surface: {record.surfaceId}</span>
+                      <span>source: {record.source}</span>
+                      <span>kind: {getAndroidNativeOverlayForwardingKindLabel(record.kind)}</span>
+                      <span>status: {record.status}</span>
+                      <span>allowed: {String(record.allowed)}</span>
+                      <span>time: {compactTimestamp(record.timestamp)}</span>
+                    </div>
+                    <p className="mt-1 text-[9px] text-red-200">Blocked by: {record.blockedBy.join(", ")}</p>
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      {getAndroidNativeOverlayForwardingBoundaryLabels().map((label) => (
+                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                      ))}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                      {getAndroidNativeOverlayForwardingSafetyFlagSummary(record).map((flag) => (
+                        <span key={flag}>{flag}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         )}
       </RightPanelSection>
