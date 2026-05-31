@@ -21,6 +21,7 @@ import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCor
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { overlayManagerSessionService } from "../../services/runtime/OverlayManagerSessionService";
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
+import { overlayCaptureActivationGateService } from "../../services/runtime/OverlayCaptureActivationGateService";
 import { formatVisualCoreTraceLabel } from "../../services/runtime/visualCoreTraceCorrelation";
 import { agentPlanningCheckpointService } from "../../services/runtime/AgentPlanningCheckpointService";
 import { runtimePlanService } from "../../services/runtime/RuntimePlanService";
@@ -104,6 +105,15 @@ import {
   getOverlayApprovalResolutionStatusLabel,
   isOverlayApprovalResolutionBlocked,
 } from "../runtime/overlayApprovalResolutionLabels";
+import {
+  getOverlayCaptureGateBoundaryLabels,
+  getOverlayCaptureGateSafetyFlagSummary,
+  getOverlayCaptureGateStatusLabel,
+  getOverlayCaptureGateStatusTone,
+  getOverlayCaptureKindSummary,
+  getOverlayCaptureSurfaceLabel,
+  isOverlayCaptureGateBlocked,
+} from "../runtime/overlayCaptureGateLabels";
 
 interface TraceLogsPanelProps {
   theme: { hex: string; primary: string; border: string };
@@ -174,6 +184,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       visualModeTransitions: visualCoreModeTransitionService.listTransitionRecords(),
       overlaySessions: overlayManagerSessionService.listOverlaySessions(),
       overlayApprovalResolutions: overlayApprovalResolutionService.listRecords(),
+      overlayCaptureGateRecords: overlayCaptureActivationGateService.listRecords(),
       skillRequests: skillGovernanceService.listSkillRequests(),
       checkpoints: agentPlanningCheckpointService.listCheckpoints(),
       plans: runtimePlanService.listPlans(),
@@ -207,6 +218,60 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div className={`font-bold ${log.result.startsWith("ERROR") || log.result.startsWith("ACTION ABORTED") ? "text-red-500" : log.result.includes("SENTINEL") ? "text-slate-500" : "text-[var(--app-text-main)]"}`}>{summarizeToolLog(log)}</div>
               </div>
             ))}
+          </div>
+        )}
+      </RightPanelSection>
+
+      <RightPanelSection title="Overlay capture gate trace" subtitle="Read-only trace of PR #153 capture activation-gate records. Blocked/stub-only records are non-actionable audit evidence. No approve/start/stop/capture/request-permission controls, capture start/stop, permission request, OverlayManager behavior change, screenshot/OCR/vision, file, messaging, wireless, tool execution, or sensitive-surface enablement.">
+        {trace.overlayCaptureGateRecords.length === 0 ? (
+          <div className="text-[10px] italic text-[var(--app-text-muted)]">No overlay capture gate records.</div>
+        ) : (
+          <div className="space-y-2">
+            {[...trace.overlayCaptureGateRecords]
+              .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+              .slice(0, 8)
+              .map((record) => {
+                const blocked = isOverlayCaptureGateBlocked(record.status);
+                const tone = getOverlayCaptureGateStatusTone(record.status);
+                return (
+                  <div key={record.captureGateRecordId} className={`rounded-xl border p-2 ${getSkillToneBorder(tone)} ${getSkillToneBg(tone)}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className={`text-[10px] font-black uppercase tracking-[0.14em] ${getSkillToneColor(tone)}`}>
+                          {getOverlayCaptureSurfaceLabel(record.surfaceId)} · {getOverlayCaptureGateStatusLabel(record.status)}
+                        </div>
+                        <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
+                        <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">Future approval copy: {record.recommendedFutureApprovalCopy}</p>
+                      </div>
+                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-red-200">{blocked ? "blocked" : "audit"}</span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-1 text-[9px] text-[var(--app-text-muted)]">
+                      <span>id: {record.captureGateRecordId}</span>
+                      <span>surface: {record.surfaceId}</span>
+                      <span>component: {record.sourceComponent}</span>
+                      <span>captures: {getOverlayCaptureKindSummary(record.captures)}</span>
+                      <span>risk: {record.riskLevel}</span>
+                      <span>status: {record.status}</span>
+                      <span>allowed: {String(record.allowed)}</span>
+                      <span>blockedBy: {record.blockedBy.join(", ")}</span>
+                      <span>visualcore bypass: {String(record.canBypassVisualCoreGovernance)}</span>
+                      <span>tools: {String(record.canInvokeTools)}</span>
+                      <span>explicit gate: {String(record.needsExplicitActivationGate)}</span>
+                      <span>time: {compactTimestamp(record.timestamp)}</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      {getOverlayCaptureGateBoundaryLabels().map((label) => (
+                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                      ))}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                      {getOverlayCaptureGateSafetyFlagSummary(record).map((flag) => (
+                        <span key={flag}>{flag}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         )}
       </RightPanelSection>
