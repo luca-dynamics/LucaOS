@@ -79,6 +79,16 @@ import OperationsSidebar from "./components/layout/OperationsSidebar";
 import ChatPanel from "./components/layout/ChatPanel";
 import OverlayManager from "./components/layout/OverlayManager";
 import PanelResizer from "./components/layout/PanelResizer";
+import {
+  ACTIVITY_RAIL_ICONS,
+  DESKTOP_RAIL_WIDTH_PX,
+  LEFT_PANEL_COLLAPSED_KEY,
+  RIGHT_PANEL_COLLAPSED_KEY,
+  leftToggleIcon,
+  readCollapsedPreference,
+  rightToggleIcon,
+  writeCollapsedPreference,
+} from "./components/layout/desktopShellModel";
 import { useAppSystem } from "./hooks/app/useAppSystem";
 import { useAppIPC } from "./hooks/app/useAppIPC";
 import { useVoiceEngine } from "./hooks/app/useVoiceEngine";
@@ -199,6 +209,21 @@ function AppContent() {
     chat: 430,
     right: 340,
   });
+
+  // Desktop-only collapsible side panels (UI shell layout only). Persisted via
+  // the existing `luca_*` localStorage preference convention.
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState<boolean>(() =>
+    readCollapsedPreference(LEFT_PANEL_COLLAPSED_KEY),
+  );
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(() =>
+    readCollapsedPreference(RIGHT_PANEL_COLLAPSED_KEY),
+  );
+  useEffect(() => {
+    writeCollapsedPreference(LEFT_PANEL_COLLAPSED_KEY, leftPanelCollapsed);
+  }, [leftPanelCollapsed]);
+  useEffect(() => {
+    writeCollapsedPreference(RIGHT_PANEL_COLLAPSED_KEY, rightPanelCollapsed);
+  }, [rightPanelCollapsed]);
   const [connectionTier, setConnectionTier] = useState<
     "LAN" | "LOCAL" | "CLOUD" | "OFFLINE"
   >("LOCAL");
@@ -2514,12 +2539,49 @@ function AppContent() {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden relative z-10 flex h-full gap-0 p-0">
-          {!isMobile && (
+          {!isMobile && leftPanelCollapsed && (
+            <div
+              className={`flex-none h-full overflow-hidden flex flex-col items-center gap-4 py-3 border-r border-white/10 ${
+                theme.isLight ? "glass-panel-light" : "glass-panel"
+              }`}
+              style={{ width: `${DESKTOP_RAIL_WIDTH_PX}px` }}
+            >
+              <button
+                type="button"
+                aria-label={leftToggleIcon(true).label}
+                title={leftToggleIcon(true).label}
+                onClick={() => setLeftPanelCollapsed(false)}
+                className="p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-[var(--app-text-muted)]"
+              >
+                <Icon name={leftToggleIcon(true).name} size={20} />
+              </button>
+              <div
+                className="flex flex-col items-center gap-1 text-[var(--app-text-muted)]"
+                aria-hidden="true"
+              >
+                <Icon name="LayoutGrid" size={18} />
+                <span className="text-[8px] font-bold tracking-widest [writing-mode:vertical-rl] rotate-180 opacity-70">
+                  APPS
+                </span>
+              </div>
+            </div>
+          )}
+
+          {!isMobile && !leftPanelCollapsed && (
             <>
               <div
-                className="flex-none h-full overflow-hidden flex flex-col"
+                className="flex-none h-full overflow-hidden flex flex-col relative"
                 style={{ width: `${panelWidths.sidebar}px` }}
               >
+                <button
+                  type="button"
+                  aria-label={leftToggleIcon(false).label}
+                  title={leftToggleIcon(false).label}
+                  onClick={() => setLeftPanelCollapsed(true)}
+                  className="absolute top-2 right-2 z-30 p-1.5 rounded-lg border border-white/10 bg-black/30 hover:bg-white/10 backdrop-blur-sm transition-colors text-[var(--app-text-muted)]"
+                >
+                  <Icon name={leftToggleIcon(false).name} size={18} />
+                </button>
                 <SafeComponent componentName="OperationsSidebar">
                   <OperationsSidebar
                     theme={theme}
@@ -2715,7 +2777,47 @@ function AppContent() {
           )}
 
           {/* Right Panel or Data Panel */}
-          {!isMobile && (
+          {!isMobile && rightPanelCollapsed && (
+            <div
+              className={`flex-none h-full overflow-hidden flex flex-col items-center gap-2 py-3 border-l border-white/10 ${
+                theme.isLight ? "glass-panel-light" : "glass-panel"
+              }`}
+              style={{ width: `${DESKTOP_RAIL_WIDTH_PX}px` }}
+            >
+              <button
+                type="button"
+                aria-label={rightToggleIcon(true).label}
+                title={rightToggleIcon(true).label}
+                onClick={() => setRightPanelCollapsed(false)}
+                className="p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-[var(--app-text-muted)]"
+              >
+                <Icon name={rightToggleIcon(true).name} size={20} />
+              </button>
+              <div className="mt-2 flex flex-col items-center gap-1 w-full">
+                {ACTIVITY_RAIL_ICONS.map((item) => (
+                  <button
+                    key={item.mode}
+                    type="button"
+                    aria-label={item.label}
+                    title={item.label}
+                    onClick={() => {
+                      setRightPanelMode(item.mode);
+                      soundService.play("KEYSTROKE");
+                    }}
+                    className={`p-2 rounded-lg border transition-colors ${
+                      rightPanelMode === item.mode
+                        ? `bg-white/5 ${theme.primary} ${theme.border}`
+                        : "border-transparent text-[var(--app-text-muted)] hover:bg-white/5 hover:text-[var(--app-text-main)]"
+                    }`}
+                  >
+                    <Icon name={item.icon} size={18} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!isMobile && !rightPanelCollapsed && (
             <>
               <PanelResizer
                 themeColor={theme.hex}
@@ -2764,6 +2866,15 @@ function AppContent() {
                         )}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      aria-label={rightToggleIcon(false).label}
+                      title={rightToggleIcon(false).label}
+                      onClick={() => setRightPanelCollapsed(true)}
+                      className="flex-none px-3 flex items-center justify-center border-l border-white/10 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:bg-white/5 transition-colors"
+                    >
+                      <Icon name={rightToggleIcon(false).name} size={18} />
+                    </button>
                   </div>
 
                   <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
