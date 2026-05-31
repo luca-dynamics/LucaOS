@@ -23,6 +23,7 @@ import { overlayManagerSessionService } from "../../services/runtime/OverlayMana
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 import { overlayCaptureActivationGateService } from "../../services/runtime/OverlayCaptureActivationGateService";
 import { androidNativeOverlayForwardingGateService } from "../../services/runtime/AndroidNativeOverlayForwardingGateService";
+import { originOverlayCriticalControlGateService } from "../../services/runtime/OriginOverlayCriticalControlGateService";
 import { visualCoreRemoteCommandService } from "../../services/runtime/VisualCoreRemoteCommandService";
 import { visualCoreModeTransitionService } from "../../services/runtime/VisualCoreModeTransitionService";
 import { ROUTING_MODE_SHORT_LABELS } from "../../types/intentRouting";
@@ -92,6 +93,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
   const overlayApprovalResolutions = overlayApprovalResolutionService.getDiagnosticsSummary();
   const overlayCaptureGate = overlayCaptureActivationGateService.getDiagnosticsSummary();
   const nativeOverlayForwardingGate = androidNativeOverlayForwardingGateService.getDiagnosticsSummary();
+  const originCriticalControlGate = originOverlayCriticalControlGateService.getDiagnosticsSummary();
   const visualRemoteCommands = visualCoreRemoteCommandService.getDiagnosticsSummary();
   const visualModeTransitions = visualCoreModeTransitionService.getDiagnosticsSummary();
   const loopStatus = runtimeContinuityLoopService.getLoopStatus();
@@ -144,6 +146,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Memory</span>
             <div>{diagnostics?.memory.label ?? "Memory route loading"} · {diagnostics?.memory.readiness ?? "unknown"}</div>
           </div>
+        </div>
+      </RightPanelSection>
+
+      <RightPanelSection title="Origin critical controls" subtitle="OriginOverlayPanels policy/stub diagnostics only. No control execution, root/admin grant, lockdown override, destructive tools, device control, custom skills, or rendering behavior changes.">
+        <div className="grid grid-cols-2 gap-2">
+          <RightPanelMetric label="Mapped" value={formatCount("control", originCriticalControlGate.controls.length)} tone="danger" />
+          <RightPanelMetric label="Attempts" value={formatCount("attempt", originCriticalControlGate.totalRecords)} tone={originCriticalControlGate.totalRecords > 0 ? "danger" : "neutral"} />
+          <RightPanelMetric label="Stub only" value="true" tone="good" />
+          <RightPanelMetric label="Executed" value="false" tone="neutral" />
+          <RightPanelMetric label="Root/Admin" value="false" tone="neutral" />
+          <RightPanelMetric label="Devices" value="false" tone="neutral" />
         </div>
       </RightPanelSection>
 
