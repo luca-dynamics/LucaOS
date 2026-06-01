@@ -1,8 +1,10 @@
+import { getLucaBootDiagnosticCopy } from "../runtime/lucaBootCopyModel";
+
 export const KERNEL_BOOT_MESSAGES = [
-  "KERNEL AWAKENING IN PROGRESS...",
-  "STABILIZING LUCA TENSORS...",
-  "GENERATING IDENTITY KEYPAIR [ED25519]...",
-  "LUCA AGENT INITIALIZED.",
+  getLucaBootDiagnosticCopy("kernelAwakening").standardLabel,
+  getLucaBootDiagnosticCopy("stabilizingLucaTensors").standardLabel,
+  getLucaBootDiagnosticCopy("generatingIdentityKeypair").standardLabel,
+  getLucaBootDiagnosticCopy("lucaAgentInitialized").standardLabel,
 ];
 
 export const startKernelBootSequence = (options: {
