@@ -133,7 +133,6 @@ import {
 import {
   lucaMobileActiveIndicatorStyle,
   lucaMobileActiveTabStyle,
-  lucaMobileAppBackgroundStyle,
   lucaMobileClassNames,
   lucaMobileContentSurfaceStyle,
   lucaMobileDividerStyle,
@@ -143,6 +142,7 @@ import {
   lucaMobileNavSurfaceStyle,
   lucaMobilePanelSurfaceStyle,
 } from "./styles/lucaMobileShellStyles";
+import { resolveLucaPlatformBackgroundPolicy } from "./styles/lucaPlatformBackgroundPolicy";
 
 // --- Mock Initial State ---
 
@@ -203,6 +203,15 @@ function AppContent() {
   const isCapacitor = Capacitor.isNativePlatform();
   const isElectron = checkElectron();
   const isMobile = useMobile();
+  const platformBackgroundPolicy = useMemo(
+    () =>
+      resolveLucaPlatformBackgroundPolicy({
+        isMobileViewport: isMobile,
+        isNativeMobile: isCapacitor,
+        isDesktopNative: isElectron,
+      }),
+    [isMobile, isCapacitor, isElectron],
+  );
 
   const [currentCwd, setCurrentCwd] = useState<string>("");
   const [opsecStatus, setOpsecStatus] = useState<string>("ACTIVE");
@@ -2262,13 +2271,31 @@ function AppContent() {
 
   return (
     <>
-      {isMobile ? (
+      {platformBackgroundPolicy.shouldUseMobileStableBackground ? (
         <div
           className={`fixed inset-0 -z-50 ${lucaMobileClassNames.app}`}
-          style={lucaMobileAppBackgroundStyle}
+          data-luca-background-policy={platformBackgroundPolicy.mode}
+          style={platformBackgroundPolicy.backdropStyle}
         />
       ) : (
-        <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
+        <>
+          {/*
+            Desktop web cannot show real desktop wallpaper through a browser tab.
+            Its LiquidBackground is an internal LucaOS page material over solid
+            premium fallback tokens; native desktop remains transparent-ready
+            when the host window is safely configured for OS glass later.
+          */}
+          {platformBackgroundPolicy.usesBrowserSafeLiquidFallback && (
+            <div
+              className="fixed inset-0 -z-50"
+              data-luca-background-policy={platformBackgroundPolicy.mode}
+              style={platformBackgroundPolicy.backdropStyle}
+            />
+          )}
+          {platformBackgroundPolicy.shouldRenderLiquidBackground && (
+            <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
+          )}
+        </>
       )}
       <SafeComponent componentName="OverlayManager">
         <OverlayManager
@@ -2440,18 +2467,16 @@ function AppContent() {
                 transformOrigin: "top left",
                 borderColor:
                   "var(--luca-border-subtle, var(--app-border-main))",
-                background: isMobile
-                  ? lucaMobileAppBackgroundStyle.background
-                  : "transparent",
+                background:
+                  platformBackgroundPolicy.rootApplicationStyle.background,
               }
             : {
                 width: "100vw",
                 height: "100vh",
                 borderColor:
                   "var(--luca-border-subtle, var(--app-border-main))",
-                background: isMobile
-                  ? lucaMobileAppBackgroundStyle.background
-                  : "transparent",
+                background:
+                  platformBackgroundPolicy.rootApplicationStyle.background,
               }
         }
       >
