@@ -107,11 +107,29 @@ import ControlPanel from "./components/right-panel/ControlPanel";
 import ActivityPanel from "./components/right-panel/ActivityPanel";
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
 import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
-import { MOBILE_RIGHT_PANEL_LABELS, RIGHT_PANEL_MODES, isRightPanelMode } from "./components/right-panel/rightPanelModel";
+import {
+  MOBILE_RIGHT_PANEL_LABELS,
+  RIGHT_PANEL_MODES,
+  isRightPanelMode,
+} from "./components/right-panel/rightPanelModel";
 import {
   mobileNavigationLabel,
   type MobileNavigationTab,
 } from "./components/layout/mobileNavigationModel";
+import {
+  lucaShellActiveControlStyle,
+  lucaShellActiveIndicatorStyle,
+  lucaShellActiveLabelStyle,
+  lucaShellActiveTabStyle,
+  lucaShellClassNames,
+  lucaShellControlStyle,
+  lucaShellDividerStyle,
+  lucaShellMutedTextStyle,
+  lucaShellPanelSurfaceStyle,
+  lucaShellRailSurfaceStyle,
+  lucaShellTabStyle,
+  lucaShellWorkspaceSurfaceStyle,
+} from "./styles/lucaShellStyles";
 
 // --- Mock Initial State ---
 
@@ -320,13 +338,14 @@ function AppContent() {
       // Transparency Control
       const opacity = settings?.general?.backgroundOpacity ?? 0.3;
       const blur = settings?.general?.backgroundBlur ?? 40; // Defaulting to high-frost tactical look
-      
+
       setBackgroundOpacity(opacity);
       setBackgroundBlur(blur);
 
       // Unified Typography Engine
       const fontScale = settings?.general?.fontScale ?? 1.0;
-      const fontFamily = settings?.general?.fontFamily ?? '"Inter", system-ui, sans-serif';
+      const fontFamily =
+        settings?.general?.fontFamily ?? '"Inter", system-ui, sans-serif';
 
       // Dynamic Contrast Engine + premium semantic token variables. Existing
       // --app-* variables remain additive compatibility; --luca-* variables are
@@ -1050,7 +1069,9 @@ function AppContent() {
   // NEW: PROFILE MANAGER STATE
   const [showProfileManager, setShowProfileManager] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [settingsInitialTab, setSettingsInitialTab] = useState<string | undefined>(undefined);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<
+    string | undefined
+  >(undefined);
 
   // Open Settings Modal directly to a specific tab via custom event
   // (e.g. clicking the MCP indicator pill in ChatWidgetInput dispatches this)
@@ -1061,7 +1082,8 @@ function AppContent() {
       setShowSettingsModal(true);
     };
     window.addEventListener("luca:open-settings", handleOpenSettings);
-    return () => window.removeEventListener("luca:open-settings", handleOpenSettings);
+    return () =>
+      window.removeEventListener("luca:open-settings", handleOpenSettings);
   }, []);
 
   // Listen for governed panel-open events dispatched by GovernedToolExecutionService
@@ -1074,7 +1096,8 @@ function AppContent() {
       }
     };
     window.addEventListener("luca:open-right-panel", handleOpenRightPanel);
-    return () => window.removeEventListener("luca:open-right-panel", handleOpenRightPanel);
+    return () =>
+      window.removeEventListener("luca:open-right-panel", handleOpenRightPanel);
   }, [setRightPanelMode]);
   const [userProfile, setUserProfile] = useState<any>(null);
 
@@ -2395,13 +2418,15 @@ function AppContent() {
                 height: "117.65vh",
                 transform: "scale(0.85)",
                 transformOrigin: "top left",
-                borderColor: theme.hex,
+                borderColor:
+                  "var(--luca-border-subtle, var(--app-border-main))",
                 backgroundColor: "transparent",
               }
             : {
                 width: "100vw",
                 height: "100vh",
-                borderColor: theme.hex,
+                borderColor:
+                  "var(--luca-border-subtle, var(--app-border-main))",
                 backgroundColor: "transparent",
               }
         }
@@ -2441,22 +2466,25 @@ function AppContent() {
         <main className="flex-1 overflow-hidden relative z-10 flex h-full gap-0 p-0">
           {!isMobile && leftPanelCollapsed && (
             <div
-              className={`flex-none h-full overflow-hidden flex flex-col items-center gap-4 py-3 border-r border-white/10 ${
-                theme.isLight ? "glass-panel-light" : "glass-panel"
-              }`}
-              style={{ width: `${DESKTOP_RAIL_WIDTH_PX}px` }}
+              className={`flex-none h-full overflow-hidden flex flex-col items-center gap-4 py-3 border-r ${lucaShellClassNames.rail}`}
+              style={{
+                ...lucaShellRailSurfaceStyle,
+                width: `${DESKTOP_RAIL_WIDTH_PX}px`,
+              }}
             >
               <button
                 type="button"
                 aria-label={leftToggleIcon(true).label}
                 title={leftToggleIcon(true).label}
                 onClick={() => setLeftPanelCollapsed(false)}
-                className="p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-[var(--app-text-muted)]"
+                className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                style={lucaShellControlStyle}
               >
                 <Icon name={leftToggleIcon(true).name} size={20} />
               </button>
               <div
-                className="flex flex-col items-center gap-1 text-[var(--app-text-muted)]"
+                className="flex flex-col items-center gap-1"
+                style={lucaShellMutedTextStyle}
                 aria-hidden="true"
               >
                 <Icon name="LayoutGrid" size={18} />
@@ -2470,15 +2498,19 @@ function AppContent() {
           {!isMobile && !leftPanelCollapsed && (
             <>
               <div
-                className="flex-none h-full overflow-hidden flex flex-col relative"
-                style={{ width: `${panelWidths.sidebar}px` }}
+                className={`flex-none h-full overflow-hidden flex flex-col relative border-r ${lucaShellClassNames.panel}`}
+                style={{
+                  ...lucaShellPanelSurfaceStyle,
+                  width: `${panelWidths.sidebar}px`,
+                }}
               >
                 <button
                   type="button"
                   aria-label={leftToggleIcon(false).label}
                   title={leftToggleIcon(false).label}
                   onClick={() => setLeftPanelCollapsed(true)}
-                  className="absolute top-2 right-2 z-30 p-1.5 rounded-lg border border-white/10 bg-black/30 hover:bg-white/10 backdrop-blur-sm transition-colors text-[var(--app-text-muted)]"
+                  className={`absolute top-2 right-2 z-30 p-1.5 rounded-lg border backdrop-blur-sm transition-colors ${lucaShellClassNames.control}`}
+                  style={lucaShellControlStyle}
                 >
                   <Icon name={leftToggleIcon(false).name} size={18} />
                 </button>
@@ -2582,7 +2614,10 @@ function AppContent() {
 
           {!isMobile && (
             <>
-              <div className="flex-1 h-full overflow-hidden flex flex-col">
+              <div
+                className={`flex-1 h-full overflow-hidden flex flex-col ${lucaShellClassNames.workspace}`}
+                style={lucaShellWorkspaceSurfaceStyle}
+              >
                 <SafeComponent componentName="ChatPanel">
                   <ChatPanel
                     messages={messages}
@@ -2679,17 +2714,19 @@ function AppContent() {
           {/* Right Panel or Data Panel */}
           {!isMobile && rightPanelCollapsed && (
             <div
-              className={`flex-none h-full overflow-hidden flex flex-col items-center gap-2 py-3 border-l border-white/10 ${
-                theme.isLight ? "glass-panel-light" : "glass-panel"
-              }`}
-              style={{ width: `${DESKTOP_RAIL_WIDTH_PX}px` }}
+              className={`flex-none h-full overflow-hidden flex flex-col items-center gap-2 py-3 border-l ${lucaShellClassNames.rail}`}
+              style={{
+                ...lucaShellRailSurfaceStyle,
+                width: `${DESKTOP_RAIL_WIDTH_PX}px`,
+              }}
             >
               <button
                 type="button"
                 aria-label={rightToggleIcon(true).label}
                 title={rightToggleIcon(true).label}
                 onClick={() => setRightPanelCollapsed(false)}
-                className="p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-[var(--app-text-muted)]"
+                className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                style={lucaShellControlStyle}
               >
                 <Icon name={rightToggleIcon(true).name} size={20} />
               </button>
@@ -2704,11 +2741,12 @@ function AppContent() {
                       setRightPanelMode(item.mode);
                       soundService.play("KEYSTROKE");
                     }}
-                    className={`p-2 rounded-lg border transition-colors ${
+                    className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                    style={
                       rightPanelMode === item.mode
-                        ? `bg-white/5 ${theme.primary} ${theme.border}`
-                        : "border-transparent text-[var(--app-text-muted)] hover:bg-white/5 hover:text-[var(--app-text-main)]"
-                    }`}
+                        ? lucaShellActiveControlStyle
+                        : lucaShellControlStyle
+                    }
                   >
                     <Icon name={item.icon} size={18} />
                   </button>
@@ -2729,20 +2767,17 @@ function AppContent() {
                 }
               />
               <section
-                className={`flex-none h-full border-l border-white/10 relative overflow-hidden flex flex-col ${
-                  theme.isLight ? "glass-panel-light" : "glass-panel"
-                }`}
+                className={`flex-none h-full border-l relative overflow-hidden flex flex-col ${lucaShellClassNames.panel}`}
                 style={{
+                  ...lucaShellPanelSurfaceStyle,
                   width: `${panelWidths.right}px`,
-                  background: theme?.isLight
-                    ? (theme.themeName?.toLowerCase() === "lightcream"
-                        ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-                        : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
-                    : "rgba(0, 0, 0, var(--app-bg-opacity, 0.4))",
                 }}
               >
                 <div className="flex flex-col h-full w-full overflow-hidden">
-                  <div className="flex flex-none border-b border-white/10">
+                  <div
+                    className="flex flex-none border-b"
+                    style={lucaShellDividerStyle}
+                  >
                     {RIGHT_PANEL_MODES.map((mode) => (
                       <button
                         key={mode}
@@ -2751,17 +2786,30 @@ function AppContent() {
                           setRightPanelMode(mode);
                           soundService.play("KEYSTROKE");
                         }}
-                        className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors relative ${
+                        className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors relative border-b-2 ${
                           rightPanelMode === mode
-                            ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                            : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
+                            ? lucaShellClassNames.activeTab
+                            : lucaShellClassNames.tab
                         }`}
+                        style={
+                          rightPanelMode === mode
+                            ? lucaShellActiveTabStyle
+                            : lucaShellTabStyle
+                        }
                       >
                         {mode}
                         {mode === "CONTROL" && rightPanelMode === "CONTROL" && (
                           <div className="absolute top-0.5 right-1.5 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse border border-emerald-400/50 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                            <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full animate-pulse border ${lucaShellClassNames.activeIndicator}`}
+                              style={lucaShellActiveIndicatorStyle}
+                            />
+                            <span
+                              className={`text-[7px] font-black uppercase tracking-widest ${lucaShellClassNames.activeLabel}`}
+                              style={lucaShellActiveLabelStyle}
+                            >
+                              Active
+                            </span>
                           </div>
                         )}
                       </button>
@@ -2771,7 +2819,11 @@ function AppContent() {
                       aria-label={rightToggleIcon(false).label}
                       title={rightToggleIcon(false).label}
                       onClick={() => setRightPanelCollapsed(true)}
-                      className="flex-none px-3 flex items-center justify-center border-l border-white/10 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:bg-white/5 transition-colors"
+                      className={`flex-none px-3 flex items-center justify-center border-l transition-colors ${lucaShellClassNames.control}`}
+                      style={{
+                        ...lucaShellControlStyle,
+                        ...lucaShellDividerStyle,
+                      }}
                     >
                       <Icon name={rightToggleIcon(false).name} size={18} />
                     </button>
@@ -2779,13 +2831,26 @@ function AppContent() {
 
                   <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
                     {rightPanelMode === "CONTROL" && (
-                      <ControlPanel theme={theme} tasks={management.tasks} events={management.events} goals={management.goals} />
+                      <ControlPanel
+                        theme={theme}
+                        tasks={management.tasks}
+                        events={management.events}
+                        goals={management.goals}
+                      />
                     )}
-                    {rightPanelMode === "ACTIVITY" && <ActivityPanel theme={theme} />}
+                    {rightPanelMode === "ACTIVITY" && (
+                      <ActivityPanel theme={theme} />
+                    )}
                     {rightPanelMode === "MEMORY" && (
-                      <MemoryControlPanel theme={theme} memories={memories} setMemories={setMemories} />
+                      <MemoryControlPanel
+                        theme={theme}
+                        memories={memories}
+                        setMemories={setMemories}
+                      />
                     )}
-                    {rightPanelMode === "LOGS" && <TraceLogsPanel theme={theme} toolLogs={toolLogs} />}
+                    {rightPanelMode === "LOGS" && (
+                      <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
+                    )}
                   </div>
                 </div>
               </section>
@@ -2830,13 +2895,26 @@ function AppContent() {
 
                 <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
                   {rightPanelMode === "CONTROL" && (
-                    <ControlPanel theme={theme} tasks={management.tasks} events={management.events} goals={management.goals} />
+                    <ControlPanel
+                      theme={theme}
+                      tasks={management.tasks}
+                      events={management.events}
+                      goals={management.goals}
+                    />
                   )}
-                  {rightPanelMode === "ACTIVITY" && <ActivityPanel theme={theme} />}
+                  {rightPanelMode === "ACTIVITY" && (
+                    <ActivityPanel theme={theme} />
+                  )}
                   {rightPanelMode === "MEMORY" && (
-                    <MemoryControlPanel theme={theme} memories={memories} setMemories={setMemories} />
+                    <MemoryControlPanel
+                      theme={theme}
+                      memories={memories}
+                      setMemories={setMemories}
+                    />
                   )}
-                  {rightPanelMode === "LOGS" && <TraceLogsPanel theme={theme} toolLogs={toolLogs} />}
+                  {rightPanelMode === "LOGS" && (
+                    <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
+                  )}
                 </div>
               </div>
             </section>

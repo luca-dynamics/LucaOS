@@ -382,3 +382,36 @@ a,
 .animate-shimmer {
   animation: shimmer 3s infinite;
 }
+
+/* Luca desktop shell token migration pseudo-states.
+ * Base panel/control/tab values live in src/styles/lucaShellStyles.ts so App.tsx
+ * has a single token source of truth for shell surfaces and fallbacks.
+ */
+.luca-shell-control:hover,
+.luca-shell-control:focus-visible {
+  background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
+  border-color: var(--luca-border-strong, var(--app-border-main)) !important;
+  color: var(--luca-text-primary, var(--app-text-main)) !important;
+}
+
+.luca-shell-tab:hover,
+.luca-shell-tab:focus-visible {
+  background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
+  color: var(--luca-text-primary, var(--app-text-main)) !important;
+}
+
+.luca-shell-tab-active {
+  background: var(--luca-surface-hover, var(--app-bg-tint));
+  border-color: var(--luca-border-strong, var(--app-border-main));
+  color: var(--luca-text-primary, var(--app-text-main));
+}
+
+.luca-shell-active-indicator {
+  background: var(--luca-accent-primary);
+  border-color: var(--luca-accent-soft);
+  box-shadow: var(--luca-shadow-glow);
+}
+
+.luca-shell-active-label {
+  color: var(--luca-accent-primary);
+}
