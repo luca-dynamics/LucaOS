@@ -130,6 +130,19 @@ import {
   lucaShellTabStyle,
   lucaShellWorkspaceSurfaceStyle,
 } from "./styles/lucaShellStyles";
+import {
+  lucaMobileActiveIndicatorStyle,
+  lucaMobileActiveTabStyle,
+  lucaMobileAppBackgroundStyle,
+  lucaMobileClassNames,
+  lucaMobileContentSurfaceStyle,
+  lucaMobileDividerStyle,
+  lucaMobileInactiveTabStyle,
+  lucaMobileNavActiveStyle,
+  lucaMobileNavInactiveStyle,
+  lucaMobileNavSurfaceStyle,
+  lucaMobilePanelSurfaceStyle,
+} from "./styles/lucaMobileShellStyles";
 
 // --- Mock Initial State ---
 
@@ -2249,7 +2262,14 @@ function AppContent() {
 
   return (
     <>
-      <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
+      {isMobile ? (
+        <div
+          className={`fixed inset-0 -z-50 ${lucaMobileClassNames.app}`}
+          style={lucaMobileAppBackgroundStyle}
+        />
+      ) : (
+        <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
+      )}
       <SafeComponent componentName="OverlayManager">
         <OverlayManager
           theme={theme}
@@ -2420,14 +2440,18 @@ function AppContent() {
                 transformOrigin: "top left",
                 borderColor:
                   "var(--luca-border-subtle, var(--app-border-main))",
-                backgroundColor: "transparent",
+                background: isMobile
+                  ? lucaMobileAppBackgroundStyle.background
+                  : "transparent",
               }
             : {
                 width: "100vw",
                 height: "100vh",
                 borderColor:
                   "var(--luca-border-subtle, var(--app-border-main))",
-                backgroundColor: "transparent",
+                background: isMobile
+                  ? lucaMobileAppBackgroundStyle.background
+                  : "transparent",
               }
         }
       >
@@ -2569,7 +2593,10 @@ function AppContent() {
           )}
 
           {isMobile && activeMobileTab === "SYSTEM" && (
-            <div className="flex w-full h-full">
+            <div
+              className={`flex w-full h-full ${lucaMobileClassNames.content}`}
+              style={lucaMobileContentSurfaceStyle}
+            >
               <OperationsSidebar
                 theme={theme}
                 isMobile={true}
@@ -2667,7 +2694,10 @@ function AppContent() {
           )}
 
           {isMobile && activeMobileTab === "TERMINAL" && (
-            <div className="flex w-full h-full">
+            <div
+              className={`flex w-full h-full ${lucaMobileClassNames.content}`}
+              style={lucaMobileContentSurfaceStyle}
+            >
               <ChatPanel
                 messages={messages}
                 isMobile={true}
@@ -2860,20 +2890,14 @@ function AppContent() {
           {/* Mobile DATA keeps minimal access to the same safe, state-only panels without redesigning the mobile shell. */}
           {isMobile && activeMobileTab === "DATA" && (
             <section
-              className={`flex-1 flex-col h-full border-l border-white/10 relative overflow-hidden flex ${
-                theme.themeName?.toLowerCase() === "lucagent"
-                  ? "glass-panel-light"
-                  : "glass-panel"
-              }`}
-              style={{
-                background:
-                  theme.themeName?.toLowerCase() === "lucagent"
-                    ? "rgba(255, 255, 255, 0.5)"
-                    : "rgba(0, 0, 0, 0.4)",
-              }}
+              className={`flex-1 flex-col h-full border-l relative overflow-hidden flex ${lucaMobileClassNames.panel}`}
+              style={lucaMobilePanelSurfaceStyle}
             >
               <div className="flex flex-col h-full w-full overflow-hidden">
-                <div className="flex flex-none border-b border-white/10">
+                <div
+                  className="flex flex-none border-b"
+                  style={lucaMobileDividerStyle}
+                >
                   {RIGHT_PANEL_MODES.map((mode) => (
                     <button
                       key={mode}
@@ -2882,13 +2906,25 @@ function AppContent() {
                         setRightPanelMode(mode);
                         soundService.play("KEYSTROKE");
                       }}
-                      className={`flex-1 py-3 text-[10px] font-bold tracking-widest transition-colors ${
+                      className={`flex-1 py-3 text-[10px] font-bold tracking-widest transition-colors relative border-b-2 ${
                         rightPanelMode === mode
-                          ? `bg-white/5 ${theme.primary} border-b-2 ${theme.border}`
-                          : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
+                          ? lucaMobileClassNames.tabActive
+                          : lucaMobileClassNames.tab
                       }`}
+                      style={
+                        rightPanelMode === mode
+                          ? lucaMobileActiveTabStyle
+                          : lucaMobileInactiveTabStyle
+                      }
                     >
                       {MOBILE_RIGHT_PANEL_LABELS[mode]}
+                      {rightPanelMode === mode && (
+                        <span
+                          aria-hidden="true"
+                          className={`absolute left-1/2 top-1 -translate-x-1/2 h-1 w-5 rounded-full border ${lucaMobileClassNames.indicator}`}
+                          style={lucaMobileActiveIndicatorStyle}
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -2924,47 +2960,39 @@ function AppContent() {
         {/* Mobile Navigation Bar */}
         {isMobile && (
           <nav
-            className={`flex-none h-16 ${
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "bg-white border-t border-slate-200"
-                : "bg-black border-t border-white/10"
-            } grid grid-cols-3 items-center z-50`}
+            className={`flex-none h-16 border-t grid grid-cols-3 items-center z-50 ${lucaMobileClassNames.nav}`}
+            style={lucaMobileNavSurfaceStyle}
           >
-            <button
-              onClick={() => setActiveMobileTab("SYSTEM")}
-              className={`flex flex-col items-center justify-center h-full gap-1 ${
-                activeMobileTab === "SYSTEM" ? theme.primary : "text-slate-500"
-              }`}
-            >
-              <Icon name="Cpu" size={20} />
-              <span className="text-[10px] font-bold tracking-widest">
-                {mobileNavigationLabel("SYSTEM")}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveMobileTab("TERMINAL")}
-              className={`flex flex-col items-center justify-center h-full gap-1 ${
-                activeMobileTab === "TERMINAL"
-                  ? theme.primary
-                  : "text-slate-500"
-              }`}
-            >
-              <Icon name="Terminal" size={20} />
-              <span className="text-[10px] font-bold tracking-widest">
-                {mobileNavigationLabel("TERMINAL")}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveMobileTab("DATA")}
-              className={`flex flex-col items-center justify-center h-full gap-1 ${
-                activeMobileTab === "DATA" ? theme.primary : "text-slate-500"
-              }`}
-            >
-              <Icon name="Database" size={20} />
-              <span className="text-[10px] font-bold tracking-widest">
-                {mobileNavigationLabel("DATA")}
-              </span>
-            </button>
+            {[
+              { tab: "SYSTEM" as const, icon: "Cpu" as const },
+              { tab: "TERMINAL" as const, icon: "Terminal" as const },
+              { tab: "DATA" as const, icon: "Database" as const },
+            ].map(({ tab, icon }) => {
+              const active = activeMobileTab === tab;
+
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveMobileTab(tab)}
+                  className={`mx-2 flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl transition-colors ${
+                    active
+                      ? lucaMobileClassNames.navItemActive
+                      : lucaMobileClassNames.navItem
+                  }`}
+                  style={
+                    active
+                      ? lucaMobileNavActiveStyle
+                      : lucaMobileNavInactiveStyle
+                  }
+                >
+                  <Icon name={icon} size={20} />
+                  <span className="text-[10px] font-bold tracking-widest">
+                    {mobileNavigationLabel(tab)}
+                  </span>
+                </button>
+              );
+            })}
           </nav>
         )}
         {showSettingsModal && (

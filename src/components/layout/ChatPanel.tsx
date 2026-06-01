@@ -14,6 +14,11 @@ import { chatIntentRouterBridge } from "../../services/runtime/ChatIntentRouterB
 import { chatIntentProvenanceService } from "../../services/runtime/ChatIntentProvenanceService";
 import type { ChatRoutingResult } from "../../services/runtime/ChatIntentRouterBridge";
 import { getRouteHintText, getRouteLabel, getRouteTone, shouldAppendRouteHint } from "../runtime/intentRoutingLabels";
+import {
+  lucaMobileContentSurfaceStyle,
+  lucaMobileGlassControlStyle,
+  lucaMobileSheetSurfaceStyle,
+} from "../../styles/lucaMobileShellStyles";
 
 interface ChatPanelProps {
   messages: any[];
@@ -619,16 +624,20 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               ? "flex w-full overflow-hidden"
               : "hidden"
             : "flex-1 overflow-hidden"
-        } flex flex-col h-full relative ${isMobile ? "z-10" : "z-20"} transition-all duration-500 tech-border glass-blur`}
-        style={{
-          borderTop: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
-          borderBottom: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
-          backgroundColor: theme?.isLight
-            ? (theme.themeName?.toLowerCase() === "lightcream"
-                ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-                : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
-            : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
-        }}
+        } flex flex-col h-full relative ${isMobile ? "z-10" : "z-20"} transition-all duration-500 ${isMobile ? "" : "tech-border glass-blur"}`}
+        style={
+          isMobile
+            ? lucaMobileContentSurfaceStyle
+            : {
+                borderTop: `1px solid var(--app-border-main, rgba(255,255,255,0.1))`,
+                borderBottom: `1px solid var(--app-border-main, rgba(255,255,255,0.1))`,
+                backgroundColor: theme?.isLight
+                  ? (theme.themeName?.toLowerCase() === "lightcream"
+                      ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
+                      : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
+                  : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
+              }
+        }
       >
         {/* Header Toggle */}
         <div className="absolute top-4 left-6 z-50 flex items-center gap-2">
@@ -636,12 +645,26 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             onClick={() => {
               setViewMode(viewMode === "CHAT" ? "CORTEX" : "CHAT");
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest glass-blur"
-            style={{ 
-              borderColor: viewMode === "CORTEX" ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))", 
-              backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-              color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
-            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest ${isMobile ? "" : "glass-blur"}`}
+            style={
+              isMobile
+                ? {
+                    ...lucaMobileGlassControlStyle,
+                    borderColor:
+                      viewMode === "CORTEX"
+                        ? "var(--luca-accent-soft)"
+                        : lucaMobileGlassControlStyle.borderColor,
+                    color:
+                      viewMode === "CORTEX"
+                        ? "var(--luca-accent-primary)"
+                        : lucaMobileGlassControlStyle.color,
+                  }
+                : {
+                    borderColor: viewMode === "CORTEX" ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))",
+                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
+                    color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
+                  }
+            }
           >
             {viewMode === "CORTEX" ? (
               <Icon name="ArrowLeft" size={10} variant="BoldDuotone" />
@@ -760,7 +783,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         {/* Faint watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
           <h1
-            className={`text-[4rem] lg:text-[5rem] font-black italic opacity-[0.025] select-none tracking-tighter ${theme.primary} transition-colors duration-500`}
+            className={`text-[4rem] lg:text-[5rem] font-black italic opacity-[0.025] select-none tracking-tighter transition-colors duration-500 ${isMobile ? "" : theme.primary}`}
+            style={isMobile ? { color: "var(--luca-text-tertiary)" } : undefined}
           >
             L.U.C.A
           </h1>
@@ -780,16 +804,20 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           : "flex-1 overflow-hidden"
       } flex flex-col ${isMobile ? "h-full" : "h-full"} relative ${
         isMobile ? "z-10" : "z-20"
-      } transition-all duration-500 glass-blur`}
-      style={{
-        borderTop: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
-        borderBottom: !isMobile ? `1px solid var(--app-border-main, rgba(255,255,255,0.1))` : "none",
-        backgroundColor: theme?.isLight
-          ? (theme.themeName?.toLowerCase() === "lightcream"
-              ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-              : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
-          : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
-      }}
+      } transition-all duration-500 ${isMobile ? "" : "glass-blur"}`}
+      style={
+        isMobile
+          ? lucaMobileContentSurfaceStyle
+          : {
+              borderTop: `1px solid var(--app-border-main, rgba(255,255,255,0.1))`,
+              borderBottom: `1px solid var(--app-border-main, rgba(255,255,255,0.1))`,
+              backgroundColor: theme?.isLight
+                ? (theme.themeName?.toLowerCase() === "lightcream"
+                    ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
+                    : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
+                : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
+            }
+      }
     >
       {/* Header Toggle */}
       <div className="absolute top-3 left-6 z-50 flex items-center gap-2">
@@ -797,12 +825,26 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           onClick={() => {
             setViewMode(viewMode === "CHAT" ? "CORTEX" : "CHAT");
           }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest glass-blur"
-          style={{ 
-            borderColor: viewMode === "CORTEX" ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))", 
-            backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-            color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
-          }}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest ${isMobile ? "" : "glass-blur"}`}
+          style={
+            isMobile
+              ? {
+                  ...lucaMobileGlassControlStyle,
+                  borderColor:
+                    viewMode === "CORTEX"
+                      ? "var(--luca-accent-soft)"
+                      : lucaMobileGlassControlStyle.borderColor,
+                  color:
+                    viewMode === "CORTEX"
+                      ? "var(--luca-accent-primary)"
+                      : lucaMobileGlassControlStyle.color,
+                }
+              : {
+                  borderColor: viewMode === "CORTEX" ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))",
+                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
+                  color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
+                }
+          }
         >
           {viewMode === "CORTEX" ? (
             <Icon name="ArrowLeft" size={10} variant="BoldDuotone" />
@@ -818,7 +860,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Faint watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
         <h1
-          className={`text-[9rem] lg:text-[8rem] font-black italic opacity-[0.04] select-none tracking-tighter ${theme.primary} transition-colors duration-500`}
+          className={`text-[9rem] lg:text-[8rem] font-black italic opacity-[0.04] select-none tracking-tighter transition-colors duration-500 ${isMobile ? "" : theme.primary}`}
+          style={isMobile ? { color: "var(--luca-text-tertiary)" } : undefined}
         >
           L.U.C.A
         </h1>
@@ -901,13 +944,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Bottom-docked input */}
       <div
-        className={`${
-          isMobile
-            ? isLight
-              ? "bg-white/90 glass-blur"
-              : "bg-black/95"
-            : "bg-transparent"
-        } z-40 px-3 pb-3 pt-0`}
+        className={`${isMobile ? "border-t" : "bg-transparent"} z-40 px-3 pb-3 pt-0`}
+        style={isMobile ? lucaMobileSheetSurfaceStyle : undefined}
       >
         <div className="mb-2 px-1">
           {suggestionChips}
