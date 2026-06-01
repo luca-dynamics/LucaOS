@@ -23,7 +23,7 @@
 // ===========================================================================
 
 export type LucaLinkHostRoleId =
-  | "origin"
+  | "primary"
   | "companion"
   | "execution"
   | "sensor"
@@ -46,10 +46,10 @@ export interface LucaLinkHostRole {
 
 export const lucaLinkHostRoles: readonly LucaLinkHostRole[] = Object.freeze([
   {
-    id: "origin",
-    label: "Origin Host",
+    id: "primary",
+    label: "Primary Host",
     summary:
-      "The main Luca body. Owns full memory/runtime/tool authority and approves or denies every other host joining the mesh.",
+      "The user's main trusted LucaLink device. Owns user-mesh memory/runtime/tool authority and approves or denies other hosts, but is not Creator/Origin source-code authority.",
     typicalDevices: ["desktop", "laptop"],
     expectedCapabilities: [
       "memory.write",
@@ -80,7 +80,7 @@ export const lucaLinkHostRoles: readonly LucaLinkHostRole[] = Object.freeze([
     id: "execution",
     label: "Execution Host",
     summary:
-      "A powerful desktop/server that runs local models, coding tools, and build pipelines on behalf of the Origin.",
+      "A powerful desktop/server that runs local models, coding tools, and build pipelines on behalf of the Primary Host.",
     typicalDevices: ["desktop", "server", "workstation"],
     expectedCapabilities: [
       "shell.execute",
@@ -150,7 +150,7 @@ export type LucaLinkTrustLevelId =
   | "paired"
   | "trusted"
   | "admin"
-  | "origin";
+  | "owner";
 
 export interface LucaLinkTrustLevel {
   id: LucaLinkTrustLevelId;
@@ -180,7 +180,7 @@ export const lucaLinkTrustLevels: readonly LucaLinkTrustLevel[] = Object.freeze(
     label: "Trusted",
     rank: 2,
     summary:
-      "A known device approved by the Origin for richer sync (memory read, settings sync, sensor input).",
+      "A known device approved by the Primary Host for richer sync (memory read, settings sync, sensor input).",
   },
   {
     id: "admin",
@@ -190,11 +190,11 @@ export const lucaLinkTrustLevels: readonly LucaLinkTrustLevel[] = Object.freeze(
       "A trusted host explicitly granted high-risk capabilities (tool/code/shell) under policy.",
   },
   {
-    id: "origin",
-    label: "Origin",
+    id: "owner",
+    label: "Owner",
     rank: 4,
     summary:
-      "The single source of truth. Full authority; approves/revokes all other hosts.",
+      "Owner-level authority inside the user's LucaLink mesh. Can approve or revoke mesh hosts, but is not Creator/Origin source-code authority.",
   },
 ] as const);
 
@@ -346,13 +346,13 @@ export type LucaLinkSyncLaneId =
   | "safety";
 
 export type LucaLinkLaneDirection =
-  | "origin->host"
-  | "host->origin"
+  | "primary->host"
+  | "host->primary"
   | "bidirectional"
   | "broadcast";
 
 export type LucaLinkConflictPolicy =
-  | "origin-wins"
+  | "primary-host-wins"
   | "last-write-wins"
   | "append-only"
   | "merge"
@@ -379,7 +379,7 @@ export const lucaLinkSyncLanes: readonly LucaLinkSyncLane[] = Object.freeze([
     direction: "bidirectional",
     requiredPermissions: [],
     encryptionRequired: true,
-    conflictPolicy: "origin-wins",
+    conflictPolicy: "primary-host-wins",
   },
   {
     id: "presence",
@@ -419,7 +419,7 @@ export const lucaLinkSyncLanes: readonly LucaLinkSyncLane[] = Object.freeze([
     direction: "bidirectional",
     requiredPermissions: ["settings.sync"],
     encryptionRequired: true,
-    conflictPolicy: "origin-wins",
+    conflictPolicy: "primary-host-wins",
   },
   {
     id: "mission",
@@ -429,14 +429,14 @@ export const lucaLinkSyncLanes: readonly LucaLinkSyncLane[] = Object.freeze([
     direction: "broadcast",
     requiredPermissions: ["memory.read"],
     encryptionRequired: true,
-    conflictPolicy: "origin-wins",
+    conflictPolicy: "primary-host-wins",
   },
   {
     id: "sensor",
     label: "Sensor Lane",
     purpose: "Stream perception pulses (battery/cpu/signal/location) to Luca.",
     examplePayloads: ["SENSOR_PULSE", "node-health", "location-fix"],
-    direction: "host->origin",
+    direction: "host->primary",
     requiredPermissions: ["location.read", "camera.capture", "voice.capture"],
     encryptionRequired: true,
     conflictPolicy: "append-only",
@@ -466,7 +466,7 @@ export const lucaLinkSyncLanes: readonly LucaLinkSyncLane[] = Object.freeze([
     label: "Notification Lane",
     purpose: "Fan out user-facing notifications to display/companion hosts.",
     examplePayloads: ["notify", "alert", "reminder"],
-    direction: "origin->host",
+    direction: "primary->host",
     requiredPermissions: ["notification.send"],
     encryptionRequired: false,
     conflictPolicy: "append-only",
@@ -487,10 +487,10 @@ export const lucaLinkSyncLanes: readonly LucaLinkSyncLane[] = Object.freeze([
     purpose:
       "Carry revocation, kill-switch, key-rotation, and embodied-host safety signals.",
     examplePayloads: ["revoke-device", "rotate-key", "emergency-stop"],
-    direction: "origin->host",
+    direction: "primary->host",
     requiredPermissions: [],
     encryptionRequired: true,
-    conflictPolicy: "origin-wins",
+    conflictPolicy: "primary-host-wins",
   },
 ] as const);
 

@@ -3,7 +3,7 @@
  *
  * Pure, runtime-safe policy evaluator for LucaLink Mesh. Given a
  * {@link LucaHostManifest}, it returns structured allow / deny /
- * requires-origin-approval decisions for permissions and sync lanes.
+ * requires-primary-host-approval decisions for permissions and sync lanes.
  *
  * It builds on:
  * - PR #182 vocabularies (`lucaLinkArchitectureMap.ts`): permission risk bands,
@@ -37,7 +37,7 @@ import type { LucaHostManifest, LucaHostRole } from "./lucaHostManifest";
 export type LucaLinkPolicyDecision =
   | "allow"
   | "deny"
-  | "requires-origin-approval";
+  | "requires-primary-host-approval";
 
 export type LucaLinkPolicyReason =
   | "permission-granted"
@@ -75,10 +75,10 @@ export interface LucaLinkLaneEvaluation {
 }
 
 export interface LucaLinkPolicyOptions {
-  /** True when evaluating the local/current Origin (or local execution) host. */
-  isLocalOrigin?: boolean;
-  /** Permit critical-risk permissions for the local Origin/execution host. */
-  allowCriticalForOrigin?: boolean;
+  /** True when evaluating the local/current Primary Host (or local execution) host. */
+  isPrimaryHost?: boolean;
+  /** Permit critical-risk permissions for the local Primary Host/execution host. */
+  allowCriticalForPrimaryHost?: boolean;
   /** Permit high-risk permissions for admin (and local execution) hosts. */
   allowHighRiskForAdmin?: boolean;
   /** Clock override for deterministic tests. */
@@ -192,7 +192,7 @@ const ROLE_POLICIES: Readonly<Record<LucaHostRole, RolePolicy>> = {
   },
   companion: {
     benignAllowed: new Set(PERCEPTION_AND_IO),
-    // Companion may *request* memory writes, but only under Origin approval.
+    // Companion may *request* memory writes, but only under Primary Host approval.
     dangerous: { "memory.write": "approval" },
     dangerousDefault: "deny",
   },
@@ -219,7 +219,7 @@ const ROLE_POLICIES: Readonly<Record<LucaHostRole, RolePolicy>> = {
     },
     dangerousDefault: "deny",
   },
-  origin: {
+  primary: {
     benignAllowed: new Set([...PERCEPTION_AND_IO]),
     dangerous: {},
     dangerousDefault: "approval",
@@ -236,7 +236,7 @@ const ROLE_POLICIES: Readonly<Record<LucaHostRole, RolePolicy>> = {
       "notification.send",
       "memory.read",
     ]),
-    // Physical actuation always needs Origin approval; tools/spend denied.
+    // Physical actuation always needs Primary Host approval; tools/spend denied.
     dangerous: {
       "robotics.motion": "approval",
       "smart_home.control": "approval",
@@ -266,12 +266,12 @@ const REASON_TEXT: Record<LucaLinkPolicyReason, string> = {
   "trust-level-too-low": "Host trust level is too low for this permission.",
   "role-not-allowed": "This host role may not use this permission.",
   "high-risk-requires-approval":
-    "High-risk permission requires explicit Origin approval.",
+    "High-risk permission requires explicit Primary Host approval.",
   "critical-risk-requires-approval":
-    "Critical-risk permission requires explicit Origin approval.",
+    "Critical-risk permission requires explicit Primary Host approval.",
   "guest-restricted": "Guest hosts are limited to chat only.",
   "embodied-safety-restricted":
-    "Physical-world action on an embodied host requires Origin approval.",
+    "Physical-world action on an embodied host requires Primary Host approval.",
   "expired-trust": "Trust grant expired.",
   "unknown-permission": "Unknown permission category.",
   "unknown-lane": "Unknown sync lane.",
@@ -290,7 +290,7 @@ function evaluation(
     reason,
     permission,
     risk,
-    requiresApproval: decision === "requires-origin-approval",
+    requiresApproval: decision === "requires-primary-host-approval",
     explain: REASON_TEXT[reason],
   };
 }
@@ -307,7 +307,7 @@ function decideDangerous(
   options: LucaLinkPolicyOptions,
 ): LucaLinkPolicyEvaluation {
   const role = manifest.hostRole;
-  const isLocalOrigin = options.isLocalOrigin === true;
+  const isPrimaryHost = options.isPrimaryHost === true;
   const approvalReason: LucaLinkPolicyReason =
     risk === "critical"
       ? "critical-risk-requires-approval"
@@ -316,19 +316,19 @@ function decideDangerous(
   // Embodied physical actuation is always surfaced as a safety-gated approval.
   if (role === "embodied" && PHYSICAL_PERMISSIONS.has(permission)) {
     return evaluation(
-      "requires-origin-approval",
+      "requires-primary-host-approval",
       "embodied-safety-restricted",
       permission,
       risk,
     );
   }
 
-  // Local Origin host: highest authority.
-  if (role === "origin" && isLocalOrigin) {
+  // Local Primary Host host: highest authority.
+  if (role === "primary" && isPrimaryHost) {
     if (risk === "critical") {
-      return options.allowCriticalForOrigin
+      return options.allowCriticalForPrimaryHost
         ? evaluation("allow", "permission-granted", permission, risk)
-        : evaluation("requires-origin-approval", approvalReason, permission, risk);
+        : evaluation("requires-primary-host-approval", approvalReason, permission, risk);
     }
     return evaluation("allow", "permission-granted", permission, risk);
   }
@@ -344,8 +344,8 @@ function decideDangerous(
   }
 
   // Local execution host may be elevated via explicit options.
-  if (role === "execution" && isLocalOrigin) {
-    if (risk === "critical" && options.allowCriticalForOrigin) {
+  if (role === "execution" && isPrimaryHost) {
+    if (risk === "critical" && options.allowCriticalForPrimaryHost) {
       return evaluation("allow", "permission-granted", permission, risk);
     }
     if (risk === "high" && options.allowHighRiskForAdmin) {
@@ -353,7 +353,7 @@ function decideDangerous(
     }
   }
 
-  return evaluation("requires-origin-approval", approvalReason, permission, risk);
+  return evaluation("requires-primary-host-approval", approvalReason, permission, risk);
 }
 
 // ===========================================================================
@@ -413,7 +413,7 @@ export function evaluateHostPermission(
       risk === "critical"
         ? "critical-risk-requires-approval"
         : "high-risk-requires-approval";
-    return evaluation("requires-origin-approval", reason, perm, risk);
+    return evaluation("requires-primary-host-approval", reason, perm, risk);
   }
 
   // Dangerous permissions go through the approval/elevation path.
@@ -435,15 +435,15 @@ export function canHostUsePermission(
     "allow";
 }
 
-/** Convenience: whether using the permission requires Origin approval. */
-export function requiresOriginApproval(
+/** Convenience: whether using the permission requires Primary Host approval. */
+export function requiresPrimaryHostApproval(
   manifest: LucaHostManifest,
   permission: string,
   options: LucaLinkPolicyOptions = {},
 ): boolean {
   return (
     evaluateHostPermission(manifest, permission, options).decision ===
-    "requires-origin-approval"
+    "requires-primary-host-approval"
   );
 }
 
@@ -466,7 +466,7 @@ const LANE_BY_ID: ReadonlyMap<LucaLinkSyncLaneId, (typeof lucaLinkSyncLanes)[num
  * the lane's required permissions are granted). Conservative defaults.
  */
 const ALL_HOST_ROLES: readonly LucaHostRole[] = [
-  "origin",
+  "primary",
   "execution",
   "companion",
   "sensor",
@@ -481,23 +481,23 @@ const LANE_ALLOWED_ROLES: Readonly<
   identity: new Set(ALL_HOST_ROLES),
   presence: new Set(ALL_HOST_ROLES),
   conversation: new Set([
-    "origin",
+    "primary",
     "execution",
     "companion",
     "display",
     "guest",
     "embodied",
   ]),
-  memory: new Set(["origin", "execution"]),
-  settings: new Set(["origin", "execution", "companion"]),
-  mission: new Set(["origin", "execution", "companion", "display"]),
+  memory: new Set(["primary", "execution"]),
+  settings: new Set(["primary", "execution", "companion"]),
+  mission: new Set(["primary", "execution", "companion", "display"]),
   sensor: new Set(["sensor", "companion", "embodied"]),
-  tool: new Set(["origin", "execution"]),
-  artifact: new Set(["origin", "execution"]),
-  notification: new Set(["origin", "execution", "companion", "display"]),
-  model: new Set(["origin", "execution"]),
-  // origin role, or any host elevated to admin/origin trust.
-  safety: new Set(["origin"]),
+  tool: new Set(["primary", "execution"]),
+  artifact: new Set(["primary", "execution"]),
+  notification: new Set(["primary", "execution", "companion", "display"]),
+  model: new Set(["primary", "execution"]),
+  // primary role, or any host elevated to admin/owner trust.
+  safety: new Set(["primary"]),
 };
 
 function isRoleAllowedInLane(
@@ -505,11 +505,11 @@ function isRoleAllowedInLane(
   manifest: LucaHostManifest,
 ): boolean {
   if (LANE_ALLOWED_ROLES[laneId].has(manifest.hostRole)) return true;
-  // Safety lane additionally admits admin/origin *trust* levels.
+  // Safety lane additionally admits admin/owner *trust* levels.
   if (laneId === "safety") {
     return (
       manifest.trust.trustLevel === "admin" ||
-      manifest.trust.trustLevel === "origin"
+      manifest.trust.trustLevel === "owner"
     );
   }
   return false;
@@ -525,7 +525,7 @@ function laneEvaluation(
     decision,
     reason,
     laneId,
-    requiresApproval: decision === "requires-origin-approval",
+    requiresApproval: decision === "requires-primary-host-approval",
     permissionResults,
     explain: REASON_TEXT[reason],
   };
@@ -556,11 +556,11 @@ export function canHostParticipateInLane(
   }
 
   // The identity lane carries host manifests, public keys, role grants, and
-  // trust state. A guest host must not freely participate; it requires Origin
+  // trust state. A guest host must not freely participate; it requires Primary Host
   // approval (guests may still need limited identity/bootstrap metadata later).
   if (lane.id === "identity" && manifest.hostRole === "guest") {
     return laneEvaluation(
-      "requires-origin-approval",
+      "requires-primary-host-approval",
       "guest-restricted",
       lane.id,
       [],
@@ -576,12 +576,12 @@ export function canHostParticipateInLane(
     const denied = permissionResults.find((r) => r.decision === "deny")!;
     return laneEvaluation("deny", denied.reason, lane.id, permissionResults);
   }
-  if (permissionResults.some((r) => r.decision === "requires-origin-approval")) {
+  if (permissionResults.some((r) => r.decision === "requires-primary-host-approval")) {
     const approval = permissionResults.find(
-      (r) => r.decision === "requires-origin-approval",
+      (r) => r.decision === "requires-primary-host-approval",
     )!;
     return laneEvaluation(
-      "requires-origin-approval",
+      "requires-primary-host-approval",
       approval.reason,
       lane.id,
       permissionResults,

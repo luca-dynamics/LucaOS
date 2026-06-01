@@ -9,6 +9,12 @@
 
 ---
 
+## Origin vs Primary Host
+
+Origin is reserved for LucaOS Creator/source-code authority and root system blueprint control.
+Primary Host is the user's main trusted device inside LucaLink Mesh.
+Primary Host can approve mesh/device actions, but it is not Creator/Origin authority.
+
 ## A. Executive Summary
 
 **What LucaLink currently is.** LucaLink is LucaOS's device-pairing and
@@ -154,7 +160,7 @@ Captured statically in `lucaLinkCurrentEventMap`. Grouped by layer:
 | `sync` (`message.type`) | broadcast | Carries `sync.type` payloads. |
 | `registry` (`sync.type`) | relay→clients | Connected device list. |
 | `mission` (`sync.type`) | broadcast | Sovereign mission `goldEgg` string. |
-| `SENSOR_PULSE` (`message.type`) | host→origin | Health/perception pulse. |
+| `SENSOR_PULSE` (`message.type`) | host→primary | Health/perception pulse. |
 | `heartbeat` | client→relay | Liveness. |
 | `error` | relay→client | Server error (e.g. invalid token). |
 | `guest-join` | guest→relay | Guest joins a desktop session. |
@@ -263,7 +269,7 @@ interface SharedSecret { key: Uint8Array; createdAt; expiresAt; }
 | Persistent device ID | Random 12-char ID in localStorage, survives reconnects. | Not cryptographically bound to an identity key; clearing storage silently re-identifies the device. |
 | Relay vs local security | Relay is a public Socket.IO server; LAN mode probes plain HTTP `http://<ip>:3003`. | Local mode is unauthenticated transport (relies on app-layer crypto only); relay sees routing metadata. |
 | Guest PIN flow | PIN checked via Cortex `verify-pin`; gates `startGuestSession`. | PIN is the only guest gate; no attempt throttling/lockout documented; no guest scope beyond chat. |
-| WebRTC security | Standard DTLS-SRTP via STUN; offer initiated by desktop after auth. | No TURN fallback; ICE/candidate origin is trusted from relay routing. |
+| WebRTC security | Standard DTLS-SRTP via STUN; offer initiated by desktop after auth. | No TURN fallback; ICE/candidate source is trusted from relay routing. |
 | Encrypted packet / session manager | `beamPacket` + `secure:message` use AES-256-GCM + HMAC; X25519 DH for shared secret; Ed25519 identity sign available. | Solid primitives, but **only `beamPacket` opts in**; ordinary `send()` is plaintext. |
 | Master key storage | `SessionManager.masterPassword = "luca-link-master-key"` (hardcoded) wraps stored secrets via CryptoJS AES. | **Significant gap** — a hardcoded master key offers no real at-rest protection. |
 | Key rotation | `SharedSecret.expiresAt` + `needsRotation()` exist; `KEY_ROTATION_INTERVAL = 24h`. | Type-level only; **no runtime rotation loop** observed. |
@@ -281,9 +287,9 @@ The following target-model pieces do not yet exist (tracked in
 `lucaLinkTargetComponents` + roadmap):
 
 - **Capability registry** — beyond ad-hoc `detectCapabilities()` strings.
-- **Host roles** — no `origin/companion/execution/sensor/display/guest/embodied`.
+- **Host roles** — no `primary/companion/execution/sensor/display/guest/embodied`.
 - **Per-device permissions** — only a scalar `trustLevel`.
-- **Trust levels** — no `guest/paired/trusted/admin/origin` policy ladder.
+- **Trust levels** — no `guest/paired/trusted/admin/owner` policy ladder.
 - **Sync lanes** — single undifferentiated message channel.
 - **Host routing engine** — `selectBestDevice` exists but is capability+trust
   only, unused by the active service, and lacks cost/privacy/latency factors.
@@ -362,7 +368,7 @@ interface LucaHostManifest {
   platform:
     | "ios" | "android" | "web" | "macos" | "windows" | "linux"
     | "tizen" | "webos" | "wearos" | "robot";
-  hostRole: LucaLinkHostRoleId;     // origin | companion | execution | ...
+  hostRole: LucaLinkHostRoleId;     // primary | companion | execution | ...
   hardware: {
     cpuCores?: number;
     memoryGb?: number;
@@ -379,7 +385,7 @@ interface LucaHostManifest {
   trust: {
     level: LucaLinkTrustLevelId;
     grantedPermissions: LucaLinkPermissionCategory[];
-    approvedBy?: string;            // origin deviceId
+    approvedBy?: string;            // Primary Host deviceId
     approvedAt?: number;
   };
   status: {
@@ -404,9 +410,9 @@ Defined in `lucaLinkTrustLevels` (ascending authority):
 |---|---|---|
 | `guest` | 0 | Temporary, least-privilege, time-limited. No memory write, no tools. |
 | `paired` | 1 | Completed pairing; basic chat/presence only. |
-| `trusted` | 2 | Origin-approved for memory read, settings sync, sensor input. |
+| `trusted` | 2 | Primary Host-approved for memory read, settings sync, sensor input. |
 | `admin` | 3 | Explicitly granted high-risk capabilities (tool/code/shell) under policy. |
-| `origin` | 4 | Single source of truth; approves/revokes all hosts. |
+| `owner` | 4 | Owner-level mesh authority; approves/revokes hosts but is not Creator/Origin authority. |
 
 **Permission categories** (defined in `lucaLinkPermissionCategories`, each with a
 risk band):
@@ -419,7 +425,7 @@ risk band):
 
 High-risk categories (`shell.execute`, `code.modify`, `git.create_pr`,
 `robotics.motion`, `payment.spend`) are classified `critical` and must require
-`admin`/`origin` trust plus explicit grant.
+`admin`/`owner` trust plus explicit grant.
 
 ---
 
@@ -430,18 +436,18 @@ direction, required permissions, encryption requirement, and a conflict policy.
 
 | Lane | Direction | Purpose | Required perms | Encrypted | Conflict |
 |---|---|---|---|---|---|
-| `identity` | bidirectional | Host manifests, public keys, role grants | — | yes | origin-wins |
+| `identity` | bidirectional | Host manifests, public keys, role grants | — | yes | primary-host-wins |
 | `presence` | broadcast | Online/away, battery/network | — | no | last-write-wins |
 | `conversation` | bidirectional | Hand off chat/voice turns | chat.send/receive | yes | append-only |
 | `memory` | bidirectional | Replicate memory + sovereign facts | memory.read/write | yes | merge |
-| `settings` | bidirectional | Sync settings/appearance/runtime | settings.sync | yes | origin-wins |
-| `mission` | broadcast | Mission/goldEgg hydration | memory.read | yes | origin-wins |
-| `sensor` | host→origin | Perception pulses (SENSOR_PULSE) | location/camera/voice | yes | append-only |
+| `settings` | bidirectional | Sync settings/appearance/runtime | settings.sync | yes | primary-host-wins |
+| `mission` | broadcast | Mission/goldEgg hydration | memory.read | yes | primary-host-wins |
+| `sensor` | host→primary | Perception pulses (SENSOR_PULSE) | location/camera/voice | yes | append-only |
 | `tool` | bidirectional | Tool invoke/result routing | shell.execute/browser.control/files.write | yes | no-conflict |
 | `artifact` | bidirectional | File/blob/build-artifact transfer | files.read/write | yes | last-write-wins |
-| `notification` | origin→host | Fan-out notifications | notification.send | no | append-only |
+| `notification` | primary→host | Fan-out notifications | notification.send | no | append-only |
 | `model` | bidirectional | Local model advertise/route | — | yes | no-conflict |
-| `safety` | origin→host | Revocation, kill-switch, key rotation | — | yes | origin-wins |
+| `safety` | primary→host | Revocation, kill-switch, key rotation | — | yes | primary-host-wins |
 
 Mapping existing events onto lanes: `sync/registry`→`presence/identity`,
 `sync/mission`→`mission`, `SENSOR_PULSE`→`sensor`, guest chat→`conversation`,
@@ -464,7 +470,7 @@ Inputs per candidate host:
 - **compute** — cores/RAM/GPU/NPU vs task cost.
 - **network** — connection quality/quota.
 - **user context** — which host the user is actively using.
-- **risk level** — high-risk tasks bias toward `execution`/`origin`.
+- **risk level** — high-risk tasks bias toward `execution`/`primary`.
 
 Rough scoring sketch (illustrative only):
 

@@ -38,7 +38,7 @@ export const LUCA_LINK_ENVELOPE_VERSION = "luca-link/v1" as const;
 
 export type LucaLinkEnvelopeTarget =
   | string
-  | "origin"
+  | "primary"
   | "all"
   | "trusted"
   | "nearby";
@@ -712,7 +712,7 @@ export function evaluateEnvelopePolicy(
       envelopeValidation.valid &&
       decisions.every((decision) => decision === "allow"),
     requiresApproval: decisions.some(
-      (decision) => decision === "requires-origin-approval",
+      (decision) => decision === "requires-primary-host-approval",
     ),
   };
 }

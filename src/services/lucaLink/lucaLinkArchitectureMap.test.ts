@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   lucaLinkArchitectureAuditNote,
@@ -14,7 +15,7 @@ describe("lucaLinkArchitectureMap", () => {
   it("defines all target host roles", () => {
     const ids = lucaLinkHostRoles.map((r) => r.id);
     expect(ids).toEqual([
-      "origin",
+      "primary",
       "companion",
       "execution",
       "sensor",
@@ -22,18 +23,23 @@ describe("lucaLinkArchitectureMap", () => {
       "guest",
       "embodied",
     ]);
-    // Only the Origin owns memory authority by default.
+    expect(ids).toContain("primary");
+    expect(ids).not.toContain("origin");
+
+    // Only the Primary Host owns memory authority by default.
     expect(lucaLinkHostRoles.filter((r) => r.ownsMemoryAuthority)).toHaveLength(
       1,
     );
     expect(
       lucaLinkHostRoles.find((r) => r.ownsMemoryAuthority)?.id,
-    ).toBe("origin");
+    ).toBe("primary");
   });
 
   it("defines all trust levels in ascending rank order", () => {
     const ids = lucaLinkTrustLevels.map((t) => t.id);
-    expect(ids).toEqual(["guest", "paired", "trusted", "admin", "origin"]);
+    expect(ids).toEqual(["guest", "paired", "trusted", "admin", "owner"]);
+    expect(ids).toContain("owner");
+    expect(ids).not.toContain("origin");
 
     const ranks = lucaLinkTrustLevels.map((t) => t.rank);
     const sorted = [...ranks].sort((a, b) => a - b);
@@ -123,6 +129,21 @@ describe("lucaLinkArchitectureMap", () => {
       expect(prNumbers).toContain(pr);
     }
     expect(lucaLinkArchitectureAuditNote.pr).toBe(182);
+  });
+
+
+  it("documents the Origin vs Primary Host boundary", () => {
+    for (const path of [
+      "docs/lucalink-host-mesh-architecture.md",
+      "docs/lucalink-device-manifest.md",
+      "docs/lucalink-trust-permission-policy.md",
+      "docs/lucalink-sync-lane-protocol.md",
+    ]) {
+      const doc = readFileSync(path, "utf8");
+      expect(doc).toContain("## Origin vs Primary Host");
+      expect(doc).toContain("Origin is reserved for LucaOS Creator/source-code authority");
+      expect(doc).toContain("Primary Host is the user's main trusted device inside LucaLink Mesh");
+    }
   });
 
   it("exports static, side-effect-free, frozen definitions", () => {
