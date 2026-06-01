@@ -12,6 +12,13 @@ export interface SettingsTabDefinition {
   platforms: SettingsPlatform[];
 }
 
+export interface SettingsNavigationGroupDefinition {
+  id: "standard-settings" | "advanced-features";
+  label: "Standard Settings" | "Advanced Features";
+  description: string;
+  tabs: SettingsTabDefinition[];
+}
+
 export interface SettingsAdvancedGroupDefinition {
   id: "advanced-settings";
   label: "Advanced Settings";
@@ -20,42 +27,90 @@ export interface SettingsAdvancedGroupDefinition {
   availabilityNote: string;
 }
 
+export const standardSettingsTabIds = [
+  "general",
+  "brain",
+  "voice",
+  "vision",
+  "personality",
+  "profile",
+  "data",
+  "knowledge-bridge",
+  "lucalink",
+  "about",
+] as const;
+
+export const advancedFeatureTabIds = [
+  "model-manager",
+  "mcp-bridge",
+  "connectors",
+  "iot",
+  "autonomy",
+] as const;
+
+type SettingsTabId = (typeof settingsExperienceMap)[number]["id"];
+
+const byId = new Map<SettingsTabId, (typeof settingsExperienceMap)[number]>(
+  settingsExperienceMap.map((entry) => [entry.id, entry]),
+);
+
+const tabFromId = (id: SettingsTabId): SettingsTabDefinition => {
+  const entry = byId.get(id);
+  if (!entry) throw new Error(`Unknown Settings tab id: ${id}`);
+  return {
+    id: entry.id,
+    label: entry.currentLabel,
+    icon: entry.icon,
+    platforms: [...entry.availability],
+  };
+};
+
 export const settingsAdvancedGroup: SettingsAdvancedGroupDefinition = {
   id: "advanced-settings",
   label: "Advanced Settings",
   icon: "Sliders",
   description:
-    "Advanced tools and controls for models, autonomy, devices, and integrations.",
+    "Advanced tools for model management, integrations, devices, and autonomy.",
   availabilityNote:
-    "Some advanced surfaces may need additional mobile refinement.",
+    "These features remain available on mobile, grouped here to keep everyday Settings clear.",
 };
 
-export const settingsDesktopTabs: SettingsTabDefinition[] =
-  settingsExperienceMap.map((entry) => ({
-    id: entry.id,
-    label: entry.currentLabel,
-    icon: entry.icon,
-    platforms: [...entry.availability],
-  }));
+export const settingsStandardTabs: SettingsTabDefinition[] =
+  standardSettingsTabIds.map(tabFromId);
+
+export const settingsAdvancedFeatureTabs: SettingsTabDefinition[] =
+  advancedFeatureTabIds.map(tabFromId);
+
+export const settingsNavigationGroups: SettingsNavigationGroupDefinition[] = [
+  {
+    id: "standard-settings",
+    label: "Standard Settings",
+    description: "Everyday Luca preferences and personal configuration.",
+    tabs: settingsStandardTabs,
+  },
+  {
+    id: "advanced-features",
+    label: "Advanced Features",
+    description:
+      "Power-user model, integration, device, and autonomy controls.",
+    tabs: settingsAdvancedFeatureTabs,
+  },
+];
+
+export const settingsDesktopTabs: SettingsTabDefinition[] = [
+  ...settingsStandardTabs,
+  ...settingsAdvancedFeatureTabs,
+];
 
 export const mobileStandardSettingsTabs: SettingsTabDefinition[] =
-  settingsDesktopTabs.filter((tab) => {
-    const mapEntry = settingsExperienceMap.find((entry) => entry.id === tab.id);
+  settingsStandardTabs.filter((tab) => tab.platforms.includes("mobile"));
 
-    return (
-      tab.platforms.includes("mobile") &&
-      mapEntry?.futurePlacement === "top-level-everyone"
-    );
-  });
-
+// Advanced features are intentionally exposed from the mobile Advanced Settings
+// entry even when an older audit availability flag has not yet marked the tab
+// as mobile-primary. They remain grouped under Advanced Settings and are not
+// promoted into the standard mobile rail.
 export const mobileAdvancedSettingsTabs: SettingsTabDefinition[] =
-  settingsDesktopTabs.filter((tab) => {
-    const mapEntry = settingsExperienceMap.find((entry) => entry.id === tab.id);
-
-    return ["advanced-features", "tactical-mode"].includes(
-      mapEntry?.futurePlacement ?? "",
-    );
-  });
+  settingsAdvancedFeatureTabs;
 
 export const mobileAvailableAdvancedSettingsTabs = mobileAdvancedSettingsTabs;
 

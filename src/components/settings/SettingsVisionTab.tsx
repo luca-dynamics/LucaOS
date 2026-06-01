@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Icon } from "../ui/Icon";
 import { LucaSettings } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
+import {
+  SettingsAdvancedDisclosure,
+  SettingsCard,
+  SettingsSection,
+  settingsControlInlineStyle,
+  settingsSelectClassName,
+} from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 interface SettingsVisionTabProps {
   settings: LucaSettings;
@@ -55,99 +62,128 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
     show: { opacity: 1, y: 0 },
   };
 
+  const selectedVisionModel =
+    settings.brain.visionModel || "gemini-3-flash-preview";
+  const selectedLocalModel = localVisionModels.find(
+    (model) => model.id === selectedVisionModel,
+  );
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"} mt-2`}>
       <motion.div
         variants={container}
         initial="hidden"
         animate="show"
-        className="space-y-6"
+        className="space-y-5"
       >
-        {/* Vision Engine Header */}
-        <div className="flex items-center gap-2">
-          <Icon name="Sparkles" className="w-3.5 h-3.5" style={{ color: theme.hex }} />
-          <h4
-            className={`text-base font-black uppercase tracking-widest`}
-            style={{ color: "var(--app-text-main, #ffffff)" }}
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Vision Awareness"
+            description="Choose how Luca sees and understands your screen."
+            icon="Eye"
+            accentColor={theme.hex}
+            isMobile={isMobile}
           >
-            Vision Configuration
-          </h4>
-        </div>
-
-        {/* Vision Card */}
-        <motion.div
-          variants={item}
-          className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-xl border glass-blur"}`}
-          style={{
-            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <Icon name="Eye" className="w-4 h-4" style={{ color: theme.hex }} />
-            <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase opacity-60">
-              Vision & Multimodal
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div
-              className={`text-base font-black uppercase tracking-widest`}
-              style={{ color: "var(--app-text-main, #ffffff)" }}
-            >
-              Vision Engine
-            </div>
-            <p className="text-xs text-[var(--app-text-muted)] leading-tight opacity-70">
-              Controls screenshots, screen analysis, and spatial reasoning.
-            </p>
-            <select
-              value={settings.brain.visionModel || "gemini-3-flash-preview"}
-              onChange={(e) => onUpdate("brain", "visionModel", e.target.value)}
-              className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border tech-border`}
-              style={{
-                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                color: "var(--app-text-main, #ffffff)"
-              }}
-            >
-              <optgroup label="Cloud Vision (Managed)">
-                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-              </optgroup>
-              {localVisionModels.length > 0 && (
-                <optgroup label="Local Vision (Offline)">
-                  {localVisionModels.map((m: LocalModel) => {
-                    const isIntelMac = (window as any).luca?.isIntelMac;
-                    const isWindows = (window as any).luca?.isWindows;
-                    const isRestricted =
-                      (isIntelMac || isWindows) && m.id === "ui-tars-2b";
-
-                    return (
-                      <option key={m.id} value={m.id} disabled={isRestricted}>
-                        {m.name}{" "}
-                        {isRestricted
-                          ? "(Restricted on CPU)"
-                          : `- ${m.sizeFormatted}`}
-                      </option>
-                    );
-                  })}
-                </optgroup>
-              )}
-            </select>
-          </div>
+            <SettingsCard>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: settingsSurfaceTokens.textSecondary }}
+                  >
+                    Active vision engine
+                  </p>
+                  <p
+                    className="mt-1 text-lg font-semibold"
+                    style={{ color: settingsSurfaceTokens.textPrimary }}
+                  >
+                    {selectedLocalModel?.name ?? selectedVisionModel}
+                  </p>
+                  <p
+                    className="mt-1 text-xs leading-relaxed"
+                    style={{ color: settingsSurfaceTokens.textTertiary }}
+                  >
+                    Controls screenshots, screen analysis, and spatial
+                    reasoning.
+                  </p>
+                </div>
+                <span
+                  className="mt-1 h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: theme.hex }}
+                />
+              </div>
+            </SettingsCard>
+          </SettingsSection>
         </motion.div>
 
-        {/* Vision Tips */}
-        <motion.div
-          variants={item}
-          className={`text-xs italic p-4 rounded-xl border transition-all tech-border opacity-70`}
-          style={{
-            backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-            color: "var(--app-text-muted, #94a3b8)"
-          }}
-        >
-          Vision models enable features like Astra Scan and agentic UI control.
-          Local models like UI-TARS 2B provide the highest privacy but require
-          significant GPU resources.
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Vision Engine"
+            description="Select the model Luca uses for visual understanding."
+            icon="Sparkles"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            <SettingsCard>
+              <label
+                className="text-sm font-medium"
+                style={{ color: settingsSurfaceTokens.textPrimary }}
+              >
+                Model Selection
+              </label>
+              <select
+                value={selectedVisionModel}
+                onChange={(e) =>
+                  onUpdate("brain", "visionModel", e.target.value)
+                }
+                className={`${settingsSelectClassName} mt-2`}
+                style={settingsControlInlineStyle}
+              >
+                <optgroup label="Cloud Vision (Managed)">
+                  <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                </optgroup>
+                {localVisionModels.length > 0 && (
+                  <optgroup label="Local Vision (Offline)">
+                    {localVisionModels.map((m: LocalModel) => {
+                      const isIntelMac = (window as any).luca?.isIntelMac;
+                      const isWindows = (window as any).luca?.isWindows;
+                      const isRestricted =
+                        (isIntelMac || isWindows) && m.id === "ui-tars-2b";
+
+                      return (
+                        <option key={m.id} value={m.id} disabled={isRestricted}>
+                          {m.name}{" "}
+                          {isRestricted
+                            ? "(Restricted on CPU)"
+                            : `- ${m.sizeFormatted}`}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                )}
+              </select>
+            </SettingsCard>
+          </SettingsSection>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <SettingsAdvancedDisclosure
+            title="Advanced Vision Details"
+            description="Raw model notes, local restrictions, GPU guidance, and performance considerations."
+          >
+            <div className="space-y-2 text-sm leading-relaxed">
+              <p style={{ color: settingsSurfaceTokens.textSecondary }}>
+                Vision models enable features like Astra Scan and agentic UI
+                control. Local models keep more analysis on-device but can need
+                significant GPU resources.
+              </p>
+              <p style={{ color: settingsSurfaceTokens.textTertiary }}>
+                UI-TARS 2B remains disabled on restricted CPU-only devices by
+                the existing model selector logic. Current raw model ID:{" "}
+                {selectedVisionModel}.
+              </p>
+            </div>
+          </SettingsAdvancedDisclosure>
         </motion.div>
       </motion.div>
     </div>

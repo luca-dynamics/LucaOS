@@ -9,7 +9,18 @@ import {
   NORMAL_LUCA_THEME_OPTIONS,
   getLucaThemeLabel,
 } from "../../config/lucaThemeLabels";
-
+import {
+  SettingsAdvancedDisclosure,
+  SettingsCard,
+  SettingsDangerZone,
+  SettingsRow,
+  SettingsSection,
+  SettingsStatusCard,
+  SettingsToggle,
+  settingsControlInlineStyle,
+  settingsSelectClassName,
+} from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 interface ChromeProfileStatus {
   imported: boolean;
@@ -66,6 +77,13 @@ function normalizeDisplayValue(value: unknown, fallback = "ASSISTANT"): string {
   return text && text !== "[object Object]" ? text : fallback;
 }
 
+const personaOptions: PersonaMode[] = [
+  "RUTHLESS",
+  "ENGINEER",
+  "ASSISTANT",
+  "HACKER",
+];
+
 const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   settings,
   onUpdate,
@@ -108,7 +126,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.05 },
+      transition: { staggerChildren: 0.04 },
     },
   };
 
@@ -117,713 +135,565 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
     show: { opacity: 1, y: 0 },
   };
 
+  const toggleGeneral = (key: keyof LucaSettings["general"]) =>
+    onUpdate("general", key, !settings.general[key]);
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"} overflow-y-auto`}>
       <motion.div
         variants={container}
         initial="hidden"
         animate="show"
-        className="space-y-4"
+        className="space-y-5"
       >
-        {/* IDENTITY & AESTHETIC (Full Width) */}
-        <motion.div
-          variants={item}
-          className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "p-4 rounded-xl border"} transition-all duration-300`}
-          style={{
-            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
-            borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <IconEngine name="Palette" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
-              <span
-                className={`text-xs font-bold uppercase tracking-tighter`}
-                style={{ color: "var(--app-text-main)" }}
-              >
-                Persona & Appearance
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 mr-2">
-                  <span className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase">
-                    Sync appearance
-                  </span>
-                  <button
-                    onClick={() =>
-                      onUpdate(
-                        "general",
-                        "syncThemeWithPersona",
-                        !settings.general.syncThemeWithPersona,
-                      )
-                    }
-                    className={`w-7 h-3.5 rounded-full transition-all relative ${settings.general.syncThemeWithPersona ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
-                    style={{
-                      backgroundColor: settings.general.syncThemeWithPersona ? theme.hex : undefined,
-                    }}
-                  >
-                    <div
-                      className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.general.syncThemeWithPersona ? "translate-x-4" : "translate-x-0.5"}`}
-                      style={{ 
-                        backgroundColor: settings.general.syncThemeWithPersona ? "white" : "var(--app-text-muted)" 
-                      }}
-                    />
-                  </button>
-              </div>
-              <div 
-                className={`text-[10px] font-mono uppercase tracking-widest border-l pl-3`}
-                style={{ 
-                  color: "var(--app-text-main)",
-                  borderLeftColor: "var(--app-border-main)" 
-                }}
-              >
-                {personaLabel} MODE
-              </div>
-            </div>
-          </div>
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Appearance"
+            description="Choose Luca's persona and visual theme without exposing raw theme internals."
+            icon="Palette"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            <SettingsRow
+              label="Sync appearance with persona"
+              description="Let Luca choose the matching appearance when you switch persona."
+              icon="RefreshCircle"
+              accentColor={theme.hex}
+              control={
+                <SettingsToggle
+                  checked={!!settings.general.syncThemeWithPersona}
+                  onChange={() => toggleGeneral("syncThemeWithPersona")}
+                  accentColor={theme.hex}
+                  ariaLabel="Sync appearance with persona"
+                />
+              }
+            />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Mind Selection */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 mb-1 opacity-60">
-                <IconEngine name="BrainCircuit" variant="BoldDuotone" className="w-3 h-3" style={{ color: theme.hex }} />
-                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--app-text-main)" }}>
-                  Persona (Capabilities)
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    "RUTHLESS",
-                    "ENGINEER",
-                    "ASSISTANT",
-                    "HACKER",
-                  ] as PersonaMode[]
-                ).map((p) => {
-                  const isActive = personaLabel === p;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => onUpdate("general", "persona", p)}
-                      className={`py-2 rounded border text-[10px] font-mono transition-all`}
-                      style={{ 
-                        borderColor: isActive ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))",
-                        backgroundColor: isActive ? "var(--app-bg-tint, rgba(255,255,255,0.1))" : "var(--app-bg-tint, rgba(0,0,0,0.2))",
-                        color: "var(--app-text-main, #475569)"
-                      }}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <SettingsCard>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h4
+                      className="text-sm font-semibold"
+                      style={{ color: settingsSurfaceTokens.textPrimary }}
                     >
-                      {p}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Skin Selection */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 mb-1 opacity-60">
-                <IconEngine name="Paintbrush" variant="BoldDuotone" className="w-3 h-3" style={{ color: theme.hex }} />
-                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--app-text-main)" }}>
-                  Appearance Theme
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {NORMAL_LUCA_THEME_OPTIONS.map((option) => {
-                  const isActive =
-                    getLucaThemeLabel(settings.general.theme).canonicalThemeId ===
-                    option.canonicalThemeId;
-                  return (
-                    <button
-                      key={option.id}
-                      disabled={settings.general.syncThemeWithPersona}
-                      onClick={() => onUpdate("general", "theme", option.canonicalThemeId)}
-                      className={`py-2 px-2 rounded border text-[10px] font-semibold transition-all flex items-center justify-start gap-1.5 glass-blur text-left
-                        ${settings.general.syncThemeWithPersona ? "opacity-20 cursor-not-allowed" : "opacity-80"}
-                      `}
-                      title={option.description}
-                      aria-label={`${option.label}: ${option.description}`}
-                      style={{
-                        backgroundColor: isActive ? "var(--app-bg-tint)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
-                        borderColor: isActive ? `${theme.hex}66` : "var(--app-border-main, rgba(255,255,255,0.1))",
-                        color: "var(--app-text-main, #475569)"
-                      }}
+                      Luca Persona
+                    </h4>
+                    <p
+                      className="text-xs"
+                      style={{ color: settingsSurfaceTokens.textSecondary }}
                     >
-                      <div
-                        className="w-1.5 h-1.5 rounded-full shrink-0"
-                        style={{ backgroundColor: option.hex }}
-                      />
-                      <span className="truncate">{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {settings.general.syncThemeWithPersona && (
-                <div className="text-[9px] text-[var(--app-text-muted)] italic mt-1 px-1">
-                  * Appearance follows persona suggestions. Disable sync to
-                  customize.
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Dual Column Stacks */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-          {/* Column 1: Tone & Browser */}
-          <div className="flex flex-col gap-4">
-            {/* Tone Styles Card */}
-            <motion.div
-              variants={item}
-              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg glass-blur"}`}
-              style={{
-                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
-                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <IconEngine
-                    name="ChatRoundUnread" 
-                    variant="BoldDuotone"
-                    className="w-4 h-4"
-                    style={{ color: theme.hex }}
-                  />
-                  <span
-                    className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main)" }}
-                  >
-                    Response Style
-                  </span>
-                </div>
-                <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase">
-                  Conversational Vibe
-                </div>
-              </div>
-              <ToneStyleSelector
-                currentStyleId={settings.general.toneStyle}
-                customDimensions={settings.general.customTone}
-                onStyleChange={(id) => onUpdate("general", "toneStyle", id)}
-                onCustomChange={(dims) =>
-                  onUpdate("general", "customTone", dims)
-                }
-                themeHex={theme.hex}
-              />
-            </motion.div>
-
-            {/* Browser Sessions Card */}
-            <motion.div
-              variants={item}
-              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg glass-blur"}`}
-              style={{
-                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #0a0a0a)",
-                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <IconEngine name="Globus" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
-                  <span
-                    className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main)" }}
-                  >
-                    Browser Sessions
-                  </span>
-                </div>
-                <div
-                  className={`text-[10px] font-mono ${profileStatus?.imported ? "text-green-500" : "text-yellow-500"}`}
-                >
-                  {profileStatus?.imported ? "CONNECTED" : "UNLINKED"}
-                </div>
-              </div>
-              <div className="space-y-3">
-                {profileStatus?.imported && (
-                  <div 
-                    className={`space-y-1.5 p-2 rounded border glass-blur`}
-                    style={{
-                      backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
-                      borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-                    }}
-                  >
-                    {profileStatus.profileName && (
-                      <div
-                        className={`text-[11px] font-mono flex items-center gap-2`}
-                        style={{ color: "var(--app-text-main, #475569)" }}
-                      >
-                        <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: theme.hex }}
-                        />
-                        PROFILE: {profileStatus.profileName.toUpperCase()}
-                      </div>
-                    )}
-                    {profileStatus.lastSync && (
-                      <div className="text-[10px] text-[var(--app-text-muted)] font-mono ml-3.5">
-                        SYNCED:{" "}
-                        {new Date(profileStatus.lastSync).toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {profileStatus?.chromeRunning && (
-                  <div
-                    className={`text-[10px] font-mono flex items-center gap-1.5 p-2 rounded border animate-pulse`}
-                    style={{
-                      backgroundColor: "rgba(249, 115, 22, 0.1)",
-                      borderColor: "rgba(249, 115, 22, 0.3)",
-                      color: "rgb(249, 115, 22)"
-                    }}
-                  >
-                    <IconEngine name="ShieldWarning" variant="BoldDuotone" className="w-3 h-3" />
-                    CHROME OPEN: CLOSE BEFORE RE-IMPORT
-                  </div>
-                )}
-                <p
-                  className={`text-[10px] leading-relaxed`}
-                  style={{ color: "var(--app-text-main, #64748b)" }}
-                >
-                  Import approved Chrome sessions so Luca can remember signed-in websites without asking for passwords.
-                </p>
-              </div>
-              <div 
-                className={`flex gap-2 pt-2 border-t`}
-                style={{ borderTopColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}
-              >
-                <button
-                  onClick={() =>
-                    fetch(apiUrl("/api/chrome-profile/import"), {
-                      method: "POST",
-                    }).then(() => fetchProfileStatus())
-                  }
-                  className={`flex-1 py-1.5 rounded border text-[11px] font-bold flex items-center justify-center gap-2 transition-all glass-blur`}
-                  style={{
-                    color: "var(--app-text-main, #475569)",
-                    backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
-                    borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-                  }}
-                >
-                  {profileStatus?.imported ? (
-                    <IconEngine name="Restart" variant="BoldDuotone" className="w-3 h-3" />
-                  ) : (
-                    <IconEngine name="Globus" variant="BoldDuotone" className="w-3 h-3" />
-                  )}
-                  {profileStatus?.imported ? "RE-IMPORT" : "IMPORT SESSION"}
-                </button>
-                {profileStatus?.imported && (
-                  <button
-                    onClick={handleClear}
-                    className="p-1.5 rounded border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-all"
-                  >
-                    <IconEngine name="TrashBinMinimalistic" variant="BoldDuotone" className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Column 2: Behavior & Privacy */}
-          <div className="flex flex-col gap-4">
-            {/* Global UI Preferences Card */}
-            <motion.div
-              variants={item}
-              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg glass-blur"}`}
-              style={{
-                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
-                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <IconEngine name="Settings" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
-                  <span
-                    className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main)" }}
-                  >
-                    INTERFACE SETTINGS
-                  </span>
-                </div>
-                <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest">
-                  USER EXPERIENCE
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                {/* System Behavior Sub-Section */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-bold text-[var(--app-text-muted)] mb-1">
-                    BEHAVIOR
-                  </div>
-                  <div className="space-y-1">
-                    {[
-                      { label: "AUTO BOOT", key: "startOnBoot" },
-                      { label: "TRAY MINIMIZE", key: "minimizeToTray" },
-                      { label: "DIAGNOSTIC MODE", key: "debugMode" },
-                      { label: "ADVANCED FEATURES", key: "experimentalMode" },
-                    ].map((beh) => (
-                      <div
-                        key={beh.key}
-                        className={`flex items-center justify-between py-1.5 px-2 rounded transition-colors group/row hover:bg-[var(--app-bg-tint)]/40`}
-                      >
-                        <span
-                          className={`text-[10px] font-mono`}
-                          style={{ color: "var(--app-text-main, #64748b)" }}
-                        >
-                          {beh.label}
-                        </span>
-                        <button
-                          onClick={() =>
-                            onUpdate("general", beh.key, !settings.general[beh.key as keyof typeof settings.general])
-                          }
-                          className={`w-7 h-3.5 rounded-full transition-all relative ${settings.general[beh.key as keyof typeof settings.general] ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
-                          style={{
-                            backgroundColor: settings.general[beh.key as keyof typeof settings.general] ? theme.hex : undefined,
-                          }}
-                        >
-                          <div
-                            className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.general[beh.key as keyof typeof settings.general] ? "translate-x-4" : "translate-x-0.5"}`}
-                            style={{ 
-                              backgroundColor: settings.general[beh.key as keyof typeof settings.general] ? "white" : "var(--app-text-muted)" 
-                            }}
-                          />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Background Visibility Sub-Section */}
-                <div 
-                  className={`space-y-2 border-t pt-3`}
-                  style={{ borderTopColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="text-xs font-bold text-[var(--app-text-muted)] uppercase">
-                      Glass Controls
-                    </div>
-                  </div>
-                  <div className="space-y-3 px-1">
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span
-                          className={`text-[9px] font-bold text-[var(--app-text-muted)] tracking-widest`}
-                        >
-                          OPACITY
-                        </span>
-                        <span
-                          className={`text-[10px] font-mono`}
-                          style={{ color: "var(--app-text-main, #475569)" }}
-                        >
-                          {Math.round(
-                            (settings.general.backgroundOpacity ?? 0.75) * 100,
-                          )}
-                          %
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={Math.round(
-                          (settings.general.backgroundOpacity ?? 0.75) * 100,
-                        )}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) / 100;
-                          onUpdate("general", "backgroundOpacity", val);
-                          // Live Preview
-                          document.documentElement.style.setProperty(
-                            "--app-bg-opacity",
-                            val.toString(),
-                          );
-                        }}
-                        className={`w-full accent-current h-1 rounded-lg appearance-none cursor-pointer`}
-                        style={{ 
-                          accentColor: theme.hex,
-                          backgroundColor: "var(--app-border-main, rgba(255,255,255,0.2))"
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span
-                          className={`text-[9px] font-bold text-[var(--app-text-muted)] tracking-widest`}
-                        >
-                          BLUR
-                        </span>
-                        <span
-                          className={`text-[10px] font-mono`}
-                          style={{ color: "var(--app-text-main, #475569)" }}
-                        >
-                          {settings.general.backgroundBlur ?? 12}px
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="40"
-                        value={settings.general.backgroundBlur ?? 12}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          onUpdate("general", "backgroundBlur", val);
-                          // Live Preview
-                          document.documentElement.style.setProperty(
-                            "--app-bg-blur",
-                            `${val}px`,
-                          );
-                        }}
-                        className={`w-full accent-current h-1 rounded-lg appearance-none cursor-pointer`}
-                        style={{ 
-                          accentColor: theme.hex,
-                          backgroundColor: "var(--app-border-main, rgba(255,255,255,0.2))"
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Typography & Global Scaling Card */}
-            <motion.div
-              variants={item}
-              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg glass-blur"}`}
-              style={{
-                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
-                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <IconEngine name="TextField" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
-                  <span
-                    className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main, #475569)" }}
-                  >
-                    Display & Text
-                  </span>
-                </div>
-                <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest">
-                  GLOBAL SCALING
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {/* Font Family Selection */}
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-bold text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
-                    Interface Font
-                  </div>
-                  <select
-                    value={settings.general.fontFamily || '"Inter", system-ui, sans-serif'}
-                    onChange={(e) => onUpdate("general", "fontFamily", e.target.value)}
-                    className={`w-full rounded-lg p-2 text-xs font-mono outline-none transition-colors border tech-border`}
-                    style={{
-                      backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                      borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-                      color: "var(--app-text-main, #475569)"
-                    }}
-                  >
-                    <option value='"Inter", system-ui, sans-serif'>INTER (STANDARD)</option>
-                    <option value='"JetBrains Mono", monospace'>JETBRAINS MONO (TECH)</option>
-                    <option value='"Outfit", sans-serif'>OUTFIT (PREMIUM)</option>
-                    <option value='"Fraunces", serif'>FRAUNCES (EDITORIAL)</option>
-                    <option value='"Space Mono", monospace'>SPACE MONO (TACTICAL)</option>
-                    <option value='system-ui, sans-serif'>SYSTEM NATIVE</option>
-                  </select>
-                </div>
-
-                {/* Font Scaling Slider */}
-                <div className="space-y-2 border-t pt-3" style={{ borderTopColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
-                   <div className="flex justify-between items-center mb-1">
-                    <span className={`text-[11px] font-bold text-[var(--app-text-muted)] uppercase tracking-wider`}>
-                      UI SCALE
-                    </span>
-                    <span className={`text-[10px] font-mono`} style={{ color: "var(--app-text-main, #475569)" }}>
-                      {Math.round((settings.general.fontScale || 1.0) * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="80"
-                    max="150"
-                    value={Math.round((settings.general.fontScale || 1.0) * 100)}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) / 100;
-                      onUpdate("general", "fontScale", val);
-                      // Live Preview
-                      document.documentElement.style.setProperty("--app-font-scale", val.toString());
-                    }}
-                    className={`w-full h-1 bg-[var(--app-bg-tint)] rounded-lg appearance-none cursor-pointer`}
-                    style={{ 
-                      accentColor: theme.hex,
-                      backgroundColor: "var(--app-border-main, rgba(255,255,255,0.2))"
-                    }}
-                  />
-                  <div className="text-[9px] text-[var(--app-text-muted)] italic px-1">
-                    * Adjusting scale impacts all tactical panels and text density.
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Privacy & Awareness Card */}
-            <motion.div
-              variants={item}
-              className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-xl border glass-blur"}`}
-              style={{
-                backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
-                borderColor: "var(--app-border-main, rgba(0,0,0,0.2))",
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <IconEngine name="ShieldCheck" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
-                  <span
-                    className={`text-xs font-bold uppercase tracking-tighter`}
-                    style={{ color: "var(--app-text-main, #475569)" }}
-                  >
-                    Privacy & Awareness
-                  </span>
-                </div>
-                <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase tracking-widest">
-                  PRIVACY & SENSORS
-                </div>
-              </div>
-              <p
-                className={`text-[10px] text-[var(--app-text-muted)] leading-tight`}
-              >
-                Control what Luca is allowed to observe. Turning off a sensor stops that awareness immediately, including active loops.
-              </p>
-              <div className="space-y-1">
-                {[
-                  {
-                    label: "SCREEN OBSERVATION",
-                    key: "screenEnabled",
-                    icon: "Eye",
-                    desc: "Allow Luca to read screen context only when awareness features need it",
-                  },
-                  {
-                    label: "CAMERA ACCESS",
-                    key: "cameraEnabled",
-                    icon: "Camera",
-                    desc: "Allow camera-based awareness for approved vision features",
-                  },
-                  {
-                    label: "MICROPHONE",
-                    key: "micEnabled",
-                    icon: "Microphone",
-                    desc: "Allow microphone input for voice commands and approved audio awareness",
-                  },
-                  {
-                    label: "PRODUCT IMPROVEMENT",
-                    key: "telemetryEnabled",
-                    icon: "Link",
-                    desc: "Share anonymized diagnostics to improve LucaOS reliability",
-                  },
-                ].map((privItem) => {
-                  const isEnabled =
-                    !!settings.privacy?.[
-                      privItem.key as keyof typeof settings.privacy
-                    ];
-                  return (
-                    <div
-                      key={privItem.key}
-                      className={`flex items-center justify-between py-2 border-b border-[var(--app-border-main)] transition-colors px-2 rounded last:border-0 hover:bg-[var(--app-bg-tint)]/40`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <IconEngine
-                          name={privItem.icon as any}
-                          variant="BoldDuotone"
-                          className="w-3.5 h-3.5"
-                          style={{
-                            color: isEnabled ? theme.hex : "var(--app-text-muted)",
-                            opacity: isEnabled ? 1 : 0.5
-                          }}
-                        />
-                        <div>
-                          <span
-                            className={`text-[9px] font-mono block`}
-                            style={{ color: "var(--app-text-main, #64748b)" }}
-                          >
-                            {privItem.label}
-                          </span>
-                          <span className="text-xs text-[var(--app-text-muted)] uppercase italic opacity-60">
-                            {privItem.desc}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() =>
-                          onUpdate("privacy", privItem.key, !isEnabled)
-                        }
-                        className={`w-7 h-3.5 rounded-full transition-all relative ${isEnabled ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
-                        style={{
-                          backgroundColor: isEnabled ? theme.hex : undefined,
-                        }}
-                      >
-                        <div
-                          className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${isEnabled ? "translate-x-4" : "translate-x-0.5"}`}
-                          style={{ 
-                            backgroundColor: isEnabled ? "white" : "var(--app-text-muted)" 
-                          }}
-                        />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* System Permissions Merged Here */}
-              <div 
-                className={`mt-2 pt-3 border-t border-[var(--app-border-main)] space-y-2`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <IconEngine
-                      name="ShieldWarning"
-                      variant="BoldDuotone"
-                      className="w-3 h-3"
-                      style={{ color: theme.hex }}
-                    />
-                    <span
-                      className={`text-[10px] font-bold text-[var(--app-text-muted)] uppercase tracking-tighter`}
-                    >
-                      System Permissions
-                    </span>
+                      Current mode: {personaLabel}
+                    </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={async () => {
-                      const { checkPermissions } =
-                        await import("../../tools/handlers/LocalTools");
-                      const res = await checkPermissions();
-                      alert(
-                        res.success ? "Permissions verified." : "Access denied.",
-                      );
-                    }}
-                    className={`py-1 rounded-lg border border-[var(--app-border-main)] bg-[var(--app-bg-tint)] text-[var(--app-text-main)] font-bold text-[10px] hover:bg-white/10 transition-all shadow-sm`}
-                  >
-                    CHECK STATUS
-                  </button>
-                  <button
-                    onClick={async () => {
-                      const { requestPermissions } =
-                        await import("../../tools/handlers/LocalTools");
-                      await requestPermissions();
-                    }}
-                    className={`py-1 rounded-lg border border-[var(--app-border-main)] text-[10px] font-bold transition-all shadow-sm`}
-                    style={{
-                      backgroundColor: "var(--app-bg-tint, rgba(234, 179, 8, 0.1))",
-                      color: theme.hex,
-                    }}
-                  >
-                    GRANT ACCESS
-                  </button>
+                  {personaOptions.map((p) => {
+                    const isActive = personaLabel === p;
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => onUpdate("general", "persona", p)}
+                        className="rounded-xl border px-3 py-2 text-sm font-medium transition-all"
+                        style={{
+                          borderColor: isActive
+                            ? theme.hex
+                            : settingsSurfaceTokens.borderSubtle,
+                          backgroundColor: isActive
+                            ? settingsSurfaceTokens.accentSoft
+                            : settingsSurfaceTokens.elevated,
+                          color: settingsSurfaceTokens.textPrimary,
+                        }}
+                      >
+                        {p.charAt(0) + p.slice(1).toLowerCase()}
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
-            </motion.div>
+              </SettingsCard>
 
-          </div>
-        </div>
+              <SettingsCard>
+                <h4
+                  className="text-sm font-semibold"
+                  style={{ color: settingsSurfaceTokens.textPrimary }}
+                >
+                  Theme
+                </h4>
+                <p
+                  className="mb-3 text-xs"
+                  style={{ color: settingsSurfaceTokens.textSecondary }}
+                >
+                  Pick the surface style Luca uses across Settings and shell UI.
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {NORMAL_LUCA_THEME_OPTIONS.map((option) => {
+                    const isActive =
+                      getLucaThemeLabel(settings.general.theme)
+                        .canonicalThemeId === option.canonicalThemeId;
+                    return (
+                      <button
+                        key={option.id}
+                        disabled={settings.general.syncThemeWithPersona}
+                        onClick={() =>
+                          onUpdate("general", "theme", option.canonicalThemeId)
+                        }
+                        title={option.description}
+                        aria-label={`${option.label}: ${option.description}`}
+                        className="flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-all disabled:cursor-not-allowed disabled:opacity-40"
+                        style={{
+                          borderColor: isActive
+                            ? theme.hex
+                            : settingsSurfaceTokens.borderSubtle,
+                          backgroundColor: isActive
+                            ? settingsSurfaceTokens.accentSoft
+                            : settingsSurfaceTokens.elevated,
+                          color: settingsSurfaceTokens.textPrimary,
+                        }}
+                      >
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: option.hex }}
+                        />
+                        <span className="truncate">{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {settings.general.syncThemeWithPersona && (
+                  <p
+                    className="mt-2 text-xs"
+                    style={{ color: settingsSurfaceTokens.textTertiary }}
+                  >
+                    Disable sync to customize theme manually.
+                  </p>
+                )}
+              </SettingsCard>
+            </div>
+          </SettingsSection>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Material & Display"
+            description="Tune readability, glass material, and global text scale."
+            icon="TextField"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <SettingsCard>
+                <label
+                  className="text-sm font-medium"
+                  style={{ color: settingsSurfaceTokens.textPrimary }}
+                >
+                  Interface font
+                </label>
+                <select
+                  value={
+                    settings.general.fontFamily ||
+                    '"Inter", system-ui, sans-serif'
+                  }
+                  onChange={(e) =>
+                    onUpdate("general", "fontFamily", e.target.value)
+                  }
+                  className={`${settingsSelectClassName} mt-2`}
+                  style={settingsControlInlineStyle}
+                >
+                  <option value='"Inter", system-ui, sans-serif'>
+                    Inter — Standard
+                  </option>
+                  <option value='"JetBrains Mono", monospace'>
+                    JetBrains Mono — Technical
+                  </option>
+                  <option value='"Outfit", sans-serif'>Outfit — Premium</option>
+                  <option value='"Fraunces", serif'>
+                    Fraunces — Editorial
+                  </option>
+                  <option value='"Space Mono", monospace'>
+                    Space Mono — Tactical
+                  </option>
+                  <option value="system-ui, sans-serif">System Native</option>
+                </select>
+              </SettingsCard>
+
+              <SettingsCard>
+                <div
+                  className="flex justify-between text-sm font-medium"
+                  style={{ color: settingsSurfaceTokens.textPrimary }}
+                >
+                  <span>UI scale</span>
+                  <span>
+                    {Math.round((settings.general.fontScale || 1.0) * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="80"
+                  max="150"
+                  value={Math.round((settings.general.fontScale || 1.0) * 100)}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) / 100;
+                    onUpdate("general", "fontScale", val);
+                    document.documentElement.style.setProperty(
+                      "--app-font-scale",
+                      val.toString(),
+                    );
+                  }}
+                  className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                  style={{
+                    accentColor: theme.hex,
+                    backgroundColor: settingsSurfaceTokens.borderSubtle,
+                  }}
+                />
+              </SettingsCard>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <SettingsCard>
+                <div
+                  className="flex justify-between text-sm font-medium"
+                  style={{ color: settingsSurfaceTokens.textPrimary }}
+                >
+                  <span>Background opacity</span>
+                  <span>
+                    {Math.round(
+                      (settings.general.backgroundOpacity ?? 0.75) * 100,
+                    )}
+                    %
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(
+                    (settings.general.backgroundOpacity ?? 0.75) * 100,
+                  )}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) / 100;
+                    onUpdate("general", "backgroundOpacity", val);
+                    document.documentElement.style.setProperty(
+                      "--app-bg-opacity",
+                      val.toString(),
+                    );
+                  }}
+                  className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                  style={{
+                    accentColor: theme.hex,
+                    backgroundColor: settingsSurfaceTokens.borderSubtle,
+                  }}
+                />
+              </SettingsCard>
+              <SettingsCard>
+                <div
+                  className="flex justify-between text-sm font-medium"
+                  style={{ color: settingsSurfaceTokens.textPrimary }}
+                >
+                  <span>Background blur</span>
+                  <span>{settings.general.backgroundBlur ?? 12}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  value={settings.general.backgroundBlur ?? 12}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    onUpdate("general", "backgroundBlur", val);
+                    document.documentElement.style.setProperty(
+                      "--app-bg-blur",
+                      `${val}px`,
+                    );
+                  }}
+                  className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                  style={{
+                    accentColor: theme.hex,
+                    backgroundColor: settingsSurfaceTokens.borderSubtle,
+                  }}
+                />
+              </SettingsCard>
+            </div>
+          </SettingsSection>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Luca Behavior"
+            description="Set how Luca responds in conversation."
+            icon="ChatRoundUnread"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            <ToneStyleSelector
+              currentStyleId={settings.general.toneStyle}
+              customDimensions={settings.general.customTone}
+              onStyleChange={(id) => onUpdate("general", "toneStyle", id)}
+              onCustomChange={(dims) => onUpdate("general", "customTone", dims)}
+              themeHex={theme.hex}
+            />
+          </SettingsSection>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Privacy & Awareness"
+            description="Control what Luca can observe. Turning off a sensor stops that awareness immediately."
+            icon="ShieldCheck"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            {[
+              [
+                "screenEnabled",
+                "Screen observation",
+                "Allow Luca to read screen context only when awareness features need it",
+                "Eye",
+              ],
+              [
+                "cameraEnabled",
+                "Camera access",
+                "Allow camera-based awareness for approved vision features",
+                "Camera",
+              ],
+              [
+                "micEnabled",
+                "Microphone",
+                "Allow microphone input for voice commands and audio awareness",
+                "Microphone",
+              ],
+              [
+                "telemetryEnabled",
+                "Product improvement",
+                "Share anonymized diagnostics to improve LucaOS reliability",
+                "Link",
+              ],
+            ].map(([key, label, desc, icon]) => {
+              const isEnabled =
+                !!settings.privacy?.[key as keyof typeof settings.privacy];
+              return (
+                <SettingsRow
+                  key={key}
+                  label={label}
+                  description={desc}
+                  icon={icon}
+                  accentColor={theme.hex}
+                  control={
+                    <SettingsToggle
+                      checked={isEnabled}
+                      onChange={() => onUpdate("privacy", key, !isEnabled)}
+                      accentColor={theme.hex}
+                      ariaLabel={label}
+                    />
+                  }
+                />
+              );
+            })}
+          </SettingsSection>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Browser Sessions"
+            description="Import approved browser sessions so Luca can use signed-in websites without asking for passwords."
+            icon="Globus"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <SettingsStatusCard
+                label="Session status"
+                value={profileStatus?.imported ? "Connected" : "Not linked"}
+                detail={
+                  profileStatus?.profileName
+                    ? `Profile: ${profileStatus.profileName}`
+                    : "Import a browser profile when needed."
+                }
+                accentColor={
+                  profileStatus?.imported
+                    ? theme.hex
+                    : settingsSurfaceTokens.textTertiary
+                }
+              />
+              <SettingsStatusCard
+                label="Chrome"
+                value={profileStatus?.chromeRunning ? "Open" : "Ready"}
+                detail={
+                  profileStatus?.chromeRunning
+                    ? "Close Chrome before re-importing."
+                    : "Ready for import or refresh."
+                }
+                accentColor={theme.hex}
+              />
+            </div>
+            {profileStatus?.lastSync && (
+              <p
+                className="text-xs"
+                style={{ color: settingsSurfaceTokens.textSecondary }}
+              >
+                Last synced {new Date(profileStatus.lastSync).toLocaleString()}.
+              </p>
+            )}
+            <button
+              onClick={() =>
+                fetch(apiUrl("/api/chrome-profile/import"), {
+                  method: "POST",
+                }).then(() => fetchProfileStatus())
+              }
+              className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
+              style={settingsControlInlineStyle}
+            >
+              <IconEngine
+                name={profileStatus?.imported ? "Restart" : "Globus"}
+                variant="BoldDuotone"
+                className="h-4 w-4"
+              />
+              {profileStatus?.imported ? "Re-import session" : "Import session"}
+            </button>
+          </SettingsSection>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Startup & Window Behavior"
+            description="Choose how Luca opens and stays available on this device."
+            icon="WindowFrame"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            <SettingsRow
+              label="Start Luca when this device boots"
+              description="Launch LucaOS automatically after sign-in."
+              icon="Power"
+              accentColor={theme.hex}
+              control={
+                <SettingsToggle
+                  checked={!!settings.general.startOnBoot}
+                  onChange={() => toggleGeneral("startOnBoot")}
+                  accentColor={theme.hex}
+                  ariaLabel="Start Luca on boot"
+                />
+              }
+            />
+            <SettingsRow
+              label="Minimize to tray"
+              description="Keep Luca running in the background when the window closes."
+              icon="Tray"
+              accentColor={theme.hex}
+              control={
+                <SettingsToggle
+                  checked={!!settings.general.minimizeToTray}
+                  onChange={() => toggleGeneral("minimizeToTray")}
+                  accentColor={theme.hex}
+                  ariaLabel="Minimize to tray"
+                />
+              }
+            />
+          </SettingsSection>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <SettingsAdvancedDisclosure
+            title="Advanced Settings"
+            description="Diagnostics, experimental switches, permissions, and destructive session maintenance."
+            defaultOpen={false}
+          >
+            <SettingsRow
+              label="Diagnostic mode"
+              description="Show additional debug information while troubleshooting."
+              icon="Bug"
+              accentColor={theme.hex}
+              control={
+                <SettingsToggle
+                  checked={!!settings.general.debugMode}
+                  onChange={() => toggleGeneral("debugMode")}
+                  accentColor={theme.hex}
+                  ariaLabel="Diagnostic mode"
+                />
+              }
+            />
+            <SettingsRow
+              label="Experimental features"
+              description="Enable features still in evaluation. Existing settings keys remain unchanged."
+              icon="TestTube"
+              accentColor={theme.hex}
+              control={
+                <SettingsToggle
+                  checked={!!settings.general.experimentalMode}
+                  onChange={() => toggleGeneral("experimentalMode")}
+                  accentColor={theme.hex}
+                  ariaLabel="Experimental features"
+                />
+              }
+            />
+
+            <SettingsCard>
+              <h4
+                className="text-sm font-semibold"
+                style={{ color: settingsSurfaceTokens.textPrimary }}
+              >
+                System Permissions
+              </h4>
+              <p
+                className="mt-1 text-xs"
+                style={{ color: settingsSurfaceTokens.textSecondary }}
+              >
+                Verify or request OS-level permissions for local tools and
+                awareness features.
+              </p>
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  onClick={async () => {
+                    const { checkPermissions } =
+                      await import("../../tools/handlers/LocalTools");
+                    const res = await checkPermissions();
+                    alert(
+                      res.success ? "Permissions verified." : "Access denied.",
+                    );
+                  }}
+                  className="rounded-xl border px-3 py-2 text-sm font-semibold transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
+                  style={settingsControlInlineStyle}
+                >
+                  Check status
+                </button>
+                <button
+                  onClick={async () => {
+                    const { requestPermissions } =
+                      await import("../../tools/handlers/LocalTools");
+                    await requestPermissions();
+                  }}
+                  className="rounded-xl border px-3 py-2 text-sm font-semibold transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
+                  style={{ ...settingsControlInlineStyle, color: theme.hex }}
+                >
+                  Grant access
+                </button>
+              </div>
+            </SettingsCard>
+
+            {profileStatus?.imported && (
+              <SettingsDangerZone
+                title="Browser Session Maintenance"
+                description="Clear imported browser session data from Luca."
+              >
+                <button
+                  onClick={handleClear}
+                  className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
+                  style={{
+                    ...settingsControlInlineStyle,
+                    borderColor:
+                      "var(--luca-border-strong, var(--app-border-main))",
+                  }}
+                >
+                  <IconEngine
+                    name="TrashBinMinimalistic"
+                    variant="BoldDuotone"
+                    className="h-4 w-4"
+                  />
+                  Clear imported session
+                </button>
+              </SettingsDangerZone>
+            )}
+          </SettingsAdvancedDisclosure>
+        </motion.div>
       </motion.div>
     </div>
   );

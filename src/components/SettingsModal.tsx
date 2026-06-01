@@ -32,6 +32,7 @@ import {
   mobileSettingsNavigationTabs,
   settingsAdvancedGroup,
   settingsDesktopTabs,
+  settingsNavigationGroups,
 } from "./settings/settingsNavigationModel";
 
 interface SettingsModalProps {
@@ -77,14 +78,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     theme ||
     PERSONA_UI_CONFIG.ASSISTANT;
 
-  // Filter tabs by platform. Desktop remains fully visible; mobile groups
-  // tactical/advanced surfaces behind Advanced Settings.
-  const currentPlatform = isMobile ? "mobile" : "desktop";
+  // Desktop keeps every tab discoverable in grouped sections. Mobile keeps
+  // standard settings primary and places advanced features behind one entry.
   const visibleTabs = isMobile
     ? mobileSettingsNavigationTabs
-    : settingsDesktopTabs.filter((tab) =>
-        tab.platforms.includes(currentPlatform),
-      );
+    : settingsDesktopTabs;
+  const desktopNavigationGroups = settingsNavigationGroups.map((group) => ({
+    ...group,
+    tabs: group.tabs.filter((tab) => tab.platforms.includes("desktop")),
+  }));
 
   useEffect(() => {
     // Load initial data
@@ -286,64 +288,94 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               name="Settings"
               variant="BoldDuotone"
               className={`${isMobile ? "w-5 h-5" : "w-4 h-4"}`}
-              style={{ color: liveTheme.hex }}
+              style={{
+                color: "var(--luca-accent-primary, var(--app-core-hex))",
+              }}
             />
             {!isMobile && (
               <h2
-                className={`text-md font-bold tracking-wider ${liveTheme.primary}`}
+                className="text-md font-semibold tracking-tight"
+                style={{
+                  color: "var(--luca-text-primary, var(--app-text-main))",
+                }}
               >
-                SETTINGS
+                Settings
               </h2>
             )}
           </div>
 
           {/* Navigation Tabs */}
           <div
-            className={`flex-1 overflow-y-auto no-scrollbar ${isMobile ? "p-2" : "p-3"} space-y-2`}
+            className={`flex-1 overflow-y-auto no-scrollbar ${isMobile ? "p-2" : "p-3"} space-y-4`}
           >
-            {visibleTabs.map((tab) => {
-              const isAdvancedGroup = tab.id === settingsAdvancedGroup.id;
-              const isActive = isAdvancedGroup
-                ? activeTab === settingsAdvancedGroup.id ||
-                  isMobileAdvancedSettingsTab(activeTab)
-                : activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    color: isActive
-                      ? "var(--app-text-main, #ffffff)"
-                      : "var(--app-text-muted, #9ca3af)",
-                    backgroundColor: isActive
-                      ? "var(--app-bg-tint, rgba(255,255,255,0.05))"
-                      : "transparent",
-                    borderColor: isActive
-                      ? "var(--app-border-main, rgba(0,0,0,0.2))"
-                      : "transparent",
-                  }}
-                  title={tab.label}
-                  className={`w-full flex items-center rounded-lg border border-transparent transition-all hover:bg-white/5 ${
-                    isMobile
-                      ? "flex-col justify-center py-3 px-1 gap-1"
-                      : "flex-row gap-3 p-2.5"
-                  }`}
-                >
-                  <Icon
-                    name={tab.icon}
-                    variant={isActive ? "BoldDuotone" : "Linear"}
-                    className={`${isMobile ? "w-5 h-5" : "w-5 h-5"}`}
-                  />
-                  {!isMobile ? (
-                    <span className="text-sm font-medium">{tab.label}</span>
-                  ) : (
-                    <span className="text-[8px] font-bold uppercase tracking-tighter opacity-70 text-center leading-[1.1]">
-                      {tab.label}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {(isMobile
+              ? [{ id: "mobile", label: "", tabs: visibleTabs }]
+              : desktopNavigationGroups
+            ).map((group) => (
+              <div key={group.id} className="space-y-2">
+                {!isMobile && (
+                  <div className="px-2 pt-2">
+                    <p
+                      className="text-[11px] font-semibold tracking-wide"
+                      style={{
+                        color:
+                          "var(--luca-text-tertiary, var(--app-text-muted))",
+                      }}
+                    >
+                      {group.label}
+                    </p>
+                  </div>
+                )}
+                {group.tabs.map((tab) => {
+                  const isAdvancedGroup = tab.id === settingsAdvancedGroup.id;
+                  const isActive = isAdvancedGroup
+                    ? activeTab === settingsAdvancedGroup.id ||
+                      isMobileAdvancedSettingsTab(activeTab)
+                    : activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      style={{
+                        color: isActive
+                          ? "var(--luca-text-primary, var(--app-text-main, #ffffff))"
+                          : "var(--luca-text-secondary, var(--app-text-muted, #9ca3af))",
+                        backgroundColor: isActive
+                          ? "var(--luca-accent-soft, var(--app-bg-tint, rgba(255,255,255,0.05)))"
+                          : "transparent",
+                        borderColor: isActive
+                          ? "var(--luca-border-strong, var(--app-border-main, rgba(0,0,0,0.2)))"
+                          : "transparent",
+                      }}
+                      title={tab.label}
+                      className={`w-full flex items-center rounded-xl border border-transparent transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] ${
+                        isMobile
+                          ? "flex-col justify-center py-3 px-1 gap-1 min-h-[54px]"
+                          : "flex-row gap-3 p-2.5"
+                      }`}
+                    >
+                      <Icon
+                        name={tab.icon}
+                        variant={isActive ? "BoldDuotone" : "Linear"}
+                        className={`${isMobile ? "w-5 h-5" : "w-5 h-5"}`}
+                        style={{
+                          color: isActive
+                            ? "var(--luca-accent-primary, var(--app-core-hex))"
+                            : undefined,
+                        }}
+                      />
+                      {!isMobile ? (
+                        <span className="text-sm font-medium">{tab.label}</span>
+                      ) : (
+                        <span className="text-[9px] font-semibold tracking-tight opacity-80 text-center leading-[1.1]">
+                          {tab.label}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </div>
 
           {/* Mobile Footer Exit - Since we don't have the header X on mobile anymore */}
@@ -445,10 +477,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className="flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all hover:bg-white/5"
+                      className="flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
                       style={{
                         borderColor: "var(--app-border-main)",
-                        backgroundColor: "rgba(255,255,255,0.03)",
+                        backgroundColor:
+                          "var(--luca-surface-glass, var(--app-bg-tint))",
                       }}
                     >
                       <span className="flex items-center gap-3">
