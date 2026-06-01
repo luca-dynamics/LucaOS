@@ -4,7 +4,6 @@ import { apiUrl } from "../../config/api";
 import { Icon } from "../ui/Icon";
 import {
   SettingsAdvancedDisclosure,
-  SettingsDangerZone,
   SettingsRow,
   SettingsSection,
   SettingsStatusCard,
@@ -442,8 +441,6 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
           description="Raw connector internals are not primary user controls."
         />
       </SettingsAdvancedDisclosure>
-
-      <SettingsDangerZone description="Revoke all, disconnect app, and clear connector state actions remain inside connector-specific flows." />
 
       {proTipModal && (
         <div className="absolute inset-0 z-[50] flex items-center justify-center p-6">

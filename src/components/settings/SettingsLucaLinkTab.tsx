@@ -602,7 +602,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           />
           <SettingsStatusCard
             label="Connection health"
-            value={connected ? "Connected" : "Ready"}
+            value={linkState.connected ? "Connected" : "Ready"}
             detail="Relay, local, and VPN status remains in existing controls."
             accentColor={theme.hex}
           />

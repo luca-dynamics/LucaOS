@@ -71,7 +71,6 @@ export const remainingSettingsPremiumTabStructure = {
     "Downloads",
     "Runtime",
     "Advanced Details",
-    "Danger Zone",
   ],
   "mcp-bridge": [
     "MCP Status",
@@ -87,7 +86,6 @@ export const remainingSettingsPremiumTabStructure = {
     "Connector Permissions",
     "Activity & Safety",
     "Advanced Details",
-    "Danger Zone",
   ],
   data: [
     "Memory Status",
@@ -126,7 +124,6 @@ export const remainingSettingsPremiumTabStructure = {
     "Permissions",
     "Automations",
     "Advanced Details",
-    "Danger Zone",
   ],
   profile: [
     "Operator Profile",
@@ -169,12 +166,6 @@ export const remainingAdvancedDetailsControlIds = [
 ] as const;
 
 export const remainingDangerZoneControlIds = [
-  "model-manager.deleteModel",
-  "model-manager.cacheWipe",
-  "connectors.revokeAll",
-  "connectors.disconnectApp",
-  "connectors.clearConnectorState",
   "data.deleteMemory",
   "data.clearSessions",
-  "iot.resetIntegration",
 ] as const;

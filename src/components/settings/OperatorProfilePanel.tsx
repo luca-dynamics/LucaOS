@@ -218,11 +218,10 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
           <h3
             className={`text-lg font-black uppercase tracking-widest text-[var(--app-text-main)]`}
           >
-            Terminal Identity Required
+            Profile setup needed
           </h3>
           <p className="text-xs font-mono text-[var(--app-text-muted)] max-w-sm mx-auto opacity-60 leading-relaxed uppercase tracking-tighter">
-            Complete conversational initialization to synthesize your operator
-            profile. Cognitive bridge active // Waiting for input.
+            Complete onboarding to build your Luca profile.
           </p>
         </div>
       </div>
@@ -298,16 +297,16 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
             <h3
               className={`text-xl font-black text-[var(--app-text-main)] tracking-tighter uppercase italic`}
             >
-              Identity Records
+              Profile details
             </h3>
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-black font-mono text-[var(--app-text-muted)] uppercase tracking-[0.3em] opacity-40">
-                SYNCHRONIZATION:{" "}
+                Last updated:{" "}
                 {new Date(profile.metadata.lastUpdated).toLocaleDateString()}
               </span>
               <div className="w-1 h-1 rounded-full bg-[var(--app-text-muted)] opacity-20" />
               <span className="text-[10px] font-black font-mono text-[var(--app-text-muted)] uppercase tracking-[0.3em] opacity-40">
-                BUILD: v{profile.metadata.conversationCount || 0}.0
+                Conversation count: {profile.metadata.conversationCount || 0}
               </span>
             </div>
           </div>
@@ -315,7 +314,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
             <button
               onClick={handleRefresh}
               className={`px-5 py-2 bg-[var(--app-bg-tint)] hover:bg-[var(--app-text-main)]/5 rounded-lg flex items-center gap-3 transition-all tech-border glass-blur group`}
-              title="Re-sync data"
+              title="Refresh profile"
             >
               <Icon
                 name="RefreshCw"
@@ -324,7 +323,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               <span
                 className={`text-[11px] font-black text-[var(--app-text-main)] uppercase tracking-widest opacity-80`}
               >
-                Sync Matrix
+                Refresh profile
               </span>
             </button>
           </div>

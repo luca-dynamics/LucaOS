@@ -159,7 +159,7 @@ describe("remaining Settings premium migration", () => {
         "Advanced Details",
       ]),
     );
-    expect(remainingSettingsPremiumTabStructure.connectors).toContain(
+    expect(remainingSettingsPremiumTabStructure.connectors).not.toContain(
       "Danger Zone",
     );
     expect(remainingSettingsPremiumTabStructure.data).toContain("Privacy");
@@ -176,9 +176,9 @@ describe("remaining Settings premium migration", () => {
     expect(modelManagerSource).toContain("SettingsCard");
     expect(modelManagerSource).toContain("SettingsAdvancedDisclosure");
     expect(mcpBridgeSource).toContain("SettingsAdvancedDisclosure");
-    expect(connectorsSource).toContain("SettingsDangerZone");
+    expect(connectorsSource).not.toContain("SettingsDangerZone");
     expect(dataSource).toContain("SettingsDangerZone");
-    expect(iotSource).toContain("SettingsDangerZone");
+    expect(iotSource).not.toContain("SettingsDangerZone");
   });
 
   it("places advanced technical controls under Advanced Details", () => {
@@ -212,19 +212,13 @@ describe("remaining Settings premium migration", () => {
 
   it("places destructive maintenance under Danger Zone where destructive actions exist", () => {
     expect(remainingDangerZoneControlIds).toEqual(
-      expect.arrayContaining([
-        "model-manager.deleteModel",
-        "connectors.revokeAll",
-        "data.deleteMemory",
-        "data.clearSessions",
-        "iot.resetIntegration",
-      ]),
+      expect.arrayContaining(["data.deleteMemory", "data.clearSessions"]),
     );
 
-    expect(modelManagerSource).toContain("SettingsDangerZone");
-    expect(connectorsSource).toContain("SettingsDangerZone");
+    expect(modelManagerSource).not.toContain("SettingsDangerZone");
+    expect(connectorsSource).not.toContain("SettingsDangerZone");
     expect(dataSource).toContain("SettingsDangerZone");
-    expect(iotSource).toContain("SettingsDangerZone");
+    expect(iotSource).not.toContain("SettingsDangerZone");
   });
 
   it("keeps raw profile and personality/system controls out of primary user controls", () => {

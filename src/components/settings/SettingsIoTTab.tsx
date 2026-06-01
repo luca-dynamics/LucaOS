@@ -3,7 +3,6 @@ import { LucaSettings } from "../../services/settingsService";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
-  SettingsDangerZone,
   SettingsRow,
   SettingsSection,
   SettingsStatusCard,
@@ -167,8 +166,6 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
           description="Sync logs stay grouped as technical details."
         />
       </SettingsAdvancedDisclosure>
-
-      <SettingsDangerZone description="Revoke or reset the home integration only when those existing actions are available." />
     </div>
   );
 };

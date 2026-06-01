@@ -4,7 +4,6 @@ import RuntimeDiagnosticsPanel from "../runtime/RuntimeDiagnosticsPanel";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
-  SettingsDangerZone,
   SettingsRow,
   SettingsSection,
   SettingsStatusCard,
@@ -36,25 +35,25 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <SettingsStatusCard
             label="Installed models"
-            value="Local library"
+            value="Managed below"
             detail="Brain, vision, voice, TTS, and memory models stay grouped by capability."
             accentColor={theme.hex}
           />
           <SettingsStatusCard
             label="Available updates"
-            value="Ready to review"
+            value="Review in Model Manager"
             detail="Downloads and compatible upgrades remain in the model manager queue."
             accentColor={theme.hex}
           />
           <SettingsStatusCard
             label="Storage used"
-            value="App data"
+            value="Shown in model details"
             detail="Downloaded GGUF and ONNX assets remain in the application data directory."
             accentColor={theme.hex}
           />
           <SettingsStatusCard
             label="Runtime health"
-            value="Checked below"
+            value="See Runtime Status"
             detail="Ollama, local runtime, and CPU/GPU readiness are summarized before raw logs."
             accentColor={theme.hex}
           />
@@ -135,8 +134,6 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
           description="Maintenance actions remain available where the existing model manager exposes them."
         />
       </SettingsAdvancedDisclosure>
-
-      <SettingsDangerZone description="Destructive model deletion or cache wipe actions remain inside the model manager when available." />
     </div>
   );
 };

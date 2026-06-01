@@ -151,28 +151,12 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
         isMobile={isMobile}
       >
         <SettingsRow
-          label="Shadow execution"
-          description="Preview actions before Luca runs or surfaces them."
-          control={
-            <SettingsToggle
-              checked={!!autonomy.shadowExecutionEnabled}
-              onChange={() => toggle("shadowExecutionEnabled")}
-              accentColor={theme.hex}
-              ariaLabel="Shadow execution"
-            />
-          }
+          label="Mission killswitch"
+          description="Pause background autonomy immediately when mission risk or context changes."
         />
         <SettingsRow
-          label="Double-brain consensus"
-          description="Require a second reasoning pass before sensitive autonomous steps."
-          control={
-            <SettingsToggle
-              checked={!!autonomy.doubleBrainConsensus}
-              onChange={() => toggle("doubleBrainConsensus")}
-              accentColor={theme.hex}
-              ariaLabel="Double-brain consensus"
-            />
-          }
+          label="Approval requirements"
+          description="Tool, spending, messaging, and sensitive-app actions should stay review-gated."
         />
         <SettingsRow
           label="Restricted actions"
@@ -227,8 +211,32 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
 
       <SettingsAdvancedDisclosure
         title="Advanced Details"
-        description="Shadow execution, double-brain consensus, planning traces, tool execution diagnostics, and autonomy logs."
+        description="Advanced autonomy safeguards, planning traces, tool execution diagnostics, and autonomy logs."
       >
+        <SettingsRow
+          label="Shadow execution safeguard"
+          description="Preview actions before Luca runs or surfaces them. Use only when you understand the mission review flow."
+          control={
+            <SettingsToggle
+              checked={!!autonomy.shadowExecutionEnabled}
+              onChange={() => toggle("shadowExecutionEnabled")}
+              accentColor={theme.hex}
+              ariaLabel="Shadow execution safeguard"
+            />
+          }
+        />
+        <SettingsRow
+          label="Double-brain consensus safeguard"
+          description="Require a second reasoning pass before sensitive autonomous steps; keep enabled for higher-risk missions."
+          control={
+            <SettingsToggle
+              checked={!!autonomy.doubleBrainConsensus}
+              onChange={() => toggle("doubleBrainConsensus")}
+              accentColor={theme.hex}
+              ariaLabel="Double-brain consensus safeguard"
+            />
+          }
+        />
         <SettingsRow
           label="Planning traces"
           description="Keep raw plans and tool diagnostics away from primary controls."
