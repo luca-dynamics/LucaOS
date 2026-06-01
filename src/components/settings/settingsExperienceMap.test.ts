@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import {
   settingsAdvancedFeatureCandidateTabIds,
   settingsClassificationLabels,
@@ -9,15 +7,9 @@ import {
   settingsSensitiveTabIds,
   settingsTacticalModeCandidateTabIds,
 } from "./settingsExperienceMap";
+import { settingsDesktopTabs } from "./settingsNavigationModel";
 
-const settingsModalSource = readFileSync(
-  resolve(process.cwd(), "src/components/SettingsModal.tsx"),
-  "utf8",
-);
-
-const currentSettingsModalTabIds = Array.from(
-  settingsModalSource.matchAll(/id:\s*"([^"]+)"/g),
-).map((match) => match[1]);
+const currentSettingsModalTabIds = settingsDesktopTabs.map((tab) => tab.id);
 
 const unique = (values: readonly string[]) => Array.from(new Set(values));
 

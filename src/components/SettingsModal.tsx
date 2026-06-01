@@ -26,6 +26,14 @@ import OperatorProfilePanel from "./settings/OperatorProfilePanel";
 import PersonalityDashboard from "./settings/PersonalityDashboard";
 import KnowledgeBridgeTab from "./settings/KnowledgeBridgeTab";
 import SettingsAutonomyTab from "./settings/SettingsAutonomyTab";
+import {
+  isMobileAdvancedSettingsTab,
+  mobileAvailableAdvancedSettingsTabs,
+  mobileDesktopOnlyAdvancedSettingsTabs,
+  mobileSettingsNavigationTabs,
+  settingsAdvancedGroup,
+  settingsDesktopTabs,
+} from "./settings/settingsNavigationModel";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -40,79 +48,6 @@ interface SettingsModalProps {
     themeName: string;
   };
 }
-
-const TABS = [
-  {
-    id: "general",
-    label: "General",
-    icon: "Settings",
-    platforms: ["desktop", "mobile"],
-  },
-  { id: "brain", label: "Brain", icon: "Cpu", platforms: ["desktop", "mobile"] },
-  { id: "voice", label: "Voice", icon: "Microphone", platforms: ["desktop", "mobile"] },
-  {
-    id: "vision",
-    label: "Vision",
-    icon: "Share",
-    platforms: ["desktop", "mobile"],
-  },
-  {
-    id: "model-manager",
-    label: "Model Manager",
-    icon: "Database",
-    platforms: ["desktop", "mobile"],
-  },
-  {
-    id: "personality",
-    label: "Personality",
-    icon: "User",
-    platforms: ["desktop", "mobile"],
-  },
-  {
-    id: "autonomy",
-    label: "Autonomy",
-    icon: "Ghost",
-    platforms: ["desktop", "mobile"],
-  },
-  {
-    id: "profile",
-    label: "Profile",
-    icon: "InfoCircle",
-    platforms: ["desktop", "mobile"],
-  },
-  {
-    id: "lucalink",
-    label: "Luca Link",
-    icon: "Wifi",
-    platforms: ["desktop", "mobile"],
-  },
-  { id: "mcp-bridge", label: "MCP Bridge", icon: "Plug", platforms: ["desktop"] },
-  {
-    id: "iot",
-    label: "Smart Home",
-    icon: "Home",
-    platforms: ["desktop", "mobile"],
-  },
-  {
-    id: "connectors",
-    label: "Connectors",
-    icon: "Link",
-    platforms: ["desktop"],
-  },
-  {
-    id: "data",
-    label: "Data & Memory",
-    icon: "Database",
-    platforms: ["desktop", "mobile"],
-  },
-  {
-    id: "knowledge-bridge",
-    label: "Knowledge Base",
-    icon: "Share",
-    platforms: ["desktop", "mobile"],
-  },
-  { id: "about", label: "About", icon: "InfoCircle", platforms: ["desktop", "mobile"] },
-];
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
@@ -143,11 +78,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     theme ||
     PERSONA_UI_CONFIG.ASSISTANT;
 
-  // Filter tabs by platform
+  // Filter tabs by platform. Desktop remains fully visible; mobile groups
+  // tactical/advanced surfaces behind Advanced Settings.
   const currentPlatform = isMobile ? "mobile" : "desktop";
-  const visibleTabs = TABS.filter((tab) =>
-    tab.platforms.includes(currentPlatform),
-  );
+  const visibleTabs = isMobile
+    ? mobileSettingsNavigationTabs
+    : settingsDesktopTabs.filter((tab) =>
+        tab.platforms.includes(currentPlatform),
+      );
 
   useEffect(() => {
     // Load initial data
@@ -174,14 +112,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       const opacity = settings.general.backgroundOpacity ?? 0.3;
       const blur = settings.general.backgroundBlur ?? 40;
       const contrast = getDynamicContrast(newTheme as any, opacity);
-      
-      document.documentElement.style.setProperty("--app-text-main", contrast.text);
-      document.documentElement.style.setProperty("--app-text-muted", contrast.textMuted);
-      document.documentElement.style.setProperty("--app-border-main", contrast.border);
-      document.documentElement.style.setProperty("--app-bg-tint", contrast.bgTint);
-      document.documentElement.style.setProperty("--app-bg-main", (contrast as any).bgMain);
-      
-      document.documentElement.style.setProperty("--app-bg-opacity", opacity.toString());
+
+      document.documentElement.style.setProperty(
+        "--app-text-main",
+        contrast.text,
+      );
+      document.documentElement.style.setProperty(
+        "--app-text-muted",
+        contrast.textMuted,
+      );
+      document.documentElement.style.setProperty(
+        "--app-border-main",
+        contrast.border,
+      );
+      document.documentElement.style.setProperty(
+        "--app-bg-tint",
+        contrast.bgTint,
+      );
+      document.documentElement.style.setProperty(
+        "--app-bg-main",
+        (contrast as any).bgMain,
+      );
+
+      document.documentElement.style.setProperty(
+        "--app-bg-opacity",
+        opacity.toString(),
+      );
       document.documentElement.style.setProperty("--app-bg-blur", `${blur}px`);
 
       const isLight = PERSONA_UI_CONFIG[newTheme as any]?.isLight || false;
@@ -300,21 +256,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     >
       <div
         className={`w-full ${
-          isMobile
-            ? "h-full rounded-none"
-            : "max-w-[90%] h-[90%] rounded-xl"
+          isMobile ? "h-full rounded-none" : "max-w-[90%] h-[90%] rounded-xl"
         } flex flex-row overflow-hidden transition-all duration-300 tech-border glass-blur`}
         style={{
           boxShadow: isMobile ? "none" : `0 0 50px -20px rgba(0,0,0,0.5)`,
           backgroundColor: "var(--app-bg-main, #0a0a0f)",
-          borderColor: isMobile ? "transparent" : "var(--app-border-main, rgba(0,0,0,0.2))",
+          borderColor: isMobile
+            ? "transparent"
+            : "var(--app-border-main, rgba(0,0,0,0.2))",
         }}
       >
         {/* Unified Sidebar Navigation */}
         <div
           className={`flex flex-col shrink-0 ${isMobile ? "w-16" : "w-64"}`}
           style={{
-            backgroundColor: isMobile ? "rgba(0,0,0,0.2)" : "var(--app-bg-main, #0a0a0a)",
+            backgroundColor: isMobile
+              ? "rgba(0,0,0,0.2)"
+              : "var(--app-bg-main, #0a0a0a)",
             borderRight: "1px solid var(--app-border-main, rgba(0,0,0,0.1))",
           }}
         >
@@ -345,7 +303,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             className={`flex-1 overflow-y-auto no-scrollbar ${isMobile ? "p-2" : "p-3"} space-y-2`}
           >
             {visibleTabs.map((tab) => {
-              const isActive = activeTab === tab.id;
+              const isAdvancedGroup = tab.id === settingsAdvancedGroup.id;
+              const isActive = isAdvancedGroup
+                ? activeTab === settingsAdvancedGroup.id ||
+                  isMobileAdvancedSettingsTab(activeTab)
+                : activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
@@ -368,7 +330,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       : "flex-row gap-3 p-2.5"
                   }`}
                 >
-                  <Icon name={tab.icon} variant={isActive ? "BoldDuotone" : "Linear"} className={`${isMobile ? "w-5 h-5" : "w-5 h-5"}`} />
+                  <Icon
+                    name={tab.icon}
+                    variant={isActive ? "BoldDuotone" : "Linear"}
+                    className={`${isMobile ? "w-5 h-5" : "w-5 h-5"}`}
+                  />
                   {!isMobile ? (
                     <span className="text-sm font-medium">{tab.label}</span>
                   ) : (
@@ -384,10 +350,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Mobile Footer Exit - Since we don't have the header X on mobile anymore */}
           {isMobile && (
             <div
-              className="p-4 flex justify-center border-t" style={{ borderColor: "var(--app-border-main)" }}
+              className="p-4 flex justify-center border-t"
+              style={{ borderColor: "var(--app-border-main)" }}
               onClick={onClose}
             >
-              <Icon name="CloseCircle" className="w-5 h-5 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]" />
+              <Icon
+                name="CloseCircle"
+                className="w-5 h-5 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
+              />
             </div>
           )}
         </div>
@@ -398,13 +368,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {!isMobile && (
             <div
               className="p-5 flex justify-between items-center"
-              style={{ borderBottom: `1px solid var(--app-border-main)`, backgroundColor: "var(--app-bg-tint)" }}
+              style={{
+                borderBottom: `1px solid var(--app-border-main)`,
+                backgroundColor: "var(--app-bg-tint)",
+              }}
             >
               <h3
                 className="text-lg font-bold"
                 style={{ color: "var(--app-text-muted)" }}
               >
-                {TABS.find((t) => t.id === activeTab)?.label}
+                {settingsDesktopTabs.find((t) => t.id === activeTab)?.label ||
+                  (activeTab === settingsAdvancedGroup.id
+                    ? settingsAdvancedGroup.label
+                    : "Settings")}
               </h3>
               <button
                 onClick={onClose}
@@ -426,6 +402,126 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               touchAction: "pan-y",
             }}
           >
+            {isMobile &&
+              (activeTab === settingsAdvancedGroup.id ||
+                mobileDesktopOnlyAdvancedSettingsTabs.some(
+                  (tab) => tab.id === activeTab,
+                )) && (
+                <div className="space-y-5">
+                  <div
+                    className="rounded-2xl border p-4"
+                    style={{
+                      borderColor: "var(--app-border-main)",
+                      backgroundColor: "var(--app-bg-tint)",
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        name={settingsAdvancedGroup.icon}
+                        variant="BoldDuotone"
+                        className="h-5 w-5"
+                        style={{ color: liveTheme.hex }}
+                      />
+                      <div>
+                        <h3
+                          className="text-base font-bold"
+                          style={{ color: "var(--app-text-main)" }}
+                        >
+                          {settingsAdvancedGroup.label}
+                        </h3>
+                        <p
+                          className="mt-1 text-xs leading-relaxed"
+                          style={{ color: "var(--app-text-muted)" }}
+                        >
+                          {settingsAdvancedGroup.description}
+                        </p>
+                      </div>
+                    </div>
+                    <p
+                      className="mt-3 text-[11px] leading-relaxed"
+                      style={{ color: "var(--app-text-muted)" }}
+                    >
+                      {settingsAdvancedGroup.availabilityNote}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    {mobileAvailableAdvancedSettingsTabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className="flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all hover:bg-white/5"
+                        style={{
+                          borderColor: "var(--app-border-main)",
+                          backgroundColor: "rgba(255,255,255,0.03)",
+                        }}
+                      >
+                        <span className="flex items-center gap-3">
+                          <Icon
+                            name={tab.icon}
+                            variant="Linear"
+                            className="h-5 w-5"
+                            style={{ color: liveTheme.hex }}
+                          />
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--app-text-main)" }}
+                          >
+                            {tab.label}
+                          </span>
+                        </span>
+                        <Icon
+                          name="ChevronRight"
+                          className="h-4 w-4"
+                          style={{ color: "var(--app-text-muted)" }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {mobileDesktopOnlyAdvancedSettingsTabs.length > 0 && (
+                    <div className="space-y-2">
+                      <p
+                        className="text-[11px] font-bold uppercase tracking-[0.2em]"
+                        style={{ color: "var(--app-text-muted)" }}
+                      >
+                        Available on desktop
+                      </p>
+                      {mobileDesktopOnlyAdvancedSettingsTabs.map((tab) => (
+                        <div
+                          key={tab.id}
+                          className="flex w-full items-center justify-between rounded-xl border p-3 opacity-70"
+                          style={{
+                            borderColor: "var(--app-border-main)",
+                            backgroundColor: "rgba(255,255,255,0.02)",
+                          }}
+                        >
+                          <span className="flex items-center gap-3">
+                            <Icon
+                              name={tab.icon}
+                              variant="Linear"
+                              className="h-5 w-5"
+                              style={{ color: "var(--app-text-muted)" }}
+                            />
+                            <span
+                              className="text-sm font-semibold"
+                              style={{ color: "var(--app-text-main)" }}
+                            >
+                              {tab.label}
+                            </span>
+                          </span>
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-wide"
+                            style={{ color: "var(--app-text-muted)" }}
+                          >
+                            Desktop only
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             {activeTab === "general" && (
               <SettingsGeneralTab
                 settings={settings}
@@ -475,16 +571,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             )}
             {activeTab === "model-manager" && (
-              <SettingsModelManagerTab
-                theme={liveTheme}
-                isMobile={isMobile}
-              />
+              <SettingsModelManagerTab theme={liveTheme} isMobile={isMobile} />
             )}
             {activeTab === "profile" && (
-              <OperatorProfilePanel
-                theme={liveTheme}
-                isMobile={isMobile}
-              />
+              <OperatorProfilePanel theme={liveTheme} isMobile={isMobile} />
             )}
             {activeTab === "iot" && (
               <SettingsIoTTab
@@ -494,7 +584,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 isMobile={isMobile}
               />
             )}
-            {activeTab === "connectors" && (
+            {activeTab === "connectors" && !isMobile && (
               <SettingsConnectorsTab
                 settings={settings}
                 theme={liveTheme}
@@ -510,7 +600,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 isMobile={isMobile}
               />
             )}
-            {activeTab === "mcp-bridge" && (
+            {activeTab === "mcp-bridge" && !isMobile && (
               <SettingsMCPBridgeTab
                 settings={settings}
                 theme={liveTheme}
@@ -528,10 +618,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             )}
             {activeTab === "knowledge-bridge" && (
-              <KnowledgeBridgeTab
-                theme={liveTheme}
-                isMobile={isMobile}
-              />
+              <KnowledgeBridgeTab theme={liveTheme} isMobile={isMobile} />
             )}
 
             {activeTab === "about" && (
@@ -544,7 +631,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-            <div
+          <div
             className={`p-4 flex justify-between items-center ${
               isMobile ? "pb-8" : ""
             }`}
@@ -578,14 +665,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={handleSave}
                 disabled={loading}
                 style={{
-                  borderColor:
-                    liveTheme.isLight
-                      ? "rgba(0,0,0,0.1)"
-                      : liveTheme.hex,
-                  backgroundColor:
-                    liveTheme.isLight
-                      ? liveTheme.hex
-                      : `${liveTheme.hex}20`,
+                  borderColor: liveTheme.isLight
+                    ? "rgba(0,0,0,0.1)"
+                    : liveTheme.hex,
+                  backgroundColor: liveTheme.isLight
+                    ? liveTheme.hex
+                    : `${liveTheme.hex}20`,
                   color: "#ffffff",
                 }}
                 className="px-6 py-2 border hover:opacity-90 rounded text-xs font-bold shadow-lg flex items-center gap-2 transition-all disabled:opacity-50"
