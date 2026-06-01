@@ -31,12 +31,12 @@ describe("right panel control plane model", () => {
     expect(normalizeRightPanelMode("CLOUD")).toBe("CONTROL");
   });
 
-  it("keeps compact labels for the mobile DATA tab row", () => {
+  it("keeps product-friendly labels for the mobile Activity tab row", () => {
     expect(MOBILE_RIGHT_PANEL_LABELS).toEqual({
-      CONTROL: "CTRL",
-      ACTIVITY: "ACT",
-      MEMORY: "MEM",
-      LOGS: "LOGS",
+      CONTROL: "Overview",
+      ACTIVITY: "Timeline",
+      MEMORY: "Memory",
+      LOGS: "Trace",
     });
   });
 

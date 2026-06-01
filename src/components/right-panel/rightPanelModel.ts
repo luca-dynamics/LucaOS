@@ -10,10 +10,10 @@ export const RIGHT_PANEL_MODES: RightPanelMode[] = [
 ];
 
 export const MOBILE_RIGHT_PANEL_LABELS: Record<RightPanelMode, string> = {
-  CONTROL: "CTRL",
-  ACTIVITY: "ACT",
-  MEMORY: "MEM",
-  LOGS: "LOGS",
+  CONTROL: "Overview",
+  ACTIVITY: "Timeline",
+  MEMORY: "Memory",
+  LOGS: "Trace",
 };
 
 export function isRightPanelMode(value: string): value is RightPanelMode {
