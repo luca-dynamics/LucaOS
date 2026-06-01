@@ -92,7 +92,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   const handleClear = async () => {
     if (
       !confirm(
-        "Clear imported Chrome data? Ghost Browser will use clean sessions.",
+        "Clear imported Chrome session data? Luca will use clean browser sessions.",
       )
     )
       return;
@@ -384,15 +384,14 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     }}
                   >
                     <IconEngine name="ShieldWarning" variant="BoldDuotone" className="w-3 h-3" />
-                    CHROME DETECTED: CLOSE TO RE-IMPORT
+                    CHROME OPEN: CLOSE BEFORE RE-IMPORT
                   </div>
                 )}
                 <p
                   className={`text-[10px] leading-relaxed`}
                   style={{ color: "var(--app-text-main, #64748b)" }}
                 >
-                  Link Chrome to synchronize your active sessions and
-                  credentials directly with the Ghost Browser.
+                  Import approved Chrome sessions so Luca can remember signed-in websites without asking for passwords.
                 </p>
               </div>
               <div 
@@ -467,8 +466,8 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     {[
                       { label: "AUTO BOOT", key: "startOnBoot" },
                       { label: "TRAY MINIMIZE", key: "minimizeToTray" },
-                      { label: "DEBUG MATRIX", key: "debugMode" },
-                      { label: "TACTICAL MODE", key: "experimentalMode" },
+                      { label: "DIAGNOSTIC MODE", key: "debugMode" },
+                      { label: "ADVANCED FEATURES", key: "experimentalMode" },
                     ].map((beh) => (
                       <div
                         key={beh.key}
@@ -701,8 +700,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               <p
                 className={`text-[10px] text-[var(--app-text-muted)] leading-tight`}
               >
-                Control what Luca can observe. Disabling a sensor stops it
-                immediately, even mid-loop.
+                Control what Luca is allowed to observe. Turning off a sensor stops that awareness immediately, including active loops.
               </p>
               <div className="space-y-1">
                 {[
@@ -710,25 +708,25 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     label: "SCREEN OBSERVATION",
                     key: "screenEnabled",
                     icon: "Eye",
-                    desc: "Allow Luca to periodically scan your screen for context",
+                    desc: "Allow Luca to read screen context only when awareness features need it",
                   },
                   {
                     label: "CAMERA ACCESS",
                     key: "cameraEnabled",
                     icon: "Camera",
-                    desc: "Allow Luca to use the webcam (Room Guard, Vision)",
+                    desc: "Allow camera-based awareness for approved vision features",
                   },
                   {
                     label: "MICROPHONE",
                     key: "micEnabled",
                     icon: "Microphone",
-                    desc: "Allow Luca to listen for voice input and ambient audio",
+                    desc: "Allow microphone input for voice commands and approved audio awareness",
                   },
                   {
-                    label: "GLOBAL FORGE",
+                    label: "PRODUCT IMPROVEMENT",
                     key: "telemetryEnabled",
                     icon: "Link",
-                    desc: "Anonymously share architectural improvements to evolve LUCA",
+                    desc: "Share anonymized diagnostics to improve LucaOS reliability",
                   },
                 ].map((privItem) => {
                   const isEnabled =
@@ -809,7 +807,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                         await import("../../tools/handlers/LocalTools");
                       const res = await checkPermissions();
                       alert(
-                        res.success ? "Manual Link Secured." : "Access Denied.",
+                        res.success ? "Permissions verified." : "Access denied.",
                       );
                     }}
                     className={`py-1 rounded-lg border border-[var(--app-border-main)] bg-[var(--app-bg-tint)] text-[var(--app-text-main)] font-bold text-[10px] hover:bg-white/10 transition-all shadow-sm`}

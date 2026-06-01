@@ -44,13 +44,12 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
             className="text-base font-black flex items-center gap-2 mb-1 text-[var(--app-text-main)] uppercase"
           >
             <Icon name="Plug" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)] opacity-80" />
-            LUCA MCP Protocol
+            Luca Capability Sharing
           </h4>
           <p
             className={`text-xs text-[var(--app-text-muted)] max-w-md opacity-60 italic`}
           >
-            Connect Luca to external AI agents. Memory access now, more
-            capabilities coming soon.
+            Expose approved Luca capabilities to external AI apps through MCP. Use this advanced bridge only with tools you trust.
           </p>
         </div>
         <div
@@ -171,7 +170,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
             className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
           >
             <Icon name="Terminal" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)]" />
-            Local Command
+            Local Bridge Command
           </div>
           <p
             className={`text-[11px] font-mono break-all p-3 rounded-lg bg-black/40 text-[var(--app-text-muted)] leading-relaxed shadow-inner`}
@@ -187,19 +186,18 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
             className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
           >
             <Icon name="Shield" variant="BoldDuotone" className="w-4 h-4 text-[var(--app-text-main)]" />
-            Security Mode
+            Access Scope
           </div>
           <div
             className={`text-sm text-[var(--app-text-muted)] leading-relaxed opacity-80`}
           >
-            Bridge is currently in{" "}
+            Bridge access is currently in{" "}
             <span
               className={`text-[var(--app-text-main)] font-black italic`}
             >
-              Direct Mode
+              Direct local mode
             </span>
-            . External apps have read/write access to your local SQLite
-            memory.
+            . Approved external apps can access the local memory bridge according to the configured MCP scope.
           </div>
         </div>
       </div>

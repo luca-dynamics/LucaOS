@@ -70,17 +70,15 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
             <IconEngine name="Ghost" variant="BoldDuotone" className="w-5 h-5" style={{ color: theme.hex }} />
             <div>
               <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--app-text-main)" }}>
-                LUCY Autonomy Model
+                Luca Autonomy Model
               </h3>
               <p className="text-[10px] text-[var(--app-text-muted)] italic">
-                Sovereign OS protocols for proactive digital life management.
+                Safety-aware controls for proactive, user-approved assistance.
               </p>
             </div>
           </div>
           <p className="text-[11px] leading-relaxed opacity-80 mt-3" style={{ color: "var(--app-text-main)" }}>
-            The LUCY model shifts Luca from a reactive assistant to an autonomous kernel. 
-            When enabled, Luca observes your environment and pursues persistent missions 
-            independently. <strong>Exercise caution: these routines consume tokens and system resources.</strong>
+            Autonomy lets Luca prepare and continue approved work while you are away. Keep mission controls and safety review enabled for sensitive tasks. <strong>These routines may consume tokens and system resources.</strong>
           </p>
         </motion.div>
 
@@ -107,7 +105,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
                 <div className="flex items-center justify-between group">
                   <div className="space-y-0.5">
                     <div className="text-[11px] font-bold" style={{ color: "var(--app-text-main)" }}>Background Missions</div>
-                    <div className="text-[9px] text-[var(--app-text-muted)] uppercase">Allow proactive goal pursuit while idle</div>
+                    <div className="text-[9px] text-[var(--app-text-muted)] uppercase">Allow Luca to continue approved goals while you are idle</div>
                   </div>
                   <button
                     onClick={() => toggle("backgroundMissionsEnabled")}
@@ -122,7 +120,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
                 <div className="flex items-center justify-between group">
                   <div className="space-y-0.5">
                     <div className="text-[11px] font-bold" style={{ color: "var(--app-text-main)" }}>Shadow Execution</div>
-                    <div className="text-[9px] text-[var(--app-text-muted)] uppercase">Enable tool usage without explicit UI feedback</div>
+                    <div className="text-[9px] text-[var(--app-text-muted)] uppercase">Preview actions before Luca runs or surfaces them</div>
                   </div>
                   <button
                     onClick={() => toggle("shadowExecutionEnabled")}
@@ -189,7 +187,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
               <div className="flex items-center gap-2">
                 <IconEngine name="ShieldCheck" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--app-text-main)" }}>
-                  Sovereign Hardness
+                  Autonomy Safety
                 </span>
               </div>
 
@@ -198,7 +196,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
                 <div className="flex items-center justify-between group">
                   <div className="space-y-0.5">
                     <div className="text-[11px] font-bold" style={{ color: "var(--app-text-main)" }}>Double-Brain Consensus</div>
-                    <div className="text-[9px] text-[var(--app-text-muted)] uppercase">Require secondary model audit for all actions</div>
+                    <div className="text-[9px] text-[var(--app-text-muted)] uppercase">Require a second model review before autonomous actions</div>
                   </div>
                   <button
                     onClick={() => toggle("doubleBrainConsensus")}
@@ -231,8 +229,7 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
                   <span className="text-[9px] font-bold text-yellow-500 uppercase">Security Note</span>
                 </div>
                 <p className="text-[9px] text-yellow-500/80 leading-tight">
-                  Consensus mode is MANDATORY for autonomous execution to prevent single-model hallucinations 
-                  from impacting the host kernel. Disabling this is not recommended.
+                  Consensus review helps prevent single-model mistakes during autonomous work. Disabling this safety layer is not recommended.
                 </p>
               </div>
             </motion.div>
@@ -248,11 +245,10 @@ const SettingsAutonomyTab: React.FC<SettingsAutonomyTabProps> = ({
                 </span>
               </div>
               <p className="text-[10px] text-red-500/70">
-                Immediately terminates all active autonomous missions and clears the mission queue. 
-                Use this if Luca exhibits unexpected proactive behavior.
+                Stops all autonomous activity immediately and clears queued missions. Use this any time Luca behaves unexpectedly.
               </p>
               <button className="w-full py-2 bg-red-500/20 border border-red-500/30 rounded text-[10px] font-bold text-red-500 hover:bg-red-500/30 transition-all uppercase tracking-widest">
-                Abort All Missions
+                Stop All Missions
               </button>
             </motion.div>
           </div>

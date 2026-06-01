@@ -421,8 +421,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
             <p
               className={`text-[10px] text-[var(--app-text-muted)] opacity-70 italic`}
             >
-              Import and distill your knowledge assets from other AI platforms into
-              Luca&apos;s local indexing engine.
+              Import approved files and AI exports into Luca&apos;s local knowledge index. Raw uploads are distilled into saved facts.
             </p>
           </div>
         </div>
@@ -548,7 +547,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                               <label
                                 className={`text-sm font-bold uppercase tracking-widest block text-[var(--app-text-muted)]`}
                               >
-                                Source Transmission ({platform.toUpperCase()})
+                                Source Import ({platform.toUpperCase()})
                               </label>
 
                               <div
@@ -601,7 +600,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                     <div
                                       className={`text-center text-sm uppercase tracking-widest font-bold text-[var(--app-text-muted)]`}
                                     >
-                                      Inject {cat.extension} Data
+                                      Import {cat.extension} Data
                                     </div>
                                   </>
                                 )}
@@ -629,11 +628,11 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                   <div className="flex justify-between items-center text-sm uppercase tracking-widest">
                                     <span className="text-[var(--app-text-muted)] animate-pulse">
                                       {status === "uploading" &&
-                                        "Syncing Bits..."}
+                                        "Syncing Source..."}
                                       {status === "distilling" &&
-                                        "Distilling Intelligence..."}
+                                        "Distilling Knowledge..."}
                                       {status === "success" &&
-                                        "Core Synchronized"}
+                                        "Knowledge Synced"}
                                     </span>
                                     <span style={{ color: theme.hex }}>
                                       {progress}%
@@ -718,7 +717,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
             <p
               className={`text-xs text-[var(--app-text-muted)] opacity-70`}
             >
-              Connect your apps to sync knowledge automatically
+              Connect approved apps to sync selected sources into Luca&apos;s knowledge base.
             </p>
           </div>
         </div>
@@ -1114,9 +1113,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
         <p
           className={`text-[9px] leading-relaxed text-[var(--app-text-muted)]`}
         >
-          <strong>Privacy Note:</strong> Luca distills your logs locally. Raw
-          chat history from imports is NOT stored permanently&mdash;only the
-          distilled facts are saved to your local Master Index.
+          <strong>Privacy Note:</strong> Luca distills imports into your local knowledge base. Raw chat history from imports is not stored permanently&mdash;only selected distilled facts are saved.
         </p>
       </div>
     </div>

@@ -44,7 +44,7 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
           style={bridgeMode === "inbound" ? { backgroundColor: `${theme.hex}22`, color: theme.hex } : {}}
         >
           <Icon name="Import" className="w-3.5 h-3.5" />
-          Client: Import Skills
+          Connect Tool Servers
         </button>
         <button
           onClick={() => setBridgeMode("outbound")}
@@ -56,7 +56,7 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
           style={bridgeMode === "outbound" ? { backgroundColor: `${theme.hex}22`, color: theme.hex } : {}}
         >
           <Icon name="Share2" className="w-3.5 h-3.5" />
-          Server: Export Tools
+          Share Luca Capabilities
         </button>
       </div>
 

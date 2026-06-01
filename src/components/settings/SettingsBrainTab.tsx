@@ -412,7 +412,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               className={`${isMobile ? "text-sm" : "text-base"} font-black uppercase tracking-widest truncate`}
               style={{ color: "var(--app-text-main)" }}
             >
-              Cloud API (BYOK)
+              Cloud AI Access (BYOK)
             </h4>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -454,7 +454,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               <span
                 className={`text-[10px] font-mono text-[var(--app-text-muted)]`}
               >
-                CONFIGURE EXTERNAL KEYS
+                CONNECT YOUR PROVIDER KEYS
               </span>
               <button
                 onClick={() => setShowAdvancedProxy(!showAdvancedProxy)}
@@ -462,8 +462,8 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               >
                 <Icon name="Database" variant="BoldDuotone" className="w-2.5 h-2.5" />
                 {showAdvancedProxy
-                  ? "HIDE ADVANCED PROXY"
-                  : "SHOW ADVANCED PROXY"}
+                  ? "HIDE ADVANCED ENDPOINTS"
+                  : "SHOW ADVANCED ENDPOINTS"}
               </button>
             </div>
 
@@ -506,7 +506,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Base URL (Optional: e.g. https://your-proxy.com/v1)"
+                    placeholder="Custom endpoint URL (optional: e.g. https://your-proxy.com/v1)"
                     value={settings.brain.geminiBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "geminiBaseUrl", e.target.value)
@@ -562,7 +562,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Base URL (Optional)"
+                    placeholder="Custom endpoint URL (optional)"
                     value={settings.brain.anthropicBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "anthropicBaseUrl", e.target.value)
@@ -618,7 +618,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Base URL (Optional)"
+                    placeholder="Custom endpoint URL (optional)"
                     value={settings.brain.openaiBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "openaiBaseUrl", e.target.value)
@@ -668,7 +668,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Base URL (Optional: e.g. https://api.x.ai/v1)"
+                    placeholder="Custom endpoint URL (optional: e.g. https://api.x.ai/v1)"
                     value={settings.brain.xaiBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "xaiBaseUrl", e.target.value)
@@ -719,7 +719,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Base URL (Optional)"
+                    placeholder="Custom endpoint URL (optional)"
                     value={settings.brain.deepseekBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "deepseekBaseUrl", e.target.value)
@@ -855,8 +855,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             </div>
             {settings.brain.model.includes("/") === false && (
               <p className="text-xs text-[var(--app-text-muted)] leading-tight opacity-70">
-                Unified managed intelligence gateway providing access to the
-                world&apos;s most powerful LLMs.
+                Choose the reasoning model Luca uses for planning, conversation, and agent decisions.
               </p>
             )}
             <select
@@ -964,7 +963,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   className="pt-2"
                 >
                   <div className="text-base text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
-                    External Model ID (Ollama)
+                    External Local Model ID (Ollama)
                   </div>
                   <input
                     type="text"
@@ -985,7 +984,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     }}
                   />
                   <div className="text-sm text-[var(--app-text-muted)] mt-1">
-                    Runs on standard Ollama port 11434
+                    Uses your local Ollama service on port 11434.
                   </div>
                 </motion.div>
               ) : null;
@@ -1014,8 +1013,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <p
             className={`text-xs text-[var(--app-text-muted)] leading-tight opacity-70`}
           >
-            Self-evolving intelligence memory architecture that optimizes retrieval
-            based on your session history.
+            Select the model Luca uses to index and retrieve your local knowledge safely.
           </p>
           <select
             value={settings.brain.memoryModel || "gemini-2.5-flash"}
@@ -1052,7 +1050,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           </select>
         </motion.div>
 
-        {/* Luca Maintenance (Settings) */}
+        {/* Knowledge Maintenance (Settings) */}
         <motion.div
           variants={item}
           className={`space-y-4 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
@@ -1068,11 +1066,11 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 className={`text-xs font-bold uppercase tracking-widest`}
                 style={{ color: "var(--app-text-main, #ffffff)" }}
               >
-                Luca Maintenance
+                Knowledge Maintenance
               </h4>
             </div>
             <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase">
-              LUCA ENGINE
+              LOCAL INDEX
             </div>
           </div>
 
@@ -1090,10 +1088,10 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   className={`text-xs font-bold`}
                   style={{ color: "var(--app-text-main, #ffffff)" }}
                 >
-                  Universal History Sync
+                  Background History Indexing
                 </div>
                 <div className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-wider">
-                  Index history in background (Local Search)
+                  Keep local search memory current in the background
                 </div>
               </div>
               <button
@@ -1133,7 +1131,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               className={`grid grid-cols-2 items-center gap-4 bg-[var(--app-bg-tint, rgba(255,255,255,0.1))] p-2 rounded-lg border border-[var(--app-border-main)]`}
             >
               <div className="text-[11px] text-[var(--app-text-muted)] uppercase tracking-wider font-bold">
-                Re-index Timeframe
+                Indexing Interval
               </div>
               <select
                 defaultValue="30"
@@ -1159,8 +1157,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               </select>
             </div>
             <p className="text-[10px] text-[var(--app-text-muted)] italic px-1">
-              Note: Disabling sync stops the &quot;Invisible API Drain&quot; but
-              Luca will only remember the current session.
+              Note: pausing background indexing reduces provider calls; Luca will still keep the current session active.
             </p>
           </div>
         </motion.div>
@@ -1190,7 +1187,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               className={`text-base font-black uppercase tracking-widest`}
               style={{ color: "var(--app-text-main, #ffffff)" }}
             >
-              Load Balancer
+              Routing Health
             </div>
             <div
               className={`w-full h-1 rounded-full overflow-hidden`}
@@ -1211,7 +1208,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               />
             </div>
             <div className="flex justify-between text-[11px] font-mono">
-              <span className="text-[var(--app-text-muted)]">AVG LATENCY</span>
+              <span className="text-[var(--app-text-muted)]">AVG RESPONSE</span>
               <span style={{ color: theme.hex }}>
                 {balancerStatus.label === "OFFLINE" ? "---" : `${avgLatency}ms`}
               </span>
@@ -1219,13 +1216,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             <div
               className={`text-[10px] text-[var(--app-text-muted)] font-mono leading-tight`}
             >
-              Auto-balancing traffic between cloud and local agents for optimum
-              response time.
+              Shows how Luca routes between cloud and local models for speed, privacy, and availability.
             </div>
           </div>
         </motion.div>
 
-        {/* Ollama Service Card */}
+        {/* Local Ollama Service Card */}
         <motion.div
           variants={item}
           className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
@@ -1249,7 +1245,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 className={`text-base font-black uppercase tracking-widest`}
                 style={{ color: "var(--app-text-main, #ffffff)" }}
               >
-                Ollama Service
+                Local Ollama Service
               </div>
             </div>
             <div
@@ -1288,7 +1284,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               )
             ) : (
               <div className="text-[11px] text-[var(--app-text-muted)] italic">
-                Service active on port 11434
+                Local model service is active on port 11434.
               </div>
             )}
             <button

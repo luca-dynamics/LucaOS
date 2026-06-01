@@ -36,7 +36,7 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
           <p
             className={`text-xs text-[var(--app-text-muted)] opacity-70 leading-relaxed max-w-xs`}
           >
-            Bridge Luca to your real-world environment. Full automation control active.
+            Connect Luca to Home Assistant for approved smart-home awareness and device control.
           </p>
         </div>
       </div>
@@ -45,7 +45,7 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
       <div className={`space-y-6 ${isMobile ? "px-4" : ""}`}>
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--app-text-muted)] ml-1 opacity-60">
-            Internal Server URL
+            Home Assistant Server URL
           </label>
           <input
             type="text"
@@ -57,7 +57,7 @@ const SettingsIoTTab: React.FC<SettingsIoTTabProps> = ({
         </div>
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--app-text-muted)] ml-1 opacity-60">
-            Long-Lived Access Token
+            Home Assistant Access Token
           </label>
           <textarea
             value={settings.iot.haToken}
