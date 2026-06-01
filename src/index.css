@@ -383,48 +383,21 @@ a,
   animation: shimmer 3s infinite;
 }
 
-/* Luca desktop shell token migration: premium glass panels without persona-dominant color washes. */
-.luca-shell-panel,
-.luca-shell-rail {
-  background: var(--luca-surface-glass, var(--app-bg-tint));
-  border-color: var(--luca-border-subtle, var(--app-border-main));
-  color: var(--luca-text-primary, var(--app-text-main));
-  box-shadow: var(--luca-shadow-soft);
-  backdrop-filter: blur(var(--luca-blur-level, var(--app-bg-blur, 40px)));
-  -webkit-backdrop-filter: blur(var(--luca-blur-level, var(--app-bg-blur, 40px)));
-}
-
-.luca-shell-rail {
-  color: var(--luca-text-secondary, var(--app-text-muted));
-}
-
-.luca-shell-workspace {
-  background: var(--luca-background-elevated, transparent);
-  color: var(--luca-text-primary, var(--app-text-main));
-}
-
-.luca-shell-control {
-  background: var(--luca-surface-glass, var(--app-bg-tint));
-  border-color: var(--luca-border-subtle, var(--app-border-main));
-  color: var(--luca-text-secondary, var(--app-text-muted));
-}
-
+/* Luca desktop shell token migration pseudo-states.
+ * Base panel/control/tab values live in src/styles/lucaShellStyles.ts so App.tsx
+ * has a single token source of truth for shell surfaces and fallbacks.
+ */
 .luca-shell-control:hover,
 .luca-shell-control:focus-visible {
-  background: var(--luca-surface-hover, var(--app-bg-tint));
-  border-color: var(--luca-border-strong, var(--app-border-main));
-  color: var(--luca-text-primary, var(--app-text-main));
-}
-
-.luca-shell-tab {
-  border-color: transparent;
-  color: var(--luca-text-secondary, var(--app-text-muted));
+  background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
+  border-color: var(--luca-border-strong, var(--app-border-main)) !important;
+  color: var(--luca-text-primary, var(--app-text-main)) !important;
 }
 
 .luca-shell-tab:hover,
 .luca-shell-tab:focus-visible {
-  background: var(--luca-surface-hover, var(--app-bg-tint));
-  color: var(--luca-text-primary, var(--app-text-main));
+  background: var(--luca-surface-hover, var(--app-bg-tint)) !important;
+  color: var(--luca-text-primary, var(--app-text-main)) !important;
 }
 
 .luca-shell-tab-active {

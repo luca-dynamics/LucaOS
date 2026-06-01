@@ -122,10 +122,12 @@ import {
   lucaShellActiveLabelStyle,
   lucaShellActiveTabStyle,
   lucaShellClassNames,
+  lucaShellControlStyle,
   lucaShellDividerStyle,
   lucaShellMutedTextStyle,
   lucaShellPanelSurfaceStyle,
   lucaShellRailSurfaceStyle,
+  lucaShellTabStyle,
   lucaShellWorkspaceSurfaceStyle,
 } from "./styles/lucaShellStyles";
 
@@ -2476,6 +2478,7 @@ function AppContent() {
                 title={leftToggleIcon(true).label}
                 onClick={() => setLeftPanelCollapsed(false)}
                 className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                style={lucaShellControlStyle}
               >
                 <Icon name={leftToggleIcon(true).name} size={20} />
               </button>
@@ -2507,6 +2510,7 @@ function AppContent() {
                   title={leftToggleIcon(false).label}
                   onClick={() => setLeftPanelCollapsed(true)}
                   className={`absolute top-2 right-2 z-30 p-1.5 rounded-lg border backdrop-blur-sm transition-colors ${lucaShellClassNames.control}`}
+                  style={lucaShellControlStyle}
                 >
                   <Icon name={leftToggleIcon(false).name} size={18} />
                 </button>
@@ -2722,6 +2726,7 @@ function AppContent() {
                 title={rightToggleIcon(true).label}
                 onClick={() => setRightPanelCollapsed(false)}
                 className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                style={lucaShellControlStyle}
               >
                 <Icon name={rightToggleIcon(true).name} size={20} />
               </button>
@@ -2740,7 +2745,7 @@ function AppContent() {
                     style={
                       rightPanelMode === item.mode
                         ? lucaShellActiveControlStyle
-                        : undefined
+                        : lucaShellControlStyle
                     }
                   >
                     <Icon name={item.icon} size={18} />
@@ -2789,7 +2794,7 @@ function AppContent() {
                         style={
                           rightPanelMode === mode
                             ? lucaShellActiveTabStyle
-                            : undefined
+                            : lucaShellTabStyle
                         }
                       >
                         {mode}
@@ -2815,7 +2820,10 @@ function AppContent() {
                       title={rightToggleIcon(false).label}
                       onClick={() => setRightPanelCollapsed(true)}
                       className={`flex-none px-3 flex items-center justify-center border-l transition-colors ${lucaShellClassNames.control}`}
-                      style={lucaShellDividerStyle}
+                      style={{
+                        ...lucaShellControlStyle,
+                        ...lucaShellDividerStyle,
+                      }}
                     >
                       <Icon name={rightToggleIcon(false).name} size={18} />
                     </button>
