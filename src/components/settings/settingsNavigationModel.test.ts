@@ -85,10 +85,20 @@ describe("settingsNavigationModel", () => {
     ]);
   });
 
-  it("represents mobile advanced feature tabs inside Advanced Settings", () => {
+  it("represents every advanced feature tab inside mobile Advanced Settings", () => {
     expect(ids(mobileAdvancedSettingsTabs)).toEqual(expectedAdvancedTabIds);
     expect(ids(mobileAvailableAdvancedSettingsTabs)).toEqual(
       expectedAdvancedTabIds,
+    );
+    expect(ids(mobileAdvancedSettingsTabs)).toEqual([...advancedFeatureTabIds]);
+    expect(ids(mobileAdvancedSettingsTabs)).toEqual(
+      expect.arrayContaining([
+        "model-manager",
+        "mcp-bridge",
+        "connectors",
+        "iot",
+        "autonomy",
+      ]),
     );
   });
 
@@ -103,6 +113,7 @@ describe("settingsNavigationModel", () => {
       expect(settingsOriginModeCandidateTabIds).not.toContain(id);
       expect(ids(settingsDesktopTabs)).toContain(id);
       expect(ids(mobileAdvancedSettingsTabs)).toContain(id);
+      expect(ids(mobileSettingsNavigationTabs)).not.toContain(id);
     }
   });
 

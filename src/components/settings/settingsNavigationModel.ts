@@ -105,8 +105,12 @@ export const settingsDesktopTabs: SettingsTabDefinition[] = [
 export const mobileStandardSettingsTabs: SettingsTabDefinition[] =
   settingsStandardTabs.filter((tab) => tab.platforms.includes("mobile"));
 
+// Advanced features are intentionally exposed from the mobile Advanced Settings
+// entry even when an older audit availability flag has not yet marked the tab
+// as mobile-primary. They remain grouped under Advanced Settings and are not
+// promoted into the standard mobile rail.
 export const mobileAdvancedSettingsTabs: SettingsTabDefinition[] =
-  settingsAdvancedFeatureTabs.filter((tab) => tab.platforms.includes("mobile"));
+  settingsAdvancedFeatureTabs;
 
 export const mobileAvailableAdvancedSettingsTabs = mobileAdvancedSettingsTabs;
 
