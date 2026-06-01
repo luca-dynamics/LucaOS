@@ -48,12 +48,19 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
     bootSequence === "READY" || bootSequence === "ONBOARDING"
       ? 100
       : lucaBootProgressBySequence[bootSequence];
-  const glowColor = theme.hex;
-  const glowSoft = setHexAlpha(glowColor, 0.15);
-  const glowPanel = setHexAlpha(glowColor, 0.09);
-  const glowRing = setHexAlpha(glowColor, 0.27);
-  const glowRingSoft = setHexAlpha(glowColor, 0.2);
-  const glowOrb = setHexAlpha(glowColor, 0.33);
+  const glowColor = `var(--luca-accent-primary, ${theme.hex})`;
+  const glowSoft = `var(--luca-accent-soft, ${setHexAlpha(theme.hex, 0.15)})`;
+  const glowPanel = `color-mix(in srgb, var(--luca-accent-soft, ${setHexAlpha(theme.hex, 0.09)}) 44%, transparent)`;
+  const glowRing = `color-mix(in srgb, var(--luca-accent-primary, ${theme.hex}) 24%, transparent)`;
+  const glowRingSoft = `color-mix(in srgb, var(--luca-accent-soft, ${setHexAlpha(theme.hex, 0.2)}) 68%, transparent)`;
+  const glowOrb = `color-mix(in srgb, var(--luca-accent-primary, ${theme.hex}) 18%, transparent)`;
+  const surfaceGlass = "var(--luca-surface-glass, color-mix(in srgb, var(--app-bg-tint) 76%, transparent))";
+  const surfaceHover = "var(--luca-surface-hover, color-mix(in srgb, var(--app-bg-tint) 68%, transparent))";
+  const borderSubtle = "var(--luca-border-subtle, var(--app-border-main))";
+  const textPrimary = "var(--luca-text-primary, var(--app-text-main))";
+  const textSecondary = "var(--luca-text-secondary, var(--app-text-muted))";
+  const backgroundLiquid = "var(--luca-background-liquid, transparent)";
+  const shadowGlow = "var(--luca-shadow-glow, 0 0 36px rgba(255, 255, 255, 0.12))";
 
   return (
     <div className="relative flex h-full min-h-screen w-full items-center justify-center overflow-hidden px-5 py-8 font-sans sm:px-8">
@@ -62,7 +69,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
       <div
         className="pointer-events-none absolute inset-x-6 top-12 h-48 rounded-full blur-3xl sm:inset-x-24"
         style={{
-          background: `radial-gradient(circle, ${glowSoft} 0%, transparent 68%)`,
+          background: `${backgroundLiquid}, radial-gradient(circle, ${glowSoft} 0%, transparent 68%)`,
         }}
       />
 
@@ -70,20 +77,19 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
         aria-label="LucaOS startup"
         className="relative z-10 flex w-full max-w-4xl flex-col items-center gap-8 rounded-[2rem] border px-5 py-8 text-center shadow-2xl backdrop-blur-2xl sm:px-10 sm:py-10"
         style={{
-          background: "color-mix(in srgb, var(--app-bg-tint) 76%, transparent)",
-          borderColor: "var(--app-border-main)",
-          boxShadow: `0 24px 80px ${glowPanel}, inset 0 1px 0 rgba(255,255,255,0.08)`,
-          color: "var(--app-text-main)",
+          background: surfaceGlass,
+          borderColor: borderSubtle,
+          boxShadow: `var(--luca-shadow-soft, 0 24px 80px ${glowPanel}), ${shadowGlow}, inset 0 1px 0 rgba(255,255,255,0.08)`,
+          color: textPrimary,
         }}
       >
         <div className="flex flex-col items-center gap-3">
           <div
             className="relative flex h-14 w-14 items-center justify-center rounded-2xl border p-2 backdrop-blur-xl transition-all duration-700 sm:h-16 sm:w-16"
             style={{
-              background:
-                "color-mix(in srgb, var(--app-bg-tint) 68%, transparent)",
-              borderColor: "var(--app-border-main)",
-              boxShadow: `0 0 36px ${glowSoft}, inset 0 1px 0 color-mix(in srgb, var(--app-text-main) 12%, transparent)`,
+              background: surfaceHover,
+              borderColor: borderSubtle,
+              boxShadow: `0 0 36px ${glowSoft}, inset 0 1px 0 color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 12%, transparent)`,
               opacity: launchIdentity.markOpacity,
               transform:
                 launchIdentity.emphasis === "launch"
@@ -112,8 +118,8 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           <div
             className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.32em]"
             style={{
-              borderColor: "var(--app-border-main)",
-              color: "var(--app-text-muted)",
+              borderColor: borderSubtle,
+              color: textSecondary,
             }}
           >
             <Icon name="Sparkles" size={14} color={glowColor} />
@@ -124,7 +130,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           </h1>
           <p
             className="max-w-md text-sm sm:text-base"
-            style={{ color: "var(--app-text-muted)" }}
+            style={{ color: textSecondary }}
           >
             {launchIdentity.subtitle}
           </p>
@@ -152,7 +158,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             style={{
               animationDelay: "450ms",
               animationDuration: "5.8s",
-              background: `radial-gradient(circle at 35% 28%, color-mix(in srgb, ${glowColor} 28%, var(--app-text-main)), ${glowRingSoft} 38%, transparent 72%)`,
+              background: `radial-gradient(circle at 35% 28%, color-mix(in srgb, ${glowColor} 28%, var(--luca-text-primary, var(--app-text-main))), ${glowRingSoft} 38%, transparent 72%)`,
               borderColor: glowRingSoft,
               boxShadow: `0 0 60px ${glowSoft}, inset 0 0 42px ${glowSoft}`,
             }}
@@ -161,8 +167,8 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full animate-pulse sm:h-32 sm:w-32"
             style={{
               animationDuration: "4.6s",
-              background: `radial-gradient(circle at 32% 26%, color-mix(in srgb, ${glowColor} 52%, var(--app-text-main)), ${glowColor} 38%, ${glowRingSoft} 64%, transparent 86%)`,
-              boxShadow: `0 0 48px ${glowOrb}, inset 0 0 28px color-mix(in srgb, var(--app-text-main) 16%, transparent)`,
+              background: `radial-gradient(circle at 32% 26%, color-mix(in srgb, ${textPrimary} 28%, transparent), ${surfaceGlass} 40%, ${glowRingSoft} 74%, transparent 90%)`,
+              boxShadow: `${shadowGlow}, inset 0 0 28px color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 16%, transparent)`,
             }}
           >
             <img
@@ -180,10 +186,10 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
               className="absolute left-6 top-5 h-10 w-14 rounded-full blur-md sm:left-8 sm:top-7 sm:h-12 sm:w-16"
               style={{
                 background:
-                  "color-mix(in srgb, var(--app-text-main) 26%, transparent)",
+                  "color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 26%, transparent)",
               }}
             />
-            <Icon name="Activity" size={34} color="var(--app-text-main)" />
+            <Icon name="Activity" size={34} color={textPrimary} />
           </div>
         </div>
 
@@ -193,7 +199,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           </div>
           <div
             className="h-1.5 w-full overflow-hidden rounded-full"
-            style={{ background: "var(--app-bg-tint)" }}
+            style={{ background: surfaceHover }}
           >
             <div
               className="h-full rounded-full transition-all duration-700 ease-out"
@@ -206,7 +212,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           </div>
           <div
             className="flex items-center gap-2 text-xs"
-            style={{ color: "var(--app-text-muted)" }}
+            style={{ color: textSecondary }}
           >
             <Icon
               name="Sparkles"
@@ -227,25 +233,24 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
                 key={item.id}
                 className="flex min-h-[7.5rem] flex-col justify-between rounded-2xl border p-3 text-left backdrop-blur-xl"
                 style={{
-                  background:
-                    "color-mix(in srgb, var(--app-bg-tint) 72%, transparent)",
+                  background: surfaceGlass,
                   borderColor: isAttention
-                    ? "var(--app-text-muted)"
-                    : "var(--app-border-main)",
-                  color: "var(--app-text-main)",
+                    ? textSecondary
+                    : borderSubtle,
+                  color: textPrimary,
                 }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <Icon
                     name={item.icon}
                     size={18}
-                    color={isAttention ? "var(--app-text-main)" : glowColor}
+                    color={isAttention ? textPrimary : glowColor}
                   />
                   <span
                     className={`mt-1 h-2 w-2 rounded-full ${statusDotClass[tone]}`}
                     style={{
                       background: isAttention
-                        ? "var(--app-text-main)"
+                        ? textPrimary
                         : glowColor,
                     }}
                     aria-hidden="true"
@@ -255,14 +260,14 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
                   <div className="text-sm font-semibold">{item.label}</div>
                   <div
                     className="mt-1 text-[0.68rem] leading-4"
-                    style={{ color: "var(--app-text-muted)" }}
+                    style={{ color: textSecondary }}
                   >
                     {item.detail}
                   </div>
                 </div>
                 <div
                   className="text-[0.68rem] font-semibold uppercase tracking-[0.18em]"
-                  style={{ color: "var(--app-text-muted)" }}
+                  style={{ color: textSecondary }}
                 >
                   {item.statusLabel}
                 </div>
@@ -273,7 +278,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
 
         <div
           className="flex flex-col items-center gap-1 text-xs"
-          style={{ color: "var(--app-text-muted)" }}
+          style={{ color: textSecondary }}
         >
           <span>Startup details · {identityCopy.tacticalLabel}</span>
           <span className="max-w-xl">{bootCopy.diagnosticMeaning}</span>
