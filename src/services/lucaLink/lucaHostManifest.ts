@@ -129,7 +129,7 @@ export interface LucaHostTrust {
    */
   permissions: LucaLinkPermissionCategory[];
   expiresAt?: number;
-  /** Permission categories that always require explicit Origin approval. */
+  /** Permission categories that always require explicit Primary Host approval. */
   requiresApprovalFor: LucaLinkPermissionCategory[];
 }
 

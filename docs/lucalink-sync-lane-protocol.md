@@ -2,6 +2,12 @@
 
 PR #185 introduces a typed, pure protocol model for future LucaLink Mesh sync traffic. It defines an envelope that can carry lane-specific payloads without changing the current Socket.IO, relay/local/VPN, guest, WebRTC, crypto/session, mission, sensor, Settings, boot, onboarding, theme, shell, or platform-background runtimes.
 
+## Origin vs Primary Host
+
+Origin is reserved for LucaOS Creator/source-code authority and root system blueprint control.
+Primary Host is the user's main trusted device inside LucaLink Mesh.
+Primary Host can approve mesh/device actions, but it is not Creator/Origin authority.
+
 ## Envelope shape
 
 Every protocol message is a `LucaLinkEnvelope` with:

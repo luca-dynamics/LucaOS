@@ -131,7 +131,7 @@ export function inferPlatformFromUserAgent(
 /**
  * Conservative host-role inference from platform.
  *
- * - desktop platforms (windows/macos/linux): `origin` only when the caller
+ * - desktop platforms (windows/macos/linux): `primary` only when the caller
  *   knows this is the local/current host, otherwise `execution`.
  * - mobile (ios/android): `companion`.
  * - robotics: `embodied`.
@@ -140,13 +140,13 @@ export function inferPlatformFromUserAgent(
  */
 export function inferHostRoleFromPlatform(
   platform: LucaHostPlatform,
-  options: { isLocalOrigin?: boolean } = {},
+  options: { isPrimaryHost?: boolean } = {},
 ): LucaHostRole {
   switch (platform) {
     case "windows":
     case "macos":
     case "linux":
-      return options.isLocalOrigin ? "origin" : "execution";
+      return options.isPrimaryHost ? "primary" : "execution";
     case "ios":
     case "android":
       return "companion";
@@ -166,9 +166,9 @@ export function inferHostRoleFromPlatform(
 const DEFAULT_PERMISSIONS_BY_ROLE: Readonly<
   Record<LucaHostRole, readonly LucaLinkPermissionCategory[]>
 > = Object.freeze({
-  // Origin holds memory authority. Dangerous permissions are listed *clearly*
+  // Primary Host holds user-mesh memory authority. Dangerous permissions are listed *clearly*
   // here so the future policy layer (PR #184) can reason about them.
-  origin: [
+  primary: [
     "chat.send",
     "chat.receive",
     "memory.read",
@@ -227,8 +227,8 @@ export function getDefaultPermissionsForRole(
 
 function defaultTrustLevelForRole(role: LucaHostRole): LucaHostTrustLevel {
   switch (role) {
-    case "origin":
-      return "origin";
+    case "primary":
+      return "owner";
     case "execution":
       return "trusted";
     case "companion":
@@ -315,7 +315,7 @@ export interface CreateDefaultHostManifestInput {
   platform?: LucaHostPlatform;
   hostRole?: LucaHostRole;
   /** Hint that this manifest describes the local/current host. */
-  isLocalOrigin?: boolean;
+  isPrimaryHost?: boolean;
   /** Optional clock override for deterministic tests. */
   now?: number;
 }
@@ -333,7 +333,7 @@ export function createDefaultHostManifest(
   const hostRole =
     input.hostRole ??
     inferHostRoleFromPlatform(platform, {
-      isLocalOrigin: input.isLocalOrigin,
+      isPrimaryHost: input.isPrimaryHost,
     });
 
   const permissions = getDefaultPermissionsForRole(hostRole);
@@ -493,14 +493,14 @@ export function inferPlatformFromLucaLinkDeviceType(
 
 function inferRoleFromLucaLinkDeviceType(
   type: string,
-  isLocalOrigin: boolean,
+  isPrimaryHost: boolean,
 ): LucaHostRole {
   switch (type.toLowerCase()) {
     case "desktop":
     case "laptop":
     case "workstation":
     case "server":
-      return isLocalOrigin ? "origin" : "execution";
+      return isPrimaryHost ? "primary" : "execution";
     case "mobile":
     case "phone":
     case "tablet":
@@ -540,15 +540,15 @@ function inferRoleFromLucaLinkDeviceType(
 export function manifestFromLucaLinkDevice(
   device: LucaLinkDevice,
   options: {
-    isLocalOrigin?: boolean;
+    isPrimaryHost?: boolean;
     platform?: LucaHostPlatform;
     now?: number;
   } = {},
 ): LucaHostManifest {
-  const isLocalOrigin = options.isLocalOrigin ?? false;
+  const isPrimaryHost = options.isPrimaryHost ?? false;
   const hostRole = inferRoleFromLucaLinkDeviceType(
     device.type ?? "",
-    isLocalOrigin,
+    isPrimaryHost,
   );
   const platform =
     options.platform ?? inferPlatformFromLucaLinkDeviceType(device.type ?? "");
@@ -558,7 +558,7 @@ export function manifestFromLucaLinkDevice(
     deviceName: device.name,
     platform,
     hostRole,
-    isLocalOrigin,
+    isPrimaryHost,
     now: options.now,
   });
 

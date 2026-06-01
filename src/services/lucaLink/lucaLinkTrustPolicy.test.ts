@@ -12,14 +12,14 @@ import {
   getPermissionDescriptor,
   getPermissionRisk,
   isKnownPermission,
-  requiresOriginApproval,
+  requiresPrimaryHostApproval,
 } from "./lucaLinkTrustPolicy";
 
 const NOW = 1_700_000_000_000;
 
 /**
  * Build a manifest for a role with explicit permissions and (by default) no
- * Origin-flagged approvals, so role-policy behavior is exercised directly.
+ * Primary Host approval flags, so role-policy behavior is exercised directly.
  */
 function makeManifest(
   hostRole: LucaHostRole,
@@ -70,7 +70,7 @@ describe("permission descriptor / risk", () => {
       getPermissionDescriptor("nope.invalid" as LucaLinkPermissionCategory),
     ).toBeUndefined();
     const evalResult = evaluateHostPermission(
-      makeManifest("origin", []),
+      makeManifest("primary", []),
       "nope.invalid",
       { now: NOW },
     );
@@ -136,12 +136,12 @@ describe("companion policy", () => {
     }
   });
 
-  it("routes memory.write to Origin approval when granted", () => {
+  it("routes memory.write to Primary Host approval when granted", () => {
     const companion = makeManifest("companion", ["chat.send", "memory.write"]);
     expect(decision(companion, "memory.write")).toBe(
-      "requires-origin-approval",
+      "requires-primary-host-approval",
     );
-    expect(requiresOriginApproval(companion, "memory.write", { now: NOW })).toBe(
+    expect(requiresPrimaryHostApproval(companion, "memory.write", { now: NOW })).toBe(
       true,
     );
   });
@@ -158,19 +158,19 @@ describe("execution policy", () => {
     "git.create_pr",
   ];
 
-  it("requires Origin approval for shell.execute by default", () => {
+  it("requires Primary Host approval for shell.execute by default", () => {
     const execution = makeManifest("execution", perms);
     expect(decision(execution, "shell.execute")).toBe(
-      "requires-origin-approval",
+      "requires-primary-host-approval",
     );
   });
 
-  it("allows shell.execute only when explicitly elevated for local origin", () => {
+  it("allows shell.execute only when explicitly elevated for local Primary Host", () => {
     const execution = makeManifest("execution", perms);
     expect(
       decision(execution, "shell.execute", {
-        isLocalOrigin: true,
-        allowCriticalForOrigin: true,
+        isPrimaryHost: true,
+        allowCriticalForPrimaryHost: true,
       }),
     ).toBe("allow");
   });
@@ -181,8 +181,8 @@ describe("execution policy", () => {
   });
 });
 
-describe("origin policy", () => {
-  const origin = makeManifest("origin", [
+describe("primary policy", () => {
+  const primary = makeManifest("primary", [
     "chat.send",
     "memory.read",
     "memory.write",
@@ -191,20 +191,20 @@ describe("origin policy", () => {
     "code.modify",
   ]);
 
-  it("allows memory.write for the local origin", () => {
-    expect(decision(origin, "memory.write", { isLocalOrigin: true })).toBe(
+  it("allows memory.write for the local Primary Host", () => {
+    expect(decision(primary, "memory.write", { isPrimaryHost: true })).toBe(
       "allow",
     );
   });
 
   it("requires approval for critical permissions unless explicitly allowed", () => {
-    expect(decision(origin, "shell.execute", { isLocalOrigin: true })).toBe(
-      "requires-origin-approval",
+    expect(decision(primary, "shell.execute", { isPrimaryHost: true })).toBe(
+      "requires-primary-host-approval",
     );
     expect(
-      decision(origin, "shell.execute", {
-        isLocalOrigin: true,
-        allowCriticalForOrigin: true,
+      decision(primary, "shell.execute", {
+        isPrimaryHost: true,
+        allowCriticalForPrimaryHost: true,
       }),
     ).toBe("allow");
   });
@@ -219,15 +219,15 @@ describe("embodied policy", () => {
       "robotics.motion",
     ]);
     expect(decision(embodied, "robotics.motion")).toBe(
-      "requires-origin-approval",
+      "requires-primary-host-approval",
     );
-    // Even Origin-elevation options must not auto-allow embodied motion.
+    // Even Primary Host-elevation options must not auto-allow embodied motion.
     expect(
       decision(embodied, "robotics.motion", {
-        isLocalOrigin: true,
-        allowCriticalForOrigin: true,
+        isPrimaryHost: true,
+        allowCriticalForPrimaryHost: true,
       }),
-    ).toBe("requires-origin-approval");
+    ).toBe("requires-primary-host-approval");
   });
 });
 
@@ -283,18 +283,24 @@ describe("sync lane gating", () => {
     );
   });
 
-  it("restricts the safety lane to origin role / admin trust", () => {
-    const origin = makeManifest("origin", ["chat.send"]);
+  it("restricts the safety lane to primary role / admin or owner trust", () => {
+    const primary = makeManifest("primary", ["chat.send"]);
     // Admin is a trust level, not a host role: an execution host with admin trust.
     const adminTrust = makeManifest("execution", ["chat.send"], {
       trustLevel: "admin",
     });
+    const ownerTrust = makeManifest("execution", ["chat.send"], {
+      trustLevel: "owner",
+    });
     const guest = makeManifest("guest", ["chat.send", "chat.receive"]);
-    expect(canHostParticipateInLane(origin, "safety", { now: NOW }).decision).toBe(
+    expect(canHostParticipateInLane(primary, "safety", { now: NOW }).decision).toBe(
       "allow",
     );
     expect(
       canHostParticipateInLane(adminTrust, "safety", { now: NOW }).decision,
+    ).toBe("allow");
+    expect(
+      canHostParticipateInLane(ownerTrust, "safety", { now: NOW }).decision,
     ).toBe("allow");
     expect(canHostParticipateInLane(guest, "safety", { now: NOW }).decision).toBe(
       "deny",
@@ -302,27 +308,27 @@ describe("sync lane gating", () => {
   });
 
   it("denies unknown lanes", () => {
-    const origin = makeManifest("origin", ["chat.send"]);
-    const result = canHostParticipateInLane(origin, "frobnicate", { now: NOW });
+    const primary = makeManifest("primary", ["chat.send"]);
+    const result = canHostParticipateInLane(primary, "frobnicate", { now: NOW });
     expect(result.decision).toBe("deny");
     expect(result.reason).toBe("unknown-lane");
   });
 
-  it("requires Origin approval for a guest in the identity lane", () => {
+  it("requires Primary Host approval for a guest in the identity lane", () => {
     const guest = makeManifest("guest", ["chat.send", "chat.receive"]);
     const result = canHostParticipateInLane(guest, "identity", { now: NOW });
     expect(result.decision).not.toBe("allow");
-    expect(result.decision).toBe("requires-origin-approval");
+    expect(result.decision).toBe("requires-primary-host-approval");
     expect(result.reason).toBe("guest-restricted");
   });
 
   it("lets non-guest hosts participate in the identity lane", () => {
-    const origin = makeManifest("origin", ["chat.send"]);
+    const primary = makeManifest("primary", ["chat.send"]);
     const companion = makeManifest("companion", ["chat.send"], {
       trustLevel: "trusted",
     });
     expect(
-      canHostParticipateInLane(origin, "identity", { now: NOW }).decision,
+      canHostParticipateInLane(primary, "identity", { now: NOW }).decision,
     ).toBe("allow");
     expect(
       canHostParticipateInLane(companion, "identity", { now: NOW }).decision,
@@ -349,20 +355,20 @@ describe("manifest defaults", () => {
     expect(canHostUsePermission(guest, "shell.execute", { now: NOW })).toBe(false);
   });
 
-  it("classifies default origin dangerous permissions as approval-aware", () => {
-    const origin = createDefaultHostManifest({
+  it("classifies default primary dangerous permissions as approval-aware", () => {
+    const primary = createDefaultHostManifest({
       deviceId: "o",
       platform: "macos",
-      isLocalOrigin: true,
+      isPrimaryHost: true,
       now: NOW,
     });
-    const shell = evaluateHostPermission(origin, "shell.execute", { now: NOW });
-    expect(shell.decision).toBe("requires-origin-approval");
+    const shell = evaluateHostPermission(primary, "shell.execute", { now: NOW });
+    expect(shell.decision).toBe("requires-primary-host-approval");
     expect(shell.risk).toBe("critical");
 
-    const summary = getDefaultPolicyForManifest(origin, { now: NOW });
+    const summary = getDefaultPolicyForManifest(primary, { now: NOW });
     expect(summary.lanes).toHaveLength(lucaLinkSyncLanes.length);
-    expect(summary.permissions.length).toBe(origin.trust.permissions.length);
+    expect(summary.permissions.length).toBe(primary.trust.permissions.length);
   });
 
   it("does not grant robotics.motion to a default embodied host", () => {

@@ -60,7 +60,7 @@ function envelope<TLane extends LucaLinkSyncLaneId>(
     lane,
     type: payload.kind,
     sourceDeviceId: "source-device",
-    targetDeviceId: "origin",
+    targetDeviceId: "primary",
     timestamp: NOW,
     payload,
     ...overrides,
@@ -274,7 +274,7 @@ describe("LucaLink sync protocol envelopes", () => {
       lane: "tool",
       type: "tool-request",
       sourceDeviceId: "execution-device",
-      targetDeviceId: "origin",
+      targetDeviceId: "primary",
       timestamp: NOW,
       security: { trustLevelRequired: "admin", expiresAt: NOW + 10_000 },
       payload: { kind: "tool-request", permission: "shell.execute" },
@@ -289,7 +289,7 @@ describe("LucaLink sync protocol envelopes", () => {
 });
 
 describe("LucaLink lane payload mapping", () => {
-  const manifest = makeManifest("origin", ["chat.send", "chat.receive"]);
+  const manifest = makeManifest("primary", ["chat.send", "chat.receive"]);
   const lanePayloads: {
     [TLane in LucaLinkSyncLaneId]: LucaLinkLanePayloadMap[TLane];
   } = {
@@ -365,7 +365,7 @@ describe("LucaLink lane payload mapping", () => {
         lane,
         type: payload.kind,
         sourceDeviceId: "source-device",
-        targetDeviceId: "origin",
+        targetDeviceId: "primary",
         timestamp: NOW,
         payload,
       });
@@ -460,7 +460,7 @@ describe("LucaLink sync security defaults", () => {
         lane,
         type: payload.kind,
         sourceDeviceId: "source-device",
-        targetDeviceId: "origin",
+        targetDeviceId: "primary",
         timestamp: NOW,
         payload,
       });
@@ -476,7 +476,7 @@ describe("LucaLink sync security defaults", () => {
         lane,
         type: payload.kind,
         sourceDeviceId: "source-device",
-        targetDeviceId: "origin",
+        targetDeviceId: "primary",
         timestamp: NOW,
         payload,
       });
@@ -503,7 +503,7 @@ describe("LucaLink sync security defaults", () => {
         lane,
         type: payload.kind,
         sourceDeviceId: "source-device",
-        targetDeviceId: "origin",
+        targetDeviceId: "primary",
         timestamp: NOW,
         payload,
       });
@@ -524,7 +524,7 @@ describe("LucaLink envelope policy helper", () => {
     expect(result.lanePolicy.decision).toBe("allow");
   });
 
-  it("requires Origin approval for guest identity envelopes and denies guest memory envelopes", () => {
+  it("requires Primary Host approval for guest identity envelopes and denies guest memory envelopes", () => {
     const guest = makeManifest("guest", ["chat.send", "chat.receive"]);
     expect(
       evaluateEnvelopePolicy(
@@ -570,7 +570,7 @@ describe("LucaLink envelope policy helper", () => {
     ).toBe("deny");
   });
 
-  it("routes execution tool shell/code/file-write permissions to Origin approval", () => {
+  it("routes execution tool shell/code/file-write permissions to Primary Host approval", () => {
     const execution = makeManifest("execution", [
       "chat.send",
       "chat.receive",
@@ -594,21 +594,21 @@ describe("LucaLink envelope policy helper", () => {
       );
       expect(result.requiresApproval).toBe(true);
       expect(result.permissionPolicy?.decision).toBe(
-        "requires-origin-approval",
+        "requires-primary-host-approval",
       );
     }
   });
 
-  it("allows local origin safety envelopes", () => {
-    const origin = makeManifest(
-      "origin",
+  it("allows local Primary Host safety envelopes", () => {
+    const primary = makeManifest(
+      "primary",
       ["chat.send", "chat.receive", "memory.read", "memory.write"],
-      { trustLevel: "origin" },
+      { trustLevel: "owner" },
     );
     const result = evaluateEnvelopePolicy(
-      origin,
+      primary,
       envelope("safety", { kind: "security-alert", severity: "critical" }),
-      { now: NOW, isLocalOrigin: true, allowCriticalForOrigin: true },
+      { now: NOW, isPrimaryHost: true, allowCriticalForPrimaryHost: true },
     );
 
     expect(result.allowed).toBe(true);

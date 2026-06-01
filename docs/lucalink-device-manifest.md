@@ -5,6 +5,12 @@
 > enforce permissions and does **not** change LucaLink runtime behavior.
 > Permission enforcement lands in PR #184 (Trust & Permission Policy).
 
+## Origin vs Primary Host
+
+Origin is reserved for LucaOS Creator/source-code authority and root system blueprint control.
+Primary Host is the user's main trusted device inside LucaLink Mesh.
+Primary Host can approve mesh/device actions, but it is not Creator/Origin authority.
+
 ## What this adds
 
 Two new, runtime-safe modules under `src/services/lucaLink/`:
@@ -39,8 +45,8 @@ Schema version: `luca-host-manifest/v1`.
   (chat only — no memory write, no tools).
 - **Companion** (phone/tablet) may request actions but gets no
   shell / `files.write` / `git.create_pr` by default.
-- **Execution / origin** roles can advertise dangerous capabilities; **origin**
-  additionally holds memory authority. These are listed clearly for the future
+- **Execution / primary** roles can advertise dangerous capabilities; **primary**
+  additionally holds user-mesh memory authority. These are listed clearly for the future
   policy layer but are **not** enforced in this PR.
 - **Embodied** hosts do **not** receive `robotics.motion` by default.
 

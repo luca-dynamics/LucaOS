@@ -52,10 +52,10 @@ describe("inferHostRoleFromPlatform", () => {
   it("infers conservative roles per platform", () => {
     expect(inferHostRoleFromPlatform("windows")).toBe("execution");
     expect(
-      inferHostRoleFromPlatform("windows", { isLocalOrigin: true }),
-    ).toBe("origin");
-    expect(inferHostRoleFromPlatform("macos", { isLocalOrigin: true })).toBe(
-      "origin",
+      inferHostRoleFromPlatform("windows", { isPrimaryHost: true }),
+    ).toBe("primary");
+    expect(inferHostRoleFromPlatform("macos", { isPrimaryHost: true })).toBe(
+      "primary",
     );
     expect(inferHostRoleFromPlatform("ios")).toBe("companion");
     expect(inferHostRoleFromPlatform("android")).toBe("companion");
@@ -103,16 +103,16 @@ describe("getDefaultPermissionsForRole", () => {
     }
   });
 
-  it("origin holds memory authority but still lists dangerous permissions", () => {
-    const origin = getDefaultPermissionsForRole("origin");
-    expect(origin).toContain("memory.write");
+  it("primary holds memory authority but still lists dangerous permissions", () => {
+    const primary = getDefaultPermissionsForRole("primary");
+    expect(primary).toContain("memory.write");
     for (const dangerous of [
       "shell.execute",
       "code.modify",
       "git.create_pr",
       "files.write",
     ] as const) {
-      expect(origin).toContain(dangerous);
+      expect(primary).toContain(dangerous);
     }
   });
 
@@ -182,7 +182,7 @@ describe("manifestFromLucaLinkDevice", () => {
     expect(manifest.schemaVersion).toBe("luca-host-manifest/v1");
   });
 
-  it("maps desktop to execution unless it is the local origin", () => {
+  it("maps desktop to execution unless it is the local Primary Host", () => {
     const remote = manifestFromLucaLinkDevice({
       deviceId: "d1",
       type: "desktop",
@@ -193,9 +193,9 @@ describe("manifestFromLucaLinkDevice", () => {
 
     const local = manifestFromLucaLinkDevice(
       { deviceId: "d1", type: "desktop", name: "Studio", lastSeen: 1 },
-      { isLocalOrigin: true },
+      { isPrimaryHost: true },
     );
-    expect(local.hostRole).toBe("origin");
+    expect(local.hostRole).toBe("primary");
   });
 
   it("maps web/guest devices to platform web and role guest", () => {
@@ -225,7 +225,7 @@ describe("manifestFromLucaLinkDevice", () => {
     }
   });
 
-  it("desktop defaults platform unknown but role execution (origin when local)", () => {
+  it("desktop defaults platform unknown but role execution (primary when local)", () => {
     const remote = manifestFromLucaLinkDevice({
       deviceId: "d1",
       type: "desktop",
@@ -237,10 +237,10 @@ describe("manifestFromLucaLinkDevice", () => {
 
     const local = manifestFromLucaLinkDevice(
       { deviceId: "d1", type: "desktop", name: "Studio", lastSeen: 1 },
-      { isLocalOrigin: true },
+      { isPrimaryHost: true },
     );
     expect(local.platform).toBe("unknown");
-    expect(local.hostRole).toBe("origin");
+    expect(local.hostRole).toBe("primary");
   });
 
   it("mobile defaults platform unknown but role companion", () => {

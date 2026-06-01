@@ -3,9 +3,15 @@
 > Companion to [`lucalink-host-mesh-architecture.md`](./lucalink-host-mesh-architecture.md)
 > and [`lucalink-device-manifest.md`](./lucalink-device-manifest.md).
 > **Policy evaluation only.** This layer decides allow / deny /
-> requires-origin-approval; it does **not** enforce policy in live runtime.
+> requires-primary-host-approval; it does **not** enforce policy in live runtime.
 > Runtime enforcement (wiring into send/receive/execute flows) lands in
 > follow-up PRs.
+
+## Origin vs Primary Host
+
+Origin is reserved for LucaOS Creator/source-code authority and root system blueprint control.
+Primary Host is the user's main trusted device inside LucaLink Mesh.
+Primary Host can approve mesh/device actions, but it is not Creator/Origin authority.
 
 ## Purpose
 
@@ -13,7 +19,7 @@
 `LucaHostManifest`:
 
 - may a host use a permission? (`evaluateHostPermission`, `canHostUsePermission`)
-- does the action require Origin approval? (`requiresOriginApproval`)
+- does the action require Primary Host approval? (`requiresPrimaryHostApproval`)
 - may a host participate in a sync lane? (`canHostParticipateInLane`)
 - what is the default policy posture for a manifest? (`getDefaultPolicyForManifest`)
 
@@ -26,7 +32,7 @@ PR #183 manifest layer (role, trust level, granted permissions,
 Every evaluation returns a structured result:
 
 ```ts
-{ decision: "allow" | "deny" | "requires-origin-approval";
+{ decision: "allow" | "deny" | "requires-primary-host-approval";
   reason: LucaLinkPolicyReason; permission?; risk?; requiresApproval; explain }
 ```
 
@@ -57,22 +63,22 @@ physical actuation, spending) are gated behind approval/deny.
 | display | output only (chat.receive, notification.send) |
 | execution | perception/IO; tool perms → approval; **no** `memory.write` |
 | admin | broad; dangerous perms → approval (high may elevate, critical does not) |
-| origin | highest authority; dangerous perms → approval, allowed for the local Origin |
-| embodied | perception + chat; `robotics.motion` / `smart_home.control` → Origin approval, never auto-allowed |
+| primary | highest authority; dangerous perms → approval, allowed for the local Primary Host |
+| embodied | perception + chat; `robotics.motion` / `smart_home.control` → Primary Host approval, never auto-allowed |
 
 ## Approval & elevation options
 
 ```ts
 interface LucaLinkPolicyOptions {
-  isLocalOrigin?: boolean;       // evaluating the local/current host
-  allowCriticalForOrigin?: boolean;
+  isPrimaryHost?: boolean;       // evaluating the local/current host
+  allowCriticalForPrimaryHost?: boolean;
   allowHighRiskForAdmin?: boolean;
   now?: number;
 }
 ```
 
 Conservative defaults: critical permissions require approval unless
-`isLocalOrigin && allowCriticalForOrigin`; admin does not auto-bypass critical;
+`isPrimaryHost && allowCriticalForPrimaryHost`; admin does not auto-bypass critical;
 expired trust denies. An explicit `requiresApprovalFor` entry forces approval.
 
 ## Lane gating
@@ -81,11 +87,11 @@ expired trust denies. An explicit `requiresApprovalFor` entry forces approval.
 deny; expired trust → deny; role allowed for the lane → else deny; then every
 required permission must evaluate (deny propagates, approval propagates,
 otherwise allow). Notable defaults: `memory`/`tool`/`artifact`/`model` are
-origin/admin/execution only; `safety` is origin role or admin/origin trust;
+primary/execution roles only; `safety` is primary role or admin/owner trust;
 `sensor` is sensor/companion/embodied with the sensor permissions granted;
 `conversation`/`presence` are open to all roles; the `identity` lane (host
 manifests, public keys, role grants, trust state) admits non-guest roles but
-returns `requires-origin-approval` for a guest host.
+returns `requires-primary-host-approval` for a guest host.
 
 ## Not in this PR
 

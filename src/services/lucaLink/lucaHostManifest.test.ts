@@ -40,11 +40,24 @@ describe("lucaHostManifest", () => {
     expect(validateHostManifest(manifest).valid).toBe(true);
   });
 
+
+  it("creates a Primary Host with owner trust when explicitly marked local", () => {
+    const manifest = createDefaultHostManifest({
+      deviceId: "primary-1",
+      platform: "macos",
+      isPrimaryHost: true,
+      now: FIXED_NOW,
+    });
+
+    expect(manifest.hostRole).toBe("primary");
+    expect(manifest.trust.trustLevel).toBe("owner");
+  });
+
   it("validates a well-formed manifest and rejects malformed vocab", () => {
     const manifest = createDefaultHostManifest({
       deviceId: "dev-1",
       platform: "macos",
-      isLocalOrigin: true,
+      isPrimaryHost: true,
       now: FIXED_NOW,
     });
     expect(validateHostManifest(manifest)).toEqual({
