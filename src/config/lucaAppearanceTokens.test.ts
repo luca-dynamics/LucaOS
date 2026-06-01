@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   LUCA_APPEARANCE_DEFAULTS,
+  buildLucaAppearanceCssVariableState,
   buildLucaAppearanceCssVariables,
   getLucaAppearanceCssVariables,
   resolveLucaAppearanceTokens,
@@ -93,6 +94,7 @@ describe("resolveLucaAppearanceTokens", () => {
     const tokens = resolveLucaAppearanceTokens({ theme: "MASTER_SYSTEM" });
 
     expect(tokens.productTheme).toBe("luca-graphite");
+    expect(tokens.appearanceMode).toBe("dark");
     expect(tokens.accent).toBe("blue");
     expect(tokens.accentPrimary).toBe("#4f8cff");
     expect(tokens.surfaceGlass).not.toContain("#4f8cff");
@@ -103,6 +105,7 @@ describe("resolveLucaAppearanceTokens", () => {
     const tokens = resolveLucaAppearanceTokens({ theme: "TERMINAL" });
 
     expect(tokens.productTheme).toBe("luca-graphite");
+    expect(tokens.appearanceMode).toBe("dark");
     expect(tokens.accent).toBe("green");
     expect(tokens.accentPrimary).toBe("#4fbf7a");
     expect(tokens.surfaceGlass).not.toContain("#4fbf7a");
@@ -151,6 +154,32 @@ describe("resolveLucaAppearanceTokens", () => {
     expect(variables["--luca-background-base"]).toBeTruthy();
     expect(variables["--luca-surface-glass"]).toBeTruthy();
     expect(variables["--luca-shadow-glow"]).toBeTruthy();
+  });
+
+  it("returns variable state so App light-mode follows resolved token mode", () => {
+    const professionalState = buildLucaAppearanceCssVariableState({
+      theme: "PROFESSIONAL",
+      backgroundOpacity: 0.3,
+      backgroundBlur: 40,
+    });
+    const masterState = buildLucaAppearanceCssVariableState({
+      theme: "MASTER_SYSTEM",
+      backgroundOpacity: 0.3,
+      backgroundBlur: 40,
+    });
+    const terminalState = buildLucaAppearanceCssVariableState({
+      theme: "TERMINAL",
+      backgroundOpacity: 0.3,
+      backgroundBlur: 40,
+    });
+
+    expect(professionalState.appearanceMode).toBe("light");
+    expect(professionalState.tokens.appearanceMode).toBe("light");
+    expect(masterState.appearanceMode).toBe("dark");
+    expect(terminalState.appearanceMode).toBe("dark");
+    expect(professionalState.variables["--app-bg-opacity"]).toBe("0.3");
+    expect(professionalState.variables["--app-bg-blur"]).toBe("40px");
+    expect(professionalState.variables["--luca-blur-level"]).toBe("40px");
   });
 
   it("exposes token-only variables consumable by boot and liquid without new runtime state", () => {

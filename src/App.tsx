@@ -49,7 +49,7 @@ import {
 import { Icon } from "./components/ui/Icon";
 import {
   applyLucaAppearanceCssVariables,
-  buildLucaAppearanceCssVariables,
+  buildLucaAppearanceCssVariableState,
 } from "./config/lucaAppearanceTokens";
 
 import LucaBrowser from "./components/LucaBrowser";
@@ -326,7 +326,7 @@ function AppContent() {
       // Dynamic Contrast Engine + premium semantic token variables. Existing
       // --app-* variables remain additive compatibility; --luca-* variables are
       // the new material-aware layer consumed by Boot and LiquidBackground.
-      const cssVariables = buildLucaAppearanceCssVariables({
+      const cssVariableState = buildLucaAppearanceCssVariableState({
         theme: effectiveTheme,
         persona: effectivePersona,
         backgroundOpacity: opacity,
@@ -334,11 +334,14 @@ function AppContent() {
         fontScale,
         fontFamily,
       });
-      applyLucaAppearanceCssVariables(document.documentElement, cssVariables);
+      applyLucaAppearanceCssVariables(
+        document.documentElement,
+        cssVariableState.variables,
+      );
 
-      // Class-based theme toggle for global CSS
-      const isLight = PERSONA_UI_CONFIG[effectiveTheme]?.isLight || false;
-      if (isLight) {
+      // Class-based theme toggle for global CSS follows semantic token mode,
+      // not legacy persona config flags.
+      if (cssVariableState.appearanceMode === "light") {
         document.documentElement.classList.add("light-mode");
       } else {
         document.documentElement.classList.remove("light-mode");

@@ -358,12 +358,18 @@ export const getLucaAppearanceCssVariables = (
   "--luca-blur-level": tokens.blurLevel,
 });
 
-export const buildLucaAppearanceCssVariables = (
+export interface LucaAppearanceCssVariableState {
+  tokens: LucaAppearanceTokens;
+  appearanceMode: ResolvedAppearanceMode;
+  variables: Record<string, string>;
+}
+
+export const buildLucaAppearanceCssVariableState = (
   input: ResolveLucaAppearanceTokensInput & {
     fontScale?: number | null;
     fontFamily?: string | null;
   } = {},
-): Record<string, string> => {
+): LucaAppearanceCssVariableState => {
   const tokens = resolveLucaAppearanceTokens(input);
   const legacyContrast = getDynamicContrast(
     input.theme ?? LUCA_APPEARANCE_DEFAULTS.defaultTheme,
@@ -371,18 +377,29 @@ export const buildLucaAppearanceCssVariables = (
   );
 
   return {
-    "--app-bg-opacity": tokens.backgroundOpacity.toString(),
-    "--app-bg-blur": tokens.blurLevel,
-    "--app-text-main": legacyContrast.text,
-    "--app-text-muted": legacyContrast.textMuted,
-    "--app-border-main": legacyContrast.border,
-    "--app-bg-tint": legacyContrast.bgTint,
-    "--app-bg-main": legacyContrast.bgMain,
-    "--app-font-scale": (input.fontScale ?? 1).toString(),
-    "--app-font-family": input.fontFamily ?? '"Inter", system-ui, sans-serif',
-    ...getLucaAppearanceCssVariables(tokens),
+    tokens,
+    appearanceMode: tokens.appearanceMode,
+    variables: {
+      "--app-bg-opacity": tokens.backgroundOpacity.toString(),
+      "--app-bg-blur": tokens.blurLevel,
+      "--app-text-main": legacyContrast.text,
+      "--app-text-muted": legacyContrast.textMuted,
+      "--app-border-main": legacyContrast.border,
+      "--app-bg-tint": legacyContrast.bgTint,
+      "--app-bg-main": legacyContrast.bgMain,
+      "--app-font-scale": (input.fontScale ?? 1).toString(),
+      "--app-font-family": input.fontFamily ?? '"Inter", system-ui, sans-serif',
+      ...getLucaAppearanceCssVariables(tokens),
+    },
   };
 };
+
+export const buildLucaAppearanceCssVariables = (
+  input: ResolveLucaAppearanceTokensInput & {
+    fontScale?: number | null;
+    fontFamily?: string | null;
+  } = {},
+): Record<string, string> => buildLucaAppearanceCssVariableState(input).variables;
 
 export const applyLucaAppearanceCssVariables = (
   target: HTMLElement,
