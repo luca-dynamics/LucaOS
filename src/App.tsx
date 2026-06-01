@@ -104,6 +104,10 @@ import ActivityPanel from "./components/right-panel/ActivityPanel";
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
 import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
 import { MOBILE_RIGHT_PANEL_LABELS, RIGHT_PANEL_MODES, isRightPanelMode } from "./components/right-panel/rightPanelModel";
+import {
+  mobileNavigationLabel,
+  type MobileNavigationTab,
+} from "./components/layout/mobileNavigationModel";
 
 // --- Mock Initial State ---
 
@@ -907,9 +911,8 @@ function AppContent() {
   }, [setGhostBrowserUrl, setShowGhostBrowser]);
 
   // Mobile Navigation State
-  const [activeMobileTab, setActiveMobileTab] = useState<
-    "SYSTEM" | "TERMINAL" | "DATA"
-  >("TERMINAL");
+  const [activeMobileTab, setActiveMobileTab] =
+    useState<MobileNavigationTab>("TERMINAL");
 
   // NAVIGATION TRACKING: Sync mobile tab state with LucaService for context awareness
   useEffect(() => {
@@ -2960,7 +2963,7 @@ function AppContent() {
             >
               <Icon name="Cpu" size={20} />
               <span className="text-[10px] font-bold tracking-widest">
-                SYSTEM
+                {mobileNavigationLabel("SYSTEM")}
               </span>
             </button>
             <button
@@ -2973,7 +2976,7 @@ function AppContent() {
             >
               <Icon name="Terminal" size={20} />
               <span className="text-[10px] font-bold tracking-widest">
-                TERMINAL
+                {mobileNavigationLabel("TERMINAL")}
               </span>
             </button>
             <button
@@ -2984,7 +2987,7 @@ function AppContent() {
             >
               <Icon name="Database" size={20} />
               <span className="text-[10px] font-bold tracking-widest">
-                DATA
+                {mobileNavigationLabel("DATA")}
               </span>
             </button>
           </nav>
