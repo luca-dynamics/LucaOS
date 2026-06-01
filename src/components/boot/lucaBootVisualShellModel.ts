@@ -168,7 +168,7 @@ export const buildLucaBootReadinessItems = (
     const toolsStatus = normalizeBootStatus(biosStatus.ollama);
     items.push({
       id: "tools",
-      label: "Tools",
+      label: "Model bridge",
       status: toolsStatus,
       statusLabel: getLucaBootStatusCopy(toolsStatus),
       detail: "Local model bridge",

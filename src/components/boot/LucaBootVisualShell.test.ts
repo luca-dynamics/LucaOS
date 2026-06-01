@@ -45,6 +45,12 @@ describe("LucaBootVisualShell readiness model", () => {
     expect(items.find((item) => item.id === "vision")?.statusLabel).toBe(
       getLucaBootStatusCopy("FAIL"),
     );
+    expect(items.find((item) => item.id === "tools")).toMatchObject({
+      label: "Model bridge",
+      detail: "Local model bridge",
+      source: "biosStatus",
+      sourceKey: "ollama",
+    });
   });
 
   it("does not introduce new BootSequence values", () => {
