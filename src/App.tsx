@@ -95,11 +95,7 @@ import { useVoiceEngine } from "./hooks/app/useVoiceEngine";
 import { useChatController } from "./hooks/app/useChatController";
 import { useToolOrchestrator } from "./hooks/app/useToolOrchestrator";
 import { BootSequence } from "./hooks/app/useAppSystem";
-import {
-  getLucaBootDiagnosticCopy,
-  getLucaBootSequenceCopy,
-  getLucaBootStatusCopy,
-} from "./services/runtime/lucaBootCopyModel";
+import { LucaBootVisualShell } from "./components/boot/LucaBootVisualShell";
 import OnboardingFlow from "./components/Onboarding/OnboardingFlow";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
 import { THEME_PALETTE } from "./config/themeColors";
@@ -2178,158 +2174,14 @@ function AppContent() {
 
   // --- BOOT SEQUENCE RENDER ---
   if (bootSequence !== "READY") {
-    const bootCopy = getLucaBootSequenceCopy(bootSequence);
-    const bootLabels = {
-      identity: getLucaBootDiagnosticCopy("biosIdentity"),
-      initializingHardware: getLucaBootDiagnosticCopy("initializingHardware"),
-      checkingMemoryBanks: getLucaBootDiagnosticCopy("checkingMemoryBanks"),
-      mountingLocalCore: getLucaBootDiagnosticCopy("mountingLocalCore"),
-      systemInitialization: getLucaBootDiagnosticCopy("systemInitialization"),
-      cortexCore: getLucaBootDiagnosticCopy("cortexCore"),
-      visualCortex: getLucaBootDiagnosticCopy("visualCortex"),
-      audioReceptors: getLucaBootDiagnosticCopy("audioReceptors"),
-      securityProtocols: getLucaBootDiagnosticCopy("securityProtocols"),
-      loadingLucaOs: getLucaBootDiagnosticCopy("loadingLucaOs"),
-    };
-
     return (
       <div
-        className="h-screen w-full bg-transparent flex flex-col items-center justify-center font-mono cursor-default select-none draggable transition-all duration-700 relative overflow-hidden"
+        className="h-screen w-full bg-transparent cursor-default select-none draggable transition-all duration-700 relative overflow-hidden"
         style={{ color: "var(--app-text-main)" }}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
-        {/* BIOS/KERNEL TERMINAL - Only show if NOT onboarding */}
-        {bootSequence !== "ONBOARDING" && (
-          <div className="max-w-md w-full space-y-4 p-8 relative z-10">
-            <div
-              className="flex justify-between items-center border-b pb-2 mb-4"
-              style={{ borderColor: "var(--app-border-main)" }}
-            >
-              <div className="flex flex-col">
-                <span className="text-xs tracking-widest">
-                  {bootCopy.standardLabel}
-                </span>
-                <span className="text-[10px] tracking-widest opacity-50">
-                  {bootLabels.identity.tacticalLabel}
-                </span>
-              </div>
-              <Icon name="Activity" size={14} className="animate-pulse" />
-            </div>
-
-            {bootSequence === "INIT" && (
-              <div className="space-y-1 text-xs">
-                <div className="opacity-50">
-                  &gt; {bootLabels.initializingHardware.standardLabel}
-                </div>
-                <div>
-                  &gt; {bootLabels.checkingMemoryBanks.standardLabel}: {getLucaBootStatusCopy("OK")}
-                </div>
-                <div>
-                  &gt; {bootLabels.mountingLocalCore.standardLabel}: {getLucaBootStatusCopy("PENDING")}
-                </div>
-              </div>
-            )}
-
-            {bootSequence === "BIOS" && (
-              <div className="space-y-1 text-xs font-mono">
-                <div className="flex items-center gap-2">
-                  <span>&gt; {bootLabels.systemInitialization.standardLabel}:</span>
-                  <span
-                    className={
-                      biosStatus.server === "OK"
-                        ? "text-green-500"
-                        : biosStatus.server === "FAIL"
-                          ? "text-red-500 animate-pulse"
-                          : "text-green-500/50"
-                    }
-                  >
-                    {biosStatus.server === "OK"
-                      ? getLucaBootStatusCopy("OK")
-                      : biosStatus.server === "FAIL"
-                        ? getLucaBootStatusCopy("FAIL")
-                        : getLucaBootStatusCopy("PENDING")}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>&gt; {bootLabels.cortexCore.standardLabel}:</span>
-                  <span
-                    className={
-                      biosStatus.core === "OK"
-                        ? "text-green-500"
-                        : biosStatus.core === "FAIL"
-                          ? "text-red-500 animate-pulse"
-                          : "text-green-500/50"
-                    }
-                  >
-                    {biosStatus.core === "OK"
-                      ? getLucaBootStatusCopy("OK")
-                      : biosStatus.core === "FAIL"
-                        ? getLucaBootStatusCopy("FAIL") // Retain FAIL logic for actual failures
-                        : getLucaBootStatusCopy("PENDING")}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>&gt; {bootLabels.visualCortex.standardLabel}:</span>
-                  <span
-                    className={
-                      biosStatus.vision === "OK"
-                        ? "text-green-500"
-                        : biosStatus.vision === "FAIL"
-                          ? "text-red-500 animate-pulse"
-                          : "text-green-500/50"
-                    }
-                  >
-                    {biosStatus.vision === "OK"
-                      ? getLucaBootStatusCopy("OK")
-                      : biosStatus.vision === "FAIL"
-                        ? getLucaBootStatusCopy("FAIL")
-                        : getLucaBootStatusCopy("PENDING")}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>&gt; {bootLabels.audioReceptors.standardLabel}:</span>
-                  <span
-                    className={
-                      biosStatus.audio === "OK"
-                        ? "text-green-500"
-                        : biosStatus.audio === "FAIL"
-                          ? "text-red-500 animate-pulse"
-                          : "text-green-500/50"
-                    }
-                  >
-                    {biosStatus.audio === "OK"
-                      ? getLucaBootStatusCopy("OK")
-                      : biosStatus.audio === "FAIL"
-                        ? getLucaBootStatusCopy("FAIL")
-                        : getLucaBootStatusCopy("PENDING")}
-                  </span>
-                </div>
-                <div className="text-rq-red animate-pulse mt-2">
-                  &gt; {bootLabels.securityProtocols.standardLabel}
-                </div>
-              </div>
-            )}
-
-            {bootSequence === "KERNEL" && (
-              <div className="flex flex-col items-center justify-center h-32">
-                <div
-                  className="w-16 h-16 border-4 rounded-full border-t-transparent animate-spin mb-4"
-                  style={{
-                    borderColor: theme.hex,
-                    borderTopColor: "transparent",
-                  }}
-                ></div>
-                <div className="text-sm font-bold tracking-[0.5em] animate-pulse">
-                  {bootLabels.loadingLucaOs.standardLabel}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {bootSequence === "ONBOARDING" && (
-          <div className="absolute inset-0 z-10" style={{}}>
+        {bootSequence === "ONBOARDING" ? (
+          <div className="absolute inset-0 z-10">
             <OnboardingFlow
               theme={theme}
               onComplete={(profile, mode) => {
@@ -2350,6 +2202,12 @@ function AppContent() {
               }}
             />
           </div>
+        ) : (
+          <LucaBootVisualShell
+            bootSequence={bootSequence}
+            biosStatus={biosStatus}
+            theme={theme}
+          />
         )}
       </div>
     );
