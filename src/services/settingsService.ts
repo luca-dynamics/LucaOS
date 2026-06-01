@@ -367,6 +367,7 @@ const STORAGE_KEY = "LUCA_SETTINGS_V1";
 class SettingsService extends EventEmitter {
   private settings: LucaSettings;
   private localDiscoveryOverride: boolean = false;
+  private storedSettingsDetected: boolean = false;
 
   constructor() {
     super();
@@ -390,6 +391,7 @@ class SettingsService extends EventEmitter {
       let parsed: any = {};
 
       if (stored) {
+        this.storedSettingsDetected = true;
         parsed = JSON.parse(stored);
         // Deep merge with defaults to ensure new keys exist
         merged = this.deepMerge(DEFAULT_SETTINGS, parsed);
@@ -643,6 +645,7 @@ class SettingsService extends EventEmitter {
     } catch (e) {
       console.warn("[SETTINGS] Failed to load settings, using defaults", e);
     }
+    this.storedSettingsDetected = false;
     const defaults = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
     console.log(
       "[SETTINGS] Loaded Defaults (No Storage Found). WakeWord=",
@@ -673,6 +676,10 @@ class SettingsService extends EventEmitter {
 
   public getSettings(): LucaSettings {
     return this.settings;
+  }
+
+  public hasStoredSettings(): boolean {
+    return this.storedSettingsDetected;
   }
 
   public get<K extends keyof LucaSettings>(section: K): LucaSettings[K] {
@@ -722,6 +729,7 @@ class SettingsService extends EventEmitter {
 
       if (typeof window !== "undefined" && window.localStorage) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(savedSettings));
+        this.storedSettingsDetected = true;
       }
 
       console.log("[SETTINGS] Saved to Storage (Sensitive data encrypted).");

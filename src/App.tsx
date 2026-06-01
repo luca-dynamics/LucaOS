@@ -296,7 +296,12 @@ function AppContent() {
       const newPersona = settings?.general?.persona;
       const newTheme = settings?.general?.theme;
       const effectivePersona = newPersona ?? "ASSISTANT";
-      const effectiveTheme = (newTheme ?? "PROFESSIONAL") as UIThemeId;
+      const hasStoredSettings = settingsService.hasStoredSettings?.() ?? true;
+      // Preserve saved themes exactly, but let true first-run/no-storage boots
+      // resolve through the system-aware Silver/Graphite appearance policy.
+      const effectiveTheme = hasStoredSettings
+        ? ((newTheme ?? "PROFESSIONAL") as UIThemeId)
+        : undefined;
 
       if (newPersona) {
         setPersona(normalizePersonaValue(newPersona));
