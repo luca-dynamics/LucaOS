@@ -304,7 +304,7 @@ export const settingsExperienceMap = [
     id: "mcp-bridge",
     currentLabel: "MCP Bridge",
     icon: "Plug",
-    availability: ["desktop"],
+    availability: ["desktop", "mobile"],
     currentComponent: "SettingsMCPBridgeTab",
     controls:
       "Inbound MCP skill/server import, outbound tool/server export, custom server setup, marketplace servers, commands, environment variables, and connectivity bridge controls.",
@@ -312,11 +312,11 @@ export const settingsExperienceMap = [
     classificationLabels: [
       "tactical-user",
       "advanced-feature",
-      "experimental",
       "privacy-sensitive",
       "permission-sensitive",
       "runtime-sensitive",
       "needs-product-language-review",
+      "needs-mobile-layout-review",
     ],
     sensitiveCapabilityImplications: [
       "tool import/export",
@@ -360,7 +360,7 @@ export const settingsExperienceMap = [
     id: "connectors",
     currentLabel: "Connectors",
     icon: "Link",
-    availability: ["desktop"],
+    availability: ["desktop", "mobile"],
     currentComponent: "SettingsConnectorsTab",
     controls:
       "Social and workspace account connection matrix for WhatsApp, Telegram, Google Workspace, X/Twitter, Instagram, LinkedIn, YouTube, Discord, and WeChat via browser automation/session persistence.",
@@ -384,7 +384,7 @@ export const settingsExperienceMap = [
     languageFit: "technical",
     futurePlacement: "advanced-features",
     auditNotes:
-      "Connectors has high value but reads like an automation console; desktop-only availability should be clarified and mobile strategy needs review.",
+      "Connectors has high value but reads like an automation console; mobile Advanced Settings should expose it while continued responsive layout review clarifies the mobile experience.",
   },
   {
     id: "data",

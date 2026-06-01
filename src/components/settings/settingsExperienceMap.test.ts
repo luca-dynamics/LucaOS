@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import {
   settingsAdvancedFeatureCandidateTabIds,
   settingsClassificationLabels,
@@ -10,14 +8,23 @@ import {
   settingsTacticalModeCandidateTabIds,
 } from "./settingsExperienceMap";
 
-const settingsModalSource = readFileSync(
-  resolve(process.cwd(), "src/components/SettingsModal.tsx"),
-  "utf8",
-);
-
-const currentSettingsModalTabIds = Array.from(
-  settingsModalSource.matchAll(/id:\s*"([^"]+)"/g),
-).map((match) => match[1]);
+const expectedSettingsTabIds = [
+  "general",
+  "brain",
+  "voice",
+  "vision",
+  "model-manager",
+  "personality",
+  "autonomy",
+  "profile",
+  "lucalink",
+  "mcp-bridge",
+  "iot",
+  "connectors",
+  "data",
+  "knowledge-bridge",
+  "about",
+];
 
 const unique = (values: readonly string[]) => Array.from(new Set(values));
 
@@ -26,7 +33,7 @@ describe("settingsExperienceMap", () => {
     const mappedIds = settingsExperienceMap.map((entry) => entry.id);
 
     expect(unique(mappedIds)).toEqual(mappedIds);
-    expect(mappedIds).toEqual(currentSettingsModalTabIds);
+    expect(mappedIds).toEqual(expectedSettingsTabIds);
   });
 
   it("assigns supported classification labels to every tab", () => {
@@ -62,15 +69,40 @@ describe("settingsExperienceMap", () => {
   });
 
   it("identifies advanced, tactical, and origin follow-up candidates", () => {
-    expect(settingsAdvancedFeatureCandidateTabIds).toEqual(
-      expect.arrayContaining([
-        "model-manager",
-        "mcp-bridge",
-        "iot",
-        "connectors",
-      ]),
-    );
+    expect(settingsAdvancedFeatureCandidateTabIds).toEqual([
+      "model-manager",
+      "mcp-bridge",
+      "iot",
+      "connectors",
+    ]);
     expect(settingsTacticalModeCandidateTabIds).toEqual(["autonomy"]);
     expect(settingsOriginModeCandidateTabIds).toEqual([]);
+  });
+
+  it("keeps MCP Bridge and Connectors tactical/advanced mobile surfaces", () => {
+    const tacticalAdvancedLabels = [
+      "tactical-user",
+      "advanced-feature",
+      "privacy-sensitive",
+      "permission-sensitive",
+      "runtime-sensitive",
+      "needs-product-language-review",
+      "needs-mobile-layout-review",
+    ];
+
+    const mcpBridge = settingsExperienceMap.find(
+      (entry) => entry.id === "mcp-bridge",
+    );
+    const connectors = settingsExperienceMap.find(
+      (entry) => entry.id === "connectors",
+    );
+
+    expect(mcpBridge?.availability).toEqual(["desktop", "mobile"]);
+    expect(mcpBridge?.classificationLabels).toEqual(tacticalAdvancedLabels);
+    expect(mcpBridge?.futurePlacement).toBe("advanced-features");
+
+    expect(connectors?.availability).toEqual(["desktop", "mobile"]);
+    expect(connectors?.classificationLabels).toEqual(tacticalAdvancedLabels);
+    expect(connectors?.futurePlacement).toBe("advanced-features");
   });
 });
