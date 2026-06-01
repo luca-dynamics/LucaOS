@@ -81,9 +81,11 @@ expired trust denies. An explicit `requiresApprovalFor` entry forces approval.
 deny; expired trust → deny; role allowed for the lane → else deny; then every
 required permission must evaluate (deny propagates, approval propagates,
 otherwise allow). Notable defaults: `memory`/`tool`/`artifact`/`model` are
-origin/admin/execution only; `safety` is origin/admin only; `sensor` is
-sensor/companion/embodied with the sensor permissions granted; `conversation`/
-`presence`/`identity` are open to all roles.
+origin/admin/execution only; `safety` is origin role or admin/origin trust;
+`sensor` is sensor/companion/embodied with the sensor permissions granted;
+`conversation`/`presence` are open to all roles; the `identity` lane (host
+manifests, public keys, role grants, trust state) admits non-guest roles but
+returns `requires-origin-approval` for a guest host.
 
 ## Not in this PR
 

@@ -307,6 +307,37 @@ describe("sync lane gating", () => {
     expect(result.decision).toBe("deny");
     expect(result.reason).toBe("unknown-lane");
   });
+
+  it("requires Origin approval for a guest in the identity lane", () => {
+    const guest = makeManifest("guest", ["chat.send", "chat.receive"]);
+    const result = canHostParticipateInLane(guest, "identity", { now: NOW });
+    expect(result.decision).not.toBe("allow");
+    expect(result.decision).toBe("requires-origin-approval");
+    expect(result.reason).toBe("guest-restricted");
+  });
+
+  it("lets non-guest hosts participate in the identity lane", () => {
+    const origin = makeManifest("origin", ["chat.send"]);
+    const companion = makeManifest("companion", ["chat.send"], {
+      trustLevel: "trusted",
+    });
+    expect(
+      canHostParticipateInLane(origin, "identity", { now: NOW }).decision,
+    ).toBe("allow");
+    expect(
+      canHostParticipateInLane(companion, "identity", { now: NOW }).decision,
+    ).toBe("allow");
+  });
+
+  it("keeps presence and conversation open to guests", () => {
+    const guest = makeManifest("guest", ["chat.send", "chat.receive"]);
+    expect(
+      canHostParticipateInLane(guest, "presence", { now: NOW }).decision,
+    ).toBe("allow");
+    expect(
+      canHostParticipateInLane(guest, "conversation", { now: NOW }).decision,
+    ).toBe("allow");
+  });
 });
 
 describe("manifest defaults", () => {

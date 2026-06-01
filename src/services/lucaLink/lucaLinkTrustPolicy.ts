@@ -555,6 +555,18 @@ export function canHostParticipateInLane(
     return laneEvaluation("deny", "role-not-allowed", lane.id, []);
   }
 
+  // The identity lane carries host manifests, public keys, role grants, and
+  // trust state. A guest host must not freely participate; it requires Origin
+  // approval (guests may still need limited identity/bootstrap metadata later).
+  if (lane.id === "identity" && manifest.hostRole === "guest") {
+    return laneEvaluation(
+      "requires-origin-approval",
+      "guest-restricted",
+      lane.id,
+      [],
+    );
+  }
+
   // Evaluate every required permission; aggregate the strictest outcome.
   const permissionResults = lane.requiredPermissions.map((perm) =>
     evaluateHostPermission(manifest, perm, options),
