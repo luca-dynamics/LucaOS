@@ -9,6 +9,7 @@ import { Icon } from "../ui/Icon";
 import { LiquidBackground } from "../visual/LiquidBackground";
 import {
   buildLucaBootReadinessItems,
+  getLucaBootLaunchIdentityPresence,
   lucaBootProgressBySequence,
   resolveLucaBootReadinessTone,
   type BiosStatus,
@@ -42,6 +43,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
   const identityCopy = getLucaBootDiagnosticCopy("biosIdentity");
   const kernelCopy = getLucaBootDiagnosticCopy("loadingLucaOs");
   const readinessItems = buildLucaBootReadinessItems(bootSequence, biosStatus);
+  const launchIdentity = getLucaBootLaunchIdentityPresence(bootSequence);
   const progress =
     bootSequence === "READY" || bootSequence === "ONBOARDING"
       ? 100
@@ -74,7 +76,39 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           color: "var(--app-text-main)",
         }}
       >
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-3">
+          <div
+            className="relative flex h-14 w-14 items-center justify-center rounded-2xl border p-2 backdrop-blur-xl transition-all duration-700 sm:h-16 sm:w-16"
+            style={{
+              background:
+                "color-mix(in srgb, var(--app-bg-tint) 68%, transparent)",
+              borderColor: "var(--app-border-main)",
+              boxShadow: `0 0 36px ${glowSoft}, inset 0 1px 0 color-mix(in srgb, var(--app-text-main) 12%, transparent)`,
+              opacity: launchIdentity.markOpacity,
+              transform:
+                launchIdentity.emphasis === "launch"
+                  ? "scale(1)"
+                  : "scale(0.88)",
+            }}
+            aria-hidden="true"
+          >
+            <div
+              className="absolute inset-0 rounded-2xl blur-xl animate-pulse"
+              style={{
+                animationDuration: "5.6s",
+                background: `radial-gradient(circle, ${glowSoft} 0%, transparent 70%)`,
+              }}
+            />
+            <img
+              src={launchIdentity.assetSrc}
+              alt=""
+              className="relative h-full w-full object-contain animate-pulse"
+              style={{
+                animationDuration: "6s",
+                filter: `drop-shadow(0 0 18px ${glowSoft})`,
+              }}
+            />
+          </div>
           <div
             className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.32em]"
             style={{
@@ -83,7 +117,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             }}
           >
             <Icon name="Sparkles" size={14} color={glowColor} />
-            LucaOS
+            {launchIdentity.label}
           </div>
           <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
             Luca is waking up
@@ -92,7 +126,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             className="max-w-md text-sm sm:text-base"
             style={{ color: "var(--app-text-muted)" }}
           >
-            Personal Autonomous AI OS
+            {launchIdentity.subtitle}
           </p>
         </div>
 
@@ -131,6 +165,17 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
               boxShadow: `0 0 48px ${glowOrb}, inset 0 0 28px color-mix(in srgb, var(--app-text-main) 16%, transparent)`,
             }}
           >
+            <img
+              src={launchIdentity.assetSrc}
+              alt=""
+              className="absolute h-[68%] w-[68%] object-contain animate-pulse"
+              style={{
+                animationDuration: "6.2s",
+                filter: `drop-shadow(0 0 18px ${glowSoft})`,
+                opacity: launchIdentity.orbPresenceOpacity,
+              }}
+              aria-hidden="true"
+            />
             <div
               className="absolute left-6 top-5 h-10 w-14 rounded-full blur-md sm:left-8 sm:top-7 sm:h-12 sm:w-16"
               style={{

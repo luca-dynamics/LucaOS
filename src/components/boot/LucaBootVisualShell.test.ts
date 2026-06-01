@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import * as bootVisualShellModel from "./lucaBootVisualShellModel";
-import { buildLucaBootReadinessItems } from "./lucaBootVisualShellModel";
+import {
+  LUCA_BOOT_IDENTITY_ASSET_SRC,
+  buildLucaBootReadinessItems,
+  getLucaBootLaunchIdentityPresence,
+} from "./lucaBootVisualShellModel";
 import { LUCA_BOOT_SEQUENCE_STATES } from "../../services/runtime/lucaBootExperienceMap";
 import {
   getLucaBootDiagnosticCopy,
@@ -102,9 +106,35 @@ describe("LucaBootVisualShell readiness model", () => {
     ).not.toContain(getLucaBootDiagnosticCopy("biosIdentity").tacticalLabel);
   });
 
+  it("keeps launch identity presence visual-only and tied to existing boot sequences", () => {
+    const launchPresence = getLucaBootLaunchIdentityPresence("INIT");
+    const readinessPresence = getLucaBootLaunchIdentityPresence("BIOS");
+
+    expect(launchPresence).toMatchObject({
+      label: "LucaOS",
+      subtitle: "Personal Autonomous AI OS",
+      assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
+      emphasis: "launch",
+      visualOnly: true,
+      source: "existing-public-icon-asset",
+      introducesBootPhase: false,
+      usesHeavyHologramRuntime: false,
+    });
+    expect(readinessPresence).toMatchObject({
+      assetSrc: "/icon.png",
+      emphasis: "supporting",
+      visualOnly: true,
+      introducesBootPhase: false,
+      usesHeavyHologramRuntime: false,
+    });
+    expect(launchPresence.markOpacity).toBeGreaterThan(
+      readinessPresence.markOpacity,
+    );
+  });
+
   it("exposes no execution surfaces", () => {
     expect(Object.keys(bootVisualShellModel).join(" ")).not.toMatch(
-      /execute|runTool|browser|automation|screenshot|ocr|fileAccess|messaging|wireless/i,
+      /execute|runTool|browser|automation|screenshot|ocr|fileAccess|messaging|wireless|HologramScene|setTimeout|setInterval/i,
     );
   });
 });

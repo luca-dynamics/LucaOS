@@ -14,6 +14,40 @@ export type BiosStatus = Partial<
 
 export type ReadinessTone = "ready" | "pending" | "attention";
 
+export const LUCA_BOOT_IDENTITY_ASSET_SRC = "/icon.png";
+
+export interface LucaBootLaunchIdentityPresence {
+  label: "LucaOS";
+  subtitle: "Personal Autonomous AI OS";
+  assetSrc: typeof LUCA_BOOT_IDENTITY_ASSET_SRC;
+  emphasis: "launch" | "supporting";
+  markOpacity: number;
+  orbPresenceOpacity: number;
+  visualOnly: true;
+  source: "existing-public-icon-asset";
+  introducesBootPhase: false;
+  usesHeavyHologramRuntime: false;
+}
+
+export const getLucaBootLaunchIdentityPresence = (
+  bootSequence: BootSequence,
+): LucaBootLaunchIdentityPresence => {
+  const isLaunchEmphasis = bootSequence === "INIT";
+
+  return {
+    label: "LucaOS",
+    subtitle: "Personal Autonomous AI OS",
+    assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
+    emphasis: isLaunchEmphasis ? "launch" : "supporting",
+    markOpacity: isLaunchEmphasis ? 0.92 : 0.62,
+    orbPresenceOpacity: isLaunchEmphasis ? 0.34 : 0.22,
+    visualOnly: true,
+    source: "existing-public-icon-asset",
+    introducesBootPhase: false,
+    usesHeavyHologramRuntime: false,
+  };
+};
+
 export interface LucaBootReadinessItem {
   id:
     | "memory"
