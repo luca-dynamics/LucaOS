@@ -163,6 +163,129 @@ describe("LucaLink sync protocol envelopes", () => {
       "envelope is expired",
     );
   });
+
+  it("rejects invalid routing priority values", () => {
+    const created = envelope("conversation", {
+      kind: "message",
+      text: "hello",
+    });
+    const validation = validateLucaLinkEnvelope({
+      ...created,
+      routing: { ...created.routing, priority: "urgent" },
+    });
+
+    expect(validation.valid).toBe(false);
+    expect(validation.errors).toContain(
+      "routing.priority must be low, normal, high, or critical",
+    );
+  });
+
+  it("rejects invalid routing delivery values", () => {
+    const created = envelope("conversation", {
+      kind: "message",
+      text: "hello",
+    });
+    const validation = validateLucaLinkEnvelope({
+      ...created,
+      routing: { ...created.routing, delivery: "broadcast" },
+    });
+
+    expect(validation.valid).toBe(false);
+    expect(validation.errors).toContain(
+      "routing.delivery must be direct, relay, local, or store-and-forward",
+    );
+  });
+
+  it("rejects invalid routing retryPolicy values", () => {
+    const created = envelope("conversation", {
+      kind: "message",
+      text: "hello",
+    });
+    const validation = validateLucaLinkEnvelope({
+      ...created,
+      routing: { ...created.routing, retryPolicy: "forever" },
+    });
+
+    expect(validation.valid).toBe(false);
+    expect(validation.errors).toContain(
+      "routing.retryPolicy must be none, standard, or persistent",
+    );
+  });
+
+  it("rejects invalid security boolean fields", () => {
+    const created = envelope("conversation", {
+      kind: "message",
+      text: "hello",
+    });
+    const validation = validateLucaLinkEnvelope({
+      ...created,
+      security: {
+        ...created.security,
+        encrypted: "yes",
+        signed: 1,
+        requiresAck: "no",
+      },
+    });
+
+    expect(validation.valid).toBe(false);
+    expect(validation.errors).toEqual(
+      expect.arrayContaining([
+        "security.encrypted must be boolean",
+        "security.signed must be boolean",
+        "security.requiresAck must be boolean",
+      ]),
+    );
+  });
+
+  it("rejects invalid security trustLevelRequired values", () => {
+    const created = envelope("conversation", {
+      kind: "message",
+      text: "hello",
+    });
+    const validation = validateLucaLinkEnvelope({
+      ...created,
+      security: { ...created.security, trustLevelRequired: "super-admin" },
+    });
+
+    expect(validation.valid).toBe(false);
+    expect(validation.errors).toContain(
+      "security.trustLevelRequired must be a known trust level",
+    );
+  });
+
+  it("rejects invalid security expiresAt values", () => {
+    const created = envelope("conversation", {
+      kind: "message",
+      text: "hello",
+    });
+    const validation = validateLucaLinkEnvelope({
+      ...created,
+      security: { ...created.security, expiresAt: Number.NaN },
+    });
+
+    expect(validation.valid).toBe(false);
+    expect(validation.errors).toContain(
+      "security.expiresAt must be a finite number",
+    );
+  });
+
+  it("valid factory-created envelopes still pass deep routing and security validation", () => {
+    const created = createLucaLinkEnvelope({
+      lane: "tool",
+      type: "tool-request",
+      sourceDeviceId: "execution-device",
+      targetDeviceId: "origin",
+      timestamp: NOW,
+      security: { trustLevelRequired: "admin", expiresAt: NOW + 10_000 },
+      payload: { kind: "tool-request", permission: "shell.execute" },
+    });
+
+    expect(validateLucaLinkEnvelope(created)).toEqual({
+      valid: true,
+      errors: [],
+      warnings: [],
+    });
+  });
 });
 
 describe("LucaLink lane payload mapping", () => {

@@ -9,7 +9,10 @@
  * into LucaLinkEnvelope instances without replacing those live shapes here.
  */
 
-import { lucaLinkSyncLanes } from "./lucaLinkArchitectureMap";
+import {
+  lucaLinkSyncLanes,
+  lucaLinkTrustLevels,
+} from "./lucaLinkArchitectureMap";
 import type {
   LucaLinkPermissionCategory,
   LucaLinkSyncLane,
@@ -312,6 +315,30 @@ export interface LucaLinkEnvelopePolicyEvaluation {
 const LANE_DESCRIPTORS: ReadonlyMap<LucaLinkSyncLaneId, LucaLinkSyncLane> =
   new Map(lucaLinkSyncLanes.map((lane) => [lane.id, lane]));
 
+const TRUST_LEVEL_IDS: ReadonlySet<LucaLinkTrustLevelId> = new Set(
+  lucaLinkTrustLevels.map((level) => level.id),
+);
+
+const PRIORITY_VALUES: ReadonlySet<LucaLinkEnvelopePriority> = new Set([
+  "low",
+  "normal",
+  "high",
+  "critical",
+]);
+
+const DELIVERY_VALUES: ReadonlySet<LucaLinkEnvelopeDelivery> = new Set([
+  "direct",
+  "relay",
+  "local",
+  "store-and-forward",
+]);
+
+const RETRY_POLICY_VALUES: ReadonlySet<LucaLinkEnvelopeRetryPolicy> = new Set([
+  "none",
+  "standard",
+  "persistent",
+]);
+
 const ACK_REQUIRED_LANES: ReadonlySet<LucaLinkSyncLaneId> = new Set([
   "identity",
   "memory",
@@ -550,9 +577,58 @@ export function validateLucaLinkEnvelope(
   }
   if (!candidate.security || typeof candidate.security !== "object") {
     errors.push("security is required");
+  } else {
+    if (typeof candidate.security.encrypted !== "boolean") {
+      errors.push("security.encrypted must be boolean");
+    }
+    if (typeof candidate.security.signed !== "boolean") {
+      errors.push("security.signed must be boolean");
+    }
+    if (typeof candidate.security.requiresAck !== "boolean") {
+      errors.push("security.requiresAck must be boolean");
+    }
+    if (
+      candidate.security.trustLevelRequired !== undefined &&
+      !TRUST_LEVEL_IDS.has(
+        candidate.security.trustLevelRequired as LucaLinkTrustLevelId,
+      )
+    ) {
+      errors.push("security.trustLevelRequired must be a known trust level");
+    }
+    if (
+      candidate.security.expiresAt !== undefined &&
+      (typeof candidate.security.expiresAt !== "number" ||
+        !Number.isFinite(candidate.security.expiresAt))
+    ) {
+      errors.push("security.expiresAt must be a finite number");
+    }
   }
   if (!candidate.routing || typeof candidate.routing !== "object") {
     errors.push("routing is required");
+  } else {
+    if (
+      !PRIORITY_VALUES.has(
+        candidate.routing.priority as LucaLinkEnvelopePriority,
+      )
+    ) {
+      errors.push("routing.priority must be low, normal, high, or critical");
+    }
+    if (
+      !DELIVERY_VALUES.has(
+        candidate.routing.delivery as LucaLinkEnvelopeDelivery,
+      )
+    ) {
+      errors.push(
+        "routing.delivery must be direct, relay, local, or store-and-forward",
+      );
+    }
+    if (
+      !RETRY_POLICY_VALUES.has(
+        candidate.routing.retryPolicy as LucaLinkEnvelopeRetryPolicy,
+      )
+    ) {
+      errors.push("routing.retryPolicy must be none, standard, or persistent");
+    }
   }
   if (candidate.payload === undefined || candidate.payload === null) {
     errors.push("payload is required");
