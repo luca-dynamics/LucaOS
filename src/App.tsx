@@ -47,7 +47,10 @@ import {
 } from "./types";
 
 import { Icon } from "./components/ui/Icon";
-import { getDynamicContrast } from "./config/themeColors";
+import {
+  applyLucaAppearanceCssVariables,
+  buildLucaAppearanceCssVariableState,
+} from "./config/lucaAppearanceTokens";
 
 import LucaBrowser from "./components/LucaBrowser";
 import { watchGateway } from "./services/watchGateway";
@@ -292,6 +295,8 @@ function AppContent() {
       // Persona & Theme Selection — always apply latest from settings (React deduplicates no-ops)
       const newPersona = settings?.general?.persona;
       const newTheme = settings?.general?.theme;
+      const effectivePersona = newPersona ?? "ASSISTANT";
+      const effectiveTheme = (newTheme ?? "PROFESSIONAL") as UIThemeId;
 
       if (newPersona) {
         setPersona(normalizePersonaValue(newPersona));
@@ -314,32 +319,29 @@ function AppContent() {
       setBackgroundOpacity(opacity);
       setBackgroundBlur(blur);
 
-      document.documentElement.style.setProperty(
-        "--app-bg-opacity",
-        opacity.toString(),
-      );
-      document.documentElement.style.setProperty("--app-bg-blur", `${blur}px`);
-
-      // Dynamic Contrast Engine Initialization (Global)
-      if (newTheme) {
-        const contrast = getDynamicContrast(newTheme as UIThemeId, opacity);
-        document.documentElement.style.setProperty("--app-text-main", contrast.text);
-        document.documentElement.style.setProperty("--app-text-muted", contrast.textMuted);
-        document.documentElement.style.setProperty("--app-border-main", contrast.border);
-        document.documentElement.style.setProperty("--app-bg-tint", contrast.bgTint);
-        document.documentElement.style.setProperty("--app-bg-main", (contrast as any).bgMain);
-      }
-
       // Unified Typography Engine
       const fontScale = settings?.general?.fontScale ?? 1.0;
       const fontFamily = settings?.general?.fontFamily ?? '"Inter", system-ui, sans-serif';
 
-      document.documentElement.style.setProperty("--app-font-scale", fontScale.toString());
-      document.documentElement.style.setProperty("--app-font-family", fontFamily);
+      // Dynamic Contrast Engine + premium semantic token variables. Existing
+      // --app-* variables remain additive compatibility; --luca-* variables are
+      // the new material-aware layer consumed by Boot and LiquidBackground.
+      const cssVariableState = buildLucaAppearanceCssVariableState({
+        theme: effectiveTheme,
+        persona: effectivePersona,
+        backgroundOpacity: opacity,
+        backgroundBlur: blur,
+        fontScale,
+        fontFamily,
+      });
+      applyLucaAppearanceCssVariables(
+        document.documentElement,
+        cssVariableState.variables,
+      );
 
-      // Class-based theme toggle for global CSS
-      const isLight = PERSONA_UI_CONFIG[newTheme as UIThemeId]?.isLight || false;
-      if (isLight) {
+      // Class-based theme toggle for global CSS follows semantic token mode,
+      // not legacy persona config flags.
+      if (cssVariableState.appearanceMode === "light") {
         document.documentElement.classList.add("light-mode");
       } else {
         document.documentElement.classList.remove("light-mode");

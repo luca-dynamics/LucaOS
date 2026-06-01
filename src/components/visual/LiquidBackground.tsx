@@ -25,8 +25,14 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
   className = "",
 }) => {
   const hex = color || theme?.hex || "#00ffff";
+  const fallbackAccentSoft = setHexAlpha(hex, 0.16);
   const resolvedOpacity =
     typeof opacity === "number" ? opacity : "var(--app-bg-opacity, 0.3)";
+  const tokenBackgroundBase = "var(--luca-background-base, var(--app-bg-main, #121212))";
+  const tokenBackgroundLiquid = "var(--luca-background-liquid, transparent)";
+  const tokenAccentSoft = `var(--luca-accent-soft, ${fallbackAccentSoft})`;
+  const tokenShadowSoft = "var(--luca-shadow-soft, 0 24px 80px rgba(0, 0, 0, 0.22))";
+  const tokenBlurLevel = "var(--luca-blur-level, var(--app-bg-blur, 40px))";
   const isLight =
     theme?.themeName?.toLowerCase() === "lightcream" ||
     theme?.themeName?.toLowerCase() === "lucagent" ||
@@ -71,12 +77,8 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
         className="absolute inset-0 transition-all duration-1000"
         style={{
           background: isWeb
-            ? webBackground
-            : isLight
-              ? isLightCream
-                ? `color-mix(in srgb, #E5E1CD calc(min(100%, (${resolvedOpacity}) * 100% + max(0%, ((${resolvedOpacity}) - 0.95) * 2000%))), transparent)`
-                : `color-mix(in srgb, #F7F8FB calc(min(100%, (${resolvedOpacity}) * 100% + max(0%, ((${resolvedOpacity}) - 0.95) * 2000%))), transparent)`
-              : `color-mix(in srgb, #121212 calc(min(100%, (${resolvedOpacity}) * 100% + max(0%, ((${resolvedOpacity}) - 0.95) * 2000%))), transparent)`,
+            ? `var(--luca-background-liquid, ${webBackground})`
+            : `color-mix(in srgb, ${tokenBackgroundBase} calc(min(100%, (${resolvedOpacity}) * 100% + max(0%, ((${resolvedOpacity}) - 0.95) * 2000%))), transparent)`,
           filter: "none",
           transform: "translateZ(0)",
           willChange: "opacity",
@@ -87,10 +89,9 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
         <div
           className={`absolute inset-0 transition-all duration-1000 ${isThinking ? "animate-pulse" : ""}`}
           style={{
-            background: isLight
-              ? `radial-gradient(ellipse at 50% -10%, ${setHexAlpha(hex, 0.3 + (amplitude * 0.2))} 0%, transparent 60%)`
-              : `radial-gradient(ellipse at 50% 20%, ${setHexAlpha(hex, 0.3 + (amplitude * 0.4))} 0%, transparent 60%), radial-gradient(ellipse at 85% 85%, ${setHexAlpha(hex, 0.2 + (isSpeaking ? 0.1 : 0))} 0%, transparent 50%), radial-gradient(ellipse at 15% 75%, ${setHexAlpha(hex, 0.15 + (isThinking ? 0.1 : 0))} 0%, transparent 50%)`,
-            filter: `blur(calc(var(--app-bg-blur, 40px) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.82) / 0.18), 1))))`,
+            background: `${tokenBackgroundLiquid}, radial-gradient(ellipse at 50% 12%, color-mix(in srgb, ${tokenAccentSoft} ${isLight ? 42 : 55}%, transparent) 0%, transparent 62%), radial-gradient(ellipse at 85% 85%, color-mix(in srgb, ${tokenAccentSoft} ${isSpeaking ? 34 : 22}%, transparent) 0%, transparent 54%), radial-gradient(ellipse at 15% 75%, color-mix(in srgb, ${tokenAccentSoft} ${isThinking ? 32 : 18}%, transparent) 0%, transparent 52%)`,
+            filter: `blur(calc(${tokenBlurLevel} * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.82) / 0.18), 1))))`,
+            boxShadow: tokenShadowSoft,
             opacity:
               "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.9) / 0.1), 1)) * 0.9)",
             transform: `translateZ(0) scale(${1 + (amplitude * 0.05)})`,
