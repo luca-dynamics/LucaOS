@@ -10,6 +10,7 @@ import {
   SettingsSection,
   SettingsStatusCard,
 } from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 interface NotionPage {
   id: string;
@@ -468,7 +469,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
         isMobile={isMobile}
       >
         <div
-          className={`p-4 border space-y-4 transition-all tech-border glass-blur ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"}`}
+          className={`p-4 border space-y-4 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"}`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -484,10 +485,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
             />
             <div>
               <h3
-                className={`text-sm font-black uppercase tracking-widest`}
+                className={`text-sm font-semibold`}
                 style={{ color: "var(--app-text-main, #ffffff)" }}
               >
-                Local Knowledge Base
+                Local Knowledge
               </h3>
               <p
                 className={`text-[10px] text-[var(--app-text-muted)] opacity-70 italic`}
@@ -505,7 +506,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
               return (
                 <div
                   key={cat.id}
-                  className={`w-full overflow-hidden rounded-xl border transition-all duration-300 tech-border glass-blur`}
+                  className={`w-full overflow-hidden rounded-xl border transition-all duration-300`}
                   style={{
                     backgroundColor: isSelected
                       ? "var(--app-bg-tint, #0a0a0f)"
@@ -523,7 +524,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                     className="w-full flex items-center gap-3 p-4 text-left transition-all relative"
                   >
                     <div
-                      className={`p-2 rounded flex items-center justify-center border transition-all tech-border`}
+                      className={`p-2 rounded flex items-center justify-center border transition-all`}
                       style={{
                         backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.1))",
                         borderColor:
@@ -535,15 +536,15 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                     </div>
                     <div className="flex-1">
                       <div
-                        className={`text-sm font-black uppercase tracking-widest`}
+                        className={`text-sm font-semibold`}
                         style={{ color: "var(--app-text-main, #ffffff)" }}
                       >
                         {cat.name}
                       </div>
                       <div
-                        className={`text-[10px] font-mono text-[var(--app-text-muted)] opacity-60`}
+                        className={`text-xs text-[var(--app-text-muted)] opacity-70`}
                       >
-                        Ext: {cat.extension}
+                        File type: {cat.extension}
                       </div>
                     </div>
                     <motion.div
@@ -582,7 +583,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                   setFile(null); // Reset file when switching internal platform
                                   setStatus("idle");
                                 }}
-                                className={`flex items-center gap-2 p-2 rounded-lg border text-sm transition-all shadow-sm tech-border`}
+                                className={`flex items-center gap-2 p-2 rounded-lg border text-sm transition-all shadow-sm`}
                                 style={{
                                   backgroundColor:
                                     platform === p.id
@@ -631,13 +632,13 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                 className="space-y-4"
                               >
                                 <label
-                                  className={`text-sm font-bold uppercase tracking-widest block text-[var(--app-text-muted)]`}
+                                  className={`text-sm font-medium block text-[var(--app-text-muted)]`}
                                 >
-                                  Source Import ({platform.toUpperCase()})
+                                  Import source ({platform})
                                 </label>
 
                                 <div
-                                  className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 group transition-colors cursor-pointer tech-border`}
+                                  className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 group transition-colors cursor-pointer`}
                                   style={{
                                     backgroundColor:
                                       "var(--app-bg-tint, rgba(0,0,0,0.2))",
@@ -672,7 +673,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                           {file.name}
                                         </div>
                                         <div
-                                          className={`text-sm uppercase tracking-wider text-[var(--app-text-muted)]`}
+                                          className={`text-sm text-[var(--app-text-muted)]`}
                                         >
                                           {(file.size / 1024 / 1024).toFixed(2)}{" "}
                                           MB
@@ -686,9 +687,9 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                         className={`w-6 h-6 transition-colors text-[var(--app-text-muted)] group-hover:text-[var(--app-text-main)]`}
                                       />
                                       <div
-                                        className={`text-center text-sm uppercase tracking-widest font-bold text-[var(--app-text-muted)]`}
+                                        className={`text-center text-sm font-medium text-[var(--app-text-muted)]`}
                                       >
-                                        Import {cat.extension} Data
+                                        Import {cat.extension} file
                                       </div>
                                     </>
                                   )}
@@ -698,7 +699,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                 <button
                                   disabled={!file || status !== "idle"}
                                   onClick={handleImport}
-                                  className="w-full p-3 rounded-lg text-sm font-bold tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed group/btn overflow-hidden relative shadow-lg"
+                                  className="w-full p-3 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed group/btn overflow-hidden relative shadow-sm"
                                   style={{
                                     backgroundColor: `${theme.hex}20`,
                                     border: `1px solid ${theme.hex}`,
@@ -710,20 +711,20 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                     name="Share2"
                                     className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform"
                                   />
-                                  Commence Ingestion
+                                  Import knowledge
                                 </button>
 
                                 {/* Progress Panel */}
                                 {status !== "idle" && (
                                   <div className="space-y-2 py-2">
-                                    <div className="flex justify-between items-center text-sm uppercase tracking-widest">
+                                    <div className="flex justify-between items-center text-sm">
                                       <span className="text-[var(--app-text-muted)] animate-pulse">
                                         {status === "uploading" &&
-                                          "Syncing Source..."}
+                                          "Uploading source..."}
                                         {status === "distilling" &&
-                                          "Distilling Knowledge..."}
+                                          "Processing knowledge..."}
                                         {status === "success" &&
-                                          "Knowledge Synced"}
+                                          "Knowledge added"}
                                       </span>
                                       <span style={{ color: theme.hex }}>
                                         {progress}%
@@ -737,7 +738,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                         style={{
                                           backgroundColor:
                                             status === "success"
-                                              ? "#4ade80"
+                                              ? settingsSurfaceTokens.accentPrimary
                                               : theme.hex,
                                           boxShadow: `0 0 10px ${theme.hex}`,
                                         }}
@@ -750,11 +751,18 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                   <motion.div
                                     initial={{ opacity: 0, y: 5 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-green-400 space-y-2"
+                                    className="p-3 rounded-lg border text-sm space-y-2"
+                                    style={{
+                                      backgroundColor:
+                                        settingsSurfaceTokens.glass,
+                                      borderColor:
+                                        settingsSurfaceTokens.borderSubtle,
+                                      color: settingsSurfaceTokens.textPrimary,
+                                    }}
                                   >
-                                    <div className="flex items-center gap-2 font-bold uppercase tracking-widest">
+                                    <div className="flex items-center gap-2 font-semibold">
                                       <Icon name="Brain" className="w-3 h-3" />
-                                      <span>Insights Logged:</span>
+                                      <span>Saved insights</span>
                                     </div>
                                     {importedFacts.length > 0 && (
                                       <ul className="space-y-1 list-none opacity-80">
@@ -763,9 +771,12 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                           .map((f, i) => (
                                             <li key={i} className="flex gap-2">
                                               <span
-                                                style={{ color: theme.hex }}
+                                                style={{
+                                                  color:
+                                                    settingsSurfaceTokens.accentPrimary,
+                                                }}
                                               >
-                                                {"//"}
+                                                •
                                               </span>
                                               <span className="truncate">
                                                 {f}
@@ -790,7 +801,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
         {/* === SAAS SYNC SECTION === */}
         <div
-          className={`p-4 border space-y-4 mt-6 transition-all tech-border glass-blur ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"}`}
+          className={`p-4 border space-y-4 mt-6 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"}`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -808,7 +819,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
             />
             <div>
               <h3
-                className={`text-base font-black uppercase tracking-widest`}
+                className={`text-base font-semibold`}
                 style={{ color: "var(--app-text-main, #ffffff)" }}
               >
                 SaaS Sync
@@ -822,7 +833,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
           {/* Notion Connector */}
           <div
-            className={`p-3 rounded-lg border tech-border`}
+            className={`p-3 rounded-lg border`}
             style={{
               backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.1))",
               borderColor: "var(--app-border-main, rgba(255,255,255,0.05))",
@@ -837,7 +848,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 />
                 <div>
                   <div
-                    className={`text-sm font-black uppercase tracking-wider`}
+                    className={`text-sm font-semibold`}
                     style={{ color: "var(--app-text-main, #ffffff)" }}
                   >
                     Notion
@@ -879,7 +890,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 {notionPages.map((page) => (
                   <div
                     key={page.id}
-                    className={`flex items-center justify-between p-2 rounded transition-all border tech-border`}
+                    className={`flex items-center justify-between p-2 rounded transition-all border`}
                     style={{
                       backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
                       borderColor:
@@ -897,7 +908,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                         <button
                           onClick={() => syncNotionPage(page.id)}
                           disabled={syncingPageId === page.id}
-                          className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all cursor-pointer bg-green-500/20 text-green-400 hover:bg-green-500/30`}
+                          className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all cursor-pointer bg-[var(--luca-accent-soft,var(--app-bg-tint))] text-[var(--luca-accent-primary,var(--app-core-hex))] hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]`}
                           title="Click to re-sync"
                         >
                           {syncingPageId === page.id ? (
@@ -956,7 +967,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                   setSyncingPageId(null);
                 }}
                 disabled={syncingPageId === "all"}
-                className={`w-full mt-2 p-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-2 border tech-border`}
+                className={`w-full mt-2 p-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 border`}
                 style={{
                   backgroundColor: `${theme.hex}20`,
                   color: theme.hex,
@@ -1034,7 +1045,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 {googleFiles.map((file) => (
                   <div
                     key={file.id}
-                    className={`flex items-center justify-between p-2 rounded transition-all bg-white/5 hover:bg-white/10 border tech-border`}
+                    className={`flex items-center justify-between p-2 rounded transition-all bg-[var(--luca-surface-glass,var(--app-bg-tint))] hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] border`}
                   >
                     <span
                       className={`text-sm truncate flex-1 text-[var(--app-text-muted)]`}
@@ -1046,7 +1057,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                         <button
                           onClick={() => syncGoogleFile(file.id)}
                           disabled={syncingPageId === file.id}
-                          className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all cursor-pointer bg-green-500/20 text-green-400 hover:bg-green-500/30`}
+                          className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all cursor-pointer bg-[var(--luca-accent-soft,var(--app-bg-tint))] text-[var(--luca-accent-primary,var(--app-core-hex))] hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]`}
                           title="Click to re-sync"
                         >
                           {syncingPageId === file.id ? (
@@ -1087,7 +1098,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
           {/* Obsidian Connector */}
           <div
-            className={`p-3 rounded-lg border tech-border bg-[var(--app-bg-tint)] border-[var(--app-border-main)]`}
+            className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)]`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1141,7 +1152,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                   placeholder="Paste vault path (e.g. /Users/name/Documents/Vault)"
                   value={vaultPath}
                   onChange={(e) => setVaultPath(e.target.value)}
-                  className="w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] rounded px-2 py-1 text-[10px] text-[var(--app-text-muted)] focus:outline-none focus:border-white/20 tech-border"
+                  className="w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] rounded px-2 py-1 text-[10px] text-[var(--app-text-muted)] focus:outline-none focus:border-white/20"
                 />
               </div>
             )}
@@ -1152,7 +1163,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 {obsidianFiles.map((file) => (
                   <div
                     key={file.id}
-                    className={`flex items-center justify-between p-2 rounded transition-all bg-white/5 hover:bg-white/10 border tech-border`}
+                    className={`flex items-center justify-between p-2 rounded transition-all bg-[var(--luca-surface-glass,var(--app-bg-tint))] hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] border`}
                   >
                     <span
                       className={`text-sm truncate flex-1 text-[var(--app-text-muted)]`}
@@ -1163,7 +1174,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                       <button
                         onClick={() => syncObsidianFile(file.id)}
                         disabled={syncingPageId === file.id}
-                        className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all cursor-pointer bg-green-500/20 text-green-400 hover:bg-green-500/30`}
+                        className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all cursor-pointer bg-[var(--luca-accent-soft,var(--app-bg-tint))] text-[var(--luca-accent-primary,var(--app-core-hex))] hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]`}
                       >
                         {syncingPageId === file.id ? (
                           <Icon
@@ -1210,7 +1221,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
         </div>
 
         <div
-          className={`flex items-start gap-3 p-3 rounded-lg border transition-all tech-border`}
+          className={`flex items-start gap-3 p-3 rounded-lg border transition-all`}
           style={{
             backgroundColor: "var(--app-bg-tint, rgba(245,158,11,0.05))",
             borderColor: "rgba(245,158,11,0.2)",

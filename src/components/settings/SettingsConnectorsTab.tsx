@@ -7,7 +7,9 @@ import {
   SettingsRow,
   SettingsSection,
   SettingsStatusCard,
+  settingsControlInlineStyle,
 } from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 interface SettingsConnectorsTabProps {
   theme?: any;
@@ -221,7 +223,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
             return (
               <div
                 key={app.id}
-                className={`relative group overflow-hidden border ${isMobile ? "border-x-0 border-b rounded-none p-6" : "rounded-2xl p-5 hover:-translate-y-1 shadow-xl"} transition-all duration-500 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
+                className={`relative group overflow-hidden border ${isMobile ? "border-x-0 border-b rounded-none p-6" : "rounded-2xl p-5 hover:-translate-y-1 shadow-xl"} transition-all duration-500 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] glass-blur`}
               >
                 {/* Premium Glassmorphic Overlay: Multi-point Glow */}
                 <div
@@ -254,19 +256,19 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                         {app.name}
                       </h4>
                       <div
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 uppercase tracking-wider ${
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ${
                           isConnected
-                            ? "border-green-500/30 text-green-400 bg-green-500/10 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                            ? "border-[var(--luca-accent-primary,var(--app-core-hex))] text-[var(--luca-accent-primary,var(--app-core-hex))] bg-[var(--luca-accent-soft,var(--app-bg-tint))]"
                             : isChromeSynced
-                              ? "border-blue-500/30 text-blue-400 bg-blue-500/10"
+                              ? "border-[var(--luca-border-subtle,var(--app-border-main))] text-[var(--luca-text-secondary,var(--app-text-muted))] bg-[var(--luca-surface-glass,var(--app-bg-tint))]"
                               : "border-[var(--app-border-main)] text-[var(--app-text-muted)] bg-white/5 opacity-50"
                         }`}
                       >
                         {isConnected
-                          ? appStatus.email || "ACTIVE"
+                          ? appStatus.email || "Active"
                           : isChromeSynced
-                            ? "SYNC READY"
-                            : "OFFLINE"}
+                            ? "Sync ready"
+                            : "Offline"}
                       </div>
                     </div>
                     <p
@@ -278,9 +280,9 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                     <div className="flex items-center">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`text-[10px] font-mono uppercase tracking-widest ${isAlwaysOn ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] opacity-60"}`}
+                          className={`text-xs font-medium ${isAlwaysOn ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] opacity-60"}`}
                         >
-                          {isAlwaysOn ? "Remember Session" : "On Demand"}
+                          {isAlwaysOn ? "Remember session" : "On demand"}
                         </span>
                         <button
                           onClick={() => {
@@ -325,14 +327,19 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                   <div className="space-y-2">
                     {isChromeSynced && (
                       <div
-                        className={`text-sm text-blue-400 bg-blue-500/5 border border-blue-500/20 px-3 py-2 rounded-xl leading-snug glass-blur`}
+                        className={`text-sm border px-3 py-2 rounded-xl leading-snug glass-blur`}
+                        style={{
+                          backgroundColor: settingsSurfaceTokens.glass,
+                          borderColor: settingsSurfaceTokens.borderSubtle,
+                          color: settingsSurfaceTokens.textPrimary,
+                        }}
                       >
                         <strong
-                          className={`text-blue-400 block mb-0.5 font-bold uppercase tracking-tighter text-xs`}
+                          className={`block mb-0.5 font-semibold text-xs`}
                         >
                           {app.id === "google"
-                            ? "Chrome Sync Active"
-                            : "Session Available"}
+                            ? "Chrome sync ready"
+                            : "Session available"}
                         </strong>
                         <span className="opacity-80">
                           {app.id === "google"
@@ -351,18 +358,31 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                           handleStartAuth(app.id);
                         }
                       }}
-                      className={`w-full py-2.5 rounded-xl text-xs font-black border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] tech-border glass-blur uppercase tracking-widest`}
+                      className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] glass-blur`}
                     >
-                      {isChromeSynced ? "Connect Session" : "Connect Account"}
+                      {isChromeSynced ? "Connect session" : "Connect account"}
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="text-sm px-3 py-2 rounded-xl border border-green-500/20 bg-green-500/5 text-green-400 leading-snug glass-blur tech-border">
+                    <div
+                      className="text-sm px-3 py-2 rounded-xl border leading-snug"
+                      style={{
+                        backgroundColor: settingsSurfaceTokens.glass,
+                        borderColor: settingsSurfaceTokens.borderSubtle,
+                        color: settingsSurfaceTokens.textPrimary,
+                      }}
+                    >
                       <div className="flex items-center gap-2 mb-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                        <strong className="text-[10px] font-bold uppercase tracking-widest text-green-500">
-                          Account Connected
+                        <div
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{
+                            backgroundColor:
+                              settingsSurfaceTokens.accentPrimary,
+                          }}
+                        />
+                        <strong className="text-xs font-semibold">
+                          Account connected
                         </strong>
                       </div>
                       <span className="opacity-80 text-xs">
@@ -446,12 +466,26 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
         <div className="absolute inset-0 z-[50] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/60 glass-blur" />
           <div
-            className={`relative border p-8 rounded-3xl max-w-[320px] text-center shadow-2xl animate-in zoom-in duration-300 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
+            className={`relative border p-8 rounded-3xl max-w-[320px] text-center shadow-2xl animate-in zoom-in duration-300`}
+            style={{
+              backgroundColor: settingsSurfaceTokens.glass,
+              borderColor: settingsSurfaceTokens.borderSubtle,
+            }}
           >
-            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 bg-blue-500/10 border border-blue-500/30 text-blue-400">
-              <Icon name="Info" className="w-8 h-8" />
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 border"
+              style={{
+                backgroundColor: settingsSurfaceTokens.accentSoft,
+                borderColor: settingsSurfaceTokens.borderSubtle,
+              }}
+            >
+              <Icon
+                name="Info"
+                className="w-8 h-8"
+                style={{ color: settingsSurfaceTokens.accentPrimary }}
+              />
             </div>
-            <h5 className="font-black mb-2 uppercase tracking-widest text-xl text-[var(--app-text-main)]">
+            <h5 className="font-semibold mb-2 text-xl text-[var(--app-text-main)]">
               Session Tip
             </h5>
             <p
@@ -469,15 +503,21 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                   }
                   setProTipModal(null);
                 }}
-                className="w-full py-3 rounded-xl bg-blue-600 text-[var(--app-text-main)] text-sm font-black transition-all shadow-lg shadow-blue-500/20 hover:bg-blue-500 hover:shadow-blue-500/40 uppercase tracking-widest"
+                className="w-full py-3 rounded-xl text-sm font-semibold transition-all border"
+                style={{
+                  ...settingsControlInlineStyle,
+                  borderColor: settingsSurfaceTokens.accentPrimary,
+                  color: settingsSurfaceTokens.textPrimary,
+                }}
               >
-                Connect Anyway
+                Connect anyway
               </button>
               <button
                 onClick={() => setProTipModal(null)}
-                className={`w-full py-3 rounded-xl bg-white/5 text-[var(--app-text-muted)] text-sm font-black hover:bg-white/10 transition-all border border-[var(--app-border-main)] uppercase tracking-widest`}
+                className={`w-full py-3 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all border`}
+                style={settingsControlInlineStyle}
               >
-                Import Profile First
+                Import profile first
               </button>
             </div>
           </div>

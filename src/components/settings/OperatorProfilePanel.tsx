@@ -215,12 +215,10 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <h3
-            className={`text-lg font-black uppercase tracking-widest text-[var(--app-text-main)]`}
-          >
+          <h3 className={`text-lg font-semibold text-[var(--app-text-main)]`}>
             Profile setup needed
           </h3>
-          <p className="text-xs font-mono text-[var(--app-text-muted)] max-w-sm mx-auto opacity-60 leading-relaxed uppercase tracking-tighter">
+          <p className="text-sm text-[var(--app-text-muted)] max-w-sm mx-auto opacity-70 leading-relaxed">
             Complete onboarding to build your Luca profile.
           </p>
         </div>
@@ -294,18 +292,16 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
           className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 ${isMobile ? "px-4" : ""}`}
         >
           <div className="space-y-1">
-            <h3
-              className={`text-xl font-black text-[var(--app-text-main)] tracking-tighter uppercase italic`}
-            >
+            <h3 className={`text-xl font-semibold text-[var(--app-text-main)]`}>
               Profile details
             </h3>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black font-mono text-[var(--app-text-muted)] uppercase tracking-[0.3em] opacity-40">
+              <span className="text-xs font-medium text-[var(--app-text-muted)] opacity-70">
                 Last updated:{" "}
                 {new Date(profile.metadata.lastUpdated).toLocaleDateString()}
               </span>
               <div className="w-1 h-1 rounded-full bg-[var(--app-text-muted)] opacity-20" />
-              <span className="text-[10px] font-black font-mono text-[var(--app-text-muted)] uppercase tracking-[0.3em] opacity-40">
+              <span className="text-xs font-medium text-[var(--app-text-muted)] opacity-70">
                 Conversation count: {profile.metadata.conversationCount || 0}
               </span>
             </div>
@@ -313,7 +309,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
           <div className="flex gap-3">
             <button
               onClick={handleRefresh}
-              className={`px-5 py-2 bg-[var(--app-bg-tint)] hover:bg-[var(--app-text-main)]/5 rounded-lg flex items-center gap-3 transition-all tech-border glass-blur group`}
+              className={`px-5 py-2 bg-[var(--app-bg-tint)] hover:bg-[var(--app-text-main)]/5 rounded-lg flex items-center gap-3 transition-all border border-[var(--app-border-main)] glass-blur group`}
               title="Refresh profile"
             >
               <Icon
@@ -321,7 +317,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                 className="w-4 h-4 text-[var(--app-text-muted)] group-hover:rotate-180 transition-transform duration-500"
               />
               <span
-                className={`text-[11px] font-black text-[var(--app-text-main)] uppercase tracking-widest opacity-80`}
+                className={`text-sm font-medium text-[var(--app-text-main)] opacity-80`}
               >
                 Refresh profile
               </span>
