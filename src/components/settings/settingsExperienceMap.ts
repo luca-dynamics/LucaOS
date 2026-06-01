@@ -200,7 +200,7 @@ export const settingsExperienceMap = [
     currentComponent: "PersonalityDashboard",
     controls:
       "Global system rules, persona lenses, read-only system blueprints, system logic text, voice signature, and persona protocol indicators.",
-    primaryExperience: "origin-user",
+    primaryExperience: "standard-user",
     classificationLabels: [
       "standard-user",
       "origin-user",
@@ -229,7 +229,6 @@ export const settingsExperienceMap = [
     primaryExperience: "tactical-user",
     classificationLabels: [
       "tactical-user",
-      "origin-user",
       "advanced-feature",
       "experimental",
       "permission-sensitive",
@@ -245,7 +244,7 @@ export const settingsExperienceMap = [
     languageFit: "technical",
     futurePlacement: "tactical-mode",
     auditNotes:
-      "Autonomy is the clearest tactical/origin candidate; current copy is candid but should not appear as a casual standard-user switch without stronger explanation.",
+      "Autonomy is the clearest tactical safety/governance candidate; current copy is candid but should not appear as a casual standard-user switch without stronger explanation.",
   },
   {
     id: "profile",
@@ -309,10 +308,9 @@ export const settingsExperienceMap = [
     currentComponent: "SettingsMCPBridgeTab",
     controls:
       "Inbound MCP skill/server import, outbound tool/server export, custom server setup, marketplace servers, commands, environment variables, and connectivity bridge controls.",
-    primaryExperience: "origin-user",
+    primaryExperience: "tactical-user",
     classificationLabels: [
       "tactical-user",
-      "origin-user",
       "advanced-feature",
       "experimental",
       "privacy-sensitive",
@@ -327,9 +325,9 @@ export const settingsExperienceMap = [
       "custom command execution configuration",
     ],
     languageFit: "technical",
-    futurePlacement: "origin-creator-mode",
+    futurePlacement: "advanced-features",
     auditNotes:
-      "MCP Bridge is a creator/developer surface and desktop-only today; it belongs under Advanced Features, gated by tactical/origin context.",
+      "MCP Bridge is a tactical/power-user tool connection surface and should be available through Advanced Features; future raw creator/system-update tool controls belong in Origin mode, not normal MCP Bridge usage.",
   },
   {
     id: "iot",
@@ -472,7 +470,12 @@ export const settingsTacticalModeCandidateTabIds = settingsExperienceMap
   .filter((entry) => entry.futurePlacement === "tactical-mode")
   .map((entry) => entry.id);
 
-export const settingsOriginModeCandidateTabIds = settingsExperienceMap
+export const settingsOriginModeAuditNote =
+  "Current Settings does not yet include a true Origin/creator dashboard tab; future Origin surfaces should cover self-update, PR/build/release, GitHub push, raw system controls, and system evolution workflows.";
+
+export const settingsOriginModeCandidateTabIds = (
+  settingsExperienceMap as readonly SettingsExperienceMapEntry[]
+)
   .filter((entry) => entry.futurePlacement === "origin-creator-mode")
   .map((entry) => entry.id);
 

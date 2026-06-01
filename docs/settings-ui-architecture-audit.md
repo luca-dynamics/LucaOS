@@ -61,11 +61,11 @@ The current modal defines a static tab registry in `SettingsModal.tsx` and filte
 | Voice | Standard-user core surface | Top-level for everyone | Mic capture, wake word, voice cloning, speech routing | Technical |
 | Vision | Standard-user core surface | Top-level for everyone | Camera/image analysis, vision model routing | Appropriate |
 | Model Manager | Tactical/developer | Advanced Features | Runtime diagnostics, model downloads/storage | Technical |
-| Personality | Standard-visible with origin-grade editing | Top-level for everyone | System rules, persona logic, identity behavior | Technical |
-| Autonomy | Tactical/origin | Tactical Mode | Background missions, shadow execution, tool usage, killswitch | Technical |
+| Personality | Standard-visible with creator-grade subcontrols | Top-level for everyone | System rules, persona logic, identity behavior | Technical |
+| Autonomy | Tactical/advanced | Tactical Mode | Background missions, shadow execution, tool usage, killswitch | Technical |
 | Profile | Standard-user | Top-level for everyone | Operator identity, behavior insights, identity lock | Appropriate |
 | Luca Link | Standard-user with advanced networking | Top-level for everyone | Remote access, guest links, pairing tokens, relay/VPN | Appropriate |
-| MCP Bridge | Origin/creator | Origin/creator mode | Tool import/export, custom commands, filesystem/dev/messaging/database tools | Technical |
+| MCP Bridge | Tactical/power-user | Advanced Features / Tactical Mode | Tool import/export, custom commands, filesystem/dev/messaging/database tools | Technical |
 | Smart Home | Standard-visible, device-sensitive | Advanced Features | Home Assistant token, device control, local network endpoint | Appropriate |
 | Connectors | Tactical automation | Advanced Features | Account access, browser automation, session persistence, messaging/content surfaces | Technical |
 | Data & Memory | Standard-user trust surface | Top-level for everyone | Memory export/delete, session reset, personal fact display | User-friendly |
@@ -96,17 +96,20 @@ Rationale: these are foundational to LucaOS as an embodied personal AI OS: ident
 Recommended Advanced Features candidates:
 
 - Model Manager
+- MCP Bridge
 - Smart Home
 - Connectors
+- Autonomy, especially on mobile
 - Tactical portions of Brain, Voice, General, Personality, Luca Link, and Knowledge Base
 
-Advanced Features should be an organizing layer, not a lockout. Normal users should still be able to access full settings, but high-risk or high-complexity controls should be progressively disclosed.
+Advanced Features should be an organizing layer, not a lockout. Normal users should still be able to access full settings, but high-risk or high-complexity controls should be progressively disclosed. On desktop, all current Settings tabs should remain visible for discoverability; future desktop IA may group them visually without removing them. On mobile, Advanced Settings should provide access to tactical/dev/tool settings after the clean standard settings surface.
 
 ### 3. Which settings should only appear after enabling Tactical Mode?
 
 Recommended Tactical Mode candidates:
 
 - Autonomy as a full tab, especially Background Missions, Shadow Execution, Double-Brain Consensus, Resource Awareness, and Mission Killswitch.
+- MCP Bridge as a tactical/power-user tool and plugin connection surface, not an Origin-only surface.
 - Model Manager if the future product keeps runtime diagnostics/model installation out of the standard view.
 - Brain sub-sections for custom base URLs, Ollama service management, load balancer telemetry, maintenance sync intervals, and advanced BYOK routing.
 - Voice sub-sections for latency racing telemetry, local/offline provider routing, and voice cloning studio.
@@ -114,11 +117,19 @@ Recommended Tactical Mode candidates:
 
 ### 4. Which settings should only appear for Origin/creator mode?
 
-Recommended Origin/creator candidates:
+Current Settings does **not** yet have a true Creator Dashboard tab. MCP Bridge should not be treated as the main or only Origin/creator candidate; normal MCP/tool/plugin connection belongs in Tactical Mode and Advanced Settings.
 
-- MCP Bridge, especially Server: Export Tools, custom MCP server commands, environment variables, and filesystem/dev/database/messaging tool surfaces.
-- Raw Personality system blueprint and global system rules editing, unless rewritten as safe user-facing personality controls.
-- Any future experimental/labs toggles, governance overrides, or creator/admin diagnostics.
+Future Origin/creator mode should be reserved for privileged creator dashboard controls such as:
+
+- Raw system controls and creator/admin system rules.
+- Luca self-update workflows.
+- Create PR / build version / release creation flows.
+- GitHub push/update workflows.
+- Repo, build, and release controls.
+- System evolution dashboards and governance override surfaces.
+- Privileged creator operations that let Luca update, build, or evolve its own system.
+
+Raw Personality system blueprint/global system rules editing may become Origin-grade if it remains a raw creator/admin control instead of being rewritten as safe user-facing personality configuration.
 
 ### 5. Which labels are already professional and should stay?
 
@@ -152,7 +163,7 @@ Labels or copy that need product-language review:
 
 ### 7. Is the current mobile settings layout good enough?
 
-Current mobile is functional but not yet premium enough for a settings-heavy product surface.
+Current mobile is functional but not yet premium enough for a settings-heavy product surface. Mobile should show clean standard settings first, then expose tactical/dev/tool settings under Advanced Settings rather than making normal mobile users feel like they opened an admin dashboard.
 
 Strengths:
 
@@ -166,10 +177,11 @@ Risks:
 - Very small uppercase labels may be hard to scan.
 - Desktop-only omissions (`mcp-bridge`, `connectors`) are not explained in the UI.
 - Dense tactical tabs such as Brain, Voice, Model Manager, Autonomy, Luca Link, and Knowledge Base likely need mobile-specific grouping or progressive disclosure.
+- Future mobile Advanced Settings should remain user-accessible and can include MCP Bridge, Model Manager, Smart Home, Connectors, Autonomy, and advanced subsections of Brain, Voice, Luca Link, and Knowledge Base.
 
 ### 8. Does the current desktop settings layout feel premium enough?
 
-Desktop has a strong LucaOS visual identity, but IA density makes it feel closer to an operator console than a premium settings product.
+Desktop has a strong LucaOS visual identity, but IA density makes it feel closer to an operator console than a premium settings product. Because desktop has enough space and power users expect discoverability, all current Settings tabs should remain visible to all users for now; future desktop IA may group tabs visually, but should not remove discoverability.
 
 Strengths:
 
@@ -179,7 +191,7 @@ Strengths:
 
 Risks:
 
-- Too many top-level tabs with mixed standard/tactical/origin depth.
+- Many top-level tabs mix standard, tactical, and advanced depth; desktop should keep them discoverable while improving visual grouping and framing.
 - Multiple tabs combine consumer settings, diagnostics, credentials, runtime controls, and experimental controls in one level.
 - Language alternates between premium product language and raw internal/control-room language.
 
@@ -201,25 +213,31 @@ Recommended future IA direction, without implementing it in this PR:
 
 2. **Advanced Features**
    - Model Manager
+   - MCP Bridge
    - Smart Home
    - Connectors
+   - Autonomy on mobile or in simplified settings contexts
    - Advanced Brain controls
    - Advanced Voice controls
    - Advanced Knowledge import/sync controls
    - Advanced Luca Link networking controls
 
 3. **Tactical Mode**
+   - MCP Bridge
    - Autonomy
    - Runtime diagnostics
    - Local/cloud routing internals
    - Browser automation/session persistence controls
    - Developer-grade telemetry
 
-4. **Origin/creator Mode**
-   - MCP Bridge
-   - Raw system/persona blueprints
-   - Creator/admin/labs controls
-   - Experimental governance/runtime surfaces
+4. **Future Origin/creator Dashboard**
+   - Raw system controls and creator/admin system rules
+   - Luca self-update controls
+   - Create PR / build version / release workflows
+   - GitHub push/update workflow
+   - Repo, build, and release controls
+   - System evolution dashboards
+   - Privileged creator operations that let Luca update, build, or evolve its own system
 
 ## Recommended follow-up PRs
 
@@ -236,7 +254,7 @@ Recommended future IA direction, without implementing it in this PR:
    - Address desktop-only tab messaging.
 
 4. **PR #165 — Experience Mode UI Proposal**
-   - Add a non-functional/prototype map or design doc for Standard, Tactical, and Origin/creator modes before implementation.
+   - Add a non-functional/prototype map or design doc for Standard, Tactical, and future Origin/creator dashboard modes before implementation.
 
 5. **PR #166 — Sensitive Settings Safety Framing**
    - Improve explanations around microphone, camera, screen observation, browser automation, remote access, smart-home tokens, memory deletion, and tool connectors.

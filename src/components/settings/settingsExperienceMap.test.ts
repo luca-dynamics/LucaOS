@@ -63,9 +63,14 @@ describe("settingsExperienceMap", () => {
 
   it("identifies advanced, tactical, and origin follow-up candidates", () => {
     expect(settingsAdvancedFeatureCandidateTabIds).toEqual(
-      expect.arrayContaining(["model-manager", "iot", "connectors"]),
+      expect.arrayContaining([
+        "model-manager",
+        "mcp-bridge",
+        "iot",
+        "connectors",
+      ]),
     );
     expect(settingsTacticalModeCandidateTabIds).toEqual(["autonomy"]);
-    expect(settingsOriginModeCandidateTabIds).toEqual(["mcp-bridge"]);
+    expect(settingsOriginModeCandidateTabIds).toEqual([]);
   });
 });
