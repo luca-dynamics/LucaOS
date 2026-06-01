@@ -98,29 +98,47 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
 
         <div className="relative flex h-40 w-40 items-center justify-center sm:h-52 sm:w-52">
           <div
-            className="absolute inset-0 rounded-full border animate-spin-slow"
-            style={{ borderColor: glowRing, borderTopColor: glowColor }}
+            className="absolute -inset-4 rounded-full blur-2xl animate-pulse"
+            style={{
+              animationDuration: "5.5s",
+              background: `radial-gradient(circle, ${glowOrb} 0%, ${glowSoft} 42%, transparent 72%)`,
+            }}
+          />
+          <div
+            className="absolute inset-0 rounded-full border animate-pulse"
+            style={{
+              animationDuration: "4.8s",
+              background: `radial-gradient(circle at 50% 50%, transparent 48%, ${glowSoft} 68%, transparent 78%)`,
+              borderColor: glowRing,
+              boxShadow: `0 0 64px ${glowSoft}, inset 0 0 36px ${glowSoft}`,
+            }}
           />
           <div
             className="absolute inset-5 rounded-full border animate-pulse"
             style={{
+              animationDelay: "450ms",
+              animationDuration: "5.8s",
+              background: `radial-gradient(circle at 35% 28%, color-mix(in srgb, ${glowColor} 28%, var(--app-text-main)), ${glowRingSoft} 38%, transparent 72%)`,
               borderColor: glowRingSoft,
-              boxShadow: `0 0 60px ${glowSoft}`,
+              boxShadow: `0 0 60px ${glowSoft}, inset 0 0 42px ${glowSoft}`,
             }}
           />
           <div
-            className="relative flex h-24 w-24 items-center justify-center rounded-full sm:h-32 sm:w-32"
+            className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full animate-pulse sm:h-32 sm:w-32"
             style={{
-              background: `radial-gradient(circle at 35% 30%, color-mix(in srgb, ${glowColor} 58%, white), ${glowColor} 42%, transparent 72%)`,
-              boxShadow: `0 0 48px ${glowOrb}, inset 0 0 28px rgba(255,255,255,0.16)`,
+              animationDuration: "4.6s",
+              background: `radial-gradient(circle at 32% 26%, color-mix(in srgb, ${glowColor} 52%, var(--app-text-main)), ${glowColor} 38%, ${glowRingSoft} 64%, transparent 86%)`,
+              boxShadow: `0 0 48px ${glowOrb}, inset 0 0 28px color-mix(in srgb, var(--app-text-main) 16%, transparent)`,
             }}
           >
-            <Icon
-              name="Activity"
-              size={34}
-              color="var(--app-text-main)"
-              className="animate-pulse"
+            <div
+              className="absolute left-6 top-5 h-10 w-14 rounded-full blur-md sm:left-8 sm:top-7 sm:h-12 sm:w-16"
+              style={{
+                background:
+                  "color-mix(in srgb, var(--app-text-main) 26%, transparent)",
+              }}
             />
+            <Icon name="Activity" size={34} color="var(--app-text-main)" />
           </div>
         </div>
 
@@ -146,10 +164,10 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             style={{ color: "var(--app-text-muted)" }}
           >
             <Icon
-              name="LoaderCircle"
+              name="Sparkles"
               size={14}
               color={glowColor}
-              className="animate-spin"
+              className="animate-pulse"
             />
             {kernelCopy.standardLabel}
           </div>
