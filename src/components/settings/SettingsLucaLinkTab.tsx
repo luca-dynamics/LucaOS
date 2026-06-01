@@ -7,6 +7,15 @@ import { lucaLink, LucaLinkState } from "../../services/lucaLinkService";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
+import {
+  SettingsAdvancedDisclosure,
+  SettingsCard,
+  SettingsRow,
+  SettingsSection,
+  SettingsStatusCard,
+  settingsControlInlineStyle,
+} from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 // Guest Access Section (Long Distance via Relay)
 const GuestAccessSection: React.FC<{
@@ -155,28 +164,30 @@ const GuestAccessSection: React.FC<{
 
   return (
     <div
-      className={`rounded-xl p-4 text-center space-y-3 mt-4 border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm tech-border glass-blur`}
+      className={`rounded-xl p-4 text-center space-y-3 mt-4 border transition-all shadow-sm`}
+      style={{
+        backgroundColor: settingsSurfaceTokens.glass,
+        borderColor: settingsSurfaceTokens.borderSubtle,
+      }}
     >
-      <div
-        className="flex items-center justify-center gap-2 text-base font-black uppercase tracking-widest text-[var(--app-text-main)]"
-      >
+      <div className="flex items-center justify-center gap-2 text-base font-semibold text-[var(--app-text-main)]">
         <Icon name="Globus" variant="BoldDuotone" className="w-4 h-4" />
-        Secure Remote Access
+        Remote access
       </div>
 
-      <p
-        className={`text-xs text-[var(--app-text-muted)] opacity-70`}
-      >
-        Create a time-limited remote link for trusted devices or guests over the internet.
+      <p className={`text-xs text-[var(--app-text-muted)] opacity-70`}>
+        Create a time-limited remote link for trusted devices or guests over the
+        internet.
       </p>
 
       {!guestUrl ? (
         <button
           onClick={generateGuestAccess}
           disabled={!connected || loading}
-          className={`w-full py-3 rounded-lg text-sm font-black transition-all disabled:opacity-50 border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 opacity-80 hover:opacity-100`}
+          className={`w-full py-3 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 border hover:bg-white/5 opacity-80 hover:opacity-100`}
+          style={settingsControlInlineStyle}
         >
-          {loading ? "Generating..." : "Generate Secure Link"}
+          {loading ? "Generating..." : "Generate secure link"}
         </button>
       ) : (
         <>
@@ -197,11 +208,11 @@ const GuestAccessSection: React.FC<{
 
           {/* URL Display */}
           <div className="space-y-1">
-            <p className="text-xs text-[var(--app-text-muted)] font-bold">Share this secure URL:</p>
+            <p className="text-xs text-[var(--app-text-muted)] font-bold">
+              Share this secure URL:
+            </p>
             <div className="flex items-center justify-center gap-2">
-              <code
-                className="px-3 py-1 rounded text-sm font-mono max-w-[200px] truncate border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)]"
-              >
+              <code className="px-3 py-1 rounded text-sm font-mono max-w-[200px] truncate border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)]">
                 {guestUrl}
               </code>
               <button
@@ -212,11 +223,19 @@ const GuestAccessSection: React.FC<{
                 <Icon
                   name="Copy"
                   className="w-4 h-4"
-                  style={{ color: copied ? "#4ade80" : "var(--app-text-main)" }}
+                  style={{
+                    color: copied
+                      ? settingsSurfaceTokens.accentPrimary
+                      : "var(--app-text-main)",
+                  }}
                 />
               </button>
             </div>
-            {copied && <p className="text-xs text-green-400 font-bold">Copied!</p>}
+            {copied && (
+              <p className="text-xs text-[var(--luca-accent-primary,var(--app-core-hex))] font-bold">
+                Copied!
+              </p>
+            )}
           </div>
 
           <p className="text-xs italic text-[var(--app-text-muted)] opacity-60">
@@ -226,7 +245,7 @@ const GuestAccessSection: React.FC<{
       )}
 
       {!connected && (
-        <p className="text-xs text-yellow-500 font-bold italics opacity-80">
+        <p className="text-xs text-[var(--luca-text-secondary,var(--app-text-muted))] font-bold italics opacity-80">
           Enable Luca Link first to generate secure guest access
         </p>
       )}
@@ -235,20 +254,29 @@ const GuestAccessSection: React.FC<{
       {showSecurityModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div
-            className={`border rounded-xl p-6 transition-all shadow-2xl bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur max-w-sm w-full flex flex-col gap-4`}
+            className={`border rounded-xl p-6 transition-all shadow-2xl max-w-sm w-full flex flex-col gap-4`}
+            style={{
+              backgroundColor: settingsSurfaceTokens.glass,
+              borderColor: settingsSurfaceTokens.borderSubtle,
+            }}
           >
             <div className="flex items-center gap-3 mb-2">
               <div
                 className="p-2 rounded-full"
                 style={{ backgroundColor: setHexAlpha(theme.hex, 0.12) }}
               >
-                <Icon name="Shield" variant="BoldDuotone" className="w-5 h-5" style={{ color: theme.hex }} />
+                <Icon
+                  name="Shield"
+                  variant="BoldDuotone"
+                  className="w-5 h-5"
+                  style={{ color: theme.hex }}
+                />
               </div>
               <div className="text-left">
                 <h3
-                  className={`font-black uppercase tracking-widest text-sm text-[var(--app-text-main)]`}
+                  className={`font-semibold text-sm text-[var(--app-text-main)]`}
                 >
-                  Link Security
+                  Link security
                 </h3>
                 <p
                   className={`text-xs text-[var(--app-text-muted)] opacity-70`}
@@ -269,17 +297,35 @@ const GuestAccessSection: React.FC<{
                   className="p-3 rounded-lg flex items-center gap-3"
                   style={{
                     backgroundColor: pinEnabled
-                      ? (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(74, 222, 128, 0.05)" : "rgba(74, 222, 128, 0.1)")
-                      : (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(248, 113, 113, 0.05)" : "rgba(248, 113, 113, 0.1)"),
+                      ? theme.themeName?.toLowerCase() === "lucagent"
+                        ? "rgba(74, 222, 128, 0.05)"
+                        : "rgba(74, 222, 128, 0.1)"
+                      : theme.themeName?.toLowerCase() === "lucagent"
+                        ? "rgba(248, 113, 113, 0.05)"
+                        : "rgba(248, 113, 113, 0.1)",
                     border: `1px solid ${
-                      pinEnabled ? (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(74, 222, 128, 0.2)" : "rgba(74, 222, 128, 0.25)") : (theme.themeName?.toLowerCase() === "lucagent" ? "rgba(248, 113, 113, 0.2)" : "rgba(248, 113, 113, 0.25)")
+                      pinEnabled
+                        ? theme.themeName?.toLowerCase() === "lucagent"
+                          ? "rgba(74, 222, 128, 0.2)"
+                          : "rgba(74, 222, 128, 0.25)"
+                        : theme.themeName?.toLowerCase() === "lucagent"
+                          ? "rgba(248, 113, 113, 0.2)"
+                          : "rgba(248, 113, 113, 0.25)"
                     }`,
                   }}
                 >
                   {pinEnabled ? (
-                    <Icon name="Lock" variant="BoldDuotone" className="w-4 h-4 text-green-400" />
+                    <Icon
+                      name="Lock"
+                      variant="BoldDuotone"
+                      className="w-4 h-4 text-[var(--luca-accent-primary,var(--app-core-hex))]"
+                    />
                   ) : (
-                    <Icon name="LockOpen" variant="BoldDuotone" className="w-4 h-4 text-red-400" />
+                    <Icon
+                      name="LockOpen"
+                      variant="BoldDuotone"
+                      className="w-4 h-4 text-red-400"
+                    />
                   )}
                   <div className="text-left">
                     <div
@@ -288,7 +334,9 @@ const GuestAccessSection: React.FC<{
                         color: pinEnabled ? "#4ade80" : "#f87171",
                       }}
                     >
-                      {pinEnabled ? "PIN Protection Active" : "No Protection"}
+                      {pinEnabled
+                        ? "PIN protection active"
+                        : "No PIN protection"}
                     </div>
                     <div className="text-base text-[var(--app-text-muted)]">
                       {pinEnabled
@@ -337,11 +385,12 @@ const GuestAccessSection: React.FC<{
                 {/* Error/Success Message */}
                 {securityMessage && (
                   <div
-                    className={`text-lg p-2 rounded ${
-                      securityMessage.type === "error"
-                        ? "bg-red-500/20 text-red-300"
-                        : "bg-green-500/20 text-green-300"
-                    }`}
+                    className={`text-sm p-2 rounded border`}
+                    style={{
+                      backgroundColor: settingsSurfaceTokens.glass,
+                      borderColor: settingsSurfaceTokens.borderSubtle,
+                      color: settingsSurfaceTokens.textPrimary,
+                    }}
                   >
                     {securityMessage.text}
                   </div>
@@ -379,7 +428,7 @@ const GuestAccessSection: React.FC<{
                       }
                     }}
                     disabled={loading}
-                    className="flex-[2] py-2 rounded-lg text-sm font-black text-[var(--app-text-main)] transition-all shadow-lg shadow-purple-500/20 uppercase tracking-widest"
+                    className="flex-[2] py-2 rounded-lg text-sm font-semibold text-[var(--app-text-main)] transition-all shadow-sm"
                     style={{
                       background: `linear-gradient(135deg, ${theme.hex}, ${theme.hex}aa)`,
                     }}
@@ -464,7 +513,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             width: 200,
             margin: 2,
             color: {
-              dark: theme.themeName?.toLowerCase() === "lucagent" ? "#000000" : "#ffffff",
+              dark:
+                theme.themeName?.toLowerCase() === "lucagent"
+                  ? "#000000"
+                  : "#ffffff",
               light: "#00000000",
             },
           });
@@ -490,20 +542,45 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const getConnectionIcon = () => {
     switch (connectionMode) {
       case "local":
-        return <Icon name="Wifi" className="w-4 h-4 text-green-400" />;
+        return (
+          <Icon
+            name="Wifi"
+            className="w-4 h-4 text-[var(--luca-accent-primary,var(--app-core-hex))]"
+          />
+        );
       case "vpn":
-        return <Icon name="Shield" className="w-4 h-4" style={{ color: theme.hex }} />;
+        return (
+          <Icon
+            name="Shield"
+            className="w-4 h-4"
+            style={{ color: theme.hex }}
+          />
+        );
       case "relay":
-        return <Icon name="Globus" className="w-4 h-4" style={{ color: theme.hex }} />;
+        return (
+          <Icon
+            name="Globus"
+            className="w-4 h-4"
+            style={{ color: theme.hex }}
+          />
+        );
       default:
-        return <Icon name="WifiLow" className="w-4 h-4 text-[var(--app-text-muted)]" />;
+        return (
+          <Icon
+            name="WifiLow"
+            className="w-4 h-4 text-[var(--app-text-muted)]"
+          />
+        );
     }
   };
 
   const getConnectionStatus = () => {
     switch (connectionMode) {
       case "local":
-        return { text: "Connected (Local Network)", color: "text-green-400" };
+        return {
+          text: "Connected (Local Network)",
+          color: "text-[var(--luca-accent-primary,var(--app-core-hex))]",
+        };
       case "vpn":
         return {
           text: "Connected (VPN)",
@@ -525,368 +602,534 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
 
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
-      {/* Connection Status */}
-      <div
-        className={`p-6 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-2xl bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} tech-border glass-blur`}
+      <SettingsSection
+        title="Linked Devices"
+        description="Use Luca across your devices with desktop, phone, tablet, browser, and future gadgets grouped together."
+        icon="Devices"
+        accentColor={theme.hex}
+        isMobile={isMobile}
       >
-        <div className="flex items-center justify-between mb-3">
-          <label
-            className={`text-base font-black uppercase tracking-widest text-[var(--app-text-main)]`}
-          >
-            {isMobile ? "Desktop Connection" : "Connection Status"}
-          </label>
-          {getConnectionIcon()}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <SettingsStatusCard
+            label="Desktop"
+            value={!isMobile ? status.text : "Available"}
+            detail="This LucaOS session can pair with trusted clients."
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Phone"
+            value={isMobile ? status.text : "Pair below"}
+            detail="Mobile clients remain available through Luca Link."
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Tablet / browser"
+            value="Supported"
+            detail="Browser sessions and future devices use the same pairing surface."
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Connection health"
+            value={linkState.connected ? "Connected" : "Ready"}
+            detail="Relay, local, and VPN status remains in existing controls."
+            accentColor={theme.hex}
+          />
         </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Pair New Device"
+        description="Pair with QR code, pairing code, nearby device, or trusted-device flows without network-admin framing."
+        icon="Link"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        {/* Connection status */}
         <div
-          className={`text-sm font-black uppercase tracking-wider ${status.color}`}
-          style={(status as any).style}
+          className={`p-6 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-2xl shadow-sm"}`}
+          style={{
+            backgroundColor: settingsSurfaceTokens.glass,
+            borderColor: settingsSurfaceTokens.borderSubtle,
+          }}
         >
-          {status.text}
-        </div>
-      </div>
-
-      {/* ===== MOBILE CLIENT UI ===== */}
-      {isMobile && (
-        <>
-          {/* Connection Mode */}
-          <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
-            <label className="text-base font-black text-[var(--app-text-muted)] uppercase tracking-widest">
-              Connection Method
-            </label>
-            <select
-              value={settings.lucaLink.connectionMode}
-              onChange={(e) =>
-                onUpdate("lucaLink", "connectionMode", e.target.value)
-              }
-              className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] border rounded-lg p-3 text-sm font-bold outline-none transition-all tech-border glass-blur shadow-sm`}
+          <div className="flex items-center justify-between mb-3">
+            <label
+              className={`text-base font-semibold text-[var(--app-text-main)]`}
             >
-              <option value="auto">Auto (Try All Methods)</option>
-              <option value="local">Local Network (Same WiFi)</option>
-              <option value="vpn">VPN (Tailscale/ZeroTier)</option>
-              <option value="relay">Cloud Relay</option>
-            </select>
-            <p className="text-xs text-[var(--app-text-muted)] opacity-70 italic leading-tight">
-              {settings.lucaLink.connectionMode === "auto" &&
-                "Automatically tries local → VPN → cloud relay"}
-              {settings.lucaLink.connectionMode === "local" &&
-                "Connect when on the same WiFi as your Desktop"}
-              {settings.lucaLink.connectionMode === "vpn" &&
-                "Use Tailscale or ZeroTier for secure remote access"}
-              {settings.lucaLink.connectionMode === "relay" &&
-                "Connect via cloud relay (works everywhere)"}
-            </p>
+              {isMobile ? "Desktop connection" : "Connection status"}
+            </label>
+            {getConnectionIcon()}
           </div>
+          <div
+            className={`text-sm font-medium ${status.color}`}
+            style={(status as any).style}
+          >
+            {status.text}
+          </div>
+        </div>
 
-          {/* Direct IP/VPN Address */}
-          {(settings.lucaLink.connectionMode === "auto" ||
-            settings.lucaLink.connectionMode === "local" ||
-            settings.lucaLink.connectionMode === "vpn") && (
+        {/* ===== MOBILE CLIENT UI ===== */}
+        {isMobile && (
+          <>
+            {/* Connection Mode */}
             <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
-              <label className="text-base font-black text-[var(--app-text-muted)] uppercase tracking-widest flex items-center gap-2">
-                <Icon name="Smartphone" className="w-4 h-4" />
-                Desktop Address
+              <label className="text-base font-medium text-[var(--app-text-muted)]">
+                Connection method
               </label>
-              <input
-                type="text"
-                value={settings.lucaLink.vpnServerUrl || ""}
+              <select
+                value={settings.lucaLink.connectionMode}
                 onChange={(e) =>
-                  onUpdate("lucaLink", "vpnServerUrl", e.target.value)
+                  onUpdate("lucaLink", "connectionMode", e.target.value)
                 }
-                placeholder={
-                  settings.lucaLink.connectionMode === "vpn"
-                    ? "e.g., 100.x.x.x:8765 (Tailscale IP)"
-                    : "e.g., 192.168.1.100:8765"
-                }
-                className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 text-sm font-mono outline-none transition-all border tech-border glass-blur shadow-sm`}
-              />
-            </div>
-          )}
-
-          {/* Cloud Relay Server */}
-          {(settings.lucaLink.connectionMode === "auto" ||
-            settings.lucaLink.connectionMode === "relay") && (
-            <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
-              <label className="text-base font-black text-[var(--app-text-muted)] uppercase tracking-widest flex items-center gap-2">
-                <Icon name="Globus" variant="BoldDuotone" className="w-4 h-4" />
-                Cloud Relay Server
-              </label>
-              <input
-                type="text"
-                value={settings.lucaLink.relayServerUrl || ""}
-                onChange={(e) =>
-                  onUpdate("lucaLink", "relayServerUrl", e.target.value)
-                }
-                placeholder="https://lucaos.onrender.com"
-                className={`w-full bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 outline-none font-mono text-sm transition-all border tech-border glass-blur shadow-sm`}
-              />
+                className={`w-full border rounded-lg p-3 text-sm font-medium outline-none transition-all shadow-sm`}
+                style={settingsControlInlineStyle}
+              >
+                <option value="auto">Auto (Try All Methods)</option>
+                <option value="local">Local Network (Same WiFi)</option>
+                <option value="vpn">VPN (Tailscale/ZeroTier)</option>
+                <option value="relay">Cloud Relay</option>
+              </select>
               <p className="text-xs text-[var(--app-text-muted)] opacity-70 italic leading-tight">
-                Default relay provided. You can self-host your own.
+                {settings.lucaLink.connectionMode === "auto" &&
+                  "Automatically tries local → VPN → cloud relay"}
+                {settings.lucaLink.connectionMode === "local" &&
+                  "Connect when on the same WiFi as your Desktop"}
+                {settings.lucaLink.connectionMode === "vpn" &&
+                  "Use Tailscale or ZeroTier for secure remote access"}
+                {settings.lucaLink.connectionMode === "relay" &&
+                  "Connect via cloud relay (works everywhere)"}
               </p>
             </div>
-          )}
 
-          {/* Action Buttons */}
-          <div className={`flex flex-col gap-3 ${isMobile ? "px-4" : ""}`}>
-            {/* QR Code Scanner */}
-            <button
-              onClick={async () => {
-                const success = await qrScanner.scanAndConnect();
-                if (success) {
-                  console.log("[LucaLink] Connected via QR scan");
-                }
-              }}
-              className={`w-full py-3 rounded-lg text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 tech-border glass-blur shadow-sm`}
-            >
-              <Icon name="QrCode" className="w-5 h-5" /> Scan QR Code from Desktop
-            </button>
-
-            {/* Connect Button */}
-            <button
-              onClick={async () => {
-                const token = settings.lucaLink.vpnServerUrl?.trim();
-                if (!token) {
-                  alert("Please enter a Pairing Token or scan the QR code");
-                  return;
-                }
-                try {
-                  await lucaLink.joinWithToken(token);
-                } catch (e) {
-                  console.error("[LucaLink] Failed to connect:", e);
-                  alert(
-                    "Failed to connect to Desktop. Check the Pairing Token and try again.",
-                  );
-                }
-              }}
-              disabled={linkState.connected}
-              className={`w-full py-3 rounded-lg text-sm font-black uppercase tracking-widest transition-all disabled:opacity-50 border ${
-                linkState.connected 
-                  ? "bg-green-500/10 border-green-500/30 text-green-400" 
-                  : "bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 shadow-sm"
-              } tech-border glass-blur`}
-            >
-              {linkState.connected ? (
-                <span className="flex items-center gap-2 justify-center">
-                  <Icon name="CheckCircle" className="w-5 h-5" /> Connected to Desktop
-                </span>
-              ) : (
-                "Connect to Desktop"
-              )}
-            </button>
-
-            {/* Disconnect button if connected */}
-            {linkState.connected && (
-              <button
-                onClick={() => lucaLink.disconnect()}
-                className="w-full py-2 rounded-lg text-lg font-medium transition-all bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 shadow-sm"
-              >
-                Disconnect
-              </button>
+            {/* Direct IP/VPN Address */}
+            {(settings.lucaLink.connectionMode === "auto" ||
+              settings.lucaLink.connectionMode === "local" ||
+              settings.lucaLink.connectionMode === "vpn") && (
+              <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
+                <label className="text-base font-medium text-[var(--app-text-muted)] flex items-center gap-2">
+                  <Icon name="Smartphone" className="w-4 h-4" />
+                  Desktop address
+                </label>
+                <input
+                  type="text"
+                  value={settings.lucaLink.vpnServerUrl || ""}
+                  onChange={(e) =>
+                    onUpdate("lucaLink", "vpnServerUrl", e.target.value)
+                  }
+                  placeholder={
+                    settings.lucaLink.connectionMode === "vpn"
+                      ? "e.g., 100.x.x.x:8765 (Tailscale IP)"
+                      : "e.g., 192.168.1.100:8765"
+                  }
+                  className={`w-full rounded-lg p-3 text-sm font-mono outline-none transition-all border shadow-sm`}
+                  style={settingsControlInlineStyle}
+                />
+              </div>
             )}
-          </div>
 
-          {/* Privacy Note */}
-          <div
-            className={`p-4 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl bg-[var(--app-bg-tint)] border-[var(--app-border-main)]"} text-[var(--app-text-main)] tech-border glass-blur opacity-90 shadow-sm`}
-          >
-            <div className="flex items-start gap-3">
-              <Icon name="Shield" variant="BoldDuotone" className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--app-text-main)]" />
-              <div>
-                <div className="font-bold mb-1 uppercase tracking-wider text-sm opacity-60">Security Protocol</div>
-                <div className="font-bold mb-1 font-bold">End-to-End Encrypted</div>
-                <p className="text-[var(--app-text-muted)] text-sm opacity-80">
-                  Your connection to Desktop is encrypted. Messages are never
-                  stored on any server.
+            {/* Cloud relay server */}
+            {(settings.lucaLink.connectionMode === "auto" ||
+              settings.lucaLink.connectionMode === "relay") && (
+              <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
+                <label className="text-base font-medium text-[var(--app-text-muted)] flex items-center gap-2">
+                  <Icon
+                    name="Globus"
+                    variant="BoldDuotone"
+                    className="w-4 h-4"
+                  />
+                  Cloud relay server
+                </label>
+                <input
+                  type="text"
+                  value={settings.lucaLink.relayServerUrl || ""}
+                  onChange={(e) =>
+                    onUpdate("lucaLink", "relayServerUrl", e.target.value)
+                  }
+                  placeholder="https://lucaos.onrender.com"
+                  className={`w-full rounded-lg p-3 outline-none font-mono text-sm transition-all border shadow-sm`}
+                  style={settingsControlInlineStyle}
+                />
+                <p className="text-xs text-[var(--app-text-muted)] opacity-70 italic leading-tight">
+                  Default relay provided. You can self-host your own.
                 </p>
               </div>
-            </div>
-          </div>
-        </>
-      )}
+            )}
 
-      {/* ===== DESKTOP SERVER UI ===== */}
-      {!isMobile && (
-        <>
-          {/* Enable/Disable */}
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-base font-bold text-[var(--app-text-muted)]">
-                Enable Luca Link Remote Access
-              </label>
-              <p className="text-sm text-[var(--app-text-muted)] opacity-60 mt-1">
-                Allow trusted devices to pair securely with this Luca desktop
-              </p>
-            </div>
-            <button
-              onClick={async () => {
-                const newValue = !settings.lucaLink.enabled;
-                onUpdate("lucaLink", "enabled", newValue);
-
-                try {
-                  if (newValue) {
-                    await fetch(apiUrl("/api/luca-link/start"), {
-                      method: "POST",
-                    });
-                    await lucaLink.createRoom(); 
-                  } else {
-                    await fetch(apiUrl("/api/luca-link/stop"), {
-                      method: "POST",
-                    });
-                    lucaLink.disconnect();
+            {/* Action Buttons */}
+            <div className={`flex flex-col gap-3 ${isMobile ? "px-4" : ""}`}>
+              {/* QR Code Scanner */}
+              <button
+                onClick={async () => {
+                  const success = await qrScanner.scanAndConnect();
+                  if (success) {
+                    console.log("[LucaLink] Connected via QR scan");
                   }
-                  console.log(`[LucaLink] Server ${newValue ? "started" : "stopped"}`);
-                } catch (e) {
-                  console.error("[LucaLink] Failed to toggle server:", e);
-                }
-              }}
-              className={`w-7 h-3.5 rounded-full transition-all relative ${settings.lucaLink.enabled ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
-              style={{
-                backgroundColor: settings.lucaLink.enabled ? theme.hex : undefined,
-              }}
-            >
-              <div
-                className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.lucaLink.enabled ? "translate-x-4" : "translate-x-0.5"}`}
-                style={{ 
-                  backgroundColor: settings.lucaLink.enabled ? "white" : "var(--app-text-muted)" 
                 }}
-              />
-            </button>
-          </div>
-
-          {/* QR Code Pairing Section - Show when enabled */}
-          {settings.lucaLink.enabled && (
-            <div
-              className={`rounded-xl p-4 text-center space-y-3 bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] tech-border glass-blur shadow-sm`}
-            >
-              <div
-                className={`text-lg font-bold uppercase tracking-widest text-[var(--app-text-main)]`}
+                className={`w-full py-3 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 border hover:bg-white/5 shadow-sm`}
+                style={settingsControlInlineStyle}
               >
-                Secure Device Pairing
-              </div>
+                <Icon name="QrCode" className="w-5 h-5" /> Scan QR Code from
+                Desktop
+              </button>
 
-              <p className={`text-lg text-[var(--app-text-muted)] mb-2 opacity-80`}>
-                Pair trusted Luca apps (Desktop ↔ Mobile ↔ Tablet) using this QR code or token.
-              </p>
+              {/* Connect Button */}
+              <button
+                onClick={async () => {
+                  const token = settings.lucaLink.vpnServerUrl?.trim();
+                  if (!token) {
+                    alert("Please enter a Pairing Token or scan the QR code");
+                    return;
+                  }
+                  try {
+                    await lucaLink.joinWithToken(token);
+                  } catch (e) {
+                    console.error("[LucaLink] Failed to connect:", e);
+                    alert(
+                      "Failed to connect to Desktop. Check the Pairing Token and try again.",
+                    );
+                  }
+                }}
+                disabled={linkState.connected}
+                className={`w-full py-3 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 border shadow-sm`}
+                style={{
+                  ...settingsControlInlineStyle,
+                  borderColor: linkState.connected
+                    ? settingsSurfaceTokens.accentPrimary
+                    : settingsSurfaceTokens.borderSubtle,
+                  color: linkState.connected
+                    ? settingsSurfaceTokens.accentPrimary
+                    : settingsSurfaceTokens.textPrimary,
+                }}
+              >
+                {linkState.connected ? (
+                  <span className="flex items-center gap-2 justify-center">
+                    <Icon name="CheckCircle" className="w-5 h-5" /> Connected to
+                    desktop
+                  </span>
+                ) : (
+                  "Connect to desktop"
+                )}
+              </button>
 
-              {/* QR Code */}
-              {qrCodeUrl ? (
-                <div className="flex justify-center">
-                  <div
-                    className={`p-3 rounded-lg bg-[var(--app-bg-tint)] border border-[var(--app-border-main)]`}
-                  >
-                    <img
-                      src={qrCodeUrl}
-                      alt="Pairing QR Code"
-                      className="w-40 h-40"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="py-6 text-[var(--app-text-muted)] text-base opacity-60">
-                  Starting Luca Link...
-                </div>
+              {/* Disconnect button if connected */}
+              {linkState.connected && (
+                <button
+                  onClick={() => lucaLink.disconnect()}
+                  className="w-full py-2 rounded-lg text-lg font-medium transition-all border shadow-sm"
+                  style={settingsControlInlineStyle}
+                >
+                  Disconnect
+                </button>
               )}
+            </div>
 
-              {/* Pairing Token */}
-              {linkState.pairingToken && (
-                <div className="space-y-1">
-                  <p className={`text-lg text-[var(--app-text-muted)]`}>
-                    Or enter this one-time pairing token:
+            {/* Privacy Note */}
+            <div
+              className={`p-4 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"} text-[var(--app-text-main)] opacity-90 shadow-sm`}
+            >
+              <div className="flex items-start gap-3">
+                <Icon
+                  name="Shield"
+                  variant="BoldDuotone"
+                  className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--app-text-main)]"
+                />
+                <div>
+                  <div className="font-medium mb-1 text-sm opacity-70">
+                    Security
+                  </div>
+                  <div className="font-bold mb-1 font-bold">
+                    End-to-end encrypted
+                  </div>
+                  <p className="text-[var(--app-text-muted)] text-sm opacity-80">
+                    Your connection to Desktop is encrypted. Messages are never
+                    stored on any server.
                   </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <code
-                      className="px-3 py-1 rounded text-base font-mono bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)]"
-                    >
-                      {linkState.pairingToken}
-                    </code>
-                    <button
-                      onClick={copyRoomId}
-                      className="p-1 rounded hover:bg-white/10 transition-colors"
-                      title="Copy Token"
-                    >
-                      <Icon
-                        name="Copy"
-                        className="w-4 h-4"
-                        style={{ color: copied ? "#4ade80" : "var(--app-text-main)" }}
-                      />
-                    </button>
-                  </div>
-                  {copied && <p className="text-sm text-green-400">Copied!</p>}
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* ========== GUEST ACCESS SECTION (Long Distance) ========== */}
-          <GuestAccessSection theme={theme} connected={linkState.connected} />
-
-          {/* Relay Server Configuration */}
-          {settings.lucaLink.enabled && (
-            <div className="space-y-2 mt-4">
-              <label className="text-base font-bold text-[var(--app-text-muted)]">
-                Custom Relay Server
-              </label>
-              <input
-                type="text"
-                value={settings.lucaLink.relayServerUrl || ""}
-                onChange={(e) =>
-                  onUpdate("lucaLink", "relayServerUrl", e.target.value)
-                }
-                disabled={!settings.lucaLink.enabled}
-                placeholder="https://lucaos.onrender.com"
-                className={`w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 outline-none font-mono text-sm disabled:opacity-50 transition-all tech-border glass-blur`}
-              />
-              <p className="text-sm text-[var(--app-text-muted)] opacity-60">
-                Default encrypted relay provided. Advanced users can self-host their own.
-              </p>
-            </div>
-          )}
-
-          {/* VPN Server URL */}
-          {(settings.lucaLink.connectionMode === "auto" ||
-            settings.lucaLink.connectionMode === "vpn") && (
-            <div className="space-y-2">
-              <label className="text-base font-bold text-[var(--app-text-muted)]">
-                Trusted VPN Server URL (Optional)
-              </label>
-              <input
-                type="text"
-                value={settings.lucaLink.vpnServerUrl}
-                onChange={(e) =>
-                  onUpdate("lucaLink", "vpnServerUrl", e.target.value)
-                }
-                disabled={!settings.lucaLink.enabled}
-                placeholder={`http://100.x.x.x:${WS_PORT} (Tailscale IP)`}
-                className={`w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 outline-none font-mono text-sm disabled:opacity-50 transition-all tech-border glass-blur`}
-              />
-              <p className="text-sm text-[var(--app-text-muted)] opacity-60">
-                Leave empty for auto-detection. Use a trusted Tailscale IP (100.x.x.x) if configured.
-              </p>
-            </div>
-          )}
-
-          {/* Info Box */}
-          <div
-            className={`p-4 rounded-xl border transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] tech-border glass-blur opacity-90 shadow-sm mt-6`}
-          >
-            <div className="flex items-start gap-3">
-              <Icon
-                name="Shield"
-                variant="BoldDuotone"
-                className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--app-text-main)]"
-              />
-              <div>
-                <div className="font-bold mb-1 uppercase tracking-wider text-sm opacity-60">Privacy & Security</div>
-                <div className="font-bold mb-1">Connection Protection</div>
-                <ul className="space-y-1 opacity-80 text-sm list-disc pl-4 text-[var(--app-text-muted)]">
-                  <li>Local & VPN: direct private routes, no relay server</li>
-                  <li>Relay: End-to-end encrypted, messages are unreadable by relay</li>
-                  <li>Auto mode prioritizes local for maximum privacy</li>
-                </ul>
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
+
+        {/* ===== DESKTOP SERVER UI ===== */}
+        {!isMobile && (
+          <>
+            {/* Enable/Disable */}
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-base font-bold text-[var(--app-text-muted)]">
+                  Enable Luca Link Remote Access
+                </label>
+                <p className="text-sm text-[var(--app-text-muted)] opacity-60 mt-1">
+                  Allow trusted devices to pair securely with this Luca desktop
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  const newValue = !settings.lucaLink.enabled;
+                  onUpdate("lucaLink", "enabled", newValue);
+
+                  try {
+                    if (newValue) {
+                      await fetch(apiUrl("/api/luca-link/start"), {
+                        method: "POST",
+                      });
+                      await lucaLink.createRoom();
+                    } else {
+                      await fetch(apiUrl("/api/luca-link/stop"), {
+                        method: "POST",
+                      });
+                      lucaLink.disconnect();
+                    }
+                    console.log(
+                      `[LucaLink] Server ${newValue ? "started" : "stopped"}`,
+                    );
+                  } catch (e) {
+                    console.error("[LucaLink] Failed to toggle server:", e);
+                  }
+                }}
+                className={`w-7 h-3.5 rounded-full transition-all relative ${settings.lucaLink.enabled ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
+                style={{
+                  backgroundColor: settings.lucaLink.enabled
+                    ? theme.hex
+                    : undefined,
+                }}
+              >
+                <div
+                  className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.lucaLink.enabled ? "translate-x-4" : "translate-x-0.5"}`}
+                  style={{
+                    backgroundColor: settings.lucaLink.enabled
+                      ? "white"
+                      : "var(--app-text-muted)",
+                  }}
+                />
+              </button>
+            </div>
+
+            {/* QR Code Pairing Section - Show when enabled */}
+            {settings.lucaLink.enabled && (
+              <div
+                className={`rounded-xl p-4 text-center space-y-3 border shadow-sm`}
+                style={{
+                  backgroundColor: settingsSurfaceTokens.glass,
+                  borderColor: settingsSurfaceTokens.borderSubtle,
+                }}
+              >
+                <div
+                  className={`text-lg font-semibold text-[var(--app-text-main)]`}
+                >
+                  Device pairing
+                </div>
+
+                <p
+                  className={`text-lg text-[var(--app-text-muted)] mb-2 opacity-80`}
+                >
+                  Pair trusted Luca apps (Desktop ↔ Mobile ↔ Tablet) using this
+                  QR code or token.
+                </p>
+
+                {/* QR Code */}
+                {qrCodeUrl ? (
+                  <div className="flex justify-center">
+                    <div
+                      className={`p-3 rounded-lg bg-[var(--app-bg-tint)] border border-[var(--app-border-main)]`}
+                    >
+                      <img
+                        src={qrCodeUrl}
+                        alt="Pairing QR Code"
+                        className="w-40 h-40"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-6 text-[var(--app-text-muted)] text-base opacity-60">
+                    Starting Luca Link...
+                  </div>
+                )}
+
+                {/* Pairing Token */}
+                {linkState.pairingToken && (
+                  <div className="space-y-1">
+                    <p className={`text-lg text-[var(--app-text-muted)]`}>
+                      Or enter this one-time pairing token:
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <code className="px-3 py-1 rounded text-base font-mono bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)]">
+                        {linkState.pairingToken}
+                      </code>
+                      <button
+                        onClick={copyRoomId}
+                        className="p-1 rounded hover:bg-white/10 transition-colors"
+                        title="Copy Token"
+                      >
+                        <Icon
+                          name="Copy"
+                          className="w-4 h-4"
+                          style={{
+                            color: copied
+                              ? settingsSurfaceTokens.accentPrimary
+                              : "var(--app-text-main)",
+                          }}
+                        />
+                      </button>
+                    </div>
+                    {copied && (
+                      <p className="text-sm text-[var(--luca-accent-primary,var(--app-core-hex))]">
+                        Copied!
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ========== GUEST ACCESS SECTION (Long Distance) ========== */}
+            <GuestAccessSection theme={theme} connected={linkState.connected} />
+
+            {/* Relay Server Configuration */}
+            {settings.lucaLink.enabled && (
+              <div className="space-y-2 mt-4">
+                <label className="text-base font-bold text-[var(--app-text-muted)]">
+                  Custom relay server
+                </label>
+                <input
+                  type="text"
+                  value={settings.lucaLink.relayServerUrl || ""}
+                  onChange={(e) =>
+                    onUpdate("lucaLink", "relayServerUrl", e.target.value)
+                  }
+                  disabled={!settings.lucaLink.enabled}
+                  placeholder="https://lucaos.onrender.com"
+                  className={`w-full rounded-lg p-3 outline-none font-mono text-sm disabled:opacity-50 transition-all border`}
+                  style={settingsControlInlineStyle}
+                />
+                <p className="text-sm text-[var(--app-text-muted)] opacity-60">
+                  Default encrypted relay provided. Advanced users can self-host
+                  their own.
+                </p>
+              </div>
+            )}
+
+            {/* VPN Server URL */}
+            {(settings.lucaLink.connectionMode === "auto" ||
+              settings.lucaLink.connectionMode === "vpn") && (
+              <div className="space-y-2">
+                <label className="text-base font-bold text-[var(--app-text-muted)]">
+                  Trusted VPN server URL (optional)
+                </label>
+                <input
+                  type="text"
+                  value={settings.lucaLink.vpnServerUrl}
+                  onChange={(e) =>
+                    onUpdate("lucaLink", "vpnServerUrl", e.target.value)
+                  }
+                  disabled={!settings.lucaLink.enabled}
+                  placeholder={`http://100.x.x.x:${WS_PORT} (Tailscale IP)`}
+                  className={`w-full rounded-lg p-3 outline-none font-mono text-sm disabled:opacity-50 transition-all border`}
+                  style={settingsControlInlineStyle}
+                />
+                <p className="text-sm text-[var(--app-text-muted)] opacity-60">
+                  Leave empty for auto-detection. Use a trusted Tailscale IP
+                  (100.x.x.x) if configured.
+                </p>
+              </div>
+            )}
+
+            {/* Info Box */}
+            <div
+              className={`p-4 rounded-xl border transition-all text-[var(--app-text-main)] opacity-90 shadow-sm mt-6`}
+              style={{
+                backgroundColor: settingsSurfaceTokens.glass,
+                borderColor: settingsSurfaceTokens.borderSubtle,
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <Icon
+                  name="Shield"
+                  variant="BoldDuotone"
+                  className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--app-text-main)]"
+                />
+                <div>
+                  <div className="font-medium mb-1 text-sm opacity-70">
+                    Privacy & Security
+                  </div>
+                  <div className="font-bold mb-1">Connection Protection</div>
+                  <ul className="space-y-1 opacity-80 text-sm list-disc pl-4 text-[var(--app-text-muted)]">
+                    <li>Local & VPN: direct private routes, no relay server</li>
+                    <li>
+                      Relay: End-to-end encrypted, messages are unreadable by
+                      relay
+                    </li>
+                    <li>Auto mode prioritizes local for maximum privacy</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </SettingsSection>
+
+      <SettingsSection
+        title="Sync Behavior"
+        description="Memory sync, settings sync, conversation handoff, voice handoff, and notification handoff stay user-readable."
+        icon="RefreshCircle"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <SettingsRow
+          label="Memory sync"
+          description="Use existing Luca Link sync behavior when enabled."
+        />
+        <SettingsRow
+          label="Settings sync"
+          description="Keep device preferences aligned through the current link service."
+        />
+        <SettingsRow
+          label="Conversation and voice handoff"
+          description="Move between desktop, phone, and browser where Luca Link supports handoff."
+        />
+        <SettingsRow
+          label="Notification handoff"
+          description="Notification routing stays under existing service policy."
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Access Control"
+        description="Trusted devices, revoke device, confirmation requirements, and session expiry stay grouped here."
+        icon="ShieldCheck"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <SettingsCard>
+          <p className="text-sm font-semibold">Trusted device flow</p>
+          <p className="mt-1 text-xs opacity-70">
+            Use the existing pairing and guest access controls to authorize or
+            revoke devices.
+          </p>
+        </SettingsCard>
+      </SettingsSection>
+
+      <SettingsAdvancedDisclosure
+        title="Advanced Details"
+        description="Relay mode, local network discovery, VPN/tunnel settings, pairing token diagnostics, and connection logs."
+      >
+        <SettingsRow
+          label="Relay mode"
+          description="Relay server URL and mode controls remain in the existing Luca Link fields."
+        />
+        <SettingsRow
+          label="Local network discovery"
+          description="Discovery diagnostics stay grouped with low-level connection details."
+        />
+        <SettingsRow
+          label="VPN/tunnel settings"
+          description="VPN server URL and tunnel details are advanced configuration."
+        />
+        <SettingsRow
+          label="Connection logs"
+          description="Pairing token and connection logs stay diagnostic-only."
+        />
+      </SettingsAdvancedDisclosure>
     </div>
   );
 };

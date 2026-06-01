@@ -3,6 +3,17 @@ import { Icon } from "../ui/Icon";
 import { memoryService } from "../../services/memoryService";
 import { MemoryNode } from "../../types";
 import { cortexUrl } from "../../config/api";
+import {
+  SettingsCard,
+  SettingsDangerZone,
+  SettingsRow,
+  SettingsSection,
+  SettingsStatusCard,
+  settingsControlInlineStyle,
+  settingsInputClassName,
+  settingsSelectClassName,
+} from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 interface SettingsDataTabProps {
   theme?: any;
   memoryStats: { count: number };
@@ -71,84 +82,72 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
 
   return (
     <div className={`space-y-6 flex flex-col h-full ${isMobile ? "px-0" : ""}`}>
-      {/* Overview Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div
-          className={`p-4 rounded-lg flex items-center justify-between ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "bg-[var(--app-bg-tint)] rounded-lg"} tech-border glass-blur shadow-sm transition-all`}
-        >
-          <div>
-            <h3 className="text-xs uppercase tracking-wider text-[var(--app-text-muted)] font-bold mb-1 opacity-60">
-              Total Facts
-            </h3>
-            <div
-              className="text-2xl font-mono leading-none text-[var(--app-text-main)]"
-            >
-              {memoryStats.count}
-            </div>
-          </div>
-          <Icon name="Database" variant="BoldDuotone" className="w-8 h-8 opacity-20 text-[var(--app-text-main)]" />
-        </div>
-
-        <div
-          className={`p-4 rounded-lg space-y-2 ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "bg-[var(--app-bg-tint)] rounded-lg"} tech-border glass-blur shadow-sm transition-all`}
-        >
-          <button
-            onClick={() => {
-              const blob = new Blob([JSON.stringify(memories, null, 2)], {
-                type: "application/json",
-              });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `luca_memory_dump_${Date.now()}.json`;
-              a.click();
-            }}
-            className={`w-full flex items-center gap-2 text-sm font-bold text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-colors`}
-          >
-            <Icon name="Download" className="w-3.5 h-3.5 text-[var(--app-text-main)]" /> Export JSON
-          </button>
-          <button
-            onClick={() => {
-              if (
-                confirm(
-                  "DANGER: Wiping memory will erase everything Luca has learned. Continue?",
-                )
-              ) {
-                memoryService.wipeMemory();
-                loadAllMemories();
-              }
-            }}
-            className="w-full flex items-center gap-2 text-sm font-bold text-red-500/70 hover:text-red-400 transition-colors"
-          >
-            <Icon name="Trash2" className="w-3.5 h-3.5" /> Wipe Store
-          </button>
-        </div>
-      </div>
-
-      {/* Memory Explorer */}
-      <div
-        className={`flex-1 flex flex-col min-h-0 overflow-hidden ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)]"} tech-border glass-blur`}
+      <SettingsSection
+        title="Memory Status"
+        description="View and control what Luca remembers. This trust surface keeps memory clear and calm."
+        icon="Database"
+        isMobile={isMobile}
       >
-        <div
-          className={`p-3 border-b flex flex-wrap gap-2 items-center justify-between border-[var(--app-border-main)] bg-white/5 opacity-90`}
-        >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <SettingsStatusCard
+            label="Memory"
+            value="On-device"
+            detail="Local memory is loaded from Luca's archive."
+          />
+          <SettingsStatusCard
+            label="Total facts"
+            value={`${memoryStats.count}`}
+            detail="Personal details, preferences, projects, devices, and work context."
+          />
+          <SettingsStatusCard
+            label="Last updated"
+            value={
+              memories[0]
+                ? new Date(memories[0].timestamp).toLocaleDateString()
+                : "No memories"
+            }
+            detail="Sorted by most recent memory."
+          />
+          <SettingsStatusCard
+            label="Sync status"
+            value="Local first"
+            detail="Backend save is attempted when memory changes."
+          />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="What Luca Remembers"
+        description="Search personal details, preferences, projects, devices, and work context."
+        icon="Brain"
+        isMobile={isMobile}
+      >
+        <div className="flex flex-wrap gap-2 items-center justify-between">
           <div className="relative flex-1 min-w-[200px]">
-            <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--app-text-muted)] opacity-60" />
+            <Icon
+              name="Search"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--app-text-muted)] opacity-60"
+            />
             <input
               type="text"
-              placeholder="Search facts, concepts, entities..."
+              placeholder="Search memories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full bg-[var(--app-bg-tint)] text-[var(--app-text-main)] rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none transition-all shadow-sm tech-border`}
+              className={`${settingsInputClassName} pl-9`}
+              style={settingsControlInlineStyle}
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <Icon name="Filter" className="w-4 h-4 text-[var(--app-text-muted)] opacity-60" />
+            <Icon
+              name="Filter"
+              className="w-4 h-4 text-[var(--app-text-muted)] opacity-60"
+            />
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className={`bg-[var(--app-bg-tint)] text-[var(--app-text-main)] rounded-lg px-3 py-1.5 text-xs focus:outline-none transition-all shadow-sm font-bold tech-border`}
+              className={settingsSelectClassName}
+              style={settingsControlInlineStyle}
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -158,131 +157,228 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             </select>
             <button
               onClick={loadAllMemories}
-              className={`p-2 rounded-lg hover:bg-white/10 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all outline-none border border-transparent hover:border-[var(--app-border-main)]`}
+              className="rounded-xl border px-3 py-2 text-sm transition-all"
+              style={settingsControlInlineStyle}
             >
               <Icon
                 name="Refresh"
-                className={`w-4 h-4 ${loading ? "animate-spin text-[var(--app-text-main)]" : ""}`}
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
               />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
+        <div className="max-h-[420px] overflow-y-auto no-scrollbar space-y-2">
           {loading ? (
-            <div className="h-full flex flex-col items-center justify-center opacity-50 space-y-2 py-10">
-              <Icon name="Refresh" className="w-8 h-8 animate-spin text-[var(--app-text-main)]" />
-              <span className="text-xs font-bold uppercase tracking-widest text-[var(--app-text-muted)]">
-                Accessing Index...
-              </span>
-            </div>
+            <SettingsCard>
+              <div className="flex items-center gap-3 opacity-70">
+                <Icon name="Refresh" className="w-5 h-5 animate-spin" />
+                <span className="text-sm font-medium">Loading memories…</span>
+              </div>
+            </SettingsCard>
           ) : filteredMemories.length > 0 ? (
             filteredMemories.map((m) => (
-              <div
-                key={m.id}
-                className={`group p-4 relative overflow-hidden transition-all ${isMobile ? "border-x-0 border-b rounded-none" : "rounded-lg bg-[var(--app-bg-tint)] shadow-sm"} tech-border glass-blur`}
-              >
-                {/* Delete Button */}
-                <div className="absolute top-1 right-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => deleteMemory(m.id)}
-                    className="p-2 rounded-lg hover:bg-red-500/20 text-[var(--app-text-muted)] hover:text-red-400 transition-all border border-transparent hover:border-red-500/30 shadow-sm"
-                    title="Delete memory"
-                  >
-                    <Icon name="Trash" className="w-4 h-4" />
-                  </button>
-                </div>
+              <SettingsCard key={m.id} className="group relative">
+                <button
+                  onClick={() => deleteMemory(m.id)}
+                  className="absolute right-3 top-3 rounded-lg p-2 opacity-0 transition-opacity group-hover:opacity-100"
+                  style={{ color: settingsSurfaceTokens.textTertiary }}
+                  title="Delete memory"
+                >
+                  <Icon name="Trash" className="w-4 h-4" />
+                </button>
 
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`mt-1.5 w-2 h-2 rounded-full shrink-0 shadow-[0_0_8px_rgba(0,0,0,0.2)] ${
-                      m.category === "SEMANTIC"
-                        ? "bg-blue-500"
-                        : m.category === "USER_STATE"
-                          ? "bg-purple-500"
-                          : m.category === "SESSION_STATE"
-                            ? "bg-amber-500"
-                            : "bg-green-500"
-                    }`}
+                <div className="flex items-start gap-4 pr-10">
+                  <span
+                    className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: settingsSurfaceTokens.accentPrimary,
+                    }}
                   />
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className={`text-sm font-bold text-[var(--app-text-main)] mb-1 flex flex-wrap items-center gap-2`}
-                    >
-                      <span className="truncate">{m.key}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className="truncate text-sm font-semibold"
+                        style={{ color: settingsSurfaceTokens.textPrimary }}
+                      >
+                        {m.key}
+                      </span>
                       {m.metadata?.source && (
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 border border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-80`}
+                          className="rounded-full border px-2 py-0.5 text-[10px]"
+                          style={{
+                            borderColor: settingsSurfaceTokens.borderSubtle,
+                            color: settingsSurfaceTokens.textTertiary,
+                          }}
                         >
                           {m.metadata.source}
                         </span>
                       )}
                     </div>
                     <p
-                      className={`text-sm text-[var(--app-text-muted)] leading-relaxed break-words opacity-90`}
+                      className="mt-1 break-words text-sm leading-relaxed"
+                      style={{ color: settingsSurfaceTokens.textSecondary }}
                     >
                       {m.value}
                     </p>
-                    <div className="mt-3 flex items-center gap-4 text-[10px] text-[var(--app-text-muted)] opacity-60 font-bold uppercase tracking-tighter">
-                      <span className="flex items-center gap-1.5">
-                        <Icon name="Clock" className="w-3 h-3 text-[var(--app-text-muted)]" />
-                        {new Date(m.timestamp).toLocaleString()}
-                      </span>
-                      <span className="bg-white/5 px-2 py-0.5 rounded">
-                        {m.category.replace("_", " ")}
-                      </span>
+                    <div
+                      className="mt-3 flex flex-wrap items-center gap-3 text-[10px]"
+                      style={{ color: settingsSurfaceTokens.textTertiary }}
+                    >
+                      <span>{new Date(m.timestamp).toLocaleString()}</span>
+                      <span>{m.category.replace("_", " ")}</span>
                     </div>
                   </div>
                 </div>
-              </div>
+              </SettingsCard>
             ))
           ) : (
-            <div className="h-full flex flex-col items-center justify-center opacity-30 py-12">
-              <Icon name="Database" variant="BoldDuotone" className="w-16 h-16 mb-4 text-[var(--app-text-main)] opacity-20" />
-              <p className="text-lg font-bold text-[var(--app-text-main)]">No Memories Found</p>
-              <p className="text-sm text-[var(--app-text-muted)] mt-1">
-                Try a different search or connect more knowledge.
-              </p>
-            </div>
+            <SettingsCard>
+              <div className="py-8 text-center">
+                <Icon
+                  name="Database"
+                  variant="BoldDuotone"
+                  className="mx-auto mb-3 h-12 w-12 opacity-30"
+                />
+                <p className="text-sm font-semibold">No memories found</p>
+                <p className="mt-1 text-xs opacity-70">
+                  Try a different search or connect more knowledge.
+                </p>
+              </div>
+            </SettingsCard>
           )}
         </div>
-      </div>
+      </SettingsSection>
 
-      {/* Session Cleanup */}
-      <div
-        className={`p-4 flex items-center justify-between mt-auto tech-border glass-blur shadow-sm ${isMobile ? "border-x-0 border-y rounded-none bg-red-500/5 mx-0" : "rounded-lg bg-amber-500/10 mx-auto"}`}
+      <SettingsSection
+        title="Memory Controls"
+        description="Update memory visibility, refresh the archive, and forget selected memories from the cards above."
+        icon="Sliders"
+        isMobile={isMobile}
       >
-        <div className="flex items-center gap-4">
-          <Icon name="Logout" className="w-5 h-5 text-amber-500 opacity-80" />
-          <div>
-            <div
-              className={`text-sm font-bold text-[var(--app-text-main)] uppercase tracking-widest`}
+        <SettingsRow
+          label="Update memory"
+          description="Refresh Luca's local memory archive and backend snapshot when available."
+          control={
+            <button
+              onClick={loadAllMemories}
+              className="rounded-xl border px-3 py-2 text-sm"
+              style={settingsControlInlineStyle}
             >
-              Active Session
-            </div>
-            <div
-              className={`text-xs text-[var(--app-text-muted)] italic opacity-60`}
+              Refresh
+            </button>
+          }
+        />
+        <SettingsRow
+          label="Forget selected memory"
+          description="Use the delete control on an individual memory card."
+        />
+        <SettingsRow
+          label="Memory visibility"
+          description="Search and category filters determine which memories are visible here."
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Data Export"
+        description="Export memory and future conversation/context bundles without changing storage behavior."
+        icon="Download"
+        isMobile={isMobile}
+      >
+        <SettingsRow
+          label="Export memory"
+          description="Download Luca's current memory archive as JSON."
+          control={
+            <button
+              onClick={() => {
+                const blob = new Blob([JSON.stringify(memories, null, 2)], {
+                  type: "application/json",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `luca_memory_dump_${Date.now()}.json`;
+                a.click();
+              }}
+              className="rounded-xl border px-3 py-2 text-sm"
+              style={settingsControlInlineStyle}
             >
-              Clear chat history and active short-term state
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={() => {
-            if (
-              confirm(
-                "Clear active chat session? (Long-term memory will be preserved)",
-              )
-            ) {
-              localStorage.removeItem("LUCA_CHAT_HISTORY_V1");
-              window.location.reload();
-            }
-          }}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all bg-[var(--app-bg-tint)] text-[var(--app-text-muted)] shadow-sm tech-border glass-blur`}
-        >
-          Reset Session
-        </button>
-      </div>
+              Export JSON
+            </button>
+          }
+        />
+        <SettingsRow
+          label="Import memory"
+          description="Import and migration flows remain available where the existing product exposes them."
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Privacy"
+        description="Local-only memory, cloud sync, encryption, and sensitive-memory rules stay easy to review."
+        icon="ShieldCheck"
+        isMobile={isMobile}
+      >
+        <SettingsRow
+          label="Local-only memory"
+          description="Luca reads the local archive first."
+        />
+        <SettingsRow
+          label="Cloud sync"
+          description="Backend save is attempted only through the existing memory endpoint."
+        />
+        <SettingsRow
+          label="Sensitive memory rules"
+          description="Review and delete individual memories from What Luca Remembers."
+        />
+      </SettingsSection>
+
+      <SettingsDangerZone description="Delete memory, reset Luca profile, clear sessions, or wipe local data only after confirmation.">
+        <SettingsRow
+          label="Delete memory"
+          description="Wipe everything Luca has learned from the local memory store."
+          control={
+            <button
+              onClick={() => {
+                if (
+                  confirm(
+                    "DANGER: Wiping memory will erase everything Luca has learned. Continue?",
+                  )
+                ) {
+                  memoryService.wipeMemory();
+                  loadAllMemories();
+                }
+              }}
+              className="rounded-xl border px-3 py-2 text-sm"
+              style={settingsControlInlineStyle}
+            >
+              Wipe Store
+            </button>
+          }
+        />
+        <SettingsRow
+          label="Clear sessions"
+          description="Clear active chat history while preserving long-term memory."
+          control={
+            <button
+              onClick={() => {
+                if (
+                  confirm(
+                    "Clear active chat session? (Long-term memory will be preserved)",
+                  )
+                ) {
+                  localStorage.removeItem("LUCA_CHAT_HISTORY_V1");
+                  window.location.reload();
+                }
+              }}
+              className="rounded-xl border px-3 py-2 text-sm"
+              style={settingsControlInlineStyle}
+            >
+              Reset Session
+            </button>
+          }
+        />
+      </SettingsDangerZone>
     </div>
   );
 };
