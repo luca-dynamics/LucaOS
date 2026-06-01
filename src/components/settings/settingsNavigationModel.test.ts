@@ -3,7 +3,6 @@ import {
   isMobileAdvancedSettingsTab,
   mobileAdvancedSettingsTabs,
   mobileAvailableAdvancedSettingsTabs,
-  mobileDesktopOnlyAdvancedSettingsTabs,
   mobileSettingsNavigationTabs,
   mobileStandardSettingsTabs,
   settingsAdvancedGroup,
@@ -14,28 +13,56 @@ import {
   settingsOriginModeCandidateTabIds,
 } from "./settingsExperienceMap";
 
+const expectedDesktopTabIds = [
+  "general",
+  "brain",
+  "voice",
+  "vision",
+  "model-manager",
+  "personality",
+  "autonomy",
+  "profile",
+  "lucalink",
+  "mcp-bridge",
+  "iot",
+  "connectors",
+  "data",
+  "knowledge-bridge",
+  "about",
+];
+
+const expectedMobileStandardTabIds = [
+  "general",
+  "brain",
+  "voice",
+  "vision",
+  "personality",
+  "profile",
+  "lucalink",
+  "data",
+  "knowledge-bridge",
+  "about",
+];
+
+const expectedMobileAdvancedTabIds = [
+  "model-manager",
+  "autonomy",
+  "mcp-bridge",
+  "iot",
+  "connectors",
+];
+
 const ids = (tabs: readonly { id: string }[]) => tabs.map((tab) => tab.id);
 
 describe("settingsNavigationModel", () => {
   it("keeps desktop Settings tabs fully visible in current audit order", () => {
-    expect(ids(settingsDesktopTabs)).toEqual(
-      settingsExperienceMap.map((entry) => entry.id),
-    );
+    expect(ids(settingsDesktopTabs)).toEqual(expectedDesktopTabIds);
   });
 
   it("represents standard mobile Settings tabs directly", () => {
-    expect(ids(mobileStandardSettingsTabs)).toEqual([
-      "general",
-      "brain",
-      "voice",
-      "vision",
-      "personality",
-      "profile",
-      "lucalink",
-      "data",
-      "knowledge-bridge",
-      "about",
-    ]);
+    expect(ids(mobileStandardSettingsTabs)).toEqual(
+      expectedMobileStandardTabIds,
+    );
   });
 
   it("adds an Advanced Settings group to mobile navigation", () => {
@@ -44,31 +71,18 @@ describe("settingsNavigationModel", () => {
       label: "Advanced Settings",
     });
     expect(ids(mobileSettingsNavigationTabs)).toEqual([
-      ...ids(mobileStandardSettingsTabs),
+      ...expectedMobileStandardTabIds,
       "advanced-settings",
     ]);
   });
 
-  it("represents mobile-available tactical and advanced tabs inside Advanced Settings", () => {
-    expect(ids(mobileAdvancedSettingsTabs)).toEqual([
-      "model-manager",
-      "autonomy",
-      "mcp-bridge",
-      "iot",
-      "connectors",
-    ]);
-    expect(ids(mobileAvailableAdvancedSettingsTabs)).toEqual([
-      "model-manager",
-      "autonomy",
-      "iot",
-    ]);
-  });
-
-  it("keeps desktop-only advanced tabs classified without forcing mobile rendering", () => {
-    expect(ids(mobileDesktopOnlyAdvancedSettingsTabs)).toEqual([
-      "mcp-bridge",
-      "connectors",
-    ]);
+  it("represents all mobile tactical and advanced tabs inside Advanced Settings", () => {
+    expect(ids(mobileAdvancedSettingsTabs)).toEqual(
+      expectedMobileAdvancedTabIds,
+    );
+    expect(ids(mobileAvailableAdvancedSettingsTabs)).toEqual(
+      expectedMobileAdvancedTabIds,
+    );
   });
 
   it("classifies MCP Bridge as tactical/advanced, not Origin-only", () => {
@@ -78,8 +92,21 @@ describe("settingsNavigationModel", () => {
 
     expect(mcpBridge?.primaryExperience).toBe("tactical-user");
     expect(mcpBridge?.futurePlacement).toBe("advanced-features");
+    expect(mcpBridge?.availability).toEqual(["desktop", "mobile"]);
     expect(isMobileAdvancedSettingsTab("mcp-bridge")).toBe(true);
     expect(settingsOriginModeCandidateTabIds).not.toContain("mcp-bridge");
+  });
+
+  it("classifies Connectors as tactical/advanced, not Origin-only", () => {
+    const connectors = settingsExperienceMap.find(
+      (entry) => entry.id === "connectors",
+    );
+
+    expect(connectors?.primaryExperience).toBe("tactical-user");
+    expect(connectors?.futurePlacement).toBe("advanced-features");
+    expect(connectors?.availability).toEqual(["desktop", "mobile"]);
+    expect(isMobileAdvancedSettingsTab("connectors")).toBe(true);
+    expect(settingsOriginModeCandidateTabIds).not.toContain("connectors");
   });
 
   it("does not introduce an Origin or Creator Dashboard tab", () => {

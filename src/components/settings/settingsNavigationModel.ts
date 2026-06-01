@@ -26,7 +26,8 @@ export const settingsAdvancedGroup: SettingsAdvancedGroupDefinition = {
   icon: "Sliders",
   description:
     "Advanced tools and controls for models, autonomy, devices, and integrations.",
-  availabilityNote: "Some advanced settings may be available on desktop only.",
+  availabilityNote:
+    "Some advanced surfaces may need additional mobile refinement.",
 };
 
 export const settingsDesktopTabs: SettingsTabDefinition[] =
@@ -56,14 +57,7 @@ export const mobileAdvancedSettingsTabs: SettingsTabDefinition[] =
     );
   });
 
-export const mobileAvailableAdvancedSettingsTabs =
-  mobileAdvancedSettingsTabs.filter((tab) => tab.platforms.includes("mobile"));
-
-export const mobileDesktopOnlyAdvancedSettingsTabs =
-  mobileAdvancedSettingsTabs.filter(
-    (tab) =>
-      !tab.platforms.includes("mobile") && tab.platforms.includes("desktop"),
-  );
+export const mobileAvailableAdvancedSettingsTabs = mobileAdvancedSettingsTabs;
 
 export const mobileSettingsNavigationTabs: Array<
   SettingsTabDefinition | SettingsAdvancedGroupDefinition

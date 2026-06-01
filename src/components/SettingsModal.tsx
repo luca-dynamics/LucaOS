@@ -29,7 +29,6 @@ import SettingsAutonomyTab from "./settings/SettingsAutonomyTab";
 import {
   isMobileAdvancedSettingsTab,
   mobileAvailableAdvancedSettingsTabs,
-  mobileDesktopOnlyAdvancedSettingsTabs,
   mobileSettingsNavigationTabs,
   settingsAdvancedGroup,
   settingsDesktopTabs,
@@ -402,126 +401,80 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               touchAction: "pan-y",
             }}
           >
-            {isMobile &&
-              (activeTab === settingsAdvancedGroup.id ||
-                mobileDesktopOnlyAdvancedSettingsTabs.some(
-                  (tab) => tab.id === activeTab,
-                )) && (
-                <div className="space-y-5">
-                  <div
-                    className="rounded-2xl border p-4"
-                    style={{
-                      borderColor: "var(--app-border-main)",
-                      backgroundColor: "var(--app-bg-tint)",
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon
-                        name={settingsAdvancedGroup.icon}
-                        variant="BoldDuotone"
-                        className="h-5 w-5"
-                        style={{ color: liveTheme.hex }}
-                      />
-                      <div>
-                        <h3
-                          className="text-base font-bold"
-                          style={{ color: "var(--app-text-main)" }}
-                        >
-                          {settingsAdvancedGroup.label}
-                        </h3>
-                        <p
-                          className="mt-1 text-xs leading-relaxed"
-                          style={{ color: "var(--app-text-muted)" }}
-                        >
-                          {settingsAdvancedGroup.description}
-                        </p>
-                      </div>
-                    </div>
-                    <p
-                      className="mt-3 text-[11px] leading-relaxed"
-                      style={{ color: "var(--app-text-muted)" }}
-                    >
-                      {settingsAdvancedGroup.availabilityNote}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    {mobileAvailableAdvancedSettingsTabs.map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className="flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all hover:bg-white/5"
-                        style={{
-                          borderColor: "var(--app-border-main)",
-                          backgroundColor: "rgba(255,255,255,0.03)",
-                        }}
+            {isMobile && activeTab === settingsAdvancedGroup.id && (
+              <div className="space-y-5">
+                <div
+                  className="rounded-2xl border p-4"
+                  style={{
+                    borderColor: "var(--app-border-main)",
+                    backgroundColor: "var(--app-bg-tint)",
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      name={settingsAdvancedGroup.icon}
+                      variant="BoldDuotone"
+                      className="h-5 w-5"
+                      style={{ color: liveTheme.hex }}
+                    />
+                    <div>
+                      <h3
+                        className="text-base font-bold"
+                        style={{ color: "var(--app-text-main)" }}
                       >
-                        <span className="flex items-center gap-3">
-                          <Icon
-                            name={tab.icon}
-                            variant="Linear"
-                            className="h-5 w-5"
-                            style={{ color: liveTheme.hex }}
-                          />
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "var(--app-text-main)" }}
-                          >
-                            {tab.label}
-                          </span>
-                        </span>
-                        <Icon
-                          name="ChevronRight"
-                          className="h-4 w-4"
-                          style={{ color: "var(--app-text-muted)" }}
-                        />
-                      </button>
-                    ))}
-                  </div>
-
-                  {mobileDesktopOnlyAdvancedSettingsTabs.length > 0 && (
-                    <div className="space-y-2">
+                        {settingsAdvancedGroup.label}
+                      </h3>
                       <p
-                        className="text-[11px] font-bold uppercase tracking-[0.2em]"
+                        className="mt-1 text-xs leading-relaxed"
                         style={{ color: "var(--app-text-muted)" }}
                       >
-                        Available on desktop
+                        {settingsAdvancedGroup.description}
                       </p>
-                      {mobileDesktopOnlyAdvancedSettingsTabs.map((tab) => (
-                        <div
-                          key={tab.id}
-                          className="flex w-full items-center justify-between rounded-xl border p-3 opacity-70"
-                          style={{
-                            borderColor: "var(--app-border-main)",
-                            backgroundColor: "rgba(255,255,255,0.02)",
-                          }}
-                        >
-                          <span className="flex items-center gap-3">
-                            <Icon
-                              name={tab.icon}
-                              variant="Linear"
-                              className="h-5 w-5"
-                              style={{ color: "var(--app-text-muted)" }}
-                            />
-                            <span
-                              className="text-sm font-semibold"
-                              style={{ color: "var(--app-text-main)" }}
-                            >
-                              {tab.label}
-                            </span>
-                          </span>
-                          <span
-                            className="text-[10px] font-bold uppercase tracking-wide"
-                            style={{ color: "var(--app-text-muted)" }}
-                          >
-                            Desktop only
-                          </span>
-                        </div>
-                      ))}
                     </div>
-                  )}
+                  </div>
+                  <p
+                    className="mt-3 text-[11px] leading-relaxed"
+                    style={{ color: "var(--app-text-muted)" }}
+                  >
+                    {settingsAdvancedGroup.availabilityNote}
+                  </p>
                 </div>
-              )}
+
+                <div className="space-y-2">
+                  {mobileAvailableAdvancedSettingsTabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className="flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all hover:bg-white/5"
+                      style={{
+                        borderColor: "var(--app-border-main)",
+                        backgroundColor: "rgba(255,255,255,0.03)",
+                      }}
+                    >
+                      <span className="flex items-center gap-3">
+                        <Icon
+                          name={tab.icon}
+                          variant="Linear"
+                          className="h-5 w-5"
+                          style={{ color: liveTheme.hex }}
+                        />
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "var(--app-text-main)" }}
+                        >
+                          {tab.label}
+                        </span>
+                      </span>
+                      <Icon
+                        name="ChevronRight"
+                        className="h-4 w-4"
+                        style={{ color: "var(--app-text-muted)" }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {activeTab === "general" && (
               <SettingsGeneralTab
                 settings={settings}
@@ -584,7 +537,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 isMobile={isMobile}
               />
             )}
-            {activeTab === "connectors" && !isMobile && (
+            {activeTab === "connectors" && (
               <SettingsConnectorsTab
                 settings={settings}
                 theme={liveTheme}
@@ -600,7 +553,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 isMobile={isMobile}
               />
             )}
-            {activeTab === "mcp-bridge" && !isMobile && (
+            {activeTab === "mcp-bridge" && (
               <SettingsMCPBridgeTab
                 settings={settings}
                 theme={liveTheme}
