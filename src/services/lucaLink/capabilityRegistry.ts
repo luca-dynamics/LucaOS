@@ -466,6 +466,31 @@ export function validateHostManifest(
 // Mapping from the active LucaLinkDevice shape
 // ===========================================================================
 
+/**
+ * Conservative coarse platform inference from the legacy `LucaLinkDevice.type`.
+ *
+ * The old `type` only encodes a form factor, not an OS, so desktop-like and
+ * mobile-like types intentionally resolve to `"unknown"` (we cannot tell
+ * Windows/macOS/Linux from a "desktop", nor iOS/Android from a "mobile").
+ * Callers that know the real platform should pass it explicitly.
+ */
+export function inferPlatformFromLucaLinkDeviceType(
+  type: string,
+): LucaHostPlatform {
+  switch (type.toLowerCase()) {
+    case "web":
+    case "browser":
+    case "guest":
+      return "web";
+    case "robot":
+    case "humanoid":
+    case "drone":
+      return "robotics";
+    default:
+      return "unknown";
+  }
+}
+
 function inferRoleFromLucaLinkDeviceType(
   type: string,
   isLocalOrigin: boolean,
@@ -514,17 +539,24 @@ function inferRoleFromLucaLinkDeviceType(
  */
 export function manifestFromLucaLinkDevice(
   device: LucaLinkDevice,
-  options: { isLocalOrigin?: boolean; now?: number } = {},
+  options: {
+    isLocalOrigin?: boolean;
+    platform?: LucaHostPlatform;
+    now?: number;
+  } = {},
 ): LucaHostManifest {
   const isLocalOrigin = options.isLocalOrigin ?? false;
   const hostRole = inferRoleFromLucaLinkDeviceType(
     device.type ?? "",
     isLocalOrigin,
   );
+  const platform =
+    options.platform ?? inferPlatformFromLucaLinkDeviceType(device.type ?? "");
 
   const manifest = createDefaultHostManifest({
     deviceId: device.deviceId,
     deviceName: device.name,
+    platform,
     hostRole,
     isLocalOrigin,
     now: options.now,

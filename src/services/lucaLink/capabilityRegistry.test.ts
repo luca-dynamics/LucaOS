@@ -10,6 +10,7 @@ import {
   detectLocalHostHints,
   getDefaultPermissionsForRole,
   inferHostRoleFromPlatform,
+  inferPlatformFromLucaLinkDeviceType,
   inferPlatformFromUserAgent,
   isHighRiskCapability,
   manifestFromLucaLinkDevice,
@@ -197,15 +198,112 @@ describe("manifestFromLucaLinkDevice", () => {
     expect(local.hostRole).toBe("origin");
   });
 
-  it("maps web/guest devices conservatively to guest", () => {
-    const guest = manifestFromLucaLinkDevice({
-      deviceId: "g1",
-      type: "web",
-      name: "Browser Tab",
+  it("maps web/guest devices to platform web and role guest", () => {
+    for (const type of ["web", "guest", "browser"]) {
+      const guest = manifestFromLucaLinkDevice({
+        deviceId: `g-${type}`,
+        type,
+        name: "Browser Tab",
+        lastSeen: 1,
+      });
+      expect(guest.platform).toBe("web");
+      expect(guest.hostRole).toBe("guest");
+      expect(guest.trust.trustLevel).toBe("guest");
+    }
+  });
+
+  it("maps robot/humanoid/drone devices to platform robotics and role embodied", () => {
+    for (const type of ["robot", "humanoid", "drone"]) {
+      const embodied = manifestFromLucaLinkDevice({
+        deviceId: `r-${type}`,
+        type,
+        name: "Body",
+        lastSeen: 1,
+      });
+      expect(embodied.platform).toBe("robotics");
+      expect(embodied.hostRole).toBe("embodied");
+    }
+  });
+
+  it("desktop defaults platform unknown but role execution (origin when local)", () => {
+    const remote = manifestFromLucaLinkDevice({
+      deviceId: "d1",
+      type: "desktop",
+      name: "Studio",
       lastSeen: 1,
     });
-    expect(guest.hostRole).toBe("guest");
-    expect(guest.trust.trustLevel).toBe("guest");
+    expect(remote.platform).toBe("unknown");
+    expect(remote.hostRole).toBe("execution");
+
+    const local = manifestFromLucaLinkDevice(
+      { deviceId: "d1", type: "desktop", name: "Studio", lastSeen: 1 },
+      { isLocalOrigin: true },
+    );
+    expect(local.platform).toBe("unknown");
+    expect(local.hostRole).toBe("origin");
+  });
+
+  it("mobile defaults platform unknown but role companion", () => {
+    const mobile = manifestFromLucaLinkDevice({
+      deviceId: "m1",
+      type: "mobile",
+      name: "Phone",
+      lastSeen: 1,
+    });
+    expect(mobile.platform).toBe("unknown");
+    expect(mobile.hostRole).toBe("companion");
+  });
+
+  it("preserves an explicit platform override (mobile → ios/android)", () => {
+    for (const platform of ["ios", "android"] as const) {
+      const mobile = manifestFromLucaLinkDevice(
+        { deviceId: "m2", type: "mobile", name: "Phone", lastSeen: 1 },
+        { platform },
+      );
+      expect(mobile.platform).toBe(platform);
+      expect(mobile.hostRole).toBe("companion");
+    }
+  });
+
+  it("preserves an explicit platform override (desktop → macos/windows)", () => {
+    for (const platform of ["macos", "windows"] as const) {
+      const desktop = manifestFromLucaLinkDevice(
+        { deviceId: "d2", type: "desktop", name: "Studio", lastSeen: 1 },
+        { platform },
+      );
+      expect(desktop.platform).toBe(platform);
+      expect(desktop.hostRole).toBe("execution");
+    }
+  });
+});
+
+describe("inferPlatformFromLucaLinkDeviceType", () => {
+  it("maps browser-like types to web and robotics types to robotics", () => {
+    expect(inferPlatformFromLucaLinkDeviceType("web")).toBe("web");
+    expect(inferPlatformFromLucaLinkDeviceType("browser")).toBe("web");
+    expect(inferPlatformFromLucaLinkDeviceType("guest")).toBe("web");
+    expect(inferPlatformFromLucaLinkDeviceType("robot")).toBe("robotics");
+    expect(inferPlatformFromLucaLinkDeviceType("humanoid")).toBe("robotics");
+    expect(inferPlatformFromLucaLinkDeviceType("drone")).toBe("robotics");
+  });
+
+  it("returns unknown for OS-ambiguous form factors", () => {
+    for (const type of [
+      "desktop",
+      "laptop",
+      "workstation",
+      "server",
+      "mobile",
+      "phone",
+      "tablet",
+      "tv",
+      "watch",
+      "iot",
+      "",
+      "weird",
+    ]) {
+      expect(inferPlatformFromLucaLinkDeviceType(type)).toBe("unknown");
+    }
   });
 });
 
