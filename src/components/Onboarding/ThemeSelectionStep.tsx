@@ -7,6 +7,10 @@ import {
   setHexAlpha,
 } from "../../config/themeColors";
 import { UIThemeId } from "../../types/lucaPersonality";
+import {
+  NORMAL_LUCA_THEME_OPTIONS,
+  getLucaThemeLabel,
+} from "../../config/lucaThemeLabels";
 
 interface ThemeSelectionStepProps {
   onComplete: () => void;
@@ -14,56 +18,7 @@ interface ThemeSelectionStepProps {
   onOpacityChange?: (opacity: number) => void;
 }
 
-const THEMES = [
-  {
-    id: "PROFESSIONAL",
-    label: "Professional",
-    hex: "#C6C6C6",
-    desc: "Light Grey / Minimal",
-  },
-  {
-    id: "MASTER_SYSTEM",
-    label: "Master System",
-    hex: "#22d3ee",
-    desc: "Blue / High-Tech",
-  },
-  {
-    id: "BUILDER",
-    label: "Builder",
-    hex: "#f97316",
-    desc: "Peach / Workspace",
-  },
-  {
-    id: "TERMINAL",
-    label: "Terminal",
-    hex: "#22c55e",
-    desc: "Green / CLI",
-  },
-  {
-    id: "AGENTIC_SLATE",
-    label: "Agentic Slate",
-    hex: "#64748b",
-    desc: "Slate / Professional",
-  },
-  {
-    id: "LIGHTCREAM",
-    label: "Light Cream",
-    hex: "#E5E1CD",
-    desc: "Cream / Minimal",
-  },
-  {
-    id: "VAPORWAVE",
-    label: "Vaporwave",
-    hex: "#f471b5",
-    desc: "Neon / Retro",
-  },
-  {
-    id: "FROST",
-    label: "Frost",
-    hex: "#93c5fd",
-    desc: "Ice / Glassmorphism",
-  },
-] as const;
+const THEMES = NORMAL_LUCA_THEME_OPTIONS;
 
 const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   onComplete,
@@ -83,11 +38,15 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   const [backgroundBlur, setBackgroundBlur] = useState(
     settingsService.get("general").backgroundBlur ?? 40,
   );
+  const selectedThemeLabel = getLucaThemeLabel(selectedTheme);
   const currentThemeHex =
-    THEMES.find((t) => t.id === selectedTheme)?.hex || "#ffffff";
+    THEMES.find(
+      (t) => t.canonicalThemeId === selectedThemeLabel.canonicalThemeId,
+    )?.hex || "#ffffff";
   const currentContrast = getDynamicContrast(selectedTheme, backgroundOpacity);
   const isLightSelection =
-    selectedTheme === "LIGHTCREAM" || selectedTheme === "AGENTIC_SLATE";
+    selectedThemeLabel.canonicalThemeId === "LIGHTCREAM" ||
+    selectedThemeLabel.canonicalThemeId === "PROFESSIONAL";
   const headingColor = isLightSelection ? currentContrast.text : currentThemeHex;
 
   // Dynamic Contrast logic - Now purely reactive logic
@@ -111,7 +70,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
     updateVisualCoreVariables(selectedTheme, backgroundOpacity);
   }, [selectedTheme, backgroundOpacity]);
 
-  const handleThemeSelect = (themeId: (typeof THEMES)[number]["id"]) => {
+  const handleThemeSelect = (themeId: UIThemeId) => {
     setSelectedTheme(themeId);
     if (onThemeChange) {
       onThemeChange(themeId);
@@ -179,16 +138,18 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
               <button
                 key={t.id}
                 type="button"
-                onClick={() => handleThemeSelect(t.id)}
+                onClick={() => handleThemeSelect(t.canonicalThemeId)}
+                title={t.description}
+                aria-label={`${t.label}: ${t.description}`}
                 className="relative flex items-center gap-2 p-2 rounded-xl border transition-all text-left group backdrop-blur-md h-[62px]"
                 style={{
                   borderColor:
-                    selectedTheme === t.id
+                    selectedThemeLabel.canonicalThemeId === t.canonicalThemeId
                       ? setHexAlpha(t.hex, 0.42)
                       : currentContrast.border,
                   backgroundColor: setHexAlpha(t.hex, 0.12),
                   backgroundImage:
-                    selectedTheme === t.id
+                    selectedThemeLabel.canonicalThemeId === t.canonicalThemeId
                       ? `linear-gradient(135deg, ${setHexAlpha(
                           t.hex,
                           0.25,
@@ -198,7 +159,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                           0.15,
                         )} 0%, ${setHexAlpha(t.hex, 0.05)} 100%)`,
                   boxShadow:
-                    selectedTheme === t.id
+                    selectedThemeLabel.canonicalThemeId === t.canonicalThemeId
                       ? `0 4px 20px ${setHexAlpha(
                           t.hex,
                           0.2,
@@ -207,7 +168,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                 }}
               >
                 <div
-                    className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                  className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
                   style={{
                     backgroundColor: currentContrast.bgTint,
                     borderColor: currentContrast.border,
@@ -220,7 +181,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                       boxShadow: `0 0 15px ${setHexAlpha(t.hex, 0.5)}`,
                     }}
                   />
-                  {selectedTheme === t.id && (
+                  {selectedThemeLabel.canonicalThemeId === t.canonicalThemeId && (
                     <div
                       className="absolute inset-0 rounded-full border-2 animate-pulse"
                       style={{ borderColor: t.hex, opacity: 0.5 }}
@@ -233,8 +194,9 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                     className="text-[10px] font-bold uppercase tracking-[0.06em] transition-colors truncate leading-tight"
                     style={{
                       color:
-                        selectedTheme === t.id
-                          ? t.id === "LIGHTCREAM" || t.id === "AGENTIC_SLATE"
+                        selectedThemeLabel.canonicalThemeId === t.canonicalThemeId
+                          ? t.canonicalThemeId === "LIGHTCREAM" ||
+                            t.canonicalThemeId === "PROFESSIONAL"
                             ? currentContrast.text
                             : t.hex
                           : currentContrast.text,
@@ -246,85 +208,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                     className="text-[9px] font-medium truncate leading-tight"
                     style={{ color: currentContrast.textMuted }}
                   >
-                    {t.desc}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-          <div className="flex justify-center gap-2.5">
-            {THEMES.slice(6).map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => handleThemeSelect(t.id)}
-                className="relative flex items-center gap-2 p-2 rounded-xl border transition-all text-left group backdrop-blur-md w-[calc(33.333%-0.25rem)] h-[62px]"
-                style={{
-                  borderColor:
-                    selectedTheme === t.id
-                      ? setHexAlpha(t.hex, 0.42)
-                      : currentContrast.border,
-                  backgroundColor: setHexAlpha(t.hex, 0.12),
-                  backgroundImage:
-                    selectedTheme === t.id
-                      ? `linear-gradient(135deg, ${setHexAlpha(
-                          t.hex,
-                          0.25,
-                        )} 0%, ${setHexAlpha(t.hex, 0.1)} 100%)`
-                      : `linear-gradient(135deg, ${setHexAlpha(
-                          t.hex,
-                          0.15,
-                        )} 0%, ${setHexAlpha(t.hex, 0.05)} 100%)`,
-                  boxShadow:
-                    selectedTheme === t.id
-                      ? `0 4px 20px ${setHexAlpha(
-                          t.hex,
-                          0.2,
-                        )}, inset 0 1px 0 ${setHexAlpha(t.hex, 0.2)}`
-                      : `0 2px 10px ${setHexAlpha(t.hex, 0.06)}`,
-                }}
-              >
-                <div
-                    className="w-7 h-7 rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
-                  style={{
-                    backgroundColor: currentContrast.bgTint,
-                    borderColor: currentContrast.border,
-                  }}
-                >
-                  <div
-                    className="h-3.5 w-3.5 rounded-full transition-all"
-                    style={{
-                      backgroundColor: t.hex,
-                      boxShadow: `0 0 15px ${setHexAlpha(t.hex, 0.5)}`,
-                    }}
-                  />
-                  {selectedTheme === t.id && (
-                    <div
-                      className="absolute inset-0 rounded-full border-2 animate-pulse"
-                      style={{ borderColor: t.hex, opacity: 0.5 }}
-                    />
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div
-                    className="text-[10px] font-bold uppercase tracking-[0.06em] transition-colors truncate leading-tight"
-                    style={{
-                      color:
-                        selectedTheme === t.id
-                          ? t.id === "LIGHTCREAM" || t.id === "AGENTIC_SLATE"
-                            ? currentContrast.text
-                            : t.hex
-                          : currentContrast.text,
-                    }}
-                  >
-                    {t.label}
-                  </div>
-                  <div
-                    className="text-[9px] font-medium truncate leading-tight"
-                    style={{ color: currentContrast.textMuted }}
-                  >
-                    {t.desc}
+                    {t.description}
                   </div>
                 </div>
               </button>

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { LucaSettings } from "../../services/settingsService";
-import { PERSONA_UI_CONFIG } from "../../services/lucaService";
 import { apiUrl } from "../../config/api";
 import { Icon as IconEngine } from "../ui/Icon";
 import ToneStyleSelector from "./ToneStyleSelector";
+import { PersonaMode } from "../../types/lucaPersonality";
 import {
-  UIThemeId,
-  PersonaMode,
-} from "../../types/lucaPersonality";
+  NORMAL_LUCA_THEME_OPTIONS,
+  getLucaThemeLabel,
+} from "../../config/lucaThemeLabels";
 
 
 interface ChromeProfileStatus {
@@ -147,7 +147,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 mr-2">
                   <span className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase">
-                    Sync Theme
+                    Sync appearance
                   </span>
                   <button
                     onClick={() =>
@@ -224,34 +224,24 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               <div className="flex items-center gap-1.5 mb-1 opacity-60">
                 <IconEngine name="Paintbrush" variant="BoldDuotone" className="w-3 h-3" style={{ color: theme.hex }} />
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--app-text-main)" }}>
-                  App Theme (Visuals)
+                  Appearance Theme
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    "MASTER_SYSTEM",
-                    "BUILDER",
-                    "PROFESSIONAL",
-                    "TERMINAL",
-                    "AGENTIC_SLATE",
-                    "LIGHTCREAM",
-                    "VAPORWAVE",
-                    "DICTATION",
-                    "FROST",
-                  ] as UIThemeId[]
-                ).map((t) => {
-                  const isActive = settings.general.theme === t;
-                  const cfg = PERSONA_UI_CONFIG[t];
-                  if (!cfg) return null; // Safety guard: Skip if theme config is missing
+                {NORMAL_LUCA_THEME_OPTIONS.map((option) => {
+                  const isActive =
+                    getLucaThemeLabel(settings.general.theme).canonicalThemeId ===
+                    option.canonicalThemeId;
                   return (
                     <button
-                      key={t}
+                      key={option.id}
                       disabled={settings.general.syncThemeWithPersona}
-                      onClick={() => onUpdate("general", "theme", t)}
-                      className={`py-1.5 rounded border text-[10px] font-mono transition-all flex items-center justify-center gap-1.5 glass-blur
+                      onClick={() => onUpdate("general", "theme", option.canonicalThemeId)}
+                      className={`py-2 px-2 rounded border text-[10px] font-semibold transition-all flex items-center justify-start gap-1.5 glass-blur text-left
                         ${settings.general.syncThemeWithPersona ? "opacity-20 cursor-not-allowed" : "opacity-80"}
                       `}
+                      title={option.description}
+                      aria-label={`${option.label}: ${option.description}`}
                       style={{
                         backgroundColor: isActive ? "var(--app-bg-tint)" : "var(--app-bg-tint, rgba(0,0,0,0.1))",
                         borderColor: isActive ? `${theme.hex}66` : "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -259,17 +249,17 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                       }}
                     >
                       <div
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: cfg.hex }}
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: option.hex }}
                       />
-                      {t === "LIGHTCREAM" ? "CREA" : t.slice(0, 4)}
+                      <span className="truncate">{option.label}</span>
                     </button>
                   );
                 })}
               </div>
               {settings.general.syncThemeWithPersona && (
                 <div className="text-[9px] text-[var(--app-text-muted)] italic mt-1 px-1">
-                  * Themes are locked to Persona. Disable &quot;Sync&quot; to
+                  * Appearance follows persona suggestions. Disable sync to
                   customize.
                 </div>
               )}
