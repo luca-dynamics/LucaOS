@@ -6,6 +6,12 @@ import DevicesSection from "../left-panel/DevicesSection";
 import ToolLauncherSection from "../left-panel/ToolLauncherSection";
 import type { LeftPanelToolActionKey, LeftPanelToolItem } from "../left-panel/leftPanelModel";
 import { soundService } from "../../services/soundService";
+import {
+  lucaMobileContentSurfaceStyle,
+  lucaMobileDividerStyle,
+  lucaMobileMutedTextStyle,
+  lucaMobilePanelSurfaceStyle,
+} from "../../styles/lucaMobileShellStyles";
 import { apiUrl } from "../../config/api";
 
 interface OperationsSidebarProps {
@@ -228,26 +234,36 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             ? "flex w-full"
             : "hidden"
           : "flex"
-      } flex-col h-full overflow-hidden z-10 glass-blur rounded-lg`}
-      style={{
-        backgroundColor: isLight
-          ? isLightCream
-            ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-            : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))"
-          : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
-      }}
+      } flex-col h-full overflow-hidden z-10 rounded-lg ${isMobile ? "" : "glass-blur"}`}
+      style={
+        isMobile
+          ? lucaMobilePanelSurfaceStyle
+          : {
+              backgroundColor: isLight
+                ? isLightCream
+                  ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
+                  : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))"
+                : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
+            }
+      }
     >
       {/* Mobile Header for System Panel */}
       {isMobile && (
-        <div className="flex items-center justify-between p-4 border-b border-[var(--app-border-main)]">
-          <h2 className="text-[var(--app-text-main)] font-black tracking-[0.3em] text-xs italic uppercase">
+        <div
+          className="flex items-center justify-between p-4 border-b"
+          style={lucaMobileDividerStyle}
+        >
+          <h2 className="font-black tracking-[0.3em] text-xs italic uppercase" style={lucaMobileMutedTextStyle}>
             System Center
           </h2>
         </div>
       )}
 
       {/* SYSTEM — live monitor graph */}
-      <div className="flex-none h-[28%] p-4 bg-transparent border-b border-[var(--app-border-main)]">
+      <div
+        className="flex-none h-[28%] p-4 border-b"
+        style={isMobile ? { ...lucaMobileContentSurfaceStyle, ...lucaMobileDividerStyle } : undefined}
+      >
         <SystemMonitor
           audioListenMode={isListeningAmbient}
           connected={connectionTier !== "OFFLINE"}
