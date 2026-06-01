@@ -2,11 +2,25 @@ import { describe, expect, it } from "vitest";
 import {
   brainAdvancedDetailsControlIds,
   generalAdvancedSettingsControlIds,
+  remainingAdvancedDetailsControlIds,
+  remainingDangerZoneControlIds,
+  remainingSettingsPremiumTabStructure,
   settingsPremiumTabStructure,
   visionAdvancedDetailsControlIds,
   voiceAdvancedRoutingControlIds,
 } from "./settingsPremiumStructureModel";
 import brainSource from "./SettingsBrainTab.tsx?raw";
+import modelManagerSource from "./SettingsModelManagerTab.tsx?raw";
+import mcpBridgeSource from "./SettingsMCPBridgeTab.tsx?raw";
+import connectorsSource from "./SettingsConnectorsTab.tsx?raw";
+import dataSource from "./SettingsDataTab.tsx?raw";
+import knowledgeSource from "./KnowledgeBridgeTab.tsx?raw";
+import lucaLinkSource from "./SettingsLucaLinkTab.tsx?raw";
+import autonomySource from "./SettingsAutonomyTab.tsx?raw";
+import iotSource from "./SettingsIoTTab.tsx?raw";
+import aboutSource from "./SettingsAboutTab.tsx?raw";
+import profileSource from "./OperatorProfilePanel.tsx?raw";
+import personalitySource from "./PersonalityDashboard.tsx?raw";
 import visionSource from "./SettingsVisionTab.tsx?raw";
 import voiceSource from "./SettingsVoiceTab.tsx?raw";
 
@@ -102,5 +116,125 @@ describe("settingsPremiumStructureModel", () => {
     expect(source.indexOf('title="Advanced Vision Details"')).toBeLessThan(
       source.indexOf("GPU resources"),
     );
+  });
+});
+
+describe("remaining Settings premium migration", () => {
+  const migratedSources = {
+    "model-manager": modelManagerSource,
+    "mcp-bridge": mcpBridgeSource,
+    connectors: connectorsSource,
+    data: dataSource,
+    "knowledge-bridge": knowledgeSource,
+    lucalink: lucaLinkSource,
+    autonomy: autonomySource,
+    iot: iotSource,
+    profile: profileSource,
+    personality: personalitySource,
+    about: aboutSource,
+  } as const;
+
+  it("documents the premium section hierarchy for every remaining Settings tab", () => {
+    expect(Object.keys(remainingSettingsPremiumTabStructure)).toEqual([
+      "model-manager",
+      "mcp-bridge",
+      "connectors",
+      "data",
+      "knowledge-bridge",
+      "lucalink",
+      "autonomy",
+      "iot",
+      "profile",
+      "personality",
+      "about",
+    ]);
+
+    expect(remainingSettingsPremiumTabStructure["mcp-bridge"]).toEqual(
+      expect.arrayContaining([
+        "MCP Status",
+        "Connected MCP Servers",
+        "Add MCP Server",
+        "Permissions",
+        "Tool Approval Policy",
+        "Advanced Details",
+      ]),
+    );
+    expect(remainingSettingsPremiumTabStructure.connectors).toContain(
+      "Danger Zone",
+    );
+    expect(remainingSettingsPremiumTabStructure.data).toContain("Privacy");
+    expect(remainingSettingsPremiumTabStructure.personality).toContain(
+      "Advanced / Origin-only",
+    );
+  });
+
+  it("renders migrated tabs with the PR #180 SettingsLayout primitives", () => {
+    for (const source of Object.values(migratedSources)) {
+      expect(source).toContain("SettingsSection");
+    }
+
+    expect(modelManagerSource).toContain("SettingsCard");
+    expect(modelManagerSource).toContain("SettingsAdvancedDisclosure");
+    expect(mcpBridgeSource).toContain("SettingsAdvancedDisclosure");
+    expect(connectorsSource).toContain("SettingsDangerZone");
+    expect(dataSource).toContain("SettingsDangerZone");
+    expect(iotSource).toContain("SettingsDangerZone");
+  });
+
+  it("places advanced technical controls under Advanced Details", () => {
+    expect(remainingAdvancedDetailsControlIds).toEqual(
+      expect.arrayContaining([
+        "model-manager.rawModelIds",
+        "mcp-bridge.rawMcpJson",
+        "connectors.tokenRefreshState",
+        "knowledge-bridge.embeddingModel",
+        "lucalink.pairingTokenDiagnostics",
+        "autonomy.planningTraces",
+        "iot.homeAssistantEndpoint",
+        "personality.rawSystemBlueprint",
+      ]),
+    );
+
+    for (const source of [
+      modelManagerSource,
+      mcpBridgeSource,
+      connectorsSource,
+      knowledgeSource,
+      lucaLinkSource,
+      autonomySource,
+      iotSource,
+      profileSource,
+      aboutSource,
+    ]) {
+      expect(source).toContain('title="Advanced Details"');
+    }
+  });
+
+  it("places destructive maintenance under Danger Zone where destructive actions exist", () => {
+    expect(remainingDangerZoneControlIds).toEqual(
+      expect.arrayContaining([
+        "model-manager.deleteModel",
+        "connectors.revokeAll",
+        "data.deleteMemory",
+        "data.clearSessions",
+        "iot.resetIntegration",
+      ]),
+    );
+
+    expect(modelManagerSource).toContain("SettingsDangerZone");
+    expect(connectorsSource).toContain("SettingsDangerZone");
+    expect(dataSource).toContain("SettingsDangerZone");
+    expect(iotSource).toContain("SettingsDangerZone");
+  });
+
+  it("keeps raw profile and personality/system controls out of primary user controls", () => {
+    expect(remainingSettingsPremiumTabStructure.profile).toContain(
+      "Advanced Details",
+    );
+    expect(remainingSettingsPremiumTabStructure.personality).toContain(
+      "Advanced / Origin-only",
+    );
+    expect(profileSource).not.toContain('title="Raw profile JSON"');
+    expect(personalitySource).not.toContain('title="Raw system blueprint"');
   });
 });

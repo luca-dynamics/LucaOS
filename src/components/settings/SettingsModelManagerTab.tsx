@@ -1,7 +1,15 @@
 import React from "react";
-import { Icon } from "../ui/Icon";
 import { ModelManager } from "../ModelManager";
 import RuntimeDiagnosticsPanel from "../runtime/RuntimeDiagnosticsPanel";
+import {
+  SettingsAdvancedDisclosure,
+  SettingsCard,
+  SettingsDangerZone,
+  SettingsRow,
+  SettingsSection,
+  SettingsStatusCard,
+} from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 interface SettingsModelManagerTabProps {
   theme: {
@@ -18,31 +26,117 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
 }) => {
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"} mt-2`}>
-      <div className={`flex items-center gap-2 mb-2 p-2 ${isMobile ? "border-x-0 rounded-none bg-white/5" : "rounded bg-black/20 border"} border-white/5`}>
-        <Icon name="Sliders" className="w-3 h-3" style={{ color: theme.hex }} />
-        <h5
-          className="text-[10px] font-bold uppercase tracking-widest"
-          style={{ color: "var(--app-text-muted)" }}
-        >
-          Response Dynamic Controls
-        </h5>
-      </div>
-
-      <RuntimeDiagnosticsPanel title="Runtime Status" />
-
-      <ModelManager theme={theme} isMobile={isMobile} />
-
-      <div 
-        className="text-[10px] font-mono mt-4 p-3 border rounded-lg uppercase tracking-tight transition-all"
-        style={{
-          backgroundColor: theme.themeName?.toLowerCase() === "lucagent" ? "rgba(248,250,252,1)" : "rgba(0,0,0,0.2)",
-          borderColor: theme.themeName?.toLowerCase() === "lucagent" ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.05)",
-          color: "var(--app-text-muted)"
-        }}
+      <SettingsSection
+        title="Model Library Summary"
+        description="Luca found the best local models for this device."
+        icon="Cpu"
+        accentColor={theme.hex}
+        isMobile={isMobile}
       >
-        Luca leverages local GGUF and ONNX models for offline operation.
-        Downloaded models are stored in the application data directory.
-      </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <SettingsStatusCard
+            label="Installed models"
+            value="Local library"
+            detail="Brain, vision, voice, TTS, and memory models stay grouped by capability."
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Available updates"
+            value="Ready to review"
+            detail="Downloads and compatible upgrades remain in the model manager queue."
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Storage used"
+            value="App data"
+            detail="Downloaded GGUF and ONNX assets remain in the application data directory."
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Runtime health"
+            value="Checked below"
+            detail="Ollama, local runtime, and CPU/GPU readiness are summarized before raw logs."
+            accentColor={theme.hex}
+          />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Recommended Models"
+        description="Review Luca's suggested local models for privacy, speed, multimodal work, and this device."
+        icon="Sparkles"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {[
+            "Best for this device",
+            "Best privacy model",
+            "Best speed model",
+            "Best multimodal model",
+          ].map((label) => (
+            <SettingsCard key={label}>
+              <p
+                className="text-sm font-semibold"
+                style={{ color: settingsSurfaceTokens.textPrimary }}
+              >
+                {label}
+              </p>
+              <p
+                className="mt-1 text-xs leading-relaxed"
+                style={{ color: settingsSurfaceTokens.textSecondary }}
+              >
+                Open the model manager below to install or switch compatible
+                recommendations.
+              </p>
+            </SettingsCard>
+          ))}
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Installed Models"
+        description="Manage Brain, Vision, Voice/STT, TTS, and embedding models without changing runtime behavior."
+        icon="Library"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <ModelManager theme={theme} isMobile={isMobile} />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Runtime"
+        description="Confirm Ollama, local runtime, and CPU/GPU compatibility before changing low-level details."
+        icon="Activity"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <RuntimeDiagnosticsPanel title="Runtime Status" />
+      </SettingsSection>
+
+      <SettingsAdvancedDisclosure
+        title="Advanced Details"
+        description="Raw model IDs, model paths, runtime logs, force rescan, and cache cleanup stay here."
+      >
+        <SettingsRow
+          label="Raw model IDs"
+          description="Visible in the model manager for troubleshooting provider and local-runtime routing."
+        />
+        <SettingsRow
+          label="Model paths"
+          description="Downloaded models are stored in the application data directory."
+        />
+        <SettingsRow
+          label="Runtime logs"
+          description="Use runtime diagnostics above for detailed local runtime health."
+        />
+        <SettingsRow
+          label="Force rescan / cache cleanup"
+          description="Maintenance actions remain available where the existing model manager exposes them."
+        />
+      </SettingsAdvancedDisclosure>
+
+      <SettingsDangerZone description="Destructive model deletion or cache wipe actions remain inside the model manager when available." />
     </div>
   );
 };

@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { apiUrl } from "../../config/api";
 import { Icon } from "../ui/Icon";
+import {
+  SettingsAdvancedDisclosure,
+  SettingsDangerZone,
+  SettingsRow,
+  SettingsSection,
+  SettingsStatusCard,
+} from "./SettingsLayout";
 
 interface SettingsConnectorsTabProps {
   theme?: any;
@@ -154,182 +161,289 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
 
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
-      <div
-        className={`text-sm p-4 ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl border bg-[var(--app-bg-tint)] shadow-sm"} border-[var(--app-border-main)] text-[var(--app-text-main)] transition-all tech-border glass-blur opacity-90`}
+      <SettingsSection
+        title="Connected Apps"
+        description="Connect apps and services Luca can work with. Sessions are remembered only when you allow persistence."
+        icon="Plug"
+        accentColor={theme?.hex}
+        isMobile={isMobile}
       >
-        <span className="font-bold opacity-60 uppercase tracking-widest text-xs block mb-1">Connected Accounts</span>
-        Connect approved messaging, workspace, and browser sessions so Luca can understand your digital context. Sessions are remembered only when you allow persistence.
-      </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <SettingsStatusCard
+            label="Workspace"
+            value={settings.connectors?.google ? "Google connected" : "Ready"}
+            detail="Gmail, Calendar, and Drive connect through the existing Google auth flow."
+            accentColor={theme?.hex}
+          />
+          <SettingsStatusCard
+            label="Developer"
+            value={
+              settings.connectors?.linkedin
+                ? "Developer apps ready"
+                : "Add when available"
+            }
+            detail="Developer connectors stay grouped with recommended apps."
+            accentColor={theme?.hex}
+          />
+          <SettingsStatusCard
+            label="Community"
+            value="Optional"
+            detail="Slack, Discord, Telegram, and social connectors remain opt-in."
+            accentColor={theme?.hex}
+          />
+        </div>
+      </SettingsSection>
 
-      <div className={`grid grid-cols-1 md:grid-cols-2 ${isMobile ? "gap-0" : "gap-5"}`}>
-        {SOCIAL_APPS.map((app) => {
-          const isManualConnected =
-            settings.connectors?.[app.id as keyof typeof settings.connectors];
+      <SettingsSection
+        title="Recommended Connectors"
+        description="Choose productivity, developer, finance, social/community, and smart home integrations from the existing connector cards."
+        icon="Sparkles"
+        accentColor={theme?.hex}
+        isMobile={isMobile}
+      >
+        <div
+          className={`grid grid-cols-1 md:grid-cols-2 ${isMobile ? "gap-0" : "gap-5"}`}
+        >
+          {SOCIAL_APPS.map((app) => {
+            const isManualConnected =
+              settings.connectors?.[app.id as keyof typeof settings.connectors];
 
-          const appStatus = socialStatus[app.id] || {};
-          const isHealthy =
-            appStatus.status === "READY" ||
-            appStatus.status === "AUTHENTICATED";
+            const appStatus = socialStatus[app.id] || {};
+            const isHealthy =
+              appStatus.status === "READY" ||
+              appStatus.status === "AUTHENTICATED";
 
-          const isChromeSynced = appStatus.hasChromeProfile;
-          const isConnected = isManualConnected || isHealthy;
+            const isChromeSynced = appStatus.hasChromeProfile;
+            const isConnected = isManualConnected || isHealthy;
 
-          const isAlwaysOn =
-            settings.socialPersistence?.[app.id] === "ALWAYS_ON";
+            const isAlwaysOn =
+              settings.socialPersistence?.[app.id] === "ALWAYS_ON";
 
-          return (
-            <div
-              key={app.id}
-              className={`relative group overflow-hidden border ${isMobile ? "border-x-0 border-b rounded-none p-6" : "rounded-2xl p-5 hover:-translate-y-1 shadow-xl"} transition-all duration-500 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
-            >
-              {/* Premium Glassmorphic Overlay: Multi-point Glow */}
+            return (
               <div
-                className="absolute inset-0 opacity-10 group-hover:opacity-25 transition-opacity duration-1000 pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle at top right, var(--app-text-main) 0%, transparent 60%), 
-                               radial-gradient(circle at bottom left, var(--app-text-main) 0%, transparent 40%)`,
-                }}
-              />
-
-              {/* Animated Top-Edge Accent */}
-              <div
-                className="absolute top-0 left-0 w-full h-[1px] opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100 origin-center bg-gradient-to-r from-transparent via-[var(--app-text-main)] to-transparent"
-              />
-
-              <div className="flex items-start gap-4 mb-4 relative z-10">
+                key={app.id}
+                className={`relative group overflow-hidden border ${isMobile ? "border-x-0 border-b rounded-none p-6" : "rounded-2xl p-5 hover:-translate-y-1 shadow-xl"} transition-all duration-500 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
+              >
+                {/* Premium Glassmorphic Overlay: Multi-point Glow */}
                 <div
-                  className="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:rotate-1 shadow-lg relative bg-[var(--app-bg-tint)] mt-0.5 border border-black/5"
-                >
-                  <div className="w-full h-full flex items-center justify-center relative p-2">
-                    <img
-                      src={app.logo}
-                      alt={app.name}
-                      className="w-full h-full object-contain relative z-10"
-                    />
-                  </div>
-                </div>
+                  className="absolute inset-0 opacity-10 group-hover:opacity-25 transition-opacity duration-1000 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at top right, var(--app-text-main) 0%, transparent 60%),
+                               radial-gradient(circle at bottom left, var(--app-text-main) 0%, transparent 40%)`,
+                  }}
+                />
 
-                <div className="flex-1 min-w-0 pr-1">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <h4
-                      className={`text-lg font-bold text-[var(--app-text-main)] tracking-tight truncate`}
-                    >
-                      {app.name}
-                    </h4>
-                    <div
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 uppercase tracking-wider ${
-                        isConnected
-                          ? "border-green-500/30 text-green-400 bg-green-500/10 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                {/* Animated Top-Edge Accent */}
+                <div className="absolute top-0 left-0 w-full h-[1px] opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100 origin-center bg-gradient-to-r from-transparent via-[var(--app-text-main)] to-transparent" />
+
+                <div className="flex items-start gap-4 mb-4 relative z-10">
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:rotate-1 shadow-lg relative bg-[var(--app-bg-tint)] mt-0.5 border border-black/5">
+                    <div className="w-full h-full flex items-center justify-center relative p-2">
+                      <img
+                        src={app.logo}
+                        alt={app.name}
+                        className="w-full h-full object-contain relative z-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0 pr-1">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <h4
+                        className={`text-lg font-bold text-[var(--app-text-main)] tracking-tight truncate`}
+                      >
+                        {app.name}
+                      </h4>
+                      <div
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 uppercase tracking-wider ${
+                          isConnected
+                            ? "border-green-500/30 text-green-400 bg-green-500/10 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                            : isChromeSynced
+                              ? "border-blue-500/30 text-blue-400 bg-blue-500/10"
+                              : "border-[var(--app-border-main)] text-[var(--app-text-muted)] bg-white/5 opacity-50"
+                        }`}
+                      >
+                        {isConnected
+                          ? appStatus.email || "ACTIVE"
                           : isChromeSynced
-                            ? "border-blue-500/30 text-blue-400 bg-blue-500/10"
-                            : "border-[var(--app-border-main)] text-[var(--app-text-muted)] bg-white/5 opacity-50"
-                      }`}
-                    >
-                      {isConnected
-                        ? appStatus.email || "ACTIVE"
-                        : isChromeSynced
-                          ? "SYNC READY"
-                          : "OFFLINE"}
+                            ? "SYNC READY"
+                            : "OFFLINE"}
+                      </div>
                     </div>
-                  </div>
-                  <p
-                    className={`text-sm text-[var(--app-text-muted)] leading-tight mb-3 line-clamp-1 opacity-70`}
-                  >
-                    {app.desc}
-                  </p>
+                    <p
+                      className={`text-sm text-[var(--app-text-muted)] leading-tight mb-3 line-clamp-1 opacity-70`}
+                    >
+                      {app.desc}
+                    </p>
 
-                  <div className="flex items-center">
-                    <div className="flex items-center gap-2">
-                       <span className={`text-[10px] font-mono uppercase tracking-widest ${isAlwaysOn ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] opacity-60"}`}>
-                        {isAlwaysOn ? "Remember Session" : "On Demand"}
-                      </span>
-                      <button
-                        onClick={() => {
-                          const newMode = (!isAlwaysOn ? "ALWAYS_ON" : "LAZY") as "ALWAYS_ON" | "LAZY";
-                          const updated = {
-                            socialPersistence: {
-                              ...settings.socialPersistence,
-                              [app.id]: newMode,
-                            },
-                          };
-                          settingsService.saveSettings(updated);
-                          fetch(apiUrl("/api/system/social-settings"), {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(updated.socialPersistence),
-                          }).catch((err) => console.error("Sync error:", err));
-                        }}
-                        className={`w-7 h-3.5 rounded-full transition-all relative ${isAlwaysOn ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
-                        style={{
-                          backgroundColor: isAlwaysOn ? theme.hex : undefined,
-                        }}
-                      >
-                        <div
-                          className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${isAlwaysOn ? "translate-x-4" : "translate-x-0.5"}`}
-                          style={{ 
-                            backgroundColor: isAlwaysOn ? "white" : "var(--app-text-muted)" 
+                    <div className="flex items-center">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-[10px] font-mono uppercase tracking-widest ${isAlwaysOn ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] opacity-60"}`}
+                        >
+                          {isAlwaysOn ? "Remember Session" : "On Demand"}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const newMode = (
+                              !isAlwaysOn ? "ALWAYS_ON" : "LAZY"
+                            ) as "ALWAYS_ON" | "LAZY";
+                            const updated = {
+                              socialPersistence: {
+                                ...settings.socialPersistence,
+                                [app.id]: newMode,
+                              },
+                            };
+                            settingsService.saveSettings(updated);
+                            fetch(apiUrl("/api/system/social-settings"), {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify(updated.socialPersistence),
+                            }).catch((err) =>
+                              console.error("Sync error:", err),
+                            );
                           }}
-                        />
-                      </button>
+                          className={`w-7 h-3.5 rounded-full transition-all relative ${isAlwaysOn ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
+                          style={{
+                            backgroundColor: isAlwaysOn ? theme.hex : undefined,
+                          }}
+                        >
+                          <div
+                            className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${isAlwaysOn ? "translate-x-4" : "translate-x-0.5"}`}
+                            style={{
+                              backgroundColor: isAlwaysOn
+                                ? "white"
+                                : "var(--app-text-muted)",
+                            }}
+                          />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {!isConnected ? (
-                <div className="space-y-2">
-                  {isChromeSynced && (
-                    <div
-                      className={`text-sm text-blue-400 bg-blue-500/5 border border-blue-500/20 px-3 py-2 rounded-xl leading-snug glass-blur`}
-                    >
-                      <strong
-                        className={`text-blue-400 block mb-0.5 font-bold uppercase tracking-tighter text-xs`}
+                {!isConnected ? (
+                  <div className="space-y-2">
+                    {isChromeSynced && (
+                      <div
+                        className={`text-sm text-blue-400 bg-blue-500/5 border border-blue-500/20 px-3 py-2 rounded-xl leading-snug glass-blur`}
                       >
-                        {app.id === "google"
-                          ? "Chrome Sync Active"
-                          : "Session Available"}
-                      </strong>
-                      <span className="opacity-80">
-                        {app.id === "google"
-                          ? "Browsing session found. Connect Google only if you want Luca to use approved Workspace access."
-                          : `Approved session data found. Link it to let Luca reuse this signed-in surface.`}
+                        <strong
+                          className={`text-blue-400 block mb-0.5 font-bold uppercase tracking-tighter text-xs`}
+                        >
+                          {app.id === "google"
+                            ? "Chrome Sync Active"
+                            : "Session Available"}
+                        </strong>
+                        <span className="opacity-80">
+                          {app.id === "google"
+                            ? "Browsing session found. Connect Google only if you want Luca to use approved Workspace access."
+                            : `Approved session data found. Link it to let Luca reuse this signed-in surface.`}
+                        </span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (app.id === "google") {
+                          handleStartAuth(app.id);
+                        } else if (app.event) {
+                          window.dispatchEvent(new CustomEvent(app.event));
+                        } else {
+                          handleStartAuth(app.id);
+                        }
+                      }}
+                      className={`w-full py-2.5 rounded-xl text-xs font-black border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] tech-border glass-blur uppercase tracking-widest`}
+                    >
+                      {isChromeSynced ? "Connect Session" : "Connect Account"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-sm px-3 py-2 rounded-xl border border-green-500/20 bg-green-500/5 text-green-400 leading-snug glass-blur tech-border">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                        <strong className="text-[10px] font-bold uppercase tracking-widest text-green-500">
+                          Account Connected
+                        </strong>
+                      </div>
+                      <span className="opacity-80 text-xs">
+                        Secure connection established. Luca can use this
+                        approved surface according to your session setting.
                       </span>
                     </div>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (app.id === "google") {
-                        handleStartAuth(app.id);
-                      } else if (app.event) {
-                        window.dispatchEvent(new CustomEvent(app.event));
-                      } else {
-                        handleStartAuth(app.id);
-                      }
-                    }}
-                    className={`w-full py-2.5 rounded-xl text-xs font-black border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] tech-border glass-blur uppercase tracking-widest`}
-                  >
-                    {isChromeSynced ? "Connect Session" : "Connect Account"}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div
-                    className="text-sm px-3 py-2 rounded-xl border border-green-500/20 bg-green-500/5 text-green-400 leading-snug glass-blur tech-border"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                      <strong className="text-[10px] font-bold uppercase tracking-widest text-green-500">
-                        Account Connected
-                      </strong>
-                    </div>
-                    <span className="opacity-80 text-xs">Secure connection established. Luca can use this approved surface according to your session setting.</span>
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Connector Permissions"
+        description="Read, write, send/post, file, automation access, and approval mode stay explicit."
+        icon="ShieldCheck"
+        accentColor={theme?.hex}
+        isMobile={isMobile}
+      >
+        <SettingsRow
+          label="Read access"
+          description="Luca can summarize connected account context only after authorization."
+        />
+        <SettingsRow
+          label="Write access"
+          description="Write-capable integrations continue through their existing approval flows."
+        />
+        <SettingsRow
+          label="Send and post access"
+          description="Messaging and posting actions should require review."
+        />
+        <SettingsRow
+          label="File and automation access"
+          description="File and automation-capable connectors stay grouped behind permissions."
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title="Activity & Safety"
+        description="Recent connector actions, failed actions, pending approvals, and revoke access stay visible."
+        icon="Activity"
+        accentColor={theme?.hex}
+        isMobile={isMobile}
+      >
+        <SettingsRow
+          label="Recent connector actions"
+          description="Connector activity continues to come from existing services."
+        />
+        <SettingsRow
+          label="Failed actions"
+          description="Failures and pending approvals remain surfaced by each connector."
+        />
+        <SettingsRow
+          label="Revoke access"
+          description="Use each connector card to disconnect or revoke where supported."
+        />
+      </SettingsSection>
+
+      <SettingsAdvancedDisclosure
+        title="Advanced Details"
+        description="Browser automation/session persistence, connector debugging, webhook URLs, token refresh state, and raw connector metadata."
+      >
+        <SettingsRow
+          label="Browser sessions"
+          description="Browser session persistence is kept out of the top-level connector copy."
+        />
+        <SettingsRow
+          label="Connector debugging"
+          description="Troubleshooting metadata stays under Advanced Details."
+        />
+        <SettingsRow
+          label="Webhook URLs and token refresh state"
+          description="Raw connector internals are not primary user controls."
+        />
+      </SettingsAdvancedDisclosure>
+
+      <SettingsDangerZone description="Revoke all, disconnect app, and clear connector state actions remain inside connector-specific flows." />
 
       {proTipModal && (
         <div className="absolute inset-0 z-[50] flex items-center justify-center p-6">
@@ -337,20 +451,18 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
           <div
             className={`relative border p-8 rounded-3xl max-w-[320px] text-center shadow-2xl animate-in zoom-in duration-300 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur`}
           >
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 bg-blue-500/10 border border-blue-500/30 text-blue-400"
-            >
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 bg-blue-500/10 border border-blue-500/30 text-blue-400">
               <Icon name="Info" className="w-8 h-8" />
             </div>
-            <h5
-              className="font-black mb-2 uppercase tracking-widest text-xl text-[var(--app-text-main)]"
-            >
+            <h5 className="font-black mb-2 uppercase tracking-widest text-xl text-[var(--app-text-main)]">
               Session Tip
             </h5>
             <p
               className={`text-sm text-[var(--app-text-muted)] mb-8 leading-relaxed opacity-80`}
             >
-              Luca detected no imported Chrome profile. Import an approved browser profile first to enable one-click login without sharing passwords.
+              Luca detected no imported Chrome profile. Import an approved
+              browser profile first to enable one-click login without sharing
+              passwords.
             </p>
             <div className="flex flex-col gap-3">
               <button
