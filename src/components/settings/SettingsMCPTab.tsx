@@ -400,8 +400,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
         >
           MCP Integration:
         </strong>{" "}
-        Connect external tools via the Model Context Protocol (Claude Skills,
-        etc.). These tools become available to Luca for execution.
+        Connect Luca to approved external tool servers and capabilities through the Model Context Protocol. Review each server carefully before enabling tool access.
       </div>
 
       {/* Search & Toggle Bar */}
@@ -412,7 +411,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search servers or skills..."
+            placeholder="Search tool servers or capabilities..."
             className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all border rounded-lg tech-border`}
             style={{ 
               backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
@@ -452,7 +451,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           }}
         >
           <Icon name="Plus" className="w-4 h-4" />
-          Add Custom Server
+          Add Advanced Server
         </button>
         <button
           onClick={handleSync}
@@ -485,7 +484,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             style={{ color: "var(--app-text-main, #ffffff)" }}
           >
             <Icon name="Plug" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
-            New MCP Server
+            New Tool Server
           </h4>
 
           {/* Server Name */}
@@ -663,7 +662,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     Environment Variables
                   </label>
                   <p className="text-xs text-[var(--app-text-muted)] mb-2 italic">
-                    Pass secrets like API keys to the MCP server (e.g.,
+                    Pass secrets like API keys only to servers you trust (e.g.,
                     GITHUB_TOKEN)
                   </p>
 
@@ -748,7 +747,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             ) : (
               <Icon name="Plug" variant="BoldDuotone" className="w-4 h-4" />
             )}
-            Connect Server
+            Connect Tool Server
           </button>
         </div>
       )}
@@ -761,7 +760,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             {servers.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
               <div className={`text-center py-12 text-[var(--app-text-muted)] ${isMobile ? "text-base" : "text-lg"}`}>
                 <Icon name="Plug" className="w-8 h-8 mx-auto mb-3 opacity-30" />
-                {searchQuery ? "No matching servers found." : "No active MCP servers."}
+                {searchQuery ? "No matching servers found." : "No connected tool servers."}
               </div>
             ) : (
               servers
@@ -861,7 +860,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           <div>
                             <h5 className={`${isMobile ? "text-sm" : "text-base"} text-[var(--app-text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1`}>
                               <Icon name="Wrench" className="w-3 h-3" />
-                              Available Tools
+                              Available Capabilities
                             </h5>
                             {serverTools[server.id] ? (
                               serverTools[server.id].length > 0 ? (

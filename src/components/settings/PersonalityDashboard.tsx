@@ -165,7 +165,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             style={{ color: "var(--app-text-main, #ffffff)" }}
           >
             <Icon name="Sparkles" className="w-4 h-4" style={{ color: theme.hex }} />
-            CORE SYSTEM RULES
+            Luca Behavior Rules
           </h3>
           <span
             className={`text-sm px-2 py-0.5 rounded border uppercase tracking-tighter transition-all tech-border`}
@@ -175,7 +175,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
               color: "var(--app-text-muted, #94a3b8)"
             }}
           >
-            Primary Directives
+            Global Behavior Guidance
           </span>
         </div>
 
@@ -196,13 +196,13 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             className={`w-full h-[140px] bg-transparent p-3 text-base font-mono outline-none resize-none leading-relaxed custom-scrollbar placeholder-gray-500`}
             style={{ color: "var(--app-text-main, #ffffff)" }}
             spellCheck={false}
-            placeholder="Enter the core system rules and behavioral logic that Luca must ALWAYS follow. (e.g. 'Always be concise', 'Never mention the word technical')..."
+            placeholder="Describe the behavior and communication rules Luca should consistently follow. (e.g. 'Be concise', 'Ask before taking sensitive actions')..."
           />
           <div 
             className="absolute bottom-1.5 right-3 text-sm flex items-center gap-1 opacity-40"
             style={{ color: "var(--app-text-muted)" }}
           >
-            <Icon name="Cpu" className="w-2.5 h-2.5" /> Logical Core
+            <Icon name="Cpu" className="w-2.5 h-2.5" /> Behavior Core
           </div>
         </div>
       </div>
@@ -220,7 +220,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
         >
           <div className="mb-2 md:mb-0">
             <label className="text-sm font-bold text-[var(--app-text-muted)] uppercase flex items-center gap-1">
-              <Icon name="Monitor" className="w-2.5 h-2.5" /> System Personas
+              <Icon name="Monitor" className="w-2.5 h-2.5" /> Luca Personas
             </label>
           </div>
 
@@ -269,8 +269,8 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                   <Icon name="Settings" className="w-2 h-2" />
                 )}
                 {showAdvanced
-                  ? "Hide System Logic"
-                  : "View Technical Blueprint"}
+                  ? "Hide Technical Details"
+                  : "View Behavior Blueprint"}
               </button>
             </div>
 
@@ -280,7 +280,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between px-1">
                     <label className="text-sm font-bold text-[var(--app-text-muted)] uppercase flex items-center gap-1.5">
-                      <Icon name="Database" className="w-3 h-3" /> System Blueprint
+                      <Icon name="Database" className="w-3 h-3" /> Behavior Blueprint
                     </label>
                     <span className="text-sm text-[var(--app-text-muted)] italic">
                       READ-ONLY
@@ -300,7 +300,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                       style={{ color: "var(--app-text-muted, #94a3b8)" }}
                     >
                       {resolvedBase ||
-                        "System identity for this lens is currently loading or encrypted..."}
+                        "Behavior identity for this persona is currently loading or encrypted..."}
                     </div>
 
                     {/* Overlay label to clarify purpose */}
@@ -312,7 +312,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                         className="text-sm font-bold uppercase"
                         style={{ color: "var(--app-text-muted)" }}
                       >
-                        System Logic
+                        Persona Logic
                       </span>
                     </div>
                   </div>
@@ -358,7 +358,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                     )}
                   </div>
                   <div className="text-sm text-[var(--app-text-muted)] font-bold uppercase">
-                    System Logic Encrypted
+                    Persona Logic Encrypted
                   </div>
                 </div>
               </div>

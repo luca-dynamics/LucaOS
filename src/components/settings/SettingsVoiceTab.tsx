@@ -211,7 +211,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             className={`${isMobile ? "text-sm" : "text-base"} font-black uppercase tracking-widest`}
             style={{ color: "var(--app-text-main)" }}
           >
-            Strategic Performance Presets
+            Voice Experience Presets
           </h4>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -224,21 +224,21 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             },
             {
               id: "speedster",
-              label: "Hybrid Speedster",
+              label: "Hybrid Low Latency",
               icon: "Sparkles",
-              desc: "Local Ear, Cloud Voice",
+              desc: "Local listening, cloud voice",
             },
             {
               id: "balanced",
               label: "Balanced",
               icon: "Scale",
-              desc: "Fast STT, local-fi voice",
+              desc: "Fast listening, local voice",
             },
             {
               id: "privacy",
               label: "Full Privacy",
               icon: "Shield",
-              desc: "100% Offline, ultra-fast",
+              desc: "Offline speech routing",
             },
           ].map((preset) => {
             const isActive = 
@@ -283,7 +283,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           })}
         </div>
         <div className="mt-2 rounded-md border px-3 py-2 text-[10px] uppercase tracking-wider" style={{ borderColor: "var(--app-border-main, rgba(255,255,255,0.1))", color: "var(--app-text-muted)" }}>
-          Runtime Policy: {runtimePolicy.preferredProviderKind} · {runtimePolicy.latencyMode} · {runtimePolicy.privacyMode} · fallback {runtimePolicy.fallbackAllowed ? "on" : "off"} · network {runtimePolicy.networkAllowed ? "on" : "off"} · local preferred {runtimePolicy.localModelPreferred ? "yes" : "no"}
+          Voice Routing Policy: {runtimePolicy.preferredProviderKind} · {runtimePolicy.latencyMode} · {runtimePolicy.privacyMode} · fallback {runtimePolicy.fallbackAllowed ? "on" : "off"} · network {runtimePolicy.networkAllowed ? "on" : "off"} · local preferred {runtimePolicy.localModelPreferred ? "yes" : "no"}
         </div>
       </motion.div>
 
@@ -329,8 +329,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               className="text-xs leading-tight opacity-70"
               style={{ color: "var(--app-text-muted)" }}
             >
-              Background listening for &quot;Hey Luca&quot; to bring the AI to
-              front.
+              Listens locally for &quot;Hey Luca&quot; so Luca can respond hands-free when wake word is enabled.
             </p>
             <button
               onClick={() => {
@@ -464,7 +463,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                className="text-[9px] font-black font-mono uppercase bg-black/20 px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0"
                style={{ color: "var(--app-text-muted)" }}
             >
-               LOCAL-FIRST LOGIC
+               VOICE ROUTING
             </div>
           </div>
 
@@ -492,8 +491,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 <p className="text-[10px] text-blue-400 font-bold uppercase mt-1 animate-pulse flex items-center gap-1">
                   <Icon name="Waves" className="w-2 h-2" />
                   {settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" 
-                    ? "Direct Multimodal Live Loop Active" 
-                    : "Linked to Native Multimodal Persona"}
+                    ? "Direct multimodal voice loop active"
+                    : "Linked to Luca&apos;s native voice persona"}
                 </p>
               )}
             </div>
@@ -698,7 +697,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] space-y-2`}
           >
             <div className={`flex justify-between items-center ${isMobile ? "text-sm" : "text-base"} font-bold text-[var(--app-text-muted)] uppercase tracking-wider`}>
-              <span>Acoustic Racing (STT)</span>
+              <span>Speech Recognition Latency</span>
               <Icon name="Mic" className="w-2.5 h-2.5" />
             </div>
             <div className="space-y-2">
@@ -739,7 +738,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             className={`p-3 rounded-lg border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] space-y-2`}
           >
             <div className={`flex justify-between items-center ${isMobile ? "text-sm" : "text-base"} font-bold text-[var(--app-text-muted)] uppercase tracking-tighter`}>
-              <span>Hyper-Inference (Brain)</span>
+              <span>Reasoning Response Latency</span>
               <Icon name="Cpu" className="w-2.5 h-2.5" />
             </div>
             <div className="flex flex-col justify-center h-[44px] space-y-1">
@@ -774,7 +773,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 >
                   {metrics.tts.source === "neural"
                     ? "Cloud Neural"
-                    : "Local Bin"}
+                    : "Local Voice"}
                 </span>
               </div>
               <div className="space-y-1">
@@ -795,7 +794,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         </div>
 
         <p className={`${isMobile ? "text-[9px]" : "text-sm"} text-[var(--app-text-muted)] font-mono uppercase tracking-[0.2em] pt-1`}>
-          Telemetry stream synchronized via Hybrid Connectivity Bridge
+          Latency telemetry helps explain which local or cloud voice route Luca is using.
         </p>
       </motion.div>
 
@@ -816,7 +815,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             <span
               className={`text-lg font-bold text-[var(--app-text-muted)] uppercase tracking-wider`}
             >
-              My Voice Clones
+              Voice Identity Library
             </span>
           </div>
           <div
@@ -863,9 +862,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               </label>
             </div>
             <p className="text-[8px] text-[var(--app-text-muted)] font-mono leading-relaxed">
-              Record or upload clear audio. Luca will clone this voice for all
-              vocal output (Requires Gemini Native Audio). 
-              <span className="text-blue-500/80 ml-1">Range: 2-30s. Activating will auto-switch engine.</span>
+              Record or upload only voices you own or have consent to use. Luca stores the sample for approved vocal output (requires Gemini Native Audio).
+              <span className="text-blue-500/80 ml-1">Range: 2-30s. Activating will auto-switch the voice engine.</span>
             </p>
           </div>
 
@@ -885,7 +883,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                      {isActive ? (
                         <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-green-500/20 text-[6px] font-black text-green-400 border border-green-500/30 animate-pulse">
                           <Icon name="Activity" className="w-2 h-2" />
-                          WEARING
+                          ACTIVE
                         </span>
                      ) : (
                        <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />

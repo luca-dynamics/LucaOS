@@ -161,14 +161,13 @@ const GuestAccessSection: React.FC<{
         className="flex items-center justify-center gap-2 text-base font-black uppercase tracking-widest text-[var(--app-text-main)]"
       >
         <Icon name="Globus" variant="BoldDuotone" className="w-4 h-4" />
-        Universal Access (Anywhere)
+        Secure Remote Access
       </div>
 
       <p
         className={`text-xs text-[var(--app-text-muted)] opacity-70`}
       >
-        Access your personal Luca assistant from any device in the world • Works
-        over internet
+        Create a time-limited remote link for trusted devices or guests over the internet.
       </p>
 
       {!guestUrl ? (
@@ -177,7 +176,7 @@ const GuestAccessSection: React.FC<{
           disabled={!connected || loading}
           className={`w-full py-3 rounded-lg text-sm font-black transition-all disabled:opacity-50 border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)] hover:bg-white/5 opacity-80 hover:opacity-100`}
         >
-          {loading ? "Generating..." : "Generate Access Link"}
+          {loading ? "Generating..." : "Generate Secure Link"}
         </button>
       ) : (
         <>
@@ -198,7 +197,7 @@ const GuestAccessSection: React.FC<{
 
           {/* URL Display */}
           <div className="space-y-1">
-            <p className="text-xs text-[var(--app-text-muted)] font-bold">Or share this URL:</p>
+            <p className="text-xs text-[var(--app-text-muted)] font-bold">Share this secure URL:</p>
             <div className="flex items-center justify-center gap-2">
               <code
                 className="px-3 py-1 rounded text-sm font-mono max-w-[200px] truncate border bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-main)]"
@@ -221,14 +220,14 @@ const GuestAccessSection: React.FC<{
           </div>
 
           <p className="text-xs italic text-[var(--app-text-muted)] opacity-60">
-            Valid for 24 hours • Live voice chat included
+            Valid for 24 hours • Share only with trusted people
           </p>
         </>
       )}
 
       {!connected && (
         <p className="text-xs text-yellow-500 font-bold italics opacity-80">
-          Enable Luca Link first to generate guest access
+          Enable Luca Link first to generate secure guest access
         </p>
       )}
 
@@ -711,10 +710,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <label className="text-base font-bold text-[var(--app-text-muted)]">
-                Enable Remote Access
+                Enable Luca Link Remote Access
               </label>
               <p className="text-sm text-[var(--app-text-muted)] opacity-60 mt-1">
-                Allow devices to connect from anywhere
+                Allow trusted devices to pair securely with this Luca desktop
               </p>
             </div>
             <button
@@ -761,12 +760,11 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               <div
                 className={`text-lg font-bold uppercase tracking-widest text-[var(--app-text-main)]`}
               >
-                Device Pairing (App-to-App)
+                Secure Device Pairing
               </div>
 
               <p className={`text-lg text-[var(--app-text-muted)] mb-2 opacity-80`}>
-                Link multiple Luca apps (Desktop ↔ Mobile ↔ Tablet) into a
-                unified ecosystem.
+                Pair trusted Luca apps (Desktop ↔ Mobile ↔ Tablet) using this QR code or token.
               </p>
 
               {/* QR Code */}
@@ -792,7 +790,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               {linkState.pairingToken && (
                 <div className="space-y-1">
                   <p className={`text-lg text-[var(--app-text-muted)]`}>
-                    Or enter this Pairing Token:
+                    Or enter this one-time pairing token:
                   </p>
                   <div className="flex items-center justify-center gap-2">
                     <code
@@ -838,7 +836,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 className={`w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 outline-none font-mono text-sm disabled:opacity-50 transition-all tech-border glass-blur`}
               />
               <p className="text-sm text-[var(--app-text-muted)] opacity-60">
-                Default relay server provided. You can self-host your own.
+                Default encrypted relay provided. Advanced users can self-host their own.
               </p>
             </div>
           )}
@@ -848,7 +846,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             settings.lucaLink.connectionMode === "vpn") && (
             <div className="space-y-2">
               <label className="text-base font-bold text-[var(--app-text-muted)]">
-                VPN Server URL (Optional)
+                Trusted VPN Server URL (Optional)
               </label>
               <input
                 type="text"
@@ -861,8 +859,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 className={`w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)] rounded-lg p-3 outline-none font-mono text-sm disabled:opacity-50 transition-all tech-border glass-blur`}
               />
               <p className="text-sm text-[var(--app-text-muted)] opacity-60">
-                Leave empty for auto-detection. Use Tailscale IP (100.x.x.x) if
-                configured.
+                Leave empty for auto-detection. Use a trusted Tailscale IP (100.x.x.x) if configured.
               </p>
             </div>
           )}
@@ -879,9 +876,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               />
               <div>
                 <div className="font-bold mb-1 uppercase tracking-wider text-sm opacity-60">Privacy & Security</div>
-                <div className="font-bold mb-1">Protection Protocol</div>
+                <div className="font-bold mb-1">Connection Protection</div>
                 <ul className="space-y-1 opacity-80 text-sm list-disc pl-4 text-[var(--app-text-muted)]">
-                  <li>Local & VPN: 100% private, no cloud servers</li>
+                  <li>Local & VPN: direct private routes, no relay server</li>
                   <li>Relay: End-to-end encrypted, messages are unreadable by relay</li>
                   <li>Auto mode prioritizes local for maximum privacy</li>
                 </ul>

@@ -91,7 +91,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
       name: "Telegram",
       logo: "/icons/social/telegram.png",
       color: "#0088CC",
-      desc: "Secure Cloud Messaging",
+      desc: "Private messaging surface",
       event: "TELEGRAM_LUCA_LINK",
     },
     {
@@ -123,7 +123,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
       name: "LinkedIn",
       logo: "/icons/social/linkedin.png",
       color: "#0A66C2",
-      desc: "Professional Intelligence",
+      desc: "Professional workspace",
       event: "LINKEDIN_LUCA_LINK",
     },
     {
@@ -157,9 +157,8 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
       <div
         className={`text-sm p-4 ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl border bg-[var(--app-bg-tint)] shadow-sm"} border-[var(--app-border-main)] text-[var(--app-text-main)] transition-all tech-border glass-blur opacity-90`}
       >
-        <span className="font-bold opacity-60 uppercase tracking-widest text-xs block mb-1">Social Intelligence Matrix</span>
-        Connect your accounts to give Luca direct access. Note: This uses secure
-        browser automation (Ghost Browser), not public APIs.
+        <span className="font-bold opacity-60 uppercase tracking-widest text-xs block mb-1">Connected Accounts</span>
+        Connect approved messaging, workspace, and browser sessions so Luca can understand your digital context. Sessions are remembered only when you allow persistence.
       </div>
 
       <div className={`grid grid-cols-1 md:grid-cols-2 ${isMobile ? "gap-0" : "gap-5"}`}>
@@ -242,7 +241,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                   <div className="flex items-center">
                     <div className="flex items-center gap-2">
                        <span className={`text-[10px] font-mono uppercase tracking-widest ${isAlwaysOn ? "text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] opacity-60"}`}>
-                        {isAlwaysOn ? "Always Online" : "Lazy Mode"}
+                        {isAlwaysOn ? "Remember Session" : "On Demand"}
                       </span>
                       <button
                         onClick={() => {
@@ -288,12 +287,12 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                       >
                         {app.id === "google"
                           ? "Chrome Sync Active"
-                          : "Luca Link Available"}
+                          : "Session Available"}
                       </strong>
                       <span className="opacity-80">
                         {app.id === "google"
-                          ? "Browsing features available. Link API for high-speed Gmail & Drive automation."
-                          : `Session data found. Click below to establish the bridge.`}
+                          ? "Browsing session found. Connect Google only if you want Luca to use approved Workspace access."
+                          : `Approved session data found. Link it to let Luca reuse this signed-in surface.`}
                       </span>
                     </div>
                   )}
@@ -309,7 +308,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                     }}
                     className={`w-full py-2.5 rounded-xl text-xs font-black border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] tech-border glass-blur uppercase tracking-widest`}
                   >
-                    {isChromeSynced ? "Establish Link" : "Link Manually"}
+                    {isChromeSynced ? "Connect Session" : "Connect Account"}
                   </button>
                 </div>
               ) : (
@@ -320,10 +319,10 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                       <strong className="text-[10px] font-bold uppercase tracking-widest text-green-500">
-                        Luca Link Active
+                        Account Connected
                       </strong>
                     </div>
-                    <span className="opacity-80 text-xs">Encrypted channel established. Background agents are synchronized.</span>
+                    <span className="opacity-80 text-xs">Secure connection established. Luca can use this approved surface according to your session setting.</span>
                   </div>
                 </div>
               )}
@@ -346,14 +345,12 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
             <h5
               className="font-black mb-2 uppercase tracking-widest text-xl text-[var(--app-text-main)]"
             >
-              Pro-Tip: Access
+              Session Tip
             </h5>
             <p
               className={`text-sm text-[var(--app-text-muted)] mb-8 leading-relaxed opacity-80`}
             >
-              Luca detected no imported Chrome profile. Import your profile
-              first to enable <strong>instant one-click login</strong> and
-              deeper browsing automation.
+              Luca detected no imported Chrome profile. Import an approved browser profile first to enable one-click login without sharing passwords.
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -365,13 +362,13 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                 }}
                 className="w-full py-3 rounded-xl bg-blue-600 text-[var(--app-text-main)] text-sm font-black transition-all shadow-lg shadow-blue-500/20 hover:bg-blue-500 hover:shadow-blue-500/40 uppercase tracking-widest"
               >
-                Link Anyway
+                Connect Anyway
               </button>
               <button
                 onClick={() => setProTipModal(null)}
                 className={`w-full py-3 rounded-xl bg-white/5 text-[var(--app-text-muted)] text-sm font-black hover:bg-white/10 transition-all border border-[var(--app-border-main)] uppercase tracking-widest`}
               >
-                I&apos;ll Import First
+                Import Profile First
               </button>
             </div>
           </div>
