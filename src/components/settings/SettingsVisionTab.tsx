@@ -65,12 +65,16 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
       >
         {/* Vision Engine Header */}
         <div className="flex items-center gap-2">
-          <Icon name="Sparkles" className="w-3.5 h-3.5" style={{ color: theme.hex }} />
+          <Icon
+            name="Sparkles"
+            className="w-3.5 h-3.5"
+            style={{ color: theme.hex }}
+          />
           <h4
             className={`text-base font-black uppercase tracking-widest`}
             style={{ color: "var(--app-text-main, #ffffff)" }}
           >
-            Vision Configuration
+            Vision Awareness
           </h4>
         </div>
 
@@ -79,14 +83,16 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
           variants={item}
           className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-xl border glass-blur"}`}
           style={{
-            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile
+              ? "rgba(255,255,255,0.02)"
+              : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
           <div className="flex items-center justify-between">
             <Icon name="Eye" className="w-4 h-4" style={{ color: theme.hex }} />
             <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase opacity-60">
-              Vision & Multimodal
+              Choose how Luca sees and understands your screen.
             </div>
           </div>
           <div className="space-y-1">
@@ -106,7 +112,7 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                color: "var(--app-text-main, #ffffff)"
+                color: "var(--app-text-main, #ffffff)",
               }}
             >
               <optgroup label="Cloud Vision (Managed)">
@@ -142,12 +148,13 @@ const SettingsVisionTab: React.FC<SettingsVisionTabProps> = ({
           style={{
             backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-            color: "var(--app-text-muted, #94a3b8)"
+            color: "var(--app-text-muted, #94a3b8)",
           }}
         >
-          Vision models enable features like Astra Scan and agentic UI control.
-          Local models like UI-TARS 2B provide the highest privacy but require
-          significant GPU resources.
+          Advanced Vision Details: vision models enable features like Astra Scan
+          and agentic UI control. Local models like UI-TARS 2B provide high
+          privacy, with raw model and GPU requirements kept in this advanced
+          guidance.
         </motion.div>
       </motion.div>
     </div>

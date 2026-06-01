@@ -360,20 +360,25 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         animate={{ opacity: 1, x: 0 }}
         className={`flex items-center justify-between ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-3 rounded-xl border"} glass-blur`}
         style={{
-          backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
+          backgroundColor: isMobile
+            ? "rgba(255,255,255,0.02)"
+            : "var(--app-bg-tint, #11111a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
         }}
       >
         <div className="flex items-center gap-3">
-          <div
-            className={`p-1.5 rounded-lg bg-[var(--app-bg-tint)]/20`}
-          >
-            <Icon name="ShieldCheck" variant="BoldDuotone" className="w-4 h-4" style={{ color: statusColor }} />
+          <div className={`p-1.5 rounded-lg bg-[var(--app-bg-tint)]/20`}>
+            <Icon
+              name="ShieldCheck"
+              variant="BoldDuotone"
+              className="w-4 h-4"
+              style={{ color: statusColor }}
+            />
           </div>
           <div
             className={`text-xs uppercase tracking-wider font-mono text-[var(--app-text-muted)] opacity-60`}
           >
-            INTELLIGENCE MODE
+            Brain Status / Intelligence Mode
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -401,18 +406,25 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         variants={item}
         className={`space-y-4 ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 rounded-xl border"} glass-blur`}
         style={{
-          backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #0a0a0a)",
+          backgroundColor: isMobile
+            ? "rgba(255,255,255,0.02)"
+            : "var(--app-bg-tint, #0a0a0a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
         }}
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <Icon name="Key" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
+            <Icon
+              name="Key"
+              variant="BoldDuotone"
+              className="w-4 h-4"
+              style={{ color: theme.hex }}
+            />
             <h4
               className={`${isMobile ? "text-sm" : "text-base"} font-black uppercase tracking-widest truncate`}
               style={{ color: "var(--app-text-main)" }}
             >
-              Cloud AI Access (BYOK)
+              Provider Access / BYOK
             </h4>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -422,25 +434,29 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               {settings.brain.useCustomApiKey ? "MANUAL" : "MANAGED"}
             </span>
             <button
-               onClick={() =>
-                 onUpdate(
-                   "brain",
-                   "useCustomApiKey",
-                   !settings.brain.useCustomApiKey,
-                 )
-               }
-               className={`w-7 h-3.5 rounded-full transition-all relative ${settings.brain.useCustomApiKey ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
-               style={{
-                 backgroundColor: settings.brain.useCustomApiKey ? theme.hex : undefined,
-               }}
-             >
-               <div
-                 className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.brain.useCustomApiKey ? "translate-x-4" : "translate-x-0.5"}`}
-                 style={{ 
-                   backgroundColor: settings.brain.useCustomApiKey ? "white" : "var(--app-text-muted)" 
-                 }}
-               />
-             </button>
+              onClick={() =>
+                onUpdate(
+                  "brain",
+                  "useCustomApiKey",
+                  !settings.brain.useCustomApiKey,
+                )
+              }
+              className={`w-7 h-3.5 rounded-full transition-all relative ${settings.brain.useCustomApiKey ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
+              style={{
+                backgroundColor: settings.brain.useCustomApiKey
+                  ? theme.hex
+                  : undefined,
+              }}
+            >
+              <div
+                className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.brain.useCustomApiKey ? "translate-x-4" : "translate-x-0.5"}`}
+                style={{
+                  backgroundColor: settings.brain.useCustomApiKey
+                    ? "white"
+                    : "var(--app-text-muted)",
+                }}
+              />
+            </button>
           </div>
         </div>
 
@@ -448,22 +464,26 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            className="space-y-4 pt-2 border-t border-white/5"
+            className="space-y-4 pt-2 border-t border-[var(--luca-border-subtle,var(--app-border-main))]"
           >
             <div className="flex items-center justify-between px-1">
               <span
                 className={`text-[10px] font-mono text-[var(--app-text-muted)]`}
               >
-                CONNECT YOUR PROVIDER KEYS
+                Connect your provider keys
               </span>
               <button
                 onClick={() => setShowAdvancedProxy(!showAdvancedProxy)}
-                className={`text-[10px] font-bold flex items-center gap-1 transition-colors ${showAdvancedProxy ? "text-green-500" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-muted)]"}`}
+                className={`text-[10px] font-bold flex items-center gap-1 transition-colors ${showAdvancedProxy ? "text-[var(--luca-accent-primary,var(--app-core-hex))]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-muted)]"}`}
               >
-                <Icon name="Database" variant="BoldDuotone" className="w-2.5 h-2.5" />
+                <Icon
+                  name="Database"
+                  variant="BoldDuotone"
+                  className="w-2.5 h-2.5"
+                />
                 {showAdvancedProxy
-                  ? "HIDE ADVANCED ENDPOINTS"
-                  : "SHOW ADVANCED ENDPOINTS"}
+                  ? "Hide Advanced Details"
+                  : "Show Advanced Details"}
               </button>
             </div>
 
@@ -499,14 +519,15 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                    color: "var(--app-text-main)"
+                    borderColor:
+                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                    color: "var(--app-text-main)",
                   }}
                 />
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Custom endpoint URL (optional: e.g. https://your-proxy.com/v1)"
+                    placeholder="Advanced endpoint URL (optional: e.g. https://your-proxy.com/v1)"
                     value={settings.brain.geminiBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "geminiBaseUrl", e.target.value)
@@ -514,8 +535,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     className={`w-full rounded-lg p-2 text-[10px] outline-none font-mono border tech-border`}
                     style={{
                       backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                      borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                      color: "var(--app-text-main, #ffffff)"
+                      borderColor:
+                        "var(--app-border-main, rgba(255,255,255,0.1))",
+                      color: "var(--app-text-main, #ffffff)",
                     }}
                   />
                 )}
@@ -528,7 +550,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 <img
                   src="/icons/brands/anthropic.svg"
                   className={`w-[14px] h-[14px] object-contain brightness-0 invert-[var(--app-invert-value,0)]`}
-                  style={{ filter: "var(--app-icon-filter, brightness(0) invert(1))" }}
+                  style={{
+                    filter: "var(--app-icon-filter, brightness(0) invert(1))",
+                  }}
                   alt="Anthropic"
                 />
                 <span
@@ -555,14 +579,15 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                    color: "var(--app-text-main)"
+                    borderColor:
+                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                    color: "var(--app-text-main)",
                   }}
                 />
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Custom endpoint URL (optional)"
+                    placeholder="Advanced endpoint URL (optional)"
                     value={settings.brain.anthropicBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "anthropicBaseUrl", e.target.value)
@@ -570,8 +595,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     className={`w-full rounded-lg p-2 text-[10px] outline-none font-mono border tech-border`}
                     style={{
                       backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                      borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                      color: "var(--app-text-main, #ffffff)"
+                      borderColor:
+                        "var(--app-border-main, rgba(255,255,255,0.1))",
+                      color: "var(--app-text-main, #ffffff)",
                     }}
                   />
                 )}
@@ -584,7 +610,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 <img
                   src="/icons/brands/openai.svg"
                   className={`w-3.5 h-3.5 object-contain brightness-0 invert-[var(--app-invert-value,0)]`}
-                  style={{ filter: "var(--app-icon-filter, brightness(0) invert(1))" }}
+                  style={{
+                    filter: "var(--app-icon-filter, brightness(0) invert(1))",
+                  }}
                   alt="OpenAI"
                 />
                 <span
@@ -611,14 +639,15 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                    color: "var(--app-text-main, #ffffff)"
+                    borderColor:
+                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                    color: "var(--app-text-main, #ffffff)",
                   }}
                 />
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Custom endpoint URL (optional)"
+                    placeholder="Advanced endpoint URL (optional)"
                     value={settings.brain.openaiBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "openaiBaseUrl", e.target.value)
@@ -635,7 +664,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 <img
                   src="/icons/brands/grok.svg"
                   className={`w-[14px] h-[14px] object-contain brightness-0 invert-[var(--app-invert-value,0)]`}
-                  style={{ filter: "var(--app-icon-filter, brightness(0) invert(1))" }}
+                  style={{
+                    filter: "var(--app-icon-filter, brightness(0) invert(1))",
+                  }}
                   alt="xAI"
                 />
                 <span
@@ -661,14 +692,15 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                    color: "var(--app-text-main)"
+                    borderColor:
+                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                    color: "var(--app-text-main)",
                   }}
                 />
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Custom endpoint URL (optional: e.g. https://api.x.ai/v1)"
+                    placeholder="Advanced endpoint URL (optional: e.g. https://api.x.ai/v1)"
                     value={settings.brain.xaiBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "xaiBaseUrl", e.target.value)
@@ -685,7 +717,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 <img
                   src="/icons/brands/deepseek.svg"
                   className={`w-[14px] h-[14px] object-contain brightness-0 invert-[var(--app-invert-value,0)]`}
-                  style={{ filter: "var(--app-icon-filter, brightness(0) invert(1))" }}
+                  style={{
+                    filter: "var(--app-icon-filter, brightness(0) invert(1))",
+                  }}
                   alt="DeepSeek"
                 />
                 <span
@@ -712,14 +746,15 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                    color: "var(--app-text-main)"
+                    borderColor:
+                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                    color: "var(--app-text-main)",
                   }}
                 />
                 {showAdvancedProxy && (
                   <input
                     type="text"
-                    placeholder="Custom endpoint URL (optional)"
+                    placeholder="Advanced endpoint URL (optional)"
                     value={settings.brain.deepseekBaseUrl || ""}
                     onChange={(e) =>
                       onUpdate("brain", "deepseekBaseUrl", e.target.value)
@@ -727,8 +762,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     className={`w-full rounded-lg p-2 text-[10px] outline-none font-mono border tech-border`}
                     style={{
                       backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                      borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                      color: "var(--app-text-main, #ffffff)"
+                      borderColor:
+                        "var(--app-border-main, rgba(255,255,255,0.1))",
+                      color: "var(--app-text-main, #ffffff)",
                     }}
                   />
                 )}
@@ -741,14 +777,21 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
       {/* Strategic Presets Section */}
       <motion.div variants={item} className="space-y-3">
         <div className="flex items-center gap-2">
-          <Icon name="MagicStick" variant="BoldDuotone" className="w-3.5 h-3.5" style={{ color: theme.hex }} />
+          <Icon
+            name="MagicStick"
+            variant="BoldDuotone"
+            className="w-3.5 h-3.5"
+            style={{ color: theme.hex }}
+          />
           <h4
             className={`${isMobile ? "text-sm" : "text-base"} font-black text-[var(--app-text-muted)] uppercase tracking-widest`}
           >
             Intelligence Presets
           </h4>
         </div>
-        <div className={`grid ${isMobile ? "grid-cols-1 gap-3" : "grid-cols-3 gap-2"}`}>
+        <div
+          className={`grid ${isMobile ? "grid-cols-1 gap-3" : "grid-cols-3 gap-2"}`}
+        >
           {[
             {
               id: "performance",
@@ -836,12 +879,19 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           variants={item}
           className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
           style={{
-            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile
+              ? "rgba(255,255,255,0.02)"
+              : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
           <div className="flex items-center justify-between">
-            <Icon name="Cpu" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
+            <Icon
+              name="Cpu"
+              variant="BoldDuotone"
+              className="w-4 h-4"
+              style={{ color: theme.hex }}
+            />
             <div className="text-[10px] font-mono text-[var(--app-text-muted)] uppercase opacity-60">
               Core Intelligence
             </div>
@@ -855,7 +905,8 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             </div>
             {settings.brain.model.includes("/") === false && (
               <p className="text-xs text-[var(--app-text-muted)] leading-tight opacity-70">
-                Choose the reasoning model Luca uses for planning, conversation, and agent decisions.
+                Choose the reasoning model Luca uses for planning, conversation,
+                and agent decisions.
               </p>
             )}
             <select
@@ -885,7 +936,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                color: "var(--app-text-main, #ffffff)"
+                color: "var(--app-text-main, #ffffff)",
               }}
             >
               <optgroup label="Elite Intelligence (Latest / BYOK)">
@@ -963,7 +1014,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   className="pt-2"
                 >
                   <div className="text-base text-[var(--app-text-muted)] mb-1 uppercase tracking-wider">
-                    External Local Model ID (Ollama)
+                    Advanced Details: external local model ID (Ollama)
                   </div>
                   <input
                     type="text"
@@ -979,8 +1030,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     className={`w-full rounded-lg p-2 text-sm outline-none transition-colors border tech-border`}
                     style={{
                       backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                      borderColor: "var(--app-border-main, rgba(255,255,255,0.2))",
-                      color: "var(--app-text-main, #ffffff)"
+                      borderColor:
+                        "var(--app-border-main, rgba(255,255,255,0.2))",
+                      color: "var(--app-text-main, #ffffff)",
                     }}
                   />
                   <div className="text-sm text-[var(--app-text-muted)] mt-1">
@@ -997,12 +1049,18 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           variants={item}
           className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
           style={{
-            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile
+              ? "rgba(255,255,255,0.02)"
+              : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
           <div className="flex items-center gap-2">
-            <Icon name="Database" className="w-4 h-4" style={{ color: theme.hex }} />
+            <Icon
+              name="Database"
+              className="w-4 h-4"
+              style={{ color: theme.hex }}
+            />
             <div
               className={`text-base font-black uppercase tracking-widest`}
               style={{ color: "var(--app-text-main, #ffffff)" }}
@@ -1013,7 +1071,8 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <p
             className={`text-xs text-[var(--app-text-muted)] leading-tight opacity-70`}
           >
-            Select the model Luca uses to index and retrieve your local knowledge safely.
+            Select the model Luca uses to index and retrieve your local
+            knowledge safely.
           </p>
           <select
             value={settings.brain.memoryModel || "gemini-2.5-flash"}
@@ -1022,7 +1081,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             style={{
               backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
               borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-              color: "var(--app-text-main, #ffffff)"
+              color: "var(--app-text-main, #ffffff)",
             }}
           >
             <optgroup label="Cloud Embedding (Fast)">
@@ -1055,13 +1114,19 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           variants={item}
           className={`space-y-4 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
           style={{
-            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile
+              ? "rgba(255,255,255,0.02)"
+              : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Icon name="ShieldCheck" className="w-4 h-4" style={{ color: theme.hex }} />
+              <Icon
+                name="ShieldCheck"
+                className="w-4 h-4"
+                style={{ color: theme.hex }}
+              />
               <h4
                 className={`text-xs font-bold uppercase tracking-widest`}
                 style={{ color: "var(--app-text-main, #ffffff)" }}
@@ -1078,9 +1143,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             {/* Background Sync Toggle */}
             <div
               className={`flex items-center justify-between p-2 rounded-lg border tech-border`}
-              style={{ 
+              style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.05))"
+                borderColor: "var(--app-border-main, rgba(255,255,255,0.05))",
               }}
             >
               <div className="space-y-0.5">
@@ -1114,13 +1179,17 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 }}
                 className={`w-7 h-3.5 rounded-full transition-all relative ${settings.general.debugMode ? "" : "bg-[var(--app-border-main)] opacity-40 hover:opacity-100"}`}
                 style={{
-                  backgroundColor: settings.general.debugMode ? theme.hex : undefined,
+                  backgroundColor: settings.general.debugMode
+                    ? theme.hex
+                    : undefined,
                 }}
               >
                 <div
                   className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-[var(--app-bg-tint)] transition-all ${settings.general.debugMode ? "translate-x-4" : "translate-x-0.5"}`}
-                  style={{ 
-                    backgroundColor: settings.general.debugMode ? "white" : "var(--app-text-muted)" 
+                  style={{
+                    backgroundColor: settings.general.debugMode
+                      ? "white"
+                      : "var(--app-text-muted)",
                   }}
                 />
               </button>
@@ -1157,7 +1226,8 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               </select>
             </div>
             <p className="text-[10px] text-[var(--app-text-muted)] italic px-1">
-              Note: pausing background indexing reduces provider calls; Luca will still keep the current session active.
+              Note: pausing background indexing reduces provider calls; Luca
+              will still keep the current session active.
             </p>
           </div>
         </motion.div>
@@ -1167,12 +1237,18 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           variants={item}
           className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
           style={{
-            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile
+              ? "rgba(255,255,255,0.02)"
+              : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
           <div className="flex items-center justify-between">
-            <Icon name="Activity" className="w-4 h-4" style={{ color: theme.hex }} />
+            <Icon
+              name="Activity"
+              className="w-4 h-4"
+              style={{ color: theme.hex }}
+            />
             <div
               className={`text-[10px] font-mono ${balancerStatus.color} flex items-center gap-1`}
             >
@@ -1191,7 +1267,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             </div>
             <div
               className={`w-full h-1 rounded-full overflow-hidden`}
-              style={{ backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))" }}
+              style={{
+                backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
+              }}
             >
               <motion.div
                 initial={{ width: 0 }}
@@ -1216,17 +1294,20 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             <div
               className={`text-[10px] text-[var(--app-text-muted)] font-mono leading-tight`}
             >
-              Shows how Luca routes between cloud and local models for speed, privacy, and availability.
+              Advanced Details: routing telemetry explains how Luca chooses
+              cloud or local models for speed, privacy, and availability.
             </div>
           </div>
         </motion.div>
 
-        {/* Local Ollama Service Card */}
+        {/* Local Brain / Runtime Card */}
         <motion.div
           variants={item}
           className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
           style={{
-            backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
+            backgroundColor: isMobile
+              ? "rgba(255,255,255,0.02)"
+              : "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
           }}
         >
@@ -1245,7 +1326,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 className={`text-base font-black uppercase tracking-widest`}
                 style={{ color: "var(--app-text-main, #ffffff)" }}
               >
-                Local Ollama Service
+                Local Brain / Runtime
               </div>
             </div>
             <div
@@ -1253,7 +1334,11 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             >
               <span
                 className={`w-1 h-1 rounded-full ${ollamaStatus.available ? "animate-pulse" : ""}`}
-                style={{ backgroundColor: ollamaStatus.available ? "#10b981" : "var(--app-text-muted)" }}
+                style={{
+                  backgroundColor: ollamaStatus.available
+                    ? "#10b981"
+                    : "var(--app-text-muted)",
+                }}
               />
               {ollamaStatus.available ? "RUNNING" : "OFFLINE"}
             </div>
@@ -1311,7 +1396,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         variants={item}
         className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
         style={{
-          backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
+          backgroundColor: isMobile
+            ? "rgba(255,255,255,0.02)"
+            : "var(--app-bg-tint, #11111a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
         }}
       >
@@ -1322,9 +1409,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             <Icon name="Zap" className="w-3 h-3" style={{ color: theme.hex }} />
             Temperature (Creativity Control)
           </div>
-          <span
-            className="font-mono text-[var(--app-text-main)]"
-          >
+          <span className="font-mono text-[var(--app-text-main)]">
             {settings.brain.temperature}
           </span>
         </div>
