@@ -2,6 +2,7 @@ import { getDynamicContrast } from "./themeColors";
 
 export type AppearanceMode = "light" | "dark" | "system";
 export type ResolvedAppearanceMode = "light" | "dark";
+export type LucaPlatformAppearance = ResolvedAppearanceMode;
 export type ProductTheme =
   | "luca-silver"
   | "luca-graphite"
@@ -64,7 +65,7 @@ export interface ResolveLucaAppearanceTokensInput {
   backgroundOpacity?: number | null;
   backgroundBlur?: number | null;
   appearanceMode?: AppearanceMode | null;
-  platformAppearance?: "light" | "dark" | null;
+  platformAppearance?: LucaPlatformAppearance | null;
   productTheme?: ProductTheme | null;
   accent?: Accent | null;
   customAccentColor?: string | null;
@@ -150,6 +151,34 @@ const accentColors: Record<Accent, { primary: string; soft: string; glow: string
   },
 };
 
+export const isExplicitLegacyTheme = (theme?: string | null): boolean =>
+  typeof theme === "string" && theme.trim().length > 0;
+
+export const readLucaPlatformAppearance = (): LucaPlatformAppearance | null => {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return null;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+};
+
+// First-run policy only applies when no explicit theme id is supplied by
+// Settings. Saved legacy ids (including PROFESSIONAL) remain user-owned and
+// continue through the legacy compatibility map without automatic migration.
+export const resolveFirstRunAppearancePreference = (
+  platformAppearance?: LucaPlatformAppearance | null,
+): LegacyAppearanceMapping & { requestedAppearanceMode: AppearanceMode } => {
+  const resolvedPlatformAppearance = platformAppearance ?? readLucaPlatformAppearance();
+  const appearanceMode = resolvedPlatformAppearance ?? "light";
+
+  return {
+    requestedAppearanceMode: "system",
+    appearanceMode,
+    productTheme: appearanceMode === "dark" ? "luca-graphite" : "luca-silver",
+    accent: "neutral",
+  };
+};
+
 const resolveLegacyMapping = (theme?: string | null, persona?: string | null) => {
   const themeKey = theme?.toUpperCase() ?? "";
   const personaKey = persona?.toUpperCase() ?? "";
@@ -163,7 +192,7 @@ const resolveLegacyMapping = (theme?: string | null, persona?: string | null) =>
 const resolveMode = (
   requestedMode: AppearanceMode,
   mapping: LegacyAppearanceMapping,
-  platformAppearance?: "light" | "dark" | null,
+  platformAppearance?: LucaPlatformAppearance | null,
 ): ResolvedAppearanceMode => {
   if (requestedMode === "system") {
     return platformAppearance ?? mapping.appearanceMode ?? "light";
@@ -296,7 +325,11 @@ const buildProductTokens = ({
 export const resolveLucaAppearanceTokens = (
   input: ResolveLucaAppearanceTokensInput = {},
 ): LucaAppearanceTokens => {
-  const mapping = resolveLegacyMapping(input.theme, input.persona);
+  const platformAppearance = input.platformAppearance ?? readLucaPlatformAppearance();
+  const firstRunPreference = !isExplicitLegacyTheme(input.theme)
+    ? resolveFirstRunAppearancePreference(platformAppearance)
+    : null;
+  const mapping = firstRunPreference ?? resolveLegacyMapping(input.theme, input.persona);
   const backgroundOpacity = normalizeNumber(
     input.backgroundOpacity,
     LUCA_APPEARANCE_DEFAULTS.defaultBackgroundOpacity,
@@ -309,10 +342,10 @@ export const resolveLucaAppearanceTokens = (
     0,
     120,
   );
-  const requestedMode = input.appearanceMode ?? "system";
+  const requestedMode = input.appearanceMode ?? firstRunPreference?.requestedAppearanceMode ?? "system";
   const productTheme = input.productTheme ?? mapping.productTheme;
   const accent = input.accent ?? mapping.accent;
-  const mode = resolveMode(requestedMode, mapping, input.platformAppearance);
+  const mode = resolveMode(requestedMode, mapping, platformAppearance);
 
   const tokens = buildProductTokens({
     productTheme,
@@ -371,8 +404,13 @@ export const buildLucaAppearanceCssVariableState = (
   } = {},
 ): LucaAppearanceCssVariableState => {
   const tokens = resolveLucaAppearanceTokens(input);
+  const legacyContrastTheme = input.theme ?? (
+    tokens.appearanceMode === "dark"
+      ? "MASTER_SYSTEM"
+      : LUCA_APPEARANCE_DEFAULTS.defaultTheme
+  );
   const legacyContrast = getDynamicContrast(
-    input.theme ?? LUCA_APPEARANCE_DEFAULTS.defaultTheme,
+    legacyContrastTheme,
     tokens.backgroundOpacity,
   );
 

@@ -4,6 +4,8 @@ import {
   buildLucaAppearanceCssVariableState,
   buildLucaAppearanceCssVariables,
   getLucaAppearanceCssVariables,
+  isExplicitLegacyTheme,
+  resolveFirstRunAppearancePreference,
   resolveLucaAppearanceTokens,
   type LucaAppearanceTokens,
 } from "./lucaAppearanceTokens";
@@ -82,6 +84,52 @@ describe("resolveLucaAppearanceTokens", () => {
     expect(tokens.backgroundLiquid).not.toContain("#4fbf7a");
   });
 
+
+  it("resolves missing first-run theme to system Luca Silver in light environments", () => {
+    const tokens = resolveLucaAppearanceTokens({
+      theme: undefined,
+      platformAppearance: "light",
+    });
+
+    expect(tokens.requestedAppearanceMode).toBe("system");
+    expect(tokens.appearanceMode).toBe("light");
+    expect(tokens.productTheme).toBe("luca-silver");
+    expect(tokens.accent).toBe("neutral");
+  });
+
+  it("resolves missing first-run theme to system Luca Graphite in dark environments", () => {
+    const tokens = resolveLucaAppearanceTokens({
+      theme: null,
+      platformAppearance: "dark",
+    });
+
+    expect(tokens.requestedAppearanceMode).toBe("system");
+    expect(tokens.appearanceMode).toBe("dark");
+    expect(tokens.productTheme).toBe("luca-graphite");
+    expect(tokens.accent).toBe("neutral");
+  });
+
+  it("falls back safely to Luca Silver when no platform appearance is available", () => {
+    const preference = resolveFirstRunAppearancePreference(null);
+    const tokens = resolveLucaAppearanceTokens({ theme: undefined, platformAppearance: null });
+
+    expect(preference).toMatchObject({
+      requestedAppearanceMode: "system",
+      appearanceMode: "light",
+      productTheme: "luca-silver",
+      accent: "neutral",
+    });
+    expect(tokens.appearanceMode).toBe("light");
+    expect(tokens.productTheme).toBe("luca-silver");
+  });
+
+  it("treats saved legacy theme ids as explicit user appearance choices", () => {
+    expect(isExplicitLegacyTheme("PROFESSIONAL")).toBe(true);
+    expect(isExplicitLegacyTheme("MASTER_SYSTEM")).toBe(true);
+    expect(isExplicitLegacyTheme(undefined)).toBe(false);
+    expect(isExplicitLegacyTheme("  ")).toBe(false);
+  });
+
   it("maps legacy PROFESSIONAL safely to the premium silver direction", () => {
     const tokens = resolveLucaAppearanceTokens({ theme: "PROFESSIONAL", persona: "ASSISTANT" });
 
@@ -110,6 +158,17 @@ describe("resolveLucaAppearanceTokens", () => {
     expect(tokens.accentPrimary).toBe("#4fbf7a");
     expect(tokens.surfaceGlass).not.toContain("#4fbf7a");
     expect(tokens.backgroundLiquid).not.toContain("#4fbf7a");
+  });
+
+
+  it("maps legacy LIGHTCREAM and FROST to their preserved premium product themes", () => {
+    const cream = resolveLucaAppearanceTokens({ theme: "LIGHTCREAM" });
+    const frost = resolveLucaAppearanceTokens({ theme: "FROST" });
+
+    expect(cream.productTheme).toBe("luca-cream");
+    expect(cream.appearanceMode).toBe("light");
+    expect(frost.productTheme).toBe("luca-frost");
+    expect(frost.appearanceMode).toBe("light");
   });
 
   it("preserves and normalizes opacity and blur as first-class material inputs", () => {
@@ -173,10 +232,19 @@ describe("resolveLucaAppearanceTokens", () => {
       backgroundBlur: 40,
     });
 
+    const firstRunDarkState = buildLucaAppearanceCssVariableState({
+      theme: undefined,
+      platformAppearance: "dark",
+      backgroundOpacity: 0.3,
+      backgroundBlur: 40,
+    });
+
     expect(professionalState.appearanceMode).toBe("light");
     expect(professionalState.tokens.appearanceMode).toBe("light");
     expect(masterState.appearanceMode).toBe("dark");
     expect(terminalState.appearanceMode).toBe("dark");
+    expect(firstRunDarkState.appearanceMode).toBe("dark");
+    expect(firstRunDarkState.tokens.productTheme).toBe("luca-graphite");
     expect(professionalState.variables["--app-bg-opacity"]).toBe("0.3");
     expect(professionalState.variables["--app-bg-blur"]).toBe("40px");
     expect(professionalState.variables["--luca-blur-level"]).toBe("40px");
