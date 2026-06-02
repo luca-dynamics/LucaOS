@@ -160,11 +160,16 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).not.toContain("Origin" + " approval");
   });
 
-
   it("reads device trust state into the Device Center snapshot", () => {
-    expect(lucaLinkSource).toContain("trustedDevices: LucaLinkTrustedDeviceRecord[]");
-    expect(lucaLinkSource).toContain("deviceTrustSummary: LucaLinkDeviceTrustRegistrySummary");
-    expect(lucaLinkSource).toContain("deviceTrustAudit: LucaLinkDeviceTrustAuditRecord[]");
+    expect(lucaLinkSource).toContain(
+      "trustedDevices: LucaLinkTrustedDeviceRecord[]",
+    );
+    expect(lucaLinkSource).toContain(
+      "deviceTrustSummary: LucaLinkDeviceTrustRegistrySummary",
+    );
+    expect(lucaLinkSource).toContain(
+      "deviceTrustAudit: LucaLinkDeviceTrustAuditRecord[]",
+    );
     expect(snapshotSource).toContain("lucaLink.getTrustedDevices()");
     expect(snapshotSource).toContain("lucaLink.getActiveTrustedDevices()");
     expect(snapshotSource).toContain("lucaLink.getDeviceTrustSummary()");
@@ -177,8 +182,12 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain("Revoke locally");
     expect(lucaLinkSource).toContain("Block locally");
     expect(lucaLinkSource).toContain("Unblock locally");
-    expect(lucaLinkSource).toContain("Local only; does not disconnect remote transport yet");
-    expect(lucaLinkSource).toContain("Admin does not bypass Primary Host approvals");
+    expect(lucaLinkSource).toContain(
+      "Local only; does not disconnect remote transport yet",
+    );
+    expect(lucaLinkSource).toContain(
+      "Admin does not bypass Primary Host approvals",
+    );
     expect(lucaLinkSource).toContain("Conversation/WebRTC limited");
   });
 
@@ -190,7 +199,10 @@ describe("Settings LucaLink Device Center", () => {
   it("wires trust actions through service helpers without socket operations", () => {
     const trustActionSource = lucaLinkSource.slice(
       lucaLinkSource.indexOf("const handleDeviceTrustAction"),
-      lucaLinkSource.indexOf("return (", lucaLinkSource.indexOf("const handleDeviceTrustAction")),
+      lucaLinkSource.indexOf(
+        "return (",
+        lucaLinkSource.indexOf("const handleDeviceTrustAction"),
+      ),
     );
     expect(trustActionSource).toContain("lucaLink.renameTrustedDevice");
     expect(trustActionSource).toContain("lucaLink.setTrustedDeviceTrustLevel");
@@ -202,11 +214,14 @@ describe("Settings LucaLink Device Center", () => {
     expect(trustActionSource).not.toMatch(/\bsocket\b/);
   });
 
-
   it("reads handoff state into the Device Center snapshot", () => {
     expect(lucaLinkSource).toContain("handoffs: LucaLinkHandoffRequest[]");
-    expect(lucaLinkSource).toContain("pendingHandoffs: LucaLinkHandoffRequest[]");
-    expect(lucaLinkSource).toContain("handoffSummary: LucaLinkHandoffRegistrySummary");
+    expect(lucaLinkSource).toContain(
+      "pendingHandoffs: LucaLinkHandoffRequest[]",
+    );
+    expect(lucaLinkSource).toContain(
+      "handoffSummary: LucaLinkHandoffRegistrySummary",
+    );
     expect(snapshotSource).toContain("lucaLink.getHandoffs()");
     expect(snapshotSource).toContain("lucaLink.getPendingHandoffs()");
     expect(snapshotSource).toContain("lucaLink.getHandoffSummary()");
@@ -218,16 +233,26 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain('label="Memory intent handoffs"');
     expect(lucaLinkSource).toContain('label="Artifact / mission handoffs"');
     expect(lucaLinkSource).toContain('label="Blocked / expired"');
-    expect(lucaLinkSource).toContain("Memory handoff is intent-only; raw memory databases are not transferred.");
-    expect(lucaLinkSource).toContain("Conversation handoff excludes hidden system prompts and private reasoning.");
+    expect(lucaLinkSource).toContain(
+      "Memory handoff is intent-only; raw memory databases are not transferred.",
+    );
+    expect(lucaLinkSource).toContain(
+      "Conversation handoff excludes hidden system prompts and private reasoning.",
+    );
     expect(lucaLinkSource).toContain("Secrets are redacted before handoff.");
-    expect(lucaLinkSource).toContain("Handoff does not execute tools or mutate remote devices.");
+    expect(lucaLinkSource).toContain(
+      "Handoff does not execute tools or mutate remote devices.",
+    );
   });
 
   it("renders handoff payloadPreview only and avoids raw payload controls", () => {
-    expect(lucaLinkSource).toContain("renderPayloadPreview(handoff.payloadPreview)");
+    expect(lucaLinkSource).toContain(
+      "renderPayloadPreview(handoff.payloadPreview)",
+    );
     expect(lucaLinkSource).toContain("Payload preview only");
-    expect(lucaLinkSource).toContain("No send-now action is exposed in this PR");
+    expect(lucaLinkSource).toContain(
+      "No send-now action is exposed in this PR",
+    );
     expect(lucaLinkSource).not.toMatch(/handoff\.payload(?!Preview)/);
     expect(lucaLinkSource).not.toContain("sync full memory database");
     expect(lucaLinkSource).not.toContain("Sync full memory database");
@@ -255,5 +280,68 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain('mode === "observe-only"');
     expect(lucaLinkSource).toContain("Observe-only");
     expect(lucaLinkSource).toContain("Disabled");
+  });
+});
+
+describe("Settings LucaLink Device Center host connections", () => {
+  const hostsSectionSource = lucaLinkSource.slice(
+    lucaLinkSource.indexOf('deviceCenterTab === "hosts"'),
+    lucaLinkSource.indexOf('deviceCenterTab === "approvals"'),
+  );
+
+  it("renders a Hosts tab with multi-host connection summary cards", () => {
+    expect(lucaLinkSource).toContain('{ id: "hosts", label: "Hosts" }');
+    expect(hostsSectionSource).toContain("Host Connections / Adaptation");
+    expect(hostsSectionSource).toContain('label="Host connections"');
+    expect(hostsSectionSource).toContain('label="Display hosts"');
+    expect(hostsSectionSource).toContain('label="Approval-capable hosts"');
+    expect(hostsSectionSource).toContain('label="Sensor hosts"');
+    expect(hostsSectionSource).toContain('label="Embodied hosts"');
+    expect(hostsSectionSource).toContain('label="Unknown hosts"');
+  });
+
+  it("reads host connection state into the Device Center snapshot", () => {
+    expect(lucaLinkSource).toContain(
+      "hostConnections: LucaLinkHostConnectionRecord[]",
+    );
+    expect(lucaLinkSource).toContain(
+      "hostConnectionSummary: LucaLinkHostConnectionRegistrySummary",
+    );
+    expect(snapshotSource).toContain(
+      "lucaLink.refreshHostConnectionsFromCurrentState()",
+    );
+    expect(snapshotSource).toContain("lucaLink.getHostConnections()");
+    expect(snapshotSource).toContain("lucaLink.getHostConnectionSummary()");
+  });
+
+  it("shows host class, connection class, runtime surface, approval capability, and model-only adaptation copy", () => {
+    expect(hostsSectionSource).toContain("host.hostClass");
+    expect(hostsSectionSource).toContain("host.connectionClass");
+    expect(hostsSectionSource).toContain("host.runtimeSurfaces.join");
+    expect(hostsSectionSource).toContain("host.approvalCapability");
+    expect(hostsSectionSource).toContain(
+      "Host adaptation intelligence is model-only.",
+    );
+    expect(hostsSectionSource).toContain(
+      "generated adapters are not executed in this PR",
+    );
+    expect(hostsSectionSource).toContain(
+      "Primary Host approval, sandbox checks, and future execution controls",
+    );
+  });
+
+  it("does not expose unsafe host adaptation action labels or reserved device authority language", () => {
+    const forbiddenHostActions = [
+      ["Generate", "and", "run"].join(" "),
+      ["Install", "adapter"].join(" "),
+      ["Connect", "now"].join(" "),
+      ["Take", "over"].join(" "),
+      ["Auto", "bridge"].join(" "),
+    ];
+    forbiddenHostActions.forEach((label) => {
+      expect(hostsSectionSource).not.toContain(label);
+    });
+    expect(hostsSectionSource).not.toContain("Origin");
+    expect(hostsSectionSource).not.toMatch(/bypass|exploit/i);
   });
 });
