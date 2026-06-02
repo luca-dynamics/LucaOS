@@ -3,7 +3,10 @@ import { Icon } from "../ui/Icon";
 import { LucaSettings } from "../../services/settingsService";
 import { apiUrl, WS_PORT, cortexUrl } from "../../config/api";
 import { useMobile } from "../../hooks/useMobile";
-import { lucaLink, LucaLinkState } from "../../services/lucaLinkService";
+import { lucaLink } from "../../services/lucaLinkService";
+import type { LucaLinkDevice, LucaLinkState } from "../../services/lucaLinkService";
+import type { LucaLinkApprovalRequest, LucaLinkApprovalQueueSummary, LucaLinkApprovalRisk } from "../../services/lucaLink/lucaLinkApprovalQueue";
+import type { LucaLinkRuntimeObservation, LucaLinkRuntimeObservationSummary } from "../../services/lucaLink/lucaLinkRuntimeObserver";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
@@ -468,6 +471,113 @@ interface SettingsLucaLinkTabProps {
   isMobile?: boolean;
 }
 
+
+
+type LucaLinkDeviceCenterTab = "devices" | "approvals" | "guests" | "sync" | "advanced";
+
+interface LucaLinkDeviceCenterSnapshot {
+  state: LucaLinkState;
+  pendingApprovals: LucaLinkApprovalRequest[];
+  approvalRequests: LucaLinkApprovalRequest[];
+  approvalSummary: LucaLinkApprovalQueueSummary;
+  runtimeShadowSummary: LucaLinkRuntimeObservationSummary;
+  runtimeShadowObservations: LucaLinkRuntimeObservation[];
+  softEnforcementMode: ReturnType<typeof lucaLink.getSoftEnforcementMode>;
+}
+
+const lucaLinkDeviceCenterTabs: Array<{ id: LucaLinkDeviceCenterTab; label: string }> = [
+  { id: "devices", label: "Devices" },
+  { id: "approvals", label: "Approvals" },
+  { id: "guests", label: "Guests" },
+  { id: "sync", label: "Sync" },
+  { id: "advanced", label: "Advanced" },
+];
+
+function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
+  return {
+    state: lucaLink.getState(),
+    pendingApprovals: lucaLink.getPendingApprovalRequests(),
+    approvalRequests: lucaLink.getApprovalRequests(),
+    approvalSummary: lucaLink.getApprovalQueueSummary(),
+    runtimeShadowSummary: lucaLink.getRuntimeShadowSummary(),
+    runtimeShadowObservations: lucaLink.getRuntimeShadowObservations(),
+    softEnforcementMode: lucaLink.getSoftEnforcementMode(),
+  };
+}
+
+export function formatLucaLinkTimestamp(value?: number): string {
+  if (!value) return "Not available";
+  return new Date(value).toLocaleString();
+}
+
+export function getLucaLinkSecurityModeLabel(
+  mode: ReturnType<typeof lucaLink.getSoftEnforcementMode>,
+): string {
+  if (mode === "high-risk-only") return "High-risk gates active";
+  if (mode === "observe-only") return "Observe-only";
+  return "Disabled";
+}
+
+export function inferLucaLinkDeviceRole(
+  device: Pick<LucaLinkDevice, "deviceId" | "type">,
+  currentDeviceId?: string | null,
+): "Primary Host" | "Companion" | "Execution" | "Guest" | "Sensor" | "Display" | "Embodied" {
+  const normalizedType = (device.type ?? "").toLowerCase();
+  if (currentDeviceId && device.deviceId === currentDeviceId) return "Primary Host";
+  if (normalizedType.includes("mobile") || normalizedType.includes("phone") || normalizedType.includes("tablet")) return "Companion";
+  if (normalizedType.includes("guest") || normalizedType.includes("browser") || normalizedType.includes("web")) return "Guest";
+  if (normalizedType.includes("tv") || normalizedType.includes("display") || normalizedType.includes("projector")) return "Display";
+  if (normalizedType.includes("sensor") || normalizedType.includes("camera") || normalizedType.includes("watch") || normalizedType.includes("iot")) return "Sensor";
+  if (normalizedType.includes("robot") || normalizedType.includes("humanoid") || normalizedType.includes("drone")) return "Embodied";
+  return "Execution";
+}
+
+function renderPayloadPreview(payloadPreview: unknown): string {
+  if (typeof payloadPreview === "undefined") return "No payload preview provided.";
+  try {
+    return JSON.stringify(payloadPreview, null, 2);
+  } catch {
+    return String(payloadPreview);
+  }
+}
+
+const RiskBadge: React.FC<{ risk?: LucaLinkApprovalRisk }> = ({ risk }) => (
+  <span
+    className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+    style={{
+      borderColor: settingsSurfaceTokens.borderSubtle,
+      color: settingsSurfaceTokens.textPrimary,
+      backgroundColor: settingsSurfaceTokens.glass,
+    }}
+  >
+    Risk: {risk ?? "not rated"}
+  </span>
+);
+
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
+  <span
+    className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+    style={{
+      borderColor: settingsSurfaceTokens.borderSubtle,
+      color: settingsSurfaceTokens.textSecondary,
+      backgroundColor: settingsSurfaceTokens.elevated,
+    }}
+  >
+    Status: {status}
+  </span>
+);
+
+const DetailField: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
+  <div className="rounded-lg border p-3" style={{ borderColor: settingsSurfaceTokens.borderSubtle }}>
+    <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: settingsSurfaceTokens.textTertiary }}>
+      {label}
+    </p>
+    <div className="mt-1 break-words text-sm" style={{ color: settingsSurfaceTokens.textPrimary }}>
+      {value || "Not available"}
+    </div>
+  </div>
+);
+
 const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   settings,
   onUpdate,
@@ -480,11 +590,30 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const [linkState, setLinkState] = useState<LucaLinkState>(
     lucaLink.getState(),
   );
+  const [deviceCenterTab, setDeviceCenterTab] = useState<LucaLinkDeviceCenterTab>("devices");
+  const [selectedApprovalId, setSelectedApprovalId] = useState<string | null>(null);
+  const [approvalActionMessage, setApprovalActionMessage] = useState<string | null>(null);
+  const [deviceCenterSnapshot, setDeviceCenterSnapshot] = useState<LucaLinkDeviceCenterSnapshot>(
+    readLucaLinkDeviceCenterSnapshot(),
+  );
   const [copied, setCopied] = useState(false);
+
+  const refreshDeviceCenter = () => {
+    const snapshot = readLucaLinkDeviceCenterSnapshot();
+    setDeviceCenterSnapshot(snapshot);
+    setLinkState(snapshot.state);
+    if (selectedApprovalId && !snapshot.approvalRequests.some((request) => request.id === selectedApprovalId)) {
+      setSelectedApprovalId(null);
+    }
+  };
 
   // Subscribe to Luca Link state changes
   useEffect(() => {
-    const unsubscribe = lucaLink.onStateChange(setLinkState);
+    refreshDeviceCenter();
+    const unsubscribe = lucaLink.onStateChange((state) => {
+      setLinkState(state);
+      setDeviceCenterSnapshot((snapshot) => ({ ...snapshot, state }));
+    });
     return () => unsubscribe();
   }, []);
 
@@ -599,9 +728,278 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   };
 
   const status = getConnectionStatus();
+  const currentDeviceId = deviceCenterSnapshot.state.deviceId ?? linkState.deviceId;
+  const connectedDevices = deviceCenterSnapshot.state.connectedDevices;
+  const pendingHighOrCritical =
+    (deviceCenterSnapshot.approvalSummary.byRisk.high ?? 0) +
+    (deviceCenterSnapshot.approvalSummary.byRisk.critical ?? 0);
+  const selectedApproval =
+    deviceCenterSnapshot.approvalRequests.find((request) => request.id === selectedApprovalId) ??
+    deviceCenterSnapshot.pendingApprovals[0] ??
+    deviceCenterSnapshot.approvalRequests[0];
+
+  const handleApprovalAction = (
+    request: LucaLinkApprovalRequest,
+    action: "approve" | "deny" | "cancel",
+  ) => {
+    const reason = `${action} recorded from LucaLink Device Center; queue status only, no runtime continuation.`;
+    if (action === "approve") {
+      lucaLink.approveApprovalRequest(request.id, { decidedByDeviceId: currentDeviceId, reason });
+    } else if (action === "deny") {
+      lucaLink.denyApprovalRequest(request.id, { decidedByDeviceId: currentDeviceId, reason });
+    } else {
+      lucaLink.cancelApprovalRequest(request.id, { decidedByDeviceId: currentDeviceId, reason });
+    }
+    setApprovalActionMessage(`${request.title} marked ${action === "approve" ? "approved" : action === "deny" ? "denied" : "cancelled"}. Queue status updated only.`);
+    refreshDeviceCenter();
+    setSelectedApprovalId(request.id);
+  };
 
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
+      <SettingsSection
+        title="LucaLink Device Center"
+        description="Manage trusted devices, approval requests, guest sessions, and mesh security."
+        icon="Devices"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+          <SettingsStatusCard
+            label="Primary Host"
+            value={currentDeviceId ? "This device" : "Not confirmed"}
+            detail={currentDeviceId ? `Device ID: ${currentDeviceId}` : "Primary Host identity is not exposed yet."}
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Connected Devices"
+            value={`${connectedDevices.length}`}
+            detail={connectedDevices.length > 0 ? `${connectedDevices.length} device record${connectedDevices.length === 1 ? "" : "s"} visible.` : "No connected devices exposed yet."}
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Pending Approvals"
+            value={`${deviceCenterSnapshot.pendingApprovals.length}`}
+            detail={pendingHighOrCritical > 0 ? `${pendingHighOrCritical} high or critical request${pendingHighOrCritical === 1 ? "" : "s"}.` : "No high-risk pending requests."}
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Guest Sessions"
+            value="Read-only"
+            detail="No active guest session data exposed yet."
+            accentColor={theme.hex}
+          />
+          <SettingsStatusCard
+            label="Security Mode"
+            value={getLucaLinkSecurityModeLabel(deviceCenterSnapshot.softEnforcementMode)}
+            detail={`Soft enforcement: ${deviceCenterSnapshot.softEnforcementMode}`}
+            accentColor={theme.hex}
+          />
+        </div>
+
+        <div
+          className="flex gap-2 overflow-x-auto rounded-2xl border p-2"
+          role="tablist"
+          aria-label="LucaLink Device Center sections"
+          style={{ borderColor: settingsSurfaceTokens.borderSubtle, backgroundColor: settingsSurfaceTokens.glass }}
+        >
+          {lucaLinkDeviceCenterTabs.map((tab) => {
+            const active = deviceCenterTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setDeviceCenterTab(tab.id)}
+                className="whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-all"
+                style={{
+                  backgroundColor: active ? settingsSurfaceTokens.elevated : "transparent",
+                  color: active ? settingsSurfaceTokens.textPrimary : settingsSurfaceTokens.textSecondary,
+                  border: `1px solid ${active ? settingsSurfaceTokens.borderStrong : "transparent"}`,
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </SettingsSection>
+
+      {deviceCenterTab === "devices" && (
+        <SettingsSection
+          title="Devices"
+          description="Read-only LucaLink device overview. Trust editing and revocation are intentionally not part of this PR."
+          icon="Smartphone"
+          accentColor={theme.hex}
+          isMobile={isMobile}
+        >
+          {connectedDevices.length === 0 ? (
+            <SettingsCard>
+              <p className="text-sm font-semibold">No connected device records</p>
+              <p className="mt-1 text-xs opacity-70">Pairing controls remain available below. Device cards appear when LucaLink exposes connected devices.</p>
+            </SettingsCard>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {connectedDevices.map((device) => (
+                <SettingsCard key={device.deviceId}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-base font-semibold">{device.name || "Unnamed LucaLink device"}</p>
+                      <p className="mt-1 break-all font-mono text-xs opacity-70">{device.deviceId}</p>
+                    </div>
+                    <StatusBadge status={device.lastSeen ? "connected / last seen" : "connected"} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <DetailField label="Type" value={device.type || "Unknown"} />
+                    <DetailField label="Role" value={inferLucaLinkDeviceRole(device, currentDeviceId)} />
+                    <DetailField label="Last seen" value={formatLucaLinkTimestamp(device.lastSeen)} />
+                  </div>
+                </SettingsCard>
+              ))}
+            </div>
+          )}
+        </SettingsSection>
+      )}
+
+      {deviceCenterTab === "approvals" && (
+        <SettingsSection
+          title="Approvals"
+          description="Primary Host approval queue. Decisions update in-memory queue status only; they do not execute, retry, replay, emit, or continue blocked actions."
+          icon="ShieldCheck"
+          accentColor={theme.hex}
+          isMobile={isMobile}
+        >
+          {approvalActionMessage && (
+            <SettingsCard>
+              <p className="text-sm font-semibold">{approvalActionMessage}</p>
+              <p className="mt-1 text-xs opacity-70">No runtime continuation was started.</p>
+            </SettingsCard>
+          )}
+
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
+            <div className="space-y-3">
+              {deviceCenterSnapshot.approvalRequests.length === 0 ? (
+                <SettingsCard>
+                  <p className="text-sm font-semibold">No approval requests</p>
+                  <p className="mt-1 text-xs opacity-70">The in-memory queue is empty.</p>
+                </SettingsCard>
+              ) : (
+                deviceCenterSnapshot.approvalRequests.map((request) => (
+                  <SettingsCard key={request.id} className={selectedApproval?.id === request.id ? "ring-1 ring-white/20" : ""}>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="text-base font-semibold">{request.title}</h4>
+                          <StatusBadge status={request.status} />
+                          <RiskBadge risk={request.risk} />
+                        </div>
+                        <p className="mt-2 text-sm opacity-80">{request.summary}</p>
+                        <p className="mt-1 text-xs opacity-70">{request.reason}</p>
+                        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <DetailField label="Requested by" value={request.requestedByDeviceId} />
+                          <DetailField label="Target" value={request.requestedTargetDeviceId} />
+                          <DetailField label="Lane" value={request.lane} />
+                          <DetailField label="Permission" value={request.permission} />
+                          <DetailField label="Created" value={formatLucaLinkTimestamp(request.createdAt)} />
+                          <DetailField label="Expires" value={formatLucaLinkTimestamp(request.expiresAt)} />
+                        </div>
+                      </div>
+                      <div className="flex min-w-[9rem] flex-row gap-2 md:flex-col">
+                        <button type="button" disabled={request.status !== "pending"} onClick={() => handleApprovalAction(request, "approve")} className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-45" style={settingsControlInlineStyle}>Approve</button>
+                        <button type="button" disabled={request.status !== "pending"} onClick={() => handleApprovalAction(request, "deny")} className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-45" style={settingsControlInlineStyle}>Deny</button>
+                        <button type="button" disabled={request.status !== "pending"} onClick={() => handleApprovalAction(request, "cancel")} className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-45" style={settingsControlInlineStyle}>Cancel</button>
+                        <button type="button" onClick={() => setSelectedApprovalId(request.id)} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Details</button>
+                      </div>
+                    </div>
+                  </SettingsCard>
+                ))
+              )}
+            </div>
+
+            <SettingsCard>
+              <h4 className="text-base font-semibold">Approval Details</h4>
+              {selectedApproval ? (
+                <div className="mt-3 space-y-3">
+                  <div className="flex flex-wrap gap-2"><StatusBadge status={selectedApproval.status} /><RiskBadge risk={selectedApproval.risk} /></div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <DetailField label="Title" value={selectedApproval.title} />
+                    <DetailField label="Source" value={selectedApproval.source} />
+                    <DetailField label="Event" value={selectedApproval.eventName} />
+                    <DetailField label="Lane" value={selectedApproval.lane} />
+                    <DetailField label="Permission" value={selectedApproval.permission} />
+                    <DetailField label="Requested by device" value={selectedApproval.requestedByDeviceId} />
+                    <DetailField label="Requested by role" value={selectedApproval.requestedByRole} />
+                    <DetailField label="Requested target" value={selectedApproval.requestedTargetDeviceId} />
+                    <DetailField label="Approval host" value={[selectedApproval.approvalHostId, selectedApproval.approvalHostRole].filter(Boolean).join(" / ")} />
+                    <DetailField label="Created" value={formatLucaLinkTimestamp(selectedApproval.createdAt)} />
+                    <DetailField label="Updated" value={formatLucaLinkTimestamp(selectedApproval.updatedAt)} />
+                    <DetailField label="Expires" value={formatLucaLinkTimestamp(selectedApproval.expiresAt)} />
+                    <DetailField label="Reason" value={selectedApproval.reason} />
+                    <DetailField label="Explain" value={selectedApproval.explain} />
+                    <DetailField label="Warnings" value={selectedApproval.warnings.length ? selectedApproval.warnings.join("; ") : "None"} />
+                    <DetailField label="Errors" value={selectedApproval.errors.length ? selectedApproval.errors.join("; ") : "None"} />
+                    <DetailField label="Decision" value={selectedApproval.decision ? `${selectedApproval.decision.decision} by ${selectedApproval.decision.decidedByDeviceId ?? "unknown"} at ${formatLucaLinkTimestamp(selectedApproval.decision.decidedAt)} — ${selectedApproval.decision.reason ?? "No reason provided"}` : "Pending"} />
+                  </div>
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-70">Payload preview</p>
+                    <pre className="max-h-64 overflow-auto rounded-xl border p-3 text-xs" style={{ borderColor: settingsSurfaceTokens.borderSubtle, backgroundColor: settingsSurfaceTokens.elevated, color: settingsSurfaceTokens.textPrimary }}>
+                      {renderPayloadPreview(selectedApproval.payloadPreview)}
+                    </pre>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 text-sm opacity-70">Select an approval request to inspect details.</p>
+              )}
+            </SettingsCard>
+          </div>
+        </SettingsSection>
+      )}
+
+      {deviceCenterTab === "guests" && (
+        <SettingsSection title="Guest Sessions" description="Guest access events are observed through LucaLink runtime diagnostics. Detailed guest session controls will be added in a later hardening PR." icon="Globus" accentColor={theme.hex} isMobile={isMobile}>
+          <SettingsCard><p className="text-sm">No reliable active guest session list is exposed yet.</p></SettingsCard>
+        </SettingsSection>
+      )}
+
+      {deviceCenterTab === "sync" && (
+        <SettingsSection title="Sync & Handoff" description="Conversation, memory, mission, settings, artifact, and model handoff will be managed here in upcoming LucaLink PRs." icon="RefreshCircle" accentColor={theme.hex} isMobile={isMobile}>
+          <SettingsCard><p className="text-sm">This PR does not implement memory, conversation, mission, artifact, or model handoff.</p></SettingsCard>
+        </SettingsSection>
+      )}
+
+      {deviceCenterTab === "advanced" && (
+        <SettingsSection title="Advanced" description="Read-only LucaLink queue and runtime shadow diagnostics summary." icon="Settings" accentColor={theme.hex} isMobile={isMobile}>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <SettingsStatusCard label="Soft enforcement" value={getLucaLinkSecurityModeLabel(deviceCenterSnapshot.softEnforcementMode)} detail={deviceCenterSnapshot.softEnforcementMode} accentColor={theme.hex} />
+            <SettingsStatusCard label="Runtime observations" value={`${deviceCenterSnapshot.runtimeShadowSummary.total}`} detail={`Allow ${deviceCenterSnapshot.runtimeShadowSummary.wouldAllow} · Deny ${deviceCenterSnapshot.runtimeShadowSummary.wouldDeny} · Approval ${deviceCenterSnapshot.runtimeShadowSummary.wouldRequirePrimaryHostApproval}`} accentColor={theme.hex} />
+            <SettingsStatusCard label="Adapter diagnostics" value={`${deviceCenterSnapshot.runtimeShadowSummary.adapterWarnings} warnings / ${deviceCenterSnapshot.runtimeShadowSummary.adapterErrors} errors`} detail="Runtime shadow only; no enforcement toggles here." accentColor={theme.hex} />
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+            {(["pending", "approved", "denied", "expired", "cancelled"] as const).map((key) => (
+              <SettingsStatusCard key={key} label={`Queue ${key}`} value={`${deviceCenterSnapshot.approvalSummary[key]}`} accentColor={theme.hex} />
+            ))}
+          </div>
+          <SettingsCard>
+            <p className="text-sm font-semibold">Recent observations</p>
+            {deviceCenterSnapshot.runtimeShadowObservations.length === 0 ? (
+              <p className="mt-1 text-xs opacity-70">No runtime shadow observations exposed yet.</p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {deviceCenterSnapshot.runtimeShadowObservations.slice(-5).reverse().map((observation) => (
+                  <div key={observation.id} className="rounded-lg border p-3" style={{ borderColor: settingsSurfaceTokens.borderSubtle }}>
+                    <p className="text-sm font-semibold">{observation.eventName} · {observation.decision}</p>
+                    <p className="mt-1 text-xs opacity-70">{formatLucaLinkTimestamp(observation.timestamp)} · {observation.reasons.join("; ")}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SettingsCard>
+        </SettingsSection>
+      )}
+
+      {deviceCenterTab === "devices" && (
+      <>
       <SettingsSection
         title="Linked Devices"
         description="Use Luca across your devices with desktop, phone, tablet, browser, and future gadgets grouped together."
@@ -1067,7 +1465,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           </>
         )}
       </SettingsSection>
+      </>
+      )}
 
+      {deviceCenterTab === "sync" && (
       <SettingsSection
         title="Sync Behavior"
         description="Memory sync, settings sync, conversation handoff, voice handoff, and notification handoff stay user-readable."
@@ -1093,6 +1494,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         />
       </SettingsSection>
 
+      )}
+
+      {deviceCenterTab === "approvals" && (
       <SettingsSection
         title="Access Control"
         description="Trusted devices, revoke device, confirmation requirements, and session expiry stay grouped here."
@@ -1109,6 +1513,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         </SettingsCard>
       </SettingsSection>
 
+      )}
+
+      {deviceCenterTab === "advanced" && (
       <SettingsAdvancedDisclosure
         title="Advanced Details"
         description="Relay mode, local network discovery, VPN/tunnel settings, pairing token diagnostics, and connection logs."
@@ -1130,6 +1537,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           description="Pairing token and connection logs stay diagnostic-only."
         />
       </SettingsAdvancedDisclosure>
+      )}
     </div>
   );
 };
