@@ -19,6 +19,22 @@ import {
   type LucaLinkSoftEnforcementResult,
 } from "./lucaLink/lucaLinkSoftEnforcement";
 import {
+  approveLucaLinkApprovalRequest,
+  cancelLucaLinkApprovalRequest,
+  clearLucaLinkApprovalQueue,
+  createLucaLinkApprovalQueue,
+  denyLucaLinkApprovalRequest,
+  enqueueApprovalForSoftEnforcementResult,
+  getPendingLucaLinkApprovalRequests,
+  listLucaLinkApprovalRequests,
+  summarizeLucaLinkApprovalQueue,
+  type LucaLinkApprovalDecisionInput,
+  type LucaLinkApprovalMutationResult,
+  type LucaLinkApprovalQueueState,
+  type LucaLinkApprovalQueueSummary,
+  type LucaLinkApprovalRequest,
+} from "./lucaLink/lucaLinkApprovalQueue";
+import {
   clearLucaLinkShadowObservations,
   createLucaLinkRuntimeShadow,
   getLucaLinkShadowObservations,
@@ -79,6 +95,7 @@ class LucaLinkService {
   private stateListeners: Set<StateListener> = new Set();
   private messageListeners: Set<MessageListener> = new Set();
   private runtimeShadow: LucaLinkRuntimeShadowState = createLucaLinkRuntimeShadow({ enabled: false });
+  private approvalQueue: LucaLinkApprovalQueueState = createLucaLinkApprovalQueue();
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
@@ -600,6 +617,14 @@ class LucaLinkService {
         payload: message,
       });
       if (softEnforcement.blocked) {
+        if (softEnforcement.requiresPrimaryHostApproval) {
+          this.queueApprovalForSoftEnforcementResult(softEnforcement, {
+            eventName: type,
+            requestedByDeviceId: message.source,
+            requestedTargetDeviceId: message.target,
+            payload: message,
+          });
+        }
         console.warn(
           "[LucaLink] Soft enforcement blocked outbound send:",
           softEnforcement,
@@ -760,6 +785,62 @@ class LucaLinkService {
 
   getSoftEnforcementMode(): LucaLinkSoftEnforcementMode {
     return this.softEnforcementOptions.mode ?? "disabled";
+  }
+
+  getPendingApprovalRequests(): LucaLinkApprovalRequest[] {
+    return getPendingLucaLinkApprovalRequests(this.approvalQueue);
+  }
+
+  getApprovalRequests(): LucaLinkApprovalRequest[] {
+    return listLucaLinkApprovalRequests(this.approvalQueue);
+  }
+
+  getApprovalQueueSummary(): LucaLinkApprovalQueueSummary {
+    return summarizeLucaLinkApprovalQueue(this.approvalQueue);
+  }
+
+  approveApprovalRequest(
+    requestId: string,
+    decision?: LucaLinkApprovalDecisionInput,
+  ): LucaLinkApprovalMutationResult {
+    return approveLucaLinkApprovalRequest(this.approvalQueue, requestId, decision);
+  }
+
+  denyApprovalRequest(
+    requestId: string,
+    decision?: LucaLinkApprovalDecisionInput,
+  ): LucaLinkApprovalMutationResult {
+    return denyLucaLinkApprovalRequest(this.approvalQueue, requestId, decision);
+  }
+
+  cancelApprovalRequest(
+    requestId: string,
+    decision?: LucaLinkApprovalDecisionInput,
+  ): LucaLinkApprovalMutationResult {
+    return cancelLucaLinkApprovalRequest(this.approvalQueue, requestId, decision);
+  }
+
+  clearApprovalQueue(): LucaLinkApprovalMutationResult {
+    return clearLucaLinkApprovalQueue(this.approvalQueue);
+  }
+
+  queueApprovalForSoftEnforcementResult(
+    result: LucaLinkSoftEnforcementResult,
+    context: {
+      eventName?: string;
+      requestedByDeviceId?: string;
+      requestedByRole?: string;
+      requestedTargetDeviceId?: string;
+      approvalHostId?: string;
+      approvalHostRole?: string;
+      payload?: unknown;
+    } = {},
+  ): LucaLinkApprovalMutationResult {
+    return enqueueApprovalForSoftEnforcementResult(
+      this.approvalQueue,
+      result,
+      context,
+    );
   }
 
   /**
@@ -1251,6 +1332,18 @@ class LucaLinkService {
         },
       });
       if (softEnforcement.blocked) {
+        if (softEnforcement.requiresPrimaryHostApproval) {
+          this.queueApprovalForSoftEnforcementResult(softEnforcement, {
+            eventName: packet.type,
+            requestedByDeviceId: this.state.deviceId || "unknown",
+            requestedTargetDeviceId: targetDeviceId,
+            payload: packet.payload,
+          });
+          return {
+            success: false,
+            error: `Primary Host approval required for LucaLink beam: ${softEnforcement.explain}`,
+          };
+        }
         return {
           success: false,
           error: `Soft enforcement blocked LucaLink beam: ${softEnforcement.explain}`,
