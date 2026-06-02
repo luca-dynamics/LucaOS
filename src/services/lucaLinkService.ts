@@ -745,6 +745,8 @@ class LucaLinkService {
   observeRuntimeEventForDiagnostics(
     input: LucaLinkRuntimeShadowEventInput,
   ): LucaLinkRuntimeObservation | undefined {
+    if (!this.runtimeShadow.enabled) return undefined;
+
     return recordLucaLinkShadowObservation(this.runtimeShadow, input, {
       candidates: this.getRuntimeShadowCandidateManifests(),
     });
@@ -1200,7 +1202,7 @@ class LucaLinkService {
       const message: LucaLinkMessage = {
         id: this.generateDeviceId(),
         type: packet.type,
-        source: this.state.deviceId || "origin",
+        source: this.state.deviceId || "unknown",
         target: targetDeviceId,
         timestamp: Date.now(),
         payload: finalPayload,

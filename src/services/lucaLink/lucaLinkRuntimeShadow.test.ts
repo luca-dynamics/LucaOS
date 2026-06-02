@@ -72,12 +72,22 @@ const execution = manifest("execution", {
 });
 
 describe("LucaLink runtime shadow helper", () => {
-  it("records nothing when disabled", () => {
+  it("records nothing and does no observer option work when disabled", () => {
     const shadow = createLucaLinkRuntimeShadow({ enabled: false, now: NOW });
-    const result = recordLucaLinkShadowObservation(shadow, {
-      eventName: "message",
-      payload: { deviceId: "guest-1", text: "hello" },
-    });
+    const observerOptions = {
+      get candidates(): never {
+        throw new Error("disabled shadow should not build candidates");
+      },
+    };
+
+    const result = recordLucaLinkShadowObservation(
+      shadow,
+      {
+        eventName: "message",
+        payload: { deviceId: "guest-1", text: "hello" },
+      },
+      observerOptions,
+    );
 
     expect(result).toBeUndefined();
     expect(getLucaLinkShadowObservations(shadow)).toEqual([]);
