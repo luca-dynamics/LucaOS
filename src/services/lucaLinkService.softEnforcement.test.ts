@@ -5,6 +5,7 @@ vi.mock("socket.io-client", () => ({
 }));
 
 import { lucaLink } from "./lucaLinkService";
+import { createLucaLinkDeviceTrustRegistry } from "./lucaLink/lucaLinkDeviceTrustRegistry";
 import {
   createLucaLinkContinuationToken,
   registerLucaLinkContinuation,
@@ -17,6 +18,7 @@ describe("LucaLinkService soft enforcement controls", () => {
     lucaLink.clearRuntimeEnforcementAudit();
     lucaLink.clearApprovalQueue();
     lucaLink.clearContinuationRegistry();
+    (lucaLink as any).deviceTrustRegistry = createLucaLinkDeviceTrustRegistry();
     (lucaLink as any).socket = null;
     (lucaLink as any).state = {
       connected: false,
@@ -327,6 +329,50 @@ describe("LucaLinkService soft enforcement controls", () => {
     expect(continuation.warnings[0]).toContain("not eligible");
     expect(lucaLink.getContinuationTokens()).toHaveLength(0);
   });
+
+  it("upserts connected devices into the local trust registry", () => {
+    (lucaLink as any).state = {
+      connected: true,
+      deviceId: "primary-host",
+      pairingToken: null,
+      connectedDevices: [],
+      error: null,
+    };
+
+    (lucaLink as any).updateState({
+      connectedDevices: [
+        { deviceId: "primary-host", type: "desktop", name: "Primary", lastSeen: 1_700_000_000_000 },
+        { deviceId: "phone-1", type: "mobile", name: "Phone", lastSeen: 1_700_000_000_001 },
+      ],
+    });
+
+    expect(lucaLink.getTrustedDevices()).toHaveLength(2);
+    expect(lucaLink.getActiveTrustedDevices()).toHaveLength(2);
+    expect(lucaLink.getTrustedDevices().find((device) => device.deviceId === "phone-1")?.trustLevel).toBe("paired");
+    expect(lucaLink.getDeviceTrustSummary().connected).toBe(2);
+  });
+
+  it("device trust service helpers mutate local state without socket emit or disconnect", () => {
+    const emit = vi.fn();
+    const disconnect = vi.fn();
+    (lucaLink as any).socket = { emit, disconnect };
+    (lucaLink as any).deviceTrustRegistry = createLucaLinkDeviceTrustRegistry();
+    (lucaLink as any).updateState({
+      connectedDevices: [
+        { deviceId: "phone-1", type: "mobile", name: "Phone", lastSeen: 1_700_000_000_001 },
+      ],
+    });
+
+    expect(lucaLink.renameTrustedDevice("phone-1", "Pocket Luca").valid).toBe(true);
+    expect(lucaLink.setTrustedDeviceTrustLevel("phone-1", "trusted").valid).toBe(true);
+    expect(lucaLink.revokeTrustedDevice("phone-1").device?.status).toBe("revoked");
+    expect(lucaLink.blockTrustedDevice("phone-1").device?.status).toBe("blocked");
+    expect(lucaLink.unblockTrustedDevice("phone-1").valid).toBe(true);
+    expect(lucaLink.getDeviceTrustAudit().length).toBeGreaterThanOrEqual(5);
+    expect(emit).not.toHaveBeenCalled();
+    expect(disconnect).not.toHaveBeenCalled();
+  });
+
 });
 
 describe("LucaLinkService full runtime enforcement controls", () => {
@@ -421,6 +467,7 @@ describe("LucaLinkService guest inbound hardening", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     lucaLink.clearGuestInboundAudit();
+    (lucaLink as any).deviceTrustRegistry = createLucaLinkDeviceTrustRegistry();
     (lucaLink as any).guestSecuritySessions?.clear();
     (lucaLink as any).guestSessions?.clear();
     (lucaLink as any).guestMessageHandler = null;
