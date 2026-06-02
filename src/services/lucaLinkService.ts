@@ -11,6 +11,19 @@ import { cortexUrl, RELAY_SERVER_URL } from "../config/api";
 import { sessionManager } from "./lucaLink/sessionManager";
 import { CryptoService } from "./lucaLink/crypto";
 import type { EncryptedMessage } from "./lucaLink/types";
+import { legacyDevicesToManifests } from "./lucaLink/lucaLinkLegacyAdapter";
+import {
+  clearLucaLinkShadowObservations,
+  createLucaLinkRuntimeShadow,
+  getLucaLinkShadowObservations,
+  recordLucaLinkShadowObservation,
+  summarizeLucaLinkShadowObservations,
+  type LucaLinkRuntimeShadowEventInput,
+  type LucaLinkRuntimeShadowOptions,
+  type LucaLinkRuntimeShadowState,
+} from "./lucaLink/lucaLinkRuntimeShadow";
+import type { LucaHostManifest } from "./lucaLink/lucaHostManifest";
+import type { LucaLinkRuntimeObservation, LucaLinkRuntimeObservationSummary } from "./lucaLink/lucaLinkRuntimeObserver";
 
 // Types
 export interface LucaLinkMessage {
@@ -59,6 +72,7 @@ class LucaLinkService {
   };
   private stateListeners: Set<StateListener> = new Set();
   private messageListeners: Set<MessageListener> = new Set();
+  private runtimeShadow: LucaLinkRuntimeShadowState = createLucaLinkRuntimeShadow({ enabled: false });
 
   // Persistent storage keys
   private readonly DEVICE_ID_KEY = "luca_link_device_id";
@@ -423,6 +437,12 @@ class LucaLinkService {
 
         this.socket.on("message", async (message: LucaLinkMessage) => {
           console.log("[LucaLink] Received message:", message.type);
+          this.observeRuntimeEventForDiagnostics({
+            eventName: message.type === "SENSOR_PULSE" ? "SENSOR_PULSE" : message.type === "sync" ? "sync" : "message",
+            payload: message,
+            sourceDeviceId: message.source,
+            targetDeviceId: message.target,
+          });
 
           // --- NEURAL HARDENING: Decrypt secure messages ---
           if (message.secure && message.payload) {
@@ -453,6 +473,12 @@ class LucaLinkService {
           if (message.type === "sync" && message.sync?.type === "registry") {
             const devices = message.sync.data as LucaLinkDevice[];
             this.updateState({ connectedDevices: devices });
+            this.observeRuntimeEventForDiagnostics({
+              eventName: "registry",
+              payload: { type: "registry", devices },
+              sourceDeviceId: message.source,
+              targetDeviceId: message.target,
+            });
 
             // --- MESH BOOT: Activate Consciousness Layer when mesh has 2+ devices ---
             // We boot lazily — only when there's actually a mesh to manage.
@@ -554,6 +580,13 @@ class LucaLinkService {
       payload,
     };
 
+    this.observeRuntimeEventForDiagnostics({
+      eventName: type === "SENSOR_PULSE" ? "SENSOR_PULSE" : type === "sync" ? "sync" : "message",
+      payload: message,
+      sourceDeviceId: message.source,
+      targetDeviceId: message.target,
+    });
+
     this.socket.emit("message", message);
     return true;
   }
@@ -577,6 +610,13 @@ class LucaLinkService {
       }
     };
     
+    this.observeRuntimeEventForDiagnostics({
+      eventName: "sync",
+      payload: syncMessage,
+      sourceDeviceId: syncMessage.source,
+      targetDeviceId: syncMessage.target,
+    });
+
     this.socket.emit("message", syncMessage);
   }
 
@@ -671,6 +711,60 @@ class LucaLinkService {
     return () => this.messageListeners.delete(listener);
   }
 
+  /**
+   * Enable diagnostics-only runtime shadow observations.
+   * This does not change connection, pairing, guest, WebRTC, or message flow.
+   */
+  enableRuntimeShadowDiagnostics(options: LucaLinkRuntimeShadowOptions = {}): void {
+    this.runtimeShadow = createLucaLinkRuntimeShadow({ ...options, enabled: true });
+  }
+
+  /**
+   * Disable diagnostics-only runtime shadow observations.
+   */
+  disableRuntimeShadowDiagnostics(): void {
+    this.runtimeShadow.enabled = false;
+  }
+
+  getRuntimeShadowObservations(): LucaLinkRuntimeObservation[] {
+    return getLucaLinkShadowObservations(this.runtimeShadow);
+  }
+
+  clearRuntimeShadowObservations(): void {
+    clearLucaLinkShadowObservations(this.runtimeShadow);
+  }
+
+  getRuntimeShadowSummary(): LucaLinkRuntimeObservationSummary {
+    return summarizeLucaLinkShadowObservations(this.runtimeShadow);
+  }
+
+  /**
+   * Public diagnostic hook for future runtime call sites.
+   * The returned observation is informational only and is never used for enforcement.
+   */
+  observeRuntimeEventForDiagnostics(
+    input: LucaLinkRuntimeShadowEventInput,
+  ): LucaLinkRuntimeObservation | undefined {
+    if (!this.runtimeShadow.enabled) return undefined;
+
+    return recordLucaLinkShadowObservation(this.runtimeShadow, input, {
+      candidates: this.getRuntimeShadowCandidateManifests(),
+    });
+  }
+
+  private getRuntimeShadowCandidateManifests(): LucaHostManifest[] {
+    return legacyDevicesToManifests(
+      this.state.connectedDevices.map((device) => ({
+        deviceId: device.deviceId,
+        name: device.name,
+        type: device.type,
+        lastSeen: device.lastSeen,
+      })),
+    )
+      .map((result) => result.manifest)
+      .filter((manifest): manifest is LucaHostManifest => !!manifest);
+  }
+
   private updateState(partial: Partial<LucaLinkState>): void {
     this.state = { ...this.state, ...partial };
     this.stateListeners.forEach((listener) => listener(this.state));
@@ -748,11 +842,19 @@ class LucaLinkService {
       return false;
     }
 
-    this.socket.emit("desktop-to-guest", {
+    const payload = {
       sessionId,
       message,
       audio: audioBase64,
+    };
+    this.observeRuntimeEventForDiagnostics({
+      eventName: "desktop-to-guest",
+      payload,
+      sourceDeviceId: this.state.deviceId ?? undefined,
+      targetDeviceId: sessionId,
     });
+
+    this.socket.emit("desktop-to-guest", payload);
     return true;
   }
 
@@ -848,6 +950,12 @@ class LucaLinkService {
     // Guest connected
     this.socket.on("guest-connected", async (data: { sessionId: string }) => {
       console.log("[LucaLink] Guest connected:", data.sessionId);
+      this.observeRuntimeEventForDiagnostics({
+        eventName: "guest-connected",
+        payload: data,
+        sourceDeviceId: data.sessionId,
+        targetDeviceId: this.state.deviceId ?? "primary",
+      });
 
       // 1. Check if PIN is required
       try {
@@ -875,6 +983,12 @@ class LucaLinkService {
         sessionId: string;
         answer: RTCSessionDescriptionInit;
       }) => {
+        this.observeRuntimeEventForDiagnostics({
+          eventName: "webrtc-answer",
+          payload: data,
+          sourceDeviceId: data.sessionId,
+          targetDeviceId: this.state.deviceId ?? "primary",
+        });
         const session = this.guestSessions.get(data.sessionId);
         if (session?.peerConnection) {
           await session.peerConnection.setRemoteDescription(
@@ -888,6 +1002,12 @@ class LucaLinkService {
     this.socket.on(
       "webrtc-ice-candidate",
       async (data: { sessionId: string; candidate: RTCIceCandidateInit }) => {
+        this.observeRuntimeEventForDiagnostics({
+          eventName: "webrtc-ice-candidate",
+          payload: data,
+          sourceDeviceId: data.sessionId,
+          targetDeviceId: this.state.deviceId ?? "primary",
+        });
         const session = this.guestSessions.get(data.sessionId);
         if (session?.peerConnection && data.candidate) {
           await session.peerConnection.addIceCandidate(
@@ -901,6 +1021,12 @@ class LucaLinkService {
     this.socket.on(
       "guest-message",
       async (data: { sessionId: string; message: string }) => {
+        this.observeRuntimeEventForDiagnostics({
+          eventName: "guest-message",
+          payload: data,
+          sourceDeviceId: data.sessionId,
+          targetDeviceId: this.state.deviceId ?? "primary",
+        });
         // DEBUG:
         // console.log("[LucaLink] Raw guest message:", data);
 
@@ -965,6 +1091,12 @@ class LucaLinkService {
     // Guest disconnected
     this.socket.on("guest-disconnected", (data: { sessionId: string }) => {
       console.log("[LucaLink] Guest disconnected:", data.sessionId);
+      this.observeRuntimeEventForDiagnostics({
+        eventName: "guest-disconnected",
+        payload: data,
+        sourceDeviceId: data.sessionId,
+        targetDeviceId: this.state.deviceId ?? "primary",
+      });
       const session = this.guestSessions.get(data.sessionId);
       if (session?.peerConnection) {
         session.peerConnection.close();
@@ -1070,12 +1202,19 @@ class LucaLinkService {
       const message: LucaLinkMessage = {
         id: this.generateDeviceId(),
         type: packet.type,
-        source: this.state.deviceId || "origin",
+        source: this.state.deviceId || "unknown",
         target: targetDeviceId,
         timestamp: Date.now(),
         payload: finalPayload,
         secure: isSecure,
       };
+
+      this.observeRuntimeEventForDiagnostics({
+        eventName: packet.type === "SENSOR_PULSE" ? "SENSOR_PULSE" : packet.type === "sync" ? "sync" : "message",
+        payload: message,
+        sourceDeviceId: message.source,
+        targetDeviceId: message.target,
+      });
 
       // Emit with acknowledgement
       this.socket?.emit("message", message, (ack: any) => {
