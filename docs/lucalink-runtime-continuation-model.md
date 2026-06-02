@@ -1,6 +1,6 @@
 # LucaLink Runtime Continuation Model
 
-PR #194 adds a pure runtime continuation model for LucaLink actions that were blocked for Primary Host approval. It defines short-lived, serializable continuation tokens and an in-memory registry that can answer whether a later manual continuation would be allowed.
+PR #194 adds a pure runtime continuation model for LucaLink actions that were blocked for Primary Host approval. It defines short-lived, serializable continuation tokens and an in-memory registry that can answer whether a later manual continuation would be allowed. PR #195 connects approved Device Center approval decisions to this registry and adds read-only continuation visibility.
 
 ## Approval does not equal execution
 
@@ -10,7 +10,7 @@ A Primary Host approval only records that a blocked request was approved. It doe
 
 Continuation tokens can be `pending`, `validated`, `consumed`, `expired`, `cancelled`, or `blocked`.
 
-1. An approved approval request can create a continuation token.
+1. An approved Device Center approval request can create a continuation token.
 2. The token receives a short TTL (default: 2 minutes).
 3. Validation checks status, expiry, replay mode, and optional device/lane/permission/event context.
 4. Consumption is single-use and only records `consumedAt` / `consumedByDeviceId`; it does not execute anything.
@@ -27,9 +27,15 @@ Continuation tokens can be `pending`, `validated`, `consumed`, `expired`, `cance
 
 Payment spend, robotics motion, smart-home control, physical-world actuator commands, and critical safety lane commands are recorded as blocked tokens. Their warnings explain that they cannot be replayed from approval without fresh Primary Host confirmation.
 
+## Device Center bridge
+
+Device Center approval now calls the approval queue first and, only when the request status becomes approved, creates a continuation token from the approved request. Denied and cancelled approvals do not create continuation tokens.
+
+Device Center Advanced can display continuation totals, valid records, consumed records, expired / blocked records, and replay-mode counts. The optional record controls validate, cancel, or mark consumed as state only. They do not run the original action.
+
 ## Registry boundary
 
-The continuation registry is in-memory only. It has no persistence, socket events, backend endpoints, telemetry, local/session storage access, browser/device API access, or network calls.
+The continuation registry is in-memory only. It has no persistence, socket events, backend endpoints, telemetry, local/session storage access, browser/device API access, network calls, automatic retry, action replay, or runtime continuation execution.
 
 ## Next step
 
