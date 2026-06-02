@@ -5,6 +5,10 @@ vi.mock("socket.io-client", () => ({
 }));
 
 import { lucaLink } from "./lucaLinkService";
+import {
+  createLucaLinkContinuationToken,
+  registerLucaLinkContinuation,
+} from "./lucaLink/lucaLinkContinuation";
 
 describe("LucaLinkService soft enforcement controls", () => {
   afterEach(() => {
@@ -203,6 +207,98 @@ describe("LucaLinkService soft enforcement controls", () => {
     expect(consumed.consumed).toBe(true);
     expect(lucaLink.getContinuationRegistrySummary().consumed).toBe(1);
     expect(emit).not.toHaveBeenCalled();
+  });
+
+  it("exposes controlled continuation bridge helpers without transport side effects", () => {
+    const emit = vi.fn();
+    const sendSpy = vi.spyOn(lucaLink, "send");
+    const beamSpy = vi.spyOn(lucaLink, "beamPacket");
+    (lucaLink as any).socket = { emit };
+
+    const token = createLucaLinkContinuationToken(
+      {
+        id: "service-safe-notification",
+        source: "approval-queue",
+        permission: "notification.send",
+        lane: "notification",
+        risk: "low",
+        replayMode: "single-use-replayable",
+        status: "validated",
+        requestedByDeviceId: "device-a",
+        requestedTargetDeviceId: "primary-host",
+        title: "Safe notification",
+        summary: "Primary Host approved notification record.",
+      },
+      { now: 1_700_000_000_000 },
+    );
+    registerLucaLinkContinuation((lucaLink as any).continuationRegistry, token);
+
+    const evaluated = lucaLink.evaluateContinuationBridge(token.id, {
+      requestedByDeviceId: "device-a",
+      requestedTargetDeviceId: "primary-host",
+      permission: "notification.send",
+      now: 1_700_000_000_000,
+    });
+    const prepared = lucaLink.prepareSafeContinuation(token.id, {
+      requestedByDeviceId: "device-a",
+      requestedTargetDeviceId: "primary-host",
+      permission: "notification.send",
+      now: 1_700_000_000_000,
+    });
+    const consumed = lucaLink.consumePreparedContinuation(token.id, {
+      requestedByDeviceId: "device-a",
+      requestedTargetDeviceId: "primary-host",
+      permission: "notification.send",
+      now: 1_700_000_000_001,
+      consumedByDeviceId: "primary-host",
+    });
+
+    expect(evaluated.decision).toBe("can-prepare-safe-continuation");
+    expect(prepared.preparedAction?.safeToAutoContinue).toBe(true);
+    expect(consumed.consumed).toBe(true);
+    expect(lucaLink.getContinuationTokens()[0].status).toBe("consumed");
+    expect(sendSpy).not.toHaveBeenCalled();
+    expect(beamSpy).not.toHaveBeenCalled();
+    expect(emit).not.toHaveBeenCalled();
+
+    sendSpy.mockRestore();
+    beamSpy.mockRestore();
+  });
+
+  it("service bridge helpers refuse manual retry and fresh confirmation tokens", () => {
+    const manual = createLucaLinkContinuationToken(
+      {
+        id: "service-shell",
+        permission: "shell.execute",
+        risk: "high",
+        replayMode: "manual-retry-only",
+        status: "validated",
+      },
+      { now: 1_700_000_000_000 },
+    );
+    const fresh = createLucaLinkContinuationToken(
+      {
+        id: "service-payment",
+        permission: "payment.spend",
+        risk: "critical",
+        replayMode: "single-use-replayable",
+        status: "validated",
+      },
+      { now: 1_700_000_000_000 },
+    );
+    registerLucaLinkContinuation((lucaLink as any).continuationRegistry, manual);
+    registerLucaLinkContinuation((lucaLink as any).continuationRegistry, fresh);
+
+    expect(lucaLink.prepareSafeContinuation(manual.id).decision).toBe(
+      "requires-manual-retry",
+    );
+    expect(lucaLink.prepareSafeContinuation(fresh.id).decision).toBe(
+      "requires-fresh-confirmation",
+    );
+    expect(
+      lucaLink.prepareSafeContinuation(manual.id).preparedAction,
+    ).toBeUndefined();
+    expect(lucaLink.prepareSafeContinuation(fresh.id).preparedAction).toBeUndefined();
   });
 
   it("does not create continuations for pending approvals through service helpers", () => {
