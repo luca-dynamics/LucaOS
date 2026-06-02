@@ -159,7 +159,7 @@ describe("LucaLink sync protocol envelopes", () => {
     );
 
     expect(isEnvelopeExpired(created, NOW)).toBe(true);
-    expect(validateLucaLinkEnvelope(created).warnings).toContain(
+    expect(validateLucaLinkEnvelope(created, { now: NOW }).warnings).toContain(
       "envelope is expired",
     );
   });

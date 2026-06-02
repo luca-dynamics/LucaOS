@@ -550,8 +550,13 @@ export function requiresSignedLane(lane: unknown): boolean {
   return isKnownLane(lane);
 }
 
+export interface LucaLinkEnvelopeValidationOptions {
+  now?: number;
+}
+
 export function validateLucaLinkEnvelope(
   envelope: unknown,
+  options: LucaLinkEnvelopeValidationOptions = {},
 ): LucaLinkEnvelopeValidation {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -669,7 +674,9 @@ export function validateLucaLinkEnvelope(
     }
   }
 
-  if (isEnvelopeExpired(candidate)) warnings.push("envelope is expired");
+  if (isEnvelopeExpired(candidate, options.now)) {
+    warnings.push("envelope is expired");
+  }
 
   return { valid: errors.length === 0, errors, warnings };
 }
@@ -693,7 +700,9 @@ export function evaluateEnvelopePolicy(
   envelope: LucaLinkEnvelope,
   options: LucaLinkPolicyOptions = {},
 ): LucaLinkEnvelopePolicyEvaluation {
-  const envelopeValidation = validateLucaLinkEnvelope(envelope);
+  const envelopeValidation = validateLucaLinkEnvelope(envelope, {
+    now: options.now,
+  });
   const lanePolicy = canHostParticipateInLane(manifest, envelope.lane, options);
   const permission = getPayloadPermission(envelope.payload);
   const permissionPolicy = permission
