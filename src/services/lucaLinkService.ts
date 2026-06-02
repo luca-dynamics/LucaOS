@@ -72,6 +72,16 @@ import {
 } from "./lucaLink/lucaLinkRuntimeShadow";
 import type { LucaHostManifest } from "./lucaLink/lucaHostManifest";
 import type { LucaLinkRuntimeObservation, LucaLinkRuntimeObservationSummary } from "./lucaLink/lucaLinkRuntimeObserver";
+import {
+  createLucaLinkRuntimeEnforcementAuditRecord,
+  evaluateLucaLinkRuntimeEnforcement,
+  summarizeLucaLinkRuntimeEnforcementAudit,
+  type LucaLinkRuntimeEnforcementAuditRecord,
+  type LucaLinkRuntimeEnforcementAuditSummary,
+  type LucaLinkRuntimeEnforcementInput,
+  type LucaLinkRuntimeEnforcementMode,
+  type LucaLinkRuntimeEnforcementResult,
+} from "./lucaLink/lucaLinkRuntimeEnforcementGate";
 
 // Types
 export interface LucaLinkMessage {
@@ -126,6 +136,9 @@ class LucaLinkService {
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
+  private runtimeEnforcementMode: LucaLinkRuntimeEnforcementMode = "disabled";
+  private runtimeEnforcementAudit: LucaLinkRuntimeEnforcementAuditRecord[] = [];
+  private readonly runtimeEnforcementAuditLimit = 100;
 
   // Persistent storage keys
   private readonly DEVICE_ID_KEY = "luca_link_device_id";
@@ -633,8 +646,12 @@ class LucaLinkService {
       payload,
     };
 
-    if (this.getSoftEnforcementMode() !== "disabled") {
-      const softEnforcement = this.evaluateRuntimeEventForSoftEnforcement({
+    if (
+      this.runtimeEnforcementMode !== "disabled" ||
+      this.getSoftEnforcementMode() !== "disabled"
+    ) {
+      const runtimeEnforcement = this.evaluateRuntimeEnforcementForOutbound({
+        scope: type === "sync" ? "outbound-sync" : "outbound-send",
         eventName:
           type === "SENSOR_PULSE"
             ? "SENSOR_PULSE"
@@ -642,19 +659,13 @@ class LucaLinkService {
               ? "sync"
               : "message",
         payload: message,
+        sourceDeviceId: message.source,
+        targetDeviceId: message.target,
       });
-      if (softEnforcement.blocked) {
-        if (softEnforcement.requiresPrimaryHostApproval) {
-          this.queueApprovalForSoftEnforcementResult(softEnforcement, {
-            eventName: type,
-            requestedByDeviceId: message.source,
-            requestedTargetDeviceId: message.target,
-            payload: message,
-          });
-        }
+      if (runtimeEnforcement.blocked) {
         console.warn(
-          "[LucaLink] Soft enforcement blocked outbound send:",
-          softEnforcement,
+          "[LucaLink] Runtime enforcement blocked outbound send:",
+          runtimeEnforcement,
         );
         return false;
       }
@@ -812,6 +823,100 @@ class LucaLinkService {
 
   getSoftEnforcementMode(): LucaLinkSoftEnforcementMode {
     return this.softEnforcementOptions.mode ?? "disabled";
+  }
+
+
+  enableRuntimeEnforcement(mode: LucaLinkRuntimeEnforcementMode = "observe-only"): void {
+    this.runtimeEnforcementMode = mode;
+  }
+
+  disableRuntimeEnforcement(): void {
+    this.runtimeEnforcementMode = "disabled";
+  }
+
+  getRuntimeEnforcementMode(): LucaLinkRuntimeEnforcementMode {
+    return this.runtimeEnforcementMode;
+  }
+
+  evaluateRuntimeEnforcement(
+    input: LucaLinkRuntimeEnforcementInput,
+  ): LucaLinkRuntimeEnforcementResult {
+    return this.evaluateRuntimeEnforcementWithMode(input, this.runtimeEnforcementMode);
+  }
+
+  private evaluateRuntimeEnforcementForOutbound(
+    input: LucaLinkRuntimeEnforcementInput,
+  ): LucaLinkRuntimeEnforcementResult {
+    const effectiveMode: LucaLinkRuntimeEnforcementMode =
+      this.runtimeEnforcementMode !== "disabled"
+        ? this.runtimeEnforcementMode
+        : this.getSoftEnforcementMode();
+    return this.evaluateRuntimeEnforcementWithMode(input, effectiveMode);
+  }
+
+  private evaluateRuntimeEnforcementWithMode(
+    input: LucaLinkRuntimeEnforcementInput,
+    mode: LucaLinkRuntimeEnforcementMode,
+  ): LucaLinkRuntimeEnforcementResult {
+    const result = evaluateLucaLinkRuntimeEnforcement(input, {
+      mode,
+      candidates: this.getRuntimeShadowCandidateManifests(),
+      queueApproval: (_gateResult, context) => {
+        const softEnforcement = context.softEnforcement;
+        if (!softEnforcement.requiresPrimaryHostApproval) return { warnings: [], errors: [] };
+        const queued = this.queueApprovalForSoftEnforcementResult(softEnforcement, {
+          eventName: input.eventName,
+          requestedByDeviceId: input.sourceDeviceId,
+          requestedTargetDeviceId: input.targetDeviceId,
+          payload: input.payload,
+        });
+        return {
+          request: queued.request ? { id: queued.request.id } : undefined,
+          warnings: queued.warnings,
+          errors: queued.errors,
+        };
+      },
+      evaluateContinuation: (tokenId, context) =>
+        this.evaluateContinuationBridge(tokenId, {
+          requestedByDeviceId: input.sourceDeviceId,
+          requestedTargetDeviceId: input.targetDeviceId,
+          permission: context.permission,
+          lane: context.lane,
+          eventName: input.eventName,
+          now: input.now,
+        }),
+      prepareContinuation: (tokenId, context) =>
+        this.prepareSafeContinuation(tokenId, {
+          requestedByDeviceId: input.sourceDeviceId,
+          requestedTargetDeviceId: input.targetDeviceId,
+          permission: context.permission,
+          lane: context.lane,
+          eventName: input.eventName,
+          now: input.now,
+        }),
+      allowSafeContinuation: true,
+    });
+    this.recordRuntimeEnforcementAudit(result);
+    return result;
+  }
+
+  getRuntimeEnforcementAudit(): LucaLinkRuntimeEnforcementAuditRecord[] {
+    return [...this.runtimeEnforcementAudit];
+  }
+
+  getRuntimeEnforcementSummary(): LucaLinkRuntimeEnforcementAuditSummary {
+    return summarizeLucaLinkRuntimeEnforcementAudit(this.runtimeEnforcementAudit);
+  }
+
+  clearRuntimeEnforcementAudit(): void {
+    this.runtimeEnforcementAudit = [];
+  }
+
+  private recordRuntimeEnforcementAudit(result: LucaLinkRuntimeEnforcementResult): void {
+    this.runtimeEnforcementAudit = [
+      ...this.runtimeEnforcementAudit,
+      createLucaLinkRuntimeEnforcementAuditRecord(result),
+    ].slice(-this.runtimeEnforcementAuditLimit);
   }
 
   getPendingApprovalRequests(): LucaLinkApprovalRequest[] {
@@ -1438,8 +1543,12 @@ class LucaLinkService {
       };
     }
 
-    if (this.getSoftEnforcementMode() !== "disabled") {
-      const softEnforcement = this.evaluateRuntimeEventForSoftEnforcement({
+    if (
+      this.runtimeEnforcementMode !== "disabled" ||
+      this.getSoftEnforcementMode() !== "disabled"
+    ) {
+      const runtimeEnforcement = this.evaluateRuntimeEnforcementForOutbound({
+        scope: "outbound-beam",
         eventName:
           packet.type === "SENSOR_PULSE"
             ? "SENSOR_PULSE"
@@ -1452,23 +1561,13 @@ class LucaLinkService {
           target: targetDeviceId,
           payload: packet.payload,
         },
+        sourceDeviceId: this.state.deviceId || "unknown",
+        targetDeviceId,
       });
-      if (softEnforcement.blocked) {
-        if (softEnforcement.requiresPrimaryHostApproval) {
-          this.queueApprovalForSoftEnforcementResult(softEnforcement, {
-            eventName: packet.type,
-            requestedByDeviceId: this.state.deviceId || "unknown",
-            requestedTargetDeviceId: targetDeviceId,
-            payload: packet.payload,
-          });
-          return {
-            success: false,
-            error: `Primary Host approval required for LucaLink beam: ${softEnforcement.explain}`,
-          };
-        }
+      if (runtimeEnforcement.blocked) {
         return {
           success: false,
-          error: `Soft enforcement blocked LucaLink beam: ${softEnforcement.explain}`,
+          error: `Runtime enforcement blocked LucaLink beam: ${runtimeEnforcement.explain}`,
         };
       }
     }

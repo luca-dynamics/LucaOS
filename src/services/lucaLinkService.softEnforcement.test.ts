@@ -13,6 +13,8 @@ import {
 describe("LucaLinkService soft enforcement controls", () => {
   afterEach(() => {
     lucaLink.disableSoftEnforcement();
+    lucaLink.disableRuntimeEnforcement();
+    lucaLink.clearRuntimeEnforcementAudit();
     lucaLink.clearApprovalQueue();
     lucaLink.clearContinuationRegistry();
     (lucaLink as any).socket = null;
@@ -324,5 +326,73 @@ describe("LucaLinkService soft enforcement controls", () => {
     expect(continuation.created).toBeUndefined();
     expect(continuation.warnings[0]).toContain("not eligible");
     expect(lucaLink.getContinuationTokens()).toHaveLength(0);
+  });
+});
+
+describe("LucaLinkService full runtime enforcement controls", () => {
+  afterEach(() => {
+    lucaLink.disableRuntimeEnforcement();
+    lucaLink.clearRuntimeEnforcementAudit();
+    lucaLink.clearApprovalQueue();
+    (lucaLink as any).socket = null;
+    (lucaLink as any).state = {
+      connected: false,
+      deviceId: null,
+      pairingToken: null,
+      connectedDevices: [],
+      error: null,
+    };
+  });
+
+  it("defaults disabled and no-argument enable is observe-only", () => {
+    expect(lucaLink.getRuntimeEnforcementMode()).toBe("disabled");
+
+    lucaLink.enableRuntimeEnforcement();
+
+    expect(lucaLink.getRuntimeEnforcementMode()).toBe("observe-only");
+    lucaLink.disableRuntimeEnforcement();
+    expect(lucaLink.getRuntimeEnforcementMode()).toBe("disabled");
+  });
+
+  it("requires explicit full-outbound mode for blocking-capable runtime enforcement", () => {
+    const observed = lucaLink.evaluateRuntimeEnforcement({
+      scope: "outbound-send",
+      eventName: "message",
+      payload: { type: "tool-request", permission: "shell.execute" },
+    });
+    lucaLink.enableRuntimeEnforcement("full-outbound");
+    const enforced = lucaLink.evaluateRuntimeEnforcement({
+      scope: "outbound-send",
+      eventName: "message",
+      payload: { type: "tool-request", permission: "shell.execute" },
+    });
+
+    expect(observed.blocked).toBe(false);
+    expect(enforced.blocked).toBe(true);
+  });
+
+  it("allows basic sends and blocks or queues high-risk outbound sends in full-outbound", () => {
+    const emit = vi.fn();
+    (lucaLink as any).socket = { emit };
+    (lucaLink as any).state = {
+      connected: true,
+      deviceId: "exec-1",
+      pairingToken: null,
+      connectedDevices: [],
+      error: null,
+    };
+    lucaLink.enableRuntimeEnforcement("full-outbound");
+
+    const safe = lucaLink.send("primary", "message", { message: "hello" });
+    const blocked = lucaLink.send("primary", "tool-request", {
+      kind: "tool-request",
+      permission: "shell.execute",
+    });
+
+    expect(safe).toBe(true);
+    expect(blocked).toBe(false);
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(lucaLink.getRuntimeEnforcementSummary().total).toBe(2);
+    expect(lucaLink.getRuntimeEnforcementSummary().blocked).toBe(1);
   });
 });
