@@ -36,6 +36,13 @@ import {
   type LucaLinkApprovalRequest,
 } from "./lucaLink/lucaLinkApprovalQueue";
 import {
+  consumePreparedLucaLinkContinuation,
+  evaluateLucaLinkContinuationBridge,
+  prepareLucaLinkSafeContinuation,
+  type LucaLinkContinuationBridgeInput,
+  type LucaLinkContinuationBridgeResult,
+} from "./lucaLink/lucaLinkContinuationBridge";
+import {
   cancelLucaLinkContinuationToken,
   clearLucaLinkContinuationRegistry,
   consumeLucaLinkContinuationToken,
@@ -892,6 +899,47 @@ class LucaLinkService {
 
   cancelContinuationToken(tokenId: string, reason?: string): LucaLinkContinuationMutationResult {
     return cancelLucaLinkContinuationToken(this.continuationRegistry, tokenId, { reason });
+  }
+
+  evaluateContinuationBridge(
+    tokenId: string,
+    context: Omit<LucaLinkContinuationBridgeInput, "tokenId"> = {},
+  ): LucaLinkContinuationBridgeResult {
+    return evaluateLucaLinkContinuationBridge(this.continuationRegistry, {
+      ...context,
+      tokenId,
+    });
+  }
+
+  prepareSafeContinuation(
+    tokenId: string,
+    context: Omit<LucaLinkContinuationBridgeInput, "tokenId"> = {},
+  ): LucaLinkContinuationBridgeResult {
+    return prepareLucaLinkSafeContinuation(this.continuationRegistry, {
+      ...context,
+      tokenId,
+    });
+  }
+
+  consumePreparedContinuation(
+    tokenId: string,
+    context: Omit<LucaLinkContinuationBridgeInput, "tokenId"> & {
+      consumedByDeviceId?: string;
+      reason?: string;
+    } = {},
+  ): LucaLinkContinuationBridgeResult {
+    const prepared = prepareLucaLinkSafeContinuation(this.continuationRegistry, {
+      ...context,
+      tokenId,
+    });
+
+    if (!prepared.preparedAction) return prepared;
+
+    return consumePreparedLucaLinkContinuation(
+      this.continuationRegistry,
+      prepared.preparedAction,
+      context,
+    );
   }
 
   expireContinuationTokens(now?: number): LucaLinkContinuationMutationResult {
