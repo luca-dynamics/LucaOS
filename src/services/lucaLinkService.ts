@@ -1,8 +1,9 @@
 /**
  * Luca Link Service
  *
- * Manages Socket.IO connections to the relay server for Desktop ↔ Mobile communication.
- * Uses the Socket.IO protocol which is what the relay server expects.
+ * Manages Socket.IO connections to the relay server for multi-host LucaLink mesh communication.
+ * Coordinates Primary Host, companion, display, guest, sensor, electronics, and embodied host messaging
+ * using the Socket.IO protocol expected by the relay server.
  */
 
 import { io, Socket } from "socket.io-client";
@@ -1601,12 +1602,30 @@ class LucaLinkService {
     return unblockTrustedDevice(this.deviceTrustRegistry, deviceId, options);
   }
 
-  getHostConnections(): LucaLinkHostConnectionRecord[] {
+  getHostConnections(
+    options: { refresh?: boolean } = {},
+  ): LucaLinkHostConnectionRecord[] {
+    if (options.refresh !== false) {
+      this.refreshHostConnectionsFromCurrentState();
+    }
     return listLucaLinkHostConnections(this.hostConnectionRegistry);
   }
 
-  getHostConnectionSummary(): LucaLinkHostConnectionRegistrySummary {
+  getHostConnectionSummary(
+    options: { refresh?: boolean } = {},
+  ): LucaLinkHostConnectionRegistrySummary {
+    if (options.refresh !== false) {
+      this.refreshHostConnectionsFromCurrentState();
+    }
     return summarizeLucaLinkHostConnectionRegistry(this.hostConnectionRegistry);
+  }
+
+  getFreshHostConnections(): LucaLinkHostConnectionRecord[] {
+    return this.getHostConnections({ refresh: true });
+  }
+
+  getFreshHostConnectionSummary(): LucaLinkHostConnectionRegistrySummary {
+    return this.getHostConnectionSummary({ refresh: true });
   }
 
   clearHostConnections(): void {
@@ -1710,7 +1729,7 @@ class LucaLinkService {
       );
     }
 
-    return this.getHostConnections();
+    return listLucaLinkHostConnections(this.hostConnectionRegistry);
   }
 
   diagnoseHostConnection(

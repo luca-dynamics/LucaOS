@@ -35,6 +35,10 @@ import type {
   LucaLinkHostConnectionRecord,
   LucaLinkHostConnectionRegistrySummary,
 } from "../../services/lucaLink/lucaLinkHostConnectionModel";
+import type {
+  LucaLinkGuestSessionRecord,
+  LucaLinkGuestSessionSummary,
+} from "../../services/lucaLink/lucaLinkGuestSessionPolicy";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
@@ -525,6 +529,8 @@ interface LucaLinkDeviceCenterSnapshot {
   activeTrustedDevices: LucaLinkTrustedDeviceRecord[];
   deviceTrustSummary: LucaLinkDeviceTrustRegistrySummary;
   deviceTrustAudit: LucaLinkDeviceTrustAuditRecord[];
+  guestSecuritySessions: LucaLinkGuestSessionRecord[];
+  guestSecuritySummary: LucaLinkGuestSessionSummary;
   hostConnections: LucaLinkHostConnectionRecord[];
   hostConnectionSummary: LucaLinkHostConnectionRegistrySummary;
 }
@@ -542,7 +548,6 @@ const lucaLinkDeviceCenterTabs: Array<{
 ];
 
 function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
-  lucaLink.refreshHostConnectionsFromCurrentState();
   return {
     state: lucaLink.getState(),
     pendingApprovals: lucaLink.getPendingApprovalRequests(),
@@ -561,8 +566,10 @@ function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
     activeTrustedDevices: lucaLink.getActiveTrustedDevices(),
     deviceTrustSummary: lucaLink.getDeviceTrustSummary(),
     deviceTrustAudit: lucaLink.getDeviceTrustAudit(),
-    hostConnections: lucaLink.getHostConnections(),
-    hostConnectionSummary: lucaLink.getHostConnectionSummary(),
+    guestSecuritySessions: lucaLink.getGuestSecuritySessions(),
+    guestSecuritySummary: lucaLink.getGuestSecuritySummary(),
+    hostConnections: lucaLink.getFreshHostConnections(),
+    hostConnectionSummary: lucaLink.getFreshHostConnectionSummary(),
   };
 }
 
@@ -1138,8 +1145,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           />
           <SettingsStatusCard
             label="Guest Sessions"
-            value="Read-only"
-            detail="No active guest session data exposed yet."
+            value={`${deviceCenterSnapshot.guestSecuritySummary.total} tracked`}
+            detail={`${deviceCenterSnapshot.guestSecuritySummary.active} active · ${deviceCenterSnapshot.guestSecuritySummary.authenticated} authenticated · ${deviceCenterSnapshot.guestSecuritySummary.expired} expired · ${deviceCenterSnapshot.guestSecuritySummary.disconnected} disconnected · ${deviceCenterSnapshot.guestSecuritySummary.deniedGuestInbound} denied · ${deviceCenterSnapshot.guestSecuritySummary.rateLimitedGuestInbound} rate-limited`}
             accentColor={theme.hex}
           />
           <SettingsStatusCard
@@ -1866,10 +1873,95 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           accentColor={theme.hex}
           isMobile={isMobile}
         >
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <SettingsStatusCard
+              label="Tracked guests"
+              value={`${deviceCenterSnapshot.guestSecuritySummary.total}`}
+              detail={`${deviceCenterSnapshot.guestSecuritySummary.connected} connected · ${deviceCenterSnapshot.guestSecuritySummary.authChallenge} awaiting auth`}
+              accentColor={theme.hex}
+            />
+            <SettingsStatusCard
+              label="Authenticated / active"
+              value={`${deviceCenterSnapshot.guestSecuritySummary.authenticated} / ${deviceCenterSnapshot.guestSecuritySummary.active}`}
+              detail="Read-only guest security session state."
+              accentColor={theme.hex}
+            />
+            <SettingsStatusCard
+              label="Expired / disconnected"
+              value={`${deviceCenterSnapshot.guestSecuritySummary.expired} / ${deviceCenterSnapshot.guestSecuritySummary.disconnected}`}
+              detail="No guest transport controls are exposed here."
+              accentColor={theme.hex}
+            />
+            <SettingsStatusCard
+              label="Denied / rate-limited"
+              value={`${deviceCenterSnapshot.guestSecuritySummary.deniedGuestInbound} / ${deviceCenterSnapshot.guestSecuritySummary.rateLimitedGuestInbound}`}
+              detail="Inbound guest policy counters only."
+              accentColor={theme.hex}
+            />
+          </div>
           <SettingsCard>
-            <p className="text-sm">
-              No reliable active guest session list is exposed yet.
+            <p className="text-sm font-semibold">
+              Guest security sessions are read-only.
             </p>
+            <p className="mt-1 text-xs opacity-70">
+              Guest host records are derived from existing guest security
+              session state. This view does not revoke guests, regenerate
+              invites, or change guest auth, PIN, or WebRTC behavior.
+            </p>
+            {deviceCenterSnapshot.guestSecuritySessions.length === 0 ? (
+              <p className="mt-3 text-xs opacity-70">
+                No guest security sessions are currently tracked.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {deviceCenterSnapshot.guestSecuritySessions.map((session) => (
+                  <div
+                    key={session.sessionId}
+                    className="rounded-lg border p-3"
+                    style={{
+                      borderColor: settingsSurfaceTokens.borderSubtle,
+                      backgroundColor: settingsSurfaceTokens.glass,
+                    }}
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <p className="text-sm font-semibold">
+                        Guest {session.sessionId}
+                      </p>
+                      <StatusBadge status={session.status} />
+                    </div>
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <DetailField
+                        label="Messages"
+                        value={`${session.messageCount}`}
+                      />
+                      <DetailField
+                        label="Denied inbound"
+                        value={`${session.deniedCount}`}
+                      />
+                      <DetailField
+                        label="Rate limited"
+                        value={`${session.rateLimitedCount}`}
+                      />
+                      <DetailField
+                        label="Expires"
+                        value={formatLucaLinkTimestamp(session.expiresAt)}
+                      />
+                      <DetailField
+                        label="Last activity"
+                        value={formatLucaLinkTimestamp(session.lastActivityAt)}
+                      />
+                      <DetailField
+                        label="Capabilities"
+                        value={
+                          session.capabilities.join(", ") ||
+                          "conversation-limited"
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </SettingsCard>
         </SettingsSection>
       )}
@@ -2675,8 +2767,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     <p
                       className={`text-lg text-[var(--app-text-muted)] mb-2 opacity-80`}
                     >
-                      Pair trusted Luca apps (Desktop ↔ Mobile ↔ Tablet) using
-                      this QR code or token.
+                      Pair trusted Luca-capable hosts in the adaptive host mesh
+                      using this QR code or token.
                     </p>
 
                     {/* QR Code */}

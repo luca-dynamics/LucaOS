@@ -1,6 +1,6 @@
 # LucaLink Multi-Host Connection Architecture + Host Adaptation Intelligence
 
-LucaLink is an adaptive host mesh that lets Luca discover, diagnose, and safely plan bridge software for new digital, display, sensor, electronics, and embodied hosts.
+LucaLink is an adaptive host mesh that lets Luca discover, diagnose, and safely plan bridge software for new digital, display, sensor, electronics, and embodied hosts. The mesh is host/kernel/body aware and is not desktop/mobile-only.
 
 This PR is model-first and side-effect-free. It does not execute generated code, write generated files, install adapters, open sockets, scan networks, add backend endpoints, add persistence, or change pairing, guest, PIN, WebRTC, mission sync, sensor pulse, relay/local/VPN behavior, or runtime enforcement.
 

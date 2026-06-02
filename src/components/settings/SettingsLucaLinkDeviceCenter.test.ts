@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import lucaLinkSource from "./SettingsLucaLinkTab.tsx?raw";
+import lucaLinkServiceSource from "../../services/lucaLinkService.ts?raw";
 
 const approvalActionSource = lucaLinkSource.slice(
   lucaLinkSource.indexOf("const handleApprovalAction"),
@@ -307,11 +308,13 @@ describe("Settings LucaLink Device Center host connections", () => {
     expect(lucaLinkSource).toContain(
       "hostConnectionSummary: LucaLinkHostConnectionRegistrySummary",
     );
-    expect(snapshotSource).toContain(
-      "lucaLink.refreshHostConnectionsFromCurrentState()",
+    expect(snapshotSource).not.toContain(
+      ["lucaLink.refresh", "HostConnectionsFromCurrentState()"].join(""),
     );
-    expect(snapshotSource).toContain("lucaLink.getHostConnections()");
-    expect(snapshotSource).toContain("lucaLink.getHostConnectionSummary()");
+    expect(snapshotSource).toContain("lucaLink.getFreshHostConnections()");
+    expect(snapshotSource).toContain(
+      "lucaLink.getFreshHostConnectionSummary()",
+    );
   });
 
   it("shows host class, connection class, runtime surface, approval capability, and model-only adaptation copy", () => {
@@ -343,5 +346,71 @@ describe("Settings LucaLink Device Center host connections", () => {
     });
     expect(hostsSectionSource).not.toContain("Origin");
     expect(hostsSectionSource).not.toMatch(/bypass|exploit/i);
+  });
+});
+
+describe("Settings LucaLink Device Center guest and service cleanup", () => {
+  const guestsSectionSource = lucaLinkSource.slice(
+    lucaLinkSource.indexOf('deviceCenterTab === "guests"'),
+    lucaLinkSource.indexOf('deviceCenterTab === "sync"'),
+  );
+  const hostGetterSource = lucaLinkServiceSource.slice(
+    lucaLinkServiceSource.indexOf("getHostConnections"),
+    lucaLinkServiceSource.indexOf("getRuntimeShadowObservations"),
+  );
+
+  it("reads guest security sessions and summary into Device Center snapshot and overview", () => {
+    expect(lucaLinkSource).toContain(
+      "guestSecuritySessions: LucaLinkGuestSessionRecord[]",
+    );
+    expect(lucaLinkSource).toContain(
+      "guestSecuritySummary: LucaLinkGuestSessionSummary",
+    );
+    expect(snapshotSource).toContain("lucaLink.getGuestSecuritySessions()");
+    expect(snapshotSource).toContain("lucaLink.getGuestSecuritySummary()");
+    expect(lucaLinkSource).toContain(
+      "deviceCenterSnapshot.guestSecuritySummary.deniedGuestInbound",
+    );
+    expect(lucaLinkSource).toContain(
+      "deviceCenterSnapshot.guestSecuritySummary.rateLimitedGuestInbound",
+    );
+  });
+
+  it("replaces stale guest copy with read-only guest security state", () => {
+    expect(lucaLinkSource).not.toContain(
+      ["No active guest", "session data exposed yet."].join(" "),
+    );
+    expect(lucaLinkSource).not.toContain(
+      ["No reliable active", "guest session list is exposed yet."].join(" "),
+    );
+    expect(guestsSectionSource).toContain(
+      "Guest security sessions are read-only.",
+    );
+    expect(guestsSectionSource).toContain(
+      "This view does not revoke guests, regenerate invites, or change guest auth, PIN, or WebRTC behavior.",
+    );
+  });
+
+  it("updates LucaLinkService comments and host getters without transport behavior", () => {
+    expect(lucaLinkServiceSource).toContain(
+      "multi-host LucaLink mesh communication",
+    );
+    expect(lucaLinkServiceSource).toContain(
+      "Primary Host, companion, display, guest, sensor, electronics, and embodied host messaging",
+    );
+    expect(lucaLinkServiceSource).not.toContain(
+      ["Desktop", "↔", "Mobile communication"].join(" "),
+    );
+    expect(hostGetterSource).toContain("getFreshHostConnections");
+    expect(hostGetterSource).toContain("getFreshHostConnectionSummary");
+    expect(hostGetterSource).not.toMatch(/\.emit\s*\(/);
+    expect(hostGetterSource).not.toMatch(/\.on\s*\(/);
+    expect(hostGetterSource).not.toMatch(/fetch\s*\(/);
+    expect(hostGetterSource).not.toMatch(/io\s*\(/);
+  });
+
+  it("does not add reserved approval terminology", () => {
+    expect(lucaLinkSource).not.toContain("Origin approval");
+    expect(lucaLinkServiceSource).not.toContain("Origin approval");
   });
 });
