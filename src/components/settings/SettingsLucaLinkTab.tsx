@@ -6,6 +6,7 @@ import { useMobile } from "../../hooks/useMobile";
 import { lucaLink } from "../../services/lucaLinkService";
 import type { LucaLinkDevice, LucaLinkState } from "../../services/lucaLinkService";
 import type { LucaLinkApprovalRequest, LucaLinkApprovalQueueSummary, LucaLinkApprovalRisk } from "../../services/lucaLink/lucaLinkApprovalQueue";
+import type { LucaLinkContinuationRegistrySummary, LucaLinkContinuationToken } from "../../services/lucaLink/lucaLinkContinuation";
 import type { LucaLinkRuntimeObservation, LucaLinkRuntimeObservationSummary } from "../../services/lucaLink/lucaLinkRuntimeObserver";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
@@ -480,6 +481,9 @@ interface LucaLinkDeviceCenterSnapshot {
   pendingApprovals: LucaLinkApprovalRequest[];
   approvalRequests: LucaLinkApprovalRequest[];
   approvalSummary: LucaLinkApprovalQueueSummary;
+  continuationTokens: LucaLinkContinuationToken[];
+  validContinuationTokens: LucaLinkContinuationToken[];
+  continuationSummary: LucaLinkContinuationRegistrySummary;
   runtimeShadowSummary: LucaLinkRuntimeObservationSummary;
   runtimeShadowObservations: LucaLinkRuntimeObservation[];
   softEnforcementMode: ReturnType<typeof lucaLink.getSoftEnforcementMode>;
@@ -499,6 +503,9 @@ function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
     pendingApprovals: lucaLink.getPendingApprovalRequests(),
     approvalRequests: lucaLink.getApprovalRequests(),
     approvalSummary: lucaLink.getApprovalQueueSummary(),
+    continuationTokens: lucaLink.getContinuationTokens(),
+    validContinuationTokens: lucaLink.getValidContinuationTokens(),
+    continuationSummary: lucaLink.getContinuationRegistrySummary(),
     runtimeShadowSummary: lucaLink.getRuntimeShadowSummary(),
     runtimeShadowObservations: lucaLink.getRuntimeShadowObservations(),
     softEnforcementMode: lucaLink.getSoftEnforcementMode(),
@@ -540,6 +547,13 @@ function renderPayloadPreview(payloadPreview: unknown): string {
     return String(payloadPreview);
   }
 }
+
+const continuationReplayModeLabels: Record<string, string> = {
+  "non-replayable": "non-replayable",
+  "manual-retry-only": "manual retry only",
+  "single-use-replayable": "single-use replayable",
+  "fresh-confirmation-required": "fresh confirmation required",
+};
 
 const RiskBadge: React.FC<{ risk?: LucaLinkApprovalRisk }> = ({ risk }) => (
   <span
@@ -593,6 +607,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const [deviceCenterTab, setDeviceCenterTab] = useState<LucaLinkDeviceCenterTab>("devices");
   const [selectedApprovalId, setSelectedApprovalId] = useState<string | null>(null);
   const [approvalActionMessage, setApprovalActionMessage] = useState<string | null>(null);
+  const [continuationActionMessage, setContinuationActionMessage] = useState<string | null>(null);
   const [deviceCenterSnapshot, setDeviceCenterSnapshot] = useState<LucaLinkDeviceCenterSnapshot>(
     readLucaLinkDeviceCenterSnapshot(),
   );
@@ -728,7 +743,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   };
 
   const status = getConnectionStatus();
-  const currentDeviceId = deviceCenterSnapshot.state.deviceId ?? linkState.deviceId;
+  const currentDeviceId = deviceCenterSnapshot.state.deviceId ?? linkState.deviceId ?? undefined;
   const connectedDevices = deviceCenterSnapshot.state.connectedDevices;
   const pendingHighOrCritical =
     (deviceCenterSnapshot.approvalSummary.byRisk.high ?? 0) +
@@ -737,22 +752,55 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     deviceCenterSnapshot.approvalRequests.find((request) => request.id === selectedApprovalId) ??
     deviceCenterSnapshot.pendingApprovals[0] ??
     deviceCenterSnapshot.approvalRequests[0];
+  const selectedApprovalContinuation = selectedApproval
+    ? deviceCenterSnapshot.continuationTokens.find((token) => token.requestId === selectedApproval.id)
+    : undefined;
 
   const handleApprovalAction = (
     request: LucaLinkApprovalRequest,
     action: "approve" | "deny" | "cancel",
   ) => {
-    const reason = `${action} recorded from LucaLink Device Center; queue status only, no runtime continuation.`;
+    const reason = `${action} recorded from LucaLink Device Center; model record only, no runtime execution.`;
     if (action === "approve") {
-      lucaLink.approveApprovalRequest(request.id, { decidedByDeviceId: currentDeviceId, reason });
+      const approvalResult = lucaLink.approveApprovalRequest(request.id, { decidedByDeviceId: currentDeviceId, reason });
+      if (approvalResult.request?.status === "approved") {
+        const continuationResult = lucaLink.createContinuationFromApprovalRequest(request.id);
+        if (continuationResult.token && continuationResult.valid) {
+          setApprovalActionMessage("Approved. Continuation token created for manual validation. No action was executed.");
+        } else if (continuationResult.token?.replayMode === "fresh-confirmation-required" || continuationResult.token?.status === "blocked") {
+          setApprovalActionMessage("Approved. Continuation recorded, but this action requires fresh confirmation and cannot be replayed.");
+        } else {
+          setApprovalActionMessage("Approved. No continuation token was created.");
+        }
+      } else {
+        setApprovalActionMessage("Approval request was not approved. No continuation token was created.");
+      }
     } else if (action === "deny") {
       lucaLink.denyApprovalRequest(request.id, { decidedByDeviceId: currentDeviceId, reason });
+      setApprovalActionMessage(`${request.title} marked denied. Queue status updated only; no continuation token was created.`);
     } else {
       lucaLink.cancelApprovalRequest(request.id, { decidedByDeviceId: currentDeviceId, reason });
+      setApprovalActionMessage(`${request.title} marked cancelled. Queue status updated only; no continuation token was created.`);
     }
-    setApprovalActionMessage(`${request.title} marked ${action === "approve" ? "approved" : action === "deny" ? "denied" : "cancelled"}. Queue status updated only.`);
     refreshDeviceCenter();
     setSelectedApprovalId(request.id);
+  };
+
+  const handleContinuationRecordAction = (
+    token: LucaLinkContinuationToken,
+    action: "validate" | "cancel" | "mark-consumed",
+  ) => {
+    if (action === "validate") {
+      const validation = lucaLink.validateContinuationToken(token.id);
+      setContinuationActionMessage(validation.valid ? `${token.title} validated as a model record only. No runtime execution and no action replay occurred.` : `${token.title} is not valid for model continuation: ${validation.errors.concat(validation.warnings).join("; ") || "No additional details."}`);
+    } else if (action === "cancel") {
+      lucaLink.cancelContinuationToken(token.id, "Cancelled from LucaLink Device Center; state-only model record action.");
+      setContinuationActionMessage(`${token.title} cancelled as a continuation record only. No action replay occurred.`);
+    } else {
+      lucaLink.consumeContinuationToken(token.id, { consumedByDeviceId: currentDeviceId, reason: "Marked consumed from LucaLink Device Center; records state only and does not execute the action." });
+      setContinuationActionMessage(`${token.title} marked consumed. This only records state; it does not execute the action.`);
+    }
+    refreshDeviceCenter();
   };
 
   return (
@@ -873,7 +921,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           {approvalActionMessage && (
             <SettingsCard>
               <p className="text-sm font-semibold">{approvalActionMessage}</p>
-              <p className="mt-1 text-xs opacity-70">No runtime continuation was started.</p>
+              <p className="mt-1 text-xs opacity-70">Approval does not equal execution. Continuation tokens are model records only; no runtime execution or action replay is started.</p>
             </SettingsCard>
           )}
 
@@ -941,6 +989,18 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     <DetailField label="Errors" value={selectedApproval.errors.length ? selectedApproval.errors.join("; ") : "None"} />
                     <DetailField label="Decision" value={selectedApproval.decision ? `${selectedApproval.decision.decision} by ${selectedApproval.decision.decidedByDeviceId ?? "unknown"} at ${formatLucaLinkTimestamp(selectedApproval.decision.decidedAt)} — ${selectedApproval.decision.reason ?? "No reason provided"}` : "Pending"} />
                   </div>
+                  {selectedApprovalContinuation && (
+                    <div className="rounded-xl border p-3" style={{ borderColor: settingsSurfaceTokens.borderSubtle, backgroundColor: settingsSurfaceTokens.glass }}>
+                      <p className="text-sm font-semibold">Continuation</p>
+                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <DetailField label="Status" value={selectedApprovalContinuation.status} />
+                        <DetailField label="Replay mode" value={continuationReplayModeLabels[selectedApprovalContinuation.replayMode] ?? selectedApprovalContinuation.replayMode} />
+                        <DetailField label="Valid / blocked / expired / consumed" value={selectedApprovalContinuation.status === "validated" ? "valid model record" : selectedApprovalContinuation.status} />
+                        <DetailField label="Explanation" value={selectedApprovalContinuation.replayMode === "fresh-confirmation-required" ? "This action requires a new Primary Host confirmation and cannot be replayed from approval." : "This is a model record only. LucaOS did not execute or replay the action."} />
+                      </div>
+                      <p className="mt-2 text-xs opacity-70">Continuation token visibility is read-only model state. Runtime continuation execution will come in a later PR.</p>
+                    </div>
+                  )}
                   <div>
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-70">Payload preview</p>
                     <pre className="max-h-64 overflow-auto rounded-xl border p-3 text-xs" style={{ borderColor: settingsSurfaceTokens.borderSubtle, backgroundColor: settingsSurfaceTokens.elevated, color: settingsSurfaceTokens.textPrimary }}>
@@ -975,11 +1035,66 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             <SettingsStatusCard label="Runtime observations" value={`${deviceCenterSnapshot.runtimeShadowSummary.total}`} detail={`Allow ${deviceCenterSnapshot.runtimeShadowSummary.wouldAllow} · Deny ${deviceCenterSnapshot.runtimeShadowSummary.wouldDeny} · Approval ${deviceCenterSnapshot.runtimeShadowSummary.wouldRequirePrimaryHostApproval}`} accentColor={theme.hex} />
             <SettingsStatusCard label="Adapter diagnostics" value={`${deviceCenterSnapshot.runtimeShadowSummary.adapterWarnings} warnings / ${deviceCenterSnapshot.runtimeShadowSummary.adapterErrors} errors`} detail="Runtime shadow only; no enforcement toggles here." accentColor={theme.hex} />
           </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <SettingsStatusCard label="Continuation tokens" value={`${deviceCenterSnapshot.continuationSummary.total} total · ${deviceCenterSnapshot.continuationSummary.valid} valid`} detail="Continuation model only. Model records only; approvals do not execute actions." accentColor={theme.hex} />
+            <SettingsStatusCard label="Valid continuations" value={`${deviceCenterSnapshot.validContinuationTokens.length}`} detail="No action replay. Tokens can be validated as state only." accentColor={theme.hex} />
+            <SettingsStatusCard label="Consumed" value={`${deviceCenterSnapshot.continuationSummary.consumed}`} detail="No runtime execution. Mark consumed only records state." accentColor={theme.hex} />
+            <SettingsStatusCard label="Expired / blocked" value={`${deviceCenterSnapshot.continuationSummary.expired} expired · ${deviceCenterSnapshot.continuationSummary.blocked} blocked`} detail="Physical-world and payment actions require fresh confirmation." accentColor={theme.hex} />
+            <SettingsStatusCard label="Manual retry only" value={`${deviceCenterSnapshot.continuationSummary.byReplayMode["manual-retry-only"]}`} detail="Manual retry only is a classification, not an automatic action." accentColor={theme.hex} />
+            <SettingsStatusCard label="Fresh confirmation required" value={`${deviceCenterSnapshot.continuationSummary.byReplayMode["fresh-confirmation-required"]}`} detail={`Single-use replayable records: ${deviceCenterSnapshot.continuationSummary.byReplayMode["single-use-replayable"]}. Runtime continuation execution will come later.`} accentColor={theme.hex} />
+          </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             {(["pending", "approved", "denied", "expired", "cancelled"] as const).map((key) => (
               <SettingsStatusCard key={key} label={`Queue ${key}`} value={`${deviceCenterSnapshot.approvalSummary[key]}`} accentColor={theme.hex} />
             ))}
           </div>
+          <SettingsCard>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Continuation Records</p>
+                <p className="mt-1 text-xs opacity-70">Continuation tokens are model records only. Approval does not equal execution, and no runtime execution or action replay occurs here.</p>
+              </div>
+              {continuationActionMessage && <p className="text-xs opacity-70">{continuationActionMessage}</p>}
+            </div>
+            {deviceCenterSnapshot.continuationTokens.length === 0 ? (
+              <p className="mt-3 text-xs opacity-70">No continuation records are available.</p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {deviceCenterSnapshot.continuationTokens.map((token) => (
+                  <div key={token.id} className="rounded-lg border p-3" style={{ borderColor: settingsSurfaceTokens.borderSubtle }}>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold">{token.title}</p>
+                          <StatusBadge status={token.status} />
+                          <RiskBadge risk={token.risk} />
+                        </div>
+                        <p className="text-xs opacity-70">Replay mode: {continuationReplayModeLabels[token.replayMode] ?? token.replayMode}</p>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <DetailField label="Requested by device" value={token.requestedByDeviceId} />
+                          <DetailField label="Requested target" value={token.requestedTargetDeviceId} />
+                          <DetailField label="Lane" value={token.lane} />
+                          <DetailField label="Permission" value={token.permission} />
+                          <DetailField label="Created" value={formatLucaLinkTimestamp(token.createdAt)} />
+                          <DetailField label="Expires" value={formatLucaLinkTimestamp(token.expiresAt)} />
+                          <DetailField label="Validation warnings" value={token.validationWarnings.length ? token.validationWarnings.join("; ") : "None"} />
+                          <DetailField label="Validation errors" value={token.validationErrors.length ? token.validationErrors.join("; ") : "None"} />
+                          <DetailField label="Consumed record" value={token.consumeRecord ? `${formatLucaLinkTimestamp(token.consumeRecord.consumedAt)} by ${token.consumeRecord.consumedByDeviceId ?? "unknown"} — ${token.consumeRecord.reason ?? "No reason provided"}` : "Not consumed"} />
+                        </div>
+                      </div>
+                      <div className="flex min-w-[10rem] flex-row gap-2 md:flex-col">
+                        <button type="button" onClick={() => handleContinuationRecordAction(token, "validate")} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Validate record</button>
+                        <button type="button" onClick={() => handleContinuationRecordAction(token, "cancel")} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Cancel record</button>
+                        <button type="button" onClick={() => handleContinuationRecordAction(token, "mark-consumed")} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Mark consumed</button>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs opacity-70">Mark consumed only records state; it does not execute the action. Physical-world and payment actions require fresh Primary Host confirmation.</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SettingsCard>
+
           <SettingsCard>
             <p className="text-sm font-semibold">Recent observations</p>
             {deviceCenterSnapshot.runtimeShadowObservations.length === 0 ? (
