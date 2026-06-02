@@ -13,6 +13,7 @@ import type {
 } from "../../services/lucaLink/lucaLinkDeviceTrustRegistry";
 import type { LucaLinkApprovalRequest, LucaLinkApprovalQueueSummary, LucaLinkApprovalRisk } from "../../services/lucaLink/lucaLinkApprovalQueue";
 import type { LucaLinkContinuationRegistrySummary, LucaLinkContinuationToken } from "../../services/lucaLink/lucaLinkContinuation";
+import type { LucaLinkHandoffRegistrySummary, LucaLinkHandoffRequest } from "../../services/lucaLink/lucaLinkHandoff";
 import type { LucaLinkRuntimeObservation, LucaLinkRuntimeObservationSummary } from "../../services/lucaLink/lucaLinkRuntimeObserver";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
@@ -490,6 +491,9 @@ interface LucaLinkDeviceCenterSnapshot {
   continuationTokens: LucaLinkContinuationToken[];
   validContinuationTokens: LucaLinkContinuationToken[];
   continuationSummary: LucaLinkContinuationRegistrySummary;
+  handoffs: LucaLinkHandoffRequest[];
+  pendingHandoffs: LucaLinkHandoffRequest[];
+  handoffSummary: LucaLinkHandoffRegistrySummary;
   runtimeShadowSummary: LucaLinkRuntimeObservationSummary;
   runtimeShadowObservations: LucaLinkRuntimeObservation[];
   softEnforcementMode: ReturnType<typeof lucaLink.getSoftEnforcementMode>;
@@ -516,6 +520,9 @@ function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
     continuationTokens: lucaLink.getContinuationTokens(),
     validContinuationTokens: lucaLink.getValidContinuationTokens(),
     continuationSummary: lucaLink.getContinuationRegistrySummary(),
+    handoffs: lucaLink.getHandoffs(),
+    pendingHandoffs: lucaLink.getPendingHandoffs(),
+    handoffSummary: lucaLink.getHandoffSummary(),
     runtimeShadowSummary: lucaLink.getRuntimeShadowSummary(),
     runtimeShadowObservations: lucaLink.getRuntimeShadowObservations(),
     softEnforcementMode: lucaLink.getSoftEnforcementMode(),
@@ -622,6 +629,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const [selectedApprovalId, setSelectedApprovalId] = useState<string | null>(null);
   const [approvalActionMessage, setApprovalActionMessage] = useState<string | null>(null);
   const [continuationActionMessage, setContinuationActionMessage] = useState<string | null>(null);
+  const [handoffActionMessage, setHandoffActionMessage] = useState<string | null>(null);
   const [deviceTrustActionMessage, setDeviceTrustActionMessage] = useState<string | null>(null);
   const [deviceCenterSnapshot, setDeviceCenterSnapshot] = useState<LucaLinkDeviceCenterSnapshot>(
     readLucaLinkDeviceCenterSnapshot(),
@@ -833,6 +841,35 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       lucaLink.consumeContinuationToken(token.id, { consumedByDeviceId: currentDeviceId, reason: "Marked consumed from LucaLink Device Center; records state only and does not execute the action." });
       setContinuationActionMessage(`${token.title} marked consumed. This only records state; it does not execute the action.`);
     }
+    refreshDeviceCenter();
+  };
+
+
+  const handleCreateSampleConversationHandoff = () => {
+    const result = lucaLink.createConversationHandoff({
+      conversationTitle: "Sample conversation handoff",
+      messageSummary: "A safe local sample handoff preview for Device Center visibility.",
+      currentTask: "Review LucaLink handoff state in Device Center.",
+      activeIntent: "Continue on a trusted LucaLink device after approval if required.",
+      userVisibleContext: { source: "Device Center sample", rawPayloadVisible: false },
+      sourceDeviceId: currentDeviceId,
+      requestedByDeviceId: currentDeviceId,
+      reason: "Created locally from Device Center as a sample model-only handoff.",
+    });
+    setHandoffActionMessage(result.valid ? "Sample conversation handoff created locally. No payload was sent." : result.errors.concat(result.warnings).join(" ") || "Sample handoff was not created.");
+    refreshDeviceCenter();
+  };
+
+  const handleHandoffAction = (handoff: LucaLinkHandoffRequest, action: "approve" | "decline" | "cancel" | "accept") => {
+    const reason = `${action} recorded from LucaLink Device Center; state-only handoff action with no transport send.`;
+    const result = action === "approve"
+      ? lucaLink.approveHandoff(handoff.id, { approvedByDeviceId: currentDeviceId, reason })
+      : action === "decline"
+        ? lucaLink.declineHandoff(handoff.id, { reason })
+        : action === "cancel"
+          ? lucaLink.cancelHandoff(handoff.id, { reason })
+          : lucaLink.markHandoffAccepted(handoff.id, { reason });
+    setHandoffActionMessage(result.valid ? `${handoff.title} marked ${action}. No handoff payload was sent.` : result.errors.concat(result.warnings).join(" ") || "Handoff action was not applied.");
     refreshDeviceCenter();
   };
 
@@ -1135,8 +1172,76 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       )}
 
       {deviceCenterTab === "sync" && (
-        <SettingsSection title="Sync & Handoff" description="Conversation, memory, mission, settings, artifact, and model handoff will be managed here in upcoming LucaLink PRs." icon="RefreshCircle" accentColor={theme.hex} isMobile={isMobile}>
-          <SettingsCard><p className="text-sm">This PR does not implement memory, conversation, mission, artifact, or model handoff.</p></SettingsCard>
+        <SettingsSection title="Sync & Handoff" description="Safe model-first handoff for conversation, memory intent, mission, artifact, settings context, and model context." icon="RefreshCircle" accentColor={theme.hex} isMobile={isMobile}>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+            <SettingsStatusCard label="Pending handoffs" value={`${deviceCenterSnapshot.pendingHandoffs.length}`} detail="Awaiting state action or Primary Host approval." accentColor={theme.hex} />
+            <SettingsStatusCard label="Conversation handoffs" value={`${deviceCenterSnapshot.handoffSummary.byKind.conversation}`} detail="Hidden system prompts and private reasoning are excluded." accentColor={theme.hex} />
+            <SettingsStatusCard label="Memory intent handoffs" value={`${deviceCenterSnapshot.handoffSummary.byKind["memory-intent"]}`} detail="Intent-only; no raw memory database transfer." accentColor={theme.hex} />
+            <SettingsStatusCard label="Artifact / mission handoffs" value={`${deviceCenterSnapshot.handoffSummary.byKind.artifact + deviceCenterSnapshot.handoffSummary.byKind.mission}`} detail="Metadata only; no raw file transfer." accentColor={theme.hex} />
+            <SettingsStatusCard label="Blocked / expired" value={`${deviceCenterSnapshot.handoffSummary.blocked} / ${deviceCenterSnapshot.handoffSummary.expired}`} detail="Unsafe or stale handoff records remain visible." accentColor={theme.hex} />
+          </div>
+
+          <SettingsCard>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Handoff safety boundaries</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-xs opacity-70">
+                  <li>Memory handoff is intent-only; raw memory databases are not transferred.</li>
+                  <li>Conversation handoff excludes hidden system prompts and private reasoning.</li>
+                  <li>Secrets are redacted before handoff.</li>
+                  <li>Handoff does not execute tools or mutate remote devices.</li>
+                </ul>
+              </div>
+              <button type="button" onClick={handleCreateSampleConversationHandoff} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Create sample conversation handoff</button>
+            </div>
+            {handoffActionMessage && <p className="mt-3 text-xs opacity-70">{handoffActionMessage}</p>}
+          </SettingsCard>
+
+          <SettingsCard>
+            <p className="text-sm font-semibold">Handoff requests</p>
+            {deviceCenterSnapshot.handoffs.length === 0 ? (
+              <p className="mt-2 text-xs opacity-70">No handoff requests are registered yet.</p>
+            ) : (
+              <div className="mt-3 space-y-3">
+                {deviceCenterSnapshot.handoffs.map((handoff) => (
+                  <div key={handoff.id} className="rounded-lg border p-3" style={{ borderColor: settingsSurfaceTokens.borderSubtle }}>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold">{handoff.title}</p>
+                          <StatusBadge status={handoff.status} />
+                          <RiskBadge risk={handoff.risk} />
+                          <span className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide" style={{ borderColor: settingsSurfaceTokens.borderSubtle }}>Kind: {handoff.kind}</span>
+                        </div>
+                        <p className="text-xs opacity-70">{handoff.summary}</p>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <DetailField label="Source device" value={handoff.sourceDeviceId} />
+                          <DetailField label="Target device" value={handoff.targetDeviceId} />
+                          <DetailField label="Expires" value={formatLucaLinkTimestamp(handoff.expiresAt)} />
+                          <DetailField label="Preview flags" value={`${handoff.payloadPreview.redacted ? "redacted" : "not redacted"} · ${handoff.payloadPreview.truncated ? "truncated" : "not truncated"}`} />
+                          <DetailField label="Warnings" value={handoff.warnings.length ? handoff.warnings.join("; ") : "None"} />
+                          <DetailField label="Errors" value={handoff.errors.length ? handoff.errors.join("; ") : "None"} />
+                        </div>
+                        <div>
+                          <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-70">Payload preview only</p>
+                          <pre className="max-h-52 overflow-auto rounded-xl border p-3 text-xs" style={{ borderColor: settingsSurfaceTokens.borderSubtle, backgroundColor: settingsSurfaceTokens.elevated, color: settingsSurfaceTokens.textPrimary }}>
+                            {renderPayloadPreview(handoff.payloadPreview)}
+                          </pre>
+                        </div>
+                      </div>
+                      <div className="flex min-w-[10rem] flex-row gap-2 md:flex-col">
+                        <button type="button" onClick={() => handleHandoffAction(handoff, "approve")} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Approve</button>
+                        <button type="button" onClick={() => handleHandoffAction(handoff, "decline")} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Decline</button>
+                        <button type="button" onClick={() => handleHandoffAction(handoff, "cancel")} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Cancel</button>
+                        <button type="button" onClick={() => handleHandoffAction(handoff, "accept")} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Mark accepted</button>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs opacity-70">Payload preview is shown instead of underlying data. No send-now action is exposed in this PR.</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SettingsCard>
         </SettingsSection>
       )}
 

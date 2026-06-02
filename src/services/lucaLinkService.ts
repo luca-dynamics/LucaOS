@@ -25,6 +25,7 @@ import {
   createLucaLinkApprovalQueue,
   denyLucaLinkApprovalRequest,
   enqueueApprovalForSoftEnforcementResult,
+  enqueueLucaLinkApprovalRequest,
   getLucaLinkApprovalRequest,
   getPendingLucaLinkApprovalRequests,
   listLucaLinkApprovalRequests,
@@ -108,6 +109,36 @@ import {
   type LucaLinkDeviceTrustRegistryState,
 } from "./lucaLink/lucaLinkDeviceTrustRegistry";
 
+
+import {
+  approveLucaLinkHandoff,
+  cancelLucaLinkHandoff,
+  clearLucaLinkHandoffRegistry,
+  createArtifactHandoffPayload,
+  createConversationHandoffPayload,
+  createLucaLinkHandoffPayloadPreview,
+  createLucaLinkHandoffRegistry,
+  createLucaLinkHandoffRequest,
+  createMemoryIntentHandoffPayload,
+  createMissionHandoffPayload,
+  createModelContextHandoffPayload,
+  createSettingsContextHandoffPayload,
+  declineLucaLinkHandoff,
+  evaluateLucaLinkHandoffPolicy,
+  getLucaLinkHandoff,
+  listLucaLinkHandoffs,
+  listPendingLucaLinkHandoffs,
+  markLucaLinkHandoffAccepted,
+  registerLucaLinkHandoff,
+  summarizeLucaLinkHandoffRegistry,
+  type LucaLinkHandoffKind,
+  type LucaLinkHandoffMutationResult,
+  type LucaLinkHandoffRegistryState,
+  type LucaLinkHandoffRegistrySummary,
+  type LucaLinkHandoffRequest,
+  type LucaLinkHandoffRequestInput,
+} from "./lucaLink/lucaLinkHandoff";
+
 import {
   createLucaLinkRuntimeEnforcementAuditRecord,
   evaluateLucaLinkRuntimeEnforcement,
@@ -170,6 +201,7 @@ class LucaLinkService {
   private approvalQueue: LucaLinkApprovalQueueState = createLucaLinkApprovalQueue();
   private continuationRegistry: LucaLinkContinuationRegistryState = createLucaLinkContinuationRegistry();
   private deviceTrustRegistry: LucaLinkDeviceTrustRegistryState = createLucaLinkDeviceTrustRegistry();
+  private handoffRegistry: LucaLinkHandoffRegistryState = createLucaLinkHandoffRegistry();
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
@@ -965,6 +997,154 @@ class LucaLinkService {
       ...this.runtimeEnforcementAudit,
       createLucaLinkRuntimeEnforcementAuditRecord(result),
     ].slice(-this.runtimeEnforcementAuditLimit);
+  }
+
+
+  getHandoffs(): LucaLinkHandoffRequest[] {
+    return listLucaLinkHandoffs(this.handoffRegistry);
+  }
+
+  getPendingHandoffs(): LucaLinkHandoffRequest[] {
+    return listPendingLucaLinkHandoffs(this.handoffRegistry);
+  }
+
+  getHandoffSummary(): LucaLinkHandoffRegistrySummary {
+    return summarizeLucaLinkHandoffRegistry(this.handoffRegistry);
+  }
+
+  clearHandoffs(): LucaLinkHandoffMutationResult {
+    return clearLucaLinkHandoffRegistry(this.handoffRegistry);
+  }
+
+  private createAndRegisterHandoff(
+    input: LucaLinkHandoffRequestInput,
+  ): LucaLinkHandoffMutationResult {
+    const preview = input.payloadPreview ?? createLucaLinkHandoffPayloadPreview(input.payload, {
+      kind: input.kind,
+      summary: input.summary,
+    });
+    const targetDevice = input.targetDeviceId
+      ? this.deviceTrustRegistry.devices.find((device) => device.deviceId === input.targetDeviceId)
+      : undefined;
+    const sourceDevice = input.sourceDeviceId
+      ? this.deviceTrustRegistry.devices.find((device) => device.deviceId === input.sourceDeviceId)
+      : undefined;
+    const initialRequest = createLucaLinkHandoffRequest({
+      ...input,
+      payloadPreview: preview,
+    }, { defaultTtlMs: this.handoffRegistry.defaultTtlMs });
+    const policy = evaluateLucaLinkHandoffPolicy({
+      kind: initialRequest.kind,
+      sourceDeviceId: initialRequest.sourceDeviceId,
+      targetDeviceId: initialRequest.targetDeviceId,
+      sourceDevice,
+      targetDevice,
+      risk: initialRequest.risk,
+      payloadPreview: initialRequest.payloadPreview,
+      requestedByDeviceId: initialRequest.requestedByDeviceId,
+    });
+
+    const request = createLucaLinkHandoffRequest({
+      ...initialRequest,
+      status: policy.blocked ? "blocked" : policy.requiresPrimaryHostApproval ? "pending" : "draft",
+      requiresPrimaryHostApproval: policy.requiresPrimaryHostApproval,
+      warnings: [...initialRequest.warnings, ...policy.warnings],
+      errors: [...initialRequest.errors, ...policy.errors],
+      reason: policy.explain,
+    }, { now: initialRequest.createdAt, defaultTtlMs: this.handoffRegistry.defaultTtlMs });
+
+    if (policy.requiresPrimaryHostApproval) {
+      const queued = enqueueLucaLinkApprovalRequest(this.approvalQueue, {
+        source: "manual",
+        requestedByDeviceId: request.requestedByDeviceId,
+        requestedTargetDeviceId: request.targetDeviceId,
+        approvalHostId: this.state.deviceId ?? undefined,
+        approvalHostRole: "primary",
+        eventName: "lucalink-handoff",
+        lane: request.kind === "memory-intent" ? "memory" : request.kind,
+        permission: `handoff.${request.kind}`,
+        risk: request.risk,
+        title: `Approve ${request.kind.replace("-", " ")} handoff?`,
+        summary: request.summary,
+        reason: "Primary Host approval is required before this LucaLink handoff can move forward.",
+        explain: policy.explain,
+        payloadPreview: request.payloadPreview,
+        envelopeId: request.id,
+        envelopeType: "lucalink-handoff",
+        warnings: request.warnings,
+        errors: request.errors,
+      });
+      request.approvalRequestId = queued.request?.id;
+    }
+
+    return registerLucaLinkHandoff(this.handoffRegistry, request);
+  }
+
+  createConversationHandoff(input: Parameters<typeof createConversationHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+    const payload = createConversationHandoffPayload(input);
+    return this.createAndRegisterHandoff({
+      ...input,
+      kind: "conversation",
+      title: input.title ?? input.conversationTitle ?? "Conversation handoff",
+      summary: input.summary ?? "Continue this conversation on another trusted LucaLink device.",
+      payload,
+    });
+  }
+
+  createMemoryIntentHandoff(input: Parameters<typeof createMemoryIntentHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+    const payload = createMemoryIntentHandoffPayload(input);
+    return this.createAndRegisterHandoff({
+      ...input,
+      kind: "memory-intent",
+      title: input.title ?? "Memory intent handoff",
+      summary: input.summary ?? "Intent-only memory namespace continuation; no raw memory database is transferred.",
+      payload,
+      requiresPrimaryHostApproval: true,
+    });
+  }
+
+  createMissionHandoff(input: Parameters<typeof createMissionHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+    const payload = createMissionHandoffPayload(input);
+    return this.createAndRegisterHandoff({ ...input, kind: "mission", title: input.title ?? input.missionTitle ?? "Mission handoff", payload, requiresPrimaryHostApproval: true });
+  }
+
+  createArtifactHandoff(input: Parameters<typeof createArtifactHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+    const payload = createArtifactHandoffPayload(input);
+    return this.createAndRegisterHandoff({ ...input, kind: "artifact", title: input.title ?? "Artifact handoff", payload, requiresPrimaryHostApproval: true });
+  }
+
+  createSettingsContextHandoff(input: Parameters<typeof createSettingsContextHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+    const payload = createSettingsContextHandoffPayload(input);
+    return this.createAndRegisterHandoff({ ...input, kind: "settings-context", title: input.title ?? "Settings context handoff", payload });
+  }
+
+  createModelContextHandoff(input: Parameters<typeof createModelContextHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+    const payload = createModelContextHandoffPayload(input);
+    return this.createAndRegisterHandoff({ ...input, kind: "model-context", title: input.title ?? "Model context handoff", payload, requiresPrimaryHostApproval: true });
+  }
+
+  approveHandoff(handoffId: string, options?: { now?: number; approvedByDeviceId?: string; reason?: string }): LucaLinkHandoffMutationResult {
+    return approveLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+  }
+
+  declineHandoff(handoffId: string, options?: { now?: number; reason?: string }): LucaLinkHandoffMutationResult {
+    return declineLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+  }
+
+  cancelHandoff(handoffId: string, options?: { now?: number; reason?: string }): LucaLinkHandoffMutationResult {
+    return cancelLucaLinkHandoff(this.handoffRegistry, handoffId, options);
+  }
+
+  markHandoffAccepted(handoffId: string, options?: { now?: number; reason?: string }): LucaLinkHandoffMutationResult {
+    return markLucaLinkHandoffAccepted(this.handoffRegistry, handoffId, options);
+  }
+
+  getHandoff(handoffId: string): LucaLinkHandoffRequest | undefined {
+    return getLucaLinkHandoff(this.handoffRegistry, handoffId);
+  }
+
+  getHandoffKinds(): LucaLinkHandoffKind[] {
+    return ["conversation", "memory-intent", "mission", "artifact", "settings-context", "model-context"];
   }
 
   getPendingApprovalRequests(): LucaLinkApprovalRequest[] {
