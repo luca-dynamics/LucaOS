@@ -5,6 +5,12 @@ import { apiUrl, WS_PORT, cortexUrl } from "../../config/api";
 import { useMobile } from "../../hooks/useMobile";
 import { lucaLink } from "../../services/lucaLinkService";
 import type { LucaLinkDevice, LucaLinkState } from "../../services/lucaLinkService";
+import type {
+  LucaLinkDeviceTrustAuditRecord,
+  LucaLinkDeviceTrustRegistrySummary,
+  LucaLinkDeviceTrustLevel,
+  LucaLinkTrustedDeviceRecord,
+} from "../../services/lucaLink/lucaLinkDeviceTrustRegistry";
 import type { LucaLinkApprovalRequest, LucaLinkApprovalQueueSummary, LucaLinkApprovalRisk } from "../../services/lucaLink/lucaLinkApprovalQueue";
 import type { LucaLinkContinuationRegistrySummary, LucaLinkContinuationToken } from "../../services/lucaLink/lucaLinkContinuation";
 import type { LucaLinkRuntimeObservation, LucaLinkRuntimeObservationSummary } from "../../services/lucaLink/lucaLinkRuntimeObserver";
@@ -487,6 +493,10 @@ interface LucaLinkDeviceCenterSnapshot {
   runtimeShadowSummary: LucaLinkRuntimeObservationSummary;
   runtimeShadowObservations: LucaLinkRuntimeObservation[];
   softEnforcementMode: ReturnType<typeof lucaLink.getSoftEnforcementMode>;
+  trustedDevices: LucaLinkTrustedDeviceRecord[];
+  activeTrustedDevices: LucaLinkTrustedDeviceRecord[];
+  deviceTrustSummary: LucaLinkDeviceTrustRegistrySummary;
+  deviceTrustAudit: LucaLinkDeviceTrustAuditRecord[];
 }
 
 const lucaLinkDeviceCenterTabs: Array<{ id: LucaLinkDeviceCenterTab; label: string }> = [
@@ -509,6 +519,10 @@ function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
     runtimeShadowSummary: lucaLink.getRuntimeShadowSummary(),
     runtimeShadowObservations: lucaLink.getRuntimeShadowObservations(),
     softEnforcementMode: lucaLink.getSoftEnforcementMode(),
+    trustedDevices: lucaLink.getTrustedDevices(),
+    activeTrustedDevices: lucaLink.getActiveTrustedDevices(),
+    deviceTrustSummary: lucaLink.getDeviceTrustSummary(),
+    deviceTrustAudit: lucaLink.getDeviceTrustAudit(),
   };
 }
 
@@ -608,6 +622,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const [selectedApprovalId, setSelectedApprovalId] = useState<string | null>(null);
   const [approvalActionMessage, setApprovalActionMessage] = useState<string | null>(null);
   const [continuationActionMessage, setContinuationActionMessage] = useState<string | null>(null);
+  const [deviceTrustActionMessage, setDeviceTrustActionMessage] = useState<string | null>(null);
   const [deviceCenterSnapshot, setDeviceCenterSnapshot] = useState<LucaLinkDeviceCenterSnapshot>(
     readLucaLinkDeviceCenterSnapshot(),
   );
@@ -745,6 +760,24 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const status = getConnectionStatus();
   const currentDeviceId = deviceCenterSnapshot.state.deviceId ?? linkState.deviceId ?? undefined;
   const connectedDevices = deviceCenterSnapshot.state.connectedDevices;
+  const trustedDevices = deviceCenterSnapshot.trustedDevices.length > 0
+    ? deviceCenterSnapshot.trustedDevices
+    : connectedDevices.map((device) => ({
+        deviceId: device.deviceId,
+        displayName: device.name || "Unnamed LucaLink device",
+        deviceType: device.type,
+        role: inferLucaLinkDeviceRole(device, currentDeviceId).toLowerCase().replace(" ", "-") as LucaLinkTrustedDeviceRecord["role"],
+        trustLevel: "paired" as const,
+        status: "connected" as const,
+        createdAt: device.lastSeen || Date.now(),
+        updatedAt: device.lastSeen || Date.now(),
+        lastSeenAt: device.lastSeen,
+        capabilities: [],
+        deniedCapabilities: ["shell.execute", "files.write", "code.modify", "browser.control", "payment.spend", "physical-world.action"],
+        permissionSummary: { conversation: true, notification: true, memory: false, tools: false, files: false, code: false, browser: false, shell: false, payment: false, physicalWorld: false, safety: true },
+        warnings: [],
+        errors: [],
+      }));
   const pendingHighOrCritical =
     (deviceCenterSnapshot.approvalSummary.byRisk.high ?? 0) +
     (deviceCenterSnapshot.approvalSummary.byRisk.critical ?? 0);
@@ -800,6 +833,33 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       lucaLink.consumeContinuationToken(token.id, { consumedByDeviceId: currentDeviceId, reason: "Marked consumed from LucaLink Device Center; records state only and does not execute the action." });
       setContinuationActionMessage(`${token.title} marked consumed. This only records state; it does not execute the action.`);
     }
+    refreshDeviceCenter();
+  };
+
+  const handleDeviceTrustAction = (
+    device: LucaLinkTrustedDeviceRecord,
+    action: "rename" | "trust" | "revoke" | "block" | "unblock",
+    nextTrustLevel?: LucaLinkDeviceTrustLevel,
+  ) => {
+    const options = {
+      performedByDeviceId: currentDeviceId,
+      currentPrimaryHostDeviceId: currentDeviceId,
+      reason: "Changed from LucaLink Device Center; local-only trust registry update.",
+    };
+    const result = action === "rename"
+      ? lucaLink.renameTrustedDevice(device.deviceId, window.prompt("Rename LucaLink device", device.displayName) ?? device.displayName, options)
+      : action === "trust"
+        ? lucaLink.setTrustedDeviceTrustLevel(device.deviceId, nextTrustLevel ?? device.trustLevel, options)
+        : action === "revoke"
+          ? lucaLink.revokeTrustedDevice(device.deviceId, options)
+          : action === "block"
+            ? lucaLink.blockTrustedDevice(device.deviceId, options)
+            : lucaLink.unblockTrustedDevice(device.deviceId, options);
+    setDeviceTrustActionMessage(
+      result.valid
+        ? `${device.displayName} updated locally. ${result.warnings.join(" ")}`.trim()
+        : `${device.displayName} was not changed: ${result.errors.concat(result.warnings).join(" ")}`,
+    );
     refreshDeviceCenter();
   };
 
@@ -877,32 +937,84 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {deviceCenterTab === "devices" && (
         <SettingsSection
           title="Devices"
-          description="Read-only LucaLink device overview. Trust editing and revocation are intentionally not part of this PR."
+          description="Local LucaLink device trust management. Rename, trust, revoke, and block controls update in-memory state only."
           icon="Smartphone"
           accentColor={theme.hex}
           isMobile={isMobile}
         >
-          {connectedDevices.length === 0 ? (
+          {deviceTrustActionMessage && (
             <SettingsCard>
-              <p className="text-sm font-semibold">No connected device records</p>
-              <p className="mt-1 text-xs opacity-70">Pairing controls remain available below. Device cards appear when LucaLink exposes connected devices.</p>
+              <p className="text-sm font-semibold">{deviceTrustActionMessage}</p>
+              <p className="mt-1 text-xs opacity-70">Local only; does not disconnect remote transport yet. Admin does not bypass Primary Host approvals.</p>
+            </SettingsCard>
+          )}
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <SettingsStatusCard label="Known devices" value={`${deviceCenterSnapshot.deviceTrustSummary.total}`} detail={`${deviceCenterSnapshot.deviceTrustSummary.connected} connected · ${deviceCenterSnapshot.deviceTrustSummary.disconnected} disconnected`} accentColor={theme.hex} />
+            <SettingsStatusCard label="Revoked / blocked" value={`${deviceCenterSnapshot.deviceTrustSummary.revoked} / ${deviceCenterSnapshot.deviceTrustSummary.blocked}`} detail="Local-only state; no remote disconnect is sent." accentColor={theme.hex} />
+            <SettingsStatusCard label="Trusted / admin" value={`${deviceCenterSnapshot.deviceTrustSummary.trusted} / ${deviceCenterSnapshot.deviceTrustSummary.admin}`} detail="Admin is advanced device management only." accentColor={theme.hex} />
+            <SettingsStatusCard label="Trust audit" value={`${deviceCenterSnapshot.deviceTrustSummary.auditCount}`} detail={deviceCenterSnapshot.deviceTrustSummary.latestMutation ? `${deviceCenterSnapshot.deviceTrustSummary.latestMutation.mutation} · ${formatLucaLinkTimestamp(deviceCenterSnapshot.deviceTrustSummary.latestMutation.timestamp)}` : "No trust mutations yet."} accentColor={theme.hex} />
+          </div>
+
+          {trustedDevices.length === 0 ? (
+            <SettingsCard>
+              <p className="text-sm font-semibold">No known device records</p>
+              <p className="mt-1 text-xs opacity-70">Pairing controls remain available below. Device trust cards appear when LucaLink exposes connected or guest devices.</p>
             </SettingsCard>
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {connectedDevices.map((device) => (
+              {trustedDevices.map((device) => (
                 <SettingsCard key={device.deviceId}>
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <p className="text-base font-semibold">{device.name || "Unnamed LucaLink device"}</p>
+                      <p className="text-base font-semibold">{device.displayName || "Unnamed LucaLink device"}</p>
                       <p className="mt-1 break-all font-mono text-xs opacity-70">{device.deviceId}</p>
+                      <p className="mt-2 text-xs opacity-70">
+                        {device.role === "guest" ? "Conversation/WebRTC limited." : device.trustLevel === "admin" ? "Advanced device management; does not bypass Primary Host approvals." : "Runtime enforcement and Primary Host approval boundaries remain active."}
+                      </p>
                     </div>
-                    <StatusBadge status={device.lastSeen ? "connected / last seen" : "connected"} />
+                    <div className="flex flex-wrap gap-2">
+                      <StatusBadge status={device.status} />
+                      <StatusBadge status={`trust ${device.trustLevel}`} />
+                    </div>
                   </div>
+
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <DetailField label="Type" value={device.type || "Unknown"} />
-                    <DetailField label="Role" value={inferLucaLinkDeviceRole(device, currentDeviceId)} />
-                    <DetailField label="Last seen" value={formatLucaLinkTimestamp(device.lastSeen)} />
+                    <DetailField label="Type" value={device.deviceType || "Unknown"} />
+                    <DetailField label="Role" value={device.role === "primary-host" ? "Primary Host" : device.role} />
+                    <DetailField label="Last seen" value={formatLucaLinkTimestamp(device.lastSeenAt)} />
+                    <DetailField label="Capabilities" value={device.capabilities.length ? device.capabilities.join(", ") : "Conversation baseline only"} />
+                    <DetailField label="Denied sensitive capabilities" value={device.deniedCapabilities.length ? device.deniedCapabilities.join(", ") : "None"} />
+                    <DetailField label="Permissions" value={`conversation ${device.permissionSummary.conversation ? "on" : "off"} · notifications ${device.permissionSummary.notification ? "on" : "off"} · sensitive tools ${device.permissionSummary.shell || device.permissionSummary.files || device.permissionSummary.code || device.permissionSummary.browser ? "limited" : "off"}`} />
                   </div>
+
+                  {(device.warnings.length > 0 || device.errors.length > 0) && (
+                    <div className="mt-3 rounded-lg border p-3 text-xs" style={{ borderColor: settingsSurfaceTokens.borderSubtle, backgroundColor: settingsSurfaceTokens.glass }}>
+                      {device.warnings.length > 0 && <p>Warnings: {device.warnings.join("; ")}</p>}
+                      {device.errors.length > 0 && <p>Errors: {device.errors.join("; ")}</p>}
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <button type="button" onClick={() => handleDeviceTrustAction(device, "rename")} className="rounded-lg border px-3 py-2 text-sm font-semibold" style={settingsControlInlineStyle}>Rename</button>
+                    <select
+                      aria-label={`Set trust level for ${device.displayName}`}
+                      value={device.trustLevel}
+                      onChange={(event) => handleDeviceTrustAction(device, "trust", event.target.value as LucaLinkDeviceTrustLevel)}
+                      className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-45"
+                      style={settingsControlInlineStyle}
+                      disabled={device.role === "primary-host" || device.status === "revoked" || device.status === "blocked"}
+                    >
+                      <option value="guest">Guest</option>
+                      <option value="paired">Paired</option>
+                      <option value="trusted">Trusted</option>
+                      <option value="admin" disabled={device.role !== "execution" && device.role !== "companion"}>Admin — requires approvals</option>
+                    </select>
+                    <button type="button" onClick={() => handleDeviceTrustAction(device, "revoke")} className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-45" style={settingsControlInlineStyle} disabled={device.status === "revoked" || device.role === "primary-host"}>Revoke locally</button>
+                    <button type="button" onClick={() => handleDeviceTrustAction(device, "block")} className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-45" style={settingsControlInlineStyle} disabled={device.status === "blocked" || device.role === "primary-host"}>Block locally</button>
+                    <button type="button" onClick={() => handleDeviceTrustAction(device, "unblock")} className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-45" style={settingsControlInlineStyle} disabled={device.status !== "blocked"}>Unblock locally</button>
+                  </div>
+                  <p className="mt-2 text-xs opacity-70">Revoke/block are local only; they do not disconnect remote transport yet.</p>
                 </SettingsCard>
               ))}
             </div>
@@ -1034,6 +1146,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             <SettingsStatusCard label="Soft enforcement" value={getLucaLinkSecurityModeLabel(deviceCenterSnapshot.softEnforcementMode)} detail={deviceCenterSnapshot.softEnforcementMode} accentColor={theme.hex} />
             <SettingsStatusCard label="Runtime observations" value={`${deviceCenterSnapshot.runtimeShadowSummary.total}`} detail={`Allow ${deviceCenterSnapshot.runtimeShadowSummary.wouldAllow} · Deny ${deviceCenterSnapshot.runtimeShadowSummary.wouldDeny} · Approval ${deviceCenterSnapshot.runtimeShadowSummary.wouldRequirePrimaryHostApproval}`} accentColor={theme.hex} />
             <SettingsStatusCard label="Adapter diagnostics" value={`${deviceCenterSnapshot.runtimeShadowSummary.adapterWarnings} warnings / ${deviceCenterSnapshot.runtimeShadowSummary.adapterErrors} errors`} detail="Runtime shadow only; no enforcement toggles here." accentColor={theme.hex} />
+            <SettingsStatusCard label="Device trust" value={`${deviceCenterSnapshot.deviceTrustSummary.total} known`} detail={`${deviceCenterSnapshot.deviceTrustSummary.guests} guests · ${deviceCenterSnapshot.deviceTrustSummary.owner} owner record`} accentColor={theme.hex} />
+            <SettingsStatusCard label="Trust audit" value={`${deviceCenterSnapshot.deviceTrustAudit.length}`} detail={deviceCenterSnapshot.deviceTrustSummary.latestMutation?.mutation ?? "No trust mutations yet"} accentColor={theme.hex} />
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <SettingsStatusCard label="Continuation tokens" value={`${deviceCenterSnapshot.continuationSummary.total} total · ${deviceCenterSnapshot.continuationSummary.valid} valid`} detail="Continuation model only. Model records only; approvals do not execute actions." accentColor={theme.hex} />

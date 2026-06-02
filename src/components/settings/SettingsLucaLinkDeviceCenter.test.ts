@@ -160,6 +160,48 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).not.toContain("Origin" + " approval");
   });
 
+
+  it("reads device trust state into the Device Center snapshot", () => {
+    expect(lucaLinkSource).toContain("trustedDevices: LucaLinkTrustedDeviceRecord[]");
+    expect(lucaLinkSource).toContain("deviceTrustSummary: LucaLinkDeviceTrustRegistrySummary");
+    expect(lucaLinkSource).toContain("deviceTrustAudit: LucaLinkDeviceTrustAuditRecord[]");
+    expect(snapshotSource).toContain("lucaLink.getTrustedDevices()");
+    expect(snapshotSource).toContain("lucaLink.getActiveTrustedDevices()");
+    expect(snapshotSource).toContain("lucaLink.getDeviceTrustSummary()");
+    expect(snapshotSource).toContain("lucaLink.getDeviceTrustAudit()");
+  });
+
+  it("renders local device trust controls and conservative safety copy", () => {
+    expect(lucaLinkSource).toContain("Local LucaLink device trust management");
+    expect(lucaLinkSource).toContain("Rename");
+    expect(lucaLinkSource).toContain("Revoke locally");
+    expect(lucaLinkSource).toContain("Block locally");
+    expect(lucaLinkSource).toContain("Unblock locally");
+    expect(lucaLinkSource).toContain("Local only; does not disconnect remote transport yet");
+    expect(lucaLinkSource).toContain("Admin does not bypass Primary Host approvals");
+    expect(lucaLinkSource).toContain("Conversation/WebRTC limited");
+  });
+
+  it("does not expose unsafe owner assignment or reserved device authority text", () => {
+    expect(lucaLinkSource).not.toContain('<option value="owner"');
+    expect(lucaLinkSource).not.toContain("Origin");
+  });
+
+  it("wires trust actions through service helpers without socket operations", () => {
+    const trustActionSource = lucaLinkSource.slice(
+      lucaLinkSource.indexOf("const handleDeviceTrustAction"),
+      lucaLinkSource.indexOf("return (", lucaLinkSource.indexOf("const handleDeviceTrustAction")),
+    );
+    expect(trustActionSource).toContain("lucaLink.renameTrustedDevice");
+    expect(trustActionSource).toContain("lucaLink.setTrustedDeviceTrustLevel");
+    expect(trustActionSource).toContain("lucaLink.revokeTrustedDevice");
+    expect(trustActionSource).toContain("lucaLink.blockTrustedDevice");
+    expect(trustActionSource).toContain("lucaLink.unblockTrustedDevice");
+    expect(trustActionSource).not.toMatch(/\bemit\s*\(/);
+    expect(trustActionSource).not.toMatch(/\bdisconnect\s*\(/);
+    expect(trustActionSource).not.toMatch(/\bsocket\b/);
+  });
+
   it("maps soft enforcement modes to user-readable labels", () => {
     expect(lucaLinkSource).toContain('mode === "high-risk-only"');
     expect(lucaLinkSource).toContain("High-risk gates active");
