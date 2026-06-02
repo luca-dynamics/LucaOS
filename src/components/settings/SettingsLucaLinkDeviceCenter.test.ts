@@ -202,6 +202,53 @@ describe("Settings LucaLink Device Center", () => {
     expect(trustActionSource).not.toMatch(/\bsocket\b/);
   });
 
+
+  it("reads handoff state into the Device Center snapshot", () => {
+    expect(lucaLinkSource).toContain("handoffs: LucaLinkHandoffRequest[]");
+    expect(lucaLinkSource).toContain("pendingHandoffs: LucaLinkHandoffRequest[]");
+    expect(lucaLinkSource).toContain("handoffSummary: LucaLinkHandoffRegistrySummary");
+    expect(snapshotSource).toContain("lucaLink.getHandoffs()");
+    expect(snapshotSource).toContain("lucaLink.getPendingHandoffs()");
+    expect(snapshotSource).toContain("lucaLink.getHandoffSummary()");
+  });
+
+  it("renders Device Center Sync handoff summary and safe copy", () => {
+    expect(lucaLinkSource).toContain('label="Pending handoffs"');
+    expect(lucaLinkSource).toContain('label="Conversation handoffs"');
+    expect(lucaLinkSource).toContain('label="Memory intent handoffs"');
+    expect(lucaLinkSource).toContain('label="Artifact / mission handoffs"');
+    expect(lucaLinkSource).toContain('label="Blocked / expired"');
+    expect(lucaLinkSource).toContain("Memory handoff is intent-only; raw memory databases are not transferred.");
+    expect(lucaLinkSource).toContain("Conversation handoff excludes hidden system prompts and private reasoning.");
+    expect(lucaLinkSource).toContain("Secrets are redacted before handoff.");
+    expect(lucaLinkSource).toContain("Handoff does not execute tools or mutate remote devices.");
+  });
+
+  it("renders handoff payloadPreview only and avoids raw payload controls", () => {
+    expect(lucaLinkSource).toContain("renderPayloadPreview(handoff.payloadPreview)");
+    expect(lucaLinkSource).toContain("Payload preview only");
+    expect(lucaLinkSource).toContain("No send-now action is exposed in this PR");
+    expect(lucaLinkSource).not.toMatch(/handoff\.payload(?!Preview)/);
+    expect(lucaLinkSource).not.toContain("sync full memory database");
+    expect(lucaLinkSource).not.toContain("Sync full memory database");
+    expect(lucaLinkSource).not.toContain("Origin");
+  });
+
+  it("wires handoff actions through state-only service helpers without transport calls", () => {
+    const handoffActionSource = lucaLinkSource.slice(
+      lucaLinkSource.indexOf("const handleCreateSampleConversationHandoff"),
+      lucaLinkSource.indexOf("const handleDeviceTrustAction"),
+    );
+    expect(handoffActionSource).toContain("lucaLink.createConversationHandoff");
+    expect(handoffActionSource).toContain("lucaLink.approveHandoff");
+    expect(handoffActionSource).toContain("lucaLink.declineHandoff");
+    expect(handoffActionSource).toContain("lucaLink.cancelHandoff");
+    expect(handoffActionSource).toContain("lucaLink.markHandoffAccepted");
+    expect(handoffActionSource).not.toMatch(/\bemit\s*\(/);
+    expect(handoffActionSource).not.toMatch(/\bsocket\b/);
+    expect(handoffActionSource).not.toMatch(/\bsend\s*\(/);
+  });
+
   it("maps soft enforcement modes to user-readable labels", () => {
     expect(lucaLinkSource).toContain('mode === "high-risk-only"');
     expect(lucaLinkSource).toContain("High-risk gates active");
