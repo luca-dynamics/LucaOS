@@ -13,6 +13,12 @@ import { CryptoService } from "./lucaLink/crypto";
 import type { EncryptedMessage } from "./lucaLink/types";
 import { legacyDevicesToManifests } from "./lucaLink/lucaLinkLegacyAdapter";
 import {
+  evaluateSoftEnforcementForLegacyEvent,
+  type LucaLinkSoftEnforcementMode,
+  type LucaLinkSoftEnforcementOptions,
+  type LucaLinkSoftEnforcementResult,
+} from "./lucaLink/lucaLinkSoftEnforcement";
+import {
   clearLucaLinkShadowObservations,
   createLucaLinkRuntimeShadow,
   getLucaLinkShadowObservations,
@@ -73,6 +79,9 @@ class LucaLinkService {
   private stateListeners: Set<StateListener> = new Set();
   private messageListeners: Set<MessageListener> = new Set();
   private runtimeShadow: LucaLinkRuntimeShadowState = createLucaLinkRuntimeShadow({ enabled: false });
+  private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
+    mode: "disabled",
+  };
 
   // Persistent storage keys
   private readonly DEVICE_ID_KEY = "luca_link_device_id";
@@ -580,6 +589,25 @@ class LucaLinkService {
       payload,
     };
 
+    if (this.getSoftEnforcementMode() !== "disabled") {
+      const softEnforcement = this.evaluateRuntimeEventForSoftEnforcement({
+        eventName:
+          type === "SENSOR_PULSE"
+            ? "SENSOR_PULSE"
+            : type === "sync"
+              ? "sync"
+              : "message",
+        payload: message,
+      });
+      if (softEnforcement.blocked) {
+        console.warn(
+          "[LucaLink] Soft enforcement blocked outbound send:",
+          softEnforcement,
+        );
+        return false;
+      }
+    }
+
     this.observeRuntimeEventForDiagnostics({
       eventName: type === "SENSOR_PULSE" ? "SENSOR_PULSE" : type === "sync" ? "sync" : "message",
       payload: message,
@@ -709,6 +737,46 @@ class LucaLinkService {
   onMessage(listener: MessageListener): () => void {
     this.messageListeners.add(listener);
     return () => this.messageListeners.delete(listener);
+  }
+
+  /**
+   * Enable default-off LucaLink soft enforcement controls.
+   * Disabled and observe-only modes never block runtime behavior.
+   */
+  enableSoftEnforcement(options: LucaLinkSoftEnforcementOptions = {}): void {
+    this.softEnforcementOptions = {
+      ...this.softEnforcementOptions,
+      ...options,
+      mode: options.mode ?? "observe-only",
+    };
+  }
+
+  /**
+   * Disable LucaLink soft enforcement and restore no-block behavior.
+   */
+  disableSoftEnforcement(): void {
+    this.softEnforcementOptions = { mode: "disabled" };
+  }
+
+  getSoftEnforcementMode(): LucaLinkSoftEnforcementMode {
+    return this.softEnforcementOptions.mode ?? "disabled";
+  }
+
+  /**
+   * Evaluate a runtime event against the pure soft-enforcement model.
+   * This helper is side-effect-free except for reading current candidate manifests.
+   */
+  evaluateRuntimeEventForSoftEnforcement(input: {
+    eventName?: string;
+    payload?: unknown;
+  }): LucaLinkSoftEnforcementResult {
+    return evaluateSoftEnforcementForLegacyEvent(input, {
+      ...this.softEnforcementOptions,
+      candidates: [
+        ...(this.softEnforcementOptions.candidates ?? []),
+        ...this.getRuntimeShadowCandidateManifests(),
+      ],
+    });
   }
 
   /**
@@ -1165,6 +1233,29 @@ class LucaLinkService {
         success: false,
         error: "Transporter offline: Luca Link not connected.",
       };
+    }
+
+    if (this.getSoftEnforcementMode() !== "disabled") {
+      const softEnforcement = this.evaluateRuntimeEventForSoftEnforcement({
+        eventName:
+          packet.type === "SENSOR_PULSE"
+            ? "SENSOR_PULSE"
+            : packet.type === "sync"
+              ? "sync"
+              : "message",
+        payload: {
+          type: packet.type,
+          source: this.state.deviceId || "unknown",
+          target: targetDeviceId,
+          payload: packet.payload,
+        },
+      });
+      if (softEnforcement.blocked) {
+        return {
+          success: false,
+          error: `Soft enforcement blocked LucaLink beam: ${softEnforcement.explain}`,
+        };
+      }
     }
 
     console.log(`[LucaLink] ⚡ Preparing Neural Beam for ${targetDeviceId}...`);
