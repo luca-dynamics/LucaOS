@@ -25,6 +25,7 @@ import {
   createLucaLinkApprovalQueue,
   denyLucaLinkApprovalRequest,
   enqueueApprovalForSoftEnforcementResult,
+  getLucaLinkApprovalRequest,
   getPendingLucaLinkApprovalRequests,
   listLucaLinkApprovalRequests,
   summarizeLucaLinkApprovalQueue,
@@ -34,6 +35,24 @@ import {
   type LucaLinkApprovalQueueSummary,
   type LucaLinkApprovalRequest,
 } from "./lucaLink/lucaLinkApprovalQueue";
+import {
+  cancelLucaLinkContinuationToken,
+  clearLucaLinkContinuationRegistry,
+  consumeLucaLinkContinuationToken,
+  createLucaLinkContinuationRegistry,
+  expireLucaLinkContinuationTokens,
+  getValidLucaLinkContinuationTokens,
+  listLucaLinkContinuationTokens,
+  registerContinuationFromApprovalRequest,
+  summarizeLucaLinkContinuationRegistry,
+  validateLucaLinkContinuationToken,
+  type LucaLinkContinuationMutationResult,
+  type LucaLinkContinuationRegistryState,
+  type LucaLinkContinuationRegistrySummary,
+  type LucaLinkContinuationToken,
+  type LucaLinkContinuationValidationContext,
+  type LucaLinkContinuationValidationResult,
+} from "./lucaLink/lucaLinkContinuation";
 import {
   clearLucaLinkShadowObservations,
   createLucaLinkRuntimeShadow,
@@ -96,6 +115,7 @@ class LucaLinkService {
   private messageListeners: Set<MessageListener> = new Set();
   private runtimeShadow: LucaLinkRuntimeShadowState = createLucaLinkRuntimeShadow({ enabled: false });
   private approvalQueue: LucaLinkApprovalQueueState = createLucaLinkApprovalQueue();
+  private continuationRegistry: LucaLinkContinuationRegistryState = createLucaLinkContinuationRegistry();
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
@@ -822,6 +842,60 @@ class LucaLinkService {
 
   clearApprovalQueue(): LucaLinkApprovalMutationResult {
     return clearLucaLinkApprovalQueue(this.approvalQueue);
+  }
+
+  getContinuationTokens(): LucaLinkContinuationToken[] {
+    return listLucaLinkContinuationTokens(this.continuationRegistry);
+  }
+
+  getValidContinuationTokens(): LucaLinkContinuationToken[] {
+    return getValidLucaLinkContinuationTokens(this.continuationRegistry);
+  }
+
+  getContinuationRegistrySummary(): LucaLinkContinuationRegistrySummary {
+    return summarizeLucaLinkContinuationRegistry(this.continuationRegistry);
+  }
+
+  clearContinuationRegistry(): LucaLinkContinuationMutationResult {
+    return clearLucaLinkContinuationRegistry(this.continuationRegistry);
+  }
+
+  createContinuationFromApprovalRequest(requestId: string): LucaLinkContinuationMutationResult {
+    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    if (!request) {
+      return {
+        valid: false,
+        warnings: [`Unknown LucaLink approval request id: ${requestId}`],
+        errors: [],
+      };
+    }
+
+    return registerContinuationFromApprovalRequest(this.continuationRegistry, request);
+  }
+
+  validateContinuationToken(
+    tokenId: string,
+    context?: LucaLinkContinuationValidationContext,
+  ): LucaLinkContinuationValidationResult {
+    return validateLucaLinkContinuationToken(this.continuationRegistry, tokenId, context);
+  }
+
+  consumeContinuationToken(
+    tokenId: string,
+    context?: LucaLinkContinuationValidationContext & {
+      consumedByDeviceId?: string;
+      reason?: string;
+    },
+  ): LucaLinkContinuationMutationResult {
+    return consumeLucaLinkContinuationToken(this.continuationRegistry, tokenId, context);
+  }
+
+  cancelContinuationToken(tokenId: string, reason?: string): LucaLinkContinuationMutationResult {
+    return cancelLucaLinkContinuationToken(this.continuationRegistry, tokenId, { reason });
+  }
+
+  expireContinuationTokens(now?: number): LucaLinkContinuationMutationResult {
+    return expireLucaLinkContinuationTokens(this.continuationRegistry, now);
   }
 
   queueApprovalForSoftEnforcementResult(
