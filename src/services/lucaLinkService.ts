@@ -73,6 +73,21 @@ import {
 import type { LucaHostManifest } from "./lucaLink/lucaHostManifest";
 import type { LucaLinkRuntimeObservation, LucaLinkRuntimeObservationSummary } from "./lucaLink/lucaLinkRuntimeObserver";
 import {
+  createLucaLinkGuestSession,
+  evaluateLucaLinkGuestInbound,
+  isGuestAuthPayload,
+  markGuestSessionActive,
+  markGuestSessionAuthChallenge,
+  markGuestSessionAuthenticated,
+  markGuestSessionDisconnected,
+  summarizeLucaLinkGuestSessions,
+  type LucaLinkGuestInboundInput,
+  type LucaLinkGuestInboundResult,
+  type LucaLinkGuestSessionRecord,
+  type LucaLinkGuestSessionSummary,
+} from "./lucaLink/lucaLinkGuestSessionPolicy";
+
+import {
   createLucaLinkRuntimeEnforcementAuditRecord,
   evaluateLucaLinkRuntimeEnforcement,
   summarizeLucaLinkRuntimeEnforcementAudit,
@@ -1155,6 +1170,44 @@ class LucaLinkService {
   private guestMessageHandler:
     | ((sessionId: string, message: string) => void)
     | null = null;
+  private guestSecuritySessions: Map<string, LucaLinkGuestSessionRecord> = new Map();
+  private guestInboundAudit: LucaLinkGuestInboundResult[] = [];
+  private readonly guestInboundAuditLimit = 100;
+
+  getGuestSecuritySessions(): LucaLinkGuestSessionRecord[] {
+    return [...this.guestSecuritySessions.values()];
+  }
+
+  getGuestSecuritySummary(): LucaLinkGuestSessionSummary {
+    return summarizeLucaLinkGuestSessions(this.guestSecuritySessions.values());
+  }
+
+  getGuestInboundAudit(): LucaLinkGuestInboundResult[] {
+    return [...this.guestInboundAudit];
+  }
+
+  clearGuestInboundAudit(): void {
+    this.guestInboundAudit = [];
+  }
+
+  private evaluateGuestInbound(input: LucaLinkGuestInboundInput): LucaLinkGuestInboundResult {
+    const sessionId = input.sessionId;
+    let session = sessionId ? this.guestSecuritySessions.get(sessionId) : undefined;
+    if (sessionId && !session) {
+      session = createLucaLinkGuestSession(sessionId, { now: input.now });
+      this.guestSecuritySessions.set(sessionId, session);
+    }
+
+    const result = evaluateLucaLinkGuestInbound(input, session, { now: input.now });
+    if (sessionId && result.updatedSession) {
+      this.guestSecuritySessions.set(sessionId, result.updatedSession);
+    }
+    this.guestInboundAudit = [
+      ...this.guestInboundAudit,
+      result,
+    ].slice(-this.guestInboundAuditLimit);
+    return result;
+  }
 
   /**
    * Generate a guest session for web access (Desktop only)
@@ -1191,6 +1244,10 @@ class LucaLinkService {
         peerConnection: null,
         sessionId: data.sessionId,
       });
+      this.guestSecuritySessions.set(
+        data.sessionId,
+        createLucaLinkGuestSession(data.sessionId),
+      );
 
       return { sessionId: data.sessionId, guestUrl: data.guestUrl };
     } catch (e) {
@@ -1332,6 +1389,17 @@ class LucaLinkService {
         sourceDeviceId: data.sessionId,
         targetDeviceId: this.state.deviceId ?? "primary",
       });
+      if (!this.guestSessions.has(data.sessionId)) {
+        this.guestSessions.set(data.sessionId, {
+          peerConnection: null,
+          sessionId: data.sessionId,
+        });
+      }
+      this.evaluateGuestInbound({
+        kind: "guest-connected",
+        sessionId: data.sessionId,
+        payload: data,
+      });
 
       // 1. Check if PIN is required
       try {
@@ -1341,6 +1409,13 @@ class LucaLinkService {
           console.log(
             `[LucaLink] PIN required for session ${data.sessionId}, sending challenge`,
           );
+          const securitySession = this.guestSecuritySessions.get(data.sessionId);
+          if (securitySession) {
+            this.guestSecuritySessions.set(
+              data.sessionId,
+              markGuestSessionAuthChallenge(securitySession),
+            );
+          }
           this.sendToGuestAuth(data.sessionId, "auth-challenge");
           return;
         }
@@ -1349,6 +1424,13 @@ class LucaLinkService {
       }
 
       // If no PIN required (or check failed), proceed
+      const securitySession = this.guestSecuritySessions.get(data.sessionId);
+      if (securitySession) {
+        this.guestSecuritySessions.set(
+          data.sessionId,
+          markGuestSessionActive(securitySession),
+        );
+      }
       await this.startGuestSession(data.sessionId);
     });
 
@@ -1364,6 +1446,11 @@ class LucaLinkService {
           payload: data,
           sourceDeviceId: data.sessionId,
           targetDeviceId: this.state.deviceId ?? "primary",
+        });
+        this.evaluateGuestInbound({
+          kind: "webrtc-answer",
+          sessionId: data.sessionId,
+          payload: data,
         });
         const session = this.guestSessions.get(data.sessionId);
         if (session?.peerConnection) {
@@ -1383,6 +1470,11 @@ class LucaLinkService {
           payload: data,
           sourceDeviceId: data.sessionId,
           targetDeviceId: this.state.deviceId ?? "primary",
+        });
+        this.evaluateGuestInbound({
+          kind: "webrtc-ice-candidate",
+          sessionId: data.sessionId,
+          payload: data,
         });
         const session = this.guestSessions.get(data.sessionId);
         if (session?.peerConnection && data.candidate) {
@@ -1406,15 +1498,49 @@ class LucaLinkService {
         // DEBUG:
         // console.log("[LucaLink] Raw guest message:", data);
 
+        const inboundEvaluation = this.evaluateGuestInbound({
+          kind: isGuestAuthPayload(data.message)
+            ? "guest-auth-response"
+            : "guest-message",
+          sessionId: data.sessionId,
+          payload: data,
+          message: data.message,
+        });
+
+        if (inboundEvaluation.decision === "deny") {
+          console.warn(
+            `[LucaLink] Denied unsafe guest inbound for ${data.sessionId}`,
+          );
+          this.sendToGuest(
+            data.sessionId,
+            "This guest session can only use conversation access.",
+          );
+          return;
+        }
+
+        if (inboundEvaluation.decision === "rate-limit") {
+          console.warn(
+            `[LucaLink] Rate-limited guest inbound for ${data.sessionId}`,
+          );
+          this.sendToGuest(
+            data.sessionId,
+            "This guest session is sending messages too quickly. Please wait a moment.",
+          );
+          return;
+        }
+
+        const inboundMessage =
+          inboundEvaluation.sanitizedMessage ?? data.message;
+
         // 2. Check for Auth Response (JSON)
         // Relay passes message as-is. We try to parse it as JSON to see if it's a protocol message.
         if (
-          typeof data.message === "string" &&
-          data.message.startsWith("{") &&
-          data.message.includes("auth-response")
+          typeof inboundMessage === "string" &&
+          inboundMessage.startsWith("{") &&
+          inboundMessage.includes("auth-response")
         ) {
           try {
-            const payload = JSON.parse(data.message);
+            const payload = JSON.parse(inboundMessage);
             if (payload.type === "auth-response" && payload.pin) {
               console.log(
                 `[LucaLink] verifying PIN for session ${data.sessionId}`,
@@ -1439,6 +1565,15 @@ class LucaLinkService {
                   console.log(
                     `[LucaLink] PIN correct for ${data.sessionId}. starting session.`,
                   );
+                  const securitySession = this.guestSecuritySessions.get(data.sessionId);
+                  if (securitySession) {
+                    this.guestSecuritySessions.set(
+                      data.sessionId,
+                      markGuestSessionActive(
+                        markGuestSessionAuthenticated(securitySession),
+                      ),
+                    );
+                  }
                   this.sendToGuestAuth(data.sessionId, "auth-success");
                   await this.startGuestSession(data.sessionId);
                   return; // Don't process as chat message
@@ -1459,7 +1594,7 @@ class LucaLinkService {
         // 3. Normal Chat Message
         console.log("[LucaLink] Guest chat message:", data);
         if (this.guestMessageHandler) {
-          this.guestMessageHandler(data.sessionId, data.message);
+          this.guestMessageHandler(data.sessionId, inboundMessage);
         }
       },
     );
@@ -1473,6 +1608,18 @@ class LucaLinkService {
         sourceDeviceId: data.sessionId,
         targetDeviceId: this.state.deviceId ?? "primary",
       });
+      this.evaluateGuestInbound({
+        kind: "guest-disconnected",
+        sessionId: data.sessionId,
+        payload: data,
+      });
+      const securitySession = this.guestSecuritySessions.get(data.sessionId);
+      if (securitySession) {
+        this.guestSecuritySessions.set(
+          data.sessionId,
+          markGuestSessionDisconnected(securitySession),
+        );
+      }
       const session = this.guestSessions.get(data.sessionId);
       if (session?.peerConnection) {
         session.peerConnection.close();

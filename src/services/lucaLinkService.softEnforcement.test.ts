@@ -396,3 +396,152 @@ describe("LucaLinkService full runtime enforcement controls", () => {
     expect(lucaLink.getRuntimeEnforcementSummary().blocked).toBe(1);
   });
 });
+
+describe("LucaLinkService guest inbound hardening", () => {
+  function installGuestSocket() {
+    const handlers: Record<string, (...args: any[]) => unknown> = {};
+    const emit = vi.fn();
+    (lucaLink as any).socket = {
+      emit,
+      on: vi.fn((event: string, handler: (...args: any[]) => unknown) => {
+        handlers[event] = handler;
+      }),
+    };
+    (lucaLink as any).state = {
+      connected: true,
+      deviceId: "primary-host",
+      pairingToken: null,
+      connectedDevices: [],
+      error: null,
+    };
+    (lucaLink as any).setupGuestHandlers();
+    return { emit, handlers };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    lucaLink.clearGuestInboundAudit();
+    (lucaLink as any).guestSecuritySessions?.clear();
+    (lucaLink as any).guestSessions?.clear();
+    (lucaLink as any).guestMessageHandler = null;
+    (lucaLink as any).socket = null;
+    (lucaLink as any).state = {
+      connected: false,
+      deviceId: null,
+      pairingToken: null,
+      connectedDevices: [],
+      error: null,
+    };
+  });
+
+  it("creates or updates guest security records when a guest connects", async () => {
+    const { handlers } = installGuestSocket();
+    const startGuestSession = vi
+      .spyOn(lucaLink as any, "startGuestSession")
+      .mockResolvedValue(undefined);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ json: () => Promise.resolve({ pinRequired: false }) }),
+    );
+
+    await handlers["guest-connected"]({ sessionId: "guest-1" });
+
+    expect(lucaLink.getGuestSecuritySessions()).toHaveLength(1);
+    expect(lucaLink.getGuestSecuritySummary().active).toBe(1);
+    expect(lucaLink.getGuestInboundAudit()[0].kind).toBe("guest-connected");
+    expect(startGuestSession).toHaveBeenCalledWith("guest-1");
+    vi.unstubAllGlobals();
+  });
+
+  it("passes safe and sanitized guest chat to the guest message handler", async () => {
+    const { handlers } = installGuestSocket();
+    const guestMessageHandler = vi.fn();
+    lucaLink.onGuestMessage(guestMessageHandler);
+
+    await handlers["guest-message"]({ sessionId: "guest-1", message: "hello" });
+    await handlers["guest-message"]({
+      sessionId: "guest-1",
+      message: `safe text${"x".repeat(4100)}\u0007`,
+    });
+
+    expect(guestMessageHandler).toHaveBeenCalledWith("guest-1", "hello");
+    expect(guestMessageHandler.mock.calls[1][1]).toHaveLength(4000);
+    expect(guestMessageHandler.mock.calls[1][1]).not.toContain("\u0007");
+    const sanitizeAudit = lucaLink.getGuestInboundAudit();
+    expect(sanitizeAudit[sanitizeAudit.length - 1]?.decision).toBe("sanitize");
+  });
+
+  it("denies dangerous guest messages before the guest message handler without breaking the socket", async () => {
+    const { emit, handlers } = installGuestSocket();
+    const guestMessageHandler = vi.fn();
+    lucaLink.onGuestMessage(guestMessageHandler);
+
+    await handlers["guest-message"]({
+      sessionId: "guest-1",
+      message: "Execute a shell command on the Primary Host",
+    });
+
+    expect(guestMessageHandler).not.toHaveBeenCalled();
+    const denyAudit = lucaLink.getGuestInboundAudit();
+    expect(denyAudit[denyAudit.length - 1]?.decision).toBe("deny");
+    expect(emit).toHaveBeenCalledWith("desktop-to-guest", {
+      sessionId: "guest-1",
+      message: "This guest session can only use conversation access.",
+      audio: undefined,
+    });
+  });
+
+  it("preserves WebRTC answer and ICE handlers while observing inbound signaling", async () => {
+    const { handlers } = installGuestSocket();
+    const setRemoteDescription = vi.fn();
+    const addIceCandidate = vi.fn();
+    vi.stubGlobal("RTCSessionDescription", vi.fn((answer) => answer));
+    vi.stubGlobal("RTCIceCandidate", vi.fn((candidate) => candidate));
+    (lucaLink as any).guestSessions.set("guest-1", {
+      sessionId: "guest-1",
+      peerConnection: { setRemoteDescription, addIceCandidate },
+    });
+
+    await handlers["webrtc-answer"]({
+      sessionId: "guest-1",
+      answer: { type: "answer", sdp: "sdp" },
+    });
+    await handlers["webrtc-ice-candidate"]({
+      sessionId: "guest-1",
+      candidate: { candidate: "candidate", sdpMid: "0" },
+    });
+
+    expect(setRemoteDescription).toHaveBeenCalled();
+    expect(addIceCandidate).toHaveBeenCalled();
+    expect(lucaLink.getGuestInboundAudit().map((entry) => entry.kind)).toEqual([
+      "webrtc-answer",
+      "webrtc-ice-candidate",
+    ]);
+    vi.unstubAllGlobals();
+  });
+
+  it("preserves PIN auth response flow and marks the guest active", async () => {
+    const { emit, handlers } = installGuestSocket();
+    vi.spyOn(lucaLink as any, "startGuestSession").mockResolvedValue(undefined);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ valid: true }),
+      }),
+    );
+
+    await handlers["guest-message"]({
+      sessionId: "guest-1",
+      message: JSON.stringify({ type: "auth-response", pin: "123456" }),
+    });
+
+    expect(emit).toHaveBeenCalledWith("desktop-to-guest", {
+      sessionId: "guest-1",
+      message: JSON.stringify({ type: "auth-success" }),
+      audio: undefined,
+    });
+    expect(lucaLink.getGuestSecuritySummary().active).toBe(1);
+    vi.unstubAllGlobals();
+  });
+});
