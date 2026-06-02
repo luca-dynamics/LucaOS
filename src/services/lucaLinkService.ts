@@ -747,7 +747,7 @@ class LucaLinkService {
     this.softEnforcementOptions = {
       ...this.softEnforcementOptions,
       ...options,
-      mode: options.mode ?? "high-risk-only",
+      mode: options.mode ?? "observe-only",
     };
   }
 
