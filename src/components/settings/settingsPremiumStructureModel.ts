@@ -104,6 +104,12 @@ export const remainingSettingsPremiumTabStructure = {
     "Advanced Details",
   ],
   lucalink: [
+    "LucaLink Device Center",
+    "Devices",
+    "Approvals",
+    "Guest Sessions",
+    "Sync & Handoff",
+    "Advanced",
     "Linked Devices",
     "Pair New Device",
     "Sync Behavior",
