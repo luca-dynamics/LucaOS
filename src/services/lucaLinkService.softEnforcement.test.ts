@@ -10,6 +10,7 @@ describe("LucaLinkService soft enforcement controls", () => {
   afterEach(() => {
     lucaLink.disableSoftEnforcement();
     lucaLink.clearApprovalQueue();
+    lucaLink.clearContinuationRegistry();
     (lucaLink as any).socket = null;
     (lucaLink as any).state = {
       connected: false,
@@ -160,5 +161,72 @@ describe("LucaLinkService soft enforcement controls", () => {
       "approved",
     );
     expect(lucaLink.getPendingApprovalRequests()).toHaveLength(0);
+  });
+
+  it("exposes continuation helpers without retrying, sending, or emitting actions", () => {
+    const emit = vi.fn();
+    (lucaLink as any).socket = { emit };
+    lucaLink.enableSoftEnforcement({ mode: "high-risk-only" });
+
+    const result = lucaLink.evaluateRuntimeEventForSoftEnforcement({
+      eventName: "message",
+      payload: {
+        type: "tool-request",
+        source: "exec-1",
+        target: "primary",
+        payload: { kind: "tool-request", permission: "files.write" },
+      },
+    });
+    lucaLink.queueApprovalForSoftEnforcementResult(result, {
+      requestedByDeviceId: "exec-1",
+      requestedTargetDeviceId: "primary",
+      payload: { kind: "tool-request", permission: "files.write" },
+    });
+
+    const pending = lucaLink.getPendingApprovalRequests()[0];
+    expect(
+      lucaLink.createContinuationFromApprovalRequest(pending.id).created,
+    ).toBeUndefined();
+
+    lucaLink.approveApprovalRequest(pending.id, {
+      decidedByDeviceId: "primary",
+    });
+    const created = lucaLink.createContinuationFromApprovalRequest(pending.id);
+    expect(created.created).toBe(true);
+    expect(created.token?.replayMode).toBe("manual-retry-only");
+    expect(lucaLink.getContinuationTokens()).toHaveLength(1);
+    expect(lucaLink.getContinuationRegistrySummary().valid).toBe(1);
+
+    const consumed = lucaLink.consumeContinuationToken(created.token!.id, {
+      consumedByDeviceId: "primary",
+    });
+    expect(consumed.consumed).toBe(true);
+    expect(lucaLink.getContinuationRegistrySummary().consumed).toBe(1);
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it("does not create continuations for pending approvals through service helpers", () => {
+    lucaLink.enableSoftEnforcement({ mode: "high-risk-only" });
+    const result = lucaLink.evaluateRuntimeEventForSoftEnforcement({
+      eventName: "message",
+      payload: {
+        type: "tool-request",
+        source: "exec-1",
+        target: "primary",
+        payload: { kind: "tool-request", permission: "shell.execute" },
+      },
+    });
+    lucaLink.queueApprovalForSoftEnforcementResult(result, {
+      requestedByDeviceId: "exec-1",
+      requestedTargetDeviceId: "primary",
+    });
+
+    const pending = lucaLink.getPendingApprovalRequests()[0];
+    const continuation = lucaLink.createContinuationFromApprovalRequest(
+      pending.id,
+    );
+    expect(continuation.created).toBeUndefined();
+    expect(continuation.warnings[0]).toContain("not eligible");
+    expect(lucaLink.getContinuationTokens()).toHaveLength(0);
   });
 });
