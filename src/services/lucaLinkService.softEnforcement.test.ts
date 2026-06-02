@@ -18,6 +18,7 @@ describe("LucaLinkService soft enforcement controls", () => {
     lucaLink.clearRuntimeEnforcementAudit();
     lucaLink.clearApprovalQueue();
     lucaLink.clearContinuationRegistry();
+    lucaLink.clearHostConnections();
     (lucaLink as any).deviceTrustRegistry = createLucaLinkDeviceTrustRegistry();
     (lucaLink as any).socket = null;
     (lucaLink as any).state = {
@@ -290,7 +291,10 @@ describe("LucaLinkService soft enforcement controls", () => {
       },
       { now: 1_700_000_000_000 },
     );
-    registerLucaLinkContinuation((lucaLink as any).continuationRegistry, manual);
+    registerLucaLinkContinuation(
+      (lucaLink as any).continuationRegistry,
+      manual,
+    );
     registerLucaLinkContinuation((lucaLink as any).continuationRegistry, fresh);
 
     expect(lucaLink.prepareSafeContinuation(manual.id).decision).toBe(
@@ -302,7 +306,9 @@ describe("LucaLinkService soft enforcement controls", () => {
     expect(
       lucaLink.prepareSafeContinuation(manual.id).preparedAction,
     ).toBeUndefined();
-    expect(lucaLink.prepareSafeContinuation(fresh.id).preparedAction).toBeUndefined();
+    expect(
+      lucaLink.prepareSafeContinuation(fresh.id).preparedAction,
+    ).toBeUndefined();
   });
 
   it("does not create continuations for pending approvals through service helpers", () => {
@@ -341,14 +347,28 @@ describe("LucaLinkService soft enforcement controls", () => {
 
     (lucaLink as any).updateState({
       connectedDevices: [
-        { deviceId: "primary-host", type: "desktop", name: "Primary", lastSeen: 1_700_000_000_000 },
-        { deviceId: "phone-1", type: "mobile", name: "Phone", lastSeen: 1_700_000_000_001 },
+        {
+          deviceId: "primary-host",
+          type: "desktop",
+          name: "Primary",
+          lastSeen: 1_700_000_000_000,
+        },
+        {
+          deviceId: "phone-1",
+          type: "mobile",
+          name: "Phone",
+          lastSeen: 1_700_000_000_001,
+        },
       ],
     });
 
     expect(lucaLink.getTrustedDevices()).toHaveLength(2);
     expect(lucaLink.getActiveTrustedDevices()).toHaveLength(2);
-    expect(lucaLink.getTrustedDevices().find((device) => device.deviceId === "phone-1")?.trustLevel).toBe("paired");
+    expect(
+      lucaLink
+        .getTrustedDevices()
+        .find((device) => device.deviceId === "phone-1")?.trustLevel,
+    ).toBe("paired");
     expect(lucaLink.getDeviceTrustSummary().connected).toBe(2);
   });
 
@@ -359,20 +379,79 @@ describe("LucaLinkService soft enforcement controls", () => {
     (lucaLink as any).deviceTrustRegistry = createLucaLinkDeviceTrustRegistry();
     (lucaLink as any).updateState({
       connectedDevices: [
-        { deviceId: "phone-1", type: "mobile", name: "Phone", lastSeen: 1_700_000_000_001 },
+        {
+          deviceId: "phone-1",
+          type: "mobile",
+          name: "Phone",
+          lastSeen: 1_700_000_000_001,
+        },
       ],
     });
 
-    expect(lucaLink.renameTrustedDevice("phone-1", "Pocket Luca").valid).toBe(true);
-    expect(lucaLink.setTrustedDeviceTrustLevel("phone-1", "trusted").valid).toBe(true);
-    expect(lucaLink.revokeTrustedDevice("phone-1").device?.status).toBe("revoked");
-    expect(lucaLink.blockTrustedDevice("phone-1").device?.status).toBe("blocked");
+    expect(lucaLink.renameTrustedDevice("phone-1", "Pocket Luca").valid).toBe(
+      true,
+    );
+    expect(
+      lucaLink.setTrustedDeviceTrustLevel("phone-1", "trusted").valid,
+    ).toBe(true);
+    expect(lucaLink.revokeTrustedDevice("phone-1").device?.status).toBe(
+      "revoked",
+    );
+    expect(lucaLink.blockTrustedDevice("phone-1").device?.status).toBe(
+      "blocked",
+    );
     expect(lucaLink.unblockTrustedDevice("phone-1").valid).toBe(true);
     expect(lucaLink.getDeviceTrustAudit().length).toBeGreaterThanOrEqual(5);
     expect(emit).not.toHaveBeenCalled();
     expect(disconnect).not.toHaveBeenCalled();
   });
 
+  it("exposes model-only host connection and adaptation helpers without socket side effects", () => {
+    const emit = vi.fn();
+    (lucaLink as any).socket = { emit };
+    (lucaLink as any).state = {
+      connected: true,
+      deviceId: "primary-host",
+      pairingToken: null,
+      connectedDevices: [
+        {
+          deviceId: "primary-host",
+          type: "desktop electron",
+          name: "Primary",
+          lastSeen: 1_700_000_000_000,
+        },
+        {
+          deviceId: "watch-1",
+          type: "smart watch ble",
+          name: "Watch",
+          lastSeen: 1_700_000_000_001,
+        },
+      ],
+      error: null,
+    };
+
+    const records = lucaLink.refreshHostConnectionsFromCurrentState();
+    expect(records.length).toBeGreaterThanOrEqual(2);
+    expect(
+      lucaLink.getHostConnectionSummary().byHostClass["primary-host"],
+    ).toBe(1);
+    expect(lucaLink.getHostConnectionSummary().byHostClass["watch-host"]).toBe(
+      1,
+    );
+
+    const diagnosis = lucaLink.diagnoseHostConnection({
+      hostClass: "web-display-host",
+      runtimeSurfaces: ["browser"],
+      connectionClass: "web-display",
+    });
+    const strategies = lucaLink.planHostBridgeStrategies(diagnosis);
+    const blueprint = lucaLink.createHostBridgeBlueprint(strategies[0]);
+
+    expect(blueprint.requiresPrimaryHostApproval).toBe(true);
+    expect(blueprint.generatedProgramAllowed).toBe(false);
+    expect(JSON.stringify(blueprint)).not.toContain("Origin");
+    expect(emit).not.toHaveBeenCalled();
+  });
 });
 
 describe("LucaLinkService full runtime enforcement controls", () => {
@@ -488,7 +567,9 @@ describe("LucaLinkService guest inbound hardening", () => {
       .mockResolvedValue(undefined);
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ json: () => Promise.resolve({ pinRequired: false }) }),
+      vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({ pinRequired: false }),
+      }),
     );
 
     await handlers["guest-connected"]({ sessionId: "guest-1" });
@@ -542,8 +623,14 @@ describe("LucaLinkService guest inbound hardening", () => {
     const { handlers } = installGuestSocket();
     const setRemoteDescription = vi.fn();
     const addIceCandidate = vi.fn();
-    vi.stubGlobal("RTCSessionDescription", vi.fn((answer) => answer));
-    vi.stubGlobal("RTCIceCandidate", vi.fn((candidate) => candidate));
+    vi.stubGlobal(
+      "RTCSessionDescription",
+      vi.fn((answer) => answer),
+    );
+    vi.stubGlobal(
+      "RTCIceCandidate",
+      vi.fn((candidate) => candidate),
+    );
     (lucaLink as any).guestSessions.set("guest-1", {
       sessionId: "guest-1",
       peerConnection: { setRemoteDescription, addIceCandidate },

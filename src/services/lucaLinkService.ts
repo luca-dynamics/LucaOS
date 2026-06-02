@@ -1,8 +1,9 @@
 /**
  * Luca Link Service
  *
- * Manages Socket.IO connections to the relay server for Desktop ↔ Mobile communication.
- * Uses the Socket.IO protocol which is what the relay server expects.
+ * Manages Socket.IO connections to the relay server for multi-host LucaLink mesh communication.
+ * Coordinates Primary Host, companion, display, guest, sensor, electronics, and embodied host messaging
+ * using the Socket.IO protocol expected by the relay server.
  */
 
 import { io, Socket } from "socket.io-client";
@@ -72,7 +73,10 @@ import {
   type LucaLinkRuntimeShadowState,
 } from "./lucaLink/lucaLinkRuntimeShadow";
 import type { LucaHostManifest } from "./lucaLink/lucaHostManifest";
-import type { LucaLinkRuntimeObservation, LucaLinkRuntimeObservationSummary } from "./lucaLink/lucaLinkRuntimeObserver";
+import type {
+  LucaLinkRuntimeObservation,
+  LucaLinkRuntimeObservationSummary,
+} from "./lucaLink/lucaLinkRuntimeObserver";
 import {
   createLucaLinkGuestSession,
   evaluateLucaLinkGuestInbound,
@@ -109,7 +113,6 @@ import {
   type LucaLinkDeviceTrustRegistryState,
 } from "./lucaLink/lucaLinkDeviceTrustRegistry";
 
-
 import {
   approveLucaLinkHandoff,
   cancelLucaLinkHandoff,
@@ -138,6 +141,29 @@ import {
   type LucaLinkHandoffRequest,
   type LucaLinkHandoffRequestInput,
 } from "./lucaLink/lucaLinkHandoff";
+
+import {
+  clearLucaLinkHostConnectionRegistry,
+  createLucaLinkHostConnectionRecord,
+  createLucaLinkHostConnectionRegistry,
+  listLucaLinkHostConnections,
+  summarizeLucaLinkHostConnectionRegistry,
+  upsertLucaLinkHostConnection,
+  type LucaLinkHostConnectionInput,
+  type LucaLinkHostConnectionRecord,
+  type LucaLinkHostConnectionRegistryState,
+  type LucaLinkHostConnectionRegistrySummary,
+} from "./lucaLink/lucaLinkHostConnectionModel";
+import {
+  createLucaLinkHostBridgeBlueprint,
+  createLucaLinkHostConnectionDiagnosis,
+  planLucaLinkHostBridgeStrategies,
+  type LucaLinkHostBridgeBlueprint,
+  type LucaLinkHostBridgeStrategyKind,
+  type LucaLinkHostBridgeStrategyPlan,
+  type LucaLinkHostConnectionDiagnosis,
+  type LucaLinkHostDiagnosisInput,
+} from "./lucaLink/lucaLinkHostAdaptation";
 
 import {
   createLucaLinkRuntimeEnforcementAuditRecord,
@@ -197,11 +223,18 @@ class LucaLinkService {
   };
   private stateListeners: Set<StateListener> = new Set();
   private messageListeners: Set<MessageListener> = new Set();
-  private runtimeShadow: LucaLinkRuntimeShadowState = createLucaLinkRuntimeShadow({ enabled: false });
-  private approvalQueue: LucaLinkApprovalQueueState = createLucaLinkApprovalQueue();
-  private continuationRegistry: LucaLinkContinuationRegistryState = createLucaLinkContinuationRegistry();
-  private deviceTrustRegistry: LucaLinkDeviceTrustRegistryState = createLucaLinkDeviceTrustRegistry();
-  private handoffRegistry: LucaLinkHandoffRegistryState = createLucaLinkHandoffRegistry();
+  private runtimeShadow: LucaLinkRuntimeShadowState =
+    createLucaLinkRuntimeShadow({ enabled: false });
+  private approvalQueue: LucaLinkApprovalQueueState =
+    createLucaLinkApprovalQueue();
+  private continuationRegistry: LucaLinkContinuationRegistryState =
+    createLucaLinkContinuationRegistry();
+  private deviceTrustRegistry: LucaLinkDeviceTrustRegistryState =
+    createLucaLinkDeviceTrustRegistry();
+  private handoffRegistry: LucaLinkHandoffRegistryState =
+    createLucaLinkHandoffRegistry();
+  private hostConnectionRegistry: LucaLinkHostConnectionRegistryState =
+    createLucaLinkHostConnectionRegistry();
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
@@ -562,12 +595,16 @@ class LucaLinkService {
             error: null,
           });
 
-          this.upsertDeviceTrustFromRuntimeDevice({
-            deviceId,
-            type: deviceType,
-            name: `Luca ${deviceType === "desktop" ? "Desktop" : "Mobile"}`,
-            lastSeen: Date.now(),
-          }, true, "connected");
+          this.upsertDeviceTrustFromRuntimeDevice(
+            {
+              deviceId,
+              type: deviceType,
+              name: `Luca ${deviceType === "desktop" ? "Desktop" : "Mobile"}`,
+              lastSeen: Date.now(),
+            },
+            true,
+            "connected",
+          );
 
           // Setup guest handlers for Desktop
           if (deviceType === "desktop") {
@@ -580,7 +617,12 @@ class LucaLinkService {
         this.socket.on("message", async (message: LucaLinkMessage) => {
           console.log("[LucaLink] Received message:", message.type);
           this.observeRuntimeEventForDiagnostics({
-            eventName: message.type === "SENSOR_PULSE" ? "SENSOR_PULSE" : message.type === "sync" ? "sync" : "message",
+            eventName:
+              message.type === "SENSOR_PULSE"
+                ? "SENSOR_PULSE"
+                : message.type === "sync"
+                  ? "sync"
+                  : "message",
             payload: message,
             sourceDeviceId: message.source,
             targetDeviceId: message.target,
@@ -589,24 +631,35 @@ class LucaLinkService {
           // --- NEURAL HARDENING: Decrypt secure messages ---
           if (message.secure && message.payload) {
             try {
-              const sessionData = await sessionManager.recoverSessionByDevice(message.source);
+              const sessionData = await sessionManager.recoverSessionByDevice(
+                message.source,
+              );
               if (sessionData) {
-                console.log(`[LucaLink] 🔓 Unlocking Secure Packet from ${message.source}...`);
+                console.log(
+                  `[LucaLink] 🔓 Unlocking Secure Packet from ${message.source}...`,
+                );
                 message.payload = await CryptoService.decryptSecureMessage(
                   message.payload as EncryptedMessage,
-                  sessionData.sharedSecret
+                  sessionData.sharedSecret,
                 );
 
                 // --- VISUAL FEEDBACK: Express Thinking on thought arrival ---
-                import("./iot/CognitiveExpressor").then(({ cognitiveExpressor }) => {
-                  cognitiveExpressor.expressThinking();
-                });
+                import("./iot/CognitiveExpressor").then(
+                  ({ cognitiveExpressor }) => {
+                    cognitiveExpressor.expressThinking();
+                  },
+                );
               } else {
-                console.warn(`[LucaLink] ⚠️ Received secure message but no session found for ${message.source}`);
+                console.warn(
+                  `[LucaLink] ⚠️ Received secure message but no session found for ${message.source}`,
+                );
                 return; // Drop unverified secure message
               }
             } catch (e) {
-              console.error("[LucaLink] ❌ Neural Fracture: Failed to decrypt secure packet:", e);
+              console.error(
+                "[LucaLink] ❌ Neural Fracture: Failed to decrypt secure packet:",
+                e,
+              );
               return; // Drop corrupted packet
             }
           }
@@ -628,7 +681,9 @@ class LucaLinkService {
             if (devices.length >= 2) {
               import("./consciousnessLayer").then(({ consciousnessLayer }) => {
                 if (consciousnessLayer.getStatus() === "DORMANT") {
-                  console.log("[LucaLink] 🌌 Mesh detected. Booting Consciousness Layer...");
+                  console.log(
+                    "[LucaLink] 🌌 Mesh detected. Booting Consciousness Layer...",
+                  );
                   consciousnessLayer.boot().catch((e) => {
                     console.error("[LucaLink] Consciousness boot failed:", e);
                   });
@@ -641,37 +696,49 @@ class LucaLinkService {
           this.messageListeners.forEach((listener) => listener(message));
 
           // --- SOVEREIGN AUTO-HYDRATION: Handle Mission Sync ---
-          if (message.type === "sync" && message.sync?.type === "mission" && typeof message.sync.data === "string") {
+          if (
+            message.type === "sync" &&
+            message.sync?.type === "mission" &&
+            typeof message.sync.data === "string"
+          ) {
             const goldEgg = message.sync.data;
-            console.log("[LucaLink] Received Mission Sync. Triggering Neural re-hydration...");
-            
+            console.log(
+              "[LucaLink] Received Mission Sync. Triggering Neural re-hydration...",
+            );
+
             // We use dynamic import to avoid circular dependency with lucaService
             import("./lucaService").then(({ lucaService }) => {
-               lucaService.importSovereignMission(goldEgg).catch(e => {
-                 console.error("[TELEPORT] Auto-hydration failed:", e);
-               });
+              lucaService.importSovereignMission(goldEgg).catch((e) => {
+                console.error("[TELEPORT] Auto-hydration failed:", e);
+              });
             });
           }
 
           // --- MESH OBSERVATION: Handle Sensor Pulses (2050 Alien Tech) ---
           if (message.type === "SENSOR_PULSE" && message.payload) {
-            import("./meshObservationService").then(({ meshObservationService }) => {
-              meshObservationService.registerNodePulse(message.payload as any);
-            });
+            import("./meshObservationService").then(
+              ({ meshObservationService }) => {
+                meshObservationService.registerNodePulse(
+                  message.payload as any,
+                );
+              },
+            );
 
             // --- COGNITIVE SHARDING: Feed health signals to the Living Brain ---
-            import("./cognitiveShardingEngine").then(({ cognitiveShardingEngine }) => {
-              const pulse = message.payload as any;
-              cognitiveShardingEngine.ingestHealthSignal({
-                deviceId: pulse.deviceId || message.source,
-                battery: pulse.payload?.battery ?? -1,
-                cpuLoad: pulse.payload?.cpuLoad ?? 30,
-                signalStrength: pulse.payload?.signalStrength ?? 70,
-                isActive: pulse.payload?.isActive ?? true,
-                npuAvailable: pulse.payload?.npuAvailable ?? false,
-                lastHeartbeat: Date.now(),
-              });
-            });
+            import("./cognitiveShardingEngine").then(
+              ({ cognitiveShardingEngine }) => {
+                const pulse = message.payload as any;
+                cognitiveShardingEngine.ingestHealthSignal({
+                  deviceId: pulse.deviceId || message.source,
+                  battery: pulse.payload?.battery ?? -1,
+                  cpuLoad: pulse.payload?.cpuLoad ?? 30,
+                  signalStrength: pulse.payload?.signalStrength ?? 70,
+                  isActive: pulse.payload?.isActive ?? true,
+                  npuAvailable: pulse.payload?.npuAvailable ?? false,
+                  lastHeartbeat: Date.now(),
+                });
+              },
+            );
           }
         });
 
@@ -749,7 +816,12 @@ class LucaLinkService {
     }
 
     this.observeRuntimeEventForDiagnostics({
-      eventName: type === "SENSOR_PULSE" ? "SENSOR_PULSE" : type === "sync" ? "sync" : "message",
+      eventName:
+        type === "SENSOR_PULSE"
+          ? "SENSOR_PULSE"
+          : type === "sync"
+            ? "sync"
+            : "message",
       payload: message,
       sourceDeviceId: message.source,
       targetDeviceId: message.target,
@@ -764,7 +836,7 @@ class LucaLinkService {
    */
   syncMission(goldEgg: string): void {
     if (!this.socket || !this.state.connected) return;
-    
+
     console.log("[LucaLink] Broadcasting Mission State (Live-Wire Sync)");
     const syncMessage: LucaLinkMessage = {
       id: this.generateDeviceId(),
@@ -774,10 +846,10 @@ class LucaLinkService {
       timestamp: Date.now(),
       sync: {
         type: "mission",
-        data: goldEgg
-      }
+        data: goldEgg,
+      },
     };
-    
+
     this.observeRuntimeEventForDiagnostics({
       eventName: "sync",
       payload: syncMessage,
@@ -905,8 +977,9 @@ class LucaLinkService {
     return this.softEnforcementOptions.mode ?? "disabled";
   }
 
-
-  enableRuntimeEnforcement(mode: LucaLinkRuntimeEnforcementMode = "observe-only"): void {
+  enableRuntimeEnforcement(
+    mode: LucaLinkRuntimeEnforcementMode = "observe-only",
+  ): void {
     this.runtimeEnforcementMode = mode;
   }
 
@@ -921,7 +994,10 @@ class LucaLinkService {
   evaluateRuntimeEnforcement(
     input: LucaLinkRuntimeEnforcementInput,
   ): LucaLinkRuntimeEnforcementResult {
-    return this.evaluateRuntimeEnforcementWithMode(input, this.runtimeEnforcementMode);
+    return this.evaluateRuntimeEnforcementWithMode(
+      input,
+      this.runtimeEnforcementMode,
+    );
   }
 
   private evaluateRuntimeEnforcementForOutbound(
@@ -943,13 +1019,17 @@ class LucaLinkService {
       candidates: this.getRuntimeShadowCandidateManifests(),
       queueApproval: (_gateResult, context) => {
         const softEnforcement = context.softEnforcement;
-        if (!softEnforcement.requiresPrimaryHostApproval) return { warnings: [], errors: [] };
-        const queued = this.queueApprovalForSoftEnforcementResult(softEnforcement, {
-          eventName: input.eventName,
-          requestedByDeviceId: input.sourceDeviceId,
-          requestedTargetDeviceId: input.targetDeviceId,
-          payload: input.payload,
-        });
+        if (!softEnforcement.requiresPrimaryHostApproval)
+          return { warnings: [], errors: [] };
+        const queued = this.queueApprovalForSoftEnforcementResult(
+          softEnforcement,
+          {
+            eventName: input.eventName,
+            requestedByDeviceId: input.sourceDeviceId,
+            requestedTargetDeviceId: input.targetDeviceId,
+            payload: input.payload,
+          },
+        );
         return {
           request: queued.request ? { id: queued.request.id } : undefined,
           warnings: queued.warnings,
@@ -985,20 +1065,23 @@ class LucaLinkService {
   }
 
   getRuntimeEnforcementSummary(): LucaLinkRuntimeEnforcementAuditSummary {
-    return summarizeLucaLinkRuntimeEnforcementAudit(this.runtimeEnforcementAudit);
+    return summarizeLucaLinkRuntimeEnforcementAudit(
+      this.runtimeEnforcementAudit,
+    );
   }
 
   clearRuntimeEnforcementAudit(): void {
     this.runtimeEnforcementAudit = [];
   }
 
-  private recordRuntimeEnforcementAudit(result: LucaLinkRuntimeEnforcementResult): void {
+  private recordRuntimeEnforcementAudit(
+    result: LucaLinkRuntimeEnforcementResult,
+  ): void {
     this.runtimeEnforcementAudit = [
       ...this.runtimeEnforcementAudit,
       createLucaLinkRuntimeEnforcementAuditRecord(result),
     ].slice(-this.runtimeEnforcementAuditLimit);
   }
-
 
   getHandoffs(): LucaLinkHandoffRequest[] {
     return listLucaLinkHandoffs(this.handoffRegistry);
@@ -1019,20 +1102,29 @@ class LucaLinkService {
   private createAndRegisterHandoff(
     input: LucaLinkHandoffRequestInput,
   ): LucaLinkHandoffMutationResult {
-    const preview = input.payloadPreview ?? createLucaLinkHandoffPayloadPreview(input.payload, {
-      kind: input.kind,
-      summary: input.summary,
-    });
+    const preview =
+      input.payloadPreview ??
+      createLucaLinkHandoffPayloadPreview(input.payload, {
+        kind: input.kind,
+        summary: input.summary,
+      });
     const targetDevice = input.targetDeviceId
-      ? this.deviceTrustRegistry.devices.find((device) => device.deviceId === input.targetDeviceId)
+      ? this.deviceTrustRegistry.devices.find(
+          (device) => device.deviceId === input.targetDeviceId,
+        )
       : undefined;
     const sourceDevice = input.sourceDeviceId
-      ? this.deviceTrustRegistry.devices.find((device) => device.deviceId === input.sourceDeviceId)
+      ? this.deviceTrustRegistry.devices.find(
+          (device) => device.deviceId === input.sourceDeviceId,
+        )
       : undefined;
-    const initialRequest = createLucaLinkHandoffRequest({
-      ...input,
-      payloadPreview: preview,
-    }, { defaultTtlMs: this.handoffRegistry.defaultTtlMs });
+    const initialRequest = createLucaLinkHandoffRequest(
+      {
+        ...input,
+        payloadPreview: preview,
+      },
+      { defaultTtlMs: this.handoffRegistry.defaultTtlMs },
+    );
     const policy = evaluateLucaLinkHandoffPolicy({
       kind: initialRequest.kind,
       sourceDeviceId: initialRequest.sourceDeviceId,
@@ -1044,14 +1136,24 @@ class LucaLinkService {
       requestedByDeviceId: initialRequest.requestedByDeviceId,
     });
 
-    const request = createLucaLinkHandoffRequest({
-      ...initialRequest,
-      status: policy.blocked ? "blocked" : policy.requiresPrimaryHostApproval ? "pending" : "draft",
-      requiresPrimaryHostApproval: policy.requiresPrimaryHostApproval,
-      warnings: [...initialRequest.warnings, ...policy.warnings],
-      errors: [...initialRequest.errors, ...policy.errors],
-      reason: policy.explain,
-    }, { now: initialRequest.createdAt, defaultTtlMs: this.handoffRegistry.defaultTtlMs });
+    const request = createLucaLinkHandoffRequest(
+      {
+        ...initialRequest,
+        status: policy.blocked
+          ? "blocked"
+          : policy.requiresPrimaryHostApproval
+            ? "pending"
+            : "draft",
+        requiresPrimaryHostApproval: policy.requiresPrimaryHostApproval,
+        warnings: [...initialRequest.warnings, ...policy.warnings],
+        errors: [...initialRequest.errors, ...policy.errors],
+        reason: policy.explain,
+      },
+      {
+        now: initialRequest.createdAt,
+        defaultTtlMs: this.handoffRegistry.defaultTtlMs,
+      },
+    );
 
     if (policy.requiresPrimaryHostApproval) {
       const queued = enqueueLucaLinkApprovalRequest(this.approvalQueue, {
@@ -1066,7 +1168,8 @@ class LucaLinkService {
         risk: request.risk,
         title: `Approve ${request.kind.replace("-", " ")} handoff?`,
         summary: request.summary,
-        reason: "Primary Host approval is required before this LucaLink handoff can move forward.",
+        reason:
+          "Primary Host approval is required before this LucaLink handoff can move forward.",
         explain: policy.explain,
         payloadPreview: request.payloadPreview,
         envelopeId: request.id,
@@ -1080,63 +1183,124 @@ class LucaLinkService {
     return registerLucaLinkHandoff(this.handoffRegistry, request);
   }
 
-  createConversationHandoff(input: Parameters<typeof createConversationHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+  createConversationHandoff(
+    input: Parameters<typeof createConversationHandoffPayload>[0] &
+      Partial<LucaLinkHandoffRequestInput>,
+  ): LucaLinkHandoffMutationResult {
     const payload = createConversationHandoffPayload(input);
     return this.createAndRegisterHandoff({
       ...input,
       kind: "conversation",
       title: input.title ?? input.conversationTitle ?? "Conversation handoff",
-      summary: input.summary ?? "Continue this conversation on another trusted LucaLink device.",
+      summary:
+        input.summary ??
+        "Continue this conversation on another trusted LucaLink device.",
       payload,
     });
   }
 
-  createMemoryIntentHandoff(input: Parameters<typeof createMemoryIntentHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+  createMemoryIntentHandoff(
+    input: Parameters<typeof createMemoryIntentHandoffPayload>[0] &
+      Partial<LucaLinkHandoffRequestInput>,
+  ): LucaLinkHandoffMutationResult {
     const payload = createMemoryIntentHandoffPayload(input);
     return this.createAndRegisterHandoff({
       ...input,
       kind: "memory-intent",
       title: input.title ?? "Memory intent handoff",
-      summary: input.summary ?? "Intent-only memory namespace continuation; no raw memory database is transferred.",
+      summary:
+        input.summary ??
+        "Intent-only memory namespace continuation; no raw memory database is transferred.",
       payload,
       requiresPrimaryHostApproval: true,
     });
   }
 
-  createMissionHandoff(input: Parameters<typeof createMissionHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+  createMissionHandoff(
+    input: Parameters<typeof createMissionHandoffPayload>[0] &
+      Partial<LucaLinkHandoffRequestInput>,
+  ): LucaLinkHandoffMutationResult {
     const payload = createMissionHandoffPayload(input);
-    return this.createAndRegisterHandoff({ ...input, kind: "mission", title: input.title ?? input.missionTitle ?? "Mission handoff", payload, requiresPrimaryHostApproval: true });
+    return this.createAndRegisterHandoff({
+      ...input,
+      kind: "mission",
+      title: input.title ?? input.missionTitle ?? "Mission handoff",
+      payload,
+      requiresPrimaryHostApproval: true,
+    });
   }
 
-  createArtifactHandoff(input: Parameters<typeof createArtifactHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+  createArtifactHandoff(
+    input: Parameters<typeof createArtifactHandoffPayload>[0] &
+      Partial<LucaLinkHandoffRequestInput>,
+  ): LucaLinkHandoffMutationResult {
     const payload = createArtifactHandoffPayload(input);
-    return this.createAndRegisterHandoff({ ...input, kind: "artifact", title: input.title ?? "Artifact handoff", payload, requiresPrimaryHostApproval: true });
+    return this.createAndRegisterHandoff({
+      ...input,
+      kind: "artifact",
+      title: input.title ?? "Artifact handoff",
+      payload,
+      requiresPrimaryHostApproval: true,
+    });
   }
 
-  createSettingsContextHandoff(input: Parameters<typeof createSettingsContextHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+  createSettingsContextHandoff(
+    input: Parameters<typeof createSettingsContextHandoffPayload>[0] &
+      Partial<LucaLinkHandoffRequestInput>,
+  ): LucaLinkHandoffMutationResult {
     const payload = createSettingsContextHandoffPayload(input);
-    return this.createAndRegisterHandoff({ ...input, kind: "settings-context", title: input.title ?? "Settings context handoff", payload });
+    return this.createAndRegisterHandoff({
+      ...input,
+      kind: "settings-context",
+      title: input.title ?? "Settings context handoff",
+      payload,
+    });
   }
 
-  createModelContextHandoff(input: Parameters<typeof createModelContextHandoffPayload>[0] & Partial<LucaLinkHandoffRequestInput>): LucaLinkHandoffMutationResult {
+  createModelContextHandoff(
+    input: Parameters<typeof createModelContextHandoffPayload>[0] &
+      Partial<LucaLinkHandoffRequestInput>,
+  ): LucaLinkHandoffMutationResult {
     const payload = createModelContextHandoffPayload(input);
-    return this.createAndRegisterHandoff({ ...input, kind: "model-context", title: input.title ?? "Model context handoff", payload, requiresPrimaryHostApproval: true });
+    return this.createAndRegisterHandoff({
+      ...input,
+      kind: "model-context",
+      title: input.title ?? "Model context handoff",
+      payload,
+      requiresPrimaryHostApproval: true,
+    });
   }
 
-  approveHandoff(handoffId: string, options?: { now?: number; approvedByDeviceId?: string; reason?: string }): LucaLinkHandoffMutationResult {
+  approveHandoff(
+    handoffId: string,
+    options?: { now?: number; approvedByDeviceId?: string; reason?: string },
+  ): LucaLinkHandoffMutationResult {
     return approveLucaLinkHandoff(this.handoffRegistry, handoffId, options);
   }
 
-  declineHandoff(handoffId: string, options?: { now?: number; reason?: string }): LucaLinkHandoffMutationResult {
+  declineHandoff(
+    handoffId: string,
+    options?: { now?: number; reason?: string },
+  ): LucaLinkHandoffMutationResult {
     return declineLucaLinkHandoff(this.handoffRegistry, handoffId, options);
   }
 
-  cancelHandoff(handoffId: string, options?: { now?: number; reason?: string }): LucaLinkHandoffMutationResult {
+  cancelHandoff(
+    handoffId: string,
+    options?: { now?: number; reason?: string },
+  ): LucaLinkHandoffMutationResult {
     return cancelLucaLinkHandoff(this.handoffRegistry, handoffId, options);
   }
 
-  markHandoffAccepted(handoffId: string, options?: { now?: number; reason?: string }): LucaLinkHandoffMutationResult {
-    return markLucaLinkHandoffAccepted(this.handoffRegistry, handoffId, options);
+  markHandoffAccepted(
+    handoffId: string,
+    options?: { now?: number; reason?: string },
+  ): LucaLinkHandoffMutationResult {
+    return markLucaLinkHandoffAccepted(
+      this.handoffRegistry,
+      handoffId,
+      options,
+    );
   }
 
   getHandoff(handoffId: string): LucaLinkHandoffRequest | undefined {
@@ -1144,7 +1308,14 @@ class LucaLinkService {
   }
 
   getHandoffKinds(): LucaLinkHandoffKind[] {
-    return ["conversation", "memory-intent", "mission", "artifact", "settings-context", "model-context"];
+    return [
+      "conversation",
+      "memory-intent",
+      "mission",
+      "artifact",
+      "settings-context",
+      "model-context",
+    ];
   }
 
   getPendingApprovalRequests(): LucaLinkApprovalRequest[] {
@@ -1163,7 +1334,11 @@ class LucaLinkService {
     requestId: string,
     decision?: LucaLinkApprovalDecisionInput,
   ): LucaLinkApprovalMutationResult {
-    return approveLucaLinkApprovalRequest(this.approvalQueue, requestId, decision);
+    return approveLucaLinkApprovalRequest(
+      this.approvalQueue,
+      requestId,
+      decision,
+    );
   }
 
   denyApprovalRequest(
@@ -1177,7 +1352,11 @@ class LucaLinkService {
     requestId: string,
     decision?: LucaLinkApprovalDecisionInput,
   ): LucaLinkApprovalMutationResult {
-    return cancelLucaLinkApprovalRequest(this.approvalQueue, requestId, decision);
+    return cancelLucaLinkApprovalRequest(
+      this.approvalQueue,
+      requestId,
+      decision,
+    );
   }
 
   clearApprovalQueue(): LucaLinkApprovalMutationResult {
@@ -1200,7 +1379,9 @@ class LucaLinkService {
     return clearLucaLinkContinuationRegistry(this.continuationRegistry);
   }
 
-  createContinuationFromApprovalRequest(requestId: string): LucaLinkContinuationMutationResult {
+  createContinuationFromApprovalRequest(
+    requestId: string,
+  ): LucaLinkContinuationMutationResult {
     const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
     if (!request) {
       return {
@@ -1210,14 +1391,21 @@ class LucaLinkService {
       };
     }
 
-    return registerContinuationFromApprovalRequest(this.continuationRegistry, request);
+    return registerContinuationFromApprovalRequest(
+      this.continuationRegistry,
+      request,
+    );
   }
 
   validateContinuationToken(
     tokenId: string,
     context?: LucaLinkContinuationValidationContext,
   ): LucaLinkContinuationValidationResult {
-    return validateLucaLinkContinuationToken(this.continuationRegistry, tokenId, context);
+    return validateLucaLinkContinuationToken(
+      this.continuationRegistry,
+      tokenId,
+      context,
+    );
   }
 
   consumeContinuationToken(
@@ -1227,11 +1415,20 @@ class LucaLinkService {
       reason?: string;
     },
   ): LucaLinkContinuationMutationResult {
-    return consumeLucaLinkContinuationToken(this.continuationRegistry, tokenId, context);
+    return consumeLucaLinkContinuationToken(
+      this.continuationRegistry,
+      tokenId,
+      context,
+    );
   }
 
-  cancelContinuationToken(tokenId: string, reason?: string): LucaLinkContinuationMutationResult {
-    return cancelLucaLinkContinuationToken(this.continuationRegistry, tokenId, { reason });
+  cancelContinuationToken(
+    tokenId: string,
+    reason?: string,
+  ): LucaLinkContinuationMutationResult {
+    return cancelLucaLinkContinuationToken(this.continuationRegistry, tokenId, {
+      reason,
+    });
   }
 
   evaluateContinuationBridge(
@@ -1261,10 +1458,13 @@ class LucaLinkService {
       reason?: string;
     } = {},
   ): LucaLinkContinuationBridgeResult {
-    const prepared = prepareLucaLinkSafeContinuation(this.continuationRegistry, {
-      ...context,
-      tokenId,
-    });
+    const prepared = prepareLucaLinkSafeContinuation(
+      this.continuationRegistry,
+      {
+        ...context,
+        tokenId,
+      },
+    );
 
     if (!prepared.preparedAction) return prepared;
 
@@ -1319,8 +1519,13 @@ class LucaLinkService {
    * Enable diagnostics-only runtime shadow observations.
    * This does not change connection, pairing, guest, WebRTC, or message flow.
    */
-  enableRuntimeShadowDiagnostics(options: LucaLinkRuntimeShadowOptions = {}): void {
-    this.runtimeShadow = createLucaLinkRuntimeShadow({ ...options, enabled: true });
+  enableRuntimeShadowDiagnostics(
+    options: LucaLinkRuntimeShadowOptions = {},
+  ): void {
+    this.runtimeShadow = createLucaLinkRuntimeShadow({
+      ...options,
+      enabled: true,
+    });
   }
 
   /**
@@ -1355,7 +1560,12 @@ class LucaLinkService {
     displayName: string,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return renameTrustedDevice(this.deviceTrustRegistry, deviceId, displayName, options);
+    return renameTrustedDevice(
+      this.deviceTrustRegistry,
+      deviceId,
+      displayName,
+      options,
+    );
   }
 
   setTrustedDeviceTrustLevel(
@@ -1363,7 +1573,12 @@ class LucaLinkService {
     trustLevel: LucaLinkDeviceTrustLevel,
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
-    return setTrustedDeviceTrustLevel(this.deviceTrustRegistry, deviceId, trustLevel, options);
+    return setTrustedDeviceTrustLevel(
+      this.deviceTrustRegistry,
+      deviceId,
+      trustLevel,
+      options,
+    );
   }
 
   revokeTrustedDevice(
@@ -1385,6 +1600,164 @@ class LucaLinkService {
     options?: LucaLinkDeviceTrustMutationOptions,
   ): LucaLinkDeviceTrustMutationResult {
     return unblockTrustedDevice(this.deviceTrustRegistry, deviceId, options);
+  }
+
+  getHostConnections(
+    options: { refresh?: boolean } = {},
+  ): LucaLinkHostConnectionRecord[] {
+    if (options.refresh !== false) {
+      this.refreshHostConnectionsFromCurrentState();
+    }
+    return listLucaLinkHostConnections(this.hostConnectionRegistry);
+  }
+
+  getHostConnectionSummary(
+    options: { refresh?: boolean } = {},
+  ): LucaLinkHostConnectionRegistrySummary {
+    if (options.refresh !== false) {
+      this.refreshHostConnectionsFromCurrentState();
+    }
+    return summarizeLucaLinkHostConnectionRegistry(this.hostConnectionRegistry);
+  }
+
+  getFreshHostConnections(): LucaLinkHostConnectionRecord[] {
+    return this.getHostConnections({ refresh: true });
+  }
+
+  getFreshHostConnectionSummary(): LucaLinkHostConnectionRegistrySummary {
+    return this.getHostConnectionSummary({ refresh: true });
+  }
+
+  clearHostConnections(): void {
+    clearLucaLinkHostConnectionRegistry(this.hostConnectionRegistry);
+  }
+
+  refreshHostConnectionsFromCurrentState(): LucaLinkHostConnectionRecord[] {
+    const now = Date.now();
+    const trustedDevices = listTrustedDevices(this.deviceTrustRegistry);
+    const trustByDeviceId = new Map(
+      trustedDevices.map((device) => [device.deviceId, device]),
+    );
+
+    this.state.connectedDevices.forEach((device) => {
+      const trusted = trustByDeviceId.get(device.deviceId);
+      upsertLucaLinkHostConnection(
+        this.hostConnectionRegistry,
+        {
+          id: device.deviceId,
+          deviceId: device.deviceId,
+          displayName: trusted?.displayName ?? device.name,
+          deviceType: trusted?.deviceType ?? device.type,
+          trustLevel: trusted?.trustLevel,
+          deviceRole: trusted?.role,
+          status: trusted?.status ?? "connected",
+          capabilities: trusted?.capabilities,
+          isCurrentPrimaryHost: device.deviceId === this.state.deviceId,
+          lastSeenAt: device.lastSeen,
+          connectionEvidence: [
+            "Derived from current LucaLink connected device state.",
+          ],
+        },
+        { now },
+      );
+    });
+
+    trustedDevices.forEach((device) => {
+      upsertLucaLinkHostConnection(
+        this.hostConnectionRegistry,
+        {
+          id: device.deviceId,
+          deviceId: device.deviceId,
+          displayName: device.displayName,
+          deviceType: device.deviceType,
+          trustLevel: device.trustLevel,
+          deviceRole: device.role,
+          status: device.status,
+          capabilities: device.capabilities,
+          isCurrentPrimaryHost: device.deviceId === this.state.deviceId,
+          lastSeenAt: device.lastSeenAt,
+          connectionEvidence: [
+            "Derived from local LucaLink device trust registry.",
+          ],
+        },
+        { now },
+      );
+    });
+
+    this.guestSecuritySessions.forEach((session) => {
+      upsertLucaLinkHostConnection(
+        this.hostConnectionRegistry,
+        {
+          id: session.sessionId,
+          deviceId: session.sessionId,
+          displayName: `Guest session ${session.sessionId}`,
+          deviceType: "guest web browser",
+          trustLevel: "guest",
+          deviceRole: "guest",
+          status: session.status,
+          lastSeenAt: session.lastSeenAt,
+          connectionEvidence: [
+            "Derived from local guest security session state.",
+          ],
+        },
+        { now },
+      );
+    });
+
+    if (
+      this.state.deviceId &&
+      !this.hostConnectionRegistry.records.some(
+        (record) => record.deviceId === this.state.deviceId,
+      )
+    ) {
+      upsertLucaLinkHostConnection(
+        this.hostConnectionRegistry,
+        {
+          id: this.state.deviceId,
+          deviceId: this.state.deviceId,
+          displayName: "Current Primary Host",
+          deviceType: "desktop primary host",
+          trustLevel: "owner",
+          deviceRole: "primary-host",
+          status: this.state.connected ? "connected" : "known",
+          isCurrentPrimaryHost: true,
+          connectionEvidence: [
+            "Derived from current LucaLink service identity.",
+          ],
+        },
+        { now },
+      );
+    }
+
+    return listLucaLinkHostConnections(this.hostConnectionRegistry);
+  }
+
+  diagnoseHostConnection(
+    input: LucaLinkHostDiagnosisInput,
+  ): LucaLinkHostConnectionDiagnosis {
+    return createLucaLinkHostConnectionDiagnosis(input);
+  }
+
+  planHostBridgeStrategies(
+    input: LucaLinkHostConnectionDiagnosis | LucaLinkHostDiagnosisInput,
+  ): LucaLinkHostBridgeStrategyPlan[] {
+    const diagnosis =
+      "detectedRuntimeSurfaces" in input
+        ? input
+        : createLucaLinkHostConnectionDiagnosis(input);
+    return planLucaLinkHostBridgeStrategies(diagnosis);
+  }
+
+  createHostBridgeBlueprint(
+    input: LucaLinkHostBridgeStrategyPlan | LucaLinkHostBridgeStrategyKind,
+  ): LucaLinkHostBridgeBlueprint {
+    return createLucaLinkHostBridgeBlueprint(input);
+  }
+
+  createHostConnectionRecord(
+    input: LucaLinkHostConnectionInput,
+  ): LucaLinkHostConnectionRecord {
+    return createLucaLinkHostConnectionRecord(input);
   }
 
   getRuntimeShadowObservations(): LucaLinkRuntimeObservation[] {
@@ -1428,15 +1801,28 @@ class LucaLinkService {
 
   private updateState(partial: Partial<LucaLinkState>): void {
     if (partial.connectedDevices) {
-      this.syncDeviceTrustRegistryFromConnectedDevices(partial.connectedDevices);
-      const connectedIds = new Set(partial.connectedDevices.map((device) => device.deviceId));
+      this.syncDeviceTrustRegistryFromConnectedDevices(
+        partial.connectedDevices,
+      );
+      const connectedIds = new Set(
+        partial.connectedDevices.map((device) => device.deviceId),
+      );
       this.deviceTrustRegistry.devices.forEach((device) => {
-        if (device.status === "connected" && !connectedIds.has(device.deviceId)) {
-          markTrustedDeviceDisconnected(this.deviceTrustRegistry, device.deviceId);
+        if (
+          device.status === "connected" &&
+          !connectedIds.has(device.deviceId)
+        ) {
+          markTrustedDeviceDisconnected(
+            this.deviceTrustRegistry,
+            device.deviceId,
+          );
         }
       });
     }
     this.state = { ...this.state, ...partial };
+    if (partial.connectedDevices) {
+      this.refreshHostConnectionsFromCurrentState();
+    }
     this.stateListeners.forEach((listener) => listener(this.state));
   }
 
@@ -1453,14 +1839,26 @@ class LucaLinkService {
       status,
       isCurrentPrimaryHost,
     });
-    if (status === "connected" && record.status !== "revoked" && record.status !== "blocked") {
-      markTrustedDeviceConnected(this.deviceTrustRegistry, device.deviceId, { now: device.lastSeen || Date.now() });
+    if (
+      status === "connected" &&
+      record.status !== "revoked" &&
+      record.status !== "blocked"
+    ) {
+      markTrustedDeviceConnected(this.deviceTrustRegistry, device.deviceId, {
+        now: device.lastSeen || Date.now(),
+      });
     }
   }
 
-  private syncDeviceTrustRegistryFromConnectedDevices(devices: LucaLinkDevice[]): void {
+  private syncDeviceTrustRegistryFromConnectedDevices(
+    devices: LucaLinkDevice[],
+  ): void {
     devices.forEach((device) => {
-      this.upsertDeviceTrustFromRuntimeDevice(device, device.deviceId === this.state.deviceId, "connected");
+      this.upsertDeviceTrustFromRuntimeDevice(
+        device,
+        device.deviceId === this.state.deviceId,
+        "connected",
+      );
     });
   }
 
@@ -1473,7 +1871,8 @@ class LucaLinkService {
   private guestMessageHandler:
     | ((sessionId: string, message: string) => void)
     | null = null;
-  private guestSecuritySessions: Map<string, LucaLinkGuestSessionRecord> = new Map();
+  private guestSecuritySessions: Map<string, LucaLinkGuestSessionRecord> =
+    new Map();
   private guestInboundAudit: LucaLinkGuestInboundResult[] = [];
   private readonly guestInboundAuditLimit = 100;
 
@@ -1493,22 +1892,27 @@ class LucaLinkService {
     this.guestInboundAudit = [];
   }
 
-  private evaluateGuestInbound(input: LucaLinkGuestInboundInput): LucaLinkGuestInboundResult {
+  private evaluateGuestInbound(
+    input: LucaLinkGuestInboundInput,
+  ): LucaLinkGuestInboundResult {
     const sessionId = input.sessionId;
-    let session = sessionId ? this.guestSecuritySessions.get(sessionId) : undefined;
+    let session = sessionId
+      ? this.guestSecuritySessions.get(sessionId)
+      : undefined;
     if (sessionId && !session) {
       session = createLucaLinkGuestSession(sessionId, { now: input.now });
       this.guestSecuritySessions.set(sessionId, session);
     }
 
-    const result = evaluateLucaLinkGuestInbound(input, session, { now: input.now });
+    const result = evaluateLucaLinkGuestInbound(input, session, {
+      now: input.now,
+    });
     if (sessionId && result.updatedSession) {
       this.guestSecuritySessions.set(sessionId, result.updatedSession);
     }
-    this.guestInboundAudit = [
-      ...this.guestInboundAudit,
-      result,
-    ].slice(-this.guestInboundAuditLimit);
+    this.guestInboundAudit = [...this.guestInboundAudit, result].slice(
+      -this.guestInboundAuditLimit,
+    );
     return result;
   }
 
@@ -1733,7 +2137,9 @@ class LucaLinkService {
           console.log(
             `[LucaLink] PIN required for session ${data.sessionId}, sending challenge`,
           );
-          const securitySession = this.guestSecuritySessions.get(data.sessionId);
+          const securitySession = this.guestSecuritySessions.get(
+            data.sessionId,
+          );
           if (securitySession) {
             this.guestSecuritySessions.set(
               data.sessionId,
@@ -1889,7 +2295,9 @@ class LucaLinkService {
                   console.log(
                     `[LucaLink] PIN correct for ${data.sessionId}. starting session.`,
                   );
-                  const securitySession = this.guestSecuritySessions.get(data.sessionId);
+                  const securitySession = this.guestSecuritySessions.get(
+                    data.sessionId,
+                  );
                   if (securitySession) {
                     this.guestSecuritySessions.set(
                       data.sessionId,
@@ -2051,16 +2459,19 @@ class LucaLinkService {
     let isSecure = false;
 
     try {
-      const sessionData = await sessionManager.recoverSessionByDevice(targetDeviceId);
+      const sessionData =
+        await sessionManager.recoverSessionByDevice(targetDeviceId);
       if (sessionData) {
         console.log(`[LucaLink] 🔐 Vaulting Neural Packet with AES-256-GCM...`);
         finalPayload = await CryptoService.createSecureMessage(
           packet.payload,
-          sessionData.sharedSecret
+          sessionData.sharedSecret,
         );
         isSecure = true;
       } else {
-        console.warn(`[LucaLink] ⚠️ No secure session for ${targetDeviceId}. Sending Naked Transmission.`);
+        console.warn(
+          `[LucaLink] ⚠️ No secure session for ${targetDeviceId}. Sending Naked Transmission.`,
+        );
       }
     } catch (e) {
       console.error("[LucaLink] ❌ Cryptographic Failure during beam prep:", e);
@@ -2087,7 +2498,12 @@ class LucaLinkService {
       };
 
       this.observeRuntimeEventForDiagnostics({
-        eventName: packet.type === "SENSOR_PULSE" ? "SENSOR_PULSE" : packet.type === "sync" ? "sync" : "message",
+        eventName:
+          packet.type === "SENSOR_PULSE"
+            ? "SENSOR_PULSE"
+            : packet.type === "sync"
+              ? "sync"
+              : "message",
         payload: message,
         sourceDeviceId: message.source,
         targetDeviceId: message.target,
