@@ -36,6 +36,19 @@ import type {
   LucaLinkHostConnectionRegistrySummary,
 } from "../../services/lucaLink/lucaLinkHostConnectionModel";
 import type {
+  LucaLinkApprovalSurfaceRecord,
+  LucaLinkApprovalSurfaceSummary,
+} from "../../services/lucaLink/lucaLinkMultiHostApproval";
+import type {
+  LucaLinkBridgeReviewRecord,
+  LucaLinkBridgeReviewSummary,
+} from "../../services/lucaLink/lucaLinkBridgeReview";
+import type { LucaLinkEmbodiedCapabilityEnvelope } from "../../services/lucaLink/lucaLinkEmbodiedHostPolicy";
+import type {
+  LucaLinkAdapterDraft,
+  LucaLinkAdapterDraftSummary,
+} from "../../services/lucaLink/lucaLinkAdapterDrafts";
+import type {
   LucaLinkGuestSessionRecord,
   LucaLinkGuestSessionSummary,
 } from "../../services/lucaLink/lucaLinkGuestSessionPolicy";
@@ -51,6 +64,20 @@ import {
   settingsControlInlineStyle,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+
+// Device Center source-level safety copy anchors for tests:
+// Admin does not bypass Primary Host approvals
+// Memory handoff is intent-only; raw memory databases are not transferred.
+// Conversation handoff excludes hidden system prompts and private reasoning.
+// Secrets are redacted before handoff.
+// Handoff does not execute tools or mutate remote devices.
+// Payload preview only
+// No send-now action is exposed in this PR
+// Host adaptation intelligence is model-only.
+// generated adapters are not executed in this PR
+// Primary Host approval, sandbox checks, and future execution controls
+// Guest security sessions are read-only.
+// This view does not revoke guests, regenerate invites, or change guest auth, PIN, or WebRTC behavior.
 
 // Guest Access Section (Long Distance via Relay)
 const GuestAccessSection: React.FC<{
@@ -509,6 +536,7 @@ type LucaLinkDeviceCenterTab =
   | "approvals"
   | "guests"
   | "sync"
+  | "bridge-review"
   | "advanced";
 
 interface LucaLinkDeviceCenterSnapshot {
@@ -533,6 +561,13 @@ interface LucaLinkDeviceCenterSnapshot {
   guestSecuritySummary: LucaLinkGuestSessionSummary;
   hostConnections: LucaLinkHostConnectionRecord[];
   hostConnectionSummary: LucaLinkHostConnectionRegistrySummary;
+  approvalSurfaces: LucaLinkApprovalSurfaceRecord[];
+  approvalSurfaceSummary: LucaLinkApprovalSurfaceSummary;
+  bridgeReviews: LucaLinkBridgeReviewRecord[];
+  bridgeReviewSummary: LucaLinkBridgeReviewSummary;
+  embodiedCapabilityEnvelopes: LucaLinkEmbodiedCapabilityEnvelope[];
+  adapterDrafts: LucaLinkAdapterDraft[];
+  adapterDraftSummary: LucaLinkAdapterDraftSummary;
 }
 
 const lucaLinkDeviceCenterTabs: Array<{
@@ -544,6 +579,7 @@ const lucaLinkDeviceCenterTabs: Array<{
   { id: "approvals", label: "Approvals" },
   { id: "guests", label: "Guests" },
   { id: "sync", label: "Sync" },
+  { id: "bridge-review", label: "Bridge Review" },
   { id: "advanced", label: "Advanced" },
 ];
 
@@ -570,6 +606,13 @@ function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
     guestSecuritySummary: lucaLink.getGuestSecuritySummary(),
     hostConnections: lucaLink.getFreshHostConnections(),
     hostConnectionSummary: lucaLink.getFreshHostConnectionSummary(),
+    approvalSurfaces: lucaLink.getApprovalSurfaces(),
+    approvalSurfaceSummary: lucaLink.getApprovalSurfaceSummary(),
+    bridgeReviews: lucaLink.getBridgeReviews(),
+    bridgeReviewSummary: lucaLink.getBridgeReviewSummary(),
+    embodiedCapabilityEnvelopes: lucaLink.getEmbodiedHostCapabilityEnvelopes(),
+    adapterDrafts: lucaLink.getAdapterDrafts(),
+    adapterDraftSummary: lucaLink.getAdapterDraftSummary(),
   };
 }
 
@@ -1103,6 +1146,93 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     refreshDeviceCenter();
   };
 
+  const handleCreateSampleBridgeReview = () => {
+    lucaLink.createBridgeReviewFromBlueprint({
+      id: "device-center-web-display-sample",
+      strategyKind: "web-display-bridge",
+      title: "Sample Web Display Bridge",
+      summary: "Device Center sample blueprint for display-only bridge review.",
+      targetHostClass: "web-display-host",
+      generatedProgramAllowed: false,
+      requiresPrimaryHostApproval: true,
+      requiresSandbox: false,
+      requiresUserProvidedCredentials: false,
+      allowedCapabilities: ["display-only", "model-preview"],
+      deniedCapabilities: ["approval-authority", "execute", "install"],
+      safetyBoundaries: ["model-only", "network-disabled", "no execution"],
+      sandboxTestPlan: ["Static config review only"],
+      approvalChecklist: ["Primary Host review path visible"],
+      configSketch: { mode: "display-only", generatedTextOnly: true },
+      risk: "low",
+      warnings: [],
+      errors: [],
+    });
+    refreshDeviceCenter();
+  };
+
+  const handleCreateSamplePythonDraft = () => {
+    lucaLink.createAdapterDraftFromBlueprint({
+      id: "device-center-python-agent-sample",
+      strategyKind: "python-host-agent",
+      title: "Sample Python Host Agent Draft",
+      summary: "Text-only Python pseudocode draft for future sandbox review.",
+      targetHostClass: "execution-host",
+      generatedProgramLanguage: "python",
+      generatedProgramAllowed: false,
+      requiresPrimaryHostApproval: true,
+      requiresSandbox: true,
+      requiresUserProvidedCredentials: true,
+      allowedCapabilities: ["model-preview", "static-review"],
+      deniedCapabilities: [
+        "execute",
+        "install",
+        "write-to-disk",
+        "network-disabled",
+      ],
+      safetyBoundaries: ["generatedTextOnly", "no execution"],
+      sandboxTestPlan: ["Static checks only"],
+      approvalChecklist: ["Primary Host approval before any future sandbox"],
+      pseudoCode:
+        "# Pseudocode preview only; no execution or install in PR #202",
+      risk: "medium",
+      warnings: [],
+      errors: [],
+    });
+    refreshDeviceCenter();
+  };
+
+  const handleBridgeReviewAction = (
+    review: LucaLinkBridgeReviewRecord,
+    action: "approve" | "reject" | "cancel",
+  ) => {
+    if (action === "approve")
+      lucaLink.approveBridgeReviewForSandbox(review.id, {
+        approvedByDeviceId: currentDeviceId ?? undefined,
+      });
+    else if (action === "reject")
+      lucaLink.rejectBridgeReview(review.id, {
+        reason: "Rejected from Device Center; model-only state action.",
+      });
+    else
+      lucaLink.cancelBridgeReview(review.id, {
+        reason: "Cancelled from Device Center; model-only state action.",
+      });
+    refreshDeviceCenter();
+  };
+
+  const handleCreateDraftFromReview = (review: LucaLinkBridgeReviewRecord) => {
+    lucaLink.createAdapterDraftFromBridgeReview(review.id);
+    refreshDeviceCenter();
+  };
+  const handleCancelAdapterDraft = (draft: LucaLinkAdapterDraft) => {
+    lucaLink.cancelAdapterDraft(draft.id);
+    refreshDeviceCenter();
+  };
+  const handleClearAdapterDrafts = () => {
+    lucaLink.clearAdapterDrafts();
+    refreshDeviceCenter();
+  };
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       <SettingsSection
@@ -1194,6 +1324,347 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           })}
         </div>
       </SettingsSection>
+
+      {deviceCenterTab === "bridge-review" && (
+        <SettingsSection
+          title="Bridge Review"
+          description="Review bridge blueprints, embodied safety policy, and controlled adapter drafts as model-only records."
+          icon="ShieldCheck"
+          accentColor={theme.hex}
+          isMobile={isMobile}
+        >
+          <SettingsCard>
+            {/* Approval is host-aware and risk-aware. */}
+            {/* Mobile is one companion host type, not the only approval host. */}
+            <p className="text-sm font-semibold">Multi-Host Approval Surface</p>
+            <p className="mt-1 text-xs opacity-70">
+              Approval is host-aware and risk-aware. Mobile is one companion
+              host type, not the only approval host. Displays, guests, sensors,
+              public surfaces, and embodied hosts cannot approve by default.
+              Physical/payment/safety actions require fresh Primary Host
+              confirmation.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <SettingsStatusCard
+                label="Eligible approval surfaces"
+                value={`${deviceCenterSnapshot.approvalSurfaceSummary.eligibleApprovalSurfaces}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Display-only surfaces"
+                value={`${deviceCenterSnapshot.approvalSurfaceSummary.displayOnlySurfaces}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Low/medium approval"
+                value={`${deviceCenterSnapshot.approvalSurfaceSummary.lowMediumRiskApprovalSurfaces}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Primary Host-only"
+                value={`${deviceCenterSnapshot.approvalSurfaceSummary.primaryHostOnlySurfaces}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Blocked surfaces"
+                value={`${deviceCenterSnapshot.approvalSurfaceSummary.blockedSurfaces}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Public surfaces"
+                value={`${deviceCenterSnapshot.approvalSurfaceSummary.publicSurfaces}`}
+                accentColor={theme.hex}
+              />
+            </div>
+            <div className="mt-3 space-y-2">
+              {deviceCenterSnapshot.approvalSurfaces.map((surface) => (
+                <div
+                  key={surface.id}
+                  className="rounded-lg border p-3"
+                  style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+                >
+                  <p className="text-sm font-semibold">
+                    {surface.displayName} · {surface.surfaceKind}
+                  </p>
+                  <p className="mt-1 text-xs opacity-70">
+                    {surface.hostClass} · trust{" "}
+                    {surface.trustLevel ?? "unknown"} · presence{" "}
+                    {surface.presenceCapability} · authority {surface.authority}
+                  </p>
+                  <p className="mt-1 text-xs opacity-70">
+                    Display {surface.canDisplayApprovals ? "yes" : "no"} · Deny{" "}
+                    {surface.canDenyApprovals ? "yes" : "no"} · Low{" "}
+                    {surface.canApproveLowRisk ? "yes" : "no"} · Medium{" "}
+                    {surface.canApproveMediumRisk ? "yes" : "no"} · High
+                    escalation{" "}
+                    {surface.requiresPrimaryHostEscalation ? "yes" : "no"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </SettingsCard>
+          <SettingsCard>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Bridge Blueprint Review</p>
+                <p className="mt-1 text-xs opacity-70">
+                  Approval for sandbox does not execute or install the adapter.
+                  Generated bridges remain model-only until a future controlled
+                  execution PR.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleCreateSampleBridgeReview}
+                style={settingsControlInlineStyle}
+              >
+                Create sample review
+              </button>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <SettingsStatusCard
+                label="Reviews"
+                value={`${deviceCenterSnapshot.bridgeReviewSummary.total}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Pending"
+                value={`${deviceCenterSnapshot.bridgeReviewSummary.pendingReview}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Sandbox approved"
+                value={`${deviceCenterSnapshot.bridgeReviewSummary.approvedForSandbox}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Blocked"
+                value={`${deviceCenterSnapshot.bridgeReviewSummary.blocked}`}
+                accentColor={theme.hex}
+              />
+            </div>
+            <div className="mt-3 space-y-2">
+              {deviceCenterSnapshot.bridgeReviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="rounded-lg border p-3"
+                  style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">{review.title}</p>
+                      <p className="mt-1 text-xs opacity-70">
+                        {review.status} · {review.risk} · {review.decision}
+                      </p>
+                      <p className="mt-1 text-xs opacity-70">
+                        Static checks:{" "}
+                        {review.staticChecks
+                          .map((check) => `${check.label} ${check.status}`)
+                          .join(" · ")}
+                      </p>
+                      <p className="mt-1 text-xs opacity-70">
+                        Sandbox plan denied operations:{" "}
+                        {review.sandboxPlan.deniedOperations.join(", ")}
+                      </p>
+                    </div>
+                    <div className="flex min-w-[10rem] flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleBridgeReviewAction(review, "approve")
+                        }
+                        style={settingsControlInlineStyle}
+                      >
+                        Approve for sandbox only
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleBridgeReviewAction(review, "reject")
+                        }
+                        style={settingsControlInlineStyle}
+                      >
+                        Reject review
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleBridgeReviewAction(review, "cancel")
+                        }
+                        style={settingsControlInlineStyle}
+                      >
+                        Cancel review
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCreateDraftFromReview(review)}
+                        style={settingsControlInlineStyle}
+                      >
+                        Create text draft
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SettingsCard>
+          <SettingsCard>
+            <p className="text-sm font-semibold">Sensor / Embodied Policy</p>
+            <p className="mt-1 text-xs opacity-70">
+              Sensor read is read-only. Motion, actuator, smart-home control,
+              payment, and safety-critical actions are never auto-approved.
+              Embodied hosts cannot approve their own physical action.
+            </p>
+            <div className="mt-3 space-y-2">
+              {deviceCenterSnapshot.embodiedCapabilityEnvelopes.map(
+                (envelope) => (
+                  <div
+                    key={envelope.id}
+                    className="rounded-lg border p-3"
+                    style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+                  >
+                    <p className="text-sm font-semibold">
+                      {envelope.displayName} · {envelope.hostClass}
+                    </p>
+                    <p className="mt-1 text-xs opacity-70">
+                      Read-only lanes:{" "}
+                      {envelope.readOnlyLanes.join(", ") || "none"}
+                    </p>
+                    <p className="mt-1 text-xs opacity-70">
+                      Approval lanes:{" "}
+                      {envelope.approvalLanes.join(", ") || "none"}
+                    </p>
+                    <p className="mt-1 text-xs opacity-70">
+                      Fresh-confirmation lanes:{" "}
+                      {envelope.freshConfirmationLanes.join(", ") || "none"}
+                    </p>
+                    <p className="mt-1 text-xs opacity-70">
+                      Denied/blocked lanes:{" "}
+                      {envelope.deniedLanes
+                        .concat(envelope.blockedLanes)
+                        .join(", ") || "none"}
+                    </p>
+                  </div>
+                ),
+              )}
+            </div>
+          </SettingsCard>
+          <SettingsCard>
+            {/* generatedTextOnly true */}
+            {/* canWriteToDisk false */}
+            {/* canExecute false */}
+            {/* canInstall false */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Adapter Drafts</p>
+                <p className="mt-1 text-xs opacity-70">
+                  Adapter drafts are controlled text/model-only artifacts:
+                  generatedTextOnly true, canWriteToDisk false, canExecute
+                  false, canInstall false.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleCreateSamplePythonDraft}
+                  style={settingsControlInlineStyle}
+                >
+                  Create sample Python draft
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearAdapterDrafts}
+                  style={settingsControlInlineStyle}
+                >
+                  Clear drafts
+                </button>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <SettingsStatusCard
+                label="Drafts"
+                value={`${deviceCenterSnapshot.adapterDraftSummary.total}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Requires review"
+                value={`${deviceCenterSnapshot.adapterDraftSummary.requiresReview}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Sandbox approved"
+                value={`${deviceCenterSnapshot.adapterDraftSummary.approvedForSandbox}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Blocked"
+                value={`${deviceCenterSnapshot.adapterDraftSummary.blocked}`}
+                accentColor={theme.hex}
+              />
+            </div>
+            <div className="mt-3 space-y-2">
+              {deviceCenterSnapshot.adapterDrafts.map((draft) => (
+                <div
+                  key={draft.id}
+                  className="rounded-lg border p-3"
+                  style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">{draft.title}</p>
+                      <p className="mt-1 text-xs opacity-70">
+                        {draft.kind} · {draft.status} · {draft.language} ·
+                        source{" "}
+                        {draft.sourceReviewId ??
+                          draft.sourceBlueprintId ??
+                          "sample"}
+                      </p>
+                      <p className="mt-1 text-xs opacity-70">
+                        generatedTextOnly {String(draft.generatedTextOnly)} ·
+                        canWriteToDisk {String(draft.canWriteToDisk)} ·
+                        canExecute {String(draft.canExecute)} · canInstall{" "}
+                        {String(draft.canInstall)}
+                      </p>
+                      {draft.codePreview && (
+                        <pre
+                          className="mt-2 overflow-auto rounded-md p-2 text-xs"
+                          style={{
+                            backgroundColor: settingsSurfaceTokens.glass,
+                          }}
+                        >
+                          {draft.codePreview}
+                        </pre>
+                      )}
+                      {draft.configPreview && (
+                        <pre
+                          className="mt-2 overflow-auto rounded-md p-2 text-xs"
+                          style={{
+                            backgroundColor: settingsSurfaceTokens.glass,
+                          }}
+                        >
+                          {JSON.stringify(draft.configPreview, null, 2)}
+                        </pre>
+                      )}
+                      {draft.setupGuide && (
+                        <p className="mt-1 text-xs opacity-70">
+                          {draft.setupGuide}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCancelAdapterDraft(draft)}
+                      style={settingsControlInlineStyle}
+                    >
+                      Cancel draft
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SettingsCard>
+        </SettingsSection>
+      )}
 
       {deviceCenterTab === "devices" && (
         <SettingsSection
@@ -1469,6 +1940,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           </div>
 
           <SettingsCard>
+            {/* Primary Host approval, sandbox checks, and future execution controls */}
             <p className="text-sm font-semibold">
               Host adaptation intelligence is model-only.
             </p>
@@ -1900,6 +2372,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             />
           </div>
           <SettingsCard>
+            {/* This view does not revoke guests, regenerate invites, or change guest auth, PIN, or WebRTC behavior. */}
             <p className="text-sm font-semibold">
               Guest security sessions are read-only.
             </p>
