@@ -97,11 +97,7 @@ export const lucaLinkHostRoles: readonly LucaLinkHostRole[] = Object.freeze([
     summary:
       "A camera/mic/location/watch/IoT node that feeds perception into Luca. Read-mostly; should not hold tool authority.",
     typicalDevices: ["watch", "iot", "speaker", "camera"],
-    expectedCapabilities: [
-      "voice.capture",
-      "camera.capture",
-      "location.read",
-    ],
+    expectedCapabilities: ["voice.capture", "camera.capture", "location.read"],
     ownsMemoryAuthority: false,
     canExecuteDangerousTools: false,
   },
@@ -160,43 +156,45 @@ export interface LucaLinkTrustLevel {
   summary: string;
 }
 
-export const lucaLinkTrustLevels: readonly LucaLinkTrustLevel[] = Object.freeze([
-  {
-    id: "guest",
-    label: "Guest",
-    rank: 0,
-    summary:
-      "Temporary, least-privilege session. No memory write, no tool execution, time-limited.",
-  },
-  {
-    id: "paired",
-    label: "Paired",
-    rank: 1,
-    summary:
-      "A device that completed pairing but has not earned elevated trust. Basic chat/presence only.",
-  },
-  {
-    id: "trusted",
-    label: "Trusted",
-    rank: 2,
-    summary:
-      "A known device approved by the Primary Host for richer sync (memory read, settings sync, sensor input).",
-  },
-  {
-    id: "admin",
-    label: "Admin",
-    rank: 3,
-    summary:
-      "A trusted host explicitly granted high-risk capabilities (tool/code/shell) under policy.",
-  },
-  {
-    id: "owner",
-    label: "Owner",
-    rank: 4,
-    summary:
-      "Owner-level authority inside the user's LucaLink mesh. Can approve or revoke mesh hosts, but is not Creator/Origin source-code authority.",
-  },
-] as const);
+export const lucaLinkTrustLevels: readonly LucaLinkTrustLevel[] = Object.freeze(
+  [
+    {
+      id: "guest",
+      label: "Guest",
+      rank: 0,
+      summary:
+        "Temporary, least-privilege session. No memory write, no tool execution, time-limited.",
+    },
+    {
+      id: "paired",
+      label: "Paired",
+      rank: 1,
+      summary:
+        "A device that completed pairing but has not earned elevated trust. Basic chat/presence only.",
+    },
+    {
+      id: "trusted",
+      label: "Trusted",
+      rank: 2,
+      summary:
+        "A known device approved by the Primary Host for richer sync (memory read, settings sync, sensor input).",
+    },
+    {
+      id: "admin",
+      label: "Admin",
+      rank: 3,
+      summary:
+        "A trusted host explicitly granted high-risk capabilities (tool/code/shell) under policy.",
+    },
+    {
+      id: "owner",
+      label: "Owner",
+      rank: 4,
+      summary:
+        "Owner-level authority inside the user's LucaLink mesh. Can approve or revoke mesh hosts, but is not Creator/Origin source-code authority.",
+    },
+  ] as const,
+);
 
 // ===========================================================================
 // Permission Categories
@@ -506,107 +504,150 @@ export interface LucaLinkTargetComponent {
   buildsOn: string[];
 }
 
-export const lucaLinkTargetComponents: readonly LucaLinkTargetComponent[] = Object.freeze([
-  {
-    id: "transport",
-    label: "LucaLink Transport",
-    summary:
-      "Pluggable transport manager over local LAN, relay, VPN, and WebRTC with consistent semantics.",
-    buildsOn: [
-      "src/services/lucaLinkService.ts",
-      "src/services/lucaLink/secureSocket.ts",
-      "relay-server/index.js",
-    ],
-  },
-  {
-    id: "identity",
-    label: "LucaLink Identity",
-    summary:
-      "Stable per-host identity: device ID, Ed25519 identity keys, and signed host manifests.",
-    buildsOn: [
-      "src/services/lucaLink/crypto.ts",
-      "src/services/lucaLinkService.ts",
-    ],
-  },
-  {
-    id: "host-registry",
-    label: "LucaLink Host Registry",
-    summary:
-      "Authoritative registry of known hosts, roles, capabilities, and last-seen state.",
-    buildsOn: ["src/services/lucaLink/deviceRegistry.ts"],
-  },
-  {
-    id: "trust-policy",
-    label: "LucaLink Trust Policy",
-    summary:
-      "Maps trust levels + roles to allowed permission categories per host.",
-    buildsOn: ["src/services/lucaLink/deviceRegistry.ts"],
-  },
-  {
-    id: "sync-lanes",
-    label: "LucaLink Sync Lanes",
-    summary:
-      "Typed, permissioned channels (identity/presence/conversation/memory/etc.) over the transport.",
-    buildsOn: ["src/services/lucaLinkService.ts"],
-  },
-  {
-    id: "host-router",
-    label: "LucaLink Host Router",
-    summary:
-      "Decides which host should execute a given task using a capability/trust/cost scoring model.",
-    buildsOn: ["src/services/lucaLink/deviceRegistry.ts"],
-  },
-  {
-    id: "memory-handoff",
-    label: "LucaLink Memory / Conversation Handoff",
-    summary:
-      "Moves active conversation and relevant memory between hosts with conflict handling.",
-    buildsOn: [
-      "src/services/lucaLink/sessionManager.ts",
-      "src/services/lucaService.ts",
-    ],
-  },
-  {
-    id: "sensor-mesh",
-    label: "LucaLink Sensor Mesh",
-    summary:
-      "Aggregates perception pulses into Luca's situational awareness with privacy boundaries.",
-    buildsOn: [
-      "src/services/meshObservationService.ts",
-      "src/services/cognitiveShardingEngine.ts",
-    ],
-  },
-  {
-    id: "guest-gateway",
-    label: "LucaLink Guest Gateway",
-    summary:
-      "Hardened, expiring, least-privilege gateway for temporary web/device guests.",
-    buildsOn: [
-      "src/services/lucaLinkService.ts",
-      "relay-server/index.js",
-    ],
-  },
-  {
-    id: "embodied-host-adapter",
-    label: "LucaLink Embodied Host Adapter",
-    summary:
-      "Adapter + safety policy layer for robots/humanoids (motion, manipulators, spatial sensors).",
-    buildsOn: [],
-  },
-  {
-    id: "audit-log",
-    label: "LucaLink Audit Log",
-    summary:
-      "Append-only record of pairings, permission grants, revocations, and high-risk routes.",
-    buildsOn: [],
-  },
-] as const);
+export const lucaLinkTargetComponents: readonly LucaLinkTargetComponent[] =
+  Object.freeze([
+    {
+      id: "transport",
+      label: "LucaLink Transport",
+      summary:
+        "Pluggable transport manager over local LAN, relay, VPN, and WebRTC with consistent semantics.",
+      buildsOn: [
+        "src/services/lucaLinkService.ts",
+        "src/services/lucaLink/secureSocket.ts",
+        "relay-server/index.js",
+      ],
+    },
+    {
+      id: "identity",
+      label: "LucaLink Identity",
+      summary:
+        "Stable per-host identity: device ID, Ed25519 identity keys, and signed host manifests.",
+      buildsOn: [
+        "src/services/lucaLink/crypto.ts",
+        "src/services/lucaLinkService.ts",
+      ],
+    },
+    {
+      id: "host-registry",
+      label: "LucaLink Host Registry",
+      summary:
+        "Authoritative registry of known hosts, roles, capabilities, and last-seen state.",
+      buildsOn: ["src/services/lucaLink/deviceRegistry.ts"],
+    },
+    {
+      id: "trust-policy",
+      label: "LucaLink Trust Policy",
+      summary:
+        "Maps trust levels + roles to allowed permission categories per host.",
+      buildsOn: ["src/services/lucaLink/deviceRegistry.ts"],
+    },
+    {
+      id: "sync-lanes",
+      label: "LucaLink Sync Lanes",
+      summary:
+        "Typed, permissioned channels (identity/presence/conversation/memory/etc.) over the transport.",
+      buildsOn: ["src/services/lucaLinkService.ts"],
+    },
+    {
+      id: "host-router",
+      label: "LucaLink Host Router",
+      summary:
+        "Decides which host should execute a given task using a capability/trust/cost scoring model.",
+      buildsOn: ["src/services/lucaLink/deviceRegistry.ts"],
+    },
+    {
+      id: "memory-handoff",
+      label: "LucaLink Memory / Conversation Handoff",
+      summary:
+        "Moves active conversation and relevant memory between hosts with conflict handling.",
+      buildsOn: [
+        "src/services/lucaLink/sessionManager.ts",
+        "src/services/lucaService.ts",
+      ],
+    },
+    {
+      id: "multi-host-connection",
+      label: "LucaLink Multi-Host Connection Architecture",
+      summary:
+        "Classifies Luca-capable hosts across Primary Host, companion, display, guest, sensor, electronics, embodied, and unknown host classes.",
+      buildsOn: ["src/services/lucaLink/lucaLinkHostConnectionModel.ts"],
+    },
+    {
+      id: "host-adaptation-intelligence",
+      label: "LucaLink Host Adaptation Intelligence",
+      summary:
+        "Model-only bridge blueprint planning for unfamiliar runtime surfaces without probing, installing, or executing adapters.",
+      buildsOn: ["src/services/lucaLink/lucaLinkHostAdaptation.ts"],
+    },
+    {
+      id: "multi-host-approval-surface",
+      label: "LucaLink Multi-Host Approval Surface",
+      summary:
+        "Ranks host-aware approval surfaces while escalating risky work to the Primary Host boundary.",
+      buildsOn: ["src/services/lucaLink/lucaLinkMultiHostApproval.ts"],
+    },
+    {
+      id: "bridge-blueprint-review",
+      label: "LucaLink Bridge Blueprint Review",
+      summary:
+        "In-memory sandbox/static-check review records for bridge blueprints; approval does not execute or install adapters.",
+      buildsOn: ["src/services/lucaLink/lucaLinkBridgeReview.ts"],
+    },
+    {
+      id: "embodied-host-policy",
+      label: "LucaLink Embodied Host Policy",
+      summary:
+        "Model-only safety envelopes for sensor, electronics, robotics, smart-home, and physical host capabilities.",
+      buildsOn: ["src/services/lucaLink/lucaLinkEmbodiedHostPolicy.ts"],
+    },
+    {
+      id: "adapter-drafts",
+      label: "LucaLink Adapter Drafts",
+      summary:
+        "Generated-text-only adapter drafts that cannot write, execute, install, open sockets, or scan networks.",
+      buildsOn: ["src/services/lucaLink/lucaLinkAdapterDrafts.ts"],
+    },
+    {
+      id: "sensor-mesh",
+      label: "LucaLink Sensor Mesh",
+      summary:
+        "Aggregates perception pulses into Luca's situational awareness with privacy boundaries.",
+      buildsOn: [
+        "src/services/meshObservationService.ts",
+        "src/services/cognitiveShardingEngine.ts",
+      ],
+    },
+    {
+      id: "guest-gateway",
+      label: "LucaLink Guest Gateway",
+      summary:
+        "Hardened, expiring, least-privilege gateway for temporary web/device guests.",
+      buildsOn: ["src/services/lucaLinkService.ts", "relay-server/index.js"],
+    },
+    {
+      id: "embodied-host-adapter",
+      label: "LucaLink Embodied Host Adapter",
+      summary:
+        "Adapter + safety policy layer for robots/humanoids (motion, manipulators, spatial sensors).",
+      buildsOn: [],
+    },
+    {
+      id: "audit-log",
+      label: "LucaLink Audit Log",
+      summary:
+        "Append-only record of pairings, permission grants, revocations, and high-risk routes.",
+      buildsOn: [],
+    },
+  ] as const);
 
 // ===========================================================================
 // Current Event Map (snapshot of the audited runtime surface)
 // ===========================================================================
 
-export type LucaLinkEventLayer = "relay-socket" | "secure-socket" | "cortex-http";
+export type LucaLinkEventLayer =
+  | "relay-socket"
+  | "secure-socket"
+  | "cortex-http";
 
 export interface LucaLinkCurrentEvent {
   name: string;
@@ -619,133 +660,135 @@ export interface LucaLinkCurrentEvent {
  * map old events onto the new sync lanes. This file does not emit, listen to,
  * or otherwise touch any of them.
  */
-export const lucaLinkCurrentEventMap: readonly LucaLinkCurrentEvent[] = Object.freeze([
-  {
-    name: "register",
-    layer: "relay-socket",
-    summary: "Device announces itself to the relay with id/type/token.",
-  },
-  {
-    name: "registered",
-    layer: "relay-socket",
-    summary: "Relay confirms registration.",
-  },
-  {
-    name: "message",
-    layer: "relay-socket",
-    summary: "Generic envelope (LucaLinkMessage), optionally `secure`.",
-  },
-  {
-    name: "sync",
-    layer: "relay-socket",
-    summary: "message.type='sync' carrying registry/mission payloads.",
-  },
-  {
-    name: "registry",
-    layer: "relay-socket",
-    summary: "sync.type='registry' — connected device list.",
-  },
-  {
-    name: "mission",
-    layer: "relay-socket",
-    summary: "sync.type='mission' — sovereign mission goldEgg string.",
-  },
-  {
-    name: "SENSOR_PULSE",
-    layer: "relay-socket",
-    summary: "Perception/health pulse fed to mesh observation + sharding.",
-  },
-  {
-    name: "heartbeat",
-    layer: "relay-socket",
-    summary: "Liveness ping to keep the relay device fresh.",
-  },
-  {
-    name: "secure:message",
-    layer: "secure-socket",
-    summary: "Encrypted envelope handled by SecureSocket/manager.",
-  },
-  {
-    name: "key:exchange:request",
-    layer: "secure-socket",
-    summary: "SecureSocket initiates X25519 public-key exchange.",
-  },
-  {
-    name: "key:exchange:response",
-    layer: "secure-socket",
-    summary: "Peer returns its public key to derive the shared secret.",
-  },
-  {
-    name: "command:received",
-    layer: "secure-socket",
-    summary: "Inbound command routed by LucaLinkManager.",
-  },
-  {
-    name: "command:result",
-    layer: "secure-socket",
-    summary: "Result for a previously issued command.",
-  },
-  {
-    name: "guest-join",
-    layer: "relay-socket",
-    summary: "Guest socket joins a desktop-owned session.",
-  },
-  {
-    name: "guest-connected",
-    layer: "relay-socket",
-    summary: "Relay tells desktop a guest connected.",
-  },
-  {
-    name: "guest-message",
-    layer: "relay-socket",
-    summary: "Chat/auth message from a guest.",
-  },
-  {
-    name: "desktop-to-guest",
-    layer: "relay-socket",
-    summary: "Desktop response/audio routed to a guest.",
-  },
-  {
-    name: "guest-disconnected",
-    layer: "relay-socket",
-    summary: "Guest session ended.",
-  },
-  {
-    name: "webrtc-offer",
-    layer: "relay-socket",
-    summary: "WebRTC SDP offer for guest audio.",
-  },
-  {
-    name: "webrtc-answer",
-    layer: "relay-socket",
-    summary: "WebRTC SDP answer from guest.",
-  },
-  {
-    name: "webrtc-ice-candidate",
-    layer: "relay-socket",
-    summary: "Trickle ICE candidate exchange.",
-  },
-  {
-    name: "/api/pairing/generate",
-    layer: "cortex-http",
-    summary: "Relay endpoint issuing a short pairing token.",
-  },
-  {
-    name: "/api/guest/generate",
-    layer: "cortex-http",
-    summary: "Relay endpoint issuing a guest session + URL.",
-  },
-  {
-    name: "/api/remote-access/info",
-    layer: "cortex-http",
-    summary: "Cortex endpoint reporting local IP + pinRequired.",
-  },
-  {
-    name: "/api/remote-access/verify-pin",
-    layer: "cortex-http",
-    summary: "Cortex endpoint validating a guest PIN.",
-  },
-] as const);
+export const lucaLinkCurrentEventMap: readonly LucaLinkCurrentEvent[] =
+  Object.freeze([
+    {
+      name: "register",
+      layer: "relay-socket",
+      summary: "Device announces itself to the relay with id/type/token.",
+    },
+    {
+      name: "registered",
+      layer: "relay-socket",
+      summary: "Relay confirms registration.",
+    },
+    {
+      name: "message",
+      layer: "relay-socket",
+      summary: "Generic envelope (LucaLinkMessage), optionally `secure`.",
+    },
+    {
+      name: "sync",
+      layer: "relay-socket",
+      summary: "message.type='sync' carrying registry/mission payloads.",
+    },
+    {
+      name: "registry",
+      layer: "relay-socket",
+      summary: "sync.type='registry' — connected device list.",
+    },
+    {
+      name: "mission",
+      layer: "relay-socket",
+      summary: "sync.type='mission' — sovereign mission goldEgg string.",
+    },
+    {
+      name: "SENSOR_PULSE",
+      layer: "relay-socket",
+      summary: "Perception/health pulse fed to mesh observation + sharding.",
+    },
+    {
+      name: "heartbeat",
+      layer: "relay-socket",
+      summary: "Liveness ping to keep the relay device fresh.",
+    },
+    {
+      name: "secure:message",
+      layer: "secure-socket",
+      summary: "Encrypted envelope handled by SecureSocket/manager.",
+    },
+    {
+      name: "key:exchange:request",
+      layer: "secure-socket",
+      summary: "SecureSocket initiates X25519 public-key exchange.",
+    },
+    {
+      name: "key:exchange:response",
+      layer: "secure-socket",
+      summary: "Peer returns its public key to derive the shared secret.",
+    },
+    {
+      name: "command:received",
+      layer: "secure-socket",
+      summary: "Inbound command routed by LucaLinkManager.",
+    },
+    {
+      name: "command:result",
+      layer: "secure-socket",
+      summary: "Result for a previously issued command.",
+    },
+    {
+      name: "guest-join",
+      layer: "relay-socket",
+      summary: "Guest socket joins a desktop-owned session.",
+    },
+    {
+      name: "guest-connected",
+      layer: "relay-socket",
+      summary: "Relay tells desktop a guest connected.",
+    },
+    {
+      name: "guest-message",
+      layer: "relay-socket",
+      summary: "Chat/auth message from a guest.",
+    },
+    {
+      name: "desktop-to-guest",
+      layer: "relay-socket",
+      summary:
+        "Primary Host response/audio routed to a guest; legacy event name retained.",
+    },
+    {
+      name: "guest-disconnected",
+      layer: "relay-socket",
+      summary: "Guest session ended.",
+    },
+    {
+      name: "webrtc-offer",
+      layer: "relay-socket",
+      summary: "WebRTC SDP offer for guest audio.",
+    },
+    {
+      name: "webrtc-answer",
+      layer: "relay-socket",
+      summary: "WebRTC SDP answer from guest.",
+    },
+    {
+      name: "webrtc-ice-candidate",
+      layer: "relay-socket",
+      summary: "Trickle ICE candidate exchange.",
+    },
+    {
+      name: "/api/pairing/generate",
+      layer: "cortex-http",
+      summary: "Relay endpoint issuing a short pairing token.",
+    },
+    {
+      name: "/api/guest/generate",
+      layer: "cortex-http",
+      summary: "Relay endpoint issuing a guest session + URL.",
+    },
+    {
+      name: "/api/remote-access/info",
+      layer: "cortex-http",
+      summary: "Cortex endpoint reporting local IP + pinRequired.",
+    },
+    {
+      name: "/api/remote-access/verify-pin",
+      layer: "cortex-http",
+      summary: "Cortex endpoint validating a guest PIN.",
+    },
+  ] as const);
 
 // ===========================================================================
 // Implementation Roadmap
@@ -758,64 +801,87 @@ export interface LucaLinkRoadmapEntry {
   dependsOn: number[];
 }
 
-export const lucaLinkImplementationRoadmap: readonly LucaLinkRoadmapEntry[] = Object.freeze([
-  {
-    pr: 183,
-    title: "Device Manifest + Capability Registry",
-    summary:
-      "Introduce LucaHostManifest + a capability registry built on deviceRegistry.",
-    dependsOn: [182],
-  },
-  {
-    pr: 184,
-    title: "Trust & Permission Policy",
-    summary:
-      "Map trust levels + roles to permission categories with enforcement hooks.",
-    dependsOn: [183],
-  },
-  {
-    pr: 185,
-    title: "Sync Lane Protocol",
-    summary:
-      "Implement typed, permissioned sync lanes over the existing transport.",
-    dependsOn: [184],
-  },
-  {
-    pr: 186,
-    title: "Host Routing Engine",
-    summary:
-      "Add the capability/trust/cost scoring router for task placement.",
-    dependsOn: [185],
-  },
-  {
-    pr: 187,
-    title: "LucaLink Settings Device Center",
-    summary:
-      "Rebuild the Settings tab into a device center (detail/permissions/sync/guests/audit).",
-    dependsOn: [183, 184],
-  },
-  {
-    pr: 188,
-    title: "Memory / Conversation Handoff",
-    summary:
-      "Move active conversation + relevant memory between hosts with conflict handling.",
-    dependsOn: [185, 186],
-  },
-  {
-    pr: 189,
-    title: "Guest Access Hardening",
-    summary:
-      "Add guest expiry, permission classes, and revocation to the guest gateway.",
-    dependsOn: [184],
-  },
-  {
-    pr: 190,
-    title: "Sensor Mesh + Embodied Host Preparation",
-    summary:
-      "Formalize the sensor lane, privacy boundaries, and embodied-host safety policy.",
-    dependsOn: [185, 186],
-  },
-] as const);
+export const lucaLinkImplementationRoadmap: readonly LucaLinkRoadmapEntry[] =
+  Object.freeze([
+    {
+      pr: 183,
+      title: "Device Manifest + Capability Registry",
+      summary:
+        "Introduce LucaHostManifest + a capability registry built on deviceRegistry.",
+      dependsOn: [182],
+    },
+    {
+      pr: 184,
+      title: "Trust & Permission Policy",
+      summary:
+        "Map trust levels + roles to permission categories with enforcement hooks.",
+      dependsOn: [183],
+    },
+    {
+      pr: 185,
+      title: "Sync Lane Protocol",
+      summary:
+        "Implement typed, permissioned sync lanes over the existing transport.",
+      dependsOn: [184],
+    },
+    {
+      pr: 186,
+      title: "Host Routing Engine",
+      summary:
+        "Add the capability/trust/cost scoring router for task placement.",
+      dependsOn: [185],
+    },
+    {
+      pr: 187,
+      title: "LucaLink Settings Device Center",
+      summary:
+        "Rebuild the Settings tab into a device center (detail/permissions/sync/guests/audit).",
+      dependsOn: [183, 184],
+    },
+    {
+      pr: 188,
+      title: "Memory / Conversation Handoff",
+      summary:
+        "Move active conversation + relevant memory between hosts with conflict handling.",
+      dependsOn: [185, 186],
+    },
+    {
+      pr: 189,
+      title: "Guest Access Hardening",
+      summary:
+        "Add guest expiry, permission classes, and revocation to the guest gateway.",
+      dependsOn: [184],
+    },
+    {
+      pr: 190,
+      title: "Sensor Mesh + Embodied Host Preparation",
+      summary:
+        "Formalize the sensor lane, privacy boundaries, and embodied-host safety policy.",
+      dependsOn: [185, 186],
+    },
+    {
+      pr: 201,
+      title:
+        "Multi-Host Connection Architecture + Host Adaptation Intelligence",
+      summary:
+        "Model host/body classes and plan bridge blueprints without transport or execution changes.",
+      dependsOn: [190],
+    },
+    {
+      pr: 202,
+      title: "Multi-Host Approval Surface + Bridge Review + Adapter Drafts",
+      summary:
+        "Add model-only approval surfaces, bridge review records, embodied policy envelopes, and generated-text-only adapter drafts.",
+      dependsOn: [201],
+    },
+    {
+      pr: 203,
+      title: "LucaLink Production Hardening Audit + Terminology Cleanup",
+      summary:
+        "Audit host-aware terminology, Origin boundary, and model-only security invariants without runtime behavior changes.",
+      dependsOn: [202],
+    },
+  ] as const);
 
 // ===========================================================================
 // Audit metadata

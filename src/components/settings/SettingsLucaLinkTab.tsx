@@ -2916,14 +2916,14 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         <>
           <SettingsSection
             title="Linked Devices"
-            description="Use Luca across your devices with desktop, phone, tablet, browser, and future gadgets grouped together."
+            description="Use Luca across Primary Host, companion, display, guest, sensor, and future Luca-capable hosts in one host mesh."
             icon="Devices"
             accentColor={theme.hex}
             isMobile={isMobile}
           >
             <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
               <SettingsStatusCard
-                label="Desktop"
+                label="Primary Host"
                 value={!isMobile ? status.text : "Available"}
                 detail="This LucaOS session can pair with trusted clients."
                 accentColor={theme.hex}
@@ -2931,7 +2931,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               <SettingsStatusCard
                 label="Phone"
                 value={isMobile ? status.text : "Pair below"}
-                detail="Mobile clients remain available through Luca Link."
+                detail="Companion hosts remain available through Luca Link."
                 accentColor={theme.hex}
               />
               <SettingsStatusCard
@@ -2968,7 +2968,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 <label
                   className={`text-base font-semibold text-[var(--app-text-main)]`}
                 >
-                  {isMobile ? "Desktop connection" : "Connection status"}
+                  {isMobile ? "Primary Host connection" : "Connection status"}
                 </label>
                 {getConnectionIcon()}
               </div>
@@ -3005,7 +3005,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     {settings.lucaLink.connectionMode === "auto" &&
                       "Automatically tries local → VPN → cloud relay"}
                     {settings.lucaLink.connectionMode === "local" &&
-                      "Connect when on the same WiFi as your Desktop"}
+                      "Connect when on the same WiFi as your Primary Host"}
                     {settings.lucaLink.connectionMode === "vpn" &&
                       "Use Tailscale or ZeroTier for secure remote access"}
                     {settings.lucaLink.connectionMode === "relay" &&
@@ -3020,7 +3020,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   <div className={`space-y-2 ${isMobile ? "px-4" : ""}`}>
                     <label className="text-base font-medium text-[var(--app-text-muted)] flex items-center gap-2">
                       <Icon name="Smartphone" className="w-4 h-4" />
-                      Desktop address
+                      Primary Host address
                     </label>
                     <input
                       type="text"
@@ -3083,7 +3083,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     style={settingsControlInlineStyle}
                   >
                     <Icon name="QrCode" className="w-5 h-5" /> Scan QR Code from
-                    Desktop
+                    Primary Host
                   </button>
 
                   {/* Connect Button */}
@@ -3101,7 +3101,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       } catch (e) {
                         console.error("[LucaLink] Failed to connect:", e);
                         alert(
-                          "Failed to connect to Desktop. Check the Pairing Token and try again.",
+                          "Failed to connect to Primary Host. Check the Pairing Token and try again.",
                         );
                       }
                     }}
@@ -3120,10 +3120,10 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                     {linkState.connected ? (
                       <span className="flex items-center gap-2 justify-center">
                         <Icon name="CheckCircle" className="w-5 h-5" />{" "}
-                        Connected to desktop
+                        Connected to Primary Host
                       </span>
                     ) : (
-                      "Connect to desktop"
+                      "Connect to Primary Host"
                     )}
                   </button>
 
@@ -3157,8 +3157,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                         End-to-end encrypted
                       </div>
                       <p className="text-[var(--app-text-muted)] text-sm opacity-80">
-                        Your connection to Desktop is encrypted. Messages are
-                        never stored on any server.
+                        Your connection to the Primary Host is encrypted.
+                        Messages are never stored on any server.
                       </p>
                     </div>
                   </div>
@@ -3176,8 +3176,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       Enable Luca Link Remote Access
                     </label>
                     <p className="text-sm text-[var(--app-text-muted)] opacity-60 mt-1">
-                      Allow trusted devices to pair securely with this Luca
-                      desktop
+                      Allow trusted Luca-capable hosts to pair securely with
+                      this Primary Host
                     </p>
                   </div>
                   <button
@@ -3412,7 +3412,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           />
           <SettingsRow
             label="Conversation and voice handoff"
-            description="Move between desktop, phone, and browser where Luca Link supports handoff."
+            description="Move between Primary Host, companion hosts, display hosts, browser hosts, and future Luca-capable hosts where Luca Link supports handoff."
           />
           <SettingsRow
             label="Notification handoff"

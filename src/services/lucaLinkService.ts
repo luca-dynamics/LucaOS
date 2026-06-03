@@ -369,7 +369,7 @@ class LucaLinkService {
   private async getLocalIp(): Promise<string | null> {
     try {
       // Need to ask Cortex for its IP since we are just a JS client
-      // Assuming Cortex is reachable at localhost:8000 from the desktop app
+      // Assuming Cortex is reachable at localhost:8000 from the Primary Host app
       // If we are strictly in React dev mode, this might hit the proxy
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
@@ -388,7 +388,7 @@ class LucaLinkService {
   }
 
   /**
-   * Connect to the relay server (Desktop mode - creates room)
+   * Connect to the relay server (Primary Host room mode).
    */
   async createRoom(): Promise<string> {
     // Use PERSISTENT device ID to prevent session orphaning
@@ -400,7 +400,7 @@ class LucaLinkService {
   }
 
   /**
-   * Join with a pairing token (Mobile mode)
+   * Join with a pairing token (companion host mode)
    * Supports Hybrid Mode: Tries Local LAN first, then Relay
    */
   async joinWithToken(token: string, localUrl?: string): Promise<void> {
@@ -413,7 +413,7 @@ class LucaLinkService {
   }
 
   /**
-   * Automatically attempt to reconnect to the last known Desktop peer
+   * Automatically attempt to reconnect to the last known Primary Host peer
    * Implementation: A "Race" strategy.
    * 1. Attempt connection to LAST KNOWN IP (if stored).
    * 2. Simultaneously start mDNS (ZeroConf) scanning for a fresh IP.
@@ -489,7 +489,7 @@ class LucaLinkService {
         if (ip) {
           const freshLocalUrl = `http://${ip}:3003`;
           console.log(
-            `[LucaLink] mDNS found Desktop at ${freshLocalUrl}. Re-syncing...`,
+            `[LucaLink] mDNS found Primary Host at ${freshLocalUrl}. Re-syncing...`,
           );
 
           // If not connected or IP changed, trigger a fresh connect
@@ -651,7 +651,7 @@ class LucaLinkService {
             "connected",
           );
 
-          // Setup guest handlers for Desktop
+          // Setup guest handlers for Primary Host room mode
           if (deviceType === "desktop") {
             this.setupGuestHandlers();
           }
@@ -2062,7 +2062,7 @@ class LucaLinkService {
     });
   }
 
-  // ========== GUEST SESSION METHODS (Desktop only) ==========
+  // ========== GUEST SESSION METHODS (Primary Host room mode) ==========
 
   private guestSessions: Map<
     string,
@@ -2117,7 +2117,7 @@ class LucaLinkService {
   }
 
   /**
-   * Generate a guest session for web access (Desktop only)
+   * Generate a guest session for web access (Primary Host room mode).
    * Returns the guest URL that can be shared via QR code
    */
   async generateGuestSession(): Promise<{
