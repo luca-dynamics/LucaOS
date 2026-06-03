@@ -148,14 +148,23 @@ describe("lucaLinkArchitectureMap", () => {
     expect(ids).toContain("transport");
     expect(ids).toContain("identity");
     expect(ids).toContain("host-router");
+    expect(ids).toContain("multi-host-connection");
+    expect(ids).toContain("host-adaptation-intelligence");
+    expect(ids).toContain("multi-host-approval-surface");
+    expect(ids).toContain("bridge-blueprint-review");
+    expect(ids).toContain("embodied-host-policy");
+    expect(ids).toContain("adapter-drafts");
     expect(ids).toContain("guest-gateway");
     expect(ids).toContain("embodied-host-adapter");
     expect(ids).toContain("audit-log");
   });
 
-  it("covers PR #183 through PR #190 in the roadmap", () => {
+  it("covers PR #183 through PR #190 and hardening PR #201 through PR #203 in the roadmap", () => {
     const prNumbers = lucaLinkImplementationRoadmap.map((entry) => entry.pr);
     for (let pr = 183; pr <= 190; pr++) {
+      expect(prNumbers).toContain(pr);
+    }
+    for (const pr of [201, 202, 203]) {
       expect(prNumbers).toContain(pr);
     }
     expect(lucaLinkArchitectureAuditNote.pr).toBe(182);

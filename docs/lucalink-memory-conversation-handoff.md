@@ -1,6 +1,6 @@
 # LucaLink Memory / Conversation Handoff
 
-PR #200 adds a safe, model-first LucaLink handoff layer for moving user-visible context across trusted Desktop, Mobile, Web, and future hosts without turning handoff into broad sync or remote execution.
+PR #200 adds a safe, model-first LucaLink handoff layer for moving user-visible context across trusted Primary Host, companion, browser, display, and future Luca-capable hosts without turning handoff into broad sync or remote execution.
 
 ## Purpose
 

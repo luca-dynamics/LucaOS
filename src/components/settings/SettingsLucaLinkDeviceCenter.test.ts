@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import lucaLinkSource from "./SettingsLucaLinkTab.tsx?raw";
 import lucaLinkServiceSource from "../../services/lucaLinkService.ts?raw";
+import { LUCA_LINK_FORBIDDEN_DEVICE_CENTER_ACTION_LABELS } from "../../services/lucaLink/lucaLinkArchitectureInvariants";
 
 const approvalActionSource = lucaLinkSource.slice(
   lucaLinkSource.indexOf("const handleApprovalAction"),
@@ -282,6 +283,41 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain("Observe-only");
     expect(lucaLinkSource).toContain("Disabled");
   });
+
+  it("uses Primary Host copy in the LucaLink connection flow while preserving existing pairing and QR controls", () => {
+    expect(lucaLinkSource).toContain("Primary Host connection");
+    expect(lucaLinkSource).toContain("Primary Host address");
+    expect(lucaLinkSource).toContain("Scan QR Code from");
+    expect(lucaLinkSource).toContain("Primary Host");
+    expect(lucaLinkSource).toContain("Failed to connect to Primary Host");
+    expect(lucaLinkSource).toContain("Connected to Primary Host");
+    expect(lucaLinkSource).toContain("Connect to Primary Host");
+    expect(lucaLinkSource).toContain("Pair trusted Luca-capable hosts");
+    expect(lucaLinkSource).toContain("using this QR code or token");
+    expect(lucaLinkSource).toContain('onUpdate("lucaLink", "vpnServerUrl"');
+
+    for (const staleCopy of [
+      "Connect to desktop",
+      "connect to desktop",
+      "Desktop address",
+      "Desktop connection",
+      "Mobile clients remain",
+      "Pair with Desktop",
+      "Scan QR Code from Desktop",
+      "Failed to connect to Desktop",
+      "Connected to desktop",
+      "Your connection to Desktop",
+    ]) {
+      expect(lucaLinkSource).not.toContain(staleCopy);
+    }
+  });
+
+  it("keeps Device Center Origin and forbidden action labels out of user-facing copy", () => {
+    expect(lucaLinkSource).not.toContain("Origin approval");
+    for (const label of LUCA_LINK_FORBIDDEN_DEVICE_CENTER_ACTION_LABELS) {
+      expect(lucaLinkSource).not.toContain(label);
+    }
+  });
 });
 
 describe("Settings LucaLink Device Center host connections", () => {
@@ -478,22 +514,12 @@ describe("Settings LucaLink Device Center PR 202 surfaces", () => {
     expect(bridgeReviewSectionSource).toContain("Approve for sandbox only");
     expect(bridgeReviewSectionSource).toContain("Create text draft");
     expect(bridgeReviewSectionSource).toContain("Clear drafts");
-    const forbiddenLabels = [
-      "Generate and run",
-      "Install adapter",
+    for (const label of [
+      ...LUCA_LINK_FORBIDDEN_DEVICE_CENTER_ACTION_LABELS,
       "Connect now",
-      "Run code",
-      "Write file",
-      "Open socket",
-      "Scan network",
-      "Control robot",
-      "Control device",
-      "Bypass credentials",
-      "Exploit",
-    ];
-    forbiddenLabels.forEach((label) => {
+    ]) {
       expect(bridgeReviewSectionSource).not.toContain(label);
-    });
+    }
     expect(bridgeReviewSectionSource).not.toContain("Origin approval");
   });
 
