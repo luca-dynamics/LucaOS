@@ -166,6 +166,47 @@ import {
 } from "./lucaLink/lucaLinkHostAdaptation";
 
 import {
+  deriveLucaLinkApprovalSurface,
+  evaluateLucaLinkApprovalSurfaceForRequest,
+  rankEligibleApprovalSurfaces,
+  summarizeLucaLinkApprovalSurfaces,
+  type LucaLinkApprovalSurfaceEvaluation,
+  type LucaLinkApprovalSurfaceRecord,
+  type LucaLinkApprovalSurfaceSummary,
+} from "./lucaLink/lucaLinkMultiHostApproval";
+import {
+  approveBridgeReviewForSandbox as approveLucaLinkBridgeReviewForSandboxModel,
+  cancelBridgeReview as cancelLucaLinkBridgeReviewModel,
+  createLucaLinkBridgeReviewRecord,
+  createLucaLinkBridgeReviewRegistry,
+  getBridgeReview,
+  listBridgeReviews,
+  registerBridgeReview,
+  rejectBridgeReview as rejectLucaLinkBridgeReviewModel,
+  summarizeBridgeReviews,
+  updateBridgeReview,
+  type LucaLinkBridgeReviewRecord,
+  type LucaLinkBridgeReviewRegistry,
+  type LucaLinkBridgeReviewSummary,
+} from "./lucaLink/lucaLinkBridgeReview";
+import {
+  createAdapterDraftFromBlueprint as createLucaLinkAdapterDraftFromBlueprintModel,
+  createAdapterDraftFromBridgeReview as createLucaLinkAdapterDraftFromBridgeReviewModel,
+  createLucaLinkAdapterDraftRegistry,
+  listAdapterDrafts,
+  registerAdapterDraft,
+  summarizeAdapterDrafts,
+  updateAdapterDraft,
+  type LucaLinkAdapterDraft,
+  type LucaLinkAdapterDraftRegistry,
+  type LucaLinkAdapterDraftSummary,
+} from "./lucaLink/lucaLinkAdapterDrafts";
+import {
+  deriveEmbodiedHostCapabilityEnvelope,
+  type LucaLinkEmbodiedCapabilityEnvelope,
+} from "./lucaLink/lucaLinkEmbodiedHostPolicy";
+
+import {
   createLucaLinkRuntimeEnforcementAuditRecord,
   evaluateLucaLinkRuntimeEnforcement,
   summarizeLucaLinkRuntimeEnforcementAudit,
@@ -235,6 +276,10 @@ class LucaLinkService {
     createLucaLinkHandoffRegistry();
   private hostConnectionRegistry: LucaLinkHostConnectionRegistryState =
     createLucaLinkHostConnectionRegistry();
+  private bridgeReviewRegistry: LucaLinkBridgeReviewRegistry =
+    createLucaLinkBridgeReviewRegistry();
+  private adapterDraftRegistry: LucaLinkAdapterDraftRegistry =
+    createLucaLinkAdapterDraftRegistry();
   private softEnforcementOptions: LucaLinkSoftEnforcementOptions = {
     mode: "disabled",
   };
@@ -1363,6 +1408,161 @@ class LucaLinkService {
     return clearLucaLinkApprovalQueue(this.approvalQueue);
   }
 
+  getApprovalSurfaces(): LucaLinkApprovalSurfaceRecord[] {
+    return this.getHostConnections({ refresh: true }).map((hostConnection) =>
+      deriveLucaLinkApprovalSurface(hostConnection, {
+        currentPrimaryHostId:
+          this.state.deviceId ??
+          this.hostConnectionRegistry.records.find(
+            (record) => record.hostClass === "primary-host",
+          )?.id,
+      }),
+    );
+  }
+
+  getApprovalSurfaceSummary(): LucaLinkApprovalSurfaceSummary {
+    return summarizeLucaLinkApprovalSurfaces(this.getApprovalSurfaces());
+  }
+
+  evaluateApprovalSurfacesForRequest(
+    requestId: string,
+  ): LucaLinkApprovalSurfaceEvaluation[] {
+    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    return this.getApprovalSurfaces().map((surface) =>
+      evaluateLucaLinkApprovalSurfaceForRequest(surface, request),
+    );
+  }
+
+  rankApprovalSurfacesForRequest(
+    requestId: string,
+  ): LucaLinkApprovalSurfaceRecord[] {
+    return rankEligibleApprovalSurfaces(
+      this.getApprovalSurfaces(),
+      getLucaLinkApprovalRequest(this.approvalQueue, requestId),
+    );
+  }
+
+  createApprovalSurfacePreviewForRequest(requestId: string): {
+    request?: LucaLinkApprovalRequest;
+    surfaces: LucaLinkApprovalSurfaceRecord[];
+    evaluations: LucaLinkApprovalSurfaceEvaluation[];
+    summary: LucaLinkApprovalSurfaceSummary;
+  } {
+    const request = getLucaLinkApprovalRequest(this.approvalQueue, requestId);
+    const surfaces = this.getApprovalSurfaces();
+    return {
+      request,
+      surfaces,
+      evaluations: surfaces.map((surface) =>
+        evaluateLucaLinkApprovalSurfaceForRequest(surface, request),
+      ),
+      summary: summarizeLucaLinkApprovalSurfaces(surfaces),
+    };
+  }
+
+  getBridgeReviews(): LucaLinkBridgeReviewRecord[] {
+    return listBridgeReviews(this.bridgeReviewRegistry);
+  }
+
+  getBridgeReviewSummary(): LucaLinkBridgeReviewSummary {
+    return summarizeBridgeReviews(this.getBridgeReviews());
+  }
+
+  createBridgeReviewFromBlueprint(
+    input: Partial<LucaLinkHostBridgeBlueprint>,
+  ): LucaLinkBridgeReviewRecord {
+    return registerBridgeReview(
+      this.bridgeReviewRegistry,
+      createLucaLinkBridgeReviewRecord(input),
+    );
+  }
+
+  approveBridgeReviewForSandbox(
+    reviewId: string,
+    options?: { approvedByDeviceId?: string; now?: number },
+  ): LucaLinkBridgeReviewRecord | undefined {
+    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
+    if (!review) return undefined;
+    return updateBridgeReview(
+      this.bridgeReviewRegistry,
+      approveLucaLinkBridgeReviewForSandboxModel(review, options),
+    );
+  }
+
+  rejectBridgeReview(
+    reviewId: string,
+    options?: { reason?: string; now?: number },
+  ): LucaLinkBridgeReviewRecord | undefined {
+    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
+    if (!review) return undefined;
+    return updateBridgeReview(
+      this.bridgeReviewRegistry,
+      rejectLucaLinkBridgeReviewModel(review, options),
+    );
+  }
+
+  cancelBridgeReview(
+    reviewId: string,
+    options?: { reason?: string; now?: number },
+  ): LucaLinkBridgeReviewRecord | undefined {
+    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
+    if (!review) return undefined;
+    return updateBridgeReview(
+      this.bridgeReviewRegistry,
+      cancelLucaLinkBridgeReviewModel(review, options),
+    );
+  }
+
+  getEmbodiedHostCapabilityEnvelopes(): LucaLinkEmbodiedCapabilityEnvelope[] {
+    return this.getHostConnections({ refresh: true }).map((hostConnection) =>
+      deriveEmbodiedHostCapabilityEnvelope(hostConnection),
+    );
+  }
+
+  getAdapterDrafts(): LucaLinkAdapterDraft[] {
+    return listAdapterDrafts(this.adapterDraftRegistry);
+  }
+
+  getAdapterDraftSummary(): LucaLinkAdapterDraftSummary {
+    return summarizeAdapterDrafts(this.getAdapterDrafts());
+  }
+
+  createAdapterDraftFromBlueprint(
+    input: Partial<LucaLinkHostBridgeBlueprint>,
+  ): LucaLinkAdapterDraft {
+    return registerAdapterDraft(
+      this.adapterDraftRegistry,
+      createLucaLinkAdapterDraftFromBlueprintModel(input),
+    );
+  }
+
+  createAdapterDraftFromBridgeReview(
+    reviewId: string,
+  ): LucaLinkAdapterDraft | undefined {
+    const review = getBridgeReview(this.bridgeReviewRegistry, reviewId);
+    if (!review) return undefined;
+    return registerAdapterDraft(
+      this.adapterDraftRegistry,
+      createLucaLinkAdapterDraftFromBridgeReviewModel(review),
+    );
+  }
+
+  cancelAdapterDraft(draftId: string): LucaLinkAdapterDraft | undefined {
+    const draft = this.adapterDraftRegistry.records.find(
+      (record) => record.id === draftId,
+    );
+    if (!draft) return undefined;
+    return updateAdapterDraft(this.adapterDraftRegistry, {
+      ...draft,
+      status: "cancelled",
+      updatedAt: Date.now(),
+    });
+  }
+
+  clearAdapterDrafts(): void {
+    this.adapterDraftRegistry.records = [];
+  }
+
   getContinuationTokens(): LucaLinkContinuationToken[] {
     return listLucaLinkContinuationTokens(this.continuationRegistry);
   }
@@ -1695,7 +1895,7 @@ class LucaLinkService {
           trustLevel: "guest",
           deviceRole: "guest",
           status: session.status,
-          lastSeenAt: session.lastSeenAt,
+          lastSeenAt: session.lastActivityAt ?? session.updatedAt,
           connectionEvidence: [
             "Derived from local guest security session state.",
           ],

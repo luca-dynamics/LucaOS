@@ -414,3 +414,101 @@ describe("Settings LucaLink Device Center guest and service cleanup", () => {
     expect(lucaLinkServiceSource).not.toContain("Origin approval");
   });
 });
+
+describe("Settings LucaLink Device Center PR 202 surfaces", () => {
+  const bridgeReviewSectionSource = lucaLinkSource.slice(
+    lucaLinkSource.indexOf('deviceCenterTab === "bridge-review"'),
+    lucaLinkSource.indexOf('deviceCenterTab === "devices"'),
+  );
+
+  it("reads multi-host approval, bridge review, embodied policy, and adapter draft state", () => {
+    expect(lucaLinkSource).toContain(
+      "approvalSurfaces: LucaLinkApprovalSurfaceRecord[]",
+    );
+    expect(lucaLinkSource).toContain(
+      "approvalSurfaceSummary: LucaLinkApprovalSurfaceSummary",
+    );
+    expect(lucaLinkSource).toContain(
+      "bridgeReviews: LucaLinkBridgeReviewRecord[]",
+    );
+    expect(lucaLinkSource).toContain(
+      "bridgeReviewSummary: LucaLinkBridgeReviewSummary",
+    );
+    expect(lucaLinkSource).toContain(
+      "embodiedCapabilityEnvelopes: LucaLinkEmbodiedCapabilityEnvelope[]",
+    );
+    expect(lucaLinkSource).toContain("adapterDrafts: LucaLinkAdapterDraft[]");
+    expect(snapshotSource).toContain("lucaLink.getApprovalSurfaces()");
+    expect(snapshotSource).toContain("lucaLink.getApprovalSurfaceSummary()");
+    expect(snapshotSource).toContain("lucaLink.getBridgeReviews()");
+    expect(snapshotSource).toContain("lucaLink.getBridgeReviewSummary()");
+    expect(snapshotSource).toContain(
+      "lucaLink.getEmbodiedHostCapabilityEnvelopes()",
+    );
+    expect(snapshotSource).toContain("lucaLink.getAdapterDrafts()");
+    expect(snapshotSource).toContain("lucaLink.getAdapterDraftSummary()");
+  });
+
+  it("renders multi-host approval surface, bridge review, embodied policy, and adapter draft sections", () => {
+    expect(lucaLinkSource).toContain(
+      '{ id: "bridge-review", label: "Bridge Review" }',
+    );
+    expect(bridgeReviewSectionSource).toContain("Multi-Host Approval Surface");
+    expect(bridgeReviewSectionSource).toContain("Bridge Blueprint Review");
+    expect(bridgeReviewSectionSource).toContain("Sensor / Embodied Policy");
+    expect(bridgeReviewSectionSource).toContain("Adapter Drafts");
+    expect(bridgeReviewSectionSource).toContain(
+      "Approval is host-aware and risk-aware.",
+    );
+    expect(bridgeReviewSectionSource).toContain(
+      "Mobile is one companion host type, not the only approval host.",
+    );
+    expect(bridgeReviewSectionSource).toContain(
+      "Approval for sandbox does not execute or install the adapter.",
+    );
+    expect(bridgeReviewSectionSource).toContain("Sensor read is read-only.");
+    expect(bridgeReviewSectionSource).toContain("generatedTextOnly true");
+    expect(bridgeReviewSectionSource).toContain("canWriteToDisk false");
+    expect(bridgeReviewSectionSource).toContain("canExecute false");
+    expect(bridgeReviewSectionSource).toContain("canInstall false");
+  });
+
+  it("keeps PR 202 UI actions model-only and avoids forbidden action labels", () => {
+    expect(bridgeReviewSectionSource).toContain("Create sample review");
+    expect(bridgeReviewSectionSource).toContain("Approve for sandbox only");
+    expect(bridgeReviewSectionSource).toContain("Create text draft");
+    expect(bridgeReviewSectionSource).toContain("Clear drafts");
+    const forbiddenLabels = [
+      "Generate and run",
+      "Install adapter",
+      "Connect now",
+      "Run code",
+      "Write file",
+      "Open socket",
+      "Scan network",
+      "Control robot",
+      "Control device",
+      "Bypass credentials",
+      "Exploit",
+    ];
+    forbiddenLabels.forEach((label) => {
+      expect(bridgeReviewSectionSource).not.toContain(label);
+    });
+    expect(bridgeReviewSectionSource).not.toContain("Origin approval");
+  });
+
+  it("exposes service helpers without new socket events or execution", () => {
+    const helperSource = lucaLinkServiceSource.slice(
+      lucaLinkServiceSource.indexOf("getApprovalSurfaces"),
+      lucaLinkServiceSource.indexOf("getContinuationTokens"),
+    );
+    expect(helperSource).toContain("getApprovalSurfaceSummary");
+    expect(helperSource).toContain("createBridgeReviewFromBlueprint");
+    expect(helperSource).toContain("approveBridgeReviewForSandbox");
+    expect(helperSource).toContain("createAdapterDraftFromBridgeReview");
+    expect(helperSource).not.toMatch(/\.emit\s*\(/);
+    expect(helperSource).not.toMatch(/fetch\s*\(/);
+    expect(helperSource).not.toMatch(/io\s*\(/);
+    expect(helperSource).not.toMatch(/localStorage|sessionStorage/);
+  });
+});
