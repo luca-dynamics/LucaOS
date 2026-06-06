@@ -11,7 +11,12 @@ import {
   SettingsStatusCard,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+ 
 import { PersonalIntelligencePersistencePreview } from "./PersonalIntelligencePersistencePreview";
+=======
+import { createMemoryPreview } from "../../personal-intelligence";
+import { MemoryItemPreviewCard } from "./personalIntelligencePreview";
+ 
 
 interface NotionPage {
   id: string;
@@ -409,8 +414,29 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
+  const memoryPreview = createMemoryPreview({
+    id: "knowledge-preview",
+    kind: "project",
+    title: "Personal Intelligence integration map",
+    content: "Preview metadata for a proposed knowledge item.",
+    source: "Knowledge Base settings preview",
+    confidence: 0.92,
+    privacyZone: "project",
+    tags: ["settings", "preview", "knowledge"],
+  });
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
+      <SettingsSection
+        title="Personal Intelligence Preview"
+        description="Preview a privacy-aware Memory Item alongside the existing Knowledge Base controls."
+        icon="Eye"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <MemoryItemPreviewCard preview={memoryPreview} />
+      </SettingsSection>
+
       <SettingsSection
         title="Knowledge Status"
         description="Teach Luca with your files, folders, and apps while keeping embedding and vector details tucked away."

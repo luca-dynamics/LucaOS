@@ -3,6 +3,8 @@ import { Icon } from "../ui/Icon";
 import { LucaSettings } from "../../services/settingsService";
 import SettingsMCPTab from "./SettingsMCPTab";
 import SettingsConnectivityTab from "./SettingsConnectivityTab";
+import { createSkillManifestPreview } from "../../personal-intelligence";
+import { SkillManifestPreviewCard } from "./personalIntelligencePreview";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
@@ -33,8 +35,51 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
     "inbound",
   );
 
+  const skillManifestPreview = createSkillManifestPreview({
+    id: "settings-preview-skill",
+    name: "Knowledge Review",
+    description: "Reviews selected project knowledge after user approval.",
+    version: "0.1.0",
+    category: "knowledge",
+    entrypoint: "skills/knowledge-review",
+    permissions: [
+      {
+        id: "memory.project.read",
+        description: "Read approved project context",
+        required: true,
+      },
+    ],
+    memoryPolicy: { read: ["project"], write: [], retention: "session" },
+    requiredModels: ["text"],
+    requiredTools: [],
+    workflows: [
+      {
+        id: "review",
+        description: "Propose a review summary",
+        steps: ["inspect", "summarize", "request approval"],
+      },
+    ],
+    tests: [
+      {
+        id: "no-execution",
+        description: "Keeps the preview inert",
+        expectedOutcome: "No entrypoint is loaded",
+      },
+    ],
+  });
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
+      <SettingsSection
+        title="Personal Intelligence Preview"
+        description="Inspect a declarative Skill Manifest without loading tools, workflows, or entrypoints."
+        icon="Eye"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <SkillManifestPreviewCard manifest={skillManifestPreview} />
+      </SettingsSection>
+
       <SettingsSection
         title="MCP Status"
         description="Connect tools Luca can use while keeping permissions and diagnostics easy to review."

@@ -9,6 +9,19 @@ import {
   SettingsStatusCard,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import {
+  createExecutionDoctrinePreview,
+  createIdentityProfilePreview,
+  evaluateIntegrationReadinessPreview,
+} from "../../personal-intelligence";
+import {
+  ExecutionDoctrinePreviewCard,
+  IntegrationReadinessPreviewCard,
+} from "./personalIntelligencePreview";
+import {
+  PreviewCardFrame,
+  PreviewField,
+} from "./personalIntelligencePreview/PreviewCardFrame";
 
 interface SettingsModelManagerTabProps {
   theme: {
@@ -23,8 +36,49 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
   theme,
   isMobile,
 }) => {
+  const preferredModelsPreview = createIdentityProfilePreview({
+    userId: "model-preview-user",
+    displayName: "LucaOS operator",
+    preferredName: "Operator",
+    communicationStyle: "technical",
+    lucaPersonality: {
+      tone: "calm",
+      traits: ["local-first"],
+      boundaries: ["no-router-mutation"],
+    },
+    activeProjects: [],
+    preferredModels: [
+      "local-private",
+      "multimodal-capable",
+      "user-approved-cloud-fallback",
+    ],
+    devicePreferences: [],
+    privacyDefaults: { private: "deny" },
+  });
+  const doctrinePreview = createExecutionDoctrinePreview();
+  const readinessPreview = evaluateIntegrationReadinessPreview();
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"} mt-2`}>
+      <SettingsSection
+        title="Preferred Models Preview"
+        description="Identity Core model preferences are displayed as inert metadata only."
+        icon="Eye"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <PreviewCardFrame
+          title="Identity Core preferredModels"
+          description="Model preference preview — router not changed."
+          badges={["Preview only", "Not applied"]}
+        >
+          <PreviewField
+            label="Preferred models"
+            value={preferredModelsPreview.preferredModels.join(", ")}
+          />
+        </PreviewCardFrame>
+      </SettingsSection>
+
       <SettingsSection
         title="Model Library Summary"
         description="Luca found the best local models for this device."
@@ -111,6 +165,8 @@ const SettingsModelManagerTab: React.FC<SettingsModelManagerTabProps> = ({
         isMobile={isMobile}
       >
         <RuntimeDiagnosticsPanel title="Runtime Status" />
+        <ExecutionDoctrinePreviewCard doctrine={doctrinePreview} />
+        <IntegrationReadinessPreviewCard readiness={readinessPreview} />
       </SettingsSection>
 
       <SettingsAdvancedDisclosure

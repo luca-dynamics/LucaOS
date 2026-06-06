@@ -1236,6 +1236,23 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       <SettingsSection
+        title="Personal Intelligence Handoff"
+        description="Future bounded handoff preview requires PR #212; raw memory/private reasoning transfer remains forbidden."
+        icon="ShieldWarning"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <SettingsCard>
+          <p className="text-sm font-semibold">Future note only</p>
+          <p className="mt-1 text-xs leading-relaxed opacity-70">
+            No Personal Intelligence data is wired into LucaLink. Any future
+            handoff must remain redacted, bounded, approval-gated, and
+            preview-only before transfer.
+          </p>
+        </SettingsCard>
+      </SettingsSection>
+
+      <SettingsSection
         title="LucaLink Device Center"
         description="Manage trusted devices, approval requests, guest sessions, and mesh security."
         icon="Devices"
