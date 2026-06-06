@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   createExecutionDoctrinePreview,
   createIdentityProfilePreview,
-  createMemoryPreview,
+  createSettingsMemoryPreview,
   createSkillManifestPreview,
   evaluateIntegrationReadinessPreview,
 } from "../../../personal-intelligence";
@@ -34,7 +34,7 @@ const identity = createIdentityProfilePreview({
   privacyDefaults: { private: "deny" },
 });
 
-const memory = createMemoryPreview({
+const memory = createSettingsMemoryPreview({
   id: "memory-preview-test",
   kind: "project",
   title: "Preview knowledge",

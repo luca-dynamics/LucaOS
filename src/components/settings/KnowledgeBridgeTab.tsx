@@ -11,12 +11,11 @@ import {
   SettingsStatusCard,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
- 
+
 import { PersonalIntelligencePersistencePreview } from "./PersonalIntelligencePersistencePreview";
 
-import { createMemoryPreview } from "../../personal-intelligence";
+import { createSettingsMemoryPreview } from "../../personal-intelligence";
 import { MemoryItemPreviewCard } from "./personalIntelligencePreview";
- 
 
 interface NotionPage {
   id: string;
@@ -414,7 +413,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const memoryPreview = createMemoryPreview({
+  const memoryPreview = createSettingsMemoryPreview({
     id: "knowledge-preview",
     kind: "project",
     title: "Personal Intelligence integration map",

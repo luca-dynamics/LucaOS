@@ -14,9 +14,8 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
- 
+
 import { PersonalIntelligencePersistencePreview } from "./PersonalIntelligencePersistencePreview";
-=======
 import {
   createLearningEventPreview,
   createPrivacyZonesPreview,
@@ -27,7 +26,7 @@ import {
   LearningEventPreviewCard,
   PrivacyZonesPreviewCard,
 } from "./personalIntelligencePreview";
- 
+
 interface SettingsDataTabProps {
   theme?: any;
   memoryStats: { count: number };
@@ -160,7 +159,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
 
       <SettingsSection
         title="Personal Intelligence Persistence"
-        description="Review proposal-only memory persistence readiness without changing current storage or runtime behavior."
+        description="Review the governed memory adapter status and persistence prerequisites without triggering a write."
         icon="Shield"
         isMobile={isMobile}
       >
