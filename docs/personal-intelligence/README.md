@@ -4,18 +4,22 @@ LucaOS is not only a UI shell. A durable personal operating system also needs ex
 
 ## Scope
 
-This foundation provides:
+PR #205 created passive contracts for:
 
 - an Identity Core for stable user and Luca personalization preferences;
 - Mission Profiles for goals, constraints, success criteria, and operating state;
-- a privacy-aware Memory Item schema, in-memory store, and serialization-only filesystem adapter;
+- a privacy-aware Memory Item schema, in-memory store, and serialization-only filesystem description;
 - a versioned Skill Manifest standard and pure registry;
 - the Sense → Understand → Plan → Approve → Act → Verify → Learn doctrine;
 - a bounded Learning Log; and
 - policy helpers for explicit Privacy Zones.
 
+PR #206 adds integration boundaries, readiness evaluation, mapping descriptions, execution-trace safeguards, and combined preview composition. These additions prepare future onboarding, settings, mission, memory, skill, learning, and trace work while remaining defensive and side-effect-free.
+
 ## Integration boundary
 
-The module is intentionally passive. It does not register itself with app boot, providers, VisualCore, LucaLink, Device Center, relay, WebRTC, VPN, or runtime execution. The filesystem adapter returns readable file descriptions but performs no disk I/O. Runtime integration can happen after PR #204 verification, through separately reviewed adapters.
+No live runtime wiring is active. The module does not register itself with app boot, providers, VisualCore, LucaLink, Device Center, relay, WebRTC, VPN, storage, network, tool execution, or runtime services. Memory serialization returns readable file descriptions but performs no disk I/O, and skill entrypoints remain inert declarations.
+
+Future wiring must pass privacy, approval, persistence, execution, network, and runtime gates in separately reviewed PRs. See the [runtime wiring audit](runtime-wiring-audit.md), [integration boundaries](integration-boundaries.md), and [future roadmap](future-wiring-roadmap.md).
 
 Import the complete public API from `src/personal-intelligence/index.ts` or import a focused submodule directly.
