@@ -1,5 +1,21 @@
 # Personal Intelligence Settings Preview Safety
 
+ 
+The Personal Intelligence cards in Data & Memory and Knowledge Bridge are read-only inspection surfaces. PR #207 established preview-only Settings composition; PR #208 adds proposal/audit/readiness information to those existing surfaces rather than creating another Settings tab.
+
+## PR #208 UI guarantees
+
+- The Data & Memory card shows a sample memory proposal, `review_required` status, blockers/warnings, `writePerformed: false`, and “No storage adapter connected.”
+- Knowledge Bridge shows a compact memory persistence proposal with its proposed path and explicit approval requirement.
+- The cards do not expose an approve, write, save, execute, sync, or connect action.
+- Rendering the cards creates only deterministic in-memory preview values.
+- No memory is written and no learning event is persisted.
+- No local storage, browser database, filesystem, database, provider, network, LucaLink, MCP, tool, or Electron IPC connection is introduced by these previews.
+
+The surrounding legacy Settings surfaces retain their existing behavior; the PR #208 Personal Intelligence preview components do not invoke or mutate those services.
+
+Future PR #209 or later may introduce a governed local persistence adapter only through separate review. Until then, proposal approval means `approved_for_future_adapter`, never approval to perform a write.
+
 ## Scope
 
 PR #207 is a read-only UI integration. The preview components render typed values produced by pure Personal Intelligence boundary helpers. They do not call services directly and do not create a second settings architecture.
@@ -44,3 +60,4 @@ The LucaLink tab contains only a future note. No Personal Intelligence helper, p
 ## Runtime meaning
 
 The **Approve** and **Act** doctrine stages are evidence-only labels. Rendering those stages does not approve or perform an action. Preferred models are inert identity metadata and do not change routing. Skill manifests remain declarations; their entrypoints are not loaded.
+ 

@@ -11,8 +11,12 @@ import {
   SettingsStatusCard,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+ 
+import { PersonalIntelligencePersistencePreview } from "./PersonalIntelligencePersistencePreview";
+
 import { createMemoryPreview } from "../../personal-intelligence";
 import { MemoryItemPreviewCard } from "./personalIntelligencePreview";
+ 
 
 interface NotionPage {
   id: string;
@@ -467,6 +471,8 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
           />
         </div>
       </SettingsSection>
+
+      <PersonalIntelligencePersistencePreview compact />
 
       <SettingsSection
         title="Sources"
