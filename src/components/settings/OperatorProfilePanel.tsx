@@ -275,8 +275,8 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
         <SettingsCard>
           <p className="text-sm font-semibold">Personalization context</p>
           <p className="mt-1 text-xs opacity-70">
-            The profile cards below keep Luca's learned work context editable
-            and reviewable.
+            The profile cards below keep Luca&apos;s learned work context
+            editable and reviewable.
           </p>
         </SettingsCard>
       </SettingsSection>
