@@ -1,3 +1,4 @@
+import { isPrivacyZone } from "../privacy/privacyZones";
 import type { LearningLog, LearningLogEntry } from "./learningTypes";
 
 export function validateLearningLogEntry(entry: LearningLogEntry): string[] {
@@ -6,6 +7,10 @@ export function validateLearningLogEntry(entry: LearningLogEntry): string[] {
   if (Number.isNaN(Date.parse(entry.timestamp))) errors.push("timestamp must be an ISO date");
   if (!entry.inputSummary.trim()) errors.push("inputSummary is required");
   if (!entry.actionTaken.trim()) errors.push("actionTaken is required");
+  if (entry.privacyZone !== undefined && !isPrivacyZone(entry.privacyZone)) errors.push("privacyZone is invalid");
+  if (entry.source !== undefined && !entry.source.trim()) errors.push("source cannot be empty");
+  if (entry.confidence !== undefined && (entry.confidence < 0 || entry.confidence > 1)) errors.push("confidence must be between 0 and 1");
+  if (entry.relatedMemoryItemIds?.some((id) => !id.trim())) errors.push("relatedMemoryItemIds cannot contain empty ids");
   return errors;
 }
 
@@ -16,12 +21,16 @@ export function createLearningLog(initialEntries: LearningLogEntry[] = []): Lear
       const errors = validateLearningLogEntry(entry);
       if (errors.length) throw new Error(`Invalid learning log entry: ${errors.join(", ")}`);
       if (entries.some((candidate) => candidate.eventId === entry.eventId)) throw new Error(`Learning event already exists: ${entry.eventId}`);
-      const copy = { ...entry };
+      const copy = clone(entry);
       entries.push(copy);
-      return { ...copy };
+      return clone(copy);
     },
-    list: () => entries.map((entry) => ({ ...entry })),
+    list: () => entries.map(clone),
   };
   initialEntries.forEach(log.append);
   return log;
+}
+
+function clone(entry: LearningLogEntry): LearningLogEntry {
+  return { ...entry, relatedMemoryItemIds: entry.relatedMemoryItemIds ? [...entry.relatedMemoryItemIds] : undefined };
 }
