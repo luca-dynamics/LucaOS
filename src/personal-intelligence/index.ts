@@ -13,13 +13,20 @@ export * from "./learning/learningLog";
 export * from "./privacy/privacyZones";
 export * from "./privacy/privacyPolicy";
 export * from "./doctrine/executionDoctrine";
- 
-export * from "./integration/previewBoundaries";
 
 export * from "./integration";
- 
+export {
+  createMemoryPreview as createSettingsMemoryPreview,
+  createExecutionDoctrinePreview,
+  createPrivacyZonesPreview,
+  evaluateIntegrationReadinessPreview,
+} from "./integration/previewBoundaries";
+export type {
+  MemoryPreview,
+  IntegrationReadinessBlocker,
+  IntegrationReadinessPreview,
+} from "./integration/previewBoundaries";
 
 export * from "./persistence";
 
- 
- 
+export * from "./adapters";

@@ -14,7 +14,13 @@ describe("Personal Intelligence persistence Settings preview", () => {
     );
 
     expect(markup).toContain("Persistence Proposal Preview");
-    expect(markup).toContain("No storage adapter connected.");
+    expect(markup).toContain("Adapter status");
+    expect(markup).toContain("Feature flag is disabled by default.");
+    expect(markup).toContain("Dry run");
+    expect(markup).toContain("Last adapter result sample");
+    expect(markup).toContain(
+      "Governed adapter exists, but live writes require explicit enablement and approval.",
+    );
     expect(markup).toContain("Write performed");
     expect(markup).toContain("review_required");
     expect(persistenceProposalPreview.writePerformed).toBe(false);

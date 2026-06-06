@@ -1,6 +1,7 @@
 import React from "react";
 import {
   createMemoryPersistenceProposal,
+  DEFAULT_GOVERNED_MEMORY_ADAPTER_CONFIG,
   evaluatePersistencePolicy,
   type MemoryItem,
 } from "../../personal-intelligence";
@@ -93,8 +94,8 @@ export const PersonalIntelligencePersistencePreview: React.FC<
               Persistence Proposal Preview
             </p>
             <p className="mt-1 text-xs text-[var(--app-text-muted)]">
-              Inspect a governed memory proposal before any separately reviewed
-              future adapter exists.
+              Inspect the proposal and the disabled-by-default governed adapter
+              boundary. This preview never invokes a write.
             </p>
           </div>
           <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300">
@@ -114,10 +115,33 @@ export const PersonalIntelligencePersistencePreview: React.FC<
             detail="Proposal state changes cannot write memory."
           />
           <PreviewStatus
-            label="Storage"
-            value="Disconnected"
-            detail="No storage adapter connected."
+            label="Adapter status"
+            value={
+              DEFAULT_GOVERNED_MEMORY_ADAPTER_CONFIG.enabled
+                ? "Enabled"
+                : "Disabled"
+            }
+            detail="Feature flag is disabled by default."
           />
+          <PreviewStatus
+            label="Dry run"
+            value={
+              DEFAULT_GOVERNED_MEMORY_ADAPTER_CONFIG.dryRun
+                ? "Enabled"
+                : "Disabled"
+            }
+            detail="Conversion preview has no persistence side effects."
+          />
+          <PreviewStatus
+            label="Last adapter result sample"
+            value="blocked"
+            detail="No invocation has occurred; default configuration blocks live writes."
+          />
+        </div>
+
+        <div className="rounded-xl border border-cyan-400/25 bg-cyan-400/[0.06] p-3 text-xs font-medium text-cyan-100">
+          Governed adapter exists, but live writes require explicit enablement
+          and approval.
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
