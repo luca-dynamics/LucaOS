@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Icon } from "../ui/Icon";
 import { PersonaConfig, PersonaDefinition } from "../../types";
+import { createIdentityProfilePreview } from "../../personal-intelligence";
+import { IdentityCorePreviewCard } from "./personalIntelligencePreview";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
@@ -31,6 +33,21 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
 
   const availablePersonas = config ? Object.keys(config.personas) : [];
   const currentPersona = config ? config.personas[selectedPersona] : null;
+  const identityPreview = createIdentityProfilePreview({
+    userId: "settings-preview-user",
+    displayName: "LucaOS operator",
+    preferredName: "Operator",
+    communicationStyle: "technical",
+    lucaPersonality: {
+      tone: currentPersona?.description || "Calm, direct, and collaborative",
+      traits: [selectedPersona.toLowerCase(), "user-aligned"],
+      boundaries: ["approval-before-action", "privacy-by-default"],
+    },
+    activeProjects: ["Personal Intelligence settings integration"],
+    preferredModels: ["local-first", "user-selected fallback"],
+    devicePreferences: [],
+    privacyDefaults: { private: "deny", credential: "deny", project: "allow" },
+  });
 
   // Sync local Clean Instruction state when persona changes
   // (State removal cleanup)
@@ -162,6 +179,16 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
   return (
     <div className={`space-y-4 flex flex-col ${isMobile ? "px-0 pb-16" : ""}`}>
       <SettingsSection
+        title="Personal Intelligence Preview"
+        description="Inspect how the current personality surface could map into Identity Core without saving or applying it."
+        icon="Eye"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <IdentityCorePreviewCard identity={identityPreview} />
+      </SettingsSection>
+
+      <SettingsSection
         title="Luca Personality"
         description="Tune Luca's personality mode, tone, formality, and response style."
         icon="Sparkles"
@@ -227,7 +254,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
         <SettingsCard>
           <p className="text-sm font-semibold">Selected role profile</p>
           <p className="mt-1 text-xs opacity-70">
-            Use the role selector below to choose Luca's behavior profile.
+            Use the role selector below to choose Luca&apos;s behavior profile.
           </p>
         </SettingsCard>
       </SettingsSection>

@@ -14,6 +14,16 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import {
+  createLearningEventPreview,
+  createPrivacyZonesPreview,
+  evaluateIntegrationReadinessPreview,
+} from "../../personal-intelligence";
+import {
+  IntegrationReadinessPreviewCard,
+  LearningEventPreviewCard,
+  PrivacyZonesPreviewCard,
+} from "./personalIntelligencePreview";
 interface SettingsDataTabProps {
   theme?: any;
   memoryStats: { count: number };
@@ -80,8 +90,36 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
     "AGENT_STATE",
   ];
 
+  const privacyZonesPreview = createPrivacyZonesPreview();
+  const learningEventPreview = createLearningEventPreview({
+    eventId: "learning-preview",
+    timestamp: "2026-06-06T00:00:00.000Z",
+    inputSummary: "User reviewed a Personal Intelligence settings preview.",
+    actionTaken: "Propose a bounded preference adjustment for review.",
+    outcome: "partial",
+    verificationStatus: "pending",
+    nextAdjustment:
+      "Wait for explicit approval and a future persistence adapter.",
+  });
+  const persistenceReadinessPreview = evaluateIntegrationReadinessPreview();
+
   return (
     <div className={`space-y-6 flex flex-col h-full ${isMobile ? "px-0" : ""}`}>
+      <SettingsSection
+        title="Personal Intelligence Preview"
+        description="Review privacy, learning, and persistence boundaries without changing current memory behavior."
+        icon="Eye"
+        isMobile={isMobile}
+      >
+        <div className="space-y-3">
+          <PrivacyZonesPreviewCard zones={privacyZonesPreview} />
+          <LearningEventPreviewCard event={learningEventPreview} />
+          <IntegrationReadinessPreviewCard
+            readiness={persistenceReadinessPreview}
+          />
+        </div>
+      </SettingsSection>
+
       <SettingsSection
         title="Memory Status"
         description="View and control what Luca remembers. This trust surface keeps memory clear and calm."
