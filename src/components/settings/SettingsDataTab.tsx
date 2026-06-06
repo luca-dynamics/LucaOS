@@ -14,6 +14,7 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import { PersonalIntelligencePersistencePreview } from "./PersonalIntelligencePersistencePreview";
 interface SettingsDataTabProps {
   theme?: any;
   memoryStats: { count: number };
@@ -114,6 +115,15 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
             detail="Backend save is attempted when memory changes."
           />
         </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Personal Intelligence Persistence"
+        description="Review proposal-only memory persistence readiness without changing current storage or runtime behavior."
+        icon="Shield"
+        isMobile={isMobile}
+      >
+        <PersonalIntelligencePersistencePreview />
       </SettingsSection>
 
       <SettingsSection
