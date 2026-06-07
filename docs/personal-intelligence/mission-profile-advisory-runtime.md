@@ -68,5 +68,7 @@ This phase adds no:
 1. Connect mission context to an explicit chat planning-prompt **preview**, without hidden prompt mutation.
 2. Add user-sourced mission editing with reviewed validation and privacy boundaries.
 3. Add a separately governed persistent mission audit trail.
-4. Add skill registry UI and manifest loading without execution.
-5. Consider a bounded LucaLink handoff later with redaction, scope, expiry, explicit approval, and dedicated runtime gates.
+4. Add Skill Registry UI and static manifest loading in the existing Dashboard Skills modal, with execution disabled.
+5. Plan a Skill Runtime Sandbox with explicit approval, permission, trace, and rollback gates.
+6. Consider a separately reviewed Controlled Skill Execution Pilot.
+7. Consider a bounded LucaLink handoff later with redaction, scope, expiry, explicit approval, and dedicated runtime gates.

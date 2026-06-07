@@ -13,6 +13,14 @@ Personal Intelligence integration advances through separately reviewed boundarie
 9. **Next — Skill registry UI and manifest loading.** Surface reviewed manifests and registry status without loading executable behavior or granting skill execution authority.
 10. **Later — Bounded LucaLink handoff.** Consider only minimal, redacted, scoped, expiring, explicitly approved handoff fields. Raw memory databases, hidden prompts, private reasoning, credentials, and files remain forbidden transfer material.
 
+## Current sequence after PR #215
+
+- **PR #215 — Mission Profile advisory/collaborative runtime:** complete as bounded planning context with no autonomous authority.
+- **Next — Skill Registry UI + Manifest Loading, No Execution:** static manifest validation, risk/readiness classification, and inspection in the existing Dashboard Skills modal.
+- **Next — Skill Runtime Sandbox Planning:** define isolation, approval, permission, trace, and rollback requirements without enabling execution.
+- **Later — Controlled Skill Execution Pilot:** permit only a separately reviewed, bounded, explicitly approved pilot.
+- **Later — Bounded LucaLink handoff:** consider only redacted, scoped, expiring, explicitly approved data after dedicated transport governance.
+
 ## Invariants
 
 1. Reuse existing Settings tabs and LucaOS services instead of creating parallel runtimes or a Personal Intelligence mega-tab.
