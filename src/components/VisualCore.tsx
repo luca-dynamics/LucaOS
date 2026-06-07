@@ -975,7 +975,6 @@ const VisualCore: React.FC<VisualCoreProps> = ({
           {mode === "SKILLS" && (
             <SkillsMatrix
               onClose={() => requestModeTransition("IDLE", "component_close")}
-              onExecute={() => {}}
               theme={{
                 hex: themeColor,
                 primary: `text-[${themeColor}]`,

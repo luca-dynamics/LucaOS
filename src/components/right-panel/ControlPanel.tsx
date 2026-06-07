@@ -43,6 +43,7 @@ import { Icon } from "../ui/Icon";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
 import { formatCount, friendlyRuntimeHeadline } from "./rightPanelModel";
+import OperationPermissionCenter from "./OperationPermissionCenter";
 
 interface ControlPanelProps {
   theme: { hex: string; primary: string; border: string; bg?: string; isLight?: boolean; themeName?: string };
@@ -128,6 +129,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           </div>
         </div>
       </div>
+
+      <OperationPermissionCenter />
 
       <div className="grid grid-cols-2 gap-2">
         <RightPanelMetric label="Runtime" value={diagnostics?.governance.runtimeContinuity.lifecycleState ?? loopStatus.lifecycleState} tone={loopStatus.quarantinedItemCount > 0 ? "danger" : loopStatus.lifecycleState === "degraded" ? "warn" : "good"} />
