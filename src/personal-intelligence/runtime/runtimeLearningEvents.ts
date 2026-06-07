@@ -153,7 +153,7 @@ export function convertLearningEventToPersistenceProposalPreview(
   options: ProposalPreviewOptions,
 ): LearningEventProposalPreviewResult {
   const unsafeBlockers = findUnsafeRuntimeEvidence(eventContent(event));
-  const blockers = [...new Set([...event.blockers, ...unsafeBlockers])];
+  const blockers = Array.from(new Set([...event.blockers, ...unsafeBlockers]));
   const warnings = [...event.warnings];
   const proposal = createLearningPersistenceProposal(cloneEvent(event), {
     ...options,
@@ -206,7 +206,7 @@ function finalizeLearningEvent(
   const sensitiveBlockers = ["credential", "financial", "health", "enterprise"].includes(event.privacyZone)
     ? [`Privacy Zone ${event.privacyZone} requires explicit approval metadata before learning-event review.`]
     : [];
-  const blockers = [...new Set([...event.blockers, ...sensitiveBlockers, ...findUnsafeRuntimeEvidence(eventContent(event))])];
+  const blockers = Array.from(new Set([...event.blockers, ...sensitiveBlockers, ...findUnsafeRuntimeEvidence(eventContent(event))]));
   const normalized = cloneEvent({
     ...event,
     blockers,

@@ -93,7 +93,7 @@ export function appendRuntimeTraceStage(
   };
   copy.stages[stageIndex] = nextStage;
   copy.updatedAt = nextStage.timestamp;
-  copy.blockers = [...new Set(blockers)];
+  copy.blockers = Array.from(new Set(blockers));
   copy.status = copy.blockers.length > 0 ? "blocked" : "active";
   copy.sideEffectsPerformed = false;
   return cloneTrace(copy);
