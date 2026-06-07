@@ -76,6 +76,14 @@ The existing Data & Memory tab displays:
 
 The Settings component does not invoke the adapter or `memoryService.saveMemory`, and it exposes no write button.
 
+## Approval pilot integration
+
+PR #211 adds the companion approval UI and controlled pilot layer above this adapter. The existing persistence preview remains intact, and the new component renders directly below it in the Data & Memory section.
+
+The pilot adds a safe fixture dry-run action and pure approval/checklist/audit state. Its dry-run helper forces `enabled: true`, `dryRun: true`, `allowSensitiveWrites: false`, and `allowLucaLinkSync: false`. Its live-write helper requires pilot enablement, live-write enablement, explicit confirmation, the exact confirmation phrase, and a successful side-effect-free dry-run before delegating to this governed adapter.
+
+Neither the pilot UI nor its helper calls `memoryService.saveMemory` directly. The governed adapter remains the sole legacy write boundary and continues to enforce policy, validation audit, rollback, Privacy Zone, content-safety, operation, approval-metadata, and LucaLink-disabled gates.
+
 ## Future work
 
-A future PR may add operator approval UI and controlled live-write toggles. Those controls must preserve the adapter's gates, make live mode conspicuous, retain rollback and audit evidence, and avoid render-time or preview-time writes.
+A future PR may add real user-sourced proposal selection and a persistent approval audit trail. Runtime trace and learning-event recording, mission-profile advisory/collaborative wiring, and any later bounded LucaLink handoff remain separately reviewed scopes.

@@ -30,3 +30,5 @@ export type {
 export * from "./persistence";
 
 export * from "./adapters";
+
+export * from "./approval";

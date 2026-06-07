@@ -16,6 +16,7 @@ import {
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 import { PersonalIntelligencePersistencePreview } from "./PersonalIntelligencePersistencePreview";
+import { PersonalIntelligenceMemoryApprovalPilot } from "./PersonalIntelligenceMemoryApprovalPilot";
 import {
   createLearningEventPreview,
   createPrivacyZonesPreview,
@@ -164,6 +165,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         isMobile={isMobile}
       >
         <PersonalIntelligencePersistencePreview />
+        <PersonalIntelligenceMemoryApprovalPilot />
       </SettingsSection>
 
       <SettingsSection
