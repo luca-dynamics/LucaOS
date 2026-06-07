@@ -44,3 +44,9 @@ Adapter approval and display approval remain separate model states. Neither appr
 ## Future work
 
 A future PR may connect companion-host approval notifications. Actual display-session transport may be considered only after a dedicated network and transport permission model exists. Those future integrations must preserve explicit host consent, auditable capability boundaries, and the separation between preview approval and execution.
+
+## Companion approval notification surface
+
+An `approval_required` display session intent can now be represented as a companion-host approval notification using the existing LucaLink approval queue shape and multi-host authority evaluation. The notification contains only sanitized preview metadata and blocked-action summaries.
+
+A notification `approve_preview_intent` is separate from Web Display Bridge state and display execution. It does not call the display approval helper, move the session to `approved_preview`, open or cast a display, automate a browser, or send a transport message.
