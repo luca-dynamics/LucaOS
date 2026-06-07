@@ -2,12 +2,15 @@
 
 Personal Intelligence integration advances through separately reviewed boundaries. Readiness is not approval, approval is not execution, and no later stage may bypass the policy and safety contracts established earlier.
 
-1. **PR #207 — Existing Settings preview UI.** Render Identity, Mission, memory, learning, skill, doctrine, and privacy previews in existing Settings tabs without applying or persisting them.
-2. **PR #208 — Governed persistence proposal layer.** Define side-effect-free memory/learning proposals, policy evaluation, approval metadata, audit records, rollback/delete planning, and readiness summaries.
-3. **PR #209 — Governed memory adapter.** Add the first real bridge from an approved memory proposal to the existing `memoryService`, disabled and dry-run by default, with strict privacy, approval, validation-audit, rollback, content-safety, and operation gates.
-4. **PR #210 — Approval UI and controlled live-write pilot.** Add operator-facing approval controls and narrowly scoped live-write toggles without allowing render-time, preview-time, or implicit writes.
-5. **PR #211 — Runtime trace and learning event recording.** Record bounded runtime evidence and learning events with provenance, retention, verification, and privacy controls; do not silently alter prompts, skills, routing, or memory.
-6. **PR #212 — LucaLink bounded handoff preview.** Preview only minimal, redacted, scoped, expiring, explicitly approved handoff fields. Raw memory databases, hidden prompts, private reasoning, credentials, and files remain forbidden transfer material.
+1. **PR #205 — Personal Intelligence Core.** Establish identity, mission, memory, learning, privacy, skills metadata, and execution doctrine as isolated pure modules.
+2. **PR #206 — Integration boundaries.** Add preview-only boundaries and readiness contracts without connecting live runtime behavior.
+3. **PR #207 — Existing Settings preview UI.** Render Identity, Mission, memory, learning, skill, doctrine, and privacy previews in existing Settings tabs without applying or persisting them.
+4. **PR #208 — Governed persistence proposal layer.** Define side-effect-free memory/learning proposals, policy evaluation, approval metadata, audit records, rollback/delete planning, and readiness summaries.
+5. **PR #209 — Governed memory adapter.** Add the sole governed bridge from an approved memory proposal to existing `memoryService.saveMemory`, disabled and dry-run-first by default.
+6. **PR #211 — Approval UI and controlled live-write pilot.** Add the operator checklist, safe dry-run action, and pilot-level live-write gates inside the existing Data & Memory persistence section.
+7. **Next — Runtime trace and learning event recording.** Record bounded runtime evidence and learning events with provenance, retention, verification, and privacy controls; do not silently alter prompts, skills, routing, or memory.
+8. **Next — Mission profile advisory/collaborative wiring.** Add reviewed, bounded advisory and collaborative mission-profile integration without autonomous execution or provider-router changes.
+9. **Later — Bounded LucaLink handoff.** Consider only minimal, redacted, scoped, expiring, explicitly approved handoff fields. Raw memory databases, hidden prompts, private reasoning, credentials, and files remain forbidden transfer material.
 
 ## Invariants
 
