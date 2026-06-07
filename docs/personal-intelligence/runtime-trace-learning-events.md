@@ -59,5 +59,11 @@ No new Personal Intelligence mega-tab is introduced.
 
 1. Connect real, already-sanitized approval-pilot events to the pure trace recorder.
 2. Add a separately governed persistent audit trail.
-3. Add mission-profile advisory and collaborative wiring without autonomous execution.
-4. Consider a bounded LucaLink handoff later, with redaction, scope, expiry, and explicit approval.
+3. Use the mission-profile advisory/collaborative runtime layer to create bounded planning evidence without autonomous execution.
+4. Add skill registry UI and manifest loading without execution.
+5. Add a separately governed persistent mission audit trail.
+6. Consider a bounded LucaLink handoff later, with redaction, scope, expiry, and explicit approval.
+
+## Mission-profile trace bridge
+
+The mission-profile advisory runtime now composes the same seven doctrine stages into evidence-only traces. It records receipt of mission context, deterministic alignment interpretation, an advisory plan, pending user approval, a skipped Act stage, external-or-pending verification, and a proposal-ready learning candidate. Mission alignment remains planning evidence rather than approval, and the bridge performs no action or persistence.

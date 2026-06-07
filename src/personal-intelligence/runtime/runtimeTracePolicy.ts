@@ -12,7 +12,7 @@ const UNSAFE_CONTENT_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
   { pattern: /(?:password|credential|client_secret|private_key)\s*[:=]/i, reason: "Credential or secret material is not allowed in runtime evidence." },
   { pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/, reason: "Private key material is not allowed in runtime evidence." },
   { pattern: /\b(?:sk|pk|ghp|github_pat)_[A-Za-z0-9_-]{16,}\b/, reason: "Token-like material is not allowed in runtime evidence." },
-  { pattern: /\bBearer\s+[A-Za-z0-9._~+\/-]{16,}/i, reason: "Token-like material is not allowed in runtime evidence." },
+  { pattern: /\bBearer\s+[A-Za-z0-9._~+/-]{16,}/i, reason: "Token-like material is not allowed in runtime evidence." },
 ];
 const EXECUTION_AUTHORITY_PATTERN = /\b(?:execute now|invoked? (?:a )?tool|dispatched? (?:a )?workflow|authority to act|permission to execute|ran (?:a )?shell command|performed the action)\b/i;
 const RAW_DUMP_PATTERN = /(?:\{[\s\S]{1200,}\}|\[[\s\S]{1200,}\]|data:[^;]+;base64,)/i;
@@ -24,7 +24,7 @@ export function findUnsafeRuntimeEvidence(content: string): string[] {
   if (RAW_DUMP_PATTERN.test(content)) {
     blockers.push("Runtime traces must contain bounded summaries and evidence references, not raw payload dumps.");
   }
-  return [...new Set(blockers)];
+  return Array.from(new Set(blockers));
 }
 
 export function evaluateRuntimeTracePolicy(
@@ -45,7 +45,8 @@ export function evaluateRuntimeTracePolicy(
   if ((trace as { sideEffectsPerformed?: boolean }).sideEffectsPerformed !== false) {
     blockers.push("Runtime traces cannot claim side effects or execution authority.");
   }
-  for (const [index, stage] of evaluatedTrace.stages.entries()) {
+  for (let index = 0; index < evaluatedTrace.stages.length; index += 1) {
+    const stage = evaluatedTrace.stages[index];
     if ((trace.stages[index] as { sideEffectsPerformed?: boolean } | undefined)?.sideEffectsPerformed !== false) {
       blockers.push(`${stage.stage} stage cannot claim side effects.`);
     }
@@ -77,8 +78,8 @@ export function evaluateRuntimeTracePolicy(
     blockers.push("Private-zone trace review requires explicit approval or an allowed private-review policy.");
   }
 
-  evaluatedTrace.blockers = [...new Set(blockers)];
-  evaluatedTrace.warnings = [...new Set(warnings)];
+  evaluatedTrace.blockers = Array.from(new Set(blockers));
+  evaluatedTrace.warnings = Array.from(new Set(warnings));
   evaluatedTrace.sideEffectsPerformed = false;
   if (evaluatedTrace.blockers.length > 0) {
     evaluatedTrace.status = "blocked";
