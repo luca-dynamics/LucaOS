@@ -1,0 +1,30 @@
+import type { CreateAdapterFileInstallRequestFromPlanOptions, DeclarativeAdapterPlan, LucaLinkAdapterFileInstallPermissionRequest, LucaLinkAdapterFileWritePermissionRequest, LucaLinkAdapterInstallPermissionRequest } from "./adapterFileInstallTypes";
+import { evaluateLucaLinkAdapterFileInstallPermission } from "./adapterFileInstallDecision";
+
+const BASE = { adapterId: "fixture-adapter", requestedByHostId: "primary-host", targetHostId: "companion-host", createdAt: "2030-01-01T00:00:00.000Z", expiresAt: "2030-01-02T00:00:00.000Z", privacyLevel: "project" as const, requiresApproval: true, approvalSatisfied: false, provenance: "bundled fixture declaration", hash: "sha256:fixture-metadata-digest", signature: "fixture-signature-metadata", warnings: [], blockers: [], sideEffectsPerformed: false as const };
+const write = (requestId: string, input: Partial<LucaLinkAdapterFileWritePermissionRequest>): LucaLinkAdapterFileWritePermissionRequest => ({ ...BASE, requestId, operation: "file_write", targetPath: "app/config/adapter.json", pathKind: "app_config", fileType: "json", contentSummary: "Declarative adapter configuration metadata", overwriteRequested: false, backupRequired: false, rollbackPlanSummary: "Restore the prior declarative configuration snapshot.", riskLevel: "low", ...input });
+const install = (requestId: string, input: Partial<LucaLinkAdapterInstallPermissionRequest>): LucaLinkAdapterInstallPermissionRequest => ({ ...BASE, requestId, operation: "install", packageName: "fixture-adapter-manifest", packageKind: "adapter_manifest", installScope: "app_sandbox", sourceKind: "signed_package", sourceSummary: "Signed declarative manifest metadata bundled for policy preview", requiredPermissions: ["display.read"], requiresNetwork: false, requiresAdmin: false, requiresShell: false, rollbackPlanSummary: "Remove the inert manifest registration metadata.", uninstallPlanSummary: "Restore the prior manifest registry snapshot.", riskLevel: "medium", ...input });
+
+export const LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURES: readonly LucaLinkAdapterFileInstallPermissionRequest[] = [
+  write("adapter-config-write", {}),
+  write("sandbox-temp-write", { targetPath: "sandbox/session/preview.txt", pathKind: "temp_sandbox", fileType: "text", contentSummary: "Ephemeral preview text", requiresApproval: false }),
+  write("user-document-overwrite", { targetPath: "documents/project-notes.txt", pathKind: "user_documents", fileType: "text", contentSummary: "Project notes update", overwriteRequested: true, backupRequired: false, rollbackPlanSummary: undefined, riskLevel: "medium" }),
+  write("system-path-write", { targetPath: "/etc/luca/adapter.json", pathKind: "system_path" }),
+  write("executable-script-write", { targetPath: "app/data/helper-script", pathKind: "app_data", fileType: "script", contentSummary: "Blocked executable content classification" }),
+  install("signed-adapter-manifest", {}),
+  install("connector-manifest", { packageName: "fixture-connector-manifest", packageKind: "connector_manifest", sourceKind: "local_declaration", sourceSummary: "Locally declared connector metadata" }),
+  install("remote-url-install", { packageName: "remote-package-metadata", sourceKind: "remote_url", sourceSummary: "Remote package location intentionally omitted" }),
+  install("shell-required-install", { packageName: "shell-required-helper", requiresShell: true }),
+  install("admin-system-install", { packageName: "admin-helper", requiresAdmin: true, installScope: "system_wide", riskLevel: "high" }),
+  install("unsigned-unknown-install", { packageName: "unknown-package", packageKind: "unknown", sourceKind: "unknown", installScope: "unknown", provenance: "", hash: undefined, signature: undefined, rollbackPlanSummary: undefined, uninstallPlanSummary: undefined, riskLevel: "high" }),
+];
+export const LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS = LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURES.map((request) => evaluateLucaLinkAdapterFileInstallPermission(request, { now: "2029-12-31T00:00:00.000Z" }));
+
+export function createAdapterFileInstallPermissionRequestFromAdapterPlan(plan: DeclarativeAdapterPlan, options: CreateAdapterFileInstallRequestFromPlanOptions = {}): LucaLinkAdapterFileInstallPermissionRequest | undefined {
+  const operation = options.operation ?? (plan.requestedCapabilities.includes("file.write.request") ? "file_write" : plan.requestedCapabilities.includes("install.request") ? "install" : undefined);
+  if (!operation) return undefined;
+  const createdAt = options.createdAt ?? "2030-01-01T00:00:00.000Z";
+  const common = { requestId: options.requestId ?? `${plan.planId}-${operation}`, adapterId: plan.adapterId, requestedByHostId: plan.requestedByHostId, targetHostId: plan.targetHostId, createdAt, expiresAt: options.expiresAt ?? "2030-01-01T00:15:00.000Z", privacyLevel: "project" as const, riskLevel: plan.riskLevel, requiresApproval: true, approvalSatisfied: false, provenance: options.provenance ?? "adapter sandbox plan metadata", hash: options.hash, signature: options.signature, warnings: [...plan.warnings], blockers: plan.status === "blocked" || plan.status === "rejected" ? [...plan.blockers, `Adapter plan status ${plan.status} prevents permission readiness.`] : [...plan.blockers], sideEffectsPerformed: false as const };
+  if (operation === "file_write") return { ...common, operation, targetPath: options.targetPath ?? "unclassified/adapter-request", pathKind: options.pathKind ?? "unknown", fileType: options.fileType ?? "unknown", contentSummary: options.contentSummary ?? "File-write capability declared by adapter sandbox plan", overwriteRequested: false, backupRequired: false };
+  return { ...common, operation, packageName: options.packageName ?? `${plan.adapterId}-declared-package`, packageKind: options.packageKind ?? "unknown", installScope: options.installScope ?? "unknown", sourceKind: options.sourceKind ?? "unknown", sourceSummary: options.sourceSummary ?? "Install capability declared by adapter sandbox plan", requiredPermissions: [], requiresNetwork: false, requiresAdmin: false, requiresShell: false };
+}
