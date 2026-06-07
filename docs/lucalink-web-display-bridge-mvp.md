@@ -50,3 +50,7 @@ A future PR may connect companion-host approval notifications. Actual display-se
 An `approval_required` display session intent can now be represented as a companion-host approval notification using the existing LucaLink approval queue shape and multi-host authority evaluation. The notification contains only sanitized preview metadata and blocked-action summaries.
 
 A notification `approve_preview_intent` is separate from Web Display Bridge state and display execution. It does not call the display approval helper, move the session to `approved_preview`, open or cast a display, automate a browser, or send a transport message.
+
+## Transport permission conversion
+
+Web display session intents can be converted into side-effect-free LucaLink transport permission requests. The conversion summarizes display metadata for channel/message-class evaluation only; it does not send a display intent, approve a session, open or control a browser, cast content, or authorize runtime transport.

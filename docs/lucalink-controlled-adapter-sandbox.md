@@ -97,3 +97,7 @@ They may be used to construct an inert, summarized Sensor Bridge snapshot, but
 they do not call sensor APIs, execute an adapter entrypoint, request device
 permissions, collect live telemetry, send transport messages, or control a
 device. Adapter or host approval does not grant live sensor collection.
+
+## Transport permission conversion
+
+Adapter execution plans can be converted into side-effect-free LucaLink transport permission requests for policy preview. Conversion does not execute an adapter, load an entrypoint, authorize a capability, mutate a network, or send a message; live transport readiness remains false.
