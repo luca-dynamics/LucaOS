@@ -56,6 +56,11 @@ import {
   DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG,
   LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN,
 } from "../../services/lucaLink/adapters";
+import {
+  LUCA_LINK_WEB_DISPLAY_BLOCKED_ACTIONS,
+  LUCA_LINK_WEB_DISPLAY_SAMPLE_INTENT,
+  LUCA_LINK_WEB_DISPLAY_SAMPLE_PREVIEW,
+} from "../../services/lucaLink/display";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
@@ -1629,6 +1634,70 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 · sideEffectsPerformed{" "}
                 {String(
                   LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.sideEffectsPerformed,
+                )}
+              </p>
+            </div>
+          </SettingsCard>
+          <SettingsCard>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Web Display Bridge MVP</p>
+                <p className="mt-1 text-xs opacity-70">
+                  Read-only display session intents and sanitized previews only.
+                  This surface does not open, cast, control, or send to a browser.
+                </p>
+              </div>
+              <span
+                className="rounded-full border px-2 py-1 text-[11px] font-semibold"
+                style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+              >
+                Read-only MVP
+              </span>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <SettingsStatusCard
+                label="Status"
+                value="Read-only MVP"
+                detail="Display bridge default is inert"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Host approval"
+                value="Required"
+                detail="Presentation requires target-host approval"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Display mode"
+                value="Presentation / read-only"
+                detail="No browser or DOM automation"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Allowed actions"
+                value="None"
+                detail="Preview payload is non-interactive"
+                accentColor={theme.hex}
+              />
+            </div>
+            <div
+              className="mt-3 rounded-lg border p-3"
+              style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+            >
+              <p className="text-xs font-semibold">Blocked actions</p>
+              <p className="mt-1 text-xs opacity-70">
+                {LUCA_LINK_WEB_DISPLAY_BLOCKED_ACTIONS.join(" · ")}
+              </p>
+              <p className="mt-2 text-xs opacity-70">
+                Sample display session intent status:{" "}
+                <span className="font-semibold">
+                  {LUCA_LINK_WEB_DISPLAY_SAMPLE_INTENT.status}
+                </span>{" "}
+                · sample preview payload status: ready · allowed actions{" "}
+                {LUCA_LINK_WEB_DISPLAY_SAMPLE_PREVIEW.allowedActions.length} ·
+                sideEffectsPerformed{" "}
+                {String(
+                  LUCA_LINK_WEB_DISPLAY_SAMPLE_PREVIEW.sideEffectsPerformed,
                 )}
               </p>
             </div>

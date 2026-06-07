@@ -64,6 +64,18 @@ describe("Settings LucaLink Device Center runtime safety", () => {
     expect(lucaLinkSource).not.toMatch(/>Install adapter</i);
   });
 
+  it("shows the Web Display Bridge MVP as read-only and approval-gated", () => {
+    expect(lucaLinkSource).toContain("Web Display Bridge MVP");
+    expect(lucaLinkSource).toContain("Read-only MVP");
+    expect(lucaLinkSource).toContain("Presentation requires target-host approval");
+    expect(lucaLinkSource).toContain("Sample display session intent status");
+    expect(lucaLinkSource).toContain("sample preview payload status");
+    expect(lucaLinkSource).not.toMatch(/>Execute display</i);
+    expect(lucaLinkSource).not.toMatch(/>Cast</i);
+    expect(lucaLinkSource).not.toMatch(/>Control browser</i);
+    expect(lucaLinkSource).not.toMatch(/>Open browser</i);
+  });
+
   it("uses host-aware terminology and explicit model-only safety copy", () => {
     expect(lucaLinkSource).toContain('label="Primary Host"');
     expect(lucaLinkSource).not.toMatch(/Origin approval/i);
