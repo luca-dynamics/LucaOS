@@ -16,6 +16,7 @@ export function canApplySkillPermissionDecision(
   decision: PersonalIntelligenceSkillPermissionDecision,
 ): boolean {
   if (gate.status === "blocked") return false;
+  if (decision === "grant_for_review" && gate.status === "requires_primary_approval") return false;
   if (decision === "grant_for_review") return ["pending", "denied", "expired"].includes(gate.status);
   if (decision === "deny") return gate.status !== "denied";
   return gate.status === "granted_for_review";
