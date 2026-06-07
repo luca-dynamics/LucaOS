@@ -78,6 +78,7 @@ import {
   settingsControlInlineStyle,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import { SettingsLucaLinkSensorBridge } from "./SettingsLucaLinkSensorBridge";
 
 // Device Center source-level safety copy anchors for tests:
 // Admin does not bypass Primary Host approvals
@@ -1643,6 +1644,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               </p>
             </div>
           </SettingsCard>
+          <SettingsLucaLinkSensorBridge accentColor={theme.hex} />
           <SettingsCard>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
