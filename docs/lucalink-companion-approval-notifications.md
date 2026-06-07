@@ -59,3 +59,10 @@ The existing LucaLink Device Center Approvals surface includes a read-only **Com
 ## Future work
 
 A future PR may connect an actual companion-host notification transport only after the LucaLink network and transport permission model is complete. That work must preserve explicit host consent, existing queue and authority semantics, redaction, expiry, auditability, and the separation between notification decisions and execution.
+
+## Sensor bridge approval boundary
+
+`sensor.read` and `device.status.read` are currently model-only/readiness-only.
+A companion approval notification may describe a future request, but approval
+or decision intent creation does not grant live sensor collection, prompt for a
+sensor permission, start polling, send telemetry, or control a device.

@@ -89,3 +89,11 @@ pre-authorize them.
 Approval requirements derived from adapter dry-run plans can be represented through the existing LucaLink approval request model as companion-host notification cards. The notification layer reuses multi-host authority and redacted payload-preview rules; it does not execute the adapter or grant its requested capability.
 
 Notification decision intents remain separate from adapter approval state and execution. Approve, deny, or escalation intent creation does not mutate the approval queue, install code, write files, change a network, or invoke an adapter entrypoint.
+
+## Read-only sensor bridge capability boundary
+
+`sensor.read` and `device.status.read` are currently model-only/readiness-only.
+They may be used to construct an inert, summarized Sensor Bridge snapshot, but
+they do not call sensor APIs, execute an adapter entrypoint, request device
+permissions, collect live telemetry, send transport messages, or control a
+device. Adapter or host approval does not grant live sensor collection.
