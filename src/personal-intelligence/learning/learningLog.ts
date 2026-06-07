@@ -11,6 +11,7 @@ export function validateLearningLogEntry(entry: LearningLogEntry): string[] {
   if (entry.source !== undefined && !entry.source.trim()) errors.push("source cannot be empty");
   if (entry.confidence !== undefined && (entry.confidence < 0 || entry.confidence > 1)) errors.push("confidence must be between 0 and 1");
   if (entry.relatedMemoryItemIds?.some((id) => !id.trim())) errors.push("relatedMemoryItemIds cannot contain empty ids");
+  if (entry.relatedTraceId !== undefined && !entry.relatedTraceId.trim()) errors.push("relatedTraceId cannot be empty");
   return errors;
 }
 

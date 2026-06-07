@@ -8,7 +8,7 @@ Personal Intelligence integration advances through separately reviewed boundarie
 4. **PR #208 — Governed persistence proposal layer.** Define side-effect-free memory/learning proposals, policy evaluation, approval metadata, audit records, rollback/delete planning, and readiness summaries.
 5. **PR #209 — Governed memory adapter.** Add the sole governed bridge from an approved memory proposal to existing `memoryService.saveMemory`, disabled and dry-run-first by default.
 6. **PR #211 — Approval UI and controlled live-write pilot.** Add the operator checklist, safe dry-run action, and pilot-level live-write gates inside the existing Data & Memory persistence section.
-7. **Next — Runtime trace and learning event recording.** Record bounded runtime evidence and learning events with provenance, retention, verification, and privacy controls; do not silently alter prompts, skills, routing, or memory.
+7. **Runtime trace and learning event recording (this phase).** Record bounded doctrine-stage evidence and proposal-ready learning events with provenance, verification, privacy controls, and no execution or persistence side effects.
 8. **Next — Mission profile advisory/collaborative wiring.** Add reviewed, bounded advisory and collaborative mission-profile integration without autonomous execution or provider-router changes.
 9. **Later — Bounded LucaLink handoff.** Consider only minimal, redacted, scoped, expiring, explicitly approved handoff fields. Raw memory databases, hidden prompts, private reasoning, credentials, and files remain forbidden transfer material.
 

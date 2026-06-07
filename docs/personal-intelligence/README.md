@@ -14,11 +14,11 @@ PR #205 created passive contracts for:
 - a bounded Learning Log; and
 - policy helpers for explicit Privacy Zones.
 
-PR #206 adds integration boundaries, readiness evaluation, mapping descriptions, execution-trace safeguards, and combined preview composition. These additions prepare future onboarding, settings, mission, memory, skill, learning, and trace work while remaining defensive and side-effect-free.
+PR #206 adds integration boundaries, readiness evaluation, mapping descriptions, execution-trace safeguards, and combined preview composition. Later phases added Settings previews, governed persistence proposals, the disabled/dry-run-first memory adapter, and the controlled approval pilot. The current [runtime trace and learning-events phase](runtime-trace-learning-events.md) adds in-memory evidence and proposal-ready learning previews while remaining defensive and side-effect-free.
 
 ## Integration boundary
 
-No live runtime wiring is active. The module does not register itself with app boot, providers, VisualCore, LucaLink, Device Center, relay, WebRTC, VPN, storage, network, tool execution, or runtime services. Memory serialization returns readable file descriptions but performs no disk I/O, and skill entrypoints remain inert declarations.
+No Personal Intelligence execution wiring is active. The module does not register itself with app boot, providers, VisualCore, LucaLink, Device Center, relay, WebRTC, VPN, storage, network, tool execution, or runtime services. Memory serialization returns readable file descriptions but performs no disk I/O, and skill entrypoints remain inert declarations.
 
 Future wiring must pass privacy, approval, persistence, execution, network, and runtime gates in separately reviewed PRs. See the [runtime wiring audit](runtime-wiring-audit.md), [integration boundaries](integration-boundaries.md), and [future roadmap](future-wiring-roadmap.md).
 
