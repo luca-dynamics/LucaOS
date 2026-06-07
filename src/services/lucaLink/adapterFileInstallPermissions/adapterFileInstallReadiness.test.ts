@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS, LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURES, summarizeAdapterFileInstallPermissionReadiness } from ".";
+describe("adapter file/install readiness", () => { it("summarizes requests while execution remains disabled", () => { const result = summarizeAdapterFileInstallPermissionReadiness(LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURES, LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS); expect(result.totalRequests).toBe(11); expect(result.readyForExecution).toBe(false); expect(result.writeEnabled).toBe(false); expect(result.installEnabled).toBe(false); expect(result.sideEffectsPerformed).toBe(false); }); });
