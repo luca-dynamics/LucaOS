@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { personalIntelligenceSkillSandboxPlanFixtures } from "../personal-intelligence/skillSandbox";
 import SkillsMatrix from "./SkillsMatrix";
+import { SkillPermissionGrantProvider } from "./SkillPermissionGrantContext";
 import { SkillSandboxPlanPanel } from "./SkillSandboxPlanPanel";
 
 describe("Skill Sandbox Plan panel", () => {
@@ -17,11 +18,9 @@ describe("Skill Sandbox Plan panel", () => {
     expect(html).toContain("Approval planning does not satisfy approval.");
   });
 
-  it("does not expose an enabled run control or call onExecute", () => {
-    const onExecute = vi.fn();
-    const html = renderToStaticMarkup(<SkillsMatrix onClose={() => undefined} onExecute={onExecute} />);
+  it("does not expose an enabled run or execute control", () => {
+    const html = renderToStaticMarkup(<SkillPermissionGrantProvider><SkillsMatrix onClose={() => undefined} /></SkillPermissionGrantProvider>);
     expect(html).not.toMatch(/>\s*(Run|Execute)\s*</);
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Execution disabled<\/button>/);
-    expect(onExecute).not.toHaveBeenCalled();
   });
 });

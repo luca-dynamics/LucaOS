@@ -3,7 +3,6 @@ import { SkillRegistryPanel } from "./SkillRegistryPanel";
 
 interface Props {
   onClose: () => void;
-  onExecute: (name: string, args: unknown) => void;
   theme?: { hex: string; primary: string; border: string; bg: string };
 }
 

@@ -107,6 +107,7 @@ import ControlPanel from "./components/right-panel/ControlPanel";
 import ActivityPanel from "./components/right-panel/ActivityPanel";
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
 import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
+import { SkillPermissionGrantProvider } from "./components/SkillPermissionGrantContext";
 import {
   MOBILE_RIGHT_PANEL_LABELS,
   RIGHT_PANEL_MODES,
@@ -192,7 +193,9 @@ function normalizePersonaValue(value: unknown): PersonaType {
 export default function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <SkillPermissionGrantProvider>
+        <AppContent />
+      </SkillPermissionGrantProvider>
     </AppProvider>
   );
 }

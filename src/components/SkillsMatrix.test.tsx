@@ -3,8 +3,9 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import SkillsMatrix from "./SkillsMatrix";
+import { SkillPermissionGrantProvider } from "./SkillPermissionGrantContext";
 
-const html = renderToStaticMarkup(<SkillsMatrix onClose={() => undefined} onExecute={() => undefined} />);
+const html = renderToStaticMarkup(<SkillPermissionGrantProvider><SkillsMatrix onClose={() => undefined} /></SkillPermissionGrantProvider>);
 
 describe("existing Dashboard Skills modal registry integration", () => {
   it("renders manifest registry entries inside the existing modal", () => {
@@ -21,6 +22,8 @@ describe("existing Dashboard Skills modal registry integration", () => {
     expect(html).toContain("Sandbox Plan");
     expect(html).toContain("Sandbox planning only — skill execution remains disabled.");
     expect(html).toContain("Approval planning does not satisfy approval.");
+    expect(html).toContain("Permission Grant Review");
+    expect(html).toContain("Ephemeral, scoped review decisions only.");
   });
 
   it("has no enabled Run or Execute control", () => {

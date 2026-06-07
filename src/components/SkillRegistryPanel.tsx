@@ -10,6 +10,7 @@ import {
 } from "../personal-intelligence/skills";
 import { createPersonalIntelligenceSkillSandboxPlan } from "../personal-intelligence/skillSandbox";
 import { SkillSandboxPlanPanel } from "./SkillSandboxPlanPanel";
+import { SkillPermissionGrantPanel } from "./SkillPermissionGrantPanel";
 
 interface SkillRegistryPanelProps {
   accent: string;
@@ -106,6 +107,7 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
       </div>
 
       <SkillSandboxPlanPanel plan={sandboxPlan} />
+      <SkillPermissionGrantPanel plan={sandboxPlan} />
 
       <div className="mt-4 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-4">
         <p className="text-sm font-bold text-red-200">Execution disabled</p>

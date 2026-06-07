@@ -60,7 +60,6 @@ interface OriginOverlayPanelsProps {
   hackingLogs: any[];
   showSkillsMatrix: boolean;
   setShowSkillsMatrix: (show: boolean) => void;
-  handleSkillExecute: (skillName: string, args: any) => Promise<any>;
   showStockTerminal: boolean;
   setShowStockTerminal: (show: boolean) => void;
   stockTerminalSymbol: string;
@@ -119,7 +118,6 @@ const OriginOverlayPanels: React.FC<OriginOverlayPanelsProps> = ({
   hackingLogs,
   showSkillsMatrix,
   setShowSkillsMatrix,
-  handleSkillExecute,
   showStockTerminal,
   setShowStockTerminal,
   stockTerminalSymbol,
@@ -261,7 +259,6 @@ const OriginOverlayPanels: React.FC<OriginOverlayPanelsProps> = ({
         setShowNetworkMap={setShowNetworkMap}
         showSkillsMatrix={showSkillsMatrix}
         setShowSkillsMatrix={setShowSkillsMatrix}
-        handleSkillExecute={handleSkillExecute}
         showSubsystemDashboard={showSubsystemDashboard}
         setShowSubsystemDashboard={setShowSubsystemDashboard}
       />

@@ -867,12 +867,6 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         hackingLogs={hackingLogs}
         showSkillsMatrix={showSkillsMatrix}
         setShowSkillsMatrix={setShowSkillsMatrix}
-        handleSkillExecute={(skillName, args) =>
-          executeTool("executeCustomSkill", {
-            skillName,
-            args,
-          })
-        }
         showStockTerminal={showStockTerminal}
         setShowStockTerminal={setShowStockTerminal}
         stockTerminalSymbol={stockTerminalSymbol}

@@ -42,7 +42,6 @@ interface CuratedOriginOverlayPanelsProps {
   setShowNetworkMap: (show: boolean) => void;
   showSkillsMatrix: boolean;
   setShowSkillsMatrix: (show: boolean) => void;
-  handleSkillExecute: (skillName: string, args: any) => Promise<any>;
   showSubsystemDashboard: boolean;
   setShowSubsystemDashboard: (show: boolean) => void;
 }
@@ -75,7 +74,6 @@ const CuratedOriginOverlayPanels: React.FC<CuratedOriginOverlayPanelsProps> = ({
   setShowNetworkMap,
   showSkillsMatrix,
   setShowSkillsMatrix,
-  handleSkillExecute,
   showSubsystemDashboard,
   setShowSubsystemDashboard,
 }) => {
@@ -154,7 +152,6 @@ const CuratedOriginOverlayPanels: React.FC<CuratedOriginOverlayPanelsProps> = ({
         <SkillsMatrix
           onClose={() => setShowSkillsMatrix(false)}
           theme={theme}
-          onExecute={handleSkillExecute}
         />
       )}
 
