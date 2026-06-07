@@ -8,6 +8,8 @@ import {
   type PersonalIntelligenceSkillRiskLevel,
   type PersonalIntelligenceSkillStatus,
 } from "../personal-intelligence/skills";
+import { createPersonalIntelligenceSkillSandboxPlan } from "../personal-intelligence/skillSandbox";
+import { SkillSandboxPlanPanel } from "./SkillSandboxPlanPanel";
 
 interface SkillRegistryPanelProps {
   accent: string;
@@ -48,6 +50,7 @@ function RequirementList({ title, values }: { title: string; values?: string[] }
 
 function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegistryEntry }) {
   const memoryPolicy = entry.memoryPolicy?.access ?? "none";
+  const sandboxPlan = useMemo(() => createPersonalIntelligenceSkillSandboxPlan(entry), [entry]);
   return (
     <section className="min-w-0 flex-1 overflow-y-auto border-l border-white/10 bg-black/20 p-5" aria-label="Skill manifest detail">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -101,6 +104,8 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
           <p className="mt-3 text-xs text-slate-500">Approval: {entry.readiness.requiresApproval ? "required" : "not requested"} · Sandbox: {entry.readiness.requiresSandbox ? "required" : "not requested"}</p>
         </div>
       </div>
+
+      <SkillSandboxPlanPanel plan={sandboxPlan} />
 
       <div className="mt-4 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-4">
         <p className="text-sm font-bold text-red-200">Execution disabled</p>
