@@ -61,6 +61,11 @@ import {
   LUCA_LINK_WEB_DISPLAY_SAMPLE_INTENT,
   LUCA_LINK_WEB_DISPLAY_SAMPLE_PREVIEW,
 } from "../../services/lucaLink/display";
+import {
+  LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION,
+  LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION_INBOX,
+  summarizeApprovalNotificationInbox,
+} from "../../services/lucaLink/approvalNotifications";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
@@ -1644,7 +1649,8 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 <p className="text-sm font-semibold">Web Display Bridge MVP</p>
                 <p className="mt-1 text-xs opacity-70">
                   Read-only display session intents and sanitized previews only.
-                  This surface does not open, cast, control, or send to a browser.
+                  This surface does not open, cast, control, or send to a
+                  browser.
                 </p>
               </div>
               <span
@@ -2217,6 +2223,82 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               </p>
             </SettingsCard>
           )}
+
+          <SettingsCard>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">
+                  Companion Approval Notifications
+                </p>
+                <p className="mt-1 text-xs opacity-70">
+                  Intent-only notification preview. No execution, queue
+                  mutation, socket send, display cast, browser open, or device
+                  control is performed.
+                </p>
+              </div>
+              <span className="rounded-full border px-2 py-1 text-xs font-semibold uppercase tracking-wide">
+                intent-only
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <SettingsStatusCard
+                label="Pending notifications"
+                value={`${summarizeApprovalNotificationInbox(LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION_INBOX).pending}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Risk"
+                value={LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.risk}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Surface decision"
+                value={LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.surfaceDecision}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Audit only"
+                value={`sideEffectsPerformed ${String(LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.sideEffectsPerformed)}`}
+                accentColor={theme.hex}
+              />
+            </div>
+            <div
+              className="mt-3 rounded-lg border p-3"
+              style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+            >
+              <p className="text-sm font-semibold">
+                {LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.title}
+              </p>
+              <p className="mt-1 text-xs opacity-70">
+                Expires{" "}
+                {formatLucaLinkTimestamp(
+                  LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.expiresAt,
+                )}
+              </p>
+              <p className="mt-2 text-xs font-semibold">
+                Allowed notification actions
+              </p>
+              <p className="mt-1 text-xs opacity-70">
+                {LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.allowedNotificationActions.join(
+                  " · ",
+                )}
+              </p>
+              <p className="mt-2 text-xs font-semibold">Blocked actions</p>
+              <p className="mt-1 text-xs opacity-70">
+                {LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.blockedActions.join(
+                  " · ",
+                )}
+              </p>
+              <p className="mt-2 text-xs font-semibold">
+                Payload preview summary
+              </p>
+              <p className="mt-1 break-words text-xs opacity-70">
+                {renderPayloadPreview(
+                  LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION.payloadPreview,
+                )}
+              </p>
+            </div>
+          </SettingsCard>
 
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
             <div className="space-y-3">

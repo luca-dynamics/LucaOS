@@ -64,10 +64,27 @@ describe("Settings LucaLink Device Center runtime safety", () => {
     expect(lucaLinkSource).not.toMatch(/>Install adapter</i);
   });
 
+  it("shows companion approval notifications as intent-only read-only cards", () => {
+    expect(lucaLinkSource).toContain("Companion Approval Notifications");
+    expect(lucaLinkSource).toContain("Intent-only notification preview");
+    expect(lucaLinkSource).toMatch(/No execution, queue\s+mutation/);
+    expect(lucaLinkSource).toContain('label="Risk"');
+    expect(lucaLinkSource).toContain('label="Surface decision"');
+    expect(lucaLinkSource).toContain("Allowed notification actions");
+    expect(lucaLinkSource).toContain("Blocked actions");
+    expect(lucaLinkSource).toContain("sideEffectsPerformed");
+    expect(lucaLinkSource).not.toMatch(/>Approve notification</i);
+    expect(lucaLinkSource).not.toMatch(/>Cast notification</i);
+    expect(lucaLinkSource).not.toMatch(/>Open notification</i);
+    expect(lucaLinkSource).not.toMatch(/>Execute notification</i);
+  });
+
   it("shows the Web Display Bridge MVP as read-only and approval-gated", () => {
     expect(lucaLinkSource).toContain("Web Display Bridge MVP");
     expect(lucaLinkSource).toContain("Read-only MVP");
-    expect(lucaLinkSource).toContain("Presentation requires target-host approval");
+    expect(lucaLinkSource).toContain(
+      "Presentation requires target-host approval",
+    );
     expect(lucaLinkSource).toContain("Sample display session intent status");
     expect(lucaLinkSource).toContain("sample preview payload status");
     expect(lucaLinkSource).not.toMatch(/>Execute display</i);
