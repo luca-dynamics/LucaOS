@@ -52,6 +52,10 @@ import type {
   LucaLinkGuestSessionRecord,
   LucaLinkGuestSessionSummary,
 } from "../../services/lucaLink/lucaLinkGuestSessionPolicy";
+import {
+  DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG,
+  LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN,
+} from "../../services/lucaLink/adapters";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
@@ -1564,6 +1568,69 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   </div>
                 ),
               )}
+            </div>
+          </SettingsCard>
+          <SettingsCard>
+            <p className="text-sm font-semibold">Adapter Sandbox Runtime</p>
+            <p className="mt-1 text-xs opacity-70">
+              Read-only controlled adapter planning status. This surface does
+              not load entrypoints, execute generated code or shell commands,
+              write files, install adapters, mutate networks, or control
+              devices.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <SettingsStatusCard
+                label="Runtime status"
+                value={
+                  DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG.enabled
+                    ? "Enabled"
+                    : "Disabled"
+                }
+                detail="Default blocked state"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Dry-run"
+                value={
+                  DEFAULT_LUCA_LINK_ADAPTER_SANDBOX_CONFIG.dryRun
+                    ? "Enabled"
+                    : "Blocked"
+                }
+                detail={`Sample plan: ${LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.status}`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Code and shell"
+                value="Blocked"
+                detail="Generated-code and shell execution disabled"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Host approval"
+                value="Required"
+                detail="Approval never grants execution"
+                accentColor={theme.hex}
+              />
+            </div>
+            <div
+              className="mt-3 rounded-lg border p-3"
+              style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+            >
+              <p className="text-xs font-semibold">Blocked side effects</p>
+              <p className="mt-1 text-xs opacity-70">
+                File write · install · network mutation · device control ·
+                credential access
+              </p>
+              <p className="mt-2 text-xs opacity-70">
+                Sample dry-run plan status:{" "}
+                <span className="font-semibold">
+                  {LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.status}
+                </span>{" "}
+                · sideEffectsPerformed{" "}
+                {String(
+                  LUCA_LINK_DEFAULT_ADAPTER_SANDBOX_PREVIEW_PLAN.sideEffectsPerformed,
+                )}
+              </p>
             </div>
           </SettingsCard>
           <SettingsCard>
