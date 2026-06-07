@@ -52,6 +52,18 @@ describe("Settings LucaLink Device Center runtime safety", () => {
     }
   });
 
+  it("shows read-only adapter sandbox status without execution controls", () => {
+    expect(lucaLinkSource).toContain("Adapter Sandbox Runtime");
+    expect(lucaLinkSource).toContain('label="Runtime status"');
+    expect(lucaLinkSource).toContain('label="Dry-run"');
+    expect(lucaLinkSource).toContain('label="Code and shell"');
+    expect(lucaLinkSource).toContain('label="Host approval"');
+    expect(lucaLinkSource).toContain("Sample dry-run plan status");
+    expect(lucaLinkSource).toContain("sideEffectsPerformed");
+    expect(lucaLinkSource).not.toMatch(/>Execute adapter</i);
+    expect(lucaLinkSource).not.toMatch(/>Install adapter</i);
+  });
+
   it("uses host-aware terminology and explicit model-only safety copy", () => {
     expect(lucaLinkSource).toContain('label="Primary Host"');
     expect(lucaLinkSource).not.toMatch(/Origin approval/i);
