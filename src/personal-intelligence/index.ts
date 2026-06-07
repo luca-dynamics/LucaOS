@@ -7,7 +7,7 @@ export * from "./memory/memoryStore";
 export * from "./memory/memoryFilesystem";
 export * from "./skills/skillTypes";
 export * from "./skills/skillManifest";
-export * from "./skills/skillRegistry";
+export * from "./skills";
 export * from "./learning/learningTypes";
 export * from "./learning/learningLog";
 export * from "./privacy/privacyZones";
