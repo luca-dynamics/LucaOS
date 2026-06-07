@@ -29,3 +29,11 @@ Personal Intelligence integration advances through separately reviewed boundarie
 4. Block sensitive Privacy Zones unless a future reviewed policy explicitly narrows and authorizes them.
 5. Keep model routing, skill/workflow execution, generated code, MCP tools, Device Center, relay, WebRTC, VPN, guest flow, and LucaLink transport unchanged unless their dedicated future PR explicitly changes them.
 6. Preserve rollback, deletion, audit, source-safety, and no-render-write tests as integration expands.
+
+## Track B sequence after PR #217
+
+- **PR #217 — Skill Registry UI + Manifest Loading:** inspected declarative manifests in the existing Dashboard Skills modal with execution disabled.
+- **Next — Skill Runtime Sandbox Planning:** produce side-effect-free permission, approval, trace, rollback, and readiness plans while execution remains disabled.
+- **Next — Permission Grant UI + Approval Gates:** add explicit, unsatisfied-by-default governance controls without implying execution authority.
+- **Later — Controlled Skill Execution Pilot:** consider only a bounded, separately reviewed pilot after isolation and recovery requirements are met.
+- **Later — Bounded LucaLink handoff:** consider redacted, scoped, expiring, explicitly approved handoff under separate transport governance.

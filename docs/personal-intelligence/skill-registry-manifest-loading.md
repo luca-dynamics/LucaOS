@@ -47,3 +47,15 @@ Future phases require separate review and implementation:
 3. runtime trace integration;
 4. a controlled skill execution pilot; and
 5. a later bounded LucaLink handoff with redaction, scope, expiry, and explicit approval.
+
+## Sandbox planning follow-up
+
+The next integration phase adds Skill Runtime Sandbox Planning on top of these inspected entries. It classifies permissions, plans unsatisfied approvals, defines evidence-only runtime trace hooks and future rollback requirements, and displays readiness in the same Skill Registry modal. It still does not load or execute entrypoints. See [Skill Runtime Sandbox Planning](./skill-runtime-sandbox-planning.md).
+
+The staged sequence is:
+
+- PR #217: Skill Registry UI + Manifest Loading;
+- next: Skill Runtime Sandbox Planning;
+- next: Permission Grant UI + Approval Gates;
+- later: Controlled Skill Execution Pilot; and
+- later: Bounded LucaLink handoff.

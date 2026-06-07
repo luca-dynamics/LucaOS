@@ -18,6 +18,9 @@ describe("existing Dashboard Skills modal registry integration", () => {
     expect(html).toContain("Manifest loading only — execution disabled.");
     expect(html).toContain("Skills cannot run, call tools, call models, write memory, access files, use network, or trigger LucaLink in this PR.");
     expect(html).toContain("Execution disabled");
+    expect(html).toContain("Sandbox Plan");
+    expect(html).toContain("Sandbox planning only — skill execution remains disabled.");
+    expect(html).toContain("Approval planning does not satisfy approval.");
   });
 
   it("has no enabled Run or Execute control", () => {
