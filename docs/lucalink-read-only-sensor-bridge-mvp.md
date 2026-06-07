@@ -72,3 +72,7 @@ separate track with all of the following:
 - clear, user-visible controls for collection and revocation.
 
 No part of this MVP pre-authorizes that future work.
+
+## Transport permission conversion
+
+Read-only sensor snapshots can be converted into side-effect-free LucaLink transport permission requests. Conversion uses summarized snapshot metadata only and does not collect live sensor data, transmit a snapshot, control a device, or authorize runtime transport.
