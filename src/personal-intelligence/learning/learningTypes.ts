@@ -15,6 +15,7 @@ export interface LearningLogEntry {
   userFeedback?: string;
   nextAdjustment?: string;
   relatedMissionId?: string;
+  relatedTraceId?: string;
   relatedMemoryItemIds?: string[];
   privacyZone?: PrivacyZone;
   source?: string;

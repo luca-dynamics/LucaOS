@@ -72,3 +72,7 @@ Approval audit records in this PR are pure in-memory values. They can describe p
 - No raw Personal Intelligence memory is synchronized through LucaLink.
 - No model router, provider, skill, workflow, generated-code, adapter-execution, MCP, filesystem, network, Electron IPC, or duplicate memory-engine behavior is added.
 - Real user-sourced proposal selection and a persistent approval audit trail remain future work.
+
+## Runtime evidence follow-on
+
+The runtime trace and learning-event phase follows PR #211 without widening the pilot's authority. It may represent the safe dry-run fixture and blocked live-write posture as in-memory evidence, but it does not invoke the dry-run or live-write helpers from render, mutate pilot state, call the governed adapter, or persist a learning event. Any future learning-derived memory write must still pass through proposal → policy → approval → dry-run → governed adapter.
