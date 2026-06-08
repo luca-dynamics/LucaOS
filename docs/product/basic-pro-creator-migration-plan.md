@@ -29,11 +29,17 @@
   Creator mode when the current build is not eligible.
 - **Header** receives `tier={toHeaderTier(experienceMode)}` from the dashboard, so
   Basic uses the calm `LUCA OS` wordmark while Pro/Creator use `L.U.C.A OS`.
-- **Settings → General** includes a small Experience Mode selector. Basic and Pro
-  are always listed; Creator is listed only when build-derived Creator access is
-  eligible. The selection follows the existing Settings **Save Changes** flow.
-- **No** onboarding cards, capability scan, full dashboard gating, automatic
-  visual-default application, or Creator key/profile infrastructure exist yet.
+- **Settings → General** includes a compact, card-based Experience Mode selector
+  with descriptions, a current-mode label, and an accessible selected state.
+  Basic and Pro are always listed; Creator is listed only when build-derived
+  Creator access is eligible. The selection follows the existing Settings
+  **Save Changes** flow.
+- An intentional mode change also maps the mode's Silver/Graphite default to the
+  existing `general.theme` field. It does not run during startup or migration and
+  does not touch background opacity/blur, tools, memories, model configuration,
+  installed capabilities, or other settings.
+- **No** onboarding cards, capability scan, full dashboard gating, or Creator
+  key/profile infrastructure exist yet.
 
 ## Mapping reference
 
@@ -76,11 +82,14 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
   the non-recommended mode is honored.
 
 ### Phase 4 — Settings switch — Partially implemented
-- Settings → General now exposes Experience Mode (Basic/Pro).
+- Settings → General exposes a polished, compact Experience Mode selector with
+  Basic/Pro descriptions, an explicit current selection, and keyboard-safe native
+  buttons.
 - Creator appears only when build-derived access makes
   `canShowCreatorMode(...)` true.
 - The existing Settings save flow persists the selection without deleting or
-  mutating tools, memory, capabilities, or appearance preferences.
+  mutating tools, memory, capabilities, model configuration, or user data.
+- The selector notes that appearance remains customizable after switching.
 - Deferred: Basic dashboard hiding, Pro re-scan behavior, and the final dedicated
   Experience settings information architecture.
 
@@ -100,11 +109,22 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
 - Acceptance: Creator is unreachable in public builds; reachable in source/origin
   builds; `reason` explains the decision.
 
-### Phase 7 — Visual defaults application
-- On first mode selection, apply `getDefaultThemeForExperienceMode` (theme,
-  appearance, accent, density) without clobbering later user customization.
-- Acceptance: Basic→Silver/System/Neutral, Pro→Graphite/Dark/Blue,
-  Creator→Graphite/Dark/Violet; cyber effects stay off by default.
+### Phase 7 — Visual defaults application — Partially implemented
+- Only an intentional change to a different mode in Settings applies visual
+  defaults. Startup, settings load, and legacy migration never reset appearance.
+- The current settings schema safely supports the canonical product-theme mapping:
+  Basic applies Luca Silver (`PROFESSIONAL`), while Pro and Creator apply Luca
+  Graphite (`MASTER_SYSTEM`). The update uses the existing Settings save flow.
+- Existing background opacity/blur and all unrelated settings remain untouched.
+  Because there is no dedicated appearance-customization tracking flag, the
+  canonical theme changes only on the explicit mode click; selecting the already
+  active mode is a no-op. Richer per-field customization preservation is deferred.
+- Deferred until those preferences have schema-owned fields: explicit persisted
+  appearance mode (System/Dark), accent (Neutral/Blue/Violet), motion style,
+  density, and cyber-effect availability/default state. The typed defaults remain
+  available through `getDefaultThemeForExperienceMode`; cyber effects remain off.
+- Final acceptance remains Basic→Silver/System/Neutral, Pro→Graphite/Dark/Blue,
+  Creator→Graphite/Dark/Violet, without clobbering later customization.
 
 ## Risks & guardrails
 

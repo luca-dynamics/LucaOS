@@ -1,10 +1,12 @@
 import {
   canShowCreatorMode,
   getAvailableExperienceModes,
+  getDefaultThemeForExperienceMode,
   mapLegacyTierToExperienceMode,
   type CreatorAccessState,
   type LucaExperienceMode,
 } from "./experienceMode";
+import type { UIThemeId } from "../types/lucaPersonality";
 
 const LEGACY_EXPERIENCE_MODE_VALUES = new Set([
   "normal",
@@ -91,4 +93,36 @@ export function getExperienceModeOptions(
     label: mode.charAt(0).toUpperCase() + mode.slice(1),
     description: EXPERIENCE_MODE_DESCRIPTIONS[mode],
   }));
+}
+
+export interface ExperienceModeSettingsUpdate {
+  experienceMode: LucaExperienceMode;
+  theme: UIThemeId;
+}
+
+/**
+ * Map an intentional Experience Mode selection into fields already persisted by
+ * LucaSettings.general. Rich appearance defaults remain token-layer guidance
+ * until the settings schema can track those preferences without clobbering
+ * user customization.
+ */
+export function getExperienceModeSettingsUpdate(
+  mode: LucaExperienceMode,
+): ExperienceModeSettingsUpdate {
+  const defaults = getDefaultThemeForExperienceMode(mode);
+
+  return {
+    experienceMode: mode,
+    theme: defaults.canonicalThemeId,
+  };
+}
+
+/** Return a settings update only for a deliberate change to a different mode. */
+export function getIntentionalExperienceModeSettingsUpdate(
+  currentMode: LucaExperienceMode,
+  selectedMode: LucaExperienceMode,
+): ExperienceModeSettingsUpdate | null {
+  return currentMode === selectedMode
+    ? null
+    : getExperienceModeSettingsUpdate(selectedMode);
 }
