@@ -51,3 +51,7 @@ Any future execution pilot requires a separate design and review, including:
 9. a separate security review.
 
 Nothing in this model pre-approves that future work.
+
+## Dry-run handoff simulation integration
+
+LucaLink governance outputs can feed the side-effect-free dry-run handoff simulation layer and may appear as read-only `lucalink_dry_run` summaries in Operation Center. Dry-run evidence does not send, execute, collect, write, install, approve, open displays, or mutate pairing, transport, approval, device, or runtime state.

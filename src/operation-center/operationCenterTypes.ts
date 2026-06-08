@@ -19,6 +19,7 @@ export type OperationCenterCategory =
   | "sensor_bridge"
   | "transport_permission"
   | "adapter_file_install"
+  | "lucalink_dry_run"
   | "runtime_approval"
   | "blocked_action";
 

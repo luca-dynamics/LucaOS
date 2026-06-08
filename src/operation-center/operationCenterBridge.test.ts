@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
 import type { PersonalIntelligenceSkillPermissionGate } from "../personal-intelligence/skillPermissions";
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
+import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
 import {
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromApprovalNotifications,
   createOperationItemsFromLearningEvents,
+  createOperationItemsFromLucaLinkDryRunHandoffSimulations,
   createOperationItemsFromMissionEvaluations,
   createOperationItemsFromRuntimeTraces,
   createOperationItemsFromSensorSnapshots,
@@ -64,6 +66,15 @@ describe("operation center bridge", () => {
     expect(createOperationItemsFromSensorSnapshots([{ ...base, status: "read_only" }])[0].status).toBe("read_only");
     expect(createOperationItemsFromTransportPermissionDecisions([{ ...base, status: "allowed_preview" }])[0].status).toBe("model_only");
     expect(createOperationItemsFromTransportPermissionDecisions([{ ...base, status: "blocked" }])[0].status).toBe("blocked");
+  });
+
+  it("converts LucaLink dry-run simulations without granting runtime authority", () => {
+    const items = createOperationItemsFromLucaLinkDryRunHandoffSimulations(LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES);
+    expect(items).toHaveLength(LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES.length);
+    expect(items.every((item) => item.category === "lucalink_dry_run" && item.executionEnabled === false && item.sideEffectsPerformed === false)).toBe(true);
+    expect(items.flatMap((item) => item.blockedActions)).toEqual(expect.arrayContaining([
+      "live handoff", "transport send", "adapter execution", "display open/cast", "sensor collection", "file write", "install",
+    ]));
   });
 
   it("converts real adapter file/install fixture decisions without granting runtime authority", () => {
