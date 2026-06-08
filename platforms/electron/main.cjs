@@ -7,6 +7,7 @@ const {
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
 const fs = require('fs');
+const { findAvailableExecutable, getPythonCandidates } = require('../shared/platform.cjs');
 
 // [MAIN] Mission Control Service Initialization
 const MissionControl = require('./services/missionControl.cjs');
@@ -640,23 +641,17 @@ async function startCortex() {
         // DEVELOPMENT: Use the local script and venv
         cortexPath = path.join(__dirname, '../../cortex/python/cortex.py');
         
-        // Force Local VENV Priority (Critical for Intel Mac stability)
-        const localVenv = paths.PYTHON_BIN;
-        const systemVenv = paths.SYSTEM_PYTHON_BIN;
-        
-        if (fs.existsSync(localVenv)) {
-            pythonCmd = localVenv;
-            console.log(`[CORTEX] [DEV] Successfully located project venv: ${pythonCmd}`);
-        } else if (fs.existsSync(systemVenv)) {
-            pythonCmd = systemVenv;
-            console.log(`[CORTEX] [DEV] Falling back to system venv: ${pythonCmd}`);
-        } else {
-            pythonCmd = 'python3';
-            console.warn('[CORTEX] [DEV] WARNING: No venv found! Using system python (may lack dependencies).');
-        }
+        // Prefer the project venv, then Luca's managed venv, then a platform PATH fallback.
+        pythonCmd = findAvailableExecutable([
+            paths.PYTHON_BIN,
+            paths.SYSTEM_PYTHON_BIN,
+            ...getPythonCandidates({ projectRoot: path.join(__dirname, '../..') }).slice(-1),
+        ]);
 
-        if (process.platform === 'win32' && pythonCmd.includes('python')) {
-            pythonCmd = pythonCmd.replace('python', 'python.exe');
+        if (path.isAbsolute(pythonCmd)) {
+            console.log(`[CORTEX] [DEV] Successfully located Python environment: ${pythonCmd}`);
+        } else {
+            console.warn(`[CORTEX] [DEV] WARNING: No venv found! Using ${pythonCmd} from PATH (may lack dependencies).`);
         }
         
         console.log('[CORTEX] [DEV] Using Python Source:', cortexPath);
@@ -2088,11 +2083,18 @@ ipcMain.on('type-text', (event, { text }) => {
 // IPC: Check if a command/binary exists in the system path
 ipcMain.handle('check-command', async (event, command) => {
     return new Promise((resolve) => {
-        // Use 'which' on macOS/Linux, 'where' on Windows
-        const checkCmd = process.platform === 'win32' ? `where ${command}` : `which ${command}`;
-        exec(checkCmd, (error) => {
-            resolve(!error);
+        if (typeof command !== 'string' || !/^[a-zA-Z0-9._-]+$/.test(command)) {
+            resolve(false);
+            return;
+        }
+
+        const locator = process.platform === 'win32' ? 'where.exe' : 'which';
+        const child = spawn(locator, [command], {
+            stdio: 'ignore',
+            windowsHide: true,
         });
+        child.once('error', () => resolve(false));
+        child.once('exit', (code) => resolve(code === 0));
     });
 });
 

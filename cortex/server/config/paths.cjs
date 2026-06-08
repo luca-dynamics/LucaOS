@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
 const os = require('os');
+const { getVenvExecutable } = require('../../../platforms/shared/platform.cjs');
 
 const USER_HOME = process.env.HOME || process.env.USERPROFILE || os.homedir();
 
@@ -9,10 +10,6 @@ const LUCA_SYSTEM_DIR = path.join(USER_HOME, '.luca');
 
 // User-level files (exports, skills, macros, forge)
 const LUCA_USER_DIR = path.join(USER_HOME, 'Documents', 'Luca');
-
-const IS_WINDOWS = process.platform === 'win32';
-const VENV_BIN_DIR = IS_WINDOWS ? 'Scripts' : 'bin';
-const PYTHON_EXE = IS_WINDOWS ? 'python.exe' : 'python';
 
 module.exports = {
     USER_HOME,
@@ -28,8 +25,8 @@ module.exports = {
     CERTS_DIR: path.join(LUCA_SYSTEM_DIR, 'security', 'certs'),
     // PROJECT LOCAL VENV (Preferred for Dev)
     VENV_DIR: path.join(__dirname, '../../python/venv'),
-    PYTHON_BIN: path.join(__dirname, '../../python/venv', VENV_BIN_DIR, PYTHON_EXE),
+    PYTHON_BIN: getVenvExecutable(path.join(__dirname, '../../python/venv'), 'python'),
     // SYSTEM VENV (Fallback/Production)
     SYSTEM_VENV_DIR: path.join(LUCA_SYSTEM_DIR, 'python', 'venv'),
-    SYSTEM_PYTHON_BIN: path.join(LUCA_SYSTEM_DIR, 'python', 'venv', VENV_BIN_DIR, PYTHON_EXE)
+    SYSTEM_PYTHON_BIN: getVenvExecutable(path.join(LUCA_SYSTEM_DIR, 'python', 'venv'), 'python')
 };
