@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PersonalIntelligenceSkillPermissionGate } from "../personal-intelligence/skillPermissions";
+import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import {
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromApprovalNotifications,
@@ -55,8 +56,29 @@ describe("operation center bridge", () => {
     expect(createOperationItemsFromTransportPermissionDecisions([{ ...base, status: "blocked" }])[0].status).toBe("blocked");
   });
 
-  it("keeps an unavailable adapter file/install model disabled", () => {
-    const [item] = createOperationItemsFromAdapterFileInstallDecisions([{ ...base, status: "disabled", warnings: ["Adapter file/install model not available yet."] }]);
-    expect(item).toMatchObject({ category: "adapter_file_install", status: "disabled", executionEnabled: false });
+  it("converts real adapter file/install fixture decisions without granting runtime authority", () => {
+    const items = createOperationItemsFromAdapterFileInstallDecisions(
+      LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
+    );
+    const statuses = items.map((item) => item.status);
+
+    expect(items).toHaveLength(LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS.length);
+    expect(statuses).toEqual(expect.arrayContaining([
+      "ready_for_review",
+      "approval_required",
+      "blocked",
+      "unsupported",
+    ]));
+    expect(items.every((item) =>
+      item.category === "adapter_file_install"
+      && item.sideEffectsPerformed === false
+      && item.executionEnabled === false
+      && item.canExecute === false
+      && item.readyForExecution === false
+    )).toBe(true);
+    expect(items.some((item) => item.status === "disabled")).toBe(false);
+    expect(items.some((item) =>
+      `${item.title} ${item.summary} ${item.warnings.join(" ")}`.includes("Adapter file/install model not available yet")
+    )).toBe(false);
   });
 });
