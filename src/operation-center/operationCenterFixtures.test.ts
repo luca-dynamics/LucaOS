@@ -47,10 +47,32 @@ describe("operation center fixtures and source safety", () => {
     expect(gateStatuses).toEqual(expect.arrayContaining(["pending", "granted_for_review", "denied", "blocked"]));
   });
 
-  it("uses a disabled placeholder when the adapter file/install model is unavailable", () => {
-    const item = operationCenterFixtureItems.find((candidate) => candidate.category === "adapter_file_install");
-    expect(item).toMatchObject({ status: "disabled", sideEffectsPerformed: false });
-    expect(item?.warnings).toContain("Adapter file/install model not available yet.");
+  it("uses real read-only adapter file/install fixture decisions", () => {
+    const items = operationCenterFixtureItems.filter((item) => item.category === "adapter_file_install");
+    const statuses = items.map((item) => item.status);
+
+    expect(statuses).toEqual(expect.arrayContaining([
+      "ready_for_review",
+      "approval_required",
+      "blocked",
+      "unsupported",
+    ]));
+    expect(items.some((item) => item.status === "disabled")).toBe(false);
+    expect(items.some((item) =>
+      `${item.title} ${item.summary} ${item.warnings.join(" ")}`.includes("Adapter file/install model not available yet")
+    )).toBe(false);
+    expect(items.every((item) =>
+      item.sideEffectsPerformed === false
+      && item.executionEnabled === false
+      && item.canExecute === false
+      && item.readyForExecution === false
+    )).toBe(true);
+  });
+
+  it("keeps adapter file/install production declarations and imports unique", () => {
+    expect(bridgeSource.match(/createOperationItemsFromAdapterFileInstallDecisions\s*=/g)).toHaveLength(1);
+    expect(fixturesSource.match(/const fileInstallItems\s*=/g)).toHaveLength(1);
+    expect(fixturesSource.match(/LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS/g)).toHaveLength(2);
   });
 
   it("does not import or call forbidden runtime APIs in production sources", () => {

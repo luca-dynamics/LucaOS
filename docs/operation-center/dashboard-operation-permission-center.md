@@ -4,7 +4,7 @@
 
 The Dashboard right panel is the global **read-only governance summary** for operational readiness signals. PR #220 introduced the original Permission Center and its in-memory skill permission gate counts. This consolidation keeps that view intact and adds an Operation Center section that normalizes safe summaries from prior Personal Intelligence and LucaLink governance models.
 
-The bridge represents memory approvals, runtime traces, learning proposals, mission alignment, skill sandbox plans, skill permission gates, adapter sandbox plans, display intents, companion approval notifications, read-only sensor snapshots, transport permission decisions, and adapter file/install availability as common operation items.
+The bridge represents memory approvals, runtime traces, learning proposals, mission alignment, skill sandbox plans, skill permission gates, adapter sandbox plans, display intents, companion approval notifications, read-only sensor snapshots, transport permission decisions, and adapter file/install permission decisions as common operation items.
 
 ## Informational, not authoritative
 
@@ -27,6 +27,8 @@ Every normalized item fixes `sideEffectsPerformed`, `executionEnabled`, `canExec
 ## Data model and bridge
 
 `src/operation-center/` contains pure normalization and summarization helpers. The current Dashboard uses fixture-backed summaries for governance systems that do not expose a safe read-only event source, while current in-memory skill permission gates are converted directly. Conversion helpers copy arrays and construct new operation items; they do not mutate source objects.
+
+Adapter file/install cards are sourced from the real PR #221 read-only fixture decisions in `src/services/lucaLink/adapterFileInstallPermissions`. These cards remain informational only: they do not write files, install packages, execute adapters, run shell commands or package managers, send transport messages, or mutate host, pairing, transport, or runtime state.
 
 The source groups are:
 

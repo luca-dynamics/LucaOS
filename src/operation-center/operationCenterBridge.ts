@@ -1,3 +1,4 @@
+import type { LucaLinkAdapterFileInstallPermissionDecision } from "../services/lucaLink/adapterFileInstallPermissions";
 import type {
   OperationCenterItem,
   OperationCenterRiskLevel,
@@ -84,11 +85,6 @@ export interface SensorSnapshotSummary extends SafeSummaryBase {
 }
 
 export interface TransportPermissionDecisionSummary extends SafeSummaryBase {
-  requestId?: string;
-  hostId?: string;
-}
-
-export interface AdapterFileInstallDecisionSummary extends SafeSummaryBase {
   requestId?: string;
   hostId?: string;
 }
@@ -200,5 +196,25 @@ export const createOperationItemsFromSensorSnapshots = (snapshots: readonly Sens
 export const createOperationItemsFromTransportPermissionDecisions = (decisions: readonly TransportPermissionDecisionSummary[]) =>
   decisions.map((decision) => createItem(decision, "lucalink", "transport_permission", normalizeStatus(decision.status, "model_only"), { relatedRequestId: decision.requestId, relatedHostId: decision.hostId }));
 
-export const createOperationItemsFromAdapterFileInstallDecisions = (decisions: readonly AdapterFileInstallDecisionSummary[]) =>
-  decisions.map((decision) => createItem(decision, "lucalink", "adapter_file_install", normalizeStatus(decision.status, "disabled"), { relatedRequestId: decision.requestId, relatedHostId: decision.hostId }));
+export const createOperationItemsFromAdapterFileInstallDecisions = (
+  decisions: readonly LucaLinkAdapterFileInstallPermissionDecision[],
+) => decisions.map((decision) => createItem({
+  id: `operation:${decision.decisionId}`,
+  title: decision.operation === "file_write"
+    ? "Adapter file-write permission decision"
+    : "Adapter install permission decision",
+  summary: decision.reason,
+  status: decision.status,
+  riskLevel: decision.riskLevel,
+  requiredApprovals: decision.requiredApprovals
+    .filter((requirement) => !requirement.satisfied)
+    .map((requirement) => requirement.kind),
+  blockedActions: decision.operation === "file_write"
+    ? ["adapter file write", "adapter execution"]
+    : ["adapter package install", "adapter execution"],
+  warnings: decision.warnings,
+  blockers: decision.blockers,
+  auditSummary: `${decision.operation.replace(/_/g, " ")} decision is ${decision.status.replace(/_/g, " ")} for informational review only.`,
+}, "lucalink", "adapter_file_install", normalizeStatus(decision.status, "unsupported"), {
+  relatedRequestId: decision.requestId,
+}));
