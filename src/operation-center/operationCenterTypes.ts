@@ -1,0 +1,98 @@
+export type OperationCenterSource =
+  | "personal_intelligence"
+  | "lucalink"
+  | "runtime"
+  | "system";
+
+export type OperationCenterCategory =
+  | "memory_approval"
+  | "runtime_trace"
+  | "learning_event"
+  | "mission_alignment"
+  | "skill_registry"
+  | "skill_sandbox"
+  | "skill_permission_gate"
+  | "adapter_sandbox"
+  | "web_display"
+  | "approval_notification"
+  | "sensor_bridge"
+  | "transport_permission"
+  | "adapter_file_install"
+  | "runtime_approval"
+  | "blocked_action";
+
+export type OperationCenterStatus =
+  | "ready_for_review"
+  | "approval_required"
+  | "pending"
+  | "granted_for_review"
+  | "denied"
+  | "expired"
+  | "blocked"
+  | "unsupported"
+  | "model_only"
+  | "read_only"
+  | "disabled";
+
+export type OperationCenterRiskLevel = "low" | "medium" | "high" | "critical";
+
+export interface OperationCenterItem {
+  itemId: string;
+  source: OperationCenterSource;
+  category: OperationCenterCategory;
+  title: string;
+  summary: string;
+  status: OperationCenterStatus;
+  riskLevel: OperationCenterRiskLevel;
+  createdAt: string;
+  updatedAt?: string;
+  expiresAt?: string;
+  relatedSkillId?: string;
+  relatedPlanId?: string;
+  relatedTraceId?: string;
+  relatedMissionId?: string;
+  relatedHostId?: string;
+  relatedRequestId?: string;
+  requiredApprovals: string[];
+  blockedActions: string[];
+  warnings: string[];
+  blockers: string[];
+  auditSummary?: string;
+  sideEffectsPerformed: false;
+  executionEnabled: false;
+  canExecute: false;
+  readyForExecution: false;
+}
+
+export interface OperationCenterSummary {
+  totalItems: number;
+  pending: number;
+  approvalRequired: number;
+  grantedForReview: number;
+  denied: number;
+  expired: number;
+  blocked: number;
+  unsupported: number;
+  modelOnly: number;
+  readOnly: number;
+  disabled: number;
+  personalIntelligenceCount: number;
+  lucaLinkCount: number;
+  highRiskCount: number;
+  criticalRiskCount: number;
+  readyForExecution: false;
+  executionEnabled: false;
+  canExecute: false;
+  readyForLiveSend: false;
+  writeEnabled: false;
+  installEnabled: false;
+  liveCollectionEnabled: false;
+  sideEffectsPerformed: false;
+  warnings: string[];
+  blockers: string[];
+}
+
+export interface OperationCenterReadiness extends OperationCenterSummary {
+  topPendingApprovals: OperationCenterItem[];
+  topBlockedActions: string[];
+}

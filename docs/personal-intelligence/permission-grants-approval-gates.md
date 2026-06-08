@@ -38,3 +38,9 @@ For gates, aggregate state, readiness, and audit output:
 - `scope.executionAuthorized` is always `false`.
 
 The UI contains no Run or Execute action and does not connect the Skill Registry to an execution callback. The permission layer does not invoke skills, tools, MCP, workflows, models, memory writes, LucaLink, browser automation, files, network APIs, sockets, or credential surfaces.
+
+## Dashboard Operation Center consolidation
+
+Skill permission gates are now one source feeding the broader Dashboard Operation Center. The existing in-memory gate summary remains visible, while normalized read-only cards also summarize memory approval, runtime trace, learning, mission alignment, skill sandbox, and LucaLink governance outputs.
+
+This broader summary is informational only. It does not promote a review grant into execution authority and does not execute, send, persist, write, install, collect, or approve anything.
