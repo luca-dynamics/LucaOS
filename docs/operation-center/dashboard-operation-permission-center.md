@@ -54,3 +54,7 @@ LucaLink governance outputs can feed the side-effect-free dry-run handoff simula
 
 The Operation Center can summarize fixture-backed controlled skill dry-run evidence under the `skill_dry_run` category. Cards may show review status, missing approvals, blocked actions, trace-preview references, and rollback expectations. This bridge is read-only and informational: it does not execute skills, mutate Operation Center runtime state, or authorize tools, models, memory writes, network access, or LucaLink handoff.
  
+
+## Personal Intelligence runtime authority
+
+Operation Center can display read-only `runtime_authority` items produced from Personal Intelligence authority records. The status is a classification summary only: permanent blocks map to blocked, review-only records to ready-for-review, dry-run-only records to model-only, future-pilot candidates to approval-required, and malformed declarations to unsupported. These items do not mutate Operation Center runtime state and cannot grant or perform execution.

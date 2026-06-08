@@ -139,6 +139,7 @@ function createItem(
     blockers: copy(input.blockers),
     auditSummary: input.auditSummary,
     sideEffectsPerformed: false,
+    authorityGranted: false,
     executionEnabled: false,
     canExecute: false,
     readyForExecution: false,

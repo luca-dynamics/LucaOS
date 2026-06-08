@@ -20,6 +20,7 @@ export function summarizeOperationCenterItems(items: readonly OperationCenterIte
     lucaLinkCount: items.filter((item) => item.source === "lucalink").length,
     highRiskCount: items.filter((item) => item.riskLevel === "high").length,
     criticalRiskCount: items.filter((item) => item.riskLevel === "critical").length,
+    authorityGranted: false,
     readyForExecution: false,
     executionEnabled: false,
     canExecute: false,

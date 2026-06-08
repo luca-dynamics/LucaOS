@@ -48,3 +48,7 @@ This broader summary is informational only. It does not promote a review grant i
 ## Controlled dry-run use
 
 Permission gates can be evaluated by the controlled skill dry-run simulator. Pending, denied, expired, blocked, and grant-for-review states affect review status, but no gate authorizes execution. In particular, `granted_for_review` means only that evidence may be reviewed.
+
+## Runtime authority boundary
+
+Permission gates are inputs to the [Runtime Authority Boundary](./runtime-authority-boundary.md). `granted_for_review` means that evidence may be reviewed; it never grants skill, tool, model, memory, network, file, browser, connector, or LucaLink execution authority.
