@@ -39,3 +39,7 @@ Operation Center cards may summarize simulation status, missing approvals, block
 ## Future work
 
 A future Controlled Skill Execution Pilot would require a separate, explicit execution-authority boundary, an isolated runtime, enforceable rollback behavior, and a durable audit trail. None of those capabilities are introduced here.
+
+## Runtime authority boundary
+
+Dry-run evidence may now be classified by the [Runtime Authority Boundary](./runtime-authority-boundary.md). A successful simulation can support future-pilot review, but it does not grant authority and remains non-executable. Dry-run success is not execution approval.

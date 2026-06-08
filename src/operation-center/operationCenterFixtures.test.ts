@@ -1,5 +1,6 @@
 import auditSource from "./operationCenterAudit.ts?raw";
 import bridgeSource from "./operationCenterBridge.ts?raw";
+import runtimeAuthorityBridgeSource from "./operationCenterRuntimeAuthorityBridge.ts?raw";
 import fixturesSource from "./operationCenterFixtures.ts?raw";
 import indexSource from "./index.ts?raw";
 import readinessSource from "./operationCenterReadiness.ts?raw";
@@ -8,7 +9,7 @@ import componentSource from "../components/right-panel/OperationPermissionCenter
 import { describe, expect, it } from "vitest";
 import { operationCenterFixtureItems } from "./operationCenterFixtures";
 
-const productionSources = [auditSource, bridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource];
+const productionSources = [auditSource, bridgeSource, runtimeAuthorityBridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource];
 
 const forbiddenPatterns = [
   /memoryService/,
@@ -38,6 +39,7 @@ describe("operation center fixtures and source safety", () => {
     expect(categories.has("runtime_trace")).toBe(true);
     expect(categories.has("skill_sandbox")).toBe(true);
     expect(categories.has("skill_permission_gate")).toBe(true);
+    expect(categories.has("runtime_authority")).toBe(true);
     expect(categories.has("adapter_sandbox")).toBe(true);
     expect(categories.has("web_display")).toBe(true);
     expect(categories.has("sensor_bridge")).toBe(true);
@@ -83,5 +85,13 @@ describe("operation center fixtures and source safety", () => {
   });
   it("includes skill dry-run fixture cards", () => {
     expect(operationCenterFixtureItems.some((item) => item.category === "skill_dry_run")).toBe(true);
+  });
+});
+
+describe("runtime authority fixtures", () => {
+  it("include non-executable runtime authority items", () => {
+    const authorityItems = operationCenterFixtureItems.filter((item) => item.category === "runtime_authority");
+    expect(authorityItems.length).toBeGreaterThan(0);
+    expect(authorityItems.every((item) => !item.executionEnabled && !item.canExecute && !item.readyForExecution && !item.sideEffectsPerformed)).toBe(true);
   });
 });

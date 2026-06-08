@@ -1,0 +1,13 @@
+import { describe, expect, it } from "vitest";
+import typesSource from "./runtimeAuthorityTypes.ts?raw";
+import policySource from "./runtimeAuthorityPolicy.ts?raw";
+import registrySource from "./runtimeAuthorityRegistry.ts?raw";
+import evidenceSource from "./runtimeAuthorityEvidence.ts?raw";
+import readinessSource from "./runtimeAuthorityReadiness.ts?raw";
+import fixturesSource from "./runtimeAuthorityFixtures.ts?raw";
+import panelSource from "../../components/SkillRuntimeAuthorityPanel.tsx?raw";
+import registryPanelSource from "../../components/SkillRegistryPanel.tsx?raw";
+import bridgeSource from "../../operation-center/operationCenterRuntimeAuthorityBridge.ts?raw";
+const sources=[typesSource,policySource,registrySource,evidenceSource,readinessSource,fixturesSource,panelSource,registryPanelSource,bridgeSource];
+const forbidden=[/memoryService/,/saveMemory\s*\(/,/governedMemoryAdapter/,/live.?write helper/i,/services\/lucaLink\//i,/lucaLinkService\.send/,/modelRouter|providerRuntime/i,/mcp.*execute|tool.*execute|workflow.*execute/i,/from\s+["'](?:node:)?fs(?:\/promises)?["']/,/child_process/,/\bfetch\s*\(/,/WebSocket|socket\.io-client/,/localStorage|sessionStorage|indexedDB/,/ipcRenderer|ipcMain/,/playwright|puppeteer/,/import\s*\(.*entrypointRef/i,/\beval\s*\(/,/new\s+Function\s*\(/,/new\s+Worker\s*\(/,/from\s+["'](?:node:)?vm["']/,/VisualCore.*(?:set|mutate|update)|LucaBrowser.*(?:set|mutate|update)/i];
+describe("runtime authority source safety",()=>{it.each(forbidden)("does not use forbidden runtime API %s",(pattern: RegExp)=>{for(const source of sources) expect(source).not.toMatch(pattern);});});

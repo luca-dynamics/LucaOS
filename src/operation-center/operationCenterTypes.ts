@@ -13,6 +13,7 @@ export type OperationCenterCategory =
   | "skill_sandbox"
   | "skill_dry_run"
   | "skill_permission_gate"
+  | "runtime_authority"
   | "adapter_sandbox"
   | "web_display"
   | "approval_notification"
@@ -61,6 +62,7 @@ export interface OperationCenterItem {
   blockers: string[];
   auditSummary?: string;
   sideEffectsPerformed: false;
+  authorityGranted: false;
   executionEnabled: false;
   canExecute: false;
   readyForExecution: false;
@@ -82,6 +84,7 @@ export interface OperationCenterSummary {
   lucaLinkCount: number;
   highRiskCount: number;
   criticalRiskCount: number;
+  authorityGranted: false;
   readyForExecution: false;
   executionEnabled: false;
   canExecute: false;

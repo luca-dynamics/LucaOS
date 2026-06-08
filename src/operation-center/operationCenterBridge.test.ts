@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
+import { personalIntelligenceRuntimeAuthorityFixtures } from "../personal-intelligence/runtimeAuthority";
+import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
 import type { PersonalIntelligenceSkillPermissionGate } from "../personal-intelligence/skillPermissions";
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
@@ -101,5 +103,14 @@ describe("operation center bridge", () => {
     expect(items.some((item) =>
       `${item.title} ${item.summary} ${item.warnings.join(" ")}`.includes("Adapter file/install model not available yet")
     )).toBe(false);
+  });
+});
+
+describe("runtime authority operation bridge", () => {
+  it("maps authority classes into read-only Operation Center items", () => {
+    const items = createOperationItemsFromRuntimeAuthorityRecords(personalIntelligenceRuntimeAuthorityFixtures);
+    expect(items.every((item) => item.category === "runtime_authority")).toBe(true);
+    expect(items.find((item) => item.status === "blocked")?.blockedActions).toContain("runtime authority grant");
+    expect(items.find((item) => item.status === "approval_required")?.readyForExecution).toBe(false);
   });
 });
