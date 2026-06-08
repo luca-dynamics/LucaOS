@@ -1,6 +1,7 @@
 import auditSource from "./operationCenterAudit.ts?raw";
 import bridgeSource from "./operationCenterBridge.ts?raw";
 import runtimeAuthorityBridgeSource from "./operationCenterRuntimeAuthorityBridge.ts?raw";
+import lucaLinkRuntimeAuthorityBridgeSource from "./operationCenterLucaLinkRuntimeAuthorityBridge.ts?raw";
 import fixturesSource from "./operationCenterFixtures.ts?raw";
 import indexSource from "./index.ts?raw";
 import readinessSource from "./operationCenterReadiness.ts?raw";
@@ -9,7 +10,7 @@ import componentSource from "../components/right-panel/OperationPermissionCenter
 import { describe, expect, it } from "vitest";
 import { operationCenterFixtureItems } from "./operationCenterFixtures";
 
-const productionSources = [auditSource, bridgeSource, runtimeAuthorityBridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource];
+const productionSources = [auditSource, bridgeSource, runtimeAuthorityBridgeSource, lucaLinkRuntimeAuthorityBridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource];
 
 const forbiddenPatterns = [
   /memoryService/,
@@ -40,6 +41,7 @@ describe("operation center fixtures and source safety", () => {
     expect(categories.has("skill_sandbox")).toBe(true);
     expect(categories.has("skill_permission_gate")).toBe(true);
     expect(categories.has("runtime_authority")).toBe(true);
+    expect(categories.has("lucalink_runtime_authority")).toBe(true);
     expect(categories.has("adapter_sandbox")).toBe(true);
     expect(categories.has("web_display")).toBe(true);
     expect(categories.has("sensor_bridge")).toBe(true);
@@ -93,5 +95,15 @@ describe("runtime authority fixtures", () => {
     const authorityItems = operationCenterFixtureItems.filter((item) => item.category === "runtime_authority");
     expect(authorityItems.length).toBeGreaterThan(0);
     expect(authorityItems.every((item) => !item.executionEnabled && !item.canExecute && !item.readyForExecution && !item.sideEffectsPerformed)).toBe(true);
+  });
+});
+
+describe("LucaLink runtime authority fixtures", () => {
+  it("coexists with Personal Intelligence runtime authority and remains non-operational", () => {
+    const personalItems = operationCenterFixtureItems.filter((item) => item.category === "runtime_authority");
+    const lucaLinkItems = operationCenterFixtureItems.filter((item) => item.category === "lucalink_runtime_authority");
+    expect(personalItems.length).toBeGreaterThan(0);
+    expect(lucaLinkItems.length).toBeGreaterThan(0);
+    expect(lucaLinkItems.every((item) => !item.authorityGranted && !item.executionEnabled && !item.canExecute && !item.readyForExecution && !item.sideEffectsPerformed)).toBe(true);
   });
 });

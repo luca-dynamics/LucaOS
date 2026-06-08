@@ -82,6 +82,7 @@ import { SettingsLucaLinkSensorBridge } from "./SettingsLucaLinkSensorBridge";
 import { SettingsLucaLinkTransportPermissions } from "./SettingsLucaLinkTransportPermissions";
 import { SettingsLucaLinkAdapterFileInstallPermissions } from "./SettingsLucaLinkAdapterFileInstallPermissions";
 import { SettingsLucaLinkDryRunHandoff } from "./SettingsLucaLinkDryRunHandoff";
+import { SettingsLucaLinkRuntimeAuthority } from "./SettingsLucaLinkRuntimeAuthority";
 
 // Device Center source-level safety copy anchors for tests:
 // Admin does not bypass Primary Host approvals
@@ -1648,6 +1649,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             </div>
           </SettingsCard>
           <SettingsLucaLinkDryRunHandoff accentColor={theme.hex} />
+          <SettingsLucaLinkRuntimeAuthority accentColor={theme.hex} />
           <SettingsLucaLinkTransportPermissions accentColor={theme.hex} />
           <SettingsLucaLinkAdapterFileInstallPermissions accentColor={theme.hex} />
           <SettingsLucaLinkSensorBridge accentColor={theme.hex} />

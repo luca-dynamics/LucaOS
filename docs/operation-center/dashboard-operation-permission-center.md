@@ -58,3 +58,9 @@ The Operation Center can summarize fixture-backed controlled skill dry-run evide
 ## Personal Intelligence runtime authority
 
 Operation Center can display read-only `runtime_authority` items produced from Personal Intelligence authority records. The status is a classification summary only: permanent blocks map to blocked, review-only records to ready-for-review, dry-run-only records to model-only, future-pilot candidates to approval-required, and malformed declarations to unsupported. These items do not mutate Operation Center runtime state and cannot grant or perform execution.
+
+## LucaLink runtime authority
+
+Operation Center also displays read-only `lucalink_runtime_authority` items from the LucaLink authority registry. This category is separate from the Personal Intelligence `runtime_authority` category and does not replace or modify it. LucaLink permanent blocks map to blocked, review-only records to ready-for-review, dry-run-only records to model-only, future bounded handoff candidates to approval-required, and malformed or unsupported declarations to unsupported.
+
+Neither category grants runtime authority. LucaLink authority cards cannot hand off, send transport, execute adapters, open or cast displays, collect sensors, write files, install packages, approve requests, or mutate hosts. Future bounded handoff candidate status is evidence for a separately reviewed pilot, not permission to send or execute.
