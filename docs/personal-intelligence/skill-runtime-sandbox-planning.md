@@ -39,3 +39,7 @@ Future changes require separate review:
 3. controlled dry-run simulation;
 4. a controlled skill execution pilot; and
 5. later bounded LucaLink handoff governance.
+
+## Controlled dry-run handoff
+
+Skill sandbox plans can now feed the controlled skill dry-run simulator together with permission gates and optional mission context. The resulting evidence is informational only: Act remains skipped or blocked, all runtime authority flags remain false, and the plan cannot execute a skill.

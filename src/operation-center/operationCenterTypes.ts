@@ -11,6 +11,7 @@ export type OperationCenterCategory =
   | "mission_alignment"
   | "skill_registry"
   | "skill_sandbox"
+  | "skill_dry_run"
   | "skill_permission_gate"
   | "adapter_sandbox"
   | "web_display"
