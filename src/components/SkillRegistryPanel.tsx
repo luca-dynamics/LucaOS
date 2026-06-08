@@ -9,8 +9,11 @@ import {
   type PersonalIntelligenceSkillStatus,
 } from "../personal-intelligence/skills";
 import { createPersonalIntelligenceSkillSandboxPlan } from "../personal-intelligence/skillSandbox";
+import { createPersonalIntelligenceSkillDryRunSimulation } from "../personal-intelligence/skillDryRun";
 import { SkillSandboxPlanPanel } from "./SkillSandboxPlanPanel";
 import { SkillPermissionGrantPanel } from "./SkillPermissionGrantPanel";
+import { SkillDryRunPanel } from "./SkillDryRunPanel";
+import { useSkillPermissionGrants } from "./SkillPermissionGrantContext";
 
 interface SkillRegistryPanelProps {
   accent: string;
@@ -52,6 +55,13 @@ function RequirementList({ title, values }: { title: string; values?: string[] }
 function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegistryEntry }) {
   const memoryPolicy = entry.memoryPolicy?.access ?? "none";
   const sandboxPlan = useMemo(() => createPersonalIntelligenceSkillSandboxPlan(entry), [entry]);
+  const { state } = useSkillPermissionGrants();
+  const simulation = useMemo(() => createPersonalIntelligenceSkillDryRunSimulation({
+    skillRegistryEntry: entry,
+    sandboxPlan,
+    permissionGates: state.gates,
+    source: "selected_skill",
+  }), [entry, sandboxPlan, state.gates]);
   return (
     <section className="min-w-0 flex-1 overflow-y-auto border-l border-white/10 bg-black/20 p-5" aria-label="Skill manifest detail">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -108,6 +118,7 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
 
       <SkillSandboxPlanPanel plan={sandboxPlan} />
       <SkillPermissionGrantPanel plan={sandboxPlan} />
+      <SkillDryRunPanel simulation={simulation} />
 
       <div className="mt-4 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-4">
         <p className="text-sm font-bold text-red-200">Execution disabled</p>
