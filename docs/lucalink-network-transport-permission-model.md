@@ -36,6 +36,6 @@ The Device Center card is read-only, has no send/connect/approve/cast controls, 
 
 A separate review may connect this policy to runtime enforcement. Any future live transport work must preserve explicit approval, auditability, expiry, redaction, strict message-class/channel enforcement, trust and session checks, and deny-by-default behavior. Policy approval must never be treated as proof that a message was sent or an action was executed.
 
-## Adapter file-write and install boundary
+## Dashboard Operation Center summary
 
-Declarative `file.write.request` and `install.request` capabilities are evaluated by the Adapter File Write + Install Permission Model before any future transport conversion is considered. The current evaluation does not execute, write, install, approve, download, or send. Its decisions are explicitly not sendable.
+These model outputs can be represented as normalized, read-only cards in the Dashboard Operation Center. Summarization is informational only: it does not send, execute, approve, persist, or mutate LucaLink runtime state.
