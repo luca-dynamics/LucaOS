@@ -76,3 +76,7 @@ No part of this MVP pre-authorizes that future work.
 ## Transport permission conversion
 
 Read-only sensor snapshots can be converted into side-effect-free LucaLink transport permission requests. Conversion uses summarized snapshot metadata only and does not collect live sensor data, transmit a snapshot, control a device, or authorize runtime transport.
+
+## Dashboard Operation Center summary
+
+Read-only sensor readiness model outputs can be represented as normalized cards in the Dashboard Operation Center. Summarization does not collect sensors, send data, execute adapters, approve requests, or mutate LucaLink runtime state.

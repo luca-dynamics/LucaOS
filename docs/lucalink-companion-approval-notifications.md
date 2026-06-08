@@ -70,3 +70,7 @@ sensor permission, start polling, send telemetry, or control a device.
 ## Transport permission conversion
 
 Companion approval notifications can be converted into side-effect-free LucaLink transport permission requests. This conversion is read-only and does not send a notification, submit an approval decision, mutate the approval queue, or authorize runtime transport.
+
+## Dashboard Operation Center summary
+
+These model outputs can be represented as normalized, read-only cards in the Dashboard Operation Center. Summarization is informational only: it does not send, execute, approve, persist, or mutate LucaLink runtime state.
