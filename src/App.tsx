@@ -5,6 +5,8 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import type { LucaExperienceMode } from "./experience/experienceMode";
+import { toHeaderTier } from "./experience/experienceMode";
 import { Capacitor } from "@capacitor/core";
 import { useMobile } from "./hooks/useMobile";
 import { AppProvider, useAppContext } from "./context/AppContext";
@@ -329,6 +331,10 @@ function AppContent() {
     return (settings.general?.theme as UIThemeId) || "PROFESSIONAL";
   });
 
+  const [experienceMode, setExperienceMode] = useState<LucaExperienceMode>(
+    () => settingsService.getSettings().general.experienceMode,
+  );
+
   const [backgroundOpacity, setBackgroundOpacity] = useState<number>(0.3);
   const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
 
@@ -338,6 +344,7 @@ function AppContent() {
       // Persona & Theme Selection — always apply latest from settings (React deduplicates no-ops)
       const newPersona = settings?.general?.persona;
       const newTheme = settings?.general?.theme;
+      const newExperienceMode = settings?.general?.experienceMode;
       const effectivePersona = newPersona ?? "ASSISTANT";
       const hasStoredSettings = settingsService.hasStoredSettings?.() ?? true;
       // Preserve saved themes exactly, but let true first-run/no-storage boots
@@ -351,6 +358,9 @@ function AppContent() {
       }
       if (newTheme) {
         setActiveThemeId(newTheme as UIThemeId);
+      }
+      if (newExperienceMode) {
+        setExperienceMode(newExperienceMode as LucaExperienceMode);
       }
 
       // Interaction Mode (Text vs Voice)
@@ -2511,6 +2521,7 @@ function AppContent() {
             isWakeWordActive={isWakeWordActive}
             isLockdown={isLockdown}
             connectionTier={effectiveConnectionTier}
+            tier={toHeaderTier(experienceMode)}
           />
         </SafeComponent>
 

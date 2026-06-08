@@ -21,6 +21,8 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import { CREATOR_ACCESS_STATE } from "../../experience/experienceModeAccess";
+import { getExperienceModeOptions } from "../../experience/experienceModeSettings";
 
 interface ChromeProfileStatus {
   imported: boolean;
@@ -76,6 +78,8 @@ function normalizeDisplayValue(value: unknown, fallback = "ASSISTANT"): string {
   const text = String(value).trim();
   return text && text !== "[object Object]" ? text : fallback;
 }
+
+const experienceModeOptions = getExperienceModeOptions(CREATOR_ACCESS_STATE);
 
 const personaOptions: PersonaMode[] = [
   "RUTHLESS",
@@ -146,6 +150,55 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         animate="show"
         className="space-y-5"
       >
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Experience Mode"
+            description="Choose how much of LucaOS is surfaced. Full dashboard gating comes in a later phase."
+            icon="Layers"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              {experienceModeOptions.map((option) => {
+                const isActive =
+                  settings.general.experienceMode === option.mode;
+                return (
+                  <button
+                    key={option.mode}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() =>
+                      onUpdate("general", "experienceMode", option.mode)
+                    }
+                    className="rounded-xl border p-4 text-left transition-all hover:opacity-90"
+                    style={{
+                      borderColor: isActive
+                        ? theme.hex
+                        : settingsSurfaceTokens.borderSubtle,
+                      background: isActive
+                        ? `${theme.hex}18`
+                        : settingsSurfaceTokens.elevated,
+                    }}
+                  >
+                    <div
+                      className="text-sm font-semibold"
+                      style={{ color: settingsSurfaceTokens.textPrimary }}
+                    >
+                      {option.label}
+                    </div>
+                    <p
+                      className="mt-1 text-xs leading-relaxed"
+                      style={{ color: settingsSurfaceTokens.textSecondary }}
+                    >
+                      {option.description}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </SettingsSection>
+        </motion.div>
+
         <motion.div variants={item}>
           <SettingsSection
             title="Appearance"

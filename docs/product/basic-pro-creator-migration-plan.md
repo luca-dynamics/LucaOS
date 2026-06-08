@@ -13,7 +13,7 @@
 - Calm-by-default everywhere; mode controls **density/disclosure**, not loudness.
 - The user always makes the final mode choice; Luca only recommends.
 
-## Current state (as of this PR)
+## Current state (after Phase 1 implementation)
 
 - **Build layer** ([`layerBoundary.ts`](../../src/config/layerBoundary.ts),
   [`buildConfig.ts`](../../src/config/buildConfig.ts)) already distinguishes
@@ -23,9 +23,17 @@
   [`lucaThemeLabels.ts`](../../src/config/lucaThemeLabels.ts)) provides
   `ProductTheme`, `AppearanceMode`, `Accent`, `MotionStyle`, and the
   Silver/Graphite/Frost/Cream labels.
-- **Header** has a `tier?: "BASIC" | "PRO" | "CREATOR"` prop (PR #235),
-  defaulting to `BASIC`; no real tier source feeds it yet.
-- **No** persisted Experience-Mode setting, onboarding cards, or gating exist.
+- **Settings persistence** stores canonical `general.experienceMode` in the existing
+  `LUCA_SETTINGS_V1` record. It defaults to `basic`, migrates recognized legacy
+  mode/tier labels through `mapLegacyTierToExperienceMode`, and rejects stored
+  Creator mode when the current build is not eligible.
+- **Header** receives `tier={toHeaderTier(experienceMode)}` from the dashboard, so
+  Basic uses the calm `LUCA OS` wordmark while Pro/Creator use `L.U.C.A OS`.
+- **Settings → General** includes a small Experience Mode selector. Basic and Pro
+  are always listed; Creator is listed only when build-derived Creator access is
+  eligible. The selection follows the existing Settings **Save Changes** flow.
+- **No** onboarding cards, capability scan, full dashboard gating, automatic
+  visual-default application, or Creator key/profile infrastructure exist yet.
 
 ## Mapping reference
 
@@ -47,11 +55,13 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
 - `CreatorAccessState` contract + pure evaluator + build-derived bridge.
 - Unit tests for all pure helpers. **No behavior change.**
 
-### Phase 1 — Persisted mode + Header wiring
-- Add a persisted `experienceMode` to settings/state (default `basic`).
-- Feed it through `toHeaderTier` into `Header tier`.
-- Acceptance: switching the stored value flips the wordmark (LUCA OS ↔ L.U.C.A OS)
-  with no other visual regressions; default users see `basic`.
+### Phase 1 — Persisted mode + Header wiring — Implemented
+- `general.experienceMode` is persisted in `LUCA_SETTINGS_V1` (default `basic`).
+- Recognized legacy values are canonicalized during settings load.
+- Dashboard state follows settings changes and feeds `toHeaderTier(experienceMode)`
+  into `Header tier`.
+- Switching Basic/Pro through Settings and saving flips the wordmark
+  (`LUCA OS` ↔ `L.U.C.A OS`) without applying broader dashboard gating.
 
 ### Phase 2 — Local capability scan service
 - Local, explainable scan producing `{ recommendation: "basic" | "pro", reasons[] }`.
@@ -65,12 +75,14 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
 - Acceptance: a fresh install reaches the dashboard in the chosen mode; choosing
   the non-recommended mode is honored.
 
-### Phase 4 — Settings switch
-- Settings → Experience → Experience Mode (Basic/Pro).
-- Creator row appears only when `canShowCreatorMode` is true.
-- Basic **hides** advanced surfaces (no deletion); Pro may re-scan.
-- Acceptance: toggling preserves tools/memory/settings; Creator hidden for
-  non-eligible contexts.
+### Phase 4 — Settings switch — Partially implemented
+- Settings → General now exposes Experience Mode (Basic/Pro).
+- Creator appears only when build-derived access makes
+  `canShowCreatorMode(...)` true.
+- The existing Settings save flow persists the selection without deleting or
+  mutating tools, memory, capabilities, or appearance preferences.
+- Deferred: Basic dashboard hiding, Pro re-scan behavior, and the final dedicated
+  Experience settings information architecture.
 
 ### Phase 5 — Dashboard gating
 - Apply the per-mode surface tables (header/left/center/right + VoiceHUD, Memory,
@@ -79,10 +91,12 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
 - Acceptance: each mode matches the documented surface table; no orphaned
   controls; mobile remains thumb-friendly.
 
-### Phase 6 — Creator access wiring
-- Populate `CreatorAccessState` from `deriveCreatorAccessFromBuild(...)` using
-  build config; add repo-root/creator-config detection.
-- Design key/profile trust **safely** (separate, reviewed PR).
+### Phase 6 — Creator access wiring — Build signal partially implemented
+- `CreatorAccessState` is derived from `LUCA_AUDIENCE_TIER` and
+  `LUCA_SURFACE_LAYER`; public builds keep Creator hidden and origin builds may
+  expose it.
+- Deferred: repo-root/creator-config detection and trusted creator key/profile
+  infrastructure, which require separate security review.
 - Acceptance: Creator is unreachable in public builds; reachable in source/origin
   builds; `reason` explains the decision.
 
