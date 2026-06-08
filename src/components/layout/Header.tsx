@@ -14,6 +14,7 @@ interface HeaderProps {
   theme: any;
   persona: string;
   isMobile: boolean;
+  // Retained for API compatibility; persona switching now lives in Settings.
   handleCyclePersona: () => void;
   isRebooting: boolean;
   handleKeyDown: (e: React.KeyboardEvent) => void;
@@ -33,38 +34,43 @@ interface HeaderProps {
   isWakeWordActive: boolean;
   isLockdown?: boolean;
   connectionTier?: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
+  // Future Basic/Pro/Creator separation. Calm by default; Pro/Creator
+  // surface more brand identity. Defaults to BASIC until tiers are wired.
+  tier?: "BASIC" | "PRO" | "CREATOR";
 }
 
-function normalizePersonaDisplay(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (value == null) return "ASSISTANT";
-
-  if (typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>);
-    if (
-      entries.length > 0 &&
-      entries.every(
-        ([key, item]) => /^\d+$/.test(key) && typeof item === "string",
-      )
-    ) {
-      return entries
-        .sort((a, b) => Number(a[0]) - Number(b[0]))
-        .map(([, item]) => item)
-        .join("");
-    }
+// Tier-aware wordmark. "LUCA" is an acronym, so it stays uppercase as the
+// brand name. Basic gets a calm "LUCA OS"; Pro/Creator get the stylized
+// dotted "L.U.C.A OS" mark (kept tasteful — no italic, no neon).
+function wordmark(tier: "BASIC" | "PRO" | "CREATOR"): {
+  text: string;
+  stylized: boolean;
+} {
+  if (tier === "PRO" || tier === "CREATOR") {
+    return { text: "L.U.C.A OS", stylized: true };
   }
+  return { text: "LUCA OS", stylized: false };
+}
 
-  const fallback = String(value).trim();
-  return fallback && fallback !== "[object Object]" ? fallback : "ASSISTANT";
+function connectionLabel(
+  tier: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE",
+): string {
+  switch (tier) {
+    case "LAN":
+      return "LAN";
+    case "LOCAL":
+      return (window as any).luca ? "On device" : "Linked";
+    case "CLOUD":
+      return "Cloud";
+    default:
+      return "Offline";
+  }
 }
 
 const Header: React.FC<HeaderProps> = ({
   theme,
   persona,
   isMobile,
-  handleCyclePersona,
-  isRebooting,
-  handleKeyDown,
   setIsSettingsOpen,
   isAdminMode,
   ambientVisionActive,
@@ -73,38 +79,75 @@ const Header: React.FC<HeaderProps> = ({
   setAmbientSuggestions,
   setShowSuggestionChips,
   hostPlatform,
-  isListeningAmbient,
   isProcessing,
-  audioMonitoringActive,
   setAudioMonitoringActive,
   setVisionMonitoringActive,
   isWakeWordActive,
   isLockdown,
   connectionTier = "LOCAL",
+  tier = "BASIC",
 }) => {
-  const personaLabel = normalizePersonaDisplay(persona);
   const credits = useCredits();
+  const isLightCream = theme.themeName?.toLowerCase() === "lightcream";
+  const brand = wordmark(tier);
+
+  const creditColor =
+    credits.status === "CRITICAL"
+      ? isLightCream
+        ? "#991b1b"
+        : "#ef4444"
+      : credits.status === "LOW"
+        ? isLightCream
+          ? "#92400e"
+          : "#f59e0b"
+        : isLightCream
+          ? "#065f46"
+          : "#10b981";
+
+  const planLabel = credits.isLocal
+    ? "Local"
+    : credits.isBYOK
+      ? "BYOK"
+      : "Prime";
+
+  const connectionColor =
+    connectionTier === "OFFLINE"
+      ? "var(--app-text-muted, #64748b)"
+      : connectionTier === "CLOUD"
+        ? isLightCream
+          ? "#1e40af"
+          : "#3b82f6"
+        : isLightCream
+          ? "#065f46"
+          : "#22c55e";
+
+  const surfaceStyle = {
+    backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.3))",
+    borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.1))",
+  };
 
   return (
     <header
       id="app-header"
-      className={`${isMobile ? "h-16 px-4" : "h-20 px-6"} glass-blur tech-border flex items-center justify-between z-50 transition-all duration-500 relative drag`}
+      className={`${isMobile ? "h-16 px-4" : "h-16 px-6"} glass-blur flex items-center justify-between z-50 transition-all duration-500 relative drag border-b`}
       style={{
         backgroundColor: theme?.isLight
-          ? (theme.themeName?.toLowerCase() === "lightcream"
-              ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-              : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
+          ? isLightCream
+            ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
+            : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))"
           : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
-        color: "var(--app-text-main, #ffffff)"
+        borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.08))",
+        color: "var(--app-text-main, #ffffff)",
       }}
     >
       <RuntimeContinuityBootstrap />
-      <div className={`flex items-center gap-3 app-region-no-drag`}>
-        {/* Holographic Face Icon - 3D with Theme Colors */}
+
+      {/* Brand */}
+      <div className="flex items-center gap-3 app-region-no-drag min-w-0">
         <div
           className={`relative ${
-            isMobile ? "w-10 h-10" : "w-14 h-14"
-          } group cursor-pointer flex items-center justify-center`}
+            isMobile ? "w-8 h-8" : "w-9 h-9"
+          } group cursor-pointer flex items-center justify-center flex-none`}
           onClick={() => soundService.play("HOVER")}
         >
           <img
@@ -113,197 +156,110 @@ const Header: React.FC<HeaderProps> = ({
                 ? "/icon_dark.png"
                 : "/icon.png"
             }
-            alt="Luca Logo"
-            className="w-full h-full object-contain filter drop-shadow-md brightness-110 transition-transform duration-300 group-hover:scale-110"
+            alt="Luca"
+            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </div>
-
-        <div
-          className={`flex flex-col justify-center flex-1 min-w-0 ${isMobile ? "pt-5" : ""}`}
+        <h1
+          className={`font-display ${
+            isMobile ? "text-base" : "text-lg"
+          } font-semibold ${
+            brand.stylized ? "tracking-[0.18em]" : "tracking-tight"
+          } leading-none whitespace-nowrap`}
+          style={{ color: "var(--app-text-main, #ffffff)" }}
         >
-          <h1
-            className={`font-display ${
-              isMobile ? "text-lg" : "text-xl"
-            } font-black ${
-              isMobile ? "tracking-[0.1em]" : "tracking-[0.4em]"
-            } uppercase italic transition-colors duration-500 leading-none flex items-center gap-2 whitespace-nowrap ${isMobile ? "" : "gap-4"}`}
-            style={{ color: "var(--app-text-main, #ffffff)" }}
+          {brand.text}
+        </h1>
+
+        {isLockdown && (
+          <span
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
+            style={{
+              color: isLightCream ? "#92400e" : "#f59e0b",
+              borderColor: isLightCream
+                ? "rgba(146, 64, 14, 0.3)"
+                : "rgba(245, 158, 11, 0.3)",
+              backgroundColor: isLightCream
+                ? "rgba(146, 64, 14, 0.06)"
+                : "rgba(245, 158, 11, 0.1)",
+            }}
+            title="Lockdown active"
           >
-            L.U.C.A OS
-            <span className="inline-flex items-center gap-3 ml-2">
-              {persona === "ENGINEER" && (
-                <Icon
-                  name="Programming"
-                  size={isMobile ? 18 : 22}
-                  variant="Linear"
-                  className="opacity-80 transition-opacity group-hover:opacity-100"
-                />
-              )}
-              {persona === "ASSISTANT" && (
-                <Icon
-                  name="MagicStick"
-                  size={isMobile ? 18 : 22}
-                  variant="Linear"
-                  className="opacity-80 transition-opacity group-hover:opacity-100"
-                />
-              )}
-              {persona === "HACKER" && (
-                <Icon
-                  name="Shield"
-                  size={isMobile ? 18 : 22}
-                  variant="Linear"
-                  color="#22c55e"
-                  className="opacity-80 transition-opacity group-hover:opacity-100"
-                />
-              )}
-            </span>
-          </h1>
-
-          <div
-            className={`flex items-center ${
-              isMobile ? "gap-2" : "gap-4"
-            } ${isMobile ? "mt-[-2px]" : "mt-[-6px]"}`}
-          >
-            {/* CLICKABLE PERSONA SWITCHER */}
-            <button
-              onClick={handleCyclePersona}
-              disabled={isRebooting}
-              onKeyDown={handleKeyDown}
-              className={`${isMobile ? "text-[10px]" : "text-[9px]"} font-bold ${
-                isMobile ? "tracking-[0.1em]" : "tracking-[0.4em]"
-              } opacity-70 flex items-center gap-1.5 hover:text-[var(--app-text-main)] transition-all ${
-                isRebooting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-              } select-none group`}
-              style={{ color: "var(--app-text-muted, rgba(255, 255, 255, 0.7))" }}
-              title={
-                isRebooting
-                  ? "Rebooting... Please wait"
-                  : "Click to Switch Persona"
-              }
-            >
-              <span
-                className={`whitespace-nowrap ${
-                  isMobile ? "group-hover:underline" : "group-hover:underline"
-                }`}
-              >
-                <span>MODE: </span>
-                {personaLabel === "RUTHLESS"
-                  ? isLockdown
-                    ? "LOCKDOWN"
-                    : "RUTHLESS"
-                  : personaLabel}
-              </span>
-              <span className="w-1 h-1 rounded-full bg-current animate-pulse"></span>
-            </button>
-
-            {!isMobile && <RuntimeStatusChip compact />}
-
-            {/* SETTINGS BUTTON */}
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              title="Open Settings"
-              className={`flex items-center gap-2 ${
-                isMobile
-                  ? "p-2 rounded-full sm:px-3 sm:py-1.5"
-                  : "px-3 py-1.5 rounded-full"
-              } transition-all group border glass-blur`}
-              style={{ 
-                backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.3))",
-                borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.1))",
-                color: "var(--app-text-muted, #94a3b8)"
-              }}
-            >
-              <Icon
-                name="Settings"
-                size={isMobile ? (isMobile && window.innerWidth >= 640 ? 14 : 20) : 14}
-                variant="Linear"
-                className="group-hover:rotate-90 transition-transform"
-              />
-              <span className={`text-[10px] font-bold tracking-widest ${isMobile ? "hidden sm:inline" : "hidden group-hover:block"}`}>
-                SETTINGS
-              </span>
-            </button>
-
-
-          </div>
-        </div>
+            <Icon name="Lock" size={12} variant="Linear" color="currentColor" />
+            Locked
+          </span>
+        )}
       </div>
 
-      <div
-        className={`flex items-center ${isMobile ? "gap-1.5 sm:gap-2.5" : "gap-8"} ${
-          isMobile ? "text-[9px] sm:text-[10px]" : "text-[10px]"
-        } font-bold ${
-          isMobile ? "tracking-tight sm:tracking-widest" : "tracking-widest"
-        } opacity-80 app-region-no-drag`}
-      >
-        {/* SOVEREIGN WALLET INDICATOR */}
-        <div 
-          className={`${isMobile ? "hidden sm:flex" : "flex"} items-center gap-3 px-4 py-2 rounded-full border transition-all group cursor-default glass-blur w-fit h-[44px]`}
-          style={{ 
-            backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.3))",
-            borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.1))"
-          }}
+      {/* System status + controls */}
+      <div className="flex items-center gap-2 sm:gap-3 app-region-no-drag">
+        {isProcessing && (
+          <span
+            className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-medium"
+            style={{ color: "var(--app-text-muted, #94a3b8)" }}
+            title="Luca is working"
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ backgroundColor: "var(--luca-accent-primary, #3b82f6)" }}
+            />
+            Working
+          </span>
+        )}
+
+        {isAdminMode && (
+          <span
+            className={`${isMobile ? "hidden md:inline-flex" : "inline-flex"} items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border`}
+            style={{
+              color: isLightCream ? "#991b1b" : "#f87171",
+              borderColor: isLightCream
+                ? "rgba(153, 27, 27, 0.3)"
+                : "rgba(248, 113, 113, 0.3)",
+              backgroundColor: isLightCream
+                ? "rgba(153, 27, 27, 0.06)"
+                : "rgba(248, 113, 113, 0.1)",
+            }}
+            title="Admin mode active"
+          >
+            <Icon name="Shield" size={12} variant="Linear" color="currentColor" />
+            Admin
+          </span>
+        )}
+
+        {/* Credits */}
+        <div
+          className={`${isMobile ? "hidden sm:flex" : "flex"} items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-default`}
+          style={surfaceStyle}
+          title={`Credits${credits.isLocal ? " · running on local models" : credits.isBYOK ? " · using your own API key" : ""}`}
         >
           <Icon
             name="Wallet"
-            size={18}
+            size={15}
             variant="Linear"
-            color={
-              credits.status === "CRITICAL"
-                ? (theme.themeName?.toLowerCase() === "lightcream" ? "#991b1b" : "#ef4444")
-                : credits.status === "LOW"
-                  ? (theme.themeName?.toLowerCase() === "lightcream" ? "#92400e" : "#f59e0b")
-                  : (theme.themeName?.toLowerCase() === "lightcream" ? "#065f46" : "#10b981")
-            }
-            className={credits.status === "CRITICAL" || (!credits.isLocal && !credits.isBYOK) ? "animate-pulse" : ""}
+            color={creditColor}
           />
-          <div className="flex flex-col justify-center min-w-0">
-            <div className="flex items-center gap-1.5 leading-none">
-              <span className="text-[10px] font-mono font-black text-[var(--app-text-main)] tracking-widest uppercase opacity-70">
-                CREDITS:
-              </span>
-              <span className="text-[12px] font-mono font-black text-[var(--app-text-main)] tracking-normal">
-                {!isFinite(credits.balance) ? "∞" : Math.floor(credits.balance).toLocaleString()}
-              </span>
-              <div className="flex items-center">
-                <span 
-                  className={`text-[7px] px-1.5 py-0.5 rounded-sm font-black tracking-tighter uppercase ${
-                    credits.isLocal 
-                      ? (theme.themeName?.toLowerCase() === "lightcream" ? "bg-[#065f46]/10 text-[#065f46]" : "bg-emerald-500/20 text-emerald-500")
-                      : credits.isBYOK 
-                        ? (theme.themeName?.toLowerCase() === "lightcream" ? "bg-blue-800/10 text-blue-800" : "bg-blue-500/20 text-blue-500")
-                        : (theme.themeName?.toLowerCase() === "lightcream" ? "bg-amber-800/10 text-amber-800" : "bg-amber-500/20 text-amber-500")
-                  }`}
-                >
-                  {credits.isLocal ? "LOCAL" : credits.isBYOK ? "BYOK" : "PRIME"}
-                </span>
-              </div>
-            </div>
-            {/* TACHOMETER STYLE BAR */}
-            <div className="w-full h-[2px] bg-white/5 rounded-full mt-1.5 overflow-hidden">
-              <div
-                className={`h-full transition-all duration-700 ease-out ${
-                  credits.status === "CRITICAL"
-                    ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
-                    : credits.status === "LOW"
-                      ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
-                      : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                }`}
-                style={{
-                  width: `${!isFinite(credits.balance) ? 100 : Math.min(100, (credits.balance / 1000) * 100)}%`,
-                }}
-              />
-            </div>
-          </div>
+          <span
+            className="text-[13px] font-semibold tabular-nums"
+            style={{ color: "var(--app-text-main, #ffffff)" }}
+          >
+            {!isFinite(credits.balance)
+              ? "∞"
+              : Math.floor(credits.balance).toLocaleString()}
+          </span>
+          <span
+            className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+            style={{
+              color: creditColor,
+              backgroundColor: `${creditColor}1a`,
+            }}
+          >
+            {planLabel}
+          </span>
         </div>
-        {/* ADMIN INDICATOR - Visible on mobile if screen is wide enough */}
-        {(isAdminMode && !isMobile) || (isAdminMode && isMobile) ? (
-          <div className={`${isMobile ? "hidden md:flex" : "flex"} items-center gap-2 px-2 py-1 ${theme.themeName?.toLowerCase() === "lightcream" ? "text-red-900 border-red-900/40 bg-red-800/5 shadow-none" : "text-red-500 animate-pulse border-red-500 bg-red-950/30 shadow-[0_0_10px_red]"} font-bold border rounded`}>
-            <Icon name="Shield" size={12} color={theme.themeName?.toLowerCase() === "lightcream" ? "#991b1b" : "#ef4444"} variant="Linear" /> <span className="text-[9px]">ADMIN MODE</span>
-          </div>
-        ) : null}
 
-        {/* AMBIENT VISION INDICATOR - Visible on sm: screens and up */}
+        {!isMobile && <RuntimeStatusChip compact />}
+
+        {/* Ambient vision toggle */}
         <div className={isMobile ? "hidden sm:block" : "block"}>
           <AmbientVisionIndicator
             active={ambientVisionActive}
@@ -334,85 +290,7 @@ const Header: React.FC<HeaderProps> = ({
           />
         </div>
 
-        <div 
-          className="flex items-center gap-2 uppercase"
-          style={{ color: "var(--app-text-muted, #94a3b8)" }}
-        >
-          <Icon name="Monitor" size={isMobile ? 12 : 14} variant="Linear" />
-          <span className={isMobile ? "hidden sm:inline" : "inline"}>HOST: </span>
-          <span className="truncate">
-            {
-              hostPlatform
-                .replace(/\(.*\)/, "")
-                .trim()
-                .split(" ")[0]
-            }
-          </span>
-        </div>
-        {isListeningAmbient && (
-          <div className="flex items-center gap-2 text-rq-red animate-pulse">
-            <Icon name="Pulse" size={14} variant="Linear" color="#ff0000" />
-            <span className="hidden sm:inline">SENSORS_ACTIVE</span>
-          </div>
-        )}
-
-        {/* CORE STATUS - TIER Aware */}
-        <div
-          className="flex items-center gap-2 transition-colors"
-          style={{ 
-            color: connectionTier === "OFFLINE" 
-              ? "var(--app-text-muted, #64748b)" 
-              : connectionTier === "CLOUD" 
-                ? (theme.themeName?.toLowerCase() === "lightcream" ? "#1e40af" : "#3b82f6")
-                : (theme.themeName?.toLowerCase() === "lightcream" ? "#065f46" : "#22c55e")
-          }}
-          title={`Connection Tier: ${connectionTier}`}
-        >
-          {connectionTier === "OFFLINE" ? (
-            <Icon name="CloseCircle" size={isMobile ? 12 : 14} color="currentColor" />
-          ) : connectionTier === "CLOUD" ? (
-            <Icon name="Cloud" size={isMobile ? 12 : 14} color="currentColor" variant="Linear" />
-          ) : (
-            <Icon name="Server" size={isMobile ? 12 : 14} color="currentColor" variant="Linear" />
-          )}
-          <span className={isMobile ? "hidden sm:inline" : "inline"}>LINK: </span>
-          {connectionTier === "LAN"
-            ? "LAN"
-            : connectionTier === "LOCAL"
-              ? (window as any).luca
-                ? "NATIVE"
-                : "LINKED"
-              : connectionTier === "CLOUD"
-                ? "CLOUD"
-                : "OFFLINE"}
-        </div>
-
-        {/* LUCA_LOAD - Hidden on mobile for cleaner look */}
-        {!isMobile && (
-          <div 
-            className="flex items-center gap-2"
-            style={{ color: "var(--app-text-main, #ffffff)" }}
-          >
-            <Icon name="Cpu" size={isMobile ? 12 : 14} variant="Linear" />
-            <span>LOAD: </span>
-            {isProcessing ? "98%" : "12%"}
-            {audioMonitoringActive && !isMobile && (
-              <div 
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-bold animate-pulse"
-                style={{ 
-                  backgroundColor: theme.themeName?.toLowerCase() === "lightcream" ? "rgba(6, 95, 70, 0.05)" : "rgba(16, 185, 129, 0.1)",
-                  borderColor: theme.themeName?.toLowerCase() === "lightcream" ? "rgba(6, 95, 70, 0.3)" : "rgba(16, 185, 129, 0.3)",
-                  color: theme.themeName?.toLowerCase() === "lightcream" ? "#065f46" : "#10b981"
-                }}
-              >
-                <Icon name="Microphone" size={10} variant="Linear" />
-                <span>LIVE EAR</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Always-On Monitoring Controls - Hidden on mobile as requested */}
+        {/* Always-on monitoring controls */}
         {!isMobile && (
           <AlwaysOnControls
             onVisionToggle={(active) => setVisionMonitoringActive(active)}
@@ -422,6 +300,46 @@ const Header: React.FC<HeaderProps> = ({
             theme={theme}
           />
         )}
+
+        {/* Connection status */}
+        <div
+          className="hidden md:flex items-center gap-1.5 text-[11px] font-medium"
+          style={{ color: connectionColor }}
+          title={`Connection: ${connectionLabel(connectionTier)}${
+            hostPlatform
+              ? ` · ${hostPlatform.replace(/\(.*\)/, "").trim().split(" ")[0]}`
+              : ""
+          }`}
+        >
+          {connectionTier === "OFFLINE" ? (
+            <Icon name="CloseCircle" size={14} color="currentColor" />
+          ) : connectionTier === "CLOUD" ? (
+            <Icon name="Cloud" size={14} color="currentColor" variant="Linear" />
+          ) : (
+            <Icon name="Server" size={14} color="currentColor" variant="Linear" />
+          )}
+          <span>{connectionLabel(connectionTier)}</span>
+        </div>
+
+        {/* Settings */}
+        <button
+          type="button"
+          onClick={() => setIsSettingsOpen(true)}
+          aria-label="Open settings"
+          title="Settings"
+          className="flex items-center justify-center w-9 h-9 rounded-full border transition-all group app-region-no-drag"
+          style={{
+            ...surfaceStyle,
+            color: "var(--app-text-muted, #94a3b8)",
+          }}
+        >
+          <Icon
+            name="Settings"
+            size={16}
+            variant="Linear"
+            className="group-hover:rotate-90 transition-transform duration-300"
+          />
+        </button>
       </div>
     </header>
   );

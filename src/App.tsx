@@ -110,6 +110,7 @@ import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
 import { SkillPermissionGrantProvider } from "./components/SkillPermissionGrantContext";
 import {
   MOBILE_RIGHT_PANEL_LABELS,
+  RIGHT_PANEL_LABELS,
   RIGHT_PANEL_MODES,
   isRightPanelMode,
 } from "./components/right-panel/rightPanelModel";
@@ -120,7 +121,6 @@ import {
 import {
   lucaShellActiveControlStyle,
   lucaShellActiveIndicatorStyle,
-  lucaShellActiveLabelStyle,
   lucaShellActiveTabStyle,
   lucaShellClassNames,
   lucaShellControlStyle,
@@ -2844,7 +2844,7 @@ function AppContent() {
                           setRightPanelMode(mode);
                           soundService.play("KEYSTROKE");
                         }}
-                        className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors relative border-b-2 ${
+                        className={`flex-1 py-3 text-[13px] font-medium transition-colors relative border-b-2 ${
                           rightPanelMode === mode
                             ? lucaShellClassNames.activeTab
                             : lucaShellClassNames.tab
@@ -2855,20 +2855,13 @@ function AppContent() {
                             : lucaShellTabStyle
                         }
                       >
-                        {mode}
+                        {RIGHT_PANEL_LABELS[mode]}
                         {mode === "CONTROL" && rightPanelMode === "CONTROL" && (
-                          <div className="absolute top-0.5 right-1.5 flex items-center gap-1">
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full animate-pulse border ${lucaShellClassNames.activeIndicator}`}
-                              style={lucaShellActiveIndicatorStyle}
-                            />
-                            <span
-                              className={`text-[7px] font-black uppercase tracking-widest ${lucaShellClassNames.activeLabel}`}
-                              style={lucaShellActiveLabelStyle}
-                            >
-                              Active
-                            </span>
-                          </div>
+                          <span
+                            className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full ${lucaShellClassNames.activeIndicator}`}
+                            style={lucaShellActiveIndicatorStyle}
+                            aria-hidden="true"
+                          />
                         )}
                       </button>
                     ))}
@@ -2934,7 +2927,7 @@ function AppContent() {
                         setRightPanelMode(mode);
                         soundService.play("KEYSTROKE");
                       }}
-                      className={`flex-1 py-3 text-[10px] font-bold tracking-widest transition-colors relative border-b-2 ${
+                      className={`flex-1 py-3 text-[11px] font-medium transition-colors relative border-b-2 ${
                         rightPanelMode === mode
                           ? lucaMobileClassNames.tabActive
                           : lucaMobileClassNames.tab
