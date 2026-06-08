@@ -5,6 +5,7 @@ import indexSource from "./index.ts?raw";
 import readinessSource from "./operationCenterReadiness.ts?raw";
 import typesSource from "./operationCenterTypes.ts?raw";
 import componentSource from "../components/right-panel/OperationPermissionCenter.tsx?raw";
+ 
 import fileInstallFixturesSource from "../services/lucaLink/adapterFileInstallPermissions/adapterFileInstallPermissionFixtures.ts?raw";
 import fileInstallTypesSource from "../services/lucaLink/adapterFileInstallPermissions/adapterFileInstallPermissionTypes.ts?raw";
 import fileInstallIndexSource from "../services/lucaLink/adapterFileInstallPermissions/index.ts?raw";
@@ -12,6 +13,12 @@ import { describe, expect, it } from "vitest";
 import { operationCenterFixtureItems } from "./operationCenterFixtures";
 
 const productionSources = [auditSource, bridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource, fileInstallFixturesSource, fileInstallTypesSource, fileInstallIndexSource];
+
+import { describe, expect, it } from "vitest";
+import { operationCenterFixtureItems } from "./operationCenterFixtures";
+
+const productionSources = [auditSource, bridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource];
+ 
 
 const forbiddenPatterns = [
   /memoryService/,
@@ -26,8 +33,11 @@ const forbiddenPatterns = [
   /\bfetch\s*\(/,
   /from\s+["'](?:node:)?fs(?:\/promises)?["']/,
   /child_process/,
+ 
   /from\s+["'](?:node:)?(?:fs|child_process|vm)["']/,
   /\b(?:npm|yarn|pnpm|bun)\s+(?:add|install)\b/i,
+
+ 
   /localStorage|sessionStorage|indexedDB/,
   /electron.*ipc|ipcRenderer|ipcMain/i,
   /\beval\s*\(|new\s+Function|new\s+Worker|\bVM\b/,
@@ -52,6 +62,7 @@ describe("operation center fixtures and source safety", () => {
     expect(gateStatuses).toEqual(expect.arrayContaining(["pending", "granted_for_review", "denied", "blocked"]));
   });
 
+ 
   it("uses real adapter file/install decisions instead of the unavailable placeholder", () => {
     const items = operationCenterFixtureItems.filter((candidate) => candidate.category === "adapter_file_install");
     expect(items.map((item) => item.status)).toEqual(expect.arrayContaining([
@@ -63,6 +74,12 @@ describe("operation center fixtures and source safety", () => {
     expect(items.every((item) => item.sideEffectsPerformed === false && item.readyForExecution === false)).toBe(true);
     expect(items.some((item) => item.status === "disabled")).toBe(false);
     expect(items.flatMap((item) => item.warnings).some((warning) => warning.includes("not available"))).toBe(false);
+
+  it("uses a disabled placeholder when the adapter file/install model is unavailable", () => {
+    const item = operationCenterFixtureItems.find((candidate) => candidate.category === "adapter_file_install");
+    expect(item).toMatchObject({ status: "disabled", sideEffectsPerformed: false });
+    expect(item?.warnings).toContain("Adapter file/install model not available yet.");
+ 
   });
 
   it("does not import or call forbidden runtime APIs in production sources", () => {

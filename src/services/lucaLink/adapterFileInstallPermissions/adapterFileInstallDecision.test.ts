@@ -1,0 +1,8 @@
+import { describe, expect, it } from "vitest";
+import { createAdapterFileInstallPermissionRequestFromAdapterPlan, evaluateLucaLinkAdapterFileInstallPermission, isAdapterFileInstallDecisionExecutable, isAdapterFileInstallDecisionSendable, LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURES } from ".";
+import { createLucaLinkAdapterSandboxPlan } from "../adapters";
+import { LUCA_LINK_SAFE_ADAPTER_MANIFEST } from "../adapters/adapterSandboxFixtures";
+describe("unified adapter file/install decisions", () => {
+  it("never creates executable or sendable decisions", () => { for (const request of LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURES) { const result = evaluateLucaLinkAdapterFileInstallPermission(request, { now: "2029-12-31" }); expect(result).toMatchObject({ allowedForExecution: false, writeEnabled: false, installEnabled: false, sendable: false, sideEffectsPerformed: false }); expect(isAdapterFileInstallDecisionExecutable(result)).toBe(false); expect(isAdapterFileInstallDecisionSendable(result)).toBe(false); } });
+  it("converts declarative sandbox plans without mutation", () => { const plan = createLucaLinkAdapterSandboxPlan({ manifest: { ...LUCA_LINK_SAFE_ADAPTER_MANIFEST, requestedCapabilities: ["file.write.request"], requestedPermissions: ["file.write.request"] }, requestedByHostId: "primary-host", targetHostId: "companion-host", config: { enabled: true } }); const snapshot = JSON.stringify(plan); const request = createAdapterFileInstallPermissionRequestFromAdapterPlan(plan, { targetPath: "app/config/example.json", pathKind: "app_config", fileType: "json" }); expect(request?.operation).toBe("file_write"); expect(request?.sideEffectsPerformed).toBe(false); expect(JSON.stringify(plan)).toBe(snapshot); });
+});

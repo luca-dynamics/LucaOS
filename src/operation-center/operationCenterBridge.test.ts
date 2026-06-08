@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { PersonalIntelligenceSkillPermissionGate } from "../personal-intelligence/skillPermissions";
+ 
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
+
+ 
+  
 import {
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromApprovalNotifications,
@@ -56,6 +60,7 @@ describe("operation center bridge", () => {
     expect(createOperationItemsFromTransportPermissionDecisions([{ ...base, status: "blocked" }])[0].status).toBe("blocked");
   });
 
+ 
   it("converts the real adapter file/install fixture decisions", () => {
     const items = createOperationItemsFromAdapterFileInstallDecisions(
       LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
@@ -68,5 +73,11 @@ describe("operation center bridge", () => {
     ]);
     expect(items.every((item) => item.category === "adapter_file_install")).toBe(true);
     expect(items.every((item) => item.executionEnabled === false && item.sideEffectsPerformed === false)).toBe(true);
+
+  it("keeps an unavailable adapter file/install model disabled", () => {
+    const [item] = createOperationItemsFromAdapterFileInstallDecisions([{ ...base, status: "disabled", warnings: ["Adapter file/install model not available yet."] }]);
+    expect(item).toMatchObject({ category: "adapter_file_install", status: "disabled", executionEnabled: false });
+
+  
   });
 });

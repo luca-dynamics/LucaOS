@@ -101,3 +101,7 @@ device. Adapter or host approval does not grant live sensor collection.
 ## Transport permission conversion
 
 Adapter execution plans can be converted into side-effect-free LucaLink transport permission requests for policy preview. Conversion does not execute an adapter, load an entrypoint, authorize a capability, mutate a network, or send a message; live transport readiness remains false.
+
+## File-write and install permission evaluation
+
+Declarative `file.write.request` and `install.request` capabilities are now converted into and evaluated by the Adapter File Write + Install Permission Model. Evaluation is model-only: it does not execute an adapter, write a file, install a package, approve a request, or send a transport message.

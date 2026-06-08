@@ -1,7 +1,10 @@
 import {
+ 
   LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
 } from "../services/lucaLink/adapterFileInstallPermissions";
 import {
+
+ 
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromAdapterSandboxPlans,
   createOperationItemsFromApprovalNotifications,
@@ -197,9 +200,26 @@ const transportItems = createOperationItemsFromTransportPermissionDecisions([
   },
 ]);
 
+ 
 const fileInstallItems = createOperationItemsFromAdapterFileInstallDecisions(
   LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
 );
+
+const fileInstallItems = createOperationItemsFromAdapterFileInstallDecisions([
+  {
+    id: "operation:adapter-file-install-disabled",
+    requestId: "adapter-file-install:not-available",
+    title: "Adapter file/install model",
+    summary: "No separate adapter file/install decision module is available to bridge.",
+    status: "disabled",
+    riskLevel: "high",
+    createdAt,
+    blockedActions: ["file write", "package install"],
+    warnings: ["Adapter file/install model not available yet."],
+    blockers: ["File writes and installs remain disabled."],
+  },
+]);
+ 
 
 export const operationCenterFixtureItems: readonly OperationCenterItem[] = Object.freeze([
   ...memoryItems,

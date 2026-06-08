@@ -1,4 +1,7 @@
+ 
 import type { LucaLinkAdapterFileInstallPermissionDecision } from "../services/lucaLink/adapterFileInstallPermissions";
+
+ 
 import type {
   OperationCenterItem,
   OperationCenterRiskLevel,
@@ -89,6 +92,14 @@ export interface TransportPermissionDecisionSummary extends SafeSummaryBase {
   hostId?: string;
 }
 
+ 
+=======
+export interface AdapterFileInstallDecisionSummary extends SafeSummaryBase {
+  requestId?: string;
+  hostId?: string;
+}
+
+ 
 const statusMap: Record<string, SafeStatus> = {
   action_required: "pending",
   allowed_preview: "model_only",
@@ -215,3 +226,5 @@ export const createOperationItemsFromAdapterFileInstallDecisions = (
   relatedHostId: decision.targetHostId,
   relatedRequestId: decision.requestId,
 }));
+export const createOperationItemsFromAdapterFileInstallDecisions = (decisions: readonly AdapterFileInstallDecisionSummary[]) =>
+  decisions.map((decision) => createItem(decision, "lucalink", "adapter_file_install", normalizeStatus(decision.status, "disabled"), { relatedRequestId: decision.requestId, relatedHostId: decision.hostId }));
