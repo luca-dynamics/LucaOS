@@ -4,11 +4,10 @@ import evidenceSource from "./lucaLinkRuntimeAuthorityEvidence.ts?raw";
 import readinessSource from "./lucaLinkRuntimeAuthorityReadiness.ts?raw";
 import fixturesSource from "./lucaLinkRuntimeAuthorityFixtures.ts?raw";
 import componentSource from "../../../components/settings/SettingsLucaLinkRuntimeAuthority.tsx?raw";
-import bridgeSource from "../../../operation-center/operationCenterBridge.ts?raw";
-import operationFixturesSource from "../../../operation-center/operationCenterFixtures.ts?raw";
+import lucaLinkBridgeSource from "../../../operation-center/operationCenterLucaLinkRuntimeAuthorityBridge.ts?raw";
 import { describe, expect, it } from "vitest";
 
-const productionSources = [policySource, registrySource, evidenceSource, readinessSource, fixturesSource, componentSource, bridgeSource, operationFixturesSource];
+const productionSources = [policySource, registrySource, evidenceSource, readinessSource, fixturesSource, componentSource, lucaLinkBridgeSource];
 const forbidden = [
   /lucaLinkService/, /socket\.emit/, /socket\.io-client/, /\bWebSocket\b/, /RTCPeerConnection/, /\bfetch\s*\(/,
   /from\s+["'](?:node:)?fs(?:\/promises)?["']/, /child_process/, /localStorage|sessionStorage|indexedDB/,

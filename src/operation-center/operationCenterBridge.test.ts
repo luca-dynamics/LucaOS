@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
+import { personalIntelligenceRuntimeAuthorityFixtures } from "../personal-intelligence/runtimeAuthority";
 import type { PersonalIntelligenceSkillPermissionGate } from "../personal-intelligence/skillPermissions";
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
@@ -9,7 +10,6 @@ import {
   createOperationItemsFromApprovalNotifications,
   createOperationItemsFromLearningEvents,
   createOperationItemsFromLucaLinkDryRunHandoffSimulations,
-  createOperationItemsFromLucaLinkRuntimeAuthorityRecords,
   createOperationItemsFromMissionEvaluations,
   createOperationItemsFromRuntimeTraces,
   createOperationItemsFromSensorSnapshots,
@@ -19,6 +19,8 @@ import {
   createOperationItemsFromTransportPermissionDecisions,
   createOperationItemsFromWebDisplayIntents,
 } from "./operationCenterBridge";
+import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
+import { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } from "./operationCenterLucaLinkRuntimeAuthorityBridge";
 
 const gate: PersonalIntelligenceSkillPermissionGate = {
   gateId: "gate:test",
@@ -39,6 +41,20 @@ const gate: PersonalIntelligenceSkillPermissionGate = {
 };
 
 const base = { id: "item:test", title: "Safe summary", summary: "Fixture-backed summary.", createdAt: "2026-06-07T12:00:00.000Z" };
+
+const allAuthorityFlagsAreFalse = (item: ReturnType<typeof createOperationItemsFromRuntimeAuthorityRecords>[number]) =>
+  item.authorityGranted === false
+  && item.executionEnabled === false
+  && item.canExecute === false
+  && item.readyForExecution === false
+  && item.handoffEnabled === false
+  && item.transportSendEnabled === false
+  && item.adapterExecutionEnabled === false
+  && item.displayOpenEnabled === false
+  && item.sensorCollectionEnabled === false
+  && item.fileWriteEnabled === false
+  && item.installEnabled === false
+  && item.sideEffectsPerformed === false;
 
 describe("operation center bridge", () => {
   it("converts skill permission gates without granting execution", () => {
@@ -79,13 +95,29 @@ describe("operation center bridge", () => {
     ]));
   });
 
+  it("converts Personal Intelligence runtime authority records without granting authority", () => {
+    const items = createOperationItemsFromRuntimeAuthorityRecords(personalIntelligenceRuntimeAuthorityFixtures);
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((item) => item.category === "runtime_authority")).toBe(true);
+    expect(items.every(allAuthorityFlagsAreFalse)).toBe(true);
+    const candidateIndex = personalIntelligenceRuntimeAuthorityFixtures.findIndex((record) => record.authorityClass === "future_pilot_candidate");
+    const blockedIndex = personalIntelligenceRuntimeAuthorityFixtures.findIndex((record) => record.authorityClass === "permanently_blocked");
+    expect(items[candidateIndex].status).toBe("approval_required");
+    expect(items[blockedIndex].status).toBe("blocked");
+  });
+
   it("converts LucaLink runtime authority records into boundary-only Operation Center evidence", () => {
     const items = createOperationItemsFromLucaLinkRuntimeAuthorityRecords(LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES);
     expect(items).toHaveLength(LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES.length);
-    expect(items.every((item) => item.category === "lucalink_runtime_authority" && !item.canExecute && !item.sideEffectsPerformed)).toBe(true);
+    expect(items.every((item) => item.category === "lucalink_runtime_authority")).toBe(true);
+    expect(items.every(allAuthorityFlagsAreFalse)).toBe(true);
     expect(items.map((item) => item.status)).toEqual(expect.arrayContaining([
       "blocked", "ready_for_review", "model_only", "approval_required", "unsupported",
     ]));
+    const candidateIndex = LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES.findIndex((record) => record.authorityClass === "future_bounded_handoff_candidate");
+    const blockedIndex = LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES.findIndex((record) => record.authorityClass === "permanently_blocked");
+    expect(items[candidateIndex].status).toBe("approval_required");
+    expect(items[blockedIndex].status).toBe("blocked");
     expect(items.flatMap((item) => item.blockedActions)).toEqual(expect.arrayContaining([
       "live handoff", "transport send", "adapter execution", "display open/cast",
       "sensor collection", "file write", "install", "runtime authority grant",

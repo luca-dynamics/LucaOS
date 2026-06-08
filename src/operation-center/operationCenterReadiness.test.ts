@@ -19,12 +19,19 @@ describe("operation center readiness", () => {
   it("always preserves all execution and live capability invariants", () => {
     const readiness = evaluateOperationCenterReadiness(operationCenterFixtureItems);
     expect(readiness).toMatchObject({
+      authorityGranted: false,
       readyForExecution: false,
       executionEnabled: false,
       canExecute: false,
+      handoffEnabled: false,
+      transportSendEnabled: false,
+      adapterExecutionEnabled: false,
+      displayOpenEnabled: false,
+      sensorCollectionEnabled: false,
+      fileWriteEnabled: false,
+      installEnabled: false,
       readyForLiveSend: false,
       writeEnabled: false,
-      installEnabled: false,
       liveCollectionEnabled: false,
       sideEffectsPerformed: false,
     });

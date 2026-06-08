@@ -13,6 +13,7 @@ export type OperationCenterCategory =
   | "skill_sandbox"
   | "skill_dry_run"
   | "skill_permission_gate"
+  | "runtime_authority"
   | "adapter_sandbox"
   | "web_display"
   | "approval_notification"
@@ -61,10 +62,18 @@ export interface OperationCenterItem {
   warnings: string[];
   blockers: string[];
   auditSummary?: string;
-  sideEffectsPerformed: false;
+  authorityGranted: false;
   executionEnabled: false;
   canExecute: false;
   readyForExecution: false;
+  handoffEnabled: false;
+  transportSendEnabled: false;
+  adapterExecutionEnabled: false;
+  displayOpenEnabled: false;
+  sensorCollectionEnabled: false;
+  fileWriteEnabled: false;
+  installEnabled: false;
+  sideEffectsPerformed: false;
 }
 
 export interface OperationCenterSummary {
@@ -83,12 +92,19 @@ export interface OperationCenterSummary {
   lucaLinkCount: number;
   highRiskCount: number;
   criticalRiskCount: number;
+  authorityGranted: false;
   readyForExecution: false;
   executionEnabled: false;
   canExecute: false;
+  handoffEnabled: false;
+  transportSendEnabled: false;
+  adapterExecutionEnabled: false;
+  displayOpenEnabled: false;
+  sensorCollectionEnabled: false;
+  fileWriteEnabled: false;
+  installEnabled: false;
   readyForLiveSend: false;
   writeEnabled: false;
-  installEnabled: false;
   liveCollectionEnabled: false;
   sideEffectsPerformed: false;
   warnings: string[];

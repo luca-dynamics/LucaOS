@@ -1,0 +1,20 @@
+import { describe, expect, it } from "vitest";
+import { personalIntelligenceSkillDryRunFixtures } from "../skillDryRun";
+import { personalIntelligenceSkillSandboxPlanFixtures, personalIntelligenceSkillSandboxRegistryFixtures } from "../skillSandbox";
+import { createPersonalIntelligenceRuntimeCapabilityRegistry } from "./runtimeAuthorityRegistry";
+
+describe("runtime capability registry", () => {
+  it("creates defensive, execution-disabled records from integration summaries", () => {
+    const records = createPersonalIntelligenceRuntimeCapabilityRegistry({
+      skillRegistryEntries: personalIntelligenceSkillSandboxRegistryFixtures,
+      sandboxPlans: personalIntelligenceSkillSandboxPlanFixtures,
+      dryRunSimulations: personalIntelligenceSkillDryRunFixtures,
+      now: () => new Date("2026-06-08T00:00:00Z"),
+    });
+    expect(records.length).toBeGreaterThan(0);
+    expect(records.every((record) =>
+      !record.authorityGranted && !record.executionEnabled && !record.canExecute
+      && !record.readyForExecution && !record.sideEffectsPerformed
+    )).toBe(true);
+  });
+});

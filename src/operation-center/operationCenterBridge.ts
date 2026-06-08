@@ -1,6 +1,5 @@
 import type { LucaLinkAdapterFileInstallPermissionDecision } from "../services/lucaLink/adapterFileInstallPermissions";
 import type { LucaLinkDryRunHandoffSimulation } from "../services/lucaLink/dryRunHandoff";
-import type { LucaLinkRuntimeAuthorityRecord } from "../services/lucaLink/runtimeAuthority";
 import type {
   OperationCenterItem,
   OperationCenterRiskLevel,
@@ -154,10 +153,18 @@ function createItem(
     warnings: copy(input.warnings),
     blockers: copy(input.blockers),
     auditSummary: input.auditSummary,
-    sideEffectsPerformed: false,
+    authorityGranted: false,
     executionEnabled: false,
     canExecute: false,
     readyForExecution: false,
+    handoffEnabled: false,
+    transportSendEnabled: false,
+    adapterExecutionEnabled: false,
+    displayOpenEnabled: false,
+    sensorCollectionEnabled: false,
+    fileWriteEnabled: false,
+    installEnabled: false,
+    sideEffectsPerformed: false,
   };
 }
 
@@ -274,31 +281,4 @@ export const createOperationItemsFromLucaLinkDryRunHandoffSimulations = (
   auditSummary: `Dry-run only with ${simulation.simulatedSteps.length} deterministic steps; handoff and every runtime capability remain disabled.`,
 }, "lucalink", "lucalink_dry_run", normalizeStatus(simulation.status, "disabled"), {
   relatedHostId: simulation.targetHostId,
-}));
-
-const runtimeAuthorityStatus: Record<LucaLinkRuntimeAuthorityRecord["authorityClass"], SafeStatus> = {
-  permanently_blocked: "blocked",
-  review_only: "ready_for_review",
-  dry_run_only: "model_only",
-  future_bounded_handoff_candidate: "approval_required",
-  unsupported: "unsupported",
-};
-
-export const createOperationItemsFromLucaLinkRuntimeAuthorityRecords = (
-  records: readonly LucaLinkRuntimeAuthorityRecord[],
-): OperationCenterItem[] => records.map((record) => createItem({
-  id: `operation:${record.authorityId}`,
-  title: `LucaLink runtime authority: ${record.capabilityKind.replace(/_/g, " ")}`,
-  summary: `${record.authorityClass.replace(/_/g, " ")} boundary classification; runtime authority remains disabled.`,
-  status: record.authorityClass,
-  riskLevel: record.riskLevel,
-  createdAt: record.createdAt,
-  requiredApprovals: record.requiredApprovals,
-  blockedActions: record.blockedActions,
-  warnings: record.warnings,
-  blockers: record.blockers,
-  auditSummary: "Authority-boundary evidence only; no handoff, send, execution, collection, write, install, or host mutation is enabled.",
-}, "lucalink", "lucalink_runtime_authority", runtimeAuthorityStatus[record.authorityClass], {
-  relatedHostId: record.targetHostId,
-  relatedRequestId: record.relatedRequestId,
 }));
