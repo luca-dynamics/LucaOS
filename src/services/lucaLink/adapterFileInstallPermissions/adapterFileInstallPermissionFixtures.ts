@@ -103,6 +103,8 @@ function decision(
     readyForExecution: false,
     writeEnabled: false,
     installEnabled: false,
+    readyForLiveSend: false,
+    liveCollectionEnabled: false,
   };
 }
 
@@ -127,6 +129,8 @@ export const LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_READINESS_FIXTURE: LucaLi
   canExecute: false,
   writeEnabled: false,
   installEnabled: false,
+  readyForLiveSend: false,
+  liveCollectionEnabled: false,
   sideEffectsPerformed: false,
   warnings: ["Review and approval statuses do not authorize file writes or installs."],
   blockers: ["File writes, package installation, and adapter execution remain disabled."],

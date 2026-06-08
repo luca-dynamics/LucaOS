@@ -14,7 +14,16 @@ describe("adapter file/install permission fixtures", () => {
       "unsupported",
     ]);
     expect(LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_REQUESTS.every((item) => item.sideEffectsPerformed === false && item.writeEnabled === false && item.installEnabled === false)).toBe(true);
-    expect(LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS.every((item) => item.sideEffectsPerformed === false && item.readyForExecution === false && item.writeEnabled === false && item.installEnabled === false)).toBe(true);
+    expect(LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS.every((item) => (
+      item.sideEffectsPerformed === false
+      && item.executionEnabled === false
+      && item.canExecute === false
+      && item.readyForExecution === false
+      && item.writeEnabled === false
+      && item.installEnabled === false
+      && item.readyForLiveSend === false
+      && item.liveCollectionEnabled === false
+    ))).toBe(true);
   });
 
   it("keeps readiness non-executing and non-writing", () => {
@@ -29,6 +38,8 @@ describe("adapter file/install permission fixtures", () => {
       canExecute: false,
       writeEnabled: false,
       installEnabled: false,
+      readyForLiveSend: false,
+      liveCollectionEnabled: false,
       sideEffectsPerformed: false,
     });
   });

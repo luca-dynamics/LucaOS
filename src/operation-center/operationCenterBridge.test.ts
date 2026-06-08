@@ -67,6 +67,17 @@ describe("operation center bridge", () => {
       "unsupported",
     ]);
     expect(items.every((item) => item.category === "adapter_file_install")).toBe(true);
-    expect(items.every((item) => item.executionEnabled === false && item.sideEffectsPerformed === false)).toBe(true);
+    expect(items.every((item) => (
+      item.executionEnabled === false
+      && item.canExecute === false
+      && item.readyForExecution === false
+      && item.sideEffectsPerformed === false
+    ))).toBe(true);
+    expect(LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS.every((decision) => (
+      decision.writeEnabled === false
+      && decision.installEnabled === false
+      && decision.readyForLiveSend === false
+      && decision.liveCollectionEnabled === false
+    ))).toBe(true);
   });
 });

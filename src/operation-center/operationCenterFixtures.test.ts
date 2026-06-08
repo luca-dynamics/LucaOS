@@ -5,13 +5,26 @@ import indexSource from "./index.ts?raw";
 import readinessSource from "./operationCenterReadiness.ts?raw";
 import typesSource from "./operationCenterTypes.ts?raw";
 import componentSource from "../components/right-panel/OperationPermissionCenter.tsx?raw";
+import companionApprovalDocSource from "../../docs/lucalink-companion-approval-notifications.md?raw";
 import fileInstallFixturesSource from "../services/lucaLink/adapterFileInstallPermissions/adapterFileInstallPermissionFixtures.ts?raw";
 import fileInstallTypesSource from "../services/lucaLink/adapterFileInstallPermissions/adapterFileInstallPermissionTypes.ts?raw";
 import fileInstallIndexSource from "../services/lucaLink/adapterFileInstallPermissions/index.ts?raw";
 import { describe, expect, it } from "vitest";
 import { operationCenterFixtureItems } from "./operationCenterFixtures";
+import { evaluateOperationCenterReadiness } from "./operationCenterReadiness";
 
-const productionSources = [auditSource, bridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource, fileInstallFixturesSource, fileInstallTypesSource, fileInstallIndexSource];
+const productionSources = [
+  auditSource,
+  bridgeSource,
+  fixturesSource,
+  indexSource,
+  readinessSource,
+  typesSource,
+  componentSource,
+  fileInstallFixturesSource,
+  fileInstallTypesSource,
+  fileInstallIndexSource,
+];
 
 const forbiddenPatterns = [
   /memoryService/,
@@ -34,6 +47,7 @@ const forbiddenPatterns = [
   /playwright|puppeteer|selenium/i,
   /modelRouter|modelProvider/i,
   /collectLiveSensors|startSensorCollection|sensorService/i,
+  /^(?:<<<<<<<|=======|>>>>>>>)/m,
 ];
 
 describe("operation center fixtures and source safety", () => {
@@ -60,9 +74,31 @@ describe("operation center fixtures and source safety", () => {
       "blocked",
       "unsupported",
     ]));
-    expect(items.every((item) => item.sideEffectsPerformed === false && item.readyForExecution === false)).toBe(true);
+    expect(items.every((item) => (
+      item.sideEffectsPerformed === false
+      && item.executionEnabled === false
+      && item.canExecute === false
+      && item.readyForExecution === false
+    ))).toBe(true);
     expect(items.some((item) => item.status === "disabled")).toBe(false);
     expect(items.flatMap((item) => item.warnings).some((warning) => warning.includes("not available"))).toBe(false);
+
+    expect(evaluateOperationCenterReadiness(items)).toMatchObject({
+      readyForExecution: false,
+      executionEnabled: false,
+      canExecute: false,
+      readyForLiveSend: false,
+      writeEnabled: false,
+      installEnabled: false,
+      liveCollectionEnabled: false,
+      sideEffectsPerformed: false,
+    });
+  });
+
+  it("contains one file/install bridge and fixture declaration with no conflict residue", () => {
+    expect(bridgeSource.match(/export const createOperationItemsFromAdapterFileInstallDecisions/g)).toHaveLength(1);
+    expect(fixturesSource.match(/const fileInstallItems/g)).toHaveLength(1);
+    expect(companionApprovalDocSource).not.toMatch(/^(?:<<<<<<<|=======|>>>>>>>)/m);
   });
 
   it("does not import or call forbidden runtime APIs in production sources", () => {

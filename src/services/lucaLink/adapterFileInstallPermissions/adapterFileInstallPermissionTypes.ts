@@ -53,6 +53,8 @@ export interface LucaLinkAdapterFileInstallPermissionDecision {
   readyForExecution: false;
   writeEnabled: false;
   installEnabled: false;
+  readyForLiveSend: false;
+  liveCollectionEnabled: false;
 }
 
 export interface LucaLinkAdapterFileInstallPermissionReadiness {
@@ -66,6 +68,8 @@ export interface LucaLinkAdapterFileInstallPermissionReadiness {
   canExecute: false;
   writeEnabled: false;
   installEnabled: false;
+  readyForLiveSend: false;
+  liveCollectionEnabled: false;
   sideEffectsPerformed: false;
   warnings: string[];
   blockers: string[];
