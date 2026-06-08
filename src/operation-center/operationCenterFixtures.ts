@@ -2,6 +2,7 @@ import { personalIntelligenceRuntimeAuthorityFixtures } from "../personal-intell
 import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
+import { LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES } from "../services/lucaLink/runtimeAuthority";
 import {
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromAdapterSandboxPlans,
@@ -20,10 +21,12 @@ import {
 } from "./operationCenterBridge";
 import type { OperationCenterItem } from "./operationCenterTypes";
 import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
+import { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } from "./operationCenterLucaLinkRuntimeAuthorityBridge";
 
 const createdAt = "2026-06-07T12:00:00.000Z";
 
 const runtimeAuthorityItems = createOperationItemsFromRuntimeAuthorityRecords(personalIntelligenceRuntimeAuthorityFixtures);
+const lucaLinkRuntimeAuthorityItems = createOperationItemsFromLucaLinkRuntimeAuthorityRecords(LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES);
 
 const memoryItems = createOperationItemsFromMemoryApprovalPilot([
   {
@@ -215,6 +218,7 @@ const dryRunHandoffItems = createOperationItemsFromLucaLinkDryRunHandoffSimulati
 
 export const operationCenterFixtureItems: readonly OperationCenterItem[] = Object.freeze([
   ...runtimeAuthorityItems,
+  ...lucaLinkRuntimeAuthorityItems,
   ...memoryItems,
   ...runtimeItems,
   ...learningItems,

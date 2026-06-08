@@ -14,6 +14,7 @@ export type OperationCenterCategory =
   | "skill_dry_run"
   | "skill_permission_gate"
   | "runtime_authority"
+  | "lucalink_runtime_authority"
   | "adapter_sandbox"
   | "web_display"
   | "approval_notification"

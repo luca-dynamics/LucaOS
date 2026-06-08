@@ -114,3 +114,16 @@ describe("runtime authority operation bridge", () => {
     expect(items.find((item) => item.status === "approval_required")?.readyForExecution).toBe(false);
   });
 });
+
+describe("LucaLink runtime authority bridge", () => {
+  it("maps LucaLink authority records without replacing Personal Intelligence authority items", async () => {
+    const { LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES } = await import("../services/lucaLink/runtimeAuthority");
+    const { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } = await import("./operationCenterLucaLinkRuntimeAuthorityBridge");
+    const lucaLinkItems = createOperationItemsFromLucaLinkRuntimeAuthorityRecords(LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES);
+    const personalItems = createOperationItemsFromRuntimeAuthorityRecords(personalIntelligenceRuntimeAuthorityFixtures);
+    expect(lucaLinkItems.every((item) => item.category === "lucalink_runtime_authority" && item.source === "lucalink")).toBe(true);
+    expect(lucaLinkItems.find((item) => item.status === "approval_required")?.authorityGranted).toBe(false);
+    expect(lucaLinkItems.every((item) => item.blockedActions.includes("runtime authority grant"))).toBe(true);
+    expect(personalItems.every((item) => item.category === "runtime_authority" && item.source === "personal_intelligence")).toBe(true);
+  });
+});

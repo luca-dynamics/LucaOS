@@ -30,6 +30,11 @@ const continuationRecordsSource = lucaLinkSource.slice(
 );
 
 describe("Settings LucaLink Device Center", () => {
+  it("renders the LucaLink runtime authority boundary near the dry-run governance cards", () => {
+    expect(lucaLinkSource).toContain('import { SettingsLucaLinkRuntimeAuthority }');
+    expect(lucaLinkSource).toContain('<SettingsLucaLinkRuntimeAuthority accentColor={theme.hex} />');
+  });
+
   it("renders the Device Center shell with overview cards and tabs", () => {
     expect(lucaLinkSource).toContain('title="LucaLink Device Center"');
     expect(lucaLinkSource).toContain(
