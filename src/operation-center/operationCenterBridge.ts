@@ -1,3 +1,4 @@
+import type { PersonalIntelligenceSkillDryRunSimulation } from "../personal-intelligence/skillDryRun";
 import type { LucaLinkAdapterFileInstallPermissionDecision } from "../services/lucaLink/adapterFileInstallPermissions";
 import type { LucaLinkDryRunHandoffSimulation } from "../services/lucaLink/dryRunHandoff";
 import type {
@@ -169,6 +170,26 @@ export function createOperationItemsFromSkillPermissionGates(
 
 export const createOperationItemsFromSkillSandboxPlans = (plans: readonly SkillSandboxPlanSummary[]) =>
   plans.map((plan) => createItem(plan, "personal_intelligence", "skill_sandbox", normalizeStatus(plan.status, "model_only"), { relatedSkillId: plan.skillId, relatedPlanId: plan.planId }));
+
+export const createOperationItemsFromSkillDryRunSimulations = (simulations: readonly PersonalIntelligenceSkillDryRunSimulation[]) =>
+  simulations.map((simulation) => createItem({
+    id: `operation:${simulation.simulationId}`,
+    title: "Skill dry-run simulation",
+    summary: `${simulation.simulatedSteps.length} steps simulated; Act remained skipped or blocked.`,
+    status: simulation.status,
+    riskLevel: simulation.riskLevel,
+    createdAt: simulation.createdAt,
+    requiredApprovals: simulation.missingApprovals,
+    blockedActions: simulation.blockedActions,
+    warnings: simulation.warnings,
+    blockers: simulation.blockers,
+    auditSummary: "Side-effect-free dry-run evidence only; execution remains disabled.",
+  }, "personal_intelligence", "skill_dry_run", normalizeStatus(simulation.status, "disabled"), {
+    relatedSkillId: simulation.skillId,
+    relatedPlanId: simulation.planId,
+    relatedTraceId: simulation.runtimeTracePreview.traceId,
+    relatedMissionId: simulation.missionAlignmentSummary.missionId,
+  }));
 
 export const createOperationItemsFromRuntimeTraces = (traces: readonly RuntimeTraceSummary[]) =>
   traces.map((trace) => createItem(trace, "runtime", "runtime_trace", normalizeStatus(trace.status, "model_only"), { relatedTraceId: trace.traceId, relatedMissionId: trace.relatedMissionId }));

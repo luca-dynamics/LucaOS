@@ -45,6 +45,12 @@ The right panel groups cards by source and displays status, risk, required revie
 - Add a persistent audit trail only after a separate privacy, retention, rollback, and storage review.
 - Add controlled execution only after an isolated runtime, explicit authority boundary, verification gates, and rollback are approved.
 
+ 
 ## Dry-run handoff simulation integration
 
 LucaLink governance outputs can feed the side-effect-free dry-run handoff simulation layer and may appear as read-only `lucalink_dry_run` summaries in Operation Center. Dry-run evidence does not send, execute, collect, write, install, approve, open displays, or mutate pairing, transport, approval, device, or runtime state.
+
+## Skill dry-run evidence
+
+The Operation Center can summarize fixture-backed controlled skill dry-run evidence under the `skill_dry_run` category. Cards may show review status, missing approvals, blocked actions, trace-preview references, and rollback expectations. This bridge is read-only and informational: it does not execute skills, mutate Operation Center runtime state, or authorize tools, models, memory writes, network access, or LucaLink handoff.
+ 

@@ -1,3 +1,4 @@
+import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
 import {
@@ -11,6 +12,7 @@ import {
   createOperationItemsFromRuntimeTraces,
   createOperationItemsFromSensorSnapshots,
   createOperationItemsFromSkillPermissionGates,
+  createOperationItemsFromSkillDryRunSimulations,
   createOperationItemsFromSkillSandboxPlans,
   createOperationItemsFromTransportPermissionDecisions,
   createOperationItemsFromWebDisplayIntents,
@@ -110,6 +112,8 @@ const skillPermissionItems = createOperationItemsFromSkillPermissionGates([
   { gateId: "gate:fixture-denied", skillId: "skill:safe-summary", planId: "plan:safe-skill-preview", kind: "permission", permissionKind: "network", label: "Skill network permission denied", reason: "Network permission was denied for review.", status: "denied", riskLevel: "high", required: true },
   { gateId: "gate:fixture-blocked", skillId: "skill:safe-summary", planId: "plan:safe-skill-preview", kind: "permission", permissionKind: "shell", label: "Skill shell permission blocked", reason: "Shell capability remains prohibited.", status: "blocked", riskLevel: "critical", required: true },
 ]);
+
+const skillDryRunItems = createOperationItemsFromSkillDryRunSimulations(personalIntelligenceSkillDryRunFixtures);
 
 const adapterItems = createOperationItemsFromAdapterSandboxPlans([
   {
@@ -212,6 +216,7 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...missionItems,
   ...skillSandboxItems,
   ...skillPermissionItems,
+  ...skillDryRunItems,
   ...adapterItems,
   ...displayItems,
   ...notificationItems,

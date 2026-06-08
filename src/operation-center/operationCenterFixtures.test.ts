@@ -81,4 +81,7 @@ describe("operation center fixtures and source safety", () => {
       for (const pattern of forbiddenPatterns) expect(source, `production source matched ${pattern}`).not.toMatch(pattern);
     }
   });
+  it("includes skill dry-run fixture cards", () => {
+    expect(operationCenterFixtureItems.some((item) => item.category === "skill_dry_run")).toBe(true);
+  });
 });

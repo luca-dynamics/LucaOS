@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
 import type { PersonalIntelligenceSkillPermissionGate } from "../personal-intelligence/skillPermissions";
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
@@ -11,6 +12,7 @@ import {
   createOperationItemsFromRuntimeTraces,
   createOperationItemsFromSensorSnapshots,
   createOperationItemsFromSkillPermissionGates,
+  createOperationItemsFromSkillDryRunSimulations,
   createOperationItemsFromSkillSandboxPlans,
   createOperationItemsFromTransportPermissionDecisions,
   createOperationItemsFromWebDisplayIntents,
@@ -48,6 +50,14 @@ describe("operation center bridge", () => {
     expect(createOperationItemsFromRuntimeTraces([{ ...base, status: "blocked", traceId: "trace:test" }])[0]).toMatchObject({ source: "runtime", status: "blocked" });
     expect(createOperationItemsFromLearningEvents([{ ...base, status: "proposal_ready" }])[0].status).toBe("ready_for_review");
     expect(createOperationItemsFromMissionEvaluations([{ ...base, status: "misaligned" }])[0].status).toBe("approval_required");
+  });
+
+
+  it("converts skill dry-run simulations into non-executable Operation Center evidence", () => {
+    const items = createOperationItemsFromSkillDryRunSimulations(personalIntelligenceSkillDryRunFixtures);
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((item) => item.category === "skill_dry_run" && !item.canExecute && !item.sideEffectsPerformed)).toBe(true);
+    expect(items[0].blockedActions).toEqual(expect.arrayContaining(["skill execution", "tool invocation", "model call", "memory write", "LucaLink handoff"]));
   });
 
   it("converts LucaLink display, notification, sensor, and transport summaries", () => {
