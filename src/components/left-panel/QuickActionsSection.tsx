@@ -51,28 +51,28 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
           variant="BoldDuotone"
           className={isLight ? "opacity-100" : "opacity-70"}
         />
-        <h2 className="font-black tracking-widest text-xs uppercase">
-          Quick Actions
+        <h2 className="font-semibold text-xs tracking-tight">
+          Quick actions
         </h2>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={onAgentMode}
-          className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation rounded-lg tech-border glass-blur hover:scale-105 active:scale-95 shadow-md"
+          className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation rounded-lg border glass-blur hover:opacity-90 active:opacity-100"
           style={actionTileStyle}
         >
           <span
-            className={`text-[9px] font-black tracking-[0.2em] ${
+            className={`text-[10px] font-medium ${
               isLightCream ? "text-[#E5E1CD]/80" : "text-[var(--app-text-muted)]"
-            } ${isLight && !isLightCream ? "opacity-70" : ""} uppercase`}
+            } ${isLight && !isLightCream ? "opacity-70" : ""}`}
           >
             Agent
           </span>
           <span
-            className={`text-xs font-black ${
+            className={`text-xs font-semibold ${
               isLightCream ? "text-[#E5E1CD]" : "text-[var(--app-text-main)]"
-            } tracking-tight uppercase`}
+            } tracking-tight`}
           >
             Mode
           </span>
@@ -84,20 +84,20 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
         <button
           type="button"
           onClick={onCognitiveEngine}
-          className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation rounded-lg tech-border glass-blur hover:scale-105 active:scale-95 shadow-md"
+          className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation rounded-lg border glass-blur hover:opacity-90 active:opacity-100"
           style={actionTileStyle}
         >
           <span
-            className={`text-[9px] font-black tracking-[0.2em] ${
+            className={`text-[10px] font-medium ${
               isLightCream ? "text-[#E5E1CD]/80" : "text-[var(--app-text-muted)]"
-            } ${isLight && !isLightCream ? "opacity-70" : ""} uppercase`}
+            } ${isLight && !isLightCream ? "opacity-70" : ""}`}
           >
             Cognitive
           </span>
           <span
-            className={`text-xs font-black ${
+            className={`text-xs font-semibold ${
               isLightCream ? "text-[#E5E1CD]" : "text-[var(--app-text-main)]"
-            } tracking-tight uppercase`}
+            } tracking-tight`}
           >
             Engine
           </span>
@@ -110,8 +110,8 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
         <button
           type="button"
           onClick={onLockdown}
-          className={`col-span-2 py-3.5 flex items-center justify-center gap-3 transition-all group/btn rounded-lg tech-border ${
-            isLightCream ? "" : "glass-blur hover:scale-[1.02] active:scale-95 shadow-md"
+          className={`col-span-2 py-3.5 flex items-center justify-center gap-3 transition-all group/btn rounded-lg border ${
+            isLightCream ? "" : "glass-blur hover:opacity-90 active:opacity-100"
           }`}
           style={{
             backgroundColor: isLightCream
@@ -130,10 +130,10 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
             variant="BoldDuotone"
           />
           <span
-            className="text-[11px] font-black tracking-widest uppercase transition-colors"
+            className="text-[11px] font-medium transition-colors"
             style={{ color: isLightCream ? "#991b1b" : "#ef4444" }}
           >
-            Initiate Lockdown
+            Initiate lockdown
           </span>
         </button>
       </div>

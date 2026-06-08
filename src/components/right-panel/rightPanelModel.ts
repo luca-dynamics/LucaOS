@@ -9,12 +9,18 @@ export const RIGHT_PANEL_MODES: RightPanelMode[] = [
   "LOGS",
 ];
 
-export const MOBILE_RIGHT_PANEL_LABELS: Record<RightPanelMode, string> = {
+// Friendly, calm labels shared by desktop and mobile right-panel tabs.
+// Keeps the raw mode enums (CONTROL/ACTIVITY/MEMORY/LOGS) for state/logic
+// while presenting human, sentence-case names in the UI.
+export const RIGHT_PANEL_LABELS: Record<RightPanelMode, string> = {
   CONTROL: "Overview",
   ACTIVITY: "Timeline",
   MEMORY: "Memory",
   LOGS: "Trace",
 };
+
+export const MOBILE_RIGHT_PANEL_LABELS: Record<RightPanelMode, string> =
+  RIGHT_PANEL_LABELS;
 
 export function isRightPanelMode(value: string): value is RightPanelMode {
   return RIGHT_PANEL_MODES.includes(value as RightPanelMode);

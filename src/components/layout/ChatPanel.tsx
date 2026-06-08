@@ -138,7 +138,7 @@ const PersonaBadge = ({
 
   return (
     <div
-      className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-mono font-bold tracking-widest uppercase glass-blur"
+      className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-medium glass-blur"
       style={{
         borderColor: "var(--app-border-main, rgba(255,255,255,0.15))",
         color: themeHex,
@@ -348,10 +348,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   }, [showCentered, messages.length]);
 
   const initSteps = [
-    "Initializing AI Workforce Context",
-    "Synchronizing Neural Pathways",
-    "Calibrating Tactical Protocols",
-    "Operator Authentication Active"
+    "Preparing your workspace",
+    "Restoring recent context",
+    "Syncing memory",
+    "Ready when you are"
   ];
 
   useEffect(() => {
@@ -645,7 +645,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             onClick={() => {
               setViewMode(viewMode === "CHAT" ? "CORTEX" : "CHAT");
             }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest ${isMobile ? "" : "glass-blur"}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 text-[11px] font-medium ${isMobile ? "" : "glass-blur"}`}
             style={
               isMobile
                 ? {
@@ -671,7 +671,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             ) : (
               <Icon name="Zap" size={10} variant="BoldDuotone" />
             )}
-            {viewMode === "CORTEX" ? "RETURN TO CHAT" : "LUCA WORKFORCE"}
+            {viewMode === "CORTEX" ? "Back to chat" : "Workforce"}
           </button>
         </div>
 
@@ -688,7 +688,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             >
               {/* Greeting */}
             <h1
-              className="text-4xl lg:text-5xl font-black tracking-tight leading-tight mb-1 text-center"
+              className="text-4xl lg:text-5xl font-semibold tracking-tight leading-tight mb-1 text-center"
               style={{ color: "var(--app-text-main, #ffffff)" }}
             >
               <span className="opacity-40 font-light mr-3">
@@ -705,10 +705,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               </span>
             </h1>
             <p
-              className="text-sm font-mono tracking-[0.2em] uppercase opacity-40 text-center"
+              className="text-sm opacity-50 text-center"
               style={{ color: "var(--app-text-muted, #94a3b8)" }}
             >
-              SYSTEM READY · {personaLabel}
+              Ready when you are
             </p>
 
             {/* AI Generated Welcome Message (Rolling Stream) */}
@@ -725,7 +725,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -5 }}
                           transition={{ duration: 0.5 }}
-                          className="flex items-center gap-1.5 font-mono text-xs tracking-widest uppercase"
+                          className="flex items-center gap-1.5 text-xs"
                         >
                           {initSteps[initStep]}
                           <span className="flex gap-0.5">
@@ -786,7 +786,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             className={`text-[4rem] lg:text-[5rem] font-black italic opacity-[0.025] select-none tracking-tighter transition-colors duration-500 ${isMobile ? "" : theme.primary}`}
             style={isMobile ? { color: "var(--luca-text-tertiary)" } : undefined}
           >
-            L.U.C.A
+            LUCA
           </h1>
         </div>
       </section>
@@ -825,7 +825,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           onClick={() => {
             setViewMode(viewMode === "CHAT" ? "CORTEX" : "CHAT");
           }}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 font-mono text-[10px] uppercase tracking-widest ${isMobile ? "" : "glass-blur"}`}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 text-[11px] font-medium ${isMobile ? "" : "glass-blur"}`}
           style={
             isMobile
               ? {
@@ -851,7 +851,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           ) : (
             <Icon name="Zap" size={10} variant="BoldDuotone" />
           )}
-          {viewMode === "CORTEX" ? "RETURN TO CHAT" : "LUCA WORKFORCE"}
+          {viewMode === "CORTEX" ? "Back to chat" : "Workforce"}
         </button>
       </div>
 
@@ -863,7 +863,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           className={`text-[9rem] lg:text-[8rem] font-black italic opacity-[0.04] select-none tracking-tighter transition-colors duration-500 ${isMobile ? "" : theme.primary}`}
           style={isMobile ? { color: "var(--luca-text-tertiary)" } : undefined}
         >
-          L.U.C.A
+          LUCA
         </h1>
       </div>
 

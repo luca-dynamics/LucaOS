@@ -90,7 +90,7 @@ const AlwaysOnControls: React.FC<Props> = ({
       
       if (!isLocal) {
         const wantsLocal = window.confirm(
-          "LUCA EFFICIENCY RECOMMENDATION:\n\nAmbient 'God Hand' vision consumes significant fuel on cloud models. Use local vision (UI-TARS) to conserve your Sovereign Wallet?"
+          "Efficiency tip:\n\nAmbient vision uses significant credits on cloud models. Switch to local vision (UI-TARS) to conserve credits?"
         );
         
         if (wantsLocal) {
@@ -122,22 +122,22 @@ const AlwaysOnControls: React.FC<Props> = ({
 
   return (
     <div className={`flex items-center ${isMobile ? "gap-1" : "gap-2"}`}>
-      {/* GOD HAND (Gesture Control) */}
+      {/* Ambient vision toggle */}
       <button
         onClick={handleVisionToggle}
         disabled={loading.vision}
         className={`
           flex items-center justify-center ${
             isMobile ? "p-1.5 w-8 h-8" : "gap-2 px-3 py-1.5"
-          } rounded-sm text-[10px] font-black transition-all glass-blur
+          } rounded-full text-[11px] font-medium transition-all glass-blur border
           ${
             visionActive
-              ? "bg-amber-500/20 border-amber-500/50 text-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
-              : "bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-70 hover:opacity-100"
+              ? "bg-amber-500/15 border-amber-500/40 text-amber-500"
+              : "bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-80 hover:opacity-100"
           }
           ${loading.vision ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
         `}
-        title={visionActive ? "Stop God Hand" : "Start God Hand"}
+        title={visionActive ? "Stop ambient vision" : "Start ambient vision"}
       >
         <div className="relative">
           <Icon 
@@ -150,16 +150,16 @@ const AlwaysOnControls: React.FC<Props> = ({
             <span className="absolute -top-1 -right-1 rounded-full animate-pulse bg-amber-500 w-1.5 h-1.5" />
           )}
         </div>
-        {!isMobile && <span className="tracking-[0.2em] font-mono">GOD HAND</span>}
+        {!isMobile && <span>Vision</span>}
       </button>
 
       {/* Wake Word indicator (Sense) */}
       <div
-        className={`flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono glass-blur border
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-medium glass-blur border
           ${isWakeWordActive ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-[var(--app-bg-tint)] text-[var(--app-text-muted)] border-[var(--app-border-main)]"}
         `}
         title={
-          isWakeWordActive ? "Wake Word Listening Active" : "Wake Word Disabled"
+          isWakeWordActive ? "Wake word listening" : "Wake word off"
         }
       >
         <Icon
@@ -168,7 +168,7 @@ const AlwaysOnControls: React.FC<Props> = ({
           size={12}
           className={isWakeWordActive ? "animate-pulse" : "opacity-30"}
         />
-        {!isMobile && <span>SENSE: {isWakeWordActive ? "ON" : "OFF"}</span>}
+        {!isMobile && <span>Wake word</span>}
       </div>
     </div>
   );
