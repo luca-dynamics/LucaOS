@@ -7,6 +7,12 @@ import {
   UIThemeId,
 } from "../types/lucaPersonality";
 import { secureVault } from "./secureVault";
+import type { LucaExperienceMode } from "../experience/experienceMode";
+import { CREATOR_ACCESS_STATE } from "../experience/experienceModeAccess";
+import {
+  normalizeSelectableExperienceMode,
+  resolvePersistedExperienceMode,
+} from "../experience/experienceModeSettings";
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -29,6 +35,7 @@ export interface SovereignFact {
 export interface LucaSettings {
   general: {
     backgroundBlur?: number;
+    experienceMode: LucaExperienceMode;
     backgroundOpacity?: number;
     startOnBoot: boolean;
     minimizeToTray: boolean;
@@ -214,6 +221,7 @@ const getEnvVar = (key: string) => {
 const DEFAULT_SETTINGS: LucaSettings = {
   general: {
     backgroundBlur: 40, // Default 40px blur
+    experienceMode: "basic",
     backgroundOpacity: 0.3, // Default 30% opacity
     startOnBoot: false,
     minimizeToTray: false,
@@ -393,6 +401,24 @@ class SettingsService extends EventEmitter {
       if (stored) {
         this.storedSettingsDetected = true;
         parsed = JSON.parse(stored);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          parsed = {};
+        }
+
+        // Experience Mode migration: accept only known current/legacy labels,
+        // then enforce Creator build eligibility before the value reaches UI.
+        if (
+          !parsed.general ||
+          typeof parsed.general !== "object" ||
+          Array.isArray(parsed.general)
+        ) {
+          parsed.general = {};
+        }
+        parsed.general.experienceMode = resolvePersistedExperienceMode(
+          parsed,
+          CREATOR_ACCESS_STATE,
+        );
+
         // Deep merge with defaults to ensure new keys exist
         merged = this.deepMerge(DEFAULT_SETTINGS, parsed);
 
@@ -688,6 +714,10 @@ class SettingsService extends EventEmitter {
 
   public async saveSettings(newSettings: Partial<LucaSettings>) {
     this.settings = this.deepMerge(this.settings, newSettings);
+    this.settings.general.experienceMode = normalizeSelectableExperienceMode(
+      this.settings.general.experienceMode,
+      CREATOR_ACCESS_STATE,
+    );
 
     try {
       const savedSettings = JSON.parse(JSON.stringify(this.settings));
