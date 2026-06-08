@@ -21,7 +21,7 @@ describe("leftPanelModel", () => {
     ]);
     expect(LEFT_PANEL_TOOL_GROUPS.map((g) => g.label)).toEqual([
       "Core",
-      "Vision & Knowledge",
+      "Intelligence",
       "Finance",
       "Visual Modules",
       "Installed Modules",
