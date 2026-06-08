@@ -1,4 +1,5 @@
 import type { LucaLinkAdapterFileInstallPermissionDecision } from "../services/lucaLink/adapterFileInstallPermissions";
+import type { LucaLinkDryRunHandoffSimulation } from "../services/lucaLink/dryRunHandoff";
 import type {
   OperationCenterItem,
   OperationCenterRiskLevel,
@@ -217,4 +218,23 @@ export const createOperationItemsFromAdapterFileInstallDecisions = (
   auditSummary: `${decision.operation.replace(/_/g, " ")} decision is ${decision.status.replace(/_/g, " ")} for informational review only.`,
 }, "lucalink", "adapter_file_install", normalizeStatus(decision.status, "unsupported"), {
   relatedRequestId: decision.requestId,
+}));
+
+
+export const createOperationItemsFromLucaLinkDryRunHandoffSimulations = (
+  simulations: readonly LucaLinkDryRunHandoffSimulation[],
+) => simulations.map((simulation) => createItem({
+  id: `operation:${simulation.simulationId}`,
+  title: "LucaLink dry-run handoff simulation",
+  summary: `${simulation.transportSummary} ${simulation.adapterSummary}`,
+  status: simulation.status,
+  riskLevel: simulation.riskLevel,
+  createdAt: simulation.createdAt,
+  requiredApprovals: simulation.requiredApprovals,
+  blockedActions: simulation.blockedActions,
+  warnings: simulation.warnings,
+  blockers: simulation.blockers,
+  auditSummary: `Dry-run only with ${simulation.simulatedSteps.length} deterministic steps; handoff and every runtime capability remain disabled.`,
+}, "lucalink", "lucalink_dry_run", normalizeStatus(simulation.status, "disabled"), {
+  relatedHostId: simulation.targetHostId,
 }));

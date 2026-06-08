@@ -42,6 +42,7 @@ describe("operation center fixtures and source safety", () => {
     expect(categories.has("web_display")).toBe(true);
     expect(categories.has("sensor_bridge")).toBe(true);
     expect(categories.has("transport_permission")).toBe(true);
+    expect(categories.has("lucalink_dry_run")).toBe(true);
     expect(operationCenterFixtureItems.every((item) => item.sideEffectsPerformed === false && item.canExecute === false)).toBe(true);
     const gateStatuses = operationCenterFixtureItems.filter((item) => item.category === "skill_permission_gate").map((item) => item.status);
     expect(gateStatuses).toEqual(expect.arrayContaining(["pending", "granted_for_review", "denied", "blocked"]));

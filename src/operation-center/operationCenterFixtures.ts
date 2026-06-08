@@ -1,9 +1,11 @@
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
+import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
 import {
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromAdapterSandboxPlans,
   createOperationItemsFromApprovalNotifications,
   createOperationItemsFromLearningEvents,
+  createOperationItemsFromLucaLinkDryRunHandoffSimulations,
   createOperationItemsFromMemoryApprovalPilot,
   createOperationItemsFromMissionEvaluations,
   createOperationItemsFromRuntimeTraces,
@@ -199,6 +201,10 @@ const fileInstallItems = createOperationItemsFromAdapterFileInstallDecisions(
   LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
 );
 
+const dryRunHandoffItems = createOperationItemsFromLucaLinkDryRunHandoffSimulations(
+  LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES,
+);
+
 export const operationCenterFixtureItems: readonly OperationCenterItem[] = Object.freeze([
   ...memoryItems,
   ...runtimeItems,
@@ -212,4 +218,5 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...sensorItems,
   ...transportItems,
   ...fileInstallItems,
+  ...dryRunHandoffItems,
 ]);
