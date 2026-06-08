@@ -1,3 +1,14 @@
+/**
+ * Operation Center bridge.
+ *
+ * INTENTIONALLY NON-EXECUTING. This module maps governance artifacts (skill
+ * dry-runs, LucaLink permission decisions, handoff simulations, etc.) into
+ * read-only `OperationCenterItem` summaries for the Permission Center UI. It
+ * imports only `type`s, performs no side effects, and seeds previews from a
+ * fixed `FIXTURE_TIME` plus in-memory state. This is governance scaffolding
+ * ahead of real runtime wiring — do not treat it as an incomplete runtime
+ * integration. See docs/audits/post-pr230-lucaos-architecture-audit.md (§4).
+ */
 import type { PersonalIntelligenceSkillDryRunSimulation } from "../personal-intelligence/skillDryRun";
 import type { LucaLinkAdapterFileInstallPermissionDecision } from "../services/lucaLink/adapterFileInstallPermissions";
 import type { LucaLinkDryRunHandoffSimulation } from "../services/lucaLink/dryRunHandoff";

@@ -28,7 +28,7 @@ export function createSkillSandboxApprovalRequirements(planOrEntry: PersonalInte
   return [...kinds].map(([kind, reason], index) => ({
     approvalId: `sandbox-approval:${kind}:${index + 1}`,
     kind,
-    label: `${kind.replaceAll("_", " ")} approval`,
+    label: `${kind.replace(/_/g, " ")} approval`,
     required: true,
     satisfied: false,
     reason,
