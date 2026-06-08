@@ -50,3 +50,7 @@ A live bounded handoff is outside this phase and requires a separate security re
 5. Operation Center visibility for all decisions and blocked actions;
 6. explicit adapter, display, sensor, file, and install capability enforcement;
 7. a separately reviewed implementation that does not treat dry-run approval as runtime authorization.
+
+## Runtime authority boundary
+
+Dry-run simulations may be classified by the side-effect-free Runtime Authority Boundary. A successful simulation remains `dry_run_only` unless all future-candidate evidence is present, and even a `future_bounded_handoff_candidate` keeps every runtime flag false. See [LucaLink Runtime Authority Boundary and Handoff Capability Registry](./lucalink-runtime-authority-boundary.md).

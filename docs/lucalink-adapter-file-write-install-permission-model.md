@@ -55,3 +55,7 @@ Nothing in this model pre-approves that future work.
 ## Dry-run handoff simulation integration
 
 LucaLink governance outputs can feed the side-effect-free dry-run handoff simulation layer and may appear as read-only `lucalink_dry_run` summaries in Operation Center. Dry-run evidence does not send, execute, collect, write, install, approve, open displays, or mutate pairing, transport, approval, device, or runtime state.
+
+## Runtime authority boundary
+
+File/write and install decisions may be summarized by the Runtime Authority Boundary. Blocked or unsupported decisions prevent future candidate classification, while reviewable decisions remain non-authorizing evidence. File writes, installs, adapter execution, and package-manager activity stay disabled. See [LucaLink Runtime Authority Boundary and Handoff Capability Registry](./lucalink-runtime-authority-boundary.md).

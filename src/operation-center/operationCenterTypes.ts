@@ -20,6 +20,7 @@ export type OperationCenterCategory =
   | "transport_permission"
   | "adapter_file_install"
   | "lucalink_dry_run"
+  | "lucalink_runtime_authority"
   | "runtime_approval"
   | "blocked_action";
 

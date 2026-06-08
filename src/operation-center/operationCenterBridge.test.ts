@@ -3,11 +3,13 @@ import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligenc
 import type { PersonalIntelligenceSkillPermissionGate } from "../personal-intelligence/skillPermissions";
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
+import { LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES } from "../services/lucaLink/runtimeAuthority";
 import {
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromApprovalNotifications,
   createOperationItemsFromLearningEvents,
   createOperationItemsFromLucaLinkDryRunHandoffSimulations,
+  createOperationItemsFromLucaLinkRuntimeAuthorityRecords,
   createOperationItemsFromMissionEvaluations,
   createOperationItemsFromRuntimeTraces,
   createOperationItemsFromSensorSnapshots,
@@ -74,6 +76,19 @@ describe("operation center bridge", () => {
     expect(items.every((item) => item.category === "lucalink_dry_run" && item.executionEnabled === false && item.sideEffectsPerformed === false)).toBe(true);
     expect(items.flatMap((item) => item.blockedActions)).toEqual(expect.arrayContaining([
       "live handoff", "transport send", "adapter execution", "display open/cast", "sensor collection", "file write", "install",
+    ]));
+  });
+
+  it("converts LucaLink runtime authority records into boundary-only Operation Center evidence", () => {
+    const items = createOperationItemsFromLucaLinkRuntimeAuthorityRecords(LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES);
+    expect(items).toHaveLength(LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES.length);
+    expect(items.every((item) => item.category === "lucalink_runtime_authority" && !item.canExecute && !item.sideEffectsPerformed)).toBe(true);
+    expect(items.map((item) => item.status)).toEqual(expect.arrayContaining([
+      "blocked", "ready_for_review", "model_only", "approval_required", "unsupported",
+    ]));
+    expect(items.flatMap((item) => item.blockedActions)).toEqual(expect.arrayContaining([
+      "live handoff", "transport send", "adapter execution", "display open/cast",
+      "sensor collection", "file write", "install", "runtime authority grant",
     ]));
   });
 

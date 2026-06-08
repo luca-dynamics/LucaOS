@@ -1,12 +1,13 @@
-import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
+import { LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES } from "../services/lucaLink/runtimeAuthority";
 import {
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromAdapterSandboxPlans,
   createOperationItemsFromApprovalNotifications,
   createOperationItemsFromLearningEvents,
   createOperationItemsFromLucaLinkDryRunHandoffSimulations,
+  createOperationItemsFromLucaLinkRuntimeAuthorityRecords,
   createOperationItemsFromMemoryApprovalPilot,
   createOperationItemsFromMissionEvaluations,
   createOperationItemsFromRuntimeTraces,
@@ -113,7 +114,21 @@ const skillPermissionItems = createOperationItemsFromSkillPermissionGates([
   { gateId: "gate:fixture-blocked", skillId: "skill:safe-summary", planId: "plan:safe-skill-preview", kind: "permission", permissionKind: "shell", label: "Skill shell permission blocked", reason: "Shell capability remains prohibited.", status: "blocked", riskLevel: "critical", required: true },
 ]);
 
-const skillDryRunItems = createOperationItemsFromSkillDryRunSimulations(personalIntelligenceSkillDryRunFixtures);
+const skillDryRunItems = createOperationItemsFromSkillDryRunSimulations([{
+  simulationId: "skill-dry-run:operation-center-fixture",
+  skillId: "skill:safe-summary",
+  planId: "plan:safe-skill-preview",
+  status: "ready_for_review",
+  riskLevel: "medium",
+  createdAt,
+  simulatedSteps: [{ stage: "inspect" }, { stage: "verify" }],
+  missingApprovals: ["human review"],
+  blockedActions: ["skill execution", "tool invocation"],
+  warnings: ["Fixture evidence is model-only."],
+  blockers: ["Execution remains disabled."],
+  runtimeTracePreview: { traceId: "trace:skill-dry-run-fixture" },
+  missionAlignmentSummary: { missionId: "mission:fixture-review" },
+}]);
 
 const adapterItems = createOperationItemsFromAdapterSandboxPlans([
   {
@@ -209,6 +224,10 @@ const dryRunHandoffItems = createOperationItemsFromLucaLinkDryRunHandoffSimulati
   LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES,
 );
 
+const runtimeAuthorityItems = createOperationItemsFromLucaLinkRuntimeAuthorityRecords(
+  LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES,
+);
+
 export const operationCenterFixtureItems: readonly OperationCenterItem[] = Object.freeze([
   ...memoryItems,
   ...runtimeItems,
@@ -224,4 +243,5 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...transportItems,
   ...fileInstallItems,
   ...dryRunHandoffItems,
+  ...runtimeAuthorityItems,
 ]);
