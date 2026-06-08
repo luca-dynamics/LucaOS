@@ -35,7 +35,7 @@ const RISK_COLORS: Record<PersonalIntelligenceSkillRiskLevel, string> = {
   critical: "text-red-300 border-red-400/30 bg-red-400/10",
 };
 
-const label = (value: string) => value.replaceAll("_", " ");
+const label = (value: string) => value.replace(/_/g, " ");
 
 function Badge({ value, className }: { value: string; className: string }) {
   return (

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Icon } from "../ui/Icon";
 import { THEME_PALETTE, getDynamicContrast } from "../../config/themeColors";
 import HologramFace from "./HologramFace";
 import ModeSelect, { ConversationMode } from "./ModeSelect";
@@ -38,7 +37,6 @@ import {
   clearLocalProvisioningResume,
   evaluateLocalProvisioningState,
   getLocalPlanDownloadBytes,
-  getProvisionDownloadIds,
   getProvisionRetryIds,
   getProvisionRows,
   isRecoverableLocalStep,
