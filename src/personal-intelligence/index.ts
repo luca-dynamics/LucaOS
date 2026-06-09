@@ -46,3 +46,5 @@ export * from "./skillDryRun";
 export * from "./runtimeAuthority";
 
 export * from "./memoryGraph";
+
+export * from "./continuity";
