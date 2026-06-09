@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Luca for Windows — Sovereign AI</title>
+    <title>Luca for Linux — Sovereign AI</title>
     <meta
       name="description"
-      content="Download Luca OS for Windows. Native WSL 2 integration, PowerShell automation, and DirectML acceleration."
+      content="Download Luca OS for Linux. Run headless on servers, orchestrate Docker containers, and customize your agentic kernel."
     />
 
     <!-- Fonts -->
@@ -314,7 +314,7 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
         </button>
-        <a href="../index.html#waitlist" class="nav-cta">Get Early Access</a>
+        <a href="https://app.lucaos.space" class="nav-cta">Open App</a>
         <button class="hamburger" aria-label="Open Menu" onclick="document.getElementById('mobileNav').classList.toggle('open')">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
@@ -330,39 +330,47 @@
         <a href="../index.html#waitlist" onclick="document.getElementById('mobileNav').classList.remove('open')">Luca Beta</a>
         <a href="../legal/privacy.html" onclick="document.getElementById('mobileNav').classList.remove('open')">Manifesto</a>
       </div>
-      <a href="../index.html#waitlist" class="mobile-nav-cta" onclick="document.getElementById('mobileNav').classList.remove('open')">Get Early Access</a>
+      <a href="https://app.lucaos.space" class="mobile-nav-cta" onclick="document.getElementById('mobileNav').classList.remove('open')">Open App</a>
     </div>
     <!-- OS Hero -->
     <section class="hero">
       <div class="hero-badge">
-        <span class="badge-dot" style="background: #00a4ef;"></span>
-        NATIVE WINDOWS INTELLIGENCE
+        <span class="badge-dot" style="background: #4ade80;"></span>
+        SOVEREIGN TERMINAL INTELLIGENCE
       </div>
 
       <h1 class="hero-title">
-            Luca for Windows.
+            Luca for Linux.
         </h1>
         
         <p class="hero-subtitle">
-            Seamlessly integrated with WSL 2 and PowerShell. Automate your dev environment and control your system with DirectML acceleration (NVIDIA/AMD/Intel).
+            The ultimate power tool for operators. Run headless on servers, orchestrate Docker containers, and pipe CLI output directly into your agent's context.
         </p>
 
       <div class="download-group">
-          <button class="download-btn windows coming-soon-btn" style="background: #0078d4; color: #fff;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0V3.449zm10.949-1.651L24 0v11.551H10.949V1.798zm-10.949 10.66L9.75 12.5v9.451H0V12.458zm10.949.05L24 24V12.508H10.949V12.508z"/></svg>
-            <span>Download .exe</span>
-            <span style="font-size: 0.7em; opacity: 0.7; margin-left: 0.5rem;">(x64 / ARM64)</span>
+          <button class="download-btn linux coming-soon-btn" style="background: #333; border: 1px solid #555; color: #fff;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12.005 0C5.39 0 0 5.378 0 11.983c0 6.604 5.39 11.982 12.005 11.982 6.616 0 12.006-5.378 12.006-11.982C24.01 5.378 18.621 0 12.005 0zm2.747 16.7c-2.36.195-2.053-1.687-2.053-1.687h-1.44s.308 1.882-2.053 1.687c-1.444-.12-1.39-1.685-1.39-1.685s-.545.244-.545-1.4c0-1.64 1.408-2.616 1.408-2.616S8.2 10.35 8.2 8.78c0-1.57.876-2.585 2.226-2.733.91-.1 1.63.456 1.63.456s.672-.555 1.583-.456c1.35.148 2.225 1.163 2.225 2.733 0 1.57-.48 2.217-.48 2.217s1.408.976 1.408 2.616c0 1.644-.545 1.4-.545 1.4s.053 1.564-1.39 1.685z"/></svg>
+            <span>Download .AppImage</span>
+            <span style="font-size: 0.7em; opacity: 0.7; margin-left: 0.5rem;">(Universal)</span>
           </button>
       </div>
 
-      <!-- Device Frame (Surface/Laptop) -->
+      <!-- Device Frame (Terminal) -->
       <div class="device-container">
-          <div class="surface-frame">
-              <div class="surface-screen">
-                  <div class="surface-camera"></div>
-                  <img src="../dashboard_preview.png" alt="Luca Dashboard on Windows">
+          <div class="terminal-frame">
+              <div class="terminal-header">
+                  <div class="terminal-dot dot-red"></div>
+                  <div class="terminal-dot dot-yellow"></div>
+                  <div class="terminal-dot dot-green"></div>
               </div>
-              <div class="surface-base"></div>
+              <div class="terminal-body">
+                  <span class="terminal-prompt">user@luca-node:~$</span> <span class="terminal-cmd">luca start --headless --port 3000</span><br>
+                  <span class="terminal-output">[INFO] Initializing Cortex Kernel...</span><br>
+                  <span class="terminal-output">[INFO] Loading Memory Graph from /var/lib/luca/graph.db</span><br>
+                  <span class="terminal-output">[INFO] Connecting to Docker socket... Connected.</span><br>
+                  <span class="terminal-output">[SUCCESS] Luca Agent active. Listening on ws://0.0.0.0:3000</span><br>
+                  <span class="terminal-prompt">user@luca-node:~$</span> <span class="terminal-cursor">_</span>
+              </div>
           </div>
       </div>
     </section>
@@ -370,23 +378,23 @@
     <!-- Specs / Details -->
     <section class="specs-grid">
         <div class="spec-item">
-            <h3>WSL 2 Integration</h3>
-            <p>Luca bridges the gap between Windows and Linux. Execute bash commands inside your WSL distributions directly from Windows.</p>
+            <h3>Headless Mode</h3>
+            <p>Run Luca as a background service on your servers or Raspberry Pi. Access the agent via WebSocket API or CLI.</p>
         </div>
         <div class="spec-item">
-            <h3>PowerShell Automation</h3>
-            <p>Full access to PowerShell scripting. Automate system administration, file management, and network config.</p>
+            <h3>Docker Orchestration</h3>
+            <p>First-class integration with Docker engine. Luca can spin up containers, inspect logs, and manage deployments.</p>
         </div>
         <div class="spec-item">
-            <h3>DirectML Acceleration</h3>
-            <p>Hardware accelerated inference on any DirectX 12 GPU, including NVIDIA GeForce, AMD Radeon, and Intel Arc.</p>
+            <h3>Custom Kernels</h3>
+            <p>Swap out the underlying LLM backend. Support for Ollama, Llama.cpp, or vLLM running locally.</p>
         </div>
     </section>
 
     <section class="install-guide">
-        <h3>Installation via Winget</h3>
-        <p>Install securely using the Windows Package Manager.</p>
-        <code>winget install LucaOS.Luca</code>
+        <h3>Quick Install (cURL)</h3>
+        <p>Install the latest release via our secure script.</p>
+        <code>curl -fsSL https://get.luca.os/install.sh | sh</code>
     </section>
 
     <!-- Footer -->

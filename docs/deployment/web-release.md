@@ -28,8 +28,10 @@ Copy the public runtime configuration from `.env.vercel.example` into the approp
 
 Suggested production domains:
 
-- Web application: `app.luca-dynamics.com`
-- Hosted API: `api.luca-dynamics.com`
+- Web application: `app.lucaos.space`
+- Hosted API: `api.lucaos.space`
+
+The apex domain, `lucaos.space`, is reserved for the public product landing page in `landing/`; do not assign it to the app/dashboard project.
 
 Point `VITE_LUCA_API_URL` at the hosted API origin when that service is available. Keep browser/API origin policy, authentication, and request validation configured for the production domains.
 

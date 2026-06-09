@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Privacy Policy — Luca OS</title>
+    <title>Security — Luca OS</title>
     <meta
       name="description"
-      content="Luca OS Privacy Policy. We prioritize your data sovereignty. Your data stays on your device."
+      content="Luca OS Security. Vulnerability reporting, encryption standards, and our commitment to secure sovereign AI."
     />
 
     <!-- Fonts -->
@@ -250,84 +250,51 @@
             <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none"><circle cx="12" cy="12" r="5" /><path d="M12 1v2" /><path d="M12 21v2" /><path d="M4.22 4.22l1.42 1.42" /><path d="M18.36 18.36l1.42 1.42" /><path d="M1 12h2" /><path d="M21 12h2" /><path d="M4.22 19.78l1.42-1.42" /><path d="M18.36 5.64l1.42-1.42" /></svg>
             <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
         </button>
-        <a href="../index.html#waitlist" class="nav-cta">Get Early Access</a>
+        <a href="https://app.lucaos.space" class="nav-cta">Open App</a>
       </div>
     </nav>
 
     <main class="legal-page">
       <div class="legal-container">
         <div class="legal-header">
-            <h1 class="legal-title">Privacy Policy</h1>
+            <h1 class="legal-title">Security</h1>
             <div class="legal-meta">Last Updated: February 14, 2026</div>
         </div>
 
         <div class="legal-content">
-            <p>At LucaOS Inc. ("LucaOS," "we," "us," or "our"), our fundamental mission is to build the world's first sovereign operating system for synthetic intelligence. Unlike traditional computing platforms that rely on the commoditization of user data, Luca OS is engineered from the kernel up to protect your digital sovereignty.</p>
+            <p>Security is the foundation of sovereignty. At LucaOS Inc., we treat security not as a feature, but as a core architectural constraint.</p>
+
+            <h2>1. Reporting Vulnerabilities</h2>
+            <p>If you believe you have found a security vulnerability in Luca OS, please report it to us through our secure disclosure program.</p>
+            <ul>
+                <li><strong>Email:</strong> <a href="mailto:security@lucaos.space">security@lucaos.space</a></li>
+                <li><strong>PGP Key:</strong> <a href="#">Download Public Key</a> (Fingerprint: <code>8F3A ... 92B1</code>)</li>
+            </ul>
+            <p>We permit potential researchers to perform security research on Luca OS, provided they act in good faith and avoid causing harm to other users.</p>
+
+            <h2>2. Encryption Standards</h2>
+            <p>We use modern, authenticated encryption for all sensitive data.</p>
             
-            <p>This Privacy Policy describes how we collect, use, and handle your information when you use our websites, software, and services ("Services").</p>
+            <h3>2.1. Data in Transit</h3>
+            <p>All network traffic uses TLS 1.3 with Perfect Forward Secrecy. We pin certificates for critical domains to prevent MITM attacks.</p>
 
-            <h2>1. The Core Principle: Local-First</h2>
-            <p><strong>Your Data, Your Device.</strong> Luca OS operates primarily as a local interface. All core processing, including natural language understanding, database management, and file indexing, occurs locally on your hardware (using the Cortex engine and NPU acceleration). We do not upload your personal files, chat logs, or voice recordings to our servers for training purposes.</p>
+            <h3>2.2. Data at Rest</h3>
+            <p>Locally stored vectors and databases are encrypted using <strong>XChaCha20-Poly1305</strong>. Keys are derived from your system's hardware root of trust (Secure Enclave on macOS, TPM 2.0 on Windows).</p>
 
-            <h2>2. Information We Collect</h2>
-            <p>We collect only the minimum amount of data necessary to provide and improve our Services.</p>
-            
-            <h3>2.1. Account Information</h3>
-            <p>When you join our waitlist or create an account to access the Luca Kernel, we collect:</p>
+            <h2>3. Secure Enclave Integration</h2>
+            <p>Luca OS deeply integrates with modern hardware security modules.</p>
             <ul>
-                <li>Email address</li>
-                <li>Name (optional)</li>
-                <li>Authentication credentials (hashed)</li>
+                <li><strong>Biometric Auth:</strong> We support TouchID and Windows Hello for privilege escalation within the OS.</li>
+                <li><strong>Key Storage:</strong> API keys for third-party providers are never stored in plain text. They are wrapped by keys residing solely in the Secure Enclave.</li>
             </ul>
 
-            <h3>2.2. Telemetry (Opt-In)</h3>
-            <p>We believe telemetry should be transparent and optional. If you choose to enable "Diagnostic Data Sharing," we may collect anonymous performance metrics such as:</p>
+            <h2>4. Supply Chain Security</h2>
+            <p>We verify the integrity of every byte of code we ship.</p>
             <ul>
-                <li>Application crash reports</li>
-                <li>System resource usage (CPU/RAM/NPU load)</li>
-                <li>Feature usage frequency</li>
+                <li><strong>Signed Binaries:</strong> All Luca OS binaries are code-signed with extended validation certificates.</li>
+                <li><strong>Reproducible Builds:</strong> We strive for deterministic builds for our core open-source components, allowing the community to verify that the released binary matches the source code.</li>
+                <li><strong>SBOM:</strong> We publish a Software Bill of Materials (SBOM) with every release to ensure transparency of dependencies.</li>
             </ul>
-            <p>This data is stripped of all personal identifiers before leaving your device.</p>
-
-            <h2>3. How We Use Information</h2>
-            <p>We use the limited information we collect for the following purposes:</p>
-            <ul>
-                <li><strong>Service Provision:</strong> To verify your license and provide access to software updates.</li>
-                <li><strong>Communication:</strong> To send important product updates, security alerts, and support messages.</li>
-                <li><strong>Security:</strong> To prevent fraud and abuse of our platform.</li>
-            </ul>
-
-            <h2>4. Third-Party Integrations</h2>
-            <p>Luca OS acts as a hub for various AI services. You may choose to connect third-party providers (e.g., Anthropic, OpenAI, GitHub) via API keys.</p>
-            <ul>
-                <li><strong>Direct Connection:</strong> When you use a third-party model, your device communicates directly with that provider's API. Your data does not pass through LucaOS servers.</li>
-                <li><strong>Keys Storage:</strong> API keys are encrypted at rest on your device using your system's secure enclave (Keychain/TPM). We never see your keys.</li>
-            </ul>
-
-            <h2>5. Data Retention and Deletion</h2>
-            <p>Since your primary data resides on your device, you have complete control over its retention.</p>
-            <ul>
-                <li><strong>Local Data:</strong> You can delete your local Luca profile, database (`~/.luca/db`), and configuration at any time. This permanently erases the data.</li>
-                <li><strong>Account Data:</strong> You may request deletion of your LucaOS account by contacting <a href="mailto:privacy@lucaos.space">privacy@lucaos.space</a>. We will delete your account information within 30 days.</li>
-            </ul>
-
-            <h2>6. Security</h2>
-            <p>We employ industry-leading security measures to protect your information:</p>
-            <ul>
-                <li><strong>Encryption in Transit:</strong> All communications between your device and our update servers are encrypted via TLS 1.3.</li>
-                <li><strong>Encryption at Rest:</strong> Local databases are encrypted using XChaCha20-Poly1305 if disk encryption is enabled.</li>
-            </ul>
-
-            <h2>7. Changes to This Policy</h2>
-            <p>We may update this Privacy Policy from time to time. We will notify you of any significant changes via email or through the Luca OS notification center.</p>
-
-            <h2>8. Contact Us</h2>
-            <p>If you have questions about this Privacy Policy or your data rights, please contact us at:</p>
-            <p>
-                <strong>LucaOS Inc.</strong><br>
-                San Francisco, CA<br>
-                Email: <a href="mailto:privacy@lucaos.space">privacy@lucaos.space</a>
-            </p>
         </div>
       </div>
     </main>
@@ -368,9 +335,9 @@
 
           <div class="footer-links-col">
               <h4>Legal</h4>
-              <a href="privacy.html" style="color: var(--text-primary);">Privacy</a>
+              <a href="privacy.html">Privacy</a>
               <a href="terms.html">Terms</a>
-              <a href="security.html">Security</a>
+              <a href="security.html" style="color: var(--text-primary);">Security</a>
           </div>
       </div>
       <div class="footer-bottom">

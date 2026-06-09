@@ -3,27 +3,197 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Security — Luca OS</title>
+    <title>Luca for macOS — Sovereign AI</title>
     <meta
       name="description"
-      content="Luca OS Security. Vulnerability reporting, encryption standards, and our commitment to secure sovereign AI."
+      content="Download Luca OS for macOS. Native Apple Silicon support, Metal acceleration, and full system integration."
     />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
 
     <link rel="icon" type="image/png" href="../favicon.png" />
     <link rel="stylesheet" href="../styles.css" />
-      <link rel="canonical" href="https://lucaos.space/" />
-    <meta property="og:url" content="https://lucaos.space/" />
+    <style>
+        /* High-Fidelity Page Specific Overrides */
+        .hero {
+            padding: 6rem 2rem 2rem; /* Compressed */
+        }
+        
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4rem); /* Aggressive clamp */
+            line-height: 1.05;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-subtitle {
+            text-align: justify;
+            hyphens: auto;
+            max-width: 520px;
+            margin: 0 auto 2.5rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .hero-badge {
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            color: #a78bfa;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            padding: 0.5rem 1.25rem;
+            margin-bottom: 2rem;
+            border-radius: 100px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .device-container {
+            margin-top: 3rem;
+            display: flex;
+            justify-content: center;
+            perspective: 2000px;
+        }
+
+        /* Refined Responsive Specs */
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 2rem auto 4rem;
+            padding: 0 2rem;
+        }
+
+        .spec-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem; /* Tighter padding */
+            transition: border-color 0.3s ease;
+        }
+
+        .spec-item:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .spec-item h3 {
+            margin-bottom: 0.5rem;
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .spec-item p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-align: justify;
+            hyphens: auto;
+            line-height: 1.5;
+        }
+
+        /* High-Fidelity HUD Visual */
+        .macbook-visual {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16/10;
+            background: #000;
+            border-radius: 24px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
+        }
+
+        .macbook-screen-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 16px;
+            background: #111;
+        }
+
+        .macbook-screen-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        /* Install CLI Refinement */
+        .install-guide {
+            max-width: 600px;
+            margin: 0 auto 6rem;
+            padding: 2.5rem;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .install-guide h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .install-guide p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .terminal-box {
+            background: #0d0d0d;
+            border: 1px solid #1a1a1a;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: #4ade80;
+        }
+
+        .copy-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .specs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
   </head>
   <body>
-    <!-- Navigation -->
+    <!-- Navigation (Refined) -->
     <nav class="nav">
       <a href="../index.html" class="nav-brand">
         <img class="brand-icon" src="../icon.png" alt="Luca OS Logo" />
@@ -122,7 +292,7 @@
               <div class="mega-menu-section">
                 <h4>Select Platform</h4>
                 <div class="menu-grid">
-                  <a href="../download/mac.html" class="menu-item">
+                  <a href="mac.html" class="menu-item">
                     <div class="menu-icon">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05 1.72-3.23 1.72-1.15 0-1.53-.72-2.88-.72-1.34 0-1.78.71-2.9.71-1.12 0-2.22-.81-3.24-1.74-2.07-1.9-3.64-5.38-3.64-8.38 0-4.66 3.03-7.1 5.92-7.1 1.54 0 2.97.97 3.91.97.92 0 2.51-1.12 4.35-1.12 2.3 0 5.11 1.56 6.36 4.1-4.57 2.1-3.83 8.32.92 10.46-.77 1.83-2.13 4.19-3.57 6.1Zm-4.9-15.65c.16-2.58 2.37-4.63 4.74-4.63.16 2.65-2.21 4.96-4.74 4.63Z"/></svg>
                     </div>
@@ -131,7 +301,7 @@
                       <span class="menu-desc">Universal binary for Apple Silicon.</span>
                     </div>
                   </a>
-                  <a href="../download/windows.html" class="menu-item">
+                  <a href="windows.html" class="menu-item">
                     <div class="menu-icon">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1l.01 9.471H0V3.449zm0 17.102l9.75 1.35V12.55H0v8.001zM10.712 1.97L24 0v11.571h-13.288V1.97zm13.288 22.03L10.712 22.031V12.55H24v11.45z"/></svg>
                     </div>
@@ -140,7 +310,7 @@
                       <span class="menu-desc">Native DirectML acceleration.</span>
                     </div>
                   </a>
-                  <a href="../download/linux.html" class="menu-item">
+                  <a href="linux.html" class="menu-item">
                     <div class="menu-icon">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.37 0-.74.03-1.1.09C7.45 2.62 4.5 5.71 4.5 9.5c0 .67.11 1.32.31 1.92C3.16 12.56 2 14.4 2 16.5c0 3.04 2.46 5.5 5.5 5.5h9c3.04 0 5.5-2.46 5.5-5.5 0-2.1-1.16-3.94-2.81-5.08.2-.6.31-1.25.31-1.92 0-3.79-2.95-6.88-6.4-7.41C12.74 2.03 12.37 2 12 2zm1.5 5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm-3 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5z"/></svg>
                     </div>
@@ -202,7 +372,7 @@
 
         <!-- Legal Category -->
         <div class="nav-item">
-          <a href="privacy.html" class="nav-link">
+          <a href="../legal/privacy.html" class="nav-link">
             Legal
             <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </a>
@@ -211,15 +381,15 @@
               <div class="mega-menu-section">
                 <h4>Sovereignty & Integrity</h4>
                 <div class="menu-grid">
-                  <a href="privacy.html" class="menu-item">
+                  <a href="../legal/privacy.html" class="menu-item">
                     <div class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
                     <div class="menu-text">
                       <span class="menu-title">Manifesto</span>
                       <span class="menu-desc">Our commitment to digital autonomy.</span>
                     </div>
                   </a>
-                  <a href="privacy.html" class="menu-item">
-                    <div class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zM9 7a3 3 0 0 1 6 0v3H9V7z"/></svg></div>
+                  <a href="../legal/privacy.html" class="menu-item">
+                    <div class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zM9 7a3 3 0 0 1 6 0v3H9V7z"/></svg></div>
                     <div class="menu-text">
                       <span class="menu-title">Privacy</span>
                       <span class="menu-desc">How we protect your data footprint.</span>
@@ -246,60 +416,104 @@
         </div>
       </div>
       <div style="display: flex; align-items: center">
-        <button class="theme-toggle" aria-label="Toggle Theme" style="margin-right: 1rem;">
-            <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none"><circle cx="12" cy="12" r="5" /><path d="M12 1v2" /><path d="M12 21v2" /><path d="M4.22 4.22l1.42 1.42" /><path d="M18.36 18.36l1.42 1.42" /><path d="M1 12h2" /><path d="M21 12h2" /><path d="M4.22 19.78l1.42-1.42" /><path d="M18.36 5.64l1.42-1.42" /></svg>
-            <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+        <button class="theme-toggle" aria-label="Toggle Theme" style="margin-right: 1.5rem;">
+          <!-- Sun Icon -->
+          <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <!-- Moon Icon -->
+          <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
         </button>
-        <a href="../index.html#waitlist" class="nav-cta">Get Early Access</a>
+        <a href="https://app.lucaos.space" class="nav-cta">Open App</a>
+        <button class="hamburger" aria-label="Open Menu" onclick="document.getElementById('mobileNav').classList.toggle('open')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
     </nav>
-
-    <main class="legal-page">
-      <div class="legal-container">
-        <div class="legal-header">
-            <h1 class="legal-title">Security</h1>
-            <div class="legal-meta">Last Updated: February 14, 2026</div>
-        </div>
-
-        <div class="legal-content">
-            <p>Security is the foundation of sovereignty. At LucaOS Inc., we treat security not as a feature, but as a core architectural constraint.</p>
-
-            <h2>1. Reporting Vulnerabilities</h2>
-            <p>If you believe you have found a security vulnerability in Luca OS, please report it to us through our secure disclosure program.</p>
-            <ul>
-                <li><strong>Email:</strong> <a href="mailto:security@lucaos.space">security@lucaos.space</a></li>
-                <li><strong>PGP Key:</strong> <a href="#">Download Public Key</a> (Fingerprint: <code>8F3A ... 92B1</code>)</li>
-            </ul>
-            <p>We permit potential researchers to perform security research on Luca OS, provided they act in good faith and avoid causing harm to other users.</p>
-
-            <h2>2. Encryption Standards</h2>
-            <p>We use modern, authenticated encryption for all sensitive data.</p>
-            
-            <h3>2.1. Data in Transit</h3>
-            <p>All network traffic uses TLS 1.3 with Perfect Forward Secrecy. We pin certificates for critical domains to prevent MITM attacks.</p>
-
-            <h3>2.2. Data at Rest</h3>
-            <p>Locally stored vectors and databases are encrypted using <strong>XChaCha20-Poly1305</strong>. Keys are derived from your system's hardware root of trust (Secure Enclave on macOS, TPM 2.0 on Windows).</p>
-
-            <h2>3. Secure Enclave Integration</h2>
-            <p>Luca OS deeply integrates with modern hardware security modules.</p>
-            <ul>
-                <li><strong>Biometric Auth:</strong> We support TouchID and Windows Hello for privilege escalation within the OS.</li>
-                <li><strong>Key Storage:</strong> API keys for third-party providers are never stored in plain text. They are wrapped by keys residing solely in the Secure Enclave.</li>
-            </ul>
-
-            <h2>4. Supply Chain Security</h2>
-            <p>We verify the integrity of every byte of code we ship.</p>
-            <ul>
-                <li><strong>Signed Binaries:</strong> All Luca OS binaries are code-signed with extended validation certificates.</li>
-                <li><strong>Reproducible Builds:</strong> We strive for deterministic builds for our core open-source components, allowing the community to verify that the released binary matches the source code.</li>
-                <li><strong>SBOM:</strong> We publish a Software Bill of Materials (SBOM) with every release to ensure transparency of dependencies.</li>
-            </ul>
-        </div>
+    <div id="mobileNav" class="mobile-nav-overlay">
+      <button class="mobile-nav-close" aria-label="Close Menu" onclick="document.getElementById('mobileNav').classList.remove('open')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="mobile-nav-links">
+        <a href="../index.html#features" onclick="document.getElementById('mobileNav').classList.remove('open')">Luca OS</a>
+        <a href="../index.html#hardware" onclick="document.getElementById('mobileNav').classList.remove('open')">Luca Prism</a>
+        <a href="../index.html#waitlist" onclick="document.getElementById('mobileNav').classList.remove('open')">Luca Beta</a>
+        <a href="../legal/privacy.html" onclick="document.getElementById('mobileNav').classList.remove('open')">Manifesto</a>
       </div>
-    </main>
+      <a href="https://app.lucaos.space" class="mobile-nav-cta" onclick="document.getElementById('mobileNav').classList.remove('open')">Open App</a>
+    </div>    <!-- OS Hero -->
+    <section class="hero">
+      <div class="hero-badge">
+        <span class="badge-dot" style="background: #a78bfa;"></span>
+        KERNEL v0.9.1 — APPLE SILICON OPTIMIZED
+      </div>
 
-    <!-- Enterprise Footer -->
+      <h1 class="hero-title">
+            Luca for macOS.
+        </h1>
+        
+        <p class="hero-subtitle">
+            Unleash the full power of your M1/M2/M3 chip. Luca runs locally with Metal optimization for blazing fast token inference and VoiceHUD latency under 20ms. Full integration with macOS Accessibility and System Events.
+        </p>
+
+      <div class="download-group">
+          <button class="download-btn mac coming-soon-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.8-1.31.05-2.3-1.23-3.14-2.47-1.73-2.5-3.09-7.14-1.29-10.27 1.29-2.22 3.65-2.58 4.96-2.58 1.27 0 2.45.85 3.22.85.73 0 2.13-.91 3.59-.77 2.43.18 3.55 1.76 3.55 1.76-2.02 1.25-2.26 4.31-.06 5.67.63.4 1.11.47 1.11.47v.06a12.16 12.16 0 0 1-2.33 4.71zM13 3.5c.57-1.46.22-3.5-1.55-5.21-1.63 1.57-1.8 3.28-1.54 4.75 1.55 1.01 3.29.61 3.09.46z"/></svg>
+            <span style="display: flex; align-items: baseline; gap: 0.5rem;">
+                <span>Download for macOS</span>
+                <span style="font-size: 0.7em; opacity: 0.7;">.dmg (Universal)</span>
+            </span>
+          </button>
+      </div>
+
+      <!-- High-Fidelity Device Hub -->
+      <div class="device-container">
+          <div class="macbook-visual">
+              <div class="macbook-screen-wrap">
+                  <img src="../dashboard_preview.png" alt="Luca Dashboard">
+                  <div class="hud-overlay"></div>
+              </div>
+          </div>
+      </div>
+    </section>
+
+    <!-- Specs Grid (Technical Density) -->
+    <section class="specs-grid">
+        <div class="spec-item">
+            <h3>Metal Accelerated</h3>
+            <p>Direct integration with CoreML and Metal Performance Shaders. Luca leverages every GPU core for real-time visual reasoning and language processing.</p>
+        </div>
+        <div class="spec-item">
+            <h3>System Control</h3>
+            <p>Native bridge for system events. Luca can control native apps like Spotify, Reminders, and Calendar via secure AppleScript and Accessibility APIs.</p>
+        </div>
+        <div class="spec-item">
+            <h3>Neural Nap</h3>
+            <p>Proactive power management. The Luca kernel intelligently suspends neural weights when inactive, ensuring zero impact on MacBook mobility.</p>
+        </div>
+    </section>
+
+    <!-- Terminal Install Refinement -->
+    <section class="install-guide">
+        <h3>Power User? Use the CLI.</h3>
+        <p>Luca can be deployed via headless installation for automation servers or power user workflows.</p>
+        <div class="terminal-box">
+            <code>brew install --cask luca-os</code>
+            <button class="copy-btn">Copy</button>
+        </div>
+    </section>
+
+    <!-- Footer (Standardized) -->
     <footer class="site-footer">
       <div class="footer-content">
           <div class="footer-brand-col">
@@ -310,39 +524,32 @@
               <p class="footer-tagline">
                   The world's first sovereign operating system for synthetic intelligence.
               </p>
-              <div class="social-links">
-                  <a href="#" aria-label="Twitter"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
-                  <a href="#" aria-label="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
-              </div>
           </div>
           
           <div class="footer-links-col">
               <h4>Product</h4>
-              <a href="../download/mac.html">macOS</a>
-              <a href="../download/windows.html">Windows</a>
-              <a href="../download/linux.html">Linux</a>
-              <a href="../download/mobile.html">Mobile</a>
-              <a href="../index.html#changelog">Changelog</a>
+              <a href="mac.html">macOS</a>
+              <a href="windows.html">Windows</a>
+              <a href="linux.html">Linux</a>
+              <a href="mobile.html">Mobile</a>
           </div>
 
           <div class="footer-links-col">
               <h4>Resources</h4>
               <a href="../resources/index.html">Documentation</a>
-              <a href="../resources/api.html">API Reference</a>
-              <a href="../resources/models.html">Model Zoo</a>
               <a href="../community/index.html">Community</a>
+              <a href="../pitch/index.html">Pitch Deck</a>
           </div>
 
           <div class="footer-links-col">
               <h4>Legal</h4>
-              <a href="privacy.html">Privacy</a>
-              <a href="terms.html">Terms</a>
-              <a href="security.html" style="color: var(--text-primary);">Security</a>
+              <a href="../legal/privacy.html">Privacy</a>
+              <a href="../legal/terms.html">Terms</a>
           </div>
       </div>
       <div class="footer-bottom">
           <span>&copy; 2026 LucaOS Inc. All rights reserved.</span>
-          <span class="system-status"><span class="status-dot"></span> Systems Operational</span>
+          <span class="system-status"><span class="status-dot"></span> Kernel Online</span>
       </div>
     </footer>
     <script src="../script.js"></script>
