@@ -109,3 +109,7 @@ A UI panel is intentionally deferred. No existing surface could honestly apply t
 ## Follow-on interactive review workflow foundation
 
 A later preview-to-confirm foundation now composes these Memory Controls helpers without changing their policy authority. The interactive workflow lets a user select a queue item, preview a suggested action, then confirm or cancel a local intent object. Confirmation still reports `persistencePerformed: false` and `mutationPerformed: false`; durable writes remain deferred.
+
+## Persistence boundary follow-up
+
+Approval, denial, correction, and edit previews can now be evaluated by the persistence boundary as contract-only candidates. The boundary does not duplicate Memory Controls policy and does not apply the proposed node; it only reports eligibility, audit-before-write requirements, rollback availability, and privacy/sync impact for future persistence work.
