@@ -3161,3 +3161,211 @@ body {
 [data-theme="light"] body {
   background-image: radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.025), transparent 34rem);
 }
+
+/* --- Focused product-page polish --- */
+:root {
+  --badge-text: rgba(245, 247, 250, 0.82);
+  --badge-accent: #78d7f5;
+  --badge-bg: rgba(255, 255, 255, 0.035);
+  --badge-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background-color: #050506;
+  background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.018), transparent 30rem);
+}
+
+.nav,
+.nav.scrolled {
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: none;
+  transform: none;
+  scale: 1;
+  padding-left: 3rem;
+  padding-right: 3rem;
+}
+
+.nav.scrolled {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  background: rgba(5, 5, 6, 0.94);
+  box-shadow: 0 1px 0 var(--border-subtle), 0 14px 34px rgba(0, 0, 0, 0.36);
+}
+
+.showcase-badge {
+  width: max-content;
+  max-width: 100%;
+  gap: 0.5rem;
+  padding: 0.38rem 0.65rem;
+  border: 1px solid var(--badge-border);
+  border-radius: 999px;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.showcase-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: var(--badge-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--badge-accent) 45%, transparent);
+}
+
+.showcase-badge svg {
+  display: none;
+}
+
+.badge-dot {
+  background: var(--badge-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--badge-accent) 45%, transparent);
+}
+
+.showcase-section,
+.feature-card,
+.use-cases-grid,
+.comparison-card {
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] {
+  --badge-text: rgba(24, 24, 27, 0.76);
+  --badge-accent: #187c9c;
+  --badge-bg: rgba(0, 0, 0, 0.025);
+  --badge-border: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] body {
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.025), transparent 30rem);
+}
+
+[data-theme="light"] .nav.scrolled {
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 1px 0 var(--border-subtle), 0 14px 34px rgba(24, 24, 27, 0.1);
+}
+
+@media (max-width: 810px) {
+  .nav,
+  .nav.scrolled {
+    width: 100%;
+    min-width: 100%;
+    padding: 0.75rem 1rem;
+    transform: none;
+    scale: 1;
+  }
+
+  .nav-brand,
+  .nav-actions,
+  .theme-toggle,
+  .nav-cta,
+  .hamburger {
+    flex-shrink: 0;
+  }
+
+  .nav-brand {
+    gap: 0.5rem;
+    font-size: 1rem;
+    letter-spacing: 0.07em;
+  }
+
+  .theme-toggle {
+    margin-right: 0.15rem;
+    padding: 0.4rem;
+  }
+
+  .nav-cta {
+    padding: 0.42rem 0.72rem;
+    white-space: nowrap;
+  }
+
+  .hero {
+    min-height: 940px;
+    padding: 7.25rem 1.1rem 3.5rem;
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 4.75rem 0 0;
+    z-index: 3;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgba(5, 5, 6, 0.34) 0%, rgba(5, 5, 6, 0.1) 30%, rgba(5, 5, 6, 0.46) 68%, rgba(5, 5, 6, 0.92) 100%),
+      radial-gradient(ellipse at 50% 34%, transparent 0 20%, rgba(5, 5, 6, 0.3) 68%);
+  }
+
+  .hero-badge {
+    max-width: min(100%, 360px);
+    margin-bottom: 1.1rem;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.62rem;
+    line-height: 1.45;
+    letter-spacing: 0.1em;
+  }
+
+  .hero-title {
+    margin-bottom: 1.15rem;
+    font-size: clamp(2.65rem, 12vw, 4rem);
+    line-height: 1.02;
+    text-shadow: 0 3px 22px rgba(0, 0, 0, 0.95);
+  }
+
+  .hero-subtitle {
+    max-width: 35rem;
+    margin-bottom: 1.35rem;
+    padding: 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 1rem;
+    line-height: 1.7;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
+  }
+
+  .hero-platform-badges {
+    margin-bottom: 1.6rem;
+  }
+
+  .hero-platform-badges span {
+    background: rgba(8, 9, 11, 0.74);
+    color: rgba(255, 255, 255, 0.76);
+  }
+
+  .hero-actions {
+    gap: 0.7rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .use-cases-header .showcase-badge {
+    margin-bottom: 0.9rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .nav,
+  .nav.scrolled {
+    padding-right: 0.7rem;
+    padding-left: 0.7rem;
+  }
+
+  .brand-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-brand span {
+    font-size: 0.88rem;
+  }
+
+  .nav-cta {
+    font-size: 0.66rem;
+  }
+}
