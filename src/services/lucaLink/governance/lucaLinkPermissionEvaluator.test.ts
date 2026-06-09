@@ -3,6 +3,7 @@ import {
   canExchangeFiles,
   canPerformRemoteAction,
   canRelayVoice,
+  canRequestAdminTrust,
   canShareScreen,
   canSyncMemory,
   canUsePermission,
@@ -19,16 +20,30 @@ const approvedFull: LucaLinkGovernanceInput = {
 };
 
 describe("LucaLink governance permission evaluation", () => {
-  it("allows approved scopes for fully trusted hosts", () => {
+  it("allows approved model scopes while keeping runtime authority disabled", () => {
     expect(canSyncMemory(approvedFull)).toMatchObject({
       decision: "allowed",
       reason: "trusted_full + approved + permission_allowed",
     });
-    expect(canUseToolExecution(approvedFull).sensitive).toBe(true);
-    expect(canPerformRemoteAction(approvedFull).decision).toBe("allowed");
     expect(canRelayVoice(approvedFull).decision).toBe("allowed");
     expect(canShareScreen(approvedFull).decision).toBe("allowed");
     expect(canExchangeFiles(approvedFull).decision).toBe("allowed");
+
+    expect(canPerformRemoteAction(approvedFull)).toMatchObject({
+      decision: "denied",
+      reason: "remote_action_runtime_disabled",
+      sensitive: true,
+    });
+    expect(canUseToolExecution(approvedFull)).toMatchObject({
+      decision: "denied",
+      reason: "tool_execution_runtime_disabled",
+      sensitive: true,
+    });
+    expect(canRequestAdminTrust(approvedFull)).toMatchObject({
+      decision: "denied",
+      reason: "admin_trust_requires_primary_host_review",
+      sensitive: true,
+    });
   });
 
   it("never allows revoked hosts and removes active permission state", () => {
@@ -87,6 +102,7 @@ describe("LucaLink governance permission evaluation", () => {
       "tool_execution",
       "file_exchange",
       "share_screen",
+      "admin_trust",
     ] as const) {
       expect(
         canUsePermission({
