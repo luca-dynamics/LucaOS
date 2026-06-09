@@ -8,15 +8,15 @@ The model reuses LucaLink linked-host trust and connection states. It does not c
 
 ## Ownership lanes
 
-| Lane | Meaning | Current protection |
-| --- | --- | --- |
-| `conversation_owner` | Host selected to represent the active conversation surface. | Primary Host or approved active companion. |
-| `voice_owner` | Host selected to represent the active voice surface. | Primary Host, approved companion, or approved voice relay. |
-| `display_owner` | Host selected to represent the active display surface. | Primary Host, approved companion, or approved display surface. |
-| `approval_owner` | Host that retains approval authority. | Primary Host only. |
-| `memory_context_owner` | Host selected to represent approved memory context. | Primary Host or explicitly approved companion; no memory sync occurs. |
-| `tool_execution_owner` | Readiness/model lane for possible future execution ownership. | Always `runtime_disabled`; it grants no execution authority. |
-| `handoff_owner` | Host that represents coordination of a proposed handoff. | Primary Host only; no handoff is performed. |
+| Lane                   | Meaning                                                       | Current protection                                                    |
+| ---------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `conversation_owner`   | Host selected to represent the active conversation surface.   | Primary Host or approved active companion.                            |
+| `voice_owner`          | Host selected to represent the active voice surface.          | Primary Host, approved companion, or approved voice relay.            |
+| `display_owner`        | Host selected to represent the active display surface.        | Primary Host, approved companion, or approved display surface.        |
+| `approval_owner`       | Host that retains approval authority.                         | Primary Host only.                                                    |
+| `memory_context_owner` | Host selected to represent approved memory context.           | Primary Host or explicitly approved companion; no memory sync occurs. |
+| `tool_execution_owner` | Readiness/model lane for possible future execution ownership. | Always `runtime_disabled`; it grants no execution authority.          |
+| `handoff_owner`        | Host that represents coordination of a proposed handoff.      | Primary Host only; no handoff is performed.                           |
 
 Each evaluation returns a deterministic owner or an explicit unresolved state. Without an explicit requested owner, eligible hosts are ordered by conservative role priority and then stable host ID.
 
@@ -118,3 +118,7 @@ This foundation intentionally does not implement:
 - real pairing or discovery
 
 Any future runtime implementation must pass through separate, explicit runtime authority and enforcement work. These model results must not be treated as commands.
+
+## Revocation propagation
+
+When a revoked or blocked host appears in an existing ownership assignment, the revocation-propagation dry run marks that lane invalid and describes the review or future cleanup required. It never changes the assignment. Approval ownership may identify the Primary Host as a suggested fallback, but reassignment remains unperformed and review-required. Voice, display, memory-context, tool-execution, and handoff ownership receive lane-specific invalidation guidance. See [LucaLink Runtime Revocation Propagation Plan and Dry-Run QA Matrix](./lucalink-revocation-propagation-dry-run.md).
