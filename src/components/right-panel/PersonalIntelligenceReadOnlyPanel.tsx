@@ -8,6 +8,7 @@ import type { PersonalMemoryReviewReason } from "../../personal-intelligence/mem
 import type { PersonalMemoryGraph } from "../../personal-intelligence/memoryGraph";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
+import PersonalIntelligenceReviewWorkflowPanel from "./PersonalIntelligenceReviewWorkflowPanel";
 
 interface PersonalIntelligenceReadOnlyPanelProps {
   graph: PersonalMemoryGraph;
@@ -86,6 +87,8 @@ export const PersonalIntelligenceReadOnlyPanel: React.FC<
             </p>
           )}
         </div>
+
+        <PersonalIntelligenceReviewWorkflowPanel graph={graph} mode={mode} now={now} />
 
         {disclosure.mode === "basic" ? (
           <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-3">
