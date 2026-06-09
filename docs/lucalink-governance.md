@@ -26,9 +26,11 @@ The governance layer accepts the linked-host registry vocabulary and normalizes 
 Evaluation is deterministic and ordered:
 
 ```text
-trust / terminal state
+terminal state / trust
 → approval
+→ connection completeness
 → permission
+→ non-runtime architecture gate
 → decision
 ```
 
@@ -42,6 +44,8 @@ Every result contains:
   reason: string;
 }
 ```
+
+An `allowed` result is a model-level governance classification, not an execution instruction or proof that runtime transport exists.
 
 Reason values such as `device_revoked`, `approval_pending`, and `permission_denied` are stable explanations intended for future audit logs, governance traces, and Operation Center presentation.
 
@@ -76,6 +80,24 @@ These rules apply consistently to transitions from pending, limited, or fully tr
 
 The Device Center may display evaluated states such as `Allowed`, `Pending approval`, `Denied`, or `Revoked`. This is read-only explanation. It adds no controls, approval path, transport behavior, or runtime authority.
 
+## Hardened non-runtime permissions
+
+Trust, approval, and a granted permission are necessary but not sufficient for runtime authority. After terminal, trust, approval, connection, and permission checks pass, the evaluator applies explicit architecture gates:
+
+| Permission | Current result | Stable reason |
+| --- | --- | --- |
+| `remote_action` | `denied` | `remote_action_runtime_disabled` |
+| `tool_execution` | `denied` | `tool_execution_runtime_disabled` |
+| `admin_trust` | `denied` | `admin_trust_requires_primary_host_review` |
+
+Blocked and revoked facts still win before these architecture gates. Pending trust, approval, connection, or permission also remains pending rather than being rewritten as a runtime-disabled denial.
+
+`sync_memory` remains approval-scoped and privacy-sensitive even though the pure evaluator may classify an approved permission record as `allowed`. That result does not perform memory synchronization. Likewise, `file_exchange` and `share_screen` require approval and permission, but an allowed model decision does not create file-transfer or screen-sharing transport.
+
+## Session ownership relationship
+
+The session ownership foundation is documented in [LucaLink Session Ownership Foundation](./lucalink-session-ownership.md). It consumes linked-host and governance facts without mutating them. Primary Host approval authority remains protected, revoked and blocked hosts cannot own active lanes, and handoff readiness is classification-only.
+
 ## Deferred work
 
 This governance foundation intentionally defers:
@@ -86,7 +108,6 @@ This governance foundation intentionally defers:
 - remote execution and remote actions
 - synchronization engines
 - device discovery
-- session ownership
 - runtime authority-model changes
 
 Future consumers must continue to preserve Primary Host protections and must not treat a presentation decision as an execution mechanism.

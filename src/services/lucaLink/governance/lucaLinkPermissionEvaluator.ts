@@ -35,6 +35,24 @@ function evaluateConnection(
   return undefined;
 }
 
+function evaluateNonRuntimePermission(
+  permission: LucaLinkPermissionId,
+): LucaLinkGovernanceEvaluation | undefined {
+  if (permission === "remote_action") {
+    return { decision: "denied", reason: "remote_action_runtime_disabled" };
+  }
+  if (permission === "tool_execution") {
+    return { decision: "denied", reason: "tool_execution_runtime_disabled" };
+  }
+  if (permission === "admin_trust") {
+    return {
+      decision: "denied",
+      reason: "admin_trust_requires_primary_host_review",
+    };
+  }
+  return undefined;
+}
+
 export function canUsePermission(
   input: LucaLinkPermissionEvaluationInput,
 ): LucaLinkPermissionEvaluation {
@@ -49,7 +67,7 @@ export function canUsePermission(
       : input.permissionState === "pending" ||
           input.permissionState === "requested"
         ? { decision: "pending" as const, reason: "permission_pending" }
-        : {
+        : evaluateNonRuntimePermission(input.permission) ?? {
             decision: "allowed" as const,
             reason: `${input.trustState} + approved + permission_allowed`,
           });
@@ -76,3 +94,4 @@ export const canPerformRemoteAction = permissionHelper("remote_action");
 export const canRelayVoice = permissionHelper("voice_relay");
 export const canShareScreen = permissionHelper("share_screen");
 export const canExchangeFiles = permissionHelper("file_exchange");
+export const canRequestAdminTrust = permissionHelper("admin_trust");
