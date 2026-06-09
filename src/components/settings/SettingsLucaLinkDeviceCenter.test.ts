@@ -54,6 +54,16 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain('{ id: "advanced", label: "Advanced" }');
   });
 
+  it("renders the model-only pairing request preview card", () => {
+    expect(lucaLinkSource).toContain("Pairing request");
+    expect(lucaLinkSource).toContain("Preview code");
+    expect(lucaLinkSource).toContain("Primary Host approval required");
+    expect(lucaLinkSource).toContain("Limited trust");
+    expect(lucaLinkSource).toContain("Sensitive access remains blocked");
+    expect(lucaLinkSource).toContain("No real pairing started");
+    expect(lucaLinkSource).toContain("No QR scanner, network discovery, WebRTC, socket, transport, linked-host registry write, or persistent trust change is invoked here.");
+  });
+
   it("creates continuation tokens only after approved queue decisions", () => {
     expect(approvalActionSource).toContain("lucaLink.approveApprovalRequest");
     expect(approvalActionSource).toContain(

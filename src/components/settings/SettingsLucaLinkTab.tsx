@@ -87,6 +87,15 @@ import {
   LUCA_LINK_APPROVAL_ACTION_PENDING_HANDOFFS,
   previewLucaLinkApprovalAction,
 } from "../../services/lucaLink/approvalActions";
+import {
+  createLucaLinkPairingDeviceCenterSummary,
+  createLucaLinkPairingDisclosureSummary,
+  evaluateLucaLinkPairingRequest,
+  LUCA_LINK_PAIRING_FIXTURE_NOW,
+  LUCA_LINK_PAIRING_REQUEST_FIXTURES,
+  previewLucaLinkPairingApproval,
+  previewLucaLinkPairingDenial,
+} from "../../services/lucaLink/pairingRequests";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
@@ -118,6 +127,7 @@ import { SettingsLucaLinkRuntimeAuthority } from "./SettingsLucaLinkRuntimeAutho
 // Primary Host approval, sandbox checks, and future execution controls
 // Guest security sessions are read-only.
 // This view does not revoke guests, regenerate invites, or change guest auth, PIN, or WebRTC behavior.
+// Pairing request previews are model-only: no real QR scanning, pairing code verification, network discovery, transport, trust persistence, or linked-host writes.
 
 // Guest Access Section (Long Distance via Relay)
 const GuestAccessSection: React.FC<{
@@ -1068,6 +1078,24 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     localApprovalActionPreviews.revoke,
     settings.general.experienceMode,
   );
+  const pairingRequestPreview = evaluateLucaLinkPairingRequest({
+    request: LUCA_LINK_PAIRING_REQUEST_FIXTURES.qrPreviewRequest,
+    nowIso: LUCA_LINK_PAIRING_FIXTURE_NOW,
+  });
+  const pairingApprovalPreview = previewLucaLinkPairingApproval({
+    request: LUCA_LINK_PAIRING_REQUEST_FIXTURES.qrPreviewRequest,
+    nowIso: LUCA_LINK_PAIRING_FIXTURE_NOW,
+  });
+  const pairingDenialPreview = previewLucaLinkPairingDenial(
+    LUCA_LINK_PAIRING_REQUEST_FIXTURES.qrPreviewRequest,
+  );
+  const pairingDeviceCenterSummary = createLucaLinkPairingDeviceCenterSummary(
+    pairingRequestPreview,
+  );
+  const pairingDisclosure = createLucaLinkPairingDisclosureSummary(
+    pairingRequestPreview,
+    settings.general.experienceMode,
+  );
 
   const handleApprovalAction = (
     request: LucaLinkApprovalRequest,
@@ -1440,6 +1468,39 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             );
           })}
         </div>
+
+        <SettingsCard>
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-sm font-semibold">Pairing request</p>
+              <p className="mt-1 text-xs leading-relaxed opacity-70">
+                {pairingDisclosure.simpleStatus} · Preview only · No real pairing has started.
+              </p>
+            </div>
+            <StatusBadge status="Preview only" />
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <DetailField label="Preview code" value={pairingDeviceCenterSummary.codePreview} />
+            <DetailField label="Expires" value={pairingDeviceCenterSummary.expiresAt} />
+            <DetailField label="Primary Host approval required" value={pairingDeviceCenterSummary.primaryHostReviewRequired ? "Required" : "Not required"} />
+            <DetailField label="Limited trust" value={pairingDeviceCenterSummary.requestedTrustState} />
+            <DetailField label="Sensitive access remains blocked" value={`${pairingRequestPreview.blockedPermissions.length} blocked · ${pairingRequestPreview.approvalRequiredPermissions.length} approval-required`} />
+            <DetailField label="Approve / deny preview" value={`Approve: ${pairingApprovalPreview.status} · Deny: ${pairingDenialPreview.status}`} />
+          </div>
+          {settings.general.experienceMode !== "basic" && (
+            <p className="mt-3 text-xs opacity-70">
+              Method {pairingDisclosure.requestMethod} · device {pairingDisclosure.deviceType} · host {pairingDisclosure.hostType} · requested permissions {pairingDisclosure.requestedPermissionsCount} · expiration {pairingDisclosure.expirationState}.
+            </p>
+          )}
+          {settings.general.experienceMode === "creator" && (
+            <p className="mt-2 text-xs opacity-70">
+              Request {pairingDisclosure.diagnosticRequestId} · source {pairingDisclosure.diagnosticSourceHostId} · target {pairingDisclosure.diagnosticTargetHostId} · QR payload preview is non-secret and runtime-disabled · {pairingDisclosure.modelFlags?.join(" · ")}.
+            </p>
+          )}
+          <p className="mt-3 text-xs font-semibold opacity-80">
+            No real pairing started. No QR scanner, network discovery, WebRTC, socket, transport, linked-host registry write, or persistent trust change is invoked here.
+          </p>
+        </SettingsCard>
       </SettingsSection>
 
       {deviceCenterTab === "bridge-review" && (
