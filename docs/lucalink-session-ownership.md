@@ -122,3 +122,7 @@ Any future runtime implementation must pass through separate, explicit runtime a
 ## Revocation propagation
 
 When a revoked or blocked host appears in an existing ownership assignment, the revocation-propagation dry run marks that lane invalid and describes the review or future cleanup required. It never changes the assignment. Approval ownership may identify the Primary Host as a suggested fallback, but reassignment remains unperformed and review-required. Voice, display, memory-context, tool-execution, and handoff ownership receive lane-specific invalidation guidance. See [LucaLink Runtime Revocation Propagation Plan and Dry-Run QA Matrix](./lucalink-revocation-propagation-dry-run.md).
+
+## Handoff review bridge (2026-06-09)
+
+The local approval action bridge introduces `createLucaLinkHandoffReviewSummary(...)` as a read-only presentation helper for handoff readiness. It keeps session ownership classification-only, requires Primary Host review when approval ownership is not the Primary Host, blocks revoked or blocked targets, and treats `remote_action` / `tool_execution_owner` as runtime-disabled. No relay, migration, ownership mutation, or transport action is executed. See [LucaLink Local Approval Actions + Handoff Review Bridge](./lucalink-local-approval-actions.md).

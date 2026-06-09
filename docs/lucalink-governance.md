@@ -115,3 +115,7 @@ Future consumers must continue to preserve Primary Host protections and must not
 ## Revocation propagation dry run
 
 The governance terminal states now feed a separate, pure revocation-propagation evaluator. It reports invalid ownership lanes, stale approvals, blocked permissions, pending-handoff outcomes, future adapter cleanup obligations, and read-only Operation Center / Device Center summaries. It does not mutate governance state or invoke runtime code. See [LucaLink Runtime Revocation Propagation Plan and Dry-Run QA Matrix](./lucalink-revocation-propagation-dry-run.md).
+
+## Local approval action review bridge (2026-06-09)
+
+The local approval action bridge adds a preview-only layer above governance for approve, deny, revoke, block, and handoff review decisions. Approval defaults to `trusted_limited`; `remote_action`, `tool_execution`, and `admin_trust` remain runtime-disabled and approval-required. Revoke/block previews compose the revocation propagation dry-run plan, and handoff previews compose governance plus session ownership readiness. No pairing, transport, remote execution, persistence, or runtime disconnect is performed. See [LucaLink Local Approval Actions + Handoff Review Bridge](./lucalink-local-approval-actions.md).

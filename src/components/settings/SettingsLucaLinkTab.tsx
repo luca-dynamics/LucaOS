@@ -78,6 +78,15 @@ import {
   LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION_INBOX,
   summarizeApprovalNotificationInbox,
 } from "../../services/lucaLink/approvalNotifications";
+import {
+  createLucaLinkApprovalDisclosureSummary,
+  LUCA_LINK_APPROVAL_ACTION_APPROVALS,
+  LUCA_LINK_APPROVAL_ACTION_HANDOFF_REVIEWS,
+  LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES,
+  LUCA_LINK_APPROVAL_ACTION_OWNERSHIP_ASSIGNMENTS,
+  LUCA_LINK_APPROVAL_ACTION_PENDING_HANDOFFS,
+  previewLucaLinkApprovalAction,
+} from "../../services/lucaLink/approvalActions";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
@@ -1030,6 +1039,35 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         (token) => token.requestId === selectedApproval.id,
       )
     : undefined;
+  const localApprovalActionRevocationInput = {
+    ownershipAssignments: LUCA_LINK_APPROVAL_ACTION_OWNERSHIP_ASSIGNMENTS,
+    pendingHandoffs: LUCA_LINK_APPROVAL_ACTION_PENDING_HANDOFFS,
+    approvals: LUCA_LINK_APPROVAL_ACTION_APPROVALS,
+  };
+  const localApprovalActionPreviews = {
+    approve: previewLucaLinkApprovalAction({
+      host: LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES.pendingMobileCompanion,
+      action: "approve_host",
+    }),
+    deny: previewLucaLinkApprovalAction({
+      host: LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES.pendingMobileCompanion,
+      action: "deny_host",
+    }),
+    revoke: previewLucaLinkApprovalAction({
+      host: LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES.trustedLimitedDevice,
+      action: "revoke_host",
+      revocationInput: localApprovalActionRevocationInput,
+    }),
+    handoff: previewLucaLinkApprovalAction({
+      host: LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES.displaySurface,
+      action: "review_handoff",
+      handoff: LUCA_LINK_APPROVAL_ACTION_HANDOFF_REVIEWS.primaryHostReviewRequired,
+    }),
+  };
+  const localApprovalActionDisclosure = createLucaLinkApprovalDisclosureSummary(
+    localApprovalActionPreviews.revoke,
+    settings.general.experienceMode,
+  );
 
   const handleApprovalAction = (
     request: LucaLinkApprovalRequest,
@@ -1930,6 +1968,106 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               accentColor={theme.hex}
             />
           </div>
+
+          <SettingsCard>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">
+                  LucaLink Local Approval Actions
+                </p>
+                <p className="mt-1 text-xs opacity-70">
+                  Preview approve, deny, revoke, and handoff outcomes before any
+                  local state change. No runtime action will run.
+                </p>
+              </div>
+              <span
+                className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+                style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+              >
+                Preview only
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <SettingsStatusCard
+                label="Needs your approval"
+                value={localApprovalActionPreviews.approve.decision === "approval_required" ? "Pending" : "Review"}
+                detail="Approve device defaults to Limited trust"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Sensitive access"
+                value="Remains blocked"
+                detail="remote_action/tool_execution/admin_trust disabled"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Revocation preview"
+                value={`${localApprovalActionPreviews.revoke.revocationDryRun?.affectedLanes.length ?? 0} lane(s)`}
+                detail={`${localApprovalActionPreviews.revoke.revocationDryRun?.blockedPermissions.length ?? 0} permissions blocked`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Primary Host review"
+                value={localApprovalActionPreviews.handoff.requiresPrimaryHostReview ? "Required" : "Not required"}
+                detail={`Handoff readiness: ${localApprovalActionPreviews.handoff.handoffReview?.readiness ?? "review-only"}`}
+                accentColor={theme.hex}
+              />
+            </div>
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              {[
+                ["Approve device", localApprovalActionPreviews.approve],
+                ["Deny request", localApprovalActionPreviews.deny],
+                ["Revoke access", localApprovalActionPreviews.revoke],
+                ["Review handoff", localApprovalActionPreviews.handoff],
+              ].map(([label, preview]) => (
+                <div
+                  key={label as string}
+                  className="rounded-lg border p-3"
+                  style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold">{label as string}</p>
+                      <p className="mt-1 text-xs opacity-70">
+                        {(preview as typeof localApprovalActionPreviews.approve).reason}
+                      </p>
+                    </div>
+                    <StatusBadge
+                      status={(preview as typeof localApprovalActionPreviews.approve).previewOnly ? "Preview only" : "Review"}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs opacity-70">
+                    Current: {(preview as typeof localApprovalActionPreviews.approve).currentState.trustState} / {(preview as typeof localApprovalActionPreviews.approve).currentState.connectionState} · Proposed: {(preview as typeof localApprovalActionPreviews.approve).proposedState.trustState} / {(preview as typeof localApprovalActionPreviews.approve).proposedState.connectionState}
+                  </p>
+                  <p className="mt-2 text-xs opacity-70">
+                    Confirmation {(preview as typeof localApprovalActionPreviews.approve).requiresConfirmation ? "required" : "not required"} · Side effects {String((preview as typeof localApprovalActionPreviews.approve).sideEffectsPerformed)} · No runtime action executed
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div
+              className="mt-3 rounded-lg border p-3 text-xs"
+              style={{
+                borderColor: settingsSurfaceTokens.borderSubtle,
+                backgroundColor: settingsSurfaceTokens.glass,
+              }}
+            >
+              <p className="font-semibold">Disclosure mode summary</p>
+              <p className="mt-1 opacity-70">
+                {localApprovalActionDisclosure.simpleStatus} · {localApprovalActionDisclosure.sensitiveAccessCopy} · {localApprovalActionDisclosure.runtimeCopy}
+              </p>
+              {settings.general.experienceMode !== "basic" && (
+                <p className="mt-1 opacity-70">
+                  Affected lanes {localApprovalActionDisclosure.counts?.affectedLanes ?? 0} · stale approvals {localApprovalActionDisclosure.counts?.staleApprovals ?? 0} · blocked permissions {localApprovalActionDisclosure.counts?.blockedPermissions ?? 0}
+                </p>
+              )}
+              {settings.general.experienceMode === "creator" && (
+                <p className="mt-1 opacity-70">
+                  Dry-run adapter actions: {localApprovalActionDisclosure.dryRunAdapterActions?.join(", ") || "none"} · audit preview {localApprovalActionDisclosure.auditEventPreview?.join(", ") || "none"}
+                </p>
+              )}
+            </div>
+          </SettingsCard>
 
           {trustedDevices.length === 0 ? (
             <SettingsCard>
