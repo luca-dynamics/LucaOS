@@ -7,6 +7,11 @@ import React, {
 } from "react";
 import type { LucaExperienceMode } from "./experience/experienceMode";
 import { toHeaderTier } from "./experience/experienceMode";
+import {
+  getDefaultRightPanelModeForExperience,
+  getRightPanelLabelForMode,
+  getVisibleRightPanelModes,
+} from "./experience/dashboardDisclosure";
 import { Capacitor } from "@capacitor/core";
 import { useMobile } from "./hooks/useMobile";
 import { AppProvider, useAppContext } from "./context/AppContext";
@@ -110,12 +115,7 @@ import ActivityPanel from "./components/right-panel/ActivityPanel";
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
 import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
 import { SkillPermissionGrantProvider } from "./components/SkillPermissionGrantContext";
-import {
-  MOBILE_RIGHT_PANEL_LABELS,
-  RIGHT_PANEL_LABELS,
-  RIGHT_PANEL_MODES,
-  isRightPanelMode,
-} from "./components/right-panel/rightPanelModel";
+import { isRightPanelMode } from "./components/right-panel/rightPanelModel";
 import {
   mobileNavigationLabel,
   type MobileNavigationTab,
@@ -541,6 +541,20 @@ function AppContent() {
   } = useAppContext();
 
   const { rightPanelMode, setRightPanelMode, memories } = management;
+  const visibleRightPanelModes = useMemo(
+    () => getVisibleRightPanelModes(experienceMode),
+    [experienceMode],
+  );
+  const displayedRightPanelMode = getDefaultRightPanelModeForExperience(
+    experienceMode,
+    rightPanelMode,
+  );
+
+  useEffect(() => {
+    if (displayedRightPanelMode !== rightPanelMode) {
+      setRightPanelMode(displayedRightPanelMode);
+    }
+  }, [displayedRightPanelMode, rightPanelMode, setRightPanelMode]);
 
   const { approvalRequest, setApprovalRequest } = voiceSystem;
 
@@ -2800,7 +2814,9 @@ function AppContent() {
                 <Icon name={rightToggleIcon(true).name} size={20} />
               </button>
               <div className="mt-2 flex flex-col items-center gap-1 w-full">
-                {ACTIVITY_RAIL_ICONS.map((item) => (
+                {ACTIVITY_RAIL_ICONS.filter((item) =>
+                  visibleRightPanelModes.includes(item.mode),
+                ).map((item) => (
                   <button
                     key={item.mode}
                     type="button"
@@ -2812,7 +2828,7 @@ function AppContent() {
                     }}
                     className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
                     style={
-                      rightPanelMode === item.mode
+                      displayedRightPanelMode === item.mode
                         ? lucaShellActiveControlStyle
                         : lucaShellControlStyle
                     }
@@ -2847,7 +2863,7 @@ function AppContent() {
                     className="flex flex-none border-b"
                     style={lucaShellDividerStyle}
                   >
-                    {RIGHT_PANEL_MODES.map((mode) => (
+                    {visibleRightPanelModes.map((mode) => (
                       <button
                         key={mode}
                         type="button"
@@ -2856,24 +2872,25 @@ function AppContent() {
                           soundService.play("KEYSTROKE");
                         }}
                         className={`flex-1 py-3 text-[13px] font-medium transition-colors relative border-b-2 ${
-                          rightPanelMode === mode
+                          displayedRightPanelMode === mode
                             ? lucaShellClassNames.activeTab
                             : lucaShellClassNames.tab
                         }`}
                         style={
-                          rightPanelMode === mode
+                          displayedRightPanelMode === mode
                             ? lucaShellActiveTabStyle
                             : lucaShellTabStyle
                         }
                       >
-                        {RIGHT_PANEL_LABELS[mode]}
-                        {mode === "CONTROL" && rightPanelMode === "CONTROL" && (
-                          <span
-                            className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full ${lucaShellClassNames.activeIndicator}`}
-                            style={lucaShellActiveIndicatorStyle}
-                            aria-hidden="true"
-                          />
-                        )}
+                        {getRightPanelLabelForMode(experienceMode, mode)}
+                        {mode === "CONTROL" &&
+                          displayedRightPanelMode === "CONTROL" && (
+                            <span
+                              className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full ${lucaShellClassNames.activeIndicator}`}
+                              style={lucaShellActiveIndicatorStyle}
+                              aria-hidden="true"
+                            />
+                          )}
                       </button>
                     ))}
                     <button
@@ -2892,7 +2909,7 @@ function AppContent() {
                   </div>
 
                   <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
-                    {rightPanelMode === "CONTROL" && (
+                    {displayedRightPanelMode === "CONTROL" && (
                       <ControlPanel
                         theme={theme}
                         tasks={management.tasks}
@@ -2900,17 +2917,17 @@ function AppContent() {
                         goals={management.goals}
                       />
                     )}
-                    {rightPanelMode === "ACTIVITY" && (
+                    {displayedRightPanelMode === "ACTIVITY" && (
                       <ActivityPanel theme={theme} />
                     )}
-                    {rightPanelMode === "MEMORY" && (
+                    {displayedRightPanelMode === "MEMORY" && (
                       <MemoryControlPanel
                         theme={theme}
                         memories={memories}
                         setMemories={setMemories}
                       />
                     )}
-                    {rightPanelMode === "LOGS" && (
+                    {displayedRightPanelMode === "LOGS" && (
                       <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
                     )}
                   </div>
@@ -2930,7 +2947,7 @@ function AppContent() {
                   className="flex flex-none border-b"
                   style={lucaMobileDividerStyle}
                 >
-                  {RIGHT_PANEL_MODES.map((mode) => (
+                  {visibleRightPanelModes.map((mode) => (
                     <button
                       key={mode}
                       type="button"
@@ -2939,18 +2956,18 @@ function AppContent() {
                         soundService.play("KEYSTROKE");
                       }}
                       className={`flex-1 py-3 text-[11px] font-medium transition-colors relative border-b-2 ${
-                        rightPanelMode === mode
+                        displayedRightPanelMode === mode
                           ? lucaMobileClassNames.tabActive
                           : lucaMobileClassNames.tab
                       }`}
                       style={
-                        rightPanelMode === mode
+                        displayedRightPanelMode === mode
                           ? lucaMobileActiveTabStyle
                           : lucaMobileInactiveTabStyle
                       }
                     >
-                      {MOBILE_RIGHT_PANEL_LABELS[mode]}
-                      {rightPanelMode === mode && (
+                      {getRightPanelLabelForMode(experienceMode, mode)}
+                      {displayedRightPanelMode === mode && (
                         <span
                           aria-hidden="true"
                           className={`absolute left-1/2 top-1 -translate-x-1/2 h-1 w-5 rounded-full border ${lucaMobileClassNames.indicator}`}
@@ -2962,7 +2979,7 @@ function AppContent() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
-                  {rightPanelMode === "CONTROL" && (
+                  {displayedRightPanelMode === "CONTROL" && (
                     <ControlPanel
                       theme={theme}
                       tasks={management.tasks}
@@ -2970,17 +2987,17 @@ function AppContent() {
                       goals={management.goals}
                     />
                   )}
-                  {rightPanelMode === "ACTIVITY" && (
+                  {displayedRightPanelMode === "ACTIVITY" && (
                     <ActivityPanel theme={theme} />
                   )}
-                  {rightPanelMode === "MEMORY" && (
+                  {displayedRightPanelMode === "MEMORY" && (
                     <MemoryControlPanel
                       theme={theme}
                       memories={memories}
                       setMemories={setMemories}
                     />
                   )}
-                  {rightPanelMode === "LOGS" && (
+                  {displayedRightPanelMode === "LOGS" && (
                     <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
                   )}
                 </div>
