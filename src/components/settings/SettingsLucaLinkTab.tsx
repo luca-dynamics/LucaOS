@@ -52,6 +52,10 @@ import {
   getLucaLinkTrustStateMetadata,
 } from "../../services/lucaLink/lucaLinkLinkedHostRegistry";
 import type { LucaLinkLinkedHostRecord } from "../../services/lucaLink/lucaLinkLinkedHostRegistry";
+import {
+  canUsePermission,
+  getLucaLinkGovernanceDecisionLabel,
+} from "../../services/lucaLink/governance";
 import type {
   LucaLinkAdapterDraft,
   LucaLinkAdapterDraftSummary,
@@ -986,6 +990,28 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   );
   const linkedHostsById = new Map<string, LucaLinkLinkedHostRecord>(
     linkedHosts.map((host) => [host.id, host] as const),
+  );
+  const linkedHostGovernanceById = new Map(
+    linkedHosts.map((host) => [
+      host.id,
+      new Map(
+        host.permissionProfile.permissions.map((permission) => [
+          permission.id,
+          canUsePermission({
+            permission: permission.id,
+            trustState: host.trustState,
+            permissionState: permission.state,
+            approvalState:
+              permission.state === "allowed"
+                ? "approved"
+                : permission.state === "denied"
+                  ? "denied"
+                  : "pending",
+            connectionState: host.connectionState,
+          }),
+        ]),
+      ),
+    ]),
   );
   const deviceCenterDisclosure = getLucaLinkDeviceCenterDisclosure(
     settings.general.experienceMode,
@@ -2019,19 +2045,28 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       <div className="mt-2 flex flex-wrap gap-2">
                         {linkedHostsById
                           .get(device.deviceId)!
-                          .permissionProfile.permissions.map((item) => (
-                            <span
-                              key={item.id}
-                              className="rounded-full border px-2 py-1 text-[11px]"
-                              style={{
-                                borderColor: settingsSurfaceTokens.borderSubtle,
-                              }}
-                              title={item.description}
-                            >
-                              {item.label}: {item.state}
-                              {item.sensitive ? " · sensitive" : ""}
-                            </span>
-                          ))}
+                          .permissionProfile.permissions.map((item) => {
+                            const evaluation = linkedHostGovernanceById
+                              .get(device.deviceId)!
+                              .get(item.id)!;
+                            return (
+                              <span
+                                key={item.id}
+                                className="rounded-full border px-2 py-1 text-[11px]"
+                                style={{
+                                  borderColor:
+                                    settingsSurfaceTokens.borderSubtle,
+                                }}
+                                title={`${item.description} Governance: ${evaluation.reason}.`}
+                              >
+                                {item.label}:{" "}
+                                {getLucaLinkGovernanceDecisionLabel(
+                                  evaluation.decision,
+                                )}
+                                {item.sensitive ? " · sensitive" : ""}
+                              </span>
+                            );
+                          })}
                       </div>
                       <p className="mt-2 text-xs opacity-70">
                         Sensitive access requires approval. This summary does

@@ -15,6 +15,12 @@ describe("lucaLinkArchitectureInvariants", () => {
       "lucaLinkLinkedHostRegistry.ts",
     );
     expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
+      "governance/lucaLinkPermissionEvaluator.ts",
+    );
+    expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
+      "governance/lucaLinkRevocationEvaluator.ts",
+    );
+    expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
       "lucaLinkRuntimeQaChecklist.ts",
     );
     expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
