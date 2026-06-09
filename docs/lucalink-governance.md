@@ -84,11 +84,11 @@ The Device Center may display evaluated states such as `Allowed`, `Pending appro
 
 Trust, approval, and a granted permission are necessary but not sufficient for runtime authority. After terminal, trust, approval, connection, and permission checks pass, the evaluator applies explicit architecture gates:
 
-| Permission | Current result | Stable reason |
-| --- | --- | --- |
-| `remote_action` | `denied` | `remote_action_runtime_disabled` |
-| `tool_execution` | `denied` | `tool_execution_runtime_disabled` |
-| `admin_trust` | `denied` | `admin_trust_requires_primary_host_review` |
+| Permission       | Current result | Stable reason                              |
+| ---------------- | -------------- | ------------------------------------------ |
+| `remote_action`  | `denied`       | `remote_action_runtime_disabled`           |
+| `tool_execution` | `denied`       | `tool_execution_runtime_disabled`          |
+| `admin_trust`    | `denied`       | `admin_trust_requires_primary_host_review` |
 
 Blocked and revoked facts still win before these architecture gates. Pending trust, approval, connection, or permission also remains pending rather than being rewritten as a runtime-disabled denial.
 
@@ -111,3 +111,7 @@ This governance foundation intentionally defers:
 - runtime authority-model changes
 
 Future consumers must continue to preserve Primary Host protections and must not treat a presentation decision as an execution mechanism.
+
+## Revocation propagation dry run
+
+The governance terminal states now feed a separate, pure revocation-propagation evaluator. It reports invalid ownership lanes, stale approvals, blocked permissions, pending-handoff outcomes, future adapter cleanup obligations, and read-only Operation Center / Device Center summaries. It does not mutate governance state or invoke runtime code. See [LucaLink Runtime Revocation Propagation Plan and Dry-Run QA Matrix](./lucalink-revocation-propagation-dry-run.md).

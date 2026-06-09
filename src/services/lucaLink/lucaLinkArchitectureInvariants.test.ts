@@ -24,6 +24,9 @@ describe("lucaLinkArchitectureInvariants", () => {
       "sessionOwnership/lucaLinkSessionOwnershipEvaluator.ts",
     );
     expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
+      "revocationPropagation/lucaLinkRevocationPropagationEvaluator.ts",
+    );
+    expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
       "lucaLinkRuntimeQaChecklist.ts",
     );
     expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
