@@ -4,6 +4,8 @@ import { Icon } from "../ui/Icon";
 import { LucaSettings, settingsService } from "../../services/settingsService";
 import { modelManager, LocalModel } from "../../services/ModelManagerService";
 import { SettingsAdvancedDisclosure } from "./SettingsLayout";
+import { lucaCapabilities } from "../../config/lucaReleaseTarget";
+import { WebUnavailableState } from "../ui/WebUnavailableState";
 
 interface SettingsBrainTabProps {
   settings: LucaSettings;
@@ -32,6 +34,8 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
   >([]);
 
   useEffect(() => {
+    if (!lucaCapabilities.localModelScan) return;
+
     const loadLocalModels = async () => {
       const models = await modelManager.getModels();
       setLocalBrainModels(
@@ -292,6 +296,8 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
   };
 
   const refreshOllama = async () => {
+    if (!lucaCapabilities.localOllamaInstall) return;
+
     setIsRefreshingOllama(true);
     const status = await modelManager.getOllamaModels();
     const installed = await modelManager.isOllamaInstalled();
@@ -300,7 +306,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
   };
 
   useEffect(() => {
-    refreshOllama();
+    if (lucaCapabilities.localOllamaInstall) refreshOllama();
   }, []);
 
   // Update Balancer Status & Latency Pulse
@@ -1329,54 +1335,62 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     : "var(--app-text-muted)",
                 }}
               />
-              {ollamaStatus.available ? "RUNNING" : "OFFLINE"}
+              {!lucaCapabilities.localOllamaInstall
+                ? "DESKTOP ONLY"
+                : ollamaStatus.available
+                  ? "RUNNING"
+                  : "OFFLINE"}
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-2">
-            {!ollamaStatus.available ? (
-              ollamaStatus.installed ? (
-                <button
-                  onClick={async () => {
-                    await modelManager.startOllama();
-                    setTimeout(refreshOllama, 3000);
-                  }}
-                  className={`flex-1 bg-[var(--app-bg-tint)] hover:bg-white/10 border-[var(--app-border-main)] border rounded-lg py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all text-[var(--app-text-main)]`}
-                >
-                  Start Service
-                </button>
+          {lucaCapabilities.localOllamaInstall ? (
+            <div className="flex items-center justify-between gap-2">
+              {!ollamaStatus.available ? (
+                ollamaStatus.installed ? (
+                  <button
+                    onClick={async () => {
+                      await modelManager.startOllama();
+                      setTimeout(refreshOllama, 3000);
+                    }}
+                    className={`flex-1 bg-[var(--app-bg-tint)] hover:bg-white/10 border-[var(--app-border-main)] border rounded-lg py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all text-[var(--app-text-main)]`}
+                  >
+                    Start Service
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      await modelManager.installOllama();
+                      setTimeout(refreshOllama, 5000);
+                    }}
+                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all"
+                  >
+                    Install Ollama
+                  </button>
+                )
               ) : (
-                <button
-                  onClick={async () => {
-                    await modelManager.installOllama();
-                    setTimeout(refreshOllama, 5000);
+                <div className="text-[11px] text-[var(--app-text-muted)] italic">
+                  Local model service is active on port 11434.
+                </div>
+              )}
+              <button
+                onClick={refreshOllama}
+                disabled={isRefreshingOllama}
+                className="p-1.5 hover:bg-white/5 rounded-lg transition-all"
+              >
+                <Icon
+                  name="Activity"
+                  className={`w-3 h-3 ${isRefreshingOllama ? "animate-spin" : ""}`}
+                  style={{
+                    color: isRefreshingOllama
+                      ? theme.hex
+                      : "rgba(107, 114, 128, 0.7)",
                   }}
-                  className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all"
-                >
-                  Install Ollama
-                </button>
-              )
-            ) : (
-              <div className="text-[11px] text-[var(--app-text-muted)] italic">
-                Local model service is active on port 11434.
-              </div>
-            )}
-            <button
-              onClick={refreshOllama}
-              disabled={isRefreshingOllama}
-              className="p-1.5 hover:bg-white/5 rounded-lg transition-all"
-            >
-              <Icon
-                name="Activity"
-                className={`w-3 h-3 ${isRefreshingOllama ? "animate-spin" : ""}`}
-                style={{
-                  color: isRefreshingOllama
-                    ? theme.hex
-                    : "rgba(107, 114, 128, 0.7)",
-                }}
-              />
-            </button>
-          </div>
+                />
+              </button>
+            </div>
+          ) : (
+            <WebUnavailableState featureName="Local Ollama installation and service control" />
+          )}
         </motion.div>
       </motion.div>
 

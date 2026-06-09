@@ -7,6 +7,8 @@ export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), "");
+  const isVercelRelease =
+    env.VITE_LUCA_RUNTIME_TARGET === "vercel" || env.VERCEL === "1";
 
   return {
     optimizeDeps: {
@@ -35,7 +37,7 @@ export default defineConfig(({ mode }) => {
         jsxRuntime: "automatic",
       }),
     ],
-    base: "./",
+    base: isVercelRelease ? "/" : "./",
     server: {
       port: 3000,
       host: "127.0.0.1",
