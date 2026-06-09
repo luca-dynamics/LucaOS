@@ -108,3 +108,7 @@ It does not write Operation Center events or add runtime actions.
 - Cross-device memory.
 - Full settings workflow.
 - Permanent audit log writes.
+
+## Persistence boundary follow-up
+
+The Personal Intelligence persistence boundary contract now consumes confirmed review results as dry-run candidates only. A confirmed result can become persistence-eligible only when `confirmed: true`; cancelled results and blocked previews remain blocked. The boundary adds audit-event and rollback-plan contracts while preserving `persistencePerformed: false`, `mutationPerformed: false`, and `sideEffectsPerformed: false`. Actual persistence remains deferred.

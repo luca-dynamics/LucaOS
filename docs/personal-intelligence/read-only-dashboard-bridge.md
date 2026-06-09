@@ -127,3 +127,7 @@ The following remain intentionally out of scope:
 ## Follow-on interactive review workflow bridge
 
 A small local review workflow child has been added to the Personal Intelligence read-only panel. It uses the supplied graph and existing preview helpers to show review items, suggested action previews, and confirm/cancel controls. The controls are local UI workflow controls only: confirmation records intent, persistence remains deferred, and the bridge still does not retrieve live memory, mutate the graph, sync, call tools, call models, or create Settings replacements.
+
+## Persistence boundary follow-up
+
+Dashboard and Operation Center-style summaries remain read-only. The persistence boundary exposes a pure summary helper for dry-run candidate status, but it does not write Operation Center events, mutate dashboard state, or persist memory. Basic/Pro/Creator disclosure rules continue to hide protected raw values.
