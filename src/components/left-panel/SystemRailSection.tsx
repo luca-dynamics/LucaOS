@@ -5,6 +5,7 @@ import SystemHealthCard from "./SystemHealthCard";
 interface SystemRailSectionProps {
   isMobile: boolean;
   connectionTier: "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
+  showRuntimeDiagnostics?: boolean;
 }
 
 /**
@@ -18,11 +19,12 @@ interface SystemRailSectionProps {
 const SystemRailSection: React.FC<SystemRailSectionProps> = ({
   isMobile,
   connectionTier,
+  showRuntimeDiagnostics = true,
 }) => {
   return (
     <div className="space-y-4">
       <SystemHealthCard connectionTier={connectionTier} />
-      {!isMobile && (
+      {!isMobile && showRuntimeDiagnostics && (
         <RuntimeDiagnosticsPanel
           title="Runtime Status"
           collapsible

@@ -1,10 +1,18 @@
 import React from "react";
+import type { LucaExperienceMode } from "../../experience/experienceMode";
+import {
+  shouldCollapseLeftPanelGroup,
+  shouldShowLeftPanelGroup,
+} from "../../experience/dashboardDisclosure";
 import SystemMonitor from "../SystemMonitor";
 import SystemRailSection from "../left-panel/SystemRailSection";
 import QuickActionsSection from "../left-panel/QuickActionsSection";
 import DevicesSection from "../left-panel/DevicesSection";
 import ToolLauncherSection from "../left-panel/ToolLauncherSection";
-import type { LeftPanelToolActionKey, LeftPanelToolItem } from "../left-panel/leftPanelModel";
+import type {
+  LeftPanelToolActionKey,
+  LeftPanelToolItem,
+} from "../left-panel/leftPanelModel";
 import { soundService } from "../../services/soundService";
 import {
   lucaMobileContentSurfaceStyle,
@@ -15,6 +23,7 @@ import {
 import { apiUrl } from "../../config/api";
 
 interface OperationsSidebarProps {
+  experienceMode: LucaExperienceMode;
   isMobile: boolean;
   activeMobileTab: string;
   isListeningAmbient: boolean;
@@ -68,6 +77,7 @@ interface OperationsSidebarProps {
  * the existing callbacks below.
  */
 const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
+  experienceMode,
   isMobile,
   activeMobileTab,
   isListeningAmbient,
@@ -226,6 +236,54 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
     onLockdown?.();
   };
 
+  const showRuntimeDiagnostics = shouldShowLeftPanelGroup(
+    experienceMode,
+    "runtime-diagnostics",
+  );
+  const collapseAdvancedTools = shouldCollapseLeftPanelGroup(
+    experienceMode,
+    "advanced-tools",
+  );
+
+  const systemSection = (
+    <SystemRailSection
+      isMobile={isMobile}
+      connectionTier={connectionTier}
+      showRuntimeDiagnostics={showRuntimeDiagnostics}
+    />
+  );
+  const quickActionsSection = (
+    <QuickActionsSection
+      isLight={isLight}
+      isLightCream={isLightCream}
+      onAgentMode={() => {
+        setShowAgentMode(true);
+        soundService.play("KEYSTROKE");
+      }}
+      onCognitiveEngine={() => {
+        setShowThoughtProcess(true);
+        soundService.play("KEYSTROKE");
+      }}
+      onLockdown={handleLockdown}
+    />
+  );
+  const devicesSection = (
+    <DevicesSection
+      devices={devices}
+      isLight={isLight}
+      onControlClick={handleDeviceControlClick}
+    />
+  );
+  const toolLauncherSection = (
+    <ToolLauncherSection
+      installedModules={installedModules}
+      isLight={isLight}
+      isLightCream={isLightCream}
+      collapseAdvancedGroups={collapseAdvancedTools}
+      onToolSelect={handleToolSelect}
+    />
+  );
+
   return (
     <section
       className={`${
@@ -253,54 +311,50 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           className="flex items-center justify-between p-4 border-b"
           style={lucaMobileDividerStyle}
         >
-          <h2 className="font-black tracking-[0.3em] text-xs italic uppercase" style={lucaMobileMutedTextStyle}>
+          <h2
+            className="font-black tracking-[0.3em] text-xs italic uppercase"
+            style={lucaMobileMutedTextStyle}
+          >
             System Center
           </h2>
         </div>
       )}
 
-      {/* SYSTEM — live monitor graph */}
-      <div
-        className="flex-none h-[28%] p-4 border-b"
-        style={isMobile ? { ...lucaMobileContentSurfaceStyle, ...lucaMobileDividerStyle } : undefined}
-      >
-        <SystemMonitor
-          audioListenMode={isListeningAmbient}
-          connected={connectionTier !== "OFFLINE"}
-          connectionTier={connectionTier}
-        />
-      </div>
+      {/* Detailed live telemetry is disclosed only in Pro/Creator. */}
+      {showRuntimeDiagnostics && (
+        <div
+          className="flex-none h-[28%] p-4 border-b"
+          style={
+            isMobile
+              ? { ...lucaMobileContentSurfaceStyle, ...lucaMobileDividerStyle }
+              : undefined
+          }
+        >
+          <SystemMonitor
+            audioListenMode={isListeningAmbient}
+            connected={connectionTier !== "OFFLINE"}
+            connectionTier={connectionTier}
+          />
+        </div>
+      )}
 
-      {/* Scrollable rail: SYSTEM health · QUICK ACTIONS · DEVICES · TOOLS */}
+      {/* Basic prioritizes common actions; Pro/Creator retain the operator order. */}
       <div className="flex-1 p-4 overflow-y-auto space-y-6 no-scrollbar">
-        <SystemRailSection isMobile={isMobile} connectionTier={connectionTier} />
-
-        <QuickActionsSection
-          isLight={isLight}
-          isLightCream={isLightCream}
-          onAgentMode={() => {
-            setShowAgentMode(true);
-            soundService.play("KEYSTROKE");
-          }}
-          onCognitiveEngine={() => {
-            setShowThoughtProcess(true);
-            soundService.play("KEYSTROKE");
-          }}
-          onLockdown={handleLockdown}
-        />
-
-        <DevicesSection
-          devices={devices}
-          isLight={isLight}
-          onControlClick={handleDeviceControlClick}
-        />
-
-        <ToolLauncherSection
-          installedModules={installedModules}
-          isLight={isLight}
-          isLightCream={isLightCream}
-          onToolSelect={handleToolSelect}
-        />
+        {experienceMode === "basic" ? (
+          <>
+            {quickActionsSection}
+            {devicesSection}
+            {toolLauncherSection}
+            {systemSection}
+          </>
+        ) : (
+          <>
+            {systemSection}
+            {quickActionsSection}
+            {devicesSection}
+            {toolLauncherSection}
+          </>
+        )}
       </div>
     </section>
   );

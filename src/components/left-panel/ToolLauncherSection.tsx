@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Icon } from "../ui/Icon";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { skillRegistryService } from "../../services/skills/SkillRegistryService";
@@ -15,6 +15,7 @@ interface ToolLauncherSectionProps {
   installedModules: ReadonlyArray<string>;
   isLight: boolean;
   isLightCream: boolean;
+  collapseAdvancedGroups?: boolean;
   onToolSelect: (tool: LeftPanelToolItem) => void;
 }
 
@@ -27,6 +28,7 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
   installedModules,
   isLight,
   isLightCream,
+  collapseAdvancedGroups = false,
   onToolSelect,
 }) => {
   const groups = useMemo(
@@ -46,6 +48,18 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
   const [expanded, setExpanded] = useState<Record<ToolGroupId, boolean>>(
     getDefaultExpandedGroups,
   );
+
+  useEffect(() => {
+    if (!collapseAdvancedGroups) return;
+
+    setExpanded((current) => ({
+      ...current,
+      vision: false,
+      finance: false,
+      visual: false,
+      installed: false,
+    }));
+  }, [collapseAdvancedGroups]);
 
   const toggle = (id: ToolGroupId) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));

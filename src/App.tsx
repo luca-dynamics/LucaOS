@@ -2593,6 +2593,7 @@ function AppContent() {
                 </button>
                 <SafeComponent componentName="OperationsSidebar">
                   <OperationsSidebar
+                    experienceMode={experienceMode}
                     theme={theme}
                     isMobile={false}
                     activeMobileTab=""
@@ -2651,6 +2652,7 @@ function AppContent() {
               style={lucaMobileContentSurfaceStyle}
             >
               <OperationsSidebar
+                experienceMode={experienceMode}
                 theme={theme}
                 isMobile={true}
                 activeMobileTab="SYSTEM"

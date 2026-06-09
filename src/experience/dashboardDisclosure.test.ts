@@ -4,7 +4,10 @@ import {
   getDashboardDisclosure,
   getDefaultRightPanelModeForExperience,
   getRightPanelLabelForMode,
+  getVisibleLeftPanelGroups,
   getVisibleRightPanelModes,
+  isAdvancedLeftPanelGroup,
+  shouldCollapseLeftPanelGroup,
   shouldShowLeftPanelGroup,
 } from "./dashboardDisclosure";
 
@@ -18,7 +21,7 @@ describe("dashboard disclosure", () => {
     expect(canShowRightPanelMode("basic", "LOGS")).toBe(false);
     expect(getDashboardDisclosure("basic")).toMatchObject({
       showAdvancedDiagnostics: false,
-      showAdvancedTools: false,
+      showAdvancedTools: true,
       showTraceByDefault: false,
       collapseAdvancedLeftPanelGroups: true,
     });
@@ -49,14 +52,57 @@ describe("dashboard disclosure", () => {
     expect(getRightPanelLabelForMode("creator", "LOGS")).toBe("Trace");
   });
 
-  it("keeps core left-panel groups available while defining advanced disclosure", () => {
-    expect(shouldShowLeftPanelGroup("basic", "apps")).toBe(true);
-    expect(shouldShowLeftPanelGroup("basic", "devices")).toBe(true);
-    expect(shouldShowLeftPanelGroup("basic", "skills")).toBe(true);
-    expect(shouldShowLeftPanelGroup("basic", "advanced-tools")).toBe(false);
-    expect(shouldShowLeftPanelGroup("pro", "advanced-tools")).toBe(true);
-    expect(shouldShowLeftPanelGroup("creator", "runtime-diagnostics")).toBe(
-      true,
+  it("keeps common left-panel groups prominent and available in Basic", () => {
+    expect(getVisibleLeftPanelGroups("basic")).toEqual([
+      "quick-actions",
+      "devices",
+      "apps",
+      "skills",
+      "system-health",
+      "advanced-tools",
+    ]);
+
+    for (const group of [
+      "quick-actions",
+      "devices",
+      "apps",
+      "skills",
+    ] as const) {
+      expect(shouldShowLeftPanelGroup("basic", group)).toBe(true);
+      expect(shouldCollapseLeftPanelGroup("basic", group)).toBe(false);
+    }
+  });
+
+  it("de-emphasizes only advanced operational groups in Basic", () => {
+    expect(isAdvancedLeftPanelGroup("advanced-tools")).toBe(true);
+    expect(isAdvancedLeftPanelGroup("runtime-diagnostics")).toBe(true);
+    expect(isAdvancedLeftPanelGroup("apps")).toBe(false);
+    expect(shouldShowLeftPanelGroup("basic", "advanced-tools")).toBe(true);
+    expect(shouldCollapseLeftPanelGroup("basic", "advanced-tools")).toBe(true);
+    expect(shouldShowLeftPanelGroup("basic", "runtime-diagnostics")).toBe(
+      false,
+    );
+    expect(shouldCollapseLeftPanelGroup("basic", "runtime-diagnostics")).toBe(
+      false,
     );
   });
+
+  it.each(["pro", "creator"] as const)(
+    "exposes every left-panel group without mode-required collapse in %s mode",
+    (mode) => {
+      expect(getVisibleLeftPanelGroups(mode)).toEqual([
+        "system-health",
+        "runtime-diagnostics",
+        "quick-actions",
+        "devices",
+        "apps",
+        "skills",
+        "advanced-tools",
+      ]);
+      for (const group of getVisibleLeftPanelGroups(mode)) {
+        expect(shouldShowLeftPanelGroup(mode, group)).toBe(true);
+        expect(shouldCollapseLeftPanelGroup(mode, group)).toBe(false);
+      }
+    },
+  );
 });

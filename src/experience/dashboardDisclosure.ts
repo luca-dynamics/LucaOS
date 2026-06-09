@@ -12,6 +12,8 @@ export type DashboardLeftPanelGroup =
   | "apps"
   | "devices"
   | "skills"
+  | "quick-actions"
+  | "system-health"
   | "advanced-tools"
   | "runtime-diagnostics";
 
@@ -40,7 +42,7 @@ const DISCLOSURE_BY_MODE: Record<LucaExperienceMode, DashboardDisclosure> = {
     visibleRightPanelModes: BASIC_RIGHT_PANEL_MODES,
     showAdvancedDiagnostics: false,
     showCreatorDiagnostics: false,
-    showAdvancedTools: false,
+    showAdvancedTools: true,
     showTraceByDefault: false,
     collapseAdvancedLeftPanelGroups: true,
   },
@@ -69,9 +71,32 @@ const RIGHT_PANEL_LABELS: Record<DashboardRightPanelMode, string> = {
   LOGS: "Trace",
 };
 
+const CORE_LEFT_PANEL_GROUPS: readonly DashboardLeftPanelGroup[] = [
+  "quick-actions",
+  "devices",
+  "apps",
+  "skills",
+  "system-health",
+];
+
 const ADVANCED_LEFT_PANEL_GROUPS: readonly DashboardLeftPanelGroup[] = [
   "advanced-tools",
   "runtime-diagnostics",
+];
+
+const FULL_LEFT_PANEL_GROUPS: readonly DashboardLeftPanelGroup[] = [
+  "system-health",
+  "runtime-diagnostics",
+  "quick-actions",
+  "devices",
+  "apps",
+  "skills",
+  "advanced-tools",
+];
+
+const BASIC_LEFT_PANEL_GROUPS: readonly DashboardLeftPanelGroup[] = [
+  ...CORE_LEFT_PANEL_GROUPS,
+  "advanced-tools",
 ];
 
 export function getDashboardDisclosure(
@@ -133,17 +158,38 @@ export function shouldCollapseAdvancedLeftPanelGroups(
   return getDashboardDisclosure(mode).collapseAdvancedLeftPanelGroups;
 }
 
+/** Whether a left-panel group is an operational/diagnostic surface. */
+export function isAdvancedLeftPanelGroup(
+  groupId: DashboardLeftPanelGroup,
+): boolean {
+  return ADVANCED_LEFT_PANEL_GROUPS.includes(groupId);
+}
+
 /**
- * Phase 1 contract only: core apps, devices, and skills remain available in all
- * modes. Advanced groups are ready for future collapse/de-emphasis, but App does
- * not enforce this left-panel policy yet.
+ * Ordered logical groups for the current mode. Basic keeps common actions first,
+ * moves health lower, and omits only the clearly diagnostic runtime surface.
+ * Tool capabilities remain mounted through the Apps/Skills/advanced launcher.
  */
+export function getVisibleLeftPanelGroups(
+  mode: LucaExperienceMode,
+): readonly DashboardLeftPanelGroup[] {
+  return mode === "basic" ? BASIC_LEFT_PANEL_GROUPS : FULL_LEFT_PANEL_GROUPS;
+}
+
 export function shouldShowLeftPanelGroup(
   mode: LucaExperienceMode,
   groupId: DashboardLeftPanelGroup,
 ): boolean {
+  return getVisibleLeftPanelGroups(mode).includes(groupId);
+}
+
+export function shouldCollapseLeftPanelGroup(
+  mode: LucaExperienceMode,
+  groupId: DashboardLeftPanelGroup,
+): boolean {
   return (
-    !ADVANCED_LEFT_PANEL_GROUPS.includes(groupId) ||
-    !shouldCollapseAdvancedLeftPanelGroups(mode)
+    shouldShowLeftPanelGroup(mode, groupId) &&
+    isAdvancedLeftPanelGroup(groupId) &&
+    shouldCollapseAdvancedLeftPanelGroups(mode)
   );
 }

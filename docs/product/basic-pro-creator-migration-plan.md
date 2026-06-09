@@ -13,7 +13,7 @@
 - Calm-by-default everywhere; mode controls **density/disclosure**, not loudness.
 - The user always makes the final mode choice; Luca only recommends.
 
-## Current state (after Phase 1 implementation)
+## Current state (after dashboard disclosure Phase 2)
 
 - **Build layer** ([`layerBoundary.ts`](../../src/config/layerBoundary.ts),
   [`buildConfig.ts`](../../src/config/buildConfig.ts)) already distinguishes
@@ -42,9 +42,12 @@
   desktop and mobile. Basic shows Overview, Timeline, and Memory; Pro/Creator also
   show Trace. Selecting Basic while Trace is active safely returns the display to
   Overview without deleting logs or changing the Trace runtime.
-- Left-panel disclosure is contract-only in this phase: core apps, devices, and
-  skills remain available, while advanced groups are identified for later safe
-  collapse/de-emphasis.
+- **Left Panel Disclosure Phase 2** now makes the rail calmer in Basic without
+  changing any launcher callback, permission, registry, or runtime. Quick Actions,
+  Devices, Apps, and Skills remain immediately available; the compact health card
+  remains visible lower in the rail. Advanced tool groups start collapsed, while
+  the live system monitor and detailed runtime diagnostics are omitted from the
+  Basic presentation. Pro and Creator retain the full operator-oriented rail.
 - **No** onboarding cards, capability scan, full cross-surface dashboard gating,
   or Creator key/profile infrastructure exist yet.
 
@@ -115,10 +118,17 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
   back to Overview. The `LOGS` enum, Trace panel implementation, accumulated logs,
   tools, memories, settings, model configuration, and installed capabilities remain
   intact; this is display-only disclosure.
-- Basic does not yet enforce left-panel hiding. The contract keeps apps, devices,
-  and skills available and marks advanced tools/runtime diagnostics for a later
-  safe collapse or de-emphasis pass.
-- Deferred: broader left/center/header status disclosure and per-mode treatment of
+- Left Panel Disclosure Phase 2 applies the contract conservatively. Basic orders
+  Quick Actions and Devices before the launcher, keeps Apps and Skills in the open
+  Core launcher group, keeps the compact system-health summary lower in the rail,
+  and collapses advanced launcher groups by default. Only clearly diagnostic
+  surfaces—the live system monitor and detailed runtime diagnostics—are omitted
+  from the Basic presentation. Switching to Pro or Creator exposes the complete
+  current rail; no tool, callback, permission, registry entry, or runtime state is
+  removed or modified.
+- Deferred: finer-grained classification inside the existing Core launcher,
+  softened per-mode labels, broader left/center/header status disclosure, and
+  per-mode treatment of
   VoiceHUD, Memory internals, LucaLink, VisualCore, and other diagnostic surfaces.
 - Continue to prefer additive disclosure (show more for Pro/Creator) over
   destructive hiding. Final acceptance remains complete desktop/mobile surface-table
