@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "build": "mkdir -p dist && cp -R ./* dist/ && rm -rf dist/dist"
+  }
+}
