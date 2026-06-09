@@ -109,9 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="modal-content-close-x" aria-label="Close">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
-                <div class="showcase-badge">Sovereign AI</div>
-                <h2 class="waitlist-title">Join the Waitlist</h2>
-                <p class="waitlist-subtitle">Be the first to try out the version when it live. Choose your preferred kernel versions.</p>
+                <div class="showcase-badge">LucaOS Early Access</div>
+                <h2 class="waitlist-title">Join Early Access</h2>
+                <p class="waitlist-subtitle">Tell us which LucaOS runtime previews and companion surfaces matter most to you.</p>
                 
                 <form id="modal-waitlist-form">
                     <div class="input-group">
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     
                     <div class="platform-selection">
-                        <p class="platform-selection-label">Target Kernels</p>
+                        <p class="platform-selection-label">Runtime Interest</p>
                         <div class="platform-grid">
                             <label class="platform-option">
                                 <input type="checkbox" name="platform" value="macos">
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     
-                    <button type="submit" class="waitlist-submit">Reserve Spot</button>
+                    <button type="submit" class="waitlist-submit">Join Early Access</button>
                 </form>
 
                 <div id="waitlist-success-content" style="display: none;">
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
                     <h3 class="waitlist-title">You're on the list!</h3>
-                    <p class="waitlist-subtitle">We'll notify you as soon as the kernel for your selected platforms is ready for testing.</p>
+                    <p class="waitlist-subtitle">We'll share preview availability and onboarding details for your selected platforms.</p>
                     <button class="modal-close">Close</button>
                 </div>
             </div>
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const checked = form.querySelectorAll('input[name="platform"]:checked');
             if (checked.length === 0) {
-                alert('Please select at least one kernel version.');
+                alert('Please select at least one platform.');
                 return;
             }
             
