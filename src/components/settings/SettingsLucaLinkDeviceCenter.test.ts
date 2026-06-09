@@ -31,8 +31,12 @@ const continuationRecordsSource = lucaLinkSource.slice(
 
 describe("Settings LucaLink Device Center", () => {
   it("renders the LucaLink runtime authority boundary near the dry-run governance cards", () => {
-    expect(lucaLinkSource).toContain('import { SettingsLucaLinkRuntimeAuthority }');
-    expect(lucaLinkSource).toContain('<SettingsLucaLinkRuntimeAuthority accentColor={theme.hex} />');
+    expect(lucaLinkSource).toContain(
+      "import { SettingsLucaLinkRuntimeAuthority }",
+    );
+    expect(lucaLinkSource).toContain(
+      "<SettingsLucaLinkRuntimeAuthority accentColor={theme.hex} />",
+    );
   });
 
   it("renders the Device Center shell with overview cards and tabs", () => {
@@ -184,7 +188,9 @@ describe("Settings LucaLink Device Center", () => {
   });
 
   it("renders local device trust controls and conservative safety copy", () => {
-    expect(lucaLinkSource).toContain("Local LucaLink device trust management");
+    expect(lucaLinkSource).toContain(
+      "Linked hosts, trust state, and scoped permission summaries",
+    );
     expect(lucaLinkSource).toContain("Rename");
     expect(lucaLinkSource).toContain("Revoke locally");
     expect(lucaLinkSource).toContain("Block locally");
@@ -196,6 +202,9 @@ describe("Settings LucaLink Device Center", () => {
       "Admin does not bypass Primary Host approvals",
     );
     expect(lucaLinkSource).toContain("Conversation/WebRTC limited");
+    expect(lucaLinkSource).toContain("Current device");
+    expect(lucaLinkSource).toContain("Sensitive access requires approval");
+    expect(lucaLinkSource).toContain("Permission profile");
   });
 
   it("does not expose unsafe owner assignment or reserved device authority text", () => {

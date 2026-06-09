@@ -12,6 +12,9 @@ describe("lucaLinkArchitectureInvariants", () => {
     expect(LUCA_LINK_RESERVED_CREATOR_TERMS).toEqual(["Origin", "origin"]);
     expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain("lucaLinkAdapterDrafts.ts");
     expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
+      "lucaLinkLinkedHostRegistry.ts",
+    );
+    expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
       "lucaLinkRuntimeQaChecklist.ts",
     );
     expect(LUCA_LINK_MODEL_ONLY_MODULES).toContain(
