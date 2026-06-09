@@ -118,3 +118,7 @@ Fixtures use fictional host and session identifiers only. They contain no creden
 - real handoff.
 
 A future runtime adapter must treat revoked/blocked state as terminal and consume these obligations before trusting cached ownership, approval, permission, or session state. This document and evaluator do not grant runtime authority.
+
+## Local approval action composition (2026-06-09)
+
+Revoke and block previews now compose this dry-run evaluator through the local approval action bridge. Device Center can show affected lanes, stale approvals, blocked permissions, adapter dry-run actions, and audit event previews while preserving `sideEffectsPerformed: false` and `previewOnly: true`. Adapter cleanup remains guidance only; no runtime disconnect, adapter execution, ownership mutation, or durable audit write occurs. See [LucaLink Local Approval Actions + Handoff Review Bridge](./lucalink-local-approval-actions.md).
