@@ -105,3 +105,7 @@ A UI panel is intentionally deferred. No existing surface could honestly apply t
 - Runtime planning and runtime authority integration.
 - Model routing and tool execution.
 - Full Personal Intelligence dashboard and interactive approval workflow.
+
+## Follow-on interactive review workflow foundation
+
+A later preview-to-confirm foundation now composes these Memory Controls helpers without changing their policy authority. The interactive workflow lets a user select a queue item, preview a suggested action, then confirm or cancel a local intent object. Confirmation still reports `persistencePerformed: false` and `mutationPerformed: false`; durable writes remain deferred.

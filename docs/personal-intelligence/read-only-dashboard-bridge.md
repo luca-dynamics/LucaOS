@@ -123,3 +123,7 @@ The following remain intentionally out of scope:
 - a full Personal Intelligence dashboard;
 - interactive approval workflows;
 - direct Settings deep links until an existing navigation contract can be passed without broad App coupling.
+
+## Follow-on interactive review workflow bridge
+
+A small local review workflow child has been added to the Personal Intelligence read-only panel. It uses the supplied graph and existing preview helpers to show review items, suggested action previews, and confirm/cancel controls. The controls are local UI workflow controls only: confirmation records intent, persistence remains deferred, and the bridge still does not retrieve live memory, mutate the graph, sync, call tools, call models, or create Settings replacements.
