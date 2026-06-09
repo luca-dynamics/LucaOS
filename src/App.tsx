@@ -2927,6 +2927,7 @@ function AppContent() {
                         theme={theme}
                         memories={memories}
                         setMemories={setMemories}
+                        experienceMode={experienceMode}
                       />
                     )}
                     {displayedRightPanelMode === "LOGS" && (
@@ -2997,6 +2998,7 @@ function AppContent() {
                       theme={theme}
                       memories={memories}
                       setMemories={setMemories}
+                      experienceMode={experienceMode}
                     />
                   )}
                   {displayedRightPanelMode === "LOGS" && (

@@ -50,3 +50,5 @@ export * from "./memoryGraph";
 export * from "./continuity";
 
 export * from "./memoryControls";
+
+export * from "./dashboard";

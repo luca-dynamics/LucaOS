@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import type { MemoryNode } from "../../types";
+import type { LucaExperienceMode } from "../../experience/experienceMode";
+import { personalIntelligenceDashboardGraphFixture } from "../../personal-intelligence/dashboard";
 import { memoryService } from "../../services/memoryService";
 import { memoryGovernanceService } from "../../services/memory/MemoryGovernanceService";
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
@@ -11,16 +13,18 @@ import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
 import { formatMemoryValue, isRenderableMemory } from "./rightPanelModel";
 import { setHexAlpha } from "../../config/themeColors";
+import PersonalIntelligenceReadOnlyPanel from "./PersonalIntelligenceReadOnlyPanel";
 
 interface MemoryControlPanelProps {
   theme: { hex: string; primary: string; border: string };
   memories: MemoryNode[];
   setMemories: React.Dispatch<React.SetStateAction<MemoryNode[]>>;
+  experienceMode: LucaExperienceMode;
 }
 
 type MemoryViewMode = "Archive" | "Governance" | "Proposals" | "Graph";
 
-const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories, setMemories }) => {
+const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories, setMemories, experienceMode }) => {
   const [viewMode, setViewMode] = useState<MemoryViewMode>("Archive");
   const [revision, setRevision] = useState(0);
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
@@ -40,6 +44,12 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
 
   return (
     <div className="space-y-3">
+      <PersonalIntelligenceReadOnlyPanel
+        graph={personalIntelligenceDashboardGraphFixture}
+        mode={experienceMode}
+        fixture
+      />
+
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
