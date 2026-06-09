@@ -285,7 +285,7 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
         </button>
-        <a href="#waitlist" class="nav-cta">Get Early Access</a>
+        <a href="#waitlist" class="nav-cta"><span class="nav-cta-desktop">Get Early Access</span><span class="nav-cta-mobile">Early Access</span></a>
         <!-- Hamburger (mobile only) -->
         <button class="hamburger" aria-label="Open Menu" onclick="document.getElementById('mobileNav').classList.toggle('open')">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -308,7 +308,7 @@
         <a href="#voice" onclick="document.getElementById('mobileNav').classList.remove('open')">VoiceHUD</a>
         <a href="#waitlist" onclick="document.getElementById('mobileNav').classList.remove('open')">Early Access</a>
       </div>
-      <a href="#waitlist" class="mobile-nav-cta" onclick="document.getElementById('mobileNav').classList.remove('open')">Get Early Access</a>
+      <a href="#waitlist" class="mobile-nav-cta" onclick="document.getElementById('mobileNav').classList.remove('open')">Early Access</a>
     </div>
 
     <!-- Hero Section -->
@@ -322,32 +322,29 @@
         L.U.C.A — LARGE UNIVERSAL CONTROL AGENTS
       </div>
 
-      <h1 class="hero-title">
-        Your personal AI<br />operating system.
-      </h1>
+      <h1 class="hero-title">Your personal AI operating system.</h1>
 
       <p class="hero-subtitle">
-        LucaOS brings cloud, local, and BYOK intelligence into one governed
-        operating layer across Web, Desktop, and Mobile — with memory, voice,
-        browser, tools, and linked-device control under user approval.
+        LucaOS gives your AI a memory, a voice, a browser, tools, and a governed
+        way to work across your digital life — so it can understand context,
+        help you act, and stay under your control.
       </p>
 
       <div class="hero-platform-badges" aria-label="LucaOS platform and intelligence support">
         <span>Web control surface</span>
         <span>Desktop runtime</span>
         <span>Mobile companion</span>
-        <span>Cloud · Local · BYOK</span>
       </div>
 
       <div class="download-group hero-actions">
-        <a href="#waitlist" class="download-btn hero-primary">Join Early Access</a>
+        <a href="download/mac.html" class="download-btn hero-primary">Download Preview</a>
         <a href="https://app.lucaos.space" class="download-btn secondary hero-secondary">
           Launch App <span aria-hidden="true">→</span>
         </a>
       </div>
 
       <div class="integrations-strip">
-        <span class="strip-label">INTEGRATES WITH</span>
+        <span class="strip-label">Works across your tools, models, and devices.</span>
         <div class="strip-logos">
           <!-- First set of logos -->
           <span class="strip-item">
@@ -444,6 +441,32 @@
             <span>Notion</span>
           </span>
         </div>
+      </div>
+    </section>
+
+
+    <!-- Lightweight use cases -->
+    <section class="use-cases-section" aria-labelledby="use-cases-title">
+      <div class="use-cases-header">
+        <span class="feature-badge">BUILT AROUND YOUR WORK</span>
+        <h2 id="use-cases-title">Ways to use LucaOS</h2>
+      </div>
+      <div class="use-cases-grid">
+        <article class="use-case-card">
+          <span class="use-case-number">01</span>
+          <h3>Luca for personal work</h3>
+          <p>Remember projects, preferences, tools, and context across sessions.</p>
+        </article>
+        <article class="use-case-card">
+          <span class="use-case-number">02</span>
+          <h3>Luca for developers</h3>
+          <p>Coordinate code, browser work, terminal tasks, local models, and approvals.</p>
+        </article>
+        <article class="use-case-card">
+          <span class="use-case-number">03</span>
+          <h3>Luca for devices</h3>
+          <p>Link Web, Desktop, and Mobile through approval-first control.</p>
+        </article>
       </div>
     </section>
 
