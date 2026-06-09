@@ -147,9 +147,11 @@ describe("OverlayApprovalResolutionService", () => {
       OverlayApprovalResolutionService.prototype,
     ).filter((name) => name !== "constructor" && !name.startsWith("#"));
 
-    const allowed = new Set(["getDiagnosticsSummary", "listRecords", "resolveApproval"]);
-    const publicMethods = methods.filter((name) => allowed.has(name));
-    expect(publicMethods.sort()).toEqual([...allowed].sort());
+    const allowed = ["getDiagnosticsSummary", "listRecords", "resolveApproval"];
+    const unexpectedMethods = methods.filter((name) => !allowed.includes(name));
+
+    expect(methods.sort()).toEqual([...allowed].sort());
+    expect(unexpectedMethods).toEqual([]);
     for (const name of [
       "execute",
       "run",
