@@ -38,16 +38,23 @@
   existing `general.theme` field. It does not run during startup or migration and
   does not touch background opacity/blur, tools, memories, model configuration,
   installed capabilities, or other settings.
-- **No** onboarding cards, capability scan, full dashboard gating, or Creator
-  key/profile infrastructure exist yet.
+- **Dashboard gating Phase 1** now applies mode-aware right-panel disclosure on
+  desktop and mobile. Basic shows Overview, Timeline, and Memory; Pro/Creator also
+  show Trace. Selecting Basic while Trace is active safely returns the display to
+  Overview without deleting logs or changing the Trace runtime.
+- Left-panel disclosure is contract-only in this phase: core apps, devices, and
+  skills remain available, while advanced groups are identified for later safe
+  collapse/de-emphasis.
+- **No** onboarding cards, capability scan, full cross-surface dashboard gating,
+  or Creator key/profile infrastructure exist yet.
 
 ## Mapping reference
 
 | Conceptual | Build-layer `LucaAudienceTier` | Experience mode |
-| --- | --- | --- |
-| Normal | `public_standard` | `basic` |
-| Tactical | `public_tactical` | `pro` |
-| Origin | `origin` | `creator` |
+| ---------- | ------------------------------ | --------------- |
+| Normal     | `public_standard`              | `basic`         |
+| Tactical   | `public_tactical`              | `pro`           |
+| Origin     | `origin`                       | `creator`       |
 
 Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
 `audienceTierToExperienceMode` rather than re-deriving these anywhere.
@@ -55,6 +62,7 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
 ## Phases
 
 ### Phase 0 — Foundation (this PR)
+
 - `LucaExperienceMode` type + ordered list.
 - Labels/info, visual defaults, onboarding-selectable set.
 - Legacy + audience-tier mappings; Header tier bridges.
@@ -62,6 +70,7 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
 - Unit tests for all pure helpers. **No behavior change.**
 
 ### Phase 1 — Persisted mode + Header wiring — Implemented
+
 - `general.experienceMode` is persisted in `LUCA_SETTINGS_V1` (default `basic`).
 - Recognized legacy values are canonicalized during settings load.
 - Dashboard state follows settings changes and feeds `toHeaderTier(experienceMode)`
@@ -70,18 +79,21 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
   (`LUCA OS` ↔ `L.U.C.A OS`) without applying broader dashboard gating.
 
 ### Phase 2 — Local capability scan service
+
 - Local, explainable scan producing `{ recommendation: "basic" | "pro", reasons[] }`.
 - Privacy-respecting; permission-gated; never auto-selects.
 - Acceptance: scan returns a recommendation + human-readable reasons; unit-tested
   against representative signal fixtures.
 
 ### Phase 3 — First-run onboarding cards
+
 - Basic/Pro cards from `getOnboardingSelectableModes()`; show recommendation;
   persist the user's choice. Creator never shown here.
 - Acceptance: a fresh install reaches the dashboard in the chosen mode; choosing
   the non-recommended mode is honored.
 
 ### Phase 4 — Settings switch — Partially implemented
+
 - Settings → General exposes a polished, compact Experience Mode selector with
   Basic/Pro descriptions, an explicit current selection, and keyboard-safe native
   buttons.
@@ -93,14 +105,27 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
 - Deferred: Basic dashboard hiding, Pro re-scan behavior, and the final dedicated
   Experience settings information architecture.
 
-### Phase 5 — Dashboard gating
-- Apply the per-mode surface tables (header/left/center/right + VoiceHUD, Memory,
-  LucaLink, VisualCore) on **desktop and mobile**.
-- Prefer additive disclosure (show more for Pro/Creator) over destructive hiding.
-- Acceptance: each mode matches the documented surface table; no orphaned
-  controls; mobile remains thumb-friendly.
+### Phase 5 — Dashboard gating — Partially implemented
+
+- A pure dashboard disclosure contract now defines right-panel visibility, friendly
+  labels, diagnostic/tool disclosure flags, and future left-panel group policy.
+- On desktop (expanded tabs and collapsed rail) and mobile DATA tabs, Basic shows
+  Overview, Timeline, and Memory. Pro and Creator additionally expose Trace.
+- If Trace is selected when the user switches to Basic, the dashboard safely falls
+  back to Overview. The `LOGS` enum, Trace panel implementation, accumulated logs,
+  tools, memories, settings, model configuration, and installed capabilities remain
+  intact; this is display-only disclosure.
+- Basic does not yet enforce left-panel hiding. The contract keeps apps, devices,
+  and skills available and marks advanced tools/runtime diagnostics for a later
+  safe collapse or de-emphasis pass.
+- Deferred: broader left/center/header status disclosure and per-mode treatment of
+  VoiceHUD, Memory internals, LucaLink, VisualCore, and other diagnostic surfaces.
+- Continue to prefer additive disclosure (show more for Pro/Creator) over
+  destructive hiding. Final acceptance remains complete desktop/mobile surface-table
+  coverage with no orphaned controls and thumb-friendly mobile behavior.
 
 ### Phase 6 — Creator access wiring — Build signal partially implemented
+
 - `CreatorAccessState` is derived from `LUCA_AUDIENCE_TIER` and
   `LUCA_SURFACE_LAYER`; public builds keep Creator hidden and origin builds may
   expose it.
@@ -110,6 +135,7 @@ Use `mapLegacyTierToExperienceMode`, `experienceModeToAudienceTier`, and
   builds; `reason` explains the decision.
 
 ### Phase 7 — Visual defaults application — Partially implemented
+
 - Only an intentional change to a different mode in Settings applies visual
   defaults. Startup, settings load, and legacy migration never reset appearance.
 - The current settings schema safely supports the canonical product-theme mapping:

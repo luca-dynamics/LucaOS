@@ -1,6 +1,7 @@
 import type { MemoryNode, ToolExecutionLog } from "../../types";
+import type { DashboardRightPanelMode } from "../../experience/dashboardDisclosure";
 
-export type RightPanelMode = "CONTROL" | "ACTIVITY" | "MEMORY" | "LOGS";
+export type RightPanelMode = DashboardRightPanelMode;
 
 export const RIGHT_PANEL_MODES: RightPanelMode[] = [
   "CONTROL",
