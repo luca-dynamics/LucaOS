@@ -48,3 +48,5 @@ export * from "./runtimeAuthority";
 export * from "./memoryGraph";
 
 export * from "./continuity";
+
+export * from "./memoryControls";
