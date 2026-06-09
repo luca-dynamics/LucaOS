@@ -84,7 +84,7 @@ export interface OverlaySurfaceCapabilityFlags {
   displaysOnly: boolean;
   /** Renders web/browser content inside the overlay. */
   displaysBrowserContent: boolean;
-  /** Can be opened/driven by a remote command path (IPC / Luca Link / remote). */
+  /** Can be opened/driven by a remote command path (IPC / LucaLink / remote). */
   receivesRemoteCommands: boolean;
   /** Opens an external surface (remote desktop, native settings, device, etc.). */
   opensExternalSurface: boolean;
