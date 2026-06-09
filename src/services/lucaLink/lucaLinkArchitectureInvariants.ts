@@ -15,6 +15,7 @@ export const LUCA_LINK_MODEL_ONLY_MODULES = Object.freeze([
   "lucaLinkRuntimeEnforcementGate.ts",
   "lucaLinkGuestSessionPolicy.ts",
   "lucaLinkDeviceTrustRegistry.ts",
+  "lucaLinkLinkedHostRegistry.ts",
   "lucaLinkHandoff.ts",
   "lucaLinkHostConnectionModel.ts",
   "lucaLinkHostAdaptation.ts",

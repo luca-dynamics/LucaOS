@@ -44,6 +44,14 @@ import type {
   LucaLinkBridgeReviewSummary,
 } from "../../services/lucaLink/lucaLinkBridgeReview";
 import type { LucaLinkEmbodiedCapabilityEnvelope } from "../../services/lucaLink/lucaLinkEmbodiedHostPolicy";
+import {
+  createLucaLinkLinkedHostRecord,
+  getLucaLinkConnectionStateMetadata,
+  getLucaLinkDeviceCenterDisclosure,
+  getLucaLinkDeviceTypeLabel,
+  getLucaLinkTrustStateMetadata,
+} from "../../services/lucaLink/lucaLinkLinkedHostRegistry";
+import type { LucaLinkLinkedHostRecord } from "../../services/lucaLink/lucaLinkLinkedHostRegistry";
 import type {
   LucaLinkAdapterDraft,
   LucaLinkAdapterDraftSummary,
@@ -933,7 +941,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const currentDeviceId =
     deviceCenterSnapshot.state.deviceId ?? linkState.deviceId ?? undefined;
   const connectedDevices = deviceCenterSnapshot.state.connectedDevices;
-  const trustedDevices =
+  const trustedDevices: LucaLinkTrustedDeviceRecord[] =
     deviceCenterSnapshot.trustedDevices.length > 0
       ? deviceCenterSnapshot.trustedDevices
       : connectedDevices.map((device) => ({
@@ -973,6 +981,15 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           warnings: [],
           errors: [],
         }));
+  const linkedHosts = trustedDevices.map((device) =>
+    createLucaLinkLinkedHostRecord(device, currentDeviceId),
+  );
+  const linkedHostsById = new Map<string, LucaLinkLinkedHostRecord>(
+    linkedHosts.map((host) => [host.id, host] as const),
+  );
+  const deviceCenterDisclosure = getLucaLinkDeviceCenterDisclosure(
+    settings.general.experienceMode,
+  );
   const pendingHighOrCritical =
     (deviceCenterSnapshot.approvalSummary.byRisk.high ?? 0) +
     (deviceCenterSnapshot.approvalSummary.byRisk.critical ?? 0);
@@ -1651,7 +1668,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           <SettingsLucaLinkDryRunHandoff accentColor={theme.hex} />
           <SettingsLucaLinkRuntimeAuthority accentColor={theme.hex} />
           <SettingsLucaLinkTransportPermissions accentColor={theme.hex} />
-          <SettingsLucaLinkAdapterFileInstallPermissions accentColor={theme.hex} />
+          <SettingsLucaLinkAdapterFileInstallPermissions
+            accentColor={theme.hex}
+          />
           <SettingsLucaLinkSensorBridge accentColor={theme.hex} />
           <SettingsCard>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -1838,7 +1857,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {deviceCenterTab === "devices" && (
         <SettingsSection
           title="Devices"
-          description="Local LucaLink device trust management. Rename, trust, revoke, and block controls update in-memory state only."
+          description="Linked hosts, trust state, and scoped permission summaries. Sensitive access always requires explicit approval."
           icon="Smartphone"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -1900,9 +1919,22 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 <SettingsCard key={device.deviceId}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <p className="text-base font-semibold">
-                        {device.displayName || "Unnamed LucaLink device"}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-base font-semibold">
+                          {device.displayName || "Unnamed LucaLink device"}
+                        </p>
+                        {linkedHostsById.get(device.deviceId)
+                          ?.isCurrentDevice && (
+                          <span
+                            className="rounded-full border px-2 py-0.5 text-[11px] font-semibold"
+                            style={{
+                              borderColor: settingsSurfaceTokens.borderSubtle,
+                            }}
+                          >
+                            Current device
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-1 break-all font-mono text-xs opacity-70">
                         {device.deviceId}
                       </p>
@@ -1915,18 +1947,33 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <StatusBadge status={device.status} />
-                      <StatusBadge status={`trust ${device.trustLevel}`} />
+                      <StatusBadge
+                        status={
+                          getLucaLinkConnectionStateMetadata(
+                            linkedHostsById.get(device.deviceId)!
+                              .connectionState,
+                          ).label
+                        }
+                      />
+                      <StatusBadge
+                        status={
+                          getLucaLinkTrustStateMetadata(
+                            linkedHostsById.get(device.deviceId)!.trustState,
+                          ).label
+                        }
+                      />
                     </div>
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <DetailField
-                      label="Type"
-                      value={device.deviceType || "Unknown"}
+                      label="Device type"
+                      value={getLucaLinkDeviceTypeLabel(
+                        linkedHostsById.get(device.deviceId)!.deviceType,
+                      )}
                     />
                     <DetailField
-                      label="Role"
+                      label="Host type"
                       value={
                         device.role === "primary-host"
                           ? "Primary Host"
@@ -1938,26 +1985,60 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       value={formatLucaLinkTimestamp(device.lastSeenAt)}
                     />
                     <DetailField
-                      label="Capabilities"
-                      value={
-                        device.capabilities.length
-                          ? device.capabilities.join(", ")
-                          : "Conversation baseline only"
-                      }
+                      label="Allowed permissions"
+                      value={`${linkedHostsById.get(device.deviceId)!.permissionProfile.allowedCount} allowed · ${linkedHostsById.get(device.deviceId)!.permissionProfile.pendingCount} require approval`}
                     />
-                    <DetailField
-                      label="Denied sensitive capabilities"
-                      value={
-                        device.deniedCapabilities.length
-                          ? device.deniedCapabilities.join(", ")
-                          : "None"
-                      }
-                    />
-                    <DetailField
-                      label="Permissions"
-                      value={`conversation ${device.permissionSummary.conversation ? "on" : "off"} · notifications ${device.permissionSummary.notification ? "on" : "off"} · sensitive tools ${device.permissionSummary.shell || device.permissionSummary.files || device.permissionSummary.code || device.permissionSummary.browser ? "limited" : "off"}`}
-                    />
+                    {deviceCenterDisclosure.showSessionStatus && (
+                      <DetailField
+                        label="Session status"
+                        value={
+                          linkedHostsById.get(device.deviceId)!
+                            .activeSessionId ?? "No active session recorded"
+                        }
+                      />
+                    )}
+                    {deviceCenterDisclosure.showTrustDiagnostics && (
+                      <DetailField
+                        label="Registry diagnostics"
+                        value={`${device.capabilities.length} capabilities · ${device.deniedCapabilities.length} denied boundaries`}
+                      />
+                    )}
                   </div>
+
+                  {deviceCenterDisclosure.showPermissionDetails && (
+                    <div
+                      className="mt-3 rounded-lg border p-3"
+                      style={{
+                        borderColor: settingsSurfaceTokens.borderSubtle,
+                        backgroundColor: settingsSurfaceTokens.glass,
+                      }}
+                    >
+                      <p className="text-xs font-semibold">
+                        Permission profile
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {linkedHostsById
+                          .get(device.deviceId)!
+                          .permissionProfile.permissions.map((item) => (
+                            <span
+                              key={item.id}
+                              className="rounded-full border px-2 py-1 text-[11px]"
+                              style={{
+                                borderColor: settingsSurfaceTokens.borderSubtle,
+                              }}
+                              title={item.description}
+                            >
+                              {item.label}: {item.state}
+                              {item.sensitive ? " · sensitive" : ""}
+                            </span>
+                          ))}
+                      </div>
+                      <p className="mt-2 text-xs opacity-70">
+                        Sensitive access requires approval. This summary does
+                        not grant runtime authority.
+                      </p>
+                    </div>
+                  )}
 
                   {(device.warnings.length > 0 || device.errors.length > 0) && (
                     <div
