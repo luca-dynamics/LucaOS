@@ -3567,10 +3567,10 @@ body {
 /* --- Founder review landing hero and feature polish --- */
 .hero-title {
   display: grid;
-  gap: clamp(0.28rem, 0.8vw, 0.65rem);
+  gap: clamp(0.32rem, 0.75vw, 0.72rem);
   justify-items: center;
-  max-width: min(1040px, calc(100vw - 2rem));
-  line-height: 0.98;
+  max-width: min(1080px, calc(100vw - 2rem));
+  line-height: 0.96;
 }
 
 .hero-title-line {
@@ -3580,16 +3580,18 @@ body {
 }
 
 .hero-title-primary {
-  max-width: 18ch;
-  font-size: clamp(2.1rem, 4.2vw, 4.35rem);
-  letter-spacing: -0.045em;
+  max-width: 30ch;
+  font-size: clamp(1.8rem, 3.35vw, 3.75rem);
+  letter-spacing: -0.038em;
+  line-height: 1.02;
   opacity: 0.94;
 }
 
 .hero-title-impact {
-  max-width: 17ch;
-  font-size: clamp(2.45rem, 5.35vw, 5.6rem);
-  letter-spacing: -0.052em;
+  max-width: 16.5ch;
+  font-size: clamp(3rem, 6.25vw, 6.35rem);
+  letter-spacing: -0.058em;
+  line-height: 0.92;
 }
 
 .hero-subtitle {
@@ -3661,13 +3663,14 @@ body {
   }
 
   .hero-title-primary {
-    max-width: 15ch;
-    font-size: clamp(1.85rem, 8.1vw, 3rem);
+    max-width: 26ch;
+    font-size: clamp(1.35rem, 6vw, 2.35rem);
+    letter-spacing: -0.032em;
   }
 
   .hero-title-impact {
-    max-width: 14ch;
-    font-size: clamp(2.12rem, 9.4vw, 3.45rem);
+    max-width: 13.5ch;
+    font-size: clamp(2.55rem, 12vw, 4.35rem);
   }
 
   .hero-subtitle {

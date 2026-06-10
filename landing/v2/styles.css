@@ -521,18 +521,20 @@ html[data-theme="light"] .brand-icon-light {
 }
 
 .hero-title-primary {
-  max-width: 18ch;
-  margin: 0 auto clamp(0.28rem, 0.8vw, 0.58rem);
-  font-size: clamp(34px, 4.2vw, 58px);
-  letter-spacing: -0.055em;
+  max-width: 30ch;
+  margin: 0 auto clamp(0.3rem, 0.75vw, 0.65rem);
+  font-size: clamp(29px, 3.35vw, 54px);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
   opacity: 0.94;
 }
 
 .hero-title-impact {
-  max-width: 17ch;
+  max-width: 16.5ch;
   margin: 0 auto;
-  font-size: clamp(40px, 5.25vw, 72px);
-  letter-spacing: -0.068em;
+  font-size: clamp(48px, 6.25vw, 92px);
+  line-height: 0.92;
+  letter-spacing: -0.072em;
 }
 
 .hero-lede {
@@ -594,13 +596,14 @@ html[data-theme="light"] .brand-icon-light {
   }
 
   .hero-title-primary {
-    max-width: 15ch;
-    font-size: clamp(30px, 7.8vw, 46px);
+    max-width: 26ch;
+    font-size: clamp(22px, 6vw, 38px);
+    letter-spacing: -0.038em;
   }
 
   .hero-title-impact {
-    max-width: 14ch;
-    font-size: clamp(34px, 9vw, 54px);
+    max-width: 13.5ch;
+    font-size: clamp(40px, 12vw, 66px);
   }
 }
 
@@ -621,5 +624,86 @@ html[data-theme="light"] .brand-icon-light {
   .nav-cta {
     padding-inline: 0.72rem;
     font-size: 0.66rem;
+  }
+}
+
+
+/* Keep the v2 hero copy layered over the hologram field, matching the main landing composition. */
+.hero-visual::after {
+  content: "";
+  position: absolute;
+  inset: -2rem -1rem;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, color-mix(in srgb, var(--bg) 72%, transparent) 0%, transparent 26%, transparent 66%, color-mix(in srgb, var(--bg) 76%, transparent) 100%),
+    radial-gradient(ellipse at 50% 50%, transparent 0 34%, color-mix(in srgb, var(--bg) 28%, transparent) 74%);
+}
+
+.hero-copy {
+  z-index: 3;
+  padding-inline: clamp(0.5rem, 2vw, 1rem);
+  text-shadow: 0 16px 44px rgba(0, 0, 0, 0.46);
+}
+
+.hero-copy-bottom {
+  padding-bottom: clamp(0.25rem, 1vw, 1rem);
+}
+
+@media (max-width: 980px) {
+  .hero-visual {
+    min-height: 780px;
+    place-items: center;
+  }
+
+  .hero-copy {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100%, 760px);
+  }
+
+  .hero-copy-top {
+    top: 0;
+    align-self: auto;
+  }
+
+  .hero-copy-bottom {
+    bottom: 0;
+    align-self: auto;
+  }
+
+  .hologram-wrap {
+    width: min(540px, 92vw);
+    margin: 0;
+    opacity: 0.78;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-visual {
+    min-height: 720px;
+  }
+
+  .hero-copy {
+    width: 100%;
+    padding-inline: 0.25rem;
+  }
+
+  .hero-copy-top {
+    top: 0.25rem;
+  }
+
+  .hero-copy-bottom {
+    bottom: 0.25rem;
+  }
+
+  .hologram-wrap {
+    width: min(390px, 108vw);
+    opacity: 0.68;
+  }
+
+  .hero-lede {
+    max-width: 32rem;
   }
 }
