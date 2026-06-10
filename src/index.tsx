@@ -32,17 +32,18 @@ const params = new URLSearchParams(window.location.search);
 const requestedMode = params.get("mode");
 const webAccessPolicy = readCurrentWebAccessPolicy();
 const renderPublicWebShell = shouldRenderPublicWebShell(webAccessPolicy);
+const queryModeBlocked = isPublicWebQueryModeBlocked(requestedMode, webAccessPolicy);
 
 // Temporary public preview gate for app.lucaos.space until API/auth/session
 // boundaries exist. In web/vercel mode this must win before query-param
 // surfaces such as ?mode=widget, ?mode=hologram, ?mode=mobile, or ?mode=tv.
-if (isPublicWebQueryModeBlocked(requestedMode, webAccessPolicy)) {
+if (queryModeBlocked) {
   console.warn(
     `[BOOT] Public web access policy blocked query mode: ${requestedMode}`,
   );
 }
 
-const canUseQueryMode = !renderPublicWebShell;
+const canUseQueryMode = !renderPublicWebShell && !queryModeBlocked;
 const isWidgetMode = canUseQueryMode && requestedMode === "widget";
 const isChatMode = canUseQueryMode && requestedMode === "chat";
 const isHologramMode = canUseQueryMode && requestedMode === "hologram";

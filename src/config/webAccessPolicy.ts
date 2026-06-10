@@ -25,6 +25,7 @@ export interface WebAccessPolicy {
   hasConfiguredPublicApi: boolean;
   hasAuthenticatedSession: boolean;
   shouldRenderPublicShell: boolean;
+  shouldRenderBrowserSafeApp: boolean;
   blockedQueryModes: readonly LucaPublicQueryMode[];
   reason: string;
 }
@@ -80,6 +81,7 @@ export const resolveWebAccessPolicy = (
       hasConfiguredPublicApi,
       hasAuthenticatedSession,
       shouldRenderPublicShell: false,
+      shouldRenderBrowserSafeApp: false,
       blockedQueryModes: [],
       reason: "Local desktop/dev runtime is outside the public web preview gate.",
     };
@@ -92,6 +94,7 @@ export const resolveWebAccessPolicy = (
       hasConfiguredPublicApi,
       hasAuthenticatedSession,
       shouldRenderPublicShell: true,
+      shouldRenderBrowserSafeApp: false,
       blockedQueryModes: PUBLIC_WEB_BLOCKED_QUERY_MODES,
       reason:
         "Public web mode requires both VITE_LUCA_RELEASE_TARGET=web and VITE_LUCA_RUNTIME_TARGET=vercel.",
@@ -105,7 +108,8 @@ export const resolveWebAccessPolicy = (
       hasConfiguredPublicApi,
       hasAuthenticatedSession,
       shouldRenderPublicShell: false,
-      blockedQueryModes: [],
+      shouldRenderBrowserSafeApp: true,
+      blockedQueryModes: PUBLIC_WEB_BLOCKED_QUERY_MODES,
       reason:
         "A future authenticated API/session boundary is present for the public web app.",
     };
@@ -116,10 +120,11 @@ export const resolveWebAccessPolicy = (
     isExplicitWebVercelTarget,
     hasConfiguredPublicApi,
     hasAuthenticatedSession,
-    shouldRenderPublicShell: true,
+    shouldRenderPublicShell: false,
+    shouldRenderBrowserSafeApp: true,
     blockedQueryModes: PUBLIC_WEB_BLOCKED_QUERY_MODES,
     reason:
-      "Public web/vercel mode defaults to the safe unauthenticated preview shell until API/auth/session is implemented.",
+      "Public web/vercel mode renders the browser-safe LucaOS interface shell; runtime actions remain disabled until API/auth/session is implemented.",
   };
 };
 
@@ -151,5 +156,5 @@ export const isPublicWebQueryModeBlocked = (
   mode: string | null,
   policy: WebAccessPolicy,
 ): boolean =>
-  policy.shouldRenderPublicShell &&
-  PUBLIC_WEB_BLOCKED_QUERY_MODES.includes(mode as LucaPublicQueryMode);
+  (policy.shouldRenderPublicShell || policy.shouldRenderBrowserSafeApp) &&
+  policy.blockedQueryModes.includes(mode as LucaPublicQueryMode);
