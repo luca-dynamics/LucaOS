@@ -21,10 +21,12 @@
         <span>LucaOS</span>
       </a>
 
-      <nav class="desktop-nav" aria-label="Main navigation">
-        <a href="#host-inheritance">Host</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#embodiment">Embodiment</a>
+        <a href="#host-inheritance">Hosts</a>
         <a href="#presence">Presence</a>
-        <a href="#governed-autonomy">Governance</a>
+        <a href="#integrations">Integrations</a>
+        <a href="#governed-autonomy">Control</a>
       </nav>
 
       <div class="header-actions">
@@ -33,38 +35,95 @@
           <svg class="theme-icon sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
         </button>
         <a class="button button-small" href="/download/mac.html">Download <span class="header-cta-label">Preview</span></a>
+        <a class="button button-small button-secondary header-web-cta" href="https://app.lucaos.space">Launch <span class="header-cta-label">Web</span></a>
       </div>
     </div>
   </header>
 
   <main id="main">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="shell hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow"><span aria-hidden="true"></span>Embodied AI Operating System</p>
-          <h1 id="hero-title">Give intelligence a body.</h1>
-          <p class="hero-lede">LucaOS lets personal AI inhabit your devices, remember your context, speak through your screens, and act with your permission.</p>
-          <div class="button-row">
-            <a class="button" href="/download/mac.html">Download Preview <span aria-hidden="true">↘</span></a>
-            <a class="button button-secondary" href="https://app.lucaos.space">Launch Web Preview <span aria-hidden="true">↗</span></a>
-          </div>
-          <p class="platform-note">Desktop preview · Web control surface · Mobile companion</p>
-        </div>
-
+    <section class="hero" id="embodiment" aria-labelledby="hero-title">
+      <div class="shell hero-stage">
         <div class="hero-visual" aria-label="LucaOS hologram presence">
           <div class="hero-atmosphere" aria-hidden="true"></div>
           <div class="hero-orbit orbit-one" aria-hidden="true"></div>
           <div class="hero-orbit orbit-two" aria-hidden="true"></div>
+          <div class="hero-copy hero-copy-top">
+            <p class="eyebrow"><span aria-hidden="true"></span>Embodied AI Operating System</p>
+            <h1 id="hero-title">Give intelligence a body.</h1>
+          </div>
           <div class="hologram-wrap">
             <img src="/hologram.png" alt="The LucaOS holographic face" width="1000" height="1000">
+          </div>
+          <div class="hero-copy hero-copy-bottom">
+            <p class="hero-lede">LucaOS lets personal AI inhabit your devices, remember your context, speak through your screens, and act with your permission.</p>
+            <div class="button-row hero-actions-row">
+              <a class="button" href="/download/mac.html">Download Preview <span aria-hidden="true">↘</span></a>
+              <a class="button button-secondary" href="https://app.lucaos.space">Launch Web Preview <span aria-hidden="true">↗</span></a>
+            </div>
+            <p class="platform-note">Desktop preview · Web control surface · Mobile companion</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="manifest" aria-labelledby="manifest-title">
-      <div class="shell manifest-inner">
-        <h2 id="manifest-title">An operating layer for AI that remembers, moves, appears, and acts with permission.</h2>
+    <section class="category-proof" aria-labelledby="category-title">
+      <div class="shell category-panel glass-panel">
+        <div class="category-copy">
+          <p class="eyebrow"><span aria-hidden="true"></span>Platform category</p>
+          <h2 id="category-title">One embodied layer. Across every host.</h2>
+          <p>LucaOS connects memory, voice, tools, models, browser context, screens, and governed action into the system where you work.</p>
+        </div>
+        <div class="capability-rail" aria-label="LucaOS capability rail">
+          <span>Memory</span>
+          <span>Voice</span>
+          <span>Models</span>
+          <span>Browser</span>
+          <span>Tools</span>
+          <span>Devices</span>
+          <span>Approval</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="integrations-section" id="integrations" aria-labelledby="integrations-title">
+      <div class="shell integrations-panel">
+        <div class="section-heading integrations-heading">
+          <p class="eyebrow"><span aria-hidden="true"></span>Integrations</p>
+          <h2 id="integrations-title">Built to inhabit the systems you already use.</h2>
+          <p>LucaOS is built to work across model providers, local runtimes, browsers, tools, and device surfaces — with connection and approval kept visible.</p>
+        </div>
+        <div class="logo-showcase" aria-label="Supported systems and surfaces">
+          <div class="logo-group">
+            <p>Models</p>
+            <div class="logo-grid">
+              <span>Luca Prime</span>
+              <span>OpenAI</span>
+              <span>Anthropic</span>
+              <span>Gemini</span>
+              <span>Local Models</span>
+              <span>BYOK</span>
+            </div>
+          </div>
+          <div class="logo-group">
+            <p>Runtime</p>
+            <div class="logo-grid">
+              <span>Ollama</span>
+              <span>Local runtime</span>
+              <span>Desktop</span>
+            </div>
+          </div>
+          <div class="logo-group">
+            <p>Surfaces</p>
+            <div class="logo-grid">
+              <span>Browser</span>
+              <span>Files</span>
+              <span>Tools</span>
+              <span>Mobile</span>
+              <span>Web</span>
+              <span>LucaScreen</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -179,9 +238,9 @@
     <section class="final-cta" aria-labelledby="cta-title">
       <div class="shell final-cta-inner glass-panel">
         <div class="cta-copy">
-          <p class="eyebrow">Preview LucaOS</p>
-          <h2 id="cta-title">Give intelligence a place to live.</h2>
-          <p>Preview the embodied AI operating system for memory, voice, models, screens, devices, and governed action.</p>
+          <p class="eyebrow"><span aria-hidden="true"></span>Preview LucaOS</p>
+          <h2 id="cta-title">Start with LucaOS.</h2>
+          <p>Preview the embodied AI operating system for hosts, memory, presence, models, and governed action.</p>
           <div class="button-row">
             <a class="button" href="/download/mac.html">Download Preview <span aria-hidden="true">↘</span></a>
             <a class="button button-secondary" href="https://app.lucaos.space">Launch Web Preview <span aria-hidden="true">↗</span></a>
@@ -193,12 +252,49 @@
   </main>
 
   <footer class="site-footer">
-    <div class="shell footer-inner">
-      <p>© <span id="year">2026</span> LucaOS. Embodied AI operating system.</p>
-      <div>
-        <a href="mailto:hey@lucaos.space">Contact</a>
-        <a href="/v2/">Landing v2</a>
+    <div class="shell footer-grid">
+      <div class="footer-brand-col">
+        <a class="brand footer-brand" href="/v2/" aria-label="LucaOS Landing v2 home">
+          <span class="brand-mark"><img class="brand-logo brand-logo-dark" src="/icon.png" alt="" width="32" height="32"><img class="brand-logo brand-logo-light" src="/icon_dark.png" alt="" width="32" height="32"></span>
+          <span>LucaOS</span>
+        </a>
+        <p>LucaOS is the embodied AI operating system for hosts, memory, models, screens, and governed action.</p>
+        <div class="footer-actions">
+          <a class="button button-small" href="/download/mac.html">Download Preview</a>
+          <a class="button button-small button-secondary" href="https://app.lucaos.space">Launch Web</a>
+        </div>
       </div>
+
+      <nav class="footer-links" aria-label="Footer product navigation">
+        <h3>Product</h3>
+        <a href="#embodiment">Embodiment</a>
+        <a href="#host-inheritance">Host Inheritance</a>
+        <a href="#desktop-presence">Desktop Presence</a>
+        <a href="#intelligence-layer">Model Choice</a>
+        <a href="#governed-autonomy">Control</a>
+      </nav>
+
+      <nav class="footer-links" aria-label="Footer surface navigation">
+        <h3>Surfaces</h3>
+        <a href="/download/mac.html">Desktop</a>
+        <a href="https://app.lucaos.space">Web Preview</a>
+        <a href="/download/mobile.html">Mobile Companion</a>
+        <a href="#desktop-presence">LucaScreen</a>
+        <a href="#presence">Hologram</a>
+      </nav>
+
+      <nav class="footer-links" aria-label="Footer company navigation">
+        <h3>Company</h3>
+        <a href="/resources/index.html">Docs</a>
+        <a href="https://github.com/luca-dynamics/LucaOS">GitHub</a>
+        <a href="mailto:hey@lucaos.space">Contact</a>
+        <a href="/legal/privacy.html">Privacy</a>
+        <a href="/legal/terms.html">Terms</a>
+      </nav>
+    </div>
+    <div class="shell footer-bottom">
+      <span>© <span id="year">2026</span> LucaOS. All rights reserved.</span>
+      <span class="system-status"><span class="status-dot" aria-hidden="true"></span> Preview systems online</span>
     </div>
   </footer>
 </body>

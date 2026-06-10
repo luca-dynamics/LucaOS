@@ -2,6 +2,7 @@
   const root = document.documentElement;
   const toggle = document.querySelector('.theme-toggle');
   const metaTheme = document.querySelector('meta[name="theme-color"]');
+  const year = document.querySelector('#year');
   const media = window.matchMedia('(prefers-color-scheme: light)');
 
   const storedTheme = (() => {
@@ -23,6 +24,10 @@
   };
 
   applyTheme(initialTheme);
+
+  if (year) {
+    year.textContent = new Date().getFullYear();
+  }
 
   toggle.addEventListener('click', () => {
     const theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
