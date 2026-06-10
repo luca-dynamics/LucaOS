@@ -23,6 +23,8 @@ The root `vercel.json` controls the deployment commands and output directory so 
 
 The `npm run build:web` path is intentional. Do not use the default `npm run build` command for this preview project because the full repository build includes unrelated TypeScript and test debt outside the web-safe preview path.
 
+Vercel does not include `ripgrep` (`rg`) by default. The web import-boundary checker still uses `rg` when it is installed for fast local scans, but it falls back to a pure Node.js scanner on Vercel so `npm run build:web` remains the required build command without any system package installation.
+
 ## Routing
 
 The root `vercel.json` includes a rewrite from all browser routes to `/index.html` so the Vite single-page app can handle client-side routing.
