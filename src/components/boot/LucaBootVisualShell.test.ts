@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as bootVisualShellModel from "./lucaBootVisualShellModel";
 import {
   LUCA_BOOT_IDENTITY_ASSET_SRC,
+  LUCA_BOOT_VISUAL_LANGUAGE,
   LUCA_BROWSER_SAFE_BOOT_STATUS,
   buildBrowserSafeLucaBootReadinessItems,
   buildLucaBootReadinessItems,
@@ -138,30 +139,57 @@ describe("LucaBootVisualShell readiness model", () => {
     const items = buildBrowserSafeLucaBootReadinessItems();
 
     expect(LUCA_BROWSER_SAFE_BOOT_STATUS).toMatchObject({
-      headline: "Preparing your interface",
-      detail: expect.stringContaining("without desktop runtime polling"),
+      headline: "Entering browser host",
+      detail: "Resolving host interface",
       progress: 100,
+    });
+    expect(LUCA_BOOT_VISUAL_LANGUAGE).toMatchObject({
+      shell: "premium-luca-hologram-presence",
+      sharedAcrossDesktopAndWeb: true,
+      primaryIdentity: "Luca/hologram face presence field",
+      forbidsGenericWebOrbAsMainVisual: true,
+      usesHeavyHologramRuntime: false,
     });
     expect(items.map((item) => item.label)).toEqual([
       "Web surface",
+      "Memory surface",
+      "Model router",
       "Desktop runtime",
       "LucaLink",
-      "Personal Intelligence",
-      "Local models",
       "Actions",
+    ]);
+    expect(items.map((item) => item.detail)).toEqual([
+      "Web surface ready",
+      "Memory surface prepared",
+      "Model router guarded",
+      "Desktop runtime requires LucaOS Desktop",
+      "LucaLink requires pairing",
+      "Actions remain permissioned",
     ]);
     expect(items.map((item) => item.statusLabel)).toEqual([
       "Ready",
+      "Prepared",
+      "Guarded",
       "Desktop required",
       "Pairing required",
-      "API required",
-      "Desktop required",
       "Permissioned",
     ]);
     expect(items.every((item) => item.source === "webPolicy")).toBe(true);
     expect(JSON.stringify(items)).not.toMatch(
       /localhost|127\.0\.0\.1|ollama|cortex|Initializing Luca OS/i,
     );
+  });
+
+  it("keeps the pre-hydration loader aligned with the shared hologram presence", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const html = await readFile("index.html", "utf8");
+
+    expect(html).toContain("loader-presence");
+    expect(html).toContain("loader-face");
+    expect(html).toContain("loader-host-grid");
+    expect(html).toContain("Entering browser host");
+    expect(html).toContain("Host-native AI operating system");
+    expect(html).not.toMatch(/loader-orb|Preparing web-safe interface|yellow|gold/i);
   });
 
   it("exposes no execution surfaces", () => {
