@@ -9,6 +9,12 @@ import ChatWidgetMode from "./components/ChatWidgetMode"; // Import Chat Mode
 import MobileCastReceiver from "./components/MobileCastReceiver";
 import TVReceiver from "./components/TVReceiver";
 import HologramMode from "./components/HologramMode";
+import PublicWebShell from "./components/web/PublicWebShell";
+import {
+  isPublicWebQueryModeBlocked,
+  readCurrentWebAccessPolicy,
+  shouldRenderPublicWebShell,
+} from "./config/webAccessPolicy";
 import { generateThemeStyles } from "./config/themeColors";
 
 const rootElement = document.getElementById("root");
@@ -23,18 +29,34 @@ console.log("[BOOT] Environment Check - isElectron:", isElectron(), "URL Params:
 // Moved to App.tsx useEffect for more reliable cleanup.
 
 const params = new URLSearchParams(window.location.search);
-const isWidgetMode = params.get("mode") === "widget";
-const isChatMode = params.get("mode") === "chat";
-const isHologramMode = params.get("mode") === "hologram";
-const isMobileMode = params.get("mode") === "mobile";
-const isTvMode = params.get("mode") === "tv";
+const requestedMode = params.get("mode");
+const webAccessPolicy = readCurrentWebAccessPolicy();
+const renderPublicWebShell = shouldRenderPublicWebShell(webAccessPolicy);
+
+// Temporary public preview gate for app.lucaos.space until API/auth/session
+// boundaries exist. In web/vercel mode this must win before query-param
+// surfaces such as ?mode=widget, ?mode=hologram, ?mode=mobile, or ?mode=tv.
+if (isPublicWebQueryModeBlocked(requestedMode, webAccessPolicy)) {
+  console.warn(
+    `[BOOT] Public web access policy blocked query mode: ${requestedMode}`,
+  );
+}
+
+const canUseQueryMode = !renderPublicWebShell;
+const isWidgetMode = canUseQueryMode && requestedMode === "widget";
+const isChatMode = canUseQueryMode && requestedMode === "chat";
+const isHologramMode = canUseQueryMode && requestedMode === "hologram";
+const isMobileMode = canUseQueryMode && requestedMode === "mobile";
+const isTvMode = canUseQueryMode && requestedMode === "tv";
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   // <React.StrictMode>
   <SystemErrorBoundary>
     <style>{generateThemeStyles()}</style>
-    {isWidgetMode ? (
+    {renderPublicWebShell ? (
+      <PublicWebShell policy={webAccessPolicy} />
+    ) : isWidgetMode ? (
       <WidgetMode />
     ) : isChatMode ? (
       <ChatWidgetMode />
