@@ -34,5 +34,7 @@ describe("LucaBootVisualShell", () => {
     expect(html).not.toContain("rounded-full border p-2");
     expect(html).not.toContain("holo-ring");
     expect(html).not.toContain("spinner");
+    expect(html).not.toContain("top-[12%] h-px");
+    expect(html).not.toContain("top-[49%] h-px");
   });
 });
