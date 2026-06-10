@@ -4,6 +4,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/v2", "destination": "/v2/index.html" },
     { "source": "/pitch", "destination": "/pitch/index.html" },
     { "source": "/community", "destination": "/community/index.html" },
     { "source": "/resources", "destination": "/resources/index.html" },
