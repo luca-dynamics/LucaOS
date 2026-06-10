@@ -119,12 +119,12 @@ describe("LucaBootVisualShell readiness model", () => {
       assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
       emphasis: "launch",
       visualOnly: true,
-      source: "existing-public-icon-asset",
+      source: "existing-landing-hologram-face-asset",
       introducesBootPhase: false,
       usesHeavyHologramRuntime: false,
     });
     expect(readinessPresence).toMatchObject({
-      assetSrc: "/icon.png",
+      assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
       emphasis: "supporting",
       visualOnly: true,
       introducesBootPhase: false,
@@ -146,8 +146,9 @@ describe("LucaBootVisualShell readiness model", () => {
     expect(LUCA_BOOT_VISUAL_LANGUAGE).toMatchObject({
       shell: "premium-luca-hologram-presence",
       sharedAcrossDesktopAndWeb: true,
-      primaryIdentity: "Luca/hologram face presence field",
+      primaryIdentity: "Existing landing hologram face presence",
       forbidsGenericWebOrbAsMainVisual: true,
+      forbidsLogoIconAsMainVisual: true,
       usesHeavyHologramRuntime: false,
     });
     expect(items.map((item) => item.label)).toEqual([
@@ -185,11 +186,13 @@ describe("LucaBootVisualShell readiness model", () => {
     const html = await readFile("index.html", "utf8");
 
     expect(html).toContain("loader-presence");
-    expect(html).toContain("loader-face");
-    expect(html).toContain("loader-host-grid");
+    expect(html).toContain("loader-hologram-face");
+    expect(html).toContain("landing/hologram.png");
+    expect(html).not.toContain("loader-face");
+    expect(html).not.toContain("loader-host-grid");
     expect(html).toContain("Entering browser host");
     expect(html).toContain("Host-native AI operating system");
-    expect(html).not.toMatch(/loader-orb|Preparing web-safe interface|yellow|gold/i);
+    expect(html).not.toMatch(/loader-orb|loader-host-grid|loader-face|Preparing web-safe interface|yellow|gold|status::before/i);
   });
 
   it("exposes no execution surfaces", () => {

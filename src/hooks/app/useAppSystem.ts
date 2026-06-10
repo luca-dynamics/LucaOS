@@ -122,7 +122,7 @@ export const useAppSystem = ({
       const isSetupComplete = settingsService.get("general").setupComplete;
       setBootSequence(isSetupComplete ? "READY" : "ONBOARDING");
     }
-  }, [setGhostBrowserUrl]);
+  }, [browserSafeInterface, setBootSequence, setGhostBrowserUrl]);
 
   // 2. BIOS & DIAGNOSTICS
   useEffect(() => {
