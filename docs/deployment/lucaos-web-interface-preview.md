@@ -42,6 +42,13 @@ Browser-safe readiness lines currently surface as:
 
 The desktop app still preserves the full boot sequence, runtime initialization, and readiness checks. The web shortcut applies only to the browser-safe web/Vercel policy path and does not weaken Electron/local desktop boot guards. Landing pages, Vercel configuration, and domain/deployment settings are not part of this boot behavior.
 
+
+### Web boot resolution
+
+`src/config/browserSafeBootResolver.ts` owns the browser-safe boot resolver. It activates only when `VITE_LUCA_RELEASE_TARGET=web`, `VITE_LUCA_RUNTIME_TARGET=vercel`, and the web access policy reports `policy.shouldRenderBrowserSafeApp === true`. In that mode the premium hologram boot visual is a short intro: the app marks the web surface ready immediately, keeps the visual on screen for a controlled 1.2 second minimum, and has a web-only 2 second fallback timeout so the preview cannot remain indefinitely on the boot page.
+
+The resolver does not claim desktop authority. Electron/native readiness, localhost polling, Cortex, Ollama, local models, filesystem access, and host actions are skipped only for the browser-safe web boot path and remain represented as `desktop-required`, `pairing-required`, `api-required`, skipped, disabled, or permissioned in the app. Desktop/Electron/local builds do not use this resolver bypass and continue through the full boot readiness checks, runtime guards, and recovery behavior.
+
 ## Trusted runtime boundary
 
 LucaOS Desktop remains the trusted full runtime. Browser builds must not directly execute or reach for:

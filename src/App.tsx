@@ -147,6 +147,7 @@ import {
 } from "./styles/lucaMobileShellStyles";
 import { resolveLucaPlatformBackgroundPolicy } from "./styles/lucaPlatformBackgroundPolicy";
 import { readCurrentWebAccessPolicy } from "./config/webAccessPolicy";
+import { resolveBrowserSafeBootState } from "./config/browserSafeBootResolver";
 import WebRuntimeCapabilityStrip from "./components/web/WebRuntimeCapabilityStrip";
 
 // --- Mock Initial State ---
@@ -208,7 +209,15 @@ function AppContent() {
   // console.log("[APP] Rendering AppContent...");
   // --- 1. PLATFORM & BASIC STATE ---
   const webAccessPolicy = useMemo(() => readCurrentWebAccessPolicy(), []);
-  const isBrowserSafeWebInterface = webAccessPolicy.shouldRenderBrowserSafeApp;
+  const browserSafeBootState = useMemo(
+    () =>
+      resolveBrowserSafeBootState(webAccessPolicy, {
+        releaseTarget: import.meta.env.VITE_LUCA_RELEASE_TARGET,
+        runtimeTarget: import.meta.env.VITE_LUCA_RUNTIME_TARGET,
+      }),
+    [webAccessPolicy],
+  );
+  const isBrowserSafeWebInterface = browserSafeBootState.bootResolved;
   const isCapacitor = Capacitor.isNativePlatform();
   const isElectron = checkElectron();
   const isMobile = useMobile();
@@ -246,12 +255,34 @@ function AppContent() {
       return;
     }
 
-    const browserSafeBootTimer = window.setTimeout(() => {
-      setShowBrowserSafeBootShell(false);
-    }, 950);
+    setBootSequence("READY");
+    setBiosStatus({
+      server: "API REQUIRED",
+      core: "DESKTOP REQUIRED",
+      vision: "DISABLED IN WEB",
+      audio: "DISABLED IN WEB",
+      ollama: "DESKTOP REQUIRED",
+    });
 
-    return () => window.clearTimeout(browserSafeBootTimer);
-  }, [isBrowserSafeWebInterface]);
+    const resolveWebBoot = () => {
+      setBootSequence("READY");
+      setShowBrowserSafeBootShell(false);
+    };
+
+    const browserSafeBootTimer = window.setTimeout(
+      resolveWebBoot,
+      browserSafeBootState.minVisualDurationMs,
+    );
+    const browserSafeFallbackTimer = window.setTimeout(
+      resolveWebBoot,
+      browserSafeBootState.fallbackTimeoutMs,
+    );
+
+    return () => {
+      window.clearTimeout(browserSafeBootTimer);
+      window.clearTimeout(browserSafeFallbackTimer);
+    };
+  }, [browserSafeBootState, isBrowserSafeWebInterface]);
 
   // --- 2. REFS ---
   const chatEndRef = useRef<HTMLDivElement>(null);
