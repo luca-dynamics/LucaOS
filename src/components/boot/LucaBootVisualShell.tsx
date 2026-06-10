@@ -8,6 +8,8 @@ import {
 import { Icon } from "../ui/Icon";
 import { LiquidBackground } from "../visual/LiquidBackground";
 import {
+  LUCA_BROWSER_SAFE_BOOT_STATUS,
+  buildBrowserSafeLucaBootReadinessItems,
   buildLucaBootReadinessItems,
   getLucaBootLaunchIdentityPresence,
   lucaBootProgressBySequence,
@@ -26,6 +28,7 @@ interface LucaBootVisualShellProps {
   bootSequence: BootSequence;
   biosStatus: BiosStatus;
   theme: BootTheme;
+  browserSafeInterface?: boolean;
 }
 
 const statusDotClass: Record<ReadinessTone, string> = {
@@ -38,16 +41,26 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
   bootSequence,
   biosStatus,
   theme,
+  browserSafeInterface = false,
 }) => {
   const bootCopy = getLucaBootSequenceCopy(bootSequence);
   const identityCopy = getLucaBootDiagnosticCopy("biosIdentity");
   const kernelCopy = getLucaBootDiagnosticCopy("loadingLucaOs");
-  const readinessItems = buildLucaBootReadinessItems(bootSequence, biosStatus);
+  const readinessItems = browserSafeInterface
+    ? buildBrowserSafeLucaBootReadinessItems()
+    : buildLucaBootReadinessItems(bootSequence, biosStatus);
   const launchIdentity = getLucaBootLaunchIdentityPresence(bootSequence);
-  const progress =
-    bootSequence === "READY" || bootSequence === "ONBOARDING"
+  const progress = browserSafeInterface
+    ? LUCA_BROWSER_SAFE_BOOT_STATUS.progress
+    : bootSequence === "READY" || bootSequence === "ONBOARDING"
       ? 100
       : lucaBootProgressBySequence[bootSequence];
+  const statusHeadline = browserSafeInterface
+    ? LUCA_BROWSER_SAFE_BOOT_STATUS.headline
+    : bootCopy.standardLabel;
+  const statusDetail = browserSafeInterface
+    ? LUCA_BROWSER_SAFE_BOOT_STATUS.detail
+    : kernelCopy.standardLabel;
   const glowColor = `var(--luca-accent-primary, ${theme.hex})`;
   const glowSoft = `var(--luca-accent-soft, ${setHexAlpha(theme.hex, 0.15)})`;
   const glowPanel = `color-mix(in srgb, var(--luca-accent-soft, ${setHexAlpha(theme.hex, 0.09)}) 44%, transparent)`;
@@ -125,8 +138,8 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             <Icon name="Sparkles" size={14} color={glowColor} />
             {launchIdentity.label}
           </div>
-          <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
-            Luca is waking up
+          <h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-6xl">
+            LucaOS
           </h1>
           <p
             className="max-w-md text-sm sm:text-base"
@@ -195,7 +208,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
 
         <div className="flex w-full max-w-xl flex-col items-center gap-3">
           <div className="text-lg font-medium sm:text-2xl">
-            {bootCopy.standardLabel}
+            {statusHeadline}
           </div>
           <div
             className="h-1.5 w-full overflow-hidden rounded-full"
@@ -220,7 +233,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
               color={glowColor}
               className="animate-pulse"
             />
-            {kernelCopy.standardLabel}
+            {statusDetail}
           </div>
         </div>
 
@@ -280,8 +293,16 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           className="flex flex-col items-center gap-1 text-xs"
           style={{ color: textSecondary }}
         >
-          <span>Startup details · {identityCopy.tacticalLabel}</span>
-          <span className="max-w-xl">{bootCopy.diagnosticMeaning}</span>
+          <span>
+            Startup details · {browserSafeInterface
+              ? "Web-safe capability resolution"
+              : identityCopy.tacticalLabel}
+          </span>
+          <span className="max-w-xl">
+            {browserSafeInterface
+              ? "Desktop and local-runtime capabilities stay visible as guarded, unavailable states while the browser app shell loads."
+              : bootCopy.diagnosticMeaning}
+          </span>
         </div>
       </section>
     </div>

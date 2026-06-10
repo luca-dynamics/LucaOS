@@ -230,12 +230,28 @@ function AppContent() {
   const [bootSequence, setBootSequence] = useState<BootSequence>(() =>
     isBrowserSafeWebInterface ? "READY" : "INIT",
   );
+  const [showBrowserSafeBootShell, setShowBrowserSafeBootShell] = useState(
+    isBrowserSafeWebInterface,
+  );
   const [biosStatus, setBiosStatus] = useState<any>({
     server: "PENDING",
     core: "PENDING",
     vision: "PENDING",
     audio: "PENDING",
   });
+
+  useEffect(() => {
+    if (!isBrowserSafeWebInterface) {
+      setShowBrowserSafeBootShell(false);
+      return;
+    }
+
+    const browserSafeBootTimer = window.setTimeout(() => {
+      setShowBrowserSafeBootShell(false);
+    }, 950);
+
+    return () => window.clearTimeout(browserSafeBootTimer);
+  }, [isBrowserSafeWebInterface]);
 
   // --- 2. REFS ---
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -2259,7 +2275,7 @@ function AppContent() {
   // Removed Background from here (Moved to Root)
 
   // --- BOOT SEQUENCE RENDER ---
-  if (bootSequence !== "READY") {
+  if (bootSequence !== "READY" || showBrowserSafeBootShell) {
     return (
       <div
         className="h-screen w-full bg-transparent cursor-default select-none draggable transition-all duration-700 relative overflow-hidden"
@@ -2290,9 +2306,10 @@ function AppContent() {
           </div>
         ) : (
           <LucaBootVisualShell
-            bootSequence={bootSequence}
+            bootSequence={showBrowserSafeBootShell ? "INIT" : bootSequence}
             biosStatus={biosStatus}
             theme={theme}
+            browserSafeInterface={showBrowserSafeBootShell}
           />
         )}
       </div>

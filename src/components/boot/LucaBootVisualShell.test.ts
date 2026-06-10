@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import * as bootVisualShellModel from "./lucaBootVisualShellModel";
 import {
   LUCA_BOOT_IDENTITY_ASSET_SRC,
+  LUCA_BROWSER_SAFE_BOOT_STATUS,
+  buildBrowserSafeLucaBootReadinessItems,
   buildLucaBootReadinessItems,
   getLucaBootLaunchIdentityPresence,
 } from "./lucaBootVisualShellModel";
@@ -112,7 +114,7 @@ describe("LucaBootVisualShell readiness model", () => {
 
     expect(launchPresence).toMatchObject({
       label: "LucaOS",
-      subtitle: "Personal Autonomous AI OS",
+      subtitle: "Host-native AI operating system",
       assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
       emphasis: "launch",
       visualOnly: true,
@@ -132,9 +134,39 @@ describe("LucaBootVisualShell readiness model", () => {
     );
   });
 
+  it("models the browser-safe web boot shell without desktop polling", () => {
+    const items = buildBrowserSafeLucaBootReadinessItems();
+
+    expect(LUCA_BROWSER_SAFE_BOOT_STATUS).toMatchObject({
+      headline: "Preparing your interface",
+      detail: expect.stringContaining("without desktop runtime polling"),
+      progress: 100,
+    });
+    expect(items.map((item) => item.label)).toEqual([
+      "Web surface",
+      "Desktop runtime",
+      "LucaLink",
+      "Personal Intelligence",
+      "Local models",
+      "Actions",
+    ]);
+    expect(items.map((item) => item.statusLabel)).toEqual([
+      "Ready",
+      "Desktop required",
+      "Pairing required",
+      "API required",
+      "Desktop required",
+      "Permissioned",
+    ]);
+    expect(items.every((item) => item.source === "webPolicy")).toBe(true);
+    expect(JSON.stringify(items)).not.toMatch(
+      /localhost|127\.0\.0\.1|ollama|cortex|Initializing Luca OS/i,
+    );
+  });
+
   it("exposes no execution surfaces", () => {
     expect(Object.keys(bootVisualShellModel).join(" ")).not.toMatch(
-      /execute|runTool|browser|automation|screenshot|ocr|fileAccess|messaging|wireless|HologramScene|setTimeout|setInterval/i,
+      /execute|runTool|automation|screenshot|ocr|fileAccess|messaging|wireless|HologramScene|setTimeout|setInterval/i,
     );
   });
 });

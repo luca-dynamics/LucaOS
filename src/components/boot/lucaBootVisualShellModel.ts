@@ -18,7 +18,7 @@ export const LUCA_BOOT_IDENTITY_ASSET_SRC = "/icon.png";
 
 export interface LucaBootLaunchIdentityPresence {
   label: "LucaOS";
-  subtitle: "Personal Autonomous AI OS";
+  subtitle: "Host-native AI operating system";
   assetSrc: typeof LUCA_BOOT_IDENTITY_ASSET_SRC;
   emphasis: "launch" | "supporting";
   markOpacity: number;
@@ -36,7 +36,7 @@ export const getLucaBootLaunchIdentityPresence = (
 
   return {
     label: "LucaOS",
-    subtitle: "Personal Autonomous AI OS",
+    subtitle: "Host-native AI operating system",
     assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
     emphasis: isLaunchEmphasis ? "launch" : "supporting",
     markOpacity: isLaunchEmphasis ? 0.92 : 0.62,
@@ -56,14 +56,24 @@ export interface LucaBootReadinessItem {
     | "vision"
     | "voice"
     | "safety"
-    | "tools";
+    | "tools"
+    | "webSurface"
+    | "desktopRuntime"
+    | "lucaLink"
+    | "personalIntelligence"
+    | "localModels"
+    | "actions";
   label: string;
   status: LucaBootStatusValue;
   statusLabel: string;
   detail: string;
   icon: string;
-  source: "biosStatus" | "bootCopy";
-  sourceKey: keyof BiosStatus | "checkingMemoryBanks" | "securityProtocols";
+  source: "biosStatus" | "bootCopy" | "webPolicy";
+  sourceKey:
+    | keyof BiosStatus
+    | "checkingMemoryBanks"
+    | "securityProtocols"
+    | "browserSafeCapabilities";
 }
 
 export const normalizeBootStatus = (status: unknown): LucaBootStatusValue => {
@@ -115,6 +125,75 @@ const bootStatusForCompletedSequence = (
 
   return "PENDING";
 };
+
+export const LUCA_BROWSER_SAFE_BOOT_STATUS = {
+  headline: "Preparing your interface",
+  detail: "Resolving host capabilities without desktop runtime polling.",
+  progress: 100,
+} as const;
+
+export const buildBrowserSafeLucaBootReadinessItems = (): LucaBootReadinessItem[] => [
+  {
+    id: "webSurface",
+    label: "Web surface",
+    status: "OK",
+    statusLabel: "Ready",
+    detail: "Browser-safe interface ready",
+    icon: "Monitor",
+    source: "webPolicy",
+    sourceKey: "browserSafeCapabilities",
+  },
+  {
+    id: "desktopRuntime",
+    label: "Desktop runtime",
+    status: "PENDING",
+    statusLabel: "Desktop required",
+    detail: "Requires LucaOS Desktop",
+    icon: "Cpu",
+    source: "webPolicy",
+    sourceKey: "browserSafeCapabilities",
+  },
+  {
+    id: "lucaLink",
+    label: "LucaLink",
+    status: "PENDING",
+    statusLabel: "Pairing required",
+    detail: "Secure desktop pairing required",
+    icon: "Link",
+    source: "webPolicy",
+    sourceKey: "browserSafeCapabilities",
+  },
+  {
+    id: "personalIntelligence",
+    label: "Personal Intelligence",
+    status: "PENDING",
+    statusLabel: "API required",
+    detail: "Authenticated API required",
+    icon: "Brain",
+    source: "webPolicy",
+    sourceKey: "browserSafeCapabilities",
+  },
+  {
+    id: "localModels",
+    label: "Local models",
+    status: "PENDING",
+    statusLabel: "Desktop required",
+    detail: "Local model runtime requires desktop",
+    icon: "Wrench",
+    source: "webPolicy",
+    sourceKey: "browserSafeCapabilities",
+  },
+  {
+    id: "actions",
+    label: "Actions",
+    status: "OK",
+    statusLabel: "Permissioned",
+    detail: "Runtime actions remain governed",
+    icon: "ShieldCheck",
+    source: "webPolicy",
+    sourceKey: "browserSafeCapabilities",
+  },
+];
 
 export const buildLucaBootReadinessItems = (
   bootSequence: BootSequence,
