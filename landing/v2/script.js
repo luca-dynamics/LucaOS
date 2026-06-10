@@ -3,6 +3,11 @@
   const toggle = document.querySelector('.theme-toggle');
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   const year = document.querySelector('#year');
+  const header = document.querySelector('.site-header.nav');
+  const hamburger = document.querySelector('.hamburger');
+  const mobileNav = document.querySelector('#mobileNav');
+  const mobileClose = document.querySelector('.mobile-nav-close');
+  const mobileLinks = document.querySelectorAll('.mobile-nav-links a, .mobile-nav-cta');
   const media = window.matchMedia('(prefers-color-scheme: light)');
 
   const storedTheme = (() => {
@@ -28,6 +33,25 @@
   if (year) {
     year.textContent = new Date().getFullYear();
   }
+
+  const setMobileNav = (open) => {
+    if (!mobileNav || !hamburger) return;
+    mobileNav.classList.toggle('open', open);
+    mobileNav.setAttribute('aria-hidden', String(!open));
+    hamburger.setAttribute('aria-expanded', String(open));
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
+
+  hamburger?.addEventListener('click', () => {
+    setMobileNav(!mobileNav?.classList.contains('open'));
+  });
+
+  mobileClose?.addEventListener('click', () => setMobileNav(false));
+  mobileLinks.forEach((link) => link.addEventListener('click', () => setMobileNav(false)));
+
+  window.addEventListener('scroll', () => {
+    header?.classList.toggle('scrolled', window.scrollY > 24);
+  }, { passive: true });
 
   toggle.addEventListener('click', () => {
     const theme = root.dataset.theme === 'dark' ? 'light' : 'dark';

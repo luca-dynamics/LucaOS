@@ -14,31 +14,51 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="site-header">
-    <div class="shell header-inner">
-      <a class="brand" href="/v2/" aria-label="LucaOS Landing v2 home">
-        <span class="brand-mark"><img class="brand-logo brand-logo-dark" src="/icon.png" alt="" width="32" height="32"><img class="brand-logo brand-logo-light" src="/icon_dark.png" alt="" width="32" height="32"></span>
-        <span>LucaOS</span>
-      </a>
+  <header class="site-header nav" id="siteHeader">
+    <a href="/v2/" class="nav-brand" aria-label="LucaOS v2 home">
+      <img class="brand-icon brand-icon-dark" src="/icon.png" alt="Luca OS Logo" width="28" height="28">
+      <img class="brand-icon brand-icon-light" src="/icon_dark.png" alt="Luca OS Logo" width="28" height="28">
+      <span>L.U.C.A OS</span>
+    </a>
 
-      <nav class="site-nav" aria-label="Main navigation">
-        <a href="#embodiment">Platform</a>
-        <a href="#host-inheritance">Hosts</a>
-        <a href="#presence">Presence</a>
-        <a href="#integrations">Integrations</a>
-        <a href="#governed-autonomy">Control</a>
-      </nav>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#embodiment" class="nav-link">Platform</a>
+      <a href="#host-inheritance" class="nav-link">Hosts</a>
+      <a href="#presence" class="nav-link">Presence</a>
+      <a href="#integrations" class="nav-link">Integrations</a>
+      <a href="#governed-autonomy" class="nav-link">Control</a>
+    </nav>
 
-      <div class="header-actions">
-        <button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme">
-          <svg class="theme-icon moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.3A8.5 8.5 0 0 1 8.7 4a8.5 8.5 0 1 0 11.3 11.3Z"/></svg>
-          <svg class="theme-icon sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
-        </button>
-        <a class="button button-small" href="/download/mac.html">Download <span class="header-cta-label">Preview</span></a>
-        <a class="button button-small button-secondary header-web-cta" href="https://app.lucaos.space">Launch <span class="header-cta-label">Web</span></a>
-      </div>
+    <div class="nav-actions">
+      <button class="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch theme">
+        <svg class="theme-icon moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.3A8.5 8.5 0 0 1 8.7 4a8.5 8.5 0 1 0 11.3 11.3Z"/></svg>
+        <svg class="theme-icon sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+      <a href="#final-cta" class="nav-cta"><span class="nav-cta-desktop">Get Early Access</span><span class="nav-cta-mobile">Early Access</span></a>
+      <button class="hamburger" type="button" aria-label="Open Menu" aria-controls="mobileNav" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
     </div>
   </header>
+
+  <div id="mobileNav" class="mobile-nav-overlay" aria-hidden="true">
+    <button class="mobile-nav-close" type="button" aria-label="Close Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="mobile-nav-links">
+      <a href="#embodiment">Platform</a>
+      <a href="#host-inheritance">Hosts</a>
+      <a href="#presence">Presence</a>
+      <a href="#integrations">Integrations</a>
+      <a href="#governed-autonomy">Control</a>
+    </div>
+    <a href="#final-cta" class="mobile-nav-cta">Early Access</a>
+  </div>
+
 
   <main id="main">
     <section class="hero" id="embodiment" aria-labelledby="hero-title">
@@ -48,19 +68,18 @@
           <div class="hero-orbit orbit-one" aria-hidden="true"></div>
           <div class="hero-orbit orbit-two" aria-hidden="true"></div>
           <div class="hero-copy hero-copy-top">
-            <p class="eyebrow"><span aria-hidden="true"></span>Host-Native AI Operating System</p>
-            <h1 id="hero-title">The first host-native AI operating system.<br>AI that turns every device into a body.</h1>
+            <p class="eyebrow"><span aria-hidden="true"></span>Introducing LucaOS</p>
+            <h1 id="hero-title"><span class="hero-title-line hero-title-primary">The first host-native AI operating system.</span><span class="hero-title-line hero-title-impact">AI that turns every device into a body.</span></h1>
           </div>
           <div class="hologram-wrap">
             <img src="/hologram.png" alt="The LucaOS holographic face" width="1000" height="1000">
           </div>
           <div class="hero-copy hero-copy-bottom">
-            <p class="hero-lede">LucaOS lets personal intelligence inhabit devices, screens, tools, and models — carrying memory, presence, and governed action across every host.</p>
+            <p class="hero-lede">LucaOS lets personal intelligence inhabit devices, screens, tools, and models, carrying memory, presence, and governed action across every host.</p>
             <div class="button-row hero-actions-row">
               <a class="button" href="/download/mac.html">Download Preview <span aria-hidden="true">↘</span></a>
               <a class="button button-secondary" href="https://app.lucaos.space">Launch Web Preview <span aria-hidden="true">↗</span></a>
             </div>
-            <p class="platform-note">Desktop preview · Web control surface · Mobile companion</p>
           </div>
         </div>
       </div>
@@ -236,7 +255,7 @@
       </div>
     </section>
 
-    <section class="final-cta" aria-labelledby="cta-title">
+    <section class="final-cta" id="final-cta" aria-labelledby="cta-title">
       <div class="shell final-cta-inner glass-panel">
         <div class="cta-copy">
           <p class="eyebrow"><span aria-hidden="true"></span>Preview LucaOS</p>
