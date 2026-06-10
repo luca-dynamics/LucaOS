@@ -169,10 +169,10 @@ html[data-theme="dark"] .theme-icon.sun, html[data-theme="light"] .theme-icon.mo
 .orbit-two { width: min(840px, 72vw); height: min(380px, 32vw); border-color: rgba(56, 230, 209, .15); transform: rotate(18deg); }
 .hologram-wrap { position: relative; z-index: 1; width: min(610px, 52vw); aspect-ratio: 1 / 1; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle at 50% 48%, rgba(169, 239, 255, .14), transparent 60%); filter: drop-shadow(0 34px 90px rgba(56, 230, 209, .24)); }
 .hologram-wrap img { width: 100%; height: 100%; object-fit: contain; }
-.hero-copy { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); width: min(920px, 100%); display: grid; justify-items: center; }
+.hero-copy { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); width: min(1120px, 100%); display: grid; justify-items: center; }
 .hero-copy-top { top: 0; }
 .hero-copy-bottom { bottom: 0; }
-h1 { max-width: 900px; margin-bottom: 0; color: var(--text); font-size: clamp(68px, 10vw, 142px); line-height: .86; letter-spacing: -.085em; text-wrap: balance; }
+h1 { max-width: 1120px; margin-bottom: 0; color: var(--text); font-size: clamp(44px, 5.7vw, 72px); line-height: .94; letter-spacing: -.072em; text-wrap: balance; }
 .hero-lede { max-width: 700px; margin-bottom: 0; color: var(--text-soft); font-size: clamp(18px, 2vw, 22px); line-height: 1.55; text-wrap: balance; }
 .platform-note { margin: 18px 0 0; color: var(--text-muted); font-size: 13px; font-weight: 650; letter-spacing: .02em; }
 
@@ -289,7 +289,7 @@ h1 { max-width: 900px; margin-bottom: 0; color: var(--text); font-size: clamp(68
   .hologram-wrap { width: min(430px, 78vw); margin: -34px 0; }
   .orbit-one { width: min(470px, 86vw); height: min(470px, 86vw); }
   .orbit-two { width: min(600px, 98vw); height: 250px; }
-  h1 { font-size: clamp(54px, 14vw, 92px); }
+  h1 { font-size: clamp(38px, 8vw, 60px); }
   .hero-lede { font-size: 18px; }
   .category-proof { padding: 30px 0 78px; }
   .category-panel, .integrations-panel, .feature-layout, .feature-layout.reverse, .final-cta-inner { grid-template-columns: 1fr; gap: 42px; }
@@ -323,7 +323,7 @@ h1 { max-width: 900px; margin-bottom: 0; color: var(--text); font-size: clamp(68
   .hero { padding-top: 34px; }
   .hero-visual { min-height: 640px; }
   .hologram-wrap { width: min(320px, 84vw); margin: -18px 0; }
-  h1 { font-size: clamp(48px, 15vw, 68px); letter-spacing: -.078em; }
+  h1 { font-size: clamp(32px, 8.8vw, 48px); letter-spacing: -.07em; }
   .hero-lede, .section-heading p:not(.eyebrow), .category-copy p:not(.eyebrow), .integrations-heading p, .cta-copy > p:not(.eyebrow):not(.platform-note) { font-size: 16px; line-height: 1.62; }
   .platform-note { font-size: 12px; line-height: 1.5; }
   .eyebrow { font-size: 11px; letter-spacing: .13em; }
