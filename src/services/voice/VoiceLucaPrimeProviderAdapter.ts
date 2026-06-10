@@ -45,6 +45,7 @@ export class VoiceLucaPrimeProviderAdapter {
         outputEvent: {
           id: `voice.luca-prime.output.${input.sessionId}`,
           sessionId: input.sessionId,
+          kind: "tts_completed",
           text: input.text,
           voiceId: input.voiceId,
           language: input.language ?? "en",
@@ -81,6 +82,7 @@ export class VoiceLucaPrimeProviderAdapter {
       ttsApisCalled: false,
       providerApisCalled: false,
       heavyModelsLoaded: false,
+      storageWritesEnabled: false,
       systemApisCalled: false,
       requiresExplicitOptIn: true,
     };

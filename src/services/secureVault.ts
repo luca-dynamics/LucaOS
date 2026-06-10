@@ -29,6 +29,7 @@ export interface SecureVaultLike {
   delete(site: string): Promise<SecureVaultStoreResult>;
   hasCredentials(site: string): Promise<boolean>;
   list(): Promise<SecureVaultListEntry[]>;
+  exportPublicHeader(): Promise<string>;
 }
 
 function isElectronVaultAvailable(): boolean {
@@ -101,6 +102,15 @@ class SecureVaultFrontendWrapper implements SecureVaultLike {
     } catch {
       return [];
     }
+  }
+
+  async exportPublicHeader(): Promise<string> {
+    const entries = await this.list();
+    return JSON.stringify({
+      vault: "luca-secure-vault",
+      available: isElectronVaultAvailable(),
+      credentialCount: entries.length,
+    });
   }
 
   private toFailure(error: unknown): SecureVaultStoreResult {

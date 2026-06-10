@@ -56,6 +56,7 @@ export class VoiceByokProviderAdapter {
         outputEvent: {
           id: `voice.byok.output.${input.sessionId}`,
           sessionId: input.sessionId,
+          kind: "tts_completed",
           text: input.text,
           voiceId: input.voiceId,
           language: input.language ?? "en",
@@ -92,6 +93,7 @@ export class VoiceByokProviderAdapter {
       ttsApisCalled: false,
       providerApisCalled: false,
       heavyModelsLoaded: false,
+      storageWritesEnabled: false,
       systemApisCalled: false,
       requiresExplicitOptIn: true,
     };

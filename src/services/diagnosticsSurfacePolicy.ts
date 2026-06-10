@@ -18,7 +18,7 @@ export interface DiagnosticsSurfaceResult {
     timestamp: string;
     source: string;
     message: string;
-    type: "INFO" | "SUCCESS" | "WARNING" | "ERROR";
+    type: "INFO" | "SUCCESS" | "WARNING" | "ERROR" | string;
   }>;
 }
 

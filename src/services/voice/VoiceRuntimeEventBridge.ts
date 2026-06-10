@@ -67,13 +67,13 @@ export class VoiceRuntimeEventBridge {
     return this.record(eventTypeByOutput[output.kind], context?.sessionId, output);
   }
 
-  private record(eventType: LucaVoiceTapeRecord["eventType"], sessionId: string | undefined, payload: Record<string, unknown>): LucaVoiceRuntimeEventBridgeResult {
+  private record(eventType: LucaVoiceTapeRecord["eventType"], sessionId: string | undefined, payload: unknown): LucaVoiceRuntimeEventBridgeResult {
     try {
       this.sink.record({
         eventType,
         sessionId: sessionId ?? "unknown",
         timestamp: new Date().toISOString(),
-        payload: this.redactSensitiveFields(payload),
+        payload: this.toRecord(this.redactSensitiveFields(payload)),
       });
 
       return { ok: true };
@@ -83,6 +83,12 @@ export class VoiceRuntimeEventBridge {
         error: error instanceof Error ? error.message : "unknown_recording_error",
       };
     }
+  }
+
+  private toRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? { ...(value as Record<string, unknown>) }
+      : { value };
   }
 
   private redactSensitiveFields(value: unknown): unknown {

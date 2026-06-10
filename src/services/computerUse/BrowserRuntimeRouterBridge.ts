@@ -51,8 +51,10 @@ export const mapComputerUseActionToBrowserRuntimeRoute = (
 export const createBrowserRuntimeRouterBridgeRequest = (
   request: ComputerUseBrowserRuntimeAdapterRequest,
 ): { ok: true; request: BrowserRuntimeRouterBridgeRequest } | { ok: false; reason: string } => {
-  const mapped = mapComputerUseActionToBrowserRuntimeRoute(request?.action?.type);
-  if (!mapped.ok) return mapped;
+  const action = request.action;
+  const mapped = mapComputerUseActionToBrowserRuntimeRoute(action?.type);
+  if (mapped.ok === false) return { ok: false, reason: mapped.reason };
+  if (!action) return { ok: false, reason: "Missing action for BrowserRuntime router bridge request." };
 
   return {
     ok: true,
@@ -60,16 +62,16 @@ export const createBrowserRuntimeRouterBridgeRequest = (
       requestId: `router-bridge-${request.context?.traceId ?? request.context?.stepId ?? "unknown"}`,
       missionId: request.context?.missionId ?? "unknown",
       action: mapped.route,
-      target: request.action?.target?.selectorHint ?? request.action?.target?.description,
+      target: action.target?.selectorHint ?? action.target?.description,
       payload: {
-        text: request.action?.text,
+        text: action.text,
         sourceLane: request.lane,
       },
       issuedAt: new Date().toISOString(),
-      riskLevel: request.action.requiresGuardApproval ? "sensitive" : "safe",
+      riskLevel: action.requiresGuardApproval ? "sensitive" : "safe",
       trustTier: "untrusted",
       preferredLane: SANDBOX_LANE,
-      hasGuardApproval: !request.action.requiresGuardApproval,
+      hasGuardApproval: !action.requiresGuardApproval,
       metadata: {
         bridgeKind: "browser_runtime_router_bridge_scaffold",
         realBrowserExecutionEnabled: false,
@@ -79,7 +81,7 @@ export const createBrowserRuntimeRouterBridgeRequest = (
         systemApisCalled: false,
         directHostAllowed: false,
         requiresExplicitOptIn: true,
-        sourceActionType: request.action.type,
+        sourceActionType: action.type,
         sourceDisposition: mapped.conformance.disposition,
         sourceConformanceReason: mapped.conformance.reason,
         stepId: request.context?.stepId,

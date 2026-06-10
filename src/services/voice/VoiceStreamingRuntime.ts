@@ -16,6 +16,7 @@ const runtimeMetadata: LucaVoiceStreamingRuntimeMetadata = {
   ttsApisCalled: false,
   websocketOpened: false,
   heavyModelsLoaded: false,
+  storageWritesEnabled: false,
   systemApisCalled: false,
   requiresExplicitOptIn: true,
 };

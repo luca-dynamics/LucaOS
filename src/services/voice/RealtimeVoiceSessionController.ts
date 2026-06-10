@@ -27,6 +27,8 @@ export type RealtimeVoiceSessionListener = (state: LucaRealtimeVoiceSessionState
 
 const controllerMetadata: LucaRealtimeVoiceControllerMetadata = {
   controllerKind: "realtime_voice_session_controller",
+  runtimeKind: "realtime_voice_session_controller",
+  audioApisCalled: false,
   microphoneApisCalled: false,
   audioOutputApisCalled: false,
   sttApisCalled: false,
@@ -34,6 +36,7 @@ const controllerMetadata: LucaRealtimeVoiceControllerMetadata = {
   providerApisCalled: false,
   networkApisCalled: false,
   heavyModelsLoaded: false,
+  storageWritesEnabled: false,
   systemApisCalled: false,
   requiresExplicitOptIn: true,
 };

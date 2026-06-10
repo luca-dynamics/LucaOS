@@ -94,7 +94,7 @@ function policy(seed: PolicySeed): VisualCoreSurfacePolicy {
   };
 }
 
-const POLICY_SEEDS: PolicySeed[] = [
+const POLICY_SEEDS: VisualCoreSurfacePolicy[] = [
   policy({
     mode: "IDLE",
     category: "passive_display",

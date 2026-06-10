@@ -1002,8 +1002,8 @@ AUTHORIZATION CODE: LUCA-PRIME-RUTHLESS-OVERRIDE-${Date.now()}
     let lastBotMessage = "";
     if (history.length > 0) {
         const lastMsg = history[history.length - 1];
-        if (lastMsg.role === "model" && lastMsg.parts.length > 0) {
-            lastBotMessage = lastMsg.parts[0].text || "";
+        if (lastMsg.role === "model") {
+            lastBotMessage = lastMsg.content || "";
         }
     }
 

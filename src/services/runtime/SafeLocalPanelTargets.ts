@@ -73,7 +73,7 @@ export function getSafeLocalPanelEvent(target: string): string | null {
  * Returns null for targets that don't map to a right-panel tab (e.g. ui:notify).
  */
 export function getTargetPanelTab(target: string): string | null {
-  const map: Record<string, string> = {
+  const map: Record<string, string | null> = {
     "panel:control": "CONTROL",
     "panel:activity": "ACTIVITY",
     "panel:memory": "MEMORY",
