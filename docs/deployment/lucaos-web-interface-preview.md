@@ -17,16 +17,18 @@ When `VITE_LUCA_RELEASE_TARGET=web` and `VITE_LUCA_RUNTIME_TARGET=vercel` are bo
 
 The rendered web interface is browser-safe. It does not turn the public web build into a trusted production runtime.
 
-## Shared boot visual, web-safe runtime
+## Boot behavior
 
-The Vercel/browser-safe preview now reuses the same premium LucaOS boot visual language as desktop instead of a separate generic orb loader. Both the root pre-hydration frame and the React boot shell use a Luca/hologram face presence field, dark graphite base, controlled teal/ice-cyan glow, host grid, scan atmosphere, LucaOS identity copy, and refined readiness lines.
+### Shared boot visual, web-safe runtime
+
+The Vercel/browser-safe preview now reuses the existing landing-page hologram face asset (`landing/hologram.png`) for the LucaOS boot presence instead of the old ring/orb/logo-icon loader. Both the root pre-hydration frame and the React boot shell use a large centered hologram face, a black/graphite base, restrained ice-cyan glow, LucaOS identity copy, a thin progress line, and minimal readiness typography without dot chips or badge cards.
 
 In explicit web preview mode (`VITE_LUCA_RELEASE_TARGET=web` plus `VITE_LUCA_RUNTIME_TARGET=vercel`), `policy.shouldRenderBrowserSafeApp === true` means the app shows that shared premium shell only as a brief transition and then resolves into the guarded LucaOS interface. Web boot does not wait for desktop/local runtime readiness and does not require localhost, Cortex, Ollama, Electron, or native-service polling before rendering the browser-safe app shell.
 
 The runtime difference is capability logic only:
 
 - Desktop boot keeps the full Electron/native/local readiness sequence, including memory, tool, model, device, and boot guard checks.
-- Web boot uses browser-safe readiness copy and state while skipping desktop probes.
+- Web boot uses browser-safe readiness copy and state while skipping desktop probes, localhost/Cortex/Ollama polling, and LucaLink/native-device probes.
 - Unavailable native capabilities remain guarded instead of becoming fake-ready execution claims.
 
 Browser-safe readiness lines currently surface as:
@@ -38,7 +40,7 @@ Browser-safe readiness lines currently surface as:
 - LucaLink: `LucaLink requires pairing`
 - Actions: `Actions remain permissioned`
 
-The desktop app still preserves the full boot sequence, runtime initialization, and readiness checks. The web shortcut applies only to the browser-safe web/Vercel policy path and does not weaken Electron/local desktop boot guards.
+The desktop app still preserves the full boot sequence, runtime initialization, and readiness checks. The web shortcut applies only to the browser-safe web/Vercel policy path and does not weaken Electron/local desktop boot guards. Landing pages, Vercel configuration, and domain/deployment settings are not part of this boot behavior.
 
 ## Trusted runtime boundary
 

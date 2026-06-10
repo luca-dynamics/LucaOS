@@ -14,7 +14,10 @@ export type BiosStatus = Partial<
 
 export type ReadinessTone = "ready" | "pending" | "attention";
 
-export const LUCA_BOOT_IDENTITY_ASSET_SRC = "/icon.png";
+export const LUCA_BOOT_IDENTITY_ASSET_SRC = new URL(
+  "../../../landing/hologram.png",
+  import.meta.url,
+).href;
 
 export interface LucaBootLaunchIdentityPresence {
   label: "LucaOS";
@@ -22,9 +25,8 @@ export interface LucaBootLaunchIdentityPresence {
   assetSrc: typeof LUCA_BOOT_IDENTITY_ASSET_SRC;
   emphasis: "launch" | "supporting";
   markOpacity: number;
-  orbPresenceOpacity: number;
   visualOnly: true;
-  source: "existing-public-icon-asset";
+  source: "existing-landing-hologram-face-asset";
   introducesBootPhase: false;
   usesHeavyHologramRuntime: false;
 }
@@ -40,9 +42,8 @@ export const getLucaBootLaunchIdentityPresence = (
     assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
     emphasis: isLaunchEmphasis ? "launch" : "supporting",
     markOpacity: isLaunchEmphasis ? 0.92 : 0.62,
-    orbPresenceOpacity: isLaunchEmphasis ? 0.34 : 0.22,
     visualOnly: true,
-    source: "existing-public-icon-asset",
+    source: "existing-landing-hologram-face-asset",
     introducesBootPhase: false,
     usesHeavyHologramRuntime: false,
   };
@@ -129,8 +130,9 @@ const bootStatusForCompletedSequence = (
 export const LUCA_BOOT_VISUAL_LANGUAGE = {
   shell: "premium-luca-hologram-presence",
   sharedAcrossDesktopAndWeb: true,
-  primaryIdentity: "Luca/hologram face presence field",
+  primaryIdentity: "Existing landing hologram face presence",
   forbidsGenericWebOrbAsMainVisual: true,
+  forbidsLogoIconAsMainVisual: true,
   usesHeavyHologramRuntime: false,
 } as const;
 
