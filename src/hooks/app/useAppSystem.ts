@@ -47,6 +47,7 @@ interface UseAppSystemProps {
   setGoals: React.Dispatch<React.SetStateAction<any[]>>;
   devices: any[];
   setDevices: React.Dispatch<React.SetStateAction<any[]>>;
+  browserSafeInterface?: boolean;
 }
 
 export type BootSequence = "INIT" | "BIOS" | "KERNEL" | "ONBOARDING" | "READY";
@@ -70,6 +71,7 @@ export const useAppSystem = ({
   setGoals,
   devices,
   setOpsecStatus,
+  browserSafeInterface = false,
 }: UseAppSystemProps) => {
   const [isLocalCoreConnected, setIsLocalCoreConnected] = useState(false);
   const [localCoreReadinessLevel, setLocalCoreReadinessLevel] = useState<
@@ -93,6 +95,13 @@ export const useAppSystem = ({
 
   // 1. QUERY PARAM MODE CHECK
   useEffect(() => {
+    if (browserSafeInterface) {
+      setAppMode("dashboard");
+      setBootSequence("READY");
+      document.body.style.backgroundColor = "";
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const mode = params.get("mode");
     const isCapacitor = Capacitor.isNativePlatform();
@@ -117,6 +126,19 @@ export const useAppSystem = ({
 
   // 2. BIOS & DIAGNOSTICS
   useEffect(() => {
+    if (browserSafeInterface) {
+      hasInitializedRef.current = true;
+      setBiosStatus({
+        server: "API REQUIRED",
+        core: "DESKTOP REQUIRED",
+        vision: "DISABLED IN WEB",
+        audio: "DISABLED IN WEB",
+        ollama: "DESKTOP REQUIRED",
+      });
+      setBootSequence("READY");
+      return;
+    }
+
     // Prevent re-running if already initialized or ready
     if (
       hasInitializedRef.current ||
@@ -596,10 +618,21 @@ export const useAppSystem = ({
     };
 
     runDiagnostics();
-  }, []); // Run once on mount
+  }, [browserSafeInterface]); // Run once on mount, or resolve browser-safe web shell
 
   // 3. CONNECTIVITY & IP DISCOVERY
   useEffect(() => {
+    if (browserSafeInterface) {
+      setIsLocalCoreConnected(false);
+      setLocalCoreReadinessLevel("offline");
+      setLocalCoreReadinessReason(
+        "Browser-safe web interface: runtime actions require LucaOS Desktop or a future authenticated API.",
+      );
+      setHostPlatform((current) => `${current} · Browser-safe web`);
+      setLocalIp("desktop-required");
+      return;
+    }
+
     const check = async () => {
       try {
         const res = await fetch(apiUrl("/api/status"), {
@@ -656,7 +689,7 @@ export const useAppSystem = ({
     }
 
     return () => clearInterval(interval);
-  }, [isElectron, setCurrentCwd]);
+  }, [browserSafeInterface, isElectron, setCurrentCwd]);
 
   // 4. INITIAL ASYNC LOAD
   useEffect(() => {
@@ -714,13 +747,22 @@ export const useAppSystem = ({
   };
 
   useEffect(() => {
+    if (browserSafeInterface) {
+      setGoals([]);
+      return;
+    }
+
     fetchGoals();
     const interval = setInterval(fetchGoals, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [browserSafeInterface]);
 
   // 6. IOT SYNC
   useEffect(() => {
+    if (browserSafeInterface) {
+      return;
+    }
+
     if (!Capacitor.isNativePlatform() && !isCloudOnly()) {
       import("../../services/iot/init").then(({ initIoT }) => initIoT());
     }

@@ -146,6 +146,8 @@ import {
   lucaMobilePanelSurfaceStyle,
 } from "./styles/lucaMobileShellStyles";
 import { resolveLucaPlatformBackgroundPolicy } from "./styles/lucaPlatformBackgroundPolicy";
+import { readCurrentWebAccessPolicy } from "./config/webAccessPolicy";
+import WebRuntimeCapabilityStrip from "./components/web/WebRuntimeCapabilityStrip";
 
 // --- Mock Initial State ---
 
@@ -205,6 +207,8 @@ export default function App() {
 function AppContent() {
   // console.log("[APP] Rendering AppContent...");
   // --- 1. PLATFORM & BASIC STATE ---
+  const webAccessPolicy = useMemo(() => readCurrentWebAccessPolicy(), []);
+  const isBrowserSafeWebInterface = webAccessPolicy.shouldRenderBrowserSafeApp;
   const isCapacitor = Capacitor.isNativePlatform();
   const isElectron = checkElectron();
   const isMobile = useMobile();
@@ -223,7 +227,9 @@ function AppContent() {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   // State required by useAppSystem
-  const [bootSequence, setBootSequence] = useState<BootSequence>("INIT");
+  const [bootSequence, setBootSequence] = useState<BootSequence>(() =>
+    isBrowserSafeWebInterface ? "READY" : "INIT",
+  );
   const [biosStatus, setBiosStatus] = useState<any>({
     server: "PENDING",
     core: "PENDING",
@@ -773,6 +779,7 @@ function AppContent() {
     devices,
     setDevices,
     setOpsecStatus,
+    browserSafeInterface: isBrowserSafeWebInterface,
   });
 
   const effectiveConnectionTier = useMemo(() => {
@@ -2538,6 +2545,8 @@ function AppContent() {
             tier={toHeaderTier(experienceMode)}
           />
         </SafeComponent>
+
+        <WebRuntimeCapabilityStrip policy={webAccessPolicy} />
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden relative z-10 flex h-full gap-0 p-0">

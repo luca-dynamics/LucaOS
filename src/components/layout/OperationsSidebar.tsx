@@ -21,6 +21,11 @@ import {
   lucaMobilePanelSurfaceStyle,
 } from "../../styles/lucaMobileShellStyles";
 import { apiUrl } from "../../config/api";
+import { readCurrentWebAccessPolicy } from "../../config/webAccessPolicy";
+import {
+  createDisabledWebRuntimeAction,
+  resolveWebRuntimeCapabilities,
+} from "../../config/webRuntimeCapabilities";
 
 interface OperationsSidebarProps {
   experienceMode: LucaExperienceMode;
@@ -111,6 +116,19 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
 }) => {
   const isLightCream = theme?.themeName?.toLowerCase() === "lightcream";
   const isLight = Boolean(theme?.isLight);
+  const webAccessPolicy = readCurrentWebAccessPolicy();
+  const isBrowserSafeWebInterface = webAccessPolicy.shouldRenderBrowserSafeApp;
+  const webCapabilities = resolveWebRuntimeCapabilities({
+    isWebRuntime: isBrowserSafeWebInterface,
+    hasConfiguredPublicApi: webAccessPolicy.hasConfiguredPublicApi,
+    hasAuthenticatedSession: webAccessPolicy.hasAuthenticatedSession,
+  });
+
+  const warnDisabledWebAction = (capabilityId: keyof typeof webCapabilities) => {
+    const result = createDisabledWebRuntimeAction(webCapabilities[capabilityId]);
+    console.warn("[WEB RUNTIME] Disabled browser action", result);
+    return result;
+  };
 
   // Existing launcher callbacks, preserved 1:1 from the old flat button cloud.
   // Each is invoked only on a real click via ToolLauncherSection.
@@ -120,10 +138,28 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
       soundService.play("KEYSTROKE");
     },
     openApps: () => {
+      if (isBrowserSafeWebInterface) warnDisabledWebAction("modelManager");
       setShowAppExplorer(true);
       soundService.play("KEYSTROKE");
     },
     openScreen: () => {
+      if (isBrowserSafeWebInterface) {
+        warnDisabledWebAction("lucaScreen");
+        setVisualData({
+          topic: "WEB_SAFE_LUCA_SCREEN",
+          type: "GENERAL",
+          title: "LucaScreen · Browser-safe visual shell",
+          layout: "GRID",
+          items: [
+            { label: "Desktop overlay", value: "Requires LucaOS Desktop" },
+            { label: "Host execution", value: "Disabled in web" },
+            { label: "Secure bridge", value: "Future authenticated pairing" },
+          ],
+        });
+        soundService.play("KEYSTROKE");
+        return;
+      }
+
       if ((window as any).electron && (window as any).electron.ipcRenderer) {
         window.electron.ipcRenderer.send("open-visual-core");
         fetch(apiUrl("/api/vision/start"), {
@@ -141,14 +177,17 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
       soundService.play("KEYSTROKE");
     },
     openIde: () => {
+      if (isBrowserSafeWebInterface) warnDisabledWebAction("fileSystemAccess");
       setShowCodeEditor(true);
       soundService.play("KEYSTROKE");
     },
     openSystemServices: () => {
+      if (isBrowserSafeWebInterface) warnDisabledWebAction("desktopControl");
       setShowSubsystemDashboard(true);
       soundService.play("KEYSTROKE");
     },
     openLinkBridge: () => {
+      if (isBrowserSafeWebInterface) warnDisabledWebAction("lucaLink");
       setShowLucaLinkModal(true);
       soundService.play("KEYSTROKE");
     },
@@ -232,6 +271,11 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
     // (toolRegistry: SecurityLevel.LEVEL_3) and is intentionally unchanged.
     // TODO: route direct high-risk actions through the governed action request
     // / provenance gate services instead of calling executeTool directly.
+    if (isBrowserSafeWebInterface) {
+      warnDisabledWebAction("desktopControl");
+      return;
+    }
+
     executeTool("initiateLockdown", {});
     onLockdown?.();
   };
