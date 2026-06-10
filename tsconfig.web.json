@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/index.tsx",
+    "src/vite-env.d.ts",
+    "src/global.d.ts",
+    "src/d3-force-3d.d.ts",
+    "src/types/**/*.d.ts",
+    "src/shared/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "landing",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/*.stories.*",
+    "**/__tests__/**",
+    "**/__mocks__/**",
+    "vite.config.ts"
+  ]
+}

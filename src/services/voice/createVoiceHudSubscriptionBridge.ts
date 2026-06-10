@@ -5,6 +5,7 @@ export const createVoiceHudSubscriptionBridge = (bridge = new VoiceHudRuntimeBri
   const subscriptionBridge = new VoiceHudSubscriptionBridge(bridge);
   return {
     bridge: subscriptionBridge,
+    subscriptionBridge,
     getState: subscriptionBridge.getState.bind(subscriptionBridge),
     subscribe: subscriptionBridge.subscribe.bind(subscriptionBridge),
     sendControl: subscriptionBridge.sendControl.bind(subscriptionBridge),

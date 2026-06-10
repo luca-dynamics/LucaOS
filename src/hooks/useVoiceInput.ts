@@ -693,7 +693,7 @@ export const useVoiceInput = () => {
   // --- WATCHDOG: ENSURE TRUST STREAM ALIVE ---
   useEffect(() => {
     const watchdog = setInterval(async () => {
-      const settings = settingsService.get("voice") || {};
+      const settings = settingsService.get("voice");
       const privacy = settingsService.get("privacy");
 
       // CASE 0: GLOBAL PRIVACY LOCK -> KILL EVERYTHING

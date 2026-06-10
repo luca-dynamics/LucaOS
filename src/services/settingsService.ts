@@ -108,6 +108,11 @@ export interface LucaSettings {
     activeClonedVoiceId?: string; // ID of active cloned voice
     clonedVoiceName?: string; // Name of active cloned voice
     wakeWordEnabled: boolean; // Control for Sentry Mode
+    preset?: "performance" | "speedster" | "balanced" | "privacy";
+    allowCloudFallback?: boolean;
+    allowByok?: boolean;
+    cloudEnabled?: boolean;
+    byokEnabled?: boolean;
   };
   iot: {
     haUrl: string;

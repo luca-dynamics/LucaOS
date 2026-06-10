@@ -122,7 +122,7 @@ export class ComputerUseGuardConfirmationBridge {
   }
 
   private shouldEnforcePhrase(): boolean {
-    return this.options.enforceRequiredPhrase;
+    return Boolean(this.options.enforceRequiredPhrase);
   }
 
   private isExpired(request: ComputerUseGuardConfirmationRequest): boolean {
