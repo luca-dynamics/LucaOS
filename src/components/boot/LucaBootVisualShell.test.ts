@@ -193,6 +193,8 @@ describe("LucaBootVisualShell readiness model", () => {
     expect(html).toContain("Entering browser host");
     expect(html).toContain("Host-native AI operating system");
     expect(html).not.toMatch(/loader-orb|loader-host-grid|loader-face|Preparing web-safe interface|yellow|gold|status::before/i);
+    expect(html).not.toContain("#root-loader::before");
+    expect(html).not.toContain("loader-scanline");
   });
 
   it("exposes no execution surfaces", () => {

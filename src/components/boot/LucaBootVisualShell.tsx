@@ -55,7 +55,6 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
       data-boot-shell="luca-hologram-face"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(255,255,255,0.075),transparent_30%),linear-gradient(180deg,#0a0a0d_0%,#040405_52%,#0b0b0e_100%)]" />
-      <div className="pointer-events-none absolute inset-x-[14%] top-[12%] h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-60 shadow-[0_0_34px_rgba(190,240,255,0.22)]" />
       <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-100/5 blur-3xl sm:h-[32rem] sm:w-[32rem]" />
 
       <section
@@ -77,7 +76,6 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
                 "brightness(1.05) contrast(1.08) saturate(0.88) drop-shadow(0 0 52px rgba(203, 244, 255, 0.18))",
             }}
           />
-          <div className="pointer-events-none absolute inset-x-[10%] top-[49%] h-px bg-gradient-to-r from-transparent via-cyan-50/30 to-transparent opacity-50" />
         </div>
 
         <div className="relative -mt-8 flex flex-col items-center gap-2 sm:-mt-10">

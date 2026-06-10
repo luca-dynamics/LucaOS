@@ -146,17 +146,6 @@
         transition: opacity 0.5s ease-out;
         overflow: hidden;
       }
-      #root-loader::before {
-        content: "";
-        position: absolute;
-        left: 14%;
-        right: 14%;
-        top: 15%;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(248, 250, 252, 0.34), transparent);
-        box-shadow: 0 0 34px rgba(203, 244, 255, 0.22);
-        opacity: 0.62;
-      }
       #root-loader::after {
         content: "";
         position: absolute;
@@ -202,15 +191,6 @@
           contrast(1.08)
           saturate(0.88)
           drop-shadow(0 0 52px rgba(203, 244, 255, 0.18));
-      }
-      .loader-scanline {
-        position: absolute;
-        left: 10%;
-        right: 10%;
-        top: 50%;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(236, 254, 255, 0.34), transparent);
-        opacity: 0.52;
       }
       @keyframes luca-loader-breathe {
         0%, 100% { transform: translateY(0) scale(0.99); opacity: 0.88; }
@@ -270,7 +250,6 @@
     <div id="root-loader">
       <div class="loader-presence" aria-hidden="true">
         <img class="loader-hologram-face" src="landing/hologram.png" alt="" />
-        <div class="loader-scanline"></div>
       </div>
       <div class="loader-text">LucaOS</div>
       <div class="loader-status">Entering browser host</div>
