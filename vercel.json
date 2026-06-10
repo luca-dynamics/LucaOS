@@ -1,5 +1,7 @@
 {
-  "buildCommand": "npm run build",
+  "framework": "vite",
+  "installCommand": "npm ci --ignore-scripts",
+  "buildCommand": "npm run build:web",
   "outputDirectory": "dist",
   "rewrites": [
     {
