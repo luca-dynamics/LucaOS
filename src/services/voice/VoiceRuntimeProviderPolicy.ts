@@ -73,7 +73,7 @@ export function deriveVoiceRuntimeProviderPolicy(input: VoiceRuntimeProviderPoli
     return basePolicy(preset, { preferredProviderKind: "auto", latencyMode: "balanced", privacyMode: allowByok ? "byok_allowed" : "cloud_allowed", fallbackAllowed: true, networkAllowed: true, localModelPreferred: false, enableStreaming: true });
   }
 
-  const networkAllowed = Boolean(input.allowCloudFallback ?? allowCloud || allowByok);
+  const networkAllowed = Boolean(input.allowCloudFallback ?? (allowCloud || allowByok));
   return basePolicy(preset, {
     preferredProviderKind: "local",
     latencyMode: "privacy",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { THEME_PALETTE, getDynamicContrast } from "../../config/themeColors";
+import type { UIThemeId } from "../../types/lucaPersonality";
 import HologramFace from "./HologramFace";
 import ModeSelect, { ConversationMode } from "./ModeSelect";
 import ConversationalOnboarding from "./ConversationalOnboarding";
@@ -68,6 +69,25 @@ import {
 } from "../../services/onboarding/OnboardingModelModeCoordinator";
 
 type Step = OnboardingStep;
+
+const UI_THEME_IDS = new Set<UIThemeId>([
+  "PROFESSIONAL",
+  "MASTER_SYSTEM",
+  "BUILDER",
+  "TERMINAL",
+  "AGENTIC_SLATE",
+  "DICTATION",
+  "LIGHTCREAM",
+  "VAPORWAVE",
+  "FROST",
+]);
+
+const normalizeUIThemeId = (value: string): UIThemeId => {
+  const normalized = value.trim().toUpperCase();
+  return UI_THEME_IDS.has(normalized as UIThemeId)
+    ? (normalized as UIThemeId)
+    : "PROFESSIONAL";
+};
 
 interface OnboardingFlowProps {
   theme: { primary: string; hex: string };
@@ -248,17 +268,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const handleThemeChange = (newTheme: string) => {
     soundService.play("HOVER");
-    setCurrentThemeName(newTheme);
-    const hex =
-      THEME_PALETTE[newTheme as keyof typeof THEME_PALETTE]?.primary ||
-      "#ffffff";
+    const themeId = normalizeUIThemeId(newTheme);
+    setCurrentThemeName(themeId);
+    const hex = THEME_PALETTE[themeId].primary;
     setCurrentThemeHex(hex);
 
     const currentGeneral = settingsService.get("general");
     settingsService.saveSettings({
       general: {
         ...currentGeneral,
-        theme: newTheme,
+        theme: themeId,
       },
     });
   };

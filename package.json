@@ -12,7 +12,7 @@
     "build": "tsc && vite build",
     "verify:web:env": "node scripts/verify-web-build-env.mjs",
     "verify:web:imports": "node scripts/verify-web-import-boundaries.mjs",
-    "build:web": "VITE_LUCA_RELEASE_TARGET=web VITE_LUCA_RUNTIME_TARGET=vercel sh -c \"npm run verify:web:env && npm run verify:web:imports && tsc --noEmit && vite build\"",
+    "build:web": "VITE_LUCA_RELEASE_TARGET=web VITE_LUCA_RUNTIME_TARGET=vercel sh -c \"npm run verify:web:env && npm run verify:web:imports && tsc -p tsconfig.web.json --noEmit && vite build\"",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "server": "node server.js",
