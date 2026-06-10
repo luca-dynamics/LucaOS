@@ -66,7 +66,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
   const glowPanel = `color-mix(in srgb, var(--luca-accent-soft, ${setHexAlpha(theme.hex, 0.09)}) 44%, transparent)`;
   const glowRing = `color-mix(in srgb, var(--luca-accent-primary, ${theme.hex}) 24%, transparent)`;
   const glowRingSoft = `color-mix(in srgb, var(--luca-accent-soft, ${setHexAlpha(theme.hex, 0.2)}) 68%, transparent)`;
-  const glowOrb = `color-mix(in srgb, var(--luca-accent-primary, ${theme.hex}) 18%, transparent)`;
+  const glowPresence = `color-mix(in srgb, var(--luca-accent-primary, ${theme.hex}) 18%, transparent)`;
   const surfaceGlass = "var(--luca-surface-glass, color-mix(in srgb, var(--app-bg-tint) 76%, transparent))";
   const surfaceHover = "var(--luca-surface-hover, color-mix(in srgb, var(--app-bg-tint) 68%, transparent))";
   const borderSubtle = "var(--luca-border-subtle, var(--app-border-main))";
@@ -149,61 +149,93 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           </p>
         </div>
 
-        <div className="relative flex h-40 w-40 items-center justify-center sm:h-52 sm:w-52">
+        <div
+          className="relative flex h-56 w-full max-w-[23rem] items-center justify-center sm:h-64"
+          data-boot-visual="premium-luca-hologram-presence"
+          aria-hidden="true"
+        >
           <div
-            className="absolute -inset-4 rounded-full blur-2xl animate-pulse"
+            className="absolute inset-x-0 bottom-3 h-14 rounded-[100%] blur-xl"
             style={{
-              animationDuration: "5.5s",
-              background: `radial-gradient(circle, ${glowOrb} 0%, ${glowSoft} 42%, transparent 72%)`,
+              background: `radial-gradient(ellipse, ${glowPresence} 0%, transparent 70%)`,
             }}
           />
           <div
-            className="absolute inset-0 rounded-full border animate-pulse"
+            className="absolute h-48 w-48 rounded-full border sm:h-56 sm:w-56"
             style={{
-              animationDuration: "4.8s",
-              background: `radial-gradient(circle at 50% 50%, transparent 48%, ${glowSoft} 68%, transparent 78%)`,
               borderColor: glowRing,
-              boxShadow: `0 0 64px ${glowSoft}, inset 0 0 36px ${glowSoft}`,
+              background: `radial-gradient(circle at 50% 42%, transparent 40%, ${glowSoft} 72%, transparent 82%)`,
+              boxShadow: `0 0 74px ${glowSoft}, inset 0 0 42px ${glowSoft}`,
             }}
           />
           <div
-            className="absolute inset-5 rounded-full border animate-pulse"
+            className="absolute h-[15.5rem] w-[15.5rem] rounded-[2.5rem] border opacity-60 sm:h-[18rem] sm:w-[18rem]"
             style={{
-              animationDelay: "450ms",
-              animationDuration: "5.8s",
-              background: `radial-gradient(circle at 35% 28%, color-mix(in srgb, ${glowColor} 28%, var(--luca-text-primary, var(--app-text-main))), ${glowRingSoft} 38%, transparent 72%)`,
               borderColor: glowRingSoft,
-              boxShadow: `0 0 60px ${glowSoft}, inset 0 0 42px ${glowSoft}`,
+              background:
+                "linear-gradient(rgba(148, 163, 184, 0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.11) 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+              maskImage: "radial-gradient(circle, black 0%, transparent 70%)",
+              transform: "perspective(520px) rotateX(62deg)",
+              boxShadow: `0 0 48px ${glowSoft}`,
             }}
           />
           <div
-            className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full animate-pulse sm:h-32 sm:w-32"
+            className="absolute h-48 w-36 rounded-[48%_48%_44%_44%/42%_42%_58%_58%] border sm:h-56 sm:w-40"
             style={{
-              animationDuration: "4.6s",
-              background: `radial-gradient(circle at 32% 26%, color-mix(in srgb, ${textPrimary} 28%, transparent), ${surfaceGlass} 40%, ${glowRingSoft} 74%, transparent 90%)`,
-              boxShadow: `${shadowGlow}, inset 0 0 28px color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 16%, transparent)`,
+              borderColor: glowRing,
+              background: `linear-gradient(180deg, color-mix(in srgb, ${glowColor} 16%, transparent), transparent 42%), radial-gradient(circle at 50% 24%, color-mix(in srgb, ${textPrimary} 18%, transparent), transparent 28%), radial-gradient(circle at 50% 60%, ${surfaceGlass}, transparent 68%)`,
+              boxShadow: `0 0 78px ${glowSoft}, inset 0 0 46px ${glowSoft}`,
+              clipPath: "polygon(50% 0%, 79% 10%, 94% 34%, 88% 67%, 70% 91%, 50% 100%, 30% 91%, 12% 67%, 6% 34%, 21% 10%)",
             }}
           >
             <img
               src={launchIdentity.assetSrc}
               alt=""
-              className="absolute h-[68%] w-[68%] object-contain animate-pulse"
+              className="absolute inset-[18%] h-[64%] w-[64%] object-contain animate-pulse"
               style={{
                 animationDuration: "6.2s",
-                filter: `drop-shadow(0 0 18px ${glowSoft})`,
-                opacity: launchIdentity.orbPresenceOpacity,
+                filter: `brightness(1.35) contrast(1.25) drop-shadow(0 0 26px ${glowSoft})`,
+                opacity: Math.max(launchIdentity.orbPresenceOpacity, 0.28),
               }}
-              aria-hidden="true"
             />
             <div
-              className="absolute left-6 top-5 h-10 w-14 rounded-full blur-md sm:left-8 sm:top-7 sm:h-12 sm:w-16"
+              className="absolute left-[20%] right-[20%] top-[36%] h-3 rounded-full"
               style={{
-                background:
-                  "color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 26%, transparent)",
+                background: `linear-gradient(90deg, transparent, ${textPrimary}, transparent)`,
+                boxShadow: `0 0 20px ${glowColor}`,
+                opacity: 0.62,
               }}
             />
-            <Icon name="Activity" size={34} color={textPrimary} />
+            <div
+              className="absolute left-[28%] top-[34%] h-2 w-5 rounded-full"
+              style={{ background: glowColor, boxShadow: `0 0 18px ${glowColor}` }}
+            />
+            <div
+              className="absolute right-[28%] top-[34%] h-2 w-5 rounded-full"
+              style={{ background: glowColor, boxShadow: `0 0 18px ${glowColor}` }}
+            />
+            <div
+              className="absolute left-[32%] right-[32%] top-[62%] h-px"
+              style={{ background: textPrimary, boxShadow: `0 0 14px ${glowColor}`, opacity: 0.48 }}
+            />
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                background:
+                  "repeating-linear-gradient(180deg, transparent 0 9px, rgba(232, 251, 255, 0.28) 10px, transparent 12px)",
+                maskImage: "linear-gradient(180deg, transparent, black 18%, black 82%, transparent)",
+              }}
+            />
           </div>
+          <div
+            className="absolute top-4 h-12 w-px animate-pulse sm:top-2"
+            style={{
+              animationDuration: "3.8s",
+              background: `linear-gradient(180deg, transparent, ${textPrimary}, transparent)`,
+              boxShadow: `0 0 24px ${glowColor}`,
+            }}
+          />
         </div>
 
         <div className="flex w-full max-w-xl flex-col items-center gap-3">
@@ -219,7 +251,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
               style={{
                 width: `${progress}%`,
                 background: glowColor,
-                boxShadow: `0 0 18px ${glowOrb}`,
+                boxShadow: `0 0 18px ${glowPresence}`,
               }}
             />
           </div>

@@ -145,8 +145,8 @@
         position: fixed;
         inset: 0;
         background:
-          radial-gradient(circle at 50% 34%, rgba(45, 212, 191, 0.18), transparent 34%),
-          radial-gradient(circle at 18% 18%, rgba(125, 211, 252, 0.12), transparent 30%),
+          radial-gradient(circle at 50% 36%, rgba(45, 212, 191, 0.16), transparent 34%),
+          radial-gradient(circle at 20% 18%, rgba(125, 211, 252, 0.12), transparent 30%),
           linear-gradient(135deg, #020407 0%, #080b10 48%, #020407 100%);
         display: flex;
         flex-direction: column;
@@ -161,47 +161,122 @@
       #root-loader::before {
         content: "";
         position: absolute;
-        inset: 12%;
-        border-radius: 999px;
+        inset: 10%;
+        border-radius: 42px;
         background:
           linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
           linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
         background-size: 44px 44px;
         mask-image: radial-gradient(circle, black 0%, transparent 72%);
-        opacity: 0.38;
+        opacity: 0.42;
       }
-      .loader-orb {
-        position: relative;
-        width: min(38vw, 184px);
-        height: min(38vw, 184px);
-        border-radius: 999px;
-        border: 1px solid rgba(125, 211, 252, 0.26);
-        background:
-          radial-gradient(circle at 50% 42%, rgba(232, 251, 255, 0.18), transparent 18%),
-          radial-gradient(circle, rgba(45, 212, 191, 0.18) 0%, rgba(14, 165, 233, 0.08) 42%, transparent 70%);
-        box-shadow:
-          0 0 70px rgba(45, 212, 191, 0.24),
-          inset 0 0 38px rgba(125, 211, 252, 0.12);
-        animation: luca-loader-breathe 4.8s ease-in-out infinite;
-      }
-      .loader-orb::before,
-      .loader-orb::after {
+      #root-loader::after {
         content: "";
         position: absolute;
-        inset: 18px;
-        border-radius: 999px;
-        border: 1px solid rgba(232, 251, 255, 0.16);
+        left: 14%;
+        right: 14%;
+        top: 18%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(232, 251, 255, 0.54), transparent);
+        box-shadow: 0 0 28px rgba(94, 234, 212, 0.46);
+        animation: luca-loader-scan 4.2s ease-in-out infinite;
+        opacity: 0.62;
       }
-      .loader-orb::after {
-        inset: 44%;
-        background: rgba(232, 251, 255, 0.72);
-        border: 0;
-        filter: blur(10px);
-        box-shadow: 0 0 34px rgba(125, 211, 252, 0.46);
+      .loader-presence {
+        position: relative;
+        width: min(68vw, 300px);
+        height: min(62vw, 280px);
+        display: grid;
+        place-items: center;
+        animation: luca-loader-breathe 5.2s ease-in-out infinite;
+      }
+      .loader-presence::before {
+        content: "";
+        position: absolute;
+        width: 74%;
+        height: 74%;
+        border-radius: 999px;
+        border: 1px solid rgba(125, 211, 252, 0.28);
+        background: radial-gradient(circle at 50% 44%, transparent 42%, rgba(45, 212, 191, 0.18) 70%, transparent 82%);
+        box-shadow:
+          0 0 76px rgba(45, 212, 191, 0.22),
+          inset 0 0 42px rgba(125, 211, 252, 0.16);
+      }
+      .loader-host-grid {
+        position: absolute;
+        bottom: 8%;
+        width: 84%;
+        height: 42%;
+        border: 1px solid rgba(125, 211, 252, 0.18);
+        border-radius: 28px;
+        background:
+          linear-gradient(rgba(148, 163, 184, 0.13) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(148, 163, 184, 0.13) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: radial-gradient(ellipse, black 0%, transparent 72%);
+        transform: perspective(520px) rotateX(64deg);
+        box-shadow: 0 0 42px rgba(45, 212, 191, 0.18);
+      }
+      .loader-face {
+        position: relative;
+        width: 44%;
+        height: 72%;
+        border: 1px solid rgba(125, 211, 252, 0.34);
+        clip-path: polygon(50% 0%, 79% 10%, 94% 34%, 88% 67%, 70% 91%, 50% 100%, 30% 91%, 12% 67%, 6% 34%, 21% 10%);
+        border-radius: 48% 48% 44% 44% / 42% 42% 58% 58%;
+        background:
+          linear-gradient(180deg, rgba(45, 212, 191, 0.16), transparent 42%),
+          radial-gradient(circle at 50% 24%, rgba(232, 251, 255, 0.22), transparent 28%),
+          radial-gradient(circle at 50% 60%, rgba(8, 13, 20, 0.72), transparent 68%);
+        box-shadow:
+          0 0 78px rgba(45, 212, 191, 0.26),
+          inset 0 0 46px rgba(125, 211, 252, 0.16);
+        overflow: hidden;
+      }
+      .loader-face::before {
+        content: "";
+        position: absolute;
+        inset: 18%;
+        background: center / contain no-repeat url('/icon.png');
+        opacity: 0.3;
+        filter: brightness(1.35) contrast(1.25) drop-shadow(0 0 26px rgba(45, 212, 191, 0.4));
+      }
+      .loader-face::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(180deg, transparent 0 9px, rgba(232, 251, 255, 0.26) 10px, transparent 12px);
+        mask-image: linear-gradient(180deg, transparent, black 18%, black 82%, transparent);
+        opacity: 0.3;
+      }
+      .loader-eyes {
+        position: absolute;
+        left: 28%;
+        right: 28%;
+        top: 34%;
+        height: 8px;
+        background:
+          radial-gradient(ellipse at left, #5eead4 0 28%, transparent 34%),
+          radial-gradient(ellipse at right, #5eead4 0 28%, transparent 34%),
+          linear-gradient(90deg, transparent, rgba(232, 251, 255, 0.62), transparent);
+        box-shadow: 0 0 20px rgba(94, 234, 212, 0.8);
+      }
+      .loader-mouth {
+        position: absolute;
+        left: 34%;
+        right: 34%;
+        top: 62%;
+        height: 1px;
+        background: rgba(232, 251, 255, 0.62);
+        box-shadow: 0 0 14px rgba(94, 234, 212, 0.8);
       }
       @keyframes luca-loader-breathe {
-        0%, 100% { transform: scale(0.98); opacity: 0.82; }
-        50% { transform: scale(1.02); opacity: 1; }
+        0%, 100% { transform: translateY(0) scale(0.985); opacity: 0.86; }
+        50% { transform: translateY(-4px) scale(1.015); opacity: 1; }
+      }
+      @keyframes luca-loader-scan {
+        0%, 100% { transform: translateY(0); opacity: 0.22; }
+        50% { transform: translateY(52vh); opacity: 0.72; }
       }
       .loader-text {
         position: relative;
@@ -255,9 +330,15 @@
 
   <body>
     <div id="root-loader">
-      <div class="loader-orb"></div>
+      <div class="loader-presence" aria-hidden="true">
+        <div class="loader-host-grid"></div>
+        <div class="loader-face">
+          <div class="loader-eyes"></div>
+          <div class="loader-mouth"></div>
+        </div>
+      </div>
       <div class="loader-text">LucaOS</div>
-      <div class="loader-status">Preparing web-safe interface</div>
+      <div class="loader-status">Entering browser host</div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
