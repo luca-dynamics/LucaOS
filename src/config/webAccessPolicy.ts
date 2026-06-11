@@ -14,9 +14,11 @@ export type LucaPublicQueryMode =
 export interface WebAccessSignals {
   releaseTarget?: string;
   runtimeTarget?: string;
+  appMode?: string;
   apiUrl?: string;
   hostname?: string;
   hasAuthenticatedSession?: boolean;
+  isElectronRuntime?: boolean;
 }
 
 export interface WebAccessPolicy {
@@ -67,14 +69,32 @@ export const resolveWebAccessPolicy = (
 ): WebAccessPolicy => {
   const releaseTarget = normalize(signals.releaseTarget);
   const runtimeTarget = normalize(signals.runtimeTarget);
+  const appMode = normalize(signals.appMode);
+  const hostname = normalize(signals.hostname).toLowerCase();
   const isWebRelease = releaseTarget === "web";
   const isVercelRuntime = runtimeTarget === "vercel";
+  const isWebAppMode = appMode === "web";
+  const isPublicBrowserDeploymentHost =
+    hostname.endsWith(".vercel.app") ||
+    hostname.includes("vercel.app") ||
+    hostname === "app.lucaos.space" ||
+    hostname.endsWith(".app.lucaos.space");
+  const isElectronRuntime = signals.isElectronRuntime === true;
   const isExplicitWebVercelTarget = isWebRelease && isVercelRuntime;
-  const isPartialWebTarget = isWebRelease || isVercelRuntime;
+  const isReliableWebPreviewSignal =
+    isExplicitWebVercelTarget ||
+    isWebRelease ||
+    isVercelRuntime ||
+    isWebAppMode ||
+    isPublicBrowserDeploymentHost;
   const hasConfiguredPublicApi = hasPublicApiUrl(signals.apiUrl);
   const hasAuthenticatedSession = signals.hasAuthenticatedSession === true;
 
-  if (!isPartialWebTarget) {
+  // Browser-safe web rendering is intentionally robust for deployed previews:
+  // explicit Vite web env, web app mode, Vercel runtime, or a public preview
+  // hostname can activate it, but Electron/native desktop is always excluded so
+  // desktop boot readiness stays strict.
+  if (!isReliableWebPreviewSignal || isElectronRuntime) {
     return {
       runtimeState: "local-desktop-dev",
       isExplicitWebVercelTarget,
@@ -83,21 +103,9 @@ export const resolveWebAccessPolicy = (
       shouldRenderPublicShell: false,
       shouldRenderBrowserSafeApp: false,
       blockedQueryModes: [],
-      reason: "Local desktop/dev runtime is outside the public web preview gate.",
-    };
-  }
-
-  if (!isExplicitWebVercelTarget) {
-    return {
-      runtimeState: "unavailable-misconfigured",
-      isExplicitWebVercelTarget,
-      hasConfiguredPublicApi,
-      hasAuthenticatedSession,
-      shouldRenderPublicShell: true,
-      shouldRenderBrowserSafeApp: false,
-      blockedQueryModes: PUBLIC_WEB_BLOCKED_QUERY_MODES,
-      reason:
-        "Public web mode requires both VITE_LUCA_RELEASE_TARGET=web and VITE_LUCA_RUNTIME_TARGET=vercel.",
+      reason: isElectronRuntime
+        ? "Electron/native desktop runtime is excluded from browser-safe web preview boot."
+        : "Local desktop/dev runtime is outside the public web preview gate.",
     };
   }
 
@@ -123,8 +131,9 @@ export const resolveWebAccessPolicy = (
     shouldRenderPublicShell: false,
     shouldRenderBrowserSafeApp: true,
     blockedQueryModes: PUBLIC_WEB_BLOCKED_QUERY_MODES,
-    reason:
-      "Public web/vercel mode renders the browser-safe LucaOS interface shell; runtime actions remain disabled until API/auth/session is implemented.",
+    reason: isExplicitWebVercelTarget
+      ? "Public web/vercel mode renders the browser-safe LucaOS interface shell; runtime actions remain disabled until API/auth/session is implemented."
+      : "Browser-safe web preview inferred from web app mode, Vercel runtime, or public deployment hostname; runtime actions remain disabled until API/auth/session is implemented.",
   };
 };
 
@@ -143,9 +152,18 @@ export const readCurrentWebAccessPolicy = (
   resolveWebAccessPolicy({
     releaseTarget: readViteEnv("VITE_LUCA_RELEASE_TARGET"),
     runtimeTarget: readViteEnv("VITE_LUCA_RUNTIME_TARGET"),
+    appMode: readViteEnv("VITE_LUCA_APP_MODE"),
     apiUrl: readViteEnv("VITE_LUCA_API_URL"),
     hostname: typeof window !== "undefined" ? window.location.hostname : "",
     hasAuthenticatedSession: false,
+    isElectronRuntime:
+      typeof window !== "undefined" &&
+      Boolean(
+        (window as any).electron ||
+          (window as any).ipcRenderer ||
+          (window as any).process?.versions?.electron ||
+          window.navigator.userAgent.toLowerCase().includes("electron"),
+      ),
     ...overrides,
   });
 

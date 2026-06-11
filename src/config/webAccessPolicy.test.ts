@@ -37,13 +37,34 @@ describe("webAccessPolicy", () => {
     },
   );
 
-  it("keeps the public shell for partial/misconfigured public web state", () => {
+  it("renders browser-safe app for partial web env drift instead of trapping boot", () => {
     const policy = resolveWebAccessPolicy({
       releaseTarget: "web",
     });
 
-    expect(policy.runtimeState).toBe("unavailable-misconfigured");
-    expect(policy.shouldRenderPublicShell).toBe(true);
+    expect(policy.runtimeState).toBe("web-preview");
+    expect(policy.shouldRenderPublicShell).toBe(false);
+    expect(policy.shouldRenderBrowserSafeApp).toBe(true);
+  });
+
+  it("renders browser-safe app for public deployment hostname without env", () => {
+    const policy = resolveWebAccessPolicy({
+      hostname: "luca-preview.vercel.app",
+    });
+
+    expect(policy.runtimeState).toBe("web-preview");
+    expect(policy.shouldRenderBrowserSafeApp).toBe(true);
+  });
+
+  it("does not activate browser-safe web mode inside Electron", () => {
+    const policy = resolveWebAccessPolicy({
+      releaseTarget: "web",
+      runtimeTarget: "vercel",
+      hostname: "app.lucaos.space",
+      isElectronRuntime: true,
+    });
+
+    expect(policy.runtimeState).toBe("local-desktop-dev");
     expect(policy.shouldRenderBrowserSafeApp).toBe(false);
   });
 

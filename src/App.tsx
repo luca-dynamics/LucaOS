@@ -147,7 +147,10 @@ import {
 } from "./styles/lucaMobileShellStyles";
 import { resolveLucaPlatformBackgroundPolicy } from "./styles/lucaPlatformBackgroundPolicy";
 import { readCurrentWebAccessPolicy } from "./config/webAccessPolicy";
-import { resolveBrowserSafeBootState } from "./config/browserSafeBootResolver";
+import {
+  resolveBrowserSafeBootState,
+  shouldShowBootShell,
+} from "./config/browserSafeBootResolver";
 import WebRuntimeCapabilityStrip from "./components/web/WebRuntimeCapabilityStrip";
 
 // --- Mock Initial State ---
@@ -208,18 +211,27 @@ export default function App() {
 function AppContent() {
   // console.log("[APP] Rendering AppContent...");
   // --- 1. PLATFORM & BASIC STATE ---
-  const webAccessPolicy = useMemo(() => readCurrentWebAccessPolicy(), []);
+  const isCapacitor = Capacitor.isNativePlatform();
+  const isElectron = checkElectron();
+  const bootDebugEnabled =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("bootDebug") === "1";
+  const webAccessPolicy = useMemo(
+    () => readCurrentWebAccessPolicy({ isElectronRuntime: isElectron }),
+    [isElectron],
+  );
   const browserSafeBootState = useMemo(
     () =>
       resolveBrowserSafeBootState(webAccessPolicy, {
         releaseTarget: import.meta.env.VITE_LUCA_RELEASE_TARGET,
         runtimeTarget: import.meta.env.VITE_LUCA_RUNTIME_TARGET,
+        appMode: import.meta.env.VITE_LUCA_APP_MODE,
+        hostname: typeof window !== "undefined" ? window.location.hostname : "",
+        isElectronRuntime: isElectron,
       }),
-    [webAccessPolicy],
+    [webAccessPolicy, isElectron],
   );
   const isBrowserSafeWebInterface = browserSafeBootState.bootResolved;
-  const isCapacitor = Capacitor.isNativePlatform();
-  const isElectron = checkElectron();
   const isMobile = useMobile();
   const platformBackgroundPolicy = useMemo(
     () =>
@@ -242,19 +254,26 @@ function AppContent() {
   const [showBrowserSafeBootShell, setShowBrowserSafeBootShell] = useState(
     isBrowserSafeWebInterface,
   );
+  const [browserSafeBootResolved, setBrowserSafeBootResolved] = useState(
+    !isBrowserSafeWebInterface,
+  );
   const [biosStatus, setBiosStatus] = useState<any>({
     server: "PENDING",
     core: "PENDING",
     vision: "PENDING",
     audio: "PENDING",
   });
+  const hasLoggedWebBootDiagnosticRef = useRef(false);
 
   useEffect(() => {
     if (!isBrowserSafeWebInterface) {
+      setBrowserSafeBootResolved(true);
       setShowBrowserSafeBootShell(false);
       return;
     }
 
+    setBrowserSafeBootResolved(false);
+    setShowBrowserSafeBootShell(true);
     setBootSequence("READY");
     setBiosStatus({
       server: "API REQUIRED",
@@ -265,8 +284,22 @@ function AppContent() {
     });
 
     const resolveWebBoot = () => {
+      // Web-only hard fail-safe: once the intro/fallback fires, force the
+      // browser-safe app shell to render even though desktop/local readiness
+      // remains unavailable in a deployed browser.
       setBootSequence("READY");
+      setBrowserSafeBootResolved(true);
       setShowBrowserSafeBootShell(false);
+      setBiosStatus({
+        server: "API REQUIRED",
+        core: "DESKTOP REQUIRED",
+        vision: "DISABLED IN WEB",
+        audio: "DISABLED IN WEB",
+        ollama: "DESKTOP REQUIRED",
+        desktopRuntimeStatus: "desktop-required",
+        localServicesStatus: "skipped",
+        nativeActionsStatus: "disabled_in_web",
+      });
     };
 
     const browserSafeBootTimer = window.setTimeout(
@@ -283,6 +316,39 @@ function AppContent() {
       window.clearTimeout(browserSafeFallbackTimer);
     };
   }, [browserSafeBootState, isBrowserSafeWebInterface]);
+
+  useEffect(() => {
+    if (!isBrowserSafeWebInterface && !bootDebugEnabled) return;
+    if (hasLoggedWebBootDiagnosticRef.current) return;
+    hasLoggedWebBootDiagnosticRef.current = true;
+
+    console.info(
+      `[LucaOS web boot] mode=${browserSafeBootState.runtimeMode}`,
+      {
+        releaseTarget: import.meta.env.VITE_LUCA_RELEASE_TARGET || "",
+        runtimeTarget: import.meta.env.VITE_LUCA_RUNTIME_TARGET || "",
+        appMode: import.meta.env.VITE_LUCA_APP_MODE || "",
+        hostname: typeof window !== "undefined" ? window.location.hostname : "",
+        shouldRenderBrowserSafeApp:
+          webAccessPolicy.shouldRenderBrowserSafeApp,
+        resolverActive: browserSafeBootState.bootResolved,
+        bootSequence,
+        showBootShell: showBrowserSafeBootShell,
+        browserSafeBootResolved,
+        fallbackTimeoutMs: browserSafeBootState.fallbackTimeoutMs,
+        readiness: browserSafeBootState.readiness,
+        reason: browserSafeBootState.reason,
+      },
+    );
+  }, [
+    bootDebugEnabled,
+    bootSequence,
+    browserSafeBootResolved,
+    browserSafeBootState,
+    isBrowserSafeWebInterface,
+    showBrowserSafeBootShell,
+    webAccessPolicy,
+  ]);
 
   // --- 2. REFS ---
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -2306,7 +2372,14 @@ function AppContent() {
   // Removed Background from here (Moved to Root)
 
   // --- BOOT SEQUENCE RENDER ---
-  if (bootSequence !== "READY" || showBrowserSafeBootShell) {
+  if (
+    shouldShowBootShell({
+      bootSequence,
+      showBootShell: showBrowserSafeBootShell,
+      browserSafeBootResolved:
+        isBrowserSafeWebInterface && browserSafeBootResolved,
+    })
+  ) {
     return (
       <div
         className="h-screen w-full bg-transparent cursor-default select-none draggable transition-all duration-700 relative overflow-hidden"
@@ -2352,7 +2425,42 @@ function AppContent() {
   // console.log("[RENDER] Boot Ready. Rendering Main UI...");
 
   return (
-    <>
+    <SafeComponent
+      componentName={
+        isBrowserSafeWebInterface
+          ? "Browser-safe LucaOS app shell"
+          : "LucaOS app shell"
+      }
+      fallback={
+        isBrowserSafeWebInterface ? (
+          <div className="min-h-screen bg-black text-cyan-100 flex items-center justify-center p-6 font-mono">
+            <div className="max-w-lg rounded-2xl border border-cyan-400/30 bg-slate-950/80 p-6 shadow-2xl shadow-cyan-950/40">
+              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
+                Browser-safe shell failed to initialize
+              </p>
+              <h1 className="mt-3 text-2xl font-semibold text-white">
+                Desktop runtime unavailable in browser
+              </h1>
+              <p className="mt-3 text-sm text-cyan-100/75">
+                LucaOS exited boot, but a browser-safe shell component failed.
+                Native/local capabilities remain disabled instead of returning
+                to the boot screen.
+              </p>
+            </div>
+          </div>
+        ) : undefined
+      }
+    >
+      {bootDebugEnabled && isBrowserSafeWebInterface && (
+        <div className="fixed left-3 top-3 z-[9999] rounded border border-cyan-400/30 bg-black/80 px-3 py-2 text-[10px] font-mono text-cyan-100 shadow-lg pointer-events-none">
+          <div>[LucaOS web boot]</div>
+          <div>resolverActive={String(browserSafeBootState.bootResolved)}</div>
+          <div>bootSequence={bootSequence}</div>
+          <div>showBootShell={String(showBrowserSafeBootShell)}</div>
+          <div>resolved={String(browserSafeBootResolved)}</div>
+          <div>fallbackTimeoutMs={browserSafeBootState.fallbackTimeoutMs}</div>
+        </div>
+      )}
       {platformBackgroundPolicy.shouldUseMobileStableBackground ? (
         <div
           className={`fixed inset-0 -z-50 ${lucaMobileClassNames.app}`}
@@ -3131,6 +3239,6 @@ function AppContent() {
             approved open_approved_safe_url governed execution (approval + Run once). */}
         <SandboxedBrowserShell />
       </div>
-    </>
+    </SafeComponent>
   );
 }
