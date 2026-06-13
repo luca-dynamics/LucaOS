@@ -11,6 +11,8 @@ const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"])
 
 const scanGlobs = [
   "src/main.{ts,tsx,js,jsx,mjs,cjs}",
+  "src/index.{ts,tsx,js,jsx,mjs,cjs}",
+  "src/web/**/*.{ts,tsx,js,jsx,mjs,cjs}",
   "src/App.{ts,tsx,js,jsx,mjs,cjs}",
   "src/config/api.ts",
   "src/hooks/app/**/*.{ts,tsx,js,jsx,mjs,cjs}",
@@ -20,6 +22,8 @@ const scanGlobs = [
 
 const scanTargets = [
   { type: "file-stem", path: "src/main" },
+  { type: "file-stem", path: "src/index" },
+  { type: "directory", path: "src/web" },
   { type: "file-stem", path: "src/App" },
   { type: "file", path: "src/config/api.ts" },
   { type: "directory", path: "src/hooks/app" },

@@ -21,6 +21,7 @@ const describeBootError = (error: unknown): string =>
   error instanceof Error ? `${error.name}: ${error.message}` : String(error);
 
 export function mountLucaReactApp(): void {
+  window.__LUCA_DESKTOP_ENTRY_IMPORTED__ = true;
   window.__LUCA_REACT_MOUNT_ATTEMPTED__ = true;
   console.info("[LucaOS web boot] React mount attempted");
 
