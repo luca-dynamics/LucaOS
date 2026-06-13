@@ -207,8 +207,11 @@ describe("LucaBootVisualShell readiness model", () => {
     expect(html).toContain("window.__LUCA_REACT_MOUNTED__ !== true");
     expect(html).toContain("LucaOS web app failed to start");
     expect(html).toContain("React did not hydrate");
-    expect(html).toContain("Entry loaded:");
-    expect(html).toContain("Mount attempted:");
+    expect(html).toContain("React entry loaded:");
+    expect(html).toContain("React mount attempted:");
+    expect(html).toContain("Bootstrap error:");
+    expect(html).toContain("Captured errors/rejections:");
+    expect(html).toContain('"luca-react-bootstrap-error"');
     expect(html).toContain("document.scripts.length");
     expect(html).toContain("}, 5000)");
   });
@@ -216,13 +219,27 @@ describe("LucaBootVisualShell readiness model", () => {
   it("marks and guards the React entry bootstrap", async () => {
     const { readFile } = await import("node:fs/promises");
     const entry = await readFile("src/index.tsx", "utf8");
+    const appEntry = await readFile("src/reactAppEntry.tsx", "utf8");
 
     expect(entry).toContain("window.__LUCA_REACT_ENTRY_LOADED__ = true");
-    expect(entry).toContain("window.__LUCA_REACT_MOUNT_ATTEMPTED__ = true");
-    expect(entry).toContain("window.__LUCA_REACT_MOUNTED__ = true");
-    expect(entry).toContain('document.getElementById("root-loader")?.remove()');
-    expect(entry).toContain("try {");
+    expect(
+      entry.indexOf("window.__LUCA_REACT_ENTRY_LOADED__ = true"),
+    ).toBeLessThan(entry.indexOf('import("./reactAppEntry")'));
+    expect(entry).toContain('import("./reactAppEntry")');
+    expect(entry).not.toContain('from "./App"');
+    expect(entry).toContain("__LUCA_REACT_BOOTSTRAP_ERROR__");
+    expect(entry).toContain('"luca-react-bootstrap-error"');
+    expect(appEntry).toContain("export function mountLucaReactApp(): void");
+    expect(appEntry).toContain("window.__LUCA_REACT_MOUNT_ATTEMPTED__ = true");
+    expect(appEntry).toContain("window.__LUCA_REACT_MOUNTED__ = true");
+    expect(appEntry).toContain(
+      'document.getElementById("root-loader")?.remove()',
+    );
+    expect(appEntry).toContain("try {");
     expect(entry).toContain(
+      'console.error("[LucaOS web boot] React app import failed", error)',
+    );
+    expect(appEntry).toContain(
       'console.error("[LucaOS web boot] Fatal error before React mount", error)',
     );
   });
