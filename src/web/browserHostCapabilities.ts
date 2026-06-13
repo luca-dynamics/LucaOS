@@ -17,7 +17,8 @@ export type RouteUnlockOption =
   | "install-desktop"
   | "install-mobile"
   | "install-connector"
-  | "generate-approved-route";
+  | "generate-approved-route"
+  | "api-config";
 
 export type BrowserCapabilityId =
   | "camera"
