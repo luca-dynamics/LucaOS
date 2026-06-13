@@ -13,17 +13,21 @@ export type NativeCapabilityId =
   | "ollamaRuntime"
   | "nativeAutomation"
   | "electronIPC"
+  | "localProcessExecution"
   | "desktopLucaLinkHostRuntime"
   | "mobileNativeRuntime"
   | "smartTvDisplayBridge"
   | "lucaScreenNativeOverlay"
+  | "largeDisplaySession"
   | "cloudModelRouting"
   | "byokModelRouting"
   | "cloudPersonalIntelligence"
   | "webChat"
   | "webOnboarding"
   | "webSettings"
-  | "lucaLinkPairing";
+  | "lucaLinkPairing"
+  | "sessionPorting"
+  | "remoteCapabilityRoute";
 
 export type WebCapabilityGraph = Record<NativeCapabilityId, WebCapability>;
 
@@ -101,6 +105,13 @@ export const buildWebCapabilityGraph = (
     "Electron bridges exist only inside LucaOS Desktop.",
     ["install-desktop"],
   ),
+  localProcessExecution: node(
+    "localProcessExecution",
+    "Local shell / process execution",
+    "desktop-required",
+    "Browser sandboxing prevents direct local process execution.",
+    ["luca-link-host", "install-desktop", "generate-approved-route"],
+  ),
   desktopLucaLinkHostRuntime: node(
     "desktopLucaLinkHostRuntime",
     "Desktop LucaLink host",
@@ -129,6 +140,13 @@ export const buildWebCapabilityGraph = (
     "Native overlays must be rendered and approved by a paired capable host.",
     ["luca-link-host", "install-desktop", "install-mobile"],
   ),
+  largeDisplaySession: node(
+    "largeDisplaySession",
+    "Large display session",
+    "paired-host-required",
+    "Display sessions can continue through an approved LucaLink host pairing.",
+    ["luca-link-host"],
+  ),
   cloudModelRouting: node(
     "cloudModelRouting",
     "Cloud model routing",
@@ -136,7 +154,7 @@ export const buildWebCapabilityGraph = (
     config.cloudApiConfigured
       ? "A public browser-safe API route is configured."
       : "A browser-safe authenticated API route must be configured.",
-    config.cloudApiConfigured ? [] : ["install-connector"],
+    config.cloudApiConfigured ? [] : ["api-config"],
   ),
   byokModelRouting: node(
     "byokModelRouting",
@@ -152,7 +170,7 @@ export const buildWebCapabilityGraph = (
     "Cloud personal intelligence",
     "api-required",
     "Requires an authenticated, browser-safe API and user session.",
-    ["install-connector"],
+    ["api-config", "install-connector"],
   ),
   webChat: node(
     "webChat",
@@ -161,7 +179,7 @@ export const buildWebCapabilityGraph = (
     config.webChatConfigured
       ? "Browser-safe conversation routing is configured."
       : "Conversation UI is ready for a browser-safe API route.",
-    config.webChatConfigured ? [] : ["install-connector"],
+    config.webChatConfigured ? [] : ["api-config"],
   ),
   webOnboarding: node(
     "webOnboarding",
@@ -187,5 +205,21 @@ export const buildWebCapabilityGraph = (
     config.lucaLinkConnectorConfigured
       ? ["luca-link-host"]
       : ["luca-link-host", "install-connector"],
+  ),
+  sessionPorting: node(
+    "sessionPorting",
+    "Session porting",
+    config.lucaLinkConnectorConfigured ? "available" : "connector-required",
+    config.lucaLinkConnectorConfigured
+      ? "This browser is ready to negotiate a governed session handoff."
+      : "Session handoff needs a browser-safe LucaLink connector and a paired host.",
+    ["luca-link-host", "install-connector"],
+  ),
+  remoteCapabilityRoute: node(
+    "remoteCapabilityRoute",
+    "Remote capability route",
+    "paired-host-required",
+    "A paired host must approve every capability request before execution.",
+    ["luca-link-host", "generate-approved-route"],
   ),
 });
