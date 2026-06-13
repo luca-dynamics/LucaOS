@@ -2,6 +2,9 @@ import type { WebHostClass } from "./hostClass";
 
 interface WebBridgeDiagnosticsProps {
   hostClass: WebHostClass;
+  lifecycleState: string;
+  onboardingComplete: boolean;
+  activeWebSurface: string;
   availableBrowserCapabilityCount: number;
   guardedNativeCapabilityCount: number;
   lucaLinkStatus: string;
@@ -9,6 +12,9 @@ interface WebBridgeDiagnosticsProps {
 
 export function WebBridgeDiagnostics({
   hostClass,
+  lifecycleState,
+  onboardingComplete,
+  activeWebSurface,
   availableBrowserCapabilityCount,
   guardedNativeCapabilityCount,
   lucaLinkStatus,
@@ -33,6 +39,9 @@ export function WebBridgeDiagnostics({
       String(window.__LUCA_DESKTOP_ENTRY_IMPORTED__ === true),
     ],
     ["detectedHostClass", hostClass],
+    ["webLifecycleState", lifecycleState],
+    ["onboardingComplete", String(onboardingComplete)],
+    ["activeWebSurface", activeWebSurface],
     ["availableBrowserCapabilityCount", String(availableBrowserCapabilityCount)],
     ["guardedNativeCapabilityCount", String(guardedNativeCapabilityCount)],
     ["lucaLinkStatus", lucaLinkStatus],
