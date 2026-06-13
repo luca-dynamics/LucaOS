@@ -26,7 +26,7 @@ export function WebLifecycleShell() {
   };
 
   return (
-    <main className="relative h-full min-h-screen overflow-y-auto bg-[#050609] text-white">
+    <main className="relative h-full min-h-screen overflow-y-auto bg-[var(--luca-background-base,#050609)] text-[var(--luca-text-primary,#fff)]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_4%,rgba(34,211,238,0.12),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(139,92,246,0.10),transparent_26%),linear-gradient(180deg,#090b12_0%,#040509_62%,#090a10_100%)]" />
       <div className="glass-noise fixed inset-0" />
       <div className="relative min-h-full">
