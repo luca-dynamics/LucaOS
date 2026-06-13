@@ -320,7 +320,7 @@
           );
           const errorMessage =
             error instanceof Error ? error.message : error ? String(error) : "";
-          window.__LUCA_BOOT_ERROR__ = errorMessage;
+          if (errorMessage) window.__LUCA_BOOT_ERROR__ = errorMessage;
           loader.dataset.state = "failed";
 
           const title = loader.querySelector(".loader-text");
@@ -342,28 +342,50 @@
           ];
           if (debugEnabled) {
             diagnostics.push(
+              `React entry loaded: ${window.__LUCA_REACT_ENTRY_LOADED__ === true}`,
+              `React mount attempted: ${window.__LUCA_REACT_MOUNT_ATTEMPTED__ === true}`,
               `React mounted: ${window.__LUCA_REACT_MOUNTED__ === true}`,
-              `Entry loaded: ${window.__LUCA_REACT_ENTRY_LOADED__ === true}`,
-              `Mount attempted: ${window.__LUCA_REACT_MOUNT_ATTEMPTED__ === true}`,
+              `Bootstrap error: ${window.__LUCA_REACT_BOOTSTRAP_ERROR__ || "(none)"}`,
+              `Captured errors/rejections: ${
+                window.__LUCA_CAPTURED_BOOT_ERRORS__?.join(" | ") || "(none)"
+              }`,
               `Script count: ${document.scripts.length}`,
-              `Loader error: ${window.__LUCA_BOOT_ERROR__ || "(none)"}`,
             );
           }
           if (details) details.textContent = diagnostics.join("\n");
         };
 
-        window.addEventListener("error", (event) => {
-          if (window.__LUCA_REACT_MOUNTED__ !== true) {
-            window.__LUCA_BOOT_ERROR__ =
-              event.error?.message || event.message || "Unknown startup error";
-          }
-        });
-        window.addEventListener("unhandledrejection", (event) => {
-          if (window.__LUCA_REACT_MOUNTED__ !== true) {
-            window.__LUCA_BOOT_ERROR__ =
-              event.reason?.message ||
-              String(event.reason || "Unhandled startup rejection");
-          }
+        const captureBootError = (error) => {
+          const description =
+            error instanceof Error
+              ? `${error.name}: ${error.message}`
+              : String(error);
+          window.__LUCA_BOOT_ERROR__ = description;
+          window.__LUCA_CAPTURED_BOOT_ERRORS__ ??= [];
+          window.__LUCA_CAPTURED_BOOT_ERRORS__.push(description);
+        };
+
+        if (!window.__LUCA_BOOT_ERROR_LISTENERS_REGISTERED__) {
+          window.__LUCA_BOOT_ERROR_LISTENERS_REGISTERED__ = true;
+          window.addEventListener("error", (event) => {
+            if (window.__LUCA_REACT_MOUNTED__ !== true) {
+              captureBootError(
+                event.error || event.message || "Unknown startup error",
+              );
+            }
+          });
+          window.addEventListener("unhandledrejection", (event) => {
+            if (window.__LUCA_REACT_MOUNTED__ !== true) {
+              captureBootError(event.reason || "Unhandled startup rejection");
+            }
+          });
+        }
+
+        window.addEventListener("luca-react-bootstrap-error", () => {
+          window.__LUCA_SHOW_BOOT_FAILURE__(
+            "LucaOS web app failed to start",
+            window.__LUCA_REACT_BOOTSTRAP_ERROR__,
+          );
         });
 
         window.setTimeout(() => {
