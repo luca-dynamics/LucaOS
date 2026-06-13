@@ -1,8 +1,10 @@
-import { Buffer as BrowserBuffer } from "buffer";
+import {
+  isElectronRuntimeSignal,
+  selectLucaBootstrapEntry,
+  type LucaBootstrapEntry,
+} from "./config/bootstrapEntrySelector";
 
 declare global {
-  var Buffer: typeof BrowserBuffer;
-
   interface Window {
     __LUCA_REACT_ENTRY_LOADED__?: boolean;
     __LUCA_REACT_MOUNT_ATTEMPTED__?: boolean;
@@ -12,11 +14,12 @@ declare global {
     __LUCA_BOOT_ERROR_LISTENERS_REGISTERED__?: boolean;
     __LUCA_CAPTURED_BOOT_ERRORS__?: string[];
     __LUCA_SHOW_BOOT_FAILURE__?: (message?: string, error?: unknown) => void;
+    __LUCA_SELECTED_ENTRY__?: LucaBootstrapEntry;
+    __LUCA_WEB_BRIDGE_MOUNT_ATTEMPTED__?: boolean;
+    __LUCA_WEB_BRIDGE_MOUNTED__?: boolean;
+    __LUCA_DETECTED_HOST_CLASS__?: string;
+    __LUCA_DESKTOP_ENTRY_IMPORTED__?: boolean;
   }
-}
-
-if (typeof globalThis.Buffer === "undefined") {
-  globalThis.Buffer = BrowserBuffer;
 }
 
 const describeBootError = (error: unknown): string => {
@@ -51,8 +54,30 @@ if (!window.__LUCA_BOOT_ERROR_LISTENERS_REGISTERED__) {
   });
 }
 
-import("./reactAppEntry")
-  .then((module) => module.mountLucaReactApp())
+const selectedEntry = selectLucaBootstrapEntry({
+  releaseTarget: import.meta.env.VITE_LUCA_RELEASE_TARGET,
+  appMode: import.meta.env.VITE_LUCA_APP_MODE,
+  runtimeTarget: import.meta.env.VITE_LUCA_RUNTIME_TARGET,
+  hostname: window.location.hostname,
+  isElectronRuntime: isElectronRuntimeSignal(window),
+  hasBrowserRuntime: true,
+});
+
+window.__LUCA_SELECTED_ENTRY__ = selectedEntry;
+window.__LUCA_DESKTOP_ENTRY_IMPORTED__ = false;
+console.info(`[LucaOS web boot] selectedEntry=${selectedEntry}`);
+
+const entryMount =
+  selectedEntry === "webBridgeEntry"
+    ? import("./web/webBridgeEntry").then((module) =>
+        module.mountLucaWebBridge(),
+      )
+    : import("./reactAppEntry").then((module) => {
+        window.__LUCA_DESKTOP_ENTRY_IMPORTED__ = true;
+        return module.mountLucaReactApp();
+      });
+
+entryMount
   .catch((error: unknown) => {
     const description = describeBootError(error);
     window.__LUCA_REACT_BOOTSTRAP_ERROR__ = description;
