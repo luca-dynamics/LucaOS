@@ -66,6 +66,22 @@ export const createHash = () => ({
     digest: () => 'mock-hash'
   })
 });
+export const randomBytes = (size) => {
+  const length = Number(size);
+  if (!Number.isFinite(length) || length < 0) {
+    throw new TypeError('randomBytes size must be a non-negative number');
+  }
+
+  const bytes = new Uint8Array(length);
+  const webCrypto = globalThis.crypto || globalThis.msCrypto;
+
+  if (!webCrypto || typeof webCrypto.getRandomValues !== 'function') {
+    throw new Error('Secure randomBytes is unavailable in this browser-safe build.');
+  }
+
+  webCrypto.getRandomValues(bytes);
+  return bytes;
+};
 
 // util mock
 export const inspect = (obj) => JSON.stringify(obj);
@@ -107,6 +123,7 @@ export default {
   basename,
   extname,
   createHash,
+  randomBytes,
   inspect,
   setImmediate,
   clearImmediate,
