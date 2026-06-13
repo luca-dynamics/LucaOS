@@ -12,8 +12,7 @@
     "src/global.d.ts",
     "src/d3-force-3d.d.ts",
     "src/types/**/*.d.ts",
-    "src/shared/**/*.d.ts",
-    "src/shared/ui/**/*.tsx"
+    "src/shared/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
