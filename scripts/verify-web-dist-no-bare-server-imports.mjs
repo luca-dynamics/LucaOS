@@ -1,68 +1,87 @@
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
+#!/usr/bin/env node
+
+import { readdirSync, readFileSync } from "node:fs";
+import { extname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const assetsDir = path.join(repoRoot, "dist", "assets");
-const serverOnlyPackages = [
+const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const distRoot = resolve(repoRoot, "dist");
+const scriptExtensions = new Set([".js", ".mjs"]);
+const serverOnlySpecifiers = [
+  "eventsource",
   "@modelcontextprotocol/sdk",
+  "whatsapp-web.js",
+  "robotjs",
+  "playwright",
   "better-sqlite3",
-  "ccxt",
   "electron",
   "express",
-  "playwright",
-  "robotjs",
-  "whatsapp-web.js",
+  "ccxt",
 ];
 
-const escapeRegExp = (value) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const bareImportPattern = (packageName) => {
-  const specifier = `${escapeRegExp(packageName)}(?:\\/[^"'\\s)]+)?`;
-  return new RegExp(
-    `(?:\\bfrom\\s*["']${specifier}["']|\\bimport\\s*\\(\\s*["']${specifier}["']\\s*\\)|\\bimport\\s*["']${specifier}["']|\\brequire\\s*\\(\\s*["']${specifier}["']\\s*\\))`,
-    "g",
-  );
-};
-
-let assetFiles;
-try {
-  assetFiles = (await readdir(assetsDir, { withFileTypes: true }))
-    .filter((entry) => entry.isFile() && /\.(?:js|mjs|cjs)$/.test(entry.name))
-    .map((entry) => entry.name);
-} catch (error) {
-  console.error(
-    `[web-dist-imports] FAIL: unable to read ${path.relative(repoRoot, assetsDir)}: ${error.message}`,
-  );
-  process.exit(1);
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const unresolvedImports = [];
-for (const fileName of assetFiles) {
-  const source = await readFile(path.join(assetsDir, fileName), "utf8");
-  for (const packageName of serverOnlyPackages) {
-    if (bareImportPattern(packageName).test(source)) {
-      unresolvedImports.push({
-        file: path.posix.join("dist/assets", fileName),
-        packageName,
+const bareImportPatterns = serverOnlySpecifiers.map((specifier) => {
+  const escaped = escapeRegExp(specifier);
+  return {
+    specifier,
+    pattern: new RegExp(
+      String.raw`(?:\bfrom\s*|(?:^|[;\n])\s*import\s*|\bimport\s*\()\s*["']${escaped}["']`,
+      "m",
+    ),
+  };
+});
+
+function collectScripts(directory, files = []) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const absolutePath = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      collectScripts(absolutePath, files);
+    } else if (entry.isFile() && scriptExtensions.has(extname(entry.name))) {
+      files.push(absolutePath);
+    }
+  }
+  return files;
+}
+
+let scripts;
+try {
+  scripts = collectScripts(distRoot);
+} catch (error) {
+  if (error?.code === "ENOENT") {
+    console.error(
+      "[web-dist-imports] dist does not exist. Run the web build before this verification.",
+    );
+    process.exit(1);
+  }
+  throw error;
+}
+
+const findings = [];
+for (const script of scripts) {
+  const source = readFileSync(script, "utf8");
+  for (const { specifier, pattern } of bareImportPatterns) {
+    if (pattern.test(source)) {
+      findings.push({
+        file: relative(repoRoot, script).split("\\").join("/"),
+        specifier,
       });
     }
   }
 }
 
-if (unresolvedImports.length > 0) {
+if (findings.length > 0) {
   console.error(
-    `[web-dist-imports] FAIL: found ${unresolvedImports.length} unresolved server-only bare import(s):`,
+    `[web-dist-imports] FAIL: found ${findings.length} unresolved server-only bare import(s):`,
   );
-  for (const unresolvedImport of unresolvedImports) {
-    console.error(
-      `  - ${unresolvedImport.file}: ${unresolvedImport.packageName}`,
-    );
+  for (const finding of findings) {
+    console.error(`  - ${finding.file}: ${finding.specifier}`);
   }
   process.exit(1);
 }
 
 console.log(
-  `[web-dist-imports] PASS: checked ${assetFiles.length} built JavaScript asset(s).`,
+  `[web-dist-imports] OK: scanned ${scripts.length} dist script(s); no unresolved server-only bare imports found.`,
 );

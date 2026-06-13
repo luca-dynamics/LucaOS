@@ -31,7 +31,6 @@ export default defineConfig(({ mode }) => {
       include: ["debug", "ajv", "ajv-formats"],
       exclude: [
         "@modelcontextprotocol/sdk",
-        "eventsource",
         "whatsapp-web.js",
         "robotjs",
         "playwright",
@@ -72,6 +71,10 @@ export default defineConfig(({ mode }) => {
         "onnxruntime-web": path.resolve(
           __dirname,
           "node_modules/onnxruntime-web/dist/ort.min.mjs",
+        ),
+        eventsource: path.resolve(
+          __dirname,
+          "src/mocks/browser_eventsource.ts",
         ),
         three: "three",
         child_process: path.resolve(__dirname, "src/mocks/child_process.js"),
@@ -160,7 +163,6 @@ export default defineConfig(({ mode }) => {
           // Exclude server-only tools from mobile/browser builds
           /src\/services\/integrations\/ingestor/,
           "@modelcontextprotocol/sdk",
-          "eventsource",
           "whatsapp-web.js",
           "robotjs",
           "playwright",
