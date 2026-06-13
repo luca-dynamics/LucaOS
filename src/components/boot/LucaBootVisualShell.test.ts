@@ -192,9 +192,39 @@ describe("LucaBootVisualShell readiness model", () => {
     expect(html).not.toContain("loader-host-grid");
     expect(html).toContain("Entering browser host");
     expect(html).toContain("Host-native AI operating system");
-    expect(html).not.toMatch(/loader-orb|loader-host-grid|loader-face|Preparing web-safe interface|yellow|gold|status::before/i);
+    expect(html).not.toMatch(
+      /loader-orb|loader-host-grid|loader-face|Preparing web-safe interface|yellow|gold|status::before/i,
+    );
     expect(html).not.toContain("#root-loader::before");
     expect(html).not.toContain("loader-scanline");
+  });
+
+  it("exposes a pre-hydration timeout and React mount diagnostics", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const html = await readFile("index.html", "utf8");
+
+    expect(html).toContain("window.__LUCA_SHOW_BOOT_FAILURE__");
+    expect(html).toContain("window.__LUCA_REACT_MOUNTED__ !== true");
+    expect(html).toContain("LucaOS web app failed to start");
+    expect(html).toContain("React did not hydrate");
+    expect(html).toContain("Entry loaded:");
+    expect(html).toContain("Mount attempted:");
+    expect(html).toContain("document.scripts.length");
+    expect(html).toContain("}, 5000)");
+  });
+
+  it("marks and guards the React entry bootstrap", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const entry = await readFile("src/index.tsx", "utf8");
+
+    expect(entry).toContain("window.__LUCA_REACT_ENTRY_LOADED__ = true");
+    expect(entry).toContain("window.__LUCA_REACT_MOUNT_ATTEMPTED__ = true");
+    expect(entry).toContain("window.__LUCA_REACT_MOUNTED__ = true");
+    expect(entry).toContain('document.getElementById("root-loader")?.remove()');
+    expect(entry).toContain("try {");
+    expect(entry).toContain(
+      'console.error("[LucaOS web boot] Fatal error before React mount", error)',
+    );
   });
 
   it("exposes no execution surfaces", () => {
