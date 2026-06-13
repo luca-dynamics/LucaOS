@@ -1,4 +1,8 @@
+import { Buffer as BrowserBuffer } from "buffer";
+
 declare global {
+  var Buffer: typeof BrowserBuffer;
+
   interface Window {
     __LUCA_REACT_ENTRY_LOADED__?: boolean;
     __LUCA_REACT_MOUNT_ATTEMPTED__?: boolean;
@@ -9,6 +13,10 @@ declare global {
     __LUCA_CAPTURED_BOOT_ERRORS__?: string[];
     __LUCA_SHOW_BOOT_FAILURE__?: (message?: string, error?: unknown) => void;
   }
+}
+
+if (typeof globalThis.Buffer === "undefined") {
+  globalThis.Buffer = BrowserBuffer;
 }
 
 const describeBootError = (error: unknown): string => {
