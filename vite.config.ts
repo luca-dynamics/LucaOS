@@ -100,7 +100,7 @@ export default defineConfig(({ mode }) => {
         "node:url": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         "better-sqlite3": path.resolve(
           __dirname,
-          "src/mocks/node_polyfills.js",
+          "src/mocks/browser_better_sqlite3.ts",
         ),
       },
     },
@@ -166,7 +166,6 @@ export default defineConfig(({ mode }) => {
           "whatsapp-web.js",
           "robotjs",
           "playwright",
-          "better-sqlite3",
           "electron",
           "express",
           "ccxt",
