@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     optimizeDeps: {
-      include: ["debug", "ajv", "ajv-formats"],
+      include: ["buffer", "debug", "ajv", "ajv-formats"],
       exclude: [
         "@modelcontextprotocol/sdk",
         "whatsapp-web.js",

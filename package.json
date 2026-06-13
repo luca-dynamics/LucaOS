@@ -75,6 +75,7 @@
     "active-win": "^8.2.1",
     "better-sqlite3": "^12.4.5",
     "bonjour-service": "^1.2.1",
+    "buffer": "^6.0.3",
     "ccxt": "^4.5.27",
     "cheerio": "^1.0.0-rc.12",
     "chokidar": "^5.0.0",
