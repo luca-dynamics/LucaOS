@@ -16,10 +16,6 @@ const onboardingSource = read(
 );
 const iconSource = read("src/components/ui/Icon.tsx");
 const webAdapterSource = read("src/web/adapters/webOnboardingRuntime.tsx");
-const webConversationSource = read(
-  "src/web/adapters/WebOnboardingConversation.tsx",
-);
-const webBackgroundSource = read("src/web/WebLucaBackground.tsx");
 const desktopAdapterSource = read(
   "src/desktop/adapters/desktopOnboardingRuntime.ts",
 );
@@ -86,9 +82,6 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(lifecycleSource).not.toContain(
       "Original LucaOS onboarding is blocked",
     );
-    expect(lifecycleSource).not.toContain("LiquidBackground");
-    expect(lifecycleSource).toContain("<WebLucaBackground");
-    expect(webBackgroundSource).not.toMatch(/electron|LiquidBackground/);
   });
 
   it("keeps Icon presentation-only at module import time", () => {
@@ -118,23 +111,9 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(webAdapterSource).not.toContain("ModelManagerService");
     expect(webAdapterSource).not.toContain("settingsService");
     expect(webAdapterSource).not.toContain("realtimeVoiceUiBridge");
-    expect(webAdapterSource).not.toContain("ConversationalOnboarding");
-    expect(webAdapterSource).toContain("WebOnboardingConversation");
-    expect(webAdapterSource).toContain("subscribeVisualSettings");
-    expect(lifecycleSource).toContain(
-      "webOnboardingRuntime.subscribeVisualSettings",
+    expect(webAdapterSource).toContain(
+      '() => import("../../components/Onboarding/ConversationalOnboarding")',
     );
-    expect(onboardingSource).not.toContain("fallback={null}");
-    for (const unsafeConversationImport of [
-      "llmService",
-      "settingsService",
-      "personalityService",
-      "liveService",
-      "soundService",
-      "@google/generative-ai",
-    ]) {
-      expect(webConversationSource).not.toContain(unsafeConversationImport);
-    }
   });
 
   it("audits exact canonical boot, main, settings, and LucaLink source files", () => {

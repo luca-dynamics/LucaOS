@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import OnboardingFlow from "../components/Onboarding/OnboardingFlow";
+import { LiquidBackground } from "../components/visual/LiquidBackground";
 import { generateThemeStyles, getThemeColors } from "../config/themeColors";
 import { WebBridgeDiagnostics } from "./WebBridgeDiagnostics";
 import { useWebRuntime } from "./WebRuntimeContext";
@@ -9,16 +9,13 @@ import {
   completeWebOnboarding,
   readWebOnboardingComplete,
 } from "./webLifecycleStorage";
-import { WebLucaBackground } from "./WebLucaBackground";
 
 export type WebLifecycleState = "onboarding";
 
 export function WebLifecycleShell() {
   const runtime = useWebRuntime();
   const onboardingComplete = readWebOnboardingComplete();
-  const [visualSettings, setVisualSettings] = useState(() =>
-    webOnboardingRuntime.getVisualSettings(),
-  );
+  const visualSettings = webOnboardingRuntime.getVisualSettings();
   const theme = getThemeColors(visualSettings.theme);
   const browserCapabilities = Object.values(
     runtime.browserCapabilities,
@@ -27,16 +24,13 @@ export function WebLifecycleShell() {
     runtime.nativeCapabilityGuards,
   ) as WebCapability[];
 
-  useEffect(
-    () =>
-      webOnboardingRuntime.subscribeVisualSettings?.(setVisualSettings) ??
-      (() => {}),
-    [],
-  );
-
   return (
-    <WebLucaBackground visualSettings={visualSettings}>
+    <main className="relative h-screen w-full overflow-hidden">
       <style>{generateThemeStyles()}</style>
+      <LiquidBackground
+        theme={{ hex: theme.hex, themeName: visualSettings.theme }}
+        className="fixed inset-0 -z-50"
+      />
       <OnboardingFlow
         theme={{ primary: visualSettings.theme, hex: theme.hex }}
         runtime={webOnboardingRuntime}
@@ -71,6 +65,6 @@ export function WebLifecycleShell() {
         }
         lucaLinkStatus={runtime.lucaLinkStatus}
       />
-    </WebLucaBackground>
+    </main>
   );
 }
