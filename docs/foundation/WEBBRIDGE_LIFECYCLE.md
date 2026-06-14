@@ -1,5 +1,12 @@
 # WebBridge Lifecycle
 
+> Direct product-UI reuse is currently blocked by unsafe imports in the
+> canonical LucaOS components. The exact source files, import chains, and
+> proposed isolation point are recorded in
+> [`WEBBRIDGE_DIRECT_REUSE_AUDIT.md`](./WEBBRIDGE_DIRECT_REUSE_AUDIT.md).
+> WebBridge intentionally renders only a plain technical blocker until the
+> original UI can be imported without crossing the browser boundary.
+
 WebBridge is LucaOS's browser-safe runtime adapter, not a separate product
 homepage. Browser boot continues to select `webBridgeEntry`, which detects the
 host and capability context before the LucaOS web lifecycle chooses a surface.
@@ -19,30 +26,3 @@ native automation, Electron IPC, or desktop LucaLink host controllers.
 
 Desktop and Electron startup continue to select `reactAppEntry` and retain the
 full native runtime.
-
-## Existing LucaOS UX audit
-
-The concrete source-by-source extraction record is maintained in
-[`WEBBRIDGE_UX_PARITY_AUDIT.md`](./WEBBRIDGE_UX_PARITY_AUDIT.md).
-
-The browser path reuses LucaOS experience architecture rather than mounting a
-parallel WebBridge product:
-
-- **A — safe to reuse directly:** shell surface tokens in
-  `src/styles/lucaShellStyles.ts` and settings surface tokens/layout styling in
-  `src/components/settings/settingsLayoutStyles.ts`.
-- **B — visual/state architecture extracted:** the identity → conversation mode
-  → interface calibration → model route → activation progression from the
-  original onboarding, plus the LucaOS three-zone workspace rhythm, Settings
-  navigation, and LucaLink Device Center composition. These now live in
-  browser-safe `src/shared/onboarding`, `src/shared/app-shell`,
-  `src/shared/settings`, and `src/shared/ui` modules.
-- **C — desktop/native runtime only:** the full `OnboardingFlow`, `App`,
-  conversational model services, local provisioning/model scan, encrypted
-  vault/SQLite memory, native voice stack, Electron bridge, automation, and the
-  desktop LucaLink host controller. Web adapters must not import these modules.
-
-`src/web` therefore supplies lifecycle storage, host/capability data, and
-browser substitutions to shared LucaOS surfaces. Host & Capabilities is a
-Settings/System section, and LucaLink remains a Settings/status/contextual
-workflow rather than a boot destination.
