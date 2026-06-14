@@ -1,78 +1,168 @@
 import { describe, expect, it } from "vitest";
 
-const { readFileSync, readdirSync } = process.getBuiltinModule("node:fs");
+const { existsSync, readFileSync, readdirSync } =
+  process.getBuiltinModule("node:fs");
 const read = (file: string) => readFileSync(file, "utf8");
+
 const entrySource = read("src/web/webBridgeEntry.tsx");
 const lifecycleSource = read("src/web/WebLifecycleShell.tsx");
-const onboardingSource = read("src/web/WebOnboardingSurface.tsx");
-const mainSource = read("src/web/WebMainSurface.tsx");
-const capabilitiesSource = read("src/web/WebHostCapabilitiesPanel.tsx");
-const lucaLinkSource = read("src/web/WebLucaLinkSurface.tsx");
 const diagnosticsSource = read("src/web/WebBridgeDiagnostics.tsx");
+const auditSource = read(
+  "docs/foundation/WEBBRIDGE_DIRECT_REUSE_AUDIT.md",
+);
 const bootstrapSource = read("src/index.tsx");
+const onboardingSource = read(
+  "src/components/Onboarding/OnboardingFlow.tsx",
+);
+const iconSource = read("src/components/ui/Icon.tsx");
+const webAdapterSource = read("src/web/adapters/webOnboardingRuntime.tsx");
+const desktopAdapterSource = read(
+  "src/desktop/adapters/desktopOnboardingRuntime.ts",
+);
+
+const generatedProductSurfaces = [
+  "src/web/WebOnboardingSurface.tsx",
+  "src/web/WebMainSurface.tsx",
+  "src/web/WebLucaLinkSurface.tsx",
+  "src/shared/onboarding/ExtractedOnboardingFlow.tsx",
+  "src/shared/onboarding/LucaOnboardingShell.tsx",
+  "src/shared/app-shell/ExtractedLucaWorkspace.tsx",
+  "src/shared/app-shell/LucaAppShell.tsx",
+  "src/shared/settings/ExtractedSettingsFrame.tsx",
+  "src/shared/settings/ExtractedLucaLinkDeviceCenter.tsx",
+  "src/shared/settings/LucaSettingsShell.tsx",
+  "src/shared/settings/LucaDeviceCenter.tsx",
+  "src/shared/ui/ExtractedSurfacePrimitives.tsx",
+  "src/shared/ui/LucaPrimitives.tsx",
+];
 
 const forbidden = [
-  "better-sqlite3", "robotjs", "eventsource", "whatsapp-web.js", "playwright",
-  "express", "reactAppEntry", "electron", "child_process",
+  "better-sqlite3",
+  "robotjs",
+  "eventsource",
+  "whatsapp-web.js",
+  "playwright",
+  "express",
+  "reactAppEntry",
+  "electron",
+  "child_process",
 ];
-const sourceFiles = [
-  ...readdirSync("src/web").filter((file) => /\.(ts|tsx)$/.test(file) && !file.includes(".test.")),
-].map((file) => read(`src/web/${file}`));
-const staticImports = sourceFiles.flatMap((source) => source.match(/(?:from\s+|import\s*\()["'][^"']+["']/g) ?? []);
+const sourceFiles = readdirSync("src/web")
+  .filter((file) => /\.(ts|tsx)$/.test(file) && !file.includes(".test."))
+  .map((file) => read(`src/web/${file}`));
+const staticImports = sourceFiles.flatMap(
+  (source) => source.match(/(?:from\s+|import\s*\()["'][^"']+["']/g) ?? [],
+);
 
-describe("WebBridge browser lifecycle and import boundary", () => {
-  it("routes an unknown/new browser user into onboarding before the main surface", () => {
-    expect(lifecycleSource).toContain('readWebOnboardingComplete() ? "ready" : "needs-onboarding"');
-    expect(lifecycleSource).toContain("<WebOnboardingSurface");
-    expect(onboardingSource).toContain("Let’s set up LucaOS for this browser.");
-    expect(onboardingSource).not.toContain("View Capability Map");
-    expect(onboardingSource).not.toContain("Open Web Chat");
+describe("WebBridge direct LucaOS UI reuse audit", () => {
+  it("removes generated onboarding, main, settings, and LucaLink product surfaces", () => {
+    for (const path of generatedProductSurfaces) {
+      expect(existsSync(path), path).toBe(false);
+    }
+
+    for (const generatedName of [
+      "WebOnboardingSurface",
+      "WebMainSurface",
+      "WebLucaLinkSurface",
+      "ExtractedOnboardingFlow",
+      "ExtractedLucaWorkspace",
+      "ExtractedSettingsFrame",
+      "ExtractedLucaLinkDeviceCenter",
+    ]) {
+      expect(lifecycleSource).not.toContain(generatedName);
+    }
   });
 
-  it("routes returning browser users to the normal web-safe LucaOS surface", () => {
-    expect(lifecycleSource).toContain('lifecycle === "ready"');
-    expect(lifecycleSource).toContain("<WebMainSurface");
-    expect(mainSource).toContain('data-web-surface="main"');
-    expect(mainSource).toContain("What would you like to do?");
+  it("mounts the canonical LucaOS onboarding instead of a blocker or generated surface", () => {
+    expect(lifecycleSource).toContain(
+      'import OnboardingFlow from "../components/Onboarding/OnboardingFlow"',
+    );
+    expect(lifecycleSource).toContain("<OnboardingFlow");
+    expect(lifecycleSource).toContain("runtime={webOnboardingRuntime}");
+    expect(lifecycleSource).not.toContain(
+      "Original LucaOS onboarding is blocked",
+    );
   });
 
-  it("preserves capability and LucaLink work under settings instead of boot cards", () => {
-    expect(mainSource).toContain("Host & Capabilities");
-    expect(mainSource).toContain("Settings");
-    expect(capabilitiesSource).toContain('data-settings-surface="host-capabilities"');
-    expect(capabilitiesSource).toContain("Browser-safe capability map");
-    expect(capabilitiesSource).toContain("Native and routed capability map");
-    expect(capabilitiesSource).toContain("Route Unlock");
-    expect(lucaLinkSource).toContain('data-settings-surface="lucalink"');
-    expect(lucaLinkSource).toContain("Pair Desktop");
-    expect(lucaLinkSource).toContain("Continue session on another host");
-    expect(lifecycleSource).not.toContain("Choose a WebBridge route");
+  it("keeps Icon presentation-only at module import time", () => {
+    expect(iconSource).not.toContain("settingsService");
+    expect(iconSource).not.toContain("secureVault");
+    expect(iconSource).not.toContain("credentialVault");
+    expect(iconSource).not.toContain("electron");
+    expect(iconSource).toContain(
+      "color || 'var(--app-primary, currentColor)'",
+    );
   });
 
-  it("imports only local web modules or browser-safe shared UI primitives", () => {
+  it("isolates canonical onboarding runtime dependencies behind adapters", () => {
+    for (const runtimeImport of [
+      "services/ModelManagerService",
+      "services/settingsService",
+      "services/voice/realtimeVoiceUiBridge",
+      'from "./ConversationalOnboarding"',
+    ]) {
+      expect(onboardingSource).not.toContain(runtimeImport);
+    }
+    expect(onboardingSource).toContain("runtime: OnboardingRuntimeAdapter");
+    expect(onboardingSource).toContain("<ConversationComponent");
+    expect(desktopAdapterSource).toContain("ModelManagerService");
+    expect(desktopAdapterSource).toContain("settingsService");
+    expect(desktopAdapterSource).toContain("realtimeVoiceUiBridge");
+    expect(webAdapterSource).not.toContain("ModelManagerService");
+    expect(webAdapterSource).not.toContain("settingsService");
+    expect(webAdapterSource).not.toContain("realtimeVoiceUiBridge");
+    expect(webAdapterSource).toContain(
+      '() => import("../../components/Onboarding/ConversationalOnboarding")',
+    );
+  });
+
+  it("audits exact canonical boot, main, settings, and LucaLink source files", () => {
+    for (const path of [
+      "src/reactAppEntry.tsx",
+      "src/App.tsx",
+      "src/components/Onboarding/OnboardingFlow.tsx",
+      "src/components/Onboarding/ThemeSelectionStep.tsx",
+      "src/components/Onboarding/ModeSelect.tsx",
+      "src/components/layout/Header.tsx",
+      "src/components/layout/ChatPanel.tsx",
+      "src/components/SettingsModal.tsx",
+      "src/components/settings/SettingsLayout.tsx",
+      "src/components/settings/SettingsLucaLinkTab.tsx",
+      "src/components/LucaLinkModal.tsx",
+      "src/styles/lucaShellStyles.ts",
+      "src/styles/lucaMobileShellStyles.ts",
+    ]) {
+      expect(auditSource).toContain(path);
+    }
+    expect(auditSource).toContain("Direct browser-safe import");
+    expect(auditSource).toContain("Unsafe imports and exact chain");
+  });
+
+  it("keeps src/web free of native, server, and desktop-entry imports", () => {
+    const imports = staticImports.join("\n");
     for (const reference of forbidden) {
-      expect(staticImports.join("\n").toLowerCase()).not.toContain(reference.toLowerCase());
+      expect(imports.toLowerCase()).not.toContain(reference.toLowerCase());
     }
-    expect(staticImports.join("\n")).not.toMatch(/["'](?:node:)?fs["']/);
-    expect(sourceFiles.join("\n")).toContain("../shared/ui/LucaWebPrimitives");
+    expect(imports).not.toMatch(/["'](?:node:)?fs["']/);
   });
 
-  it("keeps diagnostics behind bootDebug and reports lifecycle fields", () => {
+  it("keeps diagnostics behind bootDebug while reporting canonical onboarding", () => {
     expect(diagnosticsSource).toContain('get("bootDebug") !== "1"');
-    for (const field of ["webLifecycleState", "onboardingComplete", "activeWebSurface"]) {
-      expect(diagnosticsSource).toContain(field);
-    }
+    expect(lifecycleSource).toContain('lifecycleState="onboarding"');
+    expect(lifecycleSource).toContain('activeWebSurface="lucaos-onboarding"');
   });
 
-  it("keeps desktop loading behind the desktop entry selection branch", () => {
+  it("keeps WebBridge and desktop on their separate bootstrap entries", () => {
     expect(bootstrapSource).toContain('selectedEntry === "webBridgeEntry"');
     expect(bootstrapSource).toContain('import("./web/webBridgeEntry")');
     expect(bootstrapSource).toContain('import("./reactAppEntry")');
-    expect(bootstrapSource.indexOf('import("./web/webBridgeEntry")')).toBeLessThan(bootstrapSource.indexOf('import("./reactAppEntry")'));
+    expect(
+      bootstrapSource.indexOf('import("./web/webBridgeEntry")'),
+    ).toBeLessThan(bootstrapSource.indexOf('import("./reactAppEntry")'));
+    expect(entrySource).not.toContain("reactAppEntry");
   });
 
-  it("does not validate master keys or import desktop runtime from WebBridge entry", () => {
+  it("does not validate master keys from the WebBridge entry", () => {
     expect(entrySource).not.toMatch(/master.?key/i);
-    expect(entrySource).not.toContain("reactAppEntry");
   });
 });

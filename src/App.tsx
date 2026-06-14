@@ -107,6 +107,7 @@ import { useToolOrchestrator } from "./hooks/app/useToolOrchestrator";
 import { BootSequence } from "./hooks/app/useAppSystem";
 import { LucaBootVisualShell } from "./components/boot/LucaBootVisualShell";
 import OnboardingFlow from "./components/Onboarding/OnboardingFlow";
+import { desktopOnboardingRuntime } from "./desktop/adapters/desktopOnboardingRuntime";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
 import { THEME_PALETTE } from "./config/themeColors";
 import { isElectron as checkElectron, isWeb } from "./utils/env";
@@ -2390,6 +2391,7 @@ function AppContent() {
           <div className="absolute inset-0 z-10">
             <OnboardingFlow
               theme={theme}
+              runtime={desktopOnboardingRuntime}
               onComplete={(profile, mode) => {
                 console.log("[App] Onboarding Complete:", { profile, mode });
                 settingsService.saveSettings({

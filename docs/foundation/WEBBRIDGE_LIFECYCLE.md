@@ -1,5 +1,11 @@
 # WebBridge Lifecycle
 
+> The canonical LucaOS onboarding now runs through an injected runtime adapter.
+> The original JSX and progression remain shared with Desktop/Mobile while
+> WebBridge supplies browser-safe settings, capability, model-route, and voice
+> behavior. The source audit and resolved import chains are recorded in
+> [`WEBBRIDGE_DIRECT_REUSE_AUDIT.md`](./WEBBRIDGE_DIRECT_REUSE_AUDIT.md).
+
 WebBridge is LucaOS's browser-safe runtime adapter, not a separate product
 homepage. Browser boot continues to select `webBridgeEntry`, which detects the
 host and capability context before the LucaOS web lifecycle chooses a surface.

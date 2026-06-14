@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon";
-import { settingsService } from "../../services/settingsService";
 import {
   THEME_PALETTE,
   getDynamicContrast,
@@ -16,6 +15,15 @@ interface ThemeSelectionStepProps {
   onComplete: () => void;
   onThemeChange?: (themeName: UIThemeId) => void;
   onOpacityChange?: (opacity: number) => void;
+  initialTheme?: UIThemeId;
+  initialBackgroundOpacity?: number;
+  initialBackgroundBlur?: number;
+  showTransparencyControls?: boolean;
+  onVisualSettingsChange?: (settings: {
+    theme?: UIThemeId;
+    backgroundOpacity?: number;
+    backgroundBlur?: number;
+  }) => void;
 }
 
 const THEMES = NORMAL_LUCA_THEME_OPTIONS;
@@ -24,20 +32,19 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   onComplete,
   onThemeChange,
   onOpacityChange,
+  initialTheme = "PROFESSIONAL",
+  initialBackgroundOpacity = 0.3,
+  initialBackgroundBlur = 40,
+  showTransparencyControls = false,
+  onVisualSettingsChange,
 }) => {
-  const isElectron = !!(
-    (window as any).electron && (window as any).electron.ipcRenderer
-  );
-
   const [selectedTheme, setSelectedTheme] = useState<UIThemeId>(
-    settingsService.get("general").theme as UIThemeId,
+    initialTheme,
   );
   const [backgroundOpacity, setBackgroundOpacity] = useState(
-    settingsService.get("general").backgroundOpacity ?? 0.3,
+    initialBackgroundOpacity,
   );
-  const [backgroundBlur, setBackgroundBlur] = useState(
-    settingsService.get("general").backgroundBlur ?? 40,
-  );
+  const [backgroundBlur, setBackgroundBlur] = useState(initialBackgroundBlur);
   const selectedThemeLabel = getLucaThemeLabel(selectedTheme);
   const currentThemeHex =
     THEMES.find(
@@ -74,22 +81,15 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
     setSelectedTheme(themeId);
     if (onThemeChange) {
       onThemeChange(themeId);
-      // Persist immediately
-      const currentGen = settingsService.get("general");
-      settingsService.saveSettings({
-        general: { ...currentGen, theme: themeId as any },
-      });
     }
+    onVisualSettingsChange?.({ theme: themeId });
   };
 
   const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value) / 100;
     setBackgroundOpacity(val);
     if (onOpacityChange) onOpacityChange(val);
-    const currentGen = settingsService.get("general");
-    settingsService.saveSettings({
-      general: { ...currentGen, backgroundOpacity: val },
-    });
+    onVisualSettingsChange?.({ backgroundOpacity: val });
     // Live Preview
     document.documentElement.style.setProperty(
       "--app-bg-opacity",
@@ -100,10 +100,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
   const handleBlurChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
     setBackgroundBlur(val);
-    const currentGen = settingsService.get("general");
-    settingsService.saveSettings({
-      general: { ...currentGen, backgroundBlur: val },
-    });
+    onVisualSettingsChange?.({ backgroundBlur: val });
     // Live Preview
     document.documentElement.style.setProperty("--app-bg-blur", `${val}px`);
   };
@@ -217,7 +214,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
         </section>
 
         {/* Transparency Controls */}
-        {isElectron && (
+        {showTransparencyControls && (
           <section
             className="space-y-2 pt-2 pb-1"
             style={{ borderTop: `1px solid ${currentContrast.border}` }}
