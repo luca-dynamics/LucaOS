@@ -45,9 +45,6 @@ export interface OnboardingRuntimeAdapter {
   saveVisualSettings(
     settings: Partial<Pick<OnboardingVisualSettings, "theme" | "backgroundOpacity" | "backgroundBlur">>,
   ): void;
-  subscribeVisualSettings?(
-    listener: (settings: OnboardingVisualSettings) => void,
-  ): () => void;
   playSound(sound: OnboardingSound): void;
   persistOperatorIdentity(name: string): void;
   saveFaceScanData(faceData: string | null): void;
