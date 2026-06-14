@@ -9,11 +9,13 @@ const mainSource = read("src/web/WebMainSurface.tsx");
 const capabilitiesSource = read("src/web/WebHostCapabilitiesPanel.tsx");
 const lucaLinkSource = read("src/web/WebLucaLinkSurface.tsx");
 const diagnosticsSource = read("src/web/WebBridgeDiagnostics.tsx");
-const sharedOnboardingSource = read("src/shared/onboarding/LucaOnboardingShell.tsx");
-const onboardingSchemaSource = read("src/shared/onboarding/lucaOnboardingSchema.ts");
-const sharedShellSource = read("src/shared/app-shell/LucaAppShell.tsx");
-const sharedSettingsSource = read("src/shared/settings/LucaSettingsShell.tsx");
-const sharedDeviceCenterSource = read("src/shared/settings/LucaDeviceCenter.tsx");
+const sharedOnboardingSource = read("src/shared/onboarding/ExtractedOnboardingFlow.tsx");
+const sharedShellSource = read("src/shared/app-shell/ExtractedLucaWorkspace.tsx");
+const sharedSettingsSource = read("src/shared/settings/ExtractedSettingsFrame.tsx");
+const sharedDeviceCenterSource = read("src/shared/settings/ExtractedLucaLinkDeviceCenter.tsx");
+const sharedPrimitivesSource = read("src/shared/ui/ExtractedSurfacePrimitives.tsx");
+const originalModeCardSource = read("src/components/Onboarding/ModeCard.tsx");
+const auditSource = read("docs/foundation/WEBBRIDGE_UX_PARITY_AUDIT.md");
 const bootstrapSource = read("src/index.tsx");
 
 const forbidden = [
@@ -29,12 +31,11 @@ describe("WebBridge browser lifecycle and import boundary", () => {
   it("routes an unknown/new browser user into onboarding before the main surface", () => {
     expect(lifecycleSource).toContain('readWebOnboardingComplete() ? "ready" : "needs-onboarding"');
     expect(lifecycleSource).toContain("<WebOnboardingSurface");
-    expect(onboardingSource).toContain("../shared/onboarding/LucaOnboardingShell");
-    expect(onboardingSource).toContain("../shared/onboarding/lucaOnboardingSchema");
-    expect(sharedOnboardingSource).toContain('data-luca-surface="onboarding"');
-    expect(onboardingSchemaSource).toContain("LUCA_ONBOARDING_STEPS");
-    expect(onboardingSchemaSource).toContain("Conversation mode");
-    expect(onboardingSchemaSource).toContain("Interface calibration");
+    expect(onboardingSource).toContain("../shared/onboarding/ExtractedOnboardingFlow");
+    expect(sharedOnboardingSource).toContain("EXTRACTED_ONBOARDING_SOURCES");
+    expect(sharedOnboardingSource).toContain("src/components/Onboarding/OnboardingFlow.tsx");
+    expect(sharedOnboardingSource).toContain("src/components/Onboarding/ModeSelect.tsx");
+    expect(sharedOnboardingSource).toContain("Interface Calibration");
     expect(onboardingSource).not.toContain("View Capability Map");
     expect(onboardingSource).not.toContain("Open Web Chat");
   });
@@ -42,24 +43,27 @@ describe("WebBridge browser lifecycle and import boundary", () => {
   it("routes returning browser users to the normal web-safe LucaOS surface", () => {
     expect(lifecycleSource).toContain('lifecycle === "ready"');
     expect(lifecycleSource).toContain("<WebMainSurface");
-    expect(mainSource).toContain("../shared/app-shell/LucaAppShell");
-    expect(sharedShellSource).toContain('data-luca-surface="main"');
-    expect(mainSource).toContain("What would you like to do?");
+    expect(mainSource).toContain("../shared/app-shell/ExtractedLucaWorkspace");
+    expect(sharedShellSource).toContain('data-luca-extraction="app-shell"');
+    expect(sharedShellSource).toContain("src/App.tsx");
+    expect(sharedShellSource).toContain("src/components/layout/ChatPanel.tsx");
   });
 
   it("preserves capability and LucaLink work under settings instead of boot cards", () => {
-    expect(mainSource).toContain("../shared/settings/LucaSettingsShell");
-    expect(sharedSettingsSource).toContain('data-luca-surface="settings"');
+    expect(mainSource).toContain("../shared/settings/ExtractedSettingsFrame");
+    expect(sharedSettingsSource).toContain('data-luca-extraction="settings-modal"');
+    expect(sharedSettingsSource).toContain("src/components/SettingsModal.tsx");
     expect(sharedSettingsSource).toContain("Host & Capabilities");
-    expect(sharedSettingsSource).toContain("Model / Runtime");
-    expect(sharedSettingsSource).toContain("Memory / Data");
+    expect(sharedSettingsSource).toContain('"brain"');
+    expect(sharedSettingsSource).toContain('"data"');
     expect(capabilitiesSource).toContain('data-settings-surface="host-capabilities"');
     expect(capabilitiesSource).toContain("Browser-safe capability map");
     expect(capabilitiesSource).toContain("Native and routed capability map");
     expect(capabilitiesSource).toContain("Route Unlock");
-    expect(lucaLinkSource).toContain("../shared/settings/LucaDeviceCenter");
-    expect(sharedDeviceCenterSource).toContain('data-luca-settings-section="lucalink"');
-    expect(sharedDeviceCenterSource).toContain("Pair Desktop");
+    expect(lucaLinkSource).toContain("../shared/settings/ExtractedLucaLinkDeviceCenter");
+    expect(sharedDeviceCenterSource).toContain('data-luca-extraction="lucalink-device-center"');
+    expect(sharedDeviceCenterSource).toContain("src/components/settings/SettingsLucaLinkTab.tsx");
+    expect(sharedDeviceCenterSource).toContain("Desktop");
     expect(sharedDeviceCenterSource).toContain("Continue session");
     expect(lifecycleSource).not.toContain("Choose a WebBridge route");
   });
@@ -69,10 +73,9 @@ describe("WebBridge browser lifecycle and import boundary", () => {
       expect(staticImports.join("\n").toLowerCase()).not.toContain(reference.toLowerCase());
     }
     expect(staticImports.join("\n")).not.toMatch(/["'](?:node:)?fs["']/);
-    expect(sourceFiles.join("\n")).toContain("../shared/onboarding/");
-    expect(sourceFiles.join("\n")).toContain("../shared/app-shell/");
-    expect(sourceFiles.join("\n")).toContain("../shared/settings/");
-    expect(sourceFiles.join("\n")).not.toContain("LucaWebPrimitives");
+    expect(sourceFiles.join("\n")).toContain("../shared/onboarding/Extracted");
+    expect(sourceFiles.join("\n")).toContain("../shared/app-shell/Extracted");
+    expect(sourceFiles.join("\n")).toContain("../shared/settings/Extracted");
   });
 
   it("keeps web surfaces as adapters rather than standalone alternate layouts", () => {
@@ -82,6 +85,30 @@ describe("WebBridge browser lifecycle and import boundary", () => {
     expect(onboardingSource).not.toContain("<aside");
     expect(mainSource).not.toContain("<header");
     expect(lucaLinkSource).not.toContain("<button");
+  });
+
+  it("ties extracted primitives back into an original LucaOS component", () => {
+    expect(originalModeCardSource).toContain("../../shared/ui/ExtractedSurfacePrimitives");
+    expect(originalModeCardSource).toContain("<OnboardingChoiceCard");
+    expect(sharedPrimitivesSource).toContain("src/components/Onboarding/ModeCard.tsx");
+    expect(sharedPrimitivesSource).toContain("src/components/settings/SettingsLayout.tsx");
+  });
+
+  it("documents concrete original parity sources and A/B/C classifications", () => {
+    for (const path of [
+      "src/components/Onboarding/OnboardingFlow.tsx",
+      "src/components/Onboarding/ThemeSelectionStep.tsx",
+      "src/App.tsx",
+      "src/components/layout/ChatPanel.tsx",
+      "src/components/SettingsModal.tsx",
+      "src/components/settings/SettingsLucaLinkTab.tsx",
+      "src/styles/lucaShellStyles.ts",
+    ]) {
+      expect(auditSource).toContain(path);
+    }
+    expect(auditSource).toContain("A — browser-safe");
+    expect(auditSource).toContain("B — visual/state");
+    expect(auditSource).toContain("C — desktop/native");
   });
 
   it("keeps diagnostics behind bootDebug and reports lifecycle fields", () => {

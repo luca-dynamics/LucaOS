@@ -22,6 +22,9 @@ full native runtime.
 
 ## Existing LucaOS UX audit
 
+The concrete source-by-source extraction record is maintained in
+[`WEBBRIDGE_UX_PARITY_AUDIT.md`](./WEBBRIDGE_UX_PARITY_AUDIT.md).
+
 The browser path reuses LucaOS experience architecture rather than mounting a
 parallel WebBridge product:
 

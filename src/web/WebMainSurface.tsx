@@ -1,7 +1,17 @@
 import { useState } from "react";
-import { LucaAppShell } from "../shared/app-shell/LucaAppShell";
-import { LucaSettingsHeading, LucaSettingsShell, type LucaSettingsSectionId } from "../shared/settings/LucaSettingsShell";
-import { LucaAction } from "../shared/ui/LucaPrimitives";
+import {
+  ExtractedChatWorkspace,
+  ExtractedLucaHeader,
+  ExtractedLucaWorkspace,
+} from "../shared/app-shell/ExtractedLucaWorkspace";
+import {
+  ExtractedSettingsFrame,
+  type BrowserSettingsTab,
+} from "../shared/settings/ExtractedSettingsFrame";
+import {
+  ExtractedSettingsCard,
+  ExtractedSettingsSection,
+} from "../shared/ui/ExtractedSurfacePrimitives";
 import { WebHostCapabilitiesPanel } from "./WebHostCapabilitiesPanel";
 import { WebLucaLinkSurface } from "./WebLucaLinkSurface";
 import { useWebRuntime } from "./WebRuntimeContext";
@@ -9,34 +19,44 @@ import type { WebProfile } from "./webLifecycleStorage";
 
 export function WebMainSurface({ profile }: { profile: WebProfile | null }) {
   const runtime = useWebRuntime();
-  const [settings, setSettings] = useState<LucaSettingsSectionId | "closed">("closed");
+  const [settings, setSettings] = useState<BrowserSettingsTab | null>(null);
 
-  if (settings !== "closed") {
+  if (settings) {
     return (
-      <LucaSettingsShell activeSection={settings} onBack={() => setSettings("closed")} onSelect={setSettings}>
+      <ExtractedSettingsFrame activeTab={settings} onClose={() => setSettings(null)} onSelect={setSettings}>
         {settings === "host-capabilities" ? (
           <WebHostCapabilitiesPanel onOpenLucaLink={() => setSettings("lucalink")} />
         ) : settings === "lucalink" ? (
           <WebLucaLinkSurface status={runtime.lucaLinkStatus} />
-        ) : settings === "model-runtime" ? (
-          <BrowserSettingsSection eyebrow="Settings · Model / Runtime" title="Model routing" detail="Cloud and BYOK routes are available here. Local model discovery and Ollama remain on LucaOS Desktop or an approved paired host." />
+        ) : settings === "brain" ? (
+          <ExtractedSettingsSection title="Brain" description="Choose the model route Luca uses on this host.">
+            <ExtractedSettingsCard>Current route: {profile?.modelRoute === "desktop-later" ? "Paired Desktop required" : profile?.modelRoute ?? "Luca Prime"}</ExtractedSettingsCard>
+          </ExtractedSettingsSection>
         ) : (
-          <BrowserSettingsSection eyebrow="Settings · Memory / Data" title="Browser data" detail="This host stores only the browser-safe LucaOS profile and lifecycle state. Desktop vault, SQLite memory, and filesystem memory are not initialized." />
+          <ExtractedSettingsSection title="Data" description="Review storage available to this LucaOS host.">
+            <ExtractedSettingsCard>Browser-safe profile storage only. Desktop vault and local memory are not initialized.</ExtractedSettingsCard>
+          </ExtractedSettingsSection>
         )}
-      </LucaSettingsShell>
+      </ExtractedSettingsFrame>
     );
   }
 
   return (
-    <LucaAppShell operatorName={profile?.name} hostStatus={runtime.hostClass.replace("-", " ")} lucaLinkStatus={runtime.lucaLinkStatus.replace(/-/g, " ")} onOpenSettings={() => setSettings("host-capabilities")} onOpenSystem={() => setSettings("host-capabilities")} onOpenLucaLink={() => setSettings("lucalink")}>
-      <div className="flex h-full min-h-[34rem] flex-col p-5 sm:p-7">
-        <div className="flex-1"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--luca-accent-primary)]">Luca</p><h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">What would you like to do?</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--luca-text-secondary)]">Chat with Luca here. Capabilities that need another host remain contextual and can be routed through LucaLink when approved.</p></div>
-        <div className="rounded-2xl border border-[var(--luca-border-subtle)] bg-[var(--luca-surface-glass)] p-3"><textarea aria-label="Message Luca" rows={2} placeholder="Ask Luca…" className="w-full resize-none bg-transparent px-2 py-1 text-sm outline-none placeholder:text-[var(--luca-text-tertiary)]" /><div className="flex justify-end"><LucaAction emphasis="primary">Send</LucaAction></div></div>
-      </div>
-    </LucaAppShell>
+    <ExtractedLucaWorkspace
+      header={<ExtractedLucaHeader connection={runtime.hostClass.replace("-", " ")} onOpenSettings={() => setSettings("host-capabilities")} />}
+      navigation={<WebNavigation onOpenLucaLink={() => setSettings("lucalink")} />}
+      activity={<WebActivity host={runtime.hostClass} lucaLink={runtime.lucaLinkStatus} onOpenSystem={() => setSettings("host-capabilities")} />}
+      onSelectMobile={(tab) => tab === "SYSTEM" ? setSettings("host-capabilities") : undefined}
+    >
+      <ExtractedChatWorkspace name={profile?.name ?? ""} onOpenVoice={() => undefined} />
+    </ExtractedLucaWorkspace>
   );
 }
 
-function BrowserSettingsSection({ eyebrow, title, detail }: { eyebrow: string; title: string; detail: string }) {
-  return <section><LucaSettingsHeading eyebrow={eyebrow} title={title} detail={detail} /><div className="rounded-xl border border-[var(--luca-border-subtle)] p-4 text-sm text-[var(--luca-text-secondary)]">Browser-safe adapter active</div></section>;
+function WebNavigation({ onOpenLucaLink }: { onOpenLucaLink: () => void }) {
+  return <div className="flex h-full flex-col p-3"><p className="px-2 py-3 text-[10px] font-bold tracking-widest text-[var(--app-text-muted)]">APPS</p><button type="button" className="rounded-lg bg-[var(--luca-surface-hover)] px-3 py-2 text-left text-sm">Luca</button><button type="button" className="rounded-lg px-3 py-2 text-left text-sm">Conversations</button><button type="button" onClick={onOpenLucaLink} className="mt-auto rounded-lg border px-3 py-3 text-left text-sm" style={{ borderColor: "var(--app-border-main)" }}>LucaLink</button></div>;
+}
+
+function WebActivity({ host, lucaLink, onOpenSystem }: { host: string; lucaLink: string; onOpenSystem: () => void }) {
+  return <div className="p-5"><p className="text-xs font-bold uppercase tracking-widest text-[var(--app-text-muted)]">Activity</p><dl className="mt-5 space-y-4 text-sm"><div><dt className="text-xs text-[var(--app-text-muted)]">Host</dt><dd className="mt-1 capitalize">{host.replace("-", " ")}</dd></div><div><dt className="text-xs text-[var(--app-text-muted)]">LucaLink</dt><dd className="mt-1 capitalize">{lucaLink.replace(/-/g, " ")}</dd></div></dl><button type="button" onClick={onOpenSystem} className="mt-6 w-full rounded-lg border px-3 py-2 text-xs" style={{ borderColor: "var(--app-border-main)" }}>Host & Capabilities</button></div>;
 }
