@@ -1,11 +1,10 @@
 # WebBridge Lifecycle
 
-> Direct product-UI reuse is currently blocked by unsafe imports in the
-> canonical LucaOS components. The exact source files, import chains, and
-> proposed isolation point are recorded in
+> The canonical LucaOS onboarding now runs through an injected runtime adapter.
+> The original JSX and progression remain shared with Desktop/Mobile while
+> WebBridge supplies browser-safe settings, capability, model-route, and voice
+> behavior. The source audit and resolved import chains are recorded in
 > [`WEBBRIDGE_DIRECT_REUSE_AUDIT.md`](./WEBBRIDGE_DIRECT_REUSE_AUDIT.md).
-> WebBridge intentionally renders only a plain technical blocker until the
-> original UI can be imported without crossing the browser boundary.
 
 WebBridge is LucaOS's browser-safe runtime adapter, not a separate product
 homepage. Browser boot continues to select `webBridgeEntry`, which detects the

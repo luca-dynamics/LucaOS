@@ -2,11 +2,11 @@
 
 ## Decision
 
-WebBridge must import the real LucaOS product UI or render no product UI. The
-direct-import experiment found that the canonical onboarding, main application,
-Settings, and LucaLink surfaces are not currently valid browser-safe imports.
-WebBridge therefore renders only a plain technical blocker message. No
-replacement onboarding, dashboard, Settings shell, or Device Center is used.
+WebBridge must import the real LucaOS product UI rather than generate parallel
+product surfaces. The canonical onboarding is now directly mounted by
+WebBridge with an injected browser-safe runtime adapter. The main application,
+Settings, and LucaLink surfaces still require separate future isolation work;
+no generated replacement dashboard, Settings shell, or Device Center is used.
 
 ## Direct-import experiment
 
@@ -19,13 +19,12 @@ src/reactAppEntry.tsx
   -> src/components/Onboarding/OnboardingFlow.tsx
 ```
 
-Importing `OnboardingFlow` directly into the WebBridge graph is rejected
-because its static graph initializes desktop/local-model, vault/settings,
-provider, voice, and Electron-aware modules before a browser adapter can
-substitute behavior. The build can transpile several of these modules because
-they guard calls at runtime, but that does not satisfy the WebBridge import
-boundary: local model scanners, provider runtime, vault bridges, and desktop
-controllers must not enter the browser startup graph.
+The initial experiment exposed desktop/local-model, vault/settings, provider,
+voice, and Electron-aware static dependencies. Those dependencies are now
+isolated behind `OnboardingRuntimeAdapter`. Desktop receives
+`desktopOnboardingRuntime`; WebBridge receives `webOnboardingRuntime`.
+Conversational/provider onboarding is dynamically loaded only after the user
+reaches the conversation step.
 
 ## Boot to onboarding transition
 
@@ -39,31 +38,32 @@ controllers must not enter the browser startup graph.
 
 | Path | Purpose | Direct browser-safe import | Unsafe imports and exact chain |
 | --- | --- | --- | --- |
-| `src/components/Onboarding/OnboardingFlow.tsx` | Canonical onboarding orchestrator and visual flow. This is the direct-reuse target. | **No** | Direct imports include `services/ModelManagerService`, `services/onboarding/LocalProvisioningService`, `services/settingsService`, `components/Onboarding/ConversationalOnboarding`, and `services/voice/realtimeVoiceUiBridge`. Chains: `OnboardingFlow -> ModelManagerService` invokes `window.electron.ipcRenderer` for local model/Ollama operations; `OnboardingFlow -> LocalProvisioningService -> ModelManagerService`; `OnboardingFlow -> settingsService -> secureVault -> credentialVault -> window.luca.vault`; `OnboardingFlow -> ConversationalOnboarding -> llmService -> @google/generative-ai`; `OnboardingFlow -> realtimeVoiceUiBridge` enters the native/provider voice runtime. |
-| `src/components/Onboarding/ThemeSelectionStep.tsx` | Canonical theme, opacity, and blur selection. | **No as currently composed** | `ThemeSelectionStep -> components/ui/Icon -> services/settingsService -> services/secureVault -> services/credentialVault -> window.luca.vault`; it also directly checks `window.electron.ipcRenderer` and persists through `settingsService`. |
-| `src/components/Onboarding/OnboardingAccessPanels.tsx` | Canonical identity and Luca Core selection panels. | **No as currently composed** | `OnboardingAccessPanels -> components/ui/Icon -> settingsService -> secureVault -> credentialVault -> window.luca.vault`. Core callbacks are supplied by `OnboardingFlow` and reach local model/provider runtime. |
-| `src/components/Onboarding/ModeSelect.tsx` | Canonical Text/Voice selection. | **No as currently composed** | `ModeSelect -> ModeCard -> components/ui/Icon -> settingsService -> secureVault -> credentialVault -> window.luca.vault`; readiness types and callbacks originate from `OnboardingModelModeCoordinator`. |
+| `src/components/Onboarding/OnboardingFlow.tsx` | Canonical onboarding orchestrator and visual flow mounted by Desktop/Mobile and WebBridge. | **Yes, with adapter** | Runtime calls are supplied through `OnboardingRuntimeAdapter`; there are no static `ModelManagerService`, `settingsService`, `realtimeVoiceUiBridge`, or conversational/provider imports. |
+| `src/components/Onboarding/ThemeSelectionStep.tsx` | Canonical theme, opacity, and blur selection. | **Yes** | Settings values and persistence callbacks are supplied by `OnboardingFlow`; no static settings/vault import remains. |
+| `src/components/Onboarding/OnboardingAccessPanels.tsx` | Canonical identity and Luca Core selection panels. | **Yes** | `Icon` is presentation-only, and model-route behavior is supplied by the runtime adapter. |
+| `src/components/Onboarding/ModeSelect.tsx` | Canonical Text/Voice selection. | **Yes** | `Icon` is presentation-only. Voice permission/runtime behavior runs only after explicit selection through the adapter. |
 | `src/components/Onboarding/ConversationalOnboarding.tsx` | Canonical personality/preferences conversation. | **No** | `ConversationalOnboarding -> llmService -> @google/generative-ai`; also imports `liveService`, `personalityService`, `settingsService`, and `soundService`. |
 | `src/components/Onboarding/FaceScan.tsx` | Canonical optional face enrollment step. | **No** | Mounted with an API enrollment endpoint by `OnboardingFlow`; its biometric/camera path is not isolated from onboarding orchestration. |
 | `src/services/onboarding/OnboardingController.ts` | Pure onboarding step transition model. | **Yes** | No unsafe import found, but this is state only and cannot render the original UI. |
 
-### Proposed onboarding split point
+### Implemented onboarding split
 
-The smallest credible future split is inside
-`src/components/Onboarding/OnboardingFlow.tsx`: dependency-inject the settings,
-model provisioning, voice, biometric, and conversational runtime adapters while
-leaving the component and its exact JSX in place. In addition,
-`src/components/ui/Icon.tsx` must stop importing `settingsService`; theme/provider
-selection should be supplied as a prop or context. This PR does not perform
-that split because it is not tiny and would risk changing desktop/mobile
-behavior.
+`src/components/Onboarding/OnboardingFlow.tsx` now receives settings, model
+provisioning, voice, identity, and model-route behavior through
+`OnboardingRuntimeAdapter` while preserving the canonical component and JSX.
+`src/components/ui/Icon.tsx` no longer imports `settingsService`; color comes
+from props or inherited CSS. Desktop behavior is retained by
+`src/desktop/adapters/desktopOnboardingRuntime.ts`, while
+`src/web/adapters/webOnboardingRuntime.tsx` blocks local provisioning, avoids
+vault/provider secrets, and requests microphone access only after Voice is
+selected.
 
 ## Original main app shell/dashboard
 
 | Path | Purpose | Direct browser-safe import | Unsafe imports and exact chain |
 | --- | --- | --- | --- |
 | `src/App.tsx` | Canonical Header, Operations sidebar, ChatPanel, Activity panel, mobile navigation, overlays, and runtime state. | **No** | `App -> lucaService -> @google/generative-ai`; `App -> lucaLink/manager` desktop host controller; `App -> useAppIPC -> window.electron.ipcRenderer`; `App -> SettingsModal -> memoryService`; and direct Electron IPC references inside `App.tsx`. |
-| `src/components/layout/Header.tsx` | Canonical identity header and Settings access. | **No as currently composed** | Imports `awarenessService`, `liveService`, `soundService`, `useCredits`, `RuntimeContinuityBootstrap`, and `components/ui/Icon`; the Icon chain reaches `settingsService -> secureVault`. |
+| `src/components/layout/Header.tsx` | Canonical identity header and Settings access. | **No as currently composed** | Imports `awarenessService`, `liveService`, `soundService`, `useCredits`, and `RuntimeContinuityBootstrap`. The former `Icon -> settingsService` chain has been removed. |
 | `src/components/layout/ChatPanel.tsx` | Canonical conversation/dashboard center. | **No** | Imports `settingsService`, `apiUrl`, `awarenessService`, `ChatIntentRouterBridge`, and runtime routing services. |
 | `src/components/layout/OperationsSidebar.tsx` | Canonical left application/capability panel. | **No** | Receives desktop execution/device callbacks from `App` and imports runtime-backed components. |
 | `src/components/layout/desktopShellModel.ts` | Pure panel state and persistence helpers. | **Yes** | No unsafe import found, but it is not a renderable shell. |
@@ -74,7 +74,7 @@ behavior.
 | Path | Purpose | Direct browser-safe import | Unsafe imports and exact chain |
 | --- | --- | --- | --- |
 | `src/components/SettingsModal.tsx` | Canonical Settings modal, navigation, tabs, save behavior, and responsive layout. | **No** | `SettingsModal -> memoryService -> ModelManagerService` and dynamic `lucaLink/manager`; `SettingsModal -> settingsService -> secureVault -> credentialVault -> window.luca.vault`; `SettingsModal -> personaService -> @google/generative-ai`; direct save path calls `window.luca.applySystemSettings`. It also statically imports every runtime-heavy Settings tab. |
-| `src/components/settings/SettingsLayout.tsx` | Canonical Settings cards/rows/sections. | **No as currently composed** | `SettingsLayout -> components/ui/Icon -> settingsService -> secureVault -> credentialVault -> window.luca.vault`. |
+| `src/components/settings/SettingsLayout.tsx` | Canonical Settings cards/rows/sections. | **Yes as a visual primitive** | Its `Icon` dependency is now presentation-only and does not import settings/vault runtime. The complete `SettingsModal` composition remains unsafe. |
 | `src/components/settings/settingsNavigationModel.ts` | Pure tab/navigation definitions. | **Yes** | Imports only `settingsExperienceMap`, which is data-only. It cannot render Settings directly. |
 | `src/components/settings/SettingsBrainTab.tsx` | Model/provider/Ollama Settings. | **No** | Provider keys, local model manager, Ollama controls, and runtime diagnostics are intentionally unavailable in WebBridge startup. |
 | `src/components/settings/SettingsDataTab.tsx` | Memory/data Settings. | **No** | Imports memory/API runtime through the Settings composition. |
@@ -89,16 +89,10 @@ behavior.
 
 ## Result
 
-Direct reuse **failed** at the current module boundaries. The WebBridge entry
-continues to provide host/capability context, storage, lifecycle information,
-and opt-in diagnostics, but it does not render generated product surfaces.
-
-The temporary visible state is intentionally plain:
-
-```text
-Original LucaOS onboarding is blocked from WebBridge by unsafe imports.
-See WEBBRIDGE_DIRECT_REUSE_AUDIT.md.
-```
+Direct onboarding reuse **succeeds** through the adapter boundary. The
+WebBridge entry provides host/capability context, browser storage, lifecycle
+information, and opt-in diagnostics, then mounts the canonical
+`OnboardingFlow`. It does not render generated product surfaces.
 
 Desktop and Electron continue to select `reactAppEntry`; browser startup
 continues to select `webBridgeEntry`. The canonical desktop/mobile product UI
