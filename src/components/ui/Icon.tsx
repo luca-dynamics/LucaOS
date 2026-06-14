@@ -6,9 +6,6 @@ import * as SolarIcons from '@solar-icons/react';
 import * as PhosphorIcons from '@phosphor-icons/react';
 import * as RemixIcons from '@remixicon/react';
 
-import { settingsService } from '../../services/settingsService';
-import { getThemeColors } from '../../config/themeColors';
-
 export type IconProvider = 'solar' | 'phosphor' | 'remix' | 'lucide' | 'auto';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -214,12 +211,10 @@ export const Icon: React.FC<IconProps> = ({
   className = '',
   ...props 
 }) => {
-  // Get active theme for context-aware coloring
-  const settings = settingsService.get('general');
-  const theme = getThemeColors(settings?.theme || 'PROFESSIONAL');
-  
-  // Default icon color if not specified
-  const iconColor = color || theme.hex || 'currentColor';
+  // Runtime/theme layers own color selection. Keeping Icon presentation-only
+  // prevents a visual primitive from importing settings, vault, or Electron
+  // services merely to render an SVG.
+  const iconColor = color || 'var(--app-primary, currentColor)';
   
   // Secondary color for Duotone (30% opacity of primary)
   const secondaryColor = iconColor.startsWith('#') 
