@@ -41,6 +41,8 @@ import {
 } from "../../services/onboarding/OnboardingLifecycleService";
 import type { OnboardingModelReadiness } from "../../services/onboarding/OnboardingModelModeCoordinator";
 import type { OnboardingRuntimeAdapter } from "./OnboardingRuntimeAdapter";
+import { LucaCanvasPresenceOrb } from "../visual/LucaCanvasPresenceOrb";
+import { LucaHologramShaderPresence } from "../visual/LucaHologramShaderPresence";
 
 type Step = OnboardingStep;
 
@@ -446,6 +448,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     if (!resumeChecked) return;
 
     if (step === "KERNEL_AWAKENING") {
+      if (runtime.skipKernelAwakeningVisual) {
+        setStep(onboardingController.afterKernelAwakening());
+        return;
+      }
       return startKernelBootSequence({
         onMessage: (message) => {
           setBootText((prev) => [...prev, message]);
@@ -748,21 +754,52 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               : "translateZ(0)",
         }}
       >
-        {step === "KERNEL_AWAKENING" && (
-          <div className="space-y-2">
-            {bootText.map((text, i) => (
-              <div
-                key={i}
-                className="text-sm animate-fade-in"
-                style={{ color: ambientThemeColor }}
-              >
-                {">"} {text}
-              </div>
-            ))}
-            <div
-              className="w-2 h-4 animate-pulse inline-block ml-2"
-              style={{ backgroundColor: ambientThemeColor }}
+        {step === "KERNEL_AWAKENING" && !runtime.skipKernelAwakeningVisual && (
+          <div className="flex w-full max-w-xl flex-col items-center px-4 text-center">
+            <LucaHologramShaderPresence
+              size={isMobile ? 190 : 230}
+              state="preparing"
+              themeColor={ambientThemeColor}
             />
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Preparing LucaOS
+            </h1>
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/60 sm:text-base">
+              Luca is setting up your personal AI environment.
+            </p>
+            <div className="mt-7 w-full max-w-md space-y-2 text-left">
+              {[
+                "Preparing memory context",
+                "Loading interaction preferences",
+                "Starting chat and voice interface",
+                "Securing this session",
+              ].map((label, index) => {
+                const complete = index < bootText.length;
+                const current = index === Math.min(bootText.length, 3);
+                return (
+                  <div
+                    key={label}
+                    className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-black/20 px-4 py-2.5"
+                  >
+                    <LucaCanvasPresenceOrb
+                      size={22}
+                      state={complete ? "ready" : current ? "preparing" : "idle"}
+                      amplitude={current ? 0.16 : 0}
+                      themeColor={ambientThemeColor}
+                      lowPower={isMobile}
+                      className="shrink-0"
+                    />
+                    <span
+                      className={`text-sm ${
+                        complete ? "text-white/75" : "text-white/50"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

@@ -30,10 +30,25 @@ const desktopAdapterSource = read(
 const postBootSource = read("src/web/postBoot/WebPostBootTransition.tsx");
 const postBootLoadingSource = read("src/web/postBoot/WebPostBootLoading.tsx");
 const postBootStateSource = read("src/web/postBoot/webPostBootState.ts");
-const hologramPresenceSource = read(
-  "src/components/visual/LucaHologramPresence.tsx",
-);
 const presenceOrbSource = read("src/components/visual/LucaPresenceOrb.tsx");
+const canvasPresenceOrbSource = read(
+  "src/components/visual/LucaCanvasPresenceOrb.tsx",
+);
+const canvasOrbRendererSource = read(
+  "src/components/visual/lucaCanvasOrbRenderer.ts",
+);
+const hologramShaderPresenceSource = read(
+  "src/components/visual/LucaHologramShaderPresence.tsx",
+);
+const hologramShaderSceneSource = read(
+  "src/components/visual/LucaHologramShaderScene.tsx",
+);
+const visualSourceAuditPath =
+  "docs/foundation/LUCA_ORB_AND_POST_BOOT_VISUAL_SOURCE_AUDIT.md";
+const visualSourceAudit = read(visualSourceAuditPath);
+const onboardingLifecycleSource = read(
+  "src/services/onboarding/OnboardingLifecycleService.ts",
+);
 
 const generatedProductSurfaces = [
   "src/web/WebOnboardingSurface.tsx",
@@ -168,12 +183,21 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
   });
 
   it("keeps post-boot presentation on reused Luca visuals and safe storage", () => {
-    expect(postBootSource).toContain("LucaHologramPresence");
-    expect(postBootSource).toContain("LucaPresenceOrb");
+    expect(postBootSource).toContain("LucaHologramShaderPresence");
+    expect(postBootSource).toContain("LucaCanvasPresenceOrb");
+    expect(postBootSource).not.toContain("LucaHologramPresence");
+    expect(postBootSource).not.toContain("LucaPresenceOrb");
     expect(postBootSource).not.toMatch(/VoiceHud|VoiceHUD/);
     expect(postBootSource).not.toContain("> Luca is waking up");
-    expect(hologramPresenceSource).toContain('src="/icon.png"');
-    expect(presenceOrbSource).toContain("amplitude");
+    expect(hologramShaderPresenceSource).toContain(
+      'import("./LucaHologramShaderScene")',
+    );
+    expect(hologramShaderSceneSource).toContain(
+      'useGLTF("/models/avatar.glb")',
+    );
+    expect(hologramShaderPresenceSource).not.toContain('src="/icon.png"');
+    expect(canvasPresenceOrbSource).toContain("<canvas");
+    expect(canvasOrbRendererSource).toContain("createRadialGradient");
     expect(postBootStateSource).toContain("readWebOnboardingComplete");
     expect(postBootStateSource).toContain("readWebProfile");
     expect(postBootLoadingSource).toContain("Preparing LucaOS");
@@ -207,6 +231,68 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     }
     expect(postBootSource).not.toMatch(/from\s+["'][^"']*VoiceHud["']/i);
     expect(lifecycleSource).not.toMatch(/from\s+["'][^"']*VoiceHud["']/i);
+    expect(postBootSource).not.toMatch(
+      /from\s+["'][^"']*voice\/VoiceVisualizer["']/i,
+    );
+    expect(lifecycleSource).not.toMatch(
+      /from\s+["'][^"']*voice\/VoiceVisualizer["']/i,
+    );
+  });
+
+  it("protects the factual orb and post-boot visual source audit", () => {
+    expect(existsSync(visualSourceAuditPath)).toBe(true);
+    expect(visualSourceAudit).toContain("src/components/WidgetVisualizer.tsx");
+    expect(visualSourceAudit).toContain(
+      "src/components/voice/VoiceVisualizer.tsx",
+    );
+    expect(visualSourceAudit).toContain(
+      "src/components/Onboarding/HologramFace.tsx",
+    );
+    expect(visualSourceAudit).toContain(
+      "src/components/Hologram/HologramScene.tsx",
+    );
+    expect(visualSourceAudit).toContain('useGLTF("/models/avatar.glb")');
+    expect(visualSourceAudit).toContain(
+      "src/services/onboarding/OnboardingLifecycleService.ts",
+    );
+    expect(visualSourceAudit).toContain(
+      "src/components/Onboarding/OnboardingFlow.tsx",
+    );
+    expect(visualSourceAudit).toContain("KERNEL_AWAKENING");
+  });
+
+  it("keeps the located terminal source and generic orb status explicit", () => {
+    for (const copyKey of [
+      "kernelAwakening",
+      "stabilizingLucaTensors",
+      "generatingIdentityKeypair",
+      "lucaAgentInitialized",
+    ]) {
+      expect(onboardingLifecycleSource).toContain(copyKey);
+    }
+    expect(onboardingSource).toContain('step === "KERNEL_AWAKENING"');
+    expect(onboardingSource).not.toContain('{">"} {text}');
+    expect(onboardingSource).toContain("<LucaHologramShaderPresence");
+    expect(onboardingSource).toContain("<LucaCanvasPresenceOrb");
+    expect(presenceOrbSource).toContain(
+      "@deprecated Generic PR #310 placeholder",
+    );
+
+    const orbComponentFiles = [
+      "src/components/visual/LucaCanvasPresenceOrb.tsx",
+      "src/components/visual/LucaPresenceOrb.tsx",
+      "src/components/voice/VoiceStatusOrb.tsx",
+    ];
+    const walk = (directory: string): string[] =>
+      readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+        const path = `${directory}/${entry.name}`;
+        return entry.isDirectory() ? walk(path) : [path];
+      });
+    expect(
+      walk("src/components")
+        .filter((path) => /Orb\.tsx$/.test(path))
+        .sort(),
+    ).toEqual(orbComponentFiles.sort());
   });
 
   it("wires ready through the browser-safe LucaOS shell and chat adapter", () => {
