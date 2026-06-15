@@ -38,6 +38,12 @@ export interface OnboardingConversationProps {
 export interface OnboardingRuntimeAdapter {
   platform: "desktop" | "web";
   supportsLocalProvisioning: boolean;
+  /**
+   * WebBridge already presents the canonical post-boot preparation surface.
+   * When true, onboarding preserves the lifecycle handoff but does not replay
+   * the shared KERNEL_AWAKENING presentation or its artificial delay.
+   */
+  skipKernelAwakeningVisual?: boolean;
   ConversationComponent: ComponentType<OnboardingConversationProps>;
   getVisualSettings(): OnboardingVisualSettings;
   subscribeVisualSettings(

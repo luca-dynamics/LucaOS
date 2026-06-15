@@ -30,9 +30,6 @@ const desktopAdapterSource = read(
 const postBootSource = read("src/web/postBoot/WebPostBootTransition.tsx");
 const postBootLoadingSource = read("src/web/postBoot/WebPostBootLoading.tsx");
 const postBootStateSource = read("src/web/postBoot/webPostBootState.ts");
-const hologramPresenceSource = read(
-  "src/components/visual/LucaHologramPresence.tsx",
-);
 const presenceOrbSource = read("src/components/visual/LucaPresenceOrb.tsx");
 const visualSourceAuditPath =
   "docs/foundation/LUCA_ORB_AND_POST_BOOT_VISUAL_SOURCE_AUDIT.md";
@@ -174,12 +171,21 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
   });
 
   it("keeps post-boot presentation on reused Luca visuals and safe storage", () => {
-    expect(postBootSource).toContain("LucaHologramPresence");
-    expect(postBootSource).toContain("LucaPresenceOrb");
+    expect(postBootSource).toContain("LucaHologramShaderPresence");
+    expect(postBootSource).toContain("LucaCanvasPresenceOrb");
+    expect(postBootSource).not.toContain("LucaHologramPresence");
+    expect(postBootSource).not.toContain("LucaPresenceOrb");
     expect(postBootSource).not.toMatch(/VoiceHud|VoiceHUD/);
     expect(postBootSource).not.toContain("> Luca is waking up");
-    expect(hologramPresenceSource).toContain('src="/icon.png"');
-    expect(presenceOrbSource).toContain("amplitude");
+    expect(hologramShaderPresenceSource).toContain(
+      'import("./LucaHologramShaderScene")',
+    );
+    expect(hologramShaderSceneSource).toContain(
+      'useGLTF("/models/avatar.glb")',
+    );
+    expect(hologramShaderPresenceSource).not.toContain('src="/icon.png"');
+    expect(canvasPresenceOrbSource).toContain("<canvas");
+    expect(canvasOrbRendererSource).toContain("createRadialGradient");
     expect(postBootStateSource).toContain("readWebOnboardingComplete");
     expect(postBootStateSource).toContain("readWebProfile");
     expect(postBootLoadingSource).toContain("Preparing LucaOS");
