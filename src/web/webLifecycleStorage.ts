@@ -4,8 +4,11 @@ export const WEB_PROFILE_KEY = "lucaos.web.profile";
 export interface WebProfile {
   name: string;
   interaction: "chat" | "voice";
-  theme: "cyan" | "violet" | "neutral";
+  theme: "PROFESSIONAL" | "MASTER_SYSTEM" | "FROST" | "LIGHTCREAM";
   modelRoute: "cloud" | "byok" | "desktop-later";
+  personality: "proactive" | "direct";
+  backgroundOpacity: number;
+  backgroundBlur: number;
 }
 
 export function readWebOnboardingComplete(): boolean {
@@ -21,7 +24,17 @@ export function readWebProfile(): WebProfile | null {
   if (typeof window === "undefined") return null;
   try {
     const value = window.localStorage.getItem(WEB_PROFILE_KEY);
-    return value ? (JSON.parse(value) as WebProfile) : null;
+    if (!value) return null;
+    const parsed = JSON.parse(value) as Partial<WebProfile>;
+    return {
+      name: parsed.name ?? "",
+      interaction: parsed.interaction ?? "chat",
+      theme: parsed.theme && ["PROFESSIONAL", "MASTER_SYSTEM", "FROST", "LIGHTCREAM"].includes(parsed.theme) ? parsed.theme : "PROFESSIONAL",
+      modelRoute: parsed.modelRoute ?? "cloud",
+      personality: parsed.personality ?? "proactive",
+      backgroundOpacity: parsed.backgroundOpacity ?? 30,
+      backgroundBlur: parsed.backgroundBlur ?? 40,
+    };
   } catch {
     return null;
   }

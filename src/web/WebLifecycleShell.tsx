@@ -1,48 +1,98 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import OnboardingFlow from "../components/Onboarding/OnboardingFlow";
+import { generateThemeStyles, getThemeColors } from "../config/themeColors";
+import type { ConversationMode } from "../components/Onboarding/ModeSelect";
+import type { OperatorProfile } from "../types/operatorProfile";
 import { WebBridgeDiagnostics } from "./WebBridgeDiagnostics";
-import { WebMainSurface } from "./WebMainSurface";
-import { WebOnboardingSurface } from "./WebOnboardingSurface";
 import { useWebRuntime } from "./WebRuntimeContext";
-import { completeWebOnboarding, readWebOnboardingComplete, readWebProfile, type WebProfile } from "./webLifecycleStorage";
+import { webOnboardingRuntime } from "./adapters/webOnboardingRuntime";
+import type { WebCapability } from "./browserHostCapabilities";
+import {
+  completeWebOnboarding,
+  readWebOnboardingComplete,
+} from "./webLifecycleStorage";
+import { WebLucaBackground } from "./WebLucaBackground";
+import { WebReadyState } from "./WebReadyState";
 
-export type WebLifecycleState = "checking" | "needs-onboarding" | "ready" | "session-restore-failed";
+export type WebLifecycleState = "onboarding" | "ready";
 
 export function WebLifecycleShell() {
   const runtime = useWebRuntime();
-  const [profile, setProfile] = useState<WebProfile | null>(() => readWebProfile());
-  const [lifecycle, setLifecycle] = useState<WebLifecycleState>(() => readWebOnboardingComplete() ? "ready" : "needs-onboarding");
-  const activeSurface = lifecycle === "ready" ? "main" : "onboarding";
-  const browserCapabilities = Object.values(runtime.browserCapabilities);
-  const nativeCapabilities = Object.values(runtime.nativeCapabilityGuards);
+  const [lifecycle, setLifecycle] = useState<WebLifecycleState>(() =>
+    readWebOnboardingComplete() ? "ready" : "onboarding",
+  );
+  const onboardingComplete = lifecycle === "ready";
+  const [visualSettings, setVisualSettings] = useState(() =>
+    webOnboardingRuntime.getVisualSettings(),
+  );
+  const theme = getThemeColors(visualSettings.theme);
+  const browserCapabilities = Object.values(
+    runtime.browserCapabilities,
+  ) as WebCapability[];
+  const nativeCapabilities = Object.values(
+    runtime.nativeCapabilityGuards,
+  ) as WebCapability[];
 
-  const finishOnboarding = (nextProfile: WebProfile) => {
-    try {
-      completeWebOnboarding(nextProfile);
-      setProfile(nextProfile);
+  useEffect(
+    () =>
+      webOnboardingRuntime.subscribeVisualSettings?.(setVisualSettings) ??
+      (() => {}),
+    [],
+  );
+
+  const handleOnboardingComplete = useCallback(
+    (profile?: Partial<OperatorProfile>, mode?: ConversationMode) => {
+      const currentVisualSettings = webOnboardingRuntime.getVisualSettings();
+      completeWebOnboarding({
+        name: profile?.identity?.name || "",
+        interaction: mode === "voice" ? "voice" : "chat",
+        theme: currentVisualSettings.theme as
+          | "PROFESSIONAL"
+          | "MASTER_SYSTEM"
+          | "FROST"
+          | "LIGHTCREAM",
+        modelRoute: "cloud",
+        personality: "proactive",
+        backgroundOpacity: currentVisualSettings.backgroundOpacity,
+        backgroundBlur: currentVisualSettings.backgroundBlur,
+      });
       setLifecycle("ready");
-    } catch {
-      setLifecycle("session-restore-failed");
-    }
-  };
+    },
+    [],
+  );
 
   return (
-    <main className="relative h-full min-h-screen overflow-y-auto bg-[#050609] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_4%,rgba(34,211,238,0.12),transparent_30%),radial-gradient(circle_at_82%_12%,rgba(139,92,246,0.10),transparent_26%),linear-gradient(180deg,#090b12_0%,#040509_62%,#090a10_100%)]" />
-      <div className="glass-noise fixed inset-0" />
-      <div className="relative min-h-full">
-        {lifecycle === "ready" ? <WebMainSurface profile={profile} /> : <WebOnboardingSurface onComplete={finishOnboarding} />}
-        <div className="mx-auto max-w-7xl px-4 pb-6 sm:px-7">
-          <WebBridgeDiagnostics
-            hostClass={runtime.hostClass}
-            lifecycleState={lifecycle}
-            onboardingComplete={lifecycle === "ready"}
-            activeWebSurface={activeSurface}
-            availableBrowserCapabilityCount={browserCapabilities.filter((item) => item.status === "available").length}
-            guardedNativeCapabilityCount={nativeCapabilities.filter((item) => item.status !== "available").length}
-            lucaLinkStatus={runtime.lucaLinkStatus}
-          />
-        </div>
-      </div>
-    </main>
+    <WebLucaBackground visualSettings={visualSettings}>
+      <style>{generateThemeStyles()}</style>
+      {lifecycle === "onboarding" ? (
+        <OnboardingFlow
+          theme={{ primary: visualSettings.theme, hex: theme.hex }}
+          runtime={webOnboardingRuntime}
+          onComplete={handleOnboardingComplete}
+        />
+      ) : (
+        <WebReadyState
+          hostClass={runtime.hostClass}
+          browserCapabilities={browserCapabilities}
+          guardedNativeCapabilities={nativeCapabilities}
+          lucaLinkStatus={runtime.lucaLinkStatus}
+        />
+      )}
+      <WebBridgeDiagnostics
+        hostClass={runtime.hostClass}
+        lifecycleState={lifecycle}
+        onboardingComplete={onboardingComplete}
+        activeWebSurface={
+          lifecycle === "onboarding" ? "lucaos-onboarding" : "web-ready-state"
+        }
+        availableBrowserCapabilityCount={
+          browserCapabilities.filter((item) => item.status === "available").length
+        }
+        guardedNativeCapabilityCount={
+          nativeCapabilities.filter((item) => item.status !== "available").length
+        }
+        lucaLinkStatus={runtime.lucaLinkStatus}
+      />
+    </WebLucaBackground>
   );
 }

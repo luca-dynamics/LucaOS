@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import { Icon } from "../ui/Icon";
-import { settingsService } from "../../services/settingsService";
 import { getDynamicContrast } from "../../config/themeColors";
 
 interface SovereignDirectivesProps {
   onComplete: () => void;
+  themeId?: string;
+  backgroundOpacity?: number;
 }
 
 const SovereignDirectives: React.FC<SovereignDirectivesProps> = ({
   onComplete,
+  themeId = "PROFESSIONAL",
+  backgroundOpacity = 0.3,
 }) => {
   const [aligned, setAligned] = useState(false);
 
-  const themeId = settingsService.get("general")?.theme || "PROFESSIONAL";
-  const backgroundOpacity = settingsService.get("general")?.backgroundOpacity ?? 0.3;
   const dynamicContrast = getDynamicContrast(themeId, backgroundOpacity);
   
   const textMain = "var(--app-text-main)";
