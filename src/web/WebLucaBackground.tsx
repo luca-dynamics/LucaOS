@@ -28,11 +28,10 @@ export function WebLucaBackground({
     "--app-bg-tint": contrast.bgTint,
     "--app-bg-opacity": opacity,
     "--app-bg-blur": `${blur}px`,
-    backgroundColor: contrast.isHighContrast ? contrast.bgMain : "#05070b",
+    backgroundColor: contrast.isHighContrast ? contrast.bgMain : "#08090b",
     backgroundImage: [
-      `radial-gradient(circle at 18% 12%, ${theme.hex}38, transparent 38%)`,
-      `radial-gradient(circle at 82% 88%, ${theme.hex}20, transparent 42%)`,
-      "linear-gradient(145deg, #05070b 0%, #0b1019 52%, #05070b 100%)",
+      `radial-gradient(ellipse at 50% 42%, ${theme.hex}0d 0%, transparent 48%)`,
+      "linear-gradient(145deg, #08090b 0%, #111317 50%, #0b0d10 100%)",
     ].join(", "),
   } as CSSProperties;
 
@@ -47,7 +46,7 @@ export function WebLucaBackground({
         style={{
           backgroundColor: contrast.bgTint,
           backdropFilter: `blur(${blur}px)`,
-          opacity: Math.max(0.12, opacity),
+          opacity: Math.max(0.08, opacity * 0.72),
         }}
       />
     </div>

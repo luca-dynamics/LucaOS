@@ -71,9 +71,14 @@ const ConversationalOnboarding: React.FC<ConversationalOnboardingProps> = ({
   // Generate opening message from Luca (AI-generated in real-time)
   useEffect(() => {
     // If we've started text mode and have no messages, generate the opening
-    if (mode === "text" && messages.length === 0 && !isProcessing && !openingRef.current) {
+    if (
+      mode === "text" &&
+      messages.length === 0 &&
+      !isProcessing &&
+      !openingRef.current
+    ) {
       openingRef.current = true;
-      
+
       const generateOpening = async () => {
         setIsProcessing(true);
         let openingContent = "";
@@ -97,15 +102,18 @@ Ask them for their preferred name.`;
             try {
               openingContent = await llmService.generate(
                 "Generate a warm, professional first greeting for our conversation. Keep it to 2-3 sentences.",
-                { systemPrompt, temperature: 0.8 }
+                { systemPrompt, temperature: 0.8 },
               );
             } catch (e) {
-              console.error("[ConversationalOnboarding] Greeting generation failed, using fallback:", e);
-              openingContent = `Identity Link Established. I am LUCA, your autonomous AI partner. It's a pleasure to meet you, ${userName}. What preferred name should I use for our interactions?`;
+              console.error(
+                "[ConversationalOnboarding] Greeting generation failed, using fallback:",
+                e,
+              );
+              openingContent = `Hi ${userName}, I’m Luca. Let’s set up how I should work with you. What name would you like me to use?`;
             }
           } else {
             // Static fallback if no model/key available
-            openingContent = `Identity Link Established. I am LUCA, your autonomous AI partner. It's a pleasure to meet you, ${userName}. What preferred name should I use for our interactions?`;
+            openingContent = `Hi ${userName}, I’m Luca. Let’s set up how I should work with you. What name would you like me to use?`;
           }
 
           const newMessage: Message = {
@@ -117,7 +125,10 @@ Ask them for their preferred name.`;
           setMessages([newMessage]);
           soundService.play("SUCCESS");
         } catch (error) {
-          console.error("[ConversationalOnboarding] Critical greeting failure:", error);
+          console.error(
+            "[ConversationalOnboarding] Critical greeting failure:",
+            error,
+          );
         } finally {
           setIsProcessing(false);
         }
@@ -359,9 +370,11 @@ Response:`;
     };
 
     // Process interaction to evolve personality
-    personalityService.processInteraction(interactionContext).catch((err: any) => {
-      console.error("[Personality] Error processing interaction:", err);
-    });
+    personalityService
+      .processInteraction(interactionContext)
+      .catch((err: any) => {
+        console.error("[Personality] Error processing interaction:", err);
+      });
 
     // Reset timer for next interaction
     interactionStartTime.current = Date.now();
@@ -607,7 +620,7 @@ Nudge:`;
   }, [messages, isProcessing]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
