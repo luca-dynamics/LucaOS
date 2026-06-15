@@ -178,9 +178,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     currentOpacity,
   );
   const useDarkLightThemeContrast = isLightTheme && currentOpacity >= 0.45;
-  const accentTextColor = isLightTheme
-    ? currentContrast.text
-    : currentThemeHex;
+  const accentTextColor = isLightTheme ? currentContrast.text : currentThemeHex;
   const mutedAccentColor = isLightTheme
     ? currentContrast.textMuted
     : `${currentThemeHex}cc`;
@@ -193,7 +191,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     ambientThemeColor,
     useDarkLightThemeContrast ? 0.08 : 0.14,
   )} 0%, ${panelSurfaceColor} 100%)`;
-
 
   useEffect(() => {
     try {
@@ -224,7 +221,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       setFailedProvisionKeys(saved.failedProvisionKeys || []);
       setStep(saved.step);
     } catch (e) {
-      console.warn("[Onboarding] Failed to restore local provisioning state:", e);
+      console.warn(
+        "[Onboarding] Failed to restore local provisioning state:",
+        e,
+      );
       runtime.clearLocalProvisioningResume();
     } finally {
       setResumeChecked(true);
@@ -511,10 +511,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     if (step !== "PROVISION_LOCAL" || !localProvisionPlan) return;
 
     const applyProvisionSnapshot = (models?: any[]) => {
-      const snapshot = runtime.evaluateLocalProvisioningState(localProvisionPlan, {
-        includeVision: !skipVisionForNow,
-        models,
-      });
+      const snapshot = runtime.evaluateLocalProvisioningState(
+        localProvisionPlan,
+        {
+          includeVision: !skipVisionForNow,
+          models,
+        },
+      );
 
       setDownloadStates(snapshot.downloadStates);
       setFailedProvisionKeys(snapshot.failedProvisionKeys);
@@ -660,18 +663,20 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       runtime.playSound("SUCCESS");
       return scheduleOnboardingDelay(() => {
         const finish = async () => {
-          const readiness =
-            await runtime.confirmSelectedModelRoute({
-              voiceSelected: conversationMode === "voice",
-              memoryEnabled: true,
-            });
+          const readiness = await runtime.confirmSelectedModelRoute({
+            voiceSelected: conversationMode === "voice",
+            memoryEnabled: true,
+          });
           setModelReadiness(readiness);
           setRouteWarnings(readiness.warnings.map((warning) => warning.reason));
           // Pass the selected conversation mode to the completion handler.
           onComplete(profile || undefined, conversationMode || undefined);
         };
         finish().catch((error) => {
-          console.warn("[Onboarding] Route readiness confirmation failed", error);
+          console.warn(
+            "[Onboarding] Route readiness confirmation failed",
+            error,
+          );
           onComplete(profile || undefined, conversationMode || undefined);
         });
       }, 1500);
@@ -849,7 +854,20 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         )}
 
         {step === "CONVERSATION" && conversationMode && (
-          <Suspense fallback={null}>
+          <Suspense
+            fallback={
+              <div
+                className="rounded-2xl border p-6 text-sm font-mono"
+                style={{
+                  color: accentTextColor,
+                  borderColor: panelBorderColor,
+                  backgroundColor: panelSurfaceColor,
+                }}
+              >
+                Preparing Luca conversation interface...
+              </div>
+            }
+          >
             <ConversationComponent
               mode={conversationMode}
               userName={name}

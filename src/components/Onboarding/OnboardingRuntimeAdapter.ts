@@ -9,9 +9,7 @@ import type {
   ProvisioningOutcome,
   ProvisionRow,
 } from "../../services/onboarding/LocalProvisioningService";
-import type {
-  OnboardingModelReadiness,
-} from "../../services/onboarding/OnboardingModelModeCoordinator";
+import type { OnboardingModelReadiness } from "../../services/onboarding/OnboardingModelModeCoordinator";
 import type { ConversationMode } from "./ModeSelect";
 
 export type OnboardingSound =
@@ -42,8 +40,16 @@ export interface OnboardingRuntimeAdapter {
   supportsLocalProvisioning: boolean;
   ConversationComponent: ComponentType<OnboardingConversationProps>;
   getVisualSettings(): OnboardingVisualSettings;
+  subscribeVisualSettings(
+    listener: (settings: OnboardingVisualSettings) => void,
+  ): () => void;
   saveVisualSettings(
-    settings: Partial<Pick<OnboardingVisualSettings, "theme" | "backgroundOpacity" | "backgroundBlur">>,
+    settings: Partial<
+      Pick<
+        OnboardingVisualSettings,
+        "theme" | "backgroundOpacity" | "backgroundBlur"
+      >
+    >,
   ): void;
   playSound(sound: OnboardingSound): void;
   persistOperatorIdentity(name: string): void;

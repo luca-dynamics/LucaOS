@@ -1,16 +1,19 @@
-import type { CSSProperties, PropsWithChildren } from "react";
+import type { CSSProperties } from "react";
 import type { OnboardingVisualSettings } from "../components/Onboarding/OnboardingRuntimeAdapter";
-import { getDynamicContrast, getThemeColors } from "../config/themeColors";
+import { getDynamicContrast } from "../config/themeColors";
 
-interface WebLucaBackgroundProps extends PropsWithChildren {
+interface WebLucaBackgroundProps {
   visualSettings: OnboardingVisualSettings;
+  theme: {
+    hex: string;
+    themeName?: string;
+  };
 }
 
 export function WebLucaBackground({
-  children,
   visualSettings,
+  theme,
 }: WebLucaBackgroundProps) {
-  const theme = getThemeColors(visualSettings.theme);
   const contrast = getDynamicContrast(
     visualSettings.theme,
     visualSettings.backgroundOpacity,
@@ -34,20 +37,19 @@ export function WebLucaBackground({
   } as CSSProperties;
 
   return (
-    <main
-      className="relative h-screen w-full overflow-hidden transition-[background-color,background-image] duration-300"
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 transition-[background-color,background-image] duration-300"
       style={style}
     >
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className="absolute inset-0"
         style={{
           backgroundColor: contrast.bgTint,
           backdropFilter: `blur(${blur}px)`,
           opacity: Math.max(0.12, opacity),
         }}
       />
-      {children}
-    </main>
+    </div>
   );
 }

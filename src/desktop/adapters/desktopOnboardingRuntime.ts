@@ -40,6 +40,10 @@ export const desktopOnboardingRuntime: OnboardingRuntimeAdapter = {
       setupComplete: Boolean(general.setupComplete),
     };
   },
+  subscribeVisualSettings(listener) {
+    listener(this.getVisualSettings());
+    return () => {};
+  },
   saveVisualSettings(next) {
     settingsService.saveSettings({
       general: { ...settingsService.get("general"), ...next } as any,

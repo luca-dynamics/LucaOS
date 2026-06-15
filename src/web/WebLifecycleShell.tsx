@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import OnboardingFlow from "../components/Onboarding/OnboardingFlow";
-import { LiquidBackground } from "../components/visual/LiquidBackground";
 import { generateThemeStyles, getThemeColors } from "../config/themeColors";
 import { WebBridgeDiagnostics } from "./WebBridgeDiagnostics";
+import { WebLucaBackground } from "./WebLucaBackground";
+import { WebReadyState } from "./WebReadyState";
 import { useWebRuntime } from "./WebRuntimeContext";
 import { webOnboardingRuntime } from "./adapters/webOnboardingRuntime";
 import type { WebCapability } from "./browserHostCapabilities";
@@ -10,12 +12,19 @@ import {
   readWebOnboardingComplete,
 } from "./webLifecycleStorage";
 
-export type WebLifecycleState = "onboarding";
+export type WebLifecycleState = "onboarding" | "ready";
 
 export function WebLifecycleShell() {
   const runtime = useWebRuntime();
-  const onboardingComplete = readWebOnboardingComplete();
-  const visualSettings = webOnboardingRuntime.getVisualSettings();
+  const [lifecycleState, setLifecycleState] = useState<WebLifecycleState>(() =>
+    readWebOnboardingComplete() ? "ready" : "onboarding",
+  );
+  const [visualSettings, setVisualSettings] = useState(() =>
+    webOnboardingRuntime.getVisualSettings(),
+  );
+  useEffect(() => {
+    return webOnboardingRuntime.subscribeVisualSettings(setVisualSettings);
+  }, []);
   const theme = getThemeColors(visualSettings.theme);
   const browserCapabilities = Object.values(
     runtime.browserCapabilities,
@@ -27,41 +36,56 @@ export function WebLifecycleShell() {
   return (
     <main className="relative h-screen w-full overflow-hidden">
       <style>{generateThemeStyles()}</style>
-      <LiquidBackground
+      <WebLucaBackground
+        visualSettings={visualSettings}
         theme={{ hex: theme.hex, themeName: visualSettings.theme }}
-        className="fixed inset-0 -z-50"
       />
-      <OnboardingFlow
-        theme={{ primary: visualSettings.theme, hex: theme.hex }}
-        runtime={webOnboardingRuntime}
-        onComplete={(profile, mode) => {
-          const currentVisualSettings =
-            webOnboardingRuntime.getVisualSettings();
-          completeWebOnboarding({
-            name: profile?.identity?.name || "",
-            interaction: mode === "voice" ? "voice" : "chat",
-            theme: currentVisualSettings.theme as
-              | "PROFESSIONAL"
-              | "MASTER_SYSTEM"
-              | "FROST"
-              | "LIGHTCREAM",
-            modelRoute: "cloud",
-            personality: "proactive",
-            backgroundOpacity: currentVisualSettings.backgroundOpacity,
-            backgroundBlur: currentVisualSettings.backgroundBlur,
-          });
-        }}
-      />
+      {lifecycleState === "onboarding" && (
+        <OnboardingFlow
+          theme={{ primary: visualSettings.theme, hex: theme.hex }}
+          runtime={webOnboardingRuntime}
+          onComplete={(profile, mode) => {
+            const currentVisualSettings =
+              webOnboardingRuntime.getVisualSettings();
+            completeWebOnboarding({
+              name: profile?.identity?.name || "",
+              interaction: mode === "voice" ? "voice" : "chat",
+              theme: currentVisualSettings.theme as
+                | "PROFESSIONAL"
+                | "MASTER_SYSTEM"
+                | "FROST"
+                | "LIGHTCREAM",
+              modelRoute: "cloud",
+              personality: "proactive",
+              backgroundOpacity: currentVisualSettings.backgroundOpacity,
+              backgroundBlur: currentVisualSettings.backgroundBlur,
+            });
+            setLifecycleState("ready");
+          }}
+        />
+      )}
+      {lifecycleState === "ready" && (
+        <WebReadyState
+          hostClass={runtime.hostClass}
+          browserCapabilities={browserCapabilities}
+          guardedNativeCapabilities={nativeCapabilities}
+          lucaLinkStatus={runtime.lucaLinkStatus}
+        />
+      )}
       <WebBridgeDiagnostics
         hostClass={runtime.hostClass}
-        lifecycleState="onboarding"
-        onboardingComplete={onboardingComplete}
-        activeWebSurface="lucaos-onboarding"
+        lifecycleState={lifecycleState}
+        onboardingComplete={lifecycleState === "ready"}
+        activeWebSurface={
+          lifecycleState === "ready" ? "web-ready-state" : "lucaos-onboarding"
+        }
         availableBrowserCapabilityCount={
-          browserCapabilities.filter((item) => item.status === "available").length
+          browserCapabilities.filter((item) => item.status === "available")
+            .length
         }
         guardedNativeCapabilityCount={
-          nativeCapabilities.filter((item) => item.status !== "available").length
+          nativeCapabilities.filter((item) => item.status !== "available")
+            .length
         }
         lucaLinkStatus={runtime.lucaLinkStatus}
       />
