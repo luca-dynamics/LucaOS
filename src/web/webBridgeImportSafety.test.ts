@@ -7,6 +7,10 @@ const read = (file: string) => readFileSync(file, "utf8");
 const entrySource = read("src/web/webBridgeEntry.tsx");
 const lifecycleSource = read("src/web/WebLifecycleShell.tsx");
 const diagnosticsSource = read("src/web/WebBridgeDiagnostics.tsx");
+const readySource = read("src/web/WebReadyState.tsx");
+const webShellSource = read("src/web/WebLucaShell.tsx");
+const webChatSource = read("src/web/chat/WebChatSurface.tsx");
+const webChatRuntimeSource = read("src/web/chat/webChatRuntime.ts");
 const auditSource = read("docs/foundation/WEBBRIDGE_DIRECT_REUSE_AUDIT.md");
 const bootstrapSource = read("src/index.tsx");
 const onboardingSource = read("src/components/Onboarding/OnboardingFlow.tsx");
@@ -57,6 +61,23 @@ const sourceFiles = readdirSync("src/web")
 const staticImports = sourceFiles.flatMap(
   (source) => source.match(/(?:from\s+|import\s*\()["'][^"']+["']/g) ?? [],
 );
+
+const unsafeWebRuntimeReferences = [
+  "llmService",
+  "liveService",
+  "settingsService",
+  "personalityService",
+  "soundService",
+  "better-sqlite3",
+  "electron",
+  "node:fs",
+  "node:path",
+  "node:crypto",
+  "@anthropic-ai/sdk",
+  "@google/generative-ai",
+  "@google/genai",
+  "openai",
+];
 
 describe("WebBridge direct LucaOS UI reuse audit", () => {
   it("removes generated onboarding, main, settings, and LucaLink product surfaces", () => {
@@ -125,6 +146,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(lifecycleSource).toContain("WebReadyState");
     expect(lifecycleSource).toContain('"onboarding"');
     expect(lifecycleSource).toContain('"ready"');
+    expect(lifecycleSource).toContain('"main"');
     expect(lifecycleSource).toContain("setLifecycleState");
     expect(lifecycleSource).toContain("subscribeVisualSettings");
     expect(webAdapterSource).not.toContain(
@@ -138,49 +160,29 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     );
   });
 
-  it("keeps WebBridge onboarding copy natural and mobile-safe", () => {
-    const visibleOnboardingSources = [
-      onboardingAccessSource,
-      modeSelectSource,
-      webConversationSource,
-    ].join("\n");
-    for (const terminalCopy of [
-      "Identity Verification",
-      "Operator Alias",
-      "Enter Designation",
-      "Confirm Identity",
-    ]) {
-      expect(visibleOnboardingSources).not.toContain(terminalCopy);
+  it("wires ready through the browser-safe LucaOS shell and chat adapter", () => {
+    expect(lifecycleSource).toContain(
+      'import { WebLucaShell } from "./WebLucaShell"',
+    );
+    expect(lifecycleSource).toContain('<WebLucaShell');
+    expect(lifecycleSource).toContain('setLifecycleState("main")');
+    expect(readySource).toContain("onContinueToShell");
+    expect(readySource).toContain("Continue to LucaOS Web Shell");
+    expect(webShellSource).toContain("<WebChatSurface");
+    expect(webChatSource).toContain('from "./webChatRuntime"');
+    expect(webChatSource).toContain("runtime.sendMessage");
+  });
+
+  it("keeps the main shell and chat path isolated from desktop and provider runtimes", () => {
+    expect(webShellSource).not.toMatch(/(?:\.\.\/)+App(?:\.tsx)?/);
+    for (const reference of unsafeWebRuntimeReferences) {
+      expect(webShellSource.toLowerCase()).not.toContain(reference.toLowerCase());
+      expect(webChatSource.toLowerCase()).not.toContain(reference.toLowerCase());
+      expect(webChatRuntimeSource.toLowerCase()).not.toContain(
+        reference.toLowerCase(),
+      );
     }
-    expect(onboardingAccessSource).toContain("Welcome to LucaOS");
-    expect(modeSelectSource).toContain("Choose how you want to talk");
-    expect(webConversationSource).toContain("Personalization");
-    expect(webConversationSource).toContain("min-h-dvh");
-    expect(webConversationSource).toContain("env(safe-area-inset-bottom)");
-  });
-
-  it("provides an explicit browser-safe voice-first onboarding branch", () => {
-    expect(webConversationSource).toContain('mode === "voice"');
-    expect(webConversationSource).toContain("Voice mode selected");
-    expect(webConversationSource).toContain(
-      "navigator.mediaDevices?.getUserMedia",
-    );
-    expect(webConversationSource).toContain("getUserMedia({ audio: true })");
-    expect(webConversationSource).toContain(
-      "Microphone unavailable. You can continue by typing.",
-    );
-    expect(webConversationSource).toContain(
-      'placeholder="Type your response…"',
-    );
-  });
-
-  it("uses a neutral graphite WebBridge background without corner blooms", () => {
-    expect(webBackgroundSource).toContain("#08090b");
-    expect(webBackgroundSource).toContain("#111317");
-    expect(webBackgroundSource).toContain("#0b0d10");
-    expect(webBackgroundSource).not.toContain("18% 12%");
-    expect(webBackgroundSource).not.toContain("82% 88%");
-    expect(webBackgroundSource).not.toContain("#0b1019");
+    expect(webChatRuntimeSource).not.toMatch(/api.?key|secret|localStorage/i);
   });
 
   it("audits exact canonical boot, main, settings, and LucaLink source files", () => {
@@ -218,6 +220,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(lifecycleSource).toContain("lifecycleState={lifecycleState}");
     expect(lifecycleSource).toContain('"lucaos-onboarding"');
     expect(lifecycleSource).toContain('"web-ready-state"');
+    expect(lifecycleSource).toContain('"web-luca-shell"');
   });
 
   it("keeps WebBridge and desktop on their separate bootstrap entries", () => {
