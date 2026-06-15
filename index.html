@@ -389,10 +389,15 @@
         });
 
         window.setTimeout(() => {
-          if (window.__LUCA_REACT_MOUNTED__ !== true) {
+          if (
+            window.__LUCA_REACT_MOUNTED__ !== true &&
+            (window.__LUCA_REACT_BOOTSTRAP_ERROR__ ||
+              window.__LUCA_BOOT_ERROR__)
+          ) {
             window.__LUCA_SHOW_BOOT_FAILURE__(
               "LucaOS web app failed to start",
-              window.__LUCA_BOOT_ERROR__,
+              window.__LUCA_REACT_BOOTSTRAP_ERROR__ ||
+                window.__LUCA_BOOT_ERROR__,
             );
           }
         }, 5000);
