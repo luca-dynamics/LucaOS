@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Icon } from "../../components/ui/Icon";
 import type { OnboardingConversationProps } from "../../components/Onboarding/OnboardingRuntimeAdapter";
 
 interface BrowserConversationMessage {
@@ -69,7 +70,7 @@ export function WebSafeConversationalOnboarding({
     () => ({
       id: "opening",
       role: "luca",
-      content: `Identity Link Established. I am LUCA, your autonomous AI partner. It’s a pleasure to meet you, ${userName || "Operator"}. ${prompts[0]}`,
+      content: `Hi ${userName || "there"}, I’m Luca. Let’s set up how I should work with you. ${prompts[0]}`,
     }),
     [userName],
   );
@@ -79,7 +80,26 @@ export function WebSafeConversationalOnboarding({
   const [answers, setAnswers] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [microphoneStatus, setMicrophoneStatus] = useState<
+    "idle" | "requesting" | "ready" | "unavailable"
+  >("idle");
   const complete = answers.length === prompts.length;
+
+  const requestMicrophone = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMicrophoneStatus("unavailable");
+      return;
+    }
+
+    setMicrophoneStatus("requesting");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      setMicrophoneStatus("ready");
+    } catch {
+      setMicrophoneStatus("unavailable");
+    }
+  };
 
   const submit = () => {
     const answer = input.trim();
@@ -115,7 +135,7 @@ export function WebSafeConversationalOnboarding({
 
   return (
     <section
-      className="flex h-full w-full max-w-3xl flex-col overflow-hidden rounded-2xl border glass-blur"
+      className="flex h-full min-h-dvh w-full max-w-3xl flex-col overflow-hidden border glass-blur sm:min-h-0 sm:rounded-2xl"
       style={{
         borderColor: "var(--app-border-main)",
         backgroundColor: "var(--app-bg-tint)",
@@ -130,15 +150,13 @@ export function WebSafeConversationalOnboarding({
             className="text-[10px] font-bold uppercase tracking-[0.2em]"
             style={{ color: theme?.hex || "var(--app-primary)" }}
           >
-            Operator calibration
+            Personalization
           </p>
           <p
             className="mt-1 text-xs"
             style={{ color: "var(--app-text-muted)" }}
           >
-            {mode === "voice"
-              ? "Voice selected · browser microphone ready · text remains available"
-              : "Chat selected · browser-safe conversation"}
+            {mode === "voice" ? "Voice mode selected" : "Text mode selected"}
           </p>
         </div>
         <span
@@ -149,7 +167,58 @@ export function WebSafeConversationalOnboarding({
         </span>
       </header>
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-5 sm:px-6">
+      {mode === "voice" && (
+        <div
+          className="mx-4 mt-4 rounded-2xl border p-4 text-center sm:mx-6 sm:p-5"
+          style={{
+            borderColor: "var(--app-border-main)",
+            backgroundColor: "rgba(8, 9, 11, 0.62)",
+          }}
+        >
+          <div
+            className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border"
+            style={{
+              borderColor: theme?.hex || "var(--app-primary)",
+              color: theme?.hex || "var(--app-primary)",
+            }}
+          >
+            <Icon name="Microphone" size={26} />
+          </div>
+          <p className="mt-3 text-sm font-bold">Voice mode selected</p>
+          <p
+            className="mt-1 text-xs leading-5"
+            style={{ color: "var(--app-text-muted)" }}
+          >
+            Tap below to allow microphone access. Browser live voice is not
+            connected yet, so you can always continue by typing.
+          </p>
+          <button
+            type="button"
+            onClick={requestMicrophone}
+            disabled={
+              microphoneStatus === "requesting" || microphoneStatus === "ready"
+            }
+            className="mt-4 rounded-xl border px-5 py-3 text-xs font-bold disabled:opacity-60"
+            style={{
+              borderColor: theme?.hex || "var(--app-primary)",
+              color: "var(--app-text-main)",
+            }}
+          >
+            {microphoneStatus === "requesting"
+              ? "Requesting microphone…"
+              : microphoneStatus === "ready"
+                ? "Microphone ready"
+                : "Enable microphone"}
+          </button>
+          {microphoneStatus === "unavailable" && (
+            <p className="mt-3 text-xs text-amber-200" role="status">
+              Microphone unavailable. You can continue by typing.
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-5 sm:px-6">
         {messages.map((message) => (
           <BrowserMessageBubble
             key={message.id}
@@ -161,7 +230,7 @@ export function WebSafeConversationalOnboarding({
       </div>
 
       <footer
-        className="border-t p-4 sm:p-6"
+        className="shrink-0 border-t px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6"
         style={{ borderColor: "var(--app-border-main)" }}
       >
         {!complete ? (
@@ -170,7 +239,7 @@ export function WebSafeConversationalOnboarding({
               event.preventDefault();
               submit();
             }}
-            className="flex items-end gap-3"
+            className="flex items-end gap-2 sm:gap-3"
           >
             <textarea
               value={input}
@@ -182,13 +251,12 @@ export function WebSafeConversationalOnboarding({
                 }
               }}
               rows={2}
-              autoFocus
-              placeholder={
-                mode === "voice"
-                  ? "Speak, or type your response…"
-                  : "Type your response…"
+              autoFocus={mode === "text"}
+              placeholder="Type your response…"
+              aria-label={
+                mode === "voice" ? "Text fallback response" : "Your response"
               }
-              className="min-h-[3rem] flex-1 resize-none rounded-xl border bg-black/10 px-4 py-3 text-sm outline-none"
+              className="min-h-[3.5rem] min-w-0 flex-1 resize-none rounded-xl border bg-black/10 px-4 py-3 text-base outline-none sm:text-sm"
               style={{
                 color: "var(--app-text-main)",
                 borderColor: "var(--app-border-main)",

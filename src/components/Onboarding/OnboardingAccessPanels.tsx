@@ -32,12 +32,12 @@ export const IdentityVerificationPanel: React.FC<
 }) => (
   <form
     onSubmit={onSubmit}
-    className="animate-fade-in-up w-full max-w-sm mx-auto"
+    className="animate-fade-in-up mx-auto w-full max-w-sm px-1 sm:px-0"
     style={{ gap: "3vmin", display: "flex", flexDirection: "column" }}
   >
     <div className="text-center space-y-2">
       <Icon
-        name="Terminal"
+        name="Stars"
         variant="Linear"
         className="mx-auto mb-4"
         style={{
@@ -47,7 +47,7 @@ export const IdentityVerificationPanel: React.FC<
         }}
       />
       <h1
-        className="text-2xl font-mono font-bold tracking-widest uppercase whitespace-nowrap"
+        className="mx-auto max-w-full text-balance text-2xl font-bold tracking-wide sm:text-3xl"
         style={{
           color: accentTextColor,
           textShadow: `0 0 18px ${hexToRgba(
@@ -56,38 +56,37 @@ export const IdentityVerificationPanel: React.FC<
           )}`,
         }}
       >
-        Identity Verification
+        Welcome to LucaOS
       </h1>
       <p
-        className="text-xs text-center font-mono font-medium"
+        className="text-sm text-center font-medium"
         style={{
           color: "var(--app-text-main)",
           opacity: 0.92,
         }}
       >
-        Please identify yourself, Operator.
+        What should Luca call you?
       </p>
     </div>
 
     <div className="space-y-2">
       <label
-        className="text-xs uppercase tracking-wider block text-center font-mono font-bold"
-        style={{ color: mutedAccentColor, letterSpacing: "0.16em" }}
+        className="block text-center text-xs font-bold tracking-wide"
+        style={{ color: mutedAccentColor }}
       >
-        Operator Alias
+        Your name
       </label>
       <input
         autoFocus
         type="text"
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
-        className="w-full border rounded-xl p-3 outline-none transition-all text-center text-lg placeholder-[var(--app-text-muted)] backdrop-blur-md text-[var(--app-text-main)] font-mono font-bold uppercase"
-        placeholder="ENTER DESIGNATION"
+        className="w-full rounded-xl border p-3.5 text-center text-base font-medium text-[var(--app-text-main)] outline-none transition-all placeholder:text-[var(--app-text-muted)] backdrop-blur-md sm:text-lg"
+        placeholder="Enter your name"
         style={{
           borderColor: "var(--app-border-main)",
           backgroundColor: "var(--app-bg-tint)",
           boxShadow: `0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 ${panelBorderColor}`,
-          letterSpacing: "0.08em",
         }}
       />
     </div>
@@ -95,7 +94,7 @@ export const IdentityVerificationPanel: React.FC<
     <button
       type="submit"
       disabled={!name.trim()}
-      className="w-full border rounded-xl py-3 uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md font-mono font-bold"
+      className="group flex w-full items-center justify-center gap-2 rounded-xl border py-3.5 text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-50 backdrop-blur-md"
       style={{
         borderColor: panelBorderColor,
         backgroundColor: panelSurfaceColor,
@@ -110,7 +109,7 @@ export const IdentityVerificationPanel: React.FC<
         color: name ? "var(--app-text-main)" : "var(--app-text-muted)",
       }}
     >
-      Confirm Identity{" "}
+      Continue{" "}
       <Icon
         name="AltArrowRight"
         size={16}
@@ -178,9 +177,7 @@ const BYOK_PROVIDER_OPTIONS: ByokProviderOption[] = [
   },
 ];
 
-export const LucaCoreSelectionPanel: React.FC<
-  LucaCoreSelectionPanelProps
-> = ({
+export const LucaCoreSelectionPanel: React.FC<LucaCoreSelectionPanelProps> = ({
   isMobile,
   accentTextColor,
   ambientThemeColor,

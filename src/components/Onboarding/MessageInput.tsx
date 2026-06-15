@@ -201,7 +201,7 @@ Once you have gathered all 5 points, provide a professional summary:
             isConnectedRef.current = connected;
             if (connected) {
               // Initial greeting for voice mode - Unified LUCA identity
-              const greeting = `Identity Link Established. I am LUCA, your autonomous AI partner. It's a pleasure to meet you, ${userName}. What preferred name should I use for our interactions?`;
+              const greeting = `Hi ${userName}, I’m Luca. Let’s set up how I should work with you. What name would you like me to use?`;
               hybridVoiceService.sendText(greeting);
             }
           },
@@ -464,9 +464,9 @@ Once you have gathered all 5 points, provide a professional summary:
     <form
       onSubmit={handleSubmit}
       className="border-t glass-blur"
-      style={{ 
+      style={{
         padding: "2vmin",
-        borderColor: "var(--app-border-main)"
+        borderColor: "var(--app-border-main)",
       }}
     >
       <div
@@ -476,7 +476,7 @@ Once you have gathered all 5 points, provide a professional summary:
           padding: "1vmin 2vmin",
           gap: "1.5vmin",
           backgroundColor: "var(--app-bg-tint)",
-          border: "1px solid var(--app-border-main)"
+          border: "1px solid var(--app-border-main)",
         }}
       >
         {/* Text input */}
@@ -492,9 +492,9 @@ Once you have gathered all 5 points, provide a professional summary:
           placeholder="Type your message..."
           autoFocus
           className="flex-1 bg-transparent outline-none"
-          style={{ 
+          style={{
             fontSize: "clamp(0.7rem, 2vmin, 0.9rem)",
-            color: "var(--app-text-main)"
+            color: "var(--app-text-main)",
           }}
         />
 
@@ -503,20 +503,22 @@ Once you have gathered all 5 points, provide a professional summary:
           type="submit"
           disabled={disabled || !value.trim()}
           className="rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 hover:bg-[rgba(var(--app-primary-rgb),0.2)] border"
-          style={{ 
+          style={{
             padding: "1vmin",
-            backgroundColor: value.trim() ? "rgba(var(--app-primary-rgb), 0.1)" : "transparent",
-            borderColor: value.trim() ? "var(--app-primary)" : "transparent"
+            backgroundColor: value.trim()
+              ? "rgba(var(--app-primary-rgb), 0.1)"
+              : "transparent",
+            borderColor: value.trim() ? "var(--app-primary)" : "transparent",
           }}
         >
           <Icon
             name="Forward"
             variant="Linear"
             className="transition-colors"
-            style={{ 
-              width: "2.5vmin", 
+            style={{
+              width: "2.5vmin",
               height: "2.5vmin",
-              color: "var(--app-primary)"
+              color: "var(--app-primary)",
             }}
           />
         </button>
@@ -525,9 +527,9 @@ Once you have gathered all 5 points, provide a professional summary:
       {/* Helper text - hidden on very small screens */}
       <div
         className="hidden sm:block text-center mt-2 opacity-60"
-        style={{ 
+        style={{
           fontSize: "clamp(0.5rem, 1.2vmin, 0.7rem)",
-          color: "var(--app-text-muted)"
+          color: "var(--app-text-muted)",
         }}
       >
         Press Enter to send, Shift+Enter for new line

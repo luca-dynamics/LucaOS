@@ -691,9 +691,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   ]);
 
   return (
-    <div
-      className={`absolute inset-0 z-10  font-mono flex flex-col items-center justify-center overflow-hidden`}
-    >
+    <div className="absolute inset-0 z-10 flex min-h-dvh flex-col items-center justify-center overflow-hidden font-mono">
       {/* Background handled by App.tsx (LiquidBackground) */}
 
       <div
@@ -725,21 +723,25 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         className={`z-10 relative transition-all duration-700 ease-in-out mx-auto flex flex-col items-center ${
           step === "CONVERSATION"
             ? conversationMode === "voice"
-              ? "w-full h-full justify-center"
+              ? "h-full w-full justify-center"
               : isMobile
-                ? "w-[95vw] h-[90vh] px-4 justify-center"
+                ? "h-full w-full justify-center px-5"
                 : "w-[min(80vmin,1000px)] h-[min(75vmin,800px)] justify-center"
             : step === "THEME"
               ? isMobile
                 ? "w-[92vw] h-[88vh] max-h-[88vh] justify-start pt-6"
                 : "w-full max-w-2xl h-[min(88vh,860px)] max-h-[88vh] px-4 justify-start pt-8"
               : isMobile
-                ? "w-[85vw] justify-center"
+                ? "w-full justify-center px-5"
                 : "w-[min(90vw,1000px)] justify-center"
         }`}
         style={{
-          padding:
+          paddingTop:
             step === "CONVERSATION" ? "0" : "clamp(0.5rem, 2vmin, 1.5rem)",
+          paddingBottom:
+            step === "CONVERSATION"
+              ? "0"
+              : "calc(clamp(1rem, 3vmin, 2rem) + env(safe-area-inset-bottom))",
           transform:
             step === "CONVERSATION" && conversationMode === "voice"
               ? "none"
@@ -952,17 +954,18 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       </div>
 
       {/* OS Info Footer */}
-      {!(step === "CONVERSATION" && conversationMode === "voice") && (
-        <div
-          className={`absolute bottom-4 text-[10px]  font-mono tracking-widest flex items-center gap-2`}
-        >
+      {!isMobile &&
+        !(step === "CONVERSATION" && conversationMode === "voice") && (
           <div
-            className="w-2 h-2 rounded-full animate-pulse"
-            style={{ backgroundColor: accentTextColor }}
-          />
-          L.U.C.A OS v1.0.0 // PROTOCOL_CONNECTED
-        </div>
-      )}
+            className={`absolute bottom-4 text-[10px]  font-mono tracking-widest flex items-center gap-2`}
+          >
+            <div
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{ backgroundColor: accentTextColor }}
+            />
+            L.U.C.A OS v1.0.0 // PROTOCOL_CONNECTED
+          </div>
+        )}
     </div>
   );
 };

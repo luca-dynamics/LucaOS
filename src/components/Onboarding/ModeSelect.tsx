@@ -24,7 +24,7 @@ const ModeSelect: React.FC<ModeSelectProps> = ({
   routeWarnings = [],
 }) => {
   return (
-    <div className="space-y-4 sm:space-y-8 animate-fade-in-up w-full max-w-2xl px-4 sm:px-0">
+    <div className="animate-fade-in-up w-full max-w-2xl space-y-4 px-1 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:space-y-8 sm:px-0">
       {/* Luca's message */}
       <div className="text-center space-y-2 sm:space-y-3">
         {/* Icon - Hidden on mobile for more compact view */}
@@ -45,10 +45,10 @@ const ModeSelect: React.FC<ModeSelectProps> = ({
           </div>
         </div>
         <h1
-          className="text-xl sm:text-2xl font-bold tracking-widest uppercase"
+          className="mx-auto max-w-xl text-balance text-2xl font-bold tracking-wide sm:text-3xl"
           style={{ color: "var(--app-text-main)" }}
         >
-          How would you like to talk?
+          Choose how you want to talk
         </h1>
         <p
           className="text-xs sm:text-sm"
@@ -58,7 +58,6 @@ const ModeSelect: React.FC<ModeSelectProps> = ({
           communicate.
         </p>
       </div>
-
 
       {modelReadiness && (
         <div
@@ -85,36 +84,39 @@ const ModeSelect: React.FC<ModeSelectProps> = ({
               ))}
             </ul>
           ) : (
-            <p>Chat route is selected. Voice readiness will be checked if you choose voice.</p>
+            <p>
+              Chat route is selected. Voice readiness will be checked if you
+              choose voice.
+            </p>
           )}
         </div>
       )}
 
       {/* Mode cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6">
         <ModeCard
           iconName="ChatRoundDots"
-          title="TEXT"
+          title="Text"
           description="Type your thoughts"
           onClick={() => onSelect("text")}
         />
         <ModeCard
           iconName="Microphone"
-          title="VOICE"
+          title="Voice"
           description="Speak naturally"
           onClick={() => onSelect("voice")}
         />
       </div>
 
       <div
-        className="text-center text-xs rounded-lg px-4 py-2 glass-blur border transition-all duration-300"
+        className="rounded-lg border px-4 py-3 text-center text-xs font-medium transition-all duration-300"
         style={{
-          color: "var(--app-text-muted)",
-          backgroundColor: "var(--app-bg-tint)",
+          color: "var(--app-text-main)",
+          backgroundColor: "rgba(8, 9, 11, 0.72)",
           borderColor: "var(--app-border-main)",
         }}
       >
-        You can switch between text and voice anytime during our conversation
+        You can switch between text and voice later.
       </div>
     </div>
   );

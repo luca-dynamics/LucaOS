@@ -26,7 +26,7 @@ const ModeCard: React.FC<ModeCardProps> = ({
   return (
     <button
       onClick={onClick}
-      className="group relative w-full border rounded-2xl p-6 sm:p-8 transition-all duration-300 glass-blur text-center touch-manipulation overflow-hidden active:scale-95 hover:bg-[var(--app-bg-tint)]"
+      className="group relative w-full overflow-hidden rounded-2xl border p-4 text-center transition-all duration-300 glass-blur touch-manipulation active:scale-95 hover:bg-[var(--app-bg-tint)] sm:p-8"
       style={{ borderColor: "var(--app-border-main)" }}
     >
       {/* Glow effect on hover */}
@@ -42,17 +42,17 @@ const ModeCard: React.FC<ModeCardProps> = ({
         {/* Icon */}
         <div className="mb-2 sm:mb-4 group-hover:scale-110 transition-transform duration-300 flex justify-center">
           <Icon
-            name={iconName} 
-            provider={iconProvider} 
+            name={iconName}
+            provider={iconProvider}
             variant="Linear"
-            className="w-12 h-12 sm:w-16 sm:h-16"
+            className="h-10 w-10 sm:h-16 sm:w-16"
             color="var(--app-text-main)"
           />
         </div>
 
         {/* Title */}
         <h3
-          className="text-lg sm:text-xl font-bold uppercase tracking-wider"
+          className="text-base font-bold tracking-wide sm:text-xl"
           style={{ color: "var(--app-text-main)" }}
         >
           {title}

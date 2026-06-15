@@ -16,6 +16,14 @@ const bootstrapSource = read("src/index.tsx");
 const onboardingSource = read("src/components/Onboarding/OnboardingFlow.tsx");
 const iconSource = read("src/components/ui/Icon.tsx");
 const webAdapterSource = read("src/web/adapters/webOnboardingRuntime.tsx");
+const webConversationSource = read(
+  "src/web/adapters/WebSafeConversationalOnboarding.tsx",
+);
+const webBackgroundSource = read("src/web/WebLucaBackground.tsx");
+const onboardingAccessSource = read(
+  "src/components/Onboarding/OnboardingAccessPanels.tsx",
+);
+const modeSelectSource = read("src/components/Onboarding/ModeSelect.tsx");
 const desktopAdapterSource = read(
   "src/desktop/adapters/desktopOnboardingRuntime.ts",
 );

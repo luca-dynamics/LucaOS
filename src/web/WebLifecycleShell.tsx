@@ -35,7 +35,7 @@ export function WebLifecycleShell() {
   ) as WebCapability[];
 
   return (
-    <main className="relative h-screen w-full overflow-hidden">
+    <main className="relative min-h-dvh w-full overflow-hidden">
       <style>{generateThemeStyles()}</style>
       <WebLucaBackground
         visualSettings={visualSettings}
