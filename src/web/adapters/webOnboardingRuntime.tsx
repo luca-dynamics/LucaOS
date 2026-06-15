@@ -1,12 +1,14 @@
+import { lazy } from "react";
 import type {
   OnboardingRuntimeAdapter,
   OnboardingVisualSettings,
 } from "../../components/Onboarding/OnboardingRuntimeAdapter";
 import type { OnboardingModelReadiness } from "../../services/onboarding/OnboardingModelModeCoordinator";
 import type { LocalRecoveryStep } from "../../services/onboarding/LocalProvisioningService";
-import {
-  WebSafeConversationalOnboarding as WebConversationComponent,
-} from "./WebSafeConversationalOnboarding";
+
+const BrowserConversationalOnboarding = lazy(
+  () => import("../../components/Onboarding/ConversationalOnboarding"),
+);
 
 const VISUAL_SETTINGS_KEY = "lucaos.web.onboarding.visual-settings";
 
@@ -16,21 +18,14 @@ const defaultVisualSettings: OnboardingVisualSettings = {
   backgroundBlur: 40,
   setupComplete: false,
 };
-let currentVisualSettings: OnboardingVisualSettings | null = null;
-const visualSettingsListeners = new Set<
-  (settings: OnboardingVisualSettings) => void
->();
 
 const readVisualSettings = (): OnboardingVisualSettings => {
-  if (currentVisualSettings) return currentVisualSettings;
   if (typeof window === "undefined") return defaultVisualSettings;
   try {
     const stored = window.localStorage.getItem(VISUAL_SETTINGS_KEY);
-    const settings = stored
+    return stored
       ? { ...defaultVisualSettings, ...JSON.parse(stored) }
       : defaultVisualSettings;
-    currentVisualSettings = settings;
-    return settings;
   } catch {
     return defaultVisualSettings;
   }
@@ -68,24 +63,14 @@ const unavailable = () => {
 export const webOnboardingRuntime: OnboardingRuntimeAdapter = {
   platform: "web",
   supportsLocalProvisioning: false,
-  ConversationComponent: WebConversationComponent,
+  ConversationComponent: BrowserConversationalOnboarding,
   getVisualSettings: readVisualSettings,
   saveVisualSettings(next) {
-    currentVisualSettings = { ...readVisualSettings(), ...next };
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        VISUAL_SETTINGS_KEY,
-        JSON.stringify(currentVisualSettings),
-      );
-    }
-    visualSettingsListeners.forEach((listener) =>
-      listener(currentVisualSettings!),
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      VISUAL_SETTINGS_KEY,
+      JSON.stringify({ ...readVisualSettings(), ...next }),
     );
-  },
-  subscribeVisualSettings(listener) {
-    visualSettingsListeners.add(listener);
-    listener(readVisualSettings());
-    return () => visualSettingsListeners.delete(listener);
   },
   playSound() {
     // Browser audio remains dormant until a user gesture selects a mode/action.

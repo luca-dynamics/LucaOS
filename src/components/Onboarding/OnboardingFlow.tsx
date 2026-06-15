@@ -849,15 +849,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         )}
 
         {step === "CONVERSATION" && conversationMode && (
-          <Suspense
-            fallback={
-              <ConversationLoadingFallback
-                accentTextColor={accentTextColor}
-                panelBorderColor={panelBorderColor}
-                panelSurfaceColor={panelSurfaceColor}
-              />
-            }
-          >
+          <Suspense fallback={null}>
             <ConversationComponent
               mode={conversationMode}
               userName={name}

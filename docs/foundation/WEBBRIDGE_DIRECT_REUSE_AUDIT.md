@@ -58,16 +58,6 @@ from props or inherited CSS. Desktop behavior is retained by
 vault/provider secrets, and requests microphone access only after Voice is
 selected.
 
-For the conversation slot, `MessageBubble.tsx` and `TypingIndicator.tsx` are
-directly browser-safe and are reused by
-`src/web/adapters/WebSafeConversationalOnboarding.tsx`.
-`MessageInput.tsx` is not browser-safe: the exact static chains are
-`MessageInput -> liveService -> @google/generative-ai` and
-`MessageInput -> hybridVoiceService -> voice/provider runtime`. WebBridge
-therefore supplies only a local textarea/send control for that unsafe leaf
-while retaining the canonical message and typing components. Desktop continues
-to use the complete `ConversationalOnboarding.tsx` composition.
-
 ## Original main app shell/dashboard
 
 | Path | Purpose | Direct browser-safe import | Unsafe imports and exact chain |

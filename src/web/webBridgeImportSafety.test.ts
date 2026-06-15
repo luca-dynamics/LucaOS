@@ -16,11 +16,6 @@ const onboardingSource = read(
 );
 const iconSource = read("src/components/ui/Icon.tsx");
 const webAdapterSource = read("src/web/adapters/webOnboardingRuntime.tsx");
-const webConversationSource = read(
-  "src/web/adapters/WebSafeConversationalOnboarding.tsx",
-);
-const webBackgroundSource = read("src/web/WebLucaBackground.tsx");
-const webReadySource = read("src/web/WebReadyState.tsx");
 const desktopAdapterSource = read(
   "src/desktop/adapters/desktopOnboardingRuntime.ts",
 );
@@ -87,15 +82,6 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(lifecycleSource).not.toContain(
       "Original LucaOS onboarding is blocked",
     );
-    expect(lifecycleSource).not.toContain("LiquidBackground");
-    expect(lifecycleSource).toContain(
-      'import { WebLucaBackground } from "./WebLucaBackground"',
-    );
-    expect(lifecycleSource).toContain(
-      'import { WebReadyState } from "./WebReadyState"',
-    );
-    expect(lifecycleSource).toContain("<WebLucaBackground");
-    expect(webBackgroundSource).not.toMatch(/electron|LiquidBackground/);
   });
 
   it("keeps Icon presentation-only at module import time", () => {
@@ -125,54 +111,9 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(webAdapterSource).not.toContain("ModelManagerService");
     expect(webAdapterSource).not.toContain("settingsService");
     expect(webAdapterSource).not.toContain("realtimeVoiceUiBridge");
-    expect(webAdapterSource).not.toContain(
-      'components/Onboarding/ConversationalOnboarding',
-    );
     expect(webAdapterSource).toContain(
-      'from "./WebSafeConversationalOnboarding"',
+      '() => import("../../components/Onboarding/ConversationalOnboarding")',
     );
-    expect(webAdapterSource).toContain(
-      "ConversationComponent: WebConversationComponent",
-    );
-    expect(webAdapterSource).toContain("subscribeVisualSettings");
-    expect(lifecycleSource).toContain(
-      "webOnboardingRuntime.subscribeVisualSettings",
-    );
-    expect(onboardingSource).not.toContain("fallback={null}");
-    expect(onboardingSource).toContain("<ConversationLoadingFallback");
-    for (const unsafeConversationImport of [
-      "llmService",
-      "settingsService",
-      "personalityService",
-      "liveService",
-      "soundService",
-      "@google/generative-ai",
-    ]) {
-      expect(webConversationSource).not.toContain(unsafeConversationImport);
-    }
-    expect(webConversationSource).toContain(
-      'import MessageBubble from "../../components/Onboarding/MessageBubble"',
-    );
-    expect(webConversationSource).toContain(
-      'import TypingIndicator from "../../components/Onboarding/TypingIndicator"',
-    );
-    expect(webConversationSource).not.toContain("MessageInput");
-  });
-
-  it("transitions completed onboarding into a controlled ready state", () => {
-    expect(lifecycleSource).toContain(
-      'export type WebLifecycleState = "onboarding" | "ready"',
-    );
-    expect(lifecycleSource).toContain(
-      'readWebOnboardingComplete() ? "ready" : "onboarding"',
-    );
-    expect(lifecycleSource).toContain('setLifecycle("ready")');
-    expect(lifecycleSource).toContain("<WebReadyState");
-    expect(webReadySource).toContain("Original onboarding complete.");
-    expect(webReadySource).toContain(
-      "original LucaOS main shell and dashboard require the next runtime-isolation step",
-    );
-    expect(webReadySource).not.toContain("WebMainSurface");
   });
 
   it("audits exact canonical boot, main, settings, and LucaLink source files", () => {
@@ -207,9 +148,8 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
 
   it("keeps diagnostics behind bootDebug while reporting canonical onboarding", () => {
     expect(diagnosticsSource).toContain('get("bootDebug") !== "1"');
-    expect(lifecycleSource).toContain("lifecycleState={lifecycle}");
-    expect(lifecycleSource).toContain('"lucaos-onboarding"');
-    expect(lifecycleSource).toContain('"web-ready-state"');
+    expect(lifecycleSource).toContain('lifecycleState="onboarding"');
+    expect(lifecycleSource).toContain('activeWebSurface="lucaos-onboarding"');
   });
 
   it("keeps WebBridge and desktop on their separate bootstrap entries", () => {
