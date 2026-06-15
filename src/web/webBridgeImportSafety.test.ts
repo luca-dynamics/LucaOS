@@ -31,18 +31,6 @@ const postBootSource = read("src/web/postBoot/WebPostBootTransition.tsx");
 const postBootLoadingSource = read("src/web/postBoot/WebPostBootLoading.tsx");
 const postBootStateSource = read("src/web/postBoot/webPostBootState.ts");
 const presenceOrbSource = read("src/components/visual/LucaPresenceOrb.tsx");
-const canvasPresenceOrbSource = read(
-  "src/components/visual/LucaCanvasPresenceOrb.tsx",
-);
-const canvasOrbRendererSource = read(
-  "src/components/visual/lucaCanvasOrbRenderer.ts",
-);
-const hologramShaderPresenceSource = read(
-  "src/components/visual/LucaHologramShaderPresence.tsx",
-);
-const hologramShaderSceneSource = read(
-  "src/components/visual/LucaHologramShaderScene.tsx",
-);
 const visualSourceAuditPath =
   "docs/foundation/LUCA_ORB_AND_POST_BOOT_VISUAL_SOURCE_AUDIT.md";
 const visualSourceAudit = read(visualSourceAuditPath);
@@ -279,15 +267,12 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       expect(onboardingLifecycleSource).toContain(copyKey);
     }
     expect(onboardingSource).toContain('step === "KERNEL_AWAKENING"');
-    expect(onboardingSource).not.toContain('{">"} {text}');
-    expect(onboardingSource).toContain("<LucaHologramShaderPresence");
-    expect(onboardingSource).toContain("<LucaCanvasPresenceOrb");
+    expect(onboardingSource).toContain('{">"} {text}');
     expect(presenceOrbSource).toContain(
       "@deprecated Generic PR #310 placeholder",
     );
 
     const orbComponentFiles = [
-      "src/components/visual/LucaCanvasPresenceOrb.tsx",
       "src/components/visual/LucaPresenceOrb.tsx",
       "src/components/voice/VoiceStatusOrb.tsx",
     ];
