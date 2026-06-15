@@ -72,6 +72,12 @@ import SandboxedBrowserShell from "./components/browser/SandboxedBrowserShell";
 import ChatWidgetMode from "./components/ChatWidgetMode";
 import WidgetMode from "./components/WidgetMode";
 import HologramMode from "./components/HologramMode";
+import {
+  fromWidgetUpdatePayload,
+  toHologramUpdatePayload,
+  toLucaLinkUiStateSync,
+  toWidgetUpdatePayload,
+} from "./presence";
 
 // Helper for device capability check removed temporarily as it's unused
 
@@ -749,6 +755,7 @@ function AppContent() {
     ingestionState,
     setIngestionState,
     voiceModel,
+    voiceAmplitude,
     setVoiceAmplitude,
   } = voiceSystem;
 
@@ -1352,6 +1359,7 @@ function AppContent() {
           isVadActive ||
           localVadActive,
         isSpeaking: isSpeaking,
+        amplitude: voiceAmplitude,
         transcript: voiceHubTranscript || voiceTranscript,
         transcriptSource: voiceTranscriptSource,
         intent: activeAutonomousAction?.intent,
@@ -1361,18 +1369,36 @@ function AppContent() {
         elevationState: elevationState,
         approvalRequest: (voiceSystem as any).approvalRequest,
       };
+      const presenceSnapshot = fromWidgetUpdatePayload(syncData);
+      const widgetSyncData = {
+        ...syncData,
+        ...toWidgetUpdatePayload(presenceSnapshot),
+      };
+      const hologramSyncData = {
+        ...syncData,
+        ...toHologramUpdatePayload(presenceSnapshot),
+      };
+      const lucaLinkSyncData = {
+        ...syncData,
+        ...toLucaLinkUiStateSync(presenceSnapshot),
+      };
 
-      window.electron.ipcRenderer.send("sync-widget-state", syncData);
-      broadcastToSatellites(syncData);
+      (window as any).electron.ipcRenderer.send(
+        "sync-widget-state",
+        widgetSyncData,
+        hologramSyncData,
+      );
+      broadcastToSatellites(lucaLinkSyncData);
 
       if (Capacitor.getPlatform() === "ios") {
-        watchGateway.updateWatchState(syncData);
+        watchGateway.updateWatchState(widgetSyncData);
       }
     }
   }, [
     isVadActive,
     localVadActive,
     isSpeaking,
+    voiceAmplitude,
     voiceTranscript,
     persona,
     voiceHubStatus,

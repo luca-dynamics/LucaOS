@@ -105,12 +105,17 @@ describe("Presence state and runtime", () => {
 describe("Presence compatibility", () => {
   const legacyPayload = {
     transcript: "Hello Luca",
+    transcriptSource: "model" as const,
     isListening: true,
     isSpeaking: true,
     amplitude: 0.42,
     persona: "ASSISTANT",
     themeHex: "#3b82f6",
+    activeBrainId: "brain-1",
+    embeddingModel: "embedding-1",
+    approvalRequest: { requestId: "approval-1" },
     intent: "summarize",
+    legacyOnlyField: "preserve-me",
     elevationState: {
       lastScanTimestamp: 123,
       authorizedMissionIds: new Set(["mission-1"]),
@@ -126,7 +131,9 @@ describe("Presence compatibility", () => {
     const output = convert(fromWidgetUpdatePayload(legacyPayload));
     expect(output).toMatchObject({
       transcript: legacyPayload.transcript,
+      transcriptSource: legacyPayload.transcriptSource,
       isListening: legacyPayload.isListening,
+      isVadActive: legacyPayload.isListening,
       isSpeaking: legacyPayload.isSpeaking,
       amplitude: legacyPayload.amplitude,
       persona: legacyPayload.persona,
@@ -142,6 +149,48 @@ describe("Presence compatibility", () => {
 
   it("maps LucaLink UI state into the same transport-safe snapshot", () => {
     expect(fromLucaLinkUiStateSync(legacyPayload)).toEqual(fromWidgetUpdatePayload(legacyPayload));
+  });
+
+  it("preserves unmodeled legacy fields when the live bridge merges converted fields", () => {
+    const snapshot = fromWidgetUpdatePayload(legacyPayload);
+    const output = {
+      ...legacyPayload,
+      ...toWidgetUpdatePayload(snapshot),
+    };
+
+    expect(output).toMatchObject({
+      activeBrainId: "brain-1",
+      embeddingModel: "embedding-1",
+      approvalRequest: { requestId: "approval-1" },
+      legacyOnlyField: "preserve-me",
+    });
+  });
+
+  it("produces a JSON-safe LucaLink payload with mission Sets normalized to arrays", () => {
+    const snapshot = fromWidgetUpdatePayload(legacyPayload);
+    const output = {
+      ...legacyPayload,
+      ...toLucaLinkUiStateSync(snapshot),
+    };
+    const serialized = JSON.stringify(output);
+
+    expect(JSON.parse(serialized)).toEqual(output);
+    expect(output.elevationState?.authorizedMissionIds).toEqual(["mission-1"]);
+    expect(output.elevationState?.authorizedMissionIds).not.toBeInstanceOf(Set);
+  });
+
+  it("does not introduce dashboard visibility or focus fields into legacy payloads", () => {
+    const snapshot = fromWidgetUpdatePayload(legacyPayload);
+
+    for (const output of [
+      toWidgetUpdatePayload(snapshot),
+      toHologramUpdatePayload(snapshot),
+      toLucaLinkUiStateSync(snapshot),
+    ]) {
+      expect(output).not.toHaveProperty("dashboard");
+      expect(output).not.toHaveProperty("focus");
+      expect(output).not.toHaveProperty("visibility");
+    }
   });
 });
 
