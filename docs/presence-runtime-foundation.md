@@ -1,6 +1,6 @@
 # Presence Runtime foundation
 
-**Status:** typed foundation only
+**Status:** typed foundation with first compatibility wiring
 
 **Runtime behavior change:** none
 
@@ -17,11 +17,28 @@ The first `src/presence/` module establishes a framework-neutral contract for Lu
 
 The compatibility boundary converts legacy `Set<string>` mission authorization state to arrays. Presence snapshots contain no functions, DOM/Electron objects, maps, sets, or class instances.
 
-## What is not wired yet
+## First compatibility wiring
+
+The dashboard's existing widget synchronization loop now converts its legacy
+state payload to a transport-safe `PresenceSnapshot`, then converts that
+snapshot back through the Widget, Hologram, and LucaLink compatibility
+adapters. Electron continues to use `sync-widget-state`, `widget-update`, and
+`hologram-update`, while LucaLink continues to use `UI_STATE_SYNC`.
+
+Fields not modeled by `PresenceSnapshot` yet, including brain and embedding
+model identifiers and approval request data, remain on the legacy payload and
+are merged into the adapter output. Presence-owned fields take precedence so
+mission authorization `Set` values become JSON-safe arrays, particularly for
+LucaLink serialization.
+
+This wiring does not change surface visibility, focus behavior, wake-word
+routing, voice ownership, MiniChat message routing, sensor behavior, approval
+behavior, or rendering.
+
+## What remains legacy
 
 This PR intentionally does **not**:
 
-- replace the state synchronization loop in `App.tsx`;
 - change wake-word or voice-shortcut routing;
 - register the runtime as an Electron, React, or LucaLink singleton;
 - alter existing IPC channel names or remove any channels;
@@ -29,7 +46,9 @@ This PR intentionally does **not**:
 - change MiniChat, Hologram, Widget, or Control Center rendering;
 - extract Electron window factories.
 
-The new runtime therefore has no effect on current application behavior. It is an importable, testable migration target for later PRs.
+The runtime still does not own current application state. The compatibility
+bridge is an importable, testable migration boundary around the existing
+dashboard-owned synchronization loop.
 
 ## Relationship to PR #313 and PR #315
 
@@ -39,10 +58,9 @@ PR #315 changed wake-word and voice summons to present the Hologram first and pr
 
 ## Suggested next migration PRs
 
-1. Publish current dashboard state through `PresenceSnapshot` compatibility adapters while retaining all existing IPC channels.
-2. Add small bridge modules for MiniChat, Hologram, and Widget, then remove their duplicate payload parsing only after parity tests.
-3. Feed wake-word and shortcut intents into the runtime while preserving the PR #315 Electron fallback behavior.
-4. Migrate voice state ownership and capability status behind injected runtime ports.
-5. Add disclosed sensor leases and sanitized approval prompts, including explicit focus-required escalation.
-6. Make LucaLink and Electron parallel adapters for the same versioned snapshot/event contracts.
-7. Only after those migrations, reduce dashboard ownership and extract Electron window factories in separately reviewable PRs.
+1. Add small bridge modules for MiniChat, Hologram, and Widget, then remove their duplicate payload parsing only after parity tests.
+2. Feed wake-word and shortcut intents into the runtime while preserving the PR #315 Electron fallback behavior.
+3. Migrate voice state ownership and capability status behind injected runtime ports.
+4. Add disclosed sensor leases and sanitized approval prompts, including explicit focus-required escalation.
+5. Make LucaLink and Electron parallel adapters for the same versioned snapshot/event contracts.
+6. Only after those migrations, reduce dashboard ownership and extract Electron window factories in separately reviewable PRs.

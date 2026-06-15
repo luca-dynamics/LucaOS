@@ -1669,7 +1669,7 @@ ipcMain.on('restore-main-window', () => {
 // App.tsx sends this, Main Process forwards to Widget
 // IPC: Sync State (Main -> Widget)
 // App.tsx sends this, Main Process forwards to Widget
-ipcMain.on('sync-widget-state', (event, state) => {
+ipcMain.on('sync-widget-state', (event, state, hologramState = state) => {
     if (widgetWindow) {
         widgetWindow.webContents.send('widget-update', state);
     }
@@ -1677,7 +1677,7 @@ ipcMain.on('sync-widget-state', (event, state) => {
         chatWindow.webContents.send('widget-update', state);
     }
     if (hologramWindow) {
-        hologramWindow.webContents.send('hologram-update', state);
+        hologramWindow.webContents.send('hologram-update', hologramState);
     }
 });
 
