@@ -978,6 +978,83 @@ function createHologramWindow() {
     });
 }
 
+function sendWhenRendererReady(window, channel, payload) {
+    if (!window || window.isDestroyed()) return false;
+
+    const send = () => {
+        if (!window || window.isDestroyed() || window.webContents.isDestroyed()) return;
+        window.webContents.send(channel, payload);
+    };
+
+    if (window.webContents.isLoadingMainFrame()) {
+        window.webContents.once('did-finish-load', send);
+    } else {
+        send();
+    }
+
+    return true;
+}
+
+function showDashboardVoiceFallback(reason) {
+    console.warn(`[PRESENCE] Falling back to dashboard voice UI: ${reason}`);
+    if (!mainWindow || mainWindow.isDestroyed()) {
+        createWindow();
+    }
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+    sendWhenRendererReady(mainWindow, 'trigger-voice-hud');
+}
+
+function summonVoicePresence(source = 'voice-summon') {
+    try {
+        // The dashboard renderer currently owns the voice runtime. Keep it alive
+        // without showing or focusing its BrowserWindow.
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            createWindow();
+        }
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            showDashboardVoiceFallback('main voice runtime unavailable');
+            return false;
+        }
+
+        if (!hologramWindow || hologramWindow.isDestroyed()) {
+            createHologramWindow();
+        }
+        if (!hologramWindow || hologramWindow.isDestroyed()) {
+            showDashboardVoiceFallback('hologram surface unavailable');
+            return false;
+        }
+
+        // Hologram is non-focusable; showInactive preserves the foreground app.
+        hologramWindow.showInactive();
+        sendWhenRendererReady(hologramWindow, 'hologram-update', {
+            isListening: true,
+            status: 'LISTENING',
+            presenceSource: source
+        });
+
+        // Wake word detection already activates listening in the renderer. Keep
+        // its voice state synchronized while the BrowserWindow remains hidden.
+        if (source === 'wake-word') {
+            sendWhenRendererReady(mainWindow, 'trigger-voice-hud');
+        } else {
+            sendWhenRendererReady(mainWindow, 'trigger-voice-toggle', {
+                mode: 'TOGGLE',
+                context: source,
+                forceHud: false
+            });
+        }
+        return true;
+    } catch (error) {
+        console.error('[PRESENCE] Failed to summon voice presence:', error);
+        showDashboardVoiceFallback(error.message || 'presence creation failed');
+        return false;
+    }
+}
+
 function toggleHologram() {
     if (!hologramWindow) {
         createHologramWindow();
@@ -1082,24 +1159,10 @@ function toggleSentryMode(type, enabled) {
     }
 }
 
-// Wake Word Triggered from Renderer --> Show UI
+// Wake Word Triggered from Renderer --> Show Presence without stealing focus
 ipcMain.on('wake-word-triggered', () => {
-    console.log('[IPC] Wake Word Triggered! Showing Main VoiceHud...');
-    // TARGET: Main Window (Assistant Mode)
-    if (mainWindow) {
-        if (!mainWindow.isVisible()) {
-             mainWindow.show();
-        }
-        if (mainWindow.isMinimized()) {
-             mainWindow.restore();
-        }
-        mainWindow.focus();
-        // Signal App.tsx to activate Voice Overlay
-        mainWindow.webContents.send('trigger-voice-hud');
-    } else {
-        // Fallback: If for some reason main is gone, recreate
-        createWindow();
-    }
+    console.log('[IPC] Wake Word Triggered! Summoning Luca Presence...');
+    summonVoicePresence('wake-word');
 });
 
 
@@ -1262,7 +1325,9 @@ app.on('ready', () => {
 
     // Voice Mode Hotkeys
 const toggleHologramVoice = () => {
-    if (hologramWindow && hologramWindow.isVisible()) {
+    if (!hologramWindow || hologramWindow.isDestroyed() || !hologramWindow.isVisible()) {
+        summonVoicePresence('voice-shortcut');
+    } else {
         hologramWindow.webContents.send('trigger-voice-toggle');
     }
 };
