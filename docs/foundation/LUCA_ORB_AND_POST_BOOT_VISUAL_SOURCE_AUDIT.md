@@ -129,12 +129,6 @@ usage with a browser-safe extraction of the real Dictation canvas orb in the
 next visual PR, then delete or deprecate the component if no other call sites
 remain.
 
-**Implemented follow-up:** The focused replacement PR introduced
-`src/components/visual/LucaCanvasPresenceOrb.tsx` and
-`src/components/visual/lucaCanvasOrbRenderer.ts`, then removed
-`LucaPresenceOrb` from the post-boot path. The generic component remains
-deprecated only for compatibility with any non-post-boot callers.
-
 ## C. Real Luca hologram face/shader source
 
 **Exact file paths:**
@@ -202,11 +196,6 @@ low-performance `HologramFace2D` fallback treatment, not the primary
 replace its use in `WebPostBootTransition` with a browser-safe,
 failure-tolerant presentation extraction of `HologramScene`; retain a
 documented low-performance fallback.
-
-**Implemented follow-up:** `WebPostBootTransition` now uses
-`src/components/visual/LucaHologramShaderPresence.tsx`, which lazily loads the
-presentation-only `LucaHologramShaderScene` and the canonical
-`/models/avatar.glb` asset without importing `eventBus` into WebBridge.
 
 ## E. Old terminal post-boot source
 
@@ -278,3 +267,4 @@ JSX renderer containing the literal strings was found.
 6. Add source and rendering tests that protect the canonical canvas and GLB
    shader sources, WebBridge import boundaries, low-performance fallback, and
    absence of newly generated generic orb substitutes.
+
