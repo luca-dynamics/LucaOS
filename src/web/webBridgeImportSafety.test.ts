@@ -189,7 +189,15 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(postBootStateSource).toContain("readWebOnboardingComplete");
     expect(postBootStateSource).toContain("readWebProfile");
     expect(postBootLoadingSource).toContain("Preparing LucaOS");
+    expect(postBootLoadingSource).toContain("LucaCanvasPresenceOrb");
+    expect(postBootLoadingSource).not.toContain("rounded-full bg-cyan-100");
+    expect(postBootLoadingSource).not.toContain("rgba(207,250,254,0.42)");
     expect(postBootLoadingSource).not.toContain("React did not hydrate");
+    for (const reference of unsafeWebRuntimeReferences) {
+      expect(postBootLoadingSource.toLowerCase()).not.toContain(
+        reference.toLowerCase(),
+      );
+    }
     for (const reference of unsafeWebRuntimeReferences) {
       expect(postBootSource.toLowerCase()).not.toContain(reference.toLowerCase());
       expect(postBootStateSource.toLowerCase()).not.toContain(

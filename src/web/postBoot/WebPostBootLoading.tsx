@@ -1,3 +1,5 @@
+import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
+
 export function WebPostBootLoading() {
   return (
     <section
