@@ -5,6 +5,7 @@ interface WebReadyStateProps {
   browserCapabilities: WebCapability[];
   guardedNativeCapabilities: WebCapability[];
   lucaLinkStatus: string;
+  onContinueToShell: () => void;
 }
 
 export function WebReadyState({
@@ -12,6 +13,7 @@ export function WebReadyState({
   browserCapabilities,
   guardedNativeCapabilities,
   lucaLinkStatus,
+  onContinueToShell,
 }: WebReadyStateProps) {
   const available = browserCapabilities.filter(
     (capability) => capability.status === "available",
@@ -40,8 +42,8 @@ export function WebReadyState({
           className="mt-3 text-sm leading-6"
           style={{ color: "var(--app-text-muted)" }}
         >
-          LucaOS Web session ready. Original main shell/dashboard isolation is
-          next.
+          Continue into the browser-safe LucaOS shell. Native desktop
+          capabilities remain guarded until paired through LucaLink.
         </p>
         <dl className="mt-6 grid gap-3 text-xs sm:grid-cols-2">
           <div
@@ -77,13 +79,18 @@ export function WebReadyState({
             </dd>
           </div>
         </dl>
-        <p
-          className="mt-6 text-xs leading-5"
-          style={{ color: "var(--app-text-muted)" }}
+        <button
+          type="button"
+          onClick={onContinueToShell}
+          className="mt-6 w-full rounded-xl border px-4 py-3 text-sm font-bold transition hover:brightness-110 focus:outline-none focus:ring-2"
+          style={{
+            color: "var(--app-text-main)",
+            borderColor: "var(--app-primary)",
+            backgroundColor: "var(--luca-accent-soft, var(--app-bg-tint))",
+          }}
         >
-          Continue by pairing LucaOS Desktop when native capabilities are
-          required. This transition state is not a replacement dashboard.
-        </p>
+          Continue to LucaOS Web Shell
+        </button>
       </div>
     </section>
   );

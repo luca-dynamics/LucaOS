@@ -7,6 +7,10 @@ const read = (file: string) => readFileSync(file, "utf8");
 const entrySource = read("src/web/webBridgeEntry.tsx");
 const lifecycleSource = read("src/web/WebLifecycleShell.tsx");
 const diagnosticsSource = read("src/web/WebBridgeDiagnostics.tsx");
+const readySource = read("src/web/WebReadyState.tsx");
+const webShellSource = read("src/web/WebLucaShell.tsx");
+const webChatSource = read("src/web/chat/WebChatSurface.tsx");
+const webChatRuntimeSource = read("src/web/chat/webChatRuntime.ts");
 const auditSource = read("docs/foundation/WEBBRIDGE_DIRECT_REUSE_AUDIT.md");
 const bootstrapSource = read("src/index.tsx");
 const onboardingSource = read("src/components/Onboarding/OnboardingFlow.tsx");
@@ -49,6 +53,23 @@ const sourceFiles = readdirSync("src/web")
 const staticImports = sourceFiles.flatMap(
   (source) => source.match(/(?:from\s+|import\s*\()["'][^"']+["']/g) ?? [],
 );
+
+const unsafeWebRuntimeReferences = [
+  "llmService",
+  "liveService",
+  "settingsService",
+  "personalityService",
+  "soundService",
+  "better-sqlite3",
+  "electron",
+  "node:fs",
+  "node:path",
+  "node:crypto",
+  "@anthropic-ai/sdk",
+  "@google/generative-ai",
+  "@google/genai",
+  "openai",
+];
 
 describe("WebBridge direct LucaOS UI reuse audit", () => {
   it("removes generated onboarding, main, settings, and LucaLink product surfaces", () => {
@@ -117,6 +138,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(lifecycleSource).toContain("WebReadyState");
     expect(lifecycleSource).toContain('"onboarding"');
     expect(lifecycleSource).toContain('"ready"');
+    expect(lifecycleSource).toContain('"main"');
     expect(lifecycleSource).toContain("setLifecycleState");
     expect(lifecycleSource).toContain("subscribeVisualSettings");
     expect(webAdapterSource).not.toContain(
@@ -128,6 +150,31 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(onboardingSource).toContain(
       "Preparing Luca conversation interface...",
     );
+  });
+
+  it("wires ready through the browser-safe LucaOS shell and chat adapter", () => {
+    expect(lifecycleSource).toContain(
+      'import { WebLucaShell } from "./WebLucaShell"',
+    );
+    expect(lifecycleSource).toContain('<WebLucaShell');
+    expect(lifecycleSource).toContain('setLifecycleState("main")');
+    expect(readySource).toContain("onContinueToShell");
+    expect(readySource).toContain("Continue to LucaOS Web Shell");
+    expect(webShellSource).toContain("<WebChatSurface");
+    expect(webChatSource).toContain('from "./webChatRuntime"');
+    expect(webChatSource).toContain("runtime.sendMessage");
+  });
+
+  it("keeps the main shell and chat path isolated from desktop and provider runtimes", () => {
+    expect(webShellSource).not.toMatch(/(?:\.\.\/)+App(?:\.tsx)?/);
+    for (const reference of unsafeWebRuntimeReferences) {
+      expect(webShellSource.toLowerCase()).not.toContain(reference.toLowerCase());
+      expect(webChatSource.toLowerCase()).not.toContain(reference.toLowerCase());
+      expect(webChatRuntimeSource.toLowerCase()).not.toContain(
+        reference.toLowerCase(),
+      );
+    }
+    expect(webChatRuntimeSource).not.toMatch(/api.?key|secret|localStorage/i);
   });
 
   it("audits exact canonical boot, main, settings, and LucaLink source files", () => {
@@ -165,6 +212,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(lifecycleSource).toContain("lifecycleState={lifecycleState}");
     expect(lifecycleSource).toContain('"lucaos-onboarding"');
     expect(lifecycleSource).toContain('"web-ready-state"');
+    expect(lifecycleSource).toContain('"web-luca-shell"');
   });
 
   it("keeps WebBridge and desktop on their separate bootstrap entries", () => {
