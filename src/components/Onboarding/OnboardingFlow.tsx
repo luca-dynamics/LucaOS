@@ -88,6 +88,25 @@ const formatBytes = (bytes: number): string => {
   return `${bytes} B`;
 };
 
+const ConversationLoadingFallback: React.FC<{
+  accentTextColor: string;
+  panelBorderColor: string;
+  panelSurfaceColor: string;
+}> = ({ accentTextColor, panelBorderColor, panelSurfaceColor }) => (
+  <div
+    role="status"
+    aria-live="polite"
+    className="rounded-xl border px-6 py-4 text-xs uppercase tracking-[0.18em] animate-pulse"
+    style={{
+      color: accentTextColor,
+      borderColor: panelBorderColor,
+      backgroundColor: panelSurfaceColor,
+    }}
+  >
+    Preparing conversation…
+  </div>
+);
+
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   theme,
   runtime,
