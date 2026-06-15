@@ -8,23 +8,35 @@ import { WebReadyState } from "./WebReadyState";
 import { useWebRuntime } from "./WebRuntimeContext";
 import { webOnboardingRuntime } from "./adapters/webOnboardingRuntime";
 import type { WebCapability } from "./browserHostCapabilities";
+import { completeWebOnboarding } from "./webLifecycleStorage";
+import { WebPostBootTransition } from "./postBoot/WebPostBootTransition";
 import {
-  completeWebOnboarding,
-  readWebOnboardingComplete,
-} from "./webLifecycleStorage";
+  resolveWebPostBootState,
+  type WebPostBootStateSnapshot,
+} from "./postBoot/webPostBootState";
 
-export type WebLifecycleState = "onboarding" | "ready" | "main";
+export type WebLifecycleState = "post_boot" | "onboarding" | "ready" | "main";
 
 export function WebLifecycleShell() {
   const runtime = useWebRuntime();
-  const [lifecycleState, setLifecycleState] = useState<WebLifecycleState>(() =>
-    readWebOnboardingComplete() ? "ready" : "onboarding",
-  );
+  const [lifecycleState, setLifecycleState] =
+    useState<WebLifecycleState>("post_boot");
+  const [postBootState, setPostBootState] =
+    useState<WebPostBootStateSnapshot | null>(null);
   const [visualSettings, setVisualSettings] = useState(() =>
     webOnboardingRuntime.getVisualSettings(),
   );
   useEffect(() => {
     return webOnboardingRuntime.subscribeVisualSettings(setVisualSettings);
+  }, []);
+  useEffect(() => {
+    let active = true;
+    resolveWebPostBootState().then((snapshot) => {
+      if (active) setPostBootState(snapshot);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
   const theme = getThemeColors(visualSettings.theme);
   const browserCapabilities = Object.values(
@@ -41,6 +53,19 @@ export function WebLifecycleShell() {
         visualSettings={visualSettings}
         theme={{ hex: theme.hex, themeName: visualSettings.theme }}
       />
+      {lifecycleState === "post_boot" && postBootState && (
+        <WebPostBootTransition
+          snapshot={postBootState}
+          onContinue={() =>
+            setLifecycleState(
+              postBootState.userState === "new_user" ? "onboarding" : "ready",
+            )
+          }
+          onRestartOnboarding={() => setLifecycleState("onboarding")}
+          onReviewVoiceAccess={() => setLifecycleState("onboarding")}
+          onChooseModelRoute={() => setLifecycleState("onboarding")}
+        />
+      )}
       {lifecycleState === "onboarding" && (
         <OnboardingFlow
           theme={{ primary: visualSettings.theme, hex: theme.hex }}
@@ -85,13 +110,15 @@ export function WebLifecycleShell() {
       <WebBridgeDiagnostics
         hostClass={runtime.hostClass}
         lifecycleState={lifecycleState}
-        onboardingComplete={lifecycleState !== "onboarding"}
+        onboardingComplete={postBootState?.hasCompletedOnboarding ?? false}
         activeWebSurface={
           lifecycleState === "main"
             ? "web-luca-shell"
             : lifecycleState === "ready"
               ? "web-ready-state"
-              : "lucaos-onboarding"
+              : lifecycleState === "onboarding"
+                ? "lucaos-onboarding"
+                : "web-post-boot"
         }
         availableBrowserCapabilityCount={
           browserCapabilities.filter((item) => item.status === "available")

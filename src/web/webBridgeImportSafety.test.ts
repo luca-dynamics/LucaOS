@@ -27,6 +27,12 @@ const modeSelectSource = read("src/components/Onboarding/ModeSelect.tsx");
 const desktopAdapterSource = read(
   "src/desktop/adapters/desktopOnboardingRuntime.ts",
 );
+const postBootSource = read("src/web/postBoot/WebPostBootTransition.tsx");
+const postBootStateSource = read("src/web/postBoot/webPostBootState.ts");
+const hologramPresenceSource = read(
+  "src/components/visual/LucaHologramPresence.tsx",
+);
+const presenceOrbSource = read("src/components/visual/LucaPresenceOrb.tsx");
 
 const generatedProductSurfaces = [
   "src/web/WebOnboardingSurface.tsx",
@@ -158,6 +164,46 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(onboardingSource).toContain(
       "Preparing Luca conversation interface...",
     );
+  });
+
+  it("keeps post-boot presentation on reused Luca visuals and safe storage", () => {
+    expect(postBootSource).toContain("LucaHologramPresence");
+    expect(postBootSource).toContain("LucaPresenceOrb");
+    expect(postBootSource).not.toMatch(/VoiceHud|VoiceHUD/);
+    expect(postBootSource).not.toContain("> Luca is waking up");
+    expect(hologramPresenceSource).toContain('src="/icon.png"');
+    expect(presenceOrbSource).toContain("amplitude");
+    expect(postBootStateSource).toContain("readWebOnboardingComplete");
+    expect(postBootStateSource).toContain("readWebProfile");
+    for (const reference of unsafeWebRuntimeReferences) {
+      expect(postBootSource.toLowerCase()).not.toContain(reference.toLowerCase());
+      expect(postBootStateSource.toLowerCase()).not.toContain(
+        reference.toLowerCase(),
+      );
+    }
+  });
+
+  it("does not introduce a generated orb or import the VoiceHud runtime", () => {
+    const generatedOrbNames = [
+      "GeneratedOrb",
+      "NewAnimatedOrb",
+      "WebGeneratedOrb",
+    ];
+    const walk = (directory: string): string[] =>
+      readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+        const path = `${directory}/${entry.name}`;
+        return entry.isDirectory() ? walk(path) : [path];
+      });
+    const productionFiles = walk("src").filter((path) =>
+      /\.(ts|tsx)$/.test(path),
+    );
+    for (const path of productionFiles) {
+      for (const name of generatedOrbNames) {
+        expect(path, name).not.toContain(name);
+      }
+    }
+    expect(postBootSource).not.toMatch(/from\s+["'][^"']*VoiceHud["']/i);
+    expect(lifecycleSource).not.toMatch(/from\s+["'][^"']*VoiceHud["']/i);
   });
 
   it("wires ready through the browser-safe LucaOS shell and chat adapter", () => {
