@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { LucaHologramPresence } from "../../components/visual/LucaHologramPresence";
-import { LucaPresenceOrb } from "../../components/visual/LucaPresenceOrb";
+import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
+import { LucaHologramShaderPresence } from "../../components/visual/LucaHologramShaderPresence";
 import type { WebPostBootStateSnapshot } from "./webPostBootState";
 
 interface WebPostBootTransitionProps {
@@ -60,14 +60,10 @@ export function WebPostBootTransition({
   return (
     <section className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-black/20 px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6">
       <div className="flex w-full max-w-xl flex-col items-center text-center">
-        <div className="relative mb-3 flex items-center justify-center">
-          <LucaHologramPresence
-            size={210}
+        <div className="mb-3 flex items-center justify-center">
+          <LucaHologramShaderPresence
+            size={220}
             state={needsAttention ? "attention" : isNewUser ? "preparing" : "ready"}
-          />
-          <LucaPresenceOrb
-            className="absolute bottom-4 right-3"
-            state={needsAttention ? "error" : isNewUser ? "preparing" : "ready"}
           />
         </div>
 
@@ -101,9 +97,12 @@ export function WebPostBootTransition({
           <div className="mt-8 w-full max-w-md space-y-2 text-left">
             {rows.map((row, index) => (
               <div key={row} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.035] px-4 py-3">
-                <span
-                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--app-primary,#67e8f9)] shadow-[0_0_10px_var(--app-primary,#67e8f9)] motion-safe:animate-pulse"
-                  style={{ animationDelay: `${index * 180}ms` }}
+                <LucaCanvasPresenceOrb
+                  size={22}
+                  state={isNewUser ? "preparing" : "ready"}
+                  amplitude={isNewUser ? 0.12 + index * 0.02 : 0}
+                  lowPower={index > 1}
+                  className="shrink-0"
                 />
                 <span className="text-sm text-white/70">{row}</span>
               </div>

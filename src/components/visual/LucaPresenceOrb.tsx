@@ -1,5 +1,10 @@
 import React from "react";
 
+/**
+ * @deprecated Generic PR #310 placeholder, not the canvas orb used by
+ * Dictation Widget or VoiceHUD. Keep only until the verified
+ * WidgetVisualizer/VoiceVisualizer presentation is safely extracted.
+ */
 export type LucaPresenceOrbState =
   | "idle"
   | "preparing"

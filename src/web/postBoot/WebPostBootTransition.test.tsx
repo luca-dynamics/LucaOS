@@ -15,7 +15,7 @@ describe("WebPostBootTransition", () => {
     expect(html).not.toContain("React did not hydrate");
   });
 
-  it("renders premium new-user preparation copy with existing Luca visuals", () => {
+  it("renders premium new-user preparation copy with canonical Luca visuals", () => {
     const html = renderToStaticMarkup(
       <WebPostBootTransition
         snapshot={{
@@ -30,8 +30,9 @@ describe("WebPostBootTransition", () => {
 
     expect(html).toContain("Preparing LucaOS");
     expect(html).toContain("Luca is setting up your personal AI environment.");
-    expect(html).toContain('src="/icon.png"');
-    expect(html).toContain("Luca voice presence preparing");
+    expect(html).toContain('data-hologram-source="/models/avatar.glb"');
+    expect(html).toContain('data-visual-source="dictation-voice-canvas-orb"');
+    expect(html).not.toContain('src="/icon.png"');
     expect(html).not.toContain("&gt; Luca is waking up");
   });
 

@@ -71,6 +71,7 @@ const unavailable = () => {
 export const webOnboardingRuntime: OnboardingRuntimeAdapter = {
   platform: "web",
   supportsLocalProvisioning: false,
+  skipKernelAwakeningVisual: true,
   ConversationComponent: WebSafeConversationalOnboarding,
   getVisualSettings() {
     return currentVisualSettings;
