@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 import React, { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import type { useThree } from "@react-three/fiber";
 import { Center, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -69,25 +70,33 @@ function LucaHologramAvatar({
   );
 
   useMemo(() => {
-    scene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        (child as THREE.Mesh).material = material;
+    scene.traverse((child: THREE.Object3D) => {
+      const mesh = child as THREE.Mesh;
+
+      if (mesh.isMesh) {
+        mesh.material = material;
       }
     });
   }, [material, scene]);
 
-  useFrame((state, delta) => {
-    material.uniforms.time.value += reducedMotion ? 0 : delta;
-    if (!groupRef.current || reducedMotion) return;
-    groupRef.current.position.y =
-      Math.sin(state.clock.elapsedTime * 0.6) * 0.06 - 0.22;
-    const pulse = active
-      ? Math.sin(state.clock.elapsedTime * 1.2) * 0.025
-      : 0;
-    groupRef.current.scale.setScalar(1.13 + pulse);
-    groupRef.current.rotation.y =
-      Math.sin(state.clock.elapsedTime * 0.3) * 0.08;
-  });
+  useFrame(
+    (state: ReturnType<typeof useThree>, delta: number) => {
+      material.uniforms.time.value += reducedMotion ? 0 : delta;
+
+      if (!groupRef.current || reducedMotion) return;
+
+      groupRef.current.position.y =
+        Math.sin(state.clock.elapsedTime * 0.6) * 0.06 - 0.22;
+
+      const pulse = active
+        ? Math.sin(state.clock.elapsedTime * 1.2) * 0.025
+        : 0;
+
+      groupRef.current.scale.setScalar(1.13 + pulse);
+      groupRef.current.rotation.y =
+        Math.sin(state.clock.elapsedTime * 0.3) * 0.08;
+    },
+  );
 
   return (
     <group ref={groupRef} position={[0, -0.22, 0]} scale={1.13}>
