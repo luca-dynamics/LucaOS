@@ -28,6 +28,7 @@ const desktopAdapterSource = read(
   "src/desktop/adapters/desktopOnboardingRuntime.ts",
 );
 const postBootSource = read("src/web/postBoot/WebPostBootTransition.tsx");
+const postBootLoadingSource = read("src/web/postBoot/WebPostBootLoading.tsx");
 const postBootStateSource = read("src/web/postBoot/webPostBootState.ts");
 const hologramPresenceSource = read(
   "src/components/visual/LucaHologramPresence.tsx",
@@ -175,6 +176,8 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(presenceOrbSource).toContain("amplitude");
     expect(postBootStateSource).toContain("readWebOnboardingComplete");
     expect(postBootStateSource).toContain("readWebProfile");
+    expect(postBootLoadingSource).toContain("Preparing LucaOS");
+    expect(postBootLoadingSource).not.toContain("React did not hydrate");
     for (const reference of unsafeWebRuntimeReferences) {
       expect(postBootSource.toLowerCase()).not.toContain(reference.toLowerCase());
       expect(postBootStateSource.toLowerCase()).not.toContain(

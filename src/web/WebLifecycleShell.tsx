@@ -10,6 +10,7 @@ import { webOnboardingRuntime } from "./adapters/webOnboardingRuntime";
 import type { WebCapability } from "./browserHostCapabilities";
 import { completeWebOnboarding } from "./webLifecycleStorage";
 import { WebPostBootTransition } from "./postBoot/WebPostBootTransition";
+import { WebPostBootLoading } from "./postBoot/WebPostBootLoading";
 import {
   resolveWebPostBootState,
   type WebPostBootStateSnapshot,
@@ -31,7 +32,7 @@ export function WebLifecycleShell() {
   }, []);
   useEffect(() => {
     let active = true;
-    resolveWebPostBootState().then((snapshot) => {
+    void resolveWebPostBootState().then((snapshot) => {
       if (active) setPostBootState(snapshot);
     });
     return () => {
@@ -53,6 +54,9 @@ export function WebLifecycleShell() {
         visualSettings={visualSettings}
         theme={{ hex: theme.hex, themeName: visualSettings.theme }}
       />
+      {lifecycleState === "post_boot" && !postBootState && (
+        <WebPostBootLoading />
+      )}
       {lifecycleState === "post_boot" && postBootState && (
         <WebPostBootTransition
           snapshot={postBootState}

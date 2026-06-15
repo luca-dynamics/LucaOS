@@ -22,6 +22,16 @@ describe("WebLifecycleShell", () => {
     expect(source).toContain("<WebPostBootTransition");
   });
 
+  it("renders an immediate loading surface while post-boot state resolves", () => {
+    expect(source).toContain(
+      'import { WebPostBootLoading } from "./postBoot/WebPostBootLoading"',
+    );
+    expect(source).toContain(
+      'lifecycleState === "post_boot" && !postBootState',
+    );
+    expect(source).toContain("<WebPostBootLoading />");
+  });
+
   it("reports the real lifecycle state to diagnostics", () => {
     expect(source).toContain("lifecycleState={lifecycleState}");
     expect(source).toContain('"web-luca-shell"');

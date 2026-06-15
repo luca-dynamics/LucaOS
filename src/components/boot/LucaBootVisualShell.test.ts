@@ -214,6 +214,8 @@ describe("LucaBootVisualShell readiness model", () => {
     expect(html).toContain('"luca-react-bootstrap-error"');
     expect(html).toContain("document.scripts.length");
     expect(html).toContain("}, 5000)");
+    expect(html).toContain("window.__LUCA_REACT_BOOTSTRAP_ERROR__ ||");
+    expect(html).toContain("window.__LUCA_BOOT_ERROR__)");
   });
 
   it("marks and guards the React entry bootstrap", async () => {

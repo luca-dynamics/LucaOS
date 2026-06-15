@@ -85,4 +85,54 @@ describe("resolveWebPostBootState", () => {
       canEnterShell: false,
     });
   });
+
+  it("never throws when localStorage is unavailable", async () => {
+    vi.stubGlobal("window", {
+      get localStorage() {
+        throw new Error("storage disabled");
+      },
+    });
+    vi.stubGlobal("navigator", {});
+
+    await expect(resolveWebPostBootState()).resolves.toMatchObject({
+      userState: "new_user",
+      hasCompletedOnboarding: false,
+      canEnterShell: false,
+    });
+  });
+
+  it("never throws when navigator permissions is unavailable", async () => {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) => values.get(key) ?? null,
+      },
+    });
+    vi.stubGlobal("navigator", {});
+    storeProfile({ interaction: "voice" });
+
+    await expect(resolveWebPostBootState()).resolves.toMatchObject({
+      userState: "returning_user",
+      needsVoicePermission: false,
+      canEnterShell: true,
+    });
+  });
+
+  it("times out a slow permission check without blocking post-boot", async () => {
+    vi.useFakeTimers();
+    installBrowser();
+    storeProfile({ interaction: "voice" });
+    vi.mocked(navigator.permissions.query).mockReturnValue(
+      new Promise(() => {}) as Promise<PermissionStatus>,
+    );
+
+    const resolution = resolveWebPostBootState();
+    await vi.advanceTimersByTimeAsync(250);
+
+    await expect(resolution).resolves.toMatchObject({
+      userState: "returning_user",
+      needsVoicePermission: false,
+      canEnterShell: true,
+    });
+    vi.useRealTimers();
+  });
 });

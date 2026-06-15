@@ -36,3 +36,11 @@ This audit records the existing Luca presence visuals evaluated for the WebBridg
 ## Final strategy
 
 The post-boot transition uses `LucaHologramPresence` as the primary visual and `LucaPresenceOrb` as a small secondary state signal. Both are browser-safe, presentation-only wrappers based on existing Luca assets and visual logic. WebBridge does not import `VoiceHud`, `VoiceVisualizer`, desktop voice runtime, native LucaLink runtime, or provider services. A later desktop-focused PR can adopt `LucaPresenceOrb` inside VoiceHUD/Dictation after dedicated visual regression testing.
+
+## Hydration and loading safety
+
+WebBridge mounts React before resolving post-boot user state. While guarded
+storage and permission checks resolve, `WebPostBootLoading` renders immediately
+with static, browser-API-free preparation copy. The pre-hydration watchdog only
+shows its fatal state when an actual bootstrap error has been captured; slow
+bundle loading or post-boot state resolution remains a normal loading state.
