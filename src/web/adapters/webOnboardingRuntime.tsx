@@ -1,14 +1,10 @@
-import { lazy } from "react";
 import type {
   OnboardingRuntimeAdapter,
   OnboardingVisualSettings,
 } from "../../components/Onboarding/OnboardingRuntimeAdapter";
 import type { OnboardingModelReadiness } from "../../services/onboarding/OnboardingModelModeCoordinator";
 import type { LocalRecoveryStep } from "../../services/onboarding/LocalProvisioningService";
-
-const BrowserConversationalOnboarding = lazy(
-  () => import("../../components/Onboarding/ConversationalOnboarding"),
-);
+import { WebSafeConversationalOnboarding } from "./WebSafeConversationalOnboarding";
 
 const VISUAL_SETTINGS_KEY = "lucaos.web.onboarding.visual-settings";
 
@@ -28,6 +24,18 @@ const readVisualSettings = (): OnboardingVisualSettings => {
       : defaultVisualSettings;
   } catch {
     return defaultVisualSettings;
+  }
+};
+
+const visualSettingsListeners = new Set<
+  (settings: OnboardingVisualSettings) => void
+>();
+
+let currentVisualSettings = readVisualSettings();
+
+const notifyVisualSettings = () => {
+  for (const listener of visualSettingsListeners) {
+    listener(currentVisualSettings);
   }
 };
 
@@ -63,14 +71,27 @@ const unavailable = () => {
 export const webOnboardingRuntime: OnboardingRuntimeAdapter = {
   platform: "web",
   supportsLocalProvisioning: false,
-  ConversationComponent: BrowserConversationalOnboarding,
-  getVisualSettings: readVisualSettings,
+  ConversationComponent: WebSafeConversationalOnboarding,
+  getVisualSettings() {
+    return currentVisualSettings;
+  },
+  subscribeVisualSettings(listener) {
+    visualSettingsListeners.add(listener);
+    listener(currentVisualSettings);
+
+    return () => {
+      visualSettingsListeners.delete(listener);
+    };
+  },
   saveVisualSettings(next) {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(
-      VISUAL_SETTINGS_KEY,
-      JSON.stringify({ ...readVisualSettings(), ...next }),
-    );
+    currentVisualSettings = { ...currentVisualSettings, ...next };
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        VISUAL_SETTINGS_KEY,
+        JSON.stringify(currentVisualSettings),
+      );
+    }
+    notifyVisualSettings();
   },
   playSound() {
     // Browser audio remains dormant until a user gesture selects a mode/action.
@@ -132,7 +153,9 @@ export const webOnboardingRuntime: OnboardingRuntimeAdapter = {
 
     if (mode === "voice") {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
         stream.getTracks().forEach((track) => track.stop());
       } catch {
         resolvedMode = "text";
