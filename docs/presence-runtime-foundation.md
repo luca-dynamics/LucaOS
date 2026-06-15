@@ -64,3 +64,31 @@ PR #315 changed wake-word and voice summons to present the Hologram first and pr
 4. Add disclosed sensor leases and sanitized approval prompts, including explicit focus-required escalation.
 5. Make LucaLink and Electron parallel adapters for the same versioned snapshot/event contracts.
 6. Only after those migrations, reduce dashboard ownership and extract Electron window factories in separately reviewable PRs.
+
+## Surface bridge foundation
+
+The Presence foundation now includes pure surface adapters under
+`src/presence/bridges/` for MiniChat, Hologram, and Widget. These modules
+centralize conversion from current legacy payloads into `PresenceSnapshot`,
+conversion back to each surface's existing transport shape, and small
+surface-specific selectors for voice display, dictation, disclosure, focus,
+and approval prompt state.
+
+The bridges reuse the existing Presence compatibility helpers rather than
+creating parallel conversion rules. When an outgoing helper receives the
+original legacy payload, it preserves fields that are not modeled by the
+snapshot—such as brain model identifiers, the current approval request shape,
+and Hologram `presenceSource`—while normalized Presence fields take precedence.
+This also keeps mission authorization identifiers JSON-safe by converting
+legacy `Set` values to arrays.
+
+IPC channels, Electron fan-out, React parsing, settings access, LucaLink
+broadcasting, and surface rendering remain legacy-owned. No bridge registers a
+runtime singleton or performs host side effects, and visible runtime behavior
+is unchanged.
+
+The next migration step is to adopt these bridge selectors at the existing
+React and application synchronization boundaries in small parity-tested
+changes. Once all surfaces consume the centralized adapters, their duplicate
+legacy parsing can be removed without changing transport channels or native
+window behavior.
