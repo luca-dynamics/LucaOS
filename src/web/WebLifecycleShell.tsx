@@ -3,6 +3,7 @@ import OnboardingFlow from "../components/Onboarding/OnboardingFlow";
 import { generateThemeStyles, getThemeColors } from "../config/themeColors";
 import { WebBridgeDiagnostics } from "./WebBridgeDiagnostics";
 import { WebLucaBackground } from "./WebLucaBackground";
+import { WebLucaShell } from "./WebLucaShell";
 import { WebReadyState } from "./WebReadyState";
 import { useWebRuntime } from "./WebRuntimeContext";
 import { webOnboardingRuntime } from "./adapters/webOnboardingRuntime";
@@ -12,7 +13,7 @@ import {
   readWebOnboardingComplete,
 } from "./webLifecycleStorage";
 
-export type WebLifecycleState = "onboarding" | "ready";
+export type WebLifecycleState = "onboarding" | "ready" | "main";
 
 export function WebLifecycleShell() {
   const runtime = useWebRuntime();
@@ -70,14 +71,27 @@ export function WebLifecycleShell() {
           browserCapabilities={browserCapabilities}
           guardedNativeCapabilities={nativeCapabilities}
           lucaLinkStatus={runtime.lucaLinkStatus}
+          onContinueToShell={() => setLifecycleState("main")}
+        />
+      )}
+      {lifecycleState === "main" && (
+        <WebLucaShell
+          hostClass={runtime.hostClass}
+          lucaLinkStatus={runtime.lucaLinkStatus}
+          browserCapabilities={browserCapabilities}
+          guardedNativeCapabilities={nativeCapabilities}
         />
       )}
       <WebBridgeDiagnostics
         hostClass={runtime.hostClass}
         lifecycleState={lifecycleState}
-        onboardingComplete={lifecycleState === "ready"}
+        onboardingComplete={lifecycleState !== "onboarding"}
         activeWebSurface={
-          lifecycleState === "ready" ? "web-ready-state" : "lucaos-onboarding"
+          lifecycleState === "main"
+            ? "web-luca-shell"
+            : lifecycleState === "ready"
+              ? "web-ready-state"
+              : "lucaos-onboarding"
         }
         availableBrowserCapabilityCount={
           browserCapabilities.filter((item) => item.status === "available")
