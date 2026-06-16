@@ -3,6 +3,7 @@ import {
   toWidgetUpdatePayload,
   type LegacyPresencePayload,
 } from "../presenceCompatibility";
+import { createPresenceApprovalPrompt, isPresenceApprovalPrompt } from "../approvals";
 import { getFocusPolicyForSurface } from "../presenceSurfacePolicy";
 import type {
   PresenceApprovalPrompt,
@@ -16,16 +17,6 @@ export interface MiniChatLegacyPayload extends LegacyPresencePayload {
   embeddingModel?: string;
 }
 
-function isPresenceApprovalPrompt(value: unknown): value is PresenceApprovalPrompt {
-  if (!value || typeof value !== "object") return false;
-  const prompt = value as Partial<PresenceApprovalPrompt>;
-  return (
-    typeof prompt.requestId === "string" &&
-    typeof prompt.summary === "string" &&
-    typeof prompt.requiresFocus === "boolean"
-  );
-}
-
 export function createMiniChatPresenceSnapshot(
   payload: MiniChatLegacyPayload,
 ): PresenceSnapshot {
@@ -36,7 +27,7 @@ export function createMiniChatPresenceSnapshot(
     ...snapshot,
     approval: {
       status: "pending",
-      prompt: { ...payload.approvalRequest },
+      prompt: createPresenceApprovalPrompt(payload.approvalRequest),
     },
   };
 }
@@ -62,5 +53,5 @@ export function getMiniChatApprovalPrompt(
   snapshot: PresenceSnapshot,
   legacyPayload?: MiniChatLegacyPayload,
 ): PresenceApprovalPrompt | unknown | null {
-  return snapshot.approval.prompt ?? legacyPayload?.approvalRequest ?? null;
+  return createPresenceApprovalPrompt(snapshot.approval.prompt ?? legacyPayload?.approvalRequest ?? null);
 }
