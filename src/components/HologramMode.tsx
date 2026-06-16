@@ -7,6 +7,7 @@ import { awarenessService } from "../services/awarenessService";
 import {
   createHologramPresenceSnapshot,
   getHologramVoiceDisplayState,
+  type HologramLegacyPayload,
 } from "../presence/bridges";
 
 /**
@@ -17,7 +18,7 @@ import {
 const HologramMode: React.FC = () => {
   const state = useSatelliteState();
   const voiceDisplay = getHologramVoiceDisplayState(
-    createHologramPresenceSnapshot(state),
+    createHologramPresenceSnapshot(state as unknown as HologramLegacyPayload),
   );
 
   const handleToggleVoice = () => {

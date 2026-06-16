@@ -7,13 +7,14 @@ import WidgetControls from "./WidgetControls";
 import {
   createWidgetPresenceSnapshot,
   getWidgetDictationState,
+  type WidgetLegacyPayload,
 } from "../presence/bridges";
 
 const WidgetMode: React.FC = () => {
   const { isDictating, toggleDictation, setDictationState } = useDictation();
   const state = useSatelliteState();
   const dictationState = getWidgetDictationState(
-    createWidgetPresenceSnapshot(state),
+    createWidgetPresenceSnapshot(state as unknown as WidgetLegacyPayload),
   );
   const [isHovered, setIsHovered] = useState(false);
   const [isVisualCoreActive, setIsVisualCoreActive] = useState(false);
