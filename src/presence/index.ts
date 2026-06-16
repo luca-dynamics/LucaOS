@@ -6,4 +6,5 @@ export * from "./presenceRuntime";
 export * from "./presenceSurfacePolicy";
 export * from "./presenceDisclosurePolicy";
 export * from "./presenceCompatibility";
+export * from "./messages";
 export * from "./bridges";

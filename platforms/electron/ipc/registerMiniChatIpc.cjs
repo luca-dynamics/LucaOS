@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+const { normalizeMiniChatMessagePayload } = require('./routes/miniChatMessageRoute.cjs');
+
 function registerMiniChatIpc({ ipcMain, getWidgetWindow, getChatWindow, getMainWindow, createMainWindow, logger = console }) {
     ipcMain.on('restore-main-window', () => {
         const widgetWindow = getWidgetWindow();
@@ -16,13 +18,14 @@ function registerMiniChatIpc({ ipcMain, getWidgetWindow, getChatWindow, getMainW
     });
 
     ipcMain.on('chat-widget-message', (event, data) => {
-        logger.log('[IPC] Received chat-widget-message:', data.text);
+        const routedMessage = normalizeMiniChatMessagePayload(data);
+        logger.log('[IPC] Received chat-widget-message:', routedMessage.text);
         const mainWindow = getMainWindow();
         const chatWindow = getChatWindow();
 
         if (mainWindow) {
             logger.log('[IPC] Forwarding to main window');
-            mainWindow.webContents.send('chat-widget-message', data);
+            mainWindow.webContents.send('chat-widget-message', routedMessage);
         } else {
             logger.error('[IPC] Main window not available!');
             if (chatWindow) {

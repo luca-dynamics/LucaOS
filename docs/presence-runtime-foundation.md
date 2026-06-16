@@ -150,3 +150,37 @@ this PR.
 The next migration step is to add parity tests around the extracted adapters and
 then progressively replace legacy payload fan-out with Presence runtime events
 once runtime ownership moves out of the dashboard renderer.
+
+## MiniChat message routing foundation
+
+Presence now includes a small, pure MiniChat message-routing contract under
+`src/presence/messages/`. The contract defines typed request, route envelope,
+reply, stream chunk, source, and status shapes for the current MiniChat path,
+plus helpers that normalize MiniChat requests, read message text, preserve
+legacy `chat-widget-message` compatibility, and copy reply or stream payloads
+without changing their current transport shapes.
+
+MiniChat message submission now constructs its `chat-widget-message` payload via
+these helpers before sending over Electron IPC. The Electron MiniChat IPC
+adapter keeps the same `chat-widget-message` channel and uses a CommonJS-safe
+pass-through route helper so the main process does not import TypeScript or add
+build complexity.
+
+The runtime path remains dashboard-owned: Electron still forwards MiniChat
+messages to the main dashboard renderer, the dashboard still performs the AI
+processing and model routing, and the dashboard still sends replies and stream
+chunks back through `reply-chat-widget`, `broadcast-stream-chunk`,
+`chat-widget-reply`, and `chat-widget-stream-chunk`. MiniChat UI rendering,
+submission behavior, streaming behavior, attachments, screen/image context,
+voice behavior, approvals, wake-word routing, and IPC channel names are
+intentionally unchanged.
+
+Unknown legacy fields remain part of the route boundary. Fields that are not
+yet modeled by a future Presence-owned AI runtime—such as ad hoc request IDs,
+persona, model/brain identifiers, image or screen context, attachment payloads,
+and other legacy extension fields—are copied through rather than filtered.
+
+The next migration step is to have the dashboard consume the typed route request
+at its existing `chat-widget-message` boundary, then introduce a Presence-owned
+message route port only after parity tests prove reply, stream, model-routing,
+and approval behavior remain identical.
