@@ -92,3 +92,33 @@ React and application synchronization boundaries in small parity-tested
 changes. Once all surfaces consume the centralized adapters, their duplicate
 legacy parsing can be removed without changing transport channels or native
 window behavior.
+
+## Surface bridge adoption
+
+The existing surface consumers now use the pure Presence bridge helpers at
+their legacy transport boundaries. `useSatelliteState` converts Electron
+`widget-update` and `hologram-update` payloads, plus LucaLink `UI_STATE_SYNC`
+payloads, through the Widget snapshot and dictation selectors while preserving
+the hook's current return shape and partial-update defaults. MiniChat converts
+its `widget-update` payload through the MiniChat snapshot and approval
+selectors. Hologram and Widget derive their existing voice display and
+dictation values from their surface selectors.
+
+The dashboard synchronization loop also uses the Widget and Hologram bridge
+output helpers instead of calling the lower-level compatibility conversions
+directly. Unknown legacy fields, including current brain/model identifiers and
+approval data, remain merged into outgoing payloads. LucaLink-specific output
+conversion remains on its existing compatibility helper.
+
+This removes duplicate interpretation of transcript, transcript source,
+listening/VAD, speaking, amplitude, status, persona, theme, intent, and
+approval fields from the surface-side update paths. Partial legacy updates
+still retain their previous values, and no dashboard, focus, or visibility
+state is added to the surface payloads.
+
+IPC channels, Electron fan-out, wake-word routing, focus behavior, voice
+runtime ownership, MiniChat message and approval execution, sensor permission
+behavior, rendering, layout, styling, and copy intentionally remain unchanged.
+The next migration step is to replace the compatibility snapshots with a
+runtime-owned Presence subscription while retaining these bridges as the
+surface view-model boundary.

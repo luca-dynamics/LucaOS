@@ -4,10 +4,18 @@ import { useSatelliteState } from "../hooks/useSatelliteState";
 import WidgetVisualizer from "./WidgetVisualizer";
 import { THEME_PALETTE } from "../config/themeColors";
 import WidgetControls from "./WidgetControls";
+import {
+  createWidgetPresenceSnapshot,
+  getWidgetDictationState,
+  type WidgetLegacyPayload,
+} from "../presence/bridges";
 
 const WidgetMode: React.FC = () => {
   const { isDictating, toggleDictation, setDictationState } = useDictation();
   const state = useSatelliteState();
+  const dictationState = getWidgetDictationState(
+    createWidgetPresenceSnapshot(state as unknown as WidgetLegacyPayload),
+  );
   const [isHovered, setIsHovered] = useState(false);
   const [isVisualCoreActive, setIsVisualCoreActive] = useState(false);
 
@@ -107,8 +115,8 @@ const WidgetMode: React.FC = () => {
     >
       {/* CANVAS ORB VISUALIZER */}
       <WidgetVisualizer
-        amplitude={state.amplitude}
-        isVadActive={isDictating ? true : state.isListening}
+        amplitude={dictationState.amplitude}
+        isVadActive={isDictating ? true : dictationState.isListening}
         isSpeaking={false}
         persona={state.persona} // Keep original persona (Blue)
         themeHex={primaryColor} // Pass dynamic color
@@ -119,13 +127,13 @@ const WidgetMode: React.FC = () => {
       {/* Transcript / Status Text */}
       <div
         className={`mt-4 px-6 py-2 bg-black/80 glass-blur rounded-full border border-white/10 text-center transition-all duration-300 shadow-2xl relative
-        ${state.transcript ? "min-w-[300px] w-auto animate-pulse-once" : "w-[180px]"}`}
+        ${dictationState.transcript ? "min-w-[300px] w-auto animate-pulse-once" : "w-[180px]"}`}
       >
         <span
           className="text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis block tracking-wider font-bold transition-colors duration-500"
           style={{ color: primaryColor }}
         >
-          {state.transcript ||
+          {dictationState.transcript ||
             (isDictating ? "LISTENING..." : "START DICTATION")}
         </span>
       </div>

@@ -3,6 +3,11 @@ import { PersonaType } from "../services/lucaService";
 import { lucaLink, LucaLinkMessage } from "../services/lucaLinkService";
 import { settingsService } from "../services/settingsService";
 import { MissionScope } from "../services/toolRegistry";
+import {
+  createWidgetPresenceSnapshot,
+  getWidgetDictationState,
+  type WidgetLegacyPayload,
+} from "../presence/bridges";
 
 export interface SatelliteState {
   transcript: string;
@@ -20,6 +25,50 @@ export interface SatelliteState {
     lastScanTimestamp: number;
     authorizedMissionIds: Set<string>;
     activeMissionScope: MissionScope;
+  };
+}
+
+export function applySatellitePresenceUpdate(
+  prev: SatelliteState,
+  data: WidgetLegacyPayload,
+): SatelliteState {
+  const snapshot = createWidgetPresenceSnapshot(data);
+  const voice = getWidgetDictationState(snapshot);
+
+  return {
+    ...prev,
+    transcript: data.transcript != null ? voice.transcript : prev.transcript,
+    transcriptSource:
+      data.transcriptSource != null
+        ? voice.transcriptSource
+        : prev.transcriptSource,
+    isListening:
+      data.isVadActive != null || data.isListening != null
+        ? voice.isListening
+        : prev.isListening,
+    isSpeaking:
+      data.isSpeaking != null ? voice.isSpeaking : prev.isSpeaking,
+    amplitude: data.amplitude != null ? voice.amplitude : prev.amplitude,
+    persona:
+      data.persona != null
+        ? (snapshot.persona as PersonaType)
+        : prev.persona,
+    status: data.status != null ? voice.status : prev.status,
+    themeHex:
+      data.themeHex != null ? snapshot.themeHex : prev.themeHex,
+    brainModel:
+      data.activeBrainId != null
+        ? (data.activeBrainId as string)
+        : prev.brainModel,
+    embeddingModel:
+      data.embeddingModel != null
+        ? (data.embeddingModel as string)
+        : prev.embeddingModel,
+    intent: data.intent != null ? snapshot.intent : prev.intent,
+    elevationState:
+      data.elevationState != null
+        ? (data.elevationState as SatelliteState["elevationState"])
+        : prev.elevationState,
   };
 }
 
@@ -88,25 +137,7 @@ export const useSatelliteState = (
     // 1. DESKTOP (ELECTRON) IPC MODE
     if (window.electron?.ipcRenderer) {
       const handleUpdate = (data: any) => {
-        setState(
-          (prev) =>
-            ({
-              ...prev,
-              transcript: data.transcript ?? prev.transcript,
-              transcriptSource: data.transcriptSource ?? prev.transcriptSource,
-              isListening:
-                data.isVadActive ?? data.isListening ?? prev.isListening,
-              isSpeaking: data.isSpeaking ?? prev.isSpeaking,
-              amplitude: data.amplitude ?? prev.amplitude,
-              persona: (data.persona as PersonaType) ?? prev.persona,
-              status: data.status ?? prev.status,
-              themeHex: data.themeHex ?? prev.themeHex,
-              brainModel: data.activeBrainId ?? prev.brainModel,
-              embeddingModel: data.embeddingModel ?? prev.embeddingModel,
-              intent: data.intent ?? prev.intent,
-              elevationState: data.elevationState ?? prev.elevationState,
-            }) as SatelliteState,
-        );
+        setState((prev) => applySatellitePresenceUpdate(prev, data));
       };
 
       const removeUpdate = window.electron.ipcRenderer.on(
@@ -135,15 +166,11 @@ export const useSatelliteState = (
     // Listen for UI_STATE_SYNC messages from a peer
     const handleLinkMessage = (msg: LucaLinkMessage) => {
       if (msg.type === "UI_STATE_SYNC" && msg.payload) {
-        const data = msg.payload as Partial<SatelliteState>;
-        setState(
-          (prev) =>
-            ({
-              ...prev,
-              ...data,
-              persona: (data.persona as PersonaType) ?? prev.persona,
-              elevationState: data.elevationState ?? prev.elevationState,
-            }) as SatelliteState,
+        setState((prev) =>
+          applySatellitePresenceUpdate(
+            prev,
+            msg.payload as WidgetLegacyPayload,
+          ),
         );
       }
     };
