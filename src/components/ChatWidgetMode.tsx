@@ -51,7 +51,9 @@ interface ChatWidgetState {
 export function getMiniChatPresenceUpdate(data: MiniChatLegacyPayload) {
   const snapshot = createMiniChatPresenceSnapshot(data);
   const voice = snapshot.voice;
-  const theme = (data.theme as string | undefined) ?? data.themeHex;
+  const theme =
+    (data.theme as string | undefined) ??
+    (data.themeHex as string | undefined);
 
   return {
     persona: data.persona ? snapshot.persona : undefined,
