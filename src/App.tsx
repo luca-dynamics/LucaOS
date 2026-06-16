@@ -73,10 +73,10 @@ import ChatWidgetMode from "./components/ChatWidgetMode";
 import WidgetMode from "./components/WidgetMode";
 import HologramMode from "./components/HologramMode";
 import {
-  fromWidgetUpdatePayload,
-  toHologramUpdatePayload,
+  createWidgetPresenceSnapshot,
+  toHologramUpdate,
   toLucaLinkUiStateSync,
-  toWidgetUpdatePayload,
+  toWidgetUpdate,
 } from "./presence";
 
 // Helper for device capability check removed temporarily as it's unused
@@ -1369,15 +1369,9 @@ function AppContent() {
         elevationState: elevationState,
         approvalRequest: (voiceSystem as any).approvalRequest,
       };
-      const presenceSnapshot = fromWidgetUpdatePayload(syncData);
-      const widgetSyncData = {
-        ...syncData,
-        ...toWidgetUpdatePayload(presenceSnapshot),
-      };
-      const hologramSyncData = {
-        ...syncData,
-        ...toHologramUpdatePayload(presenceSnapshot),
-      };
+      const presenceSnapshot = createWidgetPresenceSnapshot(syncData);
+      const widgetSyncData = toWidgetUpdate(presenceSnapshot, syncData);
+      const hologramSyncData = toHologramUpdate(presenceSnapshot, syncData);
       const lucaLinkSyncData = {
         ...syncData,
         ...toLucaLinkUiStateSync(presenceSnapshot),

@@ -5,6 +5,7 @@ import {
   createWidgetPresenceSnapshot,
   getHologramVoiceDisplayState,
   getMiniChatApprovalPrompt,
+  getWidgetDictationState,
   toHologramUpdate,
   toMiniChatWidgetUpdate,
   toWidgetUpdate,
@@ -106,6 +107,21 @@ describe("Presence surface bridges", () => {
       isSpeaking: true,
       amplitude: 0.64,
     });
+  });
+
+  it("maps Widget voice state to the existing dictation display shape", () => {
+    const payload = createLegacyPayload();
+    const snapshot = createWidgetPresenceSnapshot(payload);
+
+    expect(getWidgetDictationState(snapshot)).toEqual({
+      status: "speaking",
+      transcript: "Presence ready",
+      transcriptSource: "model",
+      isListening: true,
+      isSpeaking: true,
+      amplitude: 0.64,
+    });
+    expect(payload.elevationState.authorizedMissionIds).toBeInstanceOf(Set);
   });
 
   it("extracts a typed MiniChat approval prompt from the snapshot", () => {

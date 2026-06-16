@@ -19,6 +19,11 @@ import { settingsService } from "../services/settingsService";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
 import SecurityGate from "./SecurityGate";
 import ChatMessageBubble from "./ChatMessageBubble";
+import {
+  createMiniChatPresenceSnapshot,
+  getMiniChatApprovalPrompt,
+  type MiniChatLegacyPayload,
+} from "../presence/bridges";
 
 interface ChatWidgetState {
   history: {
@@ -37,6 +42,32 @@ interface ChatWidgetState {
   brainModel?: string;
   embeddingModel?: string;
   approvalRequest?: any;
+}
+
+export function getMiniChatPresenceUpdate(data: MiniChatLegacyPayload) {
+  const snapshot = createMiniChatPresenceSnapshot(data);
+  const voice = snapshot.voice;
+
+  return {
+    persona: data.persona ? snapshot.persona : undefined,
+    theme: data.theme as string | undefined,
+    brainModel:
+      data.activeBrainId
+        ? (data.activeBrainId as string)
+        : data.brainModel,
+    embeddingModel: data.embeddingModel as string | undefined,
+    amplitude: data.amplitude !== undefined ? voice.amplitude : undefined,
+    isSpeaking:
+      data.isSpeaking !== undefined ? voice.isSpeaking : undefined,
+    isVadActive:
+      data.isVadActive !== undefined
+        ? voice.isListening
+        : undefined,
+    approvalRequest:
+      data.approvalRequest !== undefined
+        ? getMiniChatApprovalPrompt(snapshot, data)
+        : undefined,
+  };
 }
 
 const ChatWidgetMode: React.FC = () => {
@@ -416,31 +447,32 @@ const ChatWidgetMode: React.FC = () => {
       const removeWidgetUpdate = window.electron.ipcRenderer.on(
         "widget-update",
         (data: any) => {
-          if (data.persona) {
-            setState((prev) => ({ ...prev, persona: data.persona }));
+          const update = getMiniChatPresenceUpdate(data);
+          if (update.persona) {
+            setState((prev) => ({ ...prev, persona: update.persona }));
           }
-          if (data.theme) {
-            setState((prev) => ({ ...prev, theme: data.theme }));
+          if (update.theme) {
+            setState((prev) => ({ ...prev, theme: update.theme }));
           }
-          if (data.activeBrainId) {
-            setState((prev) => ({ ...prev, brainModel: data.activeBrainId }));
+          if (update.brainModel) {
+            setState((prev) => ({ ...prev, brainModel: update.brainModel }));
           }
-          if (data.embeddingModel) {
-            setState((prev) => ({ ...prev, embeddingModel: data.embeddingModel }));
+          if (update.embeddingModel) {
+            setState((prev) => ({ ...prev, embeddingModel: update.embeddingModel }));
           }
-          if (data.amplitude !== undefined) {
-            setRemoteAmplitude(data.amplitude);
+          if (update.amplitude !== undefined) {
+            setRemoteAmplitude(update.amplitude);
           }
-          if (data.isSpeaking !== undefined) {
-            setIsRemoteSpeaking(data.isSpeaking);
+          if (update.isSpeaking !== undefined) {
+            setIsRemoteSpeaking(update.isSpeaking);
           }
-          if (data.isVadActive !== undefined) {
-            setIsRemoteVadActive(data.isVadActive);
+          if (update.isVadActive !== undefined) {
+            setIsRemoteVadActive(update.isVadActive);
           }
-          if (data.approvalRequest !== undefined) {
+          if (update.approvalRequest !== undefined) {
             setState((prev) => ({
               ...prev,
-              approvalRequest: data.approvalRequest,
+              approvalRequest: update.approvalRequest,
             }));
           }
         },
