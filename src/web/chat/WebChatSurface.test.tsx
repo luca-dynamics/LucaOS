@@ -1,96 +1,15 @@
-// @vitest-environment jsdom
-import { act } from "react";
-import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
 import { WebChatSurface } from "./WebChatSurface";
-import {
-  WEB_CHAT_RUNTIME_UNAVAILABLE,
-  type WebChatRuntime,
-} from "./webChatRuntime";
-
-let container: HTMLDivElement | null = null;
-
-afterEach(() => {
-  container?.remove();
-  container = null;
-});
-
-async function renderSurface(runtime: WebChatRuntime) {
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  const root = createRoot(container);
-  await act(async () => {
-    root.render(<WebChatSurface runtime={runtime} />);
-  });
-  return { container, root };
-}
+import { WEB_CHAT_RUNTIME_UNAVAILABLE } from "./webChatRuntime";
 
 describe("WebChatSurface", () => {
-  it("renders LucaOS welcome and unavailable runtime states", async () => {
-    const runtime: WebChatRuntime = {
-      sendMessage: vi.fn(),
-    };
-    const rendered = await renderSurface(runtime);
-
-    expect(rendered.container.textContent).toContain(
-      "LucaOS is running in browser-safe mode",
-    );
-    expect(rendered.container.textContent).toContain(
-      WEB_CHAT_RUNTIME_UNAVAILABLE,
-    );
-    await act(async () => rendered.root.unmount());
-  });
-
-  it("sends through the adapter, displays pending, and renders its result", async () => {
-    let resolveResponse!: (value: {
-      id: string;
-      role: "assistant";
-      content: string;
-      timestamp: number;
-    }) => void;
-    const runtime: WebChatRuntime = {
-      sendMessage: vi.fn(
-        () =>
-          new Promise((resolve) => {
-            resolveResponse = resolve;
-          }),
-      ),
-    };
-    const rendered = await renderSurface(runtime);
-    const input = rendered.container.querySelector("textarea")!;
-    const form = rendered.container.querySelector("form")!;
-
-    await act(async () => {
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLTextAreaElement.prototype,
-        "value",
-      )?.set;
-      setter?.call(input, "Hello Luca");
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    await act(async () => {
-      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-    });
-
-    expect(runtime.sendMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ text: "Hello Luca", mode: "chat" }),
-    );
-    expect(rendered.container.textContent).toContain(
-      "LucaOS runtime adapter is processing",
-    );
-
-    await act(async () => {
-      resolveResponse({
-        id: "adapter-result",
-        role: "assistant",
-        content: WEB_CHAT_RUNTIME_UNAVAILABLE,
-        timestamp: Date.now(),
-      });
-      await Promise.resolve();
-    });
-    expect(rendered.container.textContent).toContain(
-      WEB_CHAT_RUNTIME_UNAVAILABLE,
-    );
-    await act(async () => rendered.root.unmount());
+  it("uses user-facing LucaOS copy instead of debug adapter wording", () => {
+    const html = renderToStaticMarkup(<WebChatSurface />);
+    expect(html).toContain("Luca is ready. Ask anything or open a workspace.");
+    expect(html).toContain("Luca Prime connection is preparing");
+    expect(html).not.toContain("browser-safe mode");
+    expect(html).not.toContain("runtime adapter");
+    expect(WEB_CHAT_RUNTIME_UNAVAILABLE).not.toContain("Model execution adapter is not connected yet");
   });
 });

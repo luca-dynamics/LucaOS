@@ -145,7 +145,13 @@ export function WebSafeConversationalOnboarding({
         className="flex items-center justify-between gap-4 border-b px-4 py-3 sm:px-6"
         style={{ borderColor: "var(--app-border-main)" }}
       >
-        <div>
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button type="button" onClick={onBack} className="rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-wider" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }}>
+              Back / Change mode
+            </button>
+          )}
+          <div>
           <p
             className="text-[10px] font-bold uppercase tracking-[0.2em]"
             style={{ color: theme?.hex || "var(--app-primary)" }}
@@ -158,6 +164,7 @@ export function WebSafeConversationalOnboarding({
           >
             {mode === "voice" ? "Voice mode selected" : "Text mode selected"}
           </p>
+        </div>
         </div>
         <span
           className="text-[10px] uppercase tracking-widest"

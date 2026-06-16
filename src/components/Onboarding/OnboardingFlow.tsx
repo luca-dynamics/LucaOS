@@ -304,6 +304,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   };
 
   const handleConversationBack = () => {
+    setConversationMode(null);
     setStep(onboardingController.backFromConversation());
   };
 
@@ -720,6 +721,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
       {/* Hologram Face is visible during hardware scanning, downloads, and voice conversation */}
       {!["KERNEL_AWAKENING", "DIRECTIVE_ALIGNMENT"].includes(step) &&
+        !(runtime.platform === "web" && step === "CONVERSATION") &&
         !(step === "CONVERSATION" && conversationMode === "text") && (
           <HologramFace step={step} />
         )}

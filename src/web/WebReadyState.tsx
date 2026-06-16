@@ -36,14 +36,13 @@ export function WebReadyState({
           LucaOS Web session ready
         </p>
         <h1 className="mt-3 text-2xl font-bold tracking-wide">
-          Original onboarding complete.
+          Preparing your LucaOS workspace...
         </h1>
         <p
           className="mt-3 text-sm leading-6"
           style={{ color: "var(--app-text-muted)" }}
         >
-          Continue into the browser-safe LucaOS shell. Native desktop
-          capabilities remain guarded until paired through LucaLink.
+          Luca is opening your workspace.
         </p>
         <dl className="mt-6 grid gap-3 text-xs sm:grid-cols-2">
           <div
@@ -65,7 +64,7 @@ export function WebReadyState({
             style={{ borderColor: "var(--app-border-main)" }}
           >
             <dt style={{ color: "var(--app-text-muted)" }}>
-              Browser capabilities
+              Luca Prime
             </dt>
             <dd className="mt-1 font-bold">{available} available</dd>
           </div>
@@ -73,9 +72,9 @@ export function WebReadyState({
             className="rounded-xl border p-4"
             style={{ borderColor: "var(--app-border-main)" }}
           >
-            <dt style={{ color: "var(--app-text-muted)" }}>Native routes</dt>
+            <dt style={{ color: "var(--app-text-muted)" }}>Local routes</dt>
             <dd className="mt-1 font-bold">
-              {guardedNativeCapabilities.length} guarded
+              Connect in Settings
             </dd>
           </div>
         </dl>
@@ -89,7 +88,7 @@ export function WebReadyState({
             backgroundColor: "var(--luca-accent-soft, var(--app-bg-tint))",
           }}
         >
-          Continue to LucaOS Web Shell
+          Open LucaOS
         </button>
       </div>
     </section>

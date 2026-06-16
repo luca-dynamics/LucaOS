@@ -5,6 +5,7 @@ import type {
 import type { OnboardingModelReadiness } from "../../services/onboarding/OnboardingModelModeCoordinator";
 import type { LocalRecoveryStep } from "../../services/onboarding/LocalProvisioningService";
 import { WebSafeConversationalOnboarding } from "./WebSafeConversationalOnboarding";
+import { WebVoiceOnboardingSurface } from "../voice/WebVoiceOnboardingSurface";
 
 const VISUAL_SETTINGS_KEY = "lucaos.web.onboarding.visual-settings";
 
@@ -72,7 +73,12 @@ export const webOnboardingRuntime: OnboardingRuntimeAdapter = {
   platform: "web",
   supportsLocalProvisioning: false,
   skipKernelAwakeningVisual: true,
-  ConversationComponent: WebSafeConversationalOnboarding,
+  ConversationComponent: (props: import("../../components/Onboarding/OnboardingRuntimeAdapter").OnboardingConversationProps) =>
+    props.mode === "voice" ? (
+      <WebVoiceOnboardingSurface {...props} />
+    ) : (
+      <WebSafeConversationalOnboarding {...props} />
+    ),
   getVisualSettings() {
     return currentVisualSettings;
   },
@@ -149,25 +155,8 @@ export const webOnboardingRuntime: OnboardingRuntimeAdapter = {
     );
   },
   async selectConversationMode(mode) {
-    let resolvedMode = mode;
-    let fallbackMessage: string | undefined;
-
-    if (mode === "voice") {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        stream.getTracks().forEach((track) => track.stop());
-      } catch {
-        resolvedMode = "text";
-        fallbackMessage =
-          "Microphone access is required for voice mode. Falling back to text.";
-      }
-    }
-
     return {
-      mode: resolvedMode,
-      fallbackMessage,
+      mode,
       readiness: readiness("luca-prime"),
     };
   },
