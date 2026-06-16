@@ -77,6 +77,7 @@ import {
   toHologramUpdate,
   toLucaLinkUiStateSync,
   toWidgetUpdate,
+  type WidgetLegacyPayload,
 } from "./presence";
 
 // Helper for device capability check removed temporarily as it's unused
@@ -1352,7 +1353,7 @@ function AppContent() {
   // --- WIDGET SYNC LOOP (REAL-TIME-ISH) ---
   useEffect(() => {
     if ((window as any).electron && (window as any).electron.ipcRenderer) {
-      const syncData = {
+      const syncData: WidgetLegacyPayload = {
         isVadActive:
           isVoiceHubListening ||
           voiceHubStatus === "THINKING" ||
