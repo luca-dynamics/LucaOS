@@ -8,6 +8,12 @@ require('dotenv').config(); // Load environment variables for Main process (and 
 const path = require('path');
 const fs = require('fs');
 const { findAvailableExecutable, getPythonCandidates } = require('../shared/platform.cjs');
+const {
+    createMiniChatWindow: createMiniChatWindowFactory,
+    createHologramWindow: createHologramWindowFactory,
+    createWidgetWindow: createWidgetWindowFactory,
+    createVisualCoreWindow: createVisualCoreWindowFactory
+} = require('./windows/index.cjs');
 
 // [MAIN] Mission Control Service Initialization
 const MissionControl = require('./services/missionControl.cjs');
@@ -928,53 +934,16 @@ let hologramWindow;
 function createHologramWindow() {
     if (hologramWindow) return;
 
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, height } = primaryDisplay.workAreaSize;
-    // Freeform size (large enough for the w-80 h-80 container)
-    // Position bottom-right, but account for potential dock
-    // ample space
-
-    hologramWindow = new BrowserWindow({
-        width: 300, 
-        height: 400, 
-        x: width - 300, 
-        y: height - 410,
-        frame: false,
-        transparent: true,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        resizable: false,
-        show: false,
-        hasShadow: false,
-        focusable: false,
-        backgroundColor: '#00000000', // Transparent Hex
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.cjs'),
-            nodeIntegration: false,
-            contextIsolation: true,
-            webSecurity: false
+    hologramWindow = createHologramWindowFactory({
+        BrowserWindow,
+        screen,
+        isDev: !app.isPackaged,
+        devPort: VITE_DEV_PORT,
+        distPath: path.join(__dirname, '../../dist/index.html'),
+        preloadPath: path.join(__dirname, 'preload.cjs'),
+        onClosed: () => {
+            hologramWindow = null;
         }
-    });
-
-    const isDev = !app.isPackaged;
-    const url = isDev 
-        ? `http://localhost:${VITE_DEV_PORT}?mode=hologram` 
-        : `file://${path.join(__dirname, '../../dist/index.html')}?mode=hologram`;
-
-    hologramWindow.loadURL(url);
-    
-    // Ensure visibility overlay
-    hologramWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-    hologramWindow.setAlwaysOnTop(true, "floating", 1);
-
-    // Click-through behavior? 
-    // If the user wants to click the "Mic", we need it to be interactive.
-    // If we setIgnoreMouseEvents(true), we can't click.
-    // So we keep it interactive. But the transparent parts might block clicks unless we handle ignoreMouseEvents in renderer.
-    // For now, let's keep it simple (fully interactive rectangular window).
-
-    hologramWindow.on('closed', () => {
-        hologramWindow = null;
     });
 }
 
@@ -1521,119 +1490,37 @@ app.on('activate', () => {
 // widgetWindow is defined globally above
 
 function createWidgetWindow() {
-  if (widgetWindow) return; // Already exists
+    if (widgetWindow) return; // Already exists
 
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.workAreaSize;
-
-  widgetWindow = new BrowserWindow({
-    width: 200, // Reduced from 250
-    height: 300, // Reduced from 400
-    x: width - 220, // Adjusted padding from right
-    y: height - 350, // Adjusted padding from bottomRight positioning
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    show: false, // Start Hidden (Use Tray to toggle)
-    hasShadow: false,
-    focusable: false, // CRITICAL: Prevent stealing focus from Notepad/Other Active Apps
-    backgroundColor: '#00000000', // HEX transparent for Mac
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'), // Reuse preload
-      nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: false,
-      backgroundThrottling: false // CRITICAL: Ensure Voice runs even if window is technically "background" or unfocused
-    }
-  });
-
-  console.log('[WIDGET] BrowserWindow created');
-
-  const isDev = !app.isPackaged;
-  // Load same app but with ?mode=widget param
-  const url = isDev 
-    ? `http://127.0.0.1:${VITE_DEV_PORT}?mode=widget` 
-    : `file://${path.join(__dirname, '../../dist/index.html')}?mode=widget`;
-  
-  console.log('[WIDGET] Loading URL:', url);
-  widgetWindow.loadURL(url);
-
-  // FORCE OVERLAY ON TOP OF FULLSCREEN APPS
-  widgetWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  widgetWindow.setAlwaysOnTop(true, "floating", 1);
-  widgetWindow.setFullScreenable(false);
-
-  widgetWindow.once('ready-to-show', () => {
-    console.log('[WIDGET] Window ready to show');
-  });
-
-  widgetWindow.on('closed', () => {
-    console.log('[WIDGET] Window closed');
-    widgetWindow = null;
-  });
-
-  // Forward console logs to terminal
-  widgetWindow.webContents.on('console-message', (event, level, message) => {
-      console.log('[WIDGET]', message);
-  });
-
-  // Log any errors
-  widgetWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    console.error('[WIDGET] Failed to load:', errorCode, errorDescription);
-  });
+    widgetWindow = createWidgetWindowFactory({
+        BrowserWindow,
+        screen,
+        isDev: !app.isPackaged,
+        devPort: VITE_DEV_PORT,
+        distPath: path.join(__dirname, '../../dist/index.html'),
+        preloadPath: path.join(__dirname, 'preload.cjs'),
+        logger: console,
+        onClosed: () => {
+            widgetWindow = null;
+        }
+    });
 }
 
 function createChatWindow() {
-  if (chatWindow) return;
+    if (chatWindow) return;
 
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.workAreaSize;
-  const w = 600;
-  const h = 180; // Reduced height for Mini Chat feel
-
-  chatWindow = new BrowserWindow({
-    width: w,
-    height: h,
-    x: Math.floor(width / 2 - w / 2),
-    y: Math.floor(height / 3), // Slightly higher than center
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: true, // User requested resizability
-    minWidth: 200,
-    minHeight: 40,
-    show: false,
-    hasShadow: false,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
-      nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: false,
-      backgroundThrottling: false
-    }
-  });
-
-  const isDev = !app.isPackaged;
-  const url = isDev 
-    ? `http://127.0.0.1:${VITE_DEV_PORT}?mode=chat` 
-    : `file://${path.join(__dirname, '../../dist/index.html')}?mode=chat`;
-  
-  chatWindow.loadURL(url);
-  chatWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-
-  chatWindow.on('closed', () => {
-    chatWindow = null;
-  });
-  
-  // Close on blur (Spotlight style)
-  chatWindow.on('blur', () => {
-      // chatWindow.hide(); // Optional: user might want to keep it open
-  });
+    chatWindow = createMiniChatWindowFactory({
+        BrowserWindow,
+        screen,
+        isDev: !app.isPackaged,
+        devPort: VITE_DEV_PORT,
+        distPath: path.join(__dirname, '../../dist/index.html'),
+        preloadPath: path.join(__dirname, 'preload.cjs'),
+        onClosed: () => {
+            chatWindow = null;
+        }
+    });
 }
-
 
 // IPC:// IPC: Get Current Display ID for Screen Capture
 ipcMain.handle('get-current-display-id', (event) => {
@@ -1802,77 +1689,26 @@ function createVisualCoreWindow(initialData = null) {
         return;
     }
 
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width } = primaryDisplay.workAreaSize;
-    
-    // Load saved bounds or use default
-    const savedBounds = loadWindowStateVC();
-    const w = savedBounds?.width || 960;
-    const h = savedBounds?.height || 540;
-    const padding = 20;
-    const defaultX = width - w - padding;
-    const defaultY = padding;
-
-    visualCoreWindow = new BrowserWindow({
-        width: w,
-        height: h,
-        x: savedBounds?.x ?? defaultX,
-        y: savedBounds?.y ?? defaultY,
-        frame: false,
-        transparent: true,
-        backgroundColor: '#00000000',
-        alwaysOnTop: true, // WIDGET BEHAVIOR
-        skipTaskbar: true, // WIDGET BEHAVIOR
-        resizable: true,   // User can resize if they want it bigger
-        minWidth: 320,
-        minHeight: 180,
-        show: false,
-        hasShadow: true,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.cjs'),
-            nodeIntegration: false,
-            contextIsolation: true,
-            webSecurity: false,
-            webviewTag: true // Vital for Browser-in-Screen
+    visualCoreWindow = createVisualCoreWindowFactory({
+        BrowserWindow,
+        screen,
+        isDev: !app.isPackaged,
+        devPort: VITE_DEV_PORT,
+        distPath: path.join(__dirname, '../dist/index.html'),
+        preloadPath: path.join(__dirname, 'preload.cjs'),
+        initialData,
+        loadWindowStateVC,
+        saveWindowStateVC,
+        setVisualCorePendingData: (data) => {
+            visualCorePendingData = data;
+        },
+        setVisualCoreReady: (ready) => {
+            visualCoreReady = ready;
+        },
+        logger: console,
+        onClosed: () => {
+            visualCoreWindow = null;
         }
-    });
-
-    // Save bounds on change
-    const updateVCBounds = () => {
-        if (visualCoreWindow && !visualCoreWindow.isMinimized()) {
-            saveWindowStateVC(visualCoreWindow.getBounds());
-        }
-    };
-    visualCoreWindow.on('resize', updateVCBounds);
-    visualCoreWindow.on('move', updateVCBounds);
-
-    // Ensure it floats above full-screen apps (like a true OS widget)
-    visualCoreWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-
-    const isDev = !app.isPackaged;
-    // Load app with ?mode=visual_core
-    const url = isDev 
-        ? `http://localhost:${VITE_DEV_PORT}?mode=visual_core` 
-        : `file://${path.join(__dirname, '../dist/index.html')}?mode=visual_core`;
-
-    visualCoreWindow.loadURL(url);
-
-    visualCoreWindow.once('ready-to-show', () => {
-        console.log('[MAIN PROCESS] Smart Screen window ready-to-show');
-        visualCoreWindow.show();
-        visualCoreWindow.focus();
-        
-        // Queue the initial data - it will be sent when Smart Screen signals ready
-        if (initialData) {
-            console.log('[MAIN PROCESS] Queuing initialData for when Smart Screen is ready:', initialData);
-            visualCorePendingData = initialData;
-        }
-    });
-
-    visualCoreWindow.on('closed', () => {
-        visualCoreWindow = null;
-        visualCoreReady = false; // Reset ready state
-        visualCorePendingData = null;
     });
 }
 
