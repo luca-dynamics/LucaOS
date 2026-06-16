@@ -11,7 +11,7 @@ const welcomeMessage = (): WebChatMessage => ({
   id: "web-luca-welcome",
   role: "system",
   content:
-    "LucaOS is running in browser-safe mode. Chat requests stay behind the WebBridge runtime adapter.",
+    "Luca is ready. Ask anything or open a workspace.",
   timestamp: Date.now(),
 });
 
@@ -54,7 +54,7 @@ export function WebChatSurface({
       setMessages((current) => [...current, response]);
     } catch {
       setError(
-        "The browser-safe chat adapter could not complete this request. No desktop or provider runtime was invoked.",
+        "Luca Prime connection is preparing. Local and BYOK routes can be connected from Settings.",
       );
     } finally {
       setPending(false);
@@ -74,7 +74,7 @@ export function WebChatSurface({
           <h2 className="mt-1 text-lg font-semibold">Chat</h2>
         </div>
         <span className="rounded-full border border-[var(--app-border-main)] px-3 py-1 text-[10px] uppercase tracking-widest text-[var(--app-text-muted)]">
-          Browser-safe
+          Ready
         </span>
       </header>
 
@@ -108,7 +108,7 @@ export function WebChatSurface({
         {pending && (
           <div role="status" className="flex items-center gap-2 text-sm text-[var(--app-text-muted)]">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--app-primary)]" />
-            LucaOS runtime adapter is processing…
+            Luca is thinking…
           </div>
         )}
         {error && (

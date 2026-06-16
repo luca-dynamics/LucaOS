@@ -14,7 +14,7 @@ export interface WebChatRuntime {
 }
 
 export const WEB_CHAT_RUNTIME_UNAVAILABLE =
-  "LucaOS web chat runtime is in browser-safe mode. Model execution adapter is not connected yet.";
+  "Luca Prime connection is preparing. Local and BYOK routes can be connected from Settings.";
 
 export const webChatRuntime: WebChatRuntime = {
   async sendMessage() {

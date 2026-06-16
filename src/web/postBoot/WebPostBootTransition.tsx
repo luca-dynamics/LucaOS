@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
-import { LucaHologramShaderPresence } from "../../components/visual/LucaHologramShaderPresence";
+import { LucaStaticFacePresence } from "../../components/visual/LucaStaticFacePresence";
 import type { WebPostBootStateSnapshot } from "./webPostBootState";
 
 interface WebPostBootTransitionProps {
@@ -61,10 +61,7 @@ export function WebPostBootTransition({
     <section className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-black/20 px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6">
       <div className="flex w-full max-w-xl flex-col items-center text-center">
         <div className="mb-3 flex items-center justify-center">
-          <LucaHologramShaderPresence
-            size={220}
-            state={needsAttention ? "attention" : isNewUser ? "preparing" : "ready"}
-          />
+          <LucaStaticFacePresence size={220} />
         </div>
 
         <h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">

@@ -28,6 +28,9 @@ const desktopAdapterSource = read(
   "src/desktop/adapters/desktopOnboardingRuntime.ts",
 );
 const postBootSource = read("src/web/postBoot/WebPostBootTransition.tsx");
+const staticFaceSource = read("src/components/visual/LucaStaticFacePresence.tsx");
+const canvasPresenceOrbSource = read("src/components/visual/LucaCanvasPresenceOrb.tsx");
+const canvasOrbRendererSource = read("src/components/visual/lucaCanvasOrbRenderer.ts");
 const postBootLoadingSource = read("src/web/postBoot/WebPostBootLoading.tsx");
 const postBootStateSource = read("src/web/postBoot/webPostBootState.ts");
 const presenceOrbSource = read("src/components/visual/LucaPresenceOrb.tsx");
@@ -153,7 +156,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
   it("wires browser-safe lifecycle, conversation, and live visual settings", () => {
     expect(lifecycleSource).not.toContain("LiquidBackground");
     expect(lifecycleSource).toContain("WebLucaBackground");
-    expect(lifecycleSource).toContain("WebReadyState");
+    expect(lifecycleSource).toContain("VITE_LUCA_SHOW_WEB_READY_DEBUG");
     expect(lifecycleSource).toContain('"onboarding"');
     expect(lifecycleSource).toContain('"ready"');
     expect(lifecycleSource).toContain('"main"');
@@ -171,19 +174,17 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
   });
 
   it("keeps post-boot presentation on reused Luca visuals and safe storage", () => {
-    expect(postBootSource).toContain("LucaHologramShaderPresence");
+    expect(postBootSource).not.toContain("LucaHologramShaderPresence");
+    expect(postBootSource).not.toContain("LucaHologramShaderScene");
+    expect(postBootSource).toContain("LucaStaticFacePresence");
+    expect(staticFaceSource).toContain('src="/icon.png"');
+    expect(staticFaceSource).not.toMatch(/three|@react-three\/fiber|@react-three\/drei|eventBus|Service/);
+    expect(staticFaceSource.match(/className={[^}]+}|className="[^"]+"/g)?.join(" ") ?? "").not.toMatch(/ring|border|orbit|halo|rounded-full/);
     expect(postBootSource).toContain("LucaCanvasPresenceOrb");
     expect(postBootSource).not.toContain("LucaHologramPresence");
     expect(postBootSource).not.toContain("LucaPresenceOrb");
     expect(postBootSource).not.toMatch(/VoiceHud|VoiceHUD/);
     expect(postBootSource).not.toContain("> Luca is waking up");
-    expect(hologramShaderPresenceSource).toContain(
-      'import("./LucaHologramShaderScene")',
-    );
-    expect(hologramShaderSceneSource).toContain(
-      'useGLTF("/models/avatar.glb")',
-    );
-    expect(hologramShaderPresenceSource).not.toContain('src="/icon.png"');
     expect(canvasPresenceOrbSource).toContain("<canvas");
     expect(canvasOrbRendererSource).toContain("createRadialGradient");
     expect(postBootStateSource).toContain("readWebOnboardingComplete");
@@ -267,12 +268,13 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       expect(onboardingLifecycleSource).toContain(copyKey);
     }
     expect(onboardingSource).toContain('step === "KERNEL_AWAKENING"');
-    expect(onboardingSource).toContain('{">"} {text}');
+    expect(onboardingSource).not.toContain('{">"} {text}');
     expect(presenceOrbSource).toContain(
       "@deprecated Generic PR #310 placeholder",
     );
 
     const orbComponentFiles = [
+      "src/components/visual/LucaCanvasPresenceOrb.tsx",
       "src/components/visual/LucaPresenceOrb.tsx",
       "src/components/voice/VoiceStatusOrb.tsx",
     ];
@@ -295,7 +297,8 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(lifecycleSource).toContain('<WebLucaShell');
     expect(lifecycleSource).toContain('setLifecycleState("main")');
     expect(readySource).toContain("onContinueToShell");
-    expect(readySource).toContain("Continue to LucaOS Web Shell");
+    expect(readySource).not.toContain("Original onboarding complete");
+    expect(readySource).not.toContain("Continue to LucaOS Web Shell");
     expect(webShellSource).toContain("<WebChatSurface");
     expect(webChatSource).toContain('from "./webChatRuntime"');
     expect(webChatSource).toContain("runtime.sendMessage");
@@ -347,7 +350,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(diagnosticsSource).toContain('get("bootDebug") !== "1"');
     expect(lifecycleSource).toContain("lifecycleState={lifecycleState}");
     expect(lifecycleSource).toContain('"lucaos-onboarding"');
-    expect(lifecycleSource).toContain('"web-ready-state"');
+    expect(lifecycleSource).toContain('"web-ready-debug"');
     expect(lifecycleSource).toContain('"web-luca-shell"');
   });
 
@@ -364,4 +367,17 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
   it("does not validate master keys from the WebBridge entry", () => {
     expect(entrySource).not.toMatch(/master.?key/i);
   });
+
+
+  it("keeps developer/debug copy out of normal WebBridge user-facing sources", () => {
+    const normalSources = [lifecycleSource, webShellSource, webChatSource, webChatRuntimeSource, postBootSource, webConversationSource, webAdapterSource];
+    for (const source of normalSources) {
+      expect(source).not.toContain("Original onboarding complete");
+      expect(source).not.toContain("Continue to LucaOS Web Shell");
+      expect(source).not.toContain("browser-safe mode");
+      expect(source).not.toContain("Model execution adapter is not connected yet");
+      expect(source).not.toContain("Native routes guarded");
+    }
+  });
+
 });

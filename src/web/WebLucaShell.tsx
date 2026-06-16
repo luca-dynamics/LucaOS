@@ -38,12 +38,12 @@ export function WebLucaShell({
               L.U.C.A OS
             </h1>
             <p className="text-[9px] uppercase tracking-[0.18em] text-[var(--app-text-muted)]">
-              WebBridge host
+              Luca dashboard
             </p>
           </div>
         </div>
         <span className="rounded-full border border-[var(--app-border-main)] px-3 py-1 text-[10px] uppercase tracking-widest text-[var(--app-text-muted)]">
-          {hostClass}
+          Ready
         </span>
       </header>
 
@@ -61,8 +61,7 @@ export function WebLucaShell({
             <span className="mt-2 block font-bold">Chat</span>
           </div>
           <p className="mt-6 text-[10px] leading-5">
-            Native tools remain guarded. Browser actions are exposed only
-            through WebBridge adapters.
+            Luca is ready. Ask anything or open a workspace.
           </p>
         </aside>
 
@@ -71,24 +70,24 @@ export function WebLucaShell({
         </main>
 
         <aside
-          aria-label="WebBridge status"
+          aria-label="LucaOS status"
           className="hidden border-l p-4 xl:block"
           style={{ ...lucaShellRailSurfaceStyle, ...lucaShellDividerStyle }}
         >
           <p className="text-[9px] font-bold uppercase tracking-[0.2em]">
-            Runtime context
+            Workspace status
           </p>
           <dl className="mt-4 space-y-4 text-xs">
             <div>
-              <dt className="text-[var(--app-text-muted)]">Browser routes</dt>
+              <dt className="text-[var(--app-text-muted)]">Luca Prime</dt>
               <dd className="mt-1 font-bold text-[var(--app-text-main)]">
-                {available} available
+                Preparing
               </dd>
             </div>
             <div>
-              <dt className="text-[var(--app-text-muted)]">Native routes</dt>
+              <dt className="text-[var(--app-text-muted)]">Local routes</dt>
               <dd className="mt-1 font-bold text-[var(--app-text-main)]">
-                {guardedNativeCapabilities.length} guarded
+                Connect in Settings
               </dd>
             </div>
             <div>
