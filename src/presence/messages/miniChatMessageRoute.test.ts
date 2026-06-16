@@ -17,6 +17,20 @@ describe("MiniChat Presence message routing", () => {
     expect(getMiniChatMessageText(request)).toBe("hello");
   });
 
+  it("preserves raw string MiniChat text in typed requests", () => {
+    const request = createMiniChatMessageRequest("hello");
+
+    expect(request).toEqual({ text: "hello", source: "miniChat" });
+    expect(getMiniChatMessageText(request)).toBe("hello");
+    expect(isMiniChatMessageRequest(request)).toBe(true);
+  });
+
+  it("keeps raw string requests compatible with chat-widget-message payloads", () => {
+    const request = createMiniChatMessageRequest("hello");
+
+    expect(toLegacyChatWidgetMessage(request)).toEqual({ text: "hello", source: "miniChat" });
+  });
+
   it("preserves unknown legacy fields, text, attachments, and screen context", () => {
     const payload = {
       text: "keep exact text  ",

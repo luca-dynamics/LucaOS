@@ -184,3 +184,22 @@ The next migration step is to have the dashboard consume the typed route request
 at its existing `chat-widget-message` boundary, then introduce a Presence-owned
 message route port only after parity tests prove reply, stream, model-routing,
 and approval behavior remain identical.
+
+## Known VisualCore parity items
+
+VisualCore still has a few legacy parity behaviors that are intentionally
+preserved during the Presence extraction sequence rather than fixed in this
+cleanup PR:
+
+- VisualCore packaged loading currently resolves `../dist/index.html`, while
+  Widget, Hologram, and MiniChat resolve `../../dist/index.html` from their
+  extracted window factories.
+- `close-visual-core` keeps the legacy hide/sync and close behavior preserved
+  by the extracted VisualCore IPC adapter.
+- `update-visual-core` sends `visual-core-update` before readiness branching
+  and may send another `visual-core-update` after the window is ready.
+
+These differences were not changed during extraction to avoid behavior drift.
+They should be handled in a later dedicated VisualCore parity audit PR with
+focused tests around packaged load paths, close/hide semantics, and update
+fan-out ordering.

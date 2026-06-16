@@ -24,7 +24,9 @@ export function getMiniChatMessageText(payload: unknown): string {
 }
 
 export function createMiniChatMessageRequest(payload: unknown = {}): MiniChatMessageRequest {
-  const request = cloneRecord(payload) as MiniChatMessageRequest;
+  const request = (
+    typeof payload === "string" ? { text: payload } : cloneRecord(payload)
+  ) as MiniChatMessageRequest;
   if (request.source === undefined) {
     request.source = "miniChat";
   }
