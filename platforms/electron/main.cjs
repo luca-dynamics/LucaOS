@@ -14,6 +14,13 @@ const {
     createWidgetWindow: createWidgetWindowFactory,
     createVisualCoreWindow: createVisualCoreWindowFactory
 } = require('./windows/index.cjs');
+const {
+    registerPresenceIpc,
+    registerWidgetIpc,
+    registerHologramIpc,
+    registerMiniChatIpc,
+    registerVisualCoreIpc
+} = require('./ipc/index.cjs');
 
 // [MAIN] Mission Control Service Initialization
 const MissionControl = require('./services/missionControl.cjs');
@@ -1522,52 +1529,6 @@ function createChatWindow() {
     });
 }
 
-// IPC:// IPC: Get Current Display ID for Screen Capture
-ipcMain.handle('get-current-display-id', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) return null;
-    const { x, y, width, height } = win.getBounds();
-    const display = screen.getDisplayMatching({ x, y, width, height });
-    return display.id;
-});
-
-// Resizing IPC (Widget Mode)
-ipcMain.on('switch-to-widget', () => {
-  if (mainWindow) {
-    mainWindow.hide();
-  }
-  toggleWidgetWindow(); // Use the toggle function
-});
-
-// IPC: Restore Main Window
-ipcMain.on('restore-main-window', () => {
-  if (widgetWindow) {
-    widgetWindow.close();
-  }
-  if (mainWindow) {
-    mainWindow.show();
-    mainWindow.focus();
-  } else {
-    createWindow(); // Recreate if missing
-  }
-});
-
-// IPC: Sync State (Main -> Widget)
-// App.tsx sends this, Main Process forwards to Widget
-// IPC: Sync State (Main -> Widget)
-// App.tsx sends this, Main Process forwards to Widget
-ipcMain.on('sync-widget-state', (event, state, hologramState = state) => {
-    if (widgetWindow) {
-        widgetWindow.webContents.send('widget-update', state);
-    }
-    if (chatWindow) {
-        chatWindow.webContents.send('widget-update', state);
-    }
-    if (hologramWindow) {
-        hologramWindow.webContents.send('hologram-update', hologramState);
-    }
-});
-
 // IPC: Widget Control (Widget -> Main -> App)
     // Screen Capture
     ipcMain.handle('capture-screen', async () => {
@@ -1584,95 +1545,11 @@ ipcMain.on('sync-widget-state', (event, state, hologramState = state) => {
         }
     });
 
-// IPC: Widget Voice Toggle (Widget -> Main -> Dashboard)
-ipcMain.on('widget-toggle-voice', (event, { mode, context }) => {
-    console.log(`[IPC] Widget requested voice toggle: ${mode} (Context: ${context})`);
-    // Route to Main Window (Dashboard) which has the voice infrastructure
-    if (mainWindow) {
-        mainWindow.webContents.send('trigger-voice-toggle', { 
-            mode: mode, 
-            context: context,
-            forceHud: false // Keep main HUD hidden, widget shows its own UI
-        });
-    }
-});
-
-// IPC: Widget Voice Data (App -> Main -> Widget UI)
-ipcMain.on('widget-voice-data', (event, data) => {
-    if (widgetWindow && !widgetWindow.isDestroyed()) {
-        widgetWindow.webContents.send('widget-update', data);
-    }
-    if (hologramWindow && !hologramWindow.isDestroyed()) {
-        hologramWindow.webContents.send('hologram-update', data);
-    }
-    if (chatWindow && !chatWindow.isDestroyed()) {
-        chatWindow.webContents.send('widget-update', data);
-    }
-});
-
-// IPC: Chat Widget Message (Widget -> Main -> App)
-ipcMain.on('chat-widget-message', (event, data) => {
-    console.log('[IPC] Received chat-widget-message:', data.text);
-    
-    // Forward to main window for processing
-    if (mainWindow) {
-        console.log('[IPC] Forwarding to main window');
-        mainWindow.webContents.send('chat-widget-message', data);
-    } else {
-        console.error('[IPC] Main window not available!');
-        // Send error back to chat widget
-        if (chatWindow) {
-            chatWindow.webContents.send('chat-widget-reply', 
-                'Error: Main window not available. Please open Luca first.');
-        }
-    }
-});
-
-// IPC: Chat Reply (Main -> Chat Widget)
-ipcMain.on('reply-chat-widget', (event, reply) => {
-    console.log('[IPC] Sending reply to chat widget:', reply.substring(0, 50) + '...');
-    if (chatWindow) {
-        chatWindow.webContents.send('chat-widget-reply', reply);
-    }
-});
-
-// Broadcast streaming chunks to Mini Chat Widget
-ipcMain.on('broadcast-stream-chunk', (event, data) => {
-    if (chatWindow && !chatWindow.isDestroyed()) {
-        chatWindow.webContents.send('chat-widget-stream-chunk', data);
-    }
-});
-
-
-// IPC: Close Widget Window
-ipcMain.on('chat-widget-close', () => {
-    console.log('[IPC] Closing chat widget window');
-    if (chatWindow) {
-        chatWindow.hide();
-    }
-    if (widgetWindow) {
-        widgetWindow.hide();
-    }
-});
-
 // --- VISUAL CORE WINDOW INFRASTRUCTURE (Option B: Smart Screen) ---
 
 // Queue for pending data when Smart Screen isn't ready yet
 let visualCorePendingData = null;
 let visualCoreReady = false;
-
-// Handle ready signal from Smart Screen
-ipcMain.on('visual-core-ready', () => {
-    console.log('[MAIN PROCESS] Smart Screen signaled READY');
-    visualCoreReady = true;
-    
-    // Send any pending data immediately
-    if (visualCorePendingData && visualCoreWindow) {
-        console.log('[MAIN PROCESS] Sending queued data to Smart Screen:', visualCorePendingData);
-        visualCoreWindow.webContents.send('visual-core-update', visualCorePendingData);
-        visualCorePendingData = null;
-    }
-});
 
 function createVisualCoreWindow(initialData = null) {
     if (visualCoreWindow) {
@@ -1712,73 +1589,6 @@ function createVisualCoreWindow(initialData = null) {
     });
 }
 
-// IPC: Open Visual Core (Smart Screen)
-ipcMain.on('open-visual-core', (event, data) => {
-    createVisualCoreWindow(data);
-    syncVisualCoreStatus(true);
-});
-
-// IPC: Close/Hide Visual Core
-ipcMain.on('close-visual-core', () => {
-    console.log('[MAIN PROCESS] Closing Smart Screen');
-    if (visualCoreWindow) {
-        visualCoreWindow.hide();
-        visualCorePendingData = null;
-        syncVisualCoreStatus(false);
-    }
-});
-
-// IPC: Update Visual Core Data
-ipcMain.on('update-visual-core', (event, data) => {
-    console.log('[MAIN PROCESS] Received update-visual-core IPC:', data);
-    if (visualCoreWindow) {
-        visualCoreWindow.webContents.send('visual-core-update', data);
-        if (visualCoreReady) {
-            console.log('[MAIN PROCESS] Smart Screen is ready, sending directly');
-            visualCoreWindow.webContents.send('visual-core-update', data);
-        } else {
-            console.log('[MAIN PROCESS] Smart Screen not ready, queuing data');
-            visualCorePendingData = data;
-        }
-        if (!visualCoreWindow.isVisible()) {
-            visualCoreWindow.show();
-            syncVisualCoreStatus(true);
-        }
-        visualCoreWindow.focus();
-    } else {
-        console.log('[MAIN PROCESS] Creating new Smart Screen window with data');
-        createVisualCoreWindow(data);
-        syncVisualCoreStatus(true);
-    }
-});
-
-// [SOVEREIGN SYNC] Broadcast app state to all auxiliary windows
-ipcMain.on('broadcast-app-state', (event, state) => {
-    if (visualCoreWindow && !visualCoreWindow.isDestroyed()) {
-        visualCoreWindow.webContents.send('sync-app-state', state);
-    }
-    if (widgetWindow && !widgetWindow.isDestroyed()) {
-        widgetWindow.webContents.send('sync-app-state', state);
-    }
-    if (chatWindow && !chatWindow.isDestroyed()) {
-        chatWindow.webContents.send('sync-app-state', state);
-    }
-});
-
-// [INTERACTION FEEDBACK] Send VisualCore actions back to the brain
-ipcMain.on('visual-core-interaction', (event, interaction) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('visual-core-feedback', interaction);
-    }
-});
-
-// [AUTONOMY] Luca remotely controls the Smart Screen
-ipcMain.on('visual-core-command', (event, command) => {
-    if (visualCoreWindow && !visualCoreWindow.isDestroyed()) {
-        visualCoreWindow.webContents.send('visual-core-remote-control', command);
-    }
-});
-
 function syncVisualCoreStatus(isVisible) {
     const status = { isVisible };
     if (mainWindow) mainWindow.webContents.send('visual-core-status', status);
@@ -1786,37 +1596,55 @@ function syncVisualCoreStatus(isVisible) {
     if (chatWindow) chatWindow.webContents.send('widget-visual-status', status);
 }
 
-// Chat Widget Resize Logic
-ipcMain.on('chat-widget-resize', (event, { height, resizable }) => {
-    if (chatWindow) {
-        const [currentW] = chatWindow.getSize();
-        
-        if (resizable) {
-            // Resizable mode: Set reasonable min/max limits for BOTH width and height
-            chatWindow.setMinimumSize(300, 200); // Min: 300x200
-            chatWindow.setMaximumSize(1000, 900); // Max: 1000x900
-        } else {
-            // Fixed mode (e.g., compact): Lock to exact height
-            chatWindow.setMinimumSize(300, height);
-            chatWindow.setMaximumSize(1000, height);
-        }
-        
-        chatWindow.setSize(currentW, height, true); // true = animate
-        
-        if (typeof resizable === 'boolean') {
-            chatWindow.setResizable(resizable);
-        }
-    }
+registerPresenceIpc({
+    ipcMain,
+    getWidgetWindow: () => widgetWindow,
+    getChatWindow: () => chatWindow,
+    getHologramWindow: () => hologramWindow,
+    getVisualCoreWindow: () => visualCoreWindow
 });
 
-// IPC: Close Visual Core
-ipcMain.on('close-visual-core', () => {
-    if (visualCoreWindow) {
-        visualCoreWindow.close(); // Actually close it to free resources? Or Hide?
-        // For a widget, hiding is often better for quick toggle, but closing saves RAM.
-        // Let's stick to close() for now as implemented, or hide() if user wants persistence.
-        // User currently has 'close-visual-core' doing .close()
-    }
+registerWidgetIpc({
+    ipcMain,
+    getWidgetWindow: () => widgetWindow,
+    getChatWindow: () => chatWindow,
+    getHologramWindow: () => hologramWindow,
+    getMainWindow: () => mainWindow,
+    toggleWidgetWindow,
+    logger: console
+});
+
+registerMiniChatIpc({
+    ipcMain,
+    getWidgetWindow: () => widgetWindow,
+    getChatWindow: () => chatWindow,
+    getMainWindow: () => mainWindow,
+    createMainWindow: createWindow,
+    logger: console
+});
+
+registerHologramIpc({
+    ipcMain,
+    getHologramWindow: () => hologramWindow
+});
+
+registerVisualCoreIpc({
+    ipcMain,
+    BrowserWindow,
+    screen,
+    getVisualCoreWindow: () => visualCoreWindow,
+    createVisualCoreWindow,
+    getVisualCorePendingData: () => visualCorePendingData,
+    setVisualCorePendingData: (data) => {
+        visualCorePendingData = data;
+    },
+    getVisualCoreReady: () => visualCoreReady,
+    setVisualCoreReady: (ready) => {
+        visualCoreReady = ready;
+    },
+    syncVisualCoreStatus,
+    getMainWindow: () => mainWindow,
+    logger: console
 });
 
 function toggleVisualCoreWindow() {
@@ -1857,13 +1685,6 @@ function createGhostBrowserWindow(url = 'https://google.com') {
 
 ipcMain.on('open-browser', (event, { url }) => {
     createGhostBrowserWindow(url);
-});
-
-// IPC: Hologram HUD Intent Forwarding
-ipcMain.on('hologram-intent', (event, intent) => {
-    if (hologramWindow) {
-        hologramWindow.webContents.send('hologram-intent', intent);
-    }
 });
 
 // --- KEYBOARD & ACCESSIBILITY IPC ---
