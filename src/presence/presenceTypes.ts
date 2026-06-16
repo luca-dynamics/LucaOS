@@ -40,10 +40,15 @@ export interface PresenceSensorState {
 export type PresenceApprovalStatus = "none" | "pending" | "approved" | "denied" | "expired";
 
 export interface PresenceApprovalPrompt {
-  requestId: string;
-  summary: string;
-  requiresFocus: boolean;
-  riskLevel?: "low" | "medium" | "high" | "critical";
+  requestId?: string;
+  id?: string;
+  title?: string;
+  description?: string;
+  summary?: string;
+  requiresFocus?: boolean;
+  riskLevel?: "low" | "medium" | "high" | "critical" | (string & {});
+  status?: PresenceApprovalStatus | string;
+  [key: string]: unknown;
 }
 
 export interface PresenceApprovalState {

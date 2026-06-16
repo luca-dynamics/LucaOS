@@ -1,3 +1,4 @@
+import { createPresenceApprovalPrompt, toLegacyApprovalRequest } from "./approvals";
 import { createPresenceSnapshot, defaultPresenceRuntimeState } from "./presenceState";
 import type { PresenceElevationState, PresenceRuntimeState, PresenceSnapshot } from "./presenceTypes";
 
@@ -54,7 +55,16 @@ export function fromWidgetUpdatePayload(payload: LegacyPresencePayload): Presenc
     intent: payload.intent ?? null,
     elevationState: normalizeElevationState(payload.elevationState),
   };
-  return createPresenceSnapshot(state);
+  const snapshot = createPresenceSnapshot(state);
+  const approvalPrompt = createPresenceApprovalPrompt(payload.approvalRequest);
+  if (!approvalPrompt) return snapshot;
+  return {
+    ...snapshot,
+    approval: {
+      status: approvalPrompt.status === "none" ? "none" : "pending",
+      prompt: approvalPrompt,
+    },
+  };
 }
 
 export function toWidgetUpdatePayload(snapshot: PresenceSnapshot): LegacyPresencePayload {
@@ -70,6 +80,9 @@ export function toWidgetUpdatePayload(snapshot: PresenceSnapshot): LegacyPresenc
     themeHex: snapshot.themeHex,
     intent: snapshot.intent,
     elevationState: denormalizeElevationState(snapshot.elevationState),
+    ...(snapshot.approval.prompt
+      ? { approvalRequest: toLegacyApprovalRequest(snapshot.approval.prompt) }
+      : {}),
   };
 }
 

@@ -203,3 +203,37 @@ These differences were not changed during extraction to avoid behavior drift.
 They should be handled in a later dedicated VisualCore parity audit PR with
 focused tests around packaged load paths, close/hide semantics, and update
 fan-out ordering.
+
+## Presence approval routing foundation
+
+Presence now includes a typed, pure approval routing layer under
+`src/presence/approvals/`. The layer defines approval prompt, request,
+decision, source, status, and route-envelope contracts for the current MiniChat
+and dashboard approval handoff, including legacy fields such as `id`,
+`requestId`, titles/summaries/descriptions, tool/action identifiers, command
+and argument previews, risk level, permissions, metadata, timestamps, source,
+status, and unknown extension fields.
+
+The approval helpers normalize raw legacy approval payloads without mutating
+inputs, preserve unknown fields, tolerate partially populated objects, expose
+small selectors for approval IDs and display text, and convert typed prompts
+back to the existing legacy `approvalRequest` field. Compatibility adapters and
+MiniChat bridge selectors route approval prompts through these helpers, but the
+outgoing field name remains `approvalRequest` for current Electron, React, and
+surface consumers.
+
+This foundation intentionally does not move approval execution ownership. The
+dashboard/action system still owns tool execution, permission policy, approval
+resolution side effects, and IPC handlers. MiniChat continues to display the
+same approval UI and approval/decline actions still travel through the existing
+channels and execution path.
+
+Behavior intentionally unchanged: approval button behavior, tool permission
+policy, IPC channel names, MiniChat message routing, wake-word routing, voice
+runtime ownership, Hologram/Widget rendering, and Electron window factories all
+remain legacy-owned.
+
+The next migration step is to feed dashboard-created approval prompts into a
+Presence-owned approval route port while keeping `approvalRequest` as the
+compatibility payload until all MiniChat, Hologram, Widget, LucaLink, and
+dashboard consumers have parity coverage.

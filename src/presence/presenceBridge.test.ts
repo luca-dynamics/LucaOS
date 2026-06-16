@@ -138,8 +138,8 @@ describe("Presence surface bridges", () => {
 
   it("falls back to the preserved legacy MiniChat approval payload", () => {
     const payload = createLegacyPayload();
-    const snapshot = createMiniChatPresenceSnapshot(payload);
+    const snapshot = createMiniChatPresenceSnapshot({});
 
-    expect(getMiniChatApprovalPrompt(snapshot, payload)).toBe(payload.approvalRequest);
+    expect(getMiniChatApprovalPrompt(snapshot, payload)).toEqual(payload.approvalRequest);
   });
 });
