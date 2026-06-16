@@ -93,31 +93,32 @@ changes. Once all surfaces consume the centralized adapters, their duplicate
 legacy parsing can be removed without changing transport channels or native
 window behavior.
 
-## Electron window factory extraction
+## Surface bridge adoption
 
-Presence-related Electron window creation is now split into dedicated CommonJS
-factory modules under `platforms/electron/windows/`:
+The existing surface consumers now use the pure Presence bridge helpers at
+their legacy transport boundaries. `useSatelliteState` converts Electron
+`widget-update` and `hologram-update` payloads, plus LucaLink `UI_STATE_SYNC`
+payloads, through the Widget snapshot and dictation selectors while preserving
+the hook's current return shape and partial-update defaults. MiniChat converts
+its `widget-update` payload through the MiniChat snapshot and approval
+selectors. Hologram and Widget derive their existing voice display and
+dictation values from their surface selectors.
 
-- `createMiniChatWindow.cjs` creates the existing MiniChat BrowserWindow.
-- `createHologramWindow.cjs` creates the existing Hologram BrowserWindow.
-- `createWidgetWindow.cjs` creates the existing dictation Widget BrowserWindow.
-- `createVisualCoreWindow.cjs` creates the existing Visual Core / Smart Screen BrowserWindow.
-- `index.cjs` re-exports the factory functions for `main.cjs`.
+The dashboard synchronization loop also uses the Widget and Hologram bridge
+output helpers instead of calling the lower-level compatibility conversions
+directly. Unknown legacy fields, including current brain/model identifiers and
+approval data, remain merged into outgoing payloads. LucaLink-specific output
+conversion remains on its existing compatibility helper.
 
-This extraction intentionally preserves the current BrowserWindow dimensions,
-positioning, transparency, focusability, always-on-top and workspace behavior,
-preload configuration, route query strings, development and packaged URL
-handling, ready-to-show callbacks, close cleanup, and existing logging. The
-factories receive Electron and runtime dependencies from `main.cjs` instead of
-importing broad process globals, which keeps this step extraction-only and makes
-the next boundaries easier to review.
+This removes duplicate interpretation of transcript, transcript source,
+listening/VAD, speaking, amplitude, status, persona, theme, intent, and
+approval fields from the surface-side update paths. Partial legacy updates
+still retain their previous values, and no dashboard, focus, or visibility
+state is added to the surface payloads.
 
-`platforms/electron/main.cjs` still owns all Presence IPC handlers, tray and
-hotkey actions, wake-word and voice routing, sensor permissions, Visual Core
-state queues, and top-level window references. No IPC channel names, wake-word
-behavior, MiniChat/Hologram/Widget rendering, voice runtime ownership, or tray
-labels/actions changed as part of this extraction.
-
-The next migration step is to extract Presence IPC adapter registration behind
-similarly injected dependencies while keeping existing channels and routing
-behavior stable.
+IPC channels, Electron fan-out, wake-word routing, focus behavior, voice
+runtime ownership, MiniChat message and approval execution, sensor permission
+behavior, rendering, layout, styling, and copy intentionally remain unchanged.
+The next migration step is to replace the compatibility snapshots with a
+runtime-owned Presence subscription while retaining these bridges as the
+surface view-model boundary.
