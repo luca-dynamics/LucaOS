@@ -122,3 +122,31 @@ behavior, rendering, layout, styling, and copy intentionally remain unchanged.
 The next migration step is to replace the compatibility snapshots with a
 runtime-owned Presence subscription while retaining these bridges as the
 surface view-model boundary.
+
+## Electron Presence IPC extraction
+
+Presence-related Electron IPC registration now lives in injected CommonJS
+adapters under `platforms/electron/ipc/` instead of being registered inline in
+`platforms/electron/main.cjs`. The extracted adapters register the existing
+Presence fan-out (`sync-widget-state`), Widget voice and visibility routing,
+MiniChat message/reply/resize/restore routing, Hologram intent forwarding, and
+VisualCore/Smart Screen ready/open/close/update/interaction/command display
+routing. The `get-current-display-id` handler moved with the VisualCore adapter
+because it is currently used by screen-context surfaces.
+
+`main.cjs` still owns BrowserWindow references, window factory calls, tray and
+global shortcut orchestration, wake-word summon routing, voice-runtime fallback
+behavior, LucaLink/device state, process cleanup, and app lifecycle. The IPC
+adapters receive getters and callbacks for those owners rather than importing or
+mutating main-process globals directly.
+
+Behavior is intentionally unchanged: IPC channel names, payload shapes,
+MiniChat semantics, Widget focus behavior, Hologram-first wake-word routing,
+VisualCore queuing/status behavior, and voice runtime ownership remain the same.
+The legacy double registration of `close-visual-core` is preserved inside the
+VisualCore IPC adapter so extraction does not change the close/hide sequence in
+this PR.
+
+The next migration step is to add parity tests around the extracted adapters and
+then progressively replace legacy payload fan-out with Presence runtime events
+once runtime ownership moves out of the dashboard renderer.
