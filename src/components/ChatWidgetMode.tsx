@@ -24,6 +24,10 @@ import {
   getMiniChatApprovalPrompt,
   type MiniChatLegacyPayload,
 } from "../presence/bridges";
+import {
+  createMiniChatMessageRequest,
+  toLegacyChatWidgetMessage,
+} from "../presence/messages";
 
 interface ChatWidgetState {
   history: {
@@ -260,11 +264,16 @@ const ChatWidgetMode: React.FC = () => {
 
       if (prompt && window.electron?.ipcRenderer) {
         console.log("[MINI-CHAT] 🌅 Awakening pulse fired");
-        // @ts-ignore
-        window.electron.ipcRenderer.send("chat-widget-message", {
+        const request = createMiniChatMessageRequest({
           text: prompt,
+          source: "miniChat",
           isAwakeningPulse: true,
         });
+        // @ts-ignore
+        window.electron.ipcRenderer.send(
+          "chat-widget-message",
+          toLegacyChatWidgetMessage(request),
+        );
       }
     };
 
@@ -668,12 +677,17 @@ const ChatWidgetMode: React.FC = () => {
         const displayId = await window.electron.ipcRenderer.invoke(
           "get-current-display-id",
         );
-        // @ts-ignore
-        window.electron.ipcRenderer.send("chat-widget-message", {
+        const request = createMiniChatMessageRequest({
           text: cmd,
+          source: "miniChat",
           image: finalAttachment, // Send the image (from Eye or Upload)
           displayId,
         });
+        // @ts-ignore
+        window.electron.ipcRenderer.send(
+          "chat-widget-message",
+          toLegacyChatWidgetMessage(request),
+        );
       }
     };
     handleSend();
@@ -781,10 +795,15 @@ const ChatWidgetMode: React.FC = () => {
                   history: [...prev.history, { sender: "user", text: prompt }],
                   isProcessing: true,
                 }));
-                // @ts-ignore
-                window.electron.ipcRenderer.send("chat-widget-message", {
+                const request = createMiniChatMessageRequest({
                   text: prompt,
+                  source: "miniChat",
                 });
+                // @ts-ignore
+                window.electron.ipcRenderer.send(
+                  "chat-widget-message",
+                  toLegacyChatWidgetMessage(request),
+                );
                 setInput("");
                 setShowChips(false);
               }
