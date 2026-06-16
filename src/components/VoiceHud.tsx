@@ -8,6 +8,7 @@ import { getAllTools, PersonaType } from "../services/lucaService";
 import VoiceVisualizer from "./voice/VoiceVisualizer";
 import VoiceControls from "./voice/VoiceControls";
 import VoiceStatusOrb from "./voice/VoiceStatusOrb";
+import VoiceHudPresentation, { type VoiceHudPresentationState } from "./voice/VoiceHudPresentation";
 import TacticalStream from "./visual/TacticalStream";
 import { THEME_PALETTE, MISSION_COLORS } from "../config/themeColors";
 import { MissionScope } from "../services/toolRegistry";
@@ -227,6 +228,18 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
 
   if (!isActive || !isVisible) return null;
 
+  const presentationState: VoiceHudPresentationState = realtimeLastError
+    ? "unavailable"
+    : isVadActive
+      ? "listening"
+      : transcriptSource === "model" && isSpeaking
+        ? "speaking"
+        : statusMessage?.toLowerCase().includes("thinking") || statusMessage?.toLowerCase().includes("processing")
+          ? "thinking"
+          : realtimeStatus?.toLowerCase().includes("request") || realtimeStatus?.toLowerCase().includes("connect")
+            ? "requesting"
+            : "ready";
+
   return (
     <div
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center animate-in fade-in duration-500"
@@ -243,6 +256,18 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
           : `blur(var(--app-bg-blur, 40px))`,
       }}
     >
+      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+        <VoiceHudPresentation
+          state={presentationState}
+          title={transcriptSource === "model" ? "Luca is responding." : "Luca is listening."}
+          subtitle={statusMessage || telemetrySummary || undefined}
+          transcript={transcriptSource === "user" ? transcript : undefined}
+          assistantText={transcriptSource === "model" ? transcript : undefined}
+          micAvailable={!realtimeLastError}
+          themeColor={(THEME_PALETTE[persona as keyof typeof THEME_PALETTE] || THEME_PALETTE.RUTHLESS).primary}
+          compact={transparentBackground}
+        />
+      </div>
       {/* Liquid Organic Noise Layer */}
       <div className="glass-noise" />
       {/* Video Stream Element */}
