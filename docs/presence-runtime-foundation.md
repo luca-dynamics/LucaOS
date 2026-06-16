@@ -92,3 +92,32 @@ React and application synchronization boundaries in small parity-tested
 changes. Once all surfaces consume the centralized adapters, their duplicate
 legacy parsing can be removed without changing transport channels or native
 window behavior.
+
+## Electron window factory extraction
+
+Presence-related Electron window creation is now split into dedicated CommonJS
+factory modules under `platforms/electron/windows/`:
+
+- `createMiniChatWindow.cjs` creates the existing MiniChat BrowserWindow.
+- `createHologramWindow.cjs` creates the existing Hologram BrowserWindow.
+- `createWidgetWindow.cjs` creates the existing dictation Widget BrowserWindow.
+- `createVisualCoreWindow.cjs` creates the existing Visual Core / Smart Screen BrowserWindow.
+- `index.cjs` re-exports the factory functions for `main.cjs`.
+
+This extraction intentionally preserves the current BrowserWindow dimensions,
+positioning, transparency, focusability, always-on-top and workspace behavior,
+preload configuration, route query strings, development and packaged URL
+handling, ready-to-show callbacks, close cleanup, and existing logging. The
+factories receive Electron and runtime dependencies from `main.cjs` instead of
+importing broad process globals, which keeps this step extraction-only and makes
+the next boundaries easier to review.
+
+`platforms/electron/main.cjs` still owns all Presence IPC handlers, tray and
+hotkey actions, wake-word and voice routing, sensor permissions, Visual Core
+state queues, and top-level window references. No IPC channel names, wake-word
+behavior, MiniChat/Hologram/Widget rendering, voice runtime ownership, or tray
+labels/actions changed as part of this extraction.
+
+The next migration step is to extract Presence IPC adapter registration behind
+similarly injected dependencies while keeping existing channels and routing
+behavior stable.
