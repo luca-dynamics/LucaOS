@@ -75,6 +75,11 @@ Companion approval notifications can be converted into side-effect-free LucaLink
 ## Dashboard Operation Center summary
 
 These model outputs can be represented as normalized, read-only cards in the Dashboard Operation Center. Summarization is informational only: it does not send, execute, approve, persist, or mutate LucaLink runtime state.
+=======
+ 
+## Dashboard Operation Center summary
+
+These model outputs can be represented as normalized, read-only cards in the Dashboard Operation Center. Summarization is informational only: it does not send, execute, approve, persist, or mutate LucaLink runtime state.
 
 ## Adapter file-write and install boundary
 

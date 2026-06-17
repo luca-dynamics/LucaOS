@@ -102,6 +102,12 @@ export interface TransportPermissionDecisionSummary extends SafeSummaryBase {
   hostId?: string;
 }
 
+export interface AdapterFileInstallDecisionSummary extends SafeSummaryBase {
+  requestId?: string;
+  hostId?: string;
+}
+
+ 
 const statusMap: Record<string, SafeStatus> = {
   action_required: "pending",
   allowed_preview: "model_only",
