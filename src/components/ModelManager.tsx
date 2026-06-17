@@ -16,6 +16,7 @@ import { createProviderHubPanelViewModel, type ProviderHubPanelCardViewModel, ty
 import { createProviderHubSettingsSnapshots } from "../model-router/providerHubSettingsSnapshot";
 import { createProviderHubConfigureIntentFromCard, type LucaProviderHubConfigureIntent } from "../model-router/providerHubConfigureIntent";
 import { createProviderHubSettingsPatch, getProviderHubSafeKeyStatus, providerHubApiKeyField, providerHubBaseUrlField } from "../model-router/providerHubConfiguration";
+import { canTestProviderHubConnection, testProviderHubConnection, type LucaProviderHubConnectionTestResult } from "../model-router/providerHubConnectionTest";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -162,8 +163,20 @@ const ProviderHubConfigurationPanel: React.FC<{
   const [baseUrl, setBaseUrl] = useState(String((settings.brain as any)[providerHubBaseUrlField[card.entry.providerId] ?? ""] ?? card.entry.defaultBaseUrl ?? ""));
   const [modelId, setModelId] = useState(card.configuredModelId ?? (card.entry.providerId === "custom_openai_compatible" ? settings.brain.customOpenAiCompatibleModel : settings.brain.model) ?? "");
   const [enabled, setEnabled] = useState(card.readiness.state !== "disabled");
+  const [connectionTestResult, setConnectionTestResult] = useState<LucaProviderHubConnectionTestResult | null>(null);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const isManaged = intent.intentKind === "connect_managed";
   const isLocal = card.entry.category === "local_runtime";
+  const savedApiKeyField = providerHubApiKeyField[card.entry.providerId];
+  const savedApiKey = savedApiKeyField ? String((settings.brain as any)[savedApiKeyField] ?? "") : "";
+  const testAvailability = canTestProviderHubConnection({ providerId: card.entry.providerId, apiKey, savedApiKey, baseUrl });
+
+  const runConnectionTest = async () => {
+    setIsTestingConnection(true);
+    const result = await testProviderHubConnection({ providerId: card.entry.providerId, apiKey, savedApiKey, baseUrl });
+    setConnectionTestResult(result);
+    setIsTestingConnection(false);
+  };
 
   const save = async () => {
     await settingsService.saveSettings(createProviderHubSettingsPatch(settingsService.getSettings(), {
@@ -214,6 +227,27 @@ const ProviderHubConfigurationPanel: React.FC<{
               <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} /> Enabled
             </label>
           )}
+          <div className="rounded-lg border p-3 text-[10px]" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)", color: "var(--app-text-muted)" }}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="font-bold" style={{ color: "var(--app-text-main)" }}>Manual connection test</div>
+                <div className="mt-1">{isManaged ? "Luca Prime is managed by LucaOS; no user API-key test is available." : isLocal ? "Manual runtime check coming later. LucaOS will not start local runtimes from this panel." : testAvailability.reason ?? "Runs only when you click. Uses a minimal provider endpoint and never changes runtime routing."}</div>
+              </div>
+              {!isManaged && !isLocal && (
+                <button type="button" onClick={runConnectionTest} disabled={!testAvailability.canTest || isTestingConnection} className="px-3 py-2 rounded text-[10px] font-bold disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: testAvailability.canTest ? "#050505" : "var(--app-text-muted)", backgroundColor: testAvailability.canTest ? theme.hex : "var(--app-bg-main)" }}>
+                  {isTestingConnection ? "Testing…" : "Test connection"}
+                </button>
+              )}
+            </div>
+            {connectionTestResult && (
+              <div className="mt-3 rounded border p-2 font-mono" style={{ borderColor: "var(--app-border-main)", color: connectionTestResult.status === "success" ? theme.hex : "var(--app-text-muted)" }}>
+                <div>Status: {connectionTestResult.status}</div>
+                <div className="mt-1 whitespace-pre-wrap">{connectionTestResult.message}</div>
+                <div className="mt-1">Checked: {new Date(connectionTestResult.checkedAt).toLocaleString()}</div>
+                {connectionTestResult.latencyMs !== undefined && <div>Latency: {connectionTestResult.latencyMs}ms</div>}
+              </div>
+            )}
+          </div>
         </div>
         <div className="p-4 border-t flex justify-end gap-2" style={{ borderColor: "var(--app-border-main)" }}>
           <button type="button" onClick={onClose} className="px-3 py-2 rounded text-xs" style={{ color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>Cancel</button>
