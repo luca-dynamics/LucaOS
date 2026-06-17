@@ -127,6 +127,31 @@ describe("Presence surface bridges", () => {
     expect(payload.elevationState.authorizedMissionIds).toBeInstanceOf(Set);
   });
 
+
+  it("keeps Hologram and Widget voice selectors compatible with safe display defaults", () => {
+    const snapshot = createWidgetPresenceSnapshot({
+      transcriptSource: "assistant-preview" as never,
+      status: "future-status",
+    });
+
+    expect(getHologramVoiceDisplayState(snapshot)).toEqual({
+      status: "idle",
+      transcript: "",
+      transcriptSource: "user",
+      isListening: false,
+      isSpeaking: false,
+      amplitude: 0,
+    });
+    expect(getWidgetDictationState(snapshot)).toEqual({
+      status: "idle",
+      transcript: "",
+      transcriptSource: "user",
+      isListening: false,
+      isSpeaking: false,
+      amplitude: 0,
+    });
+  });
+
   it("narrows future transcript sources at the legacy widget payload boundary", () => {
     const snapshot = createWidgetPresenceSnapshot({
       transcript: "Custom source",
