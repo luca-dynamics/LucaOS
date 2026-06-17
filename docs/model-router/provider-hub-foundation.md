@@ -4,11 +4,12 @@ This document describes the foundation-only Provider Hub layers under `src/model
 
 ## Scope of this foundation
 
-Provider Hub currently has three separate responsibilities:
+Provider Hub currently has four separate responsibilities:
 
 1. **Registry metadata** in `src/model-router/providerHubRegistry.ts` describes known provider identities, labels, categories, aliases, capabilities, task support, connection posture, and display metadata.
 2. **Readiness evaluation** in `src/model-router/providerHubReadiness.ts` applies pure status logic to explicit `LucaProviderHubConnectionSnapshot` values.
 3. **Settings snapshot adaptation** in `src/model-router/providerHubSettingsSnapshot.ts` converts explicit, normalized settings/key/runtime-availability inputs into Provider Hub connection snapshots and readiness results.
+4. **Configure intent contracts** in `src/model-router/providerHubConfigureIntent.ts` convert registry/readiness/card/view-model state into typed, read-only configure intents for future UI affordances.
 
 This foundation does **not**:
 
@@ -62,6 +63,22 @@ The adapter:
 
 `createProviderHubReadinessFromSettings(input, options?)` composes the adapter with `evaluateProviderHubReadinessForAll(...)`. It exists only as a convenience for display/readiness surfaces and does not change execution routing.
 
+## Configure intent contract responsibilities
+
+`src/model-router/providerHubConfigureIntent.ts` adds a typed intent boundary for future Provider Hub configuration affordances. It can describe that a provider should be reviewed, a user key should be added, a custom base URL should be set, a local runtime should be started manually, a supported model should be selected, or a provider is unsupported from the current readiness state. These intents are contracts only: they do not save keys, write settings, call provider APIs, test provider connections, instantiate adapters, modify runtime routing, or start local runtimes.
+
+The configure intent helpers are pure and deterministic:
+
+- `createProviderHubConfigureIntent(entry, readiness)` builds an intent from a registry entry and readiness result;
+- `createProviderHubConfigureIntentFromCard(card)` builds the same intent from an existing Provider Hub panel card;
+- `createProviderHubConfigureIntentsFromViewModel(viewModel)` creates intents for all cards in an existing Provider Hub panel view model;
+- `getProviderHubConfigureIntentKind(readiness)` maps readiness state to a safe intent kind;
+- `createProviderHubConfigureIntentDiagnostics(intent)` emits safe diagnostics text.
+
+Luca Prime produces a managed review intent and never requests a user API key. Missing cloud keys produce `add_api_key`; missing custom OpenAI-compatible base URLs produce `set_base_url`; unavailable Ollama/LM Studio/local runtimes produce `start_local_runtime`; unsupported task/capability and unknown provider states produce `unsupported`; disabled providers produce a review or unsupported posture based on the readiness state. Every intent carries explicit false flags for side effects, settings writes, provider API calls, and runtime startup.
+
+Configure intent diagnostics may include provider identity, label, category, readiness state, required action, intent kind, supported tasks, capability summaries, and the false side-effect flags. They must not include API keys, raw secrets, environment values, local storage values, request bodies, raw headers, or provider API responses.
+
 ## Product architecture boundaries
 
 Provider Hub is not replacing MCP, plugins, or connectors. Provider Hub describes where intelligence can come from and whether an explicit connection snapshot is sufficient for a provider to be considered usable. MCP/plugins/connectors remain the action layer: tools, app integrations, external capabilities, and side-effecting operations.
@@ -83,4 +100,4 @@ Future PRs can wire this metadata into:
 5. voice, vision, memory, code, tool-planning, and long-context route planning;
 6. Operation Center route traces so users can see requested task, selected provider, fallback posture, privacy/latency/cost fit, and required actions.
 
-Until those migrations land, the registry, readiness evaluator, and settings snapshot adapter remain documentation, typed metadata, and pure read-only bridge utilities only.
+Until those migrations land, the registry, readiness evaluator, settings snapshot adapter, and configure intent contracts remain documentation, typed metadata, and pure read-only bridge utilities only.
