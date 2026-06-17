@@ -2,7 +2,12 @@ import { createPresenceApprovalPrompt, toLegacyApprovalRequest } from "./approva
 import { createPresenceSnapshot, defaultPresenceRuntimeState } from "./presenceState";
 import type { PresenceElevationState, PresenceRuntimeState, PresenceSnapshot } from "./presenceTypes";
 import { createPresenceSensorRouteState, toPresenceCapabilityStatus } from "./sensors";
-import { createPresenceVoiceActivityEvent, toLegacyVoiceUpdatePayload } from "./voice";
+import {
+  createPresenceVoiceActivityEvent,
+  toLegacyVoiceTranscriptSource,
+  toLegacyVoiceUpdatePayload,
+  toPresenceVoiceDisplayStatus,
+} from "./voice";
 
 export interface LegacyPresencePayload {
   transcript?: string;
@@ -42,10 +47,6 @@ function denormalizeElevationState(value: PresenceElevationState | undefined) {
   return { ...value, authorizedMissionIds: [...value.authorizedMissionIds] };
 }
 
-function toLegacyTranscriptSource(value: unknown): "user" | "model" {
-  return value === "model" ? "model" : "user";
-}
-
 export function fromWidgetUpdatePayload(payload: LegacyPresencePayload): PresenceSnapshot {
   const sensorRouteState = createPresenceSensorRouteState({
     ...(payload.sensors && typeof payload.sensors === "object" ? payload.sensors : {}),
@@ -58,9 +59,9 @@ export function fromWidgetUpdatePayload(payload: LegacyPresencePayload): Presenc
     revision: 1,
     voice: {
       ...defaultPresenceRuntimeState.voice,
-      status: (voice.status as PresenceRuntimeState["voice"]["status"]) ?? defaultPresenceRuntimeState.voice.status,
+      status: toPresenceVoiceDisplayStatus(voice.status),
       transcript: voice.transcript ?? "",
-      transcriptSource: (voice.transcriptSource as PresenceRuntimeState["voice"]["transcriptSource"]) ?? "user",
+      transcriptSource: toLegacyVoiceTranscriptSource(voice.transcriptSource),
       isListening: voice.isVadActive ?? voice.isListening ?? false,
       isSpeaking: voice.isSpeaking ?? false,
       amplitude: voice.amplitude ?? 0,
@@ -92,14 +93,14 @@ export function toWidgetUpdatePayload(snapshot: PresenceSnapshot): LegacyPresenc
   return {
     ...toLegacyVoiceUpdatePayload({
       transcript: snapshot.voice.transcript,
-      transcriptSource: toLegacyTranscriptSource(snapshot.voice.transcriptSource),
+      transcriptSource: toLegacyVoiceTranscriptSource(snapshot.voice.transcriptSource),
       isListening: snapshot.voice.isListening,
       isVadActive: snapshot.voice.isListening,
       isSpeaking: snapshot.voice.isSpeaking,
       amplitude: snapshot.voice.amplitude,
       status: snapshot.voice.status,
     }),
-    transcriptSource: toLegacyTranscriptSource(snapshot.voice.transcriptSource),
+    transcriptSource: toLegacyVoiceTranscriptSource(snapshot.voice.transcriptSource),
     persona: snapshot.persona,
     themeHex: snapshot.themeHex,
     intent: snapshot.intent,

@@ -8,7 +8,7 @@ import {
   getPresenceSensorDisclosure,
 } from "../presenceDisclosurePolicy";
 import type { PresenceSnapshot } from "../presenceTypes";
-import { createPresenceVoiceActivityEvent } from "../voice";
+import { toWidgetDictationState } from "../voice";
 
 export type WidgetLegacyPayload = LegacyPresencePayload;
 
@@ -40,15 +40,7 @@ export function toWidgetUpdate(
 export function getWidgetDictationState(
   snapshot: PresenceSnapshot,
 ): WidgetDictationState {
-  const voice = createPresenceVoiceActivityEvent(snapshot.voice);
-  return {
-    transcript: voice.transcript ?? "",
-    transcriptSource: voice.transcriptSource as WidgetDictationState["transcriptSource"],
-    isListening: voice.isListening ?? false,
-    isSpeaking: voice.isSpeaking ?? false,
-    amplitude: voice.amplitude ?? 0,
-    status: voice.status as WidgetDictationState["status"],
-  };
+  return toWidgetDictationState(snapshot.voice);
 }
 
 export function getWidgetDisclosureState(snapshot: PresenceSnapshot) {

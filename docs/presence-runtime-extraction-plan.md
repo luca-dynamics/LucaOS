@@ -104,17 +104,12 @@ The tables distinguish **observed current behavior** from the desired runtime ow
 Voice extraction should proceed in explicit phases to avoid moving runtime
 ownership before the route contract is stable:
 
-1. Add the typed route boundary for current toggle, activity, transcript, and
-   fallback payloads.
-2. Adopt the route helpers in renderer bridges while preserving their external
-   return shapes.
-3. Add Electron adapter parity for the existing channels without renaming IPC.
-4. Move canonical listening/transcript/activity state into the runtime.
-5. Migrate provider selection and fallback behind runtime-owned capability
-   ports.
-6. Fully decouple dashboard voice execution from Presence surfaces once parity
-   coverage proves wake-word, VAD, HUD, Widget, Hologram, and MiniChat behavior
-   unchanged.
+1. typed route boundary ✅
+2. renderer bridge adoption ✅
+3. Electron voice adapter parity tests ⏭️
+4. runtime-owned voice state ⏭️
+5. provider/fallback migration ⏭️
+6. dashboard decoupling ⏭️
 
 ### 4.3 State synchronization (`widget-update`, `hologram-update`, approvals, LucaLink)
 

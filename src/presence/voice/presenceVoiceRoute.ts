@@ -1,4 +1,3 @@
-import type { PresenceVoiceState } from "../presenceTypes";
 import type {
   PresenceVoiceActivityEvent,
   PresenceVoiceLegacyFields,
@@ -64,7 +63,7 @@ export function toLegacyVoiceTogglePayload(
 }
 
 export function toLegacyVoiceUpdatePayload(
-  voice: Partial<PresenceVoiceState> & PresenceVoiceLegacyFields,
+  voice: PresenceVoiceLegacyFields,
   legacyPayload: PresenceVoiceLegacyFields = {},
 ): PresenceVoiceLegacyFields {
   const normalized = createPresenceVoiceActivityEvent(voice);

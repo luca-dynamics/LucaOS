@@ -152,6 +152,28 @@ preserve in later phases includes wake-word summon, VAD, HUD behavior, provider
 fallback, transcript streaming, Hologram-first summon, Widget voice toggle, and
 MiniChat reply/stream behavior.
 
+### Voice renderer bridge adoption
+
+The Hologram and Widget Presence bridge selectors now route voice display state
+through typed view-model helpers in `src/presence/voice/`.
+`getHologramVoiceDisplayState(...)` and `getWidgetDictationState(...)` keep the
+same renderer-facing payload shapes while centralizing transcript, transcript
+source, listening, speaking, amplitude, and display status normalization at the
+Presence voice boundary. Legacy display payloads still emit only `"user"` or
+`"model"` transcript sources, default missing display fields to safe JSON values,
+and avoid renderer-side unsafe casts.
+
+This adoption does not move actual voice runtime ownership. The existing
+dashboard/Electron path still owns voice sessions, wake-word handling,
+`trigger-voice-toggle`, `widget-toggle-voice`, `widget-voice-data`, VAD,
+recording, transcription, HUD updates, provider fallback, and MiniChat
+message/reply streaming. The bridge helpers only normalize renderer display
+payloads at the compatibility boundary.
+
+The next phase is Electron voice adapter parity coverage for the current IPC
+channels, followed by moving canonical voice state into the Presence Runtime and
+then migrating provider/fallback behavior behind runtime-owned ports.
+
 ## Electron Presence IPC extraction
 
 Presence-related Electron IPC registration now lives in injected CommonJS
