@@ -79,6 +79,15 @@ describe("Presence voice route helpers", () => {
     });
   });
 
+  it("preserves future transcript sources inside the route boundary", () => {
+    const legacy = toLegacyVoiceUpdatePayload({
+      transcript: "Future source",
+      transcriptSource: "assistant-preview",
+    });
+
+    expect(legacy.transcriptSource).toBe("assistant-preview");
+  });
+
   it("merges legacy toggle payload fields without renaming IPC contract fields", () => {
     expect(toLegacyVoiceTogglePayload({ mode: "TOGGLE", forceHud: false }, { legacyOnlyField: true })).toEqual({
       legacyOnlyField: true,

@@ -42,6 +42,10 @@ function denormalizeElevationState(value: PresenceElevationState | undefined) {
   return { ...value, authorizedMissionIds: [...value.authorizedMissionIds] };
 }
 
+function toLegacyTranscriptSource(value: unknown): "user" | "model" {
+  return value === "model" ? "model" : "user";
+}
+
 export function fromWidgetUpdatePayload(payload: LegacyPresencePayload): PresenceSnapshot {
   const sensorRouteState = createPresenceSensorRouteState({
     ...(payload.sensors && typeof payload.sensors === "object" ? payload.sensors : {}),
@@ -88,13 +92,14 @@ export function toWidgetUpdatePayload(snapshot: PresenceSnapshot): LegacyPresenc
   return {
     ...toLegacyVoiceUpdatePayload({
       transcript: snapshot.voice.transcript,
-      transcriptSource: snapshot.voice.transcriptSource,
+      transcriptSource: toLegacyTranscriptSource(snapshot.voice.transcriptSource),
       isListening: snapshot.voice.isListening,
       isVadActive: snapshot.voice.isListening,
       isSpeaking: snapshot.voice.isSpeaking,
       amplitude: snapshot.voice.amplitude,
       status: snapshot.voice.status,
     }),
+    transcriptSource: toLegacyTranscriptSource(snapshot.voice.transcriptSource),
     persona: snapshot.persona,
     themeHex: snapshot.themeHex,
     intent: snapshot.intent,

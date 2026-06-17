@@ -11,6 +11,7 @@ import {
   toHologramUpdate,
   toMiniChatWidgetUpdate,
   toWidgetUpdate,
+  toWidgetUpdatePayload,
 } from "./index";
 
 const createLegacyPayload = () => ({
@@ -124,6 +125,22 @@ describe("Presence surface bridges", () => {
       amplitude: 0.64,
     });
     expect(payload.elevationState.authorizedMissionIds).toBeInstanceOf(Set);
+  });
+
+  it("narrows future transcript sources at the legacy widget payload boundary", () => {
+    const snapshot = createWidgetPresenceSnapshot({
+      transcript: "Custom source",
+      transcriptSource: "model",
+    });
+
+    expect(toWidgetUpdatePayload(snapshot).transcriptSource).toBe("model");
+    expect(toWidgetUpdatePayload({
+      ...snapshot,
+      voice: {
+        ...snapshot.voice,
+        transcriptSource: "assistant-preview" as unknown as typeof snapshot.voice.transcriptSource,
+      },
+    }).transcriptSource).toBe("user");
   });
 
   it("extracts a typed MiniChat approval prompt from the snapshot", () => {
