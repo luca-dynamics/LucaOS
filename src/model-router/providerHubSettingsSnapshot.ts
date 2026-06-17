@@ -21,34 +21,38 @@ export interface LucaProviderHubSettingsSnapshotInput {
   readonly disabledProviderIds?: readonly LucaProviderHubId[];
 }
 
-export interface LucaProviderHubSettingsSnapshotsInput {
-  readonly settings?: {
+
+export interface LucaProviderHubSettingsSnapshotUiInput {
+  readonly settings: {
+    readonly general?: {
+      readonly activeBrainId?: string | null;
+      readonly activeEmbedId?: string | null;
+    };
     readonly brain?: {
       readonly useCustomApiKey?: boolean;
       readonly geminiApiKey?: string;
-      readonly anthropicApiKey?: string;
-      readonly openaiApiKey?: string;
-      readonly xaiApiKey?: string;
-      readonly deepseekApiKey?: string;
-      readonly groqApiKey?: string;
-      readonly openRouterApiKey?: string;
-      readonly openaiBaseUrl?: string;
       readonly geminiBaseUrl?: string;
+      readonly anthropicApiKey?: string;
       readonly anthropicBaseUrl?: string;
+      readonly openaiApiKey?: string;
+      readonly openaiBaseUrl?: string;
+      readonly xaiApiKey?: string;
       readonly xaiBaseUrl?: string;
+      readonly deepseekApiKey?: string;
       readonly deepseekBaseUrl?: string;
+      readonly groqApiKey?: string;
       readonly groqBaseUrl?: string;
+      readonly openRouterApiKey?: string;
       readonly model?: string;
+      readonly embeddingModel?: string;
       readonly provider?: string;
     };
-    readonly general?: {
-      readonly activeBrainId?: string | null;
+    readonly memory?: {
+      readonly provider?: string;
+      readonly model?: string;
     };
   };
   readonly ollamaAvailable?: boolean;
-  readonly lmStudioAvailable?: boolean;
-  readonly localRuntimeAvailable?: boolean;
-  readonly disabledProviderIds?: readonly LucaProviderHubId[];
 }
 
 export interface LucaProviderHubReadinessFromSettingsOptions {
@@ -58,7 +62,7 @@ export interface LucaProviderHubReadinessFromSettingsOptions {
 
 const LOCAL_RUNTIME_PROVIDER_IDS = new Set<LucaProviderHubId>(["ollama", "lm_studio", "local_runtime"]);
 
-function hasPresentString(input: string | undefined): boolean {
+function hasPresentString(input: string | null | undefined): boolean {
   return typeof input === "string" && input.trim().length > 0;
 }
 
@@ -134,37 +138,53 @@ export function createProviderHubSnapshotsFromSettings(
   });
 }
 
-function hasPresentSecret(input: string | undefined): boolean {
-  return hasPresentString(input);
+
+function hasConfiguredSecret(value: string | undefined): boolean {
+  return hasPresentString(value);
+}
+
+function firstPresentString(...values: readonly (string | null | undefined)[]): string | undefined {
+  return values.find((value): value is string => hasPresentString(value));
 }
 
 export function createProviderHubSettingsSnapshots(
-  input: LucaProviderHubSettingsSnapshotsInput = {},
+  input: LucaProviderHubSettingsSnapshotUiInput,
 ): readonly LucaProviderHubConnectionSnapshot[] {
-  const brain = input.settings?.brain;
-  const selectedModelId = input.settings?.general?.activeBrainId ?? brain?.model;
+  const brain = input.settings.brain;
+  const selectedProvider = firstPresentString(brain?.provider, input.settings.memory?.provider);
+  const selectedModelId = firstPresentString(
+    brain?.model,
+    input.settings.general?.activeBrainId,
+    brain?.embeddingModel,
+    input.settings.general?.activeEmbedId,
+    input.settings.memory?.model,
+  );
 
   return createProviderHubSnapshotsFromSettings({
-    selectedProvider: brain?.provider,
-    selectedModelId: selectedModelId ?? undefined,
+    selectedProvider,
+    selectedModelId,
     useCustomApiKey: brain?.useCustomApiKey,
-    customApiKeyProvider: brain?.provider,
-    customBaseUrl: brain?.openaiBaseUrl,
+    customApiKeyProvider: selectedProvider,
+    customBaseUrl: firstPresentString(
+      brain?.openaiBaseUrl,
+      brain?.anthropicBaseUrl,
+      brain?.geminiBaseUrl,
+      brain?.xaiBaseUrl,
+      brain?.deepseekBaseUrl,
+      brain?.groqBaseUrl,
+    ),
     providerKeyPresence: {
-      google_gemini: hasPresentSecret(brain?.geminiApiKey),
-      anthropic: hasPresentSecret(brain?.anthropicApiKey),
-      openai: hasPresentSecret(brain?.openaiApiKey),
-      xai_grok: hasPresentSecret(brain?.xaiApiKey),
-      deepseek: hasPresentSecret(brain?.deepseekApiKey),
-      groq: hasPresentSecret(brain?.groqApiKey),
-      openrouter: hasPresentSecret(brain?.openRouterApiKey),
+      openai: hasConfiguredSecret(brain?.openaiApiKey),
+      anthropic: hasConfiguredSecret(brain?.anthropicApiKey),
+      gemini: hasConfiguredSecret(brain?.geminiApiKey),
+      xai: hasConfiguredSecret(brain?.xaiApiKey),
+      deepseek: hasConfiguredSecret(brain?.deepseekApiKey),
+      groq: hasConfiguredSecret(brain?.groqApiKey),
+      openrouter: hasConfiguredSecret(brain?.openRouterApiKey),
     },
     localRuntimeAvailability: {
-      ollama: input.ollamaAvailable ?? false,
-      lm_studio: input.lmStudioAvailable ?? false,
-      local_runtime: input.localRuntimeAvailable ?? false,
+      ollama: Boolean(input.ollamaAvailable),
     },
-    disabledProviderIds: input.disabledProviderIds,
   });
 }
 
