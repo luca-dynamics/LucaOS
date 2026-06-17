@@ -123,6 +123,35 @@ The next migration step is to replace the compatibility snapshots with a
 runtime-owned Presence subscription while retaining these bridges as the
 surface view-model boundary.
 
+
+## Presence voice route boundary
+
+Presence now includes a typed, pure voice route boundary under
+`src/presence/voice/`. The boundary defines serializable contracts for voice
+route status, source, mode, toggle requests, transcript events, activity events,
+route envelopes, and fallback reasons. Its normalization helpers preserve the
+legacy voice fields already used by the dashboard, Electron relays, and renderer
+surfaces: `isListening`, `isVadActive`, `isSpeaking`, `transcript`,
+`transcriptSource`, `amplitude`, `status`, `mode`, `context`, `forceHud`,
+`source`, `provider`, `model`, `persona`, `language`, `error`,
+`fallbackReason`, `timestamp`, `requestId`, `sessionId`, and unknown legacy
+fields.
+
+This is a route-boundary-only step. Current voice execution remains owned by the
+existing dashboard/Electron path: `trigger-voice-toggle`, `widget-toggle-voice`,
+`widget-voice-data`, wake-word summon routing, dashboard voice mode toggling,
+provider fallback, HUD updates, recording, transcription, VAD, and streaming
+payloads are intentionally unchanged. The compatibility layer now uses the pure
+voice helpers when interpreting and emitting legacy update payloads, but it keeps
+all existing field names and outgoing shapes intact.
+
+The boundary prepares Voice Runtime Ownership Extraction by giving future
+renderer bridges and Electron adapters a typed place to normalize voice intent
+and display state before ownership moves. Known voice-sensitive behavior to
+preserve in later phases includes wake-word summon, VAD, HUD behavior, provider
+fallback, transcript streaming, Hologram-first summon, Widget voice toggle, and
+MiniChat reply/stream behavior.
+
 ## Electron Presence IPC extraction
 
 Presence-related Electron IPC registration now lives in injected CommonJS

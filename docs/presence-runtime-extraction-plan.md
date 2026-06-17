@@ -98,6 +98,24 @@ The tables distinguish **observed current behavior** from the desired runtime ow
 | MiniChat voice toggle | Input button directly calls `useVoiceInput`; `trigger-voice-toggle` listener separately toggles local dictation and may send `type-text` | MiniChat can create a separate voice session from the dashboard and conflates chat voice input with OS dictation. Closure-based toggle state can race. | Runtime owns a single session model with purpose (`conversation`, `dictation`, `wake`) and surface attribution. |
 | Dashboard voice toggle | App `toggleVoiceMode` selects backend, starts/stops services, changes HUD state, and currently auto-enables mic privacy when requested | Session logic, UI state, privacy mutation, and dashboard HUD are coupled. Automatically changing a disabled privacy setting is unsafe. | Voice capability adapter handles session mechanics; Presence Runtime requests access through disclosure/consent policy and never silently changes privacy policy. |
 
+
+### 4.2.1 Phased voice ownership extraction
+
+Voice extraction should proceed in explicit phases to avoid moving runtime
+ownership before the route contract is stable:
+
+1. Add the typed route boundary for current toggle, activity, transcript, and
+   fallback payloads.
+2. Adopt the route helpers in renderer bridges while preserving their external
+   return shapes.
+3. Add Electron adapter parity for the existing channels without renaming IPC.
+4. Move canonical listening/transcript/activity state into the runtime.
+5. Migrate provider selection and fallback behind runtime-owned capability
+   ports.
+6. Fully decouple dashboard voice execution from Presence surfaces once parity
+   coverage proves wake-word, VAD, HUD, Widget, Hologram, and MiniChat behavior
+   unchanged.
+
 ### 4.3 State synchronization (`widget-update`, `hologram-update`, approvals, LucaLink)
 
 | Flow | Current producer → transport → consumer | Current behavior / issue | Proposed owner |
