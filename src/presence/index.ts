@@ -10,3 +10,4 @@ export * from "./messages";
 export * from "./bridges";
 export * from "./approvals";
 export * from "./sensors";
+export * from "./voice";

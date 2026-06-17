@@ -2,6 +2,7 @@ import { createPresenceApprovalPrompt, toLegacyApprovalRequest } from "./approva
 import { createPresenceSnapshot, defaultPresenceRuntimeState } from "./presenceState";
 import type { PresenceElevationState, PresenceRuntimeState, PresenceSnapshot } from "./presenceTypes";
 import { createPresenceSensorRouteState, toPresenceCapabilityStatus } from "./sensors";
+import { createPresenceVoiceActivityEvent, toLegacyVoiceUpdatePayload } from "./voice";
 
 export interface LegacyPresencePayload {
   transcript?: string;
@@ -41,23 +42,28 @@ function denormalizeElevationState(value: PresenceElevationState | undefined) {
   return { ...value, authorizedMissionIds: [...value.authorizedMissionIds] };
 }
 
+function toLegacyTranscriptSource(value: unknown): "user" | "model" {
+  return value === "model" ? "model" : "user";
+}
+
 export function fromWidgetUpdatePayload(payload: LegacyPresencePayload): PresenceSnapshot {
   const sensorRouteState = createPresenceSensorRouteState({
     ...(payload.sensors && typeof payload.sensors === "object" ? payload.sensors : {}),
     ...(payload.microphone !== undefined ? { microphone: payload.microphone } : {}),
     ...(payload.screen !== undefined ? { screen: payload.screen } : {}),
   });
+  const voice = createPresenceVoiceActivityEvent(payload);
   const state: PresenceRuntimeState = {
     ...defaultPresenceRuntimeState,
     revision: 1,
     voice: {
       ...defaultPresenceRuntimeState.voice,
-      status: (payload.status as PresenceRuntimeState["voice"]["status"]) ?? defaultPresenceRuntimeState.voice.status,
-      transcript: payload.transcript ?? "",
-      transcriptSource: payload.transcriptSource ?? "user",
-      isListening: payload.isVadActive ?? payload.isListening ?? false,
-      isSpeaking: payload.isSpeaking ?? false,
-      amplitude: payload.amplitude ?? 0,
+      status: (voice.status as PresenceRuntimeState["voice"]["status"]) ?? defaultPresenceRuntimeState.voice.status,
+      transcript: voice.transcript ?? "",
+      transcriptSource: (voice.transcriptSource as PresenceRuntimeState["voice"]["transcriptSource"]) ?? "user",
+      isListening: voice.isVadActive ?? voice.isListening ?? false,
+      isSpeaking: voice.isSpeaking ?? false,
+      amplitude: voice.amplitude ?? 0,
     },
     persona: payload.persona ?? defaultPresenceRuntimeState.persona,
     themeHex: payload.themeHex,
@@ -84,14 +90,17 @@ export function fromWidgetUpdatePayload(payload: LegacyPresencePayload): Presenc
 
 export function toWidgetUpdatePayload(snapshot: PresenceSnapshot): LegacyPresencePayload {
   return {
-    transcript: snapshot.voice.transcript,
-    transcriptSource: snapshot.voice.transcriptSource,
-    isListening: snapshot.voice.isListening,
-    isVadActive: snapshot.voice.isListening,
-    isSpeaking: snapshot.voice.isSpeaking,
-    amplitude: snapshot.voice.amplitude,
+    ...toLegacyVoiceUpdatePayload({
+      transcript: snapshot.voice.transcript,
+      transcriptSource: toLegacyTranscriptSource(snapshot.voice.transcriptSource),
+      isListening: snapshot.voice.isListening,
+      isVadActive: snapshot.voice.isListening,
+      isSpeaking: snapshot.voice.isSpeaking,
+      amplitude: snapshot.voice.amplitude,
+      status: snapshot.voice.status,
+    }),
+    transcriptSource: toLegacyTranscriptSource(snapshot.voice.transcriptSource),
     persona: snapshot.persona,
-    status: snapshot.voice.status,
     themeHex: snapshot.themeHex,
     intent: snapshot.intent,
     elevationState: denormalizeElevationState(snapshot.elevationState),

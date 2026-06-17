@@ -8,6 +8,7 @@ import {
   getPresenceSensorDisclosure,
 } from "../presenceDisclosurePolicy";
 import type { PresenceSnapshot } from "../presenceTypes";
+import { createPresenceVoiceActivityEvent } from "../voice";
 
 export interface HologramLegacyPayload extends LegacyPresencePayload {
   presenceSource?: unknown;
@@ -41,7 +42,15 @@ export function toHologramUpdate(
 export function getHologramVoiceDisplayState(
   snapshot: PresenceSnapshot,
 ): HologramVoiceDisplayState {
-  return { ...snapshot.voice };
+  const voice = createPresenceVoiceActivityEvent(snapshot.voice);
+  return {
+    transcript: voice.transcript ?? "",
+    transcriptSource: voice.transcriptSource as HologramVoiceDisplayState["transcriptSource"],
+    isListening: voice.isListening ?? false,
+    isSpeaking: voice.isSpeaking ?? false,
+    amplitude: voice.amplitude ?? 0,
+    status: voice.status as HologramVoiceDisplayState["status"],
+  };
 }
 
 export function getHologramDisclosureState(snapshot: PresenceSnapshot) {
