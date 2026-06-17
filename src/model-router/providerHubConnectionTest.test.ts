@@ -1,10 +1,51 @@
 import { describe, expect, it, vi } from "vitest";
 import source from "./providerHubConnectionTest.ts?raw";
-import { canTestProviderHubConnection, testProviderHubConnection } from "./providerHubConnectionTest";
+import { canTestProviderHubConnection, createProviderHubModelsEndpoint, normalizeProviderHubTestBaseUrl, testProviderHubConnection } from "./providerHubConnectionTest";
 
 const secret = "sk-test-secret-value-123456";
 
 describe("providerHubConnectionTest", () => {
+
+  it("creates correct default models endpoints for supported OpenAI-compatible providers", () => {
+    expect(createProviderHubModelsEndpoint("openai")).toBe("https://api.openai.com/v1/models");
+    expect(createProviderHubModelsEndpoint("xai_grok")).toBe("https://api.x.ai/v1/models");
+    expect(createProviderHubModelsEndpoint("openrouter")).toBe("https://openrouter.ai/api/v1/models");
+    expect(createProviderHubModelsEndpoint("groq")).toBe("https://api.groq.com/openai/v1/models");
+    expect(createProviderHubModelsEndpoint("deepseek")).toBe("https://api.deepseek.com/v1/models");
+  });
+
+  it("normalizes custom OpenAI-compatible base URLs without duplicating v1 or models", () => {
+    expect(createProviderHubModelsEndpoint("custom_openai_compatible", "https://example.com")).toBe("https://example.com/v1/models");
+    expect(createProviderHubModelsEndpoint("custom_openai_compatible", "https://example.com/v1")).toBe("https://example.com/v1/models");
+    expect(createProviderHubModelsEndpoint("custom_openai_compatible", "https://example.com/v1/")).toBe("https://example.com/v1/models");
+    expect(createProviderHubModelsEndpoint("custom_openai_compatible", "https://example.com/api/v1")).toBe("https://example.com/api/v1/models");
+    expect(createProviderHubModelsEndpoint("custom_openai_compatible", "https://example.com/api/v1/models")).toBe("https://example.com/api/v1/models");
+    expect(createProviderHubModelsEndpoint("custom_openai_compatible", "https://example.com/openai/v1/models?api_key=sk-hidden-secret-123456#frag")).toBe("https://example.com/openai/v1/models");
+    expect(normalizeProviderHubTestBaseUrl("https://example.com/api/v1/models")?.toString()).toBe("https://example.com/api/v1");
+  });
+
+  it("returns a safe failed result for invalid URLs without network calls", async () => {
+    const fetchImpl = vi.fn() as unknown as typeof fetch;
+    const result = await testProviderHubConnection({ providerId: "custom_openai_compatible", apiKey: secret, baseUrl: "not a url", fetchImpl });
+    expect(result.status).toBe("failed");
+    expect(result.providerApiCalled).toBe(false);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("does not include secret-like URL values in diagnostics", async () => {
+    const secretLikeQuery = "sk-hidden-secret-123456";
+    const fetchImpl = vi.fn(async (url: string) => {
+      expect(url).toBe("https://example.com/v1/models");
+      expect(url).not.toContain(secretLikeQuery);
+      return new Response(JSON.stringify({ data: [] }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const result = await testProviderHubConnection({ providerId: "custom_openai_compatible", apiKey: secret, baseUrl: `https://example.com?api_key=${secretLikeQuery}`, fetchImpl });
+    expect(result.status).toBe("success");
+    expect(result.safeDiagnosticsText).toContain('"endpointPath":"/v1/models"');
+    expect(JSON.stringify(result)).not.toContain(secret);
+    expect(JSON.stringify(result)).not.toContain(secretLikeQuery);
+  });
   it("returns a successful sanitized result from a mocked supported provider test", async () => {
     const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) => {
       expect(String(_url)).toBe("https://api.openai.com/v1/models");
@@ -73,7 +114,7 @@ describe("providerHubConnectionTest", () => {
 
   it("never imports ProviderFactory or changes runtime routing", () => {
     expect(source).not.toMatch(/ProviderFactory/);
-    expect(source).not.toMatch(/createProvider|route\(/);
+    expect(source).not.toMatch(/createProvider(?!Hub)|route\(/);
   });
 
   it("local runtime test does not start a process", async () => {
