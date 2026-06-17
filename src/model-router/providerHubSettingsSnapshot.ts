@@ -1,37 +1,116 @@
-import type { LucaSettings } from "../services/settingsService";
-import { evaluateProviderHubReadinessForAll, type LucaProviderHubConnectionSnapshot, type LucaProviderHubReadinessResult } from "./providerHubReadiness";
+import type { LucaModelCapability, LucaModelTaskType } from "./modelRouterContract";
+import {
+  getProviderHubEntries,
+  normalizeProviderHubId,
+  type LucaProviderHubId,
+} from "./providerHubRegistry";
+import {
+  evaluateProviderHubReadinessForAll,
+  type LucaProviderHubConnectionSnapshot,
+  type LucaProviderHubReadinessResult,
+} from "./providerHubReadiness";
 
-export interface ProviderHubSettingsSnapshotInput {
-  readonly settings: LucaSettings;
-  readonly ollamaAvailable?: boolean;
-  readonly lmStudioAvailable?: boolean;
-  readonly internalLocalRuntimeAvailable?: boolean;
+export interface LucaProviderHubSettingsSnapshotInput {
+  readonly selectedProvider?: string;
+  readonly selectedModelId?: string;
+  readonly useCustomApiKey?: boolean;
+  readonly customApiKeyProvider?: string;
+  readonly customBaseUrl?: string;
+  readonly providerKeyPresence?: Readonly<Record<string, boolean>>;
+  readonly localRuntimeAvailability?: Readonly<Record<string, boolean>>;
+  readonly disabledProviderIds?: readonly LucaProviderHubId[];
 }
 
-export function createProviderHubSettingsSnapshots(input: ProviderHubSettingsSnapshotInput): readonly LucaProviderHubConnectionSnapshot[] {
-  const brain = input.settings.brain;
-
-  return [
-    { providerId: "luca_prime", enabled: true, configuredModelId: brain.provider === "cloud-managed" ? brain.model : undefined },
-    { providerId: "openai", hasUserKey: Boolean(brain.openaiApiKey), configuredModelId: brain.model?.includes("gpt") ? brain.model : undefined },
-    { providerId: "anthropic", hasUserKey: Boolean(brain.anthropicApiKey), configuredModelId: brain.model?.includes("claude") ? brain.model : undefined },
-    { providerId: "google_gemini", hasUserKey: Boolean(brain.geminiApiKey), configuredModelId: brain.model?.includes("gemini") ? brain.model : undefined },
-    { providerId: "xai_grok", hasUserKey: Boolean(brain.xaiApiKey), configuredModelId: brain.model?.includes("grok") ? brain.model : undefined },
-    { providerId: "deepseek", hasUserKey: Boolean(brain.deepseekApiKey), configuredModelId: brain.model?.includes("deepseek") ? brain.model : undefined },
-    { providerId: "groq", hasUserKey: Boolean(brain.groqApiKey), configuredModelId: brain.model?.includes("groq") ? brain.model : undefined },
-    { providerId: "openrouter", hasUserKey: Boolean(brain.openRouterApiKey) },
-    { providerId: "ollama", localRuntimeAvailable: Boolean(input.ollamaAvailable), configuredModelId: input.settings.general.activeBrainId || undefined },
-    { providerId: "lm_studio", localRuntimeAvailable: Boolean(input.lmStudioAvailable) },
-    { providerId: "local_runtime", localRuntimeAvailable: Boolean(input.internalLocalRuntimeAvailable) },
-    {
-      providerId: "custom_openai_compatible",
-      hasUserKey: Boolean(brain.useCustomApiKey && brain.openaiApiKey),
-      hasCustomBaseUrl: Boolean(brain.openaiBaseUrl),
-      configuredModelId: brain.useCustomApiKey ? brain.model : undefined,
-    },
-  ];
+export interface LucaProviderHubReadinessFromSettingsOptions {
+  readonly taskType?: LucaModelTaskType;
+  readonly requiredCapabilities?: readonly LucaModelCapability[];
 }
 
-export function createProviderHubReadinessFromSettings(input: ProviderHubSettingsSnapshotInput): readonly LucaProviderHubReadinessResult[] {
-  return evaluateProviderHubReadinessForAll({ connectionSnapshots: createProviderHubSettingsSnapshots(input) });
+const LOCAL_RUNTIME_PROVIDER_IDS = new Set<LucaProviderHubId>(["ollama", "lm_studio", "local_runtime"]);
+
+function hasPresentString(input: string | undefined): boolean {
+  return typeof input === "string" && input.trim().length > 0;
+}
+
+function setNormalizedPresence(
+  target: Partial<Record<LucaProviderHubId, boolean>>,
+  rawProviderId: string,
+  present: boolean,
+): void {
+  const providerId = normalizeProviderHubId(rawProviderId);
+  if (providerId === "unknown" || providerId === "disabled") return;
+  target[providerId] = Boolean(target[providerId] || present);
+}
+
+export function normalizeProviderKeyPresence(
+  input: LucaProviderHubSettingsSnapshotInput,
+): Readonly<Partial<Record<LucaProviderHubId, boolean>>> {
+  const normalized: Partial<Record<LucaProviderHubId, boolean>> = {};
+
+  for (const [rawProviderId, present] of Object.entries(input.providerKeyPresence ?? {})) {
+    setNormalizedPresence(normalized, rawProviderId, present);
+  }
+
+  if (input.useCustomApiKey && input.customApiKeyProvider) {
+    setNormalizedPresence(normalized, input.customApiKeyProvider, true);
+  }
+
+  return normalized;
+}
+
+export function normalizeLocalRuntimeAvailability(
+  input: LucaProviderHubSettingsSnapshotInput,
+): Readonly<Partial<Record<LucaProviderHubId, boolean>>> {
+  const normalized: Partial<Record<LucaProviderHubId, boolean>> = {};
+
+  for (const [rawProviderId, available] of Object.entries(input.localRuntimeAvailability ?? {})) {
+    const providerId = normalizeProviderHubId(rawProviderId);
+    if (!LOCAL_RUNTIME_PROVIDER_IDS.has(providerId)) continue;
+    normalized[providerId] = Boolean(normalized[providerId] || available);
+  }
+
+  return normalized;
+}
+
+export function createProviderHubSnapshotsFromSettings(
+  input: LucaProviderHubSettingsSnapshotInput,
+): readonly LucaProviderHubConnectionSnapshot[] {
+  const keyPresence = normalizeProviderKeyPresence(input);
+  const localRuntimeAvailability = normalizeLocalRuntimeAvailability(input);
+  const disabledProviderIds = new Set(input.disabledProviderIds ?? []);
+  const selectedProviderId = input.selectedProvider ? normalizeProviderHubId(input.selectedProvider) : undefined;
+  const customProviderId = input.customApiKeyProvider ? normalizeProviderHubId(input.customApiKeyProvider) : undefined;
+  const hasCustomBaseUrl = hasPresentString(input.customBaseUrl);
+
+  return getProviderHubEntries().map((entry) => {
+    const snapshot: LucaProviderHubConnectionSnapshot = {
+      providerId: entry.providerId,
+      hasUserKey: keyPresence[entry.providerId] ?? false,
+      hasCustomBaseUrl: entry.providerId === "custom_openai_compatible" && hasCustomBaseUrl,
+      localRuntimeAvailable: localRuntimeAvailability[entry.providerId] ?? false,
+      enabled: disabledProviderIds.has(entry.providerId) ? false : true,
+      configuredModelId: selectedProviderId === entry.providerId && input.selectedModelId ? input.selectedModelId : undefined,
+    };
+
+    if (
+      entry.providerId === "custom_openai_compatible" &&
+      input.useCustomApiKey &&
+      customProviderId === "custom_openai_compatible"
+    ) {
+      return { ...snapshot, hasUserKey: true };
+    }
+
+    return snapshot;
+  });
+}
+
+export function createProviderHubReadinessFromSettings(
+  input: LucaProviderHubSettingsSnapshotInput,
+  options: LucaProviderHubReadinessFromSettingsOptions = {},
+): readonly LucaProviderHubReadinessResult[] {
+  return evaluateProviderHubReadinessForAll({
+    taskType: options.taskType,
+    requiredCapabilities: options.requiredCapabilities,
+    connectionSnapshots: createProviderHubSnapshotsFromSettings(input),
+  });
 }

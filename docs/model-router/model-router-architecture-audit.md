@@ -15,7 +15,7 @@ LucaOS does not yet have one state-of-the-art model router. It has several parti
 - `src/config/vision.config.ts` defines vision-specific planning, insight, and action model choices, including an action fallback.
 - `src/services/settingsService.ts` defines persisted settings defaults, model-provider settings, and one-time hardware-aware migrations.
 
-This PR adds a static audit inventory and a lightweight future contract in `src/model-router/` without changing runtime provider selection. Provider Hub registry foundation has now started in `src/model-router/providerHubRegistry.ts`, and Provider Hub readiness foundation has started in `src/model-router/providerHubReadiness.ts`, so LucaOS can describe managed, connected cloud, router, local runtime, custom, disabled, and unknown providers before runtime wiring changes.
+This PR adds a static audit inventory and a lightweight future contract in `src/model-router/` without changing runtime provider selection. Provider Hub registry foundation has now started in `src/model-router/providerHubRegistry.ts`, Provider Hub readiness foundation has started in `src/model-router/providerHubReadiness.ts`, and a read-only settings snapshot adapter has started in `src/model-router/providerHubSettingsSnapshot.ts`, so LucaOS can describe managed, connected cloud, router, local runtime, custom, disabled, and unknown providers before runtime wiring changes.
 
 ## Known Entry Points
 
@@ -85,7 +85,7 @@ BYOK currently uses `useCustomApiKey`, provider inference from selected model st
 
 1. **Centralize Model Router Contract** — started now with `src/model-router/modelRouterContract.ts`.
 2. **Replace scattered fallback constants with typed fallback policy** — deferred until policy can be integrated without changing behavior.
-3. **Add provider capability registry** — started with a side-effect-free Provider Hub registry that includes provider aliases, capabilities, key requirements, cost tier, latency posture, privacy posture, categories, and supported task types; runtime consumers remain deferred. A pure Provider Hub readiness evaluator has also started so future settings/onboarding code can pass explicit connection snapshots without changing runtime execution.
+3. **Add provider capability registry** — started with a side-effect-free Provider Hub registry that includes provider aliases, capabilities, key requirements, cost tier, latency posture, privacy posture, categories, and supported task types; runtime consumers remain deferred. A pure Provider Hub readiness evaluator and read-only settings snapshot adapter have also started so future settings/onboarding code can pass explicit key/base-url/runtime availability facts into deterministic connection snapshots without changing runtime execution, writing settings, or instantiating adapters.
 4. **Add hardware-fit evaluator for local models** — evaluate RAM, VRAM, runtime availability, platform, privacy, and task type before local recommendations.
 5. **Add BYOK readiness evaluator** — separate key availability, provider compatibility, user approval, and requested task support.
 6. **Add Luca Prime / Local / BYOK route decision helper** — make pure route decisions before adapter construction or settings writes.
