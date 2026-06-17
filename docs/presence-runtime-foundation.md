@@ -198,6 +198,40 @@ Bridge and view-model return shapes remain unchanged for Hologram, Widget, MiniC
 
 The next phase is provider/fallback port planning or runtime-owned voice session control, depending on how much additional parity coverage is in place before moving execution ownership out of the dashboard path.
 
+## Voice provider/fallback port foundation
+
+Presence now includes a typed provider/fallback planning boundary under
+`src/presence/voice/`. The new contracts describe future voice provider health,
+route decisions, fallback records, fallback reasons, route envelopes, provider
+kinds, provider modes, capabilities, status, latency, selected provider,
+attempted providers, session/request correlation, timestamps, metadata, and
+unknown legacy fields. They explicitly allow current and future LucaOS provider
+modes including cloud, local, BYOK, browser, system, mock/test, and unknown
+provider strings.
+
+This is a port foundation only. Dashboard/Electron still owns current provider
+execution, capture, recording, transcription, VAD, wake-word handling, voice HUD
+updates, MiniChat streaming, provider selection, and provider fallback. No IPC
+channel names or payload shapes change, and existing `trigger-voice-toggle`,
+`widget-toggle-voice`, `widget-voice-data`, wake-word summon, Hologram-first
+routing, transcript, listening, amplitude, VAD, model/persona, stream, and
+legacy provider fallback behavior remain unchanged.
+
+The provider route helpers are pure and transport-safe: they normalize provider
+health, route decisions, fallback records, and envelopes; extract selected
+providers and fallback reasons; detect whether a payload represents an
+available provider or fallback decision; and merge provider health snapshots
+without mutating inputs or dropping unknown legacy fields. They do not import
+React, browser APIs, Electron CommonJS files, or provider implementations.
+
+Future provider ports should feed dashboard-owned provider observations through
+these contracts first, then connect them to runtime-owned voice state once
+provider health and fallback parity are covered. Before dashboard decoupling,
+LucaOS still needs injected voice capability ports, provider selection parity
+tests, fallback execution parity tests, capture/transcription/VAD ownership
+boundaries, and adapter coverage proving the runtime can publish canonical
+voice state without changing current surface behavior.
+
 ## Electron Presence IPC extraction
 
 Presence-related Electron IPC registration now lives in injected CommonJS

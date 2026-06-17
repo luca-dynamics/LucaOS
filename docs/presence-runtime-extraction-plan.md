@@ -107,8 +107,8 @@ ownership before the route contract is stable:
 1. typed route boundary ✅
 2. renderer bridge adoption ✅
 3. Electron voice adapter parity tests ✅
-4. runtime-owned voice state foundation ✅ / in progress
-5. provider/fallback migration ⏭️
+4. runtime-owned voice state foundation ✅
+5. provider/fallback port foundation ✅ / in progress
 6. dashboard decoupling ⏭️
 
 ### 4.3 State synchronization (`widget-update`, `hologram-update`, approvals, LucaLink)
