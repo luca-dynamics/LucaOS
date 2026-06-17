@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import modelManagerSource from "../components/ModelManager.tsx?raw";
 import { createProviderHubSettingsPatch, getProviderHubSafeKeyStatus, serializeProviderHubConfigurationSafely } from "./providerHubConfiguration";
 import { createProviderHubSettingsSnapshots } from "./providerHubSettingsSnapshot";
 import { createProviderHubPanelViewModel } from "./providerHubPanelViewModel";
@@ -47,5 +48,12 @@ describe("providerHubConfiguration", () => {
     const serialized = serializeProviderHubConfigurationSafely({ apiKey: "sk-secret-provider-hub", nested: { token: "secret-token" } });
     expect(serialized).not.toContain("sk-secret-provider-hub");
     expect(serialized).not.toContain("secret-token");
+  });
+
+  it("keeps provider connection tests manual and separate from settings save", () => {
+    const saveFunction = modelManagerSource.match(/const save = async \(\) => \{[\s\S]*?\n  \};/)?.[0] ?? "";
+    expect(saveFunction).toContain("settingsService.saveSettings");
+    expect(saveFunction).not.toContain("testProviderHubConnection");
+    expect(modelManagerSource).toContain("Test connection");
   });
 });
