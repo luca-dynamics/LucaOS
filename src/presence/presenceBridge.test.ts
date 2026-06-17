@@ -3,8 +3,10 @@ import {
   createHologramPresenceSnapshot,
   createMiniChatPresenceSnapshot,
   createWidgetPresenceSnapshot,
+  getHologramDisclosureState,
   getHologramVoiceDisplayState,
   getMiniChatApprovalPrompt,
+  getWidgetDisclosureState,
   getWidgetDictationState,
   toHologramUpdate,
   toMiniChatWidgetUpdate,
@@ -134,6 +136,27 @@ describe("Presence surface bridges", () => {
     const snapshot = createMiniChatPresenceSnapshot({ approvalRequest });
 
     expect(getMiniChatApprovalPrompt(snapshot)).toEqual(approvalRequest);
+  });
+
+  it("keeps Hologram and Widget disclosure selectors compatible", () => {
+    const snapshot = createWidgetPresenceSnapshot({
+      sensors: {
+        microphone: { status: "active", legacyOnlyField: true },
+        screen: { status: "requesting" },
+      },
+      approvalRequest: { id: "approval-1" },
+    });
+
+    expect(getHologramDisclosureState(snapshot)).toEqual({
+      microphone: { label: "Voice Presence", level: "active" },
+      screen: { label: "Screen Context", level: "ambient" },
+      approval: { label: "Protected Action", level: "protected" },
+    });
+    expect(getWidgetDisclosureState(snapshot)).toEqual({
+      microphone: { label: "Voice Presence", level: "active" },
+      screen: { label: "Screen Context", level: "ambient" },
+      approval: { label: "Protected Action", level: "protected" },
+    });
   });
 
   it("falls back to the preserved legacy MiniChat approval payload", () => {

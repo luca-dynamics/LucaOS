@@ -5,6 +5,7 @@ import type {
   PresenceSensorState,
   PresenceSurface,
 } from "./presenceTypes";
+import { createPresenceSensorDisclosure } from "./sensors";
 
 const SURFACE_LABELS: Record<PresenceSurface, string> = {
   miniChat: "Luca Presence",
@@ -21,8 +22,9 @@ export function getPresenceSensorDisclosure(
   sensor: PresenceSensorKind,
   status: PresenceSensorState[PresenceSensorKind],
 ): { label: string; level: PresenceDisclosureLevel } {
-  const label = sensor === "screen" ? "Screen Context" : sensor === "microphone" ? "Voice Presence" : "Device Awareness";
-  const level: PresenceDisclosureLevel = status === "active" ? "active" : status === "requesting" ? "ambient" : "none";
+  const disclosure = createPresenceSensorDisclosure({ kind: sensor, status, active: status === "active" }, sensor);
+  const label = disclosure.kind === "screen" ? "Screen Context" : disclosure.kind === "microphone" ? "Voice Presence" : "Device Awareness";
+  const level: PresenceDisclosureLevel = disclosure.status === "active" ? "active" : disclosure.status === "requesting" ? "ambient" : "none";
   return { label, level };
 }
 
