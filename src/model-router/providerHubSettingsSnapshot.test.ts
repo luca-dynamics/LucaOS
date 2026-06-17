@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { getProviderHubEntries, type LucaProviderHubId } from "./providerHubRegistry";
 import {
   createProviderHubReadinessFromSettings,
+  createProviderHubSettingsSnapshots,
   createProviderHubSnapshotsFromSettings,
   normalizeLocalRuntimeAvailability,
   normalizeProviderKeyPresence,
@@ -126,6 +127,33 @@ describe("providerHubSettingsSnapshot", () => {
       localRuntimeAvailability: { ollama: true },
       disabledProviderIds: ["anthropic"],
     });
+  });
+
+
+  it("exports the ModelManager settings snapshot helper as a read-only adapter", () => {
+    const snapshots = new Map(createProviderHubSettingsSnapshots({
+      settings: {
+        brain: {
+          useCustomApiKey: true,
+          provider: "byok",
+          model: "gpt-compatible",
+          openaiApiKey: "present",
+          openRouterApiKey: "present",
+          openaiBaseUrl: "https://llm.example.test/v1",
+        },
+        general: { activeBrainId: "active-brain" },
+      },
+      ollamaAvailable: true,
+    }).map((snapshot) => [snapshot.providerId, snapshot]));
+
+    expect(snapshots.get("openai")?.hasUserKey).toBe(true);
+    expect(snapshots.get("openrouter")?.hasUserKey).toBe(true);
+    expect(snapshots.get("custom_openai_compatible")).toMatchObject({
+      hasUserKey: true,
+      hasCustomBaseUrl: true,
+      configuredModelId: "active-brain",
+    });
+    expect(snapshots.get("ollama")?.localRuntimeAvailable).toBe(true);
   });
 
   it("returns expected readiness states from settings snapshots", () => {
