@@ -12,6 +12,8 @@ import {
 import { settingsService } from "../services/settingsService";
 import { modelReadinessResolver } from "../services/models/ModelReadinessResolver";
 import type { ModelRouteDecision } from "../types/modelRouting";
+import { createProviderHubPanelViewModel, type ProviderHubPanelCardViewModel, type ProviderHubPanelViewModel } from "../model-router/providerHubPanelViewModel";
+import { createProviderHubSettingsSnapshots } from "../model-router/providerHubSettingsSnapshot";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -48,6 +50,102 @@ const isCatalogInstallable = (model: LocalModel) =>
   !model.catalogStatus ||
   model.catalogStatus === "verified" ||
   model.catalogStatus === "installable";
+
+const getProviderHubStateClass = (state: string) => {
+  if (state === "ready") return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+  if (state === "missing_user_key" || state === "missing_base_url" || state === "local_runtime_unavailable") return "bg-amber-500/10 text-amber-300 border-amber-500/20";
+  return "bg-white/5 text-[var(--app-text-muted)] border-white/10";
+};
+
+const ProviderHubCard: React.FC<{ card: ProviderHubPanelCardViewModel; theme: any; isMobile?: boolean }> = ({ card, theme, isMobile }) => {
+  const copyDiagnostics = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(card.diagnosticsText);
+    }
+  }, [card.diagnosticsText]);
+
+  return (
+    <div className="border rounded-lg overflow-hidden relative shadow-sm" style={{ backgroundColor: "var(--app-bg-main)", borderColor: "var(--app-border-main)" }}>
+      <div className="p-3 flex flex-col h-full justify-between gap-3">
+        <div>
+          <div className="flex justify-between items-start gap-3 mb-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--app-bg-tint)", color: card.readiness.ready ? theme.hex : "var(--app-text-muted)" }}>
+                  {card.iconSrc ? (
+                    <img
+                      src={card.iconSrc}
+                      alt={card.iconAlt}
+                      className="w-3.5 h-3.5 object-contain"
+                      style={card.entry.providerId === "openai" || card.entry.providerId === "anthropic" ? { filter: "var(--app-icon-filter, brightness(0) invert(1))" } : undefined}
+                    />
+                  ) : (
+                    <Icon name={card.entry.category === "local_runtime" ? "Cpu" : card.entry.category === "router" ? "Route" : "Brain"} size={12} variant="BoldDuotone" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold truncate" style={{ color: "var(--app-text-main)" }}>{card.entry.label}</div>
+                  <div className="text-[9px] font-mono truncate" style={{ color: "var(--app-text-muted)" }}>{card.entry.providerType} • {card.entry.defaultCostTier} cost</div>
+                </div>
+              </div>
+            </div>
+            <span className={`text-[8px] px-1.5 py-0.5 rounded border uppercase tracking-[0.12em] flex-shrink-0 ${getProviderHubStateClass(card.readiness.state)}`}>
+              {card.readinessLabel}
+            </span>
+          </div>
+          <p className="text-[9px] leading-relaxed mb-2" style={{ color: "var(--app-text-muted)" }}>{card.entry.description}</p>
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            <span className="text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.12em] bg-white/5 text-[var(--app-text-muted)] border-white/10">{card.categoryLabel}</span>
+            <span className="text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.12em] bg-white/5 text-[var(--app-text-muted)] border-white/10">Latency {card.entry.defaultLatencyFit}</span>
+            <span className="text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.12em] bg-white/5 text-[var(--app-text-muted)] border-white/10">Privacy {card.entry.privacyFit}</span>
+          </div>
+          <div className="text-[9px] font-medium mb-2" style={{ color: card.readiness.ready ? theme.hex : "var(--app-text-muted)" }}>{card.requiredActionLabel}</div>
+          {card.configuredModelId && <div className="text-[8px] font-mono mb-2 truncate" style={{ color: "var(--app-text-muted)" }}>Model: {card.configuredModelId}</div>}
+          <div className="flex flex-wrap gap-1 mb-2">
+            {card.entry.supportedTaskTypes.slice(0, isMobile ? 4 : 6).map((task) => <span key={task} className="text-[8px] px-1.5 py-0.5 rounded bg-white/5" style={{ color: "var(--app-text-muted)" }}>{task}</span>)}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {card.entry.capabilities.slice(0, isMobile ? 4 : 6).map((capability) => <span key={capability} className="text-[8px] px-1.5 py-0.5 rounded bg-white/5" style={{ color: "var(--app-text-muted)" }}>{capability}</span>)}
+          </div>
+          {card.entry.notes.length > 0 && <p className="text-[8px] leading-relaxed mt-2" style={{ color: "var(--app-text-muted)" }}>{card.entry.notes[0]}</p>}
+        </div>
+        <div className="flex items-center justify-between gap-2 pt-2 border-t" style={{ borderColor: "var(--app-border-main)" }}>
+          <button type="button" disabled className="flex-1 text-[9px] font-medium py-1 rounded opacity-60" style={{ color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>Configure coming soon</button>
+          <button type="button" onClick={copyDiagnostics} className="px-2 py-1 rounded hover:bg-white/5 transition-colors" style={{ color: "var(--app-text-muted)" }} title="Copy safe diagnostics"><Icon name="Copy" size={10} variant="BoldDuotone" /></button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; theme: any; isMobile?: boolean }> = ({ viewModel, theme, isMobile }) => (
+  <div className="mb-4 rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)" }}>
+    <div className="p-4 border-b" style={{ borderColor: "var(--app-border-main)" }}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: "var(--app-text-main)" }}><Icon name="Widget" size={16} style={{ color: theme.hex }} variant="BoldDuotone" />{viewModel.title}</h3>
+          <p className="text-[10px] mt-1 leading-relaxed" style={{ color: "var(--app-text-muted)" }}>{viewModel.subtitle}</p>
+          <p className="text-[9px] mt-1 font-mono" style={{ color: "var(--app-text-muted)" }}>{viewModel.note}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-3">
+        {viewModel.summary.map((item) => <span key={item.id} className={`text-[9px] px-2 py-1 rounded-full border ${item.id === "ready" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-white/5 text-[var(--app-text-muted)] border-white/10"}`}>{item.label}: {item.count}</span>)}
+      </div>
+    </div>
+    <div className="p-3">
+      {viewModel.sections.map((section) => (
+        <div key={section.id} className="mb-3 last:mb-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2 px-1" style={{ color: "var(--app-text-main)" }}>{section.title}</div>
+          <div className={`grid gap-2 ${isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"}`}>
+            {section.cards.map((card) => <ProviderHubCard key={card.entry.providerId} card={card} theme={theme} isMobile={isMobile} />)}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 
 interface RenderGridProps {
   title: string;
@@ -432,6 +530,10 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
   const ttsModels = useMemo(() => models.filter(m => m.category === "tts"), [models]);
   const embedModels = useMemo(() => models.filter(m => m.category === "embedding"), [models]);
 
+  const providerHubViewModel = useMemo(() => createProviderHubPanelViewModel(
+    createProviderHubSettingsSnapshots({ settings: settingsService.getSettings(), ollamaAvailable: isOllamaRunning }),
+  ), [activeBrainId, isOllamaRunning]);
+
   return (
     <div className="flex flex-col min-h-[500px] rounded-xl overflow-hidden" style={{ backgroundColor: "var(--app-bg-main, #09090b)" }}>
       {/* HEADER WITH HARDWARE HEALTH */}
@@ -492,6 +594,8 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <ProviderHubPanel viewModel={providerHubViewModel} theme={theme} isMobile={isMobile} />
+
         {routeStatus && (
           <div className="mb-4 rounded-xl border p-3" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)" }}>
             <div className="flex items-center justify-between gap-3 mb-1">
