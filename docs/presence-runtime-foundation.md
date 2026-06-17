@@ -170,9 +170,7 @@ recording, transcription, HUD updates, provider fallback, and MiniChat
 message/reply streaming. The bridge helpers only normalize renderer display
 payloads at the compatibility boundary.
 
-The next phase is Electron voice adapter parity coverage for the current IPC
-channels, followed by moving canonical voice state into the Presence Runtime and
-then migrating provider/fallback behavior behind runtime-owned ports.
+The next phase after adapter parity is now the runtime-owned voice state foundation, followed by provider/fallback planning and then runtime-owned voice session control when coverage is sufficient.
 
 ## Electron voice adapter parity
 
@@ -189,6 +187,16 @@ Voice execution is still owned by the dashboard renderer and current Electron ma
 Wake-word summon routing remains documented as the current `main.cjs` path: `wake-word-triggered` calls `summonVoicePresence('wake-word')`, creates/keeps the dashboard voice runtime available without focusing it, shows the Hologram with `showInactive()`, sends a Hologram listening update first, and uses dashboard focus only through the existing recovery fallback. A later phase can extract this route behind a testable adapter once runtime-owned voice state and provider/fallback migration are ready.
 
 What remains for the next phase: move canonical voice session state behind the Presence Runtime, introduce provider/fallback ports, and then decouple dashboard voice execution after parity tests cover those new boundaries.
+
+## Runtime-owned voice state foundation
+
+Presence now includes canonical, runtime-owned voice state reducer actions for voice updates, resets, transcript changes, activity changes, and errors. These actions merge partial voice snapshots into the Presence Runtime state without dropping existing transcript, status, provider, model, persona, session, request, fallback, amplitude, VAD, source, language, timestamp, error, or unknown legacy metadata unless an update explicitly replaces those fields. The runtime also exposes convenience helpers for recording voice state, transcript, and activity updates so current adapters can dispatch the same typed state path.
+
+This is a state-ownership foundation only. The existing dashboard/Electron path still produces the voice updates and still owns actual voice engine execution, provider selection, recording/capture, transcription, VAD, wake-word routing, HUD behavior, stream behavior, and fallback handling. Existing IPC channel names and behavior, including `trigger-voice-toggle`, `widget-toggle-voice`, and `widget-voice-data`, remain unchanged.
+
+Bridge and view-model return shapes remain unchanged for Hologram, Widget, MiniChat, and legacy payload boundaries. Future or unknown transcript sources can remain inside the typed Presence voice route boundary, while display and legacy compatibility helpers continue narrowing them to the existing `"user"` / `"model"` contract.
+
+The next phase is provider/fallback port planning or runtime-owned voice session control, depending on how much additional parity coverage is in place before moving execution ownership out of the dashboard path.
 
 ## Electron Presence IPC extraction
 

@@ -1,5 +1,7 @@
 import type { PresenceEvent } from "./presenceEvents";
-import type { PresenceRuntimeState, PresenceSurface } from "./presenceTypes";
+import { defaultPresenceRuntimeState } from "./presenceState";
+import type { PresenceRuntimeState, PresenceSurface, PresenceVoiceState } from "./presenceTypes";
+import { createPresenceVoiceActivityEvent, createPresenceVoiceTranscriptEvent } from "./voice";
 
 function withEventMetadata(state: PresenceRuntimeState, event: PresenceEvent): PresenceRuntimeState {
   return {
@@ -8,6 +10,33 @@ function withEventMetadata(state: PresenceRuntimeState, event: PresenceEvent): P
     lastEventId: event.eventId,
     lastUpdatedAt: event.timestamp,
   };
+}
+
+function toJsonSafeVoicePatch(payload: unknown): Partial<PresenceVoiceState> {
+  return JSON.parse(JSON.stringify(createPresenceVoiceActivityEvent(payload))) as Partial<PresenceVoiceState>;
+}
+
+function mergeVoiceState(
+  state: PresenceRuntimeState,
+  event: PresenceEvent,
+  payload: unknown,
+): PresenceRuntimeState {
+  return {
+    ...withEventMetadata(state, event),
+    voice: {
+      ...state.voice,
+      ...toJsonSafeVoicePatch(payload),
+    },
+  };
+}
+
+function mergeVoiceTranscriptState(state: PresenceRuntimeState, event: PresenceEvent): PresenceRuntimeState {
+  const payload = JSON.parse(JSON.stringify(createPresenceVoiceTranscriptEvent(event.payload))) as Partial<PresenceVoiceState>;
+  return { ...withEventMetadata(state, event), voice: { ...state.voice, ...payload } };
+}
+
+function resetVoiceState(state: PresenceRuntimeState, event: PresenceEvent): PresenceRuntimeState {
+  return { ...withEventMetadata(state, event), voice: { ...defaultPresenceRuntimeState.voice } };
 }
 
 function setSurface(
@@ -40,13 +69,22 @@ export function presenceReducer(state: PresenceRuntimeState, event: PresenceEven
       return setSurface(state, event.targetSurface, "failed", event);
     case "dashboard/open-requested":
       return setSurface(state, "dashboard", "summoning", event);
+    case "voice/update":
     case "voice/state-updated":
-      return { ...withEventMetadata(state, event), voice: { ...state.voice, ...event.payload } };
+      return mergeVoiceState(state, event, event.payload);
+    case "voice/reset":
+      return resetVoiceState(state, event);
+    case "voice/transcript":
+      return mergeVoiceTranscriptState(state, event);
+    case "voice/activity":
+      return mergeVoiceState(state, event, event.payload);
+    case "voice/error":
+      return mergeVoiceState(state, event, { status: "error", ...event.payload });
     case "voice/toggle-requested": {
       const listening = event.payload?.enabled ?? !state.voice.isListening;
       return {
         ...withEventMetadata(state, event),
-        voice: { ...state.voice, isListening: listening, status: listening ? "listening" : "idle" },
+        voice: { ...state.voice, isListening: listening, isVadActive: listening, status: listening ? "listening" : "idle" },
       };
     }
     case "wake-word/detected":

@@ -24,6 +24,11 @@ export type PresenceSurfaceReadyEvent = PresenceEventBase<"presence/surface-read
 export type PresenceSurfaceFailedEvent = PresenceEventBase<"presence/surface-failed", { error?: string }> & {
   targetSurface: PresenceSurface;
 };
+export type PresenceVoiceUpdateEvent = PresenceEventBase<"voice/update", Partial<PresenceVoiceState>>;
+export type PresenceVoiceResetEvent = PresenceEventBase<"voice/reset">;
+export type PresenceRuntimeVoiceTranscriptEvent = PresenceEventBase<"voice/transcript", Partial<PresenceVoiceState>>;
+export type PresenceRuntimeVoiceActivityEvent = PresenceEventBase<"voice/activity", Partial<PresenceVoiceState>>;
+export type PresenceVoiceErrorEvent = PresenceEventBase<"voice/error", Partial<PresenceVoiceState>>;
 export type PresenceVoiceStateUpdatedEvent = PresenceEventBase<"voice/state-updated", Partial<PresenceVoiceState>>;
 export type PresenceVoiceToggleRequestedEvent = PresenceEventBase<"voice/toggle-requested", { enabled?: boolean }>;
 export type PresenceWakeWordDetectedEvent = PresenceEventBase<"wake-word/detected", { phrase?: string }>;
@@ -39,6 +44,11 @@ export type PresenceEvent =
   | PresenceDismissEvent
   | PresenceSurfaceReadyEvent
   | PresenceSurfaceFailedEvent
+  | PresenceVoiceUpdateEvent
+  | PresenceVoiceResetEvent
+  | PresenceRuntimeVoiceTranscriptEvent
+  | PresenceRuntimeVoiceActivityEvent
+  | PresenceVoiceErrorEvent
   | PresenceVoiceStateUpdatedEvent
   | PresenceVoiceToggleRequestedEvent
   | PresenceWakeWordDetectedEvent

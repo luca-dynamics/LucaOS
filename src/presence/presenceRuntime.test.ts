@@ -100,6 +100,96 @@ describe("Presence state and runtime", () => {
     unsubscribe();
     expect(runtime.reset()).toEqual(defaultPresenceRuntimeState);
   });
+  it("merges canonical voice updates without dropping existing fields or mutating previous state", () => {
+    const initial = {
+      ...defaultPresenceRuntimeState,
+      voice: {
+        ...defaultPresenceRuntimeState.voice,
+        transcript: "keep me",
+        transcriptSource: "model" as const,
+        status: "speaking" as const,
+        provider: "legacy-provider",
+      },
+    };
+    const frozenState = Object.freeze({ ...initial, voice: Object.freeze({ ...initial.voice }) });
+
+    const next = presenceReducer(frozenState, {
+      ...eventBase,
+      type: "voice/update",
+      payload: { amplitude: 0.72, isSpeaking: false, model: "voice-model" },
+    });
+
+    expect(next).not.toBe(frozenState);
+    expect(next.voice).toMatchObject({
+      transcript: "keep me",
+      transcriptSource: "model",
+      status: "speaking",
+      provider: "legacy-provider",
+      model: "voice-model",
+      amplitude: 0.72,
+      isSpeaking: false,
+    });
+    expect(frozenState.voice.amplitude).toBe(0);
+    expect(frozenState.voice.model).toBeUndefined();
+  });
+
+  it("resets voice state back to defaults", () => {
+    const next = presenceReducer({
+      ...defaultPresenceRuntimeState,
+      voice: {
+        ...defaultPresenceRuntimeState.voice,
+        status: "error",
+        transcript: "stale",
+        provider: "legacy-provider",
+      },
+    }, { ...eventBase, type: "voice/reset" });
+
+    expect(next.voice).toEqual(defaultPresenceRuntimeState.voice);
+  });
+
+  it("records transcript and activity updates independently", () => {
+    const withTranscript = presenceReducer(defaultPresenceRuntimeState, {
+      ...eventBase,
+      type: "voice/transcript",
+      payload: { transcript: "Hello", transcriptSource: "model", requestId: "voice-1" },
+    });
+    const withActivity = presenceReducer(withTranscript, {
+      ...eventBase,
+      eventId: "presence-event:test:2",
+      type: "voice/activity",
+      payload: { isListening: true, isVadActive: true, amplitude: 0.4 },
+    });
+
+    expect(withActivity.voice).toMatchObject({
+      transcript: "Hello",
+      transcriptSource: "model",
+      requestId: "voice-1",
+      isListening: true,
+      isVadActive: true,
+      amplitude: 0.4,
+      status: "idle",
+    });
+  });
+
+  it("exposes runtime voice helpers that dispatch reducer actions", () => {
+    const runtime = createPresenceRuntime();
+    const listener = vi.fn();
+    runtime.subscribe(listener);
+
+    runtime.updateVoiceState({ provider: "dashboard", status: "listening" }, "dashboard");
+    runtime.recordVoiceTranscript({ transcript: "Runtime transcript", transcriptSource: "user" }, "dashboard");
+    runtime.recordVoiceActivity({ amplitude: 0.33 }, "dashboard");
+
+    expect(runtime.getState().voice).toMatchObject({
+      provider: "dashboard",
+      status: "listening",
+      transcript: "Runtime transcript",
+      transcriptSource: "user",
+      amplitude: 0.33,
+    });
+    expect(listener).toHaveBeenCalledTimes(3);
+    expect(runtime.resetVoiceState("dashboard").voice).toEqual(defaultPresenceRuntimeState.voice);
+  });
 });
 
 describe("Presence compatibility", () => {
