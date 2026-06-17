@@ -30,6 +30,7 @@ describe("providerHubPanelViewModel", () => {
   it("reuses existing brand image assets for Provider Hub cards when available", () => {
     const cards = createProviderHubPanelViewModel().sections.flatMap((section) => section.cards);
 
+    expect(cards.find((card) => card.entry.providerId === "luca_prime")?.iconSrc).toBe("/icon.png");
     expect(cards.find((card) => card.entry.providerId === "openai")?.iconSrc).toBe("/icons/brands/openai.svg");
     expect(cards.find((card) => card.entry.providerId === "anthropic")?.iconSrc).toBe("/icons/brands/anthropic.svg");
     expect(cards.find((card) => card.entry.providerId === "google_gemini")?.iconSrc).toBe("/icons/brands/gemini-color.svg");

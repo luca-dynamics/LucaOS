@@ -68,6 +68,7 @@ const ACTION_LABELS: Record<LucaProviderHubRequiredAction, string> = {
 };
 
 const PROVIDER_ICON_SRC: Partial<Record<LucaProviderHubEntry["providerId"], string>> = {
+  luca_prime: "/icon.png",
   openai: "/icons/brands/openai.svg",
   anthropic: "/icons/brands/anthropic.svg",
   google_gemini: "/icons/brands/gemini-color.svg",
