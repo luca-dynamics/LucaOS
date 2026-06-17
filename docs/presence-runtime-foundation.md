@@ -174,6 +174,22 @@ The next phase is Electron voice adapter parity coverage for the current IPC
 channels, followed by moving canonical voice state into the Presence Runtime and
 then migrating provider/fallback behavior behind runtime-owned ports.
 
+## Electron voice adapter parity
+
+Dependency-free CommonJS smoke coverage now locks the current Electron voice IPC adapter behavior before voice runtime ownership moves. The smoke test exercises `registerWidgetIpc.cjs` directly with fake `ipcMain` and fake BrowserWindow-like objects, so it does not require a real Electron runtime or import TypeScript Presence modules.
+
+Covered channels and routes:
+
+- `widget-toggle-voice` remains registered on the Widget IPC adapter and forwards to the dashboard/main window on the unchanged `trigger-voice-toggle` channel. The forwarded payload preserves `mode`, `context`, unknown legacy fields, and still forces `forceHud: false` for this path.
+- `widget-voice-data` remains registered on the Widget IPC adapter and fans the same voice display payload to the existing Presence surfaces: `widget-update` for Widget, `hologram-update` for Hologram, and `widget-update` for MiniChat. Transcript, listening, VAD, amplitude, status, source, provider/fallback metadata, and unknown legacy fields pass through without mutation.
+- Missing or destroyed destination windows are treated as lifecycle no-ops for the covered adapter paths; the tests assert that these smoke routes do not become runtime owners or require the destination windows to exist.
+
+Voice execution is still owned by the dashboard renderer and current Electron main-process orchestration. The parity coverage intentionally does not start runtime-owned voice state, rename IPC channels, alter VAD/recording/transcription/provider fallback, change MiniChat/Hologram/Widget display behavior, or move wake-word behavior.
+
+Wake-word summon routing remains documented as the current `main.cjs` path: `wake-word-triggered` calls `summonVoicePresence('wake-word')`, creates/keeps the dashboard voice runtime available without focusing it, shows the Hologram with `showInactive()`, sends a Hologram listening update first, and uses dashboard focus only through the existing recovery fallback. A later phase can extract this route behind a testable adapter once runtime-owned voice state and provider/fallback migration are ready.
+
+What remains for the next phase: move canonical voice session state behind the Presence Runtime, introduce provider/fallback ports, and then decouple dashboard voice execution after parity tests cover those new boundaries.
+
 ## Electron Presence IPC extraction
 
 Presence-related Electron IPC registration now lives in injected CommonJS
