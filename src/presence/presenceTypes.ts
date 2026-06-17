@@ -28,13 +28,28 @@ export interface PresenceVoiceState {
   transcriptSource: "user" | "model";
 }
 
-export type PresenceSensorKind = "microphone" | "camera" | "screen";
+export type PresenceSensorKind =
+  | "microphone"
+  | "camera"
+  | "vision"
+  | "screen"
+  | "clipboard"
+  | "file"
+  | "filesystem"
+  | "browser"
+  | "location";
 export type PresenceCapabilityStatus = "unavailable" | "available" | "requesting" | "active" | "blocked" | "error";
 
 export interface PresenceSensorState {
   microphone: PresenceCapabilityStatus;
   camera: PresenceCapabilityStatus;
   screen: PresenceCapabilityStatus;
+  vision?: PresenceCapabilityStatus;
+  clipboard?: PresenceCapabilityStatus;
+  file?: PresenceCapabilityStatus;
+  filesystem?: PresenceCapabilityStatus;
+  browser?: PresenceCapabilityStatus;
+  location?: PresenceCapabilityStatus;
 }
 
 export type PresenceApprovalStatus = "none" | "pending" | "approved" | "denied" | "expired";

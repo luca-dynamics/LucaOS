@@ -237,3 +237,32 @@ The next migration step is to feed dashboard-created approval prompts into a
 Presence-owned approval route port while keeping `approvalRequest` as the
 compatibility payload until all MiniChat, Hologram, Widget, LucaLink, and
 dashboard consumers have parity coverage.
+
+## Presence sensor disclosure routing foundation
+
+Presence now includes a typed, pure sensor disclosure routing layer under
+`src/presence/sensors/`. The layer defines sensor kind, status, source,
+permission, disclosure, route-state, and route-envelope contracts for current
+microphone and screen disclosure state while leaving room for future camera or
+vision, clipboard, file or filesystem, browser, and location disclosure domains.
+
+The route helpers normalize raw legacy sensor payloads into JSON-safe Presence
+sensor disclosures, preserve unknown extension fields, tolerate partial updates,
+merge partial disclosure state, detect active or disclosure-required states, and
+convert typed disclosures back to legacy-compatible objects. Existing disclosure
+policy helpers route through this normalization boundary while continuing to
+return the same `{ label, level }` shape used by Hologram and Widget surfaces.
+Compatibility adapters can read current legacy `microphone`, `screen`, or
+`sensors` fields without renaming or removing outgoing payload fields.
+
+This foundation intentionally does not move runtime ownership. Microphone and
+listening state still come from the existing voice and dashboard path. Screen
+context and display/capture behavior remain owned by the existing screen and
+VisualCore path. Permission prompts, capture checks, VAD, wake-word behavior,
+IPC channel names, MiniChat/Hologram/Widget rendering, disclosure UI copy,
+approval routing, and Electron window or IPC ownership are unchanged.
+
+The next migration step is to feed dashboard-created microphone and screen
+activity updates into this typed disclosure route at the current compatibility
+boundary, then introduce Presence-owned sensor disclosure subscriptions only
+after parity tests cover every surface and current permission behavior.

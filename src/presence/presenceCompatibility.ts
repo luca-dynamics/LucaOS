@@ -1,6 +1,7 @@
 import { createPresenceApprovalPrompt, toLegacyApprovalRequest } from "./approvals";
 import { createPresenceSnapshot, defaultPresenceRuntimeState } from "./presenceState";
 import type { PresenceElevationState, PresenceRuntimeState, PresenceSnapshot } from "./presenceTypes";
+import { createPresenceSensorRouteState, toPresenceCapabilityStatus } from "./sensors";
 
 export interface LegacyPresencePayload {
   transcript?: string;
@@ -19,6 +20,9 @@ export interface LegacyPresencePayload {
     activeMissionScope?: string;
   };
   approvalRequest?: unknown;
+  sensors?: unknown;
+  microphone?: unknown;
+  screen?: unknown;
   [key: string]: unknown;
 }
 
@@ -38,6 +42,11 @@ function denormalizeElevationState(value: PresenceElevationState | undefined) {
 }
 
 export function fromWidgetUpdatePayload(payload: LegacyPresencePayload): PresenceSnapshot {
+  const sensorRouteState = createPresenceSensorRouteState({
+    ...(payload.sensors && typeof payload.sensors === "object" ? payload.sensors : {}),
+    ...(payload.microphone !== undefined ? { microphone: payload.microphone } : {}),
+    ...(payload.screen !== undefined ? { screen: payload.screen } : {}),
+  });
   const state: PresenceRuntimeState = {
     ...defaultPresenceRuntimeState,
     revision: 1,
@@ -53,6 +62,12 @@ export function fromWidgetUpdatePayload(payload: LegacyPresencePayload): Presenc
     persona: payload.persona ?? defaultPresenceRuntimeState.persona,
     themeHex: payload.themeHex,
     intent: payload.intent ?? null,
+    sensors: {
+      ...defaultPresenceRuntimeState.sensors,
+      ...(sensorRouteState.microphone ? { microphone: toPresenceCapabilityStatus(sensorRouteState.microphone.status) } : {}),
+      ...(sensorRouteState.screen ? { screen: toPresenceCapabilityStatus(sensorRouteState.screen.status) } : {}),
+      ...(sensorRouteState.camera ? { camera: toPresenceCapabilityStatus(sensorRouteState.camera.status) } : {}),
+    },
     elevationState: normalizeElevationState(payload.elevationState),
   };
   const snapshot = createPresenceSnapshot(state);
