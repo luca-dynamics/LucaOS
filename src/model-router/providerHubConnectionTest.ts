@@ -34,7 +34,7 @@ const OPENAI_COMPATIBLE_TESTS: Partial<Record<LucaProviderHubId, TestDefinition>
   openai: { kind: "openai_models", defaultBaseUrl: "https://api.openai.com/v1" },
   xai_grok: { kind: "openai_models", defaultBaseUrl: "https://api.x.ai/v1" },
   openrouter: { kind: "openai_models", defaultBaseUrl: "https://openrouter.ai/api/v1" },
-  deepseek: { kind: "openai_models", defaultBaseUrl: "https://api.deepseek.com" },
+  deepseek: { kind: "openai_models", defaultBaseUrl: "https://api.deepseek.com/v1" },
   groq: { kind: "openai_models", defaultBaseUrl: "https://api.groq.com/openai/v1" },
   custom_openai_compatible: { kind: "openai_models", todo: "Provider-specific custom health endpoints can be added after endpoint capability metadata exists." },
 };
@@ -101,23 +101,34 @@ function createResult(input: {
   };
 }
 
-function normalizeBaseUrl(baseUrl: string): URL | undefined {
+export function normalizeProviderHubTestBaseUrl(baseUrl: string): URL | undefined {
   try {
     const url = new URL(baseUrl.trim());
     if (url.protocol !== "https:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") return undefined;
-    return url;
+
+    const next = new URL(url.origin);
+    const pathSegments = url.pathname.split("/").filter(Boolean);
+    if (pathSegments[pathSegments.length - 1] === "models") pathSegments.pop();
+    if (pathSegments[pathSegments.length - 1] !== "v1") pathSegments.push("v1");
+    next.pathname = `/${pathSegments.join("/")}`;
+    return next;
   } catch {
     return undefined;
   }
 }
 
-function appendModelsPath(baseUrl: URL): string {
-  const pathname = baseUrl.pathname.endsWith("/") ? `${baseUrl.pathname}models` : `${baseUrl.pathname}/models`;
-  const next = new URL(baseUrl.toString());
-  next.pathname = pathname.replace(/\/+/g, "/");
-  next.search = "";
-  next.hash = "";
-  return next.toString();
+export function createProviderHubModelsEndpoint(providerId: LucaProviderHubId, baseUrl?: string): string | undefined {
+  const definition = OPENAI_COMPATIBLE_TESTS[providerId];
+  const normalizedBaseUrl = normalizeProviderHubTestBaseUrl(baseUrl?.trim() || definition?.defaultBaseUrl || "");
+  if (!normalizedBaseUrl) return undefined;
+
+  const endpoint = new URL(normalizedBaseUrl.toString());
+  const pathSegments = endpoint.pathname.split("/").filter(Boolean);
+  if (pathSegments[pathSegments.length - 1] !== "models") pathSegments.push("models");
+  endpoint.pathname = `/${pathSegments.join("/")}`;
+  endpoint.search = "";
+  endpoint.hash = "";
+  return endpoint.toString();
 }
 
 export function canTestProviderHubConnection(input: Pick<LucaProviderHubConnectionTestInput, "providerId" | "apiKey" | "savedApiKey" | "baseUrl">): { canTest: boolean; reason?: string } {
@@ -137,8 +148,8 @@ export async function testProviderHubConnection(input: LucaProviderHubConnection
     return createResult({ providerId: input.providerId, status: definition ? "skipped" : "unsupported", message: blockers.reason ?? "Connection test unavailable.", providerApiCalled: false, diagnostics: definition?.todo ? { todo: definition.todo } : undefined });
   }
 
-  const baseUrl = normalizeBaseUrl(input.baseUrl?.trim() || definition?.defaultBaseUrl || "");
-  if (!baseUrl) {
+  const endpoint = createProviderHubModelsEndpoint(input.providerId, input.baseUrl);
+  if (!endpoint) {
     return createResult({ providerId: input.providerId, status: "failed", message: "Enter a valid HTTPS base URL. Localhost URLs are only accepted for explicit local endpoints.", providerApiCalled: false });
   }
 
@@ -150,7 +161,6 @@ export async function testProviderHubConnection(input: LucaProviderHubConnection
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Math.max(250, input.timeoutMs ?? 8000));
   const started = Date.now();
-  const endpoint = appendModelsPath(baseUrl);
   try {
     const response = await fetcher(endpoint, {
       method: "GET",
