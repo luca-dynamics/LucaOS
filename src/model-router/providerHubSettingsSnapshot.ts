@@ -18,7 +18,7 @@ export interface LucaProviderHubSettingsSnapshotInput {
   readonly customBaseUrl?: string;
   readonly providerKeyPresence?: Readonly<Record<string, boolean>>;
   readonly localRuntimeAvailability?: Readonly<Record<string, boolean>>;
-  readonly disabledProviderIds?: readonly LucaProviderHubId[];
+  readonly disabledProviderIds?: readonly string[];
 }
 
 
@@ -43,9 +43,17 @@ export interface LucaProviderHubSettingsSnapshotUiInput {
       readonly groqApiKey?: string;
       readonly groqBaseUrl?: string;
       readonly openRouterApiKey?: string;
+      readonly customOpenAiCompatibleApiKey?: string;
+      readonly customOpenAiCompatibleBaseUrl?: string;
+      readonly customOpenAiCompatibleModel?: string;
+      readonly ollamaBaseUrl?: string;
+      readonly lmStudioBaseUrl?: string;
       readonly model?: string;
       readonly embeddingModel?: string;
       readonly provider?: string;
+    };
+    readonly providerHub?: {
+      readonly disabledProviderIds?: readonly string[];
     };
     readonly memory?: {
       readonly provider?: string;
@@ -153,8 +161,8 @@ export function createProviderHubSettingsSnapshots(
   const brain = input.settings.brain;
   const selectedProvider = firstPresentString(brain?.provider, input.settings.memory?.provider);
   const selectedModelId = firstPresentString(
-    brain?.model,
     input.settings.general?.activeBrainId,
+    brain?.model,
     brain?.embeddingModel,
     input.settings.general?.activeEmbedId,
     input.settings.memory?.model,
@@ -164,8 +172,9 @@ export function createProviderHubSettingsSnapshots(
     selectedProvider,
     selectedModelId,
     useCustomApiKey: brain?.useCustomApiKey,
-    customApiKeyProvider: selectedProvider,
+    customApiKeyProvider: firstPresentString(selectedProvider, brain?.customOpenAiCompatibleApiKey ? "custom_openai_compatible" : undefined),
     customBaseUrl: firstPresentString(
+      brain?.customOpenAiCompatibleBaseUrl,
       brain?.openaiBaseUrl,
       brain?.anthropicBaseUrl,
       brain?.geminiBaseUrl,
@@ -181,7 +190,9 @@ export function createProviderHubSettingsSnapshots(
       deepseek: hasConfiguredSecret(brain?.deepseekApiKey),
       groq: hasConfiguredSecret(brain?.groqApiKey),
       openrouter: hasConfiguredSecret(brain?.openRouterApiKey),
+      custom_openai_compatible: hasConfiguredSecret(brain?.customOpenAiCompatibleApiKey),
     },
+    disabledProviderIds: input.settings.providerHub?.disabledProviderIds,
     localRuntimeAvailability: {
       ollama: Boolean(input.ollamaAvailable),
     },

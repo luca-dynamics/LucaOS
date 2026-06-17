@@ -14,6 +14,8 @@ import { modelReadinessResolver } from "../services/models/ModelReadinessResolve
 import type { ModelRouteDecision } from "../types/modelRouting";
 import { createProviderHubPanelViewModel, type ProviderHubPanelCardViewModel, type ProviderHubPanelViewModel } from "../model-router/providerHubPanelViewModel";
 import { createProviderHubSettingsSnapshots } from "../model-router/providerHubSettingsSnapshot";
+import { createProviderHubConfigureIntentFromCard, type LucaProviderHubConfigureIntent } from "../model-router/providerHubConfigureIntent";
+import { createProviderHubSettingsPatch, getProviderHubSafeKeyStatus, providerHubApiKeyField, providerHubBaseUrlField } from "../model-router/providerHubConfiguration";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -57,7 +59,7 @@ const getProviderHubStateClass = (state: string) => {
   return "bg-white/5 text-[var(--app-text-muted)] border-white/10";
 };
 
-const ProviderHubCard: React.FC<{ card: ProviderHubPanelCardViewModel; theme: any; isMobile?: boolean }> = ({ card, theme, isMobile }) => {
+const ProviderHubCard: React.FC<{ card: ProviderHubPanelCardViewModel; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ card, theme, isMobile, onConfigure }) => {
   const copyDiagnostics = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
@@ -111,7 +113,7 @@ const ProviderHubCard: React.FC<{ card: ProviderHubPanelCardViewModel; theme: an
           {card.entry.notes.length > 0 && <p className="text-[8px] leading-relaxed mt-2" style={{ color: "var(--app-text-muted)" }}>{card.entry.notes[0]}</p>}
         </div>
         <div className="flex items-center justify-between gap-2 pt-2 border-t" style={{ borderColor: "var(--app-border-main)" }}>
-          <button type="button" disabled className="flex-1 text-[9px] font-medium py-1 rounded opacity-60" style={{ color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>Configure coming soon</button>
+          <button type="button" onClick={() => onConfigure(card)} className="flex-1 text-[9px] font-medium py-1 rounded hover:opacity-90 transition-opacity" style={{ color: "var(--app-text-main)", backgroundColor: "var(--app-bg-tint)" }}>Configure</button>
           <button type="button" onClick={copyDiagnostics} className="px-2 py-1 rounded hover:bg-white/5 transition-colors" style={{ color: "var(--app-text-muted)" }} title="Copy safe diagnostics"><Icon name="Copy" size={10} variant="BoldDuotone" /></button>
         </div>
       </div>
@@ -119,7 +121,7 @@ const ProviderHubCard: React.FC<{ card: ProviderHubPanelCardViewModel; theme: an
   );
 };
 
-const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; theme: any; isMobile?: boolean }> = ({ viewModel, theme, isMobile }) => (
+const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, theme, isMobile, onConfigure }) => (
   <div className="mb-4 rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)" }}>
     <div className="p-4 border-b" style={{ borderColor: "var(--app-border-main)" }}>
       <div className="flex items-start justify-between gap-3">
@@ -138,13 +140,89 @@ const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; theme: 
         <div key={section.id} className="mb-3 last:mb-0">
           <div className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2 px-1" style={{ color: "var(--app-text-main)" }}>{section.title}</div>
           <div className={`grid gap-2 ${isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"}`}>
-            {section.cards.map((card) => <ProviderHubCard key={card.entry.providerId} card={card} theme={theme} isMobile={isMobile} />)}
+            {section.cards.map((card) => <ProviderHubCard key={card.entry.providerId} card={card} theme={theme} isMobile={isMobile} onConfigure={onConfigure} />)}
           </div>
         </div>
       ))}
     </div>
   </div>
 );
+
+const ProviderHubConfigurationPanel: React.FC<{
+  card: ProviderHubPanelCardViewModel;
+  intent: LucaProviderHubConfigureIntent;
+  theme: any;
+  onClose: () => void;
+  onSaved: () => void;
+}> = ({ card, intent, theme, onClose, onSaved }) => {
+  const settings = settingsService.getSettings();
+  const hasApiKeyField = Boolean(providerHubApiKeyField[card.entry.providerId]);
+  const hasBaseUrlField = Boolean(providerHubBaseUrlField[card.entry.providerId]);
+  const [apiKey, setApiKey] = useState("");
+  const [baseUrl, setBaseUrl] = useState(String((settings.brain as any)[providerHubBaseUrlField[card.entry.providerId] ?? ""] ?? card.entry.defaultBaseUrl ?? ""));
+  const [modelId, setModelId] = useState(card.configuredModelId ?? (card.entry.providerId === "custom_openai_compatible" ? settings.brain.customOpenAiCompatibleModel : settings.brain.model) ?? "");
+  const [enabled, setEnabled] = useState(card.readiness.state !== "disabled");
+  const isManaged = intent.intentKind === "connect_managed";
+  const isLocal = card.entry.category === "local_runtime";
+
+  const save = async () => {
+    await settingsService.saveSettings(createProviderHubSettingsPatch(settingsService.getSettings(), {
+      providerId: card.entry.providerId,
+      apiKey,
+      baseUrl,
+      modelId,
+      enabled,
+    }));
+    onSaved();
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" role="dialog" aria-modal="true">
+      <div className="w-full max-w-xl rounded-xl border shadow-2xl overflow-hidden" style={{ backgroundColor: "var(--app-bg-main)", borderColor: "var(--app-border-main)" }}>
+        <div className="p-4 border-b flex items-start justify-between gap-3" style={{ borderColor: "var(--app-border-main)" }}>
+          <div>
+            <h3 className="text-sm font-bold" style={{ color: "var(--app-text-main)" }}>{intent.title}: {card.entry.label}</h3>
+            <p className="text-[10px] mt-1 leading-relaxed" style={{ color: "var(--app-text-muted)" }}>{intent.description}</p>
+          </div>
+          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-white/5" style={{ color: "var(--app-text-muted)" }}><Icon name="CloseCircle" size={16} variant="BoldDuotone" /></button>
+        </div>
+        <div className="p-4 space-y-3">
+          <div className="rounded-lg border p-3 text-[10px]" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)", color: "var(--app-text-muted)" }}>
+            <div className="font-bold mb-1" style={{ color: theme.hex }}>{getProviderHubSafeKeyStatus(settings, card.entry.providerId)}</div>
+            <div>{card.readiness.reason}</div>
+            {isLocal && <div className="mt-2">Run {card.entry.label} manually, then return here to review setup. LucaOS will not start local runtimes from this panel.</div>}
+            {isManaged && <div className="mt-2">Managed by LucaOS. No user API key is requested or stored for Luca Prime.</div>}
+          </div>
+          {!isManaged && hasApiKeyField && (
+            <label className="block text-[10px] font-bold" style={{ color: "var(--app-text-main)" }}>API key
+              <input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder={getProviderHubSafeKeyStatus(settings, card.entry.providerId)} className="mt-1 w-full rounded border px-3 py-2 text-xs outline-none" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }} />
+            </label>
+          )}
+          {!isManaged && hasBaseUrlField && (
+            <label className="block text-[10px] font-bold" style={{ color: "var(--app-text-main)" }}>Base URL / endpoint
+              <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-xs outline-none" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }} />
+            </label>
+          )}
+          {!isLocal && !isManaged && (
+            <label className="block text-[10px] font-bold" style={{ color: "var(--app-text-main)" }}>Selected model ID
+              <input value={modelId} onChange={(event) => setModelId(event.target.value)} placeholder="provider/model-id" className="mt-1 w-full rounded border px-3 py-2 text-xs outline-none" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }} />
+            </label>
+          )}
+          {!isManaged && (
+            <label className="flex items-center gap-2 text-[10px] font-bold" style={{ color: "var(--app-text-main)" }}>
+              <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} /> Enabled
+            </label>
+          )}
+        </div>
+        <div className="p-4 border-t flex justify-end gap-2" style={{ borderColor: "var(--app-border-main)" }}>
+          <button type="button" onClick={onClose} className="px-3 py-2 rounded text-xs" style={{ color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>Cancel</button>
+          <button type="button" onClick={isManaged ? onClose : save} className="px-3 py-2 rounded text-xs font-bold" style={{ color: "#050505", backgroundColor: theme.hex }}>{isLocal ? "Review setup" : isManaged ? "Done" : "Save settings"}</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 
 interface RenderGridProps {
@@ -391,6 +469,8 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
   const [isOllamaRunning, setIsOllamaRunning] = useState(false);
   const [platform, setPlatform] = useState<"desktop" | "mobile">("desktop");
   const [routeStatus, setRouteStatus] = useState<ModelRouteDecision | null>(null);
+  const [settingsRevision, setSettingsRevision] = useState(0);
+  const [providerHubConfigureCard, setProviderHubConfigureCard] = useState<ProviderHubPanelCardViewModel | null>(null);
   
   useEffect(() => {
     const updatePlatform = () => {
@@ -455,11 +535,15 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
         }
     }
 
+    const handleSettingsChanged = () => setSettingsRevision((revision) => revision + 1);
+    settingsService.on("settings-changed", handleSettingsChanged);
+
     const unsubscribe = modelManagerService.subscribe((allModels: LocalModel[]) => {
       setModels(allModels.filter((m: LocalModel) => m.platforms.includes(platform)));
     });
     return () => { 
       unsubscribe(); 
+      settingsService.off("settings-changed", handleSettingsChanged);
       clearInterval(pollId);
     };
   }, [platform]);
@@ -532,7 +616,13 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
 
   const providerHubViewModel = useMemo(() => createProviderHubPanelViewModel(
     createProviderHubSettingsSnapshots({ settings: settingsService.getSettings(), ollamaAvailable: isOllamaRunning }),
-  ), [activeBrainId, isOllamaRunning]);
+  ), [activeBrainId, isOllamaRunning, settingsRevision]);
+
+  const handleProviderHubConfigure = useCallback((card: ProviderHubPanelCardViewModel) => {
+    setProviderHubConfigureCard(card);
+  }, []);
+
+  const activeProviderHubIntent = providerHubConfigureCard ? createProviderHubConfigureIntentFromCard(providerHubConfigureCard) : null;
 
   return (
     <div className="flex flex-col min-h-[500px] rounded-xl overflow-hidden" style={{ backgroundColor: "var(--app-bg-main, #09090b)" }}>
@@ -594,7 +684,16 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <ProviderHubPanel viewModel={providerHubViewModel} theme={theme} isMobile={isMobile} />
+        <ProviderHubPanel viewModel={providerHubViewModel} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
+        {providerHubConfigureCard && activeProviderHubIntent && (
+          <ProviderHubConfigurationPanel
+            card={providerHubConfigureCard}
+            intent={activeProviderHubIntent}
+            theme={theme}
+            onClose={() => setProviderHubConfigureCard(null)}
+            onSaved={() => setSettingsRevision((revision) => revision + 1)}
+          />
+        )}
 
         {routeStatus && (
           <div className="mb-4 rounded-xl border p-3" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)" }}>
