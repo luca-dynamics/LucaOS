@@ -14,11 +14,16 @@ function registerVisualCoreIpc({
     logger = console
 }) {
     ipcMain.handle('get-current-display-id', (event) => {
-        const win = BrowserWindow.fromWebContents(event.sender);
-        if (!win) return null;
-        const { x, y, width, height } = win.getBounds();
-        const display = screen.getDisplayMatching({ x, y, width, height });
-        return display.id;
+        try {
+            const win = BrowserWindow.fromWebContents(event.sender);
+            if (!win) return null;
+            const { x, y, width, height } = win.getBounds();
+            const display = screen.getDisplayMatching({ x, y, width, height });
+            return display?.id ?? null;
+        } catch (error) {
+            logger.error?.('[MAIN PROCESS] Failed to resolve current display id:', error);
+            return null;
+        }
     });
 
     ipcMain.on('visual-core-ready', () => {
@@ -63,8 +68,8 @@ function registerVisualCoreIpc({
             }
             if (!visualCoreWindow.isVisible()) {
                 visualCoreWindow.show();
-                syncVisualCoreStatus(true);
             }
+            syncVisualCoreStatus(true);
             visualCoreWindow.focus();
         } else {
             logger.log('[MAIN PROCESS] Creating new Smart Screen window with data');

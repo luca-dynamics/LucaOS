@@ -204,6 +204,46 @@ They should be handled in a later dedicated VisualCore parity audit PR with
 focused tests around packaged load paths, close/hide semantics, and update
 fan-out ordering.
 
+## VisualCore parity audit
+
+VisualCore parity now has dependency-free CommonJS smoke coverage around the
+extracted IPC adapter and window factory. The IPC tests cover
+`get-current-display-id` display lookup and lookup-failure handling,
+`visual-core-ready` pending-data flush and ready-state updates,
+`open-visual-core` creation/status sync, both registered `close-visual-core`
+handlers, `update-visual-core` ready/not-ready/missing-window branches,
+`visual-core-interaction` forwarding to the main window, and
+`visual-core-command` forwarding back to VisualCore. The window factory tests
+cover BrowserWindow sizing and transparency options, saved bounds, development
+and packaged load URL construction, preload/webview options, ready-to-show
+pending-data queuing, and close cleanup.
+
+The packaged VisualCore load path was corrected to match the other extracted
+Presence surfaces. VisualCore now passes `../../dist/index.html` from
+`platforms/electron/main.cjs` into the extracted factory, while the small
+factory URL resolver preserves the existing `?mode=visual_core` development
+and packaged URL shapes.
+
+The duplicate `close-visual-core` registration is intentionally preserved. The
+first handler keeps the legacy hide, pending-data clear, and status-sync path;
+the second handler keeps the legacy close path. The new parity test locks both
+registration effects separately so a later behavior-change PR can consolidate
+or redesign close/hide semantics deliberately.
+
+The duplicate ready-window `visual-core-update` fan-out is also intentionally
+preserved. The adapter still sends an update before readiness branching and
+sends a second update when VisualCore is already ready. The audit only hardens
+status sync so `update-visual-core` reports VisualCore as visible for existing
+windows as well as newly shown or newly created windows.
+
+Remaining follow-up work should happen in a dedicated VisualCore
+behavior-change PR: decide whether the legacy double close/hide registration
+should become one explicit semantic, decide whether ready-window update fan-out
+should emit once or twice, and only then adjust VisualCore product behavior
+behind tests. Voice runtime ownership, wake-word routing, Presence message
+routing, approval routing, sensor disclosure routing, VisualCore rendering, and
+IPC channel names remain unchanged by this audit.
+
 ## Presence approval routing foundation
 
 Presence now includes a typed, pure approval routing layer under

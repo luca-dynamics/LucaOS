@@ -1,4 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+function resolveVisualCoreLoadUrl({ isDev, devPort, distPath }) {
+    return isDev
+        ? `http://localhost:${devPort}?mode=visual_core`
+        : `file://${distPath}?mode=visual_core`;
+}
+
 function createVisualCoreWindow({
     BrowserWindow,
     screen,
@@ -62,9 +68,7 @@ function createVisualCoreWindow({
     visualCoreWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
     // Load app with ?mode=visual_core
-    const url = isDev
-        ? `http://localhost:${devPort}?mode=visual_core`
-        : `file://${distPath}?mode=visual_core`;
+    const url = resolveVisualCoreLoadUrl({ isDev, devPort, distPath });
 
     visualCoreWindow.loadURL(url);
 
@@ -89,4 +93,4 @@ function createVisualCoreWindow({
     return visualCoreWindow;
 }
 
-module.exports = { createVisualCoreWindow };
+module.exports = { createVisualCoreWindow, resolveVisualCoreLoadUrl };

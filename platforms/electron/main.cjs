@@ -1571,7 +1571,7 @@ function createVisualCoreWindow(initialData = null) {
         screen,
         isDev: !app.isPackaged,
         devPort: VITE_DEV_PORT,
-        distPath: path.join(__dirname, '../dist/index.html'),
+        distPath: path.join(__dirname, '../../dist/index.html'),
         preloadPath: path.join(__dirname, 'preload.cjs'),
         initialData,
         loadWindowStateVC,
