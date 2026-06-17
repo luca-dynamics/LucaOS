@@ -17,6 +17,7 @@ const sourceGroups: readonly { source: OperationCenterSource; title: string }[] 
   { source: "personal_intelligence", title: "Personal Intelligence" },
   { source: "lucalink", title: "LucaLink" },
   { source: "runtime", title: "Runtime" },
+  { source: "provider_hub", title: "Provider Hub / Model Mesh" },
   { source: "system", title: "System" },
 ];
 
@@ -89,6 +90,7 @@ export default function OperationPermissionCenter() {
         <div className="grid grid-cols-2 gap-2">
           <RightPanelMetric label="Total items" value={operationReadiness.totalItems} />
           <RightPanelMetric label="PI / LucaLink" value={`${operationReadiness.personalIntelligenceCount} / ${operationReadiness.lucaLinkCount}`} />
+          <RightPanelMetric label="Provider Hub" value={operationReadiness.providerHubCount} />
           <RightPanelMetric label="Pending / review" value={operationReadiness.pending + operationReadiness.approvalRequired} tone={operationReadiness.pending + operationReadiness.approvalRequired ? "warn" : "good"} />
           <RightPanelMetric label="Blocked" value={operationReadiness.blocked} tone={operationReadiness.blocked ? "danger" : "good"} />
           <RightPanelMetric label="High / critical" value={`${operationReadiness.highRiskCount} / ${operationReadiness.criticalRiskCount}`} tone={operationReadiness.highRiskCount + operationReadiness.criticalRiskCount ? "danger" : "good"} />

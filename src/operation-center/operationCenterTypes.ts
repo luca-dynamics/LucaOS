@@ -2,6 +2,7 @@ export type OperationCenterSource =
   | "personal_intelligence"
   | "lucalink"
   | "runtime"
+  | "provider_hub"
   | "system";
 
 export type OperationCenterCategory =
@@ -23,7 +24,9 @@ export type OperationCenterCategory =
   | "adapter_file_install"
   | "lucalink_dry_run"
   | "runtime_approval"
-  | "blocked_action";
+  | "blocked_action"
+  | "provider_readiness"
+  | "model_mesh";
 
 export type OperationCenterStatus =
   | "ready_for_review"
@@ -83,6 +86,7 @@ export interface OperationCenterSummary {
   disabled: number;
   personalIntelligenceCount: number;
   lucaLinkCount: number;
+  providerHubCount: number;
   highRiskCount: number;
   criticalRiskCount: number;
   authorityGranted: false;

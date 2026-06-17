@@ -19,6 +19,7 @@ import {
   createOperationItemsFromTransportPermissionDecisions,
   createOperationItemsFromWebDisplayIntents,
 } from "./operationCenterBridge";
+import { createProviderHubOperationItems } from "./providerHubOperationBridge";
 import type { OperationCenterItem } from "./operationCenterTypes";
 import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
 import { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } from "./operationCenterLucaLinkRuntimeAuthorityBridge";
@@ -216,6 +217,15 @@ const dryRunHandoffItems = createOperationItemsFromLucaLinkDryRunHandoffSimulati
   LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES,
 );
 
+const providerHubItems = createProviderHubOperationItems([
+  { providerId: "luca_prime", enabled: true },
+  { providerId: "openai", enabled: true, hasUserKey: false },
+  { providerId: "anthropic", enabled: true, hasUserKey: true, configuredModelId: "claude-sonnet-fixture" },
+  { providerId: "ollama", enabled: true, localRuntimeAvailable: false },
+  { providerId: "lm_studio", enabled: true, localRuntimeAvailable: false },
+  { providerId: "custom_openai_compatible", enabled: true, hasUserKey: true, hasCustomBaseUrl: false },
+]);
+
 export const operationCenterFixtureItems: readonly OperationCenterItem[] = Object.freeze([
   ...runtimeAuthorityItems,
   ...lucaLinkRuntimeAuthorityItems,
@@ -233,4 +243,5 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...transportItems,
   ...fileInstallItems,
   ...dryRunHandoffItems,
+  ...providerHubItems,
 ]);

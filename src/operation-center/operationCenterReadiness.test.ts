@@ -13,6 +13,7 @@ describe("operation center readiness", () => {
     expect(summary.readOnly).toBeGreaterThan(0);
     expect(summary.personalIntelligenceCount).toBeGreaterThan(0);
     expect(summary.lucaLinkCount).toBeGreaterThan(0);
+    expect(summary.providerHubCount).toBeGreaterThan(0);
     expect(summary.highRiskCount + summary.criticalRiskCount).toBeGreaterThan(0);
   });
 
