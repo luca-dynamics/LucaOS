@@ -2,6 +2,7 @@ import auditSource from "./operationCenterAudit.ts?raw";
 import bridgeSource from "./operationCenterBridge.ts?raw";
 import runtimeAuthorityBridgeSource from "./operationCenterRuntimeAuthorityBridge.ts?raw";
 import lucaLinkRuntimeAuthorityBridgeSource from "./operationCenterLucaLinkRuntimeAuthorityBridge.ts?raw";
+import providerHubBridgeSource from "./providerHubOperationBridge.ts?raw";
 import fixturesSource from "./operationCenterFixtures.ts?raw";
 import indexSource from "./index.ts?raw";
 import readinessSource from "./operationCenterReadiness.ts?raw";
@@ -13,7 +14,7 @@ import fileInstallIndexSource from "../services/lucaLink/adapterFileInstallPermi
 import { describe, expect, it } from "vitest";
 import { operationCenterFixtureItems } from "./operationCenterFixtures";
 
-const productionSources = [auditSource, bridgeSource, runtimeAuthorityBridgeSource, lucaLinkRuntimeAuthorityBridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource, fileInstallFixturesSource, fileInstallTypesSource, fileInstallIndexSource];
+const productionSources = [auditSource, bridgeSource, runtimeAuthorityBridgeSource, lucaLinkRuntimeAuthorityBridgeSource, providerHubBridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource, fileInstallFixturesSource, fileInstallTypesSource, fileInstallIndexSource];
 
 const forbiddenPatterns = [
   /memoryService/,
@@ -55,7 +56,9 @@ describe("operation center fixtures and source safety", () => {
     expect(categories.has("sensor_bridge")).toBe(true);
     expect(categories.has("transport_permission")).toBe(true);
     expect(categories.has("lucalink_dry_run")).toBe(true);
+    expect(categories.has("provider_readiness")).toBe(true);
     expect(operationCenterFixtureItems.every((item) => item.sideEffectsPerformed === false && item.canExecute === false)).toBe(true);
+    expect(operationCenterFixtureItems.some((item) => item.source === "provider_hub" && item.title === "Luca Prime ready")).toBe(true);
     const gateStatuses = operationCenterFixtureItems.filter((item) => item.category === "skill_permission_gate").map((item) => item.status);
     expect(gateStatuses).toEqual(expect.arrayContaining(["pending", "granted_for_review", "denied", "blocked"]));
   });

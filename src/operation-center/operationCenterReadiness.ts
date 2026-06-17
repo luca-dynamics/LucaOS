@@ -18,6 +18,7 @@ export function summarizeOperationCenterItems(items: readonly OperationCenterIte
     disabled: count("disabled"),
     personalIntelligenceCount: items.filter((item) => item.source === "personal_intelligence").length,
     lucaLinkCount: items.filter((item) => item.source === "lucalink").length,
+    providerHubCount: items.filter((item) => item.source === "provider_hub").length,
     highRiskCount: items.filter((item) => item.riskLevel === "high").length,
     criticalRiskCount: items.filter((item) => item.riskLevel === "critical").length,
     authorityGranted: false,
