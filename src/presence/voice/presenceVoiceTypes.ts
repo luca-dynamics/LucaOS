@@ -4,14 +4,14 @@ export type PresenceVoiceRouteStatus = PresenceVoiceStatus | "starting" | "stopp
 export type PresenceVoiceSource = "wake-word" | "voice-shortcut" | "widget" | "hologram" | "miniChat" | "dashboard" | "tray" | "manual" | "system" | (string & {});
 export type PresenceVoiceMode = "TOGGLE" | "START" | "STOP" | "DICTATION" | "CONVERSATION" | "WAKE" | "HUD" | (string & {});
 export type PresenceVoiceFallbackReason = "provider-error" | "model-unavailable" | "permission-denied" | "network" | "timeout" | "unknown" | (string & {});
-export type PresenceVoiceTranscriptSource = "user" | "model" | (string & {});
+export type PresenceRouteVoiceTranscriptSource = "user" | "model" | (string & {});
 
 export interface PresenceVoiceLegacyFields {
   isListening?: boolean;
   isVadActive?: boolean;
   isSpeaking?: boolean;
   transcript?: string;
-  transcriptSource?: PresenceVoiceTranscriptSource;
+  transcriptSource?: PresenceRouteVoiceTranscriptSource;
   amplitude?: number;
   status?: PresenceVoiceRouteStatus;
   mode?: PresenceVoiceMode;
@@ -38,7 +38,7 @@ export interface PresenceVoiceToggleRequest extends PresenceVoiceLegacyFields {
 
 export interface PresenceVoiceTranscriptEvent extends PresenceVoiceLegacyFields {
   transcript?: string;
-  transcriptSource?: PresenceVoiceTranscriptSource;
+  transcriptSource?: PresenceRouteVoiceTranscriptSource;
 }
 
 export interface PresenceVoiceActivityEvent extends PresenceVoiceLegacyFields {

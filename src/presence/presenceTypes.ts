@@ -6,6 +6,7 @@ export type PresenceSource =
   | "tray"
   | "manual"
   | "luca-link"
+  | "dashboard"
   | "system";
 
 export type PresenceVisibility = "hidden" | "summoning" | "visible" | "dismissing" | "failed";
@@ -19,13 +20,27 @@ export interface PresenceVisibilityState {
 
 export type PresenceVoiceStatus = "idle" | "listening" | "thinking" | "speaking" | "error";
 
+export type PresenceVoiceTranscriptSource = "user" | "model" | (string & {});
+
 export interface PresenceVoiceState {
   status: PresenceVoiceStatus;
   isListening: boolean;
+  isVadActive: boolean;
   isSpeaking: boolean;
   amplitude: number;
   transcript: string;
-  transcriptSource: "user" | "model";
+  transcriptSource: PresenceVoiceTranscriptSource;
+  source?: string;
+  provider?: string;
+  model?: string;
+  persona?: string;
+  language?: string;
+  fallbackReason?: string;
+  error?: unknown;
+  timestamp?: number | string;
+  requestId?: string;
+  sessionId?: string;
+  [key: string]: unknown;
 }
 
 export type PresenceSensorKind =

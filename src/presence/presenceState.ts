@@ -18,6 +18,7 @@ export const defaultPresenceRuntimeState: PresenceRuntimeState = {
   voice: {
     status: "idle",
     isListening: false,
+    isVadActive: false,
     isSpeaking: false,
     amplitude: 0,
     transcript: "",
