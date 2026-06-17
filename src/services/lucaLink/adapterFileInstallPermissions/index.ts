@@ -1,12 +1,67 @@
- 
-export * from "./adapterFileInstallPermissionTypes";
-export * from "./adapterFileInstallPermissionFixtures";
+export type {
+  CreateAdapterFileInstallRequestFromPlanOptions,
+  DeclarativeAdapterPlan,
+  LucaLinkAdapterFileInstallApprovalKind,
+  LucaLinkAdapterFileInstallApprovalRequirement,
+  LucaLinkAdapterFileInstallDecisionStatus,
+  LucaLinkAdapterFileInstallEvaluationOptions,
+  LucaLinkAdapterFileInstallPermissionDecision,
+  LucaLinkAdapterFileInstallPermissionRequest,
+  LucaLinkAdapterFileInstallPrivacyLevel,
+  LucaLinkAdapterFileInstallRequiredEvidenceItem,
+  LucaLinkAdapterFileInstallRiskLevel,
+  LucaLinkAdapterFileWritePermissionRequest,
+  LucaLinkAdapterInstallPermissionRequest,
+} from "./adapterFileInstallTypes";
+export {
+  createAdapterFileInstallApprovalRequirements,
+  createAdapterFileInstallRequiredEvidence,
+  createLucaLinkAdapterFileInstallDecision,
+  evaluateLucaLinkAdapterFileInstallPermission,
+  isAdapterFileInstallDecisionExecutable,
+  isAdapterFileInstallDecisionSendable,
+  summarizeAdapterFileInstallDecision,
+} from "./adapterFileInstallDecision";
+export {
+  evaluateLucaLinkAdapterFileWritePolicy,
+} from "./adapterFileWritePolicy";
+export {
+  evaluateLucaLinkAdapterInstallPolicy,
+} from "./adapterInstallPolicy";
+export type {
+  LucaLinkAdapterFileInstallPermissionReadiness,
+} from "./adapterFileInstallReadiness";
+export {
+  summarizeAdapterFileInstallPermissionReadiness,
+} from "./adapterFileInstallReadiness";
+export type {
+  LucaLinkAdapterFileInstallPermissionAuditEventType,
+  LucaLinkAdapterFileInstallPermissionAuditRecord,
+  LucaLinkAdapterFileInstallPermissionAuditSummary,
+} from "./adapterFileInstallAudit";
+export {
+  createAdapterFileInstallPermissionAuditRecord,
+  summarizeAdapterFileInstallPermissionAudit,
+} from "./adapterFileInstallAudit";
+export {
+  LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
+  LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURES,
+  createAdapterFileInstallPermissionRequestFromAdapterPlan,
+} from "./adapterFileInstallFixtures";
 
-export * from "./adapterFileInstallTypes";
-export * from "./adapterFileWritePolicy";
-export * from "./adapterInstallPolicy";
-export * from "./adapterFileInstallDecision";
-export * from "./adapterFileInstallReadiness";
-export * from "./adapterFileInstallAudit";
-export * from "./adapterFileInstallFixtures";
- 
+export type {
+  LucaLinkAdapterFileInstallOperation as LegacyLucaLinkAdapterFileInstallOperation,
+  LucaLinkAdapterFileInstallPermissionDecision as LegacyLucaLinkAdapterFileInstallPermissionDecision,
+  LucaLinkAdapterFileInstallPermissionReadiness as LegacyLucaLinkAdapterFileInstallPermissionReadiness,
+  LucaLinkAdapterFileInstallPermissionRequest as LegacyLucaLinkAdapterFileInstallPermissionRequest,
+  LucaLinkAdapterFileInstallRiskLevel as LegacyLucaLinkAdapterFileInstallRiskLevel,
+} from "./adapterFileInstallPermissionTypes";
+export {
+  LUCA_LINK_ADAPTER_FILE_INSTALL_APPROVAL_REQUIRED_FIXTURE as LEGACY_LUCA_LINK_ADAPTER_FILE_INSTALL_APPROVAL_REQUIRED_FIXTURE,
+  LUCA_LINK_ADAPTER_FILE_INSTALL_BLOCKED_FIXTURE as LEGACY_LUCA_LINK_ADAPTER_FILE_INSTALL_BLOCKED_FIXTURE,
+  LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS as LEGACY_LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
+  LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_REQUESTS as LEGACY_LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_REQUESTS,
+  LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_READINESS_FIXTURE as LEGACY_LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_READINESS_FIXTURE,
+  LUCA_LINK_ADAPTER_FILE_INSTALL_READY_FOR_REVIEW_FIXTURE as LEGACY_LUCA_LINK_ADAPTER_FILE_INSTALL_READY_FOR_REVIEW_FIXTURE,
+  LUCA_LINK_ADAPTER_FILE_INSTALL_UNSUPPORTED_FIXTURE as LEGACY_LUCA_LINK_ADAPTER_FILE_INSTALL_UNSUPPORTED_FIXTURE,
+} from "./adapterFileInstallPermissionFixtures";
