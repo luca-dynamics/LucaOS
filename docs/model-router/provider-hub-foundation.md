@@ -101,3 +101,29 @@ Future PRs can wire this metadata into:
 6. Operation Center route traces so users can see requested task, selected provider, fallback posture, privacy/latency/cost fit, and required actions.
 
 Until those migrations land, the registry, readiness evaluator, settings snapshot adapter, and configure intent contracts remain documentation, typed metadata, and pure read-only bridge utilities only.
+
+## Route decision planner responsibilities
+
+`src/model-router/providerHubRoutePlanner.ts` adds a pure Provider Hub route decision planner before any runtime routing migration. The planner accepts explicit task, capability, preference, connection snapshot, optional manual connection-test result, preferred-provider, allow-flag, and fallback inputs. It returns deterministic candidates and a decision describing which provider would be selected if a future runtime integration chose to honor the plan.
+
+The planner intentionally remains planning-only. It does **not** import or modify `ProviderFactory`, instantiate provider adapters, send prompts to providers, call provider APIs, automatically test connections, save settings, read secrets, read environment variables, use browser storage, start local runtimes, or alter current runtime model routing.
+
+The planner evaluates each registry provider by composing registry metadata with the readiness evaluator, then applies route allow flags and scoring signals:
+
+- ready providers are selected before non-ready providers;
+- unsupported tasks or missing required capabilities are excluded from selection;
+- `allowCloudProviders`, `allowLocalProviders`, and `allowPaidProviders` can block otherwise known providers;
+- `managed_first` boosts Luca Prime;
+- `local_first` and `privacy_first` boost ready local runtimes such as Ollama or LM Studio without starting them;
+- `lowest_latency` boosts low-latency posture providers;
+- `lowest_cost` boosts free, local, and low-cost providers;
+- configured model IDs are carried into the selected model field when available;
+- manual connection-test `success` improves a provider score;
+- manual connection-test `failed` is treated as a safe negative signal, and may block selection when fallback selection is disabled;
+- manual connection-test `unsupported` does not block a provider that is otherwise ready;
+- a ready and supported preferred provider wins;
+- an unavailable preferred provider falls back only when `allowFallbacks` is true;
+- if no supported provider is ready but supported providers are configurable, the planner returns `configuration_required`;
+- if no provider supports the requested task and capabilities, the planner returns `no_supported_provider`.
+
+Route decision diagnostics are safe JSON text. They include task type, required capabilities, preference, selected provider, selected model ID, candidate/fallback/blocked counts, top planner reasons, and explicit false flags for `sideEffectsPerformed`, `runtimeRoutingChanged`, and `providerApiCalled`. Diagnostics must not include API keys, raw secrets, base URL query strings, headers, request/response bodies, or provider API responses.
