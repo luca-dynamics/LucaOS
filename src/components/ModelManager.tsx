@@ -73,7 +73,16 @@ const ProviderHubCard: React.FC<{ card: ProviderHubPanelCardViewModel; theme: an
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--app-bg-tint)", color: card.readiness.ready ? theme.hex : "var(--app-text-muted)" }}>
-                  <Icon name={card.entry.category === "local_runtime" ? "Cpu" : card.entry.category === "router" ? "Route" : "Brain"} size={12} variant="BoldDuotone" />
+                  {card.iconSrc ? (
+                    <img
+                      src={card.iconSrc}
+                      alt={card.iconAlt}
+                      className="w-3.5 h-3.5 object-contain"
+                      style={card.entry.providerId === "openai" || card.entry.providerId === "anthropic" ? { filter: "var(--app-icon-filter, brightness(0) invert(1))" } : undefined}
+                    />
+                  ) : (
+                    <Icon name={card.entry.category === "local_runtime" ? "Cpu" : card.entry.category === "router" ? "Route" : "Brain"} size={12} variant="BoldDuotone" />
+                  )}
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold truncate" style={{ color: "var(--app-text-main)" }}>{card.entry.label}</div>

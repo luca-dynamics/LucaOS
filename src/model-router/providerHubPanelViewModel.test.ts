@@ -27,6 +27,17 @@ describe("providerHubPanelViewModel", () => {
     expect(providerIds).toContain("openrouter");
   });
 
+  it("reuses existing brand image assets for Provider Hub cards when available", () => {
+    const cards = createProviderHubPanelViewModel().sections.flatMap((section) => section.cards);
+
+    expect(cards.find((card) => card.entry.providerId === "openai")?.iconSrc).toBe("/icons/brands/openai.svg");
+    expect(cards.find((card) => card.entry.providerId === "anthropic")?.iconSrc).toBe("/icons/brands/anthropic.svg");
+    expect(cards.find((card) => card.entry.providerId === "google_gemini")?.iconSrc).toBe("/icons/brands/gemini-color.svg");
+    expect(cards.find((card) => card.entry.providerId === "xai_grok")?.iconSrc).toBe("/icons/brands/grok.svg");
+    expect(cards.find((card) => card.entry.providerId === "deepseek")?.iconSrc).toBe("/trading/icons/deepseek.svg");
+    expect(cards.find((card) => card.entry.providerId === "openrouter")?.iconSrc).toBeUndefined();
+  });
+
   it("maps readiness states from snapshot input", () => {
     const cards = createProviderHubPanelViewModel([
       { providerId: "luca_prime" },

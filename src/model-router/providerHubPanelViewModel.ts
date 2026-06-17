@@ -15,6 +15,8 @@ export interface ProviderHubPanelCardViewModel {
   readonly readinessLabel: string;
   readonly categoryLabel: string;
   readonly diagnosticsText: string;
+  readonly iconSrc?: string;
+  readonly iconAlt: string;
   readonly configuredModelId?: string;
 }
 
@@ -65,6 +67,14 @@ const ACTION_LABELS: Record<LucaProviderHubRequiredAction, string> = {
   choose_known_provider: "Choose known provider",
 };
 
+const PROVIDER_ICON_SRC: Partial<Record<LucaProviderHubEntry["providerId"], string>> = {
+  openai: "/icons/brands/openai.svg",
+  anthropic: "/icons/brands/anthropic.svg",
+  google_gemini: "/icons/brands/gemini-color.svg",
+  xai_grok: "/icons/brands/grok.svg",
+  deepseek: "/trading/icons/deepseek.svg",
+};
+
 export function createProviderHubDiagnosticsText(result: LucaProviderHubReadinessResult, entry: LucaProviderHubEntry): string {
   return [
     `providerId=${result.providerId}`,
@@ -100,6 +110,8 @@ export function createProviderHubPanelViewModel(
       readinessLabel: STATE_LABELS[readiness.state],
       categoryLabel: SECTION_TITLES[entry.category],
       diagnosticsText: createProviderHubDiagnosticsText(readiness, entry),
+      iconSrc: PROVIDER_ICON_SRC[entry.providerId],
+      iconAlt: `${entry.shortLabel} logo`,
       configuredModelId: snapshotByProvider.get(entry.providerId)?.configuredModelId,
     };
   });
