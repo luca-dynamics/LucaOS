@@ -7,19 +7,13 @@ import indexSource from "./index.ts?raw";
 import readinessSource from "./operationCenterReadiness.ts?raw";
 import typesSource from "./operationCenterTypes.ts?raw";
 import componentSource from "../components/right-panel/OperationPermissionCenter.tsx?raw";
- 
-import fileInstallFixturesSource from "../services/lucaLink/adapterFileInstallPermissions/adapterFileInstallPermissionFixtures.ts?raw";
-import fileInstallTypesSource from "../services/lucaLink/adapterFileInstallPermissions/adapterFileInstallPermissionTypes.ts?raw";
+import fileInstallFixturesSource from "../services/lucaLink/adapterFileInstallPermissions/adapterFileInstallFixtures.ts?raw";
+import fileInstallTypesSource from "../services/lucaLink/adapterFileInstallPermissions/adapterFileInstallTypes.ts?raw";
 import fileInstallIndexSource from "../services/lucaLink/adapterFileInstallPermissions/index.ts?raw";
 import { describe, expect, it } from "vitest";
 import { operationCenterFixtureItems } from "./operationCenterFixtures";
 
-const productionSources = [auditSource, bridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource, fileInstallFixturesSource, fileInstallTypesSource, fileInstallIndexSource];
-
-import { describe, expect, it } from "vitest";
-import { operationCenterFixtureItems } from "./operationCenterFixtures";
-
-const productionSources = [auditSource, bridgeSource, runtimeAuthorityBridgeSource, lucaLinkRuntimeAuthorityBridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource];
+const productionSources = [auditSource, bridgeSource, runtimeAuthorityBridgeSource, lucaLinkRuntimeAuthorityBridgeSource, fixturesSource, indexSource, readinessSource, typesSource, componentSource, fileInstallFixturesSource, fileInstallTypesSource, fileInstallIndexSource];
 
 const forbiddenPatterns = [
   /memoryService/,

@@ -1,15 +1,9 @@
 import { personalIntelligenceRuntimeAuthorityFixtures } from "../personal-intelligence/runtimeAuthority";
 import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
-import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
 import { LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES } from "../services/lucaLink/runtimeAuthority";
+import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
 import {
- 
-  LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
-} from "../services/lucaLink/adapterFileInstallPermissions";
-import {
-
- 
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromAdapterSandboxPlans,
   createOperationItemsFromApprovalNotifications,
