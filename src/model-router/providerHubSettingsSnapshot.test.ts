@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import settingsSnapshotSource from "./providerHubSettingsSnapshot.ts?raw";
 import { getProviderHubEntries, type LucaProviderHubId } from "./providerHubRegistry";
 import {
   createProviderHubReadinessFromSettings,
+  createProviderHubSettingsSnapshots,
   createProviderHubSnapshotsFromSettings,
   normalizeLocalRuntimeAvailability,
   normalizeProviderKeyPresence,
@@ -142,17 +142,35 @@ describe("providerHubSettingsSnapshot", () => {
     expect(results.get("custom_openai_compatible")?.state).toBe("ready");
   });
 
-  it("does not import runtime provider adapters", () => {
-    const source = readFileSync(join(process.cwd(), "src/model-router/providerHubSettingsSnapshot.ts"), "utf8");
 
-    expect(source).not.toContain("ProviderFactory");
-    expect(source).not.toContain("Adapter");
-    expect(source).not.toContain("settingsService");
+  it("adapts settings into secret-presence snapshots without exposing key values", () => {
+    const snapshots = new Map(createProviderHubSettingsSnapshots({
+      settings: {
+        general: { activeBrainId: "gpt-4.1-mini", activeEmbedId: "text-embedding-3-small" },
+        brain: {
+          provider: "openai",
+          model: "gpt-4.1-mini",
+          openaiApiKey: "sk-secret-value",
+          anthropicApiKey: "[SECURED]",
+          useCustomApiKey: true,
+        },
+      },
+      ollamaAvailable: true,
+    }).map((snapshot) => [snapshot.providerId, snapshot]));
+
+    expect(snapshots.get("openai")).toMatchObject({ hasUserKey: true, configuredModelId: "gpt-4.1-mini" });
+    expect(snapshots.get("anthropic")?.hasUserKey).toBe(true);
+    expect(snapshots.get("ollama")?.localRuntimeAvailable).toBe(true);
+    expect(JSON.stringify([...snapshots.values()])).not.toContain("sk-secret-value");
+  });
+
+  it("does not import runtime provider adapters", () => {
+    expect(settingsSnapshotSource).not.toContain("ProviderFactory");
+    expect(settingsSnapshotSource).not.toContain("Adapter");
+    expect(settingsSnapshotSource).not.toContain("settingsService");
   });
 
   it("does not contain environment, localStorage, or network behavior", () => {
-    const source = readFileSync(join(process.cwd(), "src/model-router/providerHubSettingsSnapshot.ts"), "utf8");
-
-    expect(source).not.toMatch(/process\.env|import\.meta\.env|localStorage|fetch\(|XMLHttpRequest|WebSocket/);
+    expect(settingsSnapshotSource).not.toMatch(/process\.env|import\.meta\.env|localStorage|fetch\(|XMLHttpRequest|WebSocket/);
   });
 });
