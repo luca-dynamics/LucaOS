@@ -21,6 +21,40 @@ export interface LucaProviderHubSettingsSnapshotInput {
   readonly disabledProviderIds?: readonly LucaProviderHubId[];
 }
 
+
+export interface LucaProviderHubSettingsSnapshotUiInput {
+  readonly settings: {
+    readonly general?: {
+      readonly activeBrainId?: string | null;
+      readonly activeEmbedId?: string | null;
+    };
+    readonly brain?: {
+      readonly useCustomApiKey?: boolean;
+      readonly geminiApiKey?: string;
+      readonly geminiBaseUrl?: string;
+      readonly anthropicApiKey?: string;
+      readonly anthropicBaseUrl?: string;
+      readonly openaiApiKey?: string;
+      readonly openaiBaseUrl?: string;
+      readonly xaiApiKey?: string;
+      readonly xaiBaseUrl?: string;
+      readonly deepseekApiKey?: string;
+      readonly deepseekBaseUrl?: string;
+      readonly groqApiKey?: string;
+      readonly groqBaseUrl?: string;
+      readonly openRouterApiKey?: string;
+      readonly model?: string;
+      readonly embeddingModel?: string;
+      readonly provider?: string;
+    };
+    readonly memory?: {
+      readonly provider?: string;
+      readonly model?: string;
+    };
+  };
+  readonly ollamaAvailable?: boolean;
+}
+
 export interface LucaProviderHubReadinessFromSettingsOptions {
   readonly taskType?: LucaModelTaskType;
   readonly requiredCapabilities?: readonly LucaModelCapability[];
@@ -28,7 +62,7 @@ export interface LucaProviderHubReadinessFromSettingsOptions {
 
 const LOCAL_RUNTIME_PROVIDER_IDS = new Set<LucaProviderHubId>(["ollama", "lm_studio", "local_runtime"]);
 
-function hasPresentString(input: string | undefined): boolean {
+function hasPresentString(input: string | null | undefined): boolean {
   return typeof input === "string" && input.trim().length > 0;
 }
 
@@ -101,6 +135,56 @@ export function createProviderHubSnapshotsFromSettings(
     }
 
     return snapshot;
+  });
+}
+
+
+function hasConfiguredSecret(value: string | undefined): boolean {
+  return hasPresentString(value);
+}
+
+function firstPresentString(...values: readonly (string | null | undefined)[]): string | undefined {
+  return values.find((value): value is string => hasPresentString(value));
+}
+
+export function createProviderHubSettingsSnapshots(
+  input: LucaProviderHubSettingsSnapshotUiInput,
+): readonly LucaProviderHubConnectionSnapshot[] {
+  const brain = input.settings.brain;
+  const selectedProvider = firstPresentString(brain?.provider, input.settings.memory?.provider);
+  const selectedModelId = firstPresentString(
+    brain?.model,
+    input.settings.general?.activeBrainId,
+    brain?.embeddingModel,
+    input.settings.general?.activeEmbedId,
+    input.settings.memory?.model,
+  );
+
+  return createProviderHubSnapshotsFromSettings({
+    selectedProvider,
+    selectedModelId,
+    useCustomApiKey: brain?.useCustomApiKey,
+    customApiKeyProvider: selectedProvider,
+    customBaseUrl: firstPresentString(
+      brain?.openaiBaseUrl,
+      brain?.anthropicBaseUrl,
+      brain?.geminiBaseUrl,
+      brain?.xaiBaseUrl,
+      brain?.deepseekBaseUrl,
+      brain?.groqBaseUrl,
+    ),
+    providerKeyPresence: {
+      openai: hasConfiguredSecret(brain?.openaiApiKey),
+      anthropic: hasConfiguredSecret(brain?.anthropicApiKey),
+      gemini: hasConfiguredSecret(brain?.geminiApiKey),
+      xai: hasConfiguredSecret(brain?.xaiApiKey),
+      deepseek: hasConfiguredSecret(brain?.deepseekApiKey),
+      groq: hasConfiguredSecret(brain?.groqApiKey),
+      openrouter: hasConfiguredSecret(brain?.openRouterApiKey),
+    },
+    localRuntimeAvailability: {
+      ollama: Boolean(input.ollamaAvailable),
+    },
   });
 }
 
