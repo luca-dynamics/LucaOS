@@ -8,11 +8,13 @@ function registerWidgetIpc({ ipcMain, getWidgetWindow, getChatWindow, getHologra
         toggleWidgetWindow();
     });
 
-    ipcMain.on('widget-toggle-voice', (event, { mode, context }) => {
+    ipcMain.on('widget-toggle-voice', (event, payload = {}) => {
+        const { mode, context } = payload;
         logger.log(`[IPC] Widget requested voice toggle: ${mode} (Context: ${context})`);
         const mainWindow = getMainWindow();
-        if (mainWindow) {
+        if (mainWindow && (!mainWindow.isDestroyed || !mainWindow.isDestroyed())) {
             mainWindow.webContents.send('trigger-voice-toggle', {
+                ...payload,
                 mode: mode,
                 context: context,
                 forceHud: false

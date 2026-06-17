@@ -106,7 +106,7 @@ ownership before the route contract is stable:
 
 1. typed route boundary ✅
 2. renderer bridge adoption ✅
-3. Electron voice adapter parity tests ⏭️
+3. Electron voice adapter parity tests ✅
 4. runtime-owned voice state ⏭️
 5. provider/fallback migration ⏭️
 6. dashboard decoupling ⏭️
