@@ -71,6 +71,11 @@ export interface LucaSettings {
     groqApiKey: string; // New
     openRouterApiKey?: string;
     groqBaseUrl?: string; // Appended for Dev Cloud Support
+    customOpenAiCompatibleApiKey?: string;
+    customOpenAiCompatibleBaseUrl?: string;
+    customOpenAiCompatibleModel?: string;
+    ollamaBaseUrl?: string;
+    lmStudioBaseUrl?: string;
     model: string;
     provider: "local-luca" | "cloud-managed" | "byok";
     voiceModel: string;
@@ -82,6 +87,9 @@ export interface LucaSettings {
     conversationMode: "fast" | "planning"; // Universal LUCA Orchestration State
     activePluginId: string | null; // Currently active power-up bundle/mode
     embeddingModel: string; // New: Centralized embedding model ID
+  };
+  providerHub?: {
+    disabledProviderIds?: string[];
   };
   memory: {
     provider: "local-luca" | "gemini-genai" | "openai";
@@ -273,6 +281,11 @@ const DEFAULT_SETTINGS: LucaSettings = {
     groqApiKey: "",
     openRouterApiKey: "",
     groqBaseUrl: "https://api.groq.com/openai/v1",
+    customOpenAiCompatibleApiKey: "",
+    customOpenAiCompatibleBaseUrl: "",
+    customOpenAiCompatibleModel: "",
+    ollamaBaseUrl: "http://localhost:11434",
+    lmStudioBaseUrl: "http://localhost:1234/v1",
     model: BRAIN_CONFIG.defaults.brain,
     provider: "local-luca",
     voiceModel: BRAIN_CONFIG.defaults.voice,
@@ -284,6 +297,9 @@ const DEFAULT_SETTINGS: LucaSettings = {
     conversationMode: "fast", // Default to conversational fast mode
     activePluginId: null, // No active plugin by default
     embeddingModel: BRAIN_CONFIG.defaults.memory,
+  },
+  providerHub: {
+    disabledProviderIds: [],
   },
   memory: {
     provider: "local-luca",
@@ -436,6 +452,7 @@ class SettingsService extends EventEmitter {
           { section: "brain", key: "deepseekApiKey" },
           { section: "brain", key: "groqApiKey" },
           { section: "brain", key: "openRouterApiKey" },
+          { section: "brain", key: "customOpenAiCompatibleApiKey" },
           { section: "voice", key: "googleApiKey" },
           { section: "voice", key: "deepgramApiKey" },
           { section: "iot", key: "haToken" },
@@ -736,6 +753,7 @@ class SettingsService extends EventEmitter {
         { section: "brain", key: "deepseekApiKey" },
         { section: "brain", key: "groqApiKey" },
         { section: "brain", key: "openRouterApiKey" },
+        { section: "brain", key: "customOpenAiCompatibleApiKey" },
         { section: "voice", key: "googleApiKey" },
         { section: "voice", key: "deepgramApiKey" },
         { section: "iot", key: "haToken" },
