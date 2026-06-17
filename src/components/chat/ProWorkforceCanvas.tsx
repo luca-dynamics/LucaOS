@@ -143,7 +143,7 @@ const ProWorkforceCanvasInternal: React.FC<ProWorkforceCanvasProps> = ({ theme }
           <div className="px-3 py-2 rounded-lg bg-black/60 glass-blur border border-white/10 flex flex-col gap-0.5">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[9px] font-bold text-white tracking-widest uppercase">LUCA WORKFORCE</span>
+              <span className="text-[10px] font-medium text-white tracking-tight">LUCA Workforce</span>
             </div>
             <div className="text-[7px] text-slate-500 font-mono text-right">
               WF_ID: {activeWorkflowId?.split('_')[1] || "PENDING"}

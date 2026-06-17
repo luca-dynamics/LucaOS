@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "build": "rm -rf dist && mkdir -p dist && find . -maxdepth 1 ! -name . ! -name dist ! -name package.json ! -name package-lock.json ! -name node_modules -exec cp -R {} dist/ \\;"
+  }
+}

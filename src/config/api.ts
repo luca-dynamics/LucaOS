@@ -15,22 +15,30 @@ const getEnvVar = (key: string, fallback: string): string => {
   return fallback;
 };
 
-// Use relative paths in Vite browser development to leverage Vite's local proxy
-// This prevents cross-origin network drop errors (ERR_NETWORK_CHANGED) during polling
+const LUCA_RELEASE_TARGET = getEnvVar("VITE_LUCA_RELEASE_TARGET", "");
+const LUCA_RUNTIME_TARGET = getEnvVar("VITE_LUCA_RUNTIME_TARGET", "");
+const IS_PUBLIC_WEB_TARGET =
+  LUCA_RELEASE_TARGET === "web" || LUCA_RUNTIME_TARGET === "vercel";
+const PUBLIC_LUCA_API_URL = getEnvVar("VITE_LUCA_API_URL", "");
+
+// Use relative paths in Vite browser development to leverage Vite's local proxy.
+// In web/Vercel mode, never fall back to localhost/127.0.0.1; the public
+// API origin must be explicitly configured with VITE_LUCA_API_URL.
 export const API_BASE_URL =
   typeof window !== "undefined" && import.meta.env?.DEV
     ? ""
-    : getEnvVar("VITE_API_URL", "http://127.0.0.1:3002");
+    : IS_PUBLIC_WEB_TARGET
+      ? PUBLIC_LUCA_API_URL
+      : PUBLIC_LUCA_API_URL || "http://127.0.0.1:3002";
 export const WS_PORT = getEnvVar("VITE_WS_PORT", "3003");
-// Use Node.js backend as a gateway to Cortex to handle dynamic ports
-export const CORTEX_URL = getEnvVar(
-  "VITE_CORTEX_URL",
-  `${API_BASE_URL}/vision`,
-);
-export const AUTH_DOMAIN = getEnvVar(
-  "VITE_AUTH_DOMAIN",
-  "http://127.0.0.1:3001",
-);
+// Use Node.js backend as a gateway to Cortex to handle dynamic ports.
+// In public web mode this remains empty unless a public cloud Cortex URL is set.
+export const CORTEX_URL = IS_PUBLIC_WEB_TARGET
+  ? getEnvVar("VITE_CLOUD_CORTEX_URL", "")
+  : getEnvVar("VITE_CORTEX_URL", `${API_BASE_URL}/vision`);
+export const AUTH_DOMAIN = IS_PUBLIC_WEB_TARGET
+  ? ""
+  : getEnvVar("VITE_AUTH_DOMAIN", "http://127.0.0.1:3001");
 export const FRONTEND_PORT = getEnvVar("VITE_FRONTEND_PORT", "3000");
 // Cloud Relay Server for Mobile Connectivity (Deployment URL)
 export const RELAY_SERVER_URL = getEnvVar("VITE_RELAY_SERVER_URL", "");
@@ -38,7 +46,10 @@ export const RELAY_SERVER_URL = getEnvVar("VITE_RELAY_SERVER_URL", "");
 // NEW: Cloud Cortex Fallback (For unlinked Web users)
 // This is the "Light" mode brain hosted on GCP/Docker
 export const CLOUD_CORTEX_URL = getEnvVar("VITE_CLOUD_CORTEX_URL", "");
-export const CLOUD_API_URL = getEnvVar("VITE_CLOUD_API_URL", "");
+export const CLOUD_API_URL = getEnvVar(
+  "VITE_CLOUD_API_URL",
+  PUBLIC_LUCA_API_URL,
+);
 
 // Streaming STT API Key
 export const DEEPGRAM_API_KEY = getEnvVar("VITE_DEEPGRAM_API_KEY", "");
@@ -99,11 +110,12 @@ if (typeof window !== "undefined") {
         : resource instanceof URL
           ? resource.href
           : resource.url;
+    const localLoopbackAllowed = !IS_PUBLIC_WEB_TARGET;
     const isLucaCall =
       (API_BASE_URL !== "" && url.includes(API_BASE_URL)) ||
       url.startsWith("/api") || // Safely captures relative proxy calls
-      url.includes("127.0.0.1:3002") ||
-      (linkedHostIp && url.includes(linkedHostIp));
+      (localLoopbackAllowed && url.includes("127.0.0.1:3002")) ||
+      (localLoopbackAllowed && linkedHostIp && url.includes(linkedHostIp));
 
     if (isLucaCall && lucaSecretToken) {
       config = config || {};
@@ -113,10 +125,13 @@ if (typeof window !== "undefined") {
       };
     }
 
-    // 2. Suppress console noise for polling endpoints ONLY in confirmed Cloud mode 
+    // 2. Suppress console noise for polling endpoints ONLY in confirmed Cloud mode
     // to avoid red errors when the local backend isn't expected to be there.
-    if ((url.includes("/api/luca-link/status") || url.includes("/api/status")) && 
-        typeof window !== "undefined" && window.sessionStorage?.getItem("LUCA_CLOUD_ONLY") === "true") {
+    if (
+      (url.includes("/api/luca-link/status") || url.includes("/api/status")) &&
+      typeof window !== "undefined" &&
+      window.sessionStorage?.getItem("LUCA_CLOUD_ONLY") === "true"
+    ) {
       return new Response(null, {
         status: 404,
         statusText: "Not Found (Suppressed in Cloud Mode)",
@@ -128,16 +143,14 @@ if (typeof window !== "undefined") {
 }
 
 // Local Python Brain (Cortex)
-export const CORTEX_SERVER_URL = getEnvVar(
-  "VITE_CORTEX_SERVER_URL",
-  "http://127.0.0.1:8000",
-);
+export const CORTEX_SERVER_URL = IS_PUBLIC_WEB_TARGET
+  ? CLOUD_CORTEX_URL
+  : getEnvVar("VITE_CORTEX_SERVER_URL", "http://127.0.0.1:8000");
 
 // External Local LLM Provider (Ollama)
-export const OLLAMA_SERVER_URL = getEnvVar(
-  "VITE_OLLAMA_SERVER_URL",
-  "http://127.0.0.1:11434",
-);
+export const OLLAMA_SERVER_URL = IS_PUBLIC_WEB_TARGET
+  ? ""
+  : getEnvVar("VITE_OLLAMA_SERVER_URL", "http://127.0.0.1:11434");
 
 // --- HYBRID CONNECTIVITY STATE ---
 let linkedHostIp: string | null =
@@ -167,6 +180,10 @@ export type ConnectionTier = "LAN" | "LOCAL" | "CLOUD" | "OFFLINE";
 export const getConnectionTier = (): ConnectionTier => {
   const isElectron = typeof window !== "undefined" && !!(window as any).luca;
 
+  if (IS_PUBLIC_WEB_TARGET) {
+    return API_BASE_URL || CLOUD_CORTEX_URL ? "CLOUD" : "OFFLINE";
+  }
+
   // 1. LAN (Linked Desktop)
   if (linkedHostIp && linkedHostIp !== "127.0.0.1") return "LAN";
 
@@ -195,6 +212,12 @@ const resolveBaseUrl = (
   type: "API" | "CORTEX" | "OLLAMA",
   defaultUrl: string,
 ): string => {
+  if (IS_PUBLIC_WEB_TARGET) {
+    if (type === "API") return PUBLIC_LUCA_API_URL || CLOUD_API_URL || "";
+    if (type === "CORTEX") return CLOUD_CORTEX_URL || "";
+    return "";
+  }
+
   // --- TIER 1: LAN (Linked Desktop) ---
   // If we have a linked Desktop LAN IP, prioritize it (Local speed)
   if (linkedHostIp && linkedHostIp !== "127.0.0.1") {
@@ -230,7 +253,8 @@ const resolveBaseUrl = (
 export const apiUrl = (path: string): string => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const baseUrl = resolveBaseUrl("API", API_BASE_URL).replace(/\/$/, "");
-  return `${baseUrl}${normalizedPath}`;
+  if (IS_PUBLIC_WEB_TARGET && !baseUrl) return "";
+  return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
 };
 
 /**
@@ -238,8 +262,12 @@ export const apiUrl = (path: string): string => {
  */
 export const cortexUrl = (path: string): string => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const baseUrl = resolveBaseUrl("CORTEX", CORTEX_SERVER_URL).replace(/\/$/, "");
-  return `${baseUrl}${normalizedPath}`;
+  const baseUrl = resolveBaseUrl("CORTEX", CORTEX_SERVER_URL).replace(
+    /\/$/,
+    "",
+  );
+  if (IS_PUBLIC_WEB_TARGET && !baseUrl) return "";
+  return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
 };
 
 /**
@@ -247,6 +275,10 @@ export const cortexUrl = (path: string): string => {
  */
 export const ollamaUrl = (path: string): string => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const baseUrl = resolveBaseUrl("OLLAMA", OLLAMA_SERVER_URL).replace(/\/$/, "");
-  return `${baseUrl}${normalizedPath}`;
+  const baseUrl = resolveBaseUrl("OLLAMA", OLLAMA_SERVER_URL).replace(
+    /\/$/,
+    "",
+  );
+  if (IS_PUBLIC_WEB_TARGET && !baseUrl) return "";
+  return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
 };

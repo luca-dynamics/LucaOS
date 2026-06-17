@@ -411,7 +411,11 @@ class DiagnosticsService {
     const mcpSummary = summarizeMcpConnections(
       mcpClientManager.getConnectionStatus(),
     );
-    results.push(createMcpInfrastructureAuditResult(mcpSummary));
+    const mcpAudit = createMcpInfrastructureAuditResult(mcpSummary);
+    results.push({
+      ...mcpAudit,
+      status: mcpAudit.status === "pass" || mcpAudit.status === "warn" || mcpAudit.status === "fail" ? mcpAudit.status : "warn",
+    });
 
     return results;
   }

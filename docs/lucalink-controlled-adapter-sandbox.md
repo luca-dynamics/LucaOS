@@ -105,3 +105,7 @@ Adapter execution plans can be converted into side-effect-free LucaLink transpor
 ## File-write and install permission evaluation
 
 Declarative `file.write.request` and `install.request` capabilities are now converted into and evaluated by the Adapter File Write + Install Permission Model. Evaluation is model-only: it does not execute an adapter, write a file, install a package, approve a request, or send a transport message.
+
+## Dry-run handoff simulation integration
+
+LucaLink governance outputs can feed the side-effect-free dry-run handoff simulation layer and may appear as read-only `lucalink_dry_run` summaries in Operation Center. Dry-run evidence does not send, execute, collect, write, install, approve, open displays, or mutate pairing, transport, approval, device, or runtime state.

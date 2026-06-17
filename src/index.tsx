@@ -1,59 +1,89 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import SystemErrorBoundary from "./components/SystemErrorBoundary";
-import { isElectron } from "./utils/env";
+import {
+  isElectronRuntimeSignal,
+  selectLucaBootstrapEntry,
+  type LucaBootstrapEntry,
+} from "./config/bootstrapEntrySelector";
 
-import WidgetMode from "./components/WidgetMode";
-import ChatWidgetMode from "./components/ChatWidgetMode"; // Import Chat Mode
-import MobileCastReceiver from "./components/MobileCastReceiver";
-import TVReceiver from "./components/TVReceiver";
-import HologramMode from "./components/HologramMode";
-import { generateThemeStyles } from "./config/themeColors";
-
-const rootElement = document.getElementById("root");
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+declare global {
+  interface Window {
+    __LUCA_REACT_ENTRY_LOADED__?: boolean;
+    __LUCA_REACT_MOUNT_ATTEMPTED__?: boolean;
+    __LUCA_REACT_MOUNTED__?: boolean;
+    __LUCA_REACT_BOOTSTRAP_ERROR__?: string;
+    __LUCA_BOOT_ERROR__?: string;
+    __LUCA_BOOT_ERROR_LISTENERS_REGISTERED__?: boolean;
+    __LUCA_CAPTURED_BOOT_ERRORS__?: string[];
+    __LUCA_SHOW_BOOT_FAILURE__?: (message?: string, error?: unknown) => void;
+    __LUCA_SELECTED_ENTRY__?: LucaBootstrapEntry;
+    __LUCA_WEB_BRIDGE_MOUNT_ATTEMPTED__?: boolean;
+    __LUCA_WEB_BRIDGE_MOUNTED__?: boolean;
+    __LUCA_DETECTED_HOST_CLASS__?: string;
+    __LUCA_DESKTOP_ENTRY_IMPORTED__?: boolean;
+  }
 }
 
-console.log("[BOOT] Environment Check - isElectron:", isElectron(), "URL Params:", window.location.search);
+const describeBootError = (error: unknown): string => {
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`;
+  }
 
-// Initialize background only if truly on web. 
-// Electron uses transparency/liquid background handled by App.tsx.
-// Moved to App.tsx useEffect for more reliable cleanup.
+  return String(error);
+};
 
-const params = new URLSearchParams(window.location.search);
-const isWidgetMode = params.get("mode") === "widget";
-const isChatMode = params.get("mode") === "chat";
-const isHologramMode = params.get("mode") === "hologram";
-const isMobileMode = params.get("mode") === "mobile";
-const isTvMode = params.get("mode") === "tv";
+const captureBootError = (error: unknown): void => {
+  const description = describeBootError(error);
+  window.__LUCA_BOOT_ERROR__ = description;
+  window.__LUCA_CAPTURED_BOOT_ERRORS__ ??= [];
+  window.__LUCA_CAPTURED_BOOT_ERRORS__.push(description);
+};
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  // <React.StrictMode>
-  <SystemErrorBoundary>
-    <style>{generateThemeStyles()}</style>
-    {isWidgetMode ? (
-      <WidgetMode />
-    ) : isChatMode ? (
-      <ChatWidgetMode />
-    ) : isHologramMode ? ( // New Route
-      <HologramMode />
-    ) : isMobileMode ? (
-      <MobileCastReceiver />
-    ) : isTvMode ? (
-      <TVReceiver />
-    ) : (
-      <App />
-    )}
-  </SystemErrorBoundary>,
-  // </React.StrictMode>
-);
+window.__LUCA_REACT_ENTRY_LOADED__ = true;
+console.info("[LucaOS web boot] React bootstrap loaded");
 
-// Remove the native splash loader once hydration begins
-const loader = document.getElementById("root-loader");
-if (loader) {
-  loader.style.opacity = "0";
-  setTimeout(() => loader.remove(), 500);
+if (!window.__LUCA_BOOT_ERROR_LISTENERS_REGISTERED__) {
+  window.__LUCA_BOOT_ERROR_LISTENERS_REGISTERED__ = true;
+  window.addEventListener("error", (event) => {
+    if (window.__LUCA_REACT_MOUNTED__ !== true) {
+      captureBootError(event.error || event.message || "Unknown startup error");
+    }
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    if (window.__LUCA_REACT_MOUNTED__ !== true) {
+      captureBootError(event.reason || "Unhandled startup rejection");
+    }
+  });
 }
+
+const selectedEntry = selectLucaBootstrapEntry({
+  releaseTarget: import.meta.env.VITE_LUCA_RELEASE_TARGET,
+  appMode: import.meta.env.VITE_LUCA_APP_MODE,
+  runtimeTarget: import.meta.env.VITE_LUCA_RUNTIME_TARGET,
+  hostname: window.location.hostname,
+  isElectronRuntime: isElectronRuntimeSignal(window),
+  hasBrowserRuntime: true,
+});
+
+window.__LUCA_SELECTED_ENTRY__ = selectedEntry;
+window.__LUCA_DESKTOP_ENTRY_IMPORTED__ = false;
+console.info(`[LucaOS web boot] selectedEntry=${selectedEntry}`);
+
+const entryMount =
+  selectedEntry === "webBridgeEntry"
+    ? import("./web/webBridgeEntry").then((module) =>
+        module.mountLucaWebBridge(),
+      )
+    : import("./reactAppEntry").then((module) => {
+        window.__LUCA_DESKTOP_ENTRY_IMPORTED__ = true;
+        return module.mountLucaReactApp();
+      });
+
+entryMount
+  .catch((error: unknown) => {
+    const description = describeBootError(error);
+    window.__LUCA_REACT_BOOTSTRAP_ERROR__ = description;
+    captureBootError(error);
+    console.error("[LucaOS web boot] React app import failed", error);
+    window.dispatchEvent(new CustomEvent("luca-react-bootstrap-error"));
+  });
+
+export {};

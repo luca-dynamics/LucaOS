@@ -7,6 +7,20 @@ const {
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
 const fs = require('fs');
+const { findAvailableExecutable, getPythonCandidates } = require('../shared/platform.cjs');
+const {
+    createMiniChatWindow: createMiniChatWindowFactory,
+    createHologramWindow: createHologramWindowFactory,
+    createWidgetWindow: createWidgetWindowFactory,
+    createVisualCoreWindow: createVisualCoreWindowFactory
+} = require('./windows/index.cjs');
+const {
+    registerPresenceIpc,
+    registerWidgetIpc,
+    registerHologramIpc,
+    registerMiniChatIpc,
+    registerVisualCoreIpc
+} = require('./ipc/index.cjs');
 
 // [MAIN] Mission Control Service Initialization
 const MissionControl = require('./services/missionControl.cjs');
@@ -640,23 +654,17 @@ async function startCortex() {
         // DEVELOPMENT: Use the local script and venv
         cortexPath = path.join(__dirname, '../../cortex/python/cortex.py');
         
-        // Force Local VENV Priority (Critical for Intel Mac stability)
-        const localVenv = paths.PYTHON_BIN;
-        const systemVenv = paths.SYSTEM_PYTHON_BIN;
-        
-        if (fs.existsSync(localVenv)) {
-            pythonCmd = localVenv;
-            console.log(`[CORTEX] [DEV] Successfully located project venv: ${pythonCmd}`);
-        } else if (fs.existsSync(systemVenv)) {
-            pythonCmd = systemVenv;
-            console.log(`[CORTEX] [DEV] Falling back to system venv: ${pythonCmd}`);
-        } else {
-            pythonCmd = 'python3';
-            console.warn('[CORTEX] [DEV] WARNING: No venv found! Using system python (may lack dependencies).');
-        }
+        // Prefer the project venv, then Luca's managed venv, then a platform PATH fallback.
+        pythonCmd = findAvailableExecutable([
+            paths.PYTHON_BIN,
+            paths.SYSTEM_PYTHON_BIN,
+            ...getPythonCandidates({ projectRoot: path.join(__dirname, '../..') }).slice(-1),
+        ]);
 
-        if (process.platform === 'win32' && pythonCmd.includes('python')) {
-            pythonCmd = pythonCmd.replace('python', 'python.exe');
+        if (path.isAbsolute(pythonCmd)) {
+            console.log(`[CORTEX] [DEV] Successfully located Python environment: ${pythonCmd}`);
+        } else {
+            console.warn(`[CORTEX] [DEV] WARNING: No venv found! Using ${pythonCmd} from PATH (may lack dependencies).`);
         }
         
         console.log('[CORTEX] [DEV] Using Python Source:', cortexPath);
@@ -933,54 +941,94 @@ let hologramWindow;
 function createHologramWindow() {
     if (hologramWindow) return;
 
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, height } = primaryDisplay.workAreaSize;
-    // Freeform size (large enough for the w-80 h-80 container)
-    // Position bottom-right, but account for potential dock
-    // ample space
-
-    hologramWindow = new BrowserWindow({
-        width: 300, 
-        height: 400, 
-        x: width - 300, 
-        y: height - 410,
-        frame: false,
-        transparent: true,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        resizable: false,
-        show: false,
-        hasShadow: false,
-        focusable: false,
-        backgroundColor: '#00000000', // Transparent Hex
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.cjs'),
-            nodeIntegration: false,
-            contextIsolation: true,
-            webSecurity: false
+    hologramWindow = createHologramWindowFactory({
+        BrowserWindow,
+        screen,
+        isDev: !app.isPackaged,
+        devPort: VITE_DEV_PORT,
+        distPath: path.join(__dirname, '../../dist/index.html'),
+        preloadPath: path.join(__dirname, 'preload.cjs'),
+        onClosed: () => {
+            hologramWindow = null;
         }
     });
+}
 
-    const isDev = !app.isPackaged;
-    const url = isDev 
-        ? `http://localhost:${VITE_DEV_PORT}?mode=hologram` 
-        : `file://${path.join(__dirname, '../../dist/index.html')}?mode=hologram`;
+function sendWhenRendererReady(window, channel, payload) {
+    if (!window || window.isDestroyed()) return false;
 
-    hologramWindow.loadURL(url);
-    
-    // Ensure visibility overlay
-    hologramWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-    hologramWindow.setAlwaysOnTop(true, "floating", 1);
+    const send = () => {
+        if (!window || window.isDestroyed() || window.webContents.isDestroyed()) return;
+        window.webContents.send(channel, payload);
+    };
 
-    // Click-through behavior? 
-    // If the user wants to click the "Mic", we need it to be interactive.
-    // If we setIgnoreMouseEvents(true), we can't click.
-    // So we keep it interactive. But the transparent parts might block clicks unless we handle ignoreMouseEvents in renderer.
-    // For now, let's keep it simple (fully interactive rectangular window).
+    if (window.webContents.isLoadingMainFrame()) {
+        window.webContents.once('did-finish-load', send);
+    } else {
+        send();
+    }
 
-    hologramWindow.on('closed', () => {
-        hologramWindow = null;
-    });
+    return true;
+}
+
+function showDashboardVoiceFallback(reason) {
+    console.warn(`[PRESENCE] Falling back to dashboard voice UI: ${reason}`);
+    if (!mainWindow || mainWindow.isDestroyed()) {
+        createWindow();
+    }
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+    sendWhenRendererReady(mainWindow, 'trigger-voice-hud');
+}
+
+function summonVoicePresence(source = 'voice-summon') {
+    try {
+        // The dashboard renderer currently owns the voice runtime. Keep it alive
+        // without showing or focusing its BrowserWindow.
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            createWindow();
+        }
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            showDashboardVoiceFallback('main voice runtime unavailable');
+            return false;
+        }
+
+        if (!hologramWindow || hologramWindow.isDestroyed()) {
+            createHologramWindow();
+        }
+        if (!hologramWindow || hologramWindow.isDestroyed()) {
+            showDashboardVoiceFallback('hologram surface unavailable');
+            return false;
+        }
+
+        // Hologram is non-focusable; showInactive preserves the foreground app.
+        hologramWindow.showInactive();
+        sendWhenRendererReady(hologramWindow, 'hologram-update', {
+            isListening: true,
+            status: 'LISTENING',
+            presenceSource: source
+        });
+
+        // Wake word detection already activates listening in the renderer. Keep
+        // its voice state synchronized while the BrowserWindow remains hidden.
+        if (source === 'wake-word') {
+            sendWhenRendererReady(mainWindow, 'trigger-voice-hud');
+        } else {
+            sendWhenRendererReady(mainWindow, 'trigger-voice-toggle', {
+                mode: 'TOGGLE',
+                context: source,
+                forceHud: false
+            });
+        }
+        return true;
+    } catch (error) {
+        console.error('[PRESENCE] Failed to summon voice presence:', error);
+        showDashboardVoiceFallback(error.message || 'presence creation failed');
+        return false;
+    }
 }
 
 function toggleHologram() {
@@ -1087,24 +1135,10 @@ function toggleSentryMode(type, enabled) {
     }
 }
 
-// Wake Word Triggered from Renderer --> Show UI
+// Wake Word Triggered from Renderer --> Show Presence without stealing focus
 ipcMain.on('wake-word-triggered', () => {
-    console.log('[IPC] Wake Word Triggered! Showing Main VoiceHud...');
-    // TARGET: Main Window (Assistant Mode)
-    if (mainWindow) {
-        if (!mainWindow.isVisible()) {
-             mainWindow.show();
-        }
-        if (mainWindow.isMinimized()) {
-             mainWindow.restore();
-        }
-        mainWindow.focus();
-        // Signal App.tsx to activate Voice Overlay
-        mainWindow.webContents.send('trigger-voice-hud');
-    } else {
-        // Fallback: If for some reason main is gone, recreate
-        createWindow();
-    }
+    console.log('[IPC] Wake Word Triggered! Summoning Luca Presence...');
+    summonVoicePresence('wake-word');
 });
 
 
@@ -1267,7 +1301,9 @@ app.on('ready', () => {
 
     // Voice Mode Hotkeys
 const toggleHologramVoice = () => {
-    if (hologramWindow && hologramWindow.isVisible()) {
+    if (!hologramWindow || hologramWindow.isDestroyed() || !hologramWindow.isVisible()) {
+        summonVoicePresence('voice-shortcut');
+    } else {
         hologramWindow.webContents.send('trigger-voice-toggle');
     }
 };
@@ -1461,165 +1497,37 @@ app.on('activate', () => {
 // widgetWindow is defined globally above
 
 function createWidgetWindow() {
-  if (widgetWindow) return; // Already exists
+    if (widgetWindow) return; // Already exists
 
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.workAreaSize;
-
-  widgetWindow = new BrowserWindow({
-    width: 200, // Reduced from 250
-    height: 300, // Reduced from 400
-    x: width - 220, // Adjusted padding from right
-    y: height - 350, // Adjusted padding from bottomRight positioning
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    show: false, // Start Hidden (Use Tray to toggle)
-    hasShadow: false,
-    focusable: false, // CRITICAL: Prevent stealing focus from Notepad/Other Active Apps
-    backgroundColor: '#00000000', // HEX transparent for Mac
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'), // Reuse preload
-      nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: false,
-      backgroundThrottling: false // CRITICAL: Ensure Voice runs even if window is technically "background" or unfocused
-    }
-  });
-
-  console.log('[WIDGET] BrowserWindow created');
-
-  const isDev = !app.isPackaged;
-  // Load same app but with ?mode=widget param
-  const url = isDev 
-    ? `http://127.0.0.1:${VITE_DEV_PORT}?mode=widget` 
-    : `file://${path.join(__dirname, '../../dist/index.html')}?mode=widget`;
-  
-  console.log('[WIDGET] Loading URL:', url);
-  widgetWindow.loadURL(url);
-
-  // FORCE OVERLAY ON TOP OF FULLSCREEN APPS
-  widgetWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  widgetWindow.setAlwaysOnTop(true, "floating", 1);
-  widgetWindow.setFullScreenable(false);
-
-  widgetWindow.once('ready-to-show', () => {
-    console.log('[WIDGET] Window ready to show');
-  });
-
-  widgetWindow.on('closed', () => {
-    console.log('[WIDGET] Window closed');
-    widgetWindow = null;
-  });
-
-  // Forward console logs to terminal
-  widgetWindow.webContents.on('console-message', (event, level, message) => {
-      console.log('[WIDGET]', message);
-  });
-
-  // Log any errors
-  widgetWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    console.error('[WIDGET] Failed to load:', errorCode, errorDescription);
-  });
+    widgetWindow = createWidgetWindowFactory({
+        BrowserWindow,
+        screen,
+        isDev: !app.isPackaged,
+        devPort: VITE_DEV_PORT,
+        distPath: path.join(__dirname, '../../dist/index.html'),
+        preloadPath: path.join(__dirname, 'preload.cjs'),
+        logger: console,
+        onClosed: () => {
+            widgetWindow = null;
+        }
+    });
 }
 
 function createChatWindow() {
-  if (chatWindow) return;
+    if (chatWindow) return;
 
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.workAreaSize;
-  const w = 600;
-  const h = 180; // Reduced height for Mini Chat feel
-
-  chatWindow = new BrowserWindow({
-    width: w,
-    height: h,
-    x: Math.floor(width / 2 - w / 2),
-    y: Math.floor(height / 3), // Slightly higher than center
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: true, // User requested resizability
-    minWidth: 200,
-    minHeight: 40,
-    show: false,
-    hasShadow: false,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
-      nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: false,
-      backgroundThrottling: false
-    }
-  });
-
-  const isDev = !app.isPackaged;
-  const url = isDev 
-    ? `http://127.0.0.1:${VITE_DEV_PORT}?mode=chat` 
-    : `file://${path.join(__dirname, '../../dist/index.html')}?mode=chat`;
-  
-  chatWindow.loadURL(url);
-  chatWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-
-  chatWindow.on('closed', () => {
-    chatWindow = null;
-  });
-  
-  // Close on blur (Spotlight style)
-  chatWindow.on('blur', () => {
-      // chatWindow.hide(); // Optional: user might want to keep it open
-  });
+    chatWindow = createMiniChatWindowFactory({
+        BrowserWindow,
+        screen,
+        isDev: !app.isPackaged,
+        devPort: VITE_DEV_PORT,
+        distPath: path.join(__dirname, '../../dist/index.html'),
+        preloadPath: path.join(__dirname, 'preload.cjs'),
+        onClosed: () => {
+            chatWindow = null;
+        }
+    });
 }
-
-
-// IPC:// IPC: Get Current Display ID for Screen Capture
-ipcMain.handle('get-current-display-id', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) return null;
-    const { x, y, width, height } = win.getBounds();
-    const display = screen.getDisplayMatching({ x, y, width, height });
-    return display.id;
-});
-
-// Resizing IPC (Widget Mode)
-ipcMain.on('switch-to-widget', () => {
-  if (mainWindow) {
-    mainWindow.hide();
-  }
-  toggleWidgetWindow(); // Use the toggle function
-});
-
-// IPC: Restore Main Window
-ipcMain.on('restore-main-window', () => {
-  if (widgetWindow) {
-    widgetWindow.close();
-  }
-  if (mainWindow) {
-    mainWindow.show();
-    mainWindow.focus();
-  } else {
-    createWindow(); // Recreate if missing
-  }
-});
-
-// IPC: Sync State (Main -> Widget)
-// App.tsx sends this, Main Process forwards to Widget
-// IPC: Sync State (Main -> Widget)
-// App.tsx sends this, Main Process forwards to Widget
-ipcMain.on('sync-widget-state', (event, state) => {
-    if (widgetWindow) {
-        widgetWindow.webContents.send('widget-update', state);
-    }
-    if (chatWindow) {
-        chatWindow.webContents.send('widget-update', state);
-    }
-    if (hologramWindow) {
-        hologramWindow.webContents.send('hologram-update', state);
-    }
-});
 
 // IPC: Widget Control (Widget -> Main -> App)
     // Screen Capture
@@ -1637,95 +1545,11 @@ ipcMain.on('sync-widget-state', (event, state) => {
         }
     });
 
-// IPC: Widget Voice Toggle (Widget -> Main -> Dashboard)
-ipcMain.on('widget-toggle-voice', (event, { mode, context }) => {
-    console.log(`[IPC] Widget requested voice toggle: ${mode} (Context: ${context})`);
-    // Route to Main Window (Dashboard) which has the voice infrastructure
-    if (mainWindow) {
-        mainWindow.webContents.send('trigger-voice-toggle', { 
-            mode: mode, 
-            context: context,
-            forceHud: false // Keep main HUD hidden, widget shows its own UI
-        });
-    }
-});
-
-// IPC: Widget Voice Data (App -> Main -> Widget UI)
-ipcMain.on('widget-voice-data', (event, data) => {
-    if (widgetWindow && !widgetWindow.isDestroyed()) {
-        widgetWindow.webContents.send('widget-update', data);
-    }
-    if (hologramWindow && !hologramWindow.isDestroyed()) {
-        hologramWindow.webContents.send('hologram-update', data);
-    }
-    if (chatWindow && !chatWindow.isDestroyed()) {
-        chatWindow.webContents.send('widget-update', data);
-    }
-});
-
-// IPC: Chat Widget Message (Widget -> Main -> App)
-ipcMain.on('chat-widget-message', (event, data) => {
-    console.log('[IPC] Received chat-widget-message:', data.text);
-    
-    // Forward to main window for processing
-    if (mainWindow) {
-        console.log('[IPC] Forwarding to main window');
-        mainWindow.webContents.send('chat-widget-message', data);
-    } else {
-        console.error('[IPC] Main window not available!');
-        // Send error back to chat widget
-        if (chatWindow) {
-            chatWindow.webContents.send('chat-widget-reply', 
-                'Error: Main window not available. Please open Luca first.');
-        }
-    }
-});
-
-// IPC: Chat Reply (Main -> Chat Widget)
-ipcMain.on('reply-chat-widget', (event, reply) => {
-    console.log('[IPC] Sending reply to chat widget:', reply.substring(0, 50) + '...');
-    if (chatWindow) {
-        chatWindow.webContents.send('chat-widget-reply', reply);
-    }
-});
-
-// Broadcast streaming chunks to Mini Chat Widget
-ipcMain.on('broadcast-stream-chunk', (event, data) => {
-    if (chatWindow && !chatWindow.isDestroyed()) {
-        chatWindow.webContents.send('chat-widget-stream-chunk', data);
-    }
-});
-
-
-// IPC: Close Widget Window
-ipcMain.on('chat-widget-close', () => {
-    console.log('[IPC] Closing chat widget window');
-    if (chatWindow) {
-        chatWindow.hide();
-    }
-    if (widgetWindow) {
-        widgetWindow.hide();
-    }
-});
-
 // --- VISUAL CORE WINDOW INFRASTRUCTURE (Option B: Smart Screen) ---
 
 // Queue for pending data when Smart Screen isn't ready yet
 let visualCorePendingData = null;
 let visualCoreReady = false;
-
-// Handle ready signal from Smart Screen
-ipcMain.on('visual-core-ready', () => {
-    console.log('[MAIN PROCESS] Smart Screen signaled READY');
-    visualCoreReady = true;
-    
-    // Send any pending data immediately
-    if (visualCorePendingData && visualCoreWindow) {
-        console.log('[MAIN PROCESS] Sending queued data to Smart Screen:', visualCorePendingData);
-        visualCoreWindow.webContents.send('visual-core-update', visualCorePendingData);
-        visualCorePendingData = null;
-    }
-});
 
 function createVisualCoreWindow(initialData = null) {
     if (visualCoreWindow) {
@@ -1742,146 +1566,28 @@ function createVisualCoreWindow(initialData = null) {
         return;
     }
 
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width } = primaryDisplay.workAreaSize;
-    
-    // Load saved bounds or use default
-    const savedBounds = loadWindowStateVC();
-    const w = savedBounds?.width || 960;
-    const h = savedBounds?.height || 540;
-    const padding = 20;
-    const defaultX = width - w - padding;
-    const defaultY = padding;
-
-    visualCoreWindow = new BrowserWindow({
-        width: w,
-        height: h,
-        x: savedBounds?.x ?? defaultX,
-        y: savedBounds?.y ?? defaultY,
-        frame: false,
-        transparent: true,
-        backgroundColor: '#00000000',
-        alwaysOnTop: true, // WIDGET BEHAVIOR
-        skipTaskbar: true, // WIDGET BEHAVIOR
-        resizable: true,   // User can resize if they want it bigger
-        minWidth: 320,
-        minHeight: 180,
-        show: false,
-        hasShadow: true,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.cjs'),
-            nodeIntegration: false,
-            contextIsolation: true,
-            webSecurity: false,
-            webviewTag: true // Vital for Browser-in-Screen
+    visualCoreWindow = createVisualCoreWindowFactory({
+        BrowserWindow,
+        screen,
+        isDev: !app.isPackaged,
+        devPort: VITE_DEV_PORT,
+        distPath: path.join(__dirname, '../../dist/index.html'),
+        preloadPath: path.join(__dirname, 'preload.cjs'),
+        initialData,
+        loadWindowStateVC,
+        saveWindowStateVC,
+        setVisualCorePendingData: (data) => {
+            visualCorePendingData = data;
+        },
+        setVisualCoreReady: (ready) => {
+            visualCoreReady = ready;
+        },
+        logger: console,
+        onClosed: () => {
+            visualCoreWindow = null;
         }
-    });
-
-    // Save bounds on change
-    const updateVCBounds = () => {
-        if (visualCoreWindow && !visualCoreWindow.isMinimized()) {
-            saveWindowStateVC(visualCoreWindow.getBounds());
-        }
-    };
-    visualCoreWindow.on('resize', updateVCBounds);
-    visualCoreWindow.on('move', updateVCBounds);
-
-    // Ensure it floats above full-screen apps (like a true OS widget)
-    visualCoreWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-
-    const isDev = !app.isPackaged;
-    // Load app with ?mode=visual_core
-    const url = isDev 
-        ? `http://localhost:${VITE_DEV_PORT}?mode=visual_core` 
-        : `file://${path.join(__dirname, '../dist/index.html')}?mode=visual_core`;
-
-    visualCoreWindow.loadURL(url);
-
-    visualCoreWindow.once('ready-to-show', () => {
-        console.log('[MAIN PROCESS] Smart Screen window ready-to-show');
-        visualCoreWindow.show();
-        visualCoreWindow.focus();
-        
-        // Queue the initial data - it will be sent when Smart Screen signals ready
-        if (initialData) {
-            console.log('[MAIN PROCESS] Queuing initialData for when Smart Screen is ready:', initialData);
-            visualCorePendingData = initialData;
-        }
-    });
-
-    visualCoreWindow.on('closed', () => {
-        visualCoreWindow = null;
-        visualCoreReady = false; // Reset ready state
-        visualCorePendingData = null;
     });
 }
-
-// IPC: Open Visual Core (Smart Screen)
-ipcMain.on('open-visual-core', (event, data) => {
-    createVisualCoreWindow(data);
-    syncVisualCoreStatus(true);
-});
-
-// IPC: Close/Hide Visual Core
-ipcMain.on('close-visual-core', () => {
-    console.log('[MAIN PROCESS] Closing Smart Screen');
-    if (visualCoreWindow) {
-        visualCoreWindow.hide();
-        visualCorePendingData = null;
-        syncVisualCoreStatus(false);
-    }
-});
-
-// IPC: Update Visual Core Data
-ipcMain.on('update-visual-core', (event, data) => {
-    console.log('[MAIN PROCESS] Received update-visual-core IPC:', data);
-    if (visualCoreWindow) {
-        visualCoreWindow.webContents.send('visual-core-update', data);
-        if (visualCoreReady) {
-            console.log('[MAIN PROCESS] Smart Screen is ready, sending directly');
-            visualCoreWindow.webContents.send('visual-core-update', data);
-        } else {
-            console.log('[MAIN PROCESS] Smart Screen not ready, queuing data');
-            visualCorePendingData = data;
-        }
-        if (!visualCoreWindow.isVisible()) {
-            visualCoreWindow.show();
-            syncVisualCoreStatus(true);
-        }
-        visualCoreWindow.focus();
-    } else {
-        console.log('[MAIN PROCESS] Creating new Smart Screen window with data');
-        createVisualCoreWindow(data);
-        syncVisualCoreStatus(true);
-    }
-});
-
-// [SOVEREIGN SYNC] Broadcast app state to all auxiliary windows
-ipcMain.on('broadcast-app-state', (event, state) => {
-    if (visualCoreWindow && !visualCoreWindow.isDestroyed()) {
-        visualCoreWindow.webContents.send('sync-app-state', state);
-    }
-    if (widgetWindow && !widgetWindow.isDestroyed()) {
-        widgetWindow.webContents.send('sync-app-state', state);
-    }
-    if (chatWindow && !chatWindow.isDestroyed()) {
-        chatWindow.webContents.send('sync-app-state', state);
-    }
-});
-
-// [INTERACTION FEEDBACK] Send VisualCore actions back to the brain
-ipcMain.on('visual-core-interaction', (event, interaction) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('visual-core-feedback', interaction);
-    }
-});
-
-// [AUTONOMY] Luca remotely controls the Smart Screen
-ipcMain.on('visual-core-command', (event, command) => {
-    if (visualCoreWindow && !visualCoreWindow.isDestroyed()) {
-        visualCoreWindow.webContents.send('visual-core-remote-control', command);
-    }
-});
 
 function syncVisualCoreStatus(isVisible) {
     const status = { isVisible };
@@ -1890,37 +1596,55 @@ function syncVisualCoreStatus(isVisible) {
     if (chatWindow) chatWindow.webContents.send('widget-visual-status', status);
 }
 
-// Chat Widget Resize Logic
-ipcMain.on('chat-widget-resize', (event, { height, resizable }) => {
-    if (chatWindow) {
-        const [currentW] = chatWindow.getSize();
-        
-        if (resizable) {
-            // Resizable mode: Set reasonable min/max limits for BOTH width and height
-            chatWindow.setMinimumSize(300, 200); // Min: 300x200
-            chatWindow.setMaximumSize(1000, 900); // Max: 1000x900
-        } else {
-            // Fixed mode (e.g., compact): Lock to exact height
-            chatWindow.setMinimumSize(300, height);
-            chatWindow.setMaximumSize(1000, height);
-        }
-        
-        chatWindow.setSize(currentW, height, true); // true = animate
-        
-        if (typeof resizable === 'boolean') {
-            chatWindow.setResizable(resizable);
-        }
-    }
+registerPresenceIpc({
+    ipcMain,
+    getWidgetWindow: () => widgetWindow,
+    getChatWindow: () => chatWindow,
+    getHologramWindow: () => hologramWindow,
+    getVisualCoreWindow: () => visualCoreWindow
 });
 
-// IPC: Close Visual Core
-ipcMain.on('close-visual-core', () => {
-    if (visualCoreWindow) {
-        visualCoreWindow.close(); // Actually close it to free resources? Or Hide?
-        // For a widget, hiding is often better for quick toggle, but closing saves RAM.
-        // Let's stick to close() for now as implemented, or hide() if user wants persistence.
-        // User currently has 'close-visual-core' doing .close()
-    }
+registerWidgetIpc({
+    ipcMain,
+    getWidgetWindow: () => widgetWindow,
+    getChatWindow: () => chatWindow,
+    getHologramWindow: () => hologramWindow,
+    getMainWindow: () => mainWindow,
+    toggleWidgetWindow,
+    logger: console
+});
+
+registerMiniChatIpc({
+    ipcMain,
+    getWidgetWindow: () => widgetWindow,
+    getChatWindow: () => chatWindow,
+    getMainWindow: () => mainWindow,
+    createMainWindow: createWindow,
+    logger: console
+});
+
+registerHologramIpc({
+    ipcMain,
+    getHologramWindow: () => hologramWindow
+});
+
+registerVisualCoreIpc({
+    ipcMain,
+    BrowserWindow,
+    screen,
+    getVisualCoreWindow: () => visualCoreWindow,
+    createVisualCoreWindow,
+    getVisualCorePendingData: () => visualCorePendingData,
+    setVisualCorePendingData: (data) => {
+        visualCorePendingData = data;
+    },
+    getVisualCoreReady: () => visualCoreReady,
+    setVisualCoreReady: (ready) => {
+        visualCoreReady = ready;
+    },
+    syncVisualCoreStatus,
+    getMainWindow: () => mainWindow,
+    logger: console
 });
 
 function toggleVisualCoreWindow() {
@@ -1961,13 +1685,6 @@ function createGhostBrowserWindow(url = 'https://google.com') {
 
 ipcMain.on('open-browser', (event, { url }) => {
     createGhostBrowserWindow(url);
-});
-
-// IPC: Hologram HUD Intent Forwarding
-ipcMain.on('hologram-intent', (event, intent) => {
-    if (hologramWindow) {
-        hologramWindow.webContents.send('hologram-intent', intent);
-    }
 });
 
 // --- KEYBOARD & ACCESSIBILITY IPC ---
@@ -2088,11 +1805,18 @@ ipcMain.on('type-text', (event, { text }) => {
 // IPC: Check if a command/binary exists in the system path
 ipcMain.handle('check-command', async (event, command) => {
     return new Promise((resolve) => {
-        // Use 'which' on macOS/Linux, 'where' on Windows
-        const checkCmd = process.platform === 'win32' ? `where ${command}` : `which ${command}`;
-        exec(checkCmd, (error) => {
-            resolve(!error);
+        if (typeof command !== 'string' || !/^[a-zA-Z0-9._-]+$/.test(command)) {
+            resolve(false);
+            return;
+        }
+
+        const locator = process.platform === 'win32' ? 'where.exe' : 'which';
+        const child = spawn(locator, [command], {
+            stdio: 'ignore',
+            windowsHide: true,
         });
+        child.once('error', () => resolve(false));
+        child.once('exit', (code) => resolve(code === 0));
     });
 });
 

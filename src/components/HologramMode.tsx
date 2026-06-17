@@ -4,6 +4,11 @@ import { useSatelliteState } from "../hooks/useSatelliteState";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
 import { settingsService } from "../services/settingsService";
 import { awarenessService } from "../services/awarenessService";
+import {
+  createHologramPresenceSnapshot,
+  getHologramVoiceDisplayState,
+  type HologramLegacyPayload,
+} from "../presence/bridges";
 
 /**
  * Dedicated Mode for the Holographic Overlay
@@ -12,6 +17,9 @@ import { awarenessService } from "../services/awarenessService";
  */
 const HologramMode: React.FC = () => {
   const state = useSatelliteState();
+  const voiceDisplay = getHologramVoiceDisplayState(
+    createHologramPresenceSnapshot(state as unknown as HologramLegacyPayload),
+  );
 
   const handleToggleVoice = () => {
     // Send Toggle Request to Main Window which holds the logic
@@ -65,11 +73,11 @@ const HologramMode: React.FC = () => {
     <div className="w-screen h-screen bg-transparent overflow-hidden flex items-end justify-end p-0">
       <HologramWidget
         isVoiceActive={true} // Always visible in Hologram Mode
-        isMicOpen={state.isListening} // Visual Feedback for Mic Status
-        transcript={state.transcript}
-        transcriptSource={state.transcriptSource}
-        isSpeaking={state.isSpeaking || state.amplitude > 0.05}
-        audioLevel={state.amplitude}
+        isMicOpen={voiceDisplay.isListening} // Visual Feedback for Mic Status
+        transcript={voiceDisplay.transcript}
+        transcriptSource={voiceDisplay.transcriptSource}
+        isSpeaking={voiceDisplay.isSpeaking || voiceDisplay.amplitude > 0.05}
+        audioLevel={voiceDisplay.amplitude}
         primaryColor={primaryColor} // Use dynamic theme color
         persona={state.persona as string}
         onClick={handleToggleVoice}

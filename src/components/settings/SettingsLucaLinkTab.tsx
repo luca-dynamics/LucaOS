@@ -44,6 +44,18 @@ import type {
   LucaLinkBridgeReviewSummary,
 } from "../../services/lucaLink/lucaLinkBridgeReview";
 import type { LucaLinkEmbodiedCapabilityEnvelope } from "../../services/lucaLink/lucaLinkEmbodiedHostPolicy";
+import {
+  createLucaLinkLinkedHostRecord,
+  getLucaLinkConnectionStateMetadata,
+  getLucaLinkDeviceCenterDisclosure,
+  getLucaLinkDeviceTypeLabel,
+  getLucaLinkTrustStateMetadata,
+} from "../../services/lucaLink/lucaLinkLinkedHostRegistry";
+import type { LucaLinkLinkedHostRecord } from "../../services/lucaLink/lucaLinkLinkedHostRegistry";
+import {
+  canUsePermission,
+  getLucaLinkGovernanceDecisionLabel,
+} from "../../services/lucaLink/governance";
 import type {
   LucaLinkAdapterDraft,
   LucaLinkAdapterDraftSummary,
@@ -66,6 +78,24 @@ import {
   LUCA_LINK_SAMPLE_APPROVAL_NOTIFICATION_INBOX,
   summarizeApprovalNotificationInbox,
 } from "../../services/lucaLink/approvalNotifications";
+import {
+  createLucaLinkApprovalDisclosureSummary,
+  LUCA_LINK_APPROVAL_ACTION_APPROVALS,
+  LUCA_LINK_APPROVAL_ACTION_HANDOFF_REVIEWS,
+  LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES,
+  LUCA_LINK_APPROVAL_ACTION_OWNERSHIP_ASSIGNMENTS,
+  LUCA_LINK_APPROVAL_ACTION_PENDING_HANDOFFS,
+  previewLucaLinkApprovalAction,
+} from "../../services/lucaLink/approvalActions";
+import {
+  createLucaLinkPairingDeviceCenterSummary,
+  createLucaLinkPairingDisclosureSummary,
+  evaluateLucaLinkPairingRequest,
+  LUCA_LINK_PAIRING_FIXTURE_NOW,
+  LUCA_LINK_PAIRING_REQUEST_FIXTURES,
+  previewLucaLinkPairingApproval,
+  previewLucaLinkPairingDenial,
+} from "../../services/lucaLink/pairingRequests";
 import { qrScanner } from "../../services/qrScannerService";
 import { setHexAlpha } from "../../config/themeColors";
 import QRCode from "qrcode";
@@ -81,6 +111,8 @@ import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 import { SettingsLucaLinkSensorBridge } from "./SettingsLucaLinkSensorBridge";
 import { SettingsLucaLinkTransportPermissions } from "./SettingsLucaLinkTransportPermissions";
 import { SettingsLucaLinkAdapterFileInstallPermissions } from "./SettingsLucaLinkAdapterFileInstallPermissions";
+import { SettingsLucaLinkDryRunHandoff } from "./SettingsLucaLinkDryRunHandoff";
+import { SettingsLucaLinkRuntimeAuthority } from "./SettingsLucaLinkRuntimeAuthority";
 
 // Device Center source-level safety copy anchors for tests:
 // Admin does not bypass Primary Host approvals
@@ -95,6 +127,7 @@ import { SettingsLucaLinkAdapterFileInstallPermissions } from "./SettingsLucaLin
 // Primary Host approval, sandbox checks, and future execution controls
 // Guest security sessions are read-only.
 // This view does not revoke guests, regenerate invites, or change guest auth, PIN, or WebRTC behavior.
+// Pairing request previews are model-only: no real QR scanning, pairing code verification, network discovery, transport, trust persistence, or linked-host writes.
 
 // Guest Access Section (Long Distance via Relay)
 const GuestAccessSection: React.FC<{
@@ -931,7 +964,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const currentDeviceId =
     deviceCenterSnapshot.state.deviceId ?? linkState.deviceId ?? undefined;
   const connectedDevices = deviceCenterSnapshot.state.connectedDevices;
-  const trustedDevices =
+  const trustedDevices: LucaLinkTrustedDeviceRecord[] =
     deviceCenterSnapshot.trustedDevices.length > 0
       ? deviceCenterSnapshot.trustedDevices
       : connectedDevices.map((device) => ({
@@ -971,6 +1004,37 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           warnings: [],
           errors: [],
         }));
+  const linkedHosts = trustedDevices.map((device) =>
+    createLucaLinkLinkedHostRecord(device, currentDeviceId),
+  );
+  const linkedHostsById = new Map<string, LucaLinkLinkedHostRecord>(
+    linkedHosts.map((host) => [host.id, host] as const),
+  );
+  const linkedHostGovernanceById = new Map(
+    linkedHosts.map((host) => [
+      host.id,
+      new Map(
+        host.permissionProfile.permissions.map((permission) => [
+          permission.id,
+          canUsePermission({
+            permission: permission.id,
+            trustState: host.trustState,
+            permissionState: permission.state,
+            approvalState:
+              permission.state === "allowed"
+                ? "approved"
+                : permission.state === "denied"
+                  ? "denied"
+                  : "pending",
+            connectionState: host.connectionState,
+          }),
+        ]),
+      ),
+    ]),
+  );
+  const deviceCenterDisclosure = getLucaLinkDeviceCenterDisclosure(
+    settings.general.experienceMode,
+  );
   const pendingHighOrCritical =
     (deviceCenterSnapshot.approvalSummary.byRisk.high ?? 0) +
     (deviceCenterSnapshot.approvalSummary.byRisk.critical ?? 0);
@@ -985,6 +1049,53 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         (token) => token.requestId === selectedApproval.id,
       )
     : undefined;
+  const localApprovalActionRevocationInput = {
+    ownershipAssignments: LUCA_LINK_APPROVAL_ACTION_OWNERSHIP_ASSIGNMENTS,
+    pendingHandoffs: LUCA_LINK_APPROVAL_ACTION_PENDING_HANDOFFS,
+    approvals: LUCA_LINK_APPROVAL_ACTION_APPROVALS,
+  };
+  const localApprovalActionPreviews = {
+    approve: previewLucaLinkApprovalAction({
+      host: LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES.pendingMobileCompanion,
+      action: "approve_host",
+    }),
+    deny: previewLucaLinkApprovalAction({
+      host: LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES.pendingMobileCompanion,
+      action: "deny_host",
+    }),
+    revoke: previewLucaLinkApprovalAction({
+      host: LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES.trustedLimitedDevice,
+      action: "revoke_host",
+      revocationInput: localApprovalActionRevocationInput,
+    }),
+    handoff: previewLucaLinkApprovalAction({
+      host: LUCA_LINK_APPROVAL_ACTION_HOST_FIXTURES.displaySurface,
+      action: "review_handoff",
+      handoff: LUCA_LINK_APPROVAL_ACTION_HANDOFF_REVIEWS.primaryHostReviewRequired,
+    }),
+  };
+  const localApprovalActionDisclosure = createLucaLinkApprovalDisclosureSummary(
+    localApprovalActionPreviews.revoke,
+    settings.general.experienceMode,
+  );
+  const pairingRequestPreview = evaluateLucaLinkPairingRequest({
+    request: LUCA_LINK_PAIRING_REQUEST_FIXTURES.qrPreviewRequest,
+    nowIso: LUCA_LINK_PAIRING_FIXTURE_NOW,
+  });
+  const pairingApprovalPreview = previewLucaLinkPairingApproval({
+    request: LUCA_LINK_PAIRING_REQUEST_FIXTURES.qrPreviewRequest,
+    nowIso: LUCA_LINK_PAIRING_FIXTURE_NOW,
+  });
+  const pairingDenialPreview = previewLucaLinkPairingDenial(
+    LUCA_LINK_PAIRING_REQUEST_FIXTURES.qrPreviewRequest,
+  );
+  const pairingDeviceCenterSummary = createLucaLinkPairingDeviceCenterSummary(
+    pairingRequestPreview,
+  );
+  const pairingDisclosure = createLucaLinkPairingDisclosureSummary(
+    pairingRequestPreview,
+    settings.general.experienceMode,
+  );
 
   const handleApprovalAction = (
     request: LucaLinkApprovalRequest,
@@ -1357,6 +1468,39 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             );
           })}
         </div>
+
+        <SettingsCard>
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-sm font-semibold">Pairing request</p>
+              <p className="mt-1 text-xs leading-relaxed opacity-70">
+                {pairingDisclosure.simpleStatus} · Preview only · No real pairing has started.
+              </p>
+            </div>
+            <StatusBadge status="Preview only" />
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <DetailField label="Preview code" value={pairingDeviceCenterSummary.codePreview} />
+            <DetailField label="Expires" value={pairingDeviceCenterSummary.expiresAt} />
+            <DetailField label="Primary Host approval required" value={pairingDeviceCenterSummary.primaryHostReviewRequired ? "Required" : "Not required"} />
+            <DetailField label="Limited trust" value={pairingDeviceCenterSummary.requestedTrustState} />
+            <DetailField label="Sensitive access remains blocked" value={`${pairingRequestPreview.blockedPermissions.length} blocked · ${pairingRequestPreview.approvalRequiredPermissions.length} approval-required`} />
+            <DetailField label="Approve / deny preview" value={`Approve: ${pairingApprovalPreview.status} · Deny: ${pairingDenialPreview.status}`} />
+          </div>
+          {settings.general.experienceMode !== "basic" && (
+            <p className="mt-3 text-xs opacity-70">
+              Method {pairingDisclosure.requestMethod} · device {pairingDisclosure.deviceType} · host {pairingDisclosure.hostType} · requested permissions {pairingDisclosure.requestedPermissionsCount} · expiration {pairingDisclosure.expirationState}.
+            </p>
+          )}
+          {settings.general.experienceMode === "creator" && (
+            <p className="mt-2 text-xs opacity-70">
+              Request {pairingDisclosure.diagnosticRequestId} · source {pairingDisclosure.diagnosticSourceHostId} · target {pairingDisclosure.diagnosticTargetHostId} · QR payload preview is non-secret and runtime-disabled · {pairingDisclosure.modelFlags?.join(" · ")}.
+            </p>
+          )}
+          <p className="mt-3 text-xs font-semibold opacity-80">
+            No real pairing started. No QR scanner, network discovery, WebRTC, socket, transport, linked-host registry write, or persistent trust change is invoked here.
+          </p>
+        </SettingsCard>
       </SettingsSection>
 
       {deviceCenterTab === "bridge-review" && (
@@ -1646,8 +1790,12 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
               </p>
             </div>
           </SettingsCard>
+          <SettingsLucaLinkDryRunHandoff accentColor={theme.hex} />
+          <SettingsLucaLinkRuntimeAuthority accentColor={theme.hex} />
           <SettingsLucaLinkTransportPermissions accentColor={theme.hex} />
-          <SettingsLucaLinkAdapterFileInstallPermissions accentColor={theme.hex} />
+          <SettingsLucaLinkAdapterFileInstallPermissions
+            accentColor={theme.hex}
+          />
           <SettingsLucaLinkSensorBridge accentColor={theme.hex} />
           <SettingsCard>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -1834,7 +1982,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       {deviceCenterTab === "devices" && (
         <SettingsSection
           title="Devices"
-          description="Local LucaLink device trust management. Rename, trust, revoke, and block controls update in-memory state only."
+          description="Linked hosts, trust state, and scoped permission summaries. Sensitive access always requires explicit approval."
           icon="Smartphone"
           accentColor={theme.hex}
           isMobile={isMobile}
@@ -1882,6 +2030,106 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
             />
           </div>
 
+          <SettingsCard>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">
+                  LucaLink Local Approval Actions
+                </p>
+                <p className="mt-1 text-xs opacity-70">
+                  Preview approve, deny, revoke, and handoff outcomes before any
+                  local state change. No runtime action will run.
+                </p>
+              </div>
+              <span
+                className="rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+                style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+              >
+                Preview only
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <SettingsStatusCard
+                label="Needs your approval"
+                value={localApprovalActionPreviews.approve.decision === "approval_required" ? "Pending" : "Review"}
+                detail="Approve device defaults to Limited trust"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Sensitive access"
+                value="Remains blocked"
+                detail="remote_action/tool_execution/admin_trust disabled"
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Revocation preview"
+                value={`${localApprovalActionPreviews.revoke.revocationDryRun?.affectedLanes.length ?? 0} lane(s)`}
+                detail={`${localApprovalActionPreviews.revoke.revocationDryRun?.blockedPermissions.length ?? 0} permissions blocked`}
+                accentColor={theme.hex}
+              />
+              <SettingsStatusCard
+                label="Primary Host review"
+                value={localApprovalActionPreviews.handoff.requiresPrimaryHostReview ? "Required" : "Not required"}
+                detail={`Handoff readiness: ${localApprovalActionPreviews.handoff.handoffReview?.readiness ?? "review-only"}`}
+                accentColor={theme.hex}
+              />
+            </div>
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              {[
+                ["Approve device", localApprovalActionPreviews.approve],
+                ["Deny request", localApprovalActionPreviews.deny],
+                ["Revoke access", localApprovalActionPreviews.revoke],
+                ["Review handoff", localApprovalActionPreviews.handoff],
+              ].map(([label, preview]) => (
+                <div
+                  key={label as string}
+                  className="rounded-lg border p-3"
+                  style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold">{label as string}</p>
+                      <p className="mt-1 text-xs opacity-70">
+                        {(preview as typeof localApprovalActionPreviews.approve).reason}
+                      </p>
+                    </div>
+                    <StatusBadge
+                      status={(preview as typeof localApprovalActionPreviews.approve).previewOnly ? "Preview only" : "Review"}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs opacity-70">
+                    Current: {(preview as typeof localApprovalActionPreviews.approve).currentState.trustState} / {(preview as typeof localApprovalActionPreviews.approve).currentState.connectionState} · Proposed: {(preview as typeof localApprovalActionPreviews.approve).proposedState.trustState} / {(preview as typeof localApprovalActionPreviews.approve).proposedState.connectionState}
+                  </p>
+                  <p className="mt-2 text-xs opacity-70">
+                    Confirmation {(preview as typeof localApprovalActionPreviews.approve).requiresConfirmation ? "required" : "not required"} · Side effects {String((preview as typeof localApprovalActionPreviews.approve).sideEffectsPerformed)} · No runtime action executed
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div
+              className="mt-3 rounded-lg border p-3 text-xs"
+              style={{
+                borderColor: settingsSurfaceTokens.borderSubtle,
+                backgroundColor: settingsSurfaceTokens.glass,
+              }}
+            >
+              <p className="font-semibold">Disclosure mode summary</p>
+              <p className="mt-1 opacity-70">
+                {localApprovalActionDisclosure.simpleStatus} · {localApprovalActionDisclosure.sensitiveAccessCopy} · {localApprovalActionDisclosure.runtimeCopy}
+              </p>
+              {settings.general.experienceMode !== "basic" && (
+                <p className="mt-1 opacity-70">
+                  Affected lanes {localApprovalActionDisclosure.counts?.affectedLanes ?? 0} · stale approvals {localApprovalActionDisclosure.counts?.staleApprovals ?? 0} · blocked permissions {localApprovalActionDisclosure.counts?.blockedPermissions ?? 0}
+                </p>
+              )}
+              {settings.general.experienceMode === "creator" && (
+                <p className="mt-1 opacity-70">
+                  Dry-run adapter actions: {localApprovalActionDisclosure.dryRunAdapterActions?.join(", ") || "none"} · audit preview {localApprovalActionDisclosure.auditEventPreview?.join(", ") || "none"}
+                </p>
+              )}
+            </div>
+          </SettingsCard>
+
           {trustedDevices.length === 0 ? (
             <SettingsCard>
               <p className="text-sm font-semibold">No known device records</p>
@@ -1896,9 +2144,22 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                 <SettingsCard key={device.deviceId}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <p className="text-base font-semibold">
-                        {device.displayName || "Unnamed LucaLink device"}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-base font-semibold">
+                          {device.displayName || "Unnamed LucaLink device"}
+                        </p>
+                        {linkedHostsById.get(device.deviceId)
+                          ?.isCurrentDevice && (
+                          <span
+                            className="rounded-full border px-2 py-0.5 text-[11px] font-semibold"
+                            style={{
+                              borderColor: settingsSurfaceTokens.borderSubtle,
+                            }}
+                          >
+                            Current device
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-1 break-all font-mono text-xs opacity-70">
                         {device.deviceId}
                       </p>
@@ -1911,18 +2172,33 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <StatusBadge status={device.status} />
-                      <StatusBadge status={`trust ${device.trustLevel}`} />
+                      <StatusBadge
+                        status={
+                          getLucaLinkConnectionStateMetadata(
+                            linkedHostsById.get(device.deviceId)!
+                              .connectionState,
+                          ).label
+                        }
+                      />
+                      <StatusBadge
+                        status={
+                          getLucaLinkTrustStateMetadata(
+                            linkedHostsById.get(device.deviceId)!.trustState,
+                          ).label
+                        }
+                      />
                     </div>
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <DetailField
-                      label="Type"
-                      value={device.deviceType || "Unknown"}
+                      label="Device type"
+                      value={getLucaLinkDeviceTypeLabel(
+                        linkedHostsById.get(device.deviceId)!.deviceType,
+                      )}
                     />
                     <DetailField
-                      label="Role"
+                      label="Host type"
                       value={
                         device.role === "primary-host"
                           ? "Primary Host"
@@ -1934,26 +2210,69 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                       value={formatLucaLinkTimestamp(device.lastSeenAt)}
                     />
                     <DetailField
-                      label="Capabilities"
-                      value={
-                        device.capabilities.length
-                          ? device.capabilities.join(", ")
-                          : "Conversation baseline only"
-                      }
+                      label="Allowed permissions"
+                      value={`${linkedHostsById.get(device.deviceId)!.permissionProfile.allowedCount} allowed · ${linkedHostsById.get(device.deviceId)!.permissionProfile.pendingCount} require approval`}
                     />
-                    <DetailField
-                      label="Denied sensitive capabilities"
-                      value={
-                        device.deniedCapabilities.length
-                          ? device.deniedCapabilities.join(", ")
-                          : "None"
-                      }
-                    />
-                    <DetailField
-                      label="Permissions"
-                      value={`conversation ${device.permissionSummary.conversation ? "on" : "off"} · notifications ${device.permissionSummary.notification ? "on" : "off"} · sensitive tools ${device.permissionSummary.shell || device.permissionSummary.files || device.permissionSummary.code || device.permissionSummary.browser ? "limited" : "off"}`}
-                    />
+                    {deviceCenterDisclosure.showSessionStatus && (
+                      <DetailField
+                        label="Session status"
+                        value={
+                          linkedHostsById.get(device.deviceId)!
+                            .activeSessionId ?? "No active session recorded"
+                        }
+                      />
+                    )}
+                    {deviceCenterDisclosure.showTrustDiagnostics && (
+                      <DetailField
+                        label="Registry diagnostics"
+                        value={`${device.capabilities.length} capabilities · ${device.deniedCapabilities.length} denied boundaries`}
+                      />
+                    )}
                   </div>
+
+                  {deviceCenterDisclosure.showPermissionDetails && (
+                    <div
+                      className="mt-3 rounded-lg border p-3"
+                      style={{
+                        borderColor: settingsSurfaceTokens.borderSubtle,
+                        backgroundColor: settingsSurfaceTokens.glass,
+                      }}
+                    >
+                      <p className="text-xs font-semibold">
+                        Permission profile
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {linkedHostsById
+                          .get(device.deviceId)!
+                          .permissionProfile.permissions.map((item) => {
+                            const evaluation = linkedHostGovernanceById
+                              .get(device.deviceId)!
+                              .get(item.id)!;
+                            return (
+                              <span
+                                key={item.id}
+                                className="rounded-full border px-2 py-1 text-[11px]"
+                                style={{
+                                  borderColor:
+                                    settingsSurfaceTokens.borderSubtle,
+                                }}
+                                title={`${item.description} Governance: ${evaluation.reason}.`}
+                              >
+                                {item.label}:{" "}
+                                {getLucaLinkGovernanceDecisionLabel(
+                                  evaluation.decision,
+                                )}
+                                {item.sensitive ? " · sensitive" : ""}
+                              </span>
+                            );
+                          })}
+                      </div>
+                      <p className="mt-2 text-xs opacity-70">
+                        Sensitive access requires approval. This summary does
+                        not grant runtime authority.
+                      </p>
+                    </div>
+                  )}
 
                   {(device.warnings.length > 0 || device.errors.length > 0) && (
                     <div

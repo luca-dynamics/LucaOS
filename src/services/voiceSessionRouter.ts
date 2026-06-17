@@ -5,8 +5,17 @@ import {
   LOCAL_TTS_MODEL_IDS,
 } from "./ModelManagerService";
 
+import type { VoiceRuntimeProviderPolicyRouteMetadata } from "./voice/VoiceRuntimeProviderPolicy";
+import type { VoiceRouteShadowEvaluation } from "./voice/VoiceRouteShadowEvaluator";
+import type { VoiceRouteAuthorityDecision } from "./voice/VoiceRouteAuthorityGate";
+
 export interface VoiceSessionRouteBase {
   brainProvider?: "GEMINI" | "OPENAI" | "GROQ";
+  providerPolicy?: VoiceRuntimeProviderPolicyRouteMetadata | null;
+  providerPolicyAdvisoryOnly?: true;
+  providerPolicyAppliedToRouting?: false;
+  shadowEvaluation?: VoiceRouteShadowEvaluation | null;
+  authority?: VoiceRouteAuthorityDecision | null;
 }
 
 export type VoiceSessionRoute =

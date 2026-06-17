@@ -415,3 +415,15 @@ a,
 .luca-shell-active-label {
   color: var(--luca-accent-primary);
 }
+
+@keyframes luca-hologram-breathe {
+  0%, 100% {
+    transform: translateY(0) scale(0.99);
+    opacity: 0.86;
+  }
+
+  50% {
+    transform: translateY(-5px) scale(1.015);
+    opacity: 1;
+  }
+}

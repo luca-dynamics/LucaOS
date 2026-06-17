@@ -31,11 +31,12 @@ const ToolLauncherButton: React.FC<ToolLauncherButtonProps> = ({
       type="button"
       onClick={() => onSelect(tool)}
       title={tool.description || tool.label}
-      className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all tech-border glass-blur hover:scale-105 active:scale-95 shadow-lg shadow-black/20 touch-manipulation"
+      className="px-4 py-2.5 rounded-lg text-[11px] font-medium flex items-center justify-center gap-2.5 transition-all border glass-blur hover:opacity-90 active:opacity-100 touch-manipulation"
       style={{
         backgroundColor: isLight
           ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))"
           : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
+        borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
         color: textColor,
       }}
     >
@@ -48,10 +49,10 @@ const ToolLauncherButton: React.FC<ToolLauncherButtonProps> = ({
       {tool.label}
       {tool.preview && (
         <span
-          className="text-[8px] font-bold tracking-[0.15em] opacity-60"
+          className="text-[9px] font-medium opacity-60"
           style={{ color: textColor }}
         >
-          PREVIEW
+          Preview
         </span>
       )}
     </button>

@@ -1,18 +1,20 @@
 import { describe, expect, it } from "vitest";
+import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
+import { personalIntelligenceRuntimeAuthorityFixtures } from "../personal-intelligence/runtimeAuthority";
+import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
 import type { PersonalIntelligenceSkillPermissionGate } from "../personal-intelligence/skillPermissions";
- 
 import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
-
- 
-  
+import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
 import {
   createOperationItemsFromAdapterFileInstallDecisions,
   createOperationItemsFromApprovalNotifications,
   createOperationItemsFromLearningEvents,
+  createOperationItemsFromLucaLinkDryRunHandoffSimulations,
   createOperationItemsFromMissionEvaluations,
   createOperationItemsFromRuntimeTraces,
   createOperationItemsFromSensorSnapshots,
   createOperationItemsFromSkillPermissionGates,
+  createOperationItemsFromSkillDryRunSimulations,
   createOperationItemsFromSkillSandboxPlans,
   createOperationItemsFromTransportPermissionDecisions,
   createOperationItemsFromWebDisplayIntents,
@@ -52,6 +54,14 @@ describe("operation center bridge", () => {
     expect(createOperationItemsFromMissionEvaluations([{ ...base, status: "misaligned" }])[0].status).toBe("approval_required");
   });
 
+
+  it("converts skill dry-run simulations into non-executable Operation Center evidence", () => {
+    const items = createOperationItemsFromSkillDryRunSimulations(personalIntelligenceSkillDryRunFixtures);
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((item) => item.category === "skill_dry_run" && !item.canExecute && !item.sideEffectsPerformed)).toBe(true);
+    expect(items[0].blockedActions).toEqual(expect.arrayContaining(["skill execution", "tool invocation", "model call", "memory write", "LucaLink handoff"]));
+  });
+
   it("converts LucaLink display, notification, sensor, and transport summaries", () => {
     expect(createOperationItemsFromWebDisplayIntents([{ ...base, status: "approval_required" }])[0].category).toBe("web_display");
     expect(createOperationItemsFromApprovalNotifications([{ ...base, status: "action_required" }])[0].status).toBe("pending");
@@ -60,24 +70,60 @@ describe("operation center bridge", () => {
     expect(createOperationItemsFromTransportPermissionDecisions([{ ...base, status: "blocked" }])[0].status).toBe("blocked");
   });
 
- 
-  it("converts the real adapter file/install fixture decisions", () => {
+  it("converts LucaLink dry-run simulations without granting runtime authority", () => {
+    const items = createOperationItemsFromLucaLinkDryRunHandoffSimulations(LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES);
+    expect(items).toHaveLength(LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES.length);
+    expect(items.every((item) => item.category === "lucalink_dry_run" && item.executionEnabled === false && item.sideEffectsPerformed === false)).toBe(true);
+    expect(items.flatMap((item) => item.blockedActions)).toEqual(expect.arrayContaining([
+      "live handoff", "transport send", "adapter execution", "display open/cast", "sensor collection", "file write", "install",
+    ]));
+  });
+
+  it("converts real adapter file/install fixture decisions without granting runtime authority", () => {
     const items = createOperationItemsFromAdapterFileInstallDecisions(
       LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
     );
-    expect(items.map((item) => item.status)).toEqual([
+    const statuses = items.map((item) => item.status);
+
+    expect(items).toHaveLength(LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS.length);
+    expect(statuses).toEqual(expect.arrayContaining([
       "ready_for_review",
       "approval_required",
       "blocked",
       "unsupported",
-    ]);
-    expect(items.every((item) => item.category === "adapter_file_install")).toBe(true);
-    expect(items.every((item) => item.executionEnabled === false && item.sideEffectsPerformed === false)).toBe(true);
+    ]));
+    expect(items.every((item) =>
+      item.category === "adapter_file_install"
+      && item.sideEffectsPerformed === false
+      && item.executionEnabled === false
+      && item.canExecute === false
+      && item.readyForExecution === false
+    )).toBe(true);
+    expect(items.some((item) => item.status === "disabled")).toBe(false);
+    expect(items.some((item) =>
+      `${item.title} ${item.summary} ${item.warnings.join(" ")}`.includes("Adapter file/install model not available yet")
+    )).toBe(false);
+  });
+});
 
-  it("keeps an unavailable adapter file/install model disabled", () => {
-    const [item] = createOperationItemsFromAdapterFileInstallDecisions([{ ...base, status: "disabled", warnings: ["Adapter file/install model not available yet."] }]);
-    expect(item).toMatchObject({ category: "adapter_file_install", status: "disabled", executionEnabled: false });
+describe("runtime authority operation bridge", () => {
+  it("maps authority classes into read-only Operation Center items", () => {
+    const items = createOperationItemsFromRuntimeAuthorityRecords(personalIntelligenceRuntimeAuthorityFixtures);
+    expect(items.every((item) => item.category === "runtime_authority")).toBe(true);
+    expect(items.find((item) => item.status === "blocked")?.blockedActions).toContain("runtime authority grant");
+    expect(items.find((item) => item.status === "approval_required")?.readyForExecution).toBe(false);
+  });
+});
 
-  
+describe("LucaLink runtime authority bridge", () => {
+  it("maps LucaLink authority records without replacing Personal Intelligence authority items", async () => {
+    const { LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES } = await import("../services/lucaLink/runtimeAuthority");
+    const { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } = await import("./operationCenterLucaLinkRuntimeAuthorityBridge");
+    const lucaLinkItems = createOperationItemsFromLucaLinkRuntimeAuthorityRecords(LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES);
+    const personalItems = createOperationItemsFromRuntimeAuthorityRecords(personalIntelligenceRuntimeAuthorityFixtures);
+    expect(lucaLinkItems.every((item) => item.category === "lucalink_runtime_authority" && item.source === "lucalink")).toBe(true);
+    expect(lucaLinkItems.find((item) => item.status === "approval_required")?.authorityGranted).toBe(false);
+    expect(lucaLinkItems.every((item) => item.blockedActions.includes("runtime authority grant"))).toBe(true);
+    expect(personalItems.every((item) => item.category === "runtime_authority" && item.source === "personal_intelligence")).toBe(true);
   });
 });

@@ -51,6 +51,8 @@ class GuardService extends EventEmitter {
   }
 
   private initListeners() {
+    if (typeof window === "undefined") return;
+
     if ((window as any).electron?.ipcRenderer) {
       (window as any).electron.ipcRenderer.on(
         "system-resource-pulse",

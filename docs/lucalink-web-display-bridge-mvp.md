@@ -54,3 +54,7 @@ A notification `approve_preview_intent` is separate from Web Display Bridge stat
 ## Transport permission conversion
 
 Web display session intents can be converted into side-effect-free LucaLink transport permission requests. The conversion summarizes display metadata for channel/message-class evaluation only; it does not send a display intent, approve a session, open or control a browser, cast content, or authorize runtime transport.
+
+## Dry-run handoff simulation integration
+
+LucaLink governance outputs can feed the side-effect-free dry-run handoff simulation layer and may appear as read-only `lucalink_dry_run` summaries in Operation Center. Dry-run evidence does not send, execute, collect, write, install, approve, open displays, or mutate pairing, transport, approval, device, or runtime state.

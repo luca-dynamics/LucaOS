@@ -44,3 +44,11 @@ The UI contains no Run or Execute action and does not connect the Skill Registry
 Skill permission gates are now one source feeding the broader Dashboard Operation Center. The existing in-memory gate summary remains visible, while normalized read-only cards also summarize memory approval, runtime trace, learning, mission alignment, skill sandbox, and LucaLink governance outputs.
 
 This broader summary is informational only. It does not promote a review grant into execution authority and does not execute, send, persist, write, install, collect, or approve anything.
+
+## Controlled dry-run use
+
+Permission gates can be evaluated by the controlled skill dry-run simulator. Pending, denied, expired, blocked, and grant-for-review states affect review status, but no gate authorizes execution. In particular, `granted_for_review` means only that evidence may be reviewed.
+
+## Runtime authority boundary
+
+Permission gates are inputs to the [Runtime Authority Boundary](./runtime-authority-boundary.md). `granted_for_review` means that evidence may be reviewed; it never grants skill, tool, model, memory, network, file, browser, connector, or LucaLink execution authority.

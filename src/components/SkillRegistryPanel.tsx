@@ -9,8 +9,13 @@ import {
   type PersonalIntelligenceSkillStatus,
 } from "../personal-intelligence/skills";
 import { createPersonalIntelligenceSkillSandboxPlan } from "../personal-intelligence/skillSandbox";
+import { createPersonalIntelligenceSkillDryRunSimulation } from "../personal-intelligence/skillDryRun";
+import { createPersonalIntelligenceRuntimeCapabilityRegistry } from "../personal-intelligence/runtimeAuthority";
 import { SkillSandboxPlanPanel } from "./SkillSandboxPlanPanel";
 import { SkillPermissionGrantPanel } from "./SkillPermissionGrantPanel";
+import { SkillDryRunPanel } from "./SkillDryRunPanel";
+import { SkillRuntimeAuthorityPanel } from "./SkillRuntimeAuthorityPanel";
+import { useSkillPermissionGrants } from "./SkillPermissionGrantContext";
 
 interface SkillRegistryPanelProps {
   accent: string;
@@ -30,7 +35,7 @@ const RISK_COLORS: Record<PersonalIntelligenceSkillRiskLevel, string> = {
   critical: "text-red-300 border-red-400/30 bg-red-400/10",
 };
 
-const label = (value: string) => value.replaceAll("_", " ");
+const label = (value: string) => value.replace(/_/g, " ");
 
 function Badge({ value, className }: { value: string; className: string }) {
   return (
@@ -52,6 +57,19 @@ function RequirementList({ title, values }: { title: string; values?: string[] }
 function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegistryEntry }) {
   const memoryPolicy = entry.memoryPolicy?.access ?? "none";
   const sandboxPlan = useMemo(() => createPersonalIntelligenceSkillSandboxPlan(entry), [entry]);
+  const { state } = useSkillPermissionGrants();
+  const simulation = useMemo(() => createPersonalIntelligenceSkillDryRunSimulation({
+    skillRegistryEntry: entry,
+    sandboxPlan,
+    permissionGates: state.gates,
+    source: "selected_skill",
+  }), [entry, sandboxPlan, state.gates]);
+  const authorityRecords = useMemo(() => createPersonalIntelligenceRuntimeCapabilityRegistry({
+    skillRegistryEntries: [entry],
+    sandboxPlans: [sandboxPlan],
+    permissionGates: state.gates.filter((gate) => gate.skillId === entry.skillId),
+    dryRunSimulations: [simulation],
+  }), [entry, sandboxPlan, simulation, state.gates]);
   return (
     <section className="min-w-0 flex-1 overflow-y-auto border-l border-white/10 bg-black/20 p-5" aria-label="Skill manifest detail">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -108,6 +126,8 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
 
       <SkillSandboxPlanPanel plan={sandboxPlan} />
       <SkillPermissionGrantPanel plan={sandboxPlan} />
+      <SkillDryRunPanel simulation={simulation} />
+      <SkillRuntimeAuthorityPanel records={authorityRecords} />
 
       <div className="mt-4 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-4">
         <p className="text-sm font-bold text-red-200">Execution disabled</p>

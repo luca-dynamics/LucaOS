@@ -5,6 +5,13 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import type { LucaExperienceMode } from "./experience/experienceMode";
+import { toHeaderTier } from "./experience/experienceMode";
+import {
+  getDefaultRightPanelModeForExperience,
+  getRightPanelLabelForMode,
+  getVisibleRightPanelModes,
+} from "./experience/dashboardDisclosure";
 import { Capacitor } from "@capacitor/core";
 import { useMobile } from "./hooks/useMobile";
 import { AppProvider, useAppContext } from "./context/AppContext";
@@ -65,6 +72,13 @@ import SandboxedBrowserShell from "./components/browser/SandboxedBrowserShell";
 import ChatWidgetMode from "./components/ChatWidgetMode";
 import WidgetMode from "./components/WidgetMode";
 import HologramMode from "./components/HologramMode";
+import {
+  createWidgetPresenceSnapshot,
+  toHologramUpdate,
+  toLucaLinkUiStateSync,
+  toWidgetUpdate,
+  type WidgetLegacyPayload,
+} from "./presence";
 
 // Helper for device capability check removed temporarily as it's unused
 
@@ -100,6 +114,7 @@ import { useToolOrchestrator } from "./hooks/app/useToolOrchestrator";
 import { BootSequence } from "./hooks/app/useAppSystem";
 import { LucaBootVisualShell } from "./components/boot/LucaBootVisualShell";
 import OnboardingFlow from "./components/Onboarding/OnboardingFlow";
+import { desktopOnboardingRuntime } from "./desktop/adapters/desktopOnboardingRuntime";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
 import { THEME_PALETTE } from "./config/themeColors";
 import { isElectron as checkElectron, isWeb } from "./utils/env";
@@ -108,11 +123,7 @@ import ActivityPanel from "./components/right-panel/ActivityPanel";
 import MemoryControlPanel from "./components/right-panel/MemoryControlPanel";
 import TraceLogsPanel from "./components/right-panel/TraceLogsPanel";
 import { SkillPermissionGrantProvider } from "./components/SkillPermissionGrantContext";
-import {
-  MOBILE_RIGHT_PANEL_LABELS,
-  RIGHT_PANEL_MODES,
-  isRightPanelMode,
-} from "./components/right-panel/rightPanelModel";
+import { isRightPanelMode } from "./components/right-panel/rightPanelModel";
 import {
   mobileNavigationLabel,
   type MobileNavigationTab,
@@ -120,7 +131,6 @@ import {
 import {
   lucaShellActiveControlStyle,
   lucaShellActiveIndicatorStyle,
-  lucaShellActiveLabelStyle,
   lucaShellActiveTabStyle,
   lucaShellClassNames,
   lucaShellControlStyle,
@@ -144,6 +154,12 @@ import {
   lucaMobilePanelSurfaceStyle,
 } from "./styles/lucaMobileShellStyles";
 import { resolveLucaPlatformBackgroundPolicy } from "./styles/lucaPlatformBackgroundPolicy";
+import { readCurrentWebAccessPolicy } from "./config/webAccessPolicy";
+import {
+  resolveBrowserSafeBootState,
+  shouldShowBootShell,
+} from "./config/browserSafeBootResolver";
+import WebRuntimeCapabilityStrip from "./components/web/WebRuntimeCapabilityStrip";
 
 // --- Mock Initial State ---
 
@@ -205,6 +221,25 @@ function AppContent() {
   // --- 1. PLATFORM & BASIC STATE ---
   const isCapacitor = Capacitor.isNativePlatform();
   const isElectron = checkElectron();
+  const bootDebugEnabled =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("bootDebug") === "1";
+  const webAccessPolicy = useMemo(
+    () => readCurrentWebAccessPolicy({ isElectronRuntime: isElectron }),
+    [isElectron],
+  );
+  const browserSafeBootState = useMemo(
+    () =>
+      resolveBrowserSafeBootState(webAccessPolicy, {
+        releaseTarget: import.meta.env.VITE_LUCA_RELEASE_TARGET,
+        runtimeTarget: import.meta.env.VITE_LUCA_RUNTIME_TARGET,
+        appMode: import.meta.env.VITE_LUCA_APP_MODE,
+        hostname: typeof window !== "undefined" ? window.location.hostname : "",
+        isElectronRuntime: isElectron,
+      }),
+    [webAccessPolicy, isElectron],
+  );
+  const isBrowserSafeWebInterface = browserSafeBootState.bootResolved;
   const isMobile = useMobile();
   const platformBackgroundPolicy = useMemo(
     () =>
@@ -221,13 +256,107 @@ function AppContent() {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   // State required by useAppSystem
-  const [bootSequence, setBootSequence] = useState<BootSequence>("INIT");
+  const [bootSequence, setBootSequence] = useState<BootSequence>(() =>
+    isBrowserSafeWebInterface ? "READY" : "INIT",
+  );
+  const [showBrowserSafeBootShell, setShowBrowserSafeBootShell] = useState(
+    isBrowserSafeWebInterface,
+  );
+  const [browserSafeBootResolved, setBrowserSafeBootResolved] = useState(
+    !isBrowserSafeWebInterface,
+  );
   const [biosStatus, setBiosStatus] = useState<any>({
     server: "PENDING",
     core: "PENDING",
     vision: "PENDING",
     audio: "PENDING",
   });
+  const hasLoggedWebBootDiagnosticRef = useRef(false);
+
+  useEffect(() => {
+    if (!isBrowserSafeWebInterface) {
+      setBrowserSafeBootResolved(true);
+      setShowBrowserSafeBootShell(false);
+      return;
+    }
+
+    setBrowserSafeBootResolved(false);
+    setShowBrowserSafeBootShell(true);
+    setBootSequence("READY");
+    setBiosStatus({
+      server: "API REQUIRED",
+      core: "DESKTOP REQUIRED",
+      vision: "DISABLED IN WEB",
+      audio: "DISABLED IN WEB",
+      ollama: "DESKTOP REQUIRED",
+    });
+
+    const resolveWebBoot = () => {
+      // Web-only hard fail-safe: once the intro/fallback fires, force the
+      // browser-safe app shell to render even though desktop/local readiness
+      // remains unavailable in a deployed browser.
+      setBootSequence("READY");
+      setBrowserSafeBootResolved(true);
+      setShowBrowserSafeBootShell(false);
+      setBiosStatus({
+        server: "API REQUIRED",
+        core: "DESKTOP REQUIRED",
+        vision: "DISABLED IN WEB",
+        audio: "DISABLED IN WEB",
+        ollama: "DESKTOP REQUIRED",
+        desktopRuntimeStatus: "desktop-required",
+        localServicesStatus: "skipped",
+        nativeActionsStatus: "disabled_in_web",
+      });
+    };
+
+    const browserSafeBootTimer = window.setTimeout(
+      resolveWebBoot,
+      browserSafeBootState.minVisualDurationMs,
+    );
+    const browserSafeFallbackTimer = window.setTimeout(
+      resolveWebBoot,
+      browserSafeBootState.fallbackTimeoutMs,
+    );
+
+    return () => {
+      window.clearTimeout(browserSafeBootTimer);
+      window.clearTimeout(browserSafeFallbackTimer);
+    };
+  }, [browserSafeBootState, isBrowserSafeWebInterface]);
+
+  useEffect(() => {
+    if (!isBrowserSafeWebInterface && !bootDebugEnabled) return;
+    if (hasLoggedWebBootDiagnosticRef.current) return;
+    hasLoggedWebBootDiagnosticRef.current = true;
+
+    console.info(
+      `[LucaOS web boot] mode=${browserSafeBootState.runtimeMode}`,
+      {
+        releaseTarget: import.meta.env.VITE_LUCA_RELEASE_TARGET || "",
+        runtimeTarget: import.meta.env.VITE_LUCA_RUNTIME_TARGET || "",
+        appMode: import.meta.env.VITE_LUCA_APP_MODE || "",
+        hostname: typeof window !== "undefined" ? window.location.hostname : "",
+        shouldRenderBrowserSafeApp:
+          webAccessPolicy.shouldRenderBrowserSafeApp,
+        resolverActive: browserSafeBootState.bootResolved,
+        bootSequence,
+        showBootShell: showBrowserSafeBootShell,
+        browserSafeBootResolved,
+        fallbackTimeoutMs: browserSafeBootState.fallbackTimeoutMs,
+        readiness: browserSafeBootState.readiness,
+        reason: browserSafeBootState.reason,
+      },
+    );
+  }, [
+    bootDebugEnabled,
+    bootSequence,
+    browserSafeBootResolved,
+    browserSafeBootState,
+    isBrowserSafeWebInterface,
+    showBrowserSafeBootShell,
+    webAccessPolicy,
+  ]);
 
   // --- 2. REFS ---
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -329,6 +458,10 @@ function AppContent() {
     return (settings.general?.theme as UIThemeId) || "PROFESSIONAL";
   });
 
+  const [experienceMode, setExperienceMode] = useState<LucaExperienceMode>(
+    () => settingsService.getSettings().general.experienceMode,
+  );
+
   const [backgroundOpacity, setBackgroundOpacity] = useState<number>(0.3);
   const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
 
@@ -338,6 +471,7 @@ function AppContent() {
       // Persona & Theme Selection — always apply latest from settings (React deduplicates no-ops)
       const newPersona = settings?.general?.persona;
       const newTheme = settings?.general?.theme;
+      const newExperienceMode = settings?.general?.experienceMode;
       const effectivePersona = newPersona ?? "ASSISTANT";
       const hasStoredSettings = settingsService.hasStoredSettings?.() ?? true;
       // Preserve saved themes exactly, but let true first-run/no-storage boots
@@ -351,6 +485,9 @@ function AppContent() {
       }
       if (newTheme) {
         setActiveThemeId(newTheme as UIThemeId);
+      }
+      if (newExperienceMode) {
+        setExperienceMode(newExperienceMode as LucaExperienceMode);
       }
 
       // Interaction Mode (Text vs Voice)
@@ -531,6 +668,20 @@ function AppContent() {
   } = useAppContext();
 
   const { rightPanelMode, setRightPanelMode, memories } = management;
+  const visibleRightPanelModes = useMemo(
+    () => getVisibleRightPanelModes(experienceMode),
+    [experienceMode],
+  );
+  const displayedRightPanelMode = getDefaultRightPanelModeForExperience(
+    experienceMode,
+    rightPanelMode,
+  );
+
+  useEffect(() => {
+    if (displayedRightPanelMode !== rightPanelMode) {
+      setRightPanelMode(displayedRightPanelMode);
+    }
+  }, [displayedRightPanelMode, rightPanelMode, setRightPanelMode]);
 
   const { approvalRequest, setApprovalRequest } = voiceSystem;
 
@@ -605,6 +756,7 @@ function AppContent() {
     ingestionState,
     setIngestionState,
     voiceModel,
+    voiceAmplitude,
     setVoiceAmplitude,
   } = voiceSystem;
 
@@ -749,6 +901,7 @@ function AppContent() {
     devices,
     setDevices,
     setOpsecStatus,
+    browserSafeInterface: isBrowserSafeWebInterface,
   });
 
   const effectiveConnectionTier = useMemo(() => {
@@ -1200,13 +1353,14 @@ function AppContent() {
   // --- WIDGET SYNC LOOP (REAL-TIME-ISH) ---
   useEffect(() => {
     if ((window as any).electron && (window as any).electron.ipcRenderer) {
-      const syncData = {
+      const syncData: WidgetLegacyPayload = {
         isVadActive:
           isVoiceHubListening ||
           voiceHubStatus === "THINKING" ||
           isVadActive ||
           localVadActive,
         isSpeaking: isSpeaking,
+        amplitude: voiceAmplitude,
         transcript: voiceHubTranscript || voiceTranscript,
         transcriptSource: voiceTranscriptSource,
         intent: activeAutonomousAction?.intent,
@@ -1216,18 +1370,30 @@ function AppContent() {
         elevationState: elevationState,
         approvalRequest: (voiceSystem as any).approvalRequest,
       };
+      const presenceSnapshot = createWidgetPresenceSnapshot(syncData);
+      const widgetSyncData = toWidgetUpdate(presenceSnapshot, syncData);
+      const hologramSyncData = toHologramUpdate(presenceSnapshot, syncData);
+      const lucaLinkSyncData = {
+        ...syncData,
+        ...toLucaLinkUiStateSync(presenceSnapshot),
+      };
 
-      window.electron.ipcRenderer.send("sync-widget-state", syncData);
-      broadcastToSatellites(syncData);
+      (window as any).electron.ipcRenderer.send(
+        "sync-widget-state",
+        widgetSyncData,
+        hologramSyncData,
+      );
+      broadcastToSatellites(lucaLinkSyncData);
 
       if (Capacitor.getPlatform() === "ios") {
-        watchGateway.updateWatchState(syncData);
+        watchGateway.updateWatchState(widgetSyncData);
       }
     }
   }, [
     isVadActive,
     localVadActive,
     isSpeaking,
+    voiceAmplitude,
     voiceTranscript,
     persona,
     voiceHubStatus,
@@ -2228,7 +2394,14 @@ function AppContent() {
   // Removed Background from here (Moved to Root)
 
   // --- BOOT SEQUENCE RENDER ---
-  if (bootSequence !== "READY") {
+  if (
+    shouldShowBootShell({
+      bootSequence,
+      showBootShell: showBrowserSafeBootShell,
+      browserSafeBootResolved:
+        isBrowserSafeWebInterface && browserSafeBootResolved,
+    })
+  ) {
     return (
       <div
         className="h-screen w-full bg-transparent cursor-default select-none draggable transition-all duration-700 relative overflow-hidden"
@@ -2239,6 +2412,7 @@ function AppContent() {
           <div className="absolute inset-0 z-10">
             <OnboardingFlow
               theme={theme}
+              runtime={desktopOnboardingRuntime}
               onComplete={(profile, mode) => {
                 console.log("[App] Onboarding Complete:", { profile, mode });
                 settingsService.saveSettings({
@@ -2259,9 +2433,10 @@ function AppContent() {
           </div>
         ) : (
           <LucaBootVisualShell
-            bootSequence={bootSequence}
+            bootSequence={showBrowserSafeBootShell ? "INIT" : bootSequence}
             biosStatus={biosStatus}
             theme={theme}
+            browserSafeInterface={showBrowserSafeBootShell}
           />
         )}
       </div>
@@ -2273,7 +2448,42 @@ function AppContent() {
   // console.log("[RENDER] Boot Ready. Rendering Main UI...");
 
   return (
-    <>
+    <SafeComponent
+      componentName={
+        isBrowserSafeWebInterface
+          ? "Browser-safe LucaOS app shell"
+          : "LucaOS app shell"
+      }
+      fallback={
+        isBrowserSafeWebInterface ? (
+          <div className="min-h-screen bg-black text-cyan-100 flex items-center justify-center p-6 font-mono">
+            <div className="max-w-lg rounded-2xl border border-cyan-400/30 bg-slate-950/80 p-6 shadow-2xl shadow-cyan-950/40">
+              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
+                Browser-safe shell failed to initialize
+              </p>
+              <h1 className="mt-3 text-2xl font-semibold text-white">
+                Desktop runtime unavailable in browser
+              </h1>
+              <p className="mt-3 text-sm text-cyan-100/75">
+                LucaOS exited boot, but a browser-safe shell component failed.
+                Native/local capabilities remain disabled instead of returning
+                to the boot screen.
+              </p>
+            </div>
+          </div>
+        ) : undefined
+      }
+    >
+      {bootDebugEnabled && isBrowserSafeWebInterface && (
+        <div className="fixed left-3 top-3 z-[9999] rounded border border-cyan-400/30 bg-black/80 px-3 py-2 text-[10px] font-mono text-cyan-100 shadow-lg pointer-events-none">
+          <div>[LucaOS web boot]</div>
+          <div>resolverActive={String(browserSafeBootState.bootResolved)}</div>
+          <div>bootSequence={bootSequence}</div>
+          <div>showBootShell={String(showBrowserSafeBootShell)}</div>
+          <div>resolved={String(browserSafeBootResolved)}</div>
+          <div>fallbackTimeoutMs={browserSafeBootState.fallbackTimeoutMs}</div>
+        </div>
+      )}
       {platformBackgroundPolicy.shouldUseMobileStableBackground ? (
         <div
           className={`fixed inset-0 -z-50 ${lucaMobileClassNames.app}`}
@@ -2511,8 +2721,11 @@ function AppContent() {
             isWakeWordActive={isWakeWordActive}
             isLockdown={isLockdown}
             connectionTier={effectiveConnectionTier}
+            tier={toHeaderTier(experienceMode)}
           />
         </SafeComponent>
+
+        <WebRuntimeCapabilityStrip policy={webAccessPolicy} />
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden relative z-10 flex h-full gap-0 p-0">
@@ -2568,6 +2781,7 @@ function AppContent() {
                 </button>
                 <SafeComponent componentName="OperationsSidebar">
                   <OperationsSidebar
+                    experienceMode={experienceMode}
                     theme={theme}
                     isMobile={false}
                     activeMobileTab=""
@@ -2626,6 +2840,7 @@ function AppContent() {
               style={lucaMobileContentSurfaceStyle}
             >
               <OperationsSidebar
+                experienceMode={experienceMode}
                 theme={theme}
                 isMobile={true}
                 activeMobileTab="SYSTEM"
@@ -2789,7 +3004,9 @@ function AppContent() {
                 <Icon name={rightToggleIcon(true).name} size={20} />
               </button>
               <div className="mt-2 flex flex-col items-center gap-1 w-full">
-                {ACTIVITY_RAIL_ICONS.map((item) => (
+                {ACTIVITY_RAIL_ICONS.filter((item) =>
+                  visibleRightPanelModes.includes(item.mode),
+                ).map((item) => (
                   <button
                     key={item.mode}
                     type="button"
@@ -2801,7 +3018,7 @@ function AppContent() {
                     }}
                     className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
                     style={
-                      rightPanelMode === item.mode
+                      displayedRightPanelMode === item.mode
                         ? lucaShellActiveControlStyle
                         : lucaShellControlStyle
                     }
@@ -2836,7 +3053,7 @@ function AppContent() {
                     className="flex flex-none border-b"
                     style={lucaShellDividerStyle}
                   >
-                    {RIGHT_PANEL_MODES.map((mode) => (
+                    {visibleRightPanelModes.map((mode) => (
                       <button
                         key={mode}
                         type="button"
@@ -2844,32 +3061,26 @@ function AppContent() {
                           setRightPanelMode(mode);
                           soundService.play("KEYSTROKE");
                         }}
-                        className={`flex-1 py-3 text-xs font-bold tracking-widest transition-colors relative border-b-2 ${
-                          rightPanelMode === mode
+                        className={`flex-1 py-3 text-[13px] font-medium transition-colors relative border-b-2 ${
+                          displayedRightPanelMode === mode
                             ? lucaShellClassNames.activeTab
                             : lucaShellClassNames.tab
                         }`}
                         style={
-                          rightPanelMode === mode
+                          displayedRightPanelMode === mode
                             ? lucaShellActiveTabStyle
                             : lucaShellTabStyle
                         }
                       >
-                        {mode}
-                        {mode === "CONTROL" && rightPanelMode === "CONTROL" && (
-                          <div className="absolute top-0.5 right-1.5 flex items-center gap-1">
+                        {getRightPanelLabelForMode(experienceMode, mode)}
+                        {mode === "CONTROL" &&
+                          displayedRightPanelMode === "CONTROL" && (
                             <span
-                              className={`w-1.5 h-1.5 rounded-full animate-pulse border ${lucaShellClassNames.activeIndicator}`}
+                              className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full ${lucaShellClassNames.activeIndicator}`}
                               style={lucaShellActiveIndicatorStyle}
+                              aria-hidden="true"
                             />
-                            <span
-                              className={`text-[7px] font-black uppercase tracking-widest ${lucaShellClassNames.activeLabel}`}
-                              style={lucaShellActiveLabelStyle}
-                            >
-                              Active
-                            </span>
-                          </div>
-                        )}
+                          )}
                       </button>
                     ))}
                     <button
@@ -2888,7 +3099,7 @@ function AppContent() {
                   </div>
 
                   <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
-                    {rightPanelMode === "CONTROL" && (
+                    {displayedRightPanelMode === "CONTROL" && (
                       <ControlPanel
                         theme={theme}
                         tasks={management.tasks}
@@ -2896,17 +3107,18 @@ function AppContent() {
                         goals={management.goals}
                       />
                     )}
-                    {rightPanelMode === "ACTIVITY" && (
+                    {displayedRightPanelMode === "ACTIVITY" && (
                       <ActivityPanel theme={theme} />
                     )}
-                    {rightPanelMode === "MEMORY" && (
+                    {displayedRightPanelMode === "MEMORY" && (
                       <MemoryControlPanel
                         theme={theme}
                         memories={memories}
                         setMemories={setMemories}
+                        experienceMode={experienceMode}
                       />
                     )}
-                    {rightPanelMode === "LOGS" && (
+                    {displayedRightPanelMode === "LOGS" && (
                       <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
                     )}
                   </div>
@@ -2926,7 +3138,7 @@ function AppContent() {
                   className="flex flex-none border-b"
                   style={lucaMobileDividerStyle}
                 >
-                  {RIGHT_PANEL_MODES.map((mode) => (
+                  {visibleRightPanelModes.map((mode) => (
                     <button
                       key={mode}
                       type="button"
@@ -2934,19 +3146,19 @@ function AppContent() {
                         setRightPanelMode(mode);
                         soundService.play("KEYSTROKE");
                       }}
-                      className={`flex-1 py-3 text-[10px] font-bold tracking-widest transition-colors relative border-b-2 ${
-                        rightPanelMode === mode
+                      className={`flex-1 py-3 text-[11px] font-medium transition-colors relative border-b-2 ${
+                        displayedRightPanelMode === mode
                           ? lucaMobileClassNames.tabActive
                           : lucaMobileClassNames.tab
                       }`}
                       style={
-                        rightPanelMode === mode
+                        displayedRightPanelMode === mode
                           ? lucaMobileActiveTabStyle
                           : lucaMobileInactiveTabStyle
                       }
                     >
-                      {MOBILE_RIGHT_PANEL_LABELS[mode]}
-                      {rightPanelMode === mode && (
+                      {getRightPanelLabelForMode(experienceMode, mode)}
+                      {displayedRightPanelMode === mode && (
                         <span
                           aria-hidden="true"
                           className={`absolute left-1/2 top-1 -translate-x-1/2 h-1 w-5 rounded-full border ${lucaMobileClassNames.indicator}`}
@@ -2958,7 +3170,7 @@ function AppContent() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto pl-1 pr-4 py-4 font-mono text-xs relative">
-                  {rightPanelMode === "CONTROL" && (
+                  {displayedRightPanelMode === "CONTROL" && (
                     <ControlPanel
                       theme={theme}
                       tasks={management.tasks}
@@ -2966,17 +3178,18 @@ function AppContent() {
                       goals={management.goals}
                     />
                   )}
-                  {rightPanelMode === "ACTIVITY" && (
+                  {displayedRightPanelMode === "ACTIVITY" && (
                     <ActivityPanel theme={theme} />
                   )}
-                  {rightPanelMode === "MEMORY" && (
+                  {displayedRightPanelMode === "MEMORY" && (
                     <MemoryControlPanel
                       theme={theme}
                       memories={memories}
                       setMemories={setMemories}
+                      experienceMode={experienceMode}
                     />
                   )}
-                  {rightPanelMode === "LOGS" && (
+                  {displayedRightPanelMode === "LOGS" && (
                     <TraceLogsPanel theme={theme} toolLogs={toolLogs} />
                   )}
                 </div>
@@ -3049,6 +3262,6 @@ function AppContent() {
             approved open_approved_safe_url governed execution (approval + Run once). */}
         <SandboxedBrowserShell />
       </div>
-    </>
+    </SafeComponent>
   );
 }

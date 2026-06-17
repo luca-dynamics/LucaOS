@@ -21,6 +21,15 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import { CREATOR_ACCESS_STATE } from "../../experience/experienceModeAccess";
+import {
+  getExperienceModeOptions,
+  getIntentionalExperienceModeSettingsUpdate,
+} from "../../experience/experienceModeSettings";
+import {
+  getExperienceModeLabel,
+  type LucaExperienceMode,
+} from "../../experience/experienceMode";
 
 interface ChromeProfileStatus {
   imported: boolean;
@@ -76,6 +85,8 @@ function normalizeDisplayValue(value: unknown, fallback = "ASSISTANT"): string {
   const text = String(value).trim();
   return text && text !== "[object Object]" ? text : fallback;
 }
+
+const experienceModeOptions = getExperienceModeOptions(CREATOR_ACCESS_STATE);
 
 const personaOptions: PersonaMode[] = [
   "RUTHLESS",
@@ -138,6 +149,17 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
   const toggleGeneral = (key: keyof LucaSettings["general"]) =>
     onUpdate("general", key, !settings.general[key]);
 
+  const handleExperienceModeChange = (mode: LucaExperienceMode) => {
+    const update = getIntentionalExperienceModeSettingsUpdate(
+      settings.general.experienceMode,
+      mode,
+    );
+    if (!update) return;
+
+    onUpdate("general", "theme", update.theme);
+    onUpdate("general", "experienceMode", update.experienceMode);
+  };
+
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : "pr-2"} overflow-y-auto`}>
       <motion.div
@@ -146,6 +168,98 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         animate="show"
         className="space-y-5"
       >
+        <motion.div variants={item}>
+          <SettingsSection
+            title="Experience Mode"
+            description="Choose the level of detail and controls that feels right for you."
+            icon="Layers"
+            accentColor={theme.hex}
+            isMobile={isMobile}
+          >
+            <SettingsCard className="p-3 sm:p-4">
+              <div
+                role="radiogroup"
+                aria-label="Experience Mode"
+                className="grid grid-cols-1 gap-2 md:grid-cols-3"
+              >
+                {experienceModeOptions.map((option) => {
+                  const isActive =
+                    settings.general.experienceMode === option.mode;
+                  return (
+                    <button
+                      key={option.mode}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      aria-label={`${option.label}: ${option.description}`}
+                      onClick={() => handleExperienceModeChange(option.mode)}
+                      className="group rounded-xl border px-3.5 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                      style={{
+                        borderColor: isActive
+                          ? theme.hex
+                          : settingsSurfaceTokens.borderSubtle,
+                        background: isActive
+                          ? `${theme.hex}14`
+                          : settingsSurfaceTokens.elevated,
+                        outlineColor: theme.hex,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: settingsSurfaceTokens.textPrimary }}
+                        >
+                          {option.label}
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold transition-opacity ${
+                            isActive ? "opacity-100" : "opacity-40"
+                          }`}
+                          style={{
+                            borderColor: isActive
+                              ? theme.hex
+                              : settingsSurfaceTokens.borderSubtle,
+                            backgroundColor: isActive
+                              ? theme.hex
+                              : "transparent",
+                            color: isActive
+                              ? "#ffffff"
+                              : settingsSurfaceTokens.textTertiary,
+                          }}
+                        >
+                          {isActive ? "✓" : ""}
+                        </span>
+                      </div>
+                      <p
+                        className="mt-1.5 text-xs leading-relaxed"
+                        style={{ color: settingsSurfaceTokens.textSecondary }}
+                      >
+                        {option.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1">
+                <p
+                  className="text-xs"
+                  style={{ color: settingsSurfaceTokens.textSecondary }}
+                >
+                  Current mode:{" "}
+                  {getExperienceModeLabel(settings.general.experienceMode)}
+                </p>
+                <p
+                  className="text-xs"
+                  style={{ color: settingsSurfaceTokens.textTertiary }}
+                >
+                  You can customize appearance later.
+                </p>
+              </div>
+            </SettingsCard>
+          </SettingsSection>
+        </motion.div>
+
         <motion.div variants={item}>
           <SettingsSection
             title="Appearance"

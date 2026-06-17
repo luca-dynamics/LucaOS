@@ -30,6 +30,15 @@ const continuationRecordsSource = lucaLinkSource.slice(
 );
 
 describe("Settings LucaLink Device Center", () => {
+  it("renders the LucaLink runtime authority boundary near the dry-run governance cards", () => {
+    expect(lucaLinkSource).toContain(
+      "import { SettingsLucaLinkRuntimeAuthority }",
+    );
+    expect(lucaLinkSource).toContain(
+      "<SettingsLucaLinkRuntimeAuthority accentColor={theme.hex} />",
+    );
+  });
+
   it("renders the Device Center shell with overview cards and tabs", () => {
     expect(lucaLinkSource).toContain('title="LucaLink Device Center"');
     expect(lucaLinkSource).toContain(
@@ -43,6 +52,16 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain('{ id: "devices", label: "Devices" }');
     expect(lucaLinkSource).toContain('{ id: "approvals", label: "Approvals" }');
     expect(lucaLinkSource).toContain('{ id: "advanced", label: "Advanced" }');
+  });
+
+  it("renders the model-only pairing request preview card", () => {
+    expect(lucaLinkSource).toContain("Pairing request");
+    expect(lucaLinkSource).toContain("Preview code");
+    expect(lucaLinkSource).toContain("Primary Host approval required");
+    expect(lucaLinkSource).toContain("Limited trust");
+    expect(lucaLinkSource).toContain("Sensitive access remains blocked");
+    expect(lucaLinkSource).toContain("No real pairing started");
+    expect(lucaLinkSource).toContain("No QR scanner, network discovery, WebRTC, socket, transport, linked-host registry write, or persistent trust change is invoked here.");
   });
 
   it("creates continuation tokens only after approved queue decisions", () => {
@@ -179,7 +198,9 @@ describe("Settings LucaLink Device Center", () => {
   });
 
   it("renders local device trust controls and conservative safety copy", () => {
-    expect(lucaLinkSource).toContain("Local LucaLink device trust management");
+    expect(lucaLinkSource).toContain(
+      "Linked hosts, trust state, and scoped permission summaries",
+    );
     expect(lucaLinkSource).toContain("Rename");
     expect(lucaLinkSource).toContain("Revoke locally");
     expect(lucaLinkSource).toContain("Block locally");
@@ -191,6 +212,9 @@ describe("Settings LucaLink Device Center", () => {
       "Admin does not bypass Primary Host approvals",
     );
     expect(lucaLinkSource).toContain("Conversation/WebRTC limited");
+    expect(lucaLinkSource).toContain("Current device");
+    expect(lucaLinkSource).toContain("Sensitive access requires approval");
+    expect(lucaLinkSource).toContain("Permission profile");
   });
 
   it("does not expose unsafe owner assignment or reserved device authority text", () => {

@@ -45,6 +45,7 @@ export class VoiceLocalProviderAdapter {
         outputEvent: {
           id: `voice.local.output.${input.sessionId}`,
           sessionId: input.sessionId,
+          kind: "tts_completed",
           text: input.text,
           voiceId: input.voiceId,
           language: input.language ?? "en",
@@ -81,6 +82,7 @@ export class VoiceLocalProviderAdapter {
       ttsApisCalled: false,
       providerApisCalled: false,
       heavyModelsLoaded: false,
+      storageWritesEnabled: false,
       systemApisCalled: false,
       requiresExplicitOptIn: true,
     };

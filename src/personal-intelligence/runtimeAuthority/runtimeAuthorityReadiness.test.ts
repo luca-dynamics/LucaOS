@@ -1,0 +1,4 @@
+import { describe, expect, it } from "vitest";
+import { personalIntelligenceRuntimeAuthorityFixtures } from "./runtimeAuthorityFixtures";
+import { summarizePersonalIntelligenceRuntimeAuthority } from "./runtimeAuthorityReadiness";
+describe("runtime authority readiness", () => { it("counts classes while preserving false runtime flags", () => { const summary=summarizePersonalIntelligenceRuntimeAuthority(personalIntelligenceRuntimeAuthorityFixtures); expect(summary.permanentlyBlocked).toBe(3); expect(summary.futurePilotCandidates).toBe(1); expect(summary.unsupported).toBe(1); expect(summary.authorityGranted).toBe(false); expect(summary.executionEnabled).toBe(false); expect(summary.canExecute).toBe(false); expect(summary.readyForExecution).toBe(false); expect(summary.sideEffectsPerformed).toBe(false); }); });

@@ -21,6 +21,9 @@ export interface LiveVoiceRuntimeBridgeSnapshot {
     sttMode?: "local" | "cloud" | string | null;
     realtimeSessionId?: string | null;
     canInterrupt?: boolean;
+    providerPolicy?: unknown;
+    providerPolicyAdvisoryOnly?: boolean;
+    providerPolicyAppliedToRouting?: boolean;
     lastError?: string | null;
   };
 }
@@ -34,6 +37,8 @@ const initialRealtime = (): LucaRealtimeVoiceSessionState => ({
   counters: {},
   metadata: {
     controllerKind: "live_voice_runtime_bridge",
+    runtimeKind: "realtime_voice_session_controller",
+    audioApisCalled: false,
     microphoneApisCalled: false,
     audioOutputApisCalled: false,
     sttApisCalled: false,
@@ -41,6 +46,7 @@ const initialRealtime = (): LucaRealtimeVoiceSessionState => ({
     providerApisCalled: false,
     networkApisCalled: false,
     heavyModelsLoaded: false,
+    storageWritesEnabled: false,
     systemApisCalled: false,
     requiresExplicitOptIn: true,
   },

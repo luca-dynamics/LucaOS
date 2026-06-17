@@ -41,7 +41,7 @@ const HealthRow: React.FC<{
 }> = ({ label, value, severity }) => (
   <div className="flex items-center justify-between gap-2">
     <span
-      className="text-[9px] font-bold uppercase tracking-[0.18em]"
+      className="text-[10px] font-medium tracking-tight"
       style={{ color: "var(--app-text-muted)" }}
     >
       {label}
@@ -49,7 +49,7 @@ const HealthRow: React.FC<{
     <span className="flex items-center gap-1.5 min-w-0">
       <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${SEVERITY_DOT[severity]}`} />
       <span
-        className="text-[10px] font-bold uppercase tracking-wide truncate"
+        className="text-[10px] font-semibold tracking-tight truncate"
         style={{ color: "var(--app-text-main)" }}
       >
         {value}
@@ -109,14 +109,14 @@ const SystemHealthCard: React.FC<SystemHealthCardProps> = ({ connectionTier }) =
         <div className="flex items-center gap-2">
           <Icon name="Pulse" size={14} variant="BoldDuotone" />
           <h3
-            className="text-[10px] font-bold uppercase tracking-[0.2em]"
+            className="text-xs font-semibold tracking-tight"
             style={{ color: "var(--app-text-main)" }}
           >
-            System Health
+            System health
           </h3>
         </div>
         <span
-          className={`rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase ${
+          className={`rounded-full border px-2 py-0.5 text-[9px] font-medium ${
             online
               ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
               : "bg-red-500/10 text-red-300 border-red-500/20"

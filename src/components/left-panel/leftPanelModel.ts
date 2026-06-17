@@ -90,7 +90,7 @@ interface ToolGroupMeta {
  */
 export const LEFT_PANEL_TOOL_GROUPS: readonly ToolGroupMeta[] = [
   { id: "core", label: "Core", defaultExpanded: true },
-  { id: "vision", label: "Vision & Knowledge", defaultExpanded: false },
+  { id: "vision", label: "Intelligence", defaultExpanded: false },
   { id: "finance", label: "Finance", defaultExpanded: false },
   {
     id: "visual",

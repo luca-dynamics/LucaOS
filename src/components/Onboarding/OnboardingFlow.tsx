@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Icon } from "../ui/Icon";
+import React, { Suspense, useState, useEffect, useRef } from "react";
 import { THEME_PALETTE, getDynamicContrast } from "../../config/themeColors";
+import type { UIThemeId } from "../../types/lucaPersonality";
 import HologramFace from "./HologramFace";
 import ModeSelect, { ConversationMode } from "./ModeSelect";
-import ConversationalOnboarding from "./ConversationalOnboarding";
 import FaceScan from "./FaceScan";
 import ConstitutionalAlignment from "./ConstitutionalAlignment";
 import ThemeSelectionStep from "./ThemeSelectionStep";
@@ -23,56 +22,52 @@ import {
   OllamaWakePanel,
 } from "./OnboardingSystemPanels";
 import { OnboardingProvisioningPanel } from "./OnboardingProvisioningPanel";
-import { soundService } from "../../services/soundService";
-import { settingsService } from "../../services/settingsService";
 import { OperatorProfile } from "../../types/operatorProfile";
 import { useMobile } from "../../hooks/useMobile";
-import { modelManager } from "../../services/ModelManagerService";
 import { apiUrl } from "../../config/api";
-import {
-  type LocalProvisionPlan,
-  type ProvisionDownloadState,
-  type ProvisioningOutcome,
-  applyLocalProvisionPlan,
-  buildLocalProvisionPlan,
-  clearLocalProvisioningResume,
-  evaluateLocalProvisioningState,
-  getLocalPlanDownloadBytes,
-  getProvisionDownloadIds,
-  getProvisionRetryIds,
-  getProvisionRows,
-  isRecoverableLocalStep,
-  persistLocalProvisioningResume,
-  readLocalProvisioningResume,
-  resolveLocalHardwarePlan,
-  startLocalProvisioning,
-  retryProvisionTargets,
+import type {
+  LocalProvisionPlan,
+  ProvisionDownloadState,
+  ProvisioningOutcome,
 } from "../../services/onboarding/LocalProvisioningService";
 import {
   onboardingController,
   type OnboardingStep,
 } from "../../services/onboarding/OnboardingController";
 import {
-  applyCloudOnboardingConfiguration,
-  resolveOnboardingConversationMode,
-  persistOperatorIdentity,
-  saveFaceScanData,
-} from "../../services/onboarding/OnboardingSetupService";
-import {
   scheduleOnboardingDelay,
   startKernelBootSequence,
   waitForOnboardingDelay,
 } from "../../services/onboarding/OnboardingLifecycleService";
-import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
-import {
-  onboardingModelModeCoordinator,
-  type OnboardingModelReadiness,
-} from "../../services/onboarding/OnboardingModelModeCoordinator";
+import type { OnboardingModelReadiness } from "../../services/onboarding/OnboardingModelModeCoordinator";
+import type { OnboardingRuntimeAdapter } from "./OnboardingRuntimeAdapter";
+import { LucaCanvasPresenceOrb } from "../visual/LucaCanvasPresenceOrb";
+import { LucaHologramShaderPresence } from "../visual/LucaHologramShaderPresence";
 
 type Step = OnboardingStep;
 
+const UI_THEME_IDS = new Set<UIThemeId>([
+  "PROFESSIONAL",
+  "MASTER_SYSTEM",
+  "BUILDER",
+  "TERMINAL",
+  "AGENTIC_SLATE",
+  "DICTATION",
+  "LIGHTCREAM",
+  "VAPORWAVE",
+  "FROST",
+]);
+
+const normalizeUIThemeId = (value: string): UIThemeId => {
+  const normalized = value.trim().toUpperCase();
+  return UI_THEME_IDS.has(normalized as UIThemeId)
+    ? (normalized as UIThemeId)
+    : "PROFESSIONAL";
+};
+
 interface OnboardingFlowProps {
   theme: { primary: string; hex: string };
+  runtime: OnboardingRuntimeAdapter;
   onComplete: (
     profile?: Partial<OperatorProfile>,
     mode?: ConversationMode,
@@ -95,18 +90,46 @@ const formatBytes = (bytes: number): string => {
   return `${bytes} B`;
 };
 
+const ConversationLoadingFallback: React.FC<{
+  accentTextColor: string;
+  panelBorderColor: string;
+  panelSurfaceColor: string;
+}> = ({ accentTextColor, panelBorderColor, panelSurfaceColor }) => (
+  <div
+    role="status"
+    aria-live="polite"
+    className="rounded-xl border px-6 py-4 text-xs uppercase tracking-[0.18em] animate-pulse"
+    style={{
+      color: accentTextColor,
+      borderColor: panelBorderColor,
+      backgroundColor: panelSurfaceColor,
+    }}
+  >
+    Preparing conversation…
+  </div>
+);
+
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   theme,
+  runtime,
   onComplete,
 }) => {
   const [step, setStep] = useState<Step>("KERNEL_AWAKENING");
   const isMobile = useMobile();
+  const initialVisualSettings = useRef(runtime.getVisualSettings()).current;
+  const ConversationComponent = runtime.ConversationComponent;
 
   // Form State
   const [name, setName] = useState("");
   const [currentThemeHex, setCurrentThemeHex] = useState(theme.hex);
   const [currentThemeName, setCurrentThemeName] = useState<string>(
-    () => (settingsService.get("general").theme as string) || "ASSISTANT",
+    initialVisualSettings.theme || "PROFESSIONAL",
+  );
+  const [backgroundOpacity, setBackgroundOpacity] = useState(
+    initialVisualSettings.backgroundOpacity,
+  );
+  const [backgroundBlur, setBackgroundBlur] = useState(
+    initialVisualSettings.backgroundBlur,
   );
   const [profile, setProfile] = useState<Partial<OperatorProfile> | null>(null);
   const [conversationMode, setConversationMode] =
@@ -151,16 +174,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     currentThemeName?.toUpperCase() === "AGENTIC_SLATE" ||
     currentThemeName?.toUpperCase() === "LIGHTCREAM";
 
-  const currentOpacity =
-    settingsService.get("general")?.backgroundOpacity ?? 0.3;
+  const currentOpacity = backgroundOpacity;
   const currentContrast = getDynamicContrast(
     currentThemeName || "PROFESSIONAL",
     currentOpacity,
   );
   const useDarkLightThemeContrast = isLightTheme && currentOpacity >= 0.45;
-  const accentTextColor = isLightTheme
-    ? currentContrast.text
-    : currentThemeHex;
+  const accentTextColor = isLightTheme ? currentContrast.text : currentThemeHex;
   const mutedAccentColor = isLightTheme
     ? currentContrast.textMuted
     : `${currentThemeHex}cc`;
@@ -174,23 +194,22 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     useDarkLightThemeContrast ? 0.08 : 0.14,
   )} 0%, ${panelSurfaceColor} 100%)`;
 
-
   useEffect(() => {
     try {
-      const setupComplete = settingsService.get("general")?.setupComplete;
+      const setupComplete = runtime.getVisualSettings().setupComplete;
       if (setupComplete) {
-        clearLocalProvisioningResume();
+        runtime.clearLocalProvisioningResume();
         setResumeChecked(true);
         return;
       }
 
-      const saved = readLocalProvisioningResume();
+      const saved = runtime.readLocalProvisioningResume();
       if (!saved) {
         setResumeChecked(true);
         return;
       }
-      if (!saved?.step || !isRecoverableLocalStep(saved.step)) {
-        clearLocalProvisioningResume();
+      if (!saved?.step || !runtime.isRecoverableLocalStep(saved.step)) {
+        runtime.clearLocalProvisioningResume();
         setResumeChecked(true);
         return;
       }
@@ -204,12 +223,15 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       setFailedProvisionKeys(saved.failedProvisionKeys || []);
       setStep(saved.step);
     } catch (e) {
-      console.warn("[Onboarding] Failed to restore local provisioning state:", e);
-      clearLocalProvisioningResume();
+      console.warn(
+        "[Onboarding] Failed to restore local provisioning state:",
+        e,
+      );
+      runtime.clearLocalProvisioningResume();
     } finally {
       setResumeChecked(true);
     }
-  }, []);
+  }, [runtime]);
 
   const resetLocalProvisioningDraft = () => {
     setLocalProvisionPlan(null);
@@ -231,10 +253,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     setProvisionError(false);
     setProvisioningOutcome(null);
     setFailedProvisionKeys([]);
-    applyLocalProvisionPlan(localProvisionPlan, {
+    runtime.applyLocalProvisionPlan(localProvisionPlan, {
       includeVision: !skipVisionForNow,
     });
-    settingsService.setLocalDiscoveryOverride(true);
+    runtime.setLocalDiscoveryOverride(true);
     setTargetBrainModel(localProvisionPlan.brain.downloadId || "");
     setStep(onboardingController.afterLocalPlanReview());
   };
@@ -244,29 +266,22 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   };
 
   const handleThemeStepComplete = () => {
-    soundService.play("SUCCESS");
+    runtime.playSound("SUCCESS");
     setStep(onboardingController.afterThemeSelection());
   };
 
   const handleThemeChange = (newTheme: string) => {
-    soundService.play("HOVER");
-    setCurrentThemeName(newTheme);
-    const hex =
-      THEME_PALETTE[newTheme as keyof typeof THEME_PALETTE]?.primary ||
-      "#ffffff";
+    runtime.playSound("HOVER");
+    const themeId = normalizeUIThemeId(newTheme);
+    setCurrentThemeName(themeId);
+    const hex = THEME_PALETTE[themeId].primary;
     setCurrentThemeHex(hex);
 
-    const currentGeneral = settingsService.get("general");
-    settingsService.saveSettings({
-      general: {
-        ...currentGeneral,
-        theme: newTheme,
-      },
-    });
+    runtime.saveVisualSettings({ theme: themeId });
   };
 
   const handleShowByok = () => {
-    soundService.play("KEYSTROKE");
+    runtime.playSound("KEYSTROKE");
     setShowByok(true);
   };
 
@@ -278,7 +293,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     provider: "gemini" | "openai" | "anthropic" | "xai",
   ) => {
     setByokProvider(provider);
-    soundService.play("HOVER");
+    runtime.playSound("HOVER");
   };
 
   const handleChangeByokKey = (provider: string, value: string) => {
@@ -289,6 +304,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   };
 
   const handleConversationBack = () => {
+    setConversationMode(null);
     setStep(onboardingController.backFromConversation());
   };
 
@@ -323,8 +339,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           subtitle: "Your main local brain for conversations and tool use.",
           modelId: localProvisionPlan.brain.selectionId,
           label: localProvisionPlan.brain.label,
-          sizeFormatted: modelManager.getModel(localProvisionPlan.brain.selectionId)
-            ?.sizeFormatted,
+          sizeFormatted: runtime.getModelSize(
+            localProvisionPlan.brain.selectionId,
+          ),
         },
         {
           key: "stt",
@@ -332,8 +349,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           subtitle: "Lets Luca hear and transcribe your speech offline.",
           modelId: localProvisionPlan.stt.id,
           label: localProvisionPlan.stt.label,
-          sizeFormatted: modelManager.getModel(localProvisionPlan.stt.id)
-            ?.sizeFormatted,
+          sizeFormatted: runtime.getModelSize(localProvisionPlan.stt.id),
         },
         {
           key: "tts",
@@ -341,8 +357,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           subtitle: "Lets Luca answer aloud with a local voice.",
           modelId: localProvisionPlan.tts.id,
           label: localProvisionPlan.tts.label,
-          sizeFormatted: modelManager.getModel(localProvisionPlan.tts.id)
-            ?.sizeFormatted,
+          sizeFormatted: runtime.getModelSize(localProvisionPlan.tts.id),
         },
         {
           key: "vision",
@@ -352,8 +367,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           modelId: localProvisionPlan.vision.id,
           label: localProvisionPlan.vision.label,
           optional: true,
-          sizeFormatted: modelManager.getModel(localProvisionPlan.vision.id)
-            ?.sizeFormatted,
+          sizeFormatted: runtime.getModelSize(localProvisionPlan.vision.id),
         },
         {
           key: "memory",
@@ -362,8 +376,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             "Improves retrieval and long-term recall with local embeddings.",
           modelId: localProvisionPlan.memory.id,
           label: localProvisionPlan.memory.label,
-          sizeFormatted: modelManager.getModel(localProvisionPlan.memory.id)
-            ?.sizeFormatted,
+          sizeFormatted: runtime.getModelSize(localProvisionPlan.memory.id),
         },
       ]
     : [];
@@ -371,8 +384,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   useEffect(() => {
     if (!resumeChecked) return;
 
-    if (isRecoverableLocalStep(step)) {
-      persistLocalProvisioningResume({
+    if (runtime.isRecoverableLocalStep(step)) {
+      runtime.persistLocalProvisioningResume({
         step,
         targetBrainModel,
         localProvisionPlan,
@@ -386,7 +399,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       return;
     }
 
-    clearLocalProvisioningResume();
+    runtime.clearLocalProvisioningResume();
   }, [
     step,
     targetBrainModel,
@@ -397,6 +410,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     provisioningOutcome,
     failedProvisionKeys,
     resumeChecked,
+    runtime,
   ]);
 
   useEffect(() => {
@@ -420,7 +434,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     // Only allow parent prop sync if we are in a step that doesn't manage its own theme state
     // or if the onboarding is already completed.
     if (step === "KERNEL_AWAKENING" || step === "DIRECTIVE_ALIGNMENT") {
-      const savedTheme = settingsService.get("general").theme as string;
+      const savedTheme = runtime.getVisualSettings().theme;
       if (savedTheme && savedTheme !== currentThemeName) {
         setCurrentThemeName(savedTheme);
         const hex =
@@ -429,25 +443,29 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         setCurrentThemeHex(hex);
       }
     }
-  }, [theme.hex, step]);
+  }, [theme.hex, step, runtime, currentThemeName]);
 
   useEffect(() => {
     if (!resumeChecked) return;
 
     if (step === "KERNEL_AWAKENING") {
+      if (runtime.skipKernelAwakeningVisual) {
+        setStep(onboardingController.afterKernelAwakening());
+        return;
+      }
       return startKernelBootSequence({
         onMessage: (message) => {
           setBootText((prev) => [...prev, message]);
         },
         onKeystroke: () => {
-          soundService.play("KEYSTROKE");
+          runtime.playSound("KEYSTROKE");
         },
         onComplete: () => {
           setStep(onboardingController.afterKernelAwakening());
         },
       });
     }
-  }, [step, resumeChecked]);
+  }, [step, resumeChecked, runtime]);
 
   // Manage Hardware Scanning
   useEffect(() => {
@@ -455,7 +473,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       const scanHardware = async () => {
         // Artificial delay for UX "Scanning" effect
         await waitForOnboardingDelay(2500);
-        const resolution = await resolveLocalHardwarePlan();
+        const resolution = await runtime.resolveLocalHardwarePlan();
 
         if (resolution.action === "offer_ollama_install") {
           setTargetBrainModel(resolution.targetBrainModel);
@@ -471,12 +489,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       };
       scanHardware();
     }
-  }, [step]);
+  }, [step, runtime]);
 
   // Method called if the user clicks "Proceed with Native Cortex Download"
   const handleProceedWithCortex = () => {
     if (!targetBrainModel) return;
-    const plan = buildLocalProvisionPlan(targetBrainModel, false);
+    const plan = runtime.buildLocalProvisionPlan(targetBrainModel, false);
     stageLocalProvisionPlan(plan);
     setStep(onboardingController.toLocalPlanReview());
   };
@@ -489,21 +507,24 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       setIsDownloadingLocal(true);
       setProvisioningOutcome(null);
       setFailedProvisionKeys([]);
-      startLocalProvisioning(localProvisionPlan, {
+      runtime.startLocalProvisioning(localProvisionPlan, {
         includeVision: !skipVisionForNow,
       });
     }
-  }, [step, localProvisionPlan, skipVisionForNow]);
+  }, [step, localProvisionPlan, skipVisionForNow, runtime]);
 
   // Track Multi-Model Download Progress
   useEffect(() => {
     if (step !== "PROVISION_LOCAL" || !localProvisionPlan) return;
 
     const applyProvisionSnapshot = (models?: any[]) => {
-      const snapshot = evaluateLocalProvisioningState(localProvisionPlan, {
-        includeVision: !skipVisionForNow,
-        models,
-      });
+      const snapshot = runtime.evaluateLocalProvisioningState(
+        localProvisionPlan,
+        {
+          includeVision: !skipVisionForNow,
+          models,
+        },
+      );
 
       setDownloadStates(snapshot.downloadStates);
       setFailedProvisionKeys(snapshot.failedProvisionKeys);
@@ -522,18 +543,18 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
     applyProvisionSnapshot();
 
-    const unsubscribe = modelManager.subscribe((models: any[]) => {
+    const unsubscribe = runtime.subscribeToModels((models) => {
       applyProvisionSnapshot(models);
     });
 
     return () => unsubscribe();
-  }, [step, localProvisionPlan, skipVisionForNow]);
+  }, [step, localProvisionPlan, skipVisionForNow, runtime]);
 
   const handleIdentitySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      soundService.play("SUCCESS");
-      persistOperatorIdentity(name);
+      runtime.playSound("SUCCESS");
+      runtime.persistOperatorIdentity(name);
       setStep(onboardingController.afterIdentityHandshake());
     }
   };
@@ -541,9 +562,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const handleActivateCloud = async () => {
     setIsActivating(true);
     resetLocalProvisioningDraft();
-    soundService.play("SUCCESS");
+    runtime.playSound("SUCCESS");
     await waitForOnboardingDelay(1500);
-    const readiness = await applyCloudOnboardingConfiguration({
+    const readiness = await runtime.applyCloudConfiguration({
       showByok,
       provider: byokProvider,
       apiKey: showByok ? byokKeys[byokProvider] : "",
@@ -556,18 +577,25 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   };
 
   const handleGoLocal = async () => {
-    soundService.play("SUCCESS");
+    runtime.playSound("SUCCESS");
     resetLocalProvisioningDraft();
-    const readiness = await onboardingModelModeCoordinator.selectLocalMode();
+    const readiness = await runtime.selectLocalMode();
     setModelReadiness(readiness);
     setRouteWarnings(readiness.warnings.map((warning) => warning.reason));
+    if (!runtime.supportsLocalProvisioning) {
+      alert(
+        readiness.warnings[0]?.reason ||
+          "Local Models require LucaOS Desktop or a paired Desktop host.",
+      );
+      return;
+    }
     setStep(onboardingController.afterGoLocal());
   };
 
   const handleInstallOllama = async () => {
     setIsActivating(true);
-    soundService.play("SUCCESS");
-    const result = await modelManager.installOllama();
+    runtime.playSound("SUCCESS");
+    const result = await runtime.installOllama();
     setIsActivating(false);
 
     if (result.success) {
@@ -584,44 +612,36 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     if (!localProvisionPlan) return;
     setProvisioningOutcome(null);
     setFailedProvisionKeys([]);
-    retryProvisionTargets([localProvisionPlan.vision.id], setDownloadStates);
+    runtime.retryProvisionTargets(
+      [localProvisionPlan.vision.id],
+      setDownloadStates,
+    );
   };
 
   const handleRetryProvisioning = () => {
     if (!localProvisionPlan) return;
     setProvisionError(false);
     setProvisioningOutcome(null);
-    const retryIds = getProvisionRetryIds(localProvisionPlan, failedProvisionKeys, {
-      includeVision: !skipVisionForNow,
-    });
-    retryProvisionTargets(retryIds, setDownloadStates);
+    const retryIds = runtime.getProvisionRetryIds(
+      localProvisionPlan,
+      failedProvisionKeys,
+      {
+        includeVision: !skipVisionForNow,
+      },
+    );
+    runtime.retryProvisionTargets(retryIds, setDownloadStates);
   };
 
   const handleFaceScanComplete = (faceData: string | null) => {
-    saveFaceScanData(faceData);
+    runtime.saveFaceScanData(faceData);
     setStep(onboardingController.afterFaceScan());
   };
 
   const handleModeSelect = async (mode: ConversationMode) => {
-    realtimeVoiceUiBridge.modeBridge.setMode(mode);
-    if (mode === "voice") {
-      realtimeVoiceUiBridge.modeBridge.startVoiceSession();
-      realtimeVoiceUiBridge.controller.startSession({ metadata: { source: "onboarding_mode_select" } });
-    } else {
-      realtimeVoiceUiBridge.modeBridge.stopVoiceSession();
-      realtimeVoiceUiBridge.controller.stopSession("text_mode_selected");
-    }
     setConversationMode(mode);
-    soundService.play("KEYSTROKE");
+    runtime.playSound("KEYSTROKE");
 
-    const isElectron = !!(
-      (window as any).electron && (window as any).electron.ipcRenderer
-    );
-
-    const resolvedMode = await resolveOnboardingConversationMode(
-      mode,
-      isElectron,
-    );
+    const resolvedMode = await runtime.selectConversationMode(mode);
     if (resolvedMode.mode !== mode) {
       setConversationMode(resolvedMode.mode);
     }
@@ -629,10 +649,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       alert(resolvedMode.fallbackMessage);
     }
 
-    const readiness = await onboardingModelModeCoordinator.getOnboardingModelReadiness({
-      includeVoice: resolvedMode.mode === "voice",
-      includeEmbedding: true,
-    });
+    const readiness = resolvedMode.readiness;
     setModelReadiness(readiness);
     const warnings = readiness.warnings.map((warning) => warning.reason);
     setRouteWarnings(warnings);
@@ -650,31 +667,38 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     }
 
     if (step === "COMPLETE") {
-      soundService.play("SUCCESS");
+      runtime.playSound("SUCCESS");
       return scheduleOnboardingDelay(() => {
         const finish = async () => {
-          const readiness =
-            await onboardingModelModeCoordinator.confirmSelectedModelRoute({
-              voiceSelected: conversationMode === "voice",
-              memoryEnabled: true,
-            });
+          const readiness = await runtime.confirmSelectedModelRoute({
+            voiceSelected: conversationMode === "voice",
+            memoryEnabled: true,
+          });
           setModelReadiness(readiness);
           setRouteWarnings(readiness.warnings.map((warning) => warning.reason));
           // Pass the selected conversation mode to the completion handler.
           onComplete(profile || undefined, conversationMode || undefined);
         };
         finish().catch((error) => {
-          console.warn("[Onboarding] Route readiness confirmation failed", error);
+          console.warn(
+            "[Onboarding] Route readiness confirmation failed",
+            error,
+          );
           onComplete(profile || undefined, conversationMode || undefined);
         });
       }, 1500);
     }
-  }, [step, onComplete, profile, conversationMode, isDownloadingLocal]);
+  }, [
+    step,
+    onComplete,
+    profile,
+    conversationMode,
+    isDownloadingLocal,
+    runtime,
+  ]);
 
   return (
-    <div
-      className={`absolute inset-0 z-10  font-mono flex flex-col items-center justify-center overflow-hidden`}
-    >
+    <div className="absolute inset-0 z-10 flex min-h-dvh flex-col items-center justify-center overflow-hidden font-mono">
       {/* Background handled by App.tsx (LiquidBackground) */}
 
       <div
@@ -697,6 +721,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
       {/* Hologram Face is visible during hardware scanning, downloads, and voice conversation */}
       {!["KERNEL_AWAKENING", "DIRECTIVE_ALIGNMENT"].includes(step) &&
+        !(runtime.platform === "web" && step === "CONVERSATION") &&
         !(step === "CONVERSATION" && conversationMode === "text") && (
           <HologramFace step={step} />
         )}
@@ -706,53 +731,105 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         className={`z-10 relative transition-all duration-700 ease-in-out mx-auto flex flex-col items-center ${
           step === "CONVERSATION"
             ? conversationMode === "voice"
-              ? "w-full h-full justify-center"
+              ? "h-full w-full justify-center"
               : isMobile
-                ? "w-[95vw] h-[90vh] px-4 justify-center"
+                ? "h-full w-full justify-center px-5"
                 : "w-[min(80vmin,1000px)] h-[min(75vmin,800px)] justify-center"
             : step === "THEME"
               ? isMobile
                 ? "w-[92vw] h-[88vh] max-h-[88vh] justify-start pt-6"
                 : "w-full max-w-2xl h-[min(88vh,860px)] max-h-[88vh] px-4 justify-start pt-8"
               : isMobile
-                ? "w-[85vw] justify-center"
+                ? "w-full justify-center px-5"
                 : "w-[min(90vw,1000px)] justify-center"
         }`}
         style={{
-          padding:
+          paddingTop:
             step === "CONVERSATION" ? "0" : "clamp(0.5rem, 2vmin, 1.5rem)",
+          paddingBottom:
+            step === "CONVERSATION"
+              ? "0"
+              : "calc(clamp(1rem, 3vmin, 2rem) + env(safe-area-inset-bottom))",
           transform:
             step === "CONVERSATION" && conversationMode === "voice"
               ? "none"
               : "translateZ(0)",
         }}
       >
-        {step === "KERNEL_AWAKENING" && (
-          <div className="space-y-2">
-            {bootText.map((text, i) => (
-              <div
-                key={i}
-                className="text-sm animate-fade-in"
-                style={{ color: ambientThemeColor }}
-              >
-                {">"} {text}
-              </div>
-            ))}
-            <div
-              className="w-2 h-4 animate-pulse inline-block ml-2"
-              style={{ backgroundColor: ambientThemeColor }}
+        {step === "KERNEL_AWAKENING" && !runtime.skipKernelAwakeningVisual && (
+          <div className="flex w-full max-w-xl flex-col items-center px-4 text-center">
+            <LucaHologramShaderPresence
+              size={isMobile ? 190 : 230}
+              state="preparing"
+              themeColor={ambientThemeColor}
             />
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Preparing LucaOS
+            </h1>
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/60 sm:text-base">
+              Luca is setting up your personal AI environment.
+            </p>
+            <div className="mt-7 w-full max-w-md space-y-2 text-left">
+              {[
+                "Preparing memory context",
+                "Loading interaction preferences",
+                "Starting chat and voice interface",
+                "Securing this session",
+              ].map((label, index) => {
+                const complete = index < bootText.length;
+                const current = index === Math.min(bootText.length, 3);
+                return (
+                  <div
+                    key={label}
+                    className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-black/20 px-4 py-2.5"
+                  >
+                    <LucaCanvasPresenceOrb
+                      size={22}
+                      state={complete ? "ready" : current ? "preparing" : "idle"}
+                      amplitude={current ? 0.16 : 0}
+                      themeColor={ambientThemeColor}
+                      lowPower={isMobile}
+                      className="shrink-0"
+                    />
+                    <span
+                      className={`text-sm ${
+                        complete ? "text-white/75" : "text-white/50"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {step === "DIRECTIVE_ALIGNMENT" && (
-          <ConstitutionalAlignment onComplete={handleDirectiveAlignmentComplete} />
+          <ConstitutionalAlignment
+            onComplete={handleDirectiveAlignmentComplete}
+            themeId={currentThemeName}
+            backgroundOpacity={backgroundOpacity}
+          />
         )}
 
         {step === "THEME" && (
           <ThemeSelectionStep
             onComplete={handleThemeStepComplete}
             onThemeChange={handleThemeChange}
+            initialTheme={normalizeUIThemeId(currentThemeName)}
+            initialBackgroundOpacity={backgroundOpacity}
+            initialBackgroundBlur={backgroundBlur}
+            showTransparencyControls={runtime.platform === "desktop"}
+            onVisualSettingsChange={(next) => {
+              if (next.backgroundOpacity !== undefined) {
+                setBackgroundOpacity(next.backgroundOpacity);
+              }
+              if (next.backgroundBlur !== undefined) {
+                setBackgroundBlur(next.backgroundBlur);
+              }
+              runtime.saveVisualSettings(next);
+            }}
           />
         )}
 
@@ -818,13 +895,28 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         )}
 
         {step === "CONVERSATION" && conversationMode && (
-          <ConversationalOnboarding
-            mode={conversationMode}
-            userName={name}
-            theme={{ primary: currentThemeName, hex: currentThemeHex }}
-            onBack={handleConversationBack}
-            onComplete={handleConversationComplete}
-          />
+          <Suspense
+            fallback={
+              <div
+                className="rounded-2xl border p-6 text-sm font-mono"
+                style={{
+                  color: accentTextColor,
+                  borderColor: panelBorderColor,
+                  backgroundColor: panelSurfaceColor,
+                }}
+              >
+                Preparing Luca conversation interface...
+              </div>
+            }
+          >
+            <ConversationComponent
+              mode={conversationMode}
+              userName={name}
+              theme={{ primary: currentThemeName, hex: currentThemeHex }}
+              onBack={handleConversationBack}
+              onComplete={handleConversationComplete}
+            />
+          </Suspense>
         )}
 
         {step === "HARDWARE_SCAN" && (
@@ -838,7 +930,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             panelSurfaceColor={panelSurfaceColor}
             tintedPanelGradient={tintedPanelGradient}
             estimatedDownload={formatBytes(
-              getLocalPlanDownloadBytes(localProvisionPlan, {
+              runtime.getLocalPlanDownloadBytes(localProvisionPlan, {
                 includeVision: !skipVisionForNow,
               }),
             )}
@@ -881,7 +973,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             accentTextColor={accentTextColor}
             panelBorderColor={panelBorderColor}
             panelSurfaceColor={panelSurfaceColor}
-            provisionRows={getProvisionRows(localProvisionPlan)}
+            provisionRows={runtime.getProvisionRows(localProvisionPlan)}
             downloadStates={downloadStates}
             provisioningOutcome={provisioningOutcome}
             provisionError={provisionError}
@@ -901,17 +993,18 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       </div>
 
       {/* OS Info Footer */}
-      {!(step === "CONVERSATION" && conversationMode === "voice") && (
-        <div
-          className={`absolute bottom-4 text-[10px]  font-mono tracking-widest flex items-center gap-2`}
-        >
+      {!isMobile &&
+        !(step === "CONVERSATION" && conversationMode === "voice") && (
           <div
-            className="w-2 h-2 rounded-full animate-pulse"
-            style={{ backgroundColor: accentTextColor }}
-          />
-          L.U.C.A OS v1.0.0 // PROTOCOL_CONNECTED
-        </div>
-      )}
+            className={`absolute bottom-4 text-[10px]  font-mono tracking-widest flex items-center gap-2`}
+          >
+            <div
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{ backgroundColor: accentTextColor }}
+            />
+            L.U.C.A OS v1.0.0 // PROTOCOL_CONNECTED
+          </div>
+        )}
     </div>
   );
 };

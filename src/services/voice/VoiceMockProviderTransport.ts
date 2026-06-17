@@ -4,7 +4,7 @@ import {
   type LucaVoiceProviderTransportResult,
 } from "./types";
 
-export interface VoiceMockProviderTransportSnapshot {
+export interface VoiceMockProviderTransportSnapshot extends Record<string, unknown> {
   kind: "mock";
   requestCount: number;
   requests: LucaVoiceProviderTransportRequest[];

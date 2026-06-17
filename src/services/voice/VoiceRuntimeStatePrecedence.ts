@@ -47,8 +47,8 @@ const hasText = (value: unknown): value is string => typeof value === "string" &
 function resolveStatus(input: VoiceRuntimeStatePrecedenceInput) {
   const live = input.liveSession || {};
   const diagnostics = input.diagnostics || {};
-  const realtime = input.realtimeBridge?.realtime || {};
-  const hud = input.hudState || {};
+  const realtime: Partial<LucaRealtimeVoiceSessionState> = input.realtimeBridge?.realtime ?? {};
+  const hud: Record<string, any> = input.hudState ?? {};
 
   const hardError = Boolean(live.error || diagnostics.error || diagnostics.status === "ERROR" || realtime.status === "failed");
   if (hardError) return { status: "failed", source: live.error ? "liveService" : "diagnostics", reason: "hard_error" };
@@ -80,9 +80,9 @@ function resolveStatus(input: VoiceRuntimeStatePrecedenceInput) {
 export function deriveVoiceOperatorState(input: VoiceRuntimeStatePrecedenceInput): VoiceOperatorState {
   const live = input.liveSession || {};
   const diagnostics = input.diagnostics || {};
-  const realtime = input.realtimeBridge?.realtime || {};
+  const realtime: Partial<LucaRealtimeVoiceSessionState> = input.realtimeBridge?.realtime ?? {};
   const bridgeMeta = input.realtimeBridge?.metadata || {};
-  const hud = input.hudState || {};
+  const hud: Record<string, any> = input.hudState || {};
   const voiceSettings = input.settings?.voice || input.settings || {};
 
   const statusResolution = resolveStatus(input);

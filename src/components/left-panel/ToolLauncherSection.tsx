@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Icon } from "../ui/Icon";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { skillRegistryService } from "../../services/skills/SkillRegistryService";
@@ -15,6 +15,7 @@ interface ToolLauncherSectionProps {
   installedModules: ReadonlyArray<string>;
   isLight: boolean;
   isLightCream: boolean;
+  collapseAdvancedGroups?: boolean;
   onToolSelect: (tool: LeftPanelToolItem) => void;
 }
 
@@ -27,6 +28,7 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
   installedModules,
   isLight,
   isLightCream,
+  collapseAdvancedGroups = false,
   onToolSelect,
 }) => {
   const groups = useMemo(
@@ -47,6 +49,18 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
     getDefaultExpandedGroups,
   );
 
+  useEffect(() => {
+    if (!collapseAdvancedGroups) return;
+
+    setExpanded((current) => ({
+      ...current,
+      vision: false,
+      finance: false,
+      visual: false,
+      installed: false,
+    }));
+  }, [collapseAdvancedGroups]);
+
   const toggle = (id: ToolGroupId) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -58,19 +72,19 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
         }`}
       >
         <Icon name="Widget" size={18} variant="BoldDuotone" />
-        <h2 className="font-black tracking-widest text-xs uppercase">Tools</h2>
+        <h2 className="font-semibold text-xs tracking-tight">Tools</h2>
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
-          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--app-text-main)]">Skills</div>
-          <span className="rounded-full border border-sky-500/20 bg-sky-500/5 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-sky-200">State-only</span>
+          <div className="text-[11px] font-semibold tracking-tight text-[var(--app-text-main)]">Skills</div>
+          <span className="rounded-full border border-sky-500/20 bg-sky-500/5 px-2 py-0.5 text-[9px] font-medium text-sky-200">State only</span>
         </div>
         <p className="text-[9px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>{skillSummaryLine}</p>
-        <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[9px] font-black uppercase tracking-widest">
-          <div className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-main)]">{skillRegistry.totalSkills}<span className="block text-[7px] text-[var(--app-text-muted)]">registered</span></div>
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-2 py-1 text-amber-200">{pendingSkillRequests}<span className="block text-[7px] text-[var(--app-text-muted)]">pending</span></div>
-          <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-2 py-1 text-red-200">{skillGovernance.blockedRequests}<span className="block text-[7px] text-[var(--app-text-muted)]">blocked</span></div>
+        <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[11px] font-semibold">
+          <div className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-main)]">{skillRegistry.totalSkills}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">registered</span></div>
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-2 py-1 text-amber-200">{pendingSkillRequests}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">pending</span></div>
+          <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-2 py-1 text-red-200">{skillGovernance.blockedRequests}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">blocked</span></div>
         </div>
       </div>
 
@@ -86,7 +100,7 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
                 className="w-full flex items-center justify-between gap-2 px-1 py-1 group/group"
               >
                 <span
-                  className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                  className="text-[11px] font-medium"
                   style={{ color: "var(--app-text-muted)" }}
                 >
                   {group.label}
@@ -129,7 +143,7 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
                       {group.modules.map((mod) => (
                         <div
                           key={mod.id}
-                          className="px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2.5 tech-border glass-blur shadow-lg shadow-black/20 italic"
+                          className="px-4 py-2.5 rounded-lg text-[11px] font-medium flex items-center justify-center gap-2.5 border glass-blur hover:opacity-90 active:opacity-100"
                           style={{
                             backgroundColor: isLight
                               ? isLightCream

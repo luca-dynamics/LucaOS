@@ -1,7 +1,17 @@
- 
+/**
+ * Operation Center bridge.
+ *
+ * INTENTIONALLY NON-EXECUTING. This module maps governance artifacts (skill
+ * dry-runs, LucaLink permission decisions, handoff simulations, etc.) into
+ * read-only `OperationCenterItem` summaries for the Permission Center UI. It
+ * imports only `type`s, performs no side effects, and seeds previews from a
+ * fixed `FIXTURE_TIME` plus in-memory state. This is governance scaffolding
+ * ahead of real runtime wiring — do not treat it as an incomplete runtime
+ * integration. See docs/audits/post-pr230-lucaos-architecture-audit.md (§4).
+ */
+import type { PersonalIntelligenceSkillDryRunSimulation } from "../personal-intelligence/skillDryRun";
 import type { LucaLinkAdapterFileInstallPermissionDecision } from "../services/lucaLink/adapterFileInstallPermissions";
-
- 
+import type { LucaLinkDryRunHandoffSimulation } from "../services/lucaLink/dryRunHandoff";
 import type {
   OperationCenterItem,
   OperationCenterRiskLevel,
@@ -92,8 +102,6 @@ export interface TransportPermissionDecisionSummary extends SafeSummaryBase {
   hostId?: string;
 }
 
- 
-=======
 export interface AdapterFileInstallDecisionSummary extends SafeSummaryBase {
   requestId?: string;
   hostId?: string;
@@ -148,6 +156,7 @@ function createItem(
     blockers: copy(input.blockers),
     auditSummary: input.auditSummary,
     sideEffectsPerformed: false,
+    authorityGranted: false,
     executionEnabled: false,
     canExecute: false,
     readyForExecution: false,
@@ -180,6 +189,26 @@ export function createOperationItemsFromSkillPermissionGates(
 export const createOperationItemsFromSkillSandboxPlans = (plans: readonly SkillSandboxPlanSummary[]) =>
   plans.map((plan) => createItem(plan, "personal_intelligence", "skill_sandbox", normalizeStatus(plan.status, "model_only"), { relatedSkillId: plan.skillId, relatedPlanId: plan.planId }));
 
+export const createOperationItemsFromSkillDryRunSimulations = (simulations: readonly PersonalIntelligenceSkillDryRunSimulation[]) =>
+  simulations.map((simulation) => createItem({
+    id: `operation:${simulation.simulationId}`,
+    title: "Skill dry-run simulation",
+    summary: `${simulation.simulatedSteps.length} steps simulated; Act remained skipped or blocked.`,
+    status: simulation.status,
+    riskLevel: simulation.riskLevel,
+    createdAt: simulation.createdAt,
+    requiredApprovals: simulation.missingApprovals,
+    blockedActions: simulation.blockedActions,
+    warnings: simulation.warnings,
+    blockers: simulation.blockers,
+    auditSummary: "Side-effect-free dry-run evidence only; execution remains disabled.",
+  }, "personal_intelligence", "skill_dry_run", normalizeStatus(simulation.status, "disabled"), {
+    relatedSkillId: simulation.skillId,
+    relatedPlanId: simulation.planId,
+    relatedTraceId: simulation.runtimeTracePreview.traceId,
+    relatedMissionId: simulation.missionAlignmentSummary.missionId,
+  }));
+
 export const createOperationItemsFromRuntimeTraces = (traces: readonly RuntimeTraceSummary[]) =>
   traces.map((trace) => createItem(trace, "runtime", "runtime_trace", normalizeStatus(trace.status, "model_only"), { relatedTraceId: trace.traceId, relatedMissionId: trace.relatedMissionId }));
 
@@ -211,20 +240,40 @@ export const createOperationItemsFromAdapterFileInstallDecisions = (
   decisions: readonly LucaLinkAdapterFileInstallPermissionDecision[],
 ) => decisions.map((decision) => createItem({
   id: `operation:${decision.decisionId}`,
-  title: `Adapter ${decision.operation.replace(/_/g, " ")}`,
-  summary: `${decision.targetSummary} ${decision.reason}`.trim(),
+  title: decision.operation === "file_write"
+    ? "Adapter file-write permission decision"
+    : "Adapter install permission decision",
+  summary: decision.reason,
   status: decision.status,
   riskLevel: decision.riskLevel,
-  createdAt: decision.createdAt,
-  expiresAt: decision.expiresAt,
-  requiredApprovals: decision.requiredApprovals,
-  blockedActions: decision.blockedActions,
+  requiredApprovals: decision.requiredApprovals
+    .filter((requirement) => !requirement.satisfied)
+    .map((requirement) => requirement.kind),
+  blockedActions: decision.operation === "file_write"
+    ? ["adapter file write", "adapter execution"]
+    : ["adapter package install", "adapter execution"],
   warnings: decision.warnings,
   blockers: decision.blockers,
-  auditSummary: `Adapter file/install decision is ${decision.status.replace(/_/g, " ")} and remains model-only.`,
+  auditSummary: `${decision.operation.replace(/_/g, " ")} decision is ${decision.status.replace(/_/g, " ")} for informational review only.`,
 }, "lucalink", "adapter_file_install", normalizeStatus(decision.status, "unsupported"), {
-  relatedHostId: decision.targetHostId,
   relatedRequestId: decision.requestId,
 }));
-export const createOperationItemsFromAdapterFileInstallDecisions = (decisions: readonly AdapterFileInstallDecisionSummary[]) =>
-  decisions.map((decision) => createItem(decision, "lucalink", "adapter_file_install", normalizeStatus(decision.status, "disabled"), { relatedRequestId: decision.requestId, relatedHostId: decision.hostId }));
+
+
+export const createOperationItemsFromLucaLinkDryRunHandoffSimulations = (
+  simulations: readonly LucaLinkDryRunHandoffSimulation[],
+) => simulations.map((simulation) => createItem({
+  id: `operation:${simulation.simulationId}`,
+  title: "LucaLink dry-run handoff simulation",
+  summary: `${simulation.transportSummary} ${simulation.adapterSummary}`,
+  status: simulation.status,
+  riskLevel: simulation.riskLevel,
+  createdAt: simulation.createdAt,
+  requiredApprovals: simulation.requiredApprovals,
+  blockedActions: simulation.blockedActions,
+  warnings: simulation.warnings,
+  blockers: simulation.blockers,
+  auditSummary: `Dry-run only with ${simulation.simulatedSteps.length} deterministic steps; handoff and every runtime capability remain disabled.`,
+}, "lucalink", "lucalink_dry_run", normalizeStatus(simulation.status, "disabled"), {
+  relatedHostId: simulation.targetHostId,
+}));

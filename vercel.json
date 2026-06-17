@@ -1,12 +1,12 @@
 {
-  "version": 2,
-  "routes": [
+  "framework": "vite",
+  "installCommand": "npm ci --ignore-scripts",
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "dist",
+  "rewrites": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import * as bootVisualShellModel from "./lucaBootVisualShellModel";
 import {
   LUCA_BOOT_IDENTITY_ASSET_SRC,
+  LUCA_BOOT_VISUAL_LANGUAGE,
+  LUCA_BROWSER_SAFE_BOOT_STATUS,
+  buildBrowserSafeLucaBootReadinessItems,
   buildLucaBootReadinessItems,
   getLucaBootLaunchIdentityPresence,
 } from "./lucaBootVisualShellModel";
@@ -112,16 +115,16 @@ describe("LucaBootVisualShell readiness model", () => {
 
     expect(launchPresence).toMatchObject({
       label: "LucaOS",
-      subtitle: "Personal Autonomous AI OS",
+      subtitle: "Host-native AI operating system",
       assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
       emphasis: "launch",
       visualOnly: true,
-      source: "existing-public-icon-asset",
+      source: "existing-landing-hologram-face-asset",
       introducesBootPhase: false,
       usesHeavyHologramRuntime: false,
     });
     expect(readinessPresence).toMatchObject({
-      assetSrc: "/icon.png",
+      assetSrc: LUCA_BOOT_IDENTITY_ASSET_SRC,
       emphasis: "supporting",
       visualOnly: true,
       introducesBootPhase: false,
@@ -132,9 +135,120 @@ describe("LucaBootVisualShell readiness model", () => {
     );
   });
 
+  it("models the browser-safe web boot shell without desktop polling", () => {
+    const items = buildBrowserSafeLucaBootReadinessItems();
+
+    expect(LUCA_BROWSER_SAFE_BOOT_STATUS).toMatchObject({
+      headline: "Entering browser host",
+      detail: "Resolving host interface",
+      progress: 100,
+    });
+    expect(LUCA_BOOT_VISUAL_LANGUAGE).toMatchObject({
+      shell: "premium-luca-hologram-presence",
+      sharedAcrossDesktopAndWeb: true,
+      primaryIdentity: "Existing landing hologram face presence",
+      forbidsGenericWebOrbAsMainVisual: true,
+      forbidsLogoIconAsMainVisual: true,
+      usesHeavyHologramRuntime: false,
+    });
+    expect(items.map((item) => item.label)).toEqual([
+      "Web surface",
+      "Memory surface",
+      "Model router",
+      "Desktop runtime",
+      "LucaLink",
+      "Actions",
+    ]);
+    expect(items.map((item) => item.detail)).toEqual([
+      "Web surface ready",
+      "Memory surface prepared",
+      "Model router guarded",
+      "Desktop runtime requires LucaOS Desktop",
+      "LucaLink requires pairing",
+      "Actions remain permissioned",
+    ]);
+    expect(items.map((item) => item.statusLabel)).toEqual([
+      "Ready",
+      "Prepared",
+      "Guarded",
+      "Desktop required",
+      "Pairing required",
+      "Permissioned",
+    ]);
+    expect(items.every((item) => item.source === "webPolicy")).toBe(true);
+    expect(JSON.stringify(items)).not.toMatch(
+      /localhost|127\.0\.0\.1|ollama|cortex|Initializing Luca OS/i,
+    );
+  });
+
+  it("keeps the pre-hydration loader aligned with the shared hologram presence", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const html = await readFile("index.html", "utf8");
+
+    expect(html).toContain("loader-presence");
+    expect(html).toContain("loader-hologram-face");
+    expect(html).toContain("landing/hologram.png");
+    expect(html).not.toContain("loader-face");
+    expect(html).not.toContain("loader-host-grid");
+    expect(html).toContain("Entering browser host");
+    expect(html).toContain("Host-native AI operating system");
+    expect(html).not.toMatch(
+      /loader-orb|loader-host-grid|loader-face|Preparing web-safe interface|yellow|gold|status::before/i,
+    );
+    expect(html).not.toContain("#root-loader::before");
+    expect(html).not.toContain("loader-scanline");
+  });
+
+  it("exposes a pre-hydration timeout and React mount diagnostics", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const html = await readFile("index.html", "utf8");
+
+    expect(html).toContain("window.__LUCA_SHOW_BOOT_FAILURE__");
+    expect(html).toContain("window.__LUCA_REACT_MOUNTED__ !== true");
+    expect(html).toContain("LucaOS web app failed to start");
+    expect(html).toContain("React did not hydrate");
+    expect(html).toContain("React entry loaded:");
+    expect(html).toContain("React mount attempted:");
+    expect(html).toContain("Bootstrap error:");
+    expect(html).toContain("Captured errors/rejections:");
+    expect(html).toContain('"luca-react-bootstrap-error"');
+    expect(html).toContain("document.scripts.length");
+    expect(html).toContain("}, 5000)");
+    expect(html).toContain("window.__LUCA_REACT_BOOTSTRAP_ERROR__ ||");
+    expect(html).toContain("window.__LUCA_BOOT_ERROR__)");
+  });
+
+  it("marks and guards the React entry bootstrap", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const entry = await readFile("src/index.tsx", "utf8");
+    const appEntry = await readFile("src/reactAppEntry.tsx", "utf8");
+
+    expect(entry).toContain("window.__LUCA_REACT_ENTRY_LOADED__ = true");
+    expect(
+      entry.indexOf("window.__LUCA_REACT_ENTRY_LOADED__ = true"),
+    ).toBeLessThan(entry.indexOf('import("./reactAppEntry")'));
+    expect(entry).toContain('import("./reactAppEntry")');
+    expect(entry).not.toContain('from "./App"');
+    expect(entry).toContain("__LUCA_REACT_BOOTSTRAP_ERROR__");
+    expect(entry).toContain('"luca-react-bootstrap-error"');
+    expect(appEntry).toContain("export function mountLucaReactApp(): void");
+    expect(appEntry).toContain("window.__LUCA_REACT_MOUNT_ATTEMPTED__ = true");
+    expect(appEntry).toContain("window.__LUCA_REACT_MOUNTED__ = true");
+    expect(appEntry).toContain(
+      'document.getElementById("root-loader")?.remove()',
+    );
+    expect(appEntry).toContain("try {");
+    expect(entry).toContain(
+      'console.error("[LucaOS web boot] React app import failed", error)',
+    );
+    expect(appEntry).toContain(
+      'console.error("[LucaOS web boot] Fatal error before React mount", error)',
+    );
+  });
+
   it("exposes no execution surfaces", () => {
     expect(Object.keys(bootVisualShellModel).join(" ")).not.toMatch(
-      /execute|runTool|browser|automation|screenshot|ocr|fileAccess|messaging|wireless|HologramScene|setTimeout|setInterval/i,
+      /execute|runTool|automation|screenshot|ocr|fileAccess|messaging|wireless|HologramScene|setTimeout|setInterval/i,
     );
   });
 });

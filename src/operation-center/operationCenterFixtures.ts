@@ -1,3 +1,8 @@
+import { personalIntelligenceRuntimeAuthorityFixtures } from "../personal-intelligence/runtimeAuthority";
+import { personalIntelligenceSkillDryRunFixtures } from "../personal-intelligence/skillDryRun";
+import { LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS } from "../services/lucaLink/adapterFileInstallPermissions";
+import { LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES } from "../services/lucaLink/dryRunHandoff";
+import { LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES } from "../services/lucaLink/runtimeAuthority";
 import {
  
   LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
@@ -9,18 +14,25 @@ import {
   createOperationItemsFromAdapterSandboxPlans,
   createOperationItemsFromApprovalNotifications,
   createOperationItemsFromLearningEvents,
+  createOperationItemsFromLucaLinkDryRunHandoffSimulations,
   createOperationItemsFromMemoryApprovalPilot,
   createOperationItemsFromMissionEvaluations,
   createOperationItemsFromRuntimeTraces,
   createOperationItemsFromSensorSnapshots,
   createOperationItemsFromSkillPermissionGates,
+  createOperationItemsFromSkillDryRunSimulations,
   createOperationItemsFromSkillSandboxPlans,
   createOperationItemsFromTransportPermissionDecisions,
   createOperationItemsFromWebDisplayIntents,
 } from "./operationCenterBridge";
 import type { OperationCenterItem } from "./operationCenterTypes";
+import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
+import { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } from "./operationCenterLucaLinkRuntimeAuthorityBridge";
 
 const createdAt = "2026-06-07T12:00:00.000Z";
+
+const runtimeAuthorityItems = createOperationItemsFromRuntimeAuthorityRecords(personalIntelligenceRuntimeAuthorityFixtures);
+const lucaLinkRuntimeAuthorityItems = createOperationItemsFromLucaLinkRuntimeAuthorityRecords(LUCA_LINK_RUNTIME_AUTHORITY_FIXTURES);
 
 const memoryItems = createOperationItemsFromMemoryApprovalPilot([
   {
@@ -114,6 +126,8 @@ const skillPermissionItems = createOperationItemsFromSkillPermissionGates([
   { gateId: "gate:fixture-blocked", skillId: "skill:safe-summary", planId: "plan:safe-skill-preview", kind: "permission", permissionKind: "shell", label: "Skill shell permission blocked", reason: "Shell capability remains prohibited.", status: "blocked", riskLevel: "critical", required: true },
 ]);
 
+const skillDryRunItems = createOperationItemsFromSkillDryRunSimulations(personalIntelligenceSkillDryRunFixtures);
+
 const adapterItems = createOperationItemsFromAdapterSandboxPlans([
   {
     id: "operation:adapter-sandbox-review",
@@ -200,38 +214,29 @@ const transportItems = createOperationItemsFromTransportPermissionDecisions([
   },
 ]);
 
- 
 const fileInstallItems = createOperationItemsFromAdapterFileInstallDecisions(
   LUCA_LINK_ADAPTER_FILE_INSTALL_PERMISSION_FIXTURE_DECISIONS,
 );
 
-const fileInstallItems = createOperationItemsFromAdapterFileInstallDecisions([
-  {
-    id: "operation:adapter-file-install-disabled",
-    requestId: "adapter-file-install:not-available",
-    title: "Adapter file/install model",
-    summary: "No separate adapter file/install decision module is available to bridge.",
-    status: "disabled",
-    riskLevel: "high",
-    createdAt,
-    blockedActions: ["file write", "package install"],
-    warnings: ["Adapter file/install model not available yet."],
-    blockers: ["File writes and installs remain disabled."],
-  },
-]);
- 
+const dryRunHandoffItems = createOperationItemsFromLucaLinkDryRunHandoffSimulations(
+  LUCA_LINK_DRY_RUN_HANDOFF_FIXTURES,
+);
 
 export const operationCenterFixtureItems: readonly OperationCenterItem[] = Object.freeze([
+  ...runtimeAuthorityItems,
+  ...lucaLinkRuntimeAuthorityItems,
   ...memoryItems,
   ...runtimeItems,
   ...learningItems,
   ...missionItems,
   ...skillSandboxItems,
   ...skillPermissionItems,
+  ...skillDryRunItems,
   ...adapterItems,
   ...displayItems,
   ...notificationItems,
   ...sensorItems,
   ...transportItems,
   ...fileInstallItems,
+  ...dryRunHandoffItems,
 ]);

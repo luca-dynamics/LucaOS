@@ -4,16 +4,33 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
-  const env = loadEnv(mode, process.cwd(), "");
+  // Only load Vite-public variables. Server/provider secrets must never be read
+  // into the browser build config or exposed via import.meta.env.
+  const env = loadEnv(mode, process.cwd(), "VITE_");
+  const isVercelRelease =
+    env.VITE_LUCA_RUNTIME_TARGET === "vercel" || process.env.VERCEL === "1";
+
+  const publicProcessEnv = {
+    NODE_ENV: mode === "production" ? "production" : "development",
+    VITE_LUCA_RELEASE_TARGET: env.VITE_LUCA_RELEASE_TARGET || "",
+    VITE_LUCA_RUNTIME_TARGET: env.VITE_LUCA_RUNTIME_TARGET || "",
+    VITE_LUCA_API_URL: env.VITE_LUCA_API_URL || "",
+    VITE_CLOUD_API_URL: env.VITE_CLOUD_API_URL || "",
+    VITE_CLOUD_CORTEX_URL: env.VITE_CLOUD_CORTEX_URL || "",
+    VITE_ENABLE_DESKTOP_RUNTIME: env.VITE_ENABLE_DESKTOP_RUNTIME || "",
+    VITE_ENABLE_LOCAL_MODEL_SCAN: env.VITE_ENABLE_LOCAL_MODEL_SCAN || "",
+    VITE_ENABLE_LOCAL_OLLAMA: env.VITE_ENABLE_LOCAL_OLLAMA || "",
+    VITE_ENABLE_FILESYSTEM_MEMORY: env.VITE_ENABLE_FILESYSTEM_MEMORY || "",
+    VITE_ENABLE_LUCALINK_NATIVE_CONTROL:
+      env.VITE_ENABLE_LUCALINK_NATIVE_CONTROL || "",
+    VITE_DEV_MODE: env.VITE_DEV_MODE || "",
+  };
 
   return {
     optimizeDeps: {
-      include: ["debug", "ajv", "ajv-formats"],
+      include: ["buffer", "debug", "ajv", "ajv-formats"],
       exclude: [
         "@modelcontextprotocol/sdk",
-        "eventsource",
         "whatsapp-web.js",
         "robotjs",
         "playwright",
@@ -35,7 +52,7 @@ export default defineConfig(({ mode }) => {
         jsxRuntime: "automatic",
       }),
     ],
-    base: "./",
+    base: isVercelRelease ? "/" : "./",
     server: {
       port: 3000,
       host: "127.0.0.1",
@@ -54,6 +71,10 @@ export default defineConfig(({ mode }) => {
         "onnxruntime-web": path.resolve(
           __dirname,
           "node_modules/onnxruntime-web/dist/ort.min.mjs",
+        ),
+        eventsource: path.resolve(
+          __dirname,
+          "src/mocks/browser_eventsource.ts",
         ),
         three: "three",
         child_process: path.resolve(__dirname, "src/mocks/child_process.js"),
@@ -79,49 +100,61 @@ export default defineConfig(({ mode }) => {
         "node:url": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         "better-sqlite3": path.resolve(
           __dirname,
-          "src/mocks/node_polyfills.js",
+          "src/mocks/browser_better_sqlite3.ts",
         ),
       },
     },
     define: {
-      // Safely shim globals and process for browser compatibility
+      // Safely shim globals and process for browser compatibility. This allowlist
+      // intentionally excludes provider/API secrets such as OPENAI_API_KEY,
+      // ANTHROPIC_API_KEY, GEMINI_API_KEY, API_KEY, and VITE_* secret variants.
       global: "window",
       "process.platform": JSON.stringify(process.platform),
-      "process.env": {
-        GEMINI_API_KEY: env.GEMINI_API_KEY || env.VITE_API_KEY || env.API_KEY || "",
-        VITE_API_KEY: env.VITE_API_KEY || env.GEMINI_API_KEY || env.API_KEY || "",
-        API_KEY: env.API_KEY || env.GEMINI_API_KEY || env.VITE_API_KEY || "",
-        OPENAI_API_KEY: env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
-        ANTHROPIC_API_KEY: env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
-        VITE_OPENAI_API_KEY: env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
-        VITE_ANTHROPIC_API_KEY: env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
-      },
-      // Flattened keys for libraries that use direct injection
-      __LUCA_DEV_MODE__: JSON.stringify(mode === "development" || env.VITE_DEV_MODE === "true"),
-      "process.env.GEMINI_API_KEY": JSON.stringify(
-        env.GEMINI_API_KEY || env.VITE_API_KEY || env.API_KEY || "",
+      "process.env": publicProcessEnv,
+      "process.env.NODE_ENV": JSON.stringify(publicProcessEnv.NODE_ENV),
+      "process.env.VITE_LUCA_RELEASE_TARGET": JSON.stringify(
+        publicProcessEnv.VITE_LUCA_RELEASE_TARGET,
       ),
-      "process.env.VITE_API_KEY": JSON.stringify(
-        env.VITE_API_KEY || env.GEMINI_API_KEY || env.API_KEY || "",
+      "process.env.VITE_LUCA_RUNTIME_TARGET": JSON.stringify(
+        publicProcessEnv.VITE_LUCA_RUNTIME_TARGET,
       ),
-      "process.env.API_KEY": JSON.stringify(
-        env.API_KEY || env.GEMINI_API_KEY || env.VITE_API_KEY || "",
+      "process.env.VITE_LUCA_API_URL": JSON.stringify(
+        publicProcessEnv.VITE_LUCA_API_URL,
       ),
-      "process.env.OPENAI_API_KEY": JSON.stringify(
-        env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
+      "process.env.VITE_CLOUD_API_URL": JSON.stringify(
+        publicProcessEnv.VITE_CLOUD_API_URL,
       ),
-      "process.env.ANTHROPIC_API_KEY": JSON.stringify(
-        env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
+      "process.env.VITE_CLOUD_CORTEX_URL": JSON.stringify(
+        publicProcessEnv.VITE_CLOUD_CORTEX_URL,
       ),
-      "process.env.VITE_OPENAI_API_KEY": JSON.stringify(
-        env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || "",
-      ),
-      "process.env.VITE_ANTHROPIC_API_KEY": JSON.stringify(
-        env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || "",
+      __LUCA_DEV_MODE__: JSON.stringify(
+        mode === "development" || env.VITE_DEV_MODE === "true",
       ),
     },
-    // Expose environment variables to import.meta.env (Vite's native way)
-    envPrefix: ["VITE_", "API_", "GEMINI_"],
+    // Expose only allowlisted public client variables to import.meta.env.
+    // Exact-name prefixes are used so VITE_* provider secret names are not
+    // made available to browser code.
+    envPrefix: [
+      "VITE_LUCA_RELEASE_TARGET",
+      "VITE_LUCA_RUNTIME_TARGET",
+      "VITE_LUCA_APP_MODE",
+      "VITE_LUCA_API_URL",
+      "VITE_CLOUD_API_URL",
+      "VITE_CLOUD_CORTEX_URL",
+      "VITE_ENABLE_DESKTOP_RUNTIME",
+      "VITE_ENABLE_LOCAL_MODEL_SCAN",
+      "VITE_ENABLE_LOCAL_OLLAMA",
+      "VITE_ENABLE_FILESYSTEM_MEMORY",
+      "VITE_ENABLE_LUCALINK_NATIVE_CONTROL",
+      "VITE_DEV_MODE",
+      "VITE_WS_PORT",
+      "VITE_CORTEX_URL",
+      "VITE_AUTH_DOMAIN",
+      "VITE_FRONTEND_PORT",
+      "VITE_RELAY_SERVER_URL",
+      "VITE_CORTEX_SERVER_URL",
+      "VITE_OLLAMA_SERVER_URL",
+    ],
     build: {
       target: "esnext",
       minify: false,
@@ -130,11 +163,9 @@ export default defineConfig(({ mode }) => {
           // Exclude server-only tools from mobile/browser builds
           /src\/services\/integrations\/ingestor/,
           "@modelcontextprotocol/sdk",
-          "eventsource",
           "whatsapp-web.js",
           "robotjs",
           "playwright",
-          "better-sqlite3",
           "electron",
           "express",
           "ccxt",

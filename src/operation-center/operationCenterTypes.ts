@@ -11,13 +11,17 @@ export type OperationCenterCategory =
   | "mission_alignment"
   | "skill_registry"
   | "skill_sandbox"
+  | "skill_dry_run"
   | "skill_permission_gate"
+  | "runtime_authority"
+  | "lucalink_runtime_authority"
   | "adapter_sandbox"
   | "web_display"
   | "approval_notification"
   | "sensor_bridge"
   | "transport_permission"
   | "adapter_file_install"
+  | "lucalink_dry_run"
   | "runtime_approval"
   | "blocked_action";
 
@@ -59,6 +63,7 @@ export interface OperationCenterItem {
   blockers: string[];
   auditSummary?: string;
   sideEffectsPerformed: false;
+  authorityGranted: false;
   executionEnabled: false;
   canExecute: false;
   readyForExecution: false;
@@ -80,6 +85,7 @@ export interface OperationCenterSummary {
   lucaLinkCount: number;
   highRiskCount: number;
   criticalRiskCount: number;
+  authorityGranted: false;
   readyForExecution: false;
   executionEnabled: false;
   canExecute: false;

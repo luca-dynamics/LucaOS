@@ -4,7 +4,7 @@
 
 The Dashboard right panel is the global **read-only governance summary** for operational readiness signals. PR #220 introduced the original Permission Center and its in-memory skill permission gate counts. This consolidation keeps that view intact and adds an Operation Center section that normalizes safe summaries from prior Personal Intelligence and LucaLink governance models.
 
-The bridge represents memory approvals, runtime traces, learning proposals, mission alignment, skill sandbox plans, skill permission gates, adapter sandbox plans, display intents, companion approval notifications, read-only sensor snapshots, transport permission decisions, and adapter file/install availability as common operation items.
+The bridge represents memory approvals, runtime traces, learning proposals, mission alignment, skill sandbox plans, skill permission gates, adapter sandbox plans, display intents, companion approval notifications, read-only sensor snapshots, transport permission decisions, and adapter file/install permission decisions as common operation items.
 
 ## Informational, not authoritative
 
@@ -28,6 +28,8 @@ Every normalized item fixes `sideEffectsPerformed`, `executionEnabled`, `canExec
 
 `src/operation-center/` contains pure normalization and summarization helpers. The current Dashboard uses fixture-backed summaries for governance systems that do not expose a safe read-only event source, while current in-memory skill permission gates are converted directly. Conversion helpers copy arrays and construct new operation items; they do not mutate source objects.
 
+Adapter file/install cards are sourced from the real PR #221 read-only fixture decisions in `src/services/lucaLink/adapterFileInstallPermissions`. These cards remain informational only: they do not write files, install packages, execute adapters, run shell commands or package managers, send transport messages, or mutate host, pairing, transport, or runtime state.
+
 The source groups are:
 
 - `personal_intelligence`
@@ -43,6 +45,22 @@ The right panel groups cards by source and displays status, risk, required revie
 - Add a persistent audit trail only after a separate privacy, retention, rollback, and storage review.
 - Add controlled execution only after an isolated runtime, explicit authority boundary, verification gates, and rollback are approved.
 
-## Adapter file/install permission source
+ 
+## Dry-run handoff simulation integration
 
-Adapter file/install cards are sourced from the read-only fixture decisions exported by `src/services/lucaLink/adapterFileInstallPermissions`. The Operation Center represents `ready_for_review`, `approval_required`, `blocked`, and `unsupported` policy outcomes without enabling file writes, package installation, adapter execution, or host/runtime mutation.
+LucaLink governance outputs can feed the side-effect-free dry-run handoff simulation layer and may appear as read-only `lucalink_dry_run` summaries in Operation Center. Dry-run evidence does not send, execute, collect, write, install, approve, open displays, or mutate pairing, transport, approval, device, or runtime state.
+
+## Skill dry-run evidence
+
+The Operation Center can summarize fixture-backed controlled skill dry-run evidence under the `skill_dry_run` category. Cards may show review status, missing approvals, blocked actions, trace-preview references, and rollback expectations. This bridge is read-only and informational: it does not execute skills, mutate Operation Center runtime state, or authorize tools, models, memory writes, network access, or LucaLink handoff.
+ 
+
+## Personal Intelligence runtime authority
+
+Operation Center can display read-only `runtime_authority` items produced from Personal Intelligence authority records. The status is a classification summary only: permanent blocks map to blocked, review-only records to ready-for-review, dry-run-only records to model-only, future-pilot candidates to approval-required, and malformed declarations to unsupported. These items do not mutate Operation Center runtime state and cannot grant or perform execution.
+
+## LucaLink runtime authority
+
+Operation Center also displays read-only `lucalink_runtime_authority` items from the LucaLink authority registry. This category is separate from the Personal Intelligence `runtime_authority` category and does not replace or modify it. LucaLink permanent blocks map to blocked, review-only records to ready-for-review, dry-run-only records to model-only, future bounded handoff candidates to approval-required, and malformed or unsupported declarations to unsupported.
+
+Neither category grants runtime authority. LucaLink authority cards cannot hand off, send transport, execute adapters, open or cast displays, collect sensors, write files, install packages, approve requests, or mutate hosts. Future bounded handoff candidate status is evidence for a separately reviewed pilot, not permission to send or execute.

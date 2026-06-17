@@ -39,3 +39,11 @@ A separate review may connect this policy to runtime enforcement. Any future liv
 ## Dashboard Operation Center summary
 
 These model outputs can be represented as normalized, read-only cards in the Dashboard Operation Center. Summarization is informational only: it does not send, execute, approve, persist, or mutate LucaLink runtime state.
+
+## Dry-run handoff simulation integration
+
+LucaLink governance outputs can feed the side-effect-free dry-run handoff simulation layer and may appear as read-only `lucalink_dry_run` summaries in Operation Center. Dry-run evidence does not send, execute, collect, write, install, approve, open displays, or mutate pairing, transport, approval, device, or runtime state.
+
+## Runtime authority boundary integration
+
+Transport decisions can contribute review evidence to the LucaLink runtime authority registry. `allowed_preview` and `approval_required` are never send permissions; they are only part of the evidence required for a possible future bounded handoff candidate. The authority layer does not call a transport and always reports `transportSendEnabled: false`, `handoffEnabled: false`, `authorityGranted: false`, and `sideEffectsPerformed: false`.

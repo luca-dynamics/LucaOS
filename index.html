@@ -100,18 +100,6 @@
         background: #ef4444;
       }
 
-      /* Holographic Core Animations */
-      .holo-ring {
-        transform-style: preserve-3d;
-        border-radius: 50%;
-      }
-
-      .holo-glow {
-        box-shadow:
-          0 0 20px currentColor,
-          inset 0 0 20px currentColor;
-      }
-
       /* Electron Draggable Region */
       .app-region-drag {
         -webkit-app-region: drag;
@@ -144,50 +132,277 @@
       #root-loader {
         position: fixed;
         inset: 0;
-        background: #09090b;
+        background:
+          radial-gradient(
+            circle at 50% 32%,
+            rgba(255, 255, 255, 0.075),
+            transparent 30%
+          ),
+          linear-gradient(180deg, #0a0a0d 0%, #040405 52%, #0b0b0e 100%);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 18px;
         z-index: 9999;
-        font-family: 'Inter', system-ui, sans-serif;
-        color: #f5d679;
+        font-family: "Inter", system-ui, sans-serif;
+        color: #f8fafc;
         transition: opacity 0.5s ease-out;
+        overflow: hidden;
       }
-      .loader-orb {
-        width: 60px;
-        height: 60px;
-        border: 2px solid rgba(245, 214, 121, 0.1);
-        border-top-color: #f5d679;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 20px;
-        box-shadow: 0 0 30px rgba(245, 214, 121, 0.1);
+      #root-loader::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 30%;
+        width: min(92vw, 520px);
+        height: min(92vw, 520px);
+        transform: translate(-50%, -50%);
+        border-radius: 999px;
+        background: rgba(207, 250, 254, 0.045);
+        filter: blur(54px);
       }
-      @keyframes spin {
-        to { transform: rotate(360deg); }
+      .loader-presence {
+        position: relative;
+        z-index: 1;
+        width: min(92vw, 500px);
+        display: grid;
+        place-items: center;
+        margin-bottom: -34px;
+        animation: luca-loader-breathe 6.4s ease-in-out infinite;
+      }
+      .loader-presence::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 14%;
+        width: 72%;
+        height: 74px;
+        transform: translateX(-50%);
+        border-radius: 100%;
+        background: rgba(207, 250, 254, 0.065);
+        filter: blur(28px);
+      }
+      .loader-hologram-face {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        opacity: 0.9;
+        filter: brightness(1.05) contrast(1.08) saturate(0.88)
+          drop-shadow(0 0 52px rgba(203, 244, 255, 0.18));
+      }
+      @keyframes luca-loader-breathe {
+        0%,
+        100% {
+          transform: translateY(0) scale(0.99);
+          opacity: 0.88;
+        }
+        50% {
+          transform: translateY(-5px) scale(1.015);
+          opacity: 1;
+        }
       }
       .loader-text {
-        font-size: 10px;
-        letter-spacing: 0.4em;
-        font-weight: 900;
-        text-transform: uppercase;
-        opacity: 0.6;
-        animation: pulse 2s infinite;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        font-size: clamp(42px, 12vw, 74px);
+        letter-spacing: -0.075em;
+        font-weight: 650;
+        line-height: 0.92;
       }
-      @keyframes pulse {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 0.7; }
+      .loader-text::after {
+        content: "Host-native AI operating system";
+        font-size: clamp(12px, 3.2vw, 16px);
+        letter-spacing: 0;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.66);
+      }
+      .loader-status {
+        position: relative;
+        z-index: 1;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 14px;
+        letter-spacing: 0;
+      }
+      .loader-failure-details {
+        position: relative;
+        z-index: 1;
+        display: none;
+        width: min(82vw, 560px);
+        color: rgba(255, 255, 255, 0.62);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        line-height: 1.6;
+        text-align: left;
+        white-space: pre-wrap;
+      }
+      #root-loader[data-state="failed"] .loader-presence,
+      #root-loader[data-state="failed"] .loader-progress {
+        display: none;
+      }
+      #root-loader[data-state="failed"] .loader-text {
+        font-size: clamp(24px, 7vw, 38px);
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        text-align: center;
+      }
+      #root-loader[data-state="failed"] .loader-text::after {
+        content: none;
+      }
+      #root-loader[data-state="failed"] .loader-status {
+        max-width: min(82vw, 560px);
+        text-align: center;
+      }
+      #root-loader[data-state="failed"] .loader-failure-details {
+        display: block;
+      }
+      .loader-progress {
+        position: relative;
+        z-index: 1;
+        width: min(74vw, 460px);
+        height: 1px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .loader-progress::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.55),
+          rgba(236, 254, 255, 0.86),
+          rgba(255, 255, 255, 0.36)
+        );
+        box-shadow: 0 0 22px rgba(205, 245, 255, 0.32);
+        transform-origin: left;
+        animation: luca-loader-progress 950ms ease-out forwards;
+      }
+      @keyframes luca-loader-progress {
+        from {
+          transform: scaleX(0.2);
+        }
+        to {
+          transform: scaleX(1);
+        }
       }
     </style>
   </head>
 
   <body>
     <div id="root-loader">
-      <div class="loader-orb"></div>
-      <div class="loader-text">Initializing Luca OS</div>
+      <div class="loader-presence" aria-hidden="true">
+        <img class="loader-hologram-face" src="landing/hologram.png" alt="" />
+      </div>
+      <div class="loader-text">LucaOS</div>
+      <div class="loader-status">Entering browser host</div>
+      <div class="loader-failure-details" aria-live="polite"></div>
+      <div class="loader-progress" aria-hidden="true"></div>
     </div>
     <div id="root"></div>
+    <script>
+      (() => {
+        const debugEnabled =
+          new URLSearchParams(window.location.search).get("bootDebug") === "1";
+
+        window.__LUCA_SHOW_BOOT_FAILURE__ = (message, error) => {
+          const loader = document.getElementById("root-loader");
+          if (!loader || window.__LUCA_REACT_MOUNTED__ === true) return;
+
+          const mainScript = document.querySelector(
+            'script[type="module"][src]',
+          );
+          const errorMessage =
+            error instanceof Error ? error.message : error ? String(error) : "";
+          if (errorMessage) window.__LUCA_BOOT_ERROR__ = errorMessage;
+          loader.dataset.state = "failed";
+
+          const title = loader.querySelector(".loader-text");
+          const status = loader.querySelector(".loader-status");
+          const details = loader.querySelector(".loader-failure-details");
+          if (title)
+            title.textContent = message || "LucaOS web app failed to start";
+          if (status) {
+            status.textContent =
+              message === "LucaOS failed before app mount"
+                ? "Open console for startup error"
+                : "React did not hydrate. Check browser console or deployment bundle.";
+          }
+
+          const diagnostics = [
+            `Hostname: ${window.location.hostname || "(none)"}`,
+            `Path: ${window.location.pathname}${window.location.search}`,
+            `Main script tag: ${mainScript ? "present" : "missing"}`,
+          ];
+          if (debugEnabled) {
+            diagnostics.push(
+              `React entry loaded: ${window.__LUCA_REACT_ENTRY_LOADED__ === true}`,
+              `React mount attempted: ${window.__LUCA_REACT_MOUNT_ATTEMPTED__ === true}`,
+              `React mounted: ${window.__LUCA_REACT_MOUNTED__ === true}`,
+              `Bootstrap error: ${window.__LUCA_REACT_BOOTSTRAP_ERROR__ || "(none)"}`,
+              `Captured errors/rejections: ${
+                window.__LUCA_CAPTURED_BOOT_ERRORS__?.join(" | ") || "(none)"
+              }`,
+              `Script count: ${document.scripts.length}`,
+            );
+          }
+          if (details) details.textContent = diagnostics.join("\n");
+        };
+
+        const captureBootError = (error) => {
+          const description =
+            error instanceof Error
+              ? `${error.name}: ${error.message}`
+              : String(error);
+          window.__LUCA_BOOT_ERROR__ = description;
+          window.__LUCA_CAPTURED_BOOT_ERRORS__ ??= [];
+          window.__LUCA_CAPTURED_BOOT_ERRORS__.push(description);
+        };
+
+        if (!window.__LUCA_BOOT_ERROR_LISTENERS_REGISTERED__) {
+          window.__LUCA_BOOT_ERROR_LISTENERS_REGISTERED__ = true;
+          window.addEventListener("error", (event) => {
+            if (window.__LUCA_REACT_MOUNTED__ !== true) {
+              captureBootError(
+                event.error || event.message || "Unknown startup error",
+              );
+            }
+          });
+          window.addEventListener("unhandledrejection", (event) => {
+            if (window.__LUCA_REACT_MOUNTED__ !== true) {
+              captureBootError(event.reason || "Unhandled startup rejection");
+            }
+          });
+        }
+
+        window.addEventListener("luca-react-bootstrap-error", () => {
+          window.__LUCA_SHOW_BOOT_FAILURE__(
+            "LucaOS web app failed to start",
+            window.__LUCA_REACT_BOOTSTRAP_ERROR__,
+          );
+        });
+
+        window.setTimeout(() => {
+          if (
+            window.__LUCA_REACT_MOUNTED__ !== true &&
+            (window.__LUCA_REACT_BOOTSTRAP_ERROR__ ||
+              window.__LUCA_BOOT_ERROR__)
+          ) {
+            window.__LUCA_SHOW_BOOT_FAILURE__(
+              "LucaOS web app failed to start",
+              window.__LUCA_REACT_BOOTSTRAP_ERROR__ ||
+                window.__LUCA_BOOT_ERROR__,
+            );
+          }
+        }, 5000);
+      })();
+    </script>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

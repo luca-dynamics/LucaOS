@@ -79,9 +79,9 @@ embodiment safe and useful:
 
 ### QR pairing URL flow
 
-- `getPairingUrl()` (`:604`) builds `luca://pair?relay=<relay>&token=<token>&local=<localUrl>`.
-- `LucaLinkService.parsePairingUrl()` (`:628`) parses both `luca://` and
-  `https://` forms. `qrScannerService.ts` calls `parsePairingUrl` then
+- `src/services/lucaLinkService.ts#getPairingUrl()` builds `luca://pair?relay=<relay>&token=<token>&local=<localUrl>`.
+- `src/services/lucaLinkService.ts#parsePairingUrl()` parses both `luca://` and
+  `https://` forms. `src/services/qrScannerService.ts` calls `parsePairingUrl` then
   `lucaLink.joinWithToken(...)`.
 
 ### Local LAN attempt (hybrid mode)

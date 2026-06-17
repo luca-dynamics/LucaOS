@@ -110,20 +110,20 @@ export class OverlayApprovalResolutionService {
   resolveApproval(input: ResolveOverlayApprovalInput): OverlayApprovalResolutionRecord {
     const decision = normalizeDecision(input.decision);
     if (!decision) {
-      return this.record(input.source, "unknown", "blocked_unrecognized_decision", [
+      return this.#record(input.source, "unknown", "blocked_unrecognized_decision", [
         "unrecognized_approval_decision",
       ]);
     }
     if (!input.approvalRequest) {
-      return this.record(input.source, decision, "blocked_no_pending_request", [
+      return this.#record(input.source, decision, "blocked_no_pending_request", [
         "no_pending_approval_request",
       ]);
     }
 
-    this.record(input.source, decision, "recorded");
+    this.#record(input.source, decision, "recorded");
     input.approvalRequest.resolve(decision === "approve");
     input.clearApprovalRequest?.();
-    return this.record(input.source, decision, "resolved");
+    return this.#record(input.source, decision, "resolved");
   }
 
   listRecords(): OverlayApprovalResolutionRecord[] {
@@ -146,7 +146,7 @@ export class OverlayApprovalResolutionService {
     };
   }
 
-  private record(
+  #record(
     source: OverlayApprovalResolutionSource,
     decision: OverlayApprovalResolutionDecision | "unknown",
     status: OverlayApprovalResolutionStatus,

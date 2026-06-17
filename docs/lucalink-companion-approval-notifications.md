@@ -85,4 +85,7 @@ These model outputs can be represented as normalized, read-only cards in the Das
 
 Declarative `file.write.request` and `install.request` capabilities are evaluated by the Adapter File Write + Install Permission Model. Approval notifications may describe a future review request, but current evaluation does not execute, write, install, approve, mutate the notification inbox, or send transport.
 
- 
+
+## Dry-run handoff simulation integration
+
+LucaLink governance outputs can feed the side-effect-free dry-run handoff simulation layer and may appear as read-only `lucalink_dry_run` summaries in Operation Center. Dry-run evidence does not send, execute, collect, write, install, approve, open displays, or mutate pairing, transport, approval, device, or runtime state.

@@ -41,7 +41,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       >
         <span className="flex items-center gap-3 min-w-0">
           {icon && <Icon name={icon} size={18} variant="BoldDuotone" />}
-          <h2 className="font-black tracking-widest text-xs uppercase truncate">
+          <h2 className="font-semibold text-xs tracking-tight truncate">
             {title}
           </h2>
         </span>

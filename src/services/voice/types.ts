@@ -28,6 +28,7 @@ export interface IReasoningProvider {
       useVision?: boolean;
       model?: string;
       provider?: string;
+      useMemory?: boolean;
     },
   ): AsyncGenerator<ChatChunk>;
 }
@@ -35,11 +36,11 @@ export interface IReasoningProvider {
 export interface ITtsProvider {
   synthesize(
     text: string,
-    options?: { abortSignal?: AbortSignal; voiceId?: string },
+    options?: { abortSignal?: AbortSignal; voiceId?: string; apiKey?: string; systemInstruction?: string },
   ): Promise<ArrayBuffer>;
   synthesizeStream?(
     text: string,
-    options?: { abortSignal?: AbortSignal; voiceId?: string },
+    options?: { abortSignal?: AbortSignal; voiceId?: string; apiKey?: string; systemInstruction?: string },
   ): AsyncIterable<ArrayBuffer>;
 }
 
@@ -158,6 +159,7 @@ export interface LucaVoiceProviderAdapterMetadata {
   ttsApisCalled: false;
   providerApisCalled: false;
   heavyModelsLoaded: false;
+  storageWritesEnabled: false;
   systemApisCalled: false;
   requiresExplicitOptIn: true;
 }
@@ -207,11 +209,14 @@ export interface LucaVoiceProviderRouteResult {
 }
 
 export interface LucaVoiceRuntimeMetadata {
-  runtimeKind: "voice_scaffold";
+  runtimeKind: "voice_scaffold" | "realtime_voice_session_controller" | "voice_streaming_scaffold";
   audioApisCalled: false;
+  microphoneApisCalled?: false;
   sttApisCalled: false;
   ttsApisCalled: false;
   systemApisCalled: false;
+  providerApisCalled?: false;
+  networkApisCalled?: false;
   heavyModelsLoaded: false;
   storageWritesEnabled: false;
   requiresExplicitOptIn: true;
@@ -238,6 +243,7 @@ export interface LucaVoiceAudioSpeechRequest {
   speed?: number;
   providerPreference?: LucaVoiceProviderPreference;
   language?: string;
+  isFinal?: boolean;
   metadata?: Record<string, unknown>;
 }
 
@@ -426,6 +432,8 @@ export interface LucaVoiceHudMetadata {
   sttApisCalled: false;
   ttsApisCalled: false;
   systemApisCalled: false;
+  providerApisCalled?: false;
+  networkApisCalled?: false;
   heavyModelsLoaded: false;
   requiresExplicitOptIn: true;
 }
@@ -515,7 +523,9 @@ export interface LucaRealtimeVoiceLatencyBudget {
 }
 
 export interface LucaRealtimeVoiceControllerMetadata {
-  controllerKind: "realtime_voice_session_controller";
+  controllerKind: "realtime_voice_session_controller" | "live_voice_runtime_bridge";
+  runtimeKind: "realtime_voice_session_controller";
+  audioApisCalled: false;
   microphoneApisCalled: false;
   audioOutputApisCalled: false;
   sttApisCalled: false;
@@ -523,6 +533,7 @@ export interface LucaRealtimeVoiceControllerMetadata {
   providerApisCalled: false;
   networkApisCalled: false;
   heavyModelsLoaded: false;
+  storageWritesEnabled: false;
   systemApisCalled: false;
   requiresExplicitOptIn: true;
 }
@@ -580,11 +591,14 @@ export interface LucaVoiceInputEvent {
 }
 
 export interface LucaVoiceTranscriptEvent {
+  kind?: "partial" | "final";
   transcript: string;
-  language: string;
-  confidence: number;
-  isFinal: boolean;
-  source: LucaVoiceProviderKind | "manual";
+  language?: string;
+  confidence?: number;
+  isFinal?: boolean;
+  source?: LucaVoiceProviderKind | "manual";
+  sessionId?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LucaVoiceIntentContext {
@@ -625,10 +639,13 @@ export type LucaVoiceOutputKind =
   | "tts_interrupted";
 
 export interface LucaVoiceOutputEvent {
+  id?: string;
+  sessionId?: string;
   kind: LucaVoiceOutputKind;
   text: string;
   voiceId?: string;
   language?: string;
+  isFinal?: boolean;
   metadata?: Record<string, unknown>;
 }
 
@@ -694,9 +711,9 @@ export interface LucaSTTTranscribeInput {
 
 export interface LucaSTTTranscribeResult {
   transcript: string;
-  language: string;
-  confidence: number;
-  isFinal: boolean;
+  language?: string;
+  confidence?: number;
+  isFinal?: boolean;
 }
 
 export interface LucaTTSynthesizeInput {
@@ -810,6 +827,7 @@ export interface LucaVoiceStreamingRuntimeMetadata {
   ttsApisCalled: false;
   websocketOpened: false;
   heavyModelsLoaded: false;
+  storageWritesEnabled: false;
   systemApisCalled: false;
   requiresExplicitOptIn: true;
 }
