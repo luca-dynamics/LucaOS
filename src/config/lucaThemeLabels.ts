@@ -8,18 +8,28 @@ export interface LucaThemeLabelConfig {
   canonicalThemeId: UIThemeId;
   label: string;
   description: string;
+  longDescription: string;
+  moodTag: string;
   hex: string;
   visibility: LucaThemeVisibility;
 }
 
 const lucaSilverDescription =
-  "Pearl-white glass, graphite text, subtle silver depth.";
+  "A clean, polished interface for everyday work.";
+const lucaSilverLongDescription =
+  "Pearl-white glass, graphite text, and subtle silver depth for a clear LucaOS workspace.";
 const lucaGraphiteDescription =
-  "Charcoal glass, soft grey borders, focused dark workspace.";
+  "A dark, focused atmosphere with Luca’s blue glow.";
+const lucaGraphiteLongDescription =
+  "Refined charcoal glass with soft grey borders for deep focus across your LucaOS shell.";
 const lucaFrostDescription =
-  "Cool silver surfaces with restrained blue highlights.";
+  "Cool glass surfaces with restrained blue highlights.";
+const lucaFrostLongDescription =
+  "A calm glass interface with cool silver depth and gentle Luca highlights.";
 const lucaCreamDescription =
   "Warm pearl surfaces with calm natural contrast.";
+const lucaCreamLongDescription =
+  "A bright, warm atmosphere for a softer personal AI OS workspace.";
 
 export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
   PROFESSIONAL: {
@@ -27,6 +37,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "PROFESSIONAL",
     label: "Luca Silver",
     description: lucaSilverDescription,
+    longDescription: lucaSilverLongDescription,
+    moodTag: "Clear",
     hex: THEME_PALETTE.PROFESSIONAL.primary,
     visibility: "normal",
   },
@@ -35,6 +47,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "MASTER_SYSTEM",
     label: "Luca Graphite",
     description: lucaGraphiteDescription,
+    longDescription: lucaGraphiteLongDescription,
+    moodTag: "Deep focus",
     hex: THEME_PALETTE.MASTER_SYSTEM.primary,
     visibility: "normal",
   },
@@ -43,6 +57,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "FROST",
     label: "Luca Frost",
     description: lucaFrostDescription,
+    longDescription: lucaFrostLongDescription,
+    moodTag: "Calm glass",
     hex: THEME_PALETTE.FROST.primary,
     visibility: "normal",
   },
@@ -51,6 +67,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "LIGHTCREAM",
     label: "Luca Cream",
     description: lucaCreamDescription,
+    longDescription: lucaCreamLongDescription,
+    moodTag: "Warm clarity",
     hex: THEME_PALETTE.LIGHTCREAM.primary,
     visibility: "normal",
   },
@@ -59,6 +77,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "PROFESSIONAL",
     label: "Luca Silver",
     description: lucaSilverDescription,
+    longDescription: lucaSilverLongDescription,
+    moodTag: "Clear",
     hex: THEME_PALETTE.PROFESSIONAL.primary,
     visibility: "legacy",
   },
@@ -67,6 +87,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "PROFESSIONAL",
     label: "Luca Silver",
     description: lucaSilverDescription,
+    longDescription: lucaSilverLongDescription,
+    moodTag: "Clear",
     hex: THEME_PALETTE.AGENTIC_SLATE.primary,
     visibility: "legacy",
   },
@@ -75,6 +97,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "PROFESSIONAL",
     label: "Luca Silver",
     description: lucaSilverDescription,
+    longDescription: lucaSilverLongDescription,
+    moodTag: "Clear",
     hex: THEME_PALETTE.LUCAGENT.primary,
     visibility: "legacy",
   },
@@ -83,6 +107,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "MASTER_SYSTEM",
     label: "Luca Graphite",
     description: lucaGraphiteDescription,
+    longDescription: lucaGraphiteLongDescription,
+    moodTag: "Deep focus",
     hex: THEME_PALETTE.RUTHLESS.primary,
     visibility: "legacy",
   },
@@ -91,6 +117,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "MASTER_SYSTEM",
     label: "Luca Graphite · Green Accent",
     description: "Charcoal glass with a restrained green accent.",
+    longDescription: lucaGraphiteLongDescription,
+    moodTag: "Deep focus",
     hex: THEME_PALETTE.TERMINAL.primary,
     visibility: "legacy",
   },
@@ -99,6 +127,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "MASTER_SYSTEM",
     label: "Luca Graphite · Green Accent",
     description: "Charcoal glass with a restrained green accent.",
+    longDescription: lucaGraphiteLongDescription,
+    moodTag: "Deep focus",
     hex: THEME_PALETTE.HACKER.primary,
     visibility: "legacy",
   },
@@ -107,6 +137,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "MASTER_SYSTEM",
     label: "Luca Graphite · Amber Accent",
     description: "Charcoal glass with a restrained amber accent.",
+    longDescription: lucaGraphiteLongDescription,
+    moodTag: "Focused warmth",
     hex: THEME_PALETTE.BUILDER.primary,
     visibility: "legacy",
   },
@@ -115,6 +147,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "MASTER_SYSTEM",
     label: "Luca Graphite · Amber Accent",
     description: "Charcoal glass with a restrained amber accent.",
+    longDescription: lucaGraphiteLongDescription,
+    moodTag: "Focused warmth",
     hex: THEME_PALETTE.ENGINEER.primary,
     visibility: "legacy",
   },
@@ -123,6 +157,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "MASTER_SYSTEM",
     label: "Luca Graphite · Violet Accent",
     description: "Charcoal glass with a restrained violet accent.",
+    longDescription: lucaGraphiteLongDescription,
+    moodTag: "Soft violet",
     hex: THEME_PALETTE.DICTATION.primary,
     visibility: "legacy",
   },
@@ -131,6 +167,8 @@ export const LUCA_THEME_LABELS: Record<string, LucaThemeLabelConfig> = {
     canonicalThemeId: "VAPORWAVE",
     label: "Vaporwave Experimental",
     description: "Experimental high-color appearance for local testing.",
+    longDescription: "A vivid high-color appearance reserved for local testing.",
+    moodTag: "Experimental",
     hex: THEME_PALETTE.VAPORWAVE.primary,
     visibility: "experimental",
   },

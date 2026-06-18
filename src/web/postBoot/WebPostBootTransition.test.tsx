@@ -27,6 +27,7 @@ describe("WebPostBootTransition", () => {
 
     expect(postBootSource).not.toContain("LucaHologramShaderPresence");
     expect(postBootSource).not.toContain("LucaHologramShaderScene");
+    expect(postBootSource).not.toContain("HologramFace");
     expect(postBootSource).toContain("LucaStaticFacePresence");
     expect(staticFaceSource).toContain('src="/icon.png"');
     expect(staticFaceSource).not.toMatch(/three|@react-three\/fiber|@react-three\/drei|eventBus|Service/);
@@ -35,6 +36,20 @@ describe("WebPostBootTransition", () => {
     expect(html).toContain('src="/icon.png"');
     expect(html).toContain('data-visual-source="dictation-voice-canvas-orb"');
     expect(html).not.toContain('data-hologram-source="/models/avatar.glb"');
+  });
+
+  it("does not render terminal-style readiness wording", () => {
+    const html = renderToStaticMarkup(
+      <WebPostBootTransition
+        snapshot={{ userState: "returning_user", hasCompletedOnboarding: true, canEnterShell: true }}
+        onContinue={noop}
+        onRestartOnboarding={noop}
+      />,
+    ).toLowerCase();
+
+    for (const forbidden of ["system ready", "runtime ready", "kernel", "protocol", "webbridge", "browser-safe"]) {
+      expect(html, forbidden).not.toContain(forbidden);
+    }
   });
 
   it("renders returning-user resume copy", () => {

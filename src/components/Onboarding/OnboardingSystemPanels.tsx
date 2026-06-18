@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "../ui/Icon";
+import { LucaStaticFacePresence } from "../visual/LucaStaticFacePresence";
 
 interface SharedPanelProps {
   accentTextColor: string;
@@ -277,29 +278,29 @@ export const CalibrationPanel: React.FC<{ accentTextColor: string }> = ({
 export const CompletePanel: React.FC<{ accentTextColor: string }> = ({
   accentTextColor,
 }) => (
-  <div className="flex flex-col items-center justify-center space-y-6 animate-fade-in-up">
-    <div
-      className="border-4 rounded-full flex items-center justify-center backdrop-blur-xl"
-      style={{
-        borderColor: accentTextColor,
-        width: "clamp(4rem, 15vmin, 7rem)",
-        height: "clamp(4rem, 15vmin, 7rem)",
-      }}
-    >
-      <Icon
-        name="CheckCircle"
-        variant="Linear"
-        style={{ color: accentTextColor, width: "50%", height: "50%" }}
+  <div className="flex flex-col items-center justify-center space-y-6 animate-fade-in-up text-center">
+    <div className="relative flex items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl">
+      <LucaStaticFacePresence size={118} />
+      <div
+        className="absolute right-4 top-4 h-2.5 w-2.5 rounded-full"
+        style={{ backgroundColor: accentTextColor }}
+        aria-hidden="true"
       />
     </div>
-    <div className="text-center space-y-2">
+    <div className="max-w-md space-y-3">
       <h2
-        className="text-2xl font-bold tracking-widest uppercase"
+        className="text-3xl font-semibold tracking-tight"
         style={{ color: accentTextColor }}
       >
-        System Ready
+        Luca is ready
       </h2>
-      <p className="text-sm">Connection Established</p>
+      <p className="text-sm leading-6 text-white/70">
+        Your personal AI workspace is ready. Luca will carry your preferences,
+        appearance, and selected mode into the workspace.
+      </p>
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-white/45">
+        Opening LucaOS
+      </p>
     </div>
   </div>
 );

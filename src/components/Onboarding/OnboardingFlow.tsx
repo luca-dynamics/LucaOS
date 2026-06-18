@@ -720,7 +720,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       />
 
       {/* Hologram Face is visible during hardware scanning, downloads, and voice conversation */}
-      {!["KERNEL_AWAKENING", "DIRECTIVE_ALIGNMENT"].includes(step) &&
+      {!["KERNEL_AWAKENING", "DIRECTIVE_ALIGNMENT", "COMPLETE"].includes(step) &&
         !(runtime.platform === "web" && step === "CONVERSATION") &&
         !(step === "CONVERSATION" && conversationMode === "text") && (
           <HologramFace step={step} />
@@ -1002,7 +1002,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               className="w-2 h-2 rounded-full animate-pulse"
               style={{ backgroundColor: accentTextColor }}
             />
-            L.U.C.A OS v1.0.0 // PROTOCOL_CONNECTED
+            LucaOS v1.0.0 · Personal workspace
           </div>
         )}
     </div>

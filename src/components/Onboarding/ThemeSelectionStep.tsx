@@ -120,10 +120,10 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
           className="text-[1.55rem] font-bold tracking-[0.16em] uppercase italic transition-colors duration-300"
           style={{ color: headingColor }}
         >
-          Interface Calibration
+          Choose Luca’s atmosphere
         </h1>
         <p className="text-xs uppercase tracking-wider font-bold text-[var(--app-text-main)] opacity-85">
-          Configure visual style
+          Set the look of your personal AI OS
         </p>
       </div>
 
@@ -224,13 +224,13 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                 className="text-xs font-bold uppercase tracking-widest"
                 style={{ color: currentContrast.text }}
               >
-                Background Visibility
+                Background depth
               </h2>
               <p
                 className="text-[9px] mt-0.5"
                 style={{ color: currentContrast.textMuted }}
               >
-                Adjust UI Transparency
+                Shape the glass presence across LucaOS
               </p>
             </div>
             <div className="space-y-3 max-w-lg mx-auto">
@@ -240,7 +240,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                     className="text-[10px] font-mono"
                     style={{ color: currentContrast.textMuted }}
                   >
-                    OPACITY
+                    Glow strength
                   </span>
                   <span
                     className="text-[10px] font-mono"
@@ -268,7 +268,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
                     className="text-[10px] font-mono"
                     style={{ color: currentContrast.textMuted }}
                   >
-                    BLUR
+                    Glass softness
                   </span>
                   <span
                     className="text-[10px] font-mono"
@@ -317,7 +317,7 @@ const ThemeSelectionStep: React.FC<ThemeSelectionStepProps> = ({
             color: currentContrast.text,
           }}
         >
-          Confirm Style
+          Use this atmosphere
           <Icon
             name="ArrowRight"
             variant="BoldDuotone"
