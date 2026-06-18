@@ -5,6 +5,8 @@ const source = readFileSync("src/components/Onboarding/OnboardingFlow.tsx", "utf
 const webRuntimeSource = readFileSync("src/web/adapters/webOnboardingRuntime.tsx", "utf8");
 const webConversationSource = readFileSync("src/web/adapters/WebSafeConversationalOnboarding.tsx", "utf8");
 const webVoiceSource = readFileSync("src/web/voice/WebVoiceOnboardingSurface.tsx", "utf8");
+const themeSelectionSource = readFileSync("src/components/Onboarding/ThemeSelectionStep.tsx", "utf8");
+const systemPanelsSource = readFileSync("src/components/Onboarding/OnboardingSystemPanels.tsx", "utf8");
 
 describe("OnboardingFlow WebBridge UX", () => {
   it("keeps the canonical kernel preparation visuals available outside WebBridge post-boot", () => {
@@ -27,6 +29,24 @@ describe("OnboardingFlow WebBridge UX", () => {
   it("keeps mobile web onboarding focused and navigable", () => {
     expect(source).toContain('!(runtime.platform === "web" && step === "CONVERSATION")');
     expect(webConversationSource).toContain("Back / Change mode");
+  });
+
+  it("keeps theme selection framed as premium LucaOS personalization", () => {
+    expect(themeSelectionSource).toContain("Choose Luca’s atmosphere");
+    expect(themeSelectionSource).toContain("Set the look of your personal AI OS");
+    expect(themeSelectionSource).toContain("Use this atmosphere");
+    expect(themeSelectionSource).not.toContain("Interface Calibration");
+    expect(themeSelectionSource).not.toContain("Configure visual style");
+  });
+
+  it("keeps final readiness product-native and free of terminal copy", () => {
+    expect(systemPanelsSource).toContain("Luca is ready");
+    expect(systemPanelsSource).toContain("Your personal AI workspace is ready");
+    expect(systemPanelsSource).toContain("LucaStaticFacePresence");
+    expect(source).toContain('!["KERNEL_AWAKENING", "DIRECTIVE_ALIGNMENT", "COMPLETE"].includes(step)');
+    expect(systemPanelsSource).not.toContain("System Ready");
+    expect(systemPanelsSource).not.toContain("Connection Established");
+    expect(source).not.toContain("PROTOCOL_CONNECTED");
   });
 
   it("explicitly avoids replaying preparation after WebBridge post-boot", () => {

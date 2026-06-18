@@ -1,3 +1,5 @@
+import { LucaCanvasPresenceOrb } from "../components/visual/LucaCanvasPresenceOrb";
+import { LucaStaticFacePresence } from "../components/visual/LucaStaticFacePresence";
 import type { WebCapability } from "./browserHostCapabilities";
 
 interface WebReadyStateProps {
@@ -8,80 +10,38 @@ interface WebReadyStateProps {
   onContinueToShell: () => void;
 }
 
-export function WebReadyState({
-  hostClass,
-  browserCapabilities,
-  guardedNativeCapabilities,
-  lucaLinkStatus,
-  onContinueToShell,
-}: WebReadyStateProps) {
-  const available = browserCapabilities.filter(
-    (capability) => capability.status === "available",
-  ).length;
-
+export function WebReadyState({ onContinueToShell }: WebReadyStateProps) {
   return (
-    <section className="absolute inset-0 z-10 flex items-center justify-center p-6 font-mono">
+    <section className="absolute inset-0 z-10 flex items-center justify-center p-6 text-center">
       <div
-        className="w-full max-w-2xl rounded-2xl border p-6 glass-blur sm:p-8"
+        className="w-full max-w-xl rounded-[2rem] border px-6 py-8 shadow-2xl backdrop-blur-2xl sm:px-10 sm:py-10"
         style={{
           color: "var(--app-text-main)",
           borderColor: "var(--app-border-main)",
           backgroundColor: "var(--app-bg-tint)",
         }}
       >
-        <p
-          className="text-xs font-bold uppercase tracking-[0.22em]"
-          style={{ color: "var(--app-primary)" }}
-        >
-          LucaOS Web session ready
-        </p>
-        <h1 className="mt-3 text-2xl font-bold tracking-wide">
-          Preparing your LucaOS workspace...
+        <div className="mx-auto flex w-fit items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+          <LucaStaticFacePresence size={128} />
+        </div>
+        <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--app-text-muted)" }}>
+          <LucaCanvasPresenceOrb size={18} state="ready" amplitude={0} lowPower />
+          Workspace ready
+        </div>
+        <h1 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          Luca is ready
         </h1>
         <p
-          className="mt-3 text-sm leading-6"
+          className="mx-auto mt-4 max-w-md text-sm leading-6 sm:text-base"
           style={{ color: "var(--app-text-muted)" }}
         >
-          Luca is opening your workspace.
+          Your personal AI workspace is ready. Luca will carry your preferences,
+          appearance, and selected mode into the workspace.
         </p>
-        <dl className="mt-6 grid gap-3 text-xs sm:grid-cols-2">
-          <div
-            className="rounded-xl border p-4"
-            style={{ borderColor: "var(--app-border-main)" }}
-          >
-            <dt style={{ color: "var(--app-text-muted)" }}>Host class</dt>
-            <dd className="mt-1 font-bold">{hostClass}</dd>
-          </div>
-          <div
-            className="rounded-xl border p-4"
-            style={{ borderColor: "var(--app-border-main)" }}
-          >
-            <dt style={{ color: "var(--app-text-muted)" }}>LucaLink</dt>
-            <dd className="mt-1 font-bold">{lucaLinkStatus}</dd>
-          </div>
-          <div
-            className="rounded-xl border p-4"
-            style={{ borderColor: "var(--app-border-main)" }}
-          >
-            <dt style={{ color: "var(--app-text-muted)" }}>
-              Luca Prime
-            </dt>
-            <dd className="mt-1 font-bold">{available} available</dd>
-          </div>
-          <div
-            className="rounded-xl border p-4"
-            style={{ borderColor: "var(--app-border-main)" }}
-          >
-            <dt style={{ color: "var(--app-text-muted)" }}>Local routes</dt>
-            <dd className="mt-1 font-bold">
-              Connect in Settings
-            </dd>
-          </div>
-        </dl>
         <button
           type="button"
           onClick={onContinueToShell}
-          className="mt-6 w-full rounded-xl border px-4 py-3 text-sm font-bold transition hover:brightness-110 focus:outline-none focus:ring-2"
+          className="mt-8 w-full rounded-2xl border px-5 py-3 text-sm font-semibold transition hover:brightness-110 focus:outline-none focus:ring-2 sm:w-auto sm:min-w-44"
           style={{
             color: "var(--app-text-main)",
             borderColor: "var(--app-primary)",

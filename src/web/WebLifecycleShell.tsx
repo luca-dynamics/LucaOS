@@ -4,6 +4,7 @@ import { generateThemeStyles, getThemeColors } from "../config/themeColors";
 import { WebBridgeDiagnostics } from "./WebBridgeDiagnostics";
 import { WebLucaBackground } from "./WebLucaBackground";
 import { WebLucaShell } from "./WebLucaShell";
+import { WebReadyState } from "./WebReadyState";
 import { useWebRuntime } from "./WebRuntimeContext";
 import { webOnboardingRuntime } from "./adapters/webOnboardingRuntime";
 import type { WebCapability } from "./browserHostCapabilities";
@@ -100,12 +101,13 @@ export function WebLifecycleShell() {
         />
       )}
       {lifecycleState === "ready" && showWebReadyDebug && (
-        <section className="absolute inset-0 z-10 flex items-center justify-center p-6 text-center">
-          <div className="rounded-2xl border border-white/10 bg-black/70 p-6 text-white">
-            <p>Preparing your LucaOS workspace...</p>
-            <button type="button" className="mt-4 rounded-xl border border-white/20 px-4 py-2" onClick={() => setLifecycleState("main")}>Open LucaOS</button>
-          </div>
-        </section>
+        <WebReadyState
+          hostClass={runtime.hostClass}
+          browserCapabilities={browserCapabilities}
+          guardedNativeCapabilities={nativeCapabilities}
+          lucaLinkStatus={runtime.lucaLinkStatus}
+          onContinueToShell={() => setLifecycleState("main")}
+        />
       )}
       {lifecycleState === "main" && (
         <WebLucaShell

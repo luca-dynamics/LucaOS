@@ -10,8 +10,10 @@ describe("WebLifecycleShell", () => {
     expect(source).toContain('showWebReadyDebug ? "ready" : "main"');
     expect(source).toContain('lifecycleState === "main"');
     expect(source).toContain("<WebLucaShell");
+    expect(source).toContain("<WebReadyState");
     expect(source).not.toContain("Original onboarding complete");
     expect(source).not.toContain("Continue to LucaOS Web Shell");
+    expect(source).not.toContain("System Ready");
   });
 
   it("branches returning users directly to shell in default flow", () => {
@@ -20,6 +22,12 @@ describe("WebLifecycleShell", () => {
     expect(source).toContain('postBootState.userState === "new_user"');
     expect(source).toContain(': showWebReadyDebug');
     expect(source).toContain(': "main"');
+  });
+
+  it("does not show the debug ready state unless explicitly enabled", () => {
+    expect(source).toContain('lifecycleState === "ready" && showWebReadyDebug');
+    expect(source).toContain('setLifecycleState(showWebReadyDebug ? "ready" : "main")');
+    expect(source).not.toMatch(/lifecycleState === "ready" && \(/);
   });
 
   it("renders an immediate loading surface while post-boot state resolves", () => {

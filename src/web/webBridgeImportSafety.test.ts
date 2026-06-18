@@ -40,6 +40,7 @@ const visualSourceAudit = read(visualSourceAuditPath);
 const onboardingLifecycleSource = read(
   "src/services/onboarding/OnboardingLifecycleService.ts",
 );
+const themeSelectionSource = read("src/components/Onboarding/ThemeSelectionStep.tsx");
 
 const generatedProductSurfaces = [
   "src/web/WebOnboardingSurface.tsx",
@@ -290,6 +291,14 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     ).toEqual(orbComponentFiles.sort());
   });
 
+  it("keeps WebBridge onboarding on shared premium theme copy without unsafe runtime imports", () => {
+    expect(onboardingSource).toContain("<ThemeSelectionStep");
+    expect(themeSelectionSource).toContain("NORMAL_LUCA_THEME_OPTIONS");
+    expect(themeSelectionSource).toContain("Choose Luca’s atmosphere");
+    expect(webAdapterSource).not.toMatch(/theme protocol|visual protocol|system profile/i);
+    expect(webAdapterSource).not.toMatch(/from\s+["'][^"']*(electron|desktop|node:fs|fs)[^"']*["']/i);
+  });
+
   it("wires ready through the browser-safe LucaOS shell and chat adapter", () => {
     expect(lifecycleSource).toContain(
       'import { WebLucaShell } from "./WebLucaShell"',
@@ -297,8 +306,13 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(lifecycleSource).toContain('<WebLucaShell');
     expect(lifecycleSource).toContain('setLifecycleState("main")');
     expect(readySource).toContain("onContinueToShell");
+    expect(readySource).toContain("Luca is ready");
+    expect(readySource).toContain("Open LucaOS");
+    expect(readySource).toContain("LucaStaticFacePresence");
+    expect(readySource).not.toContain("System Ready");
     expect(readySource).not.toContain("Original onboarding complete");
     expect(readySource).not.toContain("Continue to LucaOS Web Shell");
+    expect(readySource).not.toMatch(/HologramFace|HologramScene|LucaHologramShaderPresence|runtime adapter|browser-safe|native routes|model execution adapter/i);
     expect(webShellSource).toContain("<WebChatSurface");
     expect(webChatSource).toContain('from "./webChatRuntime"');
     expect(webChatSource).toContain("runtime.sendMessage");
@@ -375,6 +389,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       expect(source).not.toContain("Original onboarding complete");
       expect(source).not.toContain("Continue to LucaOS Web Shell");
       expect(source).not.toContain("browser-safe mode");
+      expect(source).not.toContain("System Ready");
       expect(source).not.toContain("Model execution adapter is not connected yet");
       expect(source).not.toContain("Native routes guarded");
     }
