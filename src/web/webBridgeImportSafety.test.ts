@@ -381,10 +381,10 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
   });
 
 
-  it("keeps WebBridge voice on shared VoiceHudPresentation without desktop runtime imports", () => {
+  it("keeps WebBridge voice on shared VoiceHudSurface without desktop runtime imports", () => {
     const voiceSurfaceSource = readFileSync("src/web/voice/WebVoiceOnboardingSurface.tsx", "utf8");
-    const presentationSource = readFileSync("src/components/voice/VoiceHudPresentation.tsx", "utf8");
-    expect(voiceSurfaceSource).toContain("VoiceHudPresentation");
+    const presentationSource = readFileSync("src/components/voice/VoiceHudSurface.tsx", "utf8");
+    expect(voiceSurfaceSource).toContain("VoiceHudSurface");
     expect(voiceSurfaceSource).not.toMatch(/from\s+["'][^"']*components\/VoiceHud["']/i);
     for (const reference of ["eventBus", "lucaService", "voiceSessionOrchestrator", "liveService", "soundService", "settingsService", "electron"]) {
       expect(voiceSurfaceSource.toLowerCase()).not.toContain(reference.toLowerCase());
