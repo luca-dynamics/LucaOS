@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { OnboardingConversationProps } from "../../components/Onboarding/OnboardingRuntimeAdapter";
-import VoiceHudPresentation, { type VoiceHudPresentationState } from "../../components/voice/VoiceHudPresentation";
+import VoiceHudSurface from "../../components/voice/VoiceHudSurface";
+
+type WebVoiceMicStatus = "idle" | "requesting" | "ready" | "unavailable";
 
 export function WebVoiceOnboardingSurface({
   userName,
@@ -8,7 +10,7 @@ export function WebVoiceOnboardingSurface({
   onBack,
   onComplete,
 }: OnboardingConversationProps) {
-  const [microphoneStatus, setMicrophoneStatus] = useState<VoiceHudPresentationState>("idle");
+  const [microphoneStatus, setMicrophoneStatus] = useState<WebVoiceMicStatus>("idle");
   const [typedFallback, setTypedFallback] = useState("");
 
   const requestMicrophone = async () => {
@@ -34,22 +36,44 @@ export function WebVoiceOnboardingSurface({
       workContext: { profession: typedFallback },
     });
 
+  const isReady = microphoneStatus === "ready";
+  const isRequesting = microphoneStatus === "requesting";
+  const isUnavailable = microphoneStatus === "unavailable";
+
   return (
-    <VoiceHudPresentation
-      state={microphoneStatus}
-      title={userName ? `Hi ${userName}. Luca is listening.` : "Luca is listening."}
-      subtitle={microphoneStatus === "unavailable" ? undefined : "Voice setup is available."}
-      transcript={microphoneStatus === "ready" ? "Microphone ready" : undefined}
-      micAvailable={microphoneStatus !== "unavailable"}
-      themeColor={theme?.hex}
-      compact
+    <VoiceHudSurface
+      isActive
+      isVisible
+      onClose={onBack || (() => {})}
+      onBack={onBack}
+      onContinue={finish}
+      onRequestMic={requestMicrophone}
+      transcript={isReady ? "Microphone ready" : userName ? `Hi ${userName}. Luca is listening.` : ""}
+      transcriptSource={isReady ? "system" : "user"}
+      isVadActive={isReady || isRequesting}
+      isSpeaking={false}
+      persona={theme?.primary || "RUTHLESS"}
+      theme={{
+        primary: theme?.hex || "#67e8f9",
+        border: "border-cyan-300/40",
+        bg: "bg-cyan-500/10",
+        glow: "shadow-cyan-500/30",
+        coreColor: theme?.hex || "#67e8f9",
+        hex: theme?.hex || "#67e8f9",
+        themeName: theme?.primary || "web",
+      }}
+      statusMessage={isUnavailable ? "Microphone unavailable" : isRequesting ? "Requesting microphone" : isReady ? "Microphone ready" : "Waiting for audio input"}
+      hideDebugPanels
+      hideControls
+      transparentBackground
+      amplitude={isReady ? 0.18 : isRequesting ? 0.12 : 0}
+      micAvailable={!isUnavailable}
+      realtimeStatus={microphoneStatus}
+      realtimeLastError={isUnavailable ? "Use typed fallback or check browser microphone permission." : null}
       showTypedFallback
       typedFallbackValue={typedFallback}
       typedFallbackPlaceholder="Optional: tell Luca what you want help with first…"
       onTypedFallbackChange={setTypedFallback}
-      onRequestMic={requestMicrophone}
-      onBack={onBack}
-      onContinue={finish}
     />
   );
 }

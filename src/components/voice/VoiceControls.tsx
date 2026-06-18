@@ -1,6 +1,6 @@
 import React from "react";
 import { Icon } from "../ui/Icon";
-import { PersonaType } from "../../services/lucaService";
+import type { PersonaType } from "../../services/lucaService";
 
 interface VoiceControlsProps {
   onSettingsClick: () => void;
