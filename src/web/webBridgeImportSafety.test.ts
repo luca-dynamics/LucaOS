@@ -11,6 +11,8 @@ const readySource = read("src/web/WebReadyState.tsx");
 const webShellSource = read("src/web/WebLucaShell.tsx");
 const webChatSource = read("src/web/chat/WebChatSurface.tsx");
 const webChatRuntimeSource = read("src/web/chat/webChatRuntime.ts");
+const lucaChatSurfaceSource = read("src/components/chat/LucaChatSurface.tsx");
+const chatWidgetModeSource = read("src/components/ChatWidgetMode.tsx");
 const auditSource = read("docs/foundation/WEBBRIDGE_DIRECT_REUSE_AUDIT.md");
 const bootstrapSource = read("src/index.tsx");
 const onboardingSource = read("src/components/Onboarding/OnboardingFlow.tsx");
@@ -354,6 +356,44 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       );
     }
     expect(webChatRuntimeSource).not.toMatch(/api.?key|secret|localStorage/i);
+  });
+
+
+  it("routes WebBridge chat through the shared extracted Luca chat surface", () => {
+    expect(webShellSource).toContain('chatSurface={<WebChatSurface />}');
+    expect(webChatSource).toContain('from "../../components/chat/LucaChatSurface"');
+    expect(webChatSource).toContain("<LucaChatSurface");
+    expect(webChatSource).not.toContain("ChatWidgetMode");
+    expect(chatWidgetModeSource).toContain('import LucaChatSurface from "./chat/LucaChatSurface"');
+    expect(chatWidgetModeSource).toContain("<LucaChatSurface");
+    expect(lucaChatSurfaceSource).toContain('data-luca-chat-surface="original-mini-chat-extraction"');
+  });
+
+  it("keeps shared and web chat surfaces free of forbidden chat runtime imports and generated-copy regressions", () => {
+    const forbiddenChatRuntime = [
+      "eventBus",
+      "lucaService",
+      "llmService",
+      "liveService",
+      "soundService",
+      "settingsService",
+      "personalityService",
+      "awarenessService",
+      "conversationService",
+      "lucaLinkManager",
+      "ToolRegistry",
+      "ScreenShare",
+      "SecurityGate",
+      "node:fs",
+      "better-sqlite3",
+    ];
+    for (const reference of forbiddenChatRuntime) {
+      expect(lucaChatSurfaceSource.toLowerCase()).not.toContain(reference.toLowerCase());
+      expect(webChatSource.toLowerCase()).not.toContain(reference.toLowerCase());
+    }
+    for (const source of [lucaChatSurfaceSource, webChatSource, webShellSource]) {
+      expect(source).not.toMatch(/WebBridge|browser-safe mode|runtime adapter|model execution adapter|Native routes guarded|debug route|capability manifest|host class/i);
+    }
   });
 
   it("audits exact canonical boot, main, settings, and LucaLink source files", () => {

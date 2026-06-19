@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useEffect, useRef } from "react";
-import { Icon } from "./ui/Icon";
-import ChatWidgetHeader from "./ChatWidgetHeader";
-import ChatWidgetHistory from "./ChatWidgetHistory";
-import ChatWidgetInput from "./ChatWidgetInput";
+import LucaChatSurface from "./chat/LucaChatSurface";
 import { ScreenShare, ScreenShareHandle } from "./ScreenShare";
-import VoiceVisualizer from "./voice/VoiceVisualizer";
-import SuggestionChips, { Suggestion } from "./SuggestionChips";
+import { Suggestion } from "./SuggestionChips";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { lucaService, PersonaType } from "../services/lucaService";
 import { useLucaLinkDelegation } from "../hooks/useLucaLinkDelegation";
@@ -18,7 +14,6 @@ import { awarenessService } from "../services/awarenessService";
 import { settingsService } from "../services/settingsService";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
 import SecurityGate from "./SecurityGate";
-import ChatMessageBubble from "./ChatMessageBubble";
 import {
   createMiniChatPresenceSnapshot,
   getMiniChatApprovalPrompt,
@@ -750,162 +745,72 @@ const ChatWidgetMode: React.FC = () => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleSuggestionSelect = (prompt: string) => {
+    setInput(prompt);
+    if (window.electron?.ipcRenderer) {
+      setState((prev) => ({
+        ...prev,
+        history: [...prev.history, { sender: "user", text: prompt }],
+        isProcessing: true,
+      }));
+      const request = createMiniChatMessageRequest({
+        text: prompt,
+        source: "miniChat",
+      });
+      // @ts-ignore
+      window.electron.ipcRenderer.send(
+        "chat-widget-message",
+        toLegacyChatWidgetMessage(request),
+      );
+      setInput("");
+      setShowChips(false);
+    }
+  };
+
+  const approvalSurface = state.approvalRequest ? (
+    <div className="p-4 border-t border-white/10 bg-black/40 glass-blur">
+      <SecurityGate
+        toolName={state.approvalRequest.toolName || "SYSTEM_OVERRIDE"}
+        args={state.approvalRequest.args || {}}
+        userName={state.approvalRequest.userName || "OPERATOR"}
+        persona={(state.persona as any) || "ASSISTANT"}
+        onApprove={handleApprove}
+        onDeny={handleDeny}
+        theme={{
+          hex: primaryColor,
+          bg: "rgba(0,0,0,0.8)",
+          border: primaryColor,
+          primary: primaryColor,
+          glow: `${primaryColor}40`,
+          coreColor: primaryColor,
+        }}
+      />
+    </div>
+  ) : null;
+
+  const hiddenRuntimeSurface = (
+    <div className="absolute bottom-0 right-0 z-0 pointer-events-none opacity-0">
+      <ScreenShare
+        ref={screenShareRef}
+        isActive={isEyeActive}
+        onToggle={setIsEyeActive}
+        onFrameCapture={(base64) => {}}
+        theme={{
+          hex: primaryColor,
+          bg: "transparent",
+          border: primaryColor,
+          primary: primaryColor,
+        }}
+        showUI={false}
+      />
+    </div>
+  );
+
   return (
     <div
-      className="flex flex-col bg-transparent rounded-xl border shadow-2xl relative transition-all duration-300"
-      style={
-        {
-          borderColor: `${primaryColor}40`,
-          WebkitAppRegion: "drag",
-          width: `${width}px`,
-          maxWidth: "100vw",
-          minHeight: state.history.length === 0 ? "80px" : "300px",
-          maxHeight: "90vh",
-        } as any
-      }
       onMouseEnter={() => setShowClose(true)}
       onMouseLeave={() => setShowClose(false)}
     >
-      {/* Drag Handle & Background */}
-      <div className="absolute inset-0 bg-[#0a0a0a]/95 glass-blur -z-10"></div>
-      {/* LUCA SYMBOL OVERLAY (Visible only when empty & no chips) */}
-      {state.history.length === 0 && !showChips && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 select-none opacity-[0.08]">
-          <span
-            className="font-mono italic font-black tracking-tighter"
-            style={{ color: primaryColor, fontSize: "55px" }}
-          >
-            L.U.C.A OS
-          </span>
-        </div>
-      )}
-
-      {/* SUGGESTION CHIPS — SUPPRESSED IN COMPACT MODE PER USER REQUEST */}
-      {state.history.length > 0 && (
-        <div
-          className="relative z-10"
-          style={{ WebkitAppRegion: "no-drag", pointerEvents: "auto" } as any}
-        >
-          <SuggestionChips
-            suggestions={suggestions}
-            onChipClick={(prompt) => {
-              setInput(prompt);
-              // Auto-submit the chip
-              if (window.electron?.ipcRenderer) {
-                setState((prev) => ({
-                  ...prev,
-                  history: [...prev.history, { sender: "user", text: prompt }],
-                  isProcessing: true,
-                }));
-                const request = createMiniChatMessageRequest({
-                  text: prompt,
-                  source: "miniChat",
-                });
-                // @ts-ignore
-                window.electron.ipcRenderer.send(
-                  "chat-widget-message",
-                  toLegacyChatWidgetMessage(request),
-                );
-                setInput("");
-                setShowChips(false);
-              }
-            }}
-            onDismissAll={() => {
-              setSuggestions([]);
-              setShowChips(false);
-            }}
-            theme={
-              PERSONA_UI_CONFIG[(state.persona as PersonaType) || "ASSISTANT"]
-            }
-            visible={showChips}
-            isDocked={true}
-          />
-        </div>
-      )}
-
-      {/* LUCA SCAN PULSE */}
-      {isScanning && (
-        <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center overflow-hidden">
-          <div
-            className="w-full h-full absolute inset-0 opacity-20 bg-[size:10px_10px] animate-pulse"
-            style={{
-              backgroundImage: `radial-gradient(circle, ${primaryColor}66 1px, transparent 1px)`,
-            }}
-          ></div>
-          <div
-            className="w-48 h-48 rounded-full border animate-ping opacity-40"
-            style={{ borderColor: `${primaryColor}4d` }}
-          ></div>
-          <div
-            className="w-32 h-32 rounded-full border animate-ping delay-700 opacity-20"
-            style={{ borderColor: `${primaryColor}33` }}
-          ></div>
-          <div className="absolute bottom-4 left-4 flex items-center gap-2">
-            <div
-              className="w-2 h-2 rounded-full animate-pulse shadow-lg"
-              style={{
-                backgroundColor: primaryColor,
-                boxShadow: `0 0 8px ${primaryColor}`,
-              }}
-            ></div>
-            <span
-              className="text-[8px] font-mono tracking-[0.2em] font-bold uppercase animate-pulse"
-              style={{ color: primaryColor }}
-            >
-              Luca Synchronization Active
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* COMPACT CLOSE BUTTON (Visible only when history is empty) - REMOVED, now in Input bar */}
-
-      {/* LEFT RESIZE HANDLE */}
-      <div
-        onMouseDown={(e) => handleResizeStart(e, "left")}
-        className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-rq-blue/30 transition-colors z-[100] group"
-        style={{ WebkitAppRegion: "no-drag" } as any}
-      >
-        <div className="absolute inset-y-0 -left-1 -right-1" />
-      </div>
-
-      {/* RIGHT RESIZE HANDLE */}
-      <div
-        onMouseDown={(e) => handleResizeStart(e, "right")}
-        className="absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-rq-blue/30 transition-colors z-[100] group"
-        style={{ WebkitAppRegion: "no-drag" } as any}
-      >
-        <div className="absolute inset-y-0 -left-1 -right-1" />
-      </div>
-
-      <button
-        onClick={handleClose}
-        className={`absolute top-4 right-4 z-[200] p-1.5 rounded-full bg-black/40 border border-white/10 transition-all duration-300 hover:bg-red-500/20 hover:border-red-500/40 group/close ${
-          showClose ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
-        }`}
-        style={{ WebkitAppRegion: "no-drag" } as any}
-        title="Close Luca"
-      >
-        <Icon 
-          name="Close" 
-          size={14} 
-           className="text-white/40 group-hover/close:text-red-400 transition-colors" 
-        />
-      </button>
-
-      {/* COMPONENTIZED UI */}
-      {/* DICTATION VISUALIZER OVERLAY */}
-      {/* COMPONENTIZED UI */}
-      {/* DICTATION VISUALIZER OVERLAY - REMOVED for Mini Chat per user request to allow direct chat input */}
-
-      <div
-        className={`transition-all duration-300 ${
-          state.history.length === 0 ? "opacity-0 h-0 hidden" : "opacity-100"
-        }`}
-      >
-      {/* HEADER DELETED FOR PURE STRUCTURE */}
-      </div>
-
       <input
         type="file"
         ref={fileInputRef}
@@ -913,79 +818,44 @@ const ChatWidgetMode: React.FC = () => {
         accept="image/*"
         onChange={handleFileSelect}
       />
-
-      <div
-        ref={historyContainerRef}
-        className={`flex-1 min-h-0 overflow-auto transition-all duration-300 ${
-          state.history.length === 0 ? "opacity-0 h-0 hidden" : "opacity-100"
-        }`}
-      >
-        <ChatWidgetHistory
-          history={state.history as any}
-          isProcessing={state.isProcessing}
-          primaryColor={primaryColor}
-          messagesEndRef={messagesEndRef}
-          persona={(state.persona as any) || "ASSISTANT"}
-        />
-        {state.approvalRequest && (
-          <div className="p-4 border-t border-white/10 bg-black/40 glass-blur">
-            <SecurityGate
-              toolName={state.approvalRequest.toolName || "SYSTEM_OVERRIDE"}
-              args={state.approvalRequest.args || {}}
-              userName={state.approvalRequest.userName || "OPERATOR"}
-              persona={(state.persona as any) || "ASSISTANT"}
-              onApprove={handleApprove}
-              onDeny={handleDeny}
-              theme={{
-                hex: primaryColor,
-                bg: "rgba(0,0,0,0.8)",
-                border: primaryColor,
-                primary: primaryColor,
-                glow: `${primaryColor}40`,
-                coreColor: primaryColor,
-              }}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* LUCA EYE LOGIC (Hidden UI, controlled by Input Button) */}
-      <div className="absolute bottom-0 right-0 z-0 pointer-events-none opacity-0">
-        <ScreenShare
-          ref={screenShareRef}
-          isActive={isEyeActive}
-          onToggle={setIsEyeActive}
-          onFrameCapture={(base64) => {}}
-          theme={{
-            hex: primaryColor,
-            bg: "transparent",
-            border: primaryColor,
-            primary: primaryColor,
-          }}
-          showUI={false} // Hidden UI, controlled by Camera Button
-        />
-      </div>
-
-      <ChatWidgetInput
-        input={input}
-        setInput={setInput}
-        onSubmit={handleSubmit}
-        onAttachClick={() => fileInputRef.current?.click()}
-        isProcessing={state.isProcessing}
+      <LucaChatSurface
+        messages={state.history as any}
+        inputValue={input}
+        onInputChange={setInput}
+        onSend={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
         primaryColor={primaryColor}
+        persona={state.persona}
+        themeName={state.theme}
+        brainModel={state.brainModel}
+        embeddingModel={state.embeddingModel}
+        pending={state.isProcessing}
+        suggestions={suggestions}
+        showSuggestions={state.history.length > 0 && showChips}
+        width={`${width}px`}
         attachment={attachment}
-        onClearAttachment={clearAttachment}
         isEyeActive={isEyeActive}
-        onToggleEye={() => setIsEyeActive(!isEyeActive)}
-        onToggleVoice={handleToggleVoice}
+        isScanning={isScanning}
         isVoiceActive={isListening || isRemoteVadActive}
-        isSpeaking={isListening} // ONLY pulse blue for local dictation session
-        amplitude={volume * 500} // Pulse with user's voice intensity
-        isCompact={state.history.length === 0}
+        isSpeaking={isListening}
+        amplitude={volume * 500}
+        showClose={showClose}
+        hasApprovalRequest={!!state.approvalRequest}
+        historyContainerRef={historyContainerRef}
+        messagesEndRef={messagesEndRef}
+        approvalSurface={approvalSurface}
+        hiddenRuntimeSurface={hiddenRuntimeSurface}
+        onSelectSuggestion={handleSuggestionSelect}
+        onDismissSuggestions={() => {
+          setSuggestions([]);
+          setShowChips(false);
+        }}
+        onAttachClick={() => fileInputRef.current?.click()}
+        onClearAttachment={clearAttachment}
+        onToggleEye={() => setIsEyeActive(!isEyeActive)}
+        onOpenVoice={handleToggleVoice}
         onHeightChange={setInputHeight}
         onClearChat={() => setState((prev) => ({ ...prev, history: [] }))}
-        persona={state.persona}
-        hasApprovalRequest={!!state.approvalRequest}
+        onResizeStart={handleResizeStart}
         onClose={handleClose}
       />
     </div>
