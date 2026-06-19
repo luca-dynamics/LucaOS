@@ -1,6 +1,6 @@
 import React from "react";
 import ChatMessageBubble from "./ChatMessageBubble";
-import { PersonaType } from "../services/lucaService";
+import type { PersonaType } from "../services/lucaService";
 
 interface ChatMessage {
   sender: "user" | "luca";
