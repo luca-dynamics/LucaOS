@@ -22,6 +22,7 @@ import { createProviderHubSettingsPatch, getProviderHubSafeKeyStatus, providerHu
 import { canTestProviderHubConnection, testProviderHubConnection, type LucaProviderHubConnectionTestResult } from "../model-router/providerHubConnectionTest";
 import { createProviderHubRuntimeDryRunComparison, type LucaProviderHubRuntimeDryRunComparison } from "../model-router/providerHubRuntimeDryRunComparison";
 import { createProviderHubShadowRouteTrace, type LucaProviderHubShadowRouteTrace } from "../model-router/providerHubShadowRouteTrace";
+import { selectProviderHubRuntimeRoute, type LucaProviderHubRuntimeRouteSelectionResult } from "../model-router/providerHubRuntimeRouteSelection";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -155,10 +156,13 @@ const RoutePreviewPanel: React.FC<{
   decision: LucaProviderHubRouteDecision;
   dryRunComparison: LucaProviderHubRuntimeDryRunComparison;
   shadowTrace: LucaProviderHubShadowRouteTrace;
+  runtimeSelection: LucaProviderHubRuntimeRouteSelectionResult;
+  runtimeRouteSelectionEnabled: boolean;
+  onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void;
   preview: RoutePreviewState;
   onPreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>;
   theme: any;
-}> = ({ decision, dryRunComparison, shadowTrace, preview, onPreviewChange, theme }) => {
+}> = ({ decision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, onRuntimeRouteSelectionEnabledChange, preview, onPreviewChange, theme }) => {
   const copyRouteDiagnostics = useCallback(() => {
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
       void navigator.clipboard.writeText(decision.safeDiagnosticsText);
@@ -176,6 +180,11 @@ const RoutePreviewPanel: React.FC<{
         </div>
         <button type="button" onClick={copyRouteDiagnostics} className="px-2 py-1 rounded text-[9px] font-bold" style={{ color: "#050505", backgroundColor: theme.hex }}>Copy route diagnostics</button>
       </div>
+
+      <label className="mb-3 flex items-start gap-2 rounded border p-2 text-[9px]" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>
+        <input type="checkbox" checked={runtimeRouteSelectionEnabled} onChange={(e) => onRuntimeRouteSelectionEnabledChange(e.target.checked)} />
+        <span><b style={{ color: "var(--app-text-main)" }}>Use Provider Hub route selection</b><br />Preview/runtime guard. Existing runtime remains default unless enabled.<br /><span className="font-mono">Flag: {runtimeSelection.enabled ? "enabled" : "disabled"}; runtime outcome: {runtimeSelection.shouldUseProviderHubRoute ? "Provider Hub route would be returned" : "current runtime remains active"}; execution migration: not enabled.</span></span>
+      </label>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
         <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Task type<select value={preview.taskType} onChange={(e) => update("taskType", e.target.value as LucaModelTaskType)} className="mt-1 w-full rounded border px-2 py-1 bg-transparent">{ROUTE_PREVIEW_TASK_TYPES.map((task) => <option key={task} value={task}>{task}</option>)}</select></label>
         <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Preference<select value={preview.preference} onChange={(e) => update("preference", e.target.value as LucaProviderHubRoutePreference)} className="mt-1 w-full rounded border px-2 py-1 bg-transparent">{ROUTE_PREVIEW_PREFERENCES.map((preference) => <option key={preference} value={preference}>{preference}</option>)}</select></label>
@@ -219,7 +228,7 @@ const RoutePreviewPanel: React.FC<{
   );
 };
 
-const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; shadowTrace: LucaProviderHubShadowRouteTrace; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, shadowTrace, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
+const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; shadowTrace: LucaProviderHubShadowRouteTrace; runtimeSelection: LucaProviderHubRuntimeRouteSelectionResult; runtimeRouteSelectionEnabled: boolean; onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, onRuntimeRouteSelectionEnabledChange, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
   <div className="mb-4 rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)" }}>
     <div className="p-4 border-b" style={{ borderColor: "var(--app-border-main)" }}>
       <div className="flex items-start justify-between gap-3">
@@ -748,6 +757,8 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
   const ttsModels = useMemo(() => models.filter(m => m.category === "tts"), [models]);
   const embedModels = useMemo(() => models.filter(m => m.category === "embedding"), [models]);
 
+  const currentSettings = settingsService.getSettings();
+  const providerHubRuntimeRouteSelectionEnabled = Boolean(currentSettings.providerHub?.runtimeRouteSelectionEnabled);
   const providerHubSnapshots = useMemo(() => createProviderHubSettingsSnapshots({ settings: settingsService.getSettings(), ollamaAvailable: isOllamaRunning }), [activeBrainId, isOllamaRunning, settingsRevision]);
 
   const providerHubViewModel = useMemo(() => createProviderHubPanelViewModel(providerHubSnapshots), [providerHubSnapshots]);
@@ -795,6 +806,27 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     trigger: routeStatus ? "runtime_route_status" : "model_manager_preview",
     observedAt: new Date().toISOString(),
   }), [providerHubSnapshots, routePreview, routeStatus]);
+
+  const runtimeRouteSelection = useMemo(() => selectProviderHubRuntimeRoute({
+    runtimeRouteSelectionEnabled: providerHubRuntimeRouteSelectionEnabled,
+    currentProviderId: routeStatus?.provider,
+    currentModelId: routeStatus?.model,
+    taskType: routePreview.taskType,
+    requiredCapabilities: getRoutePreviewCapabilities(routePreview.taskType),
+    routePreference: routePreview.preference,
+    connectionSnapshots: providerHubSnapshots,
+    preferredProviderId: routePreview.preferredProviderId || undefined,
+    allowFallbacks: routePreview.allowFallbacks,
+    allowPaidProviders: routePreview.allowPaidProviders,
+    allowLocalProviders: routePreview.allowLocalProviders,
+    allowCloudProviders: routePreview.allowCloudProviders,
+  }), [providerHubRuntimeRouteSelectionEnabled, providerHubSnapshots, routePreview, routeStatus]);
+
+  const handleRuntimeRouteSelectionToggle = useCallback(async (enabled: boolean) => {
+    const existing = settingsService.getSettings().providerHub ?? {};
+    await settingsService.saveSettings({ providerHub: { ...existing, runtimeRouteSelectionEnabled: enabled } });
+    setSettingsRevision((revision) => revision + 1);
+  }, []);
 
   const handleProviderHubConfigure = useCallback((card: ProviderHubPanelCardViewModel) => {
     setProviderHubConfigureCard(card);
@@ -862,7 +894,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} shadowTrace={shadowRouteTrace} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
+        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} shadowTrace={shadowRouteTrace} runtimeSelection={runtimeRouteSelection} runtimeRouteSelectionEnabled={providerHubRuntimeRouteSelectionEnabled} onRuntimeRouteSelectionEnabledChange={handleRuntimeRouteSelectionToggle} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
         {providerHubConfigureCard && activeProviderHubIntent && (
           <ProviderHubConfigurationPanel
             card={providerHubConfigureCard}
