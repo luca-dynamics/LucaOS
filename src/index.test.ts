@@ -13,11 +13,18 @@ describe("web bootstrap entry boundary", () => {
     expect(selectorIndex).toBeGreaterThanOrEqual(0);
     expect(webImportIndex).toBeGreaterThan(selectorIndex);
     expect(desktopImportIndex).toBeGreaterThan(webImportIndex);
-    expect(bootstrapSource).not.toContain('from "buffer"');
+    expect(bootstrapSource.startsWith('import "./web/webBootPolyfills";')).toBe(
+      true,
+    );
   });
 
-  it("bundles and pre-optimizes the browser buffer package without externalizing it", () => {
+  it("bundles, pre-optimizes, and explicitly boot-polyfills the browser buffer package", () => {
+    const polyfillSource = readFileSync("src/web/webBootPolyfills.ts", "utf8");
+
     expect(viteConfigSource).toContain('include: ["buffer",');
+    expect(polyfillSource).toContain('from "buffer"');
+    expect(polyfillSource).toContain("globalThis.Buffer");
+    expect(polyfillSource).toContain("window.Buffer");
 
     const externalBlock =
       viteConfigSource.match(/external:\s*\[([\s\S]*?)\]/)?.[1] ?? "";
