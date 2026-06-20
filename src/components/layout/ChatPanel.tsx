@@ -522,7 +522,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           </span>
           <button
             onClick={() => setAttachedImage(null)}
-            className="hover:text-red-400"
+            className="hover:text-[var(--luca-danger,#f87171)]"
           >
             <Icon name="Close" size={14} variant="BoldDuotone" />
           </button>
@@ -624,7 +624,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               ? "flex w-full overflow-hidden"
               : "hidden"
             : "flex-1 overflow-hidden"
-        } flex flex-col h-full relative ${isMobile ? "z-10" : "z-20"} transition-all duration-500 ${isMobile ? "" : "tech-border glass-blur"}`}
+        } flex flex-col h-full relative ${isMobile ? "z-10" : "z-20"} transition-all duration-500 ${isMobile ? "" : "glass-blur"}`}
         style={
           isMobile
             ? lucaMobileContentSurfaceStyle
@@ -694,11 +694,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               <span className="opacity-40 font-light mr-3">
                 {greeting.prefix}
               </span>
-              <span 
-                className="font-black"
-                style={{ 
+              <span
+                className="font-semibold"
+                style={{
                   color: theme.hex || "#3b82f6",
-                  textShadow: isLight ? "none" : `0 0 20px ${theme.hex || "#3b82f6"}40`
                 }}
               >
                 {greeting.suffix || "Operator"}
