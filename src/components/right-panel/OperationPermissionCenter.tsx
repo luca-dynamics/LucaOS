@@ -21,34 +21,65 @@ const sourceGroups: readonly { source: OperationCenterSource; title: string }[] 
   { source: "system", title: "System" },
 ];
 
-const statusTone: Record<OperationCenterItem["status"], string> = {
-  ready_for_review: "border-cyan-400/20 bg-cyan-400/10 text-cyan-100",
-  approval_required: "border-amber-400/20 bg-amber-400/10 text-amber-100",
-  pending: "border-amber-400/20 bg-amber-400/10 text-amber-100",
-  granted_for_review: "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
-  denied: "border-red-400/20 bg-red-400/10 text-red-100",
-  expired: "border-white/10 bg-white/[0.04] text-[var(--app-text-muted)]",
-  blocked: "border-red-400/20 bg-red-400/10 text-red-100",
-  unsupported: "border-white/10 bg-white/[0.04] text-[var(--app-text-muted)]",
-  model_only: "border-violet-400/20 bg-violet-400/10 text-violet-100",
-  read_only: "border-sky-400/20 bg-sky-400/10 text-sky-100",
-  disabled: "border-white/10 bg-white/[0.04] text-[var(--app-text-muted)]",
+// Quiet Machine: status color comes from semantic tokens, not raw neon.
+// color-mix gives the tinted surface/border while text stays the full token.
+const STATUS_TOKEN: Record<OperationCenterItem["status"], string> = {
+  ready_for_review: "--luca-info",
+  approval_required: "--luca-warning",
+  pending: "--luca-warning",
+  granted_for_review: "--luca-success",
+  denied: "--luca-danger",
+  blocked: "--luca-danger",
+  model_only: "--luca-accent-primary",
+  read_only: "--luca-info",
+  expired: "--luca-text-tertiary",
+  unsupported: "--luca-text-tertiary",
+  disabled: "--luca-text-tertiary",
 };
+
+const toneStyle = (tokenVar: string): React.CSSProperties => ({
+  borderColor: `color-mix(in srgb, var(${tokenVar}) 32%, transparent)`,
+  background: `color-mix(in srgb, var(${tokenVar}) 12%, transparent)`,
+  color: `var(${tokenVar})`,
+});
+
+const dangerBox = toneStyle("--luca-danger");
+const infoBox = toneStyle("--luca-info");
 
 function OperationCenterCard({ item }: { item: OperationCenterItem }) {
   return (
-    <article className="rounded-xl border border-white/10 bg-black/10 p-2.5" data-operation-center-item={item.itemId}>
+    <article
+      className="rounded-xl border p-2.5"
+      style={{
+        borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.1))",
+        background: "var(--luca-surface-glass, rgba(255,255,255,0.04))",
+      }}
+      data-operation-center-item={item.itemId}
+    >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h4 className="text-[10px] font-bold leading-snug text-[var(--app-text-main)]">{item.title}</h4>
-          <p className="mt-1 text-[9px] uppercase tracking-wider text-[var(--app-text-muted)]">{label(item.category)} · risk {item.riskLevel}</p>
+          <h4 className="text-[10px] font-medium leading-snug text-[var(--app-text-main)]">{item.title}</h4>
+          <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">{label(item.category)} · risk {item.riskLevel}</p>
         </div>
-        <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${statusTone[item.status]}`}>{label(item.status)}</span>
+        <span
+          className="shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-medium"
+          style={toneStyle(STATUS_TOKEN[item.status])}
+        >
+          {label(item.status)}
+        </span>
       </div>
       <p className="mt-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{item.summary}</p>
-      {item.requiredApprovals.length > 0 && <p className="mt-2 text-[9px] leading-relaxed text-amber-100/75"><span className="font-bold uppercase tracking-wider">Required reviews:</span> {item.requiredApprovals.join(", ")}</p>}
-      {item.blockedActions.length > 0 && <p className="mt-1 text-[9px] leading-relaxed text-red-100/75"><span className="font-bold uppercase tracking-wider">Blocked actions:</span> {item.blockedActions.join(", ")}</p>}
-      <p className="mt-2 text-[8px] font-bold uppercase tracking-wider text-emerald-200/70">sideEffectsPerformed: false</p>
+      {item.requiredApprovals.length > 0 && (
+        <p className="mt-2 text-[9px] leading-relaxed" style={{ color: "var(--luca-warning)" }}>
+          <span className="font-medium">Required reviews:</span> {item.requiredApprovals.join(", ")}
+        </p>
+      )}
+      {item.blockedActions.length > 0 && (
+        <p className="mt-1 text-[9px] leading-relaxed" style={{ color: "var(--luca-danger)" }}>
+          <span className="font-medium">Blocked actions:</span> {item.blockedActions.join(", ")}
+        </p>
+      )}
+      <p className="mt-2 text-[8px] text-[var(--app-text-muted)]">sideEffectsPerformed: false</p>
     </article>
   );
 }
@@ -73,15 +104,15 @@ export default function OperationPermissionCenter() {
           <RightPanelMetric label="Blocked / primary" value={readiness.blocked + readiness.requiresPrimaryApproval} tone={readiness.blocked + readiness.requiresPrimaryApproval ? "danger" : "good"} />
         </div>
 
-        <div className="mt-3 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-3">
-          <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-widest text-red-200"><span>Execution readiness</span><span>blocked</span></div>
-          <p className="mt-2 text-[10px] leading-relaxed text-red-100/70">readyForExecution: false · executionEnabled: false · canExecute: false · sideEffectsPerformed: false</p>
+        <div className="mt-3 rounded-xl border p-3" style={dangerBox}>
+          <div className="flex items-center justify-between gap-2 text-[10px] font-medium"><span>Execution readiness</span><span>blocked</span></div>
+          <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "var(--luca-danger)", opacity: 0.8 }}>readyForExecution: false · executionEnabled: false · canExecute: false · sideEffectsPerformed: false</p>
         </div>
 
         <div className="mt-3 space-y-1.5">
           {(["pending", "granted_for_review", "denied", "expired", "blocked", "requires_primary_approval"] as const).map((status) => {
             const count = state.gates.filter((gate) => gate.status === status).length;
-            return <div key={status} className="flex items-center justify-between rounded-lg border border-white/10 bg-black/10 px-2 py-1.5 text-[10px]"><span className="uppercase tracking-wider text-[var(--app-text-muted)]">{label(status)}</span><span className="font-bold text-[var(--app-text-main)]">{count}</span></div>;
+            return <div key={status} className="flex items-center justify-between rounded-lg border px-2 py-1.5 text-[10px]" style={{ borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.1))", background: "var(--luca-surface-glass, rgba(255,255,255,0.04))" }}><span className="text-[var(--app-text-muted)]">{label(status)}</span><span className="font-medium text-[var(--app-text-main)]">{count}</span></div>;
           })}
         </div>
       </RightPanelSection>
@@ -98,9 +129,9 @@ export default function OperationPermissionCenter() {
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-1.5 text-[9px]">
-          <div className="rounded-lg border border-red-400/20 bg-red-400/[0.06] p-2 text-red-100">Live transport: <strong>disabled</strong></div>
-          <div className="rounded-lg border border-red-400/20 bg-red-400/[0.06] p-2 text-red-100">Write/install: <strong>disabled</strong></div>
-          <div className="col-span-2 rounded-lg border border-red-400/20 bg-red-400/[0.06] p-2 text-red-100">Live sensor collection: <strong>disabled</strong></div>
+          <div className="rounded-lg border p-2" style={dangerBox}>Live transport: <strong>disabled</strong></div>
+          <div className="rounded-lg border p-2" style={dangerBox}>Write/install: <strong>disabled</strong></div>
+          <div className="col-span-2 rounded-lg border p-2" style={dangerBox}>Live sensor collection: <strong>disabled</strong></div>
         </div>
 
         <div className="mt-4 space-y-4">
@@ -109,24 +140,24 @@ export default function OperationPermissionCenter() {
             if (items.length === 0) return null;
             return (
               <section key={group.source} aria-label={`${group.title} operation items`}>
-                <div className="mb-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.18em] text-[var(--app-text-main)]"><span>{group.title}</span><span className="text-[var(--app-text-muted)]">{items.length}</span></div>
+                <div className="mb-2 flex items-center justify-between text-[10px] font-medium text-[var(--app-text-main)]"><span>{group.title}</span><span className="text-[var(--app-text-muted)]">{items.length}</span></div>
                 <div className="space-y-2">{items.map((item) => <OperationCenterCard key={item.itemId} item={item} />)}</div>
               </section>
             );
           })}
         </div>
 
-        <div className="mt-4 rounded-xl border border-cyan-400/20 bg-cyan-400/[0.05] p-3 text-[9px] leading-relaxed text-cyan-50/75">
-          <p className="font-bold text-cyan-100">Right-panel status is informational only.</p>
-          <p className="mt-1">No execution, transport send, memory write, sensor collection, file write, install, or model/tool call is performed.</p>
-          <p className="mt-1">Approved/review states here do not grant runtime authority.</p>
+        <div className="mt-4 rounded-xl border p-3 text-[9px] leading-relaxed" style={infoBox}>
+          <p className="font-medium">Right-panel status is informational only.</p>
+          <p className="mt-1" style={{ color: "var(--app-text-muted)" }}>No execution, transport send, memory write, sensor collection, file write, install, or model/tool call is performed.</p>
+          <p className="mt-1" style={{ color: "var(--app-text-muted)" }}>Approved/review states here do not grant runtime authority.</p>
         </div>
       </RightPanelSection>
 
       <RightPanelSection title="Permission audit" subtitle="Most recent local review transitions; no persistence or runtime action.">
         {recentEvents.length === 0 ? <p className="text-[10px] italic text-[var(--app-text-muted)]">No local permission review events.</p> : (
           <div className="space-y-2">
-            {recentEvents.map((event) => <div key={event.eventId} className="rounded-lg border border-white/10 bg-black/10 p-2"><p className="text-[10px] leading-relaxed text-[var(--app-text-main)]">{event.summary}</p><p className="mt-1 text-[9px] uppercase tracking-wider text-[var(--app-text-muted)]">{new Date(event.occurredAt).toLocaleString()} · in memory only</p></div>)}
+            {recentEvents.map((event) => <div key={event.eventId} className="rounded-lg border p-2" style={{ borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.1))", background: "var(--luca-surface-glass, rgba(255,255,255,0.04))" }}><p className="text-[10px] leading-relaxed text-[var(--app-text-main)]">{event.summary}</p><p className="mt-1 text-[9px] text-[var(--app-text-muted)]">{new Date(event.occurredAt).toLocaleString()} · in memory only</p></div>)}
           </div>
         )}
       </RightPanelSection>
