@@ -67,11 +67,21 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
 
   return (
     <div
-      className="relative flex h-full min-h-screen w-full items-center justify-center overflow-hidden bg-[#050507] px-5 py-7 font-sans text-white sm:px-8 sm:py-10"
+      className="relative flex h-full min-h-screen w-full items-center justify-center overflow-hidden px-5 py-7 font-sans sm:px-8 sm:py-10"
+      style={{
+        background: "var(--luca-background-base, #101215)",
+        color: "var(--luca-text-primary, #f4f6f8)",
+      }}
       data-boot-shell="luca-hologram-face"
     >
       <EdgePresence intent={bootIntent} color={theme?.hex} radius={0} />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(255,255,255,0.075),transparent_30%),linear-gradient(180deg,#0a0a0d_0%,#040405_52%,#0b0b0e_100%)]" />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--luca-surface-hover, rgba(104,112,124,0.18)) 42%, transparent), transparent 30%), var(--luca-background-liquid, linear-gradient(180deg, var(--luca-background-elevated, #181a1f) 0%, var(--luca-background-base, #101215) 100%))",
+        }}
+      />
       <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] blur-3xl sm:h-[32rem] sm:w-[32rem]" />
 
       <section
@@ -109,10 +119,16 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           <p className="text-xs text-white/[0.46] sm:text-sm">{statusDetail}</p>
         </div>
 
-        <div className="mt-6 h-px w-full max-w-xl overflow-hidden bg-white/10">
+        <div className="mt-6 h-px w-full max-w-xl overflow-hidden"
+          style={{ background: "var(--luca-border-subtle, rgba(232,236,242,0.14))" }}>
           <div
-            className="h-full bg-gradient-to-r from-white/55 via-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] to-white/35 shadow-[0_0_22px_rgba(205,245,255,0.32)] transition-all duration-700 ease-out"
-            style={{ width: `${progress}%` }}
+            className="h-full transition-all duration-700 ease-out"
+            style={{
+              width: `${progress}%`,
+              background:
+                "linear-gradient(90deg, color-mix(in srgb, var(--luca-text-primary, #f4f6f8) 48%, transparent), var(--luca-accent-soft, rgba(79,140,255,0.15)), color-mix(in srgb, var(--luca-text-primary, #f4f6f8) 30%, transparent))",
+              boxShadow: "var(--luca-shadow-glow, 0 0 22px rgba(79,140,255,0.22))",
+            }}
           />
         </div>
 
@@ -120,7 +136,8 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           {readinessItems.map((item) => (
             <div
               key={item.id}
-              className="flex items-baseline justify-between gap-5 border-b border-white/10 py-2.5"
+              className="flex items-baseline justify-between gap-5 border-b py-2.5"
+              style={{ borderColor: "var(--luca-border-subtle, rgba(232,236,242,0.14))" }}
             >
               <span className="text-sm text-white/[0.78]">{item.detail}</span>
               <span className="shrink-0 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-white/[0.38]">

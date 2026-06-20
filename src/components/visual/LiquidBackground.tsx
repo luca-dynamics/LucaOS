@@ -24,12 +24,13 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
   opacity,
   className = "",
 }) => {
-  const hex = color || theme?.hex || "#00ffff";
+  const hex = color || theme?.hex || "#4f8cff";
   const fallbackAccentSoft = setHexAlpha(hex, 0.16);
   const resolvedOpacity =
     typeof opacity === "number" ? opacity : "var(--app-bg-opacity, 0.3)";
-  const tokenBackgroundBase = "var(--luca-background-base, var(--app-bg-main, #121212))";
+  const tokenBackgroundBase = "var(--luca-background-base, var(--app-bg-main, #101215))";
   const tokenBackgroundLiquid = "var(--luca-background-liquid, transparent)";
+  const tokenAccentPrimary = `var(--luca-accent-primary, ${hex})`;
   const tokenAccentSoft = `var(--luca-accent-soft, ${fallbackAccentSoft})`;
   const tokenShadowSoft = "var(--luca-shadow-soft, 0 24px 80px rgba(0, 0, 0, 0.22))";
   const tokenBlurLevel = "var(--luca-blur-level, var(--app-bg-blur, 40px))";
@@ -57,12 +58,8 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
 
   const isWeb = !isElectron;
 
-  // Apple UI Aesthetics for Web Fallback
-  const webBackground = isLightCream 
-    ? "#E5E1CD"
-    : isLight
-      ? "linear-gradient(180deg, #f0f0f5 0%, #e5e5eb 100%)"
-      : "radial-gradient(circle at 50% 50%, #262626 0%, #1c1c1c 100%)";
+  const webBackground =
+    "var(--luca-background-liquid, var(--luca-background-elevated, var(--luca-background-base, #101215)))";
 
   return (
     <div
@@ -77,7 +74,7 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
         className="absolute inset-0 transition-all duration-1000"
         style={{
           background: isWeb
-            ? `var(--luca-background-liquid, ${webBackground})`
+            ? webBackground
             : `color-mix(in srgb, ${tokenBackgroundBase} calc(min(100%, (${resolvedOpacity}) * 100% + max(0%, ((${resolvedOpacity}) - 0.95) * 2000%))), transparent)`,
           filter: "none",
           transform: "translateZ(0)",
@@ -89,7 +86,7 @@ export const LiquidBackground: React.FC<LiquidBackgroundProps> = ({
         <div
           className={`absolute inset-0 transition-all duration-1000 ${isThinking ? "animate-pulse" : ""}`}
           style={{
-            background: `${tokenBackgroundLiquid}, radial-gradient(ellipse at 50% 12%, color-mix(in srgb, ${tokenAccentSoft} ${isLight ? 42 : 55}%, transparent) 0%, transparent 62%), radial-gradient(ellipse at 85% 85%, color-mix(in srgb, ${tokenAccentSoft} ${isSpeaking ? 34 : 22}%, transparent) 0%, transparent 54%), radial-gradient(ellipse at 15% 75%, color-mix(in srgb, ${tokenAccentSoft} ${isThinking ? 32 : 18}%, transparent) 0%, transparent 52%)`,
+            background: `${tokenBackgroundLiquid}, radial-gradient(ellipse at 50% 12%, color-mix(in srgb, ${tokenAccentPrimary} ${isLight ? 10 : 12}%, transparent) 0%, transparent 62%), radial-gradient(ellipse at 85% 85%, color-mix(in srgb, ${tokenAccentSoft} ${isSpeaking ? 34 : 22}%, transparent) 0%, transparent 54%), radial-gradient(ellipse at 15% 75%, color-mix(in srgb, ${tokenAccentSoft} ${isThinking ? 32 : 18}%, transparent) 0%, transparent 52%)`,
             filter: `blur(calc(${tokenBlurLevel} * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.82) / 0.18), 1))))`,
             boxShadow: tokenShadowSoft,
             opacity:

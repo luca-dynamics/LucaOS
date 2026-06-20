@@ -19,6 +19,10 @@ import {
   lucaMobileGlassControlStyle,
   lucaMobileSheetSurfaceStyle,
 } from "../../styles/lucaMobileShellStyles";
+import {
+  lucaShellPanelSurfaceStyle,
+  lucaShellWorkspaceSurfaceStyle,
+} from "../../styles/lucaShellStyles";
 
 interface ChatPanelProps {
   messages: any[];
@@ -514,7 +518,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Attachment preview */}
       {attachedImage && (
         <div
-          className={`flex items-center gap-2 mb-2 border ${theme.border} p-2 w-fit ${isLight ? "bg-gray-100/80" : "bg-white/5"}`}
+          className="flex items-center gap-2 mb-2 border p-2 w-fit"
+          style={isMobile ? lucaMobileGlassControlStyle : lucaShellPanelSurfaceStyle}
         >
           <Icon name="Gallery" size={14} className={theme.primary} variant="BoldDuotone" />
           <span className={`text-xs "text-[var(--app-text-muted)]"`}>
@@ -537,15 +542,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       />
       {/* Input box — wider in centered mode */}
       <div
-        className={`rounded-2xl transition-all duration-500 glass-blur ${
-          isLight
-            ? "bg-white/60 border border-gray-200 shadow-md"
-            : "bg-white/5 border border-white/10 shadow-lg"
-        } ${showCentered ? "shadow-[0_0_40px_rgba(0,0,0,0.3)]" : ""}`}
+        className={`rounded-2xl transition-all duration-500 glass-blur border ${showCentered ? "shadow-lg" : ""}`}
         style={{
-          borderColor: showCentered ? `${theme.hex}33` : undefined,
+          ...(isMobile ? lucaMobileSheetSurfaceStyle : lucaShellPanelSurfaceStyle),
+          borderColor: showCentered ? "var(--luca-border-strong, var(--app-border-main))" : undefined,
           boxShadow: showCentered
-            ? `0 0 50px ${theme.hex}18, 0 0 0 1px ${theme.hex}22`
+            ? "var(--luca-shadow-glow, var(--luca-shadow-soft))"
             : undefined,
         }}
       >
@@ -629,13 +631,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           isMobile
             ? lucaMobileContentSurfaceStyle
             : {
-                borderTop: `1px solid var(--app-border-main, rgba(255,255,255,0.1))`,
-                borderBottom: `1px solid var(--app-border-main, rgba(255,255,255,0.1))`,
-                backgroundColor: theme?.isLight
-                  ? (theme.themeName?.toLowerCase() === "lightcream"
-                      ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-                      : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
-                  : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
+                ...lucaShellWorkspaceSurfaceStyle,
+                borderTop: "1px solid var(--luca-border-subtle, var(--app-border-main))",
+                borderBottom: "1px solid var(--luca-border-subtle, var(--app-border-main))",
               }
         }
       >
@@ -660,8 +658,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         : lucaMobileGlassControlStyle.color,
                   }
                 : {
-                    borderColor: viewMode === "CORTEX" ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))",
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
+                    borderColor: viewMode === "CORTEX" ? "var(--luca-accent-primary)" : "var(--luca-border-subtle, var(--app-border-main))",
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                     color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
                   }
             }
@@ -808,13 +806,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         isMobile
           ? lucaMobileContentSurfaceStyle
           : {
-              borderTop: `1px solid var(--app-border-main, rgba(255,255,255,0.1))`,
-              borderBottom: `1px solid var(--app-border-main, rgba(255,255,255,0.1))`,
-              backgroundColor: theme?.isLight
-                ? (theme.themeName?.toLowerCase() === "lightcream"
-                    ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-                    : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))")
-                : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
+              ...lucaShellWorkspaceSurfaceStyle,
+              borderTop: "1px solid var(--luca-border-subtle, var(--app-border-main))",
+              borderBottom: "1px solid var(--luca-border-subtle, var(--app-border-main))",
             }
       }
     >
@@ -839,8 +833,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                       : lucaMobileGlassControlStyle.color,
                 }
               : {
-                  borderColor: viewMode === "CORTEX" ? theme.hex : "var(--app-border-main, rgba(255,255,255,0.1))",
-                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
+                  borderColor: viewMode === "CORTEX" ? "var(--luca-accent-primary)" : "var(--luca-border-subtle, var(--app-border-main))",
+                  backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                   color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
                 }
           }
