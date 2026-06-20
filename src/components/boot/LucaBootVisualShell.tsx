@@ -72,7 +72,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
     >
       <EdgePresence intent={bootIntent} color={theme?.hex} radius={0} />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(255,255,255,0.075),transparent_30%),linear-gradient(180deg,#0a0a0d_0%,#040405_52%,#0b0b0e_100%)]" />
-      <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-100/5 blur-3xl sm:h-[32rem] sm:w-[32rem]" />
+      <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] blur-3xl sm:h-[32rem] sm:w-[32rem]" />
 
       <section
         aria-label="LucaOS startup"
@@ -83,7 +83,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           data-boot-visual="landing-hologram-face"
           aria-hidden="true"
         >
-          <div className="absolute left-1/2 top-[57%] h-24 w-[72%] max-w-[34rem] -translate-x-1/2 rounded-[100%] bg-cyan-100/[0.07] blur-2xl" />
+          <div className="absolute left-1/2 top-[57%] h-24 w-[72%] max-w-[34rem] -translate-x-1/2 rounded-[100%] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]/[0.07] blur-2xl" />
           <img
             src={launchIdentity.assetSrc}
             alt=""
@@ -111,7 +111,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
 
         <div className="mt-6 h-px w-full max-w-xl overflow-hidden bg-white/10">
           <div
-            className="h-full bg-gradient-to-r from-white/55 via-cyan-50/80 to-white/35 shadow-[0_0_22px_rgba(205,245,255,0.32)] transition-all duration-700 ease-out"
+            className="h-full bg-gradient-to-r from-white/55 via-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] to-white/35 shadow-[0_0_22px_rgba(205,245,255,0.32)] transition-all duration-700 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>

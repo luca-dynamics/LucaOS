@@ -132,7 +132,7 @@ const AlwaysOnControls: React.FC<Props> = ({
           } rounded-full text-[11px] font-medium transition-all glass-blur border
           ${
             visionActive
-              ? "bg-amber-500/15 border-amber-500/40 text-amber-500"
+              ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"
               : "bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] opacity-80 hover:opacity-100"
           }
           ${loading.vision ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
@@ -147,7 +147,7 @@ const AlwaysOnControls: React.FC<Props> = ({
             className={visionActive ? "" : "opacity-40"}
           />
           {visionActive && (
-            <span className="absolute -top-1 -right-1 rounded-full animate-pulse bg-amber-500 w-1.5 h-1.5" />
+            <span className="absolute -top-1 -right-1 rounded-full animate-pulse bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] w-1.5 h-1.5" />
           )}
         </div>
         {!isMobile && <span>Vision</span>}
@@ -156,7 +156,7 @@ const AlwaysOnControls: React.FC<Props> = ({
       {/* Wake Word indicator (Sense) */}
       <div
         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-medium glass-blur border
-          ${isWakeWordActive ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-[var(--app-bg-tint)] text-[var(--app-text-muted)] border-[var(--app-border-main)]"}
+          ${isWakeWordActive ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]" : "bg-[var(--app-bg-tint)] text-[var(--app-text-muted)] border-[var(--app-border-main)]"}
         `}
         title={
           isWakeWordActive ? "Wake word listening" : "Wake word off"

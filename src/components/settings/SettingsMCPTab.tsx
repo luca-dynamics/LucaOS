@@ -705,7 +705,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                         onClick={() =>
                           setEnvVars(envVars.filter((_, i) => i !== idx))
                         }
-                        className="p-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10"
+                        className="p-1.5 rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
                       >
                         <Icon name="Trash2" className="w-3 h-3" />
                       </button>
@@ -789,14 +789,14 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           <div
                             className={`p-2 rounded-lg ${
                               server.type === "stdio"
-                                ? "bg-purple-500/20"
-                                : "bg-blue-500/20"
+                                ? "bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)]"
+                                : "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"
                             }`}
                           >
                             {server.type === "stdio" ? (
-                              <Icon name="Terminal" className="w-4 h-4 text-purple-400" />
+                              <Icon name="Terminal" className="w-4 h-4 text-[var(--luca-accent-primary,#9b7cff)]" />
                             ) : (
-                              <Icon name="Globus" className="w-4 h-4 text-blue-400" />
+                              <Icon name="Globus" className="w-4 h-4 text-[var(--luca-info,#4f8cff)]" />
                             )}
                           </div>
                           <div className="min-w-0">
@@ -822,8 +822,8 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           <div
                             className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${isMobile ? "text-xs" : "text-base"} font-bold ${
                               isConnected
-                                ? "bg-green-500/20 text-green-400"
-                                : "bg-red-500/20 text-red-400"
+                                ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]"
+                                : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)]"
                             }`}
                           >
                             {isConnected ? (
@@ -898,7 +898,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                                 e.stopPropagation();
                                 handleRemoveServer(server.id);
                               }}
-                              className="flex-1 py-2 rounded-lg text-lg font-bold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center gap-2"
+                              className="flex-1 py-2 rounded-lg text-lg font-bold border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-all flex items-center justify-center gap-2"
                             >
                               <Icon name="Trash2" className="w-3 h-3" />
                               Remove
@@ -916,7 +916,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           <div className="space-y-4">
             {/* Offline fallback notice */}
             {registryError && (
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-amber-500/10 border border-amber-500/20 text-amber-400`}>
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]`}>
                 <Icon name="AlertTriangle" className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Registry offline — showing curated selection.</span>
                 <button onClick={() => fetchRegistry(searchDebounce)} className="ml-auto underline text-xs opacity-70 hover:opacity-100">Retry</button>
@@ -926,7 +926,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             {/* Live source badge */}
             {!registryError && registryServers.length > 0 && (
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse" />
                 <span className="text-xs text-[var(--app-text-muted)]">Live · registry.modelcontextprotocol.io</span>
               </div>
             )}

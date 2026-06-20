@@ -50,8 +50,8 @@ const TVDashboard: React.FC<TVDashboardProps> = ({
               size={20}
               className={
                 status === "CONNECTED"
-                  ? "text-green-500 animate-pulse"
-                  : "text-red-500"
+                  ? "text-[var(--luca-success,#4fbf7a)] animate-pulse"
+                  : "text-[var(--luca-danger,#f87171)]"
               }
             />
             <span className="text-sm font-bold tracking-widest">{status}</span>

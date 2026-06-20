@@ -137,7 +137,7 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
         
         {/* Reasoning Status Indicator */}
         {isReasoningActive && (
-          <Icon name="Sparkles" className="w-2.5 h-2.5 text-amber-500 animate-pulse ml-0.5" />
+          <Icon name="Sparkles" className="w-2.5 h-2.5 text-[var(--luca-warning,#f2b23e)] animate-pulse ml-0.5" />
         )}
 
         <Icon name="AltArrowDown" className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""} ${isLight ? "text-gray-400" : "text-gray-500"}`} />
@@ -162,7 +162,7 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
                 onClick={() => handleSelectModel(model.id)}
                 className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors ${
                   currentModel === model.id
-                    ? (isLight ? "bg-emerald-50 text-emerald-700" : "bg-white/10 text-white")
+                    ? (isLight ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-white/10 text-white")
                     : (isLight ? "hover:bg-gray-100 text-gray-700" : "hover:bg-white/5 text-gray-300")
                 }`}
               >
@@ -186,12 +186,12 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
                     onClick={() => handleSelectModel(model.id)}
                     className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors ${
                        currentModel === model.id
-                        ? (isLight ? "bg-emerald-50 text-emerald-700" : "bg-white/10 text-white")
+                        ? (isLight ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-white/10 text-white")
                         : (isLight ? "hover:bg-gray-100 text-gray-700" : "hover:bg-white/5 text-gray-300")
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Icon name="Lock" className={`w-3 h-3 ${isLight ? "text-emerald-600" : "text-emerald-500"}`} />
+                      <Icon name="Lock" className={`w-3 h-3 ${isLight ? "text-[var(--luca-success,#4fbf7a)]" : "text-[var(--luca-success,#4fbf7a)]"}`} />
                       <span className="text-xs font-medium">{model.name}</span>
                     </div>
                     {currentModel === model.id && <Icon name="Check" className="w-3.5 h-3.5" style={{ color: safeColor }} />}
@@ -210,7 +210,7 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
                 onClick={() => handleSelectModel(model.id)}
                 className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors ${
                   currentModel === model.id
-                    ? (isLight ? "bg-emerald-50 text-emerald-700" : "bg-white/10 text-white")
+                    ? (isLight ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-white/10 text-white")
                     : (isLight ? "hover:bg-gray-100 text-gray-700" : "hover:bg-white/5 text-gray-300")
                 }`}
               >

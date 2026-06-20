@@ -243,7 +243,7 @@ export function LucaChatSurface({
       {onClose && (
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 z-[200] p-1.5 rounded-full bg-black/40 border border-white/10 transition-all duration-300 hover:bg-red-500/20 hover:border-red-500/40 ${showClose ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"}`}
+          className={`absolute top-4 right-4 z-[200] p-1.5 rounded-full bg-black/40 border border-white/10 transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] ${showClose ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"}`}
           style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
           title="Close Luca"
         >
@@ -279,7 +279,7 @@ export function LucaChatSurface({
         {errorLabel && (
           <p
             role="alert"
-            className="mx-4 mb-4 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200"
+            className="mx-4 mb-4 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3 text-sm text-[var(--luca-danger,#f87171)]"
           >
             {errorLabel}
           </p>

@@ -197,9 +197,9 @@ const SharedOverlayPanels: React.FC<SharedOverlayPanelsProps> = ({
 
       {ingestionState.active && shouldRender("ingestionOverlay") && (
         <div className="absolute inset-0 z-[950] bg-black/90 flex flex-col items-center justify-center pointer-events-none">
-          <div className="w-[600px] h-[400px] border border-green-500/50 bg-[var(--app-bg-tint)] p-8 flex flex-col relative overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.2)] rounded-lg">
+          <div className="w-[600px] h-[400px] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[var(--app-bg-tint)] p-8 flex flex-col relative overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.2)] rounded-lg">
             <div className="absolute inset-0 opacity-20 bg-[linear-gradient(0deg,transparent,rgba(34,197,94,0.5)_50%,transparent)] animate-scan"></div>
-            <div className="flex items-center gap-4 text-green-500 font-bold tracking-widest text-xl mb-6 border-b border-green-500/30 pb-4">
+            <div className="flex items-center gap-4 text-[var(--luca-success,#4fbf7a)] font-bold tracking-widest text-xl mb-6 border-b border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] pb-4">
               <Icon
                 name="Dna"
                 className="animate-spin-slow w-8 h-8"
@@ -207,19 +207,19 @@ const SharedOverlayPanels: React.FC<SharedOverlayPanelsProps> = ({
               />
               <div>
                 <div>LUCA EVOLUTION PROTOCOL</div>
-                <div className="text-[10px] text-green-400/60 font-mono">
+                <div className="text-[10px] text-[var(--luca-success,#4fbf7a)] font-mono">
                   INTEGRATING AGENTIC CAPABILITIES...
                 </div>
               </div>
             </div>
-            <div className="flex-1 overflow-hidden text-xs font-mono text-green-400/80 space-y-2 pl-4 border-l-2 border-green-500/20">
+            <div className="flex-1 overflow-hidden text-xs font-mono text-[var(--luca-success,#4fbf7a)] space-y-2 pl-4 border-l-2 border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]">
               {ingestionState && ingestionState.skills.length > 0
                 ? ingestionState.skills.map((skill: string, i: number) => (
                     <div
                       key={`skill-${i}`}
                       className="animate-in zoom-in duration-500 flex items-center gap-2 text-[color:var(--app-text-main)] font-bold tracking-wider"
                     >
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] rounded-full animate-pulse"></div>
                       ACQUIRED SKILL: {skill}
                     </div>
                   ))
@@ -237,7 +237,7 @@ const SharedOverlayPanels: React.FC<SharedOverlayPanelsProps> = ({
                       key={i}
                       className="truncate animate-in slide-in-from-left-4 fade-in duration-500 flex items-center gap-2"
                     >
-                      <span className="text-green-700">&gt;</span>
+                      <span className="text-[var(--luca-success,#4fbf7a)]">&gt;</span>
                       {file}
                     </div>
                   ))}

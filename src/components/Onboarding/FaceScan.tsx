@@ -285,8 +285,8 @@ const FaceScan: React.FC<FaceScanProps> = ({
   if (error) {
     return (
       <div className="space-y-6 animate-fade-in-up w-full max-w-2xl text-center">
-        <div className="w-24 h-24 mx-auto bg-red-500/10 border-2 border-red-500 rounded-full flex items-center justify-center glass-blur">
-          <Icon name="CheckCircle" variant="Linear" className="w-12 h-12 text-red-500 rotate-45" />
+        <div className="w-24 h-24 mx-auto bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-2 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-full flex items-center justify-center glass-blur">
+          <Icon name="CheckCircle" variant="Linear" className="w-12 h-12 text-[var(--luca-danger,#f87171)] rotate-45" />
         </div>
         <h3 
           className="text-xl font-bold"
@@ -294,7 +294,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
         >
           Enrollment Failed
         </h3>
-        <p className="text-red-400 text-sm">{error}</p>
+        <p className="text-[var(--luca-danger,#f87171)] text-sm">{error}</p>
       </div>
     );
   }
@@ -303,8 +303,8 @@ const FaceScan: React.FC<FaceScanProps> = ({
   if (confirmed && capturedImage) {
     return (
       <div className="space-y-6 animate-fade-in-up w-full max-w-2xl text-center">
-        <div className="w-24 h-24 mx-auto bg-green-500/10 border-2 border-green-500 rounded-full flex items-center justify-center glass-blur animate-scale-in">
-          <Icon name="CheckCircle" variant="Linear" className="w-12 h-12 text-green-500" />
+        <div className="w-24 h-24 mx-auto bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border-2 border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] rounded-full flex items-center justify-center glass-blur animate-scale-in">
+          <Icon name="CheckCircle" variant="Linear" className="w-12 h-12 text-[var(--luca-success,#4fbf7a)]" />
         </div>
 
         <div className="space-y-2">
@@ -314,7 +314,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
           >
             Face Recognized!
           </h3>
-          <p className="text-green-500 text-sm">
+          <p className="text-[var(--luca-success,#4fbf7a)] text-sm">
             {confirmMessage ||
               `Perfect! I've got your face saved, ${userName}.`}
           </p>
@@ -323,7 +323,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
         <img
           src={`data:image/jpeg;base64,${capturedImage}`}
           alt="Your face"
-          className="w-32 h-32 mx-auto rounded-lg border-2 border-green-500/50 object-cover"
+          className="w-32 h-32 mx-auto rounded-lg border-2 border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] object-cover"
         />
 
         <p 
@@ -414,13 +414,13 @@ const FaceScan: React.FC<FaceScanProps> = ({
       >
         <div className="flex items-center gap-3">
           <div
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-green-500/10"
+            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
           >
             <Icon
               name="CheckCircle"
               size={compact ? 9 : 14}
               variant="Linear"
-              className="text-green-500/80"
+              className="text-[var(--luca-success,#4fbf7a)]"
             />
           </div>
           <span
@@ -431,13 +431,13 @@ const FaceScan: React.FC<FaceScanProps> = ({
         </div>
         <div className="flex items-center gap-3">
           <div
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-green-500/10"
+            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
           >
             <Icon
               name="CheckCircle"
               size={compact ? 9 : 14}
               variant="Linear"
-              className="text-green-500/80"
+              className="text-[var(--luca-success,#4fbf7a)]"
             />
           </div>
           <span
@@ -448,13 +448,13 @@ const FaceScan: React.FC<FaceScanProps> = ({
         </div>
         <div className="flex items-center gap-3">
           <div
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-green-500/10"
+            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
           >
             <Icon
               name="CheckCircle"
               size={compact ? 9 : 14}
               variant="Linear"
-              className="text-green-500/80"
+              className="text-[var(--luca-success,#4fbf7a)]"
             />
           </div>
           <span

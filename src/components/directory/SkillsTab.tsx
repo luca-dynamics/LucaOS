@@ -275,9 +275,9 @@ export const SkillsTab: React.FC<{
                <p className="text-slate-500 text-xs mt-3">Syncing community registry...</p>
              </div>
            ) : communityError && activeRegistry === "Community" ? (
-             <div className="flex flex-col items-center justify-center py-16 text-center border border-red-500/10 rounded-lg bg-red-500/[0.02]">
-                <Icon name="CloseCircle" size={28} className="text-red-500/50 mb-3" />
-                <p className="text-red-400 text-sm font-medium">Registry sync failed</p>
+             <div className="flex flex-col items-center justify-center py-16 text-center border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-lg bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]/[0.02]">
+                <Icon name="CloseCircle" size={28} className="text-[var(--luca-danger,#f87171)] mb-3" />
+                <p className="text-[var(--luca-danger,#f87171)] text-sm font-medium">Registry sync failed</p>
                 <p className="text-slate-600 text-[10px] mt-1 font-mono max-w-xs">{communityError}</p>
                 <button onClick={fetchCommunitySkills} className="mt-3 px-3 py-1.5 rounded-md bg-white/5 border border-white/10 text-xs font-medium hover:bg-white/10">Retry</button>
              </div>
@@ -387,12 +387,12 @@ export const MarketplaceSkillCard: React.FC<{
         <div className="flex items-center gap-2">
           <span className="text-white text-sm font-bold truncate">{skill.name}</span>
           {skill.isVerified && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold shrink-0">
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] font-bold shrink-0">
               Official
             </span>
           )}
           {skill.isPopular && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold shrink-0">
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)] font-bold shrink-0">
               Popular
             </span>
           )}

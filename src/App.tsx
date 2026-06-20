@@ -1302,9 +1302,9 @@ function AppContent() {
       return {
         primary: "text-rq-red",
         border: "border-rq-red",
-        bg: "bg-red-950/40",
+        bg: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
         glow: "shadow-[0_0_30px_#ef4444]",
-        coreColor: "text-red-500",
+        coreColor: "text-[var(--luca-danger,#f87171)]",
         hex: "#ef4444",
         themeName: "ruthless", // Lockdown defaults to dark
       };
@@ -1322,7 +1322,7 @@ function AppContent() {
         border: "border-rq-red",
         bg: "bg-rq-red-dim",
         glow: "shadow-[0_0_20px_#ef4444]",
-        coreColor: "text-red-500",
+        coreColor: "text-[var(--luca-danger,#f87171)]",
         hex: "#ef4444",
       };
     } else if (systemStatus === SystemStatus.CAUTION) {
@@ -1332,7 +1332,7 @@ function AppContent() {
         border: "border-rq-amber",
         bg: "bg-rq-amber-dim",
         glow: `shadow-[0_0_20px_${THEME_PALETTE.BUILDER.primary}]`,
-        coreColor: "text-amber-500",
+        coreColor: "text-[var(--luca-warning,#f2b23e)]",
         hex: THEME_PALETTE.BUILDER.primary,
       };
     }
@@ -2457,15 +2457,15 @@ function AppContent() {
       }
       fallback={
         isBrowserSafeWebInterface ? (
-          <div className="min-h-screen bg-black text-cyan-100 flex items-center justify-center p-6 font-mono">
-            <div className="max-w-lg rounded-2xl border border-cyan-400/30 bg-slate-950/80 p-6 shadow-2xl shadow-cyan-950/40">
-              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
+          <div className="min-h-screen bg-black text-[var(--luca-info,#4f8cff)] flex items-center justify-center p-6 font-mono">
+            <div className="max-w-lg rounded-2xl border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-slate-950/80 p-6 shadow-2xl shadow-[color:var(--luca-info,#4f8cff)]">
+              <p className="text-sm uppercase tracking-[0.3em] text-[var(--luca-info,#4f8cff)]">
                 Browser-safe shell failed to initialize
               </p>
               <h1 className="mt-3 text-2xl font-semibold text-white">
                 Desktop runtime unavailable in browser
               </h1>
-              <p className="mt-3 text-sm text-cyan-100/75">
+              <p className="mt-3 text-sm text-[var(--luca-info,#4f8cff)]">
                 LucaOS exited boot, but a browser-safe shell component failed.
                 Native/local capabilities remain disabled instead of returning
                 to the boot screen.
@@ -2476,7 +2476,7 @@ function AppContent() {
       }
     >
       {bootDebugEnabled && isBrowserSafeWebInterface && (
-        <div className="fixed left-3 top-3 z-[9999] rounded border border-cyan-400/30 bg-black/80 px-3 py-2 text-[10px] font-mono text-cyan-100 shadow-lg pointer-events-none">
+        <div className="fixed left-3 top-3 z-[9999] rounded border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-black/80 px-3 py-2 text-[10px] font-mono text-[var(--luca-info,#4f8cff)] shadow-lg pointer-events-none">
           <div>[LucaOS web boot]</div>
           <div>resolverActive={String(browserSafeBootState.bootResolved)}</div>
           <div>bootSequence={bootSequence}</div>

@@ -105,8 +105,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     const isSuccess = text.includes("[SUCCESS]");
     const isTrading = text.includes("[TRADING]");
 
-    const iconColor = isError ? "text-rose-500" : isWarning ? "text-amber-500" : isSuccess ? "text-emerald-500" : isTrading ? "text-indigo-400" : "text-slate-500";
-    const bgClass = isError ? "bg-rose-500/5 border-rose-500/20" : isWarning ? "bg-amber-500/5 border-amber-500/20" : isSuccess ? "bg-emerald-500/5 border-emerald-500/20" : isTrading ? "bg-indigo-500/5 border-indigo-500/20" : "bg-slate-900/50 border-slate-800";
+    const iconColor = isError ? "text-[var(--luca-danger,#f87171)]" : isWarning ? "text-[var(--luca-warning,#f2b23e)]" : isSuccess ? "text-[var(--luca-success,#4fbf7a)]" : isTrading ? "text-[var(--luca-info,#4f8cff)]" : "text-slate-500";
+    const bgClass = isError ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]" : isWarning ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]" : isSuccess ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]" : isTrading ? "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]" : "bg-slate-900/50 border-slate-800";
 
     return (
       <div className="flex justify-center my-2 animate-in fade-in zoom-in duration-300 w-full">
@@ -359,9 +359,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                             >
                               <div className="flex items-center gap-2">
                                 <div className="flex gap-1">
-                                  <div className="w-2 h-2 rounded-full bg-red-500/50" />
-                                  <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
-                                  <div className="w-2 h-2 rounded-full bg-green-500/50" />
+                                  <div className="w-2 h-2 rounded-full bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" />
+                                  <div className="w-2 h-2 rounded-full bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]" />
+                                  <div className="w-2 h-2 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" />
                                 </div>
                                 <span
                                   className="text-[10px] font-mono uppercase tracking-[0.2em] font-black"
@@ -493,7 +493,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                           href={href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-400 hover:underline decoration-blue-400/30 underline-offset-4 transition-all"
+                          className="text-[var(--luca-info,#4f8cff)] hover:underline decoration-[var(--luca-info,#4f8cff)] underline-offset-4 transition-all"
                         >
                           {children}
                         </a>

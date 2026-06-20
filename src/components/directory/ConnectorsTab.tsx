@@ -143,9 +143,9 @@ export const ConnectorsTab: React.FC<{
           <p className="text-slate-500 text-xs mt-3">Syncing registry...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center border border-red-500/10 rounded-lg bg-red-500/[0.02]">
-          <Icon name="CloseCircle" size={28} className="text-red-500/50 mb-3" />
-          <p className="text-red-400 text-sm font-medium">Connection failed</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-lg bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]/[0.02]">
+          <Icon name="CloseCircle" size={28} className="text-[var(--luca-danger,#f87171)] mb-3" />
+          <p className="text-[var(--luca-danger,#f87171)] text-sm font-medium">Connection failed</p>
           <p className="text-slate-500 text-[10px] mt-1 font-mono">{error}</p>
           <button onClick={() => fetchRegistry(searchQuery)} className="mt-3 px-3 py-1.5 bg-white/5 border border-white/10 rounded-md text-xs font-medium hover:bg-white/10">Retry</button>
         </div>

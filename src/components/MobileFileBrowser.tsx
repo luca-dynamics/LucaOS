@@ -107,14 +107,14 @@ const MobileFileBrowser: React.FC<Props> = ({
   if (viewingFile && fileContent !== null) {
     return (
       <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-        <div className="bg-slate-900 border-b border-cyan-500/30 p-4 flex items-center justify-between">
+        <div className="bg-slate-900 border-b border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 setViewingFile(null);
                 setFileContent(null);
               }}
-              className="text-cyan-400 hover:text-cyan-300"
+              className="text-[var(--luca-info,#4f8cff)] hover:text-[var(--luca-info,#4f8cff)]"
             >
               <Icon name="ArrowLeft" size={20} />
             </button>
@@ -140,12 +140,12 @@ const MobileFileBrowser: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-      <div className="bg-slate-900 border-b border-cyan-500/30 p-4 flex items-center justify-between">
+      <div className="bg-slate-900 border-b border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {(currentPath || pathHistory.length > 0) && (
             <button
               onClick={handleBack}
-              className="text-cyan-400 hover:text-cyan-300"
+              className="text-[var(--luca-info,#4f8cff)] hover:text-[var(--luca-info,#4f8cff)]"
             >
               <Icon name="ArrowLeft" size={20} />
             </button>
@@ -164,14 +164,14 @@ const MobileFileBrowser: React.FC<Props> = ({
 
       <div className="flex-1 overflow-auto p-4">
         {error && (
-          <div className="bg-red-500/20 border border-red-500/50 text-red-400 p-3 rounded mb-4 text-sm">
+          <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] p-3 rounded mb-4 text-sm">
             {error}
           </div>
         )}
 
         {loading ? (
           <div className="flex items-center justify-center py-12 text-slate-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]"></div>
           </div>
         ) : files.length === 0 ? (
           <div className="text-center py-12 text-slate-500 text-sm">
@@ -183,9 +183,9 @@ const MobileFileBrowser: React.FC<Props> = ({
               <button
                 key={index}
                 onClick={() => handleItemClick(item)}
-                className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded border border-slate-700/50 hover:border-cyan-500/30 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded border border-slate-700/50 hover:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] transition-colors text-left"
               >
-                <div className="text-cyan-400">
+                <div className="text-[var(--luca-info,#4f8cff)]">
                     <Icon name={item.type === "directory" ? "Folder" : "File"} size={20} />
                 </div>
                 <div className="flex-1 min-w-0">

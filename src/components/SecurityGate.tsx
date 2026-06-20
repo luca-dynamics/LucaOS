@@ -57,7 +57,7 @@ const SecurityGate: React.FC<Props> = ({
     return (
       <div className="p-6 flex flex-col gap-6">
         <div className="flex gap-4 items-start">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-red-500/20 to-transparent border border-red-500/30 flex items-center justify-center relative shrink-0 shadow-inner group/icon overflow-hidden">
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] to-transparent border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] flex items-center justify-center relative shrink-0 shadow-inner group/icon overflow-hidden">
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
@@ -70,12 +70,12 @@ const SecurityGate: React.FC<Props> = ({
                   style={{ color: "#ef4444" }}
                 />
               </motion.div>
-              <Icon name="Lock" className="w-6 h-6 text-red-500 relative z-10" />
+              <Icon name="Lock" className="w-6 h-6 text-[var(--luca-danger,#f87171)] relative z-10" />
             </div>
 
           <div className="flex-1 space-y-2">
             <h2 className="text-xl font-bold text-white tracking-tight uppercase flex items-center gap-2">
-              <span className="text-red-500">Safety Valve</span>
+              <span className="text-[var(--luca-danger,#f87171)]">Safety Valve</span>
             </h2>
             <p className="text-gray-400 text-sm leading-relaxed">
               Luca&apos;s autonomous action was intercepted by the system&apos;s
@@ -86,17 +86,17 @@ const SecurityGate: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="bg-red-500/[0.03] border border-red-500/10 rounded-2xl overflow-hidden glass-blur">
-          <div className="p-3 border-b border-red-500/10 bg-red-500/[0.02] flex items-center justify-between">
+        <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]/[0.03] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-2xl overflow-hidden glass-blur">
+          <div className="p-3 border-b border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]/[0.02] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Icon name="Flash" className="w-3 h-3 text-red-500" />
-              <span className="text-[9px] font-bold text-red-500/60 uppercase tracking-widest">
+              <Icon name="Flash" className="w-3 h-3 text-[var(--luca-danger,#f87171)]" />
+              <span className="text-[9px] font-bold text-[var(--luca-danger,#f87171)] uppercase tracking-widest">
                 Action Blocked
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[8px] text-red-500/60 uppercase tracking-[0.2em]">
+              <div className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] animate-pulse" />
+              <span className="text-[8px] text-[var(--luca-danger,#f87171)] uppercase tracking-[0.2em]">
                 Restricted
               </span>
             </div>
@@ -110,7 +110,7 @@ const SecurityGate: React.FC<Props> = ({
             </div>
             <div className="space-y-2">
               <span className="text-gray-500 block">PROTOCOL_MESSAGE:</span>
-              <div className="p-3 bg-red-950/20 rounded-xl text-red-100/80 border border-red-500/20 leading-relaxed text-[11px] italic">
+              <div className="p-3 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] rounded-xl text-[var(--luca-danger,#f87171)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] leading-relaxed text-[11px] italic">
                 &quot;{safetyMessage}&quot;
               </div>
             </div>
@@ -136,7 +136,7 @@ const SecurityGate: React.FC<Props> = ({
             </button>
             <button
               onClick={onApprove}
-              className="flex-[2] py-4 px-6 rounded-2xl text-white font-bold text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 relative group overflow-hidden active:scale-[0.98] shadow-[0_0_30px_rgba(239,68,68,0.3)] bg-red-600"
+              className="flex-[2] py-4 px-6 rounded-2xl text-white font-bold text-xs uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 relative group overflow-hidden active:scale-[0.98] shadow-[0_0_30px_rgba(239,68,68,0.3)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
             >
               <Icon
                 name="ShieldCheck"
@@ -272,7 +272,7 @@ const SecurityGate: React.FC<Props> = ({
                 : "ENCRYPTION: AES-4096-ECC"}
             </span>
             <span className="w-px h-3 bg-white/10" />
-            <span className="text-red-500 font-bold">
+            <span className="text-[var(--luca-danger,#f87171)] font-bold">
               TIMELIMIT: {timeLeft}s
             </span>
           </div>
@@ -311,7 +311,7 @@ const SecurityGate: React.FC<Props> = ({
                 </h2>
                 <p className="text-gray-400 text-sm leading-relaxed">
                   The agent is requesting access to a{" "}
-                  <span className="text-red-400 font-bold">Level 2</span>{" "}
+                  <span className="text-[var(--luca-danger,#f87171)] font-bold">Level 2</span>{" "}
                   terminal override. Verify your identity as{" "}
                   <span className="text-white font-bold px-1 rounded bg-white/10 italic">
                     {userName}
@@ -333,7 +333,7 @@ const SecurityGate: React.FC<Props> = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse" />
                       <span className="text-[8px] text-gray-500 uppercase tracking-[0.2em]">
                         Validated
                       </span>

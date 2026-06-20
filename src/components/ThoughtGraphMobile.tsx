@@ -16,11 +16,11 @@ const ThoughtGraphMobile: React.FC<ThoughtGraphMobileProps> = ({
     switch (status) {
       case "SUCCESS":
       case "COMPLETE":
-        return <Icon name="CheckCircle2" size={14} className="text-emerald-500" />;
+        return <Icon name="CheckCircle2" size={14} className="text-[var(--luca-success,#4fbf7a)]" />;
       case "ERROR":
-        return <Icon name="XCircle" size={14} className="text-rose-500" />;
+        return <Icon name="XCircle" size={14} className="text-[var(--luca-danger,#f87171)]" />;
       case "PROCESSING":
-        return <Icon name="Loader2" size={14} className="text-amber-500 animate-spin" />;
+        return <Icon name="Loader2" size={14} className="text-[var(--luca-warning,#f2b23e)] animate-spin" />;
       default:
         return <Icon name="Clock" size={14} className="text-slate-500" />;
     }
@@ -30,11 +30,11 @@ const ThoughtGraphMobile: React.FC<ThoughtGraphMobileProps> = ({
     switch (status) {
       case "SUCCESS":
       case "COMPLETE":
-        return "border-emerald-500/50";
+        return "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]";
       case "ERROR":
-        return "border-rose-500/50";
+        return "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]";
       case "PROCESSING":
-        return "border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.1)]";
+        return "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] shadow-[0_0_10px_rgba(245,158,11,0.1)]";
       default:
         return "border-white/10";
     }
@@ -87,8 +87,8 @@ const ThoughtGraphMobile: React.FC<ThoughtGraphMobileProps> = ({
                   <div className="space-y-1.5">
                     {node.toolName && (
                       <div className="flex items-center gap-2">
-                        <div className="w-1 h-1 rounded-full bg-cyan-500"></div>
-                        <span className="text-[9px] font-bold text-cyan-400 opacity-80 uppercase tracking-tighter">
+                        <div className="w-1 h-1 rounded-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"></div>
+                        <span className="text-[9px] font-bold text-[var(--luca-info,#4f8cff)] opacity-80 uppercase tracking-tighter">
                           ENGINE: {node.toolName}
                         </span>
                       </div>

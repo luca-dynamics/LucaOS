@@ -146,7 +146,7 @@ const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
                   </div>
                 </div>
 
-                <h3 className="text-xs sm:text-sm font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
+                <h3 className="text-xs sm:text-sm font-bold text-white mb-2 line-clamp-2 group-hover:text-[var(--luca-info,#4f8cff)] transition-colors">
                   {chunk.web.title}
                 </h3>
 

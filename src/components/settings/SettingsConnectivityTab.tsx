@@ -55,8 +55,8 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
         <div
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
             bridgeStatus === "active"
-              ? "bg-green-500/10 text-green-400 border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
-              : "bg-red-500/10 text-red-400 border-red-500/30"
+              ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+              : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
           }`}
         >
           <Icon name="Activity" className={`w-3 h-3 ${bridgeStatus === "active" ? "animate-pulse" : ""}`} />
@@ -106,7 +106,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
                 className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]`}
               >
                 {copied ? (
-                  <Icon name="Check" className="w-3.5 h-3.5 text-green-400" />
+                  <Icon name="Check" className="w-3.5 h-3.5 text-[var(--luca-success,#4fbf7a)]" />
                 ) : (
                   <Icon name="Copy" className="w-3.5 h-3.5" />
                 )}
@@ -146,7 +146,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
                   className="p-2 hover:bg-white/10 rounded-lg transition-all text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
                 >
                   {copied ? (
-                    <Icon name="Check" className="w-5 h-5 text-green-400" />
+                    <Icon name="Check" className="w-5 h-5 text-[var(--luca-success,#4fbf7a)]" />
                   ) : (
                     <Icon name="Copy" className="w-5 h-5" />
                   )}

@@ -325,8 +325,8 @@ const WirelessManager: React.FC<Props> = ({
               {!hotspotActive && (
                 <div className="mb-6 max-w-sm mx-auto text-left">
                   {hostPlatform?.toLowerCase().includes("mac") && (
-                    <div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded text-yellow-500/80 text-[10px] font-mono leading-relaxed">
-                      <strong className="block text-yellow-400 mb-1 flex items-center gap-1.5">
+                    <div className="p-3 bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] rounded text-[var(--luca-warning,#f2b23e)] text-[10px] font-mono leading-relaxed">
+                      <strong className="block text-[var(--luca-warning,#f2b23e)] mb-1 flex items-center gap-1.5">
                         <Icon name="Danger" size={12} /> MACOS DETECTED
                       </strong>
                       Direct Wi-Fi sharing requires an upstream connection.
@@ -335,8 +335,8 @@ const WirelessManager: React.FC<Props> = ({
                     </div>
                   )}
                   {hostPlatform?.toLowerCase().includes("win") && (
-                    <div className="p-3 bg-green-900/20 border border-green-500/30 rounded text-green-500/80 text-[10px] font-mono leading-relaxed">
-                      <strong className="block text-green-400 mb-1 flex items-center gap-1.5">
+                    <div className="p-3 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] rounded text-[var(--luca-success,#4fbf7a)] text-[10px] font-mono leading-relaxed">
+                      <strong className="block text-[var(--luca-success,#4fbf7a)] mb-1 flex items-center gap-1.5">
                         <Icon name="CheckCircle" size={12} /> VIRTUAL ROUTER READY
                       </strong>
                       Windows supports simultaneous Wi-Fi client + hotspot
@@ -413,7 +413,7 @@ const WirelessManager: React.FC<Props> = ({
                       </button>
                     </div>
                     {hotspotPassword && hotspotPassword.length < 8 && (
-                      <p className="text-xs text-red-400 mt-1">
+                      <p className="text-xs text-[var(--luca-danger,#f87171)] mt-1">
                         Password must be at least 8 characters
                       </p>
                     )}
@@ -524,7 +524,7 @@ const WirelessManager: React.FC<Props> = ({
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 text-red-400 text-xs font-mono rounded">
+              <div className="mb-4 p-3 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] text-xs font-mono rounded">
                 ERROR: {error}
               </div>
             )}

@@ -65,20 +65,20 @@ const HumanInputModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md mx-4 bg-[#0a0a0a] border border-cyan-500/30 rounded-lg shadow-[0_0_50px_rgba(6,182,212,0.2)] overflow-hidden">
+      <div className="relative w-full max-w-md mx-4 bg-[#0a0a0a] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded-lg shadow-[0_0_50px_rgba(6,182,212,0.2)] overflow-hidden">
         {/* Header */}
-        <div className="h-14 border-b border-cyan-900/50 bg-cyan-950/10 flex items-center justify-between px-4">
+        <div className="h-14 border-b border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             {isPassword || isCredentialPrompt ? (
-              <Icon name="Lock" size={18} className="text-cyan-400" />
+              <Icon name="Lock" size={18} className="text-[var(--luca-info,#4f8cff)]" />
             ) : (
-              <Icon name="AlertCircle" size={18} className="text-cyan-400" />
+              <Icon name="AlertCircle" size={18} className="text-[var(--luca-info,#4f8cff)]" />
             )}
-            <span className="text-cyan-400 text-sm font-bold tracking-wider">AGENT REQUEST</span>
+            <span className="text-[var(--luca-info,#4f8cff)] text-sm font-bold tracking-wider">AGENT REQUEST</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-[var(--luca-danger,#f87171)] transition-colors"
             title="Close"
           >
             <Icon name="X" size={16} />
@@ -96,7 +96,7 @@ const HumanInputModal: React.FC<Props> = ({
           {isCredentialPrompt && !isSavePrompt ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-cyan-400 mb-1.5 font-mono">
+                <label className="block text-xs text-[var(--luca-info,#4f8cff)] mb-1.5 font-mono">
                   Email / Username
                 </label>
                 <input
@@ -104,13 +104,13 @@ const HumanInputModal: React.FC<Props> = ({
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-3 py-2 bg-black/40 border border-cyan-900/30 rounded text-white text-sm font-mono outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"
+                  className="w-full px-3 py-2 bg-black/40 border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded text-white text-sm font-mono outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)]"
                   placeholder="user@example.com"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-xs text-cyan-400 mb-1.5 font-mono">
+                <label className="block text-xs text-[var(--luca-info,#4f8cff)] mb-1.5 font-mono">
                   Password
                 </label>
                 <div className="relative">
@@ -119,13 +119,13 @@ const HumanInputModal: React.FC<Props> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="w-full px-3 py-2 bg-black/40 border border-cyan-900/30 rounded text-white text-sm font-mono outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 pr-10"
+                    className="w-full px-3 py-2 bg-black/40 border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded text-white text-sm font-mono outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)] pr-10"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400 text-xs font-mono"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--luca-info,#4f8cff)] text-xs font-mono"
                   >
                     {showPassword ? 'HIDE' : 'SHOW'}
                   </button>
@@ -138,7 +138,7 @@ const HumanInputModal: React.FC<Props> = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full px-3 py-2 bg-black/40 border border-cyan-900/30 rounded text-white text-sm font-mono outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 resize-none"
+                className="w-full px-3 py-2 bg-black/40 border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded text-white text-sm font-mono outline-none focus:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--luca-info,#4f8cff)_40%,transparent)] resize-none"
                 rows={4}
                 placeholder="Type your response..."
                 autoFocus
@@ -147,13 +147,13 @@ const HumanInputModal: React.FC<Props> = ({
           )}
 
           {/* Session Info */}
-          <div className="text-[10px] text-slate-500 font-mono pt-2 border-t border-cyan-900/20">
+          <div className="text-[10px] text-slate-500 font-mono pt-2 border-t border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]">
             Session: {sessionId.substring(0, 12)}...
           </div>
         </div>
 
         {/* Footer */}
-        <div className="h-12 border-t border-cyan-900/30 bg-[#080808] px-4 flex items-center justify-end gap-2">
+        <div className="h-12 border-t border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[#080808] px-4 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
             className="px-4 py-1.5 text-xs text-slate-400 hover:text-white transition-colors font-mono"
@@ -163,7 +163,7 @@ const HumanInputModal: React.FC<Props> = ({
           <button
             onClick={handleSubmit}
             disabled={isCredentialPrompt && !isSavePrompt ? (!username || !password) : !input.trim()}
-            className="px-4 py-1.5 text-xs bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 border border-cyan-500/30 rounded transition-colors font-mono disabled:opacity-30 disabled:cursor-not-allowed"
+            className="px-4 py-1.5 text-xs bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-[var(--luca-info,#4f8cff)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded transition-colors font-mono disabled:opacity-30 disabled:cursor-not-allowed"
           >
             SUBMIT
           </button>

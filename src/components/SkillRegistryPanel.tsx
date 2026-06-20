@@ -22,17 +22,17 @@ interface SkillRegistryPanelProps {
 }
 
 const STATUS_COLORS: Record<PersonalIntelligenceSkillStatus, string> = {
-  available: "text-emerald-300 border-emerald-400/30 bg-emerald-400/10",
-  review_required: "text-amber-300 border-amber-400/30 bg-amber-400/10",
-  blocked: "text-red-300 border-red-400/30 bg-red-400/10",
+  available: "text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
+  review_required: "text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+  blocked: "text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
   disabled: "text-slate-300 border-slate-400/30 bg-slate-400/10",
 };
 
 const RISK_COLORS: Record<PersonalIntelligenceSkillRiskLevel, string> = {
-  low: "text-sky-300 border-sky-400/30 bg-sky-400/10",
-  medium: "text-amber-300 border-amber-400/30 bg-amber-400/10",
-  high: "text-orange-300 border-orange-400/30 bg-orange-400/10",
-  critical: "text-red-300 border-red-400/30 bg-red-400/10",
+  low: "text-[var(--luca-info,#4f8cff)] border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
+  medium: "text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+  high: "text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+  critical: "text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
 };
 
 const label = (value: string) => value.replace(/_/g, " ");
@@ -112,13 +112,13 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
           <p className="text-xs font-bold uppercase tracking-wider text-white">Readiness</p>
           <div className="mt-3 flex items-center justify-between text-xs">
             <span className="text-slate-400">Inspection</span>
-            <strong className={entry.readiness.readyForInspection ? "text-emerald-300" : "text-red-300"}>
+            <strong className={entry.readiness.readyForInspection ? "text-[var(--luca-success,#4fbf7a)]" : "text-[var(--luca-danger,#f87171)]"}>
               {entry.readiness.readyForInspection ? "Ready" : "Blocked"}
             </strong>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
             <span className="text-slate-400">Execution</span>
-            <strong className="text-red-300">Disabled</strong>
+            <strong className="text-[var(--luca-danger,#f87171)]">Disabled</strong>
           </div>
           <p className="mt-3 text-xs text-slate-500">Approval: {entry.readiness.requiresApproval ? "required" : "not requested"} · Sandbox: {entry.readiness.requiresSandbox ? "required" : "not requested"}</p>
         </div>
@@ -129,9 +129,9 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
       <SkillDryRunPanel simulation={simulation} />
       <SkillRuntimeAuthorityPanel records={authorityRecords} />
 
-      <div className="mt-4 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-4">
-        <p className="text-sm font-bold text-red-200">Execution disabled</p>
-        <p className="mt-1 text-xs leading-5 text-red-100/70">This manifest can only be inspected. Its entrypoint is never imported, loaded, or invoked.</p>
+      <div className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]/[0.06] p-4">
+        <p className="text-sm font-bold text-[var(--luca-danger,#f87171)]">Execution disabled</p>
+        <p className="mt-1 text-xs leading-5 text-[var(--luca-danger,#f87171)]">This manifest can only be inspected. Its entrypoint is never imported, loaded, or invoked.</p>
         <button type="button" disabled className="mt-3 cursor-not-allowed rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-500">
           Execution disabled
         </button>
@@ -175,7 +175,7 @@ export const SkillRegistryPanel: React.FC<SkillRegistryPanelProps> = ({ accent }
             ))}
           </div>
         </div>
-        <div className="mt-4 rounded-lg border border-amber-400/20 bg-amber-400/[0.06] px-3 py-2 text-xs leading-5 text-amber-100/80">
+        <div className="mt-4 rounded-lg border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]/[0.06] px-3 py-2 text-xs leading-5 text-[var(--luca-warning,#f2b23e)]">
           Skills cannot run, call tools, call models, write memory, access files, use network, or trigger LucaLink in this PR.
         </div>
       </header>
@@ -201,7 +201,7 @@ export const SkillRegistryPanel: React.FC<SkillRegistryPanelProps> = ({ accent }
                 <div className="flex items-start justify-between gap-2"><span className="text-sm font-bold text-white">{entry.name}</span><Badge value={entry.status} className={STATUS_COLORS[entry.status]} /></div>
                 <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{entry.description}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5"><Badge value={`${entry.riskLevel} risk`} className={RISK_COLORS[entry.riskLevel]} />{entry.requiredPermissions.slice(0, 2).map((permission) => <span key={permission} className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-slate-400">{permission}</span>)}</div>
-                <div className="mt-3 flex justify-between text-[10px] text-slate-500"><span>Inspection: {entry.readiness.readyForInspection ? "ready" : "blocked"}</span><span className="text-red-300">Execution: disabled</span></div>
+                <div className="mt-3 flex justify-between text-[10px] text-slate-500"><span>Inspection: {entry.readiness.readyForInspection ? "ready" : "blocked"}</span><span className="text-[var(--luca-danger,#f87171)]">Execution: disabled</span></div>
               </button>
             ))}
             {filtered.length === 0 && <p className="py-12 text-center text-xs text-slate-500">No manifests match these filters.</p>}

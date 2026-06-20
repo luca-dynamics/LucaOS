@@ -45,7 +45,7 @@ const ChatModeToggle: React.FC<ChatModeToggleProps> = ({ themeName = "default", 
       onClick={toggleMode}
       className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-md border transition-all active:scale-95 ${
         isPlanningMode 
-          ? (isLight ? "bg-amber-50 border-amber-200" : "bg-amber-500/10 border-amber-500/30") 
+          ? (isLight ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]" : "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]") 
           : (isLight ? "bg-white border-gray-200 hover:bg-gray-100" : "bg-black/20 border-white/10 hover:bg-white/10")
       }`}
       style={!isPlanningMode ? { borderColor: `${safeColor}30` } : {}}
@@ -58,7 +58,7 @@ const ChatModeToggle: React.FC<ChatModeToggleProps> = ({ themeName = "default", 
       )}
       <span className={`text-[10px] sm:text-xs font-bold ${
           isPlanningMode 
-            ? "text-amber-600 dark:text-amber-500" 
+            ? "text-[var(--luca-warning,#f2b23e)] dark:text-[var(--luca-warning,#f2b23e)]" 
             : (isLight ? "text-gray-600" : "text-gray-400")
       }`}>
         {isPlanningMode ? "Planning" : "Fast"}

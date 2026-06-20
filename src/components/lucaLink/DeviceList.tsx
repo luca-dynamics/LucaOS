@@ -16,9 +16,9 @@ interface DeviceListProps {
 export const DeviceList: React.FC<DeviceListProps> = ({
   devices,
   onDeviceAction,
-  themePrimary = "text-cyan-400",
-  themeBorder = "border-cyan-500",
-  themeBg = "bg-cyan-950/10",
+  themePrimary = "text-[var(--luca-info,#4f8cff)]",
+  themeBorder = "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]",
+  themeBg = "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
 }) => {
   const getDeviceIcon = (type: Device["type"]) => {
     switch (type) {
@@ -63,15 +63,15 @@ export const DeviceList: React.FC<DeviceListProps> = ({
   };
 
   const getTrustColor = (trustLevel: number) => {
-    if (trustLevel >= 80) return { bg: "bg-green-500", text: "text-green-400" };
+    if (trustLevel >= 80) return { bg: "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]", text: "text-[var(--luca-success,#4fbf7a)]" };
     if (trustLevel >= 60)
       return {
         bg: `${themeBorder.replace("border-", "bg-")}`,
         text: themePrimary,
       };
     if (trustLevel >= 40)
-      return { bg: "bg-yellow-500", text: "text-yellow-400" };
-    return { bg: "bg-red-500", text: "text-red-400" };
+      return { bg: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]", text: "text-[var(--luca-warning,#f2b23e)]" };
+    return { bg: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]", text: "text-[var(--luca-danger,#f87171)]" };
   };
 
   if (devices.length === 0) {
@@ -167,7 +167,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                       uppercase tracking-wider
                       ${
                         isOnline
-                          ? "bg-green-500/20 border border-green-500/50 text-green-400"
+                          ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] text-[var(--luca-success,#4fbf7a)]"
                           : "bg-gray-700/20 border border-gray-700/50 text-gray-600"
                       }
                     `}
@@ -204,9 +204,9 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                   <div
                     className={`flex items-center gap-1 ${
                       device.metadata.battery < 20
-                        ? "text-red-400"
+                        ? "text-[var(--luca-danger,#f87171)]"
                         : device.metadata.battery < 50
-                        ? "text-yellow-400"
+                        ? "text-[var(--luca-warning,#f2b23e)]"
                         : "text-gray-500"
                     }`}
                   >
@@ -361,9 +361,9 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                     flex items-center justify-center gap-1.5
                     px-2.5 sm:px-3 py-1.5 sm:py-2
                     text-[10px] sm:text-xs font-mono font-medium
-                    bg-red-500/10 border border-red-500/30 text-red-400
+                    bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]
                     rounded
-                    hover:bg-red-500/20 hover:border-red-500/50
+                    hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]
                     active:scale-95
                     transition-all
                     uppercase tracking-wider

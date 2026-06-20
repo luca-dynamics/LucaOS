@@ -354,9 +354,9 @@ export const WakeWordListener: React.FC<WakeWordListenerProps> = ({
   if (status === "TRAINING" && !isModelTrained) {
     return (
       <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="bg-black/80 glass-blur border border-cyan-500/30 px-3 py-2 rounded-lg shadow-xl flex items-center gap-3">
-          <Icon name="Loader" className="text-cyan-400 animate-spin" size={14} />
-          <span className="text-[10px] font-medium text-cyan-100 italic">
+        <div className="bg-black/80 glass-blur border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] px-3 py-2 rounded-lg shadow-xl flex items-center gap-3">
+          <Icon name="Loader" className="text-[var(--luca-info,#4f8cff)] animate-spin" size={14} />
+          <span className="text-[10px] font-medium text-[var(--luca-info,#4f8cff)] italic">
             Optimizing Sense...
           </span>
         </div>

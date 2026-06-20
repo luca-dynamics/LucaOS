@@ -106,24 +106,24 @@ class SystemErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-screen w-full bg-black text-red-600 font-mono flex flex-col items-center justify-center p-10 relative overflow-hidden">
+        <div className="h-screen w-full bg-black text-[var(--luca-danger,#f87171)] font-mono flex flex-col items-center justify-center p-10 relative overflow-hidden">
           {/* Background Hazard */}
           <div className="absolute inset-0 pointer-events-none opacity-20 bg-[repeating-linear-gradient(45deg,#ef4444,#ef4444_10px,transparent_10px,transparent_20px)]"></div>
 
-          <div className="max-w-3xl w-full border-4 border-red-600 bg-[#050000] p-8 shadow-[0_0_100px_rgba(220,38,38,0.5)] relative z-10 rounded-lg">
-            <div className="flex items-center gap-4 mb-6 border-b-2 border-red-600 pb-4">
+          <div className="max-w-3xl w-full border-4 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[#050000] p-8 shadow-[0_0_100px_rgba(220,38,38,0.5)] relative z-10 rounded-lg">
+            <div className="flex items-center gap-4 mb-6 border-b-2 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] pb-4">
               <Icon name="ShieldAlert" size={48} className="animate-pulse" />
               <div>
                 <h1 className="text-4xl font-black tracking-[0.2em]">
                   CRITICAL FAILURE
                 </h1>
-                <p className="text-red-400 font-bold">
+                <p className="text-[var(--luca-danger,#f87171)] font-bold">
                   LUCA KERNEL PANIC // RUNTIME EXCEPTION
                 </p>
               </div>
             </div>
 
-            <div className="bg-red-950/30 border border-red-900 p-4 mb-6 rounded font-mono text-xs overflow-auto max-h-48">
+            <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4 mb-6 rounded font-mono text-xs overflow-auto max-h-48">
               <div className="text-white font-bold mb-2">STACK TRACE:</div>
               {this.state.error && this.state.error.toString()}
               <br />
@@ -133,7 +133,7 @@ class SystemErrorBoundary extends Component<Props, State> {
             <div className="flex gap-4">
               <button
                 onClick={() => window.location.reload()}
-                className="flex-1 py-4 border border-red-600 hover:bg-red-600 hover:text-black transition-all font-bold tracking-widest flex items-center justify-center gap-2"
+                className="flex-1 py-4 border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:text-black transition-all font-bold tracking-widest flex items-center justify-center gap-2"
               >
                 <Icon name="Refresh" size={18} /> FORCE RESTART
               </button>
@@ -141,7 +141,7 @@ class SystemErrorBoundary extends Component<Props, State> {
               <button
                 onClick={this.handleRollback}
                 disabled={this.state.isRestoring}
-                className="flex-1 py-4 bg-red-600 hover:bg-white hover:text-black text-black transition-all font-bold tracking-widest flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(220,38,38,0.4)] animate-pulse"
+                className="flex-1 py-4 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:bg-white hover:text-black text-black transition-all font-bold tracking-widest flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(220,38,38,0.4)] animate-pulse"
               >
                 {this.state.isRestoring ? (
                   <Icon name="Refresh" size={18} className="animate-spin" />
@@ -154,7 +154,7 @@ class SystemErrorBoundary extends Component<Props, State> {
               <button
                 onClick={this.handleAutoRepair}
                 disabled={this.state.isRepairing}
-                className="flex-1 py-4 bg-purple-600 hover:bg-white hover:text-black text-white transition-all font-bold tracking-widest flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(147,51,234,0.5)] animate-pulse"
+                className="flex-1 py-4 bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] hover:bg-white hover:text-black text-white transition-all font-bold tracking-widest flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(147,51,234,0.5)] animate-pulse"
               >
                 {this.state.isRepairing ? (
                   <Icon name="Refresh" size={18} className="animate-spin" />
@@ -165,7 +165,7 @@ class SystemErrorBoundary extends Component<Props, State> {
               </button>
             </div>
 
-            <div className="mt-6 text-center text-xs text-red-500/60 uppercase">
+            <div className="mt-6 text-center text-xs text-[var(--luca-danger,#f87171)] uppercase">
               <Icon name="Code" size={10} className="inline mr-1" />
               Automated Self-Repair Module V1.0
             </div>

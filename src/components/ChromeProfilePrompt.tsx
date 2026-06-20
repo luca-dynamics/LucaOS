@@ -112,13 +112,13 @@ const ChromeProfilePrompt: React.FC<ChromeProfilePromptProps> = ({
           </div>
 
           {chromeRunning && (
-            <div className="flex items-center gap-2 text-orange-400 text-xs mb-3 bg-orange-500/10 p-2 rounded">
+            <div className="flex items-center gap-2 text-[var(--luca-warning,#f2b23e)] text-xs mb-3 bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] p-2 rounded">
               <Icon name="AlertCircle" className="w-4 h-4" />
               <span>Chrome is running. Please close it first.</span>
             </div>
           )}
 
-          {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+          {error && <p className="text-[var(--luca-danger,#f87171)] text-xs mb-3">{error}</p>}
         </div>
 
         {/* Actions */}

@@ -23,7 +23,7 @@ interface PersonalityDashboardProps {
 }
 
 const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
-  theme = { primary: "text-blue-500", hex: "#3b82f6", themeName: "default" },
+  theme = { primary: "text-[var(--luca-info,#4f8cff)]", hex: "#3b82f6", themeName: "default" },
   config,
   onUpdate,
   isMobile,
@@ -434,7 +434,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                           "var(--app-border-main, rgba(255,255,255,0.1))",
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] to-transparent pointer-events-none" />
                       <div
                         className={`w-full min-h-[140px] p-4 text-base font-mono whitespace-pre-wrap leading-relaxed`}
                         style={{ color: "var(--app-text-muted, #94a3b8)" }}
@@ -487,19 +487,19 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                         Protocols:
                       </span>
                       {hasMetacognition && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/5 border border-blue-500/10 text-sm text-blue-500/60 uppercase">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] text-sm text-[var(--luca-info,#4f8cff)] uppercase">
                           <Icon name="Cpu" className="w-2.5 h-2.5" />{" "}
                           Metacognition
                         </div>
                       )}
                       {hasMemory && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/5 border border-purple-500/10 text-sm text-purple-500/60 uppercase">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] text-sm text-[var(--luca-accent-primary,#9b7cff)] uppercase">
                           <Icon name="Database" className="w-2.5 h-2.5" />{" "}
                           Contextual Memory
                         </div>
                       )}
                       {hasPlatform && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/5 border border-green-500/10 text-sm text-green-500/60 uppercase">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] text-sm text-[var(--luca-success,#4fbf7a)] uppercase">
                           <Icon name="Globe" className="w-2.5 h-2.5" /> Platform
                           Awareness
                         </div>

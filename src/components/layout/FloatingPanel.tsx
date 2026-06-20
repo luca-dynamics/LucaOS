@@ -88,13 +88,13 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
             </button>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-red-500/20 rounded transition-colors group"
+              className="p-1 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] rounded transition-colors group"
               title="Close Panel"
             >
               <Icon
                 name="Close"
                 size={14}
-                className="text-[color:var(--app-text-muted)] group-hover:text-red-400"
+                className="text-[color:var(--app-text-muted)] group-hover:text-[var(--luca-danger,#f87171)]"
                 variant="BoldDuotone"
               />
             </button>

@@ -78,7 +78,7 @@ const ModeSelect: React.FC<ModeSelectProps> = ({
             <span>{modelReadiness.mode.replace("-", " ")}</span>
           </div>
           {routeWarnings.length > 0 ? (
-            <ul className="list-disc list-inside space-y-1 text-amber-300">
+            <ul className="list-disc list-inside space-y-1 text-[var(--luca-warning,#f2b23e)]">
               {routeWarnings.slice(0, 3).map((warning) => (
                 <li key={warning}>{warning}</li>
               ))}

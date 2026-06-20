@@ -153,7 +153,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
             <button
               type="button"
               onClick={onClearAttachment}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-all active:scale-90"
+              className="absolute -top-2 -right-2 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-white rounded-full p-1 shadow-lg hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-all active:scale-90"
             >
               <Icon name="CloseCircle" size={12} />
             </button>
@@ -204,14 +204,14 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
 
         {/* MISSION PENDING INDICATOR */}
         {hasApprovalRequest && (
-          <div className="absolute top-0 right-3 flex items-center gap-1.5 py-2 px-3 bg-red-500/10 border border-red-500/20 rounded-bl-xl z-30 animate-pulse pointer-events-none">
+          <div className="absolute top-0 right-3 flex items-center gap-1.5 py-2 px-3 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-bl-xl z-30 animate-pulse pointer-events-none">
             <Icon
               name="Shield"
               size={12}
-              className="text-red-500"
+              className="text-[var(--luca-danger,#f87171)]"
               variant="BoldDuotone"
             />
-            <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest font-mono">
+            <span className="text-[10px] font-bold text-[var(--luca-danger,#f87171)] uppercase tracking-widest font-mono">
               Mission Pending
             </span>
           </div>
@@ -266,7 +266,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               <button
                 type="button"
                 onClick={onClearChat}
-                className={`p-1 sm:p-1.5 hover:text-red-400 transition-all rounded-md border ${isLight ? "hover:bg-gray-100" : "hover:bg-white/5"} active:scale-90`}
+                className={`p-1 sm:p-1.5 hover:text-[var(--luca-danger,#f87171)] transition-all rounded-md border ${isLight ? "hover:bg-gray-100" : "hover:bg-white/5"} active:scale-90`}
                 style={{
                   borderColor: `${safeColor}60`,
                   color: `${safeColor}cc`,
@@ -402,7 +402,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 </>
               )}
               {persona === "HACKER" && (
-                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono text-green-500 bg-green-950/10 px-2 rounded-md border border-green-500/20 h-[24px] sm:h-[27px]">
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono text-[var(--luca-success,#4fbf7a)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 rounded-md border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] h-[24px] sm:h-[27px]">
                   <Icon
                     name="Shield"
                     size={12}
@@ -509,7 +509,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                             >
                               <div className="flex items-center gap-2 min-w-0">
                                 <span
-                                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? "bg-green-400 animate-pulse" : "bg-gray-500"}`}
+                                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse" : "bg-gray-500"}`}
                                 />
                                 <span
                                   className={`text-[11px] font-mono font-bold truncate ${!isConnected ? "opacity-50" : ""}`}
@@ -527,7 +527,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                                       e.stopPropagation();
                                       onDisconnectMcp?.(s.id);
                                     }}
-                                    className="p-1 rounded-md hover:bg-red-500/20 text-red-400/80 hover:text-red-400 transition-all active:scale-90"
+                                    className="p-1 rounded-md hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] hover:text-[var(--luca-danger,#f87171)] transition-all active:scale-90"
                                     title="Disconnect server"
                                   >
                                     <Icon
@@ -543,7 +543,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                                       e.stopPropagation();
                                       onConnectMcp?.(s.id);
                                     }}
-                                    className="p-1 rounded-md hover:bg-green-500/20 text-green-400/80 hover:text-green-400 transition-all active:scale-90"
+                                    className="p-1 rounded-md hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] hover:text-[var(--luca-success,#4fbf7a)] transition-all active:scale-90"
                                     title="Connect server"
                                   >
                                     <Icon
@@ -592,8 +592,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                  ${
                    isVoiceActive
                      ? isSpeaking
-                       ? "bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-                       : "text-white bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                       ? "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                       : "text-white bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                      : "hover:text-white hover:bg-white/5"
                  }
                  active:scale-90
@@ -629,7 +629,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                     name="Microphone"
                     size={15}
                     variant="BoldDuotone"
-                    className="sm:w-[13px] sm:h-[13px] animate-pulse text-red-400"
+                    className="sm:w-[13px] sm:h-[13px] animate-pulse text-[var(--luca-danger,#f87171)]"
                   />
                 )
               ) : (
@@ -668,7 +668,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               transition-all duration-200
               ${
                 isProcessing
-                  ? "bg-red-500 border-red-500 text-red-100 shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse hover:bg-red-600 active:scale-95"
+                  ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] active:scale-95"
                   : input.trim() || attachment
                     ? "text-white hover:text-white/80 hover:bg-white/5 active:scale-90"
                     : `${isLight ? "text-gray-400" : "text-slate-600"} cursor-not-allowed`

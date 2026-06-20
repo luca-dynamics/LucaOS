@@ -190,8 +190,8 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
   // --- DYNAMIC LOAD BALANCER STATE ---
   const [balancerStatus, setBalancerStatus] = useState({
     label: "OPTIMIZED",
-    color: "text-green-500",
-    dotColor: "bg-green-500",
+    color: "text-[var(--luca-success,#4fbf7a)]",
+    dotColor: "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
   });
   const [avgLatency, setAvgLatency] = useState(240);
 
@@ -287,7 +287,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 : "VERIFY"}
         </button>
         {status?.error && (
-          <span className="text-[10px] text-red-500 font-mono truncate max-w-[200px]">
+          <span className="text-[10px] text-[var(--luca-danger,#f87171)] font-mono truncate max-w-[200px]">
             {status.error}
           </span>
         )}
@@ -323,26 +323,26 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
     if (hasCloud && hasLocal) {
       setBalancerStatus({
         label: "OPTIMIZED",
-        color: "text-green-500",
-        dotColor: "bg-green-500",
+        color: "text-[var(--luca-success,#4fbf7a)]",
+        dotColor: "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
       });
     } else if (hasCloud && !hasLocal) {
       setBalancerStatus({
         label: "CLOUD ONLY",
-        color: "text-orange-500",
-        dotColor: "bg-orange-500",
+        color: "text-[var(--luca-warning,#f2b23e)]",
+        dotColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
       });
     } else if (!hasCloud && hasLocal) {
       setBalancerStatus({
         label: "LOCAL ONLY",
-        color: "text-orange-500",
-        dotColor: "bg-orange-500",
+        color: "text-[var(--luca-warning,#f2b23e)]",
+        dotColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
       });
     } else {
       setBalancerStatus({
         label: "OFFLINE",
-        color: "text-red-500",
-        dotColor: "bg-red-500",
+        color: "text-[var(--luca-danger,#f87171)]",
+        dotColor: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
       });
     }
 
@@ -389,7 +389,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {isRoutingToLocal && !isLocalSelected && (
-            <span className="text-sm text-yellow-500 font-bold animate-pulse">
+            <span className="text-sm text-[var(--luca-warning,#f2b23e)] font-bold animate-pulse">
               AUTOPILOT
             </span>
           )}
@@ -1325,7 +1325,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               </div>
             </div>
             <div
-              className={`text-[10px] font-mono ${ollamaStatus.available ? "text-green-500" : "text-[var(--app-text-muted)]"} flex items-center gap-1`}
+              className={`text-[10px] font-mono ${ollamaStatus.available ? "text-[var(--luca-success,#4fbf7a)]" : "text-[var(--app-text-muted)]"} flex items-center gap-1`}
             >
               <span
                 className={`w-1 h-1 rounded-full ${ollamaStatus.available ? "animate-pulse" : ""}`}

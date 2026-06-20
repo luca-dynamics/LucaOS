@@ -166,7 +166,7 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
                 </button>
                 <button
                   onClick={() => onSendKey(26)}
-                  className="px-3 py-2 bg-red-900/20 hover:bg-red-500 text-red-500 hover:text-white text-[10px] font-bold rounded-sm border border-red-900/30 transition-colors"
+                  className="px-3 py-2 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] hover:text-white text-[10px] font-bold rounded-sm border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] transition-colors"
                 >
                   POWER
                 </button>
@@ -175,14 +175,14 @@ const MobileScreenMirror: React.FC<MobileScreenMirrorProps> = ({
 
             <button
               onClick={onStartNativeStream}
-              className="group relative flex items-center justify-center gap-2 px-4 py-3 bg-purple-900/20 hover:bg-purple-600 text-purple-400 hover:text-white text-[10px] font-bold rounded-sm border border-purple-900/40 shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all overflow-hidden"
+              className="group relative flex items-center justify-center gap-2 px-4 py-3 bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)] hover:text-white text-[10px] font-bold rounded-sm border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] shadow-[0_0_15px_rgba(168,85,247,0.1)] transition-all overflow-hidden"
             >
-              <div className="absolute inset-x-0 bottom-0 h-[1px] bg-purple-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-x-0 bottom-0 h-[1px] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                <Icon name="Cast" size={14} variant="BoldDuotone" />
               <span className="tracking-widest">CROSS-LINK MIRROR</span>
             </button>
 
-            <div className="mt-2 p-2 rounded bg-cyan-950/20 border border-cyan-900/20 flex gap-2">
+            <div className="mt-2 p-2 rounded bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] flex gap-2">
               <Icon name="Target" size={12} className="text-rq-blue shrink-0 mt-0.5" variant="BoldDuotone" />
               <div className="text-[9px] font-mono text-slate-400 leading-tight">
                 Precision Mode Active. Tap screen to send raw events. Use

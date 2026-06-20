@@ -376,7 +376,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               </div>
             </div>
             <div
-              className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0 ${settings.voice.wakeWordEnabled ? "bg-green-500/10 text-green-500" : "bg-black/20 text-[var(--app-text-muted)]"}`}
+              className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0 ${settings.voice.wakeWordEnabled ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-black/20 text-[var(--app-text-muted)]"}`}
             >
               {settings.voice.wakeWordEnabled ? "ACTIVE" : "DISABLED"}
             </div>
@@ -563,7 +563,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               {(settings.voice.sttModel?.includes("gemini") ||
                 settings.voice.sttModel === "cloud-gemini") &&
                 settings.voice.provider === "gemini-genai" && (
-                  <p className="text-[10px] text-blue-400 font-bold uppercase mt-1 animate-pulse flex items-center gap-1">
+                  <p className="text-[10px] text-[var(--luca-info,#4f8cff)] font-bold uppercase mt-1 animate-pulse flex items-center gap-1">
                     <Icon name="Waves" className="w-2 h-2" />
                     {settings.voice.sttModel ===
                     "gemini-live-2.5-flash-preview-native-audio-09-2025"
@@ -592,7 +592,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                       : "Voice Identity"}
                 </div>
                 {settings.voice.provider === "gemini-genai" && (
-                  <span className="text-sm text-blue-400 font-bold uppercase animate-pulse">
+                  <span className="text-sm text-[var(--luca-info,#4f8cff)] font-bold uppercase animate-pulse">
                     Persona Synced
                   </span>
                 )}
@@ -769,7 +769,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             </span>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse" />
             <span
               className={`${isMobile ? "text-[9px]" : "text-sm"} font-mono text-[var(--app-text-muted)] uppercase`}
             >
@@ -801,7 +801,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   className={`h-1 bg-[var(--app-bg-tint)]/40 rounded-full overflow-hidden border border-[var(--app-border-main)]`}
                 >
                   <motion.div
-                    className="h-full bg-green-500"
+                    className="h-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
                     animate={{ width: `${(metrics.stt.local / 100) * 100}%` }}
                     transition={{ type: "spring", stiffness: 50 }}
                   />
@@ -977,7 +977,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               Record or upload only voices you own or have consent to use. Luca
               stores the sample for approved vocal output (requires Gemini
               Native Audio).
-              <span className="text-blue-500/80 ml-1">
+              <span className="text-[var(--luca-info,#4f8cff)] ml-1">
                 Range: 2-30s. Activating will auto-switch the voice engine.
               </span>
             </p>
@@ -1001,7 +1001,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 >
                   <div className="flex items-center gap-2 truncate flex-1">
                     {isActive ? (
-                      <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-green-500/20 text-[6px] font-black text-green-400 border border-green-500/30 animate-pulse">
+                      <span className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[6px] font-black text-[var(--luca-success,#4fbf7a)] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] animate-pulse">
                         <Icon name="Activity" className="w-2 h-2" />
                         ACTIVE
                       </span>
@@ -1052,7 +1052,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                           audio.play();
                         });
                       }}
-                      className={`p-1.5 rounded-md transition-all ${playingVoiceId === v.id ? "bg-white/10 text-[var(--app-text-main)]" : "hover:text-green-500 text-[var(--app-text-muted)]"}`}
+                      className={`p-1.5 rounded-md transition-all ${playingVoiceId === v.id ? "bg-white/10 text-[var(--app-text-main)]" : "hover:text-[var(--luca-success,#4fbf7a)] text-[var(--app-text-muted)]"}`}
                     >
                       {playingVoiceId === v.id ? (
                         <Icon name="Pause" className="w-3 h-3" />
@@ -1068,7 +1068,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                             voiceCloneService.getVoices().then(setClonedVoices),
                           )
                       }
-                      className="p-1.5 hover:text-red-500 transition-colors text-[var(--app-text-muted)]"
+                      className="p-1.5 hover:text-[var(--luca-danger,#f87171)] transition-colors text-[var(--app-text-muted)]"
                     >
                       <Icon name="Trash2" className="w-3 h-3" />
                     </button>

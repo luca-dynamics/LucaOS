@@ -26,9 +26,9 @@ export default function ConnectForexAccountModal({
   onConnect,
   theme,
 }: Props) {
-  const themePrimary = theme?.primary || "text-emerald-500";
-  const themeBorder = theme?.border || "border-emerald-500";
-  const themeBg = theme?.bg || "bg-emerald-950/10";
+  const themePrimary = theme?.primary || "text-[var(--luca-success,#4fbf7a)]";
+  const themeBorder = theme?.border || "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]";
+  const themeBg = theme?.bg || "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]";
   const themeHex = theme?.hex || "#10b981";
 
   const [step, setStep] = useState<"broker" | "credentials">("broker");
@@ -55,7 +55,7 @@ export default function ConnectForexAccountModal({
         id: "deriv",
         name: "Deriv",
         logo: "https://static.deriv.com/favicons/favicon-32x32.png",
-        color: "from-red-500 to-pink-600",
+        color: "from-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)]",
         nigeriaFriendly: true,
         requiresAccountId: false,
         features: ["Forex", "Synthetics", "Options"],
@@ -65,7 +65,7 @@ export default function ConnectForexAccountModal({
         id: "exness",
         name: "Exness",
         logo: "https://www.exness.com/favicon.ico",
-        color: "from-yellow-500 to-orange-600",
+        color: "from-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
         nigeriaFriendly: true,
         requiresAccountId: true,
         features: ["Forex", "Metals", "Crypto"],
@@ -75,7 +75,7 @@ export default function ConnectForexAccountModal({
         id: "xm",
         name: "XM",
         logo: "https://www.xm.com/favicon.ico",
-        color: "from-green-500 to-teal-600",
+        color: "from-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
         nigeriaFriendly: true,
         requiresAccountId: true,
         features: ["Forex", "CFDs", "Stocks"],
@@ -95,7 +95,7 @@ export default function ConnectForexAccountModal({
         id: "oanda",
         name: "OANDA",
         logo: "https://www.oanda.com/favicon.ico",
-        color: "from-blue-500 to-cyan-600",
+        color: "from-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
         nigeriaFriendly: false,
         requiresAccountId: true,
         features: ["Forex", "CFDs"],
@@ -105,7 +105,7 @@ export default function ConnectForexAccountModal({
         id: "fxcm",
         name: "FXCM",
         logo: "https://www.fxcm.com/favicon.ico",
-        color: "from-purple-500 to-indigo-600",
+        color: "from-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
         nigeriaFriendly: false,
         requiresAccountId: true,
         features: ["Forex", "CFDs"],
@@ -426,7 +426,7 @@ export default function ConnectForexAccountModal({
                     placeholder="Main Trading Account"
                     className="w-full px-4 py-3 rounded-lg bg-black/40 border-2 border-slate-800
                              text-white placeholder-slate-600 font-mono
-                             focus:outline-none focus:border-emerald-500
+                             focus:outline-none focus:border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]
                              transition-all duration-200"
                   />
                 </div>
@@ -445,7 +445,7 @@ export default function ConnectForexAccountModal({
                     placeholder="••••••••••••••••••••"
                     className="w-full px-4 py-3 rounded-lg bg-black/40 border-2 border-slate-800
                              text-white placeholder-slate-600 font-mono text-sm
-                             focus:outline-none focus:border-emerald-500
+                             focus:outline-none focus:border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]
                              transition-all duration-200"
                   />
                 </div>
@@ -465,7 +465,7 @@ export default function ConnectForexAccountModal({
                       placeholder="101-004-12345678-001"
                       className="w-full px-4 py-3 rounded-lg bg-black/40 border-2 border-slate-800
                                text-white placeholder-slate-600 font-mono text-sm
-                               focus:outline-none focus:border-emerald-500
+                               focus:outline-none focus:border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]
                                transition-all duration-200"
                     />
                   </div>
@@ -503,7 +503,7 @@ export default function ConnectForexAccountModal({
                       className={`py-3 rounded-lg font-mono font-bold transition-all duration-200
                                 ${
                                   environment === "live"
-                                    ? "bg-red-500/20 text-red-400 border-2 border-red-500 shadow-lg shadow-red-500/20"
+                                    ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border-2 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] shadow-lg shadow-[color:var(--luca-danger,#f87171)]"
                                     : "bg-black/40 text-slate-400 border-2 border-slate-800 hover:border-slate-700"
                                 }`}
                     >
@@ -514,9 +514,9 @@ export default function ConnectForexAccountModal({
 
                 {/* Error Message */}
                 {error && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
-                    <Icon name="AlertCircle" className="text-red-400" size={20} />
-                    <span className="text-sm text-red-400 font-mono">
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]">
+                    <Icon name="AlertCircle" className="text-[var(--luca-danger,#f87171)]" size={20} />
+                    <span className="text-sm text-[var(--luca-danger,#f87171)] font-mono">
                       {error}
                     </span>
                   </div>

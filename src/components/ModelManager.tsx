@@ -43,9 +43,9 @@ const getCategoryIcon = (category: LocalModel["category"]) => {
 };
 
 const getCatalogBadgeClass = (status?: LocalModel["catalogStatus"]) => {
-  if (status === "verified" || status === "installable") return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-  if (status === "experimental") return "bg-purple-500/10 text-purple-300 border-purple-500/20";
-  if (status === "planned") return "bg-amber-500/10 text-amber-300 border-amber-500/20";
+  if (status === "verified" || status === "installable") return "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]";
+  if (status === "experimental") return "bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)] border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)]";
+  if (status === "planned") return "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]";
   return "bg-white/5 text-[var(--app-text-muted)] border-white/10";
 };
 
@@ -55,8 +55,8 @@ const isCatalogInstallable = (model: LocalModel) =>
   model.catalogStatus === "installable";
 
 const getProviderHubStateClass = (state: string) => {
-  if (state === "ready") return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-  if (state === "missing_user_key" || state === "missing_base_url" || state === "local_runtime_unavailable") return "bg-amber-500/10 text-amber-300 border-amber-500/20";
+  if (state === "ready") return "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]";
+  if (state === "missing_user_key" || state === "missing_base_url" || state === "local_runtime_unavailable") return "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]";
   return "bg-white/5 text-[var(--app-text-muted)] border-white/10";
 };
 
@@ -133,7 +133,7 @@ const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; theme: 
         </div>
       </div>
       <div className="flex flex-wrap gap-2 mt-3">
-        {viewModel.summary.map((item) => <span key={item.id} className={`text-[9px] px-2 py-1 rounded-full border ${item.id === "ready" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-white/5 text-[var(--app-text-muted)] border-white/10"}`}>{item.label}: {item.count}</span>)}
+        {viewModel.summary.map((item) => <span key={item.id} className={`text-[9px] px-2 py-1 rounded-full border ${item.id === "ready" ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]" : "bg-white/5 text-[var(--app-text-muted)] border-white/10"}`}>{item.label}: {item.count}</span>)}
       </div>
     </div>
     <div className="p-3">
@@ -337,11 +337,11 @@ const RenderGrid: React.FC<RenderGridProps> = ({
         <div className="px-3 pb-3 pt-1 animate-in fade-in slide-in-from-top-4 duration-500 ease-out">
           <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
             {items.map((model) => (
-              <div key={model.id} className={`border rounded-lg overflow-hidden relative ${model.status === "ready" ? "border-green-500/20" : "shadow-sm"}`}
+              <div key={model.id} className={`border rounded-lg overflow-hidden relative ${model.status === "ready" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]" : "shadow-sm"}`}
                    style={{ backgroundColor: "var(--app-bg-main)", borderColor: model.status === "ready" ? undefined : "var(--app-border-main)" }}>
                 {model.status === "downloading" && (
                   <div className="absolute bottom-0 left-0 h-1 bg-white/10 w-full z-0">
-                    <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${model.downloadProgress || 0}%`, backgroundColor: theme.hex }} />
+                    <div className="h-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] transition-all duration-300" style={{ width: `${model.downloadProgress || 0}%`, backgroundColor: theme.hex }} />
                   </div>
                 )}
 
@@ -373,11 +373,11 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                         </div>
                       </div>
                       {model.status === "ready" ? (
-                        <div className="text-green-500 bg-green-500/10 p-1 rounded-full"><Icon name="CheckCircle" size={10} variant="BoldDuotone" /></div>
+                        <div className="text-[var(--luca-success,#4fbf7a)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] p-1 rounded-full"><Icon name="CheckCircle" size={10} variant="BoldDuotone" /></div>
                       ) : model.status === "downloading" ? (
                         <div className="animate-spin" style={{ color: theme.hex }}><Icon name="Restart" size={10} variant="BoldDuotone" /></div>
                       ) : model.status === "unsupported" ? (
-                        <div className="text-yellow-500 bg-yellow-500/10 p-1 rounded-full" title={model.unsupportedReason}><Icon name="Danger" size={10} variant="BoldDuotone" /></div>
+                        <div className="text-[var(--luca-warning,#f2b23e)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] p-1 rounded-full" title={model.unsupportedReason}><Icon name="Danger" size={10} variant="BoldDuotone" /></div>
                       ) : null}
                     </div>
 
@@ -393,14 +393,14 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                         {model.catalogStatus || "verified"}
                       </span>
                       {model.catalogWarning && (
-                        <span className="text-[8px] text-amber-300 truncate max-w-[220px]" title={model.catalogWarning}>
+                        <span className="text-[8px] text-[var(--luca-warning,#f2b23e)] truncate max-w-[220px]" title={model.catalogWarning}>
                           {model.catalogWarning}
                         </span>
                       )}
                     </div>
 
                     {model.status === "ready" && model.canary && (
-                      <div className={`flex items-center gap-1.5 px-1.5 py-1 rounded-md text-[8px] font-mono mt-1 ${model.canary.passed ? "bg-emerald-500/10 text-emerald-400" : "bg-yellow-500/10 text-yellow-400"}`}>
+                      <div className={`flex items-center gap-1.5 px-1.5 py-1 rounded-md text-[8px] font-mono mt-1 ${model.canary.passed ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
                         {model.canary.passed ? <Icon name="Zap" size={8} variant="BoldDuotone" /> : <Icon name="Danger" size={8} variant="BoldDuotone" />}
                         <span className="truncate max-w-[140px]">&ldquo;{model.canary.response}&rdquo;</span>
                         <span className="opacity-60 flex-shrink-0">({model.canary.latency_ms}ms)</span>
@@ -408,7 +408,7 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                     )}
 
                     {ollamaSetupStatus.modelId === model.id && (
-                      <div className="flex flex-col gap-1.5 px-1.5 py-2 rounded-md text-[8px] font-mono mt-1 bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                      <div className="flex flex-col gap-1.5 px-1.5 py-2 rounded-md text-[8px] font-mono mt-1 bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] text-[var(--luca-info,#4f8cff)]">
                         <div className="flex justify-between items-center">
                           <span className="flex items-center gap-1.5 capitalize animate-pulse"><Icon name="Zap" size={8} variant="BoldDuotone" />{ollamaSetupStatus.step}</span>
                           {ollamaSetupStatus.progress !== undefined && ollamaSetupStatus.progress > 0 && <span style={{ color: "var(--app-text-main)" }}>{Math.round(ollamaSetupStatus.progress)}%</span>}
@@ -419,9 +419,9 @@ const RenderGrid: React.FC<RenderGridProps> = ({
 
                   <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t" style={{ borderColor: "var(--app-border-main)" }}>
                     {model.status === "unsupported" ? (
-                      <div className="flex-1 text-center text-[9px] text-yellow-500 italic">⚠️ {model.unsupportedReason || "Hardware mismatch"}</div>
+                      <div className="flex-1 text-center text-[9px] text-[var(--luca-warning,#f2b23e)] italic">⚠️ {model.unsupportedReason || "Hardware mismatch"}</div>
                     ) : model.status === "not_downloaded" && !isCatalogInstallable(model) ? (
-                      <div className="flex-1 text-center text-[9px] text-amber-300 italic">Planned / not verified</div>
+                      <div className="flex-1 text-center text-[9px] text-[var(--luca-warning,#f2b23e)] italic">Planned / not verified</div>
                     ) : model.status === "not_downloaded" ? (
                       <button 
                         type="button"
@@ -446,7 +446,7 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                             }} 
                             className={`flex-1 transition-all text-[9px] font-medium py-1 rounded flex items-center justify-center gap-1.5 border ${
                                 (model.category === "brain" ? activeBrainId === model.id : activeEmbedId === model.id) 
-                                ? (theme.isLight ? "bg-red-50 border-red-200 text-red-600" : "bg-red-500/10 border-red-500/20 text-red-400") 
+                                ? (theme.isLight ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]") 
                                 : "bg-transparent border-transparent"}`}
                             style={{ color: (model.category === "brain" ? activeBrainId === model.id : activeEmbedId === model.id) ? undefined : "var(--app-text-muted)" }}
                           >
@@ -459,7 +459,7 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                             e.stopPropagation();
                             onDelete(model.id);
                           }} 
-                          className="px-2 py-1 rounded hover:text-red-400 hover:bg-red-500/10 transition-colors" 
+                          className="px-2 py-1 rounded hover:text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-colors" 
                           style={{ color: "var(--app-text-muted)" }}
                           title="Delete"
                         >
@@ -472,7 +472,7 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                             onCanary(model.id);
                           }} 
                           disabled={canaryTestingId !== null} 
-                          className={`px-2 py-1 rounded transition-all ${canaryTestingId === model.id ? "text-blue-400 bg-blue-500/10 animate-pulse" : "hover:text-blue-400 hover:bg-blue-500/10"}`} 
+                          className={`px-2 py-1 rounded transition-all ${canaryTestingId === model.id ? "text-[var(--luca-info,#4f8cff)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] animate-pulse" : "hover:text-[var(--luca-info,#4f8cff)] hover:bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"}`} 
                           style={{ color: canaryTestingId === model.id ? "var(--app-blue)" : "var(--app-text-muted)" }}
                           title="Test"
                         >
@@ -668,7 +668,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
             className={`${isMobile ? "text-lg" : "text-xl"} font-bold flex items-center gap-2 truncate`}
             style={{ color: "var(--app-text-main)" }}
           >
-            <Icon name="Cpu" size={isMobile ? 18 : 20} className="text-blue-400 flex-shrink-0" variant="BoldDuotone" />
+            <Icon name="Cpu" size={isMobile ? 18 : 20} className="text-[var(--luca-info,#4f8cff)] flex-shrink-0" variant="BoldDuotone" />
             Sovereign Intelligence
           </h2>
           <p 
@@ -681,7 +681,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
         
         <div className={`flex flex-col ${isMobile ? "items-start" : "items-end"} gap-1.5`}>
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] animate-pulse" />
             <span 
                 className="text-[9px] uppercase tracking-[0.3em] font-black"
                 style={{ color: "var(--app-text-muted)" }}
@@ -702,7 +702,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                  </span>
               </div>
               {systemSpecs.isIntelMac && (
-                <div className="flex items-center gap-1 text-[8px] text-amber-500 font-black uppercase bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 mt-1">
+                <div className="flex items-center gap-1 text-[8px] text-[var(--luca-warning,#f2b23e)] font-black uppercase bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-1.5 py-0.5 rounded border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] mt-1">
                   <Icon name="Danger" size={8} variant="BoldDuotone" />
                   Legacy Intel Architecture Detection
                 </div>
@@ -733,7 +733,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
           <div className="mb-4 rounded-xl border p-3" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)" }}>
             <div className="flex items-center justify-between gap-3 mb-1">
               <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--app-text-main)" }}>Active chat route</span>
-              <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono ${routeStatus.readiness === "ready" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-300"}`}>
+              <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono ${routeStatus.readiness === "ready" ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
                 {routeStatus.mode} / {routeStatus.readiness}
               </span>
             </div>
@@ -831,7 +831,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
         <div className="mt-4 rounded-xl border p-4" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-tint)" }}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Icon name="Zap" size={16} className="text-blue-400" variant="BoldDuotone" />
+              <Icon name="Zap" size={16} className="text-[var(--luca-info,#4f8cff)]" variant="BoldDuotone" />
               <span 
                 className="text-xs font-bold"
                 style={{ color: "var(--app-text-main)" }}
@@ -839,7 +839,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
                 Ollama Runtime
               </span>
             </div>
-            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono ${isOllamaRunning ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono ${isOllamaRunning ? 'bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]' : 'bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)]'}`}>
               {isOllamaRunning ? 'Daemon Online' : 'Daemon Offline'}
             </span>
           </div>

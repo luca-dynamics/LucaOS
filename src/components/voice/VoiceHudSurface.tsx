@@ -270,8 +270,8 @@ export function VoiceHudSurface({
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap"><Icon name="Activity" size={10} className="md:w-3 md:h-3" variant="Linear" />VOICE: {(realtimeStatus || "idle").toUpperCase()}</div>
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap"><Icon name="ShieldTick" size={10} className="md:w-3 md:h-3" variant="Linear" />ROUTE: {(runtimeRouteHealth || "stable").toUpperCase()}{runtimeFallbackActive ? " · FALLBACK" : ""}</div>
         <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap"><Icon name="Timer1" size={10} className="md:w-3 md:h-3" variant="Linear" />RTT: {runtimeLatency ?? 0}ms</div>
-        {realtimeLastError ? <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap text-red-400">ERR: {realtimeLastError}</div> : null}
-        {!realtimeCanInterrupt ? <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap text-yellow-300">INTERRUPT LOCKED</div> : null}
+        {realtimeLastError ? <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap text-[var(--luca-danger,#f87171)]">ERR: {realtimeLastError}</div> : null}
+        {!realtimeCanInterrupt ? <div className="flex items-center gap-1 md:gap-2 whitespace-nowrap text-[var(--luca-warning,#f2b23e)]">INTERRUPT LOCKED</div> : null}
       </div>
     </div>
   );

@@ -55,9 +55,9 @@ export function WebVoiceOnboardingSurface({
       persona={theme?.primary || "RUTHLESS"}
       theme={{
         primary: theme?.hex || "#67e8f9",
-        border: "border-cyan-300/40",
-        bg: "bg-cyan-500/10",
-        glow: "shadow-cyan-500/30",
+        border: "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]",
+        bg: "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
+        glow: "shadow-[color:var(--luca-info,#4f8cff)]",
         coreColor: theme?.hex || "#67e8f9",
         hex: theme?.hex || "#67e8f9",
         themeName: theme?.primary || "web",

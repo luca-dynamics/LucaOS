@@ -395,7 +395,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   </div>
 
                   <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl flex items-center justify-center shadow-2xl z-10 border bg-[var(--app-bg-tint)] border-[var(--app-border-main)]">
-                    <Icon name="Shield" className="w-5 h-5 text-green-500" />
+                    <Icon name="Shield" className="w-5 h-5 text-[var(--luca-success,#4fbf7a)]" />
                   </div>
                 </div>
 
@@ -499,7 +499,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       >
                         Luca Partnership
                       </span>
-                      <div className="text-[9px] font-black font-mono text-green-500 animate-pulse bg-green-500/10 px-2 py-0.5 rounded-lg border border-green-500/20 flex-shrink-0">
+                      <div className="text-[9px] font-black font-mono text-[var(--luca-success,#4fbf7a)] animate-pulse bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 py-0.5 rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] flex-shrink-0">
                         SYNC ACTIVE
                       </div>
                     </div>
@@ -521,7 +521,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   <span className="text-[10px] font-black font-mono text-[var(--app-text-muted)] opacity-50 uppercase block mb-1 whitespace-nowrap tracking-widest">
                     Active Vibe
                   </span>
-                  <span className="text-lg font-black uppercase whitespace-nowrap tracking-widest text-blue-400">
+                  <span className="text-lg font-black uppercase whitespace-nowrap tracking-widest text-[var(--luca-info,#4f8cff)]">
                     {personality
                       ? getVibeSummary(personalityService.getEffectiveTraits())
                           .vibe
@@ -536,7 +536,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       Bond Strength
                     </span>
                     <span
-                      className={`text-xs font-black font-mono whitespace-nowrap text-blue-400`}
+                      className={`text-xs font-black font-mono whitespace-nowrap text-[var(--luca-info,#4f8cff)]`}
                     >
                       {personality
                         ? getStageProgress(
@@ -551,7 +551,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                     className={`h-2 rounded-full overflow-hidden border transition-all shadow-inner bg-black/40 border-[var(--app-border-main)] tech-border`}
                   >
                     <div
-                      className="h-full bg-blue-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                      className="h-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(59,130,246,0.3)]"
                       style={{
                         width: `${personality ? getStageProgress(personality.relationship.relationshipStage, personality.relationship.daysKnown) : 0}%`,
                       }}
@@ -599,8 +599,8 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
             >
               <div className="flex items-center justify-between mb-8 gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-                    <Icon name="Brain" className="w-6 h-6 text-purple-400" />
+                  <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] flex items-center justify-center shrink-0">
+                    <Icon name="Brain" className="w-6 h-6 text-[var(--luca-accent-primary,#9b7cff)]" />
                   </div>
                   <h4
                     className={`${isMobile ? "text-base" : "text-xl"} font-black text-[var(--app-text-main)] uppercase tracking-[0.2em] italic truncate`}
@@ -625,43 +625,43 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       key: "warmth",
                       label: "Warmth",
                       icon: "Heart",
-                      color: "text-red-400",
-                      barColor: "bg-red-500",
+                      color: "text-[var(--luca-danger,#f87171)]",
+                      barColor: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
                     },
                     {
                       key: "playfulness",
                       label: "Playfulness",
                       icon: "Smile",
-                      color: "text-yellow-400",
-                      barColor: "bg-yellow-500",
+                      color: "text-[var(--luca-warning,#f2b23e)]",
+                      barColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
                     },
                     {
                       key: "empathy",
                       label: "Empathy",
                       icon: "Heart",
-                      color: "text-pink-400",
-                      barColor: "bg-pink-500",
+                      color: "text-[var(--luca-accent-primary,#9b7cff)]",
+                      barColor: "bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)]",
                     },
                     {
                       key: "protectiveness",
                       label: "Guardian",
                       icon: "Shield",
-                      color: "text-blue-400",
-                      barColor: "bg-blue-500",
+                      color: "text-[var(--luca-info,#4f8cff)]",
+                      barColor: "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
                     },
                     {
                       key: "sass",
                       label: "Sharpness",
                       icon: "Flash",
-                      color: "text-purple-400",
-                      barColor: "bg-purple-500",
+                      color: "text-[var(--luca-accent-primary,#9b7cff)]",
+                      barColor: "bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)]",
                     },
                     {
                       key: "familiarity",
                       label: "Familiarity",
                       icon: "Stars",
-                      color: "text-green-400",
-                      barColor: "bg-green-500",
+                      color: "text-[var(--luca-success,#4fbf7a)]",
+                      barColor: "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
                     },
                   ].map(({ key, label, icon: iconName, color, barColor }) => {
                     const effectiveTraits =
@@ -764,8 +764,8 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               className={`border rounded-2xl p-6 lg:p-8 transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur animate-in fade-in duration-1000`}
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
-                  <Icon name="Award" className="w-5 h-5 text-yellow-400" />
+                <div className="w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] flex items-center justify-center">
+                  <Icon name="Award" className="w-5 h-5 text-[var(--luca-warning,#f2b23e)]" />
                 </div>
                 <h4
                   className={`text-xs font-black text-[var(--app-text-main)] uppercase tracking-[0.2em] italic`}
@@ -804,8 +804,8 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               className={`border rounded-2xl p-6 lg:p-8 transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] tech-border glass-blur animate-in slide-in-from-bottom-2 duration-700`}
             >
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                  <Icon name="Settings" className="w-5 h-5 text-blue-400" />
+                <div className="w-8 h-8 rounded-lg bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] flex items-center justify-center">
+                  <Icon name="Settings" className="w-5 h-5 text-[var(--luca-info,#4f8cff)]" />
                 </div>
                 <h4
                   className={`text-xs font-black text-[var(--app-text-main)] uppercase tracking-[0.2em] italic`}
@@ -882,7 +882,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                 className={`p-6 border-b flex items-center justify-between bg-black/20 border-b-[var(--app-border-main)]`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon name="Shield" className="w-5 h-5 text-green-500" />
+                  <Icon name="Shield" className="w-5 h-5 text-[var(--luca-success,#4fbf7a)]" />
                   <h3 className="text-sm font-black uppercase tracking-[0.3em] italic text-[var(--app-text-main)]">
                     Luca Identity Lock
                   </h3>

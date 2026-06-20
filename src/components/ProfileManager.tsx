@@ -65,7 +65,7 @@ const ProfileManager: React.FC<Props> = ({
           <div className="flex gap-2">
             <button
               onClick={() => applyPreset("MAC")}
-              className="px-2 py-1 text-[10px] border border-green-500/30 text-green-400 hover:bg-green-500/10 rounded"
+              className="px-2 py-1 text-[10px] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] text-[var(--luca-success,#4fbf7a)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] rounded"
             >
               LOAD: MAC
             </button>
@@ -129,7 +129,7 @@ const ProfileManager: React.FC<Props> = ({
             <textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              className="w-full h-32 bg-slate-900/50 border border-slate-800 rounded p-3 text-xs font-mono text-green-400 focus:border-rq-blue focus:outline-none resize-none"
+              className="w-full h-32 bg-slate-900/50 border border-slate-800 rounded p-3 text-xs font-mono text-[var(--luca-success,#4fbf7a)] focus:border-rq-blue focus:outline-none resize-none"
               placeholder="Define custom behaviors (e.g., 'Be sarcastic', 'Speak in riddles', 'Focus on React code')..."
             />
           </div>
@@ -137,7 +137,7 @@ const ProfileManager: React.FC<Props> = ({
 
         <button
           onClick={handleSave}
-          className="w-full py-4 bg-rq-blue hover:bg-blue-400 text-black font-bold tracking-[0.2em] flex items-center justify-center gap-2 transition-all rounded-sm mt-2"
+          className="w-full py-4 bg-rq-blue hover:bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-black font-bold tracking-[0.2em] flex items-center justify-center gap-2 transition-all rounded-sm mt-2"
         >
           <Icon name="Save" size={18} /> SAVE CONFIGURATION
         </button>

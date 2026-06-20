@@ -310,7 +310,7 @@ const SystemMonitor: React.FC<Props> = ({
         <div className="flex items-center gap-2.5">
           <Icon
             name="Pulse"
-            className={audioListenMode ? "text-amber-500 animate-pulse" : "text-[var(--app-text-main)]"}
+            className={audioListenMode ? "text-[var(--luca-warning,#f2b23e)] animate-pulse" : "text-[var(--app-text-main)]"}
             size={18}
             variant="BoldDuotone"
           />
@@ -322,9 +322,9 @@ const SystemMonitor: React.FC<Props> = ({
         </div>
         <div className="flex items-center gap-3">
           <div
-            className={`flex items-center gap-2 px-2 py-1 rounded-lg text-[9px] font-black font-mono tracking-widest border border-[var(--app-border-main)] bg-black/20 ${connected ? 'text-green-500' : 'text-amber-500'}`}
+            className={`flex items-center gap-2 px-2 py-1 rounded-lg text-[9px] font-black font-mono tracking-widest border border-[var(--app-border-main)] bg-black/20 ${connected ? 'text-[var(--luca-success,#4fbf7a)]' : 'text-[var(--luca-warning,#f2b23e)]'}`}
           >
-            <div className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-green-500" : "bg-amber-500"} animate-pulse`} />
+            <div className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"} animate-pulse`} />
             {connected ? "ONLINE" : "OFFLINE"}
           </div>
         </div>

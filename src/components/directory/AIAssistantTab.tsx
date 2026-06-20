@@ -50,7 +50,7 @@ export const AIAssistantTab: React.FC<AIAssistantTabProps> = ({
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tighter uppercase italic flex items-center justify-center gap-3">
-          <Icon name="MagicStick" size={32} className="text-blue-400" variant="BoldDuotone" />
+          <Icon name="MagicStick" size={32} className="text-[var(--luca-info,#4f8cff)]" variant="BoldDuotone" />
           The Skill Forge
         </h2>
         <p className="text-slate-500 font-mono text-xs sm:text-sm uppercase tracking-[0.2em] opacity-60">
@@ -196,7 +196,7 @@ export const AIAssistantTab: React.FC<AIAssistantTabProps> = ({
             <div className="flex items-center justify-between mb-2 px-1">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Script Logic</label>
               <div className="flex items-center gap-3">
-                <span className={`text-[9px] font-bold ${newLang === "python" ? "text-blue-400" : "text-yellow-500"}`}>
+                <span className={`text-[9px] font-bold ${newLang === "python" ? "text-[var(--luca-info,#4f8cff)]" : "text-[var(--luca-warning,#f2b23e)]"}`}>
                   {newLang === "python" ? "PYTHON 3.11" : "NODE.JS 20"}
                 </span>
                 <Icon name="Code" size={12} className="text-slate-600" />
@@ -217,12 +217,12 @@ export const AIAssistantTab: React.FC<AIAssistantTabProps> = ({
         <div className="space-y-4 animate-in slide-in-from-top-4 duration-700">
           <div className="flex items-center justify-between border-b border-white/5 pb-2">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Icon name="CheckCircle" size={14} className="text-emerald-500" />
+              <Icon name="CheckCircle" size={14} className="text-[var(--luca-success,#4fbf7a)]" />
               Logic Generated Successfully
             </h3>
             <button
               onClick={() => setCreationMode("MANUAL")}
-              className="text-[9px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-wider"
+              className="text-[9px] font-bold text-[var(--luca-info,#4f8cff)] hover:text-[var(--luca-info,#4f8cff)] transition-colors uppercase tracking-wider"
             >
               Tweak in Architect →
             </button>

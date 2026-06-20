@@ -175,9 +175,9 @@ const RemoteAccessModal: React.FC<Props> = ({
             : "shadow-[0_0_60px_rgba(6,182,212,0.1)]",
         }
       : {
-          text: "text-red-500",
-          border: "border-red-500",
-          bg: "bg-red-500",
+          text: "text-[var(--luca-danger,#f87171)]",
+          border: "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]",
+          bg: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
           hex: "#ef4444",
           glow: "shadow-[0_0_60px_rgba(239,68,68,0.15)]",
         };
@@ -186,7 +186,7 @@ const RemoteAccessModal: React.FC<Props> = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 glass-blur animate-in fade-in duration-300">
       <div
         className={`relative w-[90%] max-w-md bg-[#050505] border ${
-          mode === "EXPLOIT" ? "border-red-900" : "border-slate-800"
+          mode === "EXPLOIT" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]" : "border-slate-800"
         } ${
           theme.glow
         } p-0 overflow-hidden rounded-lg flex flex-col transition-all duration-500`}
@@ -206,7 +206,7 @@ const RemoteAccessModal: React.FC<Props> = ({
               className={`p-2 rounded border ${
                 mode === "STANDARD"
                   ? "bg-sci-cyan/10 border-sci-cyan/30"
-                  : "bg-red-900/20 border-red-500/30"
+                  : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
               }`}
             >
               {mode === "STANDARD" ? (
@@ -218,7 +218,7 @@ const RemoteAccessModal: React.FC<Props> = ({
             <div>
               <h2
                 className={`font-display text-lg font-bold tracking-widest ${
-                  mode === "STANDARD" ? "text-white" : "text-red-500"
+                  mode === "STANDARD" ? "text-white" : "text-[var(--luca-danger,#f87171)]"
                 }`}
               >
                 {mode === "STANDARD" ? "REMOTE UPLINK" : "PAYLOAD DELIVERY"}
@@ -334,7 +334,7 @@ const RemoteAccessModal: React.FC<Props> = ({
                       name="QrCode"
                       size={160}
                       className={
-                        mode === "EXPLOIT" ? "text-red-900" : "text-black"
+                        mode === "EXPLOIT" ? "text-[var(--luca-danger,#f87171)]" : "text-black"
                       }
                     />
                   )}
@@ -397,19 +397,19 @@ const RemoteAccessModal: React.FC<Props> = ({
               <div
                 className={`w-32 h-32 rounded-full flex items-center justify-center border shadow-[0_0_40px] ${
                   mode === "STANDARD"
-                    ? "bg-green-500/10 border-green-500/50 shadow-green-500/30"
-                    : "bg-red-500/10 border-red-500/50 shadow-red-500/30"
+                    ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] shadow-[color:var(--luca-success,#4fbf7a)]"
+                    : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] shadow-[color:var(--luca-danger,#f87171)]"
                 }`}
               >
                 {mode === "STANDARD" ? (
-                  <Icon name="CheckCircle2" size={64} className="text-green-500" />
+                  <Icon name="CheckCircle2" size={64} className="text-[var(--luca-success,#4fbf7a)]" />
                 ) : (
-                  <Icon name="AlertTriangle" size={64} className="text-red-500" />
+                  <Icon name="AlertTriangle" size={64} className="text-[var(--luca-danger,#f87171)]" />
                 )}
               </div>
               <div
                 className={`font-display text-xl tracking-widest ${
-                  mode === "STANDARD" ? "text-green-500" : "text-red-500"
+                  mode === "STANDARD" ? "text-[var(--luca-success,#4fbf7a)]" : "text-[var(--luca-danger,#f87171)]"
                 }`}
               >
                 {mode === "STANDARD" ? "UPLINK SECURE" : "ROOT SHELL ACTIVE"}
@@ -435,7 +435,7 @@ const RemoteAccessModal: React.FC<Props> = ({
           <div className="text-slate-500 mb-2 flex justify-between">
             <span>SYSTEM_LOG</span>
             <span
-              className={mode === "EXPLOIT" ? "text-red-500" : "text-sci-cyan"}
+              className={mode === "EXPLOIT" ? "text-[var(--luca-danger,#f87171)]" : "text-sci-cyan"}
             >
               {stage === "QR" ? "LISTENING" : stage}
             </span>
@@ -445,7 +445,7 @@ const RemoteAccessModal: React.FC<Props> = ({
               <div
                 key={i}
                 className={`truncate animate-in slide-in-from-left-2 duration-200 ${
-                  mode === "EXPLOIT" ? "text-red-400/80" : "text-sci-cyan/80"
+                  mode === "EXPLOIT" ? "text-[var(--luca-danger,#f87171)]" : "text-sci-cyan/80"
                 }`}
               >
                 {log}
@@ -459,7 +459,7 @@ const RemoteAccessModal: React.FC<Props> = ({
           className={`h-8 border-t flex items-center justify-between px-4 text-[9px] font-mono ${
             mode === "STANDARD"
               ? "bg-sci-cyan/5 border-sci-cyan/10 text-slate-400"
-              : "bg-red-900/10 border-red-900/30 text-red-400"
+              : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]"
           }`}
         >
           <div className="flex items-center gap-2">

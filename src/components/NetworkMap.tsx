@@ -263,7 +263,7 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
           ) : error ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 font-mono">
               <Icon name="Danger" size={48} style={{ color: "#ef4444" }} variant="BoldDuotone" />
-              <div className="text-red-500 text-sm font-bold tracking-widest uppercase">Network Scanner Offline</div>
+              <div className="text-[var(--luca-danger,#f87171)] text-sm font-bold tracking-widest uppercase">Network Scanner Offline</div>
               <div className="text-slate-500 text-xs text-center max-w-sm">{error}</div>
               <div className="text-[10px] text-slate-600 text-center">Ensure the Luca Core server is running and the Electron IPC bridge is active.</div>
             </div>
@@ -347,7 +347,7 @@ const NetworkMap: React.FC<Props> = ({ onClose, theme }) => {
                           {node.ip}
                         </div>
                         {node.status === "COMPROMISED" && (
-                          <div className="text-[8px] text-red-500 font-bold animate-pulse">
+                          <div className="text-[8px] text-[var(--luca-danger,#f87171)] font-bold animate-pulse">
                             THREAT DETECTED
                           </div>
                         )}

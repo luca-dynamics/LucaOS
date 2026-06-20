@@ -45,7 +45,7 @@ export const PersonalIntelligenceReadOnlyPanel: React.FC<
       title="Personal Intelligence"
       subtitle="A read-only continuity and memory review summary. No memory changes have been applied."
       action={
-        <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-sky-200">
+        <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--luca-info,#4f8cff)]">
           Preview only
         </span>
       }
@@ -91,13 +91,13 @@ export const PersonalIntelligenceReadOnlyPanel: React.FC<
         <PersonalIntelligenceReviewWorkflowPanel graph={graph} mode={mode} now={now} />
 
         {disclosure.mode === "basic" ? (
-          <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-3">
-            <div className="text-xs font-bold text-amber-100">
+          <div className="rounded-xl border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] p-3">
+            <div className="text-xs font-bold text-[var(--luca-warning,#f2b23e)]">
               {disclosure.memoryReviewCount > 0
                 ? `${disclosure.memoryReviewCount} ${disclosure.memoryReviewCount === 1 ? "memory needs" : "memories need"} your review`
                 : "Memory review is clear"}
             </div>
-            <p className="mt-1 text-[10px] leading-relaxed text-amber-100/70">
+            <p className="mt-1 text-[10px] leading-relaxed text-[var(--luca-warning,#f2b23e)]">
               {disclosure.approvalMessage}. {disclosure.settingsMessage}
             </p>
           </div>

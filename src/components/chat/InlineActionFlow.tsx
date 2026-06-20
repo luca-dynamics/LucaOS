@@ -66,7 +66,7 @@ const InlineActionFlow: React.FC<InlineActionFlowProps> = ({
                 {i === logs.length - 1 && status !== "COMPLETE" && status !== "SUCCESS" ? (
                    <Icon name="Settings" size={10} className="animate-spin" style={{ color: themeColor }} variant="BoldDuotone" />
                 ) : (
-                   <Icon name="CheckCircle" size={10} className="text-emerald-500" variant="BoldDuotone" />
+                   <Icon name="CheckCircle" size={10} className="text-[var(--luca-success,#4fbf7a)]" variant="BoldDuotone" />
                 )}
                 <div className="w-px h-full bg-white/5 mt-1" />
               </div>

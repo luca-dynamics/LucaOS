@@ -43,7 +43,7 @@ const SmartDeviceCard: React.FC<Props> = ({
         flex flex-col gap-3 group tech-border glass-blur border
         animate-in zoom-in duration-700
         ${isError 
-          ? "bg-red-500/10 border-red-500/30 shadow-red-500/10" 
+          ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] shadow-[color:var(--luca-danger,#f87171)]" 
           : isOn 
             ? "bg-[var(--app-primary)]/10 border-[var(--app-primary)]/40 shadow-lg shadow-black/20 scale-[1.02]" 
             : "bg-[var(--app-bg-tint)] border-[var(--app-border-main)] opacity-70 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 hover:scale-[1.02]"}
@@ -53,7 +53,7 @@ const SmartDeviceCard: React.FC<Props> = ({
         <div
           className={`p-2.5 rounded-xl border tech-border transition-all duration-500 shadow-inner
             ${isError 
-              ? "bg-red-500/20 border-red-500/40 text-red-500" 
+              ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" 
               : isOn 
                 ? "bg-[var(--app-primary)]/20 border-[var(--app-primary)]/40 text-[var(--app-primary)]" 
                 : "bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-muted)] group-hover:text-[var(--app-text-main)]"}
@@ -64,7 +64,7 @@ const SmartDeviceCard: React.FC<Props> = ({
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full shadow-sm animate-pulse
-              ${device.status === "online" ? "bg-green-500 shadow-green-500/50" : "bg-red-500 shadow-red-500/50"} 
+              ${device.status === "online" ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] shadow-[color:var(--luca-success,#4fbf7a)]" : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] shadow-[color:var(--luca-danger,#f87171)]"} 
             `}
           />
           <span className="text-[9px] font-black uppercase tracking-[0.2em] font-mono text-[var(--app-text-muted)]">

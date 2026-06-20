@@ -103,16 +103,16 @@ const sections: DashboardSection[] = [
 ];
 
 const statusColor: Record<DashboardSection["status"], string> = {
-  Waiting: "text-amber-300 border-amber-400/30 bg-amber-500/10",
-  Observation: "text-cyan-300 border-cyan-400/30 bg-cyan-500/10",
-  Blocked: "text-rose-300 border-rose-400/30 bg-rose-500/10",
+  Waiting: "text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+  Observation: "text-[var(--luca-info,#4f8cff)] border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
+  Blocked: "text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
 };
 
 const OriginEvolutionDashboardShell: React.FC = () => {
   return (
-    <section className="w-full h-full rounded-2xl border border-violet-500/30 bg-black/50 text-slate-100 p-5 md:p-6 backdrop-blur-sm">
+    <section className="w-full h-full rounded-2xl border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] bg-black/50 text-slate-100 p-5 md:p-6 backdrop-blur-sm">
       <header className="mb-6 space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-violet-200/90">Origin-only</p>
+        <p className="text-xs uppercase tracking-[0.25em] text-[var(--luca-accent-primary,#9b7cff)]">Origin-only</p>
         <h2 className="text-2xl font-semibold">Origin Evolution Dashboard Shell</h2>
         <p className="text-sm text-slate-300 max-w-3xl">
           Read-only interface scaffold for future guarded evolution visibility. This shell
@@ -121,11 +121,11 @@ const OriginEvolutionDashboardShell: React.FC = () => {
         </p>
       </header>
 
-      <div className="mb-6 rounded-xl border border-rose-400/25 bg-rose-500/10 p-4">
-        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-200">
+      <div className="mb-6 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-4">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--luca-danger,#f87171)]">
           Safety Banner
         </h3>
-        <ul className="mt-2 space-y-1 text-sm text-rose-100/90">
+        <ul className="mt-2 space-y-1 text-sm text-[var(--luca-danger,#f87171)]">
           <li>• Origin-only visibility mode</li>
           <li>• Read-only shell (no mutation handlers)</li>
           <li>• No approval/promote/rollback execution</li>

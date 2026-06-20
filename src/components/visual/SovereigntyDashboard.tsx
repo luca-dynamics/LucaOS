@@ -58,7 +58,7 @@ const SovereigntyDashboard: React.FC<Props> = ({ data, themeColor }) => {
           <div>
             <h2 className="text-white font-bold text-base tracking-wide">Global Sovereignty</h2>
             <p className="text-slate-500 text-xs flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse inline-block" />
               Mempool monitoring active
             </p>
           </div>
@@ -142,7 +142,7 @@ const SovereigntyDashboard: React.FC<Props> = ({ data, themeColor }) => {
               {/* Network */}
               <div className="flex items-center gap-2.5">
                 <div
-                  className={`w-2 h-2 rounded-full shrink-0 ${chain.status === "ACTIVE" ? "bg-green-500" : "bg-slate-700"}`}
+                  className={`w-2 h-2 rounded-full shrink-0 ${chain.status === "ACTIVE" ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "bg-slate-700"}`}
                   style={chain.status === "ACTIVE" ? { boxShadow: "0 0 6px #22c55e" } : {}}
                 />
                 <span className="text-white text-sm font-bold font-mono">{chain.name}</span>

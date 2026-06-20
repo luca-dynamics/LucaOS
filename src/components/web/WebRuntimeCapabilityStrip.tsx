@@ -22,12 +22,12 @@ const statusLabels: Record<LucaWebCapabilityStatus, string> = {
 };
 
 const statusClasses: Record<LucaWebCapabilityStatus, string> = {
-  available: "border-emerald-300/40 bg-emerald-400/10 text-emerald-100",
+  available: "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]",
   disabled_in_web: "border-slate-300/25 bg-white/5 text-slate-200",
-  desktop_required: "border-amber-300/40 bg-amber-400/10 text-amber-100",
-  api_required: "border-sky-300/40 bg-sky-400/10 text-sky-100",
-  pairing_required: "border-fuchsia-300/40 bg-fuchsia-400/10 text-fuchsia-100",
-  unsupported: "border-rose-300/40 bg-rose-400/10 text-rose-100",
+  desktop_required: "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)]",
+  api_required: "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-[var(--luca-info,#4f8cff)]",
+  pairing_required: "border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)]",
+  unsupported: "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)]",
 };
 
 const WebRuntimeCapabilityStrip: React.FC<WebRuntimeCapabilityStripProps> = ({
@@ -97,11 +97,11 @@ const WebRuntimeCapabilityStrip: React.FC<WebRuntimeCapabilityStripProps> = ({
       </div>
 
       <div className="mt-2 grid gap-2 md:grid-cols-2">
-        <div className="rounded-xl border border-sky-300/20 bg-sky-400/10 p-2">
+        <div className="rounded-xl border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] p-2">
           <strong>{personalIntelligenceState.title}:</strong>{" "}
           {personalIntelligenceState.summary} Requires {personalIntelligenceState.requires}.
         </div>
-        <div className="rounded-xl border border-fuchsia-300/20 bg-fuchsia-400/10 p-2">
+        <div className="rounded-xl border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] p-2">
           <strong>{lucaLinkState.title}:</strong> {lucaLinkState.hostState} Requires {lucaLinkState.requires}; host execution is disabled.
         </div>
       </div>

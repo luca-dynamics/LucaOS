@@ -127,7 +127,7 @@ export const OllamaInstallPanel: React.FC<OllamaInstallPanelProps> = ({
               name="Sparkles"
               variant="Bold"
               size={18}
-              className="text-yellow-400"
+              className="text-[var(--luca-warning,#f2b23e)]"
             />
           )}
           <span style={{ color: "var(--app-text-main)" }}>

@@ -15,9 +15,9 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   state,
   latency,
   onDetailsClick,
-  themePrimary = "text-cyan-400",
-  themeBorder = "border-cyan-500",
-  themeBg = "bg-cyan-950/10",
+  themePrimary = "text-[var(--luca-info,#4f8cff)]",
+  themeBorder = "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]",
+  themeBg = "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
 }) => {
   const getStatusConfig = () => {
     switch (state) {
@@ -25,10 +25,10 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         return {
           icon: "Wifi",
           label: "CONNECTED",
-          color: "text-green-400",
-          bgColor: "bg-green-500/10",
-          borderColor: "border-green-500/50",
-          dotColor: "bg-green-400",
+          color: "text-[var(--luca-success,#4fbf7a)]",
+          bgColor: "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
+          borderColor: "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]",
+          dotColor: "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
           animation: "animate-pulse",
         };
       case ConnectionState.CONNECTING:
@@ -49,10 +49,10 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         return {
           icon: "Activity",
           label: "RECONNECTING",
-          color: "text-yellow-400",
-          bgColor: "bg-yellow-500/10",
-          borderColor: "border-yellow-500/50",
-          dotColor: "bg-yellow-400",
+          color: "text-[var(--luca-warning,#f2b23e)]",
+          bgColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+          borderColor: "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]",
+          dotColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
           animation: "animate-pulse",
         };
       case ConnectionState.DISCONNECTED:
@@ -60,20 +60,20 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         return {
           icon: "WifiOff",
           label: "DISCONNECTED",
-          color: "text-red-400",
-          bgColor: "bg-red-500/10",
-          borderColor: "border-red-500/50",
-          dotColor: "bg-red-400",
+          color: "text-[var(--luca-danger,#f87171)]",
+          bgColor: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
+          borderColor: "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]",
+          dotColor: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
           animation: "",
         };
       case ConnectionState.DEGRADED:
         return {
           icon: "AlertCircle",
           label: "DEGRADED",
-          color: "text-orange-400",
-          bgColor: "bg-orange-500/10",
-          borderColor: "border-orange-500/50",
-          dotColor: "bg-orange-400",
+          color: "text-[var(--luca-warning,#f2b23e)]",
+          bgColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+          borderColor: "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]",
+          dotColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
           animation: "animate-pulse",
         };
       default:

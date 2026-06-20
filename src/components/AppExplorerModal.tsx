@@ -187,7 +187,7 @@ const AppExplorerModal: React.FC<AppExplorerModalProps> = ({
         {/* Footer */}
         <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" />
             <span className="text-[11px] text-slate-500">Cross-platform engine</span>
           </div>
           <span className="text-[11px] text-slate-600">{filteredApps.length} apps</span>

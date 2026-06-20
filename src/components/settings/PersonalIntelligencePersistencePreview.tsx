@@ -98,7 +98,7 @@ export const PersonalIntelligencePersistencePreview: React.FC<
               boundary. This preview never invokes a write.
             </p>
           </div>
-          <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300">
+          <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-2.5 py-1 text-[11px] font-semibold text-[var(--luca-warning,#f2b23e)]">
             {persistenceProposalPreview.status}
           </span>
         </div>
@@ -139,7 +139,7 @@ export const PersonalIntelligencePersistencePreview: React.FC<
           />
         </div>
 
-        <div className="rounded-xl border border-cyan-400/25 bg-cyan-400/[0.06] p-3 text-xs font-medium text-cyan-100">
+        <div className="rounded-xl border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]/[0.06] p-3 text-xs font-medium text-[var(--luca-info,#4f8cff)]">
           Governed adapter exists, but live writes require explicit enablement
           and approval.
         </div>

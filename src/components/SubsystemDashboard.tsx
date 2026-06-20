@@ -155,8 +155,8 @@ const SubsystemDashboard: React.FC<Props> = ({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
                       <div className={`w-2 h-2 rounded-full ${
-                        sub.status === "RUNNING" ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" :
-                        sub.status === "ERROR" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "bg-slate-700"
+                        sub.status === "RUNNING" ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] shadow-[0_0_8px_rgba(34,197,94,0.5)]" :
+                        sub.status === "ERROR" ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "bg-slate-700"
                       }`} />
                       <span className="text-sm font-bold text-white transition-colors group-hover:text-white">
                         {sub.name}
@@ -209,7 +209,7 @@ const SubsystemDashboard: React.FC<Props> = ({
                     <button
                       onClick={() => handleAction(selected.id, "stop")}
                       disabled={loading || selected.status !== "RUNNING"}
-                      className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg text-[10px] font-bold text-red-400 hover:bg-red-500/20 transition-all disabled:opacity-30"
+                      className="px-3 py-1.5 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-lg text-[10px] font-bold text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-all disabled:opacity-30"
                     >
                       STOP
                     </button>
@@ -229,7 +229,7 @@ const SubsystemDashboard: React.FC<Props> = ({
                     logs.map((log, i) => (
                       <div key={i} className="mb-0.5 group flex gap-4">
                         <span className="text-slate-600 shrink-0 select-none">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
-                        <span className={`${log.type === "stderr" || log.type === "error" ? "text-red-400" : "text-slate-300"} break-all`}>
+                        <span className={`${log.type === "stderr" || log.type === "error" ? "text-[var(--luca-danger,#f87171)]" : "text-slate-300"} break-all`}>
                           {log.data}
                         </span>
                       </div>
@@ -284,7 +284,7 @@ const SubsystemDashboard: React.FC<Props> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Status</span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                    selected.status === "RUNNING" ? "bg-green-500/10 text-green-500" : "bg-slate-500/10 text-slate-400"
+                    selected.status === "RUNNING" ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-slate-500/10 text-slate-400"
                   }`}>
                     {selected.status}
                   </span>

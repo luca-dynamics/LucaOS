@@ -360,7 +360,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
     >
       {/* Header / Status */}
       <div
-        className={`absolute top-3 right-3 text-[10px] font-mono ${theme ? theme.coreColor : "text-purple-500"} z-10 flex flex-col items-end gap-1 pointer-events-none`}
+        className={`absolute top-3 right-3 text-[10px] font-mono ${theme ? theme.coreColor : "text-[var(--luca-accent-primary,#9b7cff)]"} z-10 flex flex-col items-end gap-1 pointer-events-none`}
       >
         <div className="flex items-center gap-2">
           {loading && <Icon name="RefreshCw" size={10} className="animate-spin" />}
@@ -402,7 +402,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
             onClick={() => setShowHistory(!showHistory)}
             className={`p-1 rounded transition-all flex items-center gap-1 text-[9px] font-bold ${
               showHistory
-                ? "bg-red-900/30 text-red-400 border border-red-500/30"
+                ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
                 : "text-slate-600 hover:text-white"
             }`}
             title="Toggle Temporal History (Expired Edges)"

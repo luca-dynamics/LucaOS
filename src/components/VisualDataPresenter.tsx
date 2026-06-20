@@ -320,10 +320,10 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
             {Object.entries(item.details).map(([key, value], idx) => (
               <div key={idx} className="group/spec">
                 <div className="flex items-center justify-between mb-1">
-                  <div className="text-[9px] uppercase tracking-[0.2em] text-slate-500 group-hover/spec:text-cyan-400 transition-colors">
+                  <div className="text-[9px] uppercase tracking-[0.2em] text-slate-500 group-hover/spec:text-[var(--luca-info,#4f8cff)] transition-colors">
                     {key}
                   </div>
-                  <div className="h-px flex-1 mx-2 bg-white/10 group-hover/spec:bg-cyan-900/50 transition-colors" />
+                  <div className="h-px flex-1 mx-2 bg-white/10 group-hover/spec:bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] transition-colors" />
                 </div>
                 <div className="text-sm font-mono text-white/90 pl-1">
                   {value}
@@ -337,14 +337,14 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
             <div className="flex items-center gap-2">
               <div
                 className={`w-1.5 h-1.5 rounded-full ${
-                  i === 0 ? "bg-green-500 animate-pulse" : "bg-slate-500"
+                  i === 0 ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse" : "bg-slate-500"
                 }`}
               />
               <div className="text-[10px] font-mono text-slate-500 uppercase">
                 {item.source || "Source: Luca Net"}
               </div>
             </div>
-            <div className="p-2 rounded bg-white/5 hover:bg-cyan-500/20 hover:text-cyan-400 cursor-pointer transition-all border border-transparent hover:border-cyan-500/30">
+            <div className="p-2 rounded bg-white/5 hover:bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] hover:text-[var(--luca-info,#4f8cff)] cursor-pointer transition-all border border-transparent hover:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]">
               <Icon name="ExternalLink" size={14} />
             </div>
           </div>
@@ -651,11 +651,11 @@ const VisualDataPresenter: React.FC<VisualDataPresenterProps> = ({
 
         <button
           onClick={onClose}
-          className="group relative p-3 rounded-full hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-transparent hover:border-red-500/40 transition-all duration-300"
+          className="group relative p-3 rounded-full hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-slate-400 hover:text-[var(--luca-danger,#f87171)] border border-transparent hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] transition-all duration-300"
         >
           <Icon name="X" size={20} />
           {/* Tech Ring on Hover */}
-          <div className="absolute inset-0 rounded-full border border-red-500/0 scale-75 group-hover:scale-100 group-hover:border-red-500/50 transition-all duration-500" />
+          <div className="absolute inset-0 rounded-full border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] scale-75 group-hover:scale-100 group-hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] transition-all duration-500" />
         </button>
       </div>
 
