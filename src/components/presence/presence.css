@@ -1,0 +1,253 @@
+/* Presence orb — Quiet Machine.
+ *
+ * One mark that morphs by intent. Colors come entirely from CSS custom
+ * properties set by the component (--pm-*), which derive from the resolved
+ * appearance accent. No hardcoded hues here.
+ */
+
+.lp-root {
+  display: inline-flex;
+  position: relative;
+  line-height: 0;
+}
+
+.lp-svg {
+  --pm-amp: 0; /* live audio amplitude, 0..1, written by the component */
+  display: block;
+  overflow: visible;
+}
+
+.lp-glow,
+.lp-core,
+.lp-spark,
+.lp-orbit circle,
+.lp-wave rect {
+  fill: var(--pm-color);
+}
+
+.lp-ripple circle {
+  fill: none;
+  stroke: var(--pm-color);
+}
+
+/* Soft halo — base opacity lifts with audio amplitude. */
+.lp-glow {
+  opacity: calc(0.1 + var(--pm-amp) * 0.28);
+}
+
+/* Amplitude scales the whole core group; the breathe animation lives on the
+ * inner core so the two transforms never fight. */
+.lp-amp {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(1 + var(--pm-amp) * 0.16));
+}
+
+.lp-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(var(--pm-core-scale, 1));
+  animation: lp-breathe var(--pm-breathe, 4500ms) ease-in-out infinite;
+}
+
+.lp-ripple,
+.lp-spark,
+.lp-orbit,
+.lp-wave {
+  display: none;
+}
+
+.lp-ripple circle,
+.lp-spark,
+.lp-orbit,
+.lp-wave rect {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* idle — core only (default) */
+
+/* listening — concentric ripples */
+.lp-svg[data-intent="listening"] .lp-ripple {
+  display: block;
+}
+.lp-svg[data-intent="listening"] .lp-ripple circle {
+  animation: lp-ripple var(--pm-ripple, 2100ms) ease-out infinite;
+}
+.lp-svg[data-intent="listening"] .lp-ripple circle:nth-child(2) {
+  animation-delay: 0.7s;
+}
+.lp-svg[data-intent="listening"] .lp-ripple circle:nth-child(3) {
+  animation-delay: 1.4s;
+}
+
+/* thinking / working — rotating sparkle */
+.lp-svg[data-intent="thinking"] .lp-spark,
+.lp-svg[data-intent="working"] .lp-spark {
+  display: block;
+  animation: lp-spin var(--pm-spark, 4000ms) linear infinite;
+}
+
+/* working — add an orbiting accent dot */
+.lp-svg[data-intent="working"] .lp-orbit {
+  display: block;
+  animation: lp-spin var(--pm-orbit, 1300ms) linear infinite;
+}
+
+/* speaking — waveform bars */
+.lp-svg[data-intent="speaking"] .lp-wave {
+  display: block;
+}
+.lp-svg[data-intent="speaking"] .lp-wave rect {
+  animation: lp-wave var(--pm-wave, 1000ms) ease-in-out infinite;
+}
+.lp-svg[data-intent="speaking"] .lp-wave rect:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.lp-svg[data-intent="speaking"] .lp-wave rect:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+/* attention — faster, more insistent core pulse */
+.lp-svg[data-intent="attention"] .lp-core {
+  animation: lp-pulse var(--pm-pulse, 1200ms) ease-in-out infinite;
+}
+
+/* dormant — still and dim */
+.lp-svg[data-intent="dormant"] .lp-core {
+  animation: none;
+  opacity: 0.5;
+}
+
+/* Reduced motion: hold a calm, legible static state. Intent still reads via
+ * color and the persistent shape; nothing animates. */
+.lp-svg.lp-static .lp-core,
+.lp-svg.lp-static .lp-spark,
+.lp-svg.lp-static .lp-orbit,
+.lp-svg.lp-static .lp-ripple circle,
+.lp-svg.lp-static .lp-wave rect {
+  animation: none !important;
+}
+.lp-svg.lp-static .lp-amp {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-core,
+  .lp-spark,
+  .lp-orbit,
+  .lp-ripple circle,
+  .lp-wave rect {
+    animation: none !important;
+  }
+  .lp-amp {
+    transform: none;
+  }
+}
+
+@keyframes lp-breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(calc(var(--pm-core-scale, 1) * 0.96));
+  }
+  50% {
+    opacity: 1;
+    transform: scale(calc(var(--pm-core-scale, 1) * 1.06));
+  }
+}
+
+@keyframes lp-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes lp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lp-ripple {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+@keyframes lp-wave {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Edge-light — Luca's presence at the boundary of a surface (EdgePresence). */
+.lp-edge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-style: solid;
+  border-width: 1.5px;
+  opacity: var(--pm-edge-opacity, 0.3);
+}
+
+.lp-edge[data-intent="idle"] {
+  animation: lp-edge-breathe var(--pm-breathe, 4500ms) ease-in-out infinite;
+}
+.lp-edge[data-intent="listening"],
+.lp-edge[data-intent="speaking"],
+.lp-edge[data-intent="attention"] {
+  animation: lp-edge-pulse var(--pm-pulse, 1400ms) ease-in-out infinite;
+}
+.lp-edge[data-intent="thinking"],
+.lp-edge[data-intent="working"] {
+  animation: lp-edge-pulse var(--pm-spark, 2000ms) ease-in-out infinite;
+}
+.lp-edge[data-intent="dormant"] {
+  animation: none;
+}
+
+.lp-edge.lp-edge-static {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-edge {
+    animation: none !important;
+  }
+}
+
+@keyframes lp-edge-breathe {
+  0%,
+  100% {
+    opacity: calc(var(--pm-edge-opacity, 0.3) * 0.6);
+  }
+  50% {
+    opacity: var(--pm-edge-opacity, 0.3);
+  }
+}
+
+@keyframes lp-edge-pulse {
+  0%,
+  100% {
+    opacity: calc(var(--pm-edge-opacity, 0.5) * 0.5);
+  }
+  50% {
+    opacity: var(--pm-edge-opacity, 0.5);
+  }
+}
