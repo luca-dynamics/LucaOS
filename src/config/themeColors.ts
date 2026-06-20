@@ -140,13 +140,21 @@ export const generateThemeStyles = () => {
   `;
 };
 
+
+// Compatibility note: `bg` is still consumed by legacy/advanced widgets as a
+// Tailwind class alias. Keep the field for API stability, but route default
+// LucaOS surfaces through appearance tokens instead of hardcoded legacy black,
+// white, or terminal-era backgrounds. Tactical components that need explicit
+// brand/tone classes should define those locally.
+const LUCA_LEGACY_COMPAT_SURFACE_BG = "bg-[var(--luca-surface-glass)]";
+
 // UI Config (Fallback) - Consolidated here for easy access by components
 export const PERSONA_UI_CONFIG: Record<string, any> = {
   DEFAULT: {
     themeName: "assistant",
     primary: "text-white",
     border: "border-white/30",
-    bg: "bg-white/10",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: "shadow-[0_0_20px_rgba(255,255,255,0.5)]",
     coreColor: "text-white",
     hex: "#ffffff",
@@ -182,7 +190,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "professional",
     primary: "text-white",
     border: "border-white/30",
-    bg: "bg-white/10",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: "shadow-[0_0_20px_rgba(255,255,255,0.5)]",
     coreColor: "text-white",
     hex: "#ffffff",
@@ -191,7 +199,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "terminal",
     primary: "text-rq-green",
     border: "border-rq-green/50",
-    bg: "bg-[#121212]",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: `shadow-[0_0_20px_${THEME_PALETTE.TERMINAL.primary}]`,
     coreColor: "text-green-500",
     hex: THEME_PALETTE.TERMINAL.primary,
@@ -200,7 +208,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "lucagent",
     primary: "text-gray-900",
     border: "border-gray-900/40",
-    bg: "bg-white/40",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: "shadow-[0_4px_20px_rgba(0,0,0,0.1)]",
     coreColor: "text-gray-900",
     hex: "#111827",
@@ -210,7 +218,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "lucagent",
     primary: "text-gray-900",
     border: "border-gray-900/40",
-    bg: "bg-white/40",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: "shadow-[0_4px_20px_rgba(0,0,0,0.1)]",
     coreColor: "text-gray-900",
     hex: "#111827",
@@ -229,7 +237,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "terminal",
     primary: "text-rq-green",
     border: "border-rq-green/50",
-    bg: "bg-[#121212]",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: `shadow-[0_0_20px_${THEME_PALETTE.TERMINAL.primary}]`,
     coreColor: "text-green-500",
     hex: THEME_PALETTE.TERMINAL.primary,
@@ -247,7 +255,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "professional",
     primary: "text-white",
     border: "border-white/30",
-    bg: "bg-white/10",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: "shadow-[0_0_20px_rgba(255,255,255,0.5)]",
     coreColor: "text-white",
     hex: "#ffffff",
@@ -256,7 +264,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "lightcream",
     primary: "text-[#4a483f]",
     border: "border-[#6c6a58]/30",
-    bg: "bg-[#E5E1CD]/70",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: "shadow-[0_4px_20px_rgba(108,106,88,0.15)]",
     coreColor: "text-[#6c6a58]",
     hex: "#4a483f",
@@ -266,7 +274,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "vaporwave",
     primary: "text-[#ff71ce]",
     border: "border-[#01cdfe]/50",
-    bg: "bg-[#121212]",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: "shadow-[0_0_20px_#ff71ce]",
     coreColor: "text-[#ff71ce]",
     hex: "#ff71ce",
@@ -275,7 +283,7 @@ export const PERSONA_UI_CONFIG: Record<string, any> = {
     themeName: "frost",
     primary: "text-[#b4fbff]",
     border: "border-white/40",
-    bg: "bg-white/10",
+    bg: LUCA_LEGACY_COMPAT_SURFACE_BG,
     glow: "shadow-[0_8px_32px_rgba(180,251,255,0.2)]",
     coreColor: "text-white",
     hex: "#b4fbff",

@@ -9,6 +9,11 @@ import { awarenessService } from "../../services/awarenessService";
 import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
 import { useCredits } from "../../hooks/useCredits";
+import {
+  lucaShellPanelSurfaceStyle,
+  lucaShellControlStyle,
+} from "../../styles/lucaShellStyles";
+import { lucaMobilePanelSurfaceStyle } from "../../styles/lucaMobileShellStyles";
 
 interface HeaderProps {
   theme: any;
@@ -121,24 +126,16 @@ const Header: React.FC<HeaderProps> = ({
           ? "#065f46"
           : "#22c55e";
 
-  const surfaceStyle = {
-    backgroundColor: "var(--app-bg-tint, rgba(0, 0, 0, 0.3))",
-    borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.1))",
-  };
+  const headerSurfaceStyle = isMobile
+    ? lucaMobilePanelSurfaceStyle
+    : lucaShellPanelSurfaceStyle;
+  const surfaceStyle = isMobile ? lucaMobilePanelSurfaceStyle : lucaShellControlStyle;
 
   return (
     <header
       id="app-header"
       className={`${isMobile ? "h-16 px-4" : "h-16 px-6"} glass-blur flex items-center justify-between z-50 transition-all duration-500 relative drag border-b`}
-      style={{
-        backgroundColor: theme?.isLight
-          ? isLightCream
-            ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-            : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))"
-          : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
-        borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.08))",
-        color: "var(--app-text-main, #ffffff)",
-      }}
+      style={headerSurfaceStyle}
     >
       <RuntimeContinuityBootstrap />
 

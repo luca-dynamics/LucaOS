@@ -436,8 +436,8 @@ function AppContent() {
         document.documentElement.style.backgroundColor === "transparent"
       ) {
         document.documentElement.style.backgroundColor = isLightMode
-          ? "#f0f0f5"
-          : "#121212";
+          ? "var(--luca-background-base, #f6f7f9)"
+          : "var(--luca-background-base, #101215)";
       }
     }
   }, [isElectron]);
@@ -2378,7 +2378,11 @@ function AppContent() {
   // --- RENDER: BROWSER MODE (Standalone Window) ---
   if (appMode === "browser") {
     return (
-      <div className="w-full h-screen bg-black/90 border border-slate-700 rounded-xl overflow-hidden shadow-2xl flex flex-col">
+      <div className="w-full h-screen border rounded-xl overflow-hidden shadow-2xl flex flex-col"
+        style={{
+          background: "var(--luca-surface-solid, var(--luca-background-elevated))",
+          borderColor: "var(--luca-border-strong, var(--app-border-main))",
+        }}>
         <LucaBrowser
           url={ghostBrowserUrl}
           onClose={() => {
@@ -2457,15 +2461,28 @@ function AppContent() {
       }
       fallback={
         isBrowserSafeWebInterface ? (
-          <div className="min-h-screen bg-black text-[var(--luca-info,#4f8cff)] flex items-center justify-center p-6 font-mono">
-            <div className="max-w-lg rounded-2xl border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-slate-950/80 p-6 shadow-2xl shadow-[color:var(--luca-info,#4f8cff)]">
-              <p className="text-sm uppercase tracking-[0.3em] text-[var(--luca-info,#4f8cff)]">
+          <div
+            className="min-h-screen flex items-center justify-center p-6 font-sans"
+            style={{
+              background: "var(--luca-background-base, #101215)",
+              color: "var(--luca-text-primary, #f4f6f8)",
+            }}
+          >
+            <div
+              className="max-w-lg rounded-2xl border p-6 shadow-2xl"
+              style={{
+                background: "var(--luca-surface-solid, var(--luca-background-elevated))",
+                borderColor: "var(--luca-border-strong, var(--app-border-main))",
+                boxShadow: "var(--luca-shadow-soft)",
+              }}
+            >
+              <p className="text-sm uppercase tracking-[0.22em]" style={{ color: "var(--luca-text-secondary)" }}>
                 Browser-safe shell failed to initialize
               </p>
-              <h1 className="mt-3 text-2xl font-semibold text-white">
+              <h1 className="mt-3 text-2xl font-semibold" style={{ color: "var(--luca-text-primary)" }}>
                 Desktop runtime unavailable in browser
               </h1>
-              <p className="mt-3 text-sm text-[var(--luca-info,#4f8cff)]">
+              <p className="mt-3 text-sm" style={{ color: "var(--luca-text-secondary)" }}>
                 LucaOS exited boot, but a browser-safe shell component failed.
                 Native/local capabilities remain disabled instead of returning
                 to the boot screen.
@@ -2476,7 +2493,12 @@ function AppContent() {
       }
     >
       {bootDebugEnabled && isBrowserSafeWebInterface && (
-        <div className="fixed left-3 top-3 z-[9999] rounded border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-black/80 px-3 py-2 text-[10px] font-mono text-[var(--luca-info,#4f8cff)] shadow-lg pointer-events-none">
+        <div className="fixed left-3 top-3 z-[9999] rounded border px-3 py-2 text-[10px] font-mono shadow-lg pointer-events-none"
+          style={{
+            background: "var(--luca-surface-solid, var(--luca-background-elevated))",
+            borderColor: "var(--luca-border-strong, var(--app-border-main))",
+            color: "var(--luca-accent-primary, #4f8cff)",
+          }}>
           <div>[LucaOS web boot]</div>
           <div>resolverActive={String(browserSafeBootState.bootResolved)}</div>
           <div>bootSequence={bootSequence}</div>

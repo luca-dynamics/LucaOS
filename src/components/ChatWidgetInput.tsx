@@ -3,6 +3,7 @@ import { Icon } from "./ui/Icon";
 import ChatModelSwitcher from "./chat/ChatModelSwitcher";
 import ChatModeToggle from "./chat/ChatModeToggle";
 import { CURATED_PLUGINS, MarketplacePlugin } from "../data/directoryData";
+import { lucaShellPanelSurfaceStyle } from "../styles/lucaShellStyles";
 
 interface ChatWidgetInputProps {
   input: string;
@@ -134,14 +135,12 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
     themeName?.toLowerCase() === "lucagent" ||
     themeName?.toLowerCase() === "agentic-slate" ||
     themeName?.toLowerCase() === "light";
+  const inputSurfaceStyle = lucaShellPanelSurfaceStyle;
 
   return (
     <div
-      className={`relative z-20 transition-colors duration-500 rounded-2xl ${
-        isLight
-          ? "bg-white/10 glass-blur border-t border-gray-200/50"
-          : "bg-black/40 glass-blur"
-      }`}
+      className="relative z-20 transition-colors duration-500 rounded-2xl glass-blur border-t"
+      style={inputSurfaceStyle}
     >
       {/* Attachment Preview (Above Input) */}
       {attachment && (
@@ -253,7 +252,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 </span>
                 <button
                   onClick={handleClearPlugin}
-                  className="ml-1 p-0.5 hover:bg-white/10 rounded transition-colors opacity-60 hover:opacity-100"
+                  className="ml-1 p-0.5 rounded transition-colors opacity-60 hover:opacity-100"
+                  style={{ background: "var(--luca-surface-hover, transparent)" }}
                 >
                   <Icon name="Close" size={10} />
                 </button>
@@ -311,8 +311,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 p-1 sm:p-1.5 rounded-md border transition-all
                 ${
                   isEyeActive
-                    ? "text-white bg-white/10 shadow-lg"
-                    : "hover:text-white hover:bg-white/5"
+                    ? "shadow-lg"
+                    : "hover:text-white"
                 }
                 active:scale-90
                 relative
@@ -448,9 +448,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                       style={{
                         borderColor: isAnyConnected
                           ? `${safeColor}40`
-                          : isLight
-                            ? "rgba(0,0,0,0.1)"
-                            : "rgba(255,255,255,0.1)",
+                          : "var(--luca-border-subtle, var(--app-border-main))",
                         color: isAnyConnected
                           ? safeColor
                           : isLight
