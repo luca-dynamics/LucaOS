@@ -69,6 +69,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
   activeMcpServers = [],
   onDisconnectMcp,
   onConnectMcp,
+  activePluginId,
+  onClearActivePlugin,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
