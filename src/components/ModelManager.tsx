@@ -12,7 +12,10 @@ import {
 import { settingsService } from "../services/settingsService";
 import { modelReadinessResolver } from "../services/models/ModelReadinessResolver";
 import type { ModelRouteDecision } from "../types/modelRouting";
+import type { LucaModelCapability, LucaModelTaskType } from "../model-router/modelRouterContract";
 import { createProviderHubPanelViewModel, type ProviderHubPanelCardViewModel, type ProviderHubPanelViewModel } from "../model-router/providerHubPanelViewModel";
+import { createProviderHubRouteDecision, type LucaProviderHubRouteDecision, type LucaProviderHubRoutePreference } from "../model-router/providerHubRoutePlanner";
+import { getProviderHubEntries, type LucaProviderHubId } from "../model-router/providerHubRegistry";
 import { createProviderHubSettingsSnapshots } from "../model-router/providerHubSettingsSnapshot";
 import { createProviderHubConfigureIntentFromCard, type LucaProviderHubConfigureIntent } from "../model-router/providerHubConfigureIntent";
 import { createProviderHubSettingsPatch, getProviderHubSafeKeyStatus, providerHubApiKeyField, providerHubBaseUrlField } from "../model-router/providerHubConfiguration";
@@ -122,7 +125,71 @@ const ProviderHubCard: React.FC<{ card: ProviderHubPanelCardViewModel; theme: an
   );
 };
 
-const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, theme, isMobile, onConfigure }) => (
+
+const ROUTE_PREVIEW_TASK_TYPES = ["chat", "vision", "memory", "embedding", "code", "tool_planning", "long_context", "fast_reply", "private_local"] as const satisfies readonly LucaModelTaskType[];
+const ROUTE_PREVIEW_PREFERENCES = ["balanced", "managed_first", "local_first", "privacy_first", "lowest_latency", "lowest_cost", "cloud_first"] as const satisfies readonly LucaProviderHubRoutePreference[];
+
+function getRoutePreviewCapabilities(taskType: LucaModelTaskType): readonly LucaModelCapability[] {
+  if (taskType === "vision") return ["vision"];
+  if (taskType === "memory" || taskType === "embedding") return ["embedding"];
+  if (taskType === "code") return ["code_generation"];
+  if (taskType === "tool_planning") return ["tool_calling"];
+  if (taskType === "long_context") return ["long_context"];
+  if (taskType === "private_local") return ["text_generation", "local_only"];
+  return ["text_generation"];
+}
+
+interface RoutePreviewState {
+  readonly taskType: LucaModelTaskType;
+  readonly preference: LucaProviderHubRoutePreference;
+  readonly preferredProviderId: LucaProviderHubId | "";
+  readonly allowFallbacks: boolean;
+  readonly allowPaidProviders: boolean;
+  readonly allowLocalProviders: boolean;
+  readonly allowCloudProviders: boolean;
+}
+
+const RoutePreviewPanel: React.FC<{
+  decision: LucaProviderHubRouteDecision;
+  preview: RoutePreviewState;
+  onPreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>;
+  theme: any;
+}> = ({ decision, preview, onPreviewChange, theme }) => {
+  const copyRouteDiagnostics = useCallback(() => {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(decision.safeDiagnosticsText);
+    }
+  }, [decision.safeDiagnosticsText]);
+  const providers = getProviderHubEntries().filter((entry) => entry.providerId !== "unknown" && entry.providerId !== "disabled");
+  const update = <K extends keyof RoutePreviewState>(key: K, value: RoutePreviewState[K]) => onPreviewChange((current) => ({ ...current, [key]: value }));
+
+  return (
+    <div className="mt-3 rounded-lg border p-3" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-main)" }}>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--app-text-main)" }}>Route Preview</div>
+          <p className="text-[9px] mt-1" style={{ color: "var(--app-text-muted)" }}>Pure Model Mesh plan only. No prompts, provider APIs, settings writes, or runtime routing changes.</p>
+        </div>
+        <button type="button" onClick={copyRouteDiagnostics} className="px-2 py-1 rounded text-[9px] font-bold" style={{ color: "#050505", backgroundColor: theme.hex }}>Copy route diagnostics</button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+        <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Task type<select value={preview.taskType} onChange={(e) => update("taskType", e.target.value as LucaModelTaskType)} className="mt-1 w-full rounded border px-2 py-1 bg-transparent">{ROUTE_PREVIEW_TASK_TYPES.map((task) => <option key={task} value={task}>{task}</option>)}</select></label>
+        <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Preference<select value={preview.preference} onChange={(e) => update("preference", e.target.value as LucaProviderHubRoutePreference)} className="mt-1 w-full rounded border px-2 py-1 bg-transparent">{ROUTE_PREVIEW_PREFERENCES.map((preference) => <option key={preference} value={preference}>{preference}</option>)}</select></label>
+        <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Preferred provider<select value={preview.preferredProviderId} onChange={(e) => update("preferredProviderId", e.target.value as LucaProviderHubId | "")} className="mt-1 w-full rounded border px-2 py-1 bg-transparent"><option value="">Auto</option>{providers.map((provider) => <option key={provider.providerId} value={provider.providerId}>{provider.label}</option>)}</select></label>
+      </div>
+      <div className="flex flex-wrap gap-3 mb-3">
+        {(["allowFallbacks", "allowPaidProviders", "allowLocalProviders", "allowCloudProviders"] as const).map((key) => <label key={key} className="flex items-center gap-1.5 text-[9px]" style={{ color: "var(--app-text-muted)" }}><input type="checkbox" checked={preview[key]} onChange={(e) => update(key, e.target.checked)} /> {key.replace(/([A-Z])/g, " $1")}</label>)}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[9px] mb-3" style={{ color: "var(--app-text-muted)" }}>
+        <div>Status: <b style={{ color: theme.hex }}>{decision.status}</b></div><div>Selected: <b>{decision.selectedProviderLabel ?? "none"}</b></div><div>Model: <b>{decision.selectedModelId ?? "none"}</b></div><div>Fallbacks: <b>{decision.fallbackCandidates.length}</b> / Blocked: <b>{decision.blockedCandidates.length}</b></div>
+      </div>
+      <p className="text-[9px] mb-2" style={{ color: "var(--app-text-muted)" }}>{decision.reason} Task: {decision.taskType}; preference: {decision.preference}.</p>
+      <div className="space-y-1.5">{decision.candidates.slice(0, 3).map((candidate) => <div key={candidate.providerId} className="rounded border p-2 text-[9px]" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)" }}><div className="flex justify-between gap-2"><b style={{ color: "var(--app-text-main)" }}>{candidate.providerLabel}</b><span>{candidate.score} • {candidate.readinessState}{candidate.configuredModelId ? ` • ${candidate.configuredModelId}` : ""}</span></div><div className="mt-1">{candidate.reasons.slice(0, 2).join(" ")}</div></div>)}</div>
+    </div>
+  );
+};
+
+const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
   <div className="mb-4 rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)" }}>
     <div className="p-4 border-b" style={{ borderColor: "var(--app-border-main)" }}>
       <div className="flex items-start justify-between gap-3">
@@ -137,6 +204,8 @@ const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; theme: 
       </div>
     </div>
     <div className="p-3">
+      <RoutePreviewPanel decision={routeDecision} preview={routePreview} onPreviewChange={onRoutePreviewChange} theme={theme} />
+      <div className="mt-3" />
       {viewModel.sections.map((section) => (
         <div key={section.id} className="mb-3 last:mb-0">
           <div className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2 px-1" style={{ color: "var(--app-text-main)" }}>{section.title}</div>
@@ -505,6 +574,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
   const [routeStatus, setRouteStatus] = useState<ModelRouteDecision | null>(null);
   const [settingsRevision, setSettingsRevision] = useState(0);
   const [providerHubConfigureCard, setProviderHubConfigureCard] = useState<ProviderHubPanelCardViewModel | null>(null);
+  const [routePreview, setRoutePreview] = useState<RoutePreviewState>({ taskType: "chat", preference: "balanced", preferredProviderId: "", allowFallbacks: true, allowPaidProviders: true, allowLocalProviders: true, allowCloudProviders: true });
   
   useEffect(() => {
     const updatePlatform = () => {
@@ -648,9 +718,21 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
   const ttsModels = useMemo(() => models.filter(m => m.category === "tts"), [models]);
   const embedModels = useMemo(() => models.filter(m => m.category === "embedding"), [models]);
 
-  const providerHubViewModel = useMemo(() => createProviderHubPanelViewModel(
-    createProviderHubSettingsSnapshots({ settings: settingsService.getSettings(), ollamaAvailable: isOllamaRunning }),
-  ), [activeBrainId, isOllamaRunning, settingsRevision]);
+  const providerHubSnapshots = useMemo(() => createProviderHubSettingsSnapshots({ settings: settingsService.getSettings(), ollamaAvailable: isOllamaRunning }), [activeBrainId, isOllamaRunning, settingsRevision]);
+
+  const providerHubViewModel = useMemo(() => createProviderHubPanelViewModel(providerHubSnapshots), [providerHubSnapshots]);
+
+  const routePreviewDecision = useMemo(() => createProviderHubRouteDecision({
+    taskType: routePreview.taskType,
+    requiredCapabilities: getRoutePreviewCapabilities(routePreview.taskType),
+    preference: routePreview.preference,
+    connectionSnapshots: providerHubSnapshots,
+    preferredProviderId: routePreview.preferredProviderId || undefined,
+    allowFallbacks: routePreview.allowFallbacks,
+    allowPaidProviders: routePreview.allowPaidProviders,
+    allowLocalProviders: routePreview.allowLocalProviders,
+    allowCloudProviders: routePreview.allowCloudProviders,
+  }), [providerHubSnapshots, routePreview]);
 
   const handleProviderHubConfigure = useCallback((card: ProviderHubPanelCardViewModel) => {
     setProviderHubConfigureCard(card);
@@ -718,7 +800,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <ProviderHubPanel viewModel={providerHubViewModel} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
+        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
         {providerHubConfigureCard && activeProviderHubIntent && (
           <ProviderHubConfigurationPanel
             card={providerHubConfigureCard}
