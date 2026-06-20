@@ -69,7 +69,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
               setMemories([]);
               refresh();
             }}
-            className="rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-red-300 transition-colors hover:bg-red-500/20"
+            className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-2 text-[var(--luca-danger,#f87171)] transition-colors hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
             title="Dangerous: wipe all memory"
           >
             <Icon name="Trash2" size={14} />
@@ -122,7 +122,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                           const success = await memoryService.deleteMemory(memory.id);
                           if (success) setMemories((prev) => prev.filter((item) => item.id !== memory.id));
                         }}
-                        className="opacity-0 group-hover/mem:opacity-100 text-red-400 transition-all hover:text-white"
+                        className="opacity-0 group-hover/mem:opacity-100 text-[var(--luca-danger,#f87171)] transition-all hover:text-white"
                         title="Delete memory"
                       >
                         <Icon name="Trash" size={10} />
@@ -158,9 +158,9 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                     </div>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-200" onClick={() => { memoryGovernanceService.markUserApproved(record.memoryId); refresh(); }}>approve</button>
-                    <button type="button" className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-amber-200" onClick={() => { memoryGovernanceService.markQuarantined(record.memoryId); refresh(); }}>quarantine</button>
-                    <button type="button" className="rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-red-200" onClick={() => { memoryGovernanceService.markRejected(record.memoryId); refresh(); }}>reject</button>
+                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]" onClick={() => { memoryGovernanceService.markUserApproved(record.memoryId); refresh(); }}>approve</button>
+                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]" onClick={() => { memoryGovernanceService.markQuarantined(record.memoryId); refresh(); }}>quarantine</button>
+                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]" onClick={() => { memoryGovernanceService.markRejected(record.memoryId); refresh(); }}>reject</button>
                   </div>
                 </div>
               ))}
@@ -185,13 +185,13 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                     {proposal.status === "approved_waiting_write" && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {canWrite?.allowed ? (
-                          <button type="button" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-200" onClick={() => { void governedMemoryWriteService.writeApprovedProposal(proposal.proposalId).then(refresh); }}>Save memory once</button>
+                          <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]" onClick={() => { void governedMemoryWriteService.writeApprovedProposal(proposal.proposalId).then(refresh); }}>Save memory once</button>
                         ) : (
-                          <span className="text-[9px] uppercase tracking-widest text-red-300">Blocked for safety: {canWrite?.reason}</span>
+                          <span className="text-[9px] uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Blocked for safety: {canWrite?.reason}</span>
                         )}
                       </div>
                     )}
-                    {proposal.blockedBy && proposal.blockedBy.length > 0 && <div className="mt-1 text-red-200">Blocked: {proposal.blockedBy.join(", ")}</div>}
+                    {proposal.blockedBy && proposal.blockedBy.length > 0 && <div className="mt-1 text-[var(--luca-danger,#f87171)]">Blocked: {proposal.blockedBy.join(", ")}</div>}
                   </div>
                 );
               })}

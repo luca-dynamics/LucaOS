@@ -194,9 +194,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="Critical risk" value={formatCount("request", gateway.criticalRiskRequests)} tone={gateway.criticalRiskRequests > 0 ? "danger" : "neutral"} />
           <RightPanelMetric label="Execution enabled" value="false" tone="neutral" />
         </div>
-        <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
+        <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-red-200">Gateway research mode</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Gateway research mode</span>
             <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Control disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
@@ -301,9 +301,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="Capture enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Vision model enabled" value="false" tone="neutral" />
         </div>
-        <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
+        <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-red-200">Screen observation permission mode</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Screen observation permission mode</span>
             <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Capture disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
@@ -312,7 +312,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <div className="mt-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Future-readiness checklist — required before any observation</div>
           <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
             {["Explicit consent required", "Visible indicator required", "Region boundary required", "Sensitive-content filter required", "Credential boundary required", "Human confirmation required", "Audit log required", "Revocable"].map((item) => (
-              <span key={item} className="rounded-full border border-amber-500/30 px-2 py-0.5 text-amber-200">✓ {item}</span>
+              <span key={item} className="rounded-full border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] px-2 py-0.5 text-[var(--luca-warning,#f2b23e)]">✓ {item}</span>
             ))}
           </div>
           <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
@@ -332,9 +332,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <RightPanelMetric label="DOM read enabled" value="false" tone="neutral" />
           <RightPanelMetric label="Network request enabled" value="false" tone="neutral" />
         </div>
-        <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
+        <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-red-200">Sandboxed browser research mode</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Sandboxed browser research mode</span>
             <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Launch disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
@@ -343,7 +343,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           <div className="mt-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Future-readiness checklist — required before any browser control</div>
           <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
             {["Explicit approval", "Visible browser boundary", "Sandbox", "Human confirmation", "Credential boundary", "Audit log", "Downloads/uploads blocked", "Wallet/payment blocked", "Revocable"].map((item) => (
-              <span key={item} className="rounded-full border border-amber-500/30 px-2 py-0.5 text-amber-200">✓ {item}</span>
+              <span key={item} className="rounded-full border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] px-2 py-0.5 text-[var(--luca-warning,#f2b23e)]">✓ {item}</span>
             ))}
           </div>
           <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getSandboxedBrowserNoLaunchText()}</p>
