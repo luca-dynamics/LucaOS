@@ -331,7 +331,7 @@ const SystemMonitor: React.FC<Props> = ({
       </div>
 
       <div
-        className={`flex-1 w-full relative rounded-xl overflow-hidden tech-border glass-blur bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] shadow-inner`}
+        className={`flex-1 w-full relative rounded-xl overflow-hidden glass-blur bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] shadow-inner`}
       >
         <canvas ref={canvasRef} className="w-full h-full opacity-90" />
       </div>

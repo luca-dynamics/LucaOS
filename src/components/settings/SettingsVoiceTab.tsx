@@ -287,7 +287,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               <button
                 key={preset.id}
                 onClick={() => applyPreset(preset.id as any)}
-                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all text-center group tech-border`}
+                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all text-center group`}
                 style={{
                   backgroundColor: isMobile
                     ? "rgba(255,255,255,0.02)"
@@ -349,7 +349,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Acoustic Detection (Wake Word) */}
         <motion.div
           variants={item}
-          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-lg"} glass-blur`}
+          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : " p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -400,7 +400,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 };
                 settingsService.saveSettings(updated);
               }}
-              className={`w-full py-1.5 rounded-lg border text-sm font-black outline-none transition-all tech-border`}
+              className={`w-full py-1.5 rounded-lg border text-sm font-black outline-none transition-all`}
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
                 color: settings.voice.wakeWordEnabled
@@ -419,7 +419,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Listening Model */}
         <motion.div
           variants={item}
-          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-lg"} glass-blur`}
+          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : " p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -464,7 +464,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   onUpdate("voice", "provider", "gemini-genai");
                 }
               }}
-              className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border tech-border`}
+              className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border`}
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -507,7 +507,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Vocal Synthesis Engine (Merged Card) */}
         <motion.div
           variants={item}
-          className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 lg:col-span-1 rounded-lg glass-blur"}`}
+          className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : " p-4 space-y-4 lg:col-span-1 rounded-lg glass-blur"}`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -547,7 +547,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   settings.voice.sttModel ===
                   "gemini-live-2.5-flash-preview-native-audio-09-2025"
                 }
-                className={`w-full rounded-lg p-2 text-xs outline-none transition-all font-mono border tech-border ${settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`w-full rounded-lg p-2 text-xs outline-none transition-all font-mono border ${settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" ? "opacity-50 cursor-not-allowed" : ""}`}
                 style={{
                   backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                   borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -602,7 +602,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 value={settings.voice.voiceId || "native-browser"}
                 onChange={(e) => onUpdate("voice", "voiceId", e.target.value)}
                 disabled={settings.voice.provider === "gemini-genai"}
-                className={`w-full border rounded-lg p-2 text-xs outline-none transition-all tech-border`}
+                className={`w-full border rounded-lg p-2 text-xs outline-none transition-all`}
                 style={{
                   backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                   borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -679,7 +679,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         {/* Rhythm Calibration (Moved into grid for better balance) */}
         <motion.div
           variants={item}
-          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-3 rounded-lg"} glass-blur`}
+          className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : " p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -719,7 +719,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   onUpdate("voice", "pacing", p.id as any);
                   onUpdate("voice", "rate", p.rate);
                 }}
-                className={`py-1.5 rounded border bg-[var(--app-bg-tint)] text-sm font-mono transition-all shadow-sm tech-border hover:bg-white/5`}
+                className={`py-1.5 rounded border bg-[var(--app-bg-tint)] text-sm font-mono transition-all shadow-sm hover:bg-white/5`}
                 style={{
                   color:
                     settings.voice.pacing === p.id
@@ -747,7 +747,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
       {/* Advanced Voice Routing */}
       <motion.div
         variants={item}
-        className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "tech-border p-4 space-y-4 rounded-lg"} glass-blur`}
+        className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : " p-4 space-y-4 rounded-lg"} glass-blur`}
         style={{
           backgroundColor: isMobile
             ? "rgba(255,255,255,0.02)"
@@ -909,7 +909,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         variants={item}
         initial="hidden"
         animate="show"
-        className={`tech-border p-4 space-y-4 rounded-lg glass-blur`}
+        className={` p-4 space-y-4 rounded-lg glass-blur`}
         style={{
           backgroundColor: "var(--app-bg-tint, #11111a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -989,7 +989,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               return (
                 <div
                   key={v.id}
-                  className={`flex items-center justify-between p-2 rounded border tech-border`}
+                  className={`flex items-center justify-between p-2 rounded border`}
                   style={{
                     backgroundColor: isActive
                       ? "var(--app-bg-tint)"

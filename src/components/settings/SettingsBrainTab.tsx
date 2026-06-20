@@ -364,7 +364,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className={`flex items-center justify-between ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-3 rounded-xl border"} glass-blur`}
+        className={`flex items-center justify-between ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : " p-3 rounded-xl border"} glass-blur`}
         style={{
           backgroundColor: isMobile
             ? "rgba(255,255,255,0.02)"
@@ -410,7 +410,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
       {/* Cloud API Config Section */}
       <motion.div
         variants={item}
-        className={`space-y-4 ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "tech-border p-4 rounded-xl border"} glass-blur`}
+        className={`space-y-4 ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : " p-4 rounded-xl border"} glass-blur`}
         style={{
           backgroundColor: isMobile
             ? "rgba(255,255,255,0.02)"
@@ -509,7 +509,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   onChange={(e) =>
                     onUpdate("brain", "geminiApiKey", e.target.value)
                   }
-                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
+                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                     borderColor:
@@ -552,7 +552,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   onChange={(e) =>
                     onUpdate("brain", "anthropicApiKey", e.target.value)
                   }
-                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
+                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                     borderColor:
@@ -595,7 +595,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   onChange={(e) =>
                     onUpdate("brain", "openaiApiKey", e.target.value)
                   }
-                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
+                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                     borderColor:
@@ -637,7 +637,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   onChange={(e) =>
                     onUpdate("brain", "xaiApiKey", e.target.value)
                   }
-                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
+                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                     borderColor:
@@ -680,7 +680,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   onChange={(e) =>
                     onUpdate("brain", "deepseekApiKey", e.target.value)
                   }
-                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border tech-border`}
+                  className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                     borderColor:
@@ -872,7 +872,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Intelligence Card */}
         <motion.div
           variants={item}
-          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
+          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -927,7 +927,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 return isKnown ? settings.brain.model : "custom";
               })()}
               onChange={(e) => onUpdate("brain", "model", e.target.value)}
-              className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border tech-border`}
+              className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border`}
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -1022,7 +1022,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                         : settings.brain.model
                     }
                     onChange={(e) => onUpdate("brain", "model", e.target.value)}
-                    className={`w-full rounded-lg p-2 text-sm outline-none transition-colors border tech-border`}
+                    className={`w-full rounded-lg p-2 text-sm outline-none transition-colors border`}
                     style={{
                       backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
                       borderColor:
@@ -1042,7 +1042,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Memory Gateway */}
         <motion.div
           variants={item}
-          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
+          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -1072,7 +1072,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <select
             value={settings.brain.memoryModel || "gemini-2.5-flash"}
             onChange={(e) => onUpdate("brain", "memoryModel", e.target.value)}
-            className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border tech-border`}
+            className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border`}
             style={{
               backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
               borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -1107,7 +1107,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Knowledge Maintenance (Settings) */}
         <motion.div
           variants={item}
-          className={`space-y-4 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
+          className={`space-y-4 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -1137,7 +1137,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <div className="space-y-3">
             {/* Background Sync Toggle */}
             <div
-              className={`flex items-center justify-between p-2 rounded-lg border tech-border`}
+              className={`flex items-center justify-between p-2 rounded-lg border`}
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.05))",
@@ -1230,7 +1230,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Quota Intelligence Card */}
         <motion.div
           variants={item}
-          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
+          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -1298,7 +1298,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Local Brain / Runtime Card */}
         <motion.div
           variants={item}
-          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
+          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"
@@ -1397,7 +1397,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
       {/* Creativity / Heat Pool */}
       <motion.div
         variants={item}
-        className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} tech-border glass-blur`}
+        className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
         style={{
           backgroundColor: isMobile
             ? "rgba(255,255,255,0.02)"

@@ -221,7 +221,7 @@ export const ScreenShare = forwardRef<ScreenShareHandle, ScreenShareProps>(
         {showUI && showSourcePicker && (
           <div className="fixed inset-0 z-[100] bg-black/80 glass-blur flex items-center justify-center p-8 animate-in fade-in pointer-events-auto">
             <div
-              className={`glass-panel tech-border ${theme.primary} rounded-lg p-6 max-w-4xl w-full flex flex-col max-h-[80vh] overflow-hidden`}
+              className={`glass-panel ${theme.primary} rounded-lg p-6 max-w-4xl w-full flex flex-col max-h-[80vh] overflow-hidden`}
               style={{
                 background: "rgba(11, 6, 6, 0.45)",
                 borderColor: `${theme.hex}33`,

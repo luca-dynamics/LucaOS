@@ -77,7 +77,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
         <button
           key={suggestion.id}
           onClick={() => onChipClick(suggestion.prompt)}
-          className={`group flex-shrink flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium transition-all duration-300 tech-border glass-blur ${
+          className={`group flex-shrink flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium transition-all duration-300 glass-blur ${
             isLight
               ? "shadow-sm hover:shadow-md"
               : "hover:bg-white/10"

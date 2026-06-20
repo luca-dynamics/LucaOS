@@ -40,7 +40,7 @@ const SmartDeviceCard: React.FC<Props> = ({
     <div
       className={`
         relative p-5 rounded-2xl transition-all duration-500
-        flex flex-col gap-3 group tech-border glass-blur border
+        flex flex-col gap-3 group glass-blur border
         animate-in zoom-in duration-700
         ${isError 
           ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] shadow-[color:var(--luca-danger,#f87171)]" 
@@ -51,7 +51,7 @@ const SmartDeviceCard: React.FC<Props> = ({
     >
       <div className="flex justify-between items-start">
         <div
-          className={`p-2.5 rounded-xl border tech-border transition-all duration-500 shadow-inner
+          className={`p-2.5 rounded-xl border transition-all duration-500 shadow-inner
             ${isError 
               ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" 
               : isOn 
@@ -91,7 +91,7 @@ const SmartDeviceCard: React.FC<Props> = ({
       >
         <span className="text-[var(--app-text-muted)] opacity-40">Status</span>
         <span
-          className={`px-2 py-0.5 rounded border tech-border transition-all
+          className={`px-2 py-0.5 rounded border transition-all
             ${isOn 
               ? "text-[var(--app-primary)] bg-[var(--app-primary)]/10 border-[var(--app-primary)]/20" 
               : "text-[var(--app-text-muted)] bg-black/10 border-[var(--app-border-main)]/30"}
@@ -104,7 +104,7 @@ const SmartDeviceCard: React.FC<Props> = ({
       {(device.type === DeviceType.SMART_TV || device.type === DeviceType.MOBILE) && onControlClick && (
         <button
           onClick={() => onControlClick(device)}
-          className={`mt-2 w-full py-2.5 rounded-xl text-[10px] font-black tracking-[0.3em] uppercase italic transition-all group/btn border tech-border glass-blur 
+          className={`mt-2 w-full py-2.5 rounded-xl text-[10px] font-black tracking-[0.3em] uppercase italic transition-all group/btn border glass-blur 
             bg-black/20 border-[var(--app-border-main)] text-[var(--app-text-main)]
             hover:bg-[var(--app-text-main)]/10 hover:tracking-[0.4em] active:scale-95 shadow-lg shadow-black/20
           `}

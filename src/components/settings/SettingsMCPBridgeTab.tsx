@@ -160,7 +160,7 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
       >
         {/* Luca Traffic Control Switcher */}
         <div
-          className={`flex p-1.5 border tech-border glass-blur shadow-lg self-start mb-2 ${isMobile ? "mx-4 border-x-0 border-y rounded-none" : "rounded-xl"}`}
+          className={`flex p-1.5 border glass-blur shadow-lg self-start mb-2 ${isMobile ? "mx-4 border-x-0 border-y rounded-none" : "rounded-xl"}`}
           style={{
             backgroundColor: isMobile
               ? "rgba(255,255,255,0.02)"

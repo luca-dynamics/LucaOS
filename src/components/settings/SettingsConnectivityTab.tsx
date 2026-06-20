@@ -37,7 +37,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       {/* Header Info */}
       <div
-        className={`flex items-center gap-4 p-5 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] shadow-sm"} tech-border glass-blur`}
+        className={`flex items-center gap-4 p-5 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] shadow-sm"} glass-blur`}
       >
         <div className="flex-1 min-w-0">
           <h4
@@ -66,7 +66,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
 
       {/* Mode Selector */}
       <div
-        className={`flex gap-1.5 p-1.5 self-start transition-all ${isMobile ? "mx-4 bg-white/5 border-none" : "rounded-lg bg-white/5 tech-border"} glass-blur shadow-inner`}
+        className={`flex gap-1.5 p-1.5 self-start transition-all ${isMobile ? "mx-4 bg-white/5 border-none" : "rounded-lg bg-white/5"} glass-blur shadow-inner`}
       >
         <button
           onClick={() => setMode("stdio")}
@@ -90,7 +90,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
 
         {mode === "stdio" ? (
           <div
-            className={`overflow-hidden transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)]"} tech-border glass-blur shadow-lg`}
+            className={`overflow-hidden transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)]"} glass-blur shadow-lg`}
           >
             <div
               className={`flex items-center justify-between px-5 py-3 border-b border-[var(--app-border-main)] bg-white/5 opacity-90`}
@@ -121,7 +121,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
           </div>
         ) : (
           <div
-            className={`overflow-hidden p-8 text-center space-y-6 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-lg"} tech-border glass-blur`}
+            className={`overflow-hidden p-8 text-center space-y-6 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-lg"} glass-blur`}
           >
             <div className="space-y-3">
               <h6
@@ -164,7 +164,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
       {/* Path Helper */}
       <div className={`grid grid-cols-1 md:grid-cols-2 ${isMobile ? "gap-0" : "gap-4"}`}>
         <div
-          className={`p-5 space-y-3 transition-all ${isMobile ? "border-x-0 border-b rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} tech-border glass-blur`}
+          className={`p-5 space-y-3 transition-all ${isMobile ? "border-x-0 border-b rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} glass-blur`}
         >
           <div
             className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}
@@ -180,7 +180,7 @@ const SettingsConnectivityTab: React.FC<SettingsConnectivityTabProps> = ({ isMob
           </p>
         </div>
         <div
-          className={`p-5 space-y-3 transition-all ${isMobile ? "border-x-0 border-b rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} tech-border glass-blur`}
+          className={`p-5 space-y-3 transition-all ${isMobile ? "border-x-0 border-b rounded-none bg-white/5" : "rounded-lg bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-sm"} glass-blur`}
         >
           <div
             className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--app-text-main)] opacity-60`}

@@ -386,7 +386,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
       {/* Header Info Box */}
       <div
-        className={`text-xs p-3 border transition-all tech-border glass-blur opacity-80 ${isMobile ? "mx-4 border-x-0 border-y rounded-none" : "rounded-lg"}`}
+        className={`text-xs p-3 border transition-all glass-blur opacity-80 ${isMobile ? "mx-4 border-x-0 border-y rounded-none" : "rounded-lg"}`}
         style={{
           backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -412,7 +412,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search tool servers or capabilities..."
-            className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all border rounded-lg tech-border`}
+            className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all border rounded-lg`}
             style={{ 
               backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
               borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -421,7 +421,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           />
         </div>
         
-        <div className={`flex p-1 rounded-xl border rounded-lg tech-border`} style={{ backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))", borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
+        <div className={`flex p-1 rounded-xl border rounded-lg`} style={{ backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))", borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
           <button
             onClick={() => setActiveView("active")}
             className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${activeView === "active" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
@@ -443,7 +443,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       <div className={`flex flex-wrap gap-2 ${isMobile ? "px-4" : ""}`}>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black border transition-all shadow-sm hover:bg-white/5 rounded-lg tech-border`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black border transition-all shadow-sm hover:bg-white/5 rounded-lg`}
           style={{
             borderColor: "var(--app-border-main, rgba(255,255,255,0.2))",
             color: "var(--app-text-main, #ffffff)",
@@ -456,7 +456,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
         <button
           onClick={handleSync}
           disabled={loading}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all shadow-sm disabled:opacity-50 border rounded-lg tech-border`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all shadow-sm disabled:opacity-50 border rounded-lg`}
           style={{
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
             backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
@@ -472,7 +472,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       {/* Add Server Form */}
       {showAddForm && (
         <div
-          className={`p-4 rounded-xl space-y-4 border transition-all rounded-lg tech-border glass-blur`}
+          className={`p-4 rounded-xl space-y-4 border transition-all rounded-lg glass-blur`}
           style={{
             backgroundColor: "var(--app-bg-tint, #11111a)",
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -499,7 +499,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 setFormData((p) => ({ ...p, name: e.target.value }))
               }
               placeholder="e.g. filesystem, github"
-              className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg tech-border`}
+              className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg`}
               style={{ 
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
@@ -563,7 +563,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     setFormData((p) => ({ ...p, command: e.target.value }))
                   }
                   placeholder="e.g. npx, python3, node"
-                  className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg tech-border`}
+                  className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                     borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -582,7 +582,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     setFormData((p) => ({ ...p, args: e.target.value }))
                   }
                   placeholder="e.g. -y @modelcontextprotocol/server-filesystem /tmp"
-                  className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg tech-border`}
+                  className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                     borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -606,7 +606,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                   setFormData((p) => ({ ...p, url: e.target.value }))
                 }
                 placeholder="e.g. https://mcp-server.example.com"
-                className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg tech-border`}
+                className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg`}
                 style={{
                   backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                   borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -677,7 +677,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           setEnvVars(updated);
                         }}
                         placeholder="KEY"
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-sm placeholder-gray-600 focus:outline-none font-mono transition-all border rounded-lg tech-border`}
+                        className={`flex-1 rounded-lg px-2 py-1.5 text-sm placeholder-gray-600 focus:outline-none font-mono transition-all border rounded-lg`}
                         style={{
                           backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -693,7 +693,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           setEnvVars(updated);
                         }}
                         placeholder="value"
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-sm placeholder-gray-600 focus:outline-none font-mono transition-all border rounded-lg tech-border`}
+                        className={`flex-1 rounded-lg px-2 py-1.5 text-sm placeholder-gray-600 focus:outline-none font-mono transition-all border rounded-lg`}
                         style={{
                           backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
                           borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -772,7 +772,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                   return (
                     <div
                       key={server.id}
-                      className={`rounded-xl overflow-hidden transition-all rounded-lg tech-border border glass-blur`}
+                      className={`rounded-xl overflow-hidden transition-all rounded-lg border glass-blur`}
                       style={{
                         backgroundColor: "var(--app-bg-tint, #0a0a0a)",
                         borderColor: isConnected
@@ -868,7 +868,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                                   {serverTools[server.id].map((tool: any) => (
                                     <span
                                       key={tool.name}
-                                      className={`px-2 py-1 rounded-md text-base transition-all border rounded-lg tech-border`}
+                                      className={`px-2 py-1 rounded-md text-base transition-all border rounded-lg`}
                                       style={{
                                         borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
                                         backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
@@ -965,7 +965,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                     return (
                       <div
                         key={item.id}
-                        className={`p-4 rounded-2xl border transition-all relative overflow-hidden group bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg tech-border`}
+                        className={`p-4 rounded-2xl border transition-all relative overflow-hidden group bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg`}
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="p-2.5 rounded-2xl" style={{ backgroundColor: setHexAlpha(item.color, 0.15) }}>
