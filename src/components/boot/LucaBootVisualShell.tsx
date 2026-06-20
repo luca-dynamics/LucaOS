@@ -12,11 +12,23 @@ import {
   lucaBootProgressBySequence,
   type BiosStatus,
 } from "./lucaBootVisualShellModel";
+import { Presence, EdgePresence } from "../presence";
+import type { PresenceIntent } from "../presence";
 
 type BootTheme = {
   hex: string;
   themeName: string;
   isLight?: boolean;
+};
+
+// Boot reads as Luca incarnating into this host: reasoning about the machine,
+// then acting, then settling — ready to meet you.
+const BOOT_INTENT: Partial<Record<BootSequence, PresenceIntent>> = {
+  INIT: "thinking",
+  BIOS: "thinking",
+  KERNEL: "working",
+  ONBOARDING: "listening",
+  READY: "idle",
 };
 
 interface LucaBootVisualShellProps {
@@ -29,6 +41,7 @@ interface LucaBootVisualShellProps {
 export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
   bootSequence,
   biosStatus,
+  theme,
   browserSafeInterface = false,
 }) => {
   const bootCopy = getLucaBootSequenceCopy(bootSequence);
@@ -48,12 +61,16 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
   const statusDetail = browserSafeInterface
     ? LUCA_BROWSER_SAFE_BOOT_STATUS.detail
     : getLucaBootDiagnosticCopy("loadingLucaOs").standardLabel;
+  const bootIntent: PresenceIntent = browserSafeInterface
+    ? "idle"
+    : BOOT_INTENT[bootSequence] ?? "thinking";
 
   return (
     <div
       className="relative flex h-full min-h-screen w-full items-center justify-center overflow-hidden bg-[#050507] px-5 py-7 font-sans text-white sm:px-8 sm:py-10"
       data-boot-shell="luca-hologram-face"
     >
+      <EdgePresence intent={bootIntent} color={theme?.hex} radius={0} />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(255,255,255,0.075),transparent_30%),linear-gradient(180deg,#0a0a0d_0%,#040405_52%,#0b0b0e_100%)]" />
       <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-100/5 blur-3xl sm:h-[32rem] sm:w-[32rem]" />
 
@@ -67,15 +84,17 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           aria-hidden="true"
         >
           <div className="absolute left-1/2 top-[57%] h-24 w-[72%] max-w-[34rem] -translate-x-1/2 rounded-[100%] bg-cyan-100/[0.07] blur-2xl" />
-          <img
-            src={launchIdentity.assetSrc}
-            alt=""
-            className="relative h-auto w-[min(92vw,31rem)] max-w-none animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain opacity-90 drop-shadow-[0_0_44px_rgba(205,245,255,0.18)] sm:w-[min(56vw,36rem)]"
-            style={{
-              filter:
-                "brightness(1.05) contrast(1.08) saturate(0.88) drop-shadow(0 0 52px rgba(203, 244, 255, 0.18))",
-            }}
-          />
+          <div
+            className="relative flex items-center justify-center"
+            style={{ height: "min(56vw, 20rem)" }}
+          >
+            <Presence
+              intent={bootIntent}
+              color={theme?.hex}
+              size={232}
+              reactToAudio={false}
+            />
+          </div>
         </div>
 
         <div className="relative -mt-8 flex flex-col items-center gap-2 sm:-mt-10">
