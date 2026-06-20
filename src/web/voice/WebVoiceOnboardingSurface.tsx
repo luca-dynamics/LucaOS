@@ -10,7 +10,8 @@ export function WebVoiceOnboardingSurface({
   onBack,
   onComplete,
 }: OnboardingConversationProps) {
-  const [microphoneStatus, setMicrophoneStatus] = useState<WebVoiceMicStatus>("idle");
+  const [microphoneStatus, setMicrophoneStatus] =
+    useState<WebVoiceMicStatus>("idle");
   const [typedFallback, setTypedFallback] = useState("");
 
   const requestMicrophone = async () => {
@@ -32,7 +33,9 @@ export function WebVoiceOnboardingSurface({
     onComplete({
       identity: { name: userName },
       assistantPreferences: { detailLevel: "balanced", helpStyle: "proactive" },
-      personality: { preferences: ["voice-first", typedFallback || "balanced setup"] },
+      personality: {
+        preferences: ["voice-first", typedFallback || "balanced setup"],
+      },
       workContext: { profession: typedFallback },
     });
 
@@ -48,28 +51,47 @@ export function WebVoiceOnboardingSurface({
       onBack={onBack}
       onContinue={finish}
       onRequestMic={requestMicrophone}
-      transcript={isReady ? "Microphone ready" : userName ? `Hi ${userName}. Luca is listening.` : ""}
+      transcript={
+        isReady
+          ? "Voice is ready."
+          : userName
+            ? `Hi ${userName}. I’m listening.`
+            : ""
+      }
       transcriptSource={isReady ? "system" : "user"}
       isVadActive={isReady || isRequesting}
       isSpeaking={false}
       persona={theme?.primary || "RUTHLESS"}
       theme={{
         primary: theme?.hex || "#67e8f9",
-        border: "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]",
+        border:
+          "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]",
         bg: "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
         glow: "shadow-[color:var(--luca-info,#4f8cff)]",
         coreColor: theme?.hex || "#67e8f9",
         hex: theme?.hex || "#67e8f9",
         themeName: theme?.primary || "web",
       }}
-      statusMessage={isUnavailable ? "Microphone unavailable" : isRequesting ? "Requesting microphone" : isReady ? "Microphone ready" : "Waiting for audio input"}
+      statusMessage={
+        isUnavailable
+          ? "Voice access is not available yet."
+          : isRequesting
+            ? "Preparing microphone access…"
+            : isReady
+              ? "Voice is ready."
+              : "Waiting for your voice…"
+      }
       hideDebugPanels
       hideControls
       transparentBackground
       amplitude={isReady ? 0.18 : isRequesting ? 0.12 : 0}
       micAvailable={!isUnavailable}
       realtimeStatus={microphoneStatus}
-      realtimeLastError={isUnavailable ? "Use typed fallback or check browser microphone permission." : null}
+      realtimeLastError={
+        isUnavailable
+          ? "You can type instead, or review microphone access."
+          : null
+      }
       showTypedFallback
       typedFallbackValue={typedFallback}
       typedFallbackPlaceholder="Optional: tell Luca what you want help with first…"

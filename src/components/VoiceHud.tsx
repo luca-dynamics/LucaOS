@@ -46,7 +46,7 @@ interface VoiceHudProps {
   };
   statusMessage?: string | null;
   isVisionActive?: boolean; // New prop for dual-mode optimization
-  hideDebugPanels?: boolean; // Hide ACTIVE PROTOCOLS and TELEMETRY panels
+  hideDebugPanels?: boolean; // Hide voice diagnostics panels
   hideControls?: boolean; // Hide settings and camera buttons (for onboarding)
   transparentBackground?: boolean; // Allow underlying backgrounds to show through
   amplitude?: number; // Real-time audio amplitude
@@ -182,7 +182,9 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       hideControls={hideControls}
       transparentBackground={transparentBackground}
       visualData={visualData}
-      elevationState={{ activeMissionScope: elevationState?.activeMissionScope }}
+      elevationState={{
+        activeMissionScope: elevationState?.activeMissionScope,
+      }}
       amplitude={localAmplitude}
       telemetrySummary={telemetrySummary ?? undefined}
       speedLabel={speedLabel ?? undefined}
@@ -202,7 +204,11 @@ const VoiceHud: React.FC<VoiceHudProps> = ({
       dynamicProtocols={dynamicProtocols}
       totalToolCount={getAllTools().length}
       renderSettingsModal={(onSettingsClose) => (
-        <SettingsModal onClose={onSettingsClose} initialTab="voice" theme={theme} />
+        <SettingsModal
+          onClose={onSettingsClose}
+          initialTab="voice"
+          theme={theme}
+        />
       )}
     />
   );

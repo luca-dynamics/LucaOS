@@ -10,6 +10,7 @@ const webVoiceSurface = read("src/web/voice/WebVoiceOnboardingSurface.tsx");
 const webReadyState = read("src/web/WebReadyState.tsx");
 const webLifecycleShell = read("src/web/WebLifecycleShell.tsx");
 const lucaChatSurface = read("src/components/chat/LucaChatSurface.tsx");
+const voiceHudSurface = read("src/components/voice/VoiceHudSurface.tsx");
 
 const normalUiSources = [
   ["src/web/WebLucaShell.tsx", webLucaShell],
@@ -31,6 +32,25 @@ const forbiddenRuntimeCopy = [
   "Continue to LucaOS Web Shell",
   "Original onboarding complete",
   "System Ready",
+];
+
+const forbiddenNormalVoiceCopy = [
+  "ACTIVE PROTOCOLS",
+  "TELEMETRY STREAM",
+  "ACTIVE_MODEL",
+  "RESPONSE_CLASS",
+  "LOCAL_CORE",
+  "ROUTING_HEALTH",
+  "NEXT_ROUTE",
+  "ROUTE_CONFIDENCE",
+  "AUDIO_INPUT_DB",
+  "DOMINANT_FREQ",
+  "FIREWALL",
+  "SHIELD_ACTIVE",
+  "MISSION ACTIVE",
+  "WAITING FOR AUDIO INPUT",
+  "MICROPHONE UNAVAILABLE",
+  "Voice Status:",
 ];
 
 const forbiddenSharedImports = [
@@ -61,6 +81,32 @@ describe("WebBridge generated shell eradication audit", () => {
         expect(source, `${path} must not render ${copy}`).not.toContain(copy);
       }
     }
+  });
+
+  it("keeps normal web voice UI free of tactical/debug console copy", () => {
+    for (const copy of forbiddenNormalVoiceCopy) {
+      expect(
+        webVoiceSurface,
+        `web voice onboarding must not render ${copy}`,
+      ).not.toContain(copy);
+    }
+
+    const showTechnicalPanelsIndex = voiceHudSurface.indexOf(
+      "const showTechnicalPanels",
+    );
+    expect(showTechnicalPanelsIndex).toBeGreaterThan(-1);
+    for (const copy of forbiddenNormalVoiceCopy.slice(0, 13)) {
+      const copyIndex = voiceHudSurface.indexOf(copy);
+      if (copyIndex !== -1) {
+        expect(
+          copyIndex,
+          `${copy} should only appear after the debug-gated panel guard`,
+        ).toBeGreaterThan(showTechnicalPanelsIndex);
+      }
+    }
+    expect(voiceHudSurface).not.toContain("WAITING FOR AUDIO INPUT");
+    expect(voiceHudSurface).not.toContain("MICROPHONE UNAVAILABLE");
+    expect(voiceHudSurface).not.toContain("Voice Status:");
   });
 
   it("keeps WebBridge presentation files as thin shared-surface adapters", () => {
