@@ -24,6 +24,8 @@ import { createProviderHubRouteTraceItems } from "./providerHubRouteTraceBridge"
 import { createProviderFactoryProviderHubDryRunComparison } from "../model-router/providerHubProviderFactoryDryRun";
 import { createProviderFactoryDryRunOperationItems } from "./providerHubDryRunBridge";
 import { createProviderHubRouteDecision } from "../model-router/providerHubRoutePlanner";
+import { createProviderHubShadowRouteTrace } from "../model-router/providerHubShadowRouteTrace";
+import { createProviderHubShadowRouteTraceItems } from "./providerHubShadowRouteTraceBridge";
 import type { OperationCenterItem } from "./operationCenterTypes";
 import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
 import { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } from "./operationCenterLucaLinkRuntimeAuthorityBridge";
@@ -242,6 +244,21 @@ const providerHubRouteDecision = createProviderHubRouteDecision({
   allowCloudProviders: true,
 });
 const providerHubRouteTraceItems = createProviderHubRouteTraceItems(providerHubRouteDecision);
+const providerHubShadowTraceItems = createProviderHubShadowRouteTraceItems(createProviderHubShadowRouteTrace({
+  currentProviderId: "luca-prime",
+  currentRouteMode: "luca-prime",
+  currentModelId: "gemini-fixture",
+  taskType: "chat",
+  requiredCapabilities: ["text_generation"],
+  routePreference: "balanced",
+  connectionSnapshots: providerHubFixtureSnapshots,
+  allowFallbacks: true,
+  allowPaidProviders: true,
+  allowLocalProviders: true,
+  allowCloudProviders: true,
+  trigger: "operation_center_fixture",
+  observedAt: createdAt,
+}));
 const providerFactoryDryRunItems = createProviderFactoryDryRunOperationItems(createProviderFactoryProviderHubDryRunComparison({
   currentProviderId: "luca-prime",
   currentRouteMode: "luca-prime",
@@ -275,5 +292,6 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...dryRunHandoffItems,
   ...providerHubItems,
   ...providerHubRouteTraceItems,
+  ...providerHubShadowTraceItems,
   ...providerFactoryDryRunItems,
 ]);

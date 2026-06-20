@@ -21,6 +21,7 @@ import { createProviderHubConfigureIntentFromCard, type LucaProviderHubConfigure
 import { createProviderHubSettingsPatch, getProviderHubSafeKeyStatus, providerHubApiKeyField, providerHubBaseUrlField } from "../model-router/providerHubConfiguration";
 import { canTestProviderHubConnection, testProviderHubConnection, type LucaProviderHubConnectionTestResult } from "../model-router/providerHubConnectionTest";
 import { createProviderHubRuntimeDryRunComparison, type LucaProviderHubRuntimeDryRunComparison } from "../model-router/providerHubRuntimeDryRunComparison";
+import { createProviderHubShadowRouteTrace, type LucaProviderHubShadowRouteTrace } from "../model-router/providerHubShadowRouteTrace";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -153,10 +154,11 @@ interface RoutePreviewState {
 const RoutePreviewPanel: React.FC<{
   decision: LucaProviderHubRouteDecision;
   dryRunComparison: LucaProviderHubRuntimeDryRunComparison;
+  shadowTrace: LucaProviderHubShadowRouteTrace;
   preview: RoutePreviewState;
   onPreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>;
   theme: any;
-}> = ({ decision, dryRunComparison, preview, onPreviewChange, theme }) => {
+}> = ({ decision, dryRunComparison, shadowTrace, preview, onPreviewChange, theme }) => {
   const copyRouteDiagnostics = useCallback(() => {
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
       void navigator.clipboard.writeText(decision.safeDiagnosticsText);
@@ -198,12 +200,26 @@ const RoutePreviewPanel: React.FC<{
         <p className="mt-1">{dryRunComparison.mismatchReason ?? dryRunComparison.providerHubReason}</p>
         <button type="button" onClick={() => { if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) void navigator.clipboard.writeText(dryRunComparison.safeDiagnosticsText); }} className="mt-2 px-2 py-1 rounded text-[9px] font-bold border" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }}>Copy safe dry-run diagnostics</button>
       </div>
+
+      <div className="rounded border p-2 text-[9px] mb-3" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <b style={{ color: "var(--app-text-main)" }}>Shadow trace</b>
+          <span className={`px-2 py-0.5 rounded-full font-mono ${shadowTrace.matchesCurrentRoute ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>{shadowTrace.matchesCurrentRoute ? "match" : "mismatch"}</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div>Trigger: <b>{shadowTrace.trigger}</b></div>
+          <div>Current: <b>{shadowTrace.currentProviderId ?? "unavailable"}</b>{shadowTrace.currentModelId ? ` / ${shadowTrace.currentModelId}` : ""}</div>
+          <div>Planned: <b>{shadowTrace.providerHubSelectedProviderId ?? "none"}</b>{shadowTrace.providerHubSelectedModelId ? ` / ${shadowTrace.providerHubSelectedModelId}` : ""}</div>
+        </div>
+        <div className="mt-1">Candidates: <b>{shadowTrace.candidateCount}</b>; fallbacks: <b>{shadowTrace.fallbackCandidateCount}</b>; blocked: <b>{shadowTrace.blockedCandidateCount}</b>. {shadowTrace.mismatchReason ?? shadowTrace.providerHubReason}</div>
+        <button type="button" onClick={() => { if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) void navigator.clipboard.writeText(shadowTrace.safeDiagnosticsText); }} className="mt-2 px-2 py-1 rounded text-[9px] font-bold border" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-main)" }}>Copy shadow trace diagnostics</button>
+      </div>
       <div className="space-y-1.5">{decision.candidates.slice(0, 3).map((candidate) => <div key={candidate.providerId} className="rounded border p-2 text-[9px]" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)" }}><div className="flex justify-between gap-2"><b style={{ color: "var(--app-text-main)" }}>{candidate.providerLabel}</b><span>{candidate.score} • {candidate.readinessState}{candidate.configuredModelId ? ` • ${candidate.configuredModelId}` : ""}</span></div><div className="mt-1">{candidate.reasons.slice(0, 2).join(" ")}</div></div>)}</div>
     </div>
   );
 };
 
-const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
+const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; shadowTrace: LucaProviderHubShadowRouteTrace; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, shadowTrace, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
   <div className="mb-4 rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)" }}>
     <div className="p-4 border-b" style={{ borderColor: "var(--app-border-main)" }}>
       <div className="flex items-start justify-between gap-3">
@@ -218,7 +234,7 @@ const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDe
       </div>
     </div>
     <div className="p-3">
-      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} preview={routePreview} onPreviewChange={onRoutePreviewChange} theme={theme} />
+      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} preview={routePreview} onPreviewChange={onRoutePreviewChange} theme={theme} />
       <div className="mt-3" />
       {viewModel.sections.map((section) => (
         <div key={section.id} className="mb-3 last:mb-0">
@@ -763,6 +779,23 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     allowCloudProviders: routePreview.allowCloudProviders,
   }), [providerHubSnapshots, routePreview, routeStatus]);
 
+  const shadowRouteTrace = useMemo(() => createProviderHubShadowRouteTrace({
+    currentProviderId: routeStatus?.provider,
+    currentRouteMode: routeStatus?.mode,
+    currentModelId: routeStatus?.model,
+    taskType: routePreview.taskType,
+    requiredCapabilities: getRoutePreviewCapabilities(routePreview.taskType),
+    routePreference: routePreview.preference,
+    connectionSnapshots: providerHubSnapshots,
+    preferredProviderId: routePreview.preferredProviderId || undefined,
+    allowFallbacks: routePreview.allowFallbacks,
+    allowPaidProviders: routePreview.allowPaidProviders,
+    allowLocalProviders: routePreview.allowLocalProviders,
+    allowCloudProviders: routePreview.allowCloudProviders,
+    trigger: routeStatus ? "runtime_route_status" : "model_manager_preview",
+    observedAt: new Date().toISOString(),
+  }), [providerHubSnapshots, routePreview, routeStatus]);
+
   const handleProviderHubConfigure = useCallback((card: ProviderHubPanelCardViewModel) => {
     setProviderHubConfigureCard(card);
   }, []);
@@ -829,7 +862,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
+        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} shadowTrace={shadowRouteTrace} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
         {providerHubConfigureCard && activeProviderHubIntent && (
           <ProviderHubConfigurationPanel
             card={providerHubConfigureCard}
