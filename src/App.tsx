@@ -2510,7 +2510,15 @@ function AppContent() {
             <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
           )}
           <EdgePresence
-            intent="idle"
+            intent={
+              effectiveConnectionTier === "OFFLINE"
+                ? "attention"
+                : isProcessing
+                  ? "thinking"
+                  : isVoiceMode
+                    ? "listening"
+                    : "idle"
+            }
             color={theme.hex}
             radius={0}
             style={{ position: "fixed", zIndex: 40 }}
