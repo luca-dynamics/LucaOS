@@ -181,7 +181,6 @@ export function VoiceHudSurface({
         WebkitBackdropFilter: transparentBackground ? "none" : `blur(var(--app-bg-blur, 40px))`,
       }}
     >
-      <div className="glass-noise" />
       <div className={`absolute top-0 left-0 w-full h-full pointer-events-none transition-opacity duration-500 ${isVideoActive ? "opacity-40" : "opacity-0"}`}>
         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
         {isVideoActive && (

@@ -702,7 +702,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       {/* Background handled by App.tsx (LiquidBackground) */}
 
       <div
-        className="glass-noise transition-opacity duration-700"
+        className="transition-opacity duration-700"
         style={{
           opacity:
             "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.7) / 0.3), 1)) * 0.025)",
