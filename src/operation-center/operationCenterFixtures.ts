@@ -21,6 +21,8 @@ import {
 } from "./operationCenterBridge";
 import { createProviderHubOperationItems } from "./providerHubOperationBridge";
 import { createProviderHubRouteTraceItems } from "./providerHubRouteTraceBridge";
+import { createProviderFactoryProviderHubDryRunComparison } from "../model-router/providerHubProviderFactoryDryRun";
+import { createProviderFactoryDryRunOperationItems } from "./providerHubDryRunBridge";
 import { createProviderHubRouteDecision } from "../model-router/providerHubRoutePlanner";
 import type { OperationCenterItem } from "./operationCenterTypes";
 import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
@@ -229,10 +231,24 @@ const providerHubFixtureSnapshots = [
 ];
 
 const providerHubItems = createProviderHubOperationItems(providerHubFixtureSnapshots);
-const providerHubRouteTraceItems = createProviderHubRouteTraceItems(createProviderHubRouteDecision({
+const providerHubRouteDecision = createProviderHubRouteDecision({
   taskType: "chat",
   requiredCapabilities: ["text_generation"],
   preference: "balanced",
+  connectionSnapshots: providerHubFixtureSnapshots,
+  allowFallbacks: true,
+  allowPaidProviders: true,
+  allowLocalProviders: true,
+  allowCloudProviders: true,
+});
+const providerHubRouteTraceItems = createProviderHubRouteTraceItems(providerHubRouteDecision);
+const providerFactoryDryRunItems = createProviderFactoryDryRunOperationItems(createProviderFactoryProviderHubDryRunComparison({
+  currentProviderId: "luca-prime",
+  currentRouteMode: "luca-prime",
+  currentModelId: "gemini-fixture",
+  taskType: "chat",
+  requiredCapabilities: ["text_generation"],
+  routePreference: "balanced",
   connectionSnapshots: providerHubFixtureSnapshots,
   allowFallbacks: true,
   allowPaidProviders: true,
@@ -259,4 +275,5 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...dryRunHandoffItems,
   ...providerHubItems,
   ...providerHubRouteTraceItems,
+  ...providerFactoryDryRunItems,
 ]);
