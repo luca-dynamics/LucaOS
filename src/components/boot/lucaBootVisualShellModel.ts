@@ -14,10 +14,7 @@ export type BiosStatus = Partial<
 
 export type ReadinessTone = "ready" | "pending" | "attention";
 
-export const LUCA_BOOT_IDENTITY_ASSET_SRC = new URL(
-  "../../../landing/hologram.png",
-  import.meta.url,
-).href;
+export const LUCA_BOOT_IDENTITY_ASSET_SRC = "/hologram.png";
 
 export interface LucaBootLaunchIdentityPresence {
   label: "LucaOS";

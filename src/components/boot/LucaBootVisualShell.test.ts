@@ -187,7 +187,7 @@ describe("LucaBootVisualShell readiness model", () => {
 
     expect(html).toContain("loader-presence");
     expect(html).toContain("loader-hologram-face");
-    expect(html).toContain("landing/hologram.png");
+    expect(html).toContain("/hologram.png");
     expect(html).not.toContain("loader-face");
     expect(html).not.toContain("loader-host-grid");
     expect(html).toContain("Entering browser host");
