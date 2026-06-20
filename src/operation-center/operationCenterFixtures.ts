@@ -26,6 +26,8 @@ import { createProviderFactoryDryRunOperationItems } from "./providerHubDryRunBr
 import { createProviderHubRouteDecision } from "../model-router/providerHubRoutePlanner";
 import { createProviderHubShadowRouteTrace } from "../model-router/providerHubShadowRouteTrace";
 import { createProviderHubShadowRouteTraceItems } from "./providerHubShadowRouteTraceBridge";
+import { selectProviderHubRuntimeRoute } from "../model-router/providerHubRuntimeRouteSelection";
+import { createProviderHubRuntimeRouteSelectionGuardItems } from "./providerHubRuntimeRouteSelectionBridge";
 import type { OperationCenterItem } from "./operationCenterTypes";
 import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
 import { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } from "./operationCenterLucaLinkRuntimeAuthorityBridge";
@@ -259,6 +261,19 @@ const providerHubShadowTraceItems = createProviderHubShadowRouteTraceItems(creat
   trigger: "operation_center_fixture",
   observedAt: createdAt,
 }));
+const providerHubRuntimeRouteSelectionGuardItems = createProviderHubRuntimeRouteSelectionGuardItems(selectProviderHubRuntimeRoute({
+  runtimeRouteSelectionEnabled: false,
+  currentProviderId: "luca-prime",
+  currentModelId: "gemini-fixture",
+  taskType: "chat",
+  requiredCapabilities: ["text_generation"],
+  routePreference: "balanced",
+  connectionSnapshots: providerHubFixtureSnapshots,
+  allowFallbacks: true,
+  allowPaidProviders: true,
+  allowLocalProviders: true,
+  allowCloudProviders: true,
+}));
 const providerFactoryDryRunItems = createProviderFactoryDryRunOperationItems(createProviderFactoryProviderHubDryRunComparison({
   currentProviderId: "luca-prime",
   currentRouteMode: "luca-prime",
@@ -293,5 +308,6 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...providerHubItems,
   ...providerHubRouteTraceItems,
   ...providerHubShadowTraceItems,
+  ...providerHubRuntimeRouteSelectionGuardItems,
   ...providerFactoryDryRunItems,
 ]);

@@ -90,6 +90,7 @@ export interface LucaSettings {
   };
   providerHub?: {
     disabledProviderIds?: string[];
+    runtimeRouteSelectionEnabled?: boolean;
   };
   memory: {
     provider: "local-luca" | "gemini-genai" | "openai";
@@ -300,6 +301,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
   },
   providerHub: {
     disabledProviderIds: [],
+    runtimeRouteSelectionEnabled: false,
   },
   memory: {
     provider: "local-luca",
