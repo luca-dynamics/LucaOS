@@ -193,7 +193,7 @@ const RemoteAccessModal: React.FC<Props> = ({
       >
         {/* Animated Scanner Top */}
         <div
-          className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent animate-scan opacity-50`}
+          className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50`}
           style={{
             backgroundImage: `linear-gradient(to right, transparent, ${theme.hex}, transparent)`,
           }}

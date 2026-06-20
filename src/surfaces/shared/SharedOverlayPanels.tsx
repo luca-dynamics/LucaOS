@@ -198,7 +198,7 @@ const SharedOverlayPanels: React.FC<SharedOverlayPanelsProps> = ({
       {ingestionState.active && shouldRender("ingestionOverlay") && (
         <div className="absolute inset-0 z-[950] bg-black/90 flex flex-col items-center justify-center pointer-events-none">
           <div className="w-[600px] h-[400px] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[var(--app-bg-tint)] p-8 flex flex-col relative overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.2)] rounded-lg">
-            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(0deg,transparent,rgba(34,197,94,0.5)_50%,transparent)] animate-scan"></div>
+            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(0deg,transparent,rgba(34,197,94,0.5)_50%,transparent)]"></div>
             <div className="flex items-center gap-4 text-[var(--luca-success,#4fbf7a)] font-bold tracking-widest text-xl mb-6 border-b border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] pb-4">
               <Icon
                 name="Dna"
