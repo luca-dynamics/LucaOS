@@ -1,4 +1,5 @@
 import { createProviderFactoryProviderHubDryRunComparison } from "../model-router/providerHubProviderFactoryDryRun";
+import { describe, expect, it } from "vitest";
 import { createProviderFactoryDryRunOperationItems } from "./providerHubDryRunBridge";
 
 describe("ProviderFactory dry-run Operation Center bridge", () => {

@@ -20,7 +20,7 @@ import { createProviderHubSettingsSnapshots } from "../model-router/providerHubS
 import { createProviderHubConfigureIntentFromCard, type LucaProviderHubConfigureIntent } from "../model-router/providerHubConfigureIntent";
 import { createProviderHubSettingsPatch, getProviderHubSafeKeyStatus, providerHubApiKeyField, providerHubBaseUrlField } from "../model-router/providerHubConfiguration";
 import { canTestProviderHubConnection, testProviderHubConnection, type LucaProviderHubConnectionTestResult } from "../model-router/providerHubConnectionTest";
-import { createProviderFactoryProviderHubDryRunComparison, type LucaProviderFactoryDryRunComparison } from "../model-router/providerHubProviderFactoryDryRun";
+import { createProviderHubRuntimeDryRunComparison, type LucaProviderHubRuntimeDryRunComparison } from "../model-router/providerHubRuntimeDryRunComparison";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -152,7 +152,7 @@ interface RoutePreviewState {
 
 const RoutePreviewPanel: React.FC<{
   decision: LucaProviderHubRouteDecision;
-  dryRunComparison: LucaProviderFactoryDryRunComparison;
+  dryRunComparison: LucaProviderHubRuntimeDryRunComparison;
   preview: RoutePreviewState;
   onPreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>;
   theme: any;
@@ -203,7 +203,7 @@ const RoutePreviewPanel: React.FC<{
   );
 };
 
-const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderFactoryDryRunComparison; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
+const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
   <div className="mb-4 rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)" }}>
     <div className="p-4 border-b" style={{ borderColor: "var(--app-border-main)" }}>
       <div className="flex items-start justify-between gap-3">
@@ -748,7 +748,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     allowCloudProviders: routePreview.allowCloudProviders,
   }), [providerHubSnapshots, routePreview]);
 
-  const providerFactoryDryRunComparison = useMemo(() => createProviderFactoryProviderHubDryRunComparison({
+  const runtimeDryRunComparison = useMemo(() => createProviderHubRuntimeDryRunComparison({
     currentProviderId: routeStatus?.provider,
     currentRouteMode: routeStatus?.mode,
     currentModelId: routeStatus?.model,
@@ -829,7 +829,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={providerFactoryDryRunComparison} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
+        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
         {providerHubConfigureCard && activeProviderHubIntent && (
           <ProviderHubConfigurationPanel
             card={providerHubConfigureCard}
