@@ -1,5 +1,7 @@
-import { readFileSync } from "fs";
 import { describe, expect, it } from "vitest";
+
+// Read real source files, bypassing vite's `fs` -> node_polyfills mock alias.
+const { readFileSync } = process.getBuiltinModule("fs");
 
 const voiceHudSource = readFileSync("src/components/VoiceHud.tsx", "utf8");
 const surfaceSource = readFileSync("src/components/voice/VoiceHudSurface.tsx", "utf8");

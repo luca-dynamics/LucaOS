@@ -20,8 +20,8 @@ export const os = {
 
 // url mock
 export const url = {
-  URL: window.URL,
-  URLSearchParams: window.URLSearchParams,
+  URL: globalThis.URL,
+  URLSearchParams: globalThis.URLSearchParams,
   parse: (u) => new URL(u),
   format: (u) => u.toString(),
   fileURLToPath: (url) => {
@@ -65,6 +65,10 @@ export const createHash = () => ({
   update: () => ({
     digest: () => 'mock-hash'
   })
+});
+export const createHmac = () => ({
+  update() { return this; },
+  digest: () => 'mock-hmac'
 });
 export const randomBytes = (size) => {
   const length = Number(size);
@@ -123,6 +127,7 @@ export default {
   basename,
   extname,
   createHash,
+  createHmac,
   randomBytes,
   inspect,
   setImmediate,
