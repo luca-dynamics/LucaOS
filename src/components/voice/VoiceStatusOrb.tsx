@@ -1,5 +1,7 @@
 import React from "react";
 import { PersonaType } from "../../services/lucaService";
+import { Presence, deriveIntentFromStatus } from "../presence";
+import type { PresenceIntent } from "../presence";
 
 interface VoiceStatusOrbProps {
   isVadActive: boolean;
@@ -13,80 +15,65 @@ interface VoiceStatusOrbProps {
   detailLabel?: string | null;
 }
 
+// Sentence-case, plain-language labels (Quiet Machine: no uppercase, no mono).
+const INTENT_LABEL: Record<PresenceIntent, string> = {
+  idle: "Ready",
+  listening: "Listening",
+  thinking: "Thinking",
+  working: "Working",
+  speaking: "Speaking",
+  attention: "Needs attention",
+  dormant: "Asleep",
+};
+
 const VoiceStatusOrb: React.FC<VoiceStatusOrbProps> = ({
   isVadActive,
   transcriptSource,
   amplitude,
+  canvasThemeColor,
   isSpeaking = false,
   statusMessage,
   voiceModeLabel = "Voice",
   detailLabel,
 }) => {
-  const normalizedStatus = (statusMessage || "").toLowerCase();
-  const isConnecting =
-    normalizedStatus.includes("connecting") ||
-    normalizedStatus.includes("starting");
-  const isThinking =
-    normalizedStatus.includes("thinking") ||
-    normalizedStatus.includes("processing");
-  const isWorking = normalizedStatus.includes("working");
-  const hasError =
-    normalizedStatus.includes("error") ||
-    normalizedStatus.includes("problem") ||
-    normalizedStatus.includes("failed");
+  const intent = deriveIntentFromStatus(statusMessage, {
+    isVadActive,
+    isSpeaking,
+    transcriptSource,
+    amplitude,
+  });
 
-  const primaryLabel = hasError
-    ? "NEEDS ATTENTION"
-    : isConnecting
-      ? "CONNECTING"
-      : isWorking
-        ? "WORKING"
-      : isThinking
-        ? "THINKING"
-        : isVadActive
-          ? "LISTENING"
-          : transcriptSource === "model" && (isSpeaking || amplitude > 0.05)
-            ? "SPEAKING"
-            : "READY";
-
-  const isActiveState =
-    isVadActive ||
-    isSpeaking ||
-    isConnecting ||
-    isWorking ||
-    isThinking ||
-    hasError ||
-    amplitude > 0.05;
-
-  const labelColor = hasError
-    ? "var(--app-danger, #f87171)"
-    : isActiveState
-      ? "var(--app-id-accent, #ffffff)"
-      : "var(--app-text-main, rgba(255,255,255,0.5))";
+  const labelColor =
+    intent === "attention"
+      ? "var(--app-danger, #f87171)"
+      : intent !== "idle"
+        ? "var(--app-id-accent, #ffffff)"
+        : "var(--app-text-main, rgba(255,255,255,0.6))";
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-      {/* Center Status Text - Positioned exactly in the middle */}
-      <div className="absolute z-20 flex -translate-y-48 flex-col items-center gap-2 pointer-events-none">
+      <div className="absolute z-20 flex -translate-y-48 flex-col items-center gap-3 pointer-events-none">
+        <Presence
+          intent={intent}
+          color={canvasThemeColor}
+          size={132}
+          reactToAudio
+        />
         <div
-          className={`font-mono text-sm tracking-[0.5em] font-bold transition-all duration-300 ${
-            isActiveState ? "text-white scale-110" : ""
-          }`}
-          style={{
-            color: labelColor,
-          }}
+          className="text-sm font-medium transition-colors duration-300"
+          style={{ color: labelColor }}
         >
-          {primaryLabel}
+          {INTENT_LABEL[intent]}
         </div>
         <div
-          className="font-mono text-[10px] tracking-[0.28em] uppercase opacity-70 transition-colors duration-300"
+          className="text-[11px] opacity-70 transition-colors duration-300"
           style={{ color: labelColor }}
         >
           {voiceModeLabel}
         </div>
         {detailLabel ? (
           <div
-            className="max-w-[240px] text-center font-mono text-[9px] tracking-[0.16em] uppercase opacity-55 transition-colors duration-300"
+            className="max-w-[240px] text-center text-[10px] opacity-55 transition-colors duration-300"
             style={{ color: labelColor }}
           >
             {detailLabel}

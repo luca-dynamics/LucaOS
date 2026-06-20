@@ -5,72 +5,60 @@ interface HologramFace2DProps {
   step: string;
 }
 
-const HologramFace2D: React.FC<HologramFace2DProps> = ({
-  step,
-}) => {
-  // logoSrc is now reactive based on dark/light mode via CSS filter or just choosing one clear asset
-  // For Sovereign OS, we use a single high-fidelity asset and apply reactive filters
+const HologramFace2D: React.FC<HologramFace2DProps> = ({ step }) => {
+  // Quiet Machine: the Luca face is shown calmly — soft glow + gentle float.
+  // No scanlines, no brightness/contrast cyber boost (retired per the doctrine).
   const logoSrc = "/icon.png";
 
   return (
     <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
-      {/* Large 2D Icon Face */}
       <div
         className="absolute inset-0 flex items-center justify-center transition-all duration-700"
         style={{
           opacity:
             "calc((1 - var(--app-bg-opacity, 0.3)) * (1 - clamp(0, ((var(--app-bg-opacity, 0.3) - 0.84) / 0.16), 1)) * 0.5)",
-          filter: `blur(calc(var(--app-bg-blur, 40px) * 0.12)) drop-shadow(0 0 40px var(--app-primary)) drop-shadow(0 0 80px var(--app-primary))`,
+          filter: `blur(calc(var(--app-bg-blur, 40px) * 0.12)) drop-shadow(0 0 48px var(--app-primary))`,
         }}
       >
-        <div className="relative animate-pulse" style={{ width: "clamp(25rem, 90vmin, 50rem)", height: "clamp(25rem, 90vmin, 50rem)" }}>
-          {/* Luca Icon */}
+        <div
+          className="relative"
+          style={{
+            width: "clamp(25rem, 90vmin, 50rem)",
+            height: "clamp(25rem, 90vmin, 50rem)",
+          }}
+        >
+          {/* Luca face — calm, true to the asset */}
           <img
             src={logoSrc}
             alt="Luca AI"
             className="w-full h-full object-contain transition-all duration-1000"
             style={{
-              filter: `brightness(1.2) contrast(1.3) drop-shadow(0 0 20px var(--app-primary))`,
+              filter: "drop-shadow(0 0 28px var(--app-primary))",
               animation:
                 step === "CALIBRATION"
-                  ? "spin 8s linear infinite"
-                  : "float 6s ease-in-out infinite",
+                  ? "spin 14s linear infinite"
+                  : "float 6.4s ease-in-out infinite",
             }}
           />
 
-          {/* Color overlay tint */}
+          {/* Soft accent halo */}
           <div
             className="absolute inset-0 mix-blend-overlay rounded-full"
             style={{
               background: `radial-gradient(circle, var(--app-primary) 0%, transparent 70%)`,
-              opacity: 0.4,
+              opacity: 0.28,
             }}
           />
-
-          {/* Scanline effect */}
-          <div className="absolute inset-0 pointer-events-none opacity-20">
-            {[...Array(20)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute left-0 right-0 h-[1.5px]"
-                style={{
-                  top: `${i * 5}%`,
-                  background: "var(--app-primary)",
-                  opacity: 0.15,
-                }}
-              />
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Wave Effect Rings - Only during calibration */}
+      {/* Wave rings — only during calibration */}
       {step === "CALIBRATION" && (
         <div className="absolute inset-0 flex items-center justify-center">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="absolute rounded-full border-2 opacity-20 animate-ping"
+              className="absolute rounded-full border opacity-20 animate-ping"
               style={{
                 width: "min(300px, 50vmin)",
                 height: "min(300px, 50vmin)",
@@ -83,7 +71,7 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
         </div>
       )}
 
-      {/* Subtle Glow Pulse Effect */}
+      {/* Subtle glow pulse */}
       <div
         className="absolute inset-0 animate-pulse pointer-events-none transition-opacity duration-700"
         style={{
@@ -97,7 +85,7 @@ const HologramFace2D: React.FC<HologramFace2DProps> = ({
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-20px) scale(1.05); }
+          50% { transform: translateY(-16px) scale(1.03); }
         }
         @keyframes spin {
           0% { transform: rotate(0deg); }
