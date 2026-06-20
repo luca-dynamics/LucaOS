@@ -1,200 +1,203 @@
-# 🌌 Luca OS — Large Universal Control Agents
+# LucaOS — Host-Native Personal AI OS
 
 ![Luca OS Dashboard Interface](public/dashboard_ui.png)
 
 > [!IMPORTANT]
-> Luca OS is a **General Artificial Intelligence Operating System**—a sovereign synthetic intelligence environment designed for terminal orchestration and total digital autonomy. It bridges high-level cognitive reasoning with direct native hardware control, providing a persistent, proactive, and self-healing presence across your entire digital infrastructure. Total autonomy. Zero compromise. 🌌
+> LucaOS is a **host-native personal AI operating layer**: a calm, device-level intelligence that lives across your desktop, browser, mobile surfaces, and linked devices. It gives AI a practical body — voice, chat, presence, memory, and user-approved action — while keeping the experience approachable, transparent, and calm.
 
 [Website](https://lucaos.online) · [Docs](https://docs.lucaos.online) · [Showcase](https://docs.lucaos.online/showcase) · [FAQ](https://docs.lucaos.online/faq) · [Discord](https://discord.gg/lucaos)
 
-Luca OS is a **Distributed Cognitive Environment** that acts as the primary command layer for your digital architecture. It is designed to be your **Synthetic Partner**, orchestrating complex workflows, maintaining security perimeters, and evolving through environmental interaction. It speaks, listens, sees, and **acts**—turning your digital space into a living, intelligent ecosystem.
+LucaOS is designed to feel premium, quiet, and native: more like an intelligent system layer than a separate app. It helps people move between conversation and action while keeping permissions explicit, activity visible, and control with the user.
 
 ---
 
-## 🧬 The LUCA Blueprint
+## Product Direction
 
-Luca OS is built on the **L.U.C.A** standard—a technical framework for the next generation of synthetic intelligence.
+LucaOS is building toward **intelligence with a body**:
 
-- **[L] LARGE** — Represents the high-parameter cognitive scale and the depth of the local neural network workforce.
-- **[U] UNIVERSAL** — A device-agnostic runtime designed to operate with total parity across macOS, Linux, Windows, and Mobile.
-- **[C] CONTROL** — The autonomous orchestration layer that bridges high-level reasoning with native hardware control and self-healing loops.
-- **[A] AGENTS** — A multi-persona autonomous workforce capable of persistent goal-seeking and cross-domain tool execution.
-
----
-
-## 🎨 The Operator Experience (HUD v1.0)
-
-Luca OS features a cutting-edge **Tactical Dashboard** designed for maximum situational awareness and system orchestration.
-
-### Tactical Interface Modules
-
-The dashboard is composed of specialized command centers verified in our latest audit:
-
-- **[Hologram Interface]** — A persistent 3D-wireframe representation of Luca. Reacts to voice input with dedicated **Dictation Mode** and high-fidelity VAD feedback.
-- **[Management Console]** — Your central mission hub for tracking **Upcoming Schedules**, **Active Tasks**, and **Autonomous Goals**.
-- **[Luca Expansion]** — Direct access to specialized subsystems: **Skills Matrix**, **Sovereignty**, **Security**, **AI Trading**, and the integrated **Luca IDE**.
-- **[System Diagnostics]** — Real-time telemetry for CPU Load, Memory Allocation, and system power status.
-- **[Luca Ops]** — Live monitoring of **Wireless Intercepts** and **Network Topology** mapping.
-- **[Status Bar]** — Persistence monitoring (Host, Core Link, Luca Load) with one-touch **God Hand** autonomy activation.
+- **Host-native presence** — Luca appears as lightweight overlays, widgets, and voice surfaces that sit naturally on top of the devices you already use.
+- **Practical personal AI** — chat, voice, memory, model routing, browser assistance, device context, and approved actions in one coherent layer.
+- **Local-first where possible** — local models, local memory, and local device bridges are prioritized when they fit the task and user preference.
+- **Governed control** — sensitive actions require user approval, transparent status, and clear permission boundaries.
+- **Continuity across devices** — LucaLink connects desktop, mobile, browser, and future wearable surfaces into a shared personal context.
 
 ---
 
-## ⚡ System Startup (The Boot Sequence)
+## Experience: Quiet Machine
 
-Luca OS initializes through a specialized **Tactical Onboarding Flow** that provisions the OS environment for the specific operator.
+The LucaOS interface is moving toward a **presence-first** experience: calm, glassy, refined, and useful without requiring users to think like operators.
 
-1.  **BIOS Initialization** — Core system check of cognitive modules and hardware bridges.
-2.  **Operator Identity** — Verification of alias and optional **Biometric Face Scan**.
-3.  **Branding & Persona** — Selection of the OS theme (Engineer, Hacker, Ruthless, Assistant) and associated neural tensors.
-4.  **Neural Link Bridge** — Choice between **Luca Prime** (Managed Cloud) or **Stay Local** for maximum privacy.
-5.  **Calibration** — Real-time provisioning of local LLM stacks (Llama 3.2), STT (Moonshine), and TTS (Piper).
+### Host Surfaces
 
----
+- **Luca Widget overlay** — the primary desktop presence for quick awareness, status, and action handoff.
+- **MiniChat Widget** — a compact conversation surface for lightweight requests and follow-up.
+- **Hologram / Presence Widget** — a visual identity layer for Luca that reacts to state, voice, and attention.
+- **Voice HUD** — quick speech input, listening feedback, transcription, and response flow.
+- **Browser-safe host surfaces** — WebBridge-enabled surfaces that expose only approved browser and host capabilities.
+- **Desktop/mobile parity** — the same assistant identity and core workflow patterns across desktop and mobile surfaces.
 
-## 🧠 The Neural Stack: Swappable Intelligence
-
-Luca OS features a **Neural Center** (Model Manager) allowing operators to download and hot-swap local models for 100% offline autonomy.
-
-### Brain & Reasoning
-
-- **Llama 3.2 / Gemma 2B / Phi-3 Mini** — Efficient local LLMs for chat and tool calling.
-- **Qwen 2.5 / DeepSeek R1** — High-performance 7B models for coding and complex logic.
-
-### Vision & Perception
-
-- **UI-TARS 2B** — Optimized for pixel-precision desktop automation.
-- **SmolVLM** — Ultra-fast vision for rapid screen analysis and OCR.
-- **Moonshine / Distil-Whisper** — High-speed offline STT for "always-on" hearing.
+The goal is not a dashboard full of controls. The goal is an ambient, understandable layer that helps users complete real work while staying out of the way.
 
 ---
 
-## 🏛️ Platform Operability
+## Current Implementation
 
-| Platform       | Technical Bridge                  | Tactical Role              |
-| :------------- | :-------------------------------- | :------------------------- |
-| **🍎 macOS**   | `pyobjc` / `robotjs`              | High-Performance Mainframe |
-| **🐧 Linux**   | `xdotool` / `linux_automation.py` | Infrastructure & C2 Server |
-| **🪟 Windows** | `pyautogui` / Windows UIA         | Tactical Station & WSL2    |
-| **📱 Mobile**  | `ADB` / Capacitor / Relay         | Mobilized Sensor & Remote  |
+The repository currently includes the foundations for a host-native AI layer:
 
----
-
-## 🌐 The AI Agent Ecosystem
-
-Luca OS is part of an emerging class of **Sovereign AI Entities**. We recognize and draw inspiration from other pioneers in the autonomous agent space.
-
-| Peer Agent     | Philosophy              | Technical Blueprint              | Core Advantage                                |
-| :------------- | :---------------------- | :------------------------------- | :-------------------------------------------- |
-| **Aitomation** | Sovereign Survivalist   | `loop.ts` (Survival ReAct)       | Economic Autonomy (ERC-8004 Identity)         |
-| **Eigent**     | Digital Workforce       | `chat_service.py` (CAMEL Engine) | Reasoning Depth & Multi-Agent Planning        |
-| **Accomplish** | Productivity Native     | `opencode/index.ts` (CLI Engine) | Local Performance & OS-Native Speed           |
-| **Lemon AI**   | Professional Strategist | `AgenticAgent.js` (Plan-Verify)  | Execution Safety & Structured Validation      |
-| **OpenClaw**   | Social Infrastructure   | `server-channels.ts` (Gateway)   | Massive Platform Routing (WA/TG/Discord)      |
-| **💎 Luca OS** | **Hybrid Sovereignty**  | **Cortex Engine (Multimodal)**   | **Luca Prime Cloud + Local Integrated Brain** |
-
-For a deep technical dive and blueprint codebase analysis, see the [Full Comparison Report](file:///Users/macking/.gemini/antigravity/brain/693734b2-1b4e-42c9-a4f6-0124b70ea90d/agent_comparison_report.md).
-
-- **[Aitomation](https://github.com/Conway-Research/automaton)** — An independent digital entity on the Conway Cloud.
-- **[Eigent](https://github.com/eigent-ai/eigent)** — A local-first, multi-agent workforce for complex desktop/browser automation.
-- **[Accomplish™](https://github.com/accomplish-ai/accomplish)** — An open-source AI desktop coworker for localized productivity tasks.
-- **[Lemon AI](https://github.com/hexdocom/lemonai)** — Specialized in agentic spaces for professional document and data workflows.
-- **[OpenClaw](https://github.com/openclaw/openclaw)** — The viral personal AI infrastructure for massive social automation across messaging platforms.
+- **React + Vite + Electron** frontend for desktop host surfaces, overlays, and app shell work.
+- **Voice and chat UI surfaces** for interacting with Luca through speech and text.
+- **Presence-oriented visual components** for a more embodied assistant experience.
+- **WebBridge / browser-safe host patterns** for connecting web UI with native capabilities through controlled interfaces.
+- **Model routing foundations** for Luca Prime, local models, and bring-your-own-key providers.
+- **Memory and continuity foundations** for persistent context and user-specific state.
+- **Governed action layer foundations** for separating assistant reasoning from user-approved host actions.
+- **LucaLink direction** for pairing linked devices and sharing personal context across host surfaces.
 
 ---
 
-## ⌚ Mobile & Wearable Ecosystem
+## In Progress
 
-Luca OS extends beyond the desktop into a fully connected **Personal Area Network**:
+Active product and engineering work is focused on making LucaOS feel more native, trustworthy, and useful:
 
-### **Apple Watch (WatchOS)**
-
-- **Wrist Command**: Trigger voice mode (`Start Listening`), switch personas, or kill active tasks directly from your wrist.
-- **Haptic Feedback**: Receive silent tactical alerts (vibrations) for security events or task completions.
-
-### **AR / Vision Integration**
-
-- **Holographic HUD**: Connect AR glasses (XREAL / Viture) to project the **VisionHUD** overlay directly into your field of view.
-- **Gesture Control**: Use hand tracking (Minority Report style) to manipulate windows and execute commands without a mouse.
-
-### **Mobile Command Center**
-
-- **Android Telemetry**: Full ADB integration for screen mirroring, file extraction, and package management.
-- **Wireless Bridge**: Connect to devices over TCP/IP for wire-free orchestration.
-
-### **🍎 Hybrid iOS Architecture**
-
-Luca overcomes the "Walled Garden" using a dual-mode strategy:
-
-| Mode                    | Technology                  | Capabilities                                                                                                                 |
-| :---------------------- | :-------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
-| **Standalone** (Mobile) | **App Intents** & Shortcuts | Silent background data access (Health, Battery, Location) and authorized actions. Zero nuisance.                             |
-| **Linked** (Desktop)    | **Reflected Control**       | **God Mode**. Uses macOS iPhone Mirroring + Computer Vision to autonomously see and control the iOS screen from the desktop. |
+- Refining the **Quiet Machine** visual system and premium glass-like interface language.
+- Consolidating **Luca Widget**, **MiniChat**, **Presence Widget**, and **Voice HUD** into a coherent host experience.
+- Improving **model routing** across Luca Prime, local models, and BYOK providers.
+- Strengthening **permission prompts**, user confirmation flows, and transparent activity logs.
+- Expanding **memory and continuity** so Luca can maintain context without becoming intrusive.
+- Hardening **WebBridge** boundaries so browser-host interaction remains explicit and safe.
 
 ---
 
-## ⚙️ How It Operates
+## Roadmap
 
-Luca OS operates through a triple-server triad, unified via the **Electron HUD**:
+Planned areas include:
 
-1.  **Interaction Layer (Electron)**: Visual rendering and native hardware hooks.
-2.  **Orchestration Layer (Node.js)**: Manages 130+ services and routes tool calls.
-3.  **Cognitive Engine (Python)**: Powers autonomous perception and local inference.
+- **Mobile companion surfaces** for iOS and Android.
+- **LucaLink paired devices** for continuity between desktop, phone, browser, and future wearables.
+- **Wearable and voice-first experiences** for fast, low-friction interaction.
+- **Richer local model support** through Ollama and other local inference runtimes.
+- **More granular permissions** for files, apps, browser actions, device context, and automations.
+- **Developer extension points** for skills, workflows, and user-approved integrations.
+
+Roadmap items are directional and should not be treated as finished features.
+
+---
+
+## Architecture
+
+LucaOS combines a native desktop shell, browser-safe bridges, model routing, memory, and governed actions.
 
 ```mermaid
 graph TD
-    subgraph "Frontend (React + Vite + Electron)"
-        UI["Voice HUD & UI Overlay"]
-        Face["3D Hologram (Three.js)"]
-        State["User Mission State"]
+    subgraph "Host Surfaces"
+        Overlay["Luca Widget Overlay"]
+        MiniChat["MiniChat Widget"]
+        Presence["Hologram / Presence Widget"]
+        Voice["Voice HUD"]
+        Browser["Browser Host Surface"]
     end
 
-    subgraph "Sovereignty Layer (Orchestration)"
-        Orch["Mission Orchestrator"]
-        Auth["Security Gate (Mission Mode)"]
+    subgraph "App Shell"
+        React["React + Vite"]
+        Electron["Electron Host"]
+        WebBridge["WebBridge / Safe Host APIs"]
     end
 
-    subgraph "Intelligence Layer"
-        Gemini3["Google Gemini 3 Flash (Primary)"]
-        Ollama["Local Models (Ollama)"]
-        WebLLM["mlc-ai/web-llm (Edge)"]
-        RAG["LightRAG (Memory)"]
+    subgraph "Intelligence Routing"
+        Router["Model Router"]
+        Prime["Luca Prime"]
+        Local["Local Models"]
+        BYOK["BYOK Providers"]
     end
 
-    subgraph "Cortex Backend (Python FastAPI)"
-        Cmd["Command Processor"]
-        Automation["OS Automation (RobotJS/File OS)"]
-        Vision["Ambient Vision Loop"]
+    subgraph "Continuity & Governance"
+        Memory["Memory & Continuity"]
+        Permissions["Permissions & Approvals"]
+        Activity["Transparent Activity"]
+        LucaLink["LucaLink Devices"]
     end
 
-    %% Connections
-    UI <--> State
-    State <--> Orch
-    Orch <--> Auth
-    Auth <--> Gemini3
-    Auth <--> Ollama
-    Auth <--> WebLLM
-    
-    Orch <--> Cmd
-    Cmd <--> Automation
-    Vision <--> UI
-    RAG <--> Gemini3
-    RAG <--> Cmd
+    Overlay --> React
+    MiniChat --> React
+    Presence --> React
+    Voice --> React
+    Browser --> WebBridge
+    React --> Electron
+    Electron --> WebBridge
+    WebBridge --> Permissions
+    Permissions --> Router
+    Router --> Prime
+    Router --> Local
+    Router --> BYOK
+    Router --> Memory
+    Memory --> LucaLink
+    Permissions --> Activity
 ```
 
+### Model Routing
+
+LucaOS is designed to route work to the right intelligence layer:
+
+- **Luca Prime** for managed cloud intelligence when enabled by the user.
+- **Local models** for private, offline-capable, device-resident tasks where available.
+- **BYOK providers** for users who want to connect their own model accounts and keys.
+
+The routing goal is simple: choose the right model for the job while respecting user preference, privacy, latency, and cost.
+
+### Governed Actions
+
+LucaOS separates suggestion, reasoning, and execution. The assistant can prepare actions, explain intent, and request permission, but sensitive host actions should be visible and user-approved. This keeps Luca useful without hiding control from the person using the device.
+
+### Memory & Continuity
+
+Memory is meant to make Luca feel consistent across sessions and devices. The product direction favors clear controls, inspectable state, and user-managed continuity over invisible background accumulation.
+
 ---
 
-## 🛡️ Security & Ethics
+## Calm Host Boot & Onboarding
 
-Luca OS includes advanced offensive security and autonomous capabilities. **Use responsibly.** The **Security Gate** provides multi-tiered verification for sensitive operations.
+Onboarding is being reframed as an **incarnation boot**: a calm setup flow that gives Luca identity, preferences, and safe operating boundaries.
+
+Expected onboarding areas:
+
+1. **Welcome and mode selection** — choose the kind of Luca experience you want: quiet companion, productivity layer, developer helper, or local-first assistant.
+2. **Identity** — set user name, Luca name, tone, and relationship preferences.
+3. **Visual preferences** — choose presence style, glass intensity, compactness, and accessibility settings.
+4. **Model route** — select Luca Prime, local models, BYOK providers, or a hybrid route.
+5. **Voice and chat setup** — configure voice input, response style, and MiniChat behavior.
+6. **Permissions** — review what Luca may access, what requires confirmation, and what stays off by default.
 
 ---
 
-## ⚖️ License
+## Platform Direction
+
+| Surface | Role | Direction |
+| :-- | :-- | :-- |
+| **Desktop** | Primary host | Electron-based overlay, chat, voice, presence, and governed actions. |
+| **Browser** | Web context | Browser-safe bridge for approved page, tab, and workflow assistance. |
+| **Mobile** | Companion host | Continuity, voice/chat access, lightweight device context, and paired workflows. |
+| **Linked devices** | Personal context | LucaLink pairing for approved cross-device presence and continuity. |
+| **Wearables** | Roadmap | Low-friction voice, glanceable state, and subtle notifications. |
+
+---
+
+## Development Notes
+
+- Desktop shell: **React + Vite + Electron**.
+- Host bridge: **WebBridge** and controlled native APIs.
+- Intelligence: model routing across **Luca Prime**, **local models**, and **BYOK** providers.
+- Continuity: memory, user state, and future LucaLink paired-device context.
+- Safety model: governed permissions, user-approved actions, and transparent activity.
+
+---
+
+## License
 
 MIT License. See [LICENSE](LICENSE) for details.
 
-## 🧪 Cloud Agent Validation Notes
+## Cloud Agent Validation Notes
 
 For cloud-agent install/test constraints and the recommended scoped validation sequence, see:
+
 - `docs/cloud-agent-testing-environment.md`
 - Optional helper: `ops/scripts/cloud-agent-validate-computer-use.sh`
