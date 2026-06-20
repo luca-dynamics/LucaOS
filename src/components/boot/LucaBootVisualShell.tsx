@@ -14,6 +14,11 @@ import {
 } from "./lucaBootVisualShellModel";
 import { EdgePresence } from "../presence";
 import type { PresenceIntent } from "../presence";
+import {
+  lucaShellPrimaryTextStyle,
+  lucaShellSecondaryTextStyle,
+  lucaShellTertiaryTextStyle,
+} from "../../styles/lucaShellStyles";
 
 type BootTheme = {
   hex: string;
@@ -107,16 +112,22 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
         </div>
 
         <div className="relative -mt-8 flex flex-col items-center gap-2 sm:-mt-10">
-          <h1 className="text-5xl font-semibold tracking-[-0.075em] text-white sm:text-7xl">
+          <h1
+            className="text-5xl font-semibold tracking-[-0.075em] sm:text-7xl"
+            style={lucaShellPrimaryTextStyle}
+          >
             LucaOS
           </h1>
-          <p className="text-sm font-medium text-white/[0.68] sm:text-base">
+          <p
+            className="text-sm font-medium sm:text-base"
+            style={lucaShellSecondaryTextStyle}
+          >
             {launchIdentity.subtitle}
           </p>
-          <p className="mt-3 text-sm text-white/[0.82] sm:text-base">
+          <p className="mt-3 text-sm sm:text-base" style={lucaShellSecondaryTextStyle}>
             {statusHeadline}
           </p>
-          <p className="text-xs text-white/[0.46] sm:text-sm">{statusDetail}</p>
+          <p className="text-xs sm:text-sm" style={lucaShellTertiaryTextStyle}>{statusDetail}</p>
         </div>
 
         <div className="mt-6 h-px w-full max-w-xl overflow-hidden"
@@ -139,15 +150,15 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
               className="flex items-baseline justify-between gap-5 border-b py-2.5"
               style={{ borderColor: "var(--luca-border-subtle, rgba(232,236,242,0.14))" }}
             >
-              <span className="text-sm text-white/[0.78]">{item.detail}</span>
-              <span className="shrink-0 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-white/[0.38]">
+              <span className="text-sm" style={lucaShellSecondaryTextStyle}>{item.detail}</span>
+              <span className="shrink-0 text-[0.68rem] font-medium uppercase tracking-[0.18em]" style={lucaShellTertiaryTextStyle}>
                 {item.statusLabel}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="mt-6 max-w-xl text-xs leading-5 text-white/[0.40]">
+        <div className="mt-6 max-w-xl text-xs leading-5" style={lucaShellTertiaryTextStyle}>
           {browserSafeInterface
             ? "Desktop and local-runtime capabilities stay guarded after the browser app shell loads."
             : `${identityCopy.tacticalLabel} · ${bootCopy.diagnosticMeaning}`}

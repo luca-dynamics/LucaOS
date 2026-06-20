@@ -51,8 +51,20 @@ export const lucaShellMutedTextStyle: CSSProperties = {
   color: LUCA_SHELL_TEXT_SECONDARY,
 };
 
+export const lucaShellPrimaryTextStyle: CSSProperties = {
+  color: LUCA_SHELL_TEXT_PRIMARY,
+};
+
+export const lucaShellSecondaryTextStyle: CSSProperties = {
+  color: LUCA_SHELL_TEXT_SECONDARY,
+};
+
 export const lucaShellTertiaryTextStyle: CSSProperties = {
   color: LUCA_SHELL_TEXT_TERTIARY,
+};
+
+export const lucaShellAccentTextStyle: CSSProperties = {
+  color: LUCA_SHELL_ACCENT_PRIMARY,
 };
 
 export const lucaShellTabStyle: CSSProperties = {

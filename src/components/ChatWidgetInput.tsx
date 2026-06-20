@@ -154,7 +154,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
             <button
               type="button"
               onClick={onClearAttachment}
-              className="absolute -top-2 -right-2 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-white rounded-full p-1 shadow-lg hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-all active:scale-90"
+              className="absolute -top-2 -right-2 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-text-primary,var(--app-text-main))] rounded-full p-1 shadow-lg hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-all active:scale-90"
             >
               <Icon name="CloseCircle" size={12} />
             </button>
@@ -185,7 +185,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
           className={`
             w-full
             bg-transparent
-            ${isLight ? "text-gray-900 placeholder-gray-500" : "text-white placeholder-slate-500"}
+            text-[var(--luca-text-primary,var(--app-text-main))] placeholder:text-[var(--luca-text-tertiary,var(--app-text-muted))]
             px-4
             py-2
             focus:outline-none
@@ -312,7 +312,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 ${
                   isEyeActive
                     ? "shadow-lg"
-                    : "hover:text-white"
+                    : "hover:text-[var(--luca-text-primary,var(--app-text-main))]"
                 }
                 active:scale-90
                 relative
@@ -386,8 +386,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                     className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-mono px-1.5 rounded-md border h-[24px] sm:h-[27px] ${
                       isKernelLocked
                         ? isLight
-                          ? "text-gray-400 bg-gray-100 border-gray-200"
-                          : "text-slate-500 bg-slate-900/40 border-slate-800"
+                          ? "text-[var(--luca-text-tertiary,var(--app-text-muted))] bg-gray-100 border-gray-200"
+                          : "text-[var(--luca-text-tertiary,var(--app-text-muted))] bg-slate-900/40 border-slate-800"
                         : "text-rq-red bg-rq-red-dim/10 border-rq-red/20 animate-pulse"
                     }`}
                   >
@@ -452,8 +452,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                         color: isAnyConnected
                           ? safeColor
                           : isLight
-                            ? "#94a3b8"
-                            : "#475569",
+                            ? "var(--luca-text-tertiary, var(--app-text-muted))"
+                            : "var(--luca-text-tertiary, var(--app-text-muted))",
                         backgroundColor: isAnyConnected
                           ? `${safeColor}10`
                           : "transparent",
@@ -489,12 +489,12 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                       pointer-events-none group-hover/mcp:pointer-events-auto
                       translate-y-1 group-hover/mcp:translate-y-0
                       transition-all duration-200
-                      ${isLight ? "bg-white border-black/10 text-slate-700" : "bg-[#13131f] border-white/10 text-gray-300"}
+                      ${isLight ? "bg-white border-black/10" : "bg-[#13131f] border-white/10"} text-[var(--luca-text-secondary,var(--app-text-muted))]
                     `}
                     >
                       <div className="flex items-center justify-between px-3 pb-2 border-b border-white/5 mb-1">
                         <p
-                          className={`text-[9px] font-black uppercase tracking-widest ${isLight ? "text-slate-400" : "text-gray-500"}`}
+                          className={`text-[9px] font-black uppercase tracking-widest text-[var(--luca-text-tertiary,var(--app-text-muted))]`}
                         >
                           MCP Node Hub
                         </p>
@@ -509,7 +509,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                             >
                               <div className="flex items-center gap-2 min-w-0">
                                 <span
-                                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse" : "bg-gray-500"}`}
+                                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse" : "bg-[var(--luca-text-tertiary,var(--app-text-muted))]"}`}
                                 />
                                 <span
                                   className={`text-[11px] font-mono font-bold truncate ${!isConnected ? "opacity-50" : ""}`}
@@ -567,7 +567,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                               }),
                             )
                           }
-                          className={`w-full text-center py-1 text-[8px] font-bold uppercase tracking-widest hover:underline ${isLight ? "text-slate-400" : "text-gray-500"}`}
+                          className={`w-full text-center py-1 text-[8px] font-bold uppercase tracking-widest hover:underline text-[var(--luca-text-tertiary,var(--app-text-muted))]`}
                         >
                           Manage All Nodes
                         </button>
@@ -593,8 +593,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                    isVoiceActive
                      ? isSpeaking
                        ? "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-                       : "text-white bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] shadow-[0_0_15px_rgba(239,68,68,0.3)]"
-                     : "hover:text-white hover:bg-white/5"
+                       : "text-[var(--luca-danger,#f87171)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                     : "hover:text-[var(--luca-text-primary,var(--app-text-main))] hover:bg-white/5"
                  }
                  active:scale-90
                  relative
@@ -670,8 +670,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 isProcessing
                   ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] active:scale-95"
                   : input.trim() || attachment
-                    ? "text-white hover:text-white/80 hover:bg-white/5 active:scale-90"
-                    : `${isLight ? "text-gray-400" : "text-slate-600"} cursor-not-allowed`
+                    ? "text-[var(--luca-accent-primary)] hover:text-[var(--luca-accent-primary)] hover:bg-white/5 active:scale-90"
+                    : "text-[var(--luca-text-tertiary,var(--app-text-muted))] cursor-not-allowed"
               }
               }
             `}

@@ -1,4 +1,8 @@
 import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
+import {
+  lucaShellPrimaryTextStyle,
+  lucaShellSecondaryTextStyle,
+} from "../../styles/lucaShellStyles";
 
 export function WebPostBootLoading() {
   return (
@@ -11,10 +15,10 @@ export function WebPostBootLoading() {
         <div className="mx-auto mb-7 flex h-8 w-8 items-center justify-center" aria-hidden="true">
           <LucaCanvasPresenceOrb size={28} state="preparing" amplitude={0.14} lowPower />
         </div>
-        <h1 className="text-2xl font-medium tracking-tight text-white">
+        <h1 className="text-2xl font-medium tracking-tight" style={lucaShellPrimaryTextStyle}>
           Preparing LucaOS
         </h1>
-        <p className="mt-3 text-sm leading-6 text-white/65">
+        <p className="mt-3 text-sm leading-6" style={lucaShellSecondaryTextStyle}>
           Starting Luca&apos;s web session…
         </p>
       </div>
