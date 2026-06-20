@@ -1,3 +1,4 @@
+import "./web/webBootPolyfills";
 import {
   isElectronRuntimeSignal,
   selectLucaBootstrapEntry,
