@@ -124,7 +124,7 @@ const CastPicker: React.FC<CastPickerProps> = ({
                 setIsBeaconActive(false);
               }
             }}
-            className="p-2 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/40 text-[var(--app-text-muted)] hover:text-red-500"
+            className="p-2 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--app-text-muted)] hover:text-[var(--luca-danger,#f87171)]"
           >
             <Icon name="CloseCircle" size={20} variant="BoldDuotone" />
           </button>
@@ -156,13 +156,13 @@ const CastPicker: React.FC<CastPickerProps> = ({
 
               <button
                 onClick={() => setMethod("HOTSPOT")}
-                className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-[var(--app-border-main)] transition-all text-left group hover:bg-purple-500/10 hover:border-purple-500/30 hover:scale-[1.02] shadow-sm hover:shadow-lg hover:shadow-purple-500/5"
+                className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-[var(--app-border-main)] transition-all text-left group hover:bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] hover:scale-[1.02] shadow-sm hover:shadow-lg hover:shadow-[color:var(--luca-accent-primary,#9b7cff)]"
               >
-                <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 transition-all group-hover:scale-110 group-hover:shadow-inner group-hover:bg-purple-500/20 text-purple-400">
+                <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 transition-all group-hover:scale-110 group-hover:shadow-inner group-hover:bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)]">
                   <Icon name="Shield" size={26} variant="BoldDuotone" />
                 </div>
                 <div>
-                  <div className="font-black text-sm tracking-[0.05em] uppercase italic text-[var(--app-text-main)] group-hover:text-purple-400 transition-colors">
+                  <div className="font-black text-sm tracking-[0.05em] uppercase italic text-[var(--app-text-main)] group-hover:text-[var(--luca-accent-primary,#9b7cff)] transition-colors">
                     Secure Hotspot
                   </div>
                   <div className="text-[9px] text-[var(--app-text-muted)] font-black font-mono uppercase tracking-widest opacity-60">
@@ -173,13 +173,13 @@ const CastPicker: React.FC<CastPickerProps> = ({
 
               <button
                 onClick={() => setMethod("LOCAL")}
-                className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-[var(--app-border-main)] transition-all text-left group hover:bg-green-500/10 hover:border-green-500/30 hover:scale-[1.02] shadow-sm hover:shadow-lg hover:shadow-green-500/5"
+                className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-[var(--app-border-main)] transition-all text-left group hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] hover:scale-[1.02] shadow-sm hover:shadow-lg hover:shadow-[color:var(--luca-success,#4fbf7a)]"
               >
-                <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 transition-all group-hover:scale-110 group-hover:shadow-inner group-hover:bg-green-500/20 text-green-400">
+                <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 transition-all group-hover:scale-110 group-hover:shadow-inner group-hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]">
                   <Icon name="Wifi" size={26} variant="BoldDuotone" />
                 </div>
                 <div>
-                  <div className="font-black text-sm tracking-[0.05em] uppercase italic text-[var(--app-text-main)] group-hover:text-green-400 transition-colors">
+                  <div className="font-black text-sm tracking-[0.05em] uppercase italic text-[var(--app-text-main)] group-hover:text-[var(--luca-success,#4fbf7a)] transition-colors">
                     Local Network
                   </div>
                   <div className="text-[9px] text-[var(--app-text-muted)] font-black font-mono uppercase tracking-widest opacity-60">
@@ -226,14 +226,14 @@ const CastPicker: React.FC<CastPickerProps> = ({
             <div className="p-8 text-center animate-in fade-in slide-in-from-bottom-6 duration-500">
               <div
                 className={`w-24 h-24 mx-auto rounded-3xl flex items-center justify-center mb-6 transition-all duration-500 tech-border border
-                  ${isBeaconActive ? "bg-green-500/10 border-green-500/30 shadow-lg shadow-green-500/20" : "bg-purple-500/10 border-purple-500/30 animate-pulse"}
+                  ${isBeaconActive ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] shadow-lg shadow-[color:var(--luca-success,#4fbf7a)]" : "bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] animate-pulse"}
                 `}
               >
                 <Icon
                   name="Shield"
                   size={40}
                   variant="BoldDuotone"
-                  className={isBeaconActive ? "text-green-400" : "text-purple-400"}
+                  className={isBeaconActive ? "text-[var(--luca-success,#4fbf7a)]" : "text-[var(--luca-accent-primary,#9b7cff)]"}
                 />
               </div>
               <h3 className="text-sm font-black text-[var(--app-text-main)] mb-2 tracking-[0.2em] uppercase italic">
@@ -244,7 +244,7 @@ const CastPicker: React.FC<CastPickerProps> = ({
                   ? "Encrypted P2P tunnel established"
                   : "Initializing P2P encrypted broadcast"}
                 <br />
-                <span className="mt-1 block text-purple-400/80">SSID: LUCA CORE SECURE</span>
+                <span className="mt-1 block text-[var(--luca-accent-primary,#9b7cff)]">SSID: LUCA CORE SECURE</span>
               </p>
               {!isBeaconActive ? (
                 <button
@@ -256,7 +256,7 @@ const CastPicker: React.FC<CastPickerProps> = ({
                 </button>
               ) : (
                 <div className="flex flex-col items-center gap-4">
-                  <div className="px-4 py-1.5 bg-green-500/10 text-green-400 text-[10px] font-black uppercase tracking-[0.3em] italic rounded-xl border border-green-500/20 animate-pulse">
+                  <div className="px-4 py-1.5 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] text-[10px] font-black uppercase tracking-[0.3em] italic rounded-xl border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] animate-pulse">
                     Broadcasting
                   </div>
                   <button
@@ -272,7 +272,7 @@ const CastPicker: React.FC<CastPickerProps> = ({
                       }
                       setIsBeaconActive(false);
                     }}
-                    className="mt-2 text-[9px] font-black font-mono tracking-widest text-[var(--app-text-muted)] hover:text-red-500 transition-colors uppercase italic"
+                    className="mt-2 text-[9px] font-black font-mono tracking-widest text-[var(--app-text-muted)] hover:text-[var(--luca-danger,#f87171)] transition-colors uppercase italic"
                   >
                     Reset Beacon
                   </button>
@@ -329,7 +329,7 @@ const CastPicker: React.FC<CastPickerProps> = ({
                           </div>
                         </div>
                       </div>
-                      <div className={`w-2 h-2 rounded-full transition-all duration-500 ${device.isOn ? "bg-green-500 shadow-lg shadow-green-500/50" : "bg-white/10"}`} />
+                      <div className={`w-2 h-2 rounded-full transition-all duration-500 ${device.isOn ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] shadow-lg shadow-[color:var(--luca-success,#4fbf7a)]" : "bg-white/10"}`} />
                     </button>
                   ))}
                 </div>

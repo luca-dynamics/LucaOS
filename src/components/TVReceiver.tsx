@@ -16,7 +16,7 @@ const TVReceiver = () => {
   const [vitals, setVitals] = useState({ cpu: 0, mem: 0 });
   const [theme, setTheme] = useState({
     hex: "#a855f7", // Default Purple
-    primary: "text-purple-500",
+    primary: "text-[var(--luca-accent-primary,#9b7cff)]",
   });
 
   // VISUAL CORE STATE
@@ -90,7 +90,7 @@ const TVReceiver = () => {
             name="Wifi"
             size={24}
             className={
-              status === "CONNECTED" ? "text-green-500" : "text-red-500"
+              status === "CONNECTED" ? "text-[var(--luca-success,#4fbf7a)]" : "text-[var(--luca-danger,#f87171)]"
             }
           />
           <span className="text-white font-mono tracking-widest">
@@ -110,7 +110,7 @@ const TVReceiver = () => {
           sessionId="tv-session"
           mode="EMBEDDED"
         />
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] to-transparent opacity-50" />
       </div>
     );
   }

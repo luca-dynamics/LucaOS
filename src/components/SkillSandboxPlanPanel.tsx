@@ -3,9 +3,9 @@ import type { PersonalIntelligenceSkillSandboxPlan } from "../personal-intellige
 
 const statusColor: Record<PersonalIntelligenceSkillSandboxPlan["status"], string> = {
   draft: "text-slate-300 border-slate-400/30 bg-slate-400/10",
-  ready_for_review: "text-emerald-300 border-emerald-400/30 bg-emerald-400/10",
-  approval_required: "text-amber-300 border-amber-400/30 bg-amber-400/10",
-  blocked: "text-red-300 border-red-400/30 bg-red-400/10",
+  ready_for_review: "text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
+  approval_required: "text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+  blocked: "text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
   disabled: "text-slate-300 border-slate-400/30 bg-slate-400/10",
 };
 
@@ -22,10 +22,10 @@ function PlanList({ title, values, empty = "None" }: { title: string; values: re
 
 export function SkillSandboxPlanPanel({ plan }: { plan: PersonalIntelligenceSkillSandboxPlan }) {
   return (
-    <section className="mt-5 rounded-xl border border-cyan-400/20 bg-cyan-400/[0.04] p-4" aria-label="Sandbox Plan">
+    <section className="mt-5 rounded-xl border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]/[0.04] p-4" aria-label="Sandbox Plan">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-cyan-100">Sandbox Plan</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--luca-info,#4f8cff)]">Sandbox Plan</p>
           <p className="mt-1 text-[11px] text-slate-500">{plan.planId}</p>
         </div>
         <span className={`rounded-full border px-2 py-1 text-[10px] font-bold uppercase ${statusColor[plan.status]}`}>{label(plan.status)}</span>
@@ -46,8 +46,8 @@ export function SkillSandboxPlanPanel({ plan }: { plan: PersonalIntelligenceSkil
         <PlanList title="Blocked surfaces" values={plan.blockedSurfaces} />
       </div>
 
-      <div className="mt-4 rounded-lg border border-red-400/20 bg-red-400/[0.06] p-3 text-xs leading-5 text-red-100/80">
-        <p className="font-bold text-red-200">Sandbox planning only — skill execution remains disabled.</p>
+      <div className="mt-4 rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]/[0.06] p-3 text-xs leading-5 text-[var(--luca-danger,#f87171)]">
+        <p className="font-bold text-[var(--luca-danger,#f87171)]">Sandbox planning only — skill execution remains disabled.</p>
         <p>No tools, models, MCP, memory writes, files, network, browser, LucaLink, shell, or generated code are executed.</p>
         <p>Approval planning does not satisfy approval.</p>
       </div>

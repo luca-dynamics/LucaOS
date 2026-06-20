@@ -91,11 +91,11 @@ const BDIJustificationPanel: React.FC = () => {
           </p>
           <div className="flex gap-4 mt-2">
             <div className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded border border-white/10">
-                <Icon name="Brain" size={10} className="text-blue-400" />
+                <Icon name="Brain" size={10} className="text-[var(--luca-info,#4f8cff)]" />
                 <span className="text-[8px] font-mono font-black text-[var(--app-text-main)] uppercase">{activeBrain}</span>
             </div>
             <div className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded border border-white/10">
-                <Icon name="Database" size={10} className="text-emerald-400" />
+                <Icon name="Database" size={10} className="text-[var(--luca-success,#4fbf7a)]" />
                 <span className="text-[8px] font-mono font-black text-[var(--app-text-main)] uppercase">{activeEmbed}</span>
             </div>
           </div>
@@ -127,10 +127,10 @@ const BDIJustificationPanel: React.FC = () => {
       <div className="flex-1 space-y-10">
         {/* EVOLUTION QUEUE (Phase 6) */}
         {evolutionDesires.length > 0 && (
-          <section className="bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl glass-blur">
+          <section className="bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] p-5 rounded-2xl glass-blur">
             <div className="flex items-center gap-3 mb-4">
-              <Icon name="Zap" size={16} className="text-amber-500" />
-              <h4 className="text-[10px] text-amber-500 font-black uppercase tracking-[0.3em]">
+              <Icon name="Zap" size={16} className="text-[var(--luca-warning,#f2b23e)]" />
+              <h4 className="text-[10px] text-[var(--luca-warning,#f2b23e)] font-black uppercase tracking-[0.3em]">
                 Evolution Queue (Autonomous Remediation)
               </h4>
             </div>
@@ -138,12 +138,12 @@ const BDIJustificationPanel: React.FC = () => {
               {evolutionDesires.map((ed) => (
                 <div
                   key={ed.id}
-                  className="flex flex-col gap-1.5 border-l-2 border-amber-500/40 pl-4 py-1"
+                  className="flex flex-col gap-1.5 border-l-2 border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] pl-4 py-1"
                 >
-                  <div className="text-sm text-amber-100 font-bold">
+                  <div className="text-sm text-[var(--luca-warning,#f2b23e)] font-bold">
                     {ed.description.replace("EVOLVE_REMEDIATE: ", "")}
                   </div>
-                  <div className="text-[10px] text-amber-500/60 italic font-medium">
+                  <div className="text-[10px] text-[var(--luca-warning,#f2b23e)] italic font-medium">
                     Justification: System pattern detected. Use &apos;evolveCodeSafe&apos;
                     to proceed.
                   </div>
@@ -155,18 +155,18 @@ const BDIJustificationPanel: React.FC = () => {
 
         {/* SECTION: REFLEX ENGINE (Phase 11 RECOVERED) */}
         {lessons.length > 0 && (
-          <section className="space-y-4 bg-purple-500/5 border border-purple-500/20 p-5 rounded-2xl glass-blur">
+          <section className="space-y-4 bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] p-5 rounded-2xl glass-blur">
              <div className="flex items-center gap-3 mb-4">
-                <Icon name="Activity" size={16} className="text-purple-400" />
-                <h4 className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">
+                <Icon name="Activity" size={16} className="text-[var(--luca-accent-primary,#9b7cff)]" />
+                <h4 className="text-[10px] text-[var(--luca-accent-primary,#9b7cff)] font-bold uppercase tracking-widest">
                   {isTactical ? "Reflex Mutations" : "Instinctive Adjustments"}
                 </h4>
              </div>
              <div className="grid grid-cols-1 gap-2">
                 {lessons.map(lesson => (
-                  <div key={lesson.id} className="border-l-2 border-purple-500/40 pl-3 py-1 flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                    <span className="text-xs text-purple-100 font-mono">{lesson.fact}</span>
+                  <div key={lesson.id} className="border-l-2 border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] pl-3 py-1 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] animate-pulse" />
+                    <span className="text-xs text-[var(--luca-accent-primary,#9b7cff)] font-mono">{lesson.fact}</span>
                   </div>
                 ))}
              </div>
@@ -175,21 +175,21 @@ const BDIJustificationPanel: React.FC = () => {
 
         {/* SECTION: SOVEREIGN FORGE (Phase 12 RECOVERED) */}
         {proposals.filter(p => p.status === 'PENDING').length > 0 && (
-          <section className="space-y-4 bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl glass-blur animate-in slide-in-from-top-4 duration-700">
+          <section className="space-y-4 bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] p-5 rounded-2xl glass-blur animate-in slide-in-from-top-4 duration-700">
             <div className="flex items-center gap-3 mb-4">
-              <Icon name="Wrench" size={16} className="text-amber-500" />
-              <h4 className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">
+              <Icon name="Wrench" size={16} className="text-[var(--luca-warning,#f2b23e)]" />
+              <h4 className="text-[10px] text-[var(--luca-warning,#f2b23e)] font-bold uppercase tracking-widest">
                 {isTactical ? "Evolution Proposals" : "Internal Integration Requests"}
               </h4>
             </div>
             <div className="space-y-3">
               {proposals.filter(p => p.status === 'PENDING').map(prop => (
-                <div key={prop.id} className="bg-black/40 border border-amber-500/20 p-4 rounded-xl space-y-3">
-                  <div className="text-sm font-bold text-amber-100">{prop.title}</div>
-                  <p className="text-[11px] text-amber-500/70 italic leading-relaxed">{prop.problem}</p>
+                <div key={prop.id} className="bg-black/40 border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] p-4 rounded-xl space-y-3">
+                  <div className="text-sm font-bold text-[var(--luca-warning,#f2b23e)]">{prop.title}</div>
+                  <p className="text-[11px] text-[var(--luca-warning,#f2b23e)] italic leading-relaxed">{prop.problem}</p>
                   <button 
                     onClick={() => forgeProposalService.approveProposal(prop.id)}
-                    className="w-full py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-widest transition-all"
+                    className="w-full py-2 bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)] text-[10px] font-black uppercase tracking-widest transition-all"
                   >
                     Forge Remediation
                   </button>
@@ -255,7 +255,7 @@ const BDIJustificationPanel: React.FC = () => {
                           className={`px-3 py-1 text-[9px] font-black uppercase rounded-lg border tracking-widest
                           ${
                             intention.complexity >= 8
-                              ? "bg-red-500/10 text-red-500 border-red-500/30"
+                              ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
                               : `bg-white/5 border-white/10 ${themePrimary}`
                           }`}
                         >
@@ -294,8 +294,8 @@ const BDIJustificationPanel: React.FC = () => {
                               className={`text-[9px] px-2.5 py-1 rounded-lg font-black tracking-widest border
                               ${
                                 desire.source === "DIRECTIVE"
-                                  ? "bg-purple-500/10 text-purple-400 border-purple-500/30"
-                                  : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                                  ? "bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)] border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)]"
+                                  : "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-[var(--luca-info,#4f8cff)] border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]"
                               }`}
                             >
                               {desire.source}
@@ -323,12 +323,12 @@ const BDIJustificationPanel: React.FC = () => {
                                   className={`px-3 py-1.5 flex items-center gap-2 rounded-xl text-[10px] border font-bold
                                   ${
                                     isCritical
-                                      ? "bg-red-500/10 border-red-500/30 text-red-100"
+                                      ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]"
                                       : "bg-black/30 border-white/5 text-[var(--app-text-muted)]"
                                   }`}
                                 >
                                   {isCritical && (
-                                    <div className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse shadow-[0_0_5px_red]" />
+                                    <div className="w-1.5 h-1.5 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] rounded-full animate-pulse shadow-[0_0_5px_red]" />
                                   )}
                                   {belief.fact}
                                 </div>
@@ -368,7 +368,7 @@ const BDIJustificationPanel: React.FC = () => {
                 className={`p-4 rounded-2xl border flex flex-col gap-3 transition-all glass-blur
                 ${
                   isCritical
-                    ? "border-red-500/30 bg-red-500/5 shadow-[inset_0_0_15px_rgba(239,68,68,0.1)]"
+                    ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] shadow-[inset_0_0_15px_rgba(239,68,68,0.1)]"
                     : "border-[var(--app-border-main)] bg-black/20 hover:bg-black/40"
                 }`}
               >
@@ -377,9 +377,9 @@ const BDIJustificationPanel: React.FC = () => {
                     className={`text-[8px] font-black px-2 py-0.5 rounded-lg tracking-widest uppercase
                     ${
                       isCritical
-                        ? "text-red-400 bg-red-400/10 border border-red-400/20"
+                        ? "text-[var(--luca-danger,#f87171)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
                         : isFoundational
-                        ? "text-purple-400 bg-purple-400/10 border border-purple-400/20"
+                        ? "text-[var(--luca-accent-primary,#9b7cff)] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)]"
                         : "text-[var(--app-primary)] bg-[var(--app-primary)]/10 border border-[var(--app-primary)]/20"
                     }`}
                   >
@@ -395,7 +395,7 @@ const BDIJustificationPanel: React.FC = () => {
                 </div>
                 <span
                   className={`text-[10px] leading-relaxed font-bold ${
-                    isCritical ? "text-red-100" : "text-[var(--app-text-main)]"
+                    isCritical ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-main)]"
                   }`}
                 >
                   {b.fact}

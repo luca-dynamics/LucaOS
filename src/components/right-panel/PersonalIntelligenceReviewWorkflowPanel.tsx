@@ -74,7 +74,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
             Select an item, preview an action, then confirm or cancel a local intent. No memory changes have been applied.
           </p>
         </div>
-        <span className="shrink-0 rounded-full border border-sky-400/20 bg-sky-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-sky-200">
+        <span className="shrink-0 rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--luca-info,#4f8cff)]">
           Local only
         </span>
       </div>
@@ -88,7 +88,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
           workflowState.items.slice(0, 5).map((item) => (
             <div
               key={item.memoryId}
-              className={`rounded-lg border p-2 ${selectedMemoryId === item.memoryId ? "border-amber-300/40 bg-amber-300/10" : "border-white/10 bg-black/10"}`}
+              className={`rounded-lg border p-2 ${selectedMemoryId === item.memoryId ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]" : "border-white/10 bg-black/10"}`}
             >
               <button
                 type="button"
@@ -117,7 +117,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
                   <button
                     key={action}
                     type="button"
-                    className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-[var(--app-text-main)] hover:border-sky-300/40"
+                    className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-[var(--app-text-main)] hover:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]"
                     onClick={() => {
                       const selected = createMemoryReviewActionPreview(
                         graph,
@@ -139,12 +139,12 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
       </div>
 
       {preview && (
-        <div className="mt-3 rounded-xl border border-amber-300/20 bg-amber-300/10 p-3">
-          <div className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-100">
+        <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] p-3">
+          <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--luca-warning,#f2b23e)]">
             Preview-only result
           </div>
-          <p className="mt-1 text-[10px] leading-relaxed text-amber-100/75">{preview.summary}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-[9px] uppercase tracking-widest text-amber-100/75">
+          <p className="mt-1 text-[10px] leading-relaxed text-[var(--luca-warning,#f2b23e)]">{preview.summary}</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-[9px] uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]">
             <span>Confirmation {preview.requiresConfirmation ? "required" : "optional"}</span>
             <span>Persistence deferred</span>
             <span>Side effects none</span>
@@ -153,7 +153,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
-              className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-100"
+              className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]"
               onClick={() => setWorkflowState((current) => confirmMemoryReviewPreview(current))}
             >
               Confirm intent
@@ -179,7 +179,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
       )}
 
       {result?.phase === "confirmed" && (
-        <div className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-2 text-[10px] leading-relaxed text-emerald-100/80">
+        <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] p-2 text-[10px] leading-relaxed text-[var(--luca-success,#4fbf7a)]">
           Confirmation records intent only; persistence is deferred. No memory changes have been applied.
         </div>
       )}

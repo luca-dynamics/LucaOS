@@ -15,9 +15,9 @@ interface RuntimeStatusChipProps {
 }
 
 const SEVERITY_CLASS: Record<RuntimeReadinessSeverity, string> = {
-  ready: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10",
-  warning: "text-amber-300 border-amber-500/20 bg-amber-500/10",
-  blocked: "text-red-300 border-red-500/20 bg-red-500/10",
+  ready: "text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
+  warning: "text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+  blocked: "text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
   unknown: "text-slate-300 border-white/10 bg-white/5",
 };
 

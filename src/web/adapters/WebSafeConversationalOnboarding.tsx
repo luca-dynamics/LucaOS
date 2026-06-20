@@ -218,7 +218,7 @@ export function WebSafeConversationalOnboarding({
                 : "Enable microphone"}
           </button>
           {microphoneStatus === "unavailable" && (
-            <p className="mt-3 text-xs text-amber-200" role="status">
+            <p className="mt-3 text-xs text-[var(--luca-warning,#f2b23e)]" role="status">
               Microphone unavailable. You can continue by typing.
             </p>
           )}

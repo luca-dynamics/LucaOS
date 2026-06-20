@@ -91,11 +91,11 @@ export const DesktopStreamModal: React.FC<Props> = ({
           <div className="flex items-center gap-4">
             <div className="flex gap-2">
               <div
-                className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 cursor-pointer"
+                className="w-3 h-3 rounded-full bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] cursor-pointer"
                 onClick={onClose}
               ></div>
-              <div className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400"></div>
-              <div className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400"></div>
+              <div className="w-3 h-3 rounded-full bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"></div>
+              <div className="w-3 h-3 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"></div>
             </div>
             <div className="h-6 w-px bg-slate-800 mx-2"></div>
             <div
@@ -117,7 +117,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
               onClick={() => setInputMode(!inputMode)}
               className={`flex items-center gap-2 px-3 py-1 rounded border transition-all ${
                 inputMode
-                  ? "bg-red-900/50 border-red-500 text-red-400 animate-pulse"
+                  ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] animate-pulse"
                   : "bg-slate-800 border-slate-600 hover:bg-slate-700"
               }`}
             >
@@ -128,8 +128,8 @@ export const DesktopStreamModal: React.FC<Props> = ({
             <span
               className={
                 connected
-                  ? "text-green-500 font-bold"
-                  : "text-yellow-500 font-bold"
+                  ? "text-[var(--luca-success,#4fbf7a)] font-bold"
+                  : "text-[var(--luca-warning,#f2b23e)] font-bold"
               }
             >
               {connected ? "LIVE HOST DATA" : "SIMULATION MODE"}
@@ -148,10 +148,10 @@ export const DesktopStreamModal: React.FC<Props> = ({
           {/* Input Capture Overlay */}
           {inputMode && (
             <div
-              className="absolute inset-0 z-50 cursor-crosshair flex items-center justify-center bg-red-500/5 border-4 border-red-500/20"
+              className="absolute inset-0 z-50 cursor-crosshair flex items-center justify-center bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-4 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
               onClick={handleOverlayClick}
             >
-              <div className="bg-black/80 p-4 border border-red-500 text-red-500 font-mono text-xs text-center pointer-events-none">
+              <div className="bg-black/80 p-4 border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] font-mono text-xs text-center pointer-events-none">
                 <div className="font-bold text-lg mb-2">
                   CONTROL UPLINK ENGAGED
                 </div>

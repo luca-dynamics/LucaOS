@@ -227,14 +227,14 @@ const SkillPreview: React.FC<Props> = ({
             {/* Execution Result */}
             {executionResult && (
               <div className="mt-4">
-                <div className="text-xs font-bold text-green-400 mb-2">
+                <div className="text-xs font-bold text-[var(--luca-success,#4fbf7a)] mb-2">
                   ✓ EXECUTION SUCCESSFUL
                 </div>
                 <div
-                  className="bg-[#1e1e1e] rounded-lg p-4 border border-green-500/30"
+                  className="bg-[#1e1e1e] rounded-lg p-4 border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]"
                   style={{ maxHeight: "200px", overflowY: "auto" }}
                 >
-                  <pre className="text-sm font-mono text-green-300">
+                  <pre className="text-sm font-mono text-[var(--luca-success,#4fbf7a)]">
                     {executionResult}
                   </pre>
                 </div>
@@ -244,11 +244,11 @@ const SkillPreview: React.FC<Props> = ({
             {/* Execution Error */}
             {executionError && (
               <div className="mt-4">
-                <div className="text-xs font-bold text-red-400 mb-2">
+                <div className="text-xs font-bold text-[var(--luca-danger,#f87171)] mb-2">
                   ✗ EXECUTION FAILED
                 </div>
-                <div className="bg-[#1e1e1e] rounded-lg p-4 border border-red-500/30">
-                  <pre className="text-sm font-mono text-red-300">
+                <div className="bg-[#1e1e1e] rounded-lg p-4 border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]">
+                  <pre className="text-sm font-mono text-[var(--luca-danger,#f87171)]">
                     {executionError}
                   </pre>
                 </div>

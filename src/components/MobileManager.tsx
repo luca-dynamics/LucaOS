@@ -273,7 +273,7 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
       <div
         className={`relative w-[90%] max-w-5xl h-[85vh] bg-[#0a0a0a] border shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-lg flex flex-col overflow-hidden transition-all ${
           activeTab === "EXPLOIT" || activeTab === "WIRELESS"
-            ? "border-red-900 shadow-red-900/20"
+            ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] shadow-[color:var(--luca-danger,#f87171)]"
             : "border-rq-blue/30 shadow-rq-blue/15"
         }`}
       >
@@ -358,7 +358,7 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
                 />
                 <button
                   onClick={handleWirelessConnect}
-                  className="bg-rq-blue hover:bg-blue-400 text-black font-bold px-6 text-xs tracking-widest transition-colors"
+                  className="bg-rq-blue hover:bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-black font-bold px-6 text-xs tracking-widest transition-colors"
                 >
                   CONNECT
                 </button>
@@ -370,9 +370,9 @@ const MobileManager: React.FC<Props> = ({ device, onClose }) => {
                     key={i}
                     className={
                       log.includes("[OK]")
-                        ? "text-green-500"
+                        ? "text-[var(--luca-success,#4fbf7a)]"
                         : log.includes("[ERR]")
-                        ? "text-red-500"
+                        ? "text-[var(--luca-danger,#f87171)]"
                         : ""
                     }
                   >

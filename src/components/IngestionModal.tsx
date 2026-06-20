@@ -8,8 +8,8 @@ interface Props {
 }
 
 const IngestionModal: React.FC<Props> = ({ onClose, onIngest, theme }) => {
-  const themePrimary = theme?.primary || "text-green-400";
-  const themeBorder = theme?.border || "border-green-500";
+  const themePrimary = theme?.primary || "text-[var(--luca-success,#4fbf7a)]";
+  const themeBorder = theme?.border || "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]";
   const themeHex = theme?.hex || "#22c55e";
   const [url, setUrl] = useState("");
 

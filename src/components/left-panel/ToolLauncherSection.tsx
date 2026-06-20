@@ -78,13 +78,13 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
       <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
           <div className="text-[11px] font-semibold tracking-tight text-[var(--app-text-main)]">Skills</div>
-          <span className="rounded-full border border-sky-500/20 bg-sky-500/5 px-2 py-0.5 text-[9px] font-medium text-sky-200">State only</span>
+          <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-0.5 text-[9px] font-medium text-[var(--luca-info,#4f8cff)]">State only</span>
         </div>
         <p className="text-[9px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>{skillSummaryLine}</p>
         <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[11px] font-semibold">
           <div className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-main)]">{skillRegistry.totalSkills}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">registered</span></div>
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-2 py-1 text-amber-200">{pendingSkillRequests}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">pending</span></div>
-          <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-2 py-1 text-red-200">{skillGovernance.blockedRequests}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">blocked</span></div>
+          <div className="rounded-lg border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-2 py-1 text-[var(--luca-warning,#f2b23e)]">{pendingSkillRequests}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">pending</span></div>
+          <div className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-2 py-1 text-[var(--luca-danger,#f87171)]">{skillGovernance.blockedRequests}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">blocked</span></div>
         </div>
       </div>
 

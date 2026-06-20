@@ -450,7 +450,7 @@ Once you have gathered all 5 points, provide a professional summary:
         {/* Error message overlay */}
         {error && (
           <div className="absolute bottom-20 left-0 right-0 flex justify-center">
-            <div className="bg-red-500/20 border border-red-500/50 px-4 py-2 rounded-lg text-xs text-red-300 glass-blur">
+            <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] px-4 py-2 rounded-lg text-xs text-[var(--luca-danger,#f87171)] glass-blur">
               {error}
             </div>
           </div>

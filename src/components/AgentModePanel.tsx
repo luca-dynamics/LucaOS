@@ -376,7 +376,7 @@ const AgentModePanel: React.FC<Props> = ({
 
               <button
                 onClick={handleStop}
-                className="px-6 py-2.5 rounded-xl font-medium transition-all border hover:bg-red-500/20"
+                className="px-6 py-2.5 rounded-xl font-medium transition-all border hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
                 style={{
                   background: "#ef444420",
                   borderColor: "#ef444440",

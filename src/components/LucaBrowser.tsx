@@ -363,12 +363,12 @@ const LucaBrowser: React.FC<Props> = ({
     const displayUrl = auditUrl || url;
     return (
       <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 glass-blur animate-in fade-in duration-200 font-mono p-4 sm:p-20">
-        <div className="relative w-full h-full bg-[#0d0d0d] flex flex-col overflow-hidden border border-amber-500/40 shadow-2xl rounded-lg">
+        <div className="relative w-full h-full bg-[#0d0d0d] flex flex-col overflow-hidden border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] shadow-2xl rounded-lg">
           {/* Safety banner */}
-          <div className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-3">
+          <div className="border-b border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-4 py-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-sm font-black uppercase tracking-[0.18em] text-amber-200">
+                <div className="text-sm font-black uppercase tracking-[0.18em] text-[var(--luca-warning,#f2b23e)]">
                   {getLucaBrowserModeLabel("GOVERNED")}
                 </div>
                 <p className="mt-1 truncate text-[11px] text-slate-400">
@@ -402,7 +402,7 @@ const LucaBrowser: React.FC<Props> = ({
                 {isPaused ? (
                   <button
                     onClick={handleResume}
-                    className="ml-1 rounded-lg border border-emerald-500/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/10"
+                    className="ml-1 rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--luca-success,#4fbf7a)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
                     title="Resume governed session"
                   >
                     Resume
@@ -426,7 +426,7 @@ const LucaBrowser: React.FC<Props> = ({
                 {onRevoke && (
                   <button
                     onClick={onRevoke}
-                    className="rounded-lg border border-red-500/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-red-200 hover:bg-red-500/10"
+                    className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
                     title="Revoke"
                   >
                     Revoke
@@ -438,7 +438,7 @@ const LucaBrowser: React.FC<Props> = ({
               {boundaryLabels.map((label) => (
                 <span
                   key={label}
-                  className="rounded-full border border-amber-500/30 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-amber-200"
+                  className="rounded-full border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]"
                 >
                   {label}
                 </span>
@@ -463,17 +463,17 @@ const LucaBrowser: React.FC<Props> = ({
           <div className="flex-1 relative bg-black">
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 glass-blur">
-                <div className="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] border-t-transparent rounded-full animate-spin"></div>
               </div>
             )}
             {navBlockedReason && (
-              <div className="absolute inset-x-0 top-0 z-30 border-b border-red-500/40 bg-red-950/90 px-4 py-3 glass-blur">
+              <div className="absolute inset-x-0 top-0 z-30 border-b border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-4 py-3 glass-blur">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-[11px] font-black uppercase tracking-widest text-red-200">
+                    <div className="text-[11px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">
                       Navigation blocked by Luca Browser governance
                     </div>
-                    <p className="mt-1 text-[10px] leading-relaxed text-red-100/80">{navBlockedReason}</p>
+                    <p className="mt-1 text-[10px] leading-relaxed text-[var(--luca-danger,#f87171)]">{navBlockedReason}</p>
                   </div>
                   <button
                     onClick={handleDismissBlocked}
@@ -486,13 +486,13 @@ const LucaBrowser: React.FC<Props> = ({
             )}
             {isPaused && (
               <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-black/80 glass-blur">
-                <div className="text-sm font-black uppercase tracking-[0.18em] text-amber-200">Session paused</div>
+                <div className="text-sm font-black uppercase tracking-[0.18em] text-[var(--luca-warning,#f2b23e)]">Session paused</div>
                 <p className="max-w-md px-6 text-center text-[11px] leading-relaxed text-slate-400">
                   Governed navigation auditing is paused. Resume to continue, or close/revoke to end the session.
                 </p>
                 <button
                   onClick={handleResume}
-                  className="rounded-lg border border-emerald-500/40 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-200 hover:bg-emerald-500/10"
+                  className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--luca-success,#4fbf7a)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
                 >
                   Resume
                 </button>
@@ -552,22 +552,22 @@ const LucaBrowser: React.FC<Props> = ({
             <div className="absolute inset-0 z-30 pointer-events-none">
               {highlightedElement !== null && (
                 <div className="absolute inset-0 bg-transparent">
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-cyan-500/90 text-black px-4 py-2 rounded-full font-bold shadow-[0_0_20px_rgba(6,182,212,0.6)] animate-bounce">
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-black px-4 py-2 rounded-full font-bold shadow-[0_0_20px_rgba(6,182,212,0.6)] animate-bounce">
                     Targeting Element #{highlightedElement}
                   </div>
                 </div>
               )}
 
               {agentState.reasoning && (
-                <div className="absolute bottom-8 left-8 right-8 bg-black/80 border border-purple-500/50 p-4 rounded-xl glass-blur shadow-2xl pointer-events-auto max-h-[30vh] overflow-y-auto">
+                <div className="absolute bottom-8 left-8 right-8 bg-black/80 border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] p-4 rounded-xl glass-blur shadow-2xl pointer-events-auto max-h-[30vh] overflow-y-auto">
                   <div className="flex items-start gap-3">
                     <Icon
                       name="Brain"
-                      className="text-purple-400 shrink-0 mt-1"
+                      className="text-[var(--luca-accent-primary,#9b7cff)] shrink-0 mt-1"
                       size={20}
                     />
                     <div className="flex-1">
-                      <h4 className="text-purple-400 text-xs font-bold uppercase tracking-widest mb-1">
+                      <h4 className="text-[var(--luca-accent-primary,#9b7cff)] text-xs font-bold uppercase tracking-widest mb-1">
                         Agent Reasoning
                       </h4>
                       <p className="text-sm text-slate-200 leading-relaxed font-sans">
@@ -592,14 +592,14 @@ const LucaBrowser: React.FC<Props> = ({
           />
         </div>
 
-        <div className="h-6 border-t border-cyan-900/30 bg-[#080808] px-4 flex items-center justify-between text-[10px] text-slate-500">
+        <div className="h-6 border-t border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[#080808] px-4 flex items-center justify-between text-[10px] text-slate-500">
           <div className="flex items-center gap-4">
             <span>BROWSER</span>
-            <span className="text-cyan-400">ACTIVE</span>
+            <span className="text-[var(--luca-info,#4f8cff)]">ACTIVE</span>
             {sessionId && (
               <>
-                <span className="text-cyan-500">|</span>
-                <span className="text-cyan-400">AGENT MODE</span>
+                <span className="text-[var(--luca-info,#4f8cff)]">|</span>
+                <span className="text-[var(--luca-info,#4f8cff)]">AGENT MODE</span>
                 {agentState && (
                   <span className="text-slate-400">
                     STEP {agentState.iteration}/{agentState.maxIterations}
@@ -625,8 +625,8 @@ const LucaBrowser: React.FC<Props> = ({
         isMaximized ? "p-0" : "p-4 sm:p-20"
       }`}
     >
-      <div className="relative w-full h-full bg-[#0d0d0d] flex flex-col overflow-hidden border border-cyan-500/30 shadow-2xl rounded-lg">
-        <div className="h-14 border-b border-cyan-900/50 bg-cyan-950/10 flex items-center justify-between px-4 z-10 drag-handle">
+      <div className="relative w-full h-full bg-[#0d0d0d] flex flex-col overflow-hidden border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] shadow-2xl rounded-lg">
+        <div className="h-14 border-b border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] flex items-center justify-between px-4 z-10 drag-handle">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex items-center gap-1">
               <button
@@ -666,10 +666,10 @@ const LucaBrowser: React.FC<Props> = ({
             </div>
 
             <div className="flex-1 mx-4 min-w-0">
-              <div className="bg-black/40 border border-cyan-900/30 rounded px-3 py-1.5 flex items-center gap-2">
+              <div className="bg-black/40 border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] rounded px-3 py-1.5 flex items-center gap-2">
                 <div
                   className={`w-2 h-2 rounded-full ${
-                    isLoading ? "bg-cyan-500 animate-pulse" : "bg-green-500"
+                    isLoading ? "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] animate-pulse" : "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
                   }`}
                 ></div>
                 <input
@@ -686,7 +686,7 @@ const LucaBrowser: React.FC<Props> = ({
                 />
               </div>
             </div>
-            <div className="text-xs text-cyan-400 font-bold tracking-widest truncate max-w-[200px]">
+            <div className="text-xs text-[var(--luca-info,#4f8cff)] font-bold tracking-widest truncate max-w-[200px]">
               {title}
             </div>
           </div>
@@ -694,7 +694,7 @@ const LucaBrowser: React.FC<Props> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleOpenExternal}
-              className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors"
+              className="p-1.5 text-slate-400 hover:text-[var(--luca-info,#4f8cff)] transition-colors"
               title="Open in External Browser"
             >
               <Icon name="ExternalLink" size={16} />
@@ -708,7 +708,7 @@ const LucaBrowser: React.FC<Props> = ({
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+              className="p-1.5 text-slate-400 hover:text-[var(--luca-danger,#f87171)] transition-colors"
               title="Close"
             >
               <Icon name="X" size={16} />
@@ -738,22 +738,22 @@ const LucaBrowser: React.FC<Props> = ({
             <div className="absolute inset-0 z-30 pointer-events-none">
               {highlightedElement !== null && (
                 <div className="absolute inset-0 bg-transparent">
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-cyan-500/90 text-black px-4 py-2 rounded-full font-bold shadow-[0_0_20px_rgba(6,182,212,0.6)] animate-bounce">
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-black px-4 py-2 rounded-full font-bold shadow-[0_0_20px_rgba(6,182,212,0.6)] animate-bounce">
                     Targeting Element #{highlightedElement}
                   </div>
                 </div>
               )}
 
               {agentState.reasoning && (
-                <div className="absolute bottom-8 left-8 right-8 bg-black/80 border border-purple-500/50 p-4 rounded-xl glass-blur shadow-2xl pointer-events-auto max-h-[30vh] overflow-y-auto">
+                <div className="absolute bottom-8 left-8 right-8 bg-black/80 border border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] p-4 rounded-xl glass-blur shadow-2xl pointer-events-auto max-h-[30vh] overflow-y-auto">
                   <div className="flex items-start gap-3">
                     <Icon
                       name="Brain"
-                      className="text-purple-400 shrink-0 mt-1"
+                      className="text-[var(--luca-accent-primary,#9b7cff)] shrink-0 mt-1"
                       size={20}
                     />
                     <div className="flex-1">
-                      <h4 className="text-purple-400 text-xs font-bold uppercase tracking-widest mb-1">
+                      <h4 className="text-[var(--luca-accent-primary,#9b7cff)] text-xs font-bold uppercase tracking-widest mb-1">
                         Agent Reasoning
                       </h4>
                       <p className="text-sm text-slate-200 leading-relaxed font-sans">
@@ -778,14 +778,14 @@ const LucaBrowser: React.FC<Props> = ({
           />
         </div>
 
-        <div className="h-6 border-t border-cyan-900/30 bg-[#080808] px-4 flex items-center justify-between text-[10px] text-slate-500">
+        <div className="h-6 border-t border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[#080808] px-4 flex items-center justify-between text-[10px] text-slate-500">
           <div className="flex items-center gap-4">
             <span>LUCA BROWSER</span>
-            <span className="text-cyan-400">ACTIVE</span>
+            <span className="text-[var(--luca-info,#4f8cff)]">ACTIVE</span>
             {sessionId && (
               <>
-                <span className="text-cyan-500">|</span>
-                <span className="text-cyan-400">AGENT MODE</span>
+                <span className="text-[var(--luca-info,#4f8cff)]">|</span>
+                <span className="text-[var(--luca-info,#4f8cff)]">AGENT MODE</span>
                 {agentState && (
                   <span className="text-slate-400">
                     STEP {agentState.iteration}/{agentState.maxIterations}

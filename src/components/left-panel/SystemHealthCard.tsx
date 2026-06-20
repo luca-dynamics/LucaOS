@@ -12,9 +12,9 @@ interface SystemHealthCardProps {
 }
 
 const SEVERITY_DOT: Record<RuntimeReadinessSeverity, string> = {
-  ready: "bg-emerald-400",
-  warning: "bg-amber-300",
-  blocked: "bg-red-400",
+  ready: "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
+  warning: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+  blocked: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
   unknown: "bg-white/30",
 };
 
@@ -118,8 +118,8 @@ const SystemHealthCard: React.FC<SystemHealthCardProps> = ({ connectionTier }) =
         <span
           className={`rounded-full border px-2 py-0.5 text-[9px] font-medium ${
             online
-              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-              : "bg-red-500/10 text-red-300 border-red-500/20"
+              ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]"
+              : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
           }`}
         >
           {online ? "Online" : "Offline"}

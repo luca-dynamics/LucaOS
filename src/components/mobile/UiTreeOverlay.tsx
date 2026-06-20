@@ -109,7 +109,7 @@ const UiTreeOverlay: React.FC<UiTreeOverlayProps> = ({
                       <div className="text-[8px] text-slate-500 font-mono">
                         ID
                       </div>
-                      <div className="text-[10px] text-cyan-300 font-mono break-all">
+                      <div className="text-[10px] text-[var(--luca-info,#4f8cff)] font-mono break-all">
                         {node.resourceId.split("/").pop()}
                       </div>
                     </div>
@@ -129,7 +129,7 @@ const UiTreeOverlay: React.FC<UiTreeOverlayProps> = ({
                       {node.class.split(".").pop()}
                     </span>
                     {node.clickable && (
-                      <span className="text-[8px] px-1 bg-green-500/20 text-green-400 rounded border border-green-500/30 uppercase">
+                      <span className="text-[8px] px-1 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] rounded border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] uppercase">
                         Clickable
                       </span>
                     )}

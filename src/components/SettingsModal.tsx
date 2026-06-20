@@ -630,8 +630,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div
                 className={`text-[10px] md:text-xs ${
                   statusMsg.includes("Error")
-                    ? "text-red-500"
-                    : "text-green-500"
+                    ? "text-[var(--luca-danger,#f87171)]"
+                    : "text-[var(--luca-success,#4fbf7a)]"
                 }`}
               >
                 {statusMsg}

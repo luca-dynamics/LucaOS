@@ -21,7 +21,7 @@ interface Props {
 const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
   const themePrimary = theme?.primary || "text-rq-blue";
   const themeBorder = theme?.border || "border-rq-blue";
-  const themeBg = theme?.bg || "bg-blue-950/10";
+  const themeBg = theme?.bg || "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]";
   const themeHex = theme?.hex || "#3b82f6";
   const [files, setFiles] = useState<FileNode[]>([]);
   const [currentPath, setCurrentPath] = useState(initialCwd);
@@ -308,7 +308,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
               <button
                 onClick={handleRun}
                 disabled={isRunning}
-                className="flex items-center gap-2 px-3 py-1 bg-green-900/20 hover:bg-green-900/40 text-green-500 border border-green-900/50 rounded transition-all text-xs font-bold"
+                className="flex items-center gap-2 px-3 py-1 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] rounded transition-all text-xs font-bold"
                 title="Run Code (Auto-Saves)"
               >
                 {isRunning ? (
@@ -321,7 +321,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
             )}
             <button
               onClick={handleSave}
-              className="p-2 hover:text-green-400 hover:bg-green-900/20 rounded transition-all"
+              className="p-2 hover:text-[var(--luca-success,#4fbf7a)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] rounded transition-all"
               title="Save (Ctrl+S)"
             >
               <Icon name="Disk" size={18} className={saving ? "animate-bounce" : ""} variant="BoldDuotone" />
@@ -329,7 +329,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
             <div className="w-px h-4 bg-slate-800 mx-2"></div>
             <button
               onClick={onClose}
-              className="p-2 hover:text-red-400 hover:bg-red-900/20 rounded transition-all"
+              className="p-2 hover:text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] rounded transition-all"
             >
               <Icon name="Close" size={18} variant="BoldDuotone" />
             </button>
@@ -380,7 +380,7 @@ const CodeEditor: React.FC<Props> = ({ onClose, initialCwd, theme }) => {
                   onClick={() => handleFileClick(file)}
                 >
                   {file.isDirectory ? (
-                    <Icon name="Folder" size={14} className="text-yellow-600" variant="BoldDuotone" />
+                    <Icon name="Folder" size={14} className="text-[var(--luca-warning,#f2b23e)]" variant="BoldDuotone" />
                   ) : (
                     <Icon name="Code" size={14} className={themePrimary} variant="BoldDuotone" />
                   )}

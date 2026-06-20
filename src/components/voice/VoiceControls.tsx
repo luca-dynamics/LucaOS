@@ -53,10 +53,10 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           <span className="flex items-center gap-2">
             <Icon name="Cpu" size={10} className="md:w-3 md:h-3" /> LUCA CORE: ONLINE
           </span>
-          <span className="flex items-center gap-2 text-green-400">
+          <span className="flex items-center gap-2 text-[var(--luca-success,#4fbf7a)]">
             <Icon name="Radio" size={10} className="md:w-3 md:h-3" /> VAD: LIVEKIT TUNED
           </span>
-          <span className="flex items-center gap-2 text-green-400">
+          <span className="flex items-center gap-2 text-[var(--luca-success,#4fbf7a)]">
             <Icon name="Lock" size={10} className="md:w-3 md:h-3" /> ENCRYPTION: AES-256
           </span>
         </div>
@@ -83,7 +83,7 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
                 isVideoActive
                   ? `${theme.bg} ${theme.border} ${theme.primary}`
                   : theme.themeName?.toLowerCase() === "lucagent"
-                    ? "border-sky-900/10 bg-white/40 text-sky-900 hover:bg-white/60"
+                    ? "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-white/40 text-[var(--luca-info,#4f8cff)] hover:bg-white/60"
                     : "bg-black/40 border-white/10 hover:bg-white/10 text-slate-400"
               }`}
               title="Toggle Vision"
@@ -104,8 +104,8 @@ const VoiceControls: React.FC<VoiceControlsProps> = ({
           onClick={onClose}
           className={`cursor-pointer group p-3 md:p-4 rounded-full border ${
             theme.themeName?.toLowerCase() === "lucagent"
-              ? "border-red-900/10 bg-white/60 text-red-600 hover:bg-red-50 hover:border-red-500"
-              : "border-white/10 bg-black/60 text-slate-400 hover:bg-red-900/50 hover:border-red-500 hover:text-white"
+              ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-white/60 text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
+              : "border-white/10 bg-black/60 text-slate-400 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:text-white"
           } transition-all z-[110] glass-blur`}
           title="Terminate Voice Uplink"
         >

@@ -42,13 +42,13 @@ const LiveContentDisplay: React.FC<Props> = ({ content, onClose }) => {
                 {videos.length > 0 && (
                     <div className="space-y-3">
                         <div className="text-[10px] font-mono text-slate-500 flex items-center gap-2 border-b border-slate-800 pb-1">
-                            <Icon name="Youtube" size={12} className="text-red-500" /> VIDEO STREAMS
+                            <Icon name="Youtube" size={12} className="text-[var(--luca-danger,#f87171)]" /> VIDEO STREAMS
                         </div>
                         {videos.map((video: any, i: number) => {
                             const id = getYoutubeId(video.web.uri);
                             if (!id) return null;
                             return (
-                                <div key={i} className="rounded overflow-hidden border border-slate-800 shadow-lg bg-black group hover:border-red-900/50 transition-colors">
+                                <div key={i} className="rounded overflow-hidden border border-slate-800 shadow-lg bg-black group hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] transition-colors">
                                     <div className="relative aspect-video">
                                         <iframe 
                                             width="100%" 
@@ -62,7 +62,7 @@ const LiveContentDisplay: React.FC<Props> = ({ content, onClose }) => {
                                         ></iframe>
                                     </div>
                                     <div className="p-2 bg-slate-900/80 border-t border-slate-800">
-                                        <div className="text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">{video.web.title}</div>
+                                        <div className="text-xs font-bold text-white truncate group-hover:text-[var(--luca-danger,#f87171)] transition-colors">{video.web.title}</div>
                                         <div className="text-[9px] text-slate-500 font-mono">SOURCE: YOUTUBE</div>
                                     </div>
                                 </div>
@@ -75,7 +75,7 @@ const LiveContentDisplay: React.FC<Props> = ({ content, onClose }) => {
                 {articles.length > 0 && (
                     <div className="space-y-2">
                         <div className="text-[10px] font-mono text-slate-500 flex items-center gap-2 border-b border-slate-800 pb-1">
-                            <Icon name="Newspaper" size={12} className="text-emerald-500" /> WEB SOURCES
+                            <Icon name="Newspaper" size={12} className="text-[var(--luca-success,#4fbf7a)]" /> WEB SOURCES
                         </div>
                         {articles.map((article: any, i: number) => {
                             const hostname = new URL(article.web.uri).hostname.replace('www.', '');

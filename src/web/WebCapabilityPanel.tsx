@@ -26,13 +26,13 @@ const STATUS_LABELS: Record<WebCapability["status"], string> = {
 };
 
 const STATUS_STYLES: Record<WebCapability["status"], string> = {
-  available: "border-cyan-200/20 bg-cyan-100/10 text-cyan-50",
-  "permission-required": "border-amber-200/20 bg-amber-100/10 text-amber-50",
-  "api-required": "border-violet-200/20 bg-violet-100/10 text-violet-50",
+  available: "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-[var(--luca-info,#4f8cff)]",
+  "permission-required": "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)]",
+  "api-required": "border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)]",
   "desktop-required": "border-white/15 bg-white/[0.06] text-white/70",
   "mobile-app-required": "border-white/15 bg-white/[0.06] text-white/70",
-  "paired-host-required": "border-blue-200/20 bg-blue-100/10 text-blue-50",
-  "connector-required": "border-fuchsia-200/20 bg-fuchsia-100/10 text-fuchsia-50",
+  "paired-host-required": "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-[var(--luca-info,#4f8cff)]",
+  "connector-required": "border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)]",
   unsupported: "border-white/10 bg-black/20 text-white/40",
   unknown: "border-white/10 bg-white/[0.03] text-white/45",
 };
@@ -58,7 +58,7 @@ export function WebCapabilityPanel({
 
   return (
     <section className="rounded-[1.6rem] border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.25)] backdrop-blur-2xl sm:p-6">
-      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-cyan-100/55">
+      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-[var(--luca-info,#4f8cff)]">
         {eyebrow}
       </p>
       <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
@@ -95,13 +95,13 @@ export function WebCapabilityPanel({
                     <p className="mt-2 text-xs leading-5 text-white/45">{item.detail}</p>
                     {item.unlockOptions.length > 0 && (
                       <div className="mt-3 border-t border-white/[0.07] pt-3">
-                        <p className="text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-cyan-100/45">
+                        <p className="text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-[var(--luca-info,#4f8cff)]">
                           Route unlock options
                         </p>
                         <ul className="mt-2 grid gap-1.5">
                           {item.unlockOptions.map((route) => (
                             <li key={route} className="flex gap-2 text-[0.68rem] leading-4 text-white/55">
-                              <span className="text-cyan-200/60">→</span>
+                              <span className="text-[var(--luca-info,#4f8cff)]">→</span>
                               {ROUTE_LABELS[route]}
                             </li>
                           ))}

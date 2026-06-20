@@ -28,7 +28,7 @@ export const VoiceCommandConfirmation: React.FC<
       >
         <div className="flex items-center gap-3 mb-4">
           {isRisky ? (
-            <Icon name="Danger" className="text-red-400" size={24} />
+            <Icon name="Danger" className="text-[var(--luca-danger,#f87171)]" size={24} />
           ) : (
             <Icon name="Microphone" size={24} style={{ color: "var(--app-primary)" }} />
           )}
@@ -68,10 +68,10 @@ export const VoiceCommandConfirmation: React.FC<
                   <div
                     className={`h-full ${
                       confidence > 0.8
-                        ? "bg-green-500"
+                        ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
                         : confidence > 0.6
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
+                          ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"
+                          : "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
                     }`}
                     style={{ width: `${confidence * 100}%` }}
                   />
@@ -84,9 +84,9 @@ export const VoiceCommandConfirmation: React.FC<
           )}
 
           {isRisky && (
-            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">
-              <Icon name="Danger" className="text-red-400 shrink-0" size={16} />
-              <p className="text-xs text-red-400">
+            <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-lg p-3 flex items-start gap-2">
+              <Icon name="Danger" className="text-[var(--luca-danger,#f87171)] shrink-0" size={16} />
+              <p className="text-xs text-[var(--luca-danger,#f87171)]">
                 This command may have destructive effects. Please confirm
                 this is what you intended.
               </p>
@@ -104,7 +104,7 @@ export const VoiceCommandConfirmation: React.FC<
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${isRisky ? "bg-red-500 text-white" : "bg-[var(--app-primary)] text-black"} shadow-[0_0_20px_rgba(var(--app-primary-rgb),0.2)]`}
+            className={`flex-1 py-3 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${isRisky ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-white" : "bg-[var(--app-primary)] text-black"} shadow-[0_0_20px_rgba(var(--app-primary-rgb),0.2)]`}
           >
             <Icon name="CheckCircle" size={18} />
             Confirm

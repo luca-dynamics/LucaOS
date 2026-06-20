@@ -50,10 +50,10 @@ const AutonomyTile: React.FC = () => {
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
-              status === "IDLE" ? "bg-slate-500" : "bg-purple-500 animate-pulse"
+              status === "IDLE" ? "bg-slate-500" : "bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] animate-pulse"
             }`}
           />
-          <span className="text-xs font-mono text-purple-300">{status}</span>
+          <span className="text-xs font-mono text-[var(--luca-accent-primary,#9b7cff)]">{status}</span>
         </div>
         <div className="text-[10px] font-mono text-slate-500">
           LIFELOOP v1.0
@@ -72,17 +72,17 @@ const AutonomyTile: React.FC = () => {
                         p-2 rounded border-l-2
                         ${
                           log.type === "thought"
-                            ? "border-purple-500 bg-purple-900/10 text-purple-200"
+                            ? "border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] text-[var(--luca-accent-primary,#9b7cff)]"
                             : ""
                         }
                         ${
                           log.type === "tool"
-                            ? "border-amber-500 bg-amber-900/10 text-amber-200"
+                            ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)]"
                             : ""
                         }
                         ${
                           log.type === "status"
-                            ? "border-blue-500 bg-blue-900/10 text-blue-200"
+                            ? "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] text-[var(--luca-info,#4f8cff)]"
                             : ""
                         }
                     `}

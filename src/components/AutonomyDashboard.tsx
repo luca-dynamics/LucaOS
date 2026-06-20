@@ -190,7 +190,7 @@ export const AutonomyDashboard: React.FC<{
             <div className="space-y-4">
                <div className="flex justify-between items-center">
                   <span className="text-[10px] font-black uppercase tracking-widest text-white/30">System Stats</span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-ping"></div>
                </div>
                <div className="grid grid-cols-1 gap-4">
                   <div className="bg-white/[0.03] border border-white/5 p-4 rounded-xl">
@@ -287,13 +287,13 @@ export const AutonomyDashboard: React.FC<{
                         <div
                           className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${
                             goal.status === "COMPLETED"
-                              ? "bg-green-500"
+                              ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
                               : goal.status === "IN_PROGRESS"
-                              ? "bg-amber-500 animate-pulse"
+                              ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] animate-pulse"
                               : goal.status === "FAILED"
-                              ? "bg-red-500"
+                              ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
                               : goal.status === "PAUSED"
-                              ? "bg-orange-500"
+                              ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"
                               : "bg-white/20"
                           }`}
                         />
@@ -310,7 +310,7 @@ export const AutonomyDashboard: React.FC<{
                         {goal.status === "PAUSED" ? (
                           <button
                             onClick={() => resumeGoal(goal.id)}
-                            className="text-green-500 hover:text-green-400"
+                            className="text-[var(--luca-success,#4fbf7a)] hover:text-[var(--luca-success,#4fbf7a)]"
                             title="Resume"
                           >
                             <Icon name="Play" className="w-4 h-4" />
@@ -319,7 +319,7 @@ export const AutonomyDashboard: React.FC<{
                           goal.status !== "COMPLETED" ? (
                           <button
                             onClick={() => pauseGoal(goal.id)}
-                            className="text-orange-500 hover:text-orange-400"
+                            className="text-[var(--luca-warning,#f2b23e)] hover:text-[var(--luca-warning,#f2b23e)]"
                             title="Pause"
                           >
                             <Icon name="Pause" className="w-4 h-4" />
@@ -338,7 +338,7 @@ export const AutonomyDashboard: React.FC<{
                         )}
                         <button
                           onClick={() => deleteGoal(goal.id)}
-                          className="text-gray-600 hover:text-red-400"
+                          className="text-gray-600 hover:text-[var(--luca-danger,#f87171)]"
                           title="Delete"
                         >
                           <Icon name="Trash2" className="w-4 h-4" />
@@ -371,11 +371,11 @@ export const AutonomyDashboard: React.FC<{
                             <div
                               className={`w-1.5 h-1.5 rounded-full ${
                                 subGoal.status === "COMPLETED"
-                                  ? "bg-green-500"
+                                  ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
                                   : subGoal.status === "IN_PROGRESS"
-                                  ? "bg-yellow-500"
+                                  ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"
                                   : subGoal.status === "FAILED"
-                                  ? "bg-red-500"
+                                  ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
                                   : "bg-gray-500"
                               }`}
                             />

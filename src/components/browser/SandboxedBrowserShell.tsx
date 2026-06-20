@@ -123,12 +123,12 @@ const SandboxedBrowserShell: React.FC = () => {
       aria-modal="true"
       aria-label="Luca Sandbox Browser"
     >
-      <div className="flex h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-amber-500/30 bg-[var(--app-bg,#0b0b10)] shadow-2xl">
+      <div className="flex h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[var(--app-bg,#0b0b10)] shadow-2xl">
         {/* Safety banner */}
-        <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-3">
+        <div className="border-b border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-sm font-black uppercase tracking-[0.18em] text-amber-200">Luca Sandbox Browser</div>
+              <div className="text-sm font-black uppercase tracking-[0.18em] text-[var(--luca-warning,#f2b23e)]">Luca Sandbox Browser</div>
               <p className="mt-1 truncate text-[11px] text-[var(--app-text-muted,#9ca3af)]">
                 Audit URL: <span className="font-mono">{active.auditUrl}</span>
               </p>
@@ -144,7 +144,7 @@ const SandboxedBrowserShell: React.FC = () => {
               <button
                 type="button"
                 onClick={revoke}
-                className="rounded-lg border border-red-500/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-red-200 hover:bg-red-500/10"
+                className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
               >
                 Revoke
               </button>
@@ -154,7 +154,7 @@ const SandboxedBrowserShell: React.FC = () => {
             {BOUNDARY_LABELS.map((label) => (
               <span
                 key={label}
-                className="rounded-full border border-amber-500/30 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-amber-200"
+                className="rounded-full border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]"
               >
                 {label}
               </span>
@@ -201,11 +201,11 @@ const SandboxedBrowserShell: React.FC = () => {
         {/* Footer notices */}
         <div className="border-t border-white/10 bg-black/40 px-4 py-2">
           {embedNotice && (
-            <p className="text-[10px] text-amber-200">
+            <p className="text-[10px] text-[var(--luca-warning,#f2b23e)]">
               Site cannot be embedded; opening in an external browser is not enabled.
             </p>
           )}
-          <p className="text-[9px] font-black uppercase tracking-widest text-amber-200/80">
+          <p className="text-[9px] font-black uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]">
             Navigation audit limited in iframe fallback
           </p>
           <p className="text-[9px] italic leading-relaxed text-[var(--app-text-muted,#9ca3af)] opacity-80">

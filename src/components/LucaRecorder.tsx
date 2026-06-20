@@ -206,8 +206,8 @@ export const LucaRecorder: React.FC<Props> = ({ onClose, onSave, theme }) => {
               </h2>
               <div className="flex items-center gap-3 mt-0.5 text-[10px] font-mono">
                 {isRecording ? (
-                  <span className="text-red-500 font-bold flex items-center gap-1.5 animate-pulse">
-                    <span className="w-1 h-1 rounded-full bg-red-500" /> RECORDING: {formatTime(duration)}
+                  <span className="text-[var(--luca-danger,#f87171)] font-bold flex items-center gap-1.5 animate-pulse">
+                    <span className="w-1 h-1 rounded-full bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" /> RECORDING: {formatTime(duration)}
                   </span>
                 ) : (
                   <span className="text-slate-500 flex items-center gap-1.5 uppercase tracking-wider">
@@ -271,7 +271,7 @@ export const LucaRecorder: React.FC<Props> = ({ onClose, onSave, theme }) => {
               ) : !isRecording ? (
                 <button
                   onClick={startRecording}
-                  className="w-full py-3.5 font-bold text-white text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-500/20 active:scale-95"
+                  className="w-full py-3.5 font-bold text-white text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[color:var(--luca-danger,#f87171)] active:scale-95"
                   style={{ background: "#ef4444" }}
                 >
                   <Icon name="Record" size={16} variant="BoldDuotone" /> START IMPRINTING
@@ -304,8 +304,8 @@ export const LucaRecorder: React.FC<Props> = ({ onClose, onSave, theme }) => {
             )}
 
             {isRecording && (
-              <div className="absolute top-6 left-6 z-30 px-3 py-1.5 bg-black/60 border border-red-500/30 rounded-lg text-[9px] font-bold text-white flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" /> LIVE DATA FEED
+              <div className="absolute top-6 left-6 z-30 px-3 py-1.5 bg-black/60 border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-lg text-[9px] font-bold text-white flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] rounded-full animate-pulse" /> LIVE DATA FEED
               </div>
             )}
           </div>
@@ -347,7 +347,7 @@ export const LucaRecorder: React.FC<Props> = ({ onClose, onSave, theme }) => {
             <div className="w-full max-w-md space-y-8">
               <div className="text-center">
                 <div className="w-16 h-16 rounded-2xl bg-white/[0.06] border border-white/10 mx-auto mb-4 flex items-center justify-center">
-                  <Icon name="Record" size={32} className="text-red-500" variant="BoldDuotone" />
+                  <Icon name="Record" size={32} className="text-[var(--luca-danger,#f87171)]" variant="BoldDuotone" />
                 </div>
                 <h3 className="text-xl font-bold text-white tracking-tight">Capture Complete</h3>
                 <p className="text-slate-500 text-xs mt-1">Define this imprint to save it to Luca skill matrix</p>

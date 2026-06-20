@@ -17,7 +17,7 @@ interface Props {
 }
 
 const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
-  const themePrimary = theme?.primary || "text-emerald-500";
+  const themePrimary = theme?.primary || "text-[var(--luca-success,#4fbf7a)]";
   const themeHex = theme?.hex || "#10b981";
   const isLight = theme?.isLight || theme?.themeName?.toLowerCase() === "lucagent";
 
@@ -371,7 +371,7 @@ const WhatsAppManager: React.FC<Props> = ({ onClose, theme }) => {
                   <div
                     className={`max-w-[80%] p-3 rounded-lg text-sm ${
                       msg.sender === "me"
-                        ? `rounded-tr-none ${isLight ? "bg-white/80 text-slate-900 shadow-sm" : "text-green-100"}`
+                        ? `rounded-tr-none ${isLight ? "bg-white/80 text-slate-900 shadow-sm" : "text-[var(--luca-success,#4fbf7a)]"}`
                         : `rounded-tl-none ${isLight ? "bg-slate-100 border-slate-200 text-slate-800" : "bg-slate-900/50 border-slate-700 text-slate-300"}`
                     }`}
                     style={msg.sender === "me" ? {

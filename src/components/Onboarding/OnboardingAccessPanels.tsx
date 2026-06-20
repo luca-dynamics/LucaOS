@@ -272,7 +272,7 @@ export const LucaCoreSelectionPanel: React.FC<LucaCoreSelectionPanelProps> = ({
           >
             {((navigator as any).deviceMemory || 8) < 8 && (
               <div
-                className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[7px] sm:text-[9px] font-bold tracking-[0.14em] sm:tracking-[0.18em] uppercase shadow-lg border animate-pulse bg-yellow-500/20 border-yellow-500/40"
+                className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[7px] sm:text-[9px] font-bold tracking-[0.14em] sm:tracking-[0.18em] uppercase shadow-lg border animate-pulse bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]"
                 style={{ color: "var(--app-text-main)" }}
               >
                 LUCA RECOMMEND
@@ -330,7 +330,7 @@ export const LucaCoreSelectionPanel: React.FC<LucaCoreSelectionPanelProps> = ({
           >
             {((navigator as any).deviceMemory || 8) >= 8 && (
               <div
-                className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[7px] sm:text-[9px] font-bold tracking-[0.14em] sm:tracking-[0.18em] uppercase shadow-lg border animate-pulse bg-green-500/20 border-green-500/40"
+                className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[7px] sm:text-[9px] font-bold tracking-[0.14em] sm:tracking-[0.18em] uppercase shadow-lg border animate-pulse bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]"
                 style={{ color: "var(--app-text-main)" }}
               >
                 LUCA RECOMMEND

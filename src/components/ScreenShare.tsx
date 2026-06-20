@@ -287,7 +287,7 @@ export const ScreenShare = forwardRef<ScreenShareHandle, ScreenShareProps>(
         )}
 
         {showUI && error && (
-          <div className="bg-red-900/80 text-red-200 text-xs p-2 rounded border border-red-500/50 pointer-events-auto">
+          <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] text-xs p-2 rounded border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] pointer-events-auto">
             {error}
           </div>
         )}

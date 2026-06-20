@@ -173,7 +173,7 @@ export const OnboardingProvisioningPanel: React.FC<
       <button
         type="button"
         onClick={onRetryProvisioning}
-        className="w-full max-w-sm mx-auto border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl py-4 uppercase tracking-widest text-sm font-bold transition-all backdrop-blur-md mt-6 flex items-center justify-center gap-2"
+        className="w-full max-w-sm mx-auto border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] rounded-xl py-4 uppercase tracking-widest text-sm font-bold transition-all backdrop-blur-md mt-6 flex items-center justify-center gap-2"
       >
         <Icon name="Activity" variant="Linear" size={16} />
         Retry Neural Sync

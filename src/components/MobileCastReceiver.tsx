@@ -12,7 +12,7 @@ const MobileCastReceiver = () => {
   const [vitals, setVitals] = useState({ cpu: 0, mem: 0 });
   const [theme, setTheme] = useState({
     hex: "#a855f7", // Default Purple
-    primary: "text-purple-500",
+    primary: "text-[var(--luca-accent-primary,#9b7cff)]",
   });
   const [showModelManager, setShowModelManager] = useState(false);
 
@@ -171,10 +171,10 @@ const MobileCastReceiver = () => {
 
         <button
           onClick={() => sendCommand("switch_mode", { mode: "CINEMA" })}
-          className="p-4 bg-red-900/10 border border-red-500/30 rounded-xl hover:bg-red-500/20 active:scale-95 flex flex-col items-center gap-2 transition-all shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+          className="p-4 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-xl hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] active:scale-95 flex flex-col items-center gap-2 transition-all shadow-[0_0_15px_rgba(239,68,68,0.1)]"
         >
-          <Icon name="Monitor" size={24} className="text-red-400" />
-          <span className="text-[10px] font-bold text-red-200 tracking-wider">
+          <Icon name="Monitor" size={24} className="text-[var(--luca-danger,#f87171)]" />
+          <span className="text-[10px] font-bold text-[var(--luca-danger,#f87171)] tracking-wider">
             CINEMA PROTOCOL
           </span>
         </button>
@@ -202,10 +202,10 @@ const MobileCastReceiver = () => {
           onClick={() =>
             sendCommand("trigger_action", { action: "emergency_stop" })
           }
-          className="p-4 bg-orange-900/10 border border-orange-500/30 rounded-xl hover:bg-orange-500/20 active:scale-95 flex flex-col items-center gap-2 transition-all shadow-[0_0_15px_rgba(249,115,22,0.1)]"
+          className="p-4 bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] rounded-xl hover:bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] active:scale-95 flex flex-col items-center gap-2 transition-all shadow-[0_0_15px_rgba(249,115,22,0.1)]"
         >
-          <Icon name="Zap" size={24} className="text-orange-400" />
-          <span className="text-[10px] font-bold text-orange-200 tracking-wider">
+          <Icon name="Zap" size={24} className="text-[var(--luca-warning,#f2b23e)]" />
+          <span className="text-[10px] font-bold text-[var(--luca-warning,#f2b23e)] tracking-wider">
             SYSTEM HALT SYSTEM HALT
           </span>
         </button>

@@ -20,9 +20,9 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
   onDismiss,
   autoClose = true,
   duration = 5000,
-  themePrimary = "text-cyan-400",
-  themeBorder = "border-cyan-500",
-  themeBg = "bg-cyan-950/10",
+  themePrimary = "text-[var(--luca-info,#4f8cff)]",
+  themeBorder = "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]",
+  themeBg = "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -50,25 +50,25 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
       case ErrorSeverity.CRITICAL:
         return {
           icon: "CloseCircle",
-          bgColor: "bg-red-500/10",
-          borderColor: "border-red-500/50",
-          textColor: "text-red-400",
+          bgColor: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
+          borderColor: "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]",
+          textColor: "text-[var(--luca-danger,#f87171)]",
           glowColor: "rgba(239, 68, 68, 0.2)",
         };
       case ErrorSeverity.ERROR:
         return {
           icon: "Danger",
-          bgColor: "bg-orange-500/10",
-          borderColor: "border-orange-500/50",
-          textColor: "text-orange-400",
+          bgColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+          borderColor: "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]",
+          textColor: "text-[var(--luca-warning,#f2b23e)]",
           glowColor: "rgba(249, 115, 22, 0.2)",
         };
       case ErrorSeverity.WARNING:
         return {
           icon: "AlertTriangle",
-          bgColor: "bg-yellow-500/10",
-          borderColor: "border-yellow-500/50",
-          textColor: "text-yellow-400",
+          bgColor: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
+          borderColor: "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]",
+          textColor: "text-[var(--luca-warning,#f2b23e)]",
           glowColor: "rgba(234, 179, 8, 0.2)",
         };
       case ErrorSeverity.INFO:

@@ -17,11 +17,11 @@ export function PunkAvatar({
       .split("")
       .reduce((acc, char) => char.charCodeAt(0) + acc, 0);
     const colors = [
-      "from-pink-500 to-rose-500",
-      "from-purple-500 to-indigo-500",
-      "from-blue-500 to-cyan-500",
-      "from-emerald-500 to-teal-500",
-      "from-amber-500 to-orange-500",
+      "from-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
+      "from-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
+      "from-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]",
+      "from-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]",
+      "from-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] to-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]",
     ];
     return colors[hash % colors.length];
   };

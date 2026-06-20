@@ -178,7 +178,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
                       style={{ color: themeHex }}
                     />
                 </div>
-                <div className="text-yellow-400 font-bold text-sm">
+                <div className="text-[var(--luca-warning,#f2b23e)] font-bold text-sm">
                   AWAITING AUTHENTICATION
                 </div>
                 <div className="text-[10px] text-slate-500 mt-1">
@@ -230,9 +230,9 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
               <div
                 className={`font-mono text-sm ${
                   isConnected
-                    ? "text-green-400"
+                    ? "text-[var(--luca-success,#4fbf7a)]"
                     : isLoggingIn
-                    ? "text-yellow-400"
+                    ? "text-[var(--luca-warning,#f2b23e)]"
                     : "text-slate-500"
                 }`}
               >
@@ -242,13 +242,13 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
           </div>
 
           {status.lastError && (
-            <div className="p-3 bg-red-950/20 border border-red-500/30 rounded-lg flex items-start gap-2">
+            <div className="p-3 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-lg flex items-start gap-2">
               <Icon
                 name="AlertCircle"
                 size={16}
-                className="text-red-400 flex-shrink-0 mt-0.5"
+                className="text-[var(--luca-danger,#f87171)] flex-shrink-0 mt-0.5"
               />
-              <div className="text-xs text-red-300">{status.lastError}</div>
+              <div className="text-xs text-[var(--luca-danger,#f87171)]">{status.lastError}</div>
             </div>
           )}
 
@@ -257,7 +257,7 @@ const LinkedInManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={handleLogout}
                 disabled={loading}
-                className="flex-1 py-3 rounded-lg text-sm font-bold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex-1 py-3 rounded-lg text-sm font-bold border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? (
                   <Icon name="RefreshCw" className="w-4 h-4 animate-spin" />

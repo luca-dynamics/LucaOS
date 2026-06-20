@@ -272,7 +272,7 @@ const VisionCameraModal: React.FC<Props> = ({
                         className="relative w-full h-full border rounded-full flex items-center justify-center border-white/10"
                       >
                          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 bg-black px-2 text-[8px] text-white/40">BIO_LOCK</div>
-                         {detectionFailureCount > 40 ? ( <div className="flex flex-col items-center gap-1 text-yellow-500 animate-pulse"> <Icon name="Danger" size={32} /> <span className="text-[8px] font-bold">LOW VISIBILITY</span> </div> ) : ( <Icon name="Activity" className="text-white/20 animate-pulse" size={40} /> )}
+                         {detectionFailureCount > 40 ? ( <div className="flex flex-col items-center gap-1 text-[var(--luca-warning,#f2b23e)] animate-pulse"> <Icon name="Danger" size={32} /> <span className="text-[8px] font-bold">LOW VISIBILITY</span> </div> ) : ( <Icon name="Activity" className="text-white/20 animate-pulse" size={40} /> )}
                       </div>
                    )}
                 </div>

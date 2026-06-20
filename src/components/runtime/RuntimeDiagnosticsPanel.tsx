@@ -25,9 +25,9 @@ interface RuntimeDiagnosticsPanelProps {
 }
 
 const BADGE_CLASS: Record<RuntimeReadinessSeverity, string> = {
-  ready: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  warning: "bg-amber-500/10 text-amber-300 border-amber-500/20",
-  blocked: "bg-red-500/10 text-red-300 border-red-500/20",
+  ready: "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]",
+  warning: "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]",
+  blocked: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]",
   unknown: "bg-white/5 text-[var(--app-text-muted)] border-white/10",
 };
 
@@ -76,7 +76,7 @@ const RouteCard: React.FC<{
         <ul className="mt-2 space-y-1 text-[10px]" style={{ color: "var(--app-text-muted)" }}>
           {route.warnings.map((warning, index) => (
             <li key={`${route.capability}-warning-${index}`} className="flex gap-2">
-              <span className="text-amber-300">•</span>
+              <span className="text-[var(--luca-warning,#f2b23e)]">•</span>
               <span>{warning}</span>
             </li>
           ))}
@@ -152,7 +152,7 @@ const GovernanceContinuityCard: React.FC<{
           </p>
         </div>
         {isTactical && (
-          <span className="shrink-0 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-[9px] font-mono uppercase text-cyan-300">
+          <span className="shrink-0 rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-0.5 text-[9px] font-mono uppercase text-[var(--luca-info,#4f8cff)]">
             {governance.visibility}
           </span>
         )}
@@ -229,7 +229,7 @@ const GovernanceContinuityCard: React.FC<{
       )}
 
       {isTactical && quarantinedGovernanceItems > 0 && (
-        <p className="mt-3 text-[10px] leading-relaxed text-amber-300">
+        <p className="mt-3 text-[10px] leading-relaxed text-[var(--luca-warning,#f2b23e)]">
           Quarantined governance items cannot run until reviewed.
         </p>
       )}
@@ -278,7 +278,7 @@ const MemoryCard: React.FC<{
         <ul className="mt-2 space-y-1 text-[10px]" style={{ color: "var(--app-text-muted)" }}>
           {memory.warnings.map((warning, index) => (
             <li key={`memory-warning-${index}`} className="flex gap-2">
-              <span className="text-amber-300">•</span>
+              <span className="text-[var(--luca-warning,#f2b23e)]">•</span>
               <span>{warning}</span>
             </li>
           ))}

@@ -144,24 +144,24 @@ const OriginOverlayPanels: React.FC<OriginOverlayPanelsProps> = ({
       )}
 
       {isLockdown && shouldRender("lockdown") && (
-        <div className="absolute inset-0 z-[900] bg-red-950/90 flex flex-col items-center justify-center animate-in fade-in duration-200 pointer-events-none">
-          <div className="border-4 border-red-500 p-12 rounded-lg bg-[var(--app-bg-tint)] flex flex-col items-center shadow-[0_0_100px_#ef4444] animate-pulse">
+        <div className="absolute inset-0 z-[900] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] flex flex-col items-center justify-center animate-in fade-in duration-200 pointer-events-none">
+          <div className="border-4 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-12 rounded-lg bg-[var(--app-bg-tint)] flex flex-col items-center shadow-[0_0_100px_#ef4444] animate-pulse">
             <Icon
               name="ShieldAlert"
               size={128}
-              className="text-red-500 mb-6"
+              className="text-[var(--luca-danger,#f87171)] mb-6"
               variant="BoldDuotone"
             />
-            <h1 className="text-6xl font-display font-bold text-red-500 tracking-[0.2em] mb-4">
+            <h1 className="text-6xl font-display font-bold text-[var(--luca-danger,#f87171)] tracking-[0.2em] mb-4">
               LOCKDOWN
             </h1>
-            <div className="text-2xl font-mono text-red-400 tracking-widest mb-8">
+            <div className="text-2xl font-mono text-[var(--luca-danger,#f87171)] tracking-widest mb-8">
               DEFENSE PROTOCOL ALPHA ACTIVE
             </div>
-            <div className="mt-8 text-xs text-red-500/50 font-mono pointer-events-auto">
+            <div className="mt-8 text-xs text-[var(--luca-danger,#f87171)] font-mono pointer-events-auto">
               <button
                 onClick={onLockdownOverride}
-                className="border border-red-500 px-4 py-2 hover:bg-red-500 hover:text-[color:var(--app-text-main)] transition-colors"
+                className="border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] px-4 py-2 hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:text-[color:var(--app-text-main)] transition-colors"
               >
                 OVERRIDE AUTH CODE: OMEGA-9
               </button>

@@ -40,7 +40,7 @@ const isWebGPUSupported =
 
 export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
   onStatusChange,
-  theme = { hex: "#a855f7", primary: "text-purple-500" },
+  theme = { hex: "#a855f7", primary: "text-[var(--luca-accent-primary,#9b7cff)]" },
   onClose,
 }) => {
   // State for models
@@ -244,7 +244,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
         <div
           className={`p-3 rounded-xl border mb-4 ${
             systemBrainStatus === "online"
-              ? "border-emerald-500/30 bg-emerald-500/5"
+              ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
               : "border-white/5 bg-white/5"
           }`}
         >
@@ -259,18 +259,18 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
               )}
               {systemBrainStatus === "online" && (
                 <>
-                  <span className="text-[10px] text-emerald-400 font-mono">
+                  <span className="text-[10px] text-[var(--luca-success,#4fbf7a)] font-mono">
                     ONLINE
                   </span>
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+                  <div className="w-2 h-2 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] shadow-[0_0_8px_#10b981]" />
                 </>
               )}
               {systemBrainStatus === "offline" && (
                 <>
-                  <span className="text-[10px] text-red-400 font-mono">
+                  <span className="text-[10px] text-[var(--luca-danger,#f87171)] font-mono">
                     OFFLINE
                   </span>
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  <div className="w-2 h-2 rounded-full bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" />
                 </>
               )}
             </div>
@@ -279,7 +279,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
 
         {/* Error Display */}
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3 text-red-400 text-xs">
+          <div className="mb-4 p-3 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-lg flex items-center gap-3 text-[var(--luca-danger,#f87171)] text-xs">
             <Icon name="AlertTriangle" size={16} />
             <span>{error}</span>
           </div>
@@ -287,7 +287,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
 
         {/* WebGPU Warning */}
         {!isWebGPUSupported && (
-          <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-3 text-yellow-400 text-xs">
+          <div className="mb-4 p-3 bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] rounded-lg flex items-center gap-3 text-[var(--luca-warning,#f2b23e)] text-xs">
             <Icon name="AlertTriangle" size={16} />
             <span>
               WebGPU not supported. Only Gemma 2B (MediaPipe) will work. Use
@@ -308,9 +308,9 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                 key={model.id}
                 className={`p-4 rounded-xl border transition-all ${
                   isActive
-                    ? "border-emerald-500/50 bg-emerald-500/10"
+                    ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
                     : isReady
-                      ? "border-blue-500/30 bg-blue-500/5"
+                      ? "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"
                       : "border-white/10 bg-white/5"
                 }`}
               >
@@ -332,7 +332,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                       <h4 className="text-sm font-bold text-white flex items-center gap-2">
                         {model.name}
                         {model.recommended && (
-                          <span className="text-[8px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded font-mono">
+                          <span className="text-[8px] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)] px-1.5 py-0.5 rounded font-mono">
                             REC
                           </span>
                         )}
@@ -344,8 +344,8 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                     </div>
                   </div>
                   {isActive && (
-                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <Icon name="Check" size={12} className="text-emerald-400" />
+                    <div className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] flex items-center justify-center">
+                      <Icon name="Check" size={12} className="text-[var(--luca-success,#4fbf7a)]" />
                     </div>
                   )}
                 </div>
@@ -413,14 +413,14 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                   {isReady && !isActive && (
                     <>
                       <button
-                        className="flex-1 py-1.5 rounded-lg text-[10px] font-bold tracking-wider flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all"
+                        className="flex-1 py-1.5 rounded-lg text-[10px] font-bold tracking-wider flex items-center justify-center gap-1.5 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] transition-all"
                         onClick={() => handleActivate(model.id)}
                       >
                         <Icon name="Brain" size={12} />
                         ACTIVATE
                       </button>
                       <button
-                        className="py-1.5 px-2 rounded-lg text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all"
+                        className="py-1.5 px-2 rounded-lg text-[var(--luca-danger,#f87171)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] transition-all"
                         onClick={() => handleDelete(model)}
                       >
                         <Icon name="Trash2" size={12} />

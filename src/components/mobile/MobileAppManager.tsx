@@ -24,28 +24,28 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
     <div className="h-full flex gap-6">
       {/* Left: Controls */}
       <div className="w-1/3 flex flex-col gap-4">
-        <div className="bg-red-950/10 border border-red-900/50 p-4">
-          <h3 className="text-xs font-bold text-red-500 tracking-widest mb-3 flex items-center gap-2">
+        <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4">
+          <h3 className="text-xs font-bold text-[var(--luca-danger,#f87171)] tracking-widest mb-3 flex items-center gap-2">
             <Icon name="Eye" size={12} variant="BoldDuotone" /> DATA EXFILTRATION
           </h3>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => onExfiltrate("SMS")}
-              className="p-2 bg-red-900/20 border border-red-800 hover:bg-red-500 hover:text-black text-red-400 text-[10px] font-bold transition-all"
+              className="p-2 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:text-black text-[var(--luca-danger,#f87171)] text-[10px] font-bold transition-all"
             >
               DUMP SMS
             </button>
             <button
               onClick={() => onExfiltrate("CALLS")}
-              className="p-2 bg-red-900/20 border border-red-800 hover:bg-red-500 hover:text-black text-red-400 text-[10px] font-bold transition-all"
+              className="p-2 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:text-black text-[var(--luca-danger,#f87171)] text-[10px] font-bold transition-all"
             >
               DUMP CALLS
             </button>
           </div>
         </div>
 
-        <div className="bg-red-950/10 border border-red-900/50 p-4 flex-1 flex flex-col">
-          <h3 className="text-xs font-bold text-red-500 tracking-widest mb-3 flex items-center gap-2">
+        <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4 flex-1 flex flex-col">
+          <h3 className="text-xs font-bold text-[var(--luca-danger,#f87171)] tracking-widest mb-3 flex items-center gap-2">
             <Icon name="Activity" size={12} variant="BoldDuotone" /> PROCESS KILLER
           </h3>
           <button
@@ -58,14 +58,14 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
             {runningPackages.map((pkg, i) => (
               <div
                 key={i}
-                className="flex justify-between items-center bg-black p-1 border border-slate-900 group hover:border-red-900"
+                className="flex justify-between items-center bg-black p-1 border border-slate-900 group hover:border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
               >
                 <span className="text-[9px] font-mono text-slate-500 truncate w-32">
                   {pkg}
                 </span>
                 <button
                   onClick={() => onKillPackage(pkg)}
-                  className="text-red-900 hover:text-red-500"
+                  className="text-[var(--luca-danger,#f87171)] hover:text-[var(--luca-danger,#f87171)]"
                 >
                   <Icon name="Trash" size={10} variant="BoldDuotone" />
                 </button>
@@ -81,23 +81,23 @@ const MobileAppManager: React.FC<MobileAppManagerProps> = ({
           <span>ROOT@REMOTE_SHELL: ~ $</span>
           <span>{isAdbConnected ? "STATUS: ROOTED" : "STATUS: OFF"}</span>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 text-[10px] text-green-500 space-y-1">
+        <div className="flex-1 overflow-y-auto p-2 text-[10px] text-[var(--luca-success,#4fbf7a)] space-y-1">
           {exploitLogs.map((log, i) => (
             <div
               key={i}
               className={
                 log.includes("[ERR]")
-                  ? "text-red-500"
+                  ? "text-[var(--luca-danger,#f87171)]"
                   : log.includes("[WARN]")
-                  ? "text-yellow-500"
-                  : "text-green-500"
+                  ? "text-[var(--luca-warning,#f2b23e)]"
+                  : "text-[var(--luca-success,#4fbf7a)]"
               }
             >
               {log}
             </div>
           ))}
           {dumpedData.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-green-900">
+            <div className="mt-4 pt-4 border-t border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]">
               <div className="text-white mb-2">--- BEGIN DATA DUMP ---</div>
               {dumpedData.map((record, i) => (
                 <div

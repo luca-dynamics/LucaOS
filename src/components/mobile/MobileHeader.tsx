@@ -29,7 +29,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
       <div
         className={`h-16 border-b flex items-center justify-between px-6 ${
           activeTab === "EXPLOIT" || activeTab === "WIRELESS"
-            ? "bg-red-950/10 border-red-900"
+            ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
             : "bg-slate-950 border-slate-800"
         }`}
       >
@@ -37,7 +37,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
           <div
             className={`p-2 rounded-full border flex items-center justify-center ${
               activeTab === "EXPLOIT" || activeTab === "WIRELESS"
-                ? "bg-red-900/20 border-red-500 text-red-500"
+                ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]"
                 : "bg-rq-blue/10 border-rq-blue/30 text-rq-blue"
             }`}
           >
@@ -51,7 +51,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
             <h2
               className={`font-display text-xl font-bold tracking-widest ${
                 activeTab === "EXPLOIT" || activeTab === "WIRELESS"
-                  ? "text-red-500"
+                  ? "text-[var(--luca-danger,#f87171)]"
                   : "text-white"
               }`}
             >
@@ -107,7 +107,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
                         ${
                           activeTab === tab.id
                             ? tab.danger
-                              ? "bg-red-900/20 text-red-500 border-b-2 border-red-500"
+                              ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] border-b-2 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]"
                               : "bg-rq-blue/10 text-rq-blue border-b-2 border-rq-blue"
                             : "text-slate-500 hover:text-slate-300"
                         }`}

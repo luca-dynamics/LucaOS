@@ -954,7 +954,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                         <button
                           onClick={() => syncNotionPage(page.id)}
                           disabled={syncingPageId === page.id}
-                          className={`text-[9px] px-2 py-1 rounded transition-all cursor-pointer bg-amber-500/20 text-amber-400 hover:bg-amber-500/30`}
+                          className={`text-[9px] px-2 py-1 rounded transition-all cursor-pointer bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)] hover:bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]`}
                           title="Click to re-sync"
                         >
                           {syncingPageId === page.id ? "Syncing..." : "Empty"}
@@ -1103,7 +1103,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                         <button
                           onClick={() => syncGoogleFile(file.id)}
                           disabled={syncingPageId === file.id}
-                          className={`text-[9px] px-2 py-1 rounded transition-all cursor-pointer bg-amber-500/20 text-amber-400 hover:bg-amber-500/30`}
+                          className={`text-[9px] px-2 py-1 rounded transition-all cursor-pointer bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)] hover:bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]`}
                           title="Click to re-sync"
                         >
                           {syncingPageId === file.id ? "Syncing..." : "Empty"}
@@ -1258,7 +1258,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
           <Icon
             name="Danger"
             size={16}
-            className={`shrink-0 mt-0.5 text-amber-600`}
+            className={`shrink-0 mt-0.5 text-[var(--luca-warning,#f2b23e)]`}
           />
           <p
             className={`text-[9px] leading-relaxed text-[var(--app-text-muted)]`}

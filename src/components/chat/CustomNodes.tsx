@@ -10,18 +10,18 @@ export const GoalNode = memo(({ data }: any) => {
   return (
     <div className="px-6 py-4 shadow-xl rounded-2xl bg-black/60 glass-blur border border-white/20 flex flex-col items-center gap-2 min-w-[200px]">
       <div 
-        className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-500/20 border border-blue-500/50 text-blue-400"
+        className="w-12 h-12 rounded-full flex items-center justify-center bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] text-[var(--luca-info,#4f8cff)]"
         style={{ boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)" }}
       >
         <Icon name="Target" size={24} variant="BoldDuotone" />
       </div>
       <div className="text-center">
-        <div className="text-[10px] text-blue-400 font-bold tracking-widest uppercase mb-1">STRATEGIC GOAL</div>
+        <div className="text-[10px] text-[var(--luca-info,#4f8cff)] font-bold tracking-widest uppercase mb-1">STRATEGIC GOAL</div>
         <div className="text-sm font-medium text-white max-w-[180px] break-words">
           {data.label}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="!bg-blue-500" />
+      <Handle type="source" position={Position.Bottom} className="!bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]" />
     </div>
   );
 });
@@ -127,7 +127,7 @@ export const TaskNode = memo(({ data }: any) => {
             className="overflow-hidden rounded bg-black/50 border border-white/5"
           >
             {persona === "ENGINEER" && snapshot?.terminal && (
-              <div className="p-1.5 font-mono text-[8px] text-emerald-400/80 leading-tight">
+              <div className="p-1.5 font-mono text-[8px] text-[var(--luca-success,#4fbf7a)] leading-tight">
                 {snapshot.terminal.slice(-4).map((line: string, i: number) => (
                   <div key={i} className="truncate">{`> ${line}`}</div>
                 ))}
@@ -137,7 +137,7 @@ export const TaskNode = memo(({ data }: any) => {
             {persona === "BROWSER" && snapshot?.browserScreenshot && (
               <div className="relative aspect-video bg-slate-900 overflow-hidden">
                 <img src={snapshot.browserScreenshot} className="w-full h-full object-cover opacity-60" alt="Browser" />
-                <div className="absolute inset-0 bg-blue-500/10" />
+                <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]" />
               </div>
             )}
             {!snapshot && (
@@ -149,7 +149,7 @@ export const TaskNode = memo(({ data }: any) => {
         )}
 
         {isComplete && task.result && (
-          <div className="text-[9px] text-emerald-500 italic truncate opacity-60">
+          <div className="text-[9px] text-[var(--luca-success,#4fbf7a)] italic truncate opacity-60">
             {typeof task.result === 'string' ? task.result : 'Task completed successfully'}
           </div>
         )}

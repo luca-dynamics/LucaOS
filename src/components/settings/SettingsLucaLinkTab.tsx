@@ -436,7 +436,7 @@ const GuestAccessSection: React.FC<{
                     <Icon
                       name="LockOpen"
                       variant="BoldDuotone"
-                      className="w-4 h-4 text-red-400"
+                      className="w-4 h-4 text-[var(--luca-danger,#f87171)]"
                     />
                   )}
                   <div className="text-left">

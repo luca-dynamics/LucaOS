@@ -106,16 +106,16 @@ const SmartTVRemote: React.FC<Props> = ({
               {device.name}
             </div>
             <div className="flex items-center justify-between mt-1">
-              <div className="text-[10px] font-mono text-green-500 flex items-center gap-2">
+              <div className="text-[10px] font-mono text-[var(--luca-success,#4fbf7a)] flex items-center gap-2">
                 <div
-                  className={`w-1.5 h-1.5 bg-green-500 rounded-full ${
+                  className={`w-1.5 h-1.5 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] rounded-full ${
                     pairingMode ? "" : "animate-pulse"
                   }`}
                 ></div>
                 {pairingMode ? "AUTH_REQUIRED" : `${osName} LINKED`}
               </div>
               {pairingMode ? (
-                <Icon name="Lock" size={14} className="text-amber-500 animate-pulse" />
+                <Icon name="Lock" size={14} className="text-[var(--luca-warning,#f2b23e)] animate-pulse" />
               ) : (
                 <Icon name="Wifi" size={14} style={{ color: theme?.hex || "#3b82f6" }} />
               )}
@@ -126,7 +126,7 @@ const SmartTVRemote: React.FC<Props> = ({
         {/* PAIRING OVERLAY */}
         {pairingMode ? (
           <div className="p-6 flex flex-col items-center gap-4 h-[450px] justify-center bg-black/90 absolute bottom-0 w-full z-20 glass-blur">
-            <div className="text-amber-500 text-xs font-bold tracking-widest flex items-center gap-2">
+            <div className="text-[var(--luca-warning,#f2b23e)] text-xs font-bold tracking-widest flex items-center gap-2">
               <Icon name="Grid3x3" size={16} /> ENTER PAIRING PIN
             </div>
             <div className="text-[10px] text-slate-500 text-center px-4">
@@ -162,7 +162,7 @@ const SmartTVRemote: React.FC<Props> = ({
               ))}
               <button
                 onClick={() => setPin("")}
-                className="bg-red-900/30 text-red-500 py-3 rounded font-mono text-[10px]"
+                className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] py-3 rounded font-mono text-[10px]"
               >
                 CLR
               </button>
@@ -190,8 +190,8 @@ const SmartTVRemote: React.FC<Props> = ({
                 onClick={() => handlePress("POWER")}
                 className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all shadow-lg ${
                   pressed === "POWER"
-                    ? "bg-red-500 border-red-500 text-white shadow-red-500/50"
-                    : "border-slate-800 bg-slate-900/50 text-red-500 hover:bg-red-900/20"
+                    ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-white shadow-[color:var(--luca-danger,#f87171)]"
+                    : "border-slate-800 bg-slate-900/50 text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]"
                 }`}
               >
                 <Icon name="Power" size={24} />
@@ -226,7 +226,7 @@ const SmartTVRemote: React.FC<Props> = ({
                   onClick={() => handlePress("EXIT")}
                   className="text-[9px] font-bold text-slate-500 hover:text-white flex flex-col items-center gap-1 group"
                 >
-                  <Icon name="LogOut" size={16} className="group-hover:text-red-500" /> EXIT
+                  <Icon name="LogOut" size={16} className="group-hover:text-[var(--luca-danger,#f87171)]" /> EXIT
                 </button>
               </div>
 
@@ -324,8 +324,8 @@ const SmartTVRemote: React.FC<Props> = ({
                   onClick={() => handlePress("MUTE")}
                   className={`w-12 h-8 rounded-lg flex items-center justify-center border transition-all ${
                     pressed === "MUTE"
-                      ? "bg-amber-500 border-amber-500 text-black"
-                      : "border-slate-800 bg-slate-900/50 text-slate-400 hover:text-amber-500"
+                      ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-black"
+                      : "border-slate-800 bg-slate-900/50 text-slate-400 hover:text-[var(--luca-warning,#f2b23e)]"
                   }`}
                   title="Mute"
                 >
@@ -333,7 +333,7 @@ const SmartTVRemote: React.FC<Props> = ({
                 </button>
                 <button
                   onClick={() => setPairingMode(true)}
-                  className="text-[8px] font-mono text-amber-600 hover:text-amber-400 border border-amber-900/30 px-2 py-1 rounded text-center"
+                  className="text-[8px] font-mono text-[var(--luca-warning,#f2b23e)] hover:text-[var(--luca-warning,#f2b23e)] border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] px-2 py-1 rounded text-center"
                   title="Force Re-Pair"
                 >
                   PAIR
@@ -360,7 +360,7 @@ const SmartTVRemote: React.FC<Props> = ({
             <div className="grid grid-cols-2 gap-3 mt-1">
               <button
                 onClick={() => handlePress("NETFLIX")}
-                className="h-10 bg-black border rounded font-bold text-[10px] tracking-wider transition-all hover:bg-red-600 hover:text-white"
+                className="h-10 bg-black border rounded font-bold text-[10px] tracking-wider transition-all hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:text-white"
                 style={{
                   color: "#ef4444",
                   borderColor: "rgba(239, 68, 68, 0.4)",
@@ -412,7 +412,7 @@ const SmartTVRemote: React.FC<Props> = ({
               </button>
               <button
                 onClick={() => handlePress("YT_MUSIC")}
-                className="h-10 bg-red-900/20 border border-red-500/30 rounded text-red-400 font-bold text-[10px] tracking-wider hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center gap-1"
+                className="h-10 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded text-[var(--luca-danger,#f87171)] font-bold text-[10px] tracking-wider hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:text-white transition-colors flex items-center justify-center gap-1"
               >
                 YT MUSIC
               </button>

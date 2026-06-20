@@ -17,7 +17,7 @@ interface Props {
 }
 
 const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
-  const themePrimary = theme?.primary || "text-cyan-400";
+  const themePrimary = theme?.primary || "text-[var(--luca-info,#4f8cff)]";
   const themeHex = theme?.hex || "#06b6d4";
   const isLight = theme?.isLight || theme?.themeName?.toLowerCase() === "lucagent";
 
@@ -212,7 +212,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
                 <button
                   onClick={() => setUseSystemApi(!useSystemApi)}
                   className={`relative w-10 h-5 rounded-full transition-colors ${
-                    useSystemApi ? "bg-cyan-500" : "bg-slate-700"
+                    useSystemApi ? "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]" : "bg-slate-700"
                   }`}
                 >
                   <div
@@ -325,7 +325,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={VerifyCode}
                 disabled={loading}
-                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-slate-100" : "hover:bg-cyan-500/20"} ${themePrimary}`}
+                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-slate-100" : "hover:bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"} ${themePrimary}`}
                 style={{
                   border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.3) : setHexAlpha(themeHex, 0.5)}`,
                   backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),
@@ -338,7 +338,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
 
           {step === "PASSWORD" && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 text-center">
-              <div className="text-red-400 font-mono text-sm font-bold">
+              <div className="text-[var(--luca-danger,#f87171)] font-mono text-sm font-bold">
                 2FA Required
               </div>
               <div className="text-left">
@@ -366,7 +366,7 @@ const TelegramManager: React.FC<Props> = ({ onClose, theme }) => {
               <button
                 onClick={VerifyCode}
                 disabled={loading}
-                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-slate-100" : "hover:bg-cyan-500/20"} ${themePrimary}`}
+                className={`w-full py-3 font-bold tracking-widest rounded transition-all ${isLight ? "hover:bg-slate-100" : "hover:bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"} ${themePrimary}`}
                 style={{
                   border: `1px solid ${isLight ? setHexAlpha(themeHex, 0.3) : setHexAlpha(themeHex, 0.5)}`,
                   backgroundColor: isLight ? setHexAlpha(themeHex, 0.05) : setHexAlpha(themeHex, 0.1),

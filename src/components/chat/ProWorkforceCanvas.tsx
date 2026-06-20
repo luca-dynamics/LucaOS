@@ -142,7 +142,7 @@ const ProWorkforceCanvasInternal: React.FC<ProWorkforceCanvasProps> = ({ theme }
         <Panel position="top-right">
           <div className="px-3 py-2 rounded-lg bg-black/60 glass-blur border border-white/10 flex flex-col gap-0.5">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] animate-pulse" />
               <span className="text-[10px] font-medium text-white tracking-tight">LUCA Workforce</span>
             </div>
             <div className="text-[7px] text-slate-500 font-mono text-right">
@@ -165,9 +165,9 @@ const ProWorkforceCanvasInternal: React.FC<ProWorkforceCanvasProps> = ({ theme }
 
       {/* --- OVERLAY INTERFACE --- */}
        <div className="absolute bottom-4 left-4 flex flex-col gap-2 z-[50]">
-         <div className="px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center gap-2 glass-blur">
-            <Icon name="Activity" size={12} className="text-blue-400" variant="BoldDuotone" />
-            <span className="text-[9px] text-blue-400 font-bold tracking-widest">SYSTEM ACTIVITY</span>
+         <div className="px-3 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] flex items-center gap-2 glass-blur">
+            <Icon name="Activity" size={12} className="text-[var(--luca-info,#4f8cff)]" variant="BoldDuotone" />
+            <span className="text-[9px] text-[var(--luca-info,#4f8cff)] font-bold tracking-widest">SYSTEM ACTIVITY</span>
          </div>
        </div>
     </div>

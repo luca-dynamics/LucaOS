@@ -63,11 +63,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal }) => {
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
       case TaskStatus.COMPLETED:
-        return "text-green-500";
+        return "text-[var(--luca-success,#4fbf7a)]";
       case TaskStatus.IN_PROGRESS:
         return themePrimary;
       case TaskStatus.BLOCKED:
-        return "text-red-500";
+        return "text-[var(--luca-danger,#f87171)]";
       default:
         return "text-slate-500";
     }
@@ -76,11 +76,11 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "CRITICAL":
-        return "bg-red-500 text-white animate-pulse";
+        return "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-white animate-pulse";
       case "HIGH":
-        return "bg-orange-500 text-white";
+        return "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-white";
       case "MEDIUM":
-        return "bg-yellow-500 text-black";
+        return "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-black";
       default:
         return "bg-slate-700 text-slate-300";
     }
@@ -89,14 +89,14 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal }) => {
   const getGoalStatusColor = (status: Goal["status"]) => {
     switch (status) {
       case "COMPLETED":
-        return "text-green-500";
+        return "text-[var(--luca-success,#4fbf7a)]";
       case "IN_PROGRESS":
-        return "text-cyan-500 animate-pulse";
+        return "text-[var(--luca-info,#4f8cff)] animate-pulse";
       case "FAILED":
-        return "text-red-500";
+        return "text-[var(--luca-danger,#f87171)]";
       case "SCHEDULED":
         return themePrimary;
-        // return theme ? theme.primary : "text-purple-500";
+        // return theme ? theme.primary : "text-[var(--luca-accent-primary,#9b7cff)]";
       default:
         return "text-slate-500";
     }
@@ -293,7 +293,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal }) => {
                     {onDeleteGoal && (
                       <button
                         onClick={() => onDeleteGoal(goal.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-400 p-1"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--luca-danger,#f87171)] hover:text-[var(--luca-danger,#f87171)] p-1"
                         title="Delete goal"
                       >
                         <Icon name="X" size={10} />
@@ -357,10 +357,10 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal }) => {
                           <span
                             className={
                               sub.status === "complete"
-                                ? "text-green-500"
+                                ? "text-[var(--luca-success,#4fbf7a)]"
                                 : sub.status === "failed"
-                                  ? "text-red-500"
-                                  : "text-cyan-500"
+                                  ? "text-[var(--luca-danger,#f87171)]"
+                                  : "text-[var(--luca-info,#4f8cff)]"
                             }
                           >
                             {sub.status === "in-progress"
@@ -407,7 +407,7 @@ const ManagementDashboard: React.FC<Props> = ({ onDeleteGoal }) => {
                           e.stopPropagation();
                           onDeleteGoal(goal.id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-red-500"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-[var(--luca-danger,#f87171)]"
                         title="Delete Goal"
                       >
                         <Icon name="X" size={10} />

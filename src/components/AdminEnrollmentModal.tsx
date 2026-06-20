@@ -326,15 +326,15 @@ const AdminEnrollmentModal: React.FC<Props> = ({
               <div className="flex flex-col items-center justify-center gap-4 w-full h-full p-6">
                 {isRecording ? (
                   <>
-                    <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center animate-pulse">
-                      <Icon name="Microphone" size={32} className="text-red-500" />
+                    <div className="w-20 h-20 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] rounded-full flex items-center justify-center animate-pulse">
+                      <Icon name="Microphone" size={32} className="text-[var(--luca-danger,#f87171)]" />
                     </div>
-                    <p className="text-red-400 font-bold tracking-widest text-xs">
+                    <p className="text-[var(--luca-danger,#f87171)] font-bold tracking-widest text-xs">
                       RECORDING AUDIO...
                     </p>
                     <button
                       onClick={stopRecording}
-                      className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+                      className="px-8 py-3 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
                     >
                       Stop Recording
                     </button>
@@ -404,13 +404,13 @@ const AdminEnrollmentModal: React.FC<Props> = ({
               </div>
             )}
             {step === "verified" && (
-              <div className="text-green-500 font-bold">ACCESS GRANTED</div>
+              <div className="text-[var(--luca-success,#4fbf7a)] font-bold">ACCESS GRANTED</div>
             )}
             {step === "denied" && (
-              <div className="text-red-500 font-bold">ACCESS DENIED</div>
+              <div className="text-[var(--luca-danger,#f87171)] font-bold">ACCESS DENIED</div>
             )}
             {step === "success" && (
-              <div className="text-green-500 font-bold">ENROLLED</div>
+              <div className="text-[var(--luca-success,#4fbf7a)] font-bold">ENROLLED</div>
             )}
 
             {(step === "verified" ||
