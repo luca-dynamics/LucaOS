@@ -2,8 +2,6 @@ export { Presence, default as PresenceDefault } from "./Presence";
 export type { PresenceProps } from "./Presence";
 export { EdgePresence, default as EdgePresenceDefault } from "./EdgePresence";
 export type { EdgePresenceProps } from "./EdgePresence";
-export { LucaGlyph } from "./LucaGlyph";
-export type { LucaGlyphProps } from "./LucaGlyph";
 export {
   deriveIntentFromStatus,
   isAudioReactiveIntent,

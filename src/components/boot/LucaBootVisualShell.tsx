@@ -12,7 +12,7 @@ import {
   lucaBootProgressBySequence,
   type BiosStatus,
 } from "./lucaBootVisualShellModel";
-import { Presence, EdgePresence } from "../presence";
+import { EdgePresence } from "../presence";
 import type { PresenceIntent } from "../presence";
 
 type BootTheme = {
@@ -84,17 +84,16 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           aria-hidden="true"
         >
           <div className="absolute left-1/2 top-[57%] h-24 w-[72%] max-w-[34rem] -translate-x-1/2 rounded-[100%] bg-cyan-100/[0.07] blur-2xl" />
-          <div
-            className="relative flex items-center justify-center"
-            style={{ height: "min(56vw, 20rem)" }}
-          >
-            <Presence
-              intent={bootIntent}
-              color={theme?.hex}
-              size={232}
-              reactToAudio={false}
-            />
-          </div>
+          <img
+            src={launchIdentity.assetSrc}
+            alt=""
+            aria-hidden="true"
+            className="relative h-auto w-[min(78vw,24rem)] max-w-none animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain sm:w-[min(46vw,27rem)]"
+            style={{
+              opacity: launchIdentity.markOpacity,
+              filter: "drop-shadow(0 0 36px rgba(205, 245, 255, 0.16))",
+            }}
+          />
         </div>
 
         <div className="relative -mt-8 flex flex-col items-center gap-2 sm:-mt-10">
