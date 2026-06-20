@@ -194,7 +194,7 @@ const CastPicker: React.FC<CastPickerProps> = ({
           {method === "QR" && (
             <div className="p-6 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
               <div
-                className="mb-5 bg-white p-3 rounded-2xl shadow-2xl shadow-[var(--app-primary)]/20 tech-border border-4 border-white"
+                className="mb-5 bg-white p-3 rounded-2xl shadow-2xl shadow-[var(--app-primary)]/20 border-4 border-white"
               >
                 {qrUrl ? (
                   <img src={qrUrl} alt="Connect QR" className="w-44 h-44 mix-blend-multiply" />
@@ -225,7 +225,7 @@ const CastPicker: React.FC<CastPickerProps> = ({
           {method === "HOTSPOT" && (
             <div className="p-8 text-center animate-in fade-in slide-in-from-bottom-6 duration-500">
               <div
-                className={`w-24 h-24 mx-auto rounded-3xl flex items-center justify-center mb-6 transition-all duration-500 tech-border border
+                className={`w-24 h-24 mx-auto rounded-3xl flex items-center justify-center mb-6 transition-all duration-500 border
                   ${isBeaconActive ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] shadow-lg shadow-[color:var(--luca-success,#4fbf7a)]" : "bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_32%,transparent)] animate-pulse"}
                 `}
               >

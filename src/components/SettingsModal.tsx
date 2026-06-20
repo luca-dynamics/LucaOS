@@ -258,7 +258,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       <div
         className={`w-full ${
           isMobile ? "h-full rounded-none" : "max-w-[90%] h-[90%] rounded-xl"
-        } flex flex-row overflow-hidden transition-all duration-300 tech-border glass-blur`}
+        } flex flex-row overflow-hidden transition-all duration-300 glass-blur`}
         style={{
           boxShadow: isMobile ? "none" : `0 0 50px -20px rgba(0,0,0,0.5)`,
           backgroundColor: "var(--app-bg-main, #0a0a0f)",

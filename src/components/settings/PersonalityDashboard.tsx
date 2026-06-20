@@ -295,7 +295,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
               Luca Behavior Rules
             </h3>
             <span
-              className={`text-sm px-2 py-0.5 rounded border uppercase tracking-tighter transition-all tech-border`}
+              className={`text-sm px-2 py-0.5 rounded border uppercase tracking-tighter transition-all`}
               style={{
                 backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
                 borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -307,7 +307,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
           </div>
 
           <div
-            className={`relative group ${isMobile ? "border-x-0 border-y rounded-none" : "rounded-xl border shadow-2xl"} overflow-hidden focus-within:ring-1 transition-all tech-border`}
+            className={`relative group ${isMobile ? "border-x-0 border-y rounded-none" : "rounded-xl border shadow-2xl"} overflow-hidden focus-within:ring-1 transition-all`}
             style={{
               backgroundColor: isMobile
                 ? "rgba(255,255,255,0.02)"
@@ -341,7 +341,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
         {/* 2. SPECIALIST FOCUS (The Lenses) */}
         <div className="flex-1 flex flex-col min-h-0 space-y-3">
           <div
-            className={`flex flex-col md:flex-row justify-between items-start md:items-center ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "p-2 px-3 rounded-lg border shrink-0 tech-border"} transition-all`}
+            className={`flex flex-col md:flex-row justify-between items-start md:items-center ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "p-2 px-3 rounded-lg border shrink-0"} transition-all`}
             style={{
               backgroundColor: isMobile
                 ? "rgba(255,255,255,0.02)"
@@ -359,7 +359,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
               <select
                 value={selectedPersona}
                 onChange={(e) => setSelectedPersona(e.target.value)}
-                className={`w-full appearance-none rounded-lg px-4 py-1 text-base outline-none transition-colors pr-8 cursor-pointer border tech-border`}
+                className={`w-full appearance-none rounded-lg px-4 py-1 text-base outline-none transition-colors pr-8 cursor-pointer border`}
                 style={{
                   backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.6))",
                   borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -391,7 +391,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
               <div className="flex justify-center pt-2">
                 <button
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className={`text-sm uppercase tracking-[0.2em] transition-all flex items-center gap-2 px-3 py-1 rounded-full border tech-border`}
+                  className={`text-sm uppercase tracking-[0.2em] transition-all flex items-center gap-2 px-3 py-1 rounded-full border`}
                   style={{
                     backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
                     borderColor:
@@ -425,7 +425,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                     </div>
 
                     <div
-                      className={`relative group/blueprint ${isMobile ? "border-x-0 border-y rounded-none" : "rounded-xl border shadow-inner"} overflow-hidden transition-all tech-border`}
+                      className={`relative group/blueprint ${isMobile ? "border-x-0 border-y rounded-none" : "rounded-xl border shadow-inner"} overflow-hidden transition-all`}
                       style={{
                         backgroundColor: isMobile
                           ? "rgba(255,255,255,0.02)"

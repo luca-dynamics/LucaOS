@@ -36,7 +36,7 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
   };
 
   return (
-    <div className="p-5 rounded-lg relative overflow-hidden group tech-border glass-blur bg-black/20 shadow-xl animate-in slide-in-from-left duration-700">
+    <div className="p-5 rounded-lg relative overflow-hidden group glass-blur bg-black/20 shadow-xl animate-in slide-in-from-left duration-700">
       <div className="absolute top-0 right-0 p-3 opacity-30 text-[var(--app-text-main)]">
         <Icon name="Pulse" size={14} variant="BoldDuotone" />
       </div>

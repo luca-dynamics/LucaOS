@@ -283,7 +283,7 @@ Format the output as a JSON object:
       style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}
     >
       <div
-        className={`relative w-full h-[92vh] max-w-7xl flex flex-col overflow-hidden rounded-2xl border shadow-2xl tech-border`}
+        className={`relative w-full h-[92vh] max-w-7xl flex flex-col overflow-hidden rounded-2xl border shadow-2xl`}
         style={{
           backgroundColor: theme?.isLight
             ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.3))"

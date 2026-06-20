@@ -98,7 +98,7 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
       </div>
 
       {/* Fine-tuning Sliders */}
-      <div className={`space-y-3 p-3 rounded-lg border transition-all tech-border glass-blur`}
+      <div className={`space-y-3 p-3 rounded-lg border transition-all glass-blur`}
            style={{ backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))", borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
         <div className="flex items-center gap-2 mb-1">
           <Icon name="Settings2" className="w-3 h-3 text-[var(--app-text-muted)]" />
