@@ -17,7 +17,12 @@ import {
   lucaShellTertiaryTextStyle,
 } from "./lucaShellStyles";
 import {
+  lucaMobileActiveTabStyle,
   lucaMobileAppBackgroundStyle,
+  lucaMobileContentSurfaceStyle,
+  lucaMobileDividerStyle,
+  lucaMobileGlassControlStyle,
+  lucaMobileNavSurfaceStyle,
   lucaMobilePanelSurfaceStyle,
   lucaMobileSheetSurfaceStyle,
 } from "./lucaMobileShellStyles";
@@ -289,6 +294,52 @@ export const lucaMaterialMobileRootStyle: CSSProperties = {
   ...lucaMobileAppBackgroundStyle,
 };
 
+/**
+ * Mobile chrome roles intentionally compose mobile shell helpers instead of
+ * desktop rail/control/tab roles. They keep the lighter mobile visual weight and
+ * inherit the mobile host-policy/reduced-blur assumptions already encoded in
+ * lucaMobileShellStyles.
+ */
+export const lucaMaterialMobileNavStyle: CSSProperties = {
+  ...lucaMobileNavSurfaceStyle,
+};
+
+/** Mobile neutral control chrome — a 1:1 material alias for glass controls. */
+export const lucaMaterialMobileControlStyle: CSSProperties = {
+  ...lucaMobileGlassControlStyle,
+};
+
+/** Mobile active control chrome — preserves the active-tab helper weight. */
+export const lucaMaterialMobileControlActiveStyle: CSSProperties = {
+  ...lucaMobileActiveTabStyle,
+};
+
+/** Mobile inactive/default tab chrome. */
+export const lucaMaterialMobileTabStyle: CSSProperties = {
+  borderColor: "transparent",
+  color: LUCA_MATERIAL_TEXT_SECONDARY,
+};
+
+/** Mobile active tab chrome — direct mobile helper mapping. */
+export const lucaMaterialMobileTabActiveStyle: CSSProperties = {
+  ...lucaMobileActiveTabStyle,
+};
+
+/** Mobile divider chrome — direct mobile helper mapping. */
+export const lucaMaterialMobileDividerStyle: CSSProperties = {
+  ...lucaMobileDividerStyle,
+};
+
+/** Mobile content chrome — direct mobile content helper mapping. */
+export const lucaMaterialMobileContentStyle: CSSProperties = {
+  ...lucaMobileContentSurfaceStyle,
+};
+
+/** Mobile panel/sheet chrome — direct mobile panel helper mapping. */
+export const lucaMaterialMobilePanelChromeStyle: CSSProperties = {
+  ...lucaMobilePanelSurfaceStyle,
+};
+
 /** Browser-safe root fallback (reuses the platform background policy helper). */
 export const lucaMaterialWebFallbackStyle: CSSProperties = {
   ...lucaDesktopWebSafeRootBackgroundStyle,
@@ -324,6 +375,38 @@ export const resolveLucaSheetMaterial = (isMobile: boolean): CSSProperties =>
 export const resolveLucaRailMaterial = (isMobile: boolean): CSSProperties =>
   isMobile ? lucaMaterialMobilePanelStyle : lucaMaterialRailStyle;
 
+/** Picks safe mobile chrome roles without falling through to desktop chrome. */
+export const resolveLucaMobileChromeMaterial = (
+  role:
+    | "nav"
+    | "control"
+    | "controlActive"
+    | "tab"
+    | "tabActive"
+    | "divider"
+    | "content"
+    | "panelChrome",
+): CSSProperties => {
+  switch (role) {
+    case "nav":
+      return lucaMaterialMobileNavStyle;
+    case "control":
+      return lucaMaterialMobileControlStyle;
+    case "controlActive":
+      return lucaMaterialMobileControlActiveStyle;
+    case "tab":
+      return lucaMaterialMobileTabStyle;
+    case "tabActive":
+      return lucaMaterialMobileTabActiveStyle;
+    case "divider":
+      return lucaMaterialMobileDividerStyle;
+    case "content":
+      return lucaMaterialMobileContentStyle;
+    case "panelChrome":
+      return lucaMaterialMobilePanelChromeStyle;
+  }
+};
+
 /** Material role registry — useful for discoverability and documentation. */
 export const lucaMaterialRoles = {
   root: lucaMaterialRootStyle,
@@ -348,6 +431,14 @@ export const lucaMaterialRoles = {
   resizableHandle: lucaMaterialResizableHandleStyle,
   mobilePanel: lucaMaterialMobilePanelStyle,
   mobileSheet: lucaMaterialMobileSheetStyle,
+  mobileNav: lucaMaterialMobileNavStyle,
+  mobileControl: lucaMaterialMobileControlStyle,
+  mobileControlActive: lucaMaterialMobileControlActiveStyle,
+  mobileTab: lucaMaterialMobileTabStyle,
+  mobileTabActive: lucaMaterialMobileTabActiveStyle,
+  mobileDivider: lucaMaterialMobileDividerStyle,
+  mobileContent: lucaMaterialMobileContentStyle,
+  mobilePanelChrome: lucaMaterialMobilePanelChromeStyle,
   webFallback: lucaMaterialWebFallbackStyle,
 } as const;
 
