@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
 import type { ToolExecutionLog } from "../../types";
 import { approvalRequestCenterService } from "../../services/provenance/ApprovalRequestCenterService";
 import { runtimeInboxService } from "../../services/runtime/RuntimeInboxService";
@@ -220,9 +221,9 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
         <div className="flex items-start gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2" style={{ color: theme.hex }}>
+          <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
             <Icon name="ScrollText" size={18} />
           </div>
           <div>

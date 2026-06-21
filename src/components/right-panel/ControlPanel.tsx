@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
 import type { CalendarEvent, Goal, Task } from "../../types";
 import type { RuntimeDiagnostics } from "../../services/runtime/RuntimeDiagnosticsService";
 import { runtimeDiagnosticsService } from "../../services/runtime/RuntimeDiagnosticsService";
@@ -115,9 +116,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
         <div className="flex items-start gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2" style={{ color: theme.hex }}>
+          <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
             <Icon name="Activity" size={18} />
           </div>
           <div className="min-w-0">

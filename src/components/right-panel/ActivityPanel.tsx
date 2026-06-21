@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
 import { approvalRequestCenterService } from "../../services/provenance/ApprovalRequestCenterService";
 import { runtimeInboxService } from "../../services/runtime/RuntimeInboxService";
 import { agentSessionContinuityService } from "../../services/runtime/AgentSessionContinuityService";
@@ -287,9 +288,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
         <div className="flex items-start gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2" style={{ color: theme.hex }}>
+          <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
             <Icon name="BellRing" size={18} />
           </div>
           <div>

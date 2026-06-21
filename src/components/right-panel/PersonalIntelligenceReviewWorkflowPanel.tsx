@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { lucaMaterialCardStyle } from "../../styles/lucaMaterialSystem";
 import type { LucaExperienceMode } from "../../experience/experienceMode";
 import {
   cancelMemoryReviewPreview,
@@ -64,7 +65,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
   const result = workflowState.result;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3" data-testid="personal-intelligence-review-workflow-panel">
+    <div className="rounded-xl border p-3" style={lucaMaterialCardStyle} data-testid="personal-intelligence-review-workflow-panel">
       <div className="flex items-center justify-between gap-2">
         <div>
           <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--app-text-main)]">

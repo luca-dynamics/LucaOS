@@ -297,3 +297,64 @@ These were inspected and **left unchanged** on purpose:
 2. Add `lucaMaterialRailStyle` / control roles, then migrate the dashboard rail,
    control buttons, and tab strip.
 3. Migrate `WebCapabilityPanel` once the flat card role exists.
+
+## Flat card material role follow-up
+
+Date: 2026-06-21
+
+This follow-up adds conservative flat card roles for the right-panel and browser
+capability card surfaces that were intentionally deferred from the full panel
+migration. These roles are **not** panel roles: they keep cards lighter than
+`lucaMaterialPanelStyle` by omitting the panel backdrop blur and default panel
+shadow.
+
+### Roles added
+
+- `lucaMaterialCardStyle` — low-tint flat card / section surface using Luca
+  material opacity / tint and border strength slots.
+- `lucaMaterialMetricStyle` — lighter compact metric / chip surface, also using
+  Luca material tint and border slots.
+- `lucaMaterialWebCardStyle` — browser-safe flat card shell for web capability
+  panels with a subtle tokenized shadow and no native/liquid assumptions.
+
+### Design intent
+
+The new roles approximate the previous `bg-white/[0.03]`, `bg-white/[0.045]`,
+`bg-black/10`, and `border-white/10` surfaces without hardcoded white/black
+chrome. They route default card backgrounds through Luca surface tokens and the
+Settings Appearance material slots while keeping the hierarchy intact: full
+panels remain elevated/glassy, cards remain flat, and metrics remain lighter
+than cards.
+
+### Files migrated
+
+- `src/components/right-panel/RightPanelSection.tsx`
+- `src/components/right-panel/RightPanelMetric.tsx`
+- `src/components/right-panel/ActivityPanel.tsx`
+- `src/components/right-panel/ControlPanel.tsx`
+- `src/components/right-panel/MemoryControlPanel.tsx`
+- `src/components/right-panel/TraceLogsPanel.tsx`
+- `src/components/right-panel/PersonalIntelligenceReadOnlyPanel.tsx`
+- `src/components/right-panel/PersonalIntelligenceReviewWorkflowPanel.tsx`
+- `src/web/WebCapabilityPanel.tsx`
+
+### Why these differ from `lucaMaterialPanelStyle`
+
+`lucaMaterialPanelStyle` intentionally represents a full panel: material surface,
+border, shadow, and host-policy-aware backdrop blur. The flat card roles only
+apply low-tint background, border, text color, and no/very-subtle shadow. They do
+not force full panel blur, liquid background behavior, or panel elevation.
+
+### Host-policy behavior
+
+The card roles read the same `--luca-material-opacity`,
+`--luca-material-tint-strength`, and `--luca-material-border-strength` slots as
+the panel roles. Because they do not apply backdrop filters by default, they are
+safe for desktop app, mobile app, desktop web, and mobile web, including hosts
+with reduced blur policies.
+
+### Intentionally deferred surfaces
+
+Semantic status cards and chips using `color-mix(... var(--luca-success | --luca-warning | --luca-danger | --luca-info) ...)`,
+modal scrims, tactical/debug visuals, `MobileScreenMirror`, `UiTreeOverlay`, and
+advanced visualization surfaces remain intentionally out of scope.

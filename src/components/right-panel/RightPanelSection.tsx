@@ -1,5 +1,7 @@
 import React from "react";
 
+import { lucaMaterialCardStyle } from "../../styles/lucaMaterialSystem";
+
 interface RightPanelSectionProps {
   title: string;
   subtitle?: string;
@@ -8,7 +10,7 @@ interface RightPanelSectionProps {
 }
 
 const RightPanelSection: React.FC<RightPanelSectionProps> = ({ title, subtitle, children, action }) => (
-  <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 shadow-[0_0_24px_rgba(0,0,0,0.18)]">
+  <section className="rounded-2xl border p-3" style={lucaMaterialCardStyle}>
     <div className="mb-3 flex items-start justify-between gap-3">
       <div>
         <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--app-text-main)]">

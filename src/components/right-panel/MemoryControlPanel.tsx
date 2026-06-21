@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
 import type { MemoryNode } from "../../types";
 import type { LucaExperienceMode } from "../../experience/experienceMode";
 import { personalIntelligenceDashboardGraphFixture } from "../../personal-intelligence/dashboard";
@@ -50,10 +51,10 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
         fixture
       />
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-2" style={{ color: theme.hex }}>
+            <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
               <Icon name="Database" size={18} />
             </div>
             <div>
@@ -86,7 +87,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
         <RightPanelMetric label="To save" value={proposalSummary.approvedWaitingWriteProposals} tone={proposalSummary.approvedWaitingWriteProposals > 0 ? "warn" : "good"} />
       </div>
 
-      <div className="flex rounded-xl border border-white/10 bg-white/[0.03] p-1">
+      <div className="flex rounded-xl border p-1" style={lucaMaterialMetricStyle}>
         {(["Archive", "Governance", "Proposals", "Graph"] as MemoryViewMode[]).map((mode) => (
           <button
             key={mode}
