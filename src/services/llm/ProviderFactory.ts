@@ -9,6 +9,11 @@ import { LucaSettings, settingsService } from "../settingsService";
 import { LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
 import { BRAIN_CONFIG } from "../../config/brain.config";
 import { ollamaUrl } from "../../config/api";
+import {
+  createProviderFactoryShadowSelection,
+  getProviderHubIdForProviderFactoryRoute,
+  type LucaProviderFactoryShadowSelection,
+} from "../../model-router/providerHubProviderFactoryShadowHook";
 
 export type CloudProviderId =
   | "gemini"
@@ -41,6 +46,37 @@ export type ModelProvisioningRoute =
  * ProviderFactory - Unified LLM Provider Routing
  */
 export class ProviderFactory {
+  private static lastProviderHubShadowSelection: LucaProviderFactoryShadowSelection | undefined;
+
+  static getLastProviderHubShadowSelection(): LucaProviderFactoryShadowSelection | undefined {
+    return this.lastProviderHubShadowSelection;
+  }
+
+  static resolveProvisioningRouteWithDiagnostics(
+    settings: LucaSettings["brain"],
+    persona?: string,
+    providerOverride?: string,
+  ): { route: ModelProvisioningRoute; providerHubShadowSelection?: LucaProviderFactoryShadowSelection } {
+    const route = this.resolveProvisioningRoute(settings, persona, providerOverride);
+    const providerId = getProviderHubIdForProviderFactoryRoute(route);
+    const shadow = createProviderFactoryShadowSelection({
+      currentRuntimeProviderId: providerId,
+      currentRuntimeModelId: route.model,
+      currentRouteMode: route.kind,
+      taskType: "chat",
+      requiredCapabilities: ["text_generation"],
+      currentSettingsSnapshot: settingsService.getSettings(),
+      routePreference: route.kind === "LOCAL" ? "local_first" : route.kind === "BYOK" ? "cloud_first" : "managed_first",
+      runtimeRouteSelectionEnabled: Boolean(settingsService.getSettings().providerHub?.runtimeRouteSelectionEnabled),
+      allowFallbacks: true,
+      allowPaidProviders: route.kind !== "LOCAL",
+      allowLocalProviders: true,
+      allowCloudProviders: route.kind !== "LOCAL",
+      observedAt: new Date().toISOString(),
+    });
+    this.lastProviderHubShadowSelection = shadow;
+    return { route, providerHubShadowSelection: shadow };
+  }
   static resolveProvisioningRoute(
     settings: LucaSettings["brain"],
     persona?: string,
@@ -193,7 +229,7 @@ export class ProviderFactory {
     persona?: string,
     providerOverride?: string,
   ): LLMProvider {
-    const route = this.resolveProvisioningRoute(settings, persona, providerOverride);
+    const { route } = this.resolveProvisioningRouteWithDiagnostics(settings, persona, providerOverride);
     return this.createProviderForRoute(route, settings);
   }
 
