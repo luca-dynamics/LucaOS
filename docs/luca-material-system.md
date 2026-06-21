@@ -394,3 +394,25 @@ The roles continue the same settings flow as the existing engine: appearance set
 ### Intentionally deferred surfaces
 
 Semantic success/warning/danger/info states, tactical/debug visual components, advanced/pro/creator visualizations, hologram/presence/shader surfaces, modal scrims, mobile frame/device-preview visuals, runtime/service UI, and broad `App.tsx` chrome remain deferred unless a future role maps exactly to those surfaces.
+
+## Remaining material-role boundaries
+
+The current Luca Material hierarchy covers default desktop shell and content chrome:
+
+- Panels use `lucaMaterialPanelStyle` for elevated shell surfaces.
+- Cards use `lucaMaterialCardStyle` for flat content grouping.
+- Metrics and chips use `lucaMaterialMetricStyle`.
+- Browser-safe web cards use `lucaMaterialWebCardStyle`.
+- Rails use `lucaMaterialRailStyle`.
+- Controls use `lucaMaterialControlStyle` and active controls use `lucaMaterialControlActiveStyle`.
+- Tabs use `lucaMaterialTabStyle` and active tabs use `lucaMaterialTabActiveStyle`.
+- Dividers use `lucaMaterialDividerStyle`.
+- Workspace surfaces use `lucaMaterialWorkspaceStyle`.
+
+The hierarchy intentionally does not cover every white/black/blur/shadow match in the repository. Several boundaries remain explicit until dedicated roles or design decisions exist:
+
+- **Mobile role boundary:** mobile navigation, mobile controls, mobile dividers, and mobile panel chrome should remain on mobile-specific helpers until dedicated mobile material roles exist. Desktop rail/control/tab roles should not be applied to mobile navigation behavior by default.
+- **Overlay/scrim boundary:** modal dimmers, black overlay layers, backdrop scrims, and intentional focus/frosting layers are overlay semantics rather than default material panels.
+- **Tactical/debug boundary:** tactical terminals, debug overlays, inspection surfaces, `UiTreeOverlay`, `MobileScreenMirror`, pro/creator visuals, hologram/presence/shader/canvas effects, and generative visuals may keep bespoke styling because their visual language is not neutral shell chrome.
+- **Semantic status boundary:** success, warning, danger, info, approval, blocked, risk, active, connection, routing, and runtime-health surfaces should keep semantic/status tokens or state-specific colors instead of being flattened into neutral material roles.
+- **Web-specific boundary:** browser and web runtime surfaces need a separate desktop-web/mobile-web review before any additional material migration, even where a web-card role already exists for safe flat browser-adjacent cards.

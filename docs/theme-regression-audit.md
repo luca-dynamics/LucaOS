@@ -391,3 +391,85 @@ Voice UI, tactical/debug panels, skill runtime/registry surfaces, trading/debate
 - Add dedicated mobile nav/control material roles only after a safe mobile 1:1 mapping is agreed.
 - Continue removing direct neutral Tailwind `border-white/*`, `bg-white/*`, and `bg-black/*` in feature-specific passes where surfaces are clearly default chrome rather than semantic, tactical, or visualization UI.
 - Keep old shell helper exports available until all call sites have safe role equivalents.
+
+## Post-material rollout leak audit
+
+**Date:** 2026-06-21
+
+### Search patterns used
+
+- `border-white/`, `bg-white/`, `bg-black/`, `text-white`, `text-white/`, `border-black/`
+- `bg-gray-`, `bg-slate-`, `border-gray-`, `shadow-[`
+- `rgba(`, `#000`, `#fff`, `#121212`, `#08090b`, `#111317`
+- `backdrop-blur`, `blur-2xl`
+- `lucaShellPanelSurfaceStyle`, `lucaShellRailSurfaceStyle`, `lucaShellWorkspaceSurfaceStyle`
+- `lucaShellControlStyle`, `lucaShellTabStyle`, `lucaShellDividerStyle`
+- `lucaMobileNavSurfaceStyle`, `lucaMobileDividerStyle`, `lucaMobilePanelSurfaceStyle`
+
+### Files inspected
+
+The audit inspected broad repo matches while classifying runtime source separately from documentation and standalone marketing/static assets. Runtime source matches were reviewed under `src/` plus the app boot shell in `index.html`. Documentation-only matches were reviewed under `docs/`. Standalone static/marketing matches under `landing/`, `relay-server/public/`, and Android launcher XML were treated as outside the Luca desktop material-role hierarchy unless they also mapped to a runtime source surface.
+
+Meaningful runtime source match groups inspected:
+
+- App shell and global token/style files: `index.html`, `src/App.tsx`, `src/index.css`, `src/hooks/useTheme.ts`, `src/styles/lucaMaterialSystem.ts`, `src/styles/lucaShellStyles.ts`, `src/styles/lucaMobileShellStyles.ts`, `src/styles/lucaMaterialSettings.ts`, `src/utils/glassStyles.ts`, `src/utils/uiUtils.ts`.
+- Desktop shell/layout surfaces: `src/components/dashboard/LucaDashboardSurface.tsx`, `src/components/layout/Header.tsx`, `src/components/layout/OperationsSidebar.tsx`, left-panel components, right-panel components, and shared overlay panels under `src/surfaces/`.
+- Modal/overlay surfaces: `src/components/*Modal.tsx`, `src/components/SecurityGate.tsx`, `src/components/SystemErrorBoundary.tsx`, origin/shared overlay panel files, and human/admin/remote/cast/desktop/vision modal shells.
+- Runtime, governance, model, memory, and service-facing UI: runtime panels under `src/components/runtime/`, model/LLM panels, memory control UI, skill authority/registry/sandbox panels, and `src/services/awarenessService.ts`.
+- Browser/web surfaces: `src/components/LucaBrowser.tsx`, `src/components/browser/SandboxedBrowserShell.tsx`, `src/components/ui/WebUnavailableState.tsx`, `src/components/web/*`, and `src/web/*`.
+- Mobile source surfaces: `src/components/mobile/*`, `src/components/Mobile*.tsx`, mobile shell helpers/tests, and mobile-adjacent cast/TV receiver surfaces.
+- Tactical/debug/advanced visuals: tactical terminals, trading terminals, OSINT/intelligence views, `UiTreeOverlay`, `MobileScreenMirror`, hologram/presence/shader/orb/canvas visuals, and creator/pro workforce canvases.
+- Semantic/status source surfaces: status chips, risk/approval/blocked/active rows, trading state cards, runtime state labels, and components using success/warning/danger/info color branches or `color-mix` status tokens.
+- Documentation source-of-truth files: `docs/theme-regression-audit.md`, `docs/luca-material-system.md`, and historical audit/design docs that intentionally mention old hardcoded classes.
+
+### Classification table
+
+| file/path | match type | bucket | action | reason |
+| --- | --- | --- | --- | --- |
+| `src/components/dashboard/LucaDashboardSurface.tsx`, `src/components/layout/Header.tsx`, layout/right-panel materialized call sites | shell helper names, neutral white/black utility remnants | `safe-to-migrate-now` | Documented only | The obvious desktop rail/control/tab/workspace cases were already migrated by the #393 role pass; remaining matches are either active state, helper compatibility, or broader shell context that should not be changed in an audit PR. |
+| `src/index.css`, `src/hooks/useTheme.ts`, `src/styles/lucaMaterialSystem.ts`, `src/styles/lucaMaterialSettings.ts` | `rgba(`, `#fff`, `#000`, `#121212`, material variable fallbacks | `legacy-helper-still-used-but-safe` | Keep | These files define app/theme/material tokens and compatibility fallbacks. Raw color syntax is intentional token plumbing, not component-level default chrome leakage. |
+| `src/styles/lucaShellStyles.ts`, `src/styles/lucaMobileShellStyles.ts`, shell style tests | old shell/mobile helper names | `legacy-helper-still-used-but-safe` | Keep | Helper exports remain needed for backward compatibility, mobile-specific surfaces, and deferred tactical/mobile boundaries until exact new roles exist. |
+| `src/App.tsx` | broad shell/helper/default surface matches | `legacy-helper-still-used-but-safe` | Keep | `App.tsx` is explicitly prohibited for this PR and contains broad runtime layout wiring where a surgical audit should not alter behavior. |
+| `src/components/*Modal.tsx`, `src/surfaces/origin/*OverlayPanels.tsx`, `src/surfaces/shared/*OverlayPanels.tsx` | `bg-black/`, `backdrop-blur`, `rgba(` scrims and panel overlays | `overlay/scrim-keep` | Keep | Modal dimmers and backdrop layers are intentional overlay/scrim semantics; changing them risks focus, contrast, and layering behavior. |
+| `src/components/AdminEnrollmentModal.tsx`, `src/components/AdminGrantModal.tsx`, `src/components/SecurityGate.tsx`, skill permission/runtime panels | status and authority colors, white/black overlays | `semantic-state-keep` | Keep | Approval, blocked, risk, danger, and authority surfaces are semantic state UI, not neutral material chrome. |
+| `src/components/runtime/*`, `src/components/ModelManager.tsx`, `src/components/llm/OfflineModelManager.tsx`, memory/governance-adjacent panels | status chips, `rgba(` token/status fallbacks | `semantic-state-keep` | Keep | Runtime/model/memory state colors communicate health, routing, availability, or risk and are also prohibited areas for opportunistic changes. |
+| `src/components/mobile/*`, `src/components/Mobile*.tsx`, `src/styles/lucaMobileShellStyles.ts` | mobile helper names, `bg-white/`, `border-white/`, `backdrop-blur` | `mobile-role-needed` | Defer | Mobile navigation/control chrome needs dedicated mobile material roles before migration; desktop rail/control/tab roles should not be forced into mobile behavior. |
+| `src/components/MobileScreenMirror.tsx`, `src/components/mobile/UiTreeOverlay.tsx` | `rgba(`, white/black utility classes, debug overlays | `tactical-debug-keep` | Keep | These are inspection/mirroring/debug surfaces explicitly named as tactical/debug boundaries. |
+| `src/components/LucaBrowser.tsx`, `src/components/browser/SandboxedBrowserShell.tsx`, `src/components/web/*`, `src/components/ui/WebUnavailableState.tsx`, `src/web/*` | web card/chrome classes, `rgba(`, backdrop/overlay matches | `web-specific-review` | Defer | Browser/web runtime surfaces require separate desktop-web/mobile-web safety review; browser runtime is prohibited for this PR. |
+| Trading/terminal/tactical files such as `src/components/CryptoTerminal.tsx`, `ForexTerminal.tsx`, `StockTerminal.tsx`, `HackingTerminal.tsx`, `GeoTacticalView.tsx`, `DarkWebScanner.tsx`, `VisionHUD.tsx`, and trading dashboard/debate/strategy files | `bg-black/`, `text-white`, `shadow-[`, `rgba(`, status colors | `tactical-debug-keep` | Keep | Terminal/tactical/pro/trading visuals use intentional domain styling and visual language rather than default app chrome. |
+| Hologram/presence/visual files under `src/components/Hologram/`, `src/components/visual/`, `src/components/HolographicCore.tsx`, `src/components/VisualCore.tsx`, `src/components/WidgetVisualizer.tsx` | `rgba(`, `#fff/#000`, blur/shadow effects | `tactical-debug-keep` | Keep | Hologram, presence, shader, canvas, and generative visual effects are explicitly outside the material-role migration boundary. |
+| Onboarding files under `src/components/Onboarding/` | white/black utility classes, blur, rgba | `legacy-helper-still-used-but-safe` | Keep | Onboarding is prohibited for this PR, and its surfaces need a dedicated onboarding review rather than opportunistic material migration. |
+| LucaLink files under `src/components/lucaLink/` and LucaLink modal | status colors and overlay/helper matches | `semantic-state-keep` | Keep | Connection/error surfaces communicate device state; LucaLink is prohibited for this PR. |
+| Chat/widget/content components such as `ChatMessageBubble`, `ChatWidget*`, `SuggestionChips`, `LiveContentDisplay`, chart/rendering components | message/status/visual white-black utility matches | `semantic-state-keep` | Keep | These matches are content, message, chart, or state-specific surfaces rather than default shell material chrome. |
+| `src/config/themeColors.ts`, `src/config/lucaThemeSystemAuditMap.ts`, theme/token tests | raw hex, rgba, Tailwind class strings | `legacy-helper-still-used-but-safe` | Keep | Theme catalogs and audit maps intentionally enumerate color classes/tokens for theme behavior and regression coverage. |
+| `src/services/awarenessService.ts` | canvas `#000`/`#fff` drawing | `tactical-debug-keep` | Keep | Canvas drawing colors are service/visual implementation details and not material surfaces. |
+| `index.html` | boot CSS `rgba(`, text/surface colors | `legacy-helper-still-used-but-safe` | Keep | Boot-shell styling is pre-app visual scaffolding; no material role is available before React/material variables initialize. |
+| `docs/**` | old class/helper mentions | `docs-only` | Keep/update | Documentation intentionally records historical classes, search patterns, and migration boundaries. |
+| `landing/**`, `relay-server/public/**`, Android launcher XML | static marketing/server/launcher colors | `docs-only` | No action in this audit | These are outside runtime Luca app material roles and should be handled by separate static/marketing/platform passes if needed. |
+
+### Tiny fixes made
+
+No source fixes were made. This PR is documentation-only by design so the audit can classify the remaining surface boundaries before any additional migrations.
+
+### Intentionally deferred surfaces
+
+- Mobile navigation/control chrome until dedicated mobile material roles exist.
+- Browser/web runtime chrome until a web-specific desktop/mobile safety pass reviews it.
+- Modal scrims and dimming layers because they are overlay semantics, not material panel chrome.
+- Semantic success/warning/danger/info, risk, approval, blocked, active, connection, and runtime status surfaces.
+- Tactical/debug/advanced visuals, including `UiTreeOverlay`, `MobileScreenMirror`, terminals, trading/pro/creator surfaces, hologram/presence/shader/canvas visuals, and generative visual effects.
+- Prohibited runtime areas: onboarding, voice runtime, browser runtime, LucaLink, memory/governance/model routing/services, and broad `App.tsx` shell wiring.
+
+### Next recommended migration PRs
+
+1. Add dedicated mobile material roles for mobile nav/control/divider/panel chrome, then migrate only 1:1 mobile helper call sites.
+2. Run a web-specific material audit for browser/web surfaces, separating desktop web, mobile web, and native desktop app safety.
+3. Replace remaining desktop neutral default chrome only where a component has no semantic state branch and maps exactly to an existing material role.
+4. Keep semantic status tokens and overlay scrims out of material-role migrations unless a future design explicitly defines those boundaries.
+
+### Build results
+
+- `npm install --ignore-scripts`: completed successfully; npm emitted deprecation warnings only.
+- `npm run build:web`: completed successfully; Vite emitted existing chunking and report-mode web-import-boundary warnings.
+- `npm run build`: failed during the repo-wide `tsc` step with existing TypeScript/test fixture errors in onboarding, runtime diagnostics, browser-runtime-router, governed runtime, and voice test files; no failures reference the docs changed in this audit.
+- `npm run type-check`: failed with the same repo-wide TypeScript/test fixture errors as `npm run build`; this docs-only PR did not change source files.
