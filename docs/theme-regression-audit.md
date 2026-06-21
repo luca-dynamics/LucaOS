@@ -473,3 +473,63 @@ No source fixes were made. This PR is documentation-only by design so the audit 
 - `npm run build:web`: completed successfully; Vite emitted existing chunking and report-mode web-import-boundary warnings.
 - `npm run build`: failed during the repo-wide `tsc` step with existing TypeScript/test fixture errors in onboarding, runtime diagnostics, browser-runtime-router, governed runtime, and voice test files; no failures reference the docs changed in this audit.
 - `npm run type-check`: failed with the same repo-wide TypeScript/test fixture errors as `npm run build`; this docs-only PR did not change source files.
+
+## Mobile material chrome migration
+
+**Date:** 2026-06-21
+
+### Search patterns used
+
+- `lucaMobileNavSurfaceStyle`
+- `lucaMobileDividerStyle`
+- `lucaMobilePanelSurfaceStyle`
+- `lucaMobileGlassControlStyle`
+- `lucaMobileActiveTabStyle`
+- `lucaMobileContentSurfaceStyle`
+- `bg-white/`, `border-white/`, `bg-black/`, `text-white/`
+- `backdrop-blur`, `shadow-[`, `rgba(`
+
+### Files inspected
+
+- `src/components/mobile/`
+- `src/components/Mobile*.tsx`
+- `src/styles/lucaMobileShellStyles.ts`
+- `src/components/dashboard/LucaDashboardSurface.tsx`
+- `src/components/layout/Header.tsx`
+- `src/components/layout/ChatPanel.tsx`
+- Mobile-adjacent cast/TV/receiver surfaces were reviewed for classification only.
+
+### Helpers/classes replaced
+
+- Replaced safe mobile uses of `lucaMobileContentSurfaceStyle` with `lucaMaterialMobileContentStyle`.
+- Replaced safe mobile uses of `lucaMobilePanelSurfaceStyle` with `lucaMaterialMobilePanelChromeStyle`.
+- Replaced safe mobile uses of `lucaMobileNavSurfaceStyle` with `lucaMaterialMobileNavStyle`.
+- Replaced safe mobile uses of `lucaMobileDividerStyle` with `lucaMaterialMobileDividerStyle`.
+- Replaced safe mobile uses of `lucaMobileGlassControlStyle` with `lucaMaterialMobileControlStyle`.
+- Replaced safe mobile uses of `lucaMobileActiveTabStyle` with `lucaMaterialMobileTabActiveStyle`.
+
+### Mobile default/basic surfaces migrated
+
+- Mobile dashboard content wrappers for SYSTEM and TERMINAL views.
+- Mobile DATA panel chrome and tab-strip divider.
+- Mobile DATA active tab style.
+- Mobile bottom navigation wrapper surface.
+- Mobile header panel/control chrome.
+- Mobile chat workspace content surface and neutral mobile chat controls.
+
+### Mobile surfaces intentionally deferred
+
+Mobile navigation behavior, gesture/routing/tab-state logic, modal scrims, semantic status states, tactical/debug/pro/creator mobile visuals, `MobileScreenMirror`, `UiTreeOverlay`, `MobileManager`, `MobileFileBrowser`, mobile cast/receiver controls, browser/runtime/LucaLink/memory/governance/model-routing surfaces, onboarding, voice runtime, and services were intentionally left unchanged.
+
+### Build results
+
+- `npm install --ignore-scripts`: completed successfully; npm emitted deprecation and vulnerability audit warnings only.
+- `npm run build:web`: completed successfully; Vite emitted existing chunking and report-mode web-import-boundary warnings.
+- `npm run build`: failed during the repo-wide `tsc` step with existing TypeScript/test-fixture errors outside the changed mobile material-role files.
+- `npm run type-check`: failed with the same repo-wide TypeScript/test-fixture errors as `npm run build`; no failures referenced the changed material/dashboard/header/chat files.
+
+### Known follow-ups
+
+- Keep old mobile helper exports until all deferred mobile surfaces have explicit role mappings or are intentionally left bespoke.
+- Review mobile cast/receiver and advanced mobile visuals in a dedicated pass if they ever need material roles.
+- Continue treating modal scrims, semantic state surfaces, browser/runtime surfaces, and tactical/debug visuals as outside neutral mobile chrome.

@@ -416,3 +416,39 @@ The hierarchy intentionally does not cover every white/black/blur/shadow match i
 - **Tactical/debug boundary:** tactical terminals, debug overlays, inspection surfaces, `UiTreeOverlay`, `MobileScreenMirror`, pro/creator visuals, hologram/presence/shader/canvas effects, and generative visuals may keep bespoke styling because their visual language is not neutral shell chrome.
 - **Semantic status boundary:** success, warning, danger, info, approval, blocked, risk, active, connection, routing, and runtime-health surfaces should keep semantic/status tokens or state-specific colors instead of being flattened into neutral material roles.
 - **Web-specific boundary:** browser and web runtime surfaces need a separate desktop-web/mobile-web review before any additional material migration, even where a web-card role already exists for safe flat browser-adjacent cards.
+
+## Mobile material chrome role follow-up
+
+**Date:** 2026-06-21
+
+### Roles added
+
+- `lucaMaterialMobileNavStyle` for mobile bottom navigation shell chrome.
+- `lucaMaterialMobileControlStyle` and `lucaMaterialMobileControlActiveStyle` for mobile-safe neutral/active control chrome.
+- `lucaMaterialMobileTabStyle` and `lucaMaterialMobileTabActiveStyle` for mobile tab-strip chrome.
+- `lucaMaterialMobileDividerStyle` for mobile dividers and tab-strip separators.
+- `lucaMaterialMobileContentStyle` for mobile default content backgrounds.
+- `lucaMaterialMobilePanelChromeStyle` for mobile panel/sheet chrome wrappers.
+- `resolveLucaMobileChromeMaterial` and material-role registry entries for discoverability.
+
+### Design intent
+
+The mobile roles are conservative 1:1 aliases over the existing mobile shell helpers. They create a material import surface without changing mobile layout, navigation behavior, gestures, state, blur, elevation, or visual density. The roles preserve the current mobile helper feel for navigation, controls, active tabs, dividers, content surfaces, and panel chrome.
+
+### Files migrated
+
+- `src/components/dashboard/LucaDashboardSurface.tsx` now uses mobile material roles for the mobile content wrappers, DATA panel chrome, DATA tab divider, DATA active tab, and bottom nav wrapper.
+- `src/components/layout/Header.tsx` now uses mobile material panel/control roles for mobile header chrome and neutral header controls.
+- `src/components/layout/ChatPanel.tsx` now uses mobile material content/control roles for mobile chat workspace and neutral mobile chat controls.
+
+### Why mobile roles differ from desktop rail/control/tab roles
+
+Desktop `lucaMaterialRailStyle`, `lucaMaterialControlStyle`, and `lucaMaterialTabStyle` encode desktop shell hierarchy and desktop interaction density. Mobile navigation and mobile controls have different touch targets, weight, and host-policy assumptions, so these roles intentionally compose `lucaMobileShellStyles` helpers instead of inheriting desktop rail/control/tab styling. This avoids making mobile controls look like desktop panels or desktop rails.
+
+### Host-policy behavior
+
+The roles inherit the mobile host-policy and reduced-blur behavior already centralized in `src/styles/lucaMobileShellStyles.ts`. They consume Luca appearance/material tokens through those helpers and do not add new heavy blur, liquid background behavior, or shadow beyond the existing mobile helper mappings.
+
+### Intentionally deferred mobile surfaces
+
+`MobileScreenMirror`, `UiTreeOverlay`, tactical/debug/pro/creator mobile visuals, modal scrims, semantic status states, browser/runtime/LucaLink/memory/governance/model-routing surfaces, onboarding, voice runtime, and mobile-adjacent cast/TV/receiver visuals remain deferred. Old mobile helper exports remain available for compatibility and for deferred surfaces that do not map safely to neutral mobile chrome roles.

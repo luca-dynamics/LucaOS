@@ -15,10 +15,8 @@ import { chatIntentProvenanceService } from "../../services/runtime/ChatIntentPr
 import type { ChatRoutingResult } from "../../services/runtime/ChatIntentRouterBridge";
 import { getRouteHintText, getRouteLabel, getRouteTone, shouldAppendRouteHint } from "../runtime/intentRoutingLabels";
 import {
-  lucaMobileContentSurfaceStyle,
-  lucaMobileGlassControlStyle,
-} from "../../styles/lucaMobileShellStyles";
-import {
+  lucaMaterialMobileContentStyle,
+  lucaMaterialMobileControlStyle,
   lucaMaterialMobileSheetStyle,
   lucaMaterialPanelStyle,
   lucaMaterialWorkspaceStyle,
@@ -520,7 +518,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {attachedImage && (
         <div
           className="flex items-center gap-2 mb-2 border p-2 w-fit"
-          style={isMobile ? lucaMobileGlassControlStyle : lucaMaterialPanelStyle}
+          style={isMobile ? lucaMaterialMobileControlStyle : lucaMaterialPanelStyle}
         >
           <Icon name="Gallery" size={14} className={theme.primary} variant="BoldDuotone" />
           <span className={`text-xs "text-[var(--app-text-muted)]"`}>
@@ -630,7 +628,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         } flex flex-col h-full relative ${isMobile ? "z-10" : "z-20"} transition-all duration-500 ${isMobile ? "" : "glass-blur"}`}
         style={
           isMobile
-            ? lucaMobileContentSurfaceStyle
+            ? lucaMaterialMobileContentStyle
             : {
                 ...lucaMaterialWorkspaceStyle,
                 borderTop: "1px solid var(--luca-border-subtle, var(--app-border-main))",
@@ -648,15 +646,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             style={
               isMobile
                 ? {
-                    ...lucaMobileGlassControlStyle,
+                    ...lucaMaterialMobileControlStyle,
                     borderColor:
                       viewMode === "CORTEX"
                         ? "var(--luca-accent-soft)"
-                        : lucaMobileGlassControlStyle.borderColor,
+                        : lucaMaterialMobileControlStyle.borderColor,
                     color:
                       viewMode === "CORTEX"
                         ? "var(--luca-accent-primary)"
-                        : lucaMobileGlassControlStyle.color,
+                        : lucaMaterialMobileControlStyle.color,
                   }
                 : {
                     borderColor: viewMode === "CORTEX" ? "var(--luca-accent-primary)" : "var(--luca-border-subtle, var(--app-border-main))",
@@ -805,7 +803,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       } transition-all duration-500 ${isMobile ? "" : "glass-blur"}`}
       style={
         isMobile
-          ? lucaMobileContentSurfaceStyle
+          ? lucaMaterialMobileContentStyle
           : {
               ...lucaMaterialWorkspaceStyle,
               borderTop: "1px solid var(--luca-border-subtle, var(--app-border-main))",
@@ -823,15 +821,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           style={
             isMobile
               ? {
-                  ...lucaMobileGlassControlStyle,
+                  ...lucaMaterialMobileControlStyle,
                   borderColor:
                     viewMode === "CORTEX"
                       ? "var(--luca-accent-soft)"
-                      : lucaMobileGlassControlStyle.borderColor,
+                      : lucaMaterialMobileControlStyle.borderColor,
                   color:
                     viewMode === "CORTEX"
                       ? "var(--luca-accent-primary)"
-                      : lucaMobileGlassControlStyle.color,
+                      : lucaMaterialMobileControlStyle.color,
                 }
               : {
                   borderColor: viewMode === "CORTEX" ? "var(--luca-accent-primary)" : "var(--luca-border-subtle, var(--app-border-main))",

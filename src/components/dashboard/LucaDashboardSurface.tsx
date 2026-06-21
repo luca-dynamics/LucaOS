@@ -21,6 +21,11 @@ import {
   lucaMaterialControlActiveStyle,
   lucaMaterialControlStyle,
   lucaMaterialDividerStyle,
+  lucaMaterialMobileContentStyle,
+  lucaMaterialMobileDividerStyle,
+  lucaMaterialMobileNavStyle,
+  lucaMaterialMobilePanelChromeStyle,
+  lucaMaterialMobileTabActiveStyle,
   lucaMaterialPanelStyle,
   lucaMaterialRailStyle,
   lucaMaterialTabActiveStyle,
@@ -29,15 +34,10 @@ import {
 } from "../../styles/lucaMaterialSystem";
 import {
   lucaMobileActiveIndicatorStyle,
-  lucaMobileActiveTabStyle,
   lucaMobileClassNames,
-  lucaMobileContentSurfaceStyle,
-  lucaMobileDividerStyle,
   lucaMobileInactiveTabStyle,
   lucaMobileNavActiveStyle,
   lucaMobileNavInactiveStyle,
-  lucaMobileNavSurfaceStyle,
-  lucaMobilePanelSurfaceStyle,
 } from "../../styles/lucaMobileShellStyles";
 
 export interface LucaDashboardSurfaceProps {
@@ -187,7 +187,7 @@ export function LucaDashboardSurface({
         {isMobile && activeMobileTab === "SYSTEM" && (
           <div
             className={`flex w-full h-full ${lucaMobileClassNames.content}`}
-            style={lucaMobileContentSurfaceStyle}
+            style={lucaMaterialMobileContentStyle}
           >
             {leftPanel}
           </div>
@@ -206,7 +206,7 @@ export function LucaDashboardSurface({
         {isMobile && activeMobileTab === "TERMINAL" && (
           <div
             className={`flex w-full h-full ${lucaMobileClassNames.content}`}
-            style={lucaMobileContentSurfaceStyle}
+            style={lucaMaterialMobileContentStyle}
           >
             {chatSurface}
             {voiceSurface}
@@ -322,12 +322,12 @@ export function LucaDashboardSurface({
         {isMobile && activeMobileTab === "DATA" && (
           <section
             className={`flex-1 flex-col h-full border-l relative overflow-hidden flex ${lucaMobileClassNames.panel}`}
-            style={lucaMobilePanelSurfaceStyle}
+            style={lucaMaterialMobilePanelChromeStyle}
           >
             <div className="flex flex-col h-full w-full overflow-hidden">
               <div
                 className="flex flex-none border-b"
-                style={lucaMobileDividerStyle}
+                style={lucaMaterialMobileDividerStyle}
               >
                 {rightPanelModes.map((mode) => (
                   <button
@@ -337,7 +337,7 @@ export function LucaDashboardSurface({
                     className={`flex-1 py-3 text-[11px] font-medium transition-colors relative border-b-2 ${activeRightPanelMode === mode ? lucaMobileClassNames.tabActive : lucaMobileClassNames.tab}`}
                     style={
                       activeRightPanelMode === mode
-                        ? lucaMobileActiveTabStyle
+                        ? lucaMaterialMobileTabActiveStyle
                         : lucaMobileInactiveTabStyle
                     }
                   >
@@ -362,7 +362,7 @@ export function LucaDashboardSurface({
       {isMobile && (
         <nav
           className={`flex-none h-16 border-t grid grid-cols-3 items-center z-50 ${lucaMobileClassNames.nav}`}
-          style={lucaMobileNavSurfaceStyle}
+          style={lucaMaterialMobileNavStyle}
         >
           {(
             [
