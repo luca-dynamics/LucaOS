@@ -14,6 +14,10 @@ import {
   getProviderHubIdForProviderFactoryRoute,
   type LucaProviderFactoryShadowSelection,
 } from "../../model-router/providerHubProviderFactoryShadowHook";
+import {
+  createProviderHubProviderFactoryRouteHandoff,
+  type LucaProviderHubRouteHandoffResult,
+} from "../../model-router/providerHubProviderFactoryRouteHandoff";
 
 export type CloudProviderId =
   | "gemini"
@@ -47,16 +51,21 @@ export type ModelProvisioningRoute =
  */
 export class ProviderFactory {
   private static lastProviderHubShadowSelection: LucaProviderFactoryShadowSelection | undefined;
+  private static lastProviderHubRouteHandoff: LucaProviderHubRouteHandoffResult | undefined;
 
   static getLastProviderHubShadowSelection(): LucaProviderFactoryShadowSelection | undefined {
     return this.lastProviderHubShadowSelection;
+  }
+
+  static getLastProviderHubRouteHandoff(): LucaProviderHubRouteHandoffResult | undefined {
+    return this.lastProviderHubRouteHandoff;
   }
 
   static resolveProvisioningRouteWithDiagnostics(
     settings: LucaSettings["brain"],
     persona?: string,
     providerOverride?: string,
-  ): { route: ModelProvisioningRoute; providerHubShadowSelection?: LucaProviderFactoryShadowSelection } {
+  ): { route: ModelProvisioningRoute; providerHubShadowSelection?: LucaProviderFactoryShadowSelection; providerHubRouteHandoff?: LucaProviderHubRouteHandoffResult } {
     const route = this.resolveProvisioningRoute(settings, persona, providerOverride);
     const providerId = getProviderHubIdForProviderFactoryRoute(route);
     const shadow = createProviderFactoryShadowSelection({
@@ -74,8 +83,21 @@ export class ProviderFactory {
       allowCloudProviders: route.kind !== "LOCAL",
       observedAt: new Date().toISOString(),
     });
+    const handoff = createProviderHubProviderFactoryRouteHandoff({
+      runtimeRouteSelectionEnabled: shadow.providerHubEnabled,
+      providerHubSelectedProviderId: shadow.providerHubSelectedProviderId,
+      providerHubSelectedModelId: shadow.providerHubSelectedModelId,
+      decisionStatus: shadow.decisionStatus,
+      shouldUseProviderHubRoute: shadow.shouldUseProviderHubRoute,
+      currentRoute: route,
+      settings,
+      taskType: "chat",
+      requiredCapabilities: ["text_generation"],
+    });
+    const selectedRoute = handoff.handoffStatus === "mapped" && handoff.shouldUseProviderHubRoute ? handoff.handoffRoute : route;
     this.lastProviderHubShadowSelection = shadow;
-    return { route, providerHubShadowSelection: shadow };
+    this.lastProviderHubRouteHandoff = handoff;
+    return { route: selectedRoute, providerHubShadowSelection: shadow, providerHubRouteHandoff: handoff };
   }
   static resolveProvisioningRoute(
     settings: LucaSettings["brain"],
