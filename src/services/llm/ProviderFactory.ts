@@ -141,6 +141,57 @@ export function createFinalRouteDecision(
   };
 }
 
+
+export interface LucaProviderHubChatRuntimeGuardSummary {
+  readonly currentRoute: ModelProvisioningRoute;
+  readonly handoffRoute?: ModelProvisioningRoute;
+  readonly finalRoute: ModelProvisioningRoute;
+  readonly routeSource: LucaProviderFactoryFinalRouteDecision["routeSource"];
+  readonly fallbackReasonCode?: LucaProviderHubFinalRouteFallbackReason;
+  readonly runtimeRouteSelectionEnabled: boolean;
+  readonly sideEffectsPerformed: false;
+  readonly providerApiCalledDuringSelection: false;
+  readonly automaticConnectionTestStarted: false;
+  readonly localRuntimeStarted: false;
+  readonly providerAdapterInstantiatedByHandoffMapper: false;
+  readonly safeDiagnosticsText: string;
+}
+
+export function createProviderHubChatRuntimeGuardSummary(
+  decision: LucaProviderFactoryFinalRouteDecision,
+  runtimeRouteSelectionEnabled: boolean,
+): LucaProviderHubChatRuntimeGuardSummary {
+  const safeDiagnosticsText = JSON.stringify({
+    currentRoute: routeSummary(decision.currentRoute),
+    handoffRoute: decision.handoffRoute ? routeSummary(decision.handoffRoute) : null,
+    finalRoute: routeSummary(decision.finalRoute),
+    routeSource: decision.routeSource,
+    fallbackReasonCode: decision.fallbackReasonCode ?? null,
+    runtimeRouteSelectionEnabled,
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    automaticConnectionTestStarted: false,
+    localRuntimeStarted: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+    adapterCreationPath: "createProviderForRoute",
+  });
+
+  return {
+    currentRoute: decision.currentRoute,
+    handoffRoute: decision.handoffRoute,
+    finalRoute: decision.finalRoute,
+    routeSource: decision.routeSource,
+    fallbackReasonCode: decision.fallbackReasonCode,
+    runtimeRouteSelectionEnabled,
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    automaticConnectionTestStarted: false,
+    localRuntimeStarted: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+    safeDiagnosticsText,
+  };
+}
+
 /**
  * ProviderFactory - Unified LLM Provider Routing
  */
