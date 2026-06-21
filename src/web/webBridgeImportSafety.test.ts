@@ -18,8 +18,8 @@ const bootstrapSource = read("src/index.tsx");
 const onboardingSource = read("src/components/Onboarding/OnboardingFlow.tsx");
 const iconSource = read("src/components/ui/Icon.tsx");
 const webAdapterSource = read("src/web/adapters/webOnboardingRuntime.tsx");
-const webConversationSource = read(
-  "src/web/adapters/WebSafeConversationalOnboarding.tsx",
+const onboardingConversationSurfaceSource = read(
+  "src/components/Onboarding/OnboardingConversationSurface.tsx",
 );
 const webBackgroundSource = read("src/web/WebLucaBackground.tsx");
 const onboardingAccessSource = read(
@@ -161,7 +161,9 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(webAdapterSource).not.toContain(
       "../../components/Onboarding/ConversationalOnboarding",
     );
-    expect(webAdapterSource).toContain("WebSafeConversationalOnboarding");
+    expect(webAdapterSource).toContain("OnboardingConversationSurface");
+    expect(webAdapterSource).not.toContain("WebSafeConversationalOnboarding");
+    expect(webAdapterSource).not.toContain("WebOnboardingConversation");
   });
 
   it("wires browser-safe lifecycle, conversation, and live visual settings", () => {
@@ -176,7 +178,9 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(webAdapterSource).not.toContain(
       "../../components/Onboarding/ConversationalOnboarding",
     );
-    expect(webAdapterSource).toContain("WebSafeConversationalOnboarding");
+    expect(webAdapterSource).toContain("OnboardingConversationSurface");
+    expect(webAdapterSource).not.toContain("WebSafeConversationalOnboarding");
+    expect(webAdapterSource).not.toContain("WebOnboardingConversation");
     expect(webAdapterSource).toContain("subscribeVisualSettings");
     expect(onboardingSource).not.toContain("fallback={null}");
     expect(onboardingSource).toContain(
@@ -455,7 +459,7 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
       webChatSource,
       webChatRuntimeSource,
       postBootSource,
-      webConversationSource,
+      onboardingConversationSurfaceSource,
       webAdapterSource,
     ];
     for (const source of normalSources) {

@@ -1,10 +1,11 @@
 import { LucaCanvasPresenceOrb } from "../components/visual/LucaCanvasPresenceOrb";
 import { LucaStaticFacePresence } from "../components/visual/LucaStaticFacePresence";
+import { LucaPanel } from "../components/ui/luca";
 import {
-  LUCA_SHELL_HOVER_BACKGROUND,
-  lucaShellPanelSurfaceStyle,
-  lucaShellPrimaryTextStyle,
-} from "../styles/lucaShellStyles";
+  LUCA_MATERIAL_BORDER,
+  LUCA_MATERIAL_SURFACE_HOVER,
+  lucaMaterialPrimaryTextStyle,
+} from "../styles/lucaMaterialSystem";
 import type { WebCapability } from "./browserHostCapabilities";
 
 interface WebReadyStateProps {
@@ -18,18 +19,13 @@ interface WebReadyStateProps {
 export function WebReadyState({ onContinueToShell }: WebReadyStateProps) {
   return (
     <section className="absolute inset-0 z-10 flex items-center justify-center p-6 text-center">
-      <div
-        className="w-full max-w-xl rounded-[2rem] border px-6 py-8 backdrop-blur-2xl sm:px-10 sm:py-10"
-        style={{
-          ...lucaShellPanelSurfaceStyle,
-        }}
-      >
+      <LucaPanel className="w-full max-w-xl rounded-[2rem] border px-6 py-8 backdrop-blur-2xl sm:px-10 sm:py-10">
         <div
           className="mx-auto flex w-fit items-center justify-center rounded-[2rem] border p-5"
           style={{
-            ...lucaShellPrimaryTextStyle,
-            background: LUCA_SHELL_HOVER_BACKGROUND,
-            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+            ...lucaMaterialPrimaryTextStyle,
+            background: LUCA_MATERIAL_SURFACE_HOVER,
+            borderColor: LUCA_MATERIAL_BORDER,
           }}
         >
           <LucaStaticFacePresence size={128} />
@@ -60,7 +56,7 @@ export function WebReadyState({ onContinueToShell }: WebReadyStateProps) {
         >
           Open LucaOS
         </button>
-      </div>
+      </LucaPanel>
     </section>
   );
 }

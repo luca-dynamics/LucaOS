@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { LUCA_SHELL_BORDER_SUBTLE } from "../../styles/lucaShellStyles";
+import { lucaMaterialResizableHandleStyle } from "../../styles/lucaMaterialSystem";
 
 interface PanelResizerProps {
   onResize: (delta: number) => void;
@@ -75,7 +75,7 @@ const PanelResizer: React.FC<PanelResizerProps> = ({
             : "scale-50 opacity-0 group-hover:opacity-100"
         }`}
         style={{
-          borderColor: LUCA_SHELL_BORDER_SUBTLE,
+          ...lucaMaterialResizableHandleStyle,
           backgroundColor: `${themeColor}33`,
           boxShadow: isDragging ? `0 0 10px ${themeColor}66` : "none",
         }}

@@ -91,3 +91,56 @@ Focused `rg` audit across the settings/mobile follow-up scope using:
 
 - Consider adding shared settings-specific wrapper helpers around Luca shell style constants if future settings work touches these same panels again.
 - Audit advanced mobile developer utilities separately before tokenizing any tactical/debug visual language.
+## Luca Material Engine follow-up
+
+Date: 2026-06-21
+
+This section tracks the introduction of the centralized Luca Material Engine
+(`src/styles/lucaMaterialSystem.ts`) and shared panel primitives
+(`src/components/ui/luca/`). See `docs/luca-material-system.md` for the full
+architecture, token mapping, and slider-wiring plan.
+
+### Files migrated
+
+- `src/components/layout/FloatingPanel.tsx` — floating panel surface now consumes `lucaMaterialFloatingPanelStyle` (Framer Motion, resize, and detach/reattach behavior unchanged).
+- `src/components/layout/OperationsSidebar.tsx` — desktop/mobile sidebar surface now uses `resolveLucaSidebarMaterial(isMobile)`; existing `lucaMobileShellStyles` divider/muted/content helpers preserved.
+- `src/components/layout/OverlayManager.tsx` — reboot overlay scrim/progress-track now use `lucaMaterialOverlayStyle` + `LUCA_MATERIAL_BORDER`; approval, voice HUD, and shared-panel runtime untouched.
+- `src/components/layout/PanelResizer.tsx` — handle accent now uses `lucaMaterialResizableHandleStyle`; pointer/mouse drag behavior unchanged.
+- `src/components/layout/ChatPanel.tsx` — attachment/input panel and sheet wrappers now use `lucaMaterialPanelStyle` / `resolveLucaSheetMaterial` / `lucaMaterialMobileSheetStyle`; chat logic, message rendering, and model routing untouched.
+- `src/components/ChatWidgetInput.tsx` — input container surface now uses `lucaMaterialPanelStyle`; input/voice/attachment/MCP/plugin behavior untouched.
+- `src/web/WebReadyState.tsx` — main panel now uses the `LucaPanel` primitive + material surface/text.
+- `src/web/postBoot/WebPostBootTransition.tsx` — text/border/hover styling now sourced from material roles; browser-safe auto-advance and reduced-motion handling unchanged.
+- `src/web/postBoot/WebPostBootLoading.tsx` — container now uses the `LucaPanel` primitive + material text.
+
+### Primitives added
+
+`LucaSurface` (base), `LucaPanel`, `LucaFloatingPanel`, `LucaSidebar`,
+`LucaSheet`, `LucaPopover`, `LucaDialog`, `LucaOverlaySurface`,
+`LucaResizableHandle`, plus a `mergeClassNames` helper and an `index.ts` barrel
+under `src/components/ui/luca/`.
+
+### Intentional remaining non-migrated surfaces
+
+- Non-panel surfaces inside migrated components stay on their existing helpers:
+  `ChatPanel` workspace background (`lucaShellWorkspaceSurfaceStyle`), mobile
+  content (`lucaMobileContentSurfaceStyle`), and mobile glass controls
+  (`lucaMobileGlassControlStyle`); `OperationsSidebar` mobile divider/muted/content.
+- `lucaShellStyles.ts`, `lucaMobileShellStyles.ts`, and
+  `lucaPlatformBackgroundPolicy.ts` are intentionally kept and reused for
+  backward compatibility — not deleted.
+- Advanced/pro/creator/tactical and the broader `src/web/` dark-glass surfaces
+  remain on their existing treatment, consistent with the earlier audit buckets.
+
+### Known follow-up items
+
+- Wire a Settings appearance pass that sets the `--luca-material-*` override
+  slots from existing `backgroundOpacity` / `backgroundBlur` settings and future
+  liquid-intensity / reduce-transparency / high-contrast controls.
+- Migrate remaining default/basic panels (settings, right-panel operation
+  centers, dashboard cards) to material roles in focused follow-up PRs.
+- Pre-existing repo-wide `tsc` errors (in `src/services/computerUse`,
+  `src/services/voice`, `src/services/runtime`, and related test fixtures) cause
+  `npm run build` and `npm run type-check` to fail. They are unrelated to this
+  change: the error count is identical (113) with and without this PR's edits,
+  and none reference the material engine, primitives, or migrated files.
+  `npm run build:web` (which uses `tsconfig.web.json`) passes.

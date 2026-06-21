@@ -2,12 +2,12 @@ import { useEffect } from "react";
 import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
 import { LucaStaticFacePresence } from "../../components/visual/LucaStaticFacePresence";
 import {
-  lucaShellBorderSubtleStyle,
-  lucaShellHoverSurfaceStyle,
-  lucaShellPrimaryTextStyle,
-  lucaShellSecondaryTextStyle,
-  lucaShellTertiaryTextStyle,
-} from "../../styles/lucaShellStyles";
+  lucaMaterialBorderSubtleStyle,
+  lucaMaterialHoverSurfaceStyle,
+  lucaMaterialPrimaryTextStyle,
+  lucaMaterialSecondaryTextStyle,
+  lucaMaterialTertiaryTextStyle,
+} from "../../styles/lucaMaterialSystem";
 import type { WebPostBootStateSnapshot } from "./webPostBootState";
 
 interface WebPostBootTransitionProps {
@@ -73,37 +73,37 @@ export function WebPostBootTransition({
 
         <h1
           className="font-display text-3xl font-semibold tracking-tight sm:text-4xl"
-          style={lucaShellPrimaryTextStyle}
+          style={lucaMaterialPrimaryTextStyle}
         >
           {heading}
         </h1>
-        <p className="mt-3 max-w-md text-sm leading-6 sm:text-base" style={lucaShellSecondaryTextStyle}>
+        <p className="mt-3 max-w-md text-sm leading-6 sm:text-base" style={lucaMaterialSecondaryTextStyle}>
           {subheading}
         </p>
 
         {needsAttention ? (
           <div className="mt-8 grid w-full gap-3 text-left sm:grid-cols-2">
-            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaShellPrimaryTextStyle, ...lucaShellBorderSubtleStyle }} onClick={onContinue}>
+            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle }} onClick={onContinue}>
               <span className="block font-medium">Continue with limited mode</span>
-              <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Open LucaOS with voice features paused.</span>
+              <span className="mt-1 block text-xs" style={lucaMaterialTertiaryTextStyle}>Open LucaOS with voice features paused.</span>
             </button>
-            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaShellPrimaryTextStyle, ...lucaShellBorderSubtleStyle }} onClick={onReviewVoiceAccess}>
+            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle }} onClick={onReviewVoiceAccess}>
               <span className="block font-medium">Review voice access</span>
-              <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Check browser microphone permissions.</span>
+              <span className="mt-1 block text-xs" style={lucaMaterialTertiaryTextStyle}>Check browser microphone permissions.</span>
             </button>
-            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaShellPrimaryTextStyle, ...lucaShellBorderSubtleStyle }} onClick={onChooseModelRoute}>
+            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle }} onClick={onChooseModelRoute}>
               <span className="block font-medium">Choose model route</span>
-              <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Continue setup with a supported route.</span>
+              <span className="mt-1 block text-xs" style={lucaMaterialTertiaryTextStyle}>Continue setup with a supported route.</span>
             </button>
-            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaShellPrimaryTextStyle, ...lucaShellBorderSubtleStyle }} onClick={onRestartOnboarding}>
+            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle }} onClick={onRestartOnboarding}>
               <span className="block font-medium">Restart onboarding</span>
-              <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Review your LucaOS setup from the start.</span>
+              <span className="mt-1 block text-xs" style={lucaMaterialTertiaryTextStyle}>Review your LucaOS setup from the start.</span>
             </button>
           </div>
         ) : (
           <div className="mt-8 w-full max-w-md space-y-2 text-left">
             {rows.map((row, index) => (
-              <div key={row} className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ ...lucaShellBorderSubtleStyle, ...lucaShellHoverSurfaceStyle }}>
+              <div key={row} className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ ...lucaMaterialBorderSubtleStyle, ...lucaMaterialHoverSurfaceStyle }}>
                 <LucaCanvasPresenceOrb
                   size={22}
                   state={isNewUser ? "preparing" : "ready"}
@@ -111,7 +111,7 @@ export function WebPostBootTransition({
                   lowPower={index > 1}
                   className="shrink-0"
                 />
-                <span className="text-sm" style={lucaShellSecondaryTextStyle}>{row}</span>
+                <span className="text-sm" style={lucaMaterialSecondaryTextStyle}>{row}</span>
               </div>
             ))}
           </div>

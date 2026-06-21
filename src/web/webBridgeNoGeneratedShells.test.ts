@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-const { readFileSync } = process.getBuiltinModule("node:fs");
+const { existsSync, readFileSync } = process.getBuiltinModule("node:fs");
 
 const read = (path: string) => readFileSync(path, "utf8");
 
@@ -9,6 +9,7 @@ const webChatSurface = read("src/web/chat/WebChatSurface.tsx");
 const webVoiceSurface = read("src/web/voice/WebVoiceOnboardingSurface.tsx");
 const webReadyState = read("src/web/WebReadyState.tsx");
 const webLifecycleShell = read("src/web/WebLifecycleShell.tsx");
+const webOnboardingRuntime = read("src/web/adapters/webOnboardingRuntime.tsx");
 const lucaChatSurface = read("src/components/chat/LucaChatSurface.tsx");
 const voiceHudSurface = read("src/components/voice/VoiceHudSurface.tsx");
 
@@ -107,6 +108,15 @@ describe("WebBridge generated shell eradication audit", () => {
     expect(voiceHudSurface).not.toContain("WAITING FOR AUDIO INPUT");
     expect(voiceHudSurface).not.toContain("MICROPHONE UNAVAILABLE");
     expect(voiceHudSurface).not.toContain("Voice Status:");
+  });
+
+  it("removes regenerated onboarding fallback surfaces from normal onboarding", () => {
+    expect(webLifecycleShell).toContain("<OnboardingFlow");
+    expect(webOnboardingRuntime).toContain("OnboardingConversationSurface");
+    expect(webOnboardingRuntime).not.toContain("WebSafeConversationalOnboarding");
+    expect(webOnboardingRuntime).not.toContain("WebOnboardingConversation");
+    expect(existsSync("src/web/adapters/WebSafeConversationalOnboarding.tsx")).toBe(false);
+    expect(existsSync("src/web/adapters/WebOnboardingConversation.tsx")).toBe(false);
   });
 
   it("keeps WebBridge presentation files as thin shared-surface adapters", () => {

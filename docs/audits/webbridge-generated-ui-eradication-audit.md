@@ -17,9 +17,9 @@ WebBridge remains a browser host/runtime/state/route adapter. Normal product pre
 | `src/web/WebCapabilityPanel.tsx`                       | diagnostics/capability panel     | Contains capability/runtime wording.                        | Treat as debug/diagnostic-only; not mounted in normal lifecycle.                                                                               | Add explicit route-level debug gate if reintroduced.                                                     |
 | `src/web/chat/WebChatSurface.tsx`                      | thin chat runtime adapter        | Must not own chat presentation.                             | Confirmed it renders `LucaChatSurface` and only maps runtime state/props.                                                                      | None.                                                                                                    |
 | `src/web/voice/WebVoiceOnboardingSurface.tsx`          | thin voice onboarding adapter    | Must not regenerate a voice UI.                             | Confirmed it renders `VoiceHudSurface` and owns only microphone/typed fallback state.                                                          | None.                                                                                                    |
-| `src/web/adapters/webOnboardingRuntime.tsx`            | onboarding runtime adapter       | Must not select regenerated onboarding UI.                  | Main lifecycle mounts canonical `OnboardingFlow`; runtime still provides browser conversation component hooks.                                 | Follow-up: replace text conversation hook with a browser-safe extracted onboarding conversation surface. |
-| `src/web/adapters/WebSafeConversationalOnboarding.tsx` | onboarding conversation fallback | Regenerated browser-only conversation screen.               | Classified as still-needs-follow-up and covered by audit policy; should be replaced with shared onboarding conversation primitives.            | Blocking follow-up if used in normal text onboarding path.                                               |
-| `src/web/adapters/WebOnboardingConversation.tsx`       | legacy onboarding fallback       | Regenerated browser-only prompt card.                       | Classified as obsolete; not used by `webOnboardingRuntime`.                                                                                    | Delete in follow-up after confirming no downstream imports.                                              |
+| `src/web/adapters/webOnboardingRuntime.tsx`            | onboarding runtime adapter       | Must not select regenerated onboarding UI.                  | Main lifecycle mounts canonical `OnboardingFlow`; text onboarding now resolves to shared `OnboardingConversationSurface`; voice resolves to the voice adapter. | None. |
+| `src/web/adapters/WebSafeConversationalOnboarding.tsx` | deleted                          | Regenerated browser-only conversation screen.               | Deleted after replacing the normal text onboarding hook with `src/components/Onboarding/OnboardingConversationSurface.tsx`.                    | None.                                                                                                    |
+| `src/web/adapters/WebOnboardingConversation.tsx`       | deleted                          | Regenerated browser-only prompt card.                       | Deleted after confirming no production downstream imports remain.                                                                              | None.                                                                                                    |
 | `src/web/postBoot/WebPostBootLoading.tsx`              | post-boot loading visual         | Could drift into browser product chrome.                    | Keep as product-native loading visual without WebBridge copy.                                                                                  | None.                                                                                                    |
 | `src/web/postBoot/WebPostBootTransition.tsx`           | post-boot transition visual      | Could expose runtime/debug wording.                         | Keep as LucaOS presence transition; existing tests prevent WebBridge/browser-safe wording.                                                     | None.                                                                                                    |
 
@@ -36,6 +36,7 @@ WebBridge remains a browser host/runtime/state/route adapter. Normal product pre
 - `src/components/chat/LucaChatSurface.tsx`
 - `src/components/voice/VoiceHudSurface.tsx`
 - `src/components/Onboarding/OnboardingFlow.tsx`
+- `src/components/Onboarding/OnboardingConversationSurface.tsx`
 
 ## Chat extraction cleanup
 
@@ -43,6 +44,4 @@ WebBridge remains a browser host/runtime/state/route adapter. Normal product pre
 
 ## Remaining parity follow-ups
 
-1. Extract a browser-safe original onboarding conversation surface under `src/components/Onboarding/**` and replace `WebSafeConversationalOnboarding`.
-2. Delete `WebOnboardingConversation` after confirming no external import paths remain.
-3. Move the debug-gated readiness card to a shared readiness surface if it becomes part of normal product flow.
+1. Move the debug-gated readiness card to a shared readiness surface if it becomes part of normal product flow.
