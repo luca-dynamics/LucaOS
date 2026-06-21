@@ -2,6 +2,11 @@ import React from "react";
 import { Icon } from "../ui/Icon";
 import { motion, AnimatePresence } from "framer-motion";
 import { getThemeColors } from "../../config/themeColors";
+import {
+  LUCA_SHELL_BORDER_SUBTLE,
+  LUCA_SHELL_SHADOW_SOFT,
+  LUCA_SHELL_SURFACE_BACKGROUND,
+} from "../../styles/lucaShellStyles";
 
 interface FloatingPanelProps {
   onClose: () => void;
@@ -46,11 +51,9 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
           theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"
         }`}
         style={{
-          borderColor: `${theme.hex}44`,
-          background:
-            theme.themeName?.toLowerCase() === "lucagent"
-              ? "rgba(255, 255, 255, 0.5)"
-              : "rgba(0, 0, 0, 0.4)",
+          borderColor: LUCA_SHELL_BORDER_SUBTLE,
+          background: LUCA_SHELL_SURFACE_BACKGROUND,
+          boxShadow: LUCA_SHELL_SHADOW_SOFT,
           resize: "both",
           minWidth: "300px",
           minHeight: "400px",
@@ -76,7 +79,7 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={onReattach}
-              className="p-1 hover:bg-white/10 rounded transition-colors group"
+              className="p-1 hover:bg-[var(--luca-surface-hover)] rounded transition-colors group"
               title="Re-attach to Main Layout"
             >
               <Icon

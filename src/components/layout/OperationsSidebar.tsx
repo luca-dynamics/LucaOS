@@ -20,6 +20,7 @@ import {
   lucaMobileMutedTextStyle,
   lucaMobilePanelSurfaceStyle,
 } from "../../styles/lucaMobileShellStyles";
+import { lucaShellPanelSurfaceStyle } from "../../styles/lucaShellStyles";
 import { apiUrl } from "../../config/api";
 import { readCurrentWebAccessPolicy } from "../../config/webAccessPolicy";
 import {
@@ -338,15 +339,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           : "flex"
       } flex-col h-full overflow-hidden z-10 rounded-lg ${isMobile ? "" : "glass-blur"}`}
       style={
-        isMobile
-          ? lucaMobilePanelSurfaceStyle
-          : {
-              backgroundColor: isLight
-                ? isLightCream
-                  ? "rgba(229, 225, 205, var(--app-bg-opacity, 0.5))"
-                  : "rgba(255, 255, 255, var(--app-bg-opacity, 0.5))"
-                : "rgba(0, 0, 0, var(--app-bg-opacity, 0.5))",
-            }
+        isMobile ? lucaMobilePanelSurfaceStyle : lucaShellPanelSurfaceStyle
       }
     >
       {/* Mobile Header for System Panel */}

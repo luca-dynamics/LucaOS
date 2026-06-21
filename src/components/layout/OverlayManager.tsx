@@ -20,6 +20,11 @@ import SharedOverlayPanels from "../../surfaces/shared/SharedOverlayPanels";
 import { useRealtimeVoiceHudState } from "../../services/voice/useRealtimeVoiceHudState";
 import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
+import {
+  LUCA_SHELL_BORDER_SUBTLE,
+  LUCA_SHELL_SURFACE_BACKGROUND,
+  LUCA_SHELL_TEXT_PRIMARY,
+} from "../../styles/lucaShellStyles";
 
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
@@ -472,10 +477,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
         <div
           className={`absolute inset-0 z-[2000] flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto transition-all duration-700 glass-blur[20px]`}
           style={{
-            background:
-              theme.themeName?.toLowerCase() === "lucagent"
-                ? "rgba(255, 255, 255, 0.9)"
-                : "rgba(0, 0, 0, 0.85)",
+            background: LUCA_SHELL_SURFACE_BACKGROUND,
+            color: LUCA_SHELL_TEXT_PRIMARY,
           }}
         >
           <div
@@ -488,8 +491,8 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
             SYSTEM REBOOT
           </div>
           <div
-            className="w-64 h-2 bg-gray-900/50 rounded overflow-hidden border"
-            style={{ borderColor: `${theme.hex}33` }}
+            className="w-64 h-2 bg-[var(--luca-surface-hover)] rounded overflow-hidden border"
+            style={{ borderColor: LUCA_SHELL_BORDER_SUBTLE }}
           >
             <div
               className="h-full animate-[loading_1.5s_ease-in-out_infinite]"
