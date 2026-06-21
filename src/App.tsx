@@ -155,6 +155,7 @@ import {
   lucaMobilePanelSurfaceStyle,
 } from "./styles/lucaMobileShellStyles";
 import { resolveLucaPlatformBackgroundPolicy } from "./styles/lucaPlatformBackgroundPolicy";
+import { resolveLucaMaterialHostPolicy } from "./styles/lucaMaterialSettings";
 import { readCurrentWebAccessPolicy } from "./config/webAccessPolicy";
 import {
   resolveBrowserSafeBootState,
@@ -520,6 +521,11 @@ function AppContent() {
         backgroundBlur: blur,
         fontScale,
         fontFamily,
+        hostPolicy: resolveLucaMaterialHostPolicy({
+          isMobileViewport: isMobile,
+          isNativeMobile: isCapacitor,
+          isDesktopNative: isElectron,
+        }),
       });
       applyLucaAppearanceCssVariables(
         document.documentElement,

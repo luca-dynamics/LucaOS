@@ -144,3 +144,58 @@ under `src/components/ui/luca/`.
   change: the error count is identical (113) with and without this PR's edits,
   and none reference the material engine, primitives, or migrated files.
   `npm run build:web` (which uses `tsconfig.web.json`) passes.
+
+## Material settings wiring follow-up
+
+Date: 2026-06-21
+
+### Files changed
+
+| File | Change |
+| --- | --- |
+| `src/styles/lucaMaterialSettings.ts` | New — host kind/policy types, `resolveLucaMaterialHostPolicy`, `getLucaMaterialCssVariables` |
+| `src/config/lucaAppearanceTokens.ts` | Extended `buildLucaAppearanceCssVariableState` to accept `hostPolicy` and write `--luca-material-*` vars |
+| `src/App.tsx` | Minimal: import `resolveLucaMaterialHostPolicy`, pass `hostPolicy` to `buildLucaAppearanceCssVariableState` |
+| `src/components/settings/SettingsGeneralTab.tsx` | Extended opacity/blur slider `onChange` to immediately set `--luca-material-opacity`, `--luca-material-tint-strength`, `--luca-material-blur` |
+| `docs/luca-material-system.md` | Added Settings wiring section and host policy table |
+
+### Settings wired
+
+- `general.backgroundOpacity` → `--luca-material-opacity` (raw value)
+- `general.backgroundOpacity` → `--luca-material-tint-strength = 1` (explicit, prevents double-apply)
+- `general.backgroundBlur` → `--luca-material-blur` (capped per host policy)
+- `reducedTransparency` → `--luca-material-blur = 0px`
+- `highContrast` → handled upstream in token; `--luca-material-border-strength = 1`
+
+### Host policies confirmed
+
+| Host | Liquid BG | Component glass | Blur cap |
+| --- | --- | --- | --- |
+| `desktop-app` | yes | yes | 120 px (full) |
+| `mobile-app` | no | yes | 20 px (reduced) |
+| `desktop-web` | no | yes | 20 px (reduced) |
+| `mobile-web` | no | yes | 20 px (reduced) |
+
+Liquid background remains host-dependent. Luca Material component glass (panels,
+sheets, sidebars, overlays) is cross-host with safe fallbacks.
+
+### Validation result
+
+- `npm run build:web` passes.
+- `npm run type-check` fails with the same 113 pre-existing errors in
+  `src/services/` test fixtures (unrelated to this change). No new errors.
+- Surfaces validated: `FloatingPanel`, `OperationsSidebar`, `OverlayManager` reboot
+  overlay, `PanelResizer`, `ChatPanel` wrappers, `ChatWidgetInput`, `WebReadyState`,
+  `WebPostBootTransition`, `WebPostBootLoading` — all route through
+  `buildLucaAppearanceCssVariableState`, so material variables update system-wide on
+  any settings change.
+
+### Known follow-up items
+
+- Add UI controls for `reducedTransparency` and `highContrast` in Settings Appearance.
+- Add a liquid-intensity slider that writes `--luca-material-tint-strength` directly
+  (currently locked to 1; a dedicated slider bypasses the double-apply issue).
+- Consider a tighter blur cap for `mobile-web` (currently 20 px, may lower to 12 px
+  after real-device profiling).
+- Migrate remaining default/basic panels (settings, right-panel operation centers,
+  dashboard cards) to Luca Material roles.

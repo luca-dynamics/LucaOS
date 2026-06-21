@@ -1,4 +1,8 @@
 import { getDynamicContrast } from "./themeColors";
+import {
+  getLucaMaterialCssVariables,
+  type LucaMaterialHostPolicy,
+} from "../styles/lucaMaterialSettings";
 
 export type AppearanceMode = "light" | "dark" | "system";
 export type ResolvedAppearanceMode = "light" | "dark";
@@ -401,6 +405,8 @@ export const buildLucaAppearanceCssVariableState = (
   input: ResolveLucaAppearanceTokensInput & {
     fontScale?: number | null;
     fontFamily?: string | null;
+    /** Material host policy for blur capping and surface glass decisions. */
+    hostPolicy?: LucaMaterialHostPolicy;
   } = {},
 ): LucaAppearanceCssVariableState => {
   const tokens = resolveLucaAppearanceTokens(input);
@@ -428,6 +434,15 @@ export const buildLucaAppearanceCssVariableState = (
       "--app-font-scale": (input.fontScale ?? 1).toString(),
       "--app-font-family": input.fontFamily ?? '"Inter", system-ui, sans-serif',
       ...getLucaAppearanceCssVariables(tokens),
+      ...getLucaMaterialCssVariables(
+        {
+          backgroundOpacity: tokens.backgroundOpacity,
+          backgroundBlur: tokens.backgroundBlur,
+          reducedTransparency: tokens.reducedTransparency,
+          highContrast: tokens.highContrast,
+        },
+        input.hostPolicy,
+      ),
     },
   };
 };

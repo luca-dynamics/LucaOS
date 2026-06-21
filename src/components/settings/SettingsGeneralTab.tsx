@@ -490,6 +490,16 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                       "--app-bg-opacity",
                       val.toString(),
                     );
+                    document.documentElement.style.setProperty(
+                      "--luca-material-opacity",
+                      val.toString(),
+                    );
+                    // Keep tint-strength at 1: opacity is already in the glass
+                    // token so setting this lower would double-apply it.
+                    document.documentElement.style.setProperty(
+                      "--luca-material-tint-strength",
+                      "1",
+                    );
                   }}
                   className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
                   style={{
@@ -516,6 +526,10 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     onUpdate("general", "backgroundBlur", val);
                     document.documentElement.style.setProperty(
                       "--app-bg-blur",
+                      `${val}px`,
+                    );
+                    document.documentElement.style.setProperty(
+                      "--luca-material-blur",
                       `${val}px`,
                     );
                   }}
