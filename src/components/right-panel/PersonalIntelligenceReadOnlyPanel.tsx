@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { lucaMaterialCardStyle } from "../../styles/lucaMaterialSystem";
 import type { LucaExperienceMode } from "../../experience/experienceMode";
 import {
   createPersonalIntelligenceDashboardDisclosure,
@@ -52,13 +53,13 @@ export const PersonalIntelligenceReadOnlyPanel: React.FC<
     >
       <div className="space-y-3" data-testid="personal-intelligence-read-only-panel">
         {fixture && (
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[10px] text-[var(--app-text-muted)]">
+          <div className="flex items-center gap-2 rounded-xl border px-3 py-2 text-[10px] text-[var(--app-text-muted)]" style={lucaMaterialCardStyle}>
             <span aria-hidden="true">●</span>
             Safe fictional preview — no user or project data is being read.
           </div>
         )}
 
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="rounded-xl border p-3" style={lucaMaterialCardStyle}>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--app-text-main)]">
             <span aria-hidden="true">◇</span>
             Continuity
@@ -129,7 +130,7 @@ export const PersonalIntelligenceReadOnlyPanel: React.FC<
             </div>
 
             {disclosure.mode === "creator" && (
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="rounded-xl border p-3" style={lucaMaterialCardStyle}>
                 <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[var(--app-text-muted)]">
                   Safe audit view
                 </div>
@@ -148,7 +149,7 @@ export const PersonalIntelligenceReadOnlyPanel: React.FC<
                   </div>
                 </dl>
                 {Object.entries(disclosure.reviewCountByReason).length > 0 && (
-                  <div className="mt-3 border-t border-white/10 pt-2">
+                  <div className="mt-3 border-t border-[var(--luca-border-subtle)] pt-2">
                     <div className="mb-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--app-text-muted)]">
                       Review reasons
                     </div>
@@ -156,7 +157,7 @@ export const PersonalIntelligenceReadOnlyPanel: React.FC<
                       {Object.entries(disclosure.reviewCountByReason).map(([reason, count]) => (
                         <span
                           key={reason}
-                          className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-[var(--app-text-main)]"
+                          className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[9px] text-[var(--app-text-main)]"
                         >
                           {reviewReasonLabels[reason as PersonalMemoryReviewReason]}: {count}
                         </span>

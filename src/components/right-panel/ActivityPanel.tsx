@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
 import { approvalRequestCenterService } from "../../services/provenance/ApprovalRequestCenterService";
 import { runtimeInboxService } from "../../services/runtime/RuntimeInboxService";
 import { agentSessionContinuityService } from "../../services/runtime/AgentSessionContinuityService";
@@ -175,8 +176,9 @@ const Button: React.FC<{ children: React.ReactNode; onClick: () => void; tone?: 
     className={`rounded-lg border px-2 py-1 text-[9px] font-black uppercase tracking-widest transition-colors ${
       tone === "danger" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" :
       tone === "good" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" :
-      "border-white/10 bg-white/5 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
+      "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
     }`}
+    style={tone === "neutral" ? lucaMaterialMetricStyle : undefined}
   >
     {children}
   </button>
@@ -198,7 +200,7 @@ const getSkillToneBorder = (tone: SkillGovernanceTone): string => {
     case "warn": return "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]";
     case "danger": return "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]";
     case "info": return "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]";
-    case "neutral": return "border-white/10";
+    case "neutral": return "border-[var(--luca-border-subtle)]";
   }
 };
 
@@ -208,7 +210,7 @@ const getSkillToneBg = (tone: SkillGovernanceTone): string => {
     case "warn": return "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]";
     case "danger": return "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]";
     case "info": return "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]";
-    case "neutral": return "bg-black/10";
+    case "neutral": return "bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]";
   }
 };
 
@@ -287,9 +289,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
         <div className="flex items-start gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2" style={{ color: theme.hex }}>
+          <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
             <Icon name="BellRing" size={18} />
           </div>
           <div>
@@ -312,7 +314,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         ) : (
           <div className="space-y-2">
             {pendingApprovals.map((request) => (
-              <div key={request.approvalRequestId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+              <div key={request.approvalRequestId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold text-[var(--app-text-main)]">Needs approval · {request.title}</div>
@@ -342,7 +344,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
               .map((record) => {
                 const blocked = isAndroidNativeOverlayForwardingBlocked(record.status);
                 return (
-                  <div key={record.nativeOverlayForwardingId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={record.nativeOverlayForwardingId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getAndroidNativeOverlayForwardingSourceLabel(record.source)} · {getAndroidNativeOverlayForwardingStatusLabel(record.status)}</div>
@@ -363,7 +365,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {record.blockedBy.join(", ")}</p>
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getAndroidNativeOverlayForwardingBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -389,7 +391,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
               .map((record) => {
                 const blocked = isOriginOverlayCriticalControlBlocked(record.status);
                 return (
-                  <div key={record.originOverlayControlGateRecordId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={record.originOverlayControlGateRecordId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getOriginOverlayCriticalControlIdLabel(record.controlId)} · {getOriginOverlayCriticalControlStatusLabel(record.status)}</div>
@@ -417,7 +419,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getOriginOverlayCriticalControlBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -443,7 +445,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
               .map((record) => {
                 const blocked = isOverlayCaptureGateBlocked(record.status);
                 return (
-                  <div key={record.captureGateRecordId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={record.captureGateRecordId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getOverlayCaptureSurfaceLabel(record.surfaceId)} · {getOverlayCaptureGateStatusLabel(record.status)}</div>
@@ -467,7 +469,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {record.blockedBy.join(", ")}</p>
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getOverlayCaptureGateBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -493,7 +495,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
               .map((record) => {
                 const blocked = isOverlayApprovalResolutionBlocked(record.status);
                 return (
-                  <div key={record.approvalResolutionId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : record.status === "resolved" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={record.approvalResolutionId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : record.status === "resolved" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getOverlayApprovalResolutionStatusLabel(record.status)}</div>
@@ -513,7 +515,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     )}
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getOverlayApprovalResolutionBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -557,17 +559,17 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       </span>
                     </div>
                     <div className="mt-2 grid grid-cols-3 gap-1 text-[9px]">
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Surface: {surfaceLabel}</span>
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Surface: {surfaceLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
                     </div>
-                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-2">
+                    <div className="mt-2 rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                       <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Safeguards checklist</div>
                       <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                         {safeguards.map((safeguard) => (
                           <span
                             key={safeguard.key}
-                            className={`rounded-full border px-2 py-0.5 ${safeguard.required ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]" : "border-white/10 text-[var(--app-text-muted)] opacity-60"}`}
+                            className={`rounded-full border px-2 py-0.5 ${safeguard.required ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]" : "border-[var(--luca-border-subtle)] text-[var(--app-text-muted)] opacity-60"}`}
                           >
                             {safeguard.required ? "✓ " : "○ "}{safeguard.label}
                           </span>
@@ -622,18 +624,18 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       </span>
                     </div>
                     <div className="mt-2 grid grid-cols-3 gap-1 text-[9px]">
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Surface: {surfaceLabel}</span>
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Surface: {surfaceLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
                     </div>
                     <p className="mt-2 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">{consentLabel}</p>
-                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-2">
+                    <div className="mt-2 rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                       <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Safeguards checklist</div>
                       <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                         {safeguards.map((safeguard) => (
                           <span
                             key={safeguard.key}
-                            className={`rounded-full border px-2 py-0.5 ${safeguard.required ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]" : "border-white/10 text-[var(--app-text-muted)] opacity-60"}`}
+                            className={`rounded-full border px-2 py-0.5 ${safeguard.required ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]" : "border-[var(--luca-border-subtle)] text-[var(--app-text-muted)] opacity-60"}`}
                           >
                             {safeguard.required ? "✓ " : "○ "}{safeguard.label}
                           </span>
@@ -643,13 +645,13 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     {request.blockedBy && request.blockedBy.length > 0 && (
                       <p className="mt-2 text-[9px] leading-relaxed text-[var(--luca-danger,#f87171)]">Blocked by: {request.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-2">
+                    <div className="mt-2 rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                       <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Lifecycle</div>
                       <div className="mt-1 flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
                         {getObservationRequestTimeline(request).map((step, index) => (
                           <React.Fragment key={step.key}>
                             {index > 0 && <span className="text-[var(--app-text-muted)] opacity-40">→</span>}
-                            <span className={`rounded-full border px-2 py-0.5 ${step.state === "current" ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]" : "border-white/10 text-[var(--app-text-muted)]"}`}>
+                            <span className={`rounded-full border px-2 py-0.5 ${step.state === "current" ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]" : "border-[var(--luca-border-subtle)] text-[var(--app-text-muted)]"}`}>
                               {step.label}{step.at ? ` · ${compactTimestamp(step.at)}` : ""}
                             </span>
                           </React.Fragment>
@@ -678,13 +680,13 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{getScreenObservationSummary(session)}</p>
                       {session.requestId && <p className="mt-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Linked request: {session.requestId}</p>}
                     </div>
-                    <span className="shrink-0 rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getObservationSessionNoCaptureBadge()}</span>
+                    <span className="shrink-0 rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getObservationSessionNoCaptureBadge()}</span>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
                     {getObservationSessionTimeline(session).map((step, index) => (
                       <React.Fragment key={step.key}>
                         {index > 0 && <span className="text-[var(--app-text-muted)] opacity-40">→</span>}
-                        <span className={`rounded-full border px-2 py-0.5 ${step.state === "current" ? "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] text-[var(--luca-info,#4f8cff)]" : "border-white/10 text-[var(--app-text-muted)]"}`}>
+                        <span className={`rounded-full border px-2 py-0.5 ${step.state === "current" ? "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] text-[var(--luca-info,#4f8cff)]" : "border-[var(--luca-border-subtle)] text-[var(--app-text-muted)]"}`}>
                           {step.label}{step.at ? ` · ${compactTimestamp(step.at)}` : ""}
                         </span>
                       </React.Fragment>
@@ -741,21 +743,21 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       </span>
                     </div>
                     <div className="mt-2 grid grid-cols-3 gap-1 text-[9px]">
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Surface: {surfaceLabel}</span>
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Surface: {surfaceLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
                     </div>
                     <div className="mt-1 flex flex-wrap gap-1 text-[9px]">
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Navigation: {navigationRiskLabel}</span>
-                      <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">{credentialBoundaryLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Navigation: {navigationRiskLabel}</span>
+                      <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">{credentialBoundaryLabel}</span>
                     </div>
-                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-2">
+                    <div className="mt-2 rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                       <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Safeguards checklist</div>
                       <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                         {safeguards.map((safeguard) => (
                           <span
                             key={safeguard.key}
-                            className={`rounded-full border px-2 py-0.5 ${safeguard.required ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]" : "border-white/10 text-[var(--app-text-muted)] opacity-60"}`}
+                            className={`rounded-full border px-2 py-0.5 ${safeguard.required ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]" : "border-[var(--luca-border-subtle)] text-[var(--app-text-muted)] opacity-60"}`}
                           >
                             {safeguard.required ? "✓ " : "○ "}{safeguard.label}
                           </span>
@@ -787,12 +789,12 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{getSandboxedBrowserSummary(session)}</p>
                       {session.requestId && <p className="mt-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Linked request: {session.requestId}</p>}
                     </div>
-                    <span className="shrink-0 rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">No launch · no automation</span>
+                    <span className="shrink-0 rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">No launch · no automation</span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1 text-[9px]">
-                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Surface: {getSandboxedBrowserSurfaceLabel(session.surface)}</span>
-                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Capability: {getSandboxedBrowserCapabilityLabel(session.capability)}</span>
-                    <span className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-muted)]">Navigation: {getSandboxedBrowserNavigationRiskLabel(session.navigationRisk)}</span>
+                    <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Surface: {getSandboxedBrowserSurfaceLabel(session.surface)}</span>
+                    <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Capability: {getSandboxedBrowserCapabilityLabel(session.capability)}</span>
+                    <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Navigation: {getSandboxedBrowserNavigationRiskLabel(session.navigationRisk)}</span>
                   </div>
                   <p className="mt-2 text-[9px] leading-relaxed text-[var(--app-text-muted)]">Dry-run browser permission session only. No browser is launched, automated, read, or controlled.</p>
                   {session.status !== "revoked" && (
@@ -842,13 +844,13 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                           {session.metadata.adapter === "luca_browser_webview" ? "Luca Browser" : "Iframe fallback"}
                         </span>
                       )}
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">Nav events {navs.length}</span>
+                      <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[var(--app-text-muted)]">Nav events {navs.length}</span>
                       {blockedNavs.length > 0 && (
                         <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-2 py-0.5 text-[var(--luca-danger,#f87171)]">Blocked nav {blockedNavs.length}</span>
                       )}
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No automation</span>
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No DOM read</span>
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[var(--app-text-muted)]">No credentials</span>
+                      <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[var(--app-text-muted)]">No automation</span>
+                      <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[var(--app-text-muted)]">No DOM read</span>
+                      <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[var(--app-text-muted)]">No credentials</span>
                     </div>
                     {lastNav && (
                       <p className="mt-2 truncate font-mono text-[9px] text-[var(--app-text-muted)] opacity-80">last nav: {lastNav.toAuditUrl}</p>
@@ -857,9 +859,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <div className="mt-2 rounded-lg border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] p-2">
                         <div className="flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
                           <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] px-2 py-0.5 text-[var(--luca-info,#4f8cff)]">obs: {observation.status}</span>
-                          <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{observation.isLoading ? "loading" : "idle"}</span>
-                          <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">back {observation.canGoBack ? "yes" : "no"}</span>
-                          <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">fwd {observation.canGoForward ? "yes" : "no"}</span>
+                          <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{observation.isLoading ? "loading" : "idle"}</span>
+                          <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">back {observation.canGoBack ? "yes" : "no"}</span>
+                          <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">fwd {observation.canGoForward ? "yes" : "no"}</span>
                         </div>
                         {observation.currentAuditUrl && (
                           <p className="mt-1 truncate font-mono text-[9px] text-[var(--app-text-muted)] opacity-80">current: {observation.currentAuditUrl}</p>
@@ -937,10 +939,10 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     )}
                     <p className="mt-1 text-[9px] italic text-[var(--app-text-muted)] opacity-80">{getLucaBrowserActionNextAction(action)}</p>
                     <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">No execution</span>
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">No DOM read</span>
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">No screenshot/OCR</span>
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">No credentials</span>
+                      <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5">No execution</span>
+                      <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5">No DOM read</span>
+                      <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5">No screenshot/OCR</span>
+                      <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5">No credentials</span>
                     </div>
                     <p className="mt-1 text-[9px] italic text-[var(--app-text-muted)] opacity-70">{getLucaBrowserActionNoExecutionText()}</p>
                     {(isWaiting || isConfirmed) && (
@@ -981,7 +983,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 const active = session.status === "open" || session.status === "open_requested";
                 const closedOrGone = session.status === "closed" || session.status === "revoked";
                 return (
-                  <div key={session.visualSessionId} className={`rounded-xl border p-2 ${blocked || session.status === "revoked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : session.status === "open" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={session.visualSessionId} className={`rounded-xl border p-2 ${blocked || session.status === "revoked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : session.status === "open" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{session.mode} · {session.status}</div>
@@ -1001,7 +1003,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     )}
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getVisualCoreDisplayGovernanceBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     {!blocked && (
@@ -1030,7 +1032,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
               .map((session) => {
                 const blocked = isOverlaySessionBlocked(session.status);
                 return (
-                  <div key={session.overlaySessionId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : session.status === "open" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={session.overlaySessionId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : session.status === "open" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{session.label} · {getOverlaySessionStatusLabel(session.status)}</div>
@@ -1051,7 +1053,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     )}
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getOverlaySessionBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -1078,7 +1080,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 const blocked = command.status === "blocked";
                 const needsApproval = command.status === "needs_approval";
                 return (
-                  <div key={command.commandRecordId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : needsApproval ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]" : command.status === "allowed_record_only" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={command.commandRecordId} className={`rounded-xl border p-2 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : needsApproval ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]" : command.status === "allowed_record_only" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{command.kind} · {command.status}</div>
@@ -1100,7 +1102,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     )}
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getVisualCoreRemoteCommandBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -1152,7 +1154,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     )}
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getVisualCoreModeTransitionBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -1179,7 +1181,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
           return (
             <div className="space-y-2">
               {pending.map((proposal) => (
-                <div key={proposal.proposalId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                <div key={proposal.proposalId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">Memory proposed · {proposal.title}</div>
                   <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{proposal.summary}</p>
                   <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]">{proposal.kind} · {proposal.riskLevel} · approving does not write</p>
@@ -1208,13 +1210,13 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 );
               })}
               {written.map((proposal) => (
-                <div key={proposal.proposalId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                <div key={proposal.proposalId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">Memory saved · {proposal.title}</div>
                   <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]">written with provenance</p>
                 </div>
               ))}
               {rejectedOrBlocked.map((proposal) => (
-                <div key={proposal.proposalId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                <div key={proposal.proposalId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">{proposal.status === "blocked" ? "Blocked for safety" : "Rejected"} · {proposal.title}</div>
                   {proposal.blockedBy && proposal.blockedBy.length > 0 && <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-danger,#f87171)]">{proposal.blockedBy.join(", ")}</p>}
                 </div>
@@ -1241,16 +1243,16 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <span className="font-bold text-[var(--app-text-main)]">· {request.skillName}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-1.5 text-[9px] font-bold uppercase tracking-widest">
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[var(--app-text-muted)]">{getSkillRequestTypeLabel(request.requestType)}</span>
+                  <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-0.5 text-[var(--app-text-muted)]">{getSkillRequestTypeLabel(request.requestType)}</span>
                   <span className={`rounded-full border px-2 py-0.5 ${getSkillToneBorder(riskTone)} ${getSkillToneColor(riskTone)}`}>{getSkillRiskLabel(request.riskLevel)}</span>
                   <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-0.5 text-[var(--luca-info,#4f8cff)]">State-only</span>
                 </div>
                 <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.description}</p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {request.requestedCapabilities.length === 0 ? (
-                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[9px] text-[var(--app-text-muted)]">No capabilities requested</span>
+                    <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[9px] text-[var(--app-text-muted)]">No capabilities requested</span>
                   ) : request.requestedCapabilities.map((capability) => (
-                    <span key={capability} className="rounded-full border border-white/10 bg-black/10 px-2 py-0.5 text-[9px] text-[var(--app-text-muted)]">
+                    <span key={capability} className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-0.5 text-[9px] text-[var(--app-text-muted)]">
                       {getSkillCapabilityLabel(capability)}
                     </span>
                   ))}
@@ -1410,7 +1412,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         {unreadInbox.length === 0 ? (
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No unread runtime inbox events.</div>
         ) : unreadInbox.slice(0, 6).map((event) => (
-          <div key={event.inboxEventId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2">
+          <div key={event.inboxEventId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
             <div className="text-[10px] font-bold text-[var(--app-text-main)]">{event.title}</div>
             <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{event.body}</p>
             <div className="mt-2 flex gap-2">
@@ -1500,13 +1502,13 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 </div>
               ))}
               {alreadyDone.map(({ request }) => (
-                <div key={request.requestId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                <div key={request.requestId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">Already executed · {request.title}</div>
                   <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">completed</p>
                 </div>
               ))}
               {executed.filter((ex) => !canExecResults.some((c) => c.request.requestId === ex.requestId)).map((execution) => (
-                <div key={execution.executionId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                <div key={execution.executionId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">Executed · {execution.title}</div>
                   <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]">succeeded · {execution.capability}</p>
                 </div>
@@ -1520,7 +1522,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         {waitingRequests.length === 0 ? (
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No governed action requests waiting.</div>
         ) : waitingRequests.map((request) => (
-          <div key={request.requestId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2">
+          <div key={request.requestId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
             <div className="text-[10px] font-bold text-[var(--app-text-main)]">Action request is waiting · {request.title}</div>
             <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{request.description}</p>
             <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]">{request.kind} · {request.status} · dry-run request</p>
@@ -1536,7 +1538,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         {data.dueJobs.length === 0 ? (
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No due scheduler observations.</div>
         ) : data.dueJobs.slice(0, 6).map((job) => (
-          <div key={job.jobId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+          <div key={job.jobId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{job.title}</div>
             <div>{job.userSafeReason}</div>
             {job.blockedBy.length > 0 && <div className="mt-1 text-[var(--luca-danger,#f87171)]">Blocked for safety: {job.blockedBy.join(", ")}</div>}

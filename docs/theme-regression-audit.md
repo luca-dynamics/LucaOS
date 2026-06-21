@@ -264,3 +264,71 @@ byte-identical; blur now host-policy aware via `--luca-material-blur`):
   buttons, and tab strip.
 - Settings tab cards already use the shared `settingsLayoutStyles` token system;
   revisit only if a primitive adds clear value.
+
+## Flat card material migration
+
+Date: 2026-06-21
+
+### Search patterns used
+
+- `bg-white/[0.03]`, `bg-white/[0.04]`, `bg-white/[0.045]`, `bg-white/5`
+- `bg-black/10`, `bg-black/20`
+- `border-white/10`, `border-white/[0.07]`, `border-white/15`
+- `shadow-[0_24px_70px_rgba(0,0,0,0.25)]`, `backdrop-blur-2xl`
+- `text-white`, `text-white/45`, `text-white/55`, `text-white/70`, `text-white/90`
+
+### Files inspected
+
+- `src/styles/lucaMaterialSystem.ts`
+- `src/components/right-panel/RightPanelSection.tsx`
+- `src/components/right-panel/RightPanelMetric.tsx`
+- `src/components/right-panel/ActivityPanel.tsx`
+- `src/components/right-panel/ControlPanel.tsx`
+- `src/components/right-panel/MemoryControlPanel.tsx`
+- `src/components/right-panel/TraceLogsPanel.tsx`
+- `src/components/right-panel/OperationPermissionCenter.tsx`
+- `src/components/right-panel/PersonalIntelligenceReadOnlyPanel.tsx`
+- `src/components/right-panel/PersonalIntelligenceReviewWorkflowPanel.tsx`
+- `src/web/WebCapabilityPanel.tsx`
+
+### Classes replaced
+
+Default/basic card wrappers moved from hardcoded low-alpha white/black utility
+classes to `lucaMaterialCardStyle`, `lucaMaterialMetricStyle`, or
+`lucaMaterialWebCardStyle`. Web capability title, muted text, dividers, neutral
+status badges, and nested cards now use Luca text, border, and flat material
+roles instead of hardcoded `text-white/*`, `border-white/*`, `bg-white/*`, and
+`bg-black/*` chrome.
+
+### Default/basic card surfaces migrated
+
+- Shared right-panel section wrapper and neutral metric wrapper.
+- Top-level default/basic cards in Activity, Control, Memory, Trace Logs, and
+  Personal Intelligence review/read-only panels.
+- Operation Permission Center neutral/default cards and metric rows.
+- Neutral right-panel chips, default conditional branches, and tokenized borders
+  where the existing low-alpha visual weight was preserved.
+- Browser-safe Web Capability panel shell, nested capability cards, neutral
+  status badges with explicit secondary/tertiary color overrides, and text/divider chrome.
+
+### Semantic/tactical surfaces intentionally left
+
+Semantic success/warning/danger/info surfaces that already use Luca status tokens
+were left unchanged. Tactical/debug visuals, modal scrims, and advanced visual
+components remained out of scope. Numerous runtime record rows still contain
+conditional semantic state branches; only obvious neutral/default wrappers were
+migrated in this pass to keep the PR reviewable.
+
+### Build results
+
+- `npm install --ignore-scripts`: completed.
+- `npm run build:web`: see PR validation notes.
+- `npm run build`: see PR validation notes.
+- `npm run type-check`: see PR validation notes.
+
+### Known follow-ups
+
+- Continue migrating remaining neutral conditional record rows to flat card
+  helpers where each branch can preserve semantic state without widening scope.
+- Consider a shared neutral-chip component once more right-panel chips are moved
+  off hardcoded white/black utility classes.

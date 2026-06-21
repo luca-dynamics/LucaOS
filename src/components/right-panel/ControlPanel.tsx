@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
 import type { CalendarEvent, Goal, Task } from "../../types";
 import type { RuntimeDiagnostics } from "../../services/runtime/RuntimeDiagnosticsService";
 import { runtimeDiagnosticsService } from "../../services/runtime/RuntimeDiagnosticsService";
@@ -115,9 +116,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
         <div className="flex items-start gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2" style={{ color: theme.hex }}>
+          <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
             <Icon name="Activity" size={18} />
           </div>
           <div className="min-w-0">
@@ -141,11 +142,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
 
       <RightPanelSection title="Runtime routes" subtitle="Current model and memory readiness summaries.">
         <div className="space-y-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
-          <div className="rounded-xl border border-white/10 bg-black/10 p-2">
+          <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
             <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Model</span>
             <div>{diagnostics?.routes.chat.label ?? "Model route loading"} · {diagnostics?.routes.chat.readiness ?? "unknown"}</div>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/10 p-2">
+          <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
             <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Memory</span>
             <div>{diagnostics?.memory.label ?? "Memory route loading"} · {diagnostics?.memory.readiness ?? "unknown"}</div>
           </div>
@@ -197,7 +198,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Gateway research mode</span>
-            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Control disabled</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Control disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
             Gateway control is disabled. Luca can only record blocked/dry-run requests while the permission model is being designed.
@@ -206,11 +207,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
             Future permissions not yet enabled
           </p>
           <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Approval</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Sandbox</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Human confirmation</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Credential boundary</span>
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">Audit log</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">Approval</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">Sandbox</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">Human confirmation</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">Credential boundary</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">Audit log</span>
           </div>
           <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getGatewayNoExecutionText()}</p>
         </div>
@@ -304,7 +305,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Screen observation permission mode</span>
-            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Capture disabled</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Capture disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
             Screen observation is permission-mode only. Luca cannot capture, view, OCR, store, or analyze your screen.
@@ -335,7 +336,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Sandboxed browser research mode</span>
-            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Launch disabled</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Launch disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
             Sandboxed browser is research-mode only. Luca cannot launch, read, click, type, submit, scrape, download, upload, or automate a browser.

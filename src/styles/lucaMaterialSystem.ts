@@ -80,6 +80,18 @@ const MATERIAL_BORDER_STRENGTH = "var(--luca-material-border-strength, 1)";
  * default render matches the legacy shell surface exactly; a future opacity /
  * tint slider lowers the percentage to thin the material.
  */
+
+const MATERIAL_FLAT_CARD_TINT_STRENGTH =
+  "calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 45%)";
+const MATERIAL_METRIC_TINT_STRENGTH =
+  "calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 34%)";
+const MATERIAL_WEB_CARD_TINT_STRENGTH =
+  "calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 52%)";
+
+export const LUCA_MATERIAL_FLAT_CARD_SURFACE = `var(--luca-material-card-surface, color-mix(in srgb, var(--luca-surface-glass, ${LUCA_SHELL_SURFACE_BACKGROUND}) ${MATERIAL_FLAT_CARD_TINT_STRENGTH}, transparent))`;
+export const LUCA_MATERIAL_METRIC_SURFACE = `var(--luca-material-metric-surface, color-mix(in srgb, var(--luca-surface-glass, ${LUCA_SHELL_SURFACE_BACKGROUND}) ${MATERIAL_METRIC_TINT_STRENGTH}, transparent))`;
+export const LUCA_MATERIAL_WEB_CARD_SURFACE = `var(--luca-material-web-card-surface, color-mix(in srgb, var(--luca-surface-glass, ${LUCA_SHELL_SURFACE_BACKGROUND}) ${MATERIAL_WEB_CARD_TINT_STRENGTH}, var(--luca-surface-solid, transparent)))`;
+
 export const LUCA_MATERIAL_SURFACE = `var(--luca-material-surface, color-mix(in srgb, ${LUCA_SHELL_SURFACE_BACKGROUND} calc(${MATERIAL_TINT_STRENGTH} * 100%), transparent))`;
 export const LUCA_MATERIAL_SURFACE_SOLID = `var(--luca-material-surface-solid, var(--luca-surface-solid, ${LUCA_SHELL_SURFACE_BACKGROUND}))`;
 export const LUCA_MATERIAL_SURFACE_HOVER = `var(--luca-material-surface-hover, ${LUCA_SHELL_HOVER_BACKGROUND})`;
@@ -129,6 +141,31 @@ export const lucaMaterialFloatingPanelStyle: CSSProperties = {
   background: LUCA_MATERIAL_SURFACE,
   borderColor: LUCA_MATERIAL_BORDER,
   boxShadow: LUCA_MATERIAL_SHADOW,
+};
+
+
+/** Flat card / section surface — low-alpha, no elevation, no forced panel blur. */
+export const lucaMaterialCardStyle: CSSProperties = {
+  background: LUCA_MATERIAL_FLAT_CARD_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: "var(--luca-material-card-shadow, none)",
+};
+
+/** Compact metric/chip surface — lighter than cards and never elevated. */
+export const lucaMaterialMetricStyle: CSSProperties = {
+  background: LUCA_MATERIAL_METRIC_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: "none",
+};
+
+/** Browser-safe card surface — flat tint with no native/liquid assumptions. */
+export const lucaMaterialWebCardStyle: CSSProperties = {
+  background: LUCA_MATERIAL_WEB_CARD_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: "var(--luca-material-web-card-shadow, 0 18px 50px color-mix(in srgb, black 14%, transparent))",
 };
 
 /** Sidebar / rail surface (matches the default desktop panel material). */
@@ -233,6 +270,9 @@ export const lucaMaterialRoles = {
   root: lucaMaterialRootStyle,
   panel: lucaMaterialPanelStyle,
   floatingPanel: lucaMaterialFloatingPanelStyle,
+  card: lucaMaterialCardStyle,
+  metric: lucaMaterialMetricStyle,
+  webCard: lucaMaterialWebCardStyle,
   sidebar: lucaMaterialSidebarStyle,
   sheet: lucaMaterialSheetStyle,
   popover: lucaMaterialPopoverStyle,
