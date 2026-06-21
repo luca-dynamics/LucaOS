@@ -91,6 +91,7 @@ export function createProviderFactoryShadowSelection(input: LucaProviderFactoryS
     currentRouteMode: input.currentRouteMode,
     taskType: input.taskType,
     requiredCapabilities: input.requiredCapabilities,
+    routePreference: input.routePreference,
     providerHubSelectedProviderId: selection.selectedProviderId ?? null,
     providerHubSelectedModelId: selection.selectedModelId ?? null,
     providerHubEnabled: selection.enabled,
