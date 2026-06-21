@@ -1,21 +1,13 @@
 import modelManagerSource from "./ModelManager.tsx?raw";
 import { describe, expect, it } from "vitest";
 import { createProviderHubRouteDecision } from "../model-router/providerHubRoutePlanner";
+import { createProviderHubRouteRequestFromPolicy, resolveProviderHubTaskRoutePolicy } from "../model-router/providerHubTaskRoutePolicies";
 import { createProviderHubSettingsSnapshots } from "../model-router/providerHubSettingsSnapshot";
 
 describe("ModelManager Provider Hub route preview", () => {
   it("creates a default chat balanced route decision from settings snapshots", () => {
     const snapshots = createProviderHubSettingsSnapshots({ settings: { brain: {}, general: {}, providerHub: {} }, ollamaAvailable: false });
-    const decision = createProviderHubRouteDecision({
-      taskType: "chat",
-      requiredCapabilities: ["text_generation"],
-      preference: "balanced",
-      connectionSnapshots: snapshots,
-      allowFallbacks: true,
-      allowPaidProviders: true,
-      allowLocalProviders: true,
-      allowCloudProviders: true,
-    });
+    const decision = createProviderHubRouteDecision(createProviderHubRouteRequestFromPolicy(resolveProviderHubTaskRoutePolicy({ taskType: "chat" }), { connectionSnapshots: snapshots }));
 
     expect(decision.status).toBe("selected");
     expect(decision.selectedProviderId).toBe("luca_prime");
@@ -27,6 +19,9 @@ describe("ModelManager Provider Hub route preview", () => {
   it("wires preview controls without importing runtime factories or adapters", () => {
     expect(modelManagerSource).toContain("Route Preview");
     expect(modelManagerSource).toContain("createProviderHubRouteDecision");
-    expect(modelManagerSource).not.toMatch(/ProviderFactory|ProviderAdapter/);
+    expect(modelManagerSource).toContain("resolveProviderHubTaskRoutePolicy");
+    expect(modelManagerSource).toContain("createProviderHubRouteRequestFromPolicy");
+    expect(modelManagerSource).not.toContain("getRoutePreviewCapabilities");
+    expect(modelManagerSource).not.toMatch(/from .*ProviderFactory|from .*ProviderAdapter/);
   });
 });

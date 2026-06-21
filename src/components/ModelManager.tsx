@@ -15,6 +15,7 @@ import type { ModelRouteDecision } from "../types/modelRouting";
 import type { LucaModelCapability, LucaModelTaskType } from "../model-router/modelRouterContract";
 import { createProviderHubPanelViewModel, type ProviderHubPanelCardViewModel, type ProviderHubPanelViewModel } from "../model-router/providerHubPanelViewModel";
 import { createProviderHubRouteDecision, type LucaProviderHubRouteDecision, type LucaProviderHubRoutePreference } from "../model-router/providerHubRoutePlanner";
+import { createProviderHubRouteRequestFromPolicy, getProviderHubTaskRoutePolicy, resolveProviderHubTaskRoutePolicy, type LucaProviderHubTaskRoutePolicyResolution } from "../model-router/providerHubTaskRoutePolicies";
 import { getProviderHubEntries, type LucaProviderHubId } from "../model-router/providerHubRegistry";
 import { createProviderHubSettingsSnapshots } from "../model-router/providerHubSettingsSnapshot";
 import { createProviderHubConfigureIntentFromCard, type LucaProviderHubConfigureIntent } from "../model-router/providerHubConfigureIntent";
@@ -129,18 +130,9 @@ const ProviderHubCard: React.FC<{ card: ProviderHubPanelCardViewModel; theme: an
 };
 
 
-const ROUTE_PREVIEW_TASK_TYPES = ["chat", "vision", "memory", "embedding", "code", "tool_planning", "long_context", "fast_reply", "private_local"] as const satisfies readonly LucaModelTaskType[];
+const ROUTE_PREVIEW_TASK_TYPES = ["chat", "vision", "memory", "embedding", "code", "tool_planning", "long_context", "fast_reply", "private_local", "voice_stt", "voice_tts"] as const satisfies readonly LucaModelTaskType[];
 const ROUTE_PREVIEW_PREFERENCES = ["balanced", "managed_first", "local_first", "privacy_first", "lowest_latency", "lowest_cost", "cloud_first"] as const satisfies readonly LucaProviderHubRoutePreference[];
 
-function getRoutePreviewCapabilities(taskType: LucaModelTaskType): readonly LucaModelCapability[] {
-  if (taskType === "vision") return ["vision"];
-  if (taskType === "memory" || taskType === "embedding") return ["embedding"];
-  if (taskType === "code") return ["code_generation"];
-  if (taskType === "tool_planning") return ["tool_calling"];
-  if (taskType === "long_context") return ["long_context"];
-  if (taskType === "private_local") return ["text_generation", "local_only"];
-  return ["text_generation"];
-}
 
 interface RoutePreviewState {
   readonly taskType: LucaModelTaskType;
@@ -160,9 +152,10 @@ const RoutePreviewPanel: React.FC<{
   runtimeRouteSelectionEnabled: boolean;
   onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void;
   preview: RoutePreviewState;
+  policyResolution: LucaProviderHubTaskRoutePolicyResolution;
   onPreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>;
   theme: any;
-}> = ({ decision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, onRuntimeRouteSelectionEnabledChange, preview, onPreviewChange, theme }) => {
+}> = ({ decision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, onRuntimeRouteSelectionEnabledChange, preview, policyResolution, onPreviewChange, theme }) => {
   const copyRouteDiagnostics = useCallback(() => {
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
       void navigator.clipboard.writeText(decision.safeDiagnosticsText);
@@ -170,6 +163,18 @@ const RoutePreviewPanel: React.FC<{
   }, [decision.safeDiagnosticsText]);
   const providers = getProviderHubEntries().filter((entry) => entry.providerId !== "unknown" && entry.providerId !== "disabled");
   const update = <K extends keyof RoutePreviewState>(key: K, value: RoutePreviewState[K]) => onPreviewChange((current) => ({ ...current, [key]: value }));
+  const updateTaskType = (taskType: LucaModelTaskType) => {
+    const policy = getProviderHubTaskRoutePolicy(taskType);
+    onPreviewChange((current) => ({
+      ...current,
+      taskType,
+      preference: policy.defaultPreference,
+      allowFallbacks: policy.allowFallbacks,
+      allowPaidProviders: policy.allowPaidProviders,
+      allowLocalProviders: policy.allowLocalProviders,
+      allowCloudProviders: policy.allowCloudProviders,
+    }));
+  };
 
   return (
     <div className="mt-3 rounded-lg border p-3" style={{ borderColor: "var(--app-border-main)", backgroundColor: "var(--app-bg-main)" }}>
@@ -186,12 +191,16 @@ const RoutePreviewPanel: React.FC<{
         <span><b style={{ color: "var(--app-text-main)" }}>Use Provider Hub route selection</b><br />Preview/runtime guard. Existing runtime remains default unless enabled.<br /><span className="font-mono">Flag: {runtimeSelection.enabled ? "enabled" : "disabled"}; runtime outcome: {runtimeSelection.shouldUseProviderHubRoute ? "Provider Hub route would be returned" : "current runtime remains active"}.</span><br /><span className="font-mono">Execution guard: {!runtimeSelection.enabled ? "Current ProviderFactory route is active" : runtimeSelection.shouldUseProviderHubRoute ? "Provider Hub handoff route will be used through ProviderFactory" : "Provider Hub handoff not eligible; current route remains active"}</span><br /><span className="font-mono">Fallback reason: {!runtimeSelection.enabled ? "flag_disabled" : runtimeSelection.shouldUseProviderHubRoute ? "none — Provider Hub handoff active" : runtimeSelection.decisionStatus === "configuration_required" ? "missing_configuration" : runtimeSelection.decisionStatus === "blocked" ? "blocked_decision" : "provider_hub_not_selected"}</span></span>
       </label>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-        <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Task type<select value={preview.taskType} onChange={(e) => update("taskType", e.target.value as LucaModelTaskType)} className="mt-1 w-full rounded border px-2 py-1 bg-transparent">{ROUTE_PREVIEW_TASK_TYPES.map((task) => <option key={task} value={task}>{task}</option>)}</select></label>
+        <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Task type<select value={preview.taskType} onChange={(e) => updateTaskType(e.target.value as LucaModelTaskType)} className="mt-1 w-full rounded border px-2 py-1 bg-transparent">{ROUTE_PREVIEW_TASK_TYPES.map((task) => <option key={task} value={task}>{task}</option>)}</select></label>
         <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Preference<select value={preview.preference} onChange={(e) => update("preference", e.target.value as LucaProviderHubRoutePreference)} className="mt-1 w-full rounded border px-2 py-1 bg-transparent">{ROUTE_PREVIEW_PREFERENCES.map((preference) => <option key={preference} value={preference}>{preference}</option>)}</select></label>
         <label className="text-[9px] font-bold" style={{ color: "var(--app-text-main)" }}>Preferred provider<select value={preview.preferredProviderId} onChange={(e) => update("preferredProviderId", e.target.value as LucaProviderHubId | "")} className="mt-1 w-full rounded border px-2 py-1 bg-transparent"><option value="">Auto</option>{providers.map((provider) => <option key={provider.providerId} value={provider.providerId}>{provider.label}</option>)}</select></label>
       </div>
       <div className="flex flex-wrap gap-3 mb-3">
         {(["allowFallbacks", "allowPaidProviders", "allowLocalProviders", "allowCloudProviders"] as const).map((key) => <label key={key} className="flex items-center gap-1.5 text-[9px]" style={{ color: "var(--app-text-muted)" }}><input type="checkbox" checked={preview[key]} onChange={(e) => update(key, e.target.checked)} /> {key.replace(/([A-Z])/g, " $1")}</label>)}
+      </div>
+
+      <div className="rounded border p-2 text-[9px] mb-3" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>
+        <b style={{ color: "var(--app-text-main)" }}>Policy:</b> required <span className="font-mono">{policyResolution.requiredCapabilities.join(", ")}</span>; default <span className="font-mono">{policyResolution.policy.defaultPreference}</span>; local/cloud <span className="font-mono">{policyResolution.allowLocalProviders ? "local" : "no-local"}/{policyResolution.allowCloudProviders ? "cloud" : "no-cloud"}</span>; safety: {policyResolution.safetyNotes[0]}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[9px] mb-3" style={{ color: "var(--app-text-muted)" }}>
         <div>Status: <b style={{ color: theme.hex }}>{decision.status}</b></div><div>Selected: <b>{decision.selectedProviderLabel ?? "none"}</b></div><div>Model: <b>{decision.selectedModelId ?? "none"}</b></div><div>Fallbacks: <b>{decision.fallbackCandidates.length}</b> / Blocked: <b>{decision.blockedCandidates.length}</b></div>
@@ -243,7 +252,7 @@ const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDe
       </div>
     </div>
     <div className="p-3">
-      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} runtimeSelection={runtimeSelection} runtimeRouteSelectionEnabled={runtimeRouteSelectionEnabled} onRuntimeRouteSelectionEnabledChange={onRuntimeRouteSelectionEnabledChange} preview={routePreview} onPreviewChange={onRoutePreviewChange} theme={theme} />
+      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} runtimeSelection={runtimeSelection} runtimeRouteSelectionEnabled={runtimeRouteSelectionEnabled} onRuntimeRouteSelectionEnabledChange={onRuntimeRouteSelectionEnabledChange} preview={routePreview} policyResolution={resolveProviderHubTaskRoutePolicy({ taskType: routePreview.taskType, preferenceOverride: routePreview.preference, allowFallbacksOverride: routePreview.allowFallbacks, allowPaidProvidersOverride: routePreview.allowPaidProviders, allowLocalProvidersOverride: routePreview.allowLocalProviders, allowCloudProvidersOverride: routePreview.allowCloudProviders })} onPreviewChange={onRoutePreviewChange} theme={theme} />
       <div className="mt-3" />
       {viewModel.sections.map((section) => (
         <div key={section.id} className="mb-3 last:mb-0">
@@ -763,46 +772,41 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
 
   const providerHubViewModel = useMemo(() => createProviderHubPanelViewModel(providerHubSnapshots), [providerHubSnapshots]);
 
-  const routePreviewDecision = useMemo(() => createProviderHubRouteDecision({
-    taskType: routePreview.taskType,
-    requiredCapabilities: getRoutePreviewCapabilities(routePreview.taskType),
-    preference: routePreview.preference,
+  const routePreviewPolicy = useMemo(() => resolveProviderHubTaskRoutePolicy({ taskType: routePreview.taskType, preferenceOverride: routePreview.preference, allowFallbacksOverride: routePreview.allowFallbacks, allowPaidProvidersOverride: routePreview.allowPaidProviders, allowLocalProvidersOverride: routePreview.allowLocalProviders, allowCloudProvidersOverride: routePreview.allowCloudProviders }), [routePreview]);
+
+  const routePreviewDecision = useMemo(() => createProviderHubRouteDecision(createProviderHubRouteRequestFromPolicy(routePreviewPolicy, {
     connectionSnapshots: providerHubSnapshots,
     preferredProviderId: routePreview.preferredProviderId || undefined,
-    allowFallbacks: routePreview.allowFallbacks,
-    allowPaidProviders: routePreview.allowPaidProviders,
-    allowLocalProviders: routePreview.allowLocalProviders,
-    allowCloudProviders: routePreview.allowCloudProviders,
-  }), [providerHubSnapshots, routePreview]);
+  })), [providerHubSnapshots, routePreview.preferredProviderId, routePreviewPolicy]);
 
   const runtimeDryRunComparison = useMemo(() => createProviderHubRuntimeDryRunComparison({
     currentProviderId: routeStatus?.provider,
     currentRouteMode: routeStatus?.mode,
     currentModelId: routeStatus?.model,
-    taskType: routePreview.taskType,
-    requiredCapabilities: getRoutePreviewCapabilities(routePreview.taskType),
-    routePreference: routePreview.preference,
+    taskType: routePreviewPolicy.taskType,
+    requiredCapabilities: routePreviewPolicy.requiredCapabilities,
+    routePreference: routePreviewPolicy.preference,
     connectionSnapshots: providerHubSnapshots,
     preferredProviderId: routePreview.preferredProviderId || undefined,
-    allowFallbacks: routePreview.allowFallbacks,
-    allowPaidProviders: routePreview.allowPaidProviders,
-    allowLocalProviders: routePreview.allowLocalProviders,
-    allowCloudProviders: routePreview.allowCloudProviders,
+    allowFallbacks: routePreviewPolicy.allowFallbacks,
+    allowPaidProviders: routePreviewPolicy.allowPaidProviders,
+    allowLocalProviders: routePreviewPolicy.allowLocalProviders,
+    allowCloudProviders: routePreviewPolicy.allowCloudProviders,
   }), [providerHubSnapshots, routePreview, routeStatus]);
 
   const shadowRouteTrace = useMemo(() => createProviderHubShadowRouteTrace({
     currentProviderId: routeStatus?.provider,
     currentRouteMode: routeStatus?.mode,
     currentModelId: routeStatus?.model,
-    taskType: routePreview.taskType,
-    requiredCapabilities: getRoutePreviewCapabilities(routePreview.taskType),
-    routePreference: routePreview.preference,
+    taskType: routePreviewPolicy.taskType,
+    requiredCapabilities: routePreviewPolicy.requiredCapabilities,
+    routePreference: routePreviewPolicy.preference,
     connectionSnapshots: providerHubSnapshots,
     preferredProviderId: routePreview.preferredProviderId || undefined,
-    allowFallbacks: routePreview.allowFallbacks,
-    allowPaidProviders: routePreview.allowPaidProviders,
-    allowLocalProviders: routePreview.allowLocalProviders,
-    allowCloudProviders: routePreview.allowCloudProviders,
+    allowFallbacks: routePreviewPolicy.allowFallbacks,
+    allowPaidProviders: routePreviewPolicy.allowPaidProviders,
+    allowLocalProviders: routePreviewPolicy.allowLocalProviders,
+    allowCloudProviders: routePreviewPolicy.allowCloudProviders,
     trigger: routeStatus ? "runtime_route_status" : "model_manager_preview",
     observedAt: new Date().toISOString(),
   }), [providerHubSnapshots, routePreview, routeStatus]);
@@ -811,15 +815,15 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     runtimeRouteSelectionEnabled: providerHubRuntimeRouteSelectionEnabled,
     currentProviderId: routeStatus?.provider,
     currentModelId: routeStatus?.model,
-    taskType: routePreview.taskType,
-    requiredCapabilities: getRoutePreviewCapabilities(routePreview.taskType),
-    routePreference: routePreview.preference,
+    taskType: routePreviewPolicy.taskType,
+    requiredCapabilities: routePreviewPolicy.requiredCapabilities,
+    routePreference: routePreviewPolicy.preference,
     connectionSnapshots: providerHubSnapshots,
     preferredProviderId: routePreview.preferredProviderId || undefined,
-    allowFallbacks: routePreview.allowFallbacks,
-    allowPaidProviders: routePreview.allowPaidProviders,
-    allowLocalProviders: routePreview.allowLocalProviders,
-    allowCloudProviders: routePreview.allowCloudProviders,
+    allowFallbacks: routePreviewPolicy.allowFallbacks,
+    allowPaidProviders: routePreviewPolicy.allowPaidProviders,
+    allowLocalProviders: routePreviewPolicy.allowLocalProviders,
+    allowCloudProviders: routePreviewPolicy.allowCloudProviders,
   }), [providerHubRuntimeRouteSelectionEnabled, providerHubSnapshots, routePreview, routeStatus]);
 
   const handleRuntimeRouteSelectionToggle = useCallback(async (enabled: boolean) => {

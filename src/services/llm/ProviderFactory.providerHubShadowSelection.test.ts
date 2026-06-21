@@ -19,6 +19,8 @@ describe("ProviderFactory shadow Provider Hub route diagnostics", () => {
     expect(status.providerHubShadowSelection?.providerAdapterInstantiated).toBe(false);
     expect(ProviderFactory.getLastProviderHubShadowSelection()).toEqual(status.providerHubShadowSelection);
     expect(status.providerHubShadowSelection?.safeDiagnosticsText).not.toContain("sk-secret-value");
+    expect(providerFactorySource).toContain("resolveProviderHubTaskRoutePolicy");
+    expect(providerFactorySource).toContain("taskType: chatPolicy.taskType");
     expect(status.providerHubRouteHandoff).toBeDefined();
     expect(status.providerHubRouteHandoff?.providerApiCalled).toBe(false);
     expect(status.providerHubRouteHandoff?.providerAdapterInstantiated).toBe(false);
