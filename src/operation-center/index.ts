@@ -12,3 +12,4 @@ export * from "./providerHubRouteHandoffBridge";
 export * from "./providerHubProviderFactoryFinalRouteBridge";
 export * from "./providerHubTaskRoutePolicyBridge";
 export * from "./providerHubTaskRouteDiagnosticsMatrixBridge";
+export * from "./taskAutonomyContractBridge";
