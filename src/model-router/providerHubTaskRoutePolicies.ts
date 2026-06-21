@@ -62,6 +62,8 @@ const POLICIES: Readonly<Record<LucaProviderHubTaskRoutePolicyId, LucaProviderHu
 
 export function getProviderHubTaskRoutePolicy(taskType: LucaModelTaskType): LucaProviderHubTaskRoutePolicy { return POLICIES[taskType]; }
 
+export function getProviderHubTaskRoutePolicies(): readonly LucaProviderHubTaskRoutePolicy[] { return Object.values(POLICIES); }
+
 export function resolveProviderHubTaskRoutePolicy(input: LucaProviderHubTaskRoutePolicyInput): LucaProviderHubTaskRoutePolicyResolution {
   const policy = getProviderHubTaskRoutePolicy(input.taskType);
   const preferLocal = Boolean(input.isPrivateContext && policy.preferLocalWhenPrivate);

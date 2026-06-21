@@ -24,6 +24,7 @@ import { canTestProviderHubConnection, testProviderHubConnection, type LucaProvi
 import { createProviderHubRuntimeDryRunComparison, type LucaProviderHubRuntimeDryRunComparison } from "../model-router/providerHubRuntimeDryRunComparison";
 import { createProviderHubShadowRouteTrace, type LucaProviderHubShadowRouteTrace } from "../model-router/providerHubShadowRouteTrace";
 import { selectProviderHubRuntimeRoute, type LucaProviderHubRuntimeRouteSelectionResult } from "../model-router/providerHubRuntimeRouteSelection";
+import { createProviderHubTaskRouteDiagnosticsMatrix, type LucaProviderHubTaskRouteDiagnosticsMatrix } from "../model-router/providerHubTaskRouteDiagnosticsMatrix";
 
 interface ModelManagerProps {
   onClose?: () => void;
@@ -150,12 +151,13 @@ const RoutePreviewPanel: React.FC<{
   shadowTrace: LucaProviderHubShadowRouteTrace;
   runtimeSelection: LucaProviderHubRuntimeRouteSelectionResult;
   runtimeRouteSelectionEnabled: boolean;
+  taskRouteMatrix: LucaProviderHubTaskRouteDiagnosticsMatrix;
   onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void;
   preview: RoutePreviewState;
   policyResolution: LucaProviderHubTaskRoutePolicyResolution;
   onPreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>;
   theme: any;
-}> = ({ decision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, onRuntimeRouteSelectionEnabledChange, preview, policyResolution, onPreviewChange, theme }) => {
+}> = ({ decision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, taskRouteMatrix, onRuntimeRouteSelectionEnabledChange, preview, policyResolution, onPreviewChange, theme }) => {
   const copyRouteDiagnostics = useCallback(() => {
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
       void navigator.clipboard.writeText(decision.safeDiagnosticsText);
@@ -206,6 +208,24 @@ const RoutePreviewPanel: React.FC<{
         <div>Status: <b style={{ color: theme.hex }}>{decision.status}</b></div><div>Selected: <b>{decision.selectedProviderLabel ?? "none"}</b></div><div>Model: <b>{decision.selectedModelId ?? "none"}</b></div><div>Fallbacks: <b>{decision.fallbackCandidates.length}</b> / Blocked: <b>{decision.blockedCandidates.length}</b></div>
       </div>
       <p className="text-[9px] mb-2" style={{ color: "var(--app-text-muted)" }}>{decision.reason} Task: {decision.taskType}; preference: {decision.preference}.</p>
+
+      <div className="rounded border p-2 text-[9px] mb-3" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <b style={{ color: "var(--app-text-main)" }}>Task route diagnostics matrix</b>
+          <span className="font-mono">{taskRouteMatrix.readyTaskCount} ready / {taskRouteMatrix.configurationRequiredTaskCount} config / {taskRouteMatrix.blockedTaskCount} blocked</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-1.5">
+          {taskRouteMatrix.rows.map((row) => (
+            <div key={row.taskType} className="rounded border px-2 py-1" style={{ borderColor: "var(--app-border-main)" }}>
+              <div className="flex justify-between gap-2"><b style={{ color: "var(--app-text-main)" }}>{row.taskType}</b><span className="font-mono">{row.decisionStatus}</span></div>
+              <div>Provider: <b>{row.selectedProviderLabel ?? "none"}</b>{row.selectedModelId ? ` / ${row.selectedModelId}` : ""}</div>
+              <div>Policy: <span className="font-mono">{row.policyId}</span>; caps: <span className="font-mono">{row.requiredCapabilities.join(", ")}</span></div>
+              <div>Fallbacks: <b>{row.fallbackCandidateCount}</b>; blocked: <b>{row.blockedCandidateCount}</b></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="rounded border p-2 text-[9px] mb-3" style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", backgroundColor: "var(--app-bg-tint)" }}>
         <div className="flex items-center justify-between gap-2 mb-1">
           <b style={{ color: "var(--app-text-main)" }}>Runtime comparison</b>
@@ -237,7 +257,7 @@ const RoutePreviewPanel: React.FC<{
   );
 };
 
-const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; shadowTrace: LucaProviderHubShadowRouteTrace; runtimeSelection: LucaProviderHubRuntimeRouteSelectionResult; runtimeRouteSelectionEnabled: boolean; onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, shadowTrace, runtimeSelection, runtimeRouteSelectionEnabled, onRuntimeRouteSelectionEnabledChange, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
+const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDecision: LucaProviderHubRouteDecision; dryRunComparison: LucaProviderHubRuntimeDryRunComparison; shadowTrace: LucaProviderHubShadowRouteTrace; runtimeSelection: LucaProviderHubRuntimeRouteSelectionResult; taskRouteMatrix: LucaProviderHubTaskRouteDiagnosticsMatrix; runtimeRouteSelectionEnabled: boolean; onRuntimeRouteSelectionEnabledChange: (enabled: boolean) => void; routePreview: RoutePreviewState; onRoutePreviewChange: React.Dispatch<React.SetStateAction<RoutePreviewState>>; theme: any; isMobile?: boolean; onConfigure: (card: ProviderHubPanelCardViewModel) => void }> = ({ viewModel, routeDecision, dryRunComparison, shadowTrace, runtimeSelection, taskRouteMatrix, runtimeRouteSelectionEnabled, onRuntimeRouteSelectionEnabledChange, routePreview, onRoutePreviewChange, theme, isMobile, onConfigure }) => (
   <div className="mb-4 rounded-xl border overflow-hidden shadow-sm" style={{ backgroundColor: "var(--app-bg-tint)", borderColor: "var(--app-border-main)" }}>
     <div className="p-4 border-b" style={{ borderColor: "var(--app-border-main)" }}>
       <div className="flex items-start justify-between gap-3">
@@ -252,7 +272,7 @@ const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDe
       </div>
     </div>
     <div className="p-3">
-      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} runtimeSelection={runtimeSelection} runtimeRouteSelectionEnabled={runtimeRouteSelectionEnabled} onRuntimeRouteSelectionEnabledChange={onRuntimeRouteSelectionEnabledChange} preview={routePreview} policyResolution={resolveProviderHubTaskRoutePolicy({ taskType: routePreview.taskType, preferenceOverride: routePreview.preference, allowFallbacksOverride: routePreview.allowFallbacks, allowPaidProvidersOverride: routePreview.allowPaidProviders, allowLocalProvidersOverride: routePreview.allowLocalProviders, allowCloudProvidersOverride: routePreview.allowCloudProviders })} onPreviewChange={onRoutePreviewChange} theme={theme} />
+      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} runtimeSelection={runtimeSelection} taskRouteMatrix={taskRouteMatrix} runtimeRouteSelectionEnabled={runtimeRouteSelectionEnabled} onRuntimeRouteSelectionEnabledChange={onRuntimeRouteSelectionEnabledChange} preview={routePreview} policyResolution={resolveProviderHubTaskRoutePolicy({ taskType: routePreview.taskType, preferenceOverride: routePreview.preference, allowFallbacksOverride: routePreview.allowFallbacks, allowPaidProvidersOverride: routePreview.allowPaidProviders, allowLocalProvidersOverride: routePreview.allowLocalProviders, allowCloudProvidersOverride: routePreview.allowCloudProviders })} onPreviewChange={onRoutePreviewChange} theme={theme} />
       <div className="mt-3" />
       {viewModel.sections.map((section) => (
         <div key={section.id} className="mb-3 last:mb-0">
@@ -811,6 +831,13 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
     observedAt: new Date().toISOString(),
   }), [providerHubSnapshots, routePreview, routeStatus]);
 
+  const taskRouteDiagnosticsMatrix = useMemo(() => createProviderHubTaskRouteDiagnosticsMatrix({
+    connectionSnapshots: providerHubSnapshots,
+    preferredProviderId: routePreview.preferredProviderId || undefined,
+    runtimeRouteSelectionEnabled: providerHubRuntimeRouteSelectionEnabled,
+    observedAt: new Date().toISOString(),
+  }), [providerHubRuntimeRouteSelectionEnabled, providerHubSnapshots, routePreview.preferredProviderId]);
+
   const runtimeRouteSelection = useMemo(() => selectProviderHubRuntimeRoute({
     runtimeRouteSelectionEnabled: providerHubRuntimeRouteSelectionEnabled,
     currentProviderId: routeStatus?.provider,
@@ -898,7 +925,7 @@ export const ModelManager: React.FC<ModelManagerProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} shadowTrace={shadowRouteTrace} runtimeSelection={runtimeRouteSelection} runtimeRouteSelectionEnabled={providerHubRuntimeRouteSelectionEnabled} onRuntimeRouteSelectionEnabledChange={handleRuntimeRouteSelectionToggle} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
+        <ProviderHubPanel viewModel={providerHubViewModel} routeDecision={routePreviewDecision} dryRunComparison={runtimeDryRunComparison} shadowTrace={shadowRouteTrace} runtimeSelection={runtimeRouteSelection} taskRouteMatrix={taskRouteDiagnosticsMatrix} runtimeRouteSelectionEnabled={providerHubRuntimeRouteSelectionEnabled} onRuntimeRouteSelectionEnabledChange={handleRuntimeRouteSelectionToggle} routePreview={routePreview} onRoutePreviewChange={setRoutePreview} theme={theme} isMobile={isMobile} onConfigure={handleProviderHubConfigure} />
         {providerHubConfigureCard && activeProviderHubIntent && (
           <ProviderHubConfigurationPanel
             card={providerHubConfigureCard}
