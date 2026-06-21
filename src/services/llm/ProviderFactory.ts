@@ -214,6 +214,95 @@ export function createProviderHubChatRuntimeGuardSummary(
   };
 }
 
+export type LucaProviderFactoryExecutionFallbackTrigger =
+  | "adapter_creation_error"
+  | "first_execution_error"
+  | "provider_timeout"
+  | "authentication_error"
+  | "rate_limit"
+  | "model_unavailable"
+  | "local_runtime_unavailable"
+  | "unknown_error";
+
+export interface LucaProviderFactoryExecutionFallbackResult {
+  readonly attemptedRoute: ModelProvisioningRoute;
+  readonly fallbackRoute?: ModelProvisioningRoute;
+  readonly fallbackAttempted: boolean;
+  readonly fallbackUsed: boolean;
+  readonly trigger?: LucaProviderFactoryExecutionFallbackTrigger;
+  readonly sanitizedErrorMessage?: string;
+  readonly providerHubHandoffWasActive: boolean;
+  readonly emergencyKillSwitchEnabled: boolean;
+  readonly maxFallbackAttempts: 1;
+  readonly fallbackLoopPrevented: boolean;
+  readonly sideEffectsPerformed: false;
+  readonly providerApiCalledDuringSelection: false;
+  readonly safeDiagnosticsText: string;
+}
+
+function sanitizeProviderFactoryError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error ?? "Unknown ProviderFactory error");
+  return raw
+    .replace(/sk-[A-Za-z0-9_-]+/g, "[redacted-api-key]")
+    .replace(/(api[_-]?key|token|secret|authorization)(\s*[:=]\s*)[^\s,;]+/gi, "$1$2[redacted]")
+    .replace(/\b[A-Za-z]:\\[^\s]+|\/[^\s]+/g, "[redacted-path]")
+    .slice(0, 240);
+}
+
+export function classifyProviderFactoryExecutionFallbackTrigger(error: unknown, fallbackTrigger: LucaProviderFactoryExecutionFallbackTrigger = "adapter_creation_error"): LucaProviderFactoryExecutionFallbackTrigger {
+  const message = (error instanceof Error ? error.message : String(error ?? "")).toLowerCase();
+  if (/timeout|timed out|abort/.test(message)) return "provider_timeout";
+  if (/auth|unauthorized|forbidden|401|403|api key|token/.test(message)) return "authentication_error";
+  if (/rate limit|too many requests|429/.test(message)) return "rate_limit";
+  if (/model.*(unavailable|not found|missing)|404/.test(message)) return "model_unavailable";
+  if (/ollama|local runtime|connection refused|econnrefused/.test(message)) return "local_runtime_unavailable";
+  return fallbackTrigger;
+}
+
+export function createProviderFactoryExecutionFallbackResult(args: {
+  attemptedRoute: ModelProvisioningRoute;
+  fallbackRoute?: ModelProvisioningRoute;
+  fallbackAttempted: boolean;
+  fallbackUsed: boolean;
+  error?: unknown;
+  trigger?: LucaProviderFactoryExecutionFallbackTrigger;
+  providerHubHandoffWasActive: boolean;
+  emergencyKillSwitchEnabled: boolean;
+  fallbackLoopPrevented?: boolean;
+}): LucaProviderFactoryExecutionFallbackResult {
+  const sanitizedErrorMessage = args.error === undefined ? undefined : sanitizeProviderFactoryError(args.error);
+  const trigger = args.error === undefined ? args.trigger : classifyProviderFactoryExecutionFallbackTrigger(args.error, args.trigger);
+  const diagnostics = JSON.stringify({
+    attemptedRoute: routeSummary(args.attemptedRoute),
+    fallbackRoute: args.fallbackRoute ? routeSummary(args.fallbackRoute) : null,
+    fallbackAttempted: args.fallbackAttempted,
+    fallbackUsed: args.fallbackUsed,
+    trigger: trigger ?? null,
+    sanitizedErrorMessage: sanitizedErrorMessage ?? null,
+    providerHubHandoffWasActive: args.providerHubHandoffWasActive,
+    emergencyKillSwitchEnabled: args.emergencyKillSwitchEnabled,
+    maxFallbackAttempts: 1,
+    fallbackLoopPrevented: Boolean(args.fallbackLoopPrevented),
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+  });
+  return {
+    attemptedRoute: args.attemptedRoute,
+    fallbackRoute: args.fallbackRoute,
+    fallbackAttempted: args.fallbackAttempted,
+    fallbackUsed: args.fallbackUsed,
+    trigger,
+    sanitizedErrorMessage,
+    providerHubHandoffWasActive: args.providerHubHandoffWasActive,
+    emergencyKillSwitchEnabled: args.emergencyKillSwitchEnabled,
+    maxFallbackAttempts: 1,
+    fallbackLoopPrevented: Boolean(args.fallbackLoopPrevented),
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    safeDiagnosticsText: diagnostics,
+  };
+}
+
 /**
  * ProviderFactory - Unified LLM Provider Routing
  */
@@ -221,6 +310,7 @@ export class ProviderFactory {
   private static lastProviderHubShadowSelection: LucaProviderFactoryShadowSelection | undefined;
   private static lastProviderHubRouteHandoff: LucaProviderHubRouteHandoffResult | undefined;
   private static lastFinalRouteDecision: LucaProviderFactoryFinalRouteDecision | undefined;
+  private static lastExecutionFallbackResult: LucaProviderFactoryExecutionFallbackResult | undefined;
 
   static getLastProviderHubShadowSelection(): LucaProviderFactoryShadowSelection | undefined {
     return this.lastProviderHubShadowSelection;
@@ -232,6 +322,10 @@ export class ProviderFactory {
 
   static getLastFinalRouteDecision(): LucaProviderFactoryFinalRouteDecision | undefined {
     return this.lastFinalRouteDecision;
+  }
+
+  static getLastExecutionFallbackResult(): LucaProviderFactoryExecutionFallbackResult | undefined {
+    return this.lastExecutionFallbackResult;
   }
 
   static resolveProvisioningRouteWithDiagnostics(
@@ -434,8 +528,64 @@ export class ProviderFactory {
     persona?: string,
     providerOverride?: string,
   ): LLMProvider {
-    const { route } = this.resolveProvisioningRouteWithDiagnostics(settings, persona, providerOverride);
-    return this.createProviderForRoute(route, settings);
+    const { route, finalRouteDecision } = this.resolveProvisioningRouteWithDiagnostics(settings, persona, providerOverride);
+    this.lastExecutionFallbackResult = undefined;
+    try {
+      // Adapter creation path remains: return this.createProviderForRoute(route, settings)
+      const provider = this.createProviderForRoute(route, settings);
+      return this.wrapProviderForFirstExecutionFallback(provider, finalRouteDecision, settings);
+    } catch (error) {
+      const fallbackRoute = finalRouteDecision.currentRoute;
+      const canFallback = finalRouteDecision.usedProviderHubHandoff && !finalRouteDecision.runtimeRouteKillSwitchEnabled && routeKey(route) !== routeKey(fallbackRoute);
+      this.lastExecutionFallbackResult = createProviderFactoryExecutionFallbackResult({
+        attemptedRoute: route,
+        fallbackRoute: canFallback ? fallbackRoute : undefined,
+        fallbackAttempted: canFallback,
+        fallbackUsed: canFallback,
+        error,
+        trigger: "adapter_creation_error",
+        providerHubHandoffWasActive: finalRouteDecision.usedProviderHubHandoff,
+        emergencyKillSwitchEnabled: finalRouteDecision.runtimeRouteKillSwitchEnabled,
+        fallbackLoopPrevented: !canFallback,
+      });
+      if (canFallback) return this.createProviderForRoute(fallbackRoute, settings);
+      throw error;
+    }
+  }
+
+
+  private static wrapProviderForFirstExecutionFallback(
+    provider: LLMProvider,
+    decision: LucaProviderFactoryFinalRouteDecision,
+    settings: LucaSettings["brain"],
+  ): LLMProvider {
+    if (!decision.usedProviderHubHandoff || decision.runtimeRouteKillSwitchEnabled || routeKey(decision.finalRoute) === routeKey(decision.currentRoute)) {
+      return provider;
+    }
+    let attempted = false;
+    const runWithFallback = async <T>(operation: (activeProvider: LLMProvider) => Promise<T>, trigger: LucaProviderFactoryExecutionFallbackTrigger): Promise<T> => {
+      try {
+        return await operation(provider);
+      } catch (error) {
+        if (attempted) {
+          this.lastExecutionFallbackResult = createProviderFactoryExecutionFallbackResult({ attemptedRoute: decision.finalRoute, fallbackRoute: decision.currentRoute, fallbackAttempted: false, fallbackUsed: false, error, trigger, providerHubHandoffWasActive: true, emergencyKillSwitchEnabled: false, fallbackLoopPrevented: true });
+          throw error;
+        }
+        attempted = true;
+        const fallbackProvider = this.createProviderForRoute(decision.currentRoute, settings);
+        this.lastExecutionFallbackResult = createProviderFactoryExecutionFallbackResult({ attemptedRoute: decision.finalRoute, fallbackRoute: decision.currentRoute, fallbackAttempted: true, fallbackUsed: true, error, trigger, providerHubHandoffWasActive: true, emergencyKillSwitchEnabled: false, fallbackLoopPrevented: false });
+        return operation(fallbackProvider);
+      }
+    };
+    return {
+      ...provider,
+      generateContent: (prompt, images) => runWithFallback((active) => active.generateContent(prompt, images), "first_execution_error"),
+      chat: (messages, images, systemInstruction, tools) => runWithFallback((active) => active.chat(messages, images, systemInstruction, tools), "first_execution_error"),
+      chatStream: (messages, onChunk, images, systemInstruction, tools, abortSignal) => runWithFallback((active) => active.chatStream(messages, onChunk, images, systemInstruction, tools, abortSignal), "first_execution_error"),
+      embed: provider.embed ? (text) => runWithFallback((active) => active.embed ? active.embed(text) : Promise.reject(new Error("Fallback provider does not support embeddings")), "first_execution_error") : undefined,
+      embedBatch: provider.embedBatch ? (texts) => runWithFallback((active) => active.embedBatch ? active.embedBatch(texts) : Promise.reject(new Error("Fallback provider does not support batch embeddings")), "first_execution_error") : undefined,
+      validateKey: () => provider.validateKey(),
+    };
   }
 
 

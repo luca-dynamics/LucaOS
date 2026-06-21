@@ -32,6 +32,7 @@ import { selectProviderHubRuntimeRoute } from "../model-router/providerHubRuntim
 import { createProviderHubRuntimeRouteSelectionGuardItems } from "./providerHubRuntimeRouteSelectionBridge";
 import { createProviderHubProviderFactoryRouteHandoff } from "../model-router/providerHubProviderFactoryRouteHandoff";
 import { createProviderHubRouteHandoffGuardItems } from "./providerHubRouteHandoffBridge";
+import { createProviderHubExecutionFallbackGuardItems } from "./providerHubExecutionFallbackBridge";
 import type { OperationCenterItem } from "./operationCenterTypes";
 import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
 import { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } from "./operationCenterLucaLinkRuntimeAuthorityBridge";
@@ -291,6 +292,22 @@ const providerHubRouteHandoffGuardItems = createProviderHubRouteHandoffGuardItem
   requiredCapabilities: ["text_generation"],
 }));
 
+const providerHubExecutionFallbackItems = createProviderHubExecutionFallbackGuardItems({
+  attemptedRoute: { kind: "BYOK", provider: "anthropic", model: "claude-sonnet-fixture", apiKeySource: "user_settings" },
+  fallbackRoute: { kind: "LUCA_PRIME", provider: "gemini", model: "gemini-fixture" },
+  fallbackAttempted: true,
+  fallbackUsed: true,
+  trigger: "authentication_error",
+  sanitizedErrorMessage: "401 authentication failed for apiKey=[redacted] at [redacted-path]",
+  providerHubHandoffWasActive: true,
+  emergencyKillSwitchEnabled: false,
+  maxFallbackAttempts: 1,
+  fallbackLoopPrevented: false,
+  sideEffectsPerformed: false,
+  providerApiCalledDuringSelection: false,
+  safeDiagnosticsText: JSON.stringify({ attemptedRoute: "BYOK:anthropic:claude-sonnet-fixture", fallbackRoute: "LUCA_PRIME:gemini:gemini-fixture", fallbackAttempted: true, fallbackUsed: true, trigger: "authentication_error", sideEffectsPerformed: false, providerApiCalledDuringSelection: false }),
+});
+
 const providerFactoryDryRunItems = createProviderFactoryDryRunOperationItems(createProviderFactoryProviderHubDryRunComparison({
   currentProviderId: "luca-prime",
   currentRouteMode: "luca-prime",
@@ -328,5 +345,6 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...providerHubShadowTraceItems,
   ...providerHubRuntimeRouteSelectionGuardItems,
   ...providerHubRouteHandoffGuardItems,
+  ...providerHubExecutionFallbackItems,
   ...providerFactoryDryRunItems,
 ]);
