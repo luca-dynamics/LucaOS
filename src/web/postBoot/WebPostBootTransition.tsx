@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
 import { LucaStaticFacePresence } from "../../components/visual/LucaStaticFacePresence";
 import {
+  lucaShellBorderSubtleStyle,
+  lucaShellHoverSurfaceStyle,
   lucaShellPrimaryTextStyle,
   lucaShellSecondaryTextStyle,
   lucaShellTertiaryTextStyle,
@@ -81,19 +83,19 @@ export function WebPostBootTransition({
 
         {needsAttention ? (
           <div className="mt-8 grid w-full gap-3 text-left sm:grid-cols-2">
-            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm transition hover:bg-white/10" style={lucaShellPrimaryTextStyle} onClick={onContinue}>
+            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaShellPrimaryTextStyle, ...lucaShellBorderSubtleStyle }} onClick={onContinue}>
               <span className="block font-medium">Continue with limited mode</span>
               <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Open LucaOS with voice features paused.</span>
             </button>
-            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm transition hover:bg-white/10" style={lucaShellPrimaryTextStyle} onClick={onReviewVoiceAccess}>
+            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaShellPrimaryTextStyle, ...lucaShellBorderSubtleStyle }} onClick={onReviewVoiceAccess}>
               <span className="block font-medium">Review voice access</span>
               <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Check browser microphone permissions.</span>
             </button>
-            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm transition hover:bg-white/10" style={lucaShellPrimaryTextStyle} onClick={onChooseModelRoute}>
+            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaShellPrimaryTextStyle, ...lucaShellBorderSubtleStyle }} onClick={onChooseModelRoute}>
               <span className="block font-medium">Choose model route</span>
               <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Continue setup with a supported route.</span>
             </button>
-            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm transition hover:bg-white/10" style={lucaShellPrimaryTextStyle} onClick={onRestartOnboarding}>
+            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaShellPrimaryTextStyle, ...lucaShellBorderSubtleStyle }} onClick={onRestartOnboarding}>
               <span className="block font-medium">Restart onboarding</span>
               <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Review your LucaOS setup from the start.</span>
             </button>
@@ -101,7 +103,7 @@ export function WebPostBootTransition({
         ) : (
           <div className="mt-8 w-full max-w-md space-y-2 text-left">
             {rows.map((row, index) => (
-              <div key={row} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.035] px-4 py-3">
+              <div key={row} className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ ...lucaShellBorderSubtleStyle, ...lucaShellHoverSurfaceStyle }}>
                 <LucaCanvasPresenceOrb
                   size={22}
                   state={isNewUser ? "preparing" : "ready"}

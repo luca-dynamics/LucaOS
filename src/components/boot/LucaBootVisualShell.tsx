@@ -84,7 +84,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--luca-surface-hover, rgba(104,112,124,0.18)) 42%, transparent), transparent 30%), var(--luca-background-liquid, linear-gradient(180deg, var(--luca-background-elevated, #181a1f) 0%, var(--luca-background-base, #101215) 100%))",
+            "radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--luca-surface-hover, var(--app-bg-tint)) 42%, transparent), transparent 30%), var(--luca-background-liquid, linear-gradient(180deg, var(--luca-background-elevated, var(--app-bg-tint)) 0%, var(--luca-background-base, var(--app-bg-main)) 100%))",
         }}
       />
       <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] blur-3xl sm:h-[32rem] sm:w-[32rem]" />
@@ -106,7 +106,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             className="relative h-auto w-[min(78vw,24rem)] max-w-none animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain sm:w-[min(46vw,27rem)]"
             style={{
               opacity: launchIdentity.markOpacity,
-              filter: "drop-shadow(0 0 36px rgba(205, 245, 255, 0.16))",
+              filter: "drop-shadow(var(--luca-shadow-glow))",
             }}
           />
         </div>
@@ -131,14 +131,14 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
         </div>
 
         <div className="mt-6 h-px w-full max-w-xl overflow-hidden"
-          style={{ background: "var(--luca-border-subtle, rgba(232,236,242,0.14))" }}>
+          style={{ background: "var(--luca-border-subtle, var(--app-border-main))" }}>
           <div
             className="h-full transition-all duration-700 ease-out"
             style={{
               width: `${progress}%`,
               background:
-                "linear-gradient(90deg, color-mix(in srgb, var(--luca-text-primary, #f4f6f8) 48%, transparent), var(--luca-accent-soft, rgba(79,140,255,0.15)), color-mix(in srgb, var(--luca-text-primary, #f4f6f8) 30%, transparent))",
-              boxShadow: "var(--luca-shadow-glow, 0 0 22px rgba(79,140,255,0.22))",
+                "linear-gradient(90deg, color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 48%, transparent), var(--luca-accent-soft), color-mix(in srgb, var(--luca-text-primary, var(--app-text-main)) 30%, transparent))",
+              boxShadow: "var(--luca-shadow-glow)",
             }}
           />
         </div>
@@ -148,7 +148,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             <div
               key={item.id}
               className="flex items-baseline justify-between gap-5 border-b py-2.5"
-              style={{ borderColor: "var(--luca-border-subtle, rgba(232,236,242,0.14))" }}
+              style={{ borderColor: "var(--luca-border-subtle, var(--app-border-main))" }}
             >
               <span className="text-sm" style={lucaShellSecondaryTextStyle}>{item.detail}</span>
               <span className="shrink-0 text-[0.68rem] font-medium uppercase tracking-[0.18em]" style={lucaShellTertiaryTextStyle}>

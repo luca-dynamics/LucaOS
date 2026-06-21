@@ -144,7 +144,7 @@ const PersonaBadge = ({
     <div
       className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-medium glass-blur"
       style={{
-        borderColor: "var(--app-border-main, rgba(255,255,255,0.15))",
+        borderColor: "var(--luca-border-subtle, var(--app-border-main))",
         color: themeHex,
       }}
     >
@@ -542,7 +542,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       />
       {/* Input box — wider in centered mode */}
       <div
-        className={`rounded-2xl transition-all duration-500 glass-blur border ${showCentered ? "shadow-lg" : ""}`}
+        className="rounded-2xl transition-all duration-500 glass-blur border"
         style={{
           ...(isMobile ? lucaMobileSheetSurfaceStyle : lucaShellPanelSurfaceStyle),
           borderColor: showCentered ? "var(--luca-border-strong, var(--app-border-main))" : undefined,
