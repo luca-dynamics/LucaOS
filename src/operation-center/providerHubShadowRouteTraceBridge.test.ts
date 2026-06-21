@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { createProviderHubShadowRouteTrace } from "../model-router/providerHubShadowRouteTrace";
 import { createProviderHubShadowRouteTraceItems } from "./providerHubShadowRouteTraceBridge";
 

@@ -28,6 +28,8 @@ import { createProviderHubShadowRouteTrace } from "../model-router/providerHubSh
 import { createProviderHubShadowRouteTraceItems } from "./providerHubShadowRouteTraceBridge";
 import { selectProviderHubRuntimeRoute } from "../model-router/providerHubRuntimeRouteSelection";
 import { createProviderHubRuntimeRouteSelectionGuardItems } from "./providerHubRuntimeRouteSelectionBridge";
+import { createProviderHubProviderFactoryRouteHandoff } from "../model-router/providerHubProviderFactoryRouteHandoff";
+import { createProviderHubRouteHandoffGuardItems } from "./providerHubRouteHandoffBridge";
 import type { OperationCenterItem } from "./operationCenterTypes";
 import { createOperationItemsFromRuntimeAuthorityRecords } from "./operationCenterRuntimeAuthorityBridge";
 import { createOperationItemsFromLucaLinkRuntimeAuthorityRecords } from "./operationCenterLucaLinkRuntimeAuthorityBridge";
@@ -274,6 +276,18 @@ const providerHubRuntimeRouteSelectionGuardItems = createProviderHubRuntimeRoute
   allowLocalProviders: true,
   allowCloudProviders: true,
 }));
+const providerHubRouteHandoffGuardItems = createProviderHubRouteHandoffGuardItems(createProviderHubProviderFactoryRouteHandoff({
+  runtimeRouteSelectionEnabled: true,
+  providerHubSelectedProviderId: "anthropic",
+  providerHubSelectedModelId: "claude-sonnet-fixture",
+  decisionStatus: "selected",
+  shouldUseProviderHubRoute: true,
+  currentRoute: { kind: "LUCA_PRIME", provider: "gemini", model: "gemini-fixture" },
+  settings: { useCustomApiKey: false, model: "gemini-fixture", provider: "cloud-managed", voiceModel: "", visionModel: "", memoryModel: "", temperature: 0.7, autoContextWindow: true, preferOllama: false, conversationMode: "fast", activePluginId: null, embeddingModel: "", geminiApiKey: "", anthropicApiKey: "configured", openaiApiKey: "", xaiApiKey: "", deepseekApiKey: "", groqApiKey: "" },
+  taskType: "chat",
+  requiredCapabilities: ["text_generation"],
+}));
+
 const providerFactoryDryRunItems = createProviderFactoryDryRunOperationItems(createProviderFactoryProviderHubDryRunComparison({
   currentProviderId: "luca-prime",
   currentRouteMode: "luca-prime",
@@ -309,5 +323,6 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...providerHubRouteTraceItems,
   ...providerHubShadowTraceItems,
   ...providerHubRuntimeRouteSelectionGuardItems,
+  ...providerHubRouteHandoffGuardItems,
   ...providerFactoryDryRunItems,
 ]);
