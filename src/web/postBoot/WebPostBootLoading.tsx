@@ -1,5 +1,6 @@
 import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
 import {
+  lucaShellPanelSurfaceStyle,
   lucaShellPrimaryTextStyle,
   lucaShellSecondaryTextStyle,
 } from "../../styles/lucaShellStyles";
@@ -11,7 +12,10 @@ export function WebPostBootLoading() {
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/45 px-6 py-10 text-center shadow-2xl backdrop-blur-xl">
+      <div
+        className="w-full max-w-md rounded-3xl border px-6 py-10 text-center backdrop-blur-xl"
+        style={lucaShellPanelSurfaceStyle}
+      >
         <div className="mx-auto mb-7 flex h-8 w-8 items-center justify-center" aria-hidden="true">
           <LucaCanvasPresenceOrb size={28} state="preparing" amplitude={0.14} lowPower />
         </div>

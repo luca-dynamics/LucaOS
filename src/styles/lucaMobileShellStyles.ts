@@ -57,7 +57,7 @@ export const lucaMobileNavSurfaceStyle: CSSProperties = {
   background: LUCA_MOBILE_SURFACE_SOLID,
   borderColor: LUCA_MOBILE_BORDER_SUBTLE,
   color: LUCA_MOBILE_TEXT_SECONDARY,
-  boxShadow: "0 -12px 30px rgba(15, 23, 42, 0.08)",
+  boxShadow: LUCA_MOBILE_SHADOW_SOFT,
 };
 
 export const lucaMobileNavInactiveStyle: CSSProperties = {

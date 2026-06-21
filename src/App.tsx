@@ -2378,10 +2378,11 @@ function AppContent() {
   // --- RENDER: BROWSER MODE (Standalone Window) ---
   if (appMode === "browser") {
     return (
-      <div className="w-full h-screen border rounded-xl overflow-hidden shadow-2xl flex flex-col"
+      <div className="w-full h-screen border rounded-xl overflow-hidden flex flex-col"
         style={{
           background: "var(--luca-surface-solid, var(--luca-background-elevated))",
           borderColor: "var(--luca-border-strong, var(--app-border-main))",
+          boxShadow: "var(--luca-shadow-soft)",
         }}>
         <LucaBrowser
           url={ghostBrowserUrl}
@@ -2469,7 +2470,7 @@ function AppContent() {
             }}
           >
             <div
-              className="max-w-lg rounded-2xl border p-6 shadow-2xl"
+              className="max-w-lg rounded-2xl border p-6"
               style={{
                 background: "var(--luca-surface-solid, var(--luca-background-elevated))",
                 borderColor: "var(--luca-border-strong, var(--app-border-main))",
@@ -2493,11 +2494,12 @@ function AppContent() {
       }
     >
       {bootDebugEnabled && isBrowserSafeWebInterface && (
-        <div className="fixed left-3 top-3 z-[9999] rounded border px-3 py-2 text-[10px] font-mono shadow-lg pointer-events-none"
+        <div className="fixed left-3 top-3 z-[9999] rounded border px-3 py-2 text-[10px] font-mono pointer-events-none"
           style={{
             background: "var(--luca-surface-solid, var(--luca-background-elevated))",
             borderColor: "var(--luca-border-strong, var(--app-border-main))",
             color: "var(--luca-accent-primary, #4f8cff)",
+            boxShadow: "var(--luca-shadow-soft)",
           }}>
           <div>[LucaOS web boot]</div>
           <div>resolverActive={String(browserSafeBootState.bootResolved)}</div>

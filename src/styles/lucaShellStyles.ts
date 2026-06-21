@@ -17,8 +17,29 @@ export const LUCA_SHELL_TEXT_TERTIARY =
 export const LUCA_SHELL_ACCENT_PRIMARY = "var(--luca-accent-primary)";
 export const LUCA_SHELL_ACCENT_SOFT = "var(--luca-accent-soft)";
 export const LUCA_SHELL_SHADOW_SOFT = "var(--luca-shadow-soft)";
+export const LUCA_SHELL_SHADOW_GLOW = "var(--luca-shadow-glow)";
 export const LUCA_SHELL_BLUR =
   "var(--luca-blur-level, var(--app-bg-blur, 40px))";
+
+export const lucaShellBorderSubtleStyle: CSSProperties = {
+  borderColor: LUCA_SHELL_BORDER_SUBTLE,
+};
+
+export const lucaShellBorderStrongStyle: CSSProperties = {
+  borderColor: LUCA_SHELL_BORDER_STRONG,
+};
+
+export const lucaShellHoverSurfaceStyle: CSSProperties = {
+  background: LUCA_SHELL_HOVER_BACKGROUND,
+};
+
+export const lucaShellSoftShadowStyle: CSSProperties = {
+  boxShadow: LUCA_SHELL_SHADOW_SOFT,
+};
+
+export const lucaShellGlowShadowStyle: CSSProperties = {
+  boxShadow: LUCA_SHELL_SHADOW_GLOW,
+};
 
 export const lucaShellPanelSurfaceStyle: CSSProperties = {
   background: LUCA_SHELL_SURFACE_BACKGROUND,

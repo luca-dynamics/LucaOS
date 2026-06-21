@@ -1,5 +1,10 @@
 import { LucaCanvasPresenceOrb } from "../components/visual/LucaCanvasPresenceOrb";
 import { LucaStaticFacePresence } from "../components/visual/LucaStaticFacePresence";
+import {
+  LUCA_SHELL_HOVER_BACKGROUND,
+  lucaShellPanelSurfaceStyle,
+  lucaShellPrimaryTextStyle,
+} from "../styles/lucaShellStyles";
 import type { WebCapability } from "./browserHostCapabilities";
 
 interface WebReadyStateProps {
@@ -14,14 +19,19 @@ export function WebReadyState({ onContinueToShell }: WebReadyStateProps) {
   return (
     <section className="absolute inset-0 z-10 flex items-center justify-center p-6 text-center">
       <div
-        className="w-full max-w-xl rounded-[2rem] border px-6 py-8 shadow-2xl backdrop-blur-2xl sm:px-10 sm:py-10"
+        className="w-full max-w-xl rounded-[2rem] border px-6 py-8 backdrop-blur-2xl sm:px-10 sm:py-10"
         style={{
-          color: "var(--luca-text-primary, var(--app-text-main))",
-          borderColor: "var(--app-border-main)",
-          backgroundColor: "var(--app-bg-tint)",
+          ...lucaShellPanelSurfaceStyle,
         }}
       >
-        <div className="mx-auto flex w-fit items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+        <div
+          className="mx-auto flex w-fit items-center justify-center rounded-[2rem] border p-5"
+          style={{
+            ...lucaShellPrimaryTextStyle,
+            background: LUCA_SHELL_HOVER_BACKGROUND,
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+          }}
+        >
           <LucaStaticFacePresence size={128} />
         </div>
         <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}>
