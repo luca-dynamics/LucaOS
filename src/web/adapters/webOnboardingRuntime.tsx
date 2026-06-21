@@ -4,7 +4,7 @@ import type {
 } from "../../components/Onboarding/OnboardingRuntimeAdapter";
 import type { OnboardingModelReadiness } from "../../services/onboarding/OnboardingModelModeCoordinator";
 import type { LocalRecoveryStep } from "../../services/onboarding/LocalProvisioningService";
-import { WebSafeConversationalOnboarding } from "./WebSafeConversationalOnboarding";
+import { OnboardingConversationSurface } from "../../components/Onboarding/OnboardingConversationSurface";
 import { WebVoiceOnboardingSurface } from "../voice/WebVoiceOnboardingSurface";
 
 const VISUAL_SETTINGS_KEY = "lucaos.web.onboarding.visual-settings";
@@ -77,7 +77,7 @@ export const webOnboardingRuntime: OnboardingRuntimeAdapter = {
     props.mode === "voice" ? (
       <WebVoiceOnboardingSurface {...props} />
     ) : (
-      <WebSafeConversationalOnboarding {...props} />
+      <OnboardingConversationSurface {...props} />
     ),
   getVisualSettings() {
     return currentVisualSettings;
