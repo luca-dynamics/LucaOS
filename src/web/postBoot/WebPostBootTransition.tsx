@@ -1,6 +1,11 @@
 import { useEffect } from "react";
 import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
 import { LucaStaticFacePresence } from "../../components/visual/LucaStaticFacePresence";
+import {
+  lucaShellPrimaryTextStyle,
+  lucaShellSecondaryTextStyle,
+  lucaShellTertiaryTextStyle,
+} from "../../styles/lucaShellStyles";
 import type { WebPostBootStateSnapshot } from "./webPostBootState";
 
 interface WebPostBootTransitionProps {
@@ -64,30 +69,33 @@ export function WebPostBootTransition({
           <LucaStaticFacePresence size={220} />
         </div>
 
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h1
+          className="font-display text-3xl font-semibold tracking-tight sm:text-4xl"
+          style={lucaShellPrimaryTextStyle}
+        >
           {heading}
         </h1>
-        <p className="mt-3 max-w-md text-sm leading-6 text-white/60 sm:text-base">
+        <p className="mt-3 max-w-md text-sm leading-6 sm:text-base" style={lucaShellSecondaryTextStyle}>
           {subheading}
         </p>
 
         {needsAttention ? (
           <div className="mt-8 grid w-full gap-3 text-left sm:grid-cols-2">
-            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm text-white transition hover:bg-white/10" onClick={onContinue}>
+            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm transition hover:bg-white/10" style={lucaShellPrimaryTextStyle} onClick={onContinue}>
               <span className="block font-medium">Continue with limited mode</span>
-              <span className="mt-1 block text-xs text-white/45">Open LucaOS with voice features paused.</span>
+              <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Open LucaOS with voice features paused.</span>
             </button>
-            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm text-white transition hover:bg-white/10" onClick={onReviewVoiceAccess}>
+            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm transition hover:bg-white/10" style={lucaShellPrimaryTextStyle} onClick={onReviewVoiceAccess}>
               <span className="block font-medium">Review voice access</span>
-              <span className="mt-1 block text-xs text-white/45">Check browser microphone permissions.</span>
+              <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Check browser microphone permissions.</span>
             </button>
-            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm text-white transition hover:bg-white/10" onClick={onChooseModelRoute}>
+            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm transition hover:bg-white/10" style={lucaShellPrimaryTextStyle} onClick={onChooseModelRoute}>
               <span className="block font-medium">Choose model route</span>
-              <span className="mt-1 block text-xs text-white/45">Continue setup with a supported route.</span>
+              <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Continue setup with a supported route.</span>
             </button>
-            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm text-white transition hover:bg-white/10" onClick={onRestartOnboarding}>
+            <button className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left text-sm transition hover:bg-white/10" style={lucaShellPrimaryTextStyle} onClick={onRestartOnboarding}>
               <span className="block font-medium">Restart onboarding</span>
-              <span className="mt-1 block text-xs text-white/45">Review your LucaOS setup from the start.</span>
+              <span className="mt-1 block text-xs" style={lucaShellTertiaryTextStyle}>Review your LucaOS setup from the start.</span>
             </button>
           </div>
         ) : (
@@ -101,7 +109,7 @@ export function WebPostBootTransition({
                   lowPower={index > 1}
                   className="shrink-0"
                 />
-                <span className="text-sm text-white/70">{row}</span>
+                <span className="text-sm" style={lucaShellSecondaryTextStyle}>{row}</span>
               </div>
             ))}
           </div>

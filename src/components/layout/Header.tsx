@@ -93,21 +93,14 @@ const Header: React.FC<HeaderProps> = ({
   tier = "BASIC",
 }) => {
   const credits = useCredits();
-  const isLightCream = theme.themeName?.toLowerCase() === "lightcream";
   const brand = wordmark(tier);
 
   const creditColor =
     credits.status === "CRITICAL"
-      ? isLightCream
-        ? "#991b1b"
-        : "#ef4444"
+      ? "var(--luca-danger)"
       : credits.status === "LOW"
-        ? isLightCream
-          ? "#92400e"
-          : "#f59e0b"
-        : isLightCream
-          ? "#065f46"
-          : "#10b981";
+        ? "var(--luca-warning)"
+        : "var(--luca-success)";
 
   const planLabel = credits.isLocal
     ? "Local"
@@ -117,14 +110,10 @@ const Header: React.FC<HeaderProps> = ({
 
   const connectionColor =
     connectionTier === "OFFLINE"
-      ? "var(--app-text-muted, #64748b)"
+      ? "var(--luca-text-tertiary, var(--app-text-muted))"
       : connectionTier === "CLOUD"
-        ? isLightCream
-          ? "#1e40af"
-          : "#3b82f6"
-        : isLightCream
-          ? "#065f46"
-          : "#22c55e";
+        ? "var(--luca-info)"
+        : "var(--luca-success)";
 
   const headerSurfaceStyle = isMobile
     ? lucaMobilePanelSurfaceStyle
@@ -163,7 +152,7 @@ const Header: React.FC<HeaderProps> = ({
           } font-semibold ${
             brand.stylized ? "tracking-[0.18em]" : "tracking-tight"
           } leading-none whitespace-nowrap`}
-          style={{ color: "var(--app-text-main, #ffffff)" }}
+          style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
         >
           {brand.text}
         </h1>
@@ -172,13 +161,9 @@ const Header: React.FC<HeaderProps> = ({
           <span
             className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
             style={{
-              color: isLightCream ? "#92400e" : "#f59e0b",
-              borderColor: isLightCream
-                ? "rgba(146, 64, 14, 0.3)"
-                : "rgba(245, 158, 11, 0.3)",
-              backgroundColor: isLightCream
-                ? "rgba(146, 64, 14, 0.06)"
-                : "rgba(245, 158, 11, 0.1)",
+              color: "var(--luca-warning)",
+              borderColor: "color-mix(in srgb, var(--luca-warning) 32%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--luca-warning) 10%, transparent)",
             }}
             title="Lockdown active"
           >
@@ -193,12 +178,12 @@ const Header: React.FC<HeaderProps> = ({
         {isProcessing && (
           <span
             className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-medium"
-            style={{ color: "var(--app-text-muted, #94a3b8)" }}
+            style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
             title="Luca is working"
           >
             <span
               className="w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ backgroundColor: "var(--luca-accent-primary, #3b82f6)" }}
+              style={{ backgroundColor: "var(--luca-accent-primary)" }}
             />
             Working
           </span>
@@ -208,13 +193,9 @@ const Header: React.FC<HeaderProps> = ({
           <span
             className={`${isMobile ? "hidden md:inline-flex" : "inline-flex"} items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border`}
             style={{
-              color: isLightCream ? "#991b1b" : "#f87171",
-              borderColor: isLightCream
-                ? "rgba(153, 27, 27, 0.3)"
-                : "rgba(248, 113, 113, 0.3)",
-              backgroundColor: isLightCream
-                ? "rgba(153, 27, 27, 0.06)"
-                : "rgba(248, 113, 113, 0.1)",
+              color: "var(--luca-danger)",
+              borderColor: "color-mix(in srgb, var(--luca-danger) 32%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--luca-danger) 10%, transparent)",
             }}
             title="Admin mode active"
           >
@@ -237,7 +218,7 @@ const Header: React.FC<HeaderProps> = ({
           />
           <span
             className="text-[13px] font-semibold tabular-nums"
-            style={{ color: "var(--app-text-main, #ffffff)" }}
+            style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
           >
             {!isFinite(credits.balance)
               ? "∞"
@@ -327,7 +308,7 @@ const Header: React.FC<HeaderProps> = ({
           className="flex items-center justify-center w-9 h-9 rounded-full border transition-all group app-region-no-drag"
           style={{
             ...surfaceStyle,
-            color: "var(--app-text-muted, #94a3b8)",
+            color: "var(--luca-text-secondary, var(--app-text-muted))",
           }}
         >
           <Icon

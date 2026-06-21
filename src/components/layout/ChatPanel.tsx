@@ -660,7 +660,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 : {
                     borderColor: viewMode === "CORTEX" ? "var(--luca-accent-primary)" : "var(--luca-border-subtle, var(--app-border-main))",
                     backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
-                    color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
+                    color: viewMode === "CORTEX" ? theme.hex : "var(--luca-text-primary, var(--app-text-main))"
                   }
             }
           >
@@ -687,7 +687,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               {/* Greeting */}
             <h1
               className="text-4xl lg:text-5xl font-semibold tracking-tight leading-tight mb-1 text-center"
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+              style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
             >
               <span className="opacity-40 font-light mr-3">
                 {greeting.prefix}
@@ -695,7 +695,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               <span
                 className="font-semibold"
                 style={{
-                  color: theme.hex || "#3b82f6",
+                  color: theme.hex || "var(--luca-accent-primary)",
                 }}
               >
                 {greeting.suffix || "Operator"}
@@ -703,7 +703,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             </h1>
             <p
               className="text-sm opacity-50 text-center"
-              style={{ color: "var(--app-text-muted, #94a3b8)" }}
+              style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
             >
               Ready when you are
             </p>
@@ -835,7 +835,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               : {
                   borderColor: viewMode === "CORTEX" ? "var(--luca-accent-primary)" : "var(--luca-border-subtle, var(--app-border-main))",
                   backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
-                  color: viewMode === "CORTEX" ? theme.hex : "var(--app-text-main, #ffffff)"
+                  color: viewMode === "CORTEX" ? theme.hex : "var(--luca-text-primary, var(--app-text-main))"
                 }
           }
         >
@@ -887,7 +887,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   timestamp={msg.timestamp}
                   persona={persona as any}
                   primaryColor={
-                    theme.hex || "#3b82f6"
+                    theme.hex || "var(--luca-accent-primary)"
                   }
                   isProcessing={index === arr.length - 1 && isProcessing}
                   attachment={msg.attachment}
