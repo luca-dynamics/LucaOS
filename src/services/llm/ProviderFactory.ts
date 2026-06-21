@@ -46,12 +46,79 @@ export type ModelProvisioningRoute =
       modelId: string;
     };
 
+export interface LucaProviderFactoryFinalRouteDecision {
+  readonly currentRoute: ModelProvisioningRoute;
+  readonly handoffRoute?: ModelProvisioningRoute;
+  readonly finalRoute: ModelProvisioningRoute;
+  readonly fallbackRoute: ModelProvisioningRoute;
+  readonly usedProviderHubHandoff: boolean;
+  readonly handoffStatus: LucaProviderHubRouteHandoffResult["handoffStatus"];
+  readonly reason: string;
+  readonly fallbackReason?: string;
+  readonly safeDiagnosticsText: string;
+  readonly providerApiCalledDuringSelection: false;
+  readonly providerAdapterInstantiatedByHandoffMapper: false;
+  readonly runtimeExecutionChanged: boolean;
+}
+
+function routeKey(route: ModelProvisioningRoute): string {
+  return JSON.stringify(route);
+}
+
+function routeSummary(route: ModelProvisioningRoute): string {
+  if (route.kind === "LOCAL") return `${route.kind}:${route.runtime}:${route.model}`;
+  return `${route.kind}:${route.provider}:${route.model}`;
+}
+
+function createFinalRouteDecision(
+  currentRoute: ModelProvisioningRoute,
+  handoff: LucaProviderHubRouteHandoffResult,
+  runtimeRouteSelectionEnabled: boolean,
+): LucaProviderFactoryFinalRouteDecision {
+  const handoffEligible = runtimeRouteSelectionEnabled
+    && handoff.shouldUseProviderHubRoute
+    && handoff.handoffStatus === "mapped";
+  const finalRoute = handoffEligible ? handoff.handoffRoute : currentRoute;
+  const runtimeExecutionChanged = handoffEligible && routeKey(finalRoute) !== routeKey(currentRoute);
+  const fallbackReason = handoffEligible ? undefined : handoff.reason;
+
+  const diagnostics = JSON.stringify({
+    currentRoute: routeSummary(currentRoute),
+    handoffRoute: handoff.handoffStatus === "mapped" ? routeSummary(handoff.handoffRoute) : null,
+    fallbackRoute: routeSummary(currentRoute),
+    finalRoute: routeSummary(finalRoute),
+    usedProviderHubHandoff: handoffEligible,
+    handoffStatus: handoff.handoffStatus,
+    reason: handoffEligible ? "Provider Hub handoff route passed all final ProviderFactory execution guards." : "Current ProviderFactory route remains active because Provider Hub handoff was not eligible.",
+    fallbackReason: fallbackReason ?? null,
+    providerApiCalledDuringSelection: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+    runtimeExecutionChanged,
+  });
+
+  return {
+    currentRoute,
+    handoffRoute: handoff.handoffStatus === "mapped" ? handoff.handoffRoute : undefined,
+    finalRoute,
+    fallbackRoute: currentRoute,
+    usedProviderHubHandoff: handoffEligible,
+    handoffStatus: handoff.handoffStatus,
+    reason: handoffEligible ? "Provider Hub handoff route passed all final ProviderFactory execution guards; adapter creation will still use createProviderForRoute(...)." : "Current ProviderFactory route remains active because Provider Hub handoff was not eligible for execution.",
+    fallbackReason,
+    safeDiagnosticsText: diagnostics,
+    providerApiCalledDuringSelection: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+    runtimeExecutionChanged,
+  };
+}
+
 /**
  * ProviderFactory - Unified LLM Provider Routing
  */
 export class ProviderFactory {
   private static lastProviderHubShadowSelection: LucaProviderFactoryShadowSelection | undefined;
   private static lastProviderHubRouteHandoff: LucaProviderHubRouteHandoffResult | undefined;
+  private static lastFinalRouteDecision: LucaProviderFactoryFinalRouteDecision | undefined;
 
   static getLastProviderHubShadowSelection(): LucaProviderFactoryShadowSelection | undefined {
     return this.lastProviderHubShadowSelection;
@@ -61,12 +128,18 @@ export class ProviderFactory {
     return this.lastProviderHubRouteHandoff;
   }
 
+  static getLastFinalRouteDecision(): LucaProviderFactoryFinalRouteDecision | undefined {
+    return this.lastFinalRouteDecision;
+  }
+
   static resolveProvisioningRouteWithDiagnostics(
     settings: LucaSettings["brain"],
     persona?: string,
     providerOverride?: string,
-  ): { route: ModelProvisioningRoute; providerHubShadowSelection?: LucaProviderFactoryShadowSelection; providerHubRouteHandoff?: LucaProviderHubRouteHandoffResult } {
+  ): { route: ModelProvisioningRoute; providerHubShadowSelection?: LucaProviderFactoryShadowSelection; providerHubRouteHandoff?: LucaProviderHubRouteHandoffResult; finalRouteDecision: LucaProviderFactoryFinalRouteDecision } {
     const route = this.resolveProvisioningRoute(settings, persona, providerOverride);
+    const allSettings = { ...settingsService.getSettings(), brain: settings };
+    const runtimeRouteSelectionEnabled = Boolean(allSettings.providerHub?.runtimeRouteSelectionEnabled);
     const providerId = getProviderHubIdForProviderFactoryRoute(route);
     const shadow = createProviderFactoryShadowSelection({
       currentRuntimeProviderId: providerId,
@@ -74,9 +147,9 @@ export class ProviderFactory {
       currentRouteMode: route.kind,
       taskType: "chat",
       requiredCapabilities: ["text_generation"],
-      currentSettingsSnapshot: settingsService.getSettings(),
+      currentSettingsSnapshot: allSettings,
       routePreference: route.kind === "LOCAL" ? "local_first" : route.kind === "BYOK" ? "cloud_first" : "managed_first",
-      runtimeRouteSelectionEnabled: Boolean(settingsService.getSettings().providerHub?.runtimeRouteSelectionEnabled),
+      runtimeRouteSelectionEnabled,
       allowFallbacks: true,
       allowPaidProviders: route.kind !== "LOCAL",
       allowLocalProviders: true,
@@ -94,10 +167,11 @@ export class ProviderFactory {
       taskType: "chat",
       requiredCapabilities: ["text_generation"],
     });
-    const selectedRoute = handoff.handoffStatus === "mapped" && handoff.shouldUseProviderHubRoute ? handoff.handoffRoute : route;
+    const finalRouteDecision = createFinalRouteDecision(route, handoff, runtimeRouteSelectionEnabled);
     this.lastProviderHubShadowSelection = shadow;
     this.lastProviderHubRouteHandoff = handoff;
-    return { route: selectedRoute, providerHubShadowSelection: shadow, providerHubRouteHandoff: handoff };
+    this.lastFinalRouteDecision = finalRouteDecision;
+    return { route: finalRouteDecision.finalRoute, providerHubShadowSelection: shadow, providerHubRouteHandoff: handoff, finalRouteDecision };
   }
   static resolveProvisioningRoute(
     settings: LucaSettings["brain"],
