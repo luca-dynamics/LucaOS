@@ -236,3 +236,64 @@ no-op override slots.
    that composes `LucaFloatingPanel` once more floating surfaces exist.
 5. Revisit advanced/pro/creator/tactical surfaces only if they leak into
    default/basic shell chrome (they are intentionally excluded today).
+
+## Default/basic surface migration follow-up
+
+Date: 2026-06-21
+
+This pass continues the gradual migration of core shell surfaces onto the Luca
+Material Engine. It deliberately targets surfaces already backed by the
+**shell panel trio token style** (`lucaShellPanelSurfaceStyle`), where swapping
+to `lucaMaterialPanelStyle` keeps background / border / shadow byte-identical and
+only routes backdrop blur through the `--luca-material-blur` slot (so the surface
+now respects the #387 host-policy blur cap — full on desktop app, reduced on
+web/mobile).
+
+### Files migrated
+
+| Component | Surface | Material role used |
+| --- | --- | --- |
+| `src/components/dashboard/LucaDashboardSurface.tsx` | Desktop left panel + right panel wrappers | `lucaMaterialPanelStyle` |
+| `src/components/layout/Header.tsx` | Desktop header bar surface | `lucaMaterialPanelStyle` |
+
+### Why material roles (style objects) and not primitive components here
+
+Part 2 of the migration brief prefers primitive components (`LucaPanel`, etc.)
+but allows material style objects "when component structure makes wrapper
+replacement risky." Both migrated wrappers are large multi-child containers whose
+opening/closing tags span many lines and merge per-instance inline layout
+(`width`). Retagging them to `<LucaPanel>` would be the exact risky wrapper
+replacement Part 2 cautions against, so the material **role** is spread into the
+existing element instead. Output is identical.
+
+### Intentionally deferred surfaces
+
+These were inspected and **left unchanged** on purpose:
+
+- **Raw low-alpha right-panel cards** — `ActivityPanel`, `ControlPanel`,
+  `MemoryControlPanel`, `TraceLogsPanel`, `RightPanelSection`, `RightPanelMetric`
+  (neutral tone), and `OperationPermissionCenter` use intentionally light tints
+  (`bg-white/[0.03]`–`bg-white/[0.05]`, `bg-black/10`) with no shadow/blur. There
+  is **no flat low-tint material role** today; forcing them into `LucaPanel`
+  (heavier `--luca-surface-glass` + shadow + blur) would change their surface
+  weight and elevation — a redesign, not a normalization. These need a new
+  `lucaMaterialCardStyle` (flat: background + border + text, no shadow/blur)
+  before they can migrate identically. **Next candidate.**
+- **`src/web/WebCapabilityPanel.tsx`** — browser-stylized default panel with a
+  bespoke radius/shadow; same flat-tint concern. Deferred with the card role.
+- **Dashboard rail / workspace / control / tab styles**
+  (`lucaShellRailSurfaceStyle`, `lucaShellWorkspaceSurfaceStyle`,
+  `lucaShellControlStyle`, `lucaShellTabStyle`, dividers) — left on shell helpers;
+  rail/control variants carry secondary-text and active states with no 1:1
+  material role yet.
+- **Semantic status surfaces** (`color-mix(... var(--luca-danger/success/warning/info) ...)`),
+  **modal scrims** (`bg-black/80`), and **tactical/debug visuals**
+  (`MobileScreenMirror`, `UiTreeOverlay`) — out of scope by the brief.
+
+### Next migration candidates
+
+1. Add a flat `lucaMaterialCardStyle` role (background + border + text, no
+   shadow/blur) and migrate the right-panel operation cards to it.
+2. Add `lucaMaterialRailStyle` / control roles, then migrate the dashboard rail,
+   control buttons, and tab strip.
+3. Migrate `WebCapabilityPanel` once the flat card role exists.

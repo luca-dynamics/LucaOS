@@ -199,3 +199,68 @@ sheets, sidebars, overlays) is cross-host with safe fallbacks.
   after real-device profiling).
 - Migrate remaining default/basic panels (settings, right-panel operation centers,
   dashboard cards) to Luca Material roles.
+
+## Default/basic material primitive migration
+
+Date: 2026-06-21
+
+### Search patterns used
+
+Audited remaining default/basic surfaces across `src/components/settings/`,
+`src/components/layout/`, `src/components/right-panel/`, `src/components/dashboard/`,
+and `src/web/` for:
+
+- inline `background` / `backgroundColor` / `borderColor` / `boxShadow` /
+  `backdropFilter` using raw `rgba(...)` or hex (`#fff`, `#000`, `#121212`, …)
+- Tailwind `bg-white/`, `bg-black/`, `bg-gray-`, `bg-slate-`, `border-white/`,
+  `border-gray-`, `shadow-lg`, `shadow-2xl`
+- direct style-object usage of `lucaShellPanelSurfaceStyle` /
+  `lucaShellRailSurfaceStyle` that maps 1:1 to a material role
+- repeated background + border + shadow trios duplicating `LucaPanel`
+
+### Files inspected
+
+- `src/components/dashboard/LucaDashboardSurface.tsx`
+- `src/components/layout/Header.tsx`
+- `src/components/right-panel/{ActivityPanel,ControlPanel,MemoryControlPanel,TraceLogsPanel,RightPanelSection,RightPanelMetric,OperationPermissionCenter,PersonalIntelligenceReadOnlyPanel,PersonalIntelligenceReviewWorkflowPanel}.tsx`
+- `src/web/WebCapabilityPanel.tsx`
+- `src/components/settings/*` (SettingsLayout, SettingsMCPTab, tab wrappers)
+
+### Default/basic surfaces migrated
+
+Only token-backed shell-trio surfaces were migrated (background/border/shadow
+byte-identical; blur now host-policy aware via `--luca-material-blur`):
+
+- `LucaDashboardSurface.tsx` — desktop left panel + right panel → `lucaMaterialPanelStyle`
+- `Header.tsx` — desktop header bar → `lucaMaterialPanelStyle`
+
+### Intentional remaining classes/surfaces
+
+- Right-panel cards (`ActivityPanel`, `ControlPanel`, `MemoryControlPanel`,
+  `TraceLogsPanel`, `RightPanelSection`, `RightPanelMetric`,
+  `OperationPermissionCenter`, the two `PersonalIntelligence*Panel`s) use
+  intentional low-alpha white/black tints with no shadow/blur. They need a new
+  flat `lucaMaterialCardStyle` role to migrate without changing surface weight —
+  deferred (documented in `luca-material-system.md`).
+- `WebCapabilityPanel.tsx` — bespoke browser-stylized panel; deferred with the card role.
+- Dashboard rail / workspace / control / tab / divider styles kept on shell helpers.
+- Semantic `color-mix` status surfaces, `bg-black/80` modal scrims, and
+  tactical/debug visuals (`MobileScreenMirror`, `UiTreeOverlay`) left untouched per brief.
+- No older helper exports were removed; `lucaShellStyles.ts` /
+  `lucaMobileShellStyles.ts` / `lucaPlatformBackgroundPolicy.ts` remain in use.
+
+### Build results
+
+- `npm run build:web`: passes.
+- `npm run type-check` / `npm run build`: pre-existing 113 errors in
+  `src/services/` test fixtures (unrelated; count unchanged). No new errors from
+  this change.
+
+### Known follow-up items
+
+- Add flat `lucaMaterialCardStyle` (background + border + text, no shadow/blur)
+  and migrate right-panel operation cards + `WebCapabilityPanel`.
+- Add `lucaMaterialRailStyle` / control roles for the dashboard rail, control
+  buttons, and tab strip.
+- Settings tab cards already use the shared `settingsLayoutStyles` token system;
+  revisit only if a primitive adds clear value.

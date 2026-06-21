@@ -20,11 +20,11 @@ import {
   lucaShellControlStyle,
   lucaShellDividerStyle,
   lucaShellMutedTextStyle,
-  lucaShellPanelSurfaceStyle,
   lucaShellRailSurfaceStyle,
   lucaShellTabStyle,
   lucaShellWorkspaceSurfaceStyle,
 } from "../../styles/lucaShellStyles";
+import { lucaMaterialPanelStyle } from "../../styles/lucaMaterialSystem";
 import {
   lucaMobileActiveIndicatorStyle,
   lucaMobileActiveTabStyle,
@@ -158,7 +158,7 @@ export function LucaDashboardSurface({
             <div
               className={`flex-none h-full overflow-hidden flex flex-col relative border-r ${lucaShellClassNames.panel}`}
               style={{
-                ...lucaShellPanelSurfaceStyle,
+                ...lucaMaterialPanelStyle,
                 width: `${sidebarWidth}px`,
               }}
             >
@@ -264,7 +264,7 @@ export function LucaDashboardSurface({
             <section
               className={`flex-none h-full border-l relative overflow-hidden flex flex-col ${lucaShellClassNames.panel}`}
               style={{
-                ...lucaShellPanelSurfaceStyle,
+                ...lucaMaterialPanelStyle,
                 width: `${rightWidth}px`,
               }}
             >
