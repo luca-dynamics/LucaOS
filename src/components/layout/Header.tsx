@@ -9,10 +9,8 @@ import { awarenessService } from "../../services/awarenessService";
 import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
 import { useCredits } from "../../hooks/useCredits";
-import {
-  lucaShellPanelSurfaceStyle,
-  lucaShellControlStyle,
-} from "../../styles/lucaShellStyles";
+import { lucaShellControlStyle } from "../../styles/lucaShellStyles";
+import { lucaMaterialPanelStyle } from "../../styles/lucaMaterialSystem";
 import { lucaMobilePanelSurfaceStyle } from "../../styles/lucaMobileShellStyles";
 
 interface HeaderProps {
@@ -117,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({
 
   const headerSurfaceStyle = isMobile
     ? lucaMobilePanelSurfaceStyle
-    : lucaShellPanelSurfaceStyle;
+    : lucaMaterialPanelStyle;
   const surfaceStyle = isMobile ? lucaMobilePanelSurfaceStyle : lucaShellControlStyle;
 
   return (
