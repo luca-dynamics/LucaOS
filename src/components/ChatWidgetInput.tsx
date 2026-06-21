@@ -7,8 +7,8 @@ import {
   LUCA_SHELL_BORDER_SUBTLE,
   LUCA_SHELL_SHADOW_GLOW,
   LUCA_SHELL_SHADOW_SOFT,
-  lucaShellPanelSurfaceStyle,
 } from "../styles/lucaShellStyles";
+import { lucaMaterialPanelStyle } from "../styles/lucaMaterialSystem";
 
 interface ChatWidgetInputProps {
   input: string;
@@ -140,7 +140,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
     themeName?.toLowerCase() === "lucagent" ||
     themeName?.toLowerCase() === "agentic-slate" ||
     themeName?.toLowerCase() === "light";
-  const inputSurfaceStyle = lucaShellPanelSurfaceStyle;
+  const inputSurfaceStyle = lucaMaterialPanelStyle;
 
   return (
     <div
