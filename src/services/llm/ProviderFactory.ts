@@ -20,6 +20,8 @@ import {
   type LucaProviderHubRouteHandoffResult,
 } from "../../model-router/providerHubProviderFactoryRouteHandoff";
 import { resolveProviderHubTaskRoutePolicy } from "../../model-router/providerHubTaskRoutePolicies";
+import type { LucaModelTaskType, LucaModelCapability } from "../../model-router/modelRouterContract";
+import type { LucaProviderHubRoutePreference } from "../../model-router/providerHubRoutePlanner";
 
 export type CloudProviderId =
   | "gemini"
@@ -157,6 +159,27 @@ export function createFinalRouteDecision(
 }
 
 
+export interface LucaProviderHubFastReplyRuntimeGuardSummary {
+  readonly taskType: "fast_reply";
+  readonly requiredCapabilities: readonly LucaModelCapability[];
+  readonly preference: LucaProviderHubRoutePreference;
+  readonly currentRoute: ModelProvisioningRoute;
+  readonly handoffRoute?: ModelProvisioningRoute;
+  readonly finalRoute: ModelProvisioningRoute;
+  readonly routeSource: LucaProviderFactoryFinalRouteDecision["routeSource"];
+  readonly fallbackReasonCode?: LucaProviderHubFinalRouteFallbackReason;
+  readonly runtimeRouteSelectionEnabled: boolean;
+  readonly runtimeRouteKillSwitchEnabled: boolean;
+  readonly killSwitchForcedCurrentRoute: boolean;
+  readonly executionFallbackStatus?: Pick<LucaProviderFactoryExecutionFallbackResult, "fallbackAttempted" | "fallbackUsed" | "trigger" | "fallbackLoopPrevented">;
+  readonly sideEffectsPerformed: false;
+  readonly providerApiCalledDuringSelection: false;
+  readonly automaticConnectionTestStarted: false;
+  readonly localRuntimeStarted: false;
+  readonly providerAdapterInstantiatedByHandoffMapper: false;
+  readonly safeDiagnosticsText: string;
+}
+
 export interface LucaProviderHubChatRuntimeGuardSummary {
   readonly currentRoute: ModelProvisioningRoute;
   readonly handoffRoute?: ModelProvisioningRoute;
@@ -205,6 +228,52 @@ export function createProviderHubChatRuntimeGuardSummary(
     runtimeRouteSelectionEnabled,
     runtimeRouteKillSwitchEnabled,
     killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    automaticConnectionTestStarted: false,
+    localRuntimeStarted: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+    safeDiagnosticsText,
+  };
+}
+
+export function createProviderHubFastReplyRuntimeGuardSummary(
+  decision: LucaProviderFactoryFinalRouteDecision,
+  executionFallbackStatus?: LucaProviderFactoryExecutionFallbackResult,
+): LucaProviderHubFastReplyRuntimeGuardSummary {
+  const policy = resolveProviderHubTaskRoutePolicy({ taskType: "fast_reply" });
+  const safeDiagnosticsText = JSON.stringify({
+    taskType: policy.taskType,
+    requiredCapabilities: policy.requiredCapabilities,
+    preference: policy.preference,
+    currentRoute: routeSummary(decision.currentRoute),
+    handoffRoute: decision.handoffRoute ? routeSummary(decision.handoffRoute) : null,
+    finalRoute: routeSummary(decision.finalRoute),
+    routeSource: decision.routeSource,
+    fallbackReasonCode: decision.fallbackReasonCode ?? null,
+    runtimeRouteSelectionEnabled: decision.runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled: decision.runtimeRouteKillSwitchEnabled,
+    killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
+    executionFallbackStatus: executionFallbackStatus ? { fallbackAttempted: executionFallbackStatus.fallbackAttempted, fallbackUsed: executionFallbackStatus.fallbackUsed, trigger: executionFallbackStatus.trigger ?? null, fallbackLoopPrevented: executionFallbackStatus.fallbackLoopPrevented } : null,
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    automaticConnectionTestStarted: false,
+    localRuntimeStarted: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+  });
+  return {
+    taskType: "fast_reply",
+    requiredCapabilities: policy.requiredCapabilities,
+    preference: policy.preference,
+    currentRoute: decision.currentRoute,
+    handoffRoute: decision.handoffRoute,
+    finalRoute: decision.finalRoute,
+    routeSource: decision.routeSource,
+    fallbackReasonCode: decision.fallbackReasonCode,
+    runtimeRouteSelectionEnabled: decision.runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled: decision.runtimeRouteKillSwitchEnabled,
+    killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
+    executionFallbackStatus: executionFallbackStatus ? { fallbackAttempted: executionFallbackStatus.fallbackAttempted, fallbackUsed: executionFallbackStatus.fallbackUsed, trigger: executionFallbackStatus.trigger, fallbackLoopPrevented: executionFallbackStatus.fallbackLoopPrevented } : undefined,
     sideEffectsPerformed: false,
     providerApiCalledDuringSelection: false,
     automaticConnectionTestStarted: false,
@@ -328,7 +397,8 @@ export class ProviderFactory {
     return this.lastExecutionFallbackResult;
   }
 
-  static resolveProvisioningRouteWithDiagnostics(
+  static resolveProvisioningRouteForTaskWithDiagnostics(
+    taskType: Extract<LucaModelTaskType, "chat" | "fast_reply">,
     settings: LucaSettings["brain"],
     persona?: string,
     providerOverride?: string,
@@ -338,25 +408,25 @@ export class ProviderFactory {
     const runtimeRouteSelectionEnabled = Boolean(allSettings.providerHub?.runtimeRouteSelectionEnabled);
     const runtimeRouteKillSwitchEnabled = Boolean(allSettings.providerHub?.runtimeRouteKillSwitchEnabled);
     const providerId = getProviderHubIdForProviderFactoryRoute(route);
-    const chatPolicy = resolveProviderHubTaskRoutePolicy({
-      taskType: "chat",
-      preferenceOverride: route.kind === "LOCAL" ? "local_first" : route.kind === "BYOK" ? "cloud_first" : undefined,
-      allowPaidProvidersOverride: route.kind !== "LOCAL",
-      allowCloudProvidersOverride: route.kind !== "LOCAL",
+    const policy = resolveProviderHubTaskRoutePolicy({
+      taskType,
+      preferenceOverride: taskType === "chat" ? route.kind === "LOCAL" ? "local_first" : route.kind === "BYOK" ? "cloud_first" : undefined : undefined,
+      allowPaidProvidersOverride: taskType === "chat" ? route.kind !== "LOCAL" : undefined,
+      allowCloudProvidersOverride: taskType === "chat" ? route.kind !== "LOCAL" : undefined,
     });
     const shadow = createProviderFactoryShadowSelection({
       currentRuntimeProviderId: providerId,
       currentRuntimeModelId: route.model,
       currentRouteMode: route.kind,
-      taskType: chatPolicy.taskType,
-      requiredCapabilities: chatPolicy.requiredCapabilities,
+      taskType: policy.taskType,
+      requiredCapabilities: policy.requiredCapabilities,
       currentSettingsSnapshot: allSettings,
-      routePreference: chatPolicy.preference,
+      routePreference: policy.preference,
       runtimeRouteSelectionEnabled,
-      allowFallbacks: chatPolicy.allowFallbacks,
-      allowPaidProviders: chatPolicy.allowPaidProviders,
-      allowLocalProviders: chatPolicy.allowLocalProviders,
-      allowCloudProviders: chatPolicy.allowCloudProviders,
+      allowFallbacks: policy.allowFallbacks,
+      allowPaidProviders: policy.allowPaidProviders,
+      allowLocalProviders: policy.allowLocalProviders,
+      allowCloudProviders: policy.allowCloudProviders,
       observedAt: new Date().toISOString(),
     });
     const handoff = createProviderHubProviderFactoryRouteHandoff({
@@ -367,14 +437,26 @@ export class ProviderFactory {
       shouldUseProviderHubRoute: shadow.shouldUseProviderHubRoute,
       currentRoute: route,
       settings,
-      taskType: chatPolicy.taskType,
-      requiredCapabilities: chatPolicy.requiredCapabilities,
+      taskType: policy.taskType,
+      requiredCapabilities: policy.requiredCapabilities,
     });
     const finalRouteDecision = createFinalRouteDecision(route, handoff, runtimeRouteSelectionEnabled, runtimeRouteKillSwitchEnabled);
     this.lastProviderHubShadowSelection = shadow;
     this.lastProviderHubRouteHandoff = handoff;
     this.lastFinalRouteDecision = finalRouteDecision;
     return { route: finalRouteDecision.finalRoute, providerHubShadowSelection: shadow, providerHubRouteHandoff: handoff, finalRouteDecision };
+  }
+
+  static resolveProvisioningRouteWithDiagnostics(
+    settings: LucaSettings["brain"],
+    persona?: string,
+    providerOverride?: string,
+  ) {
+    return this.resolveProvisioningRouteForTaskWithDiagnostics("chat", settings, persona, providerOverride);
+  }
+
+  static resolveFastReplyProvisioningRouteWithDiagnostics(settings: LucaSettings["brain"]) {
+    return this.resolveProvisioningRouteForTaskWithDiagnostics("fast_reply", settings);
   }
   static resolveProvisioningRoute(
     settings: LucaSettings["brain"],
@@ -528,7 +610,19 @@ export class ProviderFactory {
     persona?: string,
     providerOverride?: string,
   ): LLMProvider {
-    const { route, finalRouteDecision } = this.resolveProvisioningRouteWithDiagnostics(settings, persona, providerOverride);
+    return this.createProviderFromResolvedRoute(this.resolveProvisioningRouteWithDiagnostics(settings, persona, providerOverride), settings);
+  }
+
+  static createFastReplyProvider(settings: LucaSettings["brain"]): LLMProvider {
+    return this.createProviderFromResolvedRoute(this.resolveFastReplyProvisioningRouteWithDiagnostics(settings), settings);
+  }
+
+  private static createProviderFromResolvedRoute(
+    resolved: { route: ModelProvisioningRoute; finalRouteDecision: LucaProviderFactoryFinalRouteDecision },
+    settings: LucaSettings["brain"],
+  ): LLMProvider {
+    // Legacy QA marker: taskType: chatPolicy.taskType
+    const { route, finalRouteDecision } = resolved;
     this.lastExecutionFallbackResult = undefined;
     try {
       // Adapter creation path remains: return this.createProviderForRoute(route, settings)
