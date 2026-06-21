@@ -7,3 +7,4 @@ export * from "./operationCenterAudit";
 export * from "./providerHubOperationBridge";
 export * from "./operationCenterFixtures";
 export * from "./providerHubRuntimeRouteSelectionBridge";
+export * from "./providerHubProviderFactoryShadowBridge";

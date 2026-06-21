@@ -243,7 +243,7 @@ const ProviderHubPanel: React.FC<{ viewModel: ProviderHubPanelViewModel; routeDe
       </div>
     </div>
     <div className="p-3">
-      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} preview={routePreview} onPreviewChange={onRoutePreviewChange} theme={theme} />
+      <RoutePreviewPanel decision={routeDecision} dryRunComparison={dryRunComparison} shadowTrace={shadowTrace} runtimeSelection={runtimeSelection} runtimeRouteSelectionEnabled={runtimeRouteSelectionEnabled} onRuntimeRouteSelectionEnabledChange={onRuntimeRouteSelectionEnabledChange} preview={routePreview} onPreviewChange={onRoutePreviewChange} theme={theme} />
       <div className="mt-3" />
       {viewModel.sections.map((section) => (
         <div key={section.id} className="mb-3 last:mb-0">
