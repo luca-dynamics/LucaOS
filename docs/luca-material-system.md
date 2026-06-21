@@ -359,3 +359,38 @@ with reduced blur policies.
 Semantic status cards and chips using `color-mix(... var(--luca-success | --luca-warning | --luca-danger | --luca-info) ...)`,
 modal scrims, tactical/debug visuals, `MobileScreenMirror`, `UiTreeOverlay`, and
 advanced visualization surfaces remain intentionally out of scope. A narrow follow-up also tokenized neutral right-panel chips, default conditional card branches, and the Operation Permission Center neutral rows while preserving semantic status surfaces.
+
+## Rail/control/tab material role follow-up
+
+**Date:** 2026-06-21
+
+### Roles added
+
+- `lucaMaterialRailStyle` for collapsed dashboard rails and other low-weight rail chrome.
+- `lucaMaterialControlStyle` and `lucaMaterialControlActiveStyle` for neutral/default control buttons.
+- `lucaMaterialTabStyle` and `lucaMaterialTabActiveStyle` for default dashboard tab buttons.
+- `lucaMaterialDividerStyle` for semantic neutral borders and separator lines.
+- `lucaMaterialWorkspaceStyle` for the safe 1:1 default workspace helper mapping.
+- `resolveLucaRailMaterial` and registry entries so the new roles are discoverable beside the existing panel/card/metric/web-card roles.
+
+### Design intent
+
+The new roles keep the hierarchy below full panels, cards, and metric chips. Rails use a tokenized surface and border without adding panel blur or elevation. Controls and tabs use lighter material slots so interactive chrome remains compact and state-focused. Dividers only route border color through the Luca Material border slot.
+
+### Files migrated
+
+- `src/components/dashboard/LucaDashboardSurface.tsx` now uses rail, control, active-control, tab, active-tab, divider, and workspace material roles for the desktop dashboard shell chrome.
+- `src/components/layout/Header.tsx` now uses the control material role for neutral header controls on desktop while keeping mobile on the mobile panel helper.
+- `src/components/layout/ChatPanel.tsx` now uses the workspace material role for the existing desktop workspace fallback surfaces.
+
+### Difference from panel/card/metric roles
+
+Panel roles remain the highest-weight default shell surfaces and continue to include blur, shadow, and primary framing. Card and metric roles remain flat content surfaces with stronger content grouping semantics than controls. The rail/control/tab roles are intentionally lighter: no new animation, no new layout behavior, no heavy shadow, and no forced panel blur. Dividers are only semantic border helpers.
+
+### Host-policy behavior
+
+The roles continue the same settings flow as the existing engine: appearance settings resolve Luca appearance tokens, material slots optionally override those tokens, and host policies can constrain material variables before components consume the semantic roles. The new rail/control/tab slots fall back to Luca appearance tokens, so desktop app, mobile app, desktop web, and mobile web keep safe defaults when a host policy withholds stronger liquid behavior.
+
+### Intentionally deferred surfaces
+
+Semantic success/warning/danger/info states, tactical/debug visual components, advanced/pro/creator visualizations, hologram/presence/shader surfaces, modal scrims, mobile frame/device-preview visuals, runtime/service UI, and broad `App.tsx` chrome remain deferred unless a future role maps exactly to those surfaces.

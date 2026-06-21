@@ -18,10 +18,10 @@ import {
   lucaMobileContentSurfaceStyle,
   lucaMobileGlassControlStyle,
 } from "../../styles/lucaMobileShellStyles";
-import { lucaShellWorkspaceSurfaceStyle } from "../../styles/lucaShellStyles";
 import {
   lucaMaterialMobileSheetStyle,
   lucaMaterialPanelStyle,
+  lucaMaterialWorkspaceStyle,
   resolveLucaSheetMaterial,
 } from "../../styles/lucaMaterialSystem";
 
@@ -632,7 +632,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           isMobile
             ? lucaMobileContentSurfaceStyle
             : {
-                ...lucaShellWorkspaceSurfaceStyle,
+                ...lucaMaterialWorkspaceStyle,
                 borderTop: "1px solid var(--luca-border-subtle, var(--app-border-main))",
                 borderBottom: "1px solid var(--luca-border-subtle, var(--app-border-main))",
               }
@@ -807,7 +807,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         isMobile
           ? lucaMobileContentSurfaceStyle
           : {
-              ...lucaShellWorkspaceSurfaceStyle,
+              ...lucaMaterialWorkspaceStyle,
               borderTop: "1px solid var(--luca-border-subtle, var(--app-border-main))",
               borderBottom: "1px solid var(--luca-border-subtle, var(--app-border-main))",
             }

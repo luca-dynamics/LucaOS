@@ -13,18 +13,20 @@ import {
   type MobileNavigationTab,
 } from "../layout/mobileNavigationModel";
 import {
-  lucaShellActiveControlStyle,
   lucaShellActiveIndicatorStyle,
-  lucaShellActiveTabStyle,
   lucaShellClassNames,
-  lucaShellControlStyle,
-  lucaShellDividerStyle,
   lucaShellMutedTextStyle,
-  lucaShellRailSurfaceStyle,
-  lucaShellTabStyle,
-  lucaShellWorkspaceSurfaceStyle,
 } from "../../styles/lucaShellStyles";
-import { lucaMaterialPanelStyle } from "../../styles/lucaMaterialSystem";
+import {
+  lucaMaterialControlActiveStyle,
+  lucaMaterialControlStyle,
+  lucaMaterialDividerStyle,
+  lucaMaterialPanelStyle,
+  lucaMaterialRailStyle,
+  lucaMaterialTabActiveStyle,
+  lucaMaterialTabStyle,
+  lucaMaterialWorkspaceStyle,
+} from "../../styles/lucaMaterialSystem";
 import {
   lucaMobileActiveIndicatorStyle,
   lucaMobileActiveTabStyle,
@@ -127,7 +129,7 @@ export function LucaDashboardSurface({
           <div
             className={`flex-none h-full overflow-hidden flex flex-col items-center gap-4 py-3 border-r ${lucaShellClassNames.rail}`}
             style={{
-              ...lucaShellRailSurfaceStyle,
+              ...lucaMaterialRailStyle,
               width: `${DESKTOP_RAIL_WIDTH_PX}px`,
             }}
           >
@@ -137,7 +139,7 @@ export function LucaDashboardSurface({
               title={leftToggleIcon(true).label}
               onClick={() => onToggleLeftPanel?.(false)}
               className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-              style={lucaShellControlStyle}
+              style={lucaMaterialControlStyle}
             >
               <Icon name={leftToggleIcon(true).name} size={20} />
             </button>
@@ -168,7 +170,7 @@ export function LucaDashboardSurface({
                 title={leftToggleIcon(false).label}
                 onClick={() => onToggleLeftPanel?.(true)}
                 className={`absolute top-2 right-2 z-30 p-1.5 rounded-lg border backdrop-blur-sm transition-colors ${lucaShellClassNames.control}`}
-                style={lucaShellControlStyle}
+                style={lucaMaterialControlStyle}
               >
                 <Icon name={leftToggleIcon(false).name} size={18} />
               </button>
@@ -193,7 +195,7 @@ export function LucaDashboardSurface({
         {!isMobile && (
           <div
             className={`flex-1 h-full overflow-hidden flex flex-col ${lucaShellClassNames.workspace}`}
-            style={lucaShellWorkspaceSurfaceStyle}
+            style={lucaMaterialWorkspaceStyle}
           >
             {chatSurface}
             {voiceSurface}
@@ -216,7 +218,7 @@ export function LucaDashboardSurface({
           <div
             className={`flex-none h-full overflow-hidden flex flex-col items-center gap-2 py-3 border-l ${lucaShellClassNames.rail}`}
             style={{
-              ...lucaShellRailSurfaceStyle,
+              ...lucaMaterialRailStyle,
               width: `${DESKTOP_RAIL_WIDTH_PX}px`,
             }}
           >
@@ -226,7 +228,7 @@ export function LucaDashboardSurface({
               title={rightToggleIcon(true).label}
               onClick={() => onToggleRightPanel?.(false)}
               className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-              style={lucaShellControlStyle}
+              style={lucaMaterialControlStyle}
             >
               <Icon name={rightToggleIcon(true).name} size={20} />
             </button>
@@ -243,8 +245,8 @@ export function LucaDashboardSurface({
                   className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
                   style={
                     activeRightPanelMode === item.mode
-                      ? lucaShellActiveControlStyle
-                      : lucaShellControlStyle
+                      ? lucaMaterialControlActiveStyle
+                      : lucaMaterialControlStyle
                   }
                 >
                   <Icon name={item.icon} size={18} />
@@ -271,7 +273,7 @@ export function LucaDashboardSurface({
               <div className="flex flex-col h-full w-full overflow-hidden">
                 <div
                   className="flex flex-none border-b"
-                  style={lucaShellDividerStyle}
+                  style={lucaMaterialDividerStyle}
                 >
                   {rightPanelModes.map((mode) => (
                     <button
@@ -281,8 +283,8 @@ export function LucaDashboardSurface({
                       className={`flex-1 py-3 text-[13px] font-medium transition-colors relative border-b-2 ${activeRightPanelMode === mode ? lucaShellClassNames.activeTab : lucaShellClassNames.tab}`}
                       style={
                         activeRightPanelMode === mode
-                          ? lucaShellActiveTabStyle
-                          : lucaShellTabStyle
+                          ? lucaMaterialTabActiveStyle
+                          : lucaMaterialTabStyle
                       }
                     >
                       {getRightPanelLabel(mode)}
@@ -303,8 +305,8 @@ export function LucaDashboardSurface({
                     onClick={() => onToggleRightPanel?.(true)}
                     className={`flex-none px-3 flex items-center justify-center border-l transition-colors ${lucaShellClassNames.control}`}
                     style={{
-                      ...lucaShellControlStyle,
-                      ...lucaShellDividerStyle,
+                      ...lucaMaterialControlStyle,
+                      ...lucaMaterialDividerStyle,
                     }}
                   >
                     <Icon name={rightToggleIcon(false).name} size={18} />

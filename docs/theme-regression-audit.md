@@ -332,3 +332,62 @@ migrated in this pass to keep the PR reviewable.
   helpers where each branch can preserve semantic state without widening scope.
 - Consider a shared neutral-chip component once more right-panel chips are moved
   off hardcoded white/black utility classes.
+
+## Rail/control/tab material migration
+
+**Date:** 2026-06-21
+
+### Search patterns used
+
+- `lucaShellRailSurfaceStyle`
+- `lucaShellWorkspaceSurfaceStyle`
+- `lucaShellControlStyle`
+- `lucaShellTabStyle`
+- `lucaShellDividerStyle`
+- `lucaMobileNavSurfaceStyle`
+- `lucaMobileDividerStyle`
+- `border-white/10`
+- `border-white/[0.07]`
+- `bg-white/5`
+- `bg-black/10`
+- `text-white/`
+
+### Files inspected
+
+- `src/styles/lucaMaterialSystem.ts`
+- `src/components/dashboard/LucaDashboardSurface.tsx`
+- `src/components/layout/Header.tsx`
+- `src/components/layout/ChatPanel.tsx`
+- `src/components/layout/OperationsSidebar.tsx`
+- existing audit references under `docs/`
+- broad `src/` matches for repeated neutral Tailwind white/black border and background utilities
+
+### Classes/helpers replaced
+
+- Replaced desktop dashboard `lucaShellRailSurfaceStyle` with `lucaMaterialRailStyle`.
+- Replaced neutral dashboard/header `lucaShellControlStyle` with `lucaMaterialControlStyle`.
+- Replaced neutral dashboard active-control usage with `lucaMaterialControlActiveStyle`.
+- Replaced default dashboard tab usage with `lucaMaterialTabStyle` and `lucaMaterialTabActiveStyle`.
+- Replaced default dashboard divider usage with `lucaMaterialDividerStyle`.
+- Replaced safe workspace helper usage with `lucaMaterialWorkspaceStyle`.
+
+### Default/basic surfaces migrated
+
+The migration covers collapsed desktop dashboard rails, rail toggle controls, right-panel rail controls, the right-panel tab strip, the right-panel collapse divider/control, desktop header neutral controls, and desktop chat workspace fallback surfaces.
+
+### Semantic/tactical surfaces intentionally left
+
+Voice UI, tactical/debug panels, skill runtime/registry surfaces, trading/debate visuals, mobile navigation behavior, mobile dividers, modal scrims, browser/runtime surfaces, semantic state colors, and broad `App.tsx` helper usage were intentionally left unchanged to avoid redesigning or touching prohibited runtime/layout areas.
+
+### Build results
+
+- `npm install --ignore-scripts`: completed successfully in this environment.
+- `npm run build:web`: completed successfully.
+- `npm run build`: failed at the repo-wide `tsc` step with existing TypeScript/test fixture errors unrelated to this UI material-role migration.
+- `npm run type-check`: failed with the same existing repo-wide TypeScript/test fixture errors; no new errors referenced the changed material/dashboard/header/chat files.
+
+### Known follow-ups
+
+- Add dedicated mobile nav/control material roles only after a safe mobile 1:1 mapping is agreed.
+- Continue removing direct neutral Tailwind `border-white/*`, `bg-white/*`, and `bg-black/*` in feature-specific passes where surfaces are clearly default chrome rather than semantic, tactical, or visualization UI.
+- Keep old shell helper exports available until all call sites have safe role equivalents.

@@ -87,10 +87,19 @@ const MATERIAL_METRIC_TINT_STRENGTH =
   "calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 34%)";
 const MATERIAL_WEB_CARD_TINT_STRENGTH =
   "calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 52%)";
+const MATERIAL_RAIL_TINT_STRENGTH =
+  "calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 72%)";
+const MATERIAL_CONTROL_TINT_STRENGTH =
+  "calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 30%)";
+const MATERIAL_TAB_ACTIVE_TINT_STRENGTH =
+  "calc(var(--luca-material-tint-strength, var(--luca-material-opacity, 1)) * 38%)";
 
 export const LUCA_MATERIAL_FLAT_CARD_SURFACE = `var(--luca-material-card-surface, color-mix(in srgb, var(--luca-surface-glass, ${LUCA_SHELL_SURFACE_BACKGROUND}) ${MATERIAL_FLAT_CARD_TINT_STRENGTH}, transparent))`;
 export const LUCA_MATERIAL_METRIC_SURFACE = `var(--luca-material-metric-surface, color-mix(in srgb, var(--luca-surface-glass, ${LUCA_SHELL_SURFACE_BACKGROUND}) ${MATERIAL_METRIC_TINT_STRENGTH}, transparent))`;
 export const LUCA_MATERIAL_WEB_CARD_SURFACE = `var(--luca-material-web-card-surface, color-mix(in srgb, var(--luca-surface-glass, ${LUCA_SHELL_SURFACE_BACKGROUND}) ${MATERIAL_WEB_CARD_TINT_STRENGTH}, var(--luca-surface-solid, transparent)))`;
+export const LUCA_MATERIAL_RAIL_SURFACE = `var(--luca-material-rail-surface, color-mix(in srgb, var(--luca-surface-glass, ${LUCA_SHELL_SURFACE_BACKGROUND}) ${MATERIAL_RAIL_TINT_STRENGTH}, transparent))`;
+export const LUCA_MATERIAL_CONTROL_SURFACE = `var(--luca-material-control-surface, color-mix(in srgb, var(--luca-surface-glass, ${LUCA_SHELL_SURFACE_BACKGROUND}) ${MATERIAL_CONTROL_TINT_STRENGTH}, transparent))`;
+export const LUCA_MATERIAL_TAB_ACTIVE_SURFACE = `var(--luca-material-tab-active-surface, color-mix(in srgb, ${LUCA_SHELL_HOVER_BACKGROUND} ${MATERIAL_TAB_ACTIVE_TINT_STRENGTH}, transparent))`;
 
 export const LUCA_MATERIAL_SURFACE = `var(--luca-material-surface, color-mix(in srgb, ${LUCA_SHELL_SURFACE_BACKGROUND} calc(${MATERIAL_TINT_STRENGTH} * 100%), transparent))`;
 export const LUCA_MATERIAL_SURFACE_SOLID = `var(--luca-material-surface-solid, var(--luca-surface-solid, ${LUCA_SHELL_SURFACE_BACKGROUND}))`;
@@ -143,7 +152,6 @@ export const lucaMaterialFloatingPanelStyle: CSSProperties = {
   boxShadow: LUCA_MATERIAL_SHADOW,
 };
 
-
 /** Flat card / section surface — low-alpha, no elevation, no forced panel blur. */
 export const lucaMaterialCardStyle: CSSProperties = {
   background: LUCA_MATERIAL_FLAT_CARD_SURFACE,
@@ -165,7 +173,54 @@ export const lucaMaterialWebCardStyle: CSSProperties = {
   background: LUCA_MATERIAL_WEB_CARD_SURFACE,
   borderColor: LUCA_MATERIAL_BORDER,
   color: LUCA_MATERIAL_TEXT_PRIMARY,
-  boxShadow: "var(--luca-material-web-card-shadow, 0 18px 50px color-mix(in srgb, black 14%, transparent))",
+  boxShadow:
+    "var(--luca-material-web-card-shadow, 0 18px 50px color-mix(in srgb, black 14%, transparent))",
+};
+
+/** Dashboard rail surface — below panel weight, tokenized border, no extra blur. */
+export const lucaMaterialRailStyle: CSSProperties = {
+  background: LUCA_MATERIAL_RAIL_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_SECONDARY,
+  boxShadow: "var(--luca-material-rail-shadow, none)",
+};
+
+/** Neutral control button / small interaction surface — lighter than cards. */
+export const lucaMaterialControlStyle: CSSProperties = {
+  background: LUCA_MATERIAL_CONTROL_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_SECONDARY,
+};
+
+/** Active neutral control state — keeps interaction hierarchy below cards. */
+export const lucaMaterialControlActiveStyle: CSSProperties = {
+  background: LUCA_MATERIAL_SURFACE_HOVER,
+  borderColor: LUCA_MATERIAL_BORDER_STRONG,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+};
+
+/** Inactive/default tab state for basic dashboard tab strips. */
+export const lucaMaterialTabStyle: CSSProperties = {
+  color: LUCA_MATERIAL_TEXT_SECONDARY,
+  borderColor: "transparent",
+};
+
+/** Active default tab state with a tokenized light fill and strong divider. */
+export const lucaMaterialTabActiveStyle: CSSProperties = {
+  background: LUCA_MATERIAL_TAB_ACTIVE_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER_STRONG,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+};
+
+/** Semantic neutral divider helper for borders and separator lines. */
+export const lucaMaterialDividerStyle: CSSProperties = {
+  borderColor: LUCA_MATERIAL_BORDER,
+};
+
+/** Default workspace surface — exact shell workspace mapping. */
+export const lucaMaterialWorkspaceStyle: CSSProperties = {
+  background: "var(--luca-background-elevated, transparent)",
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
 };
 
 /** Sidebar / rail surface (matches the default desktop panel material). */
@@ -265,6 +320,10 @@ export const resolveLucaSidebarMaterial = (isMobile: boolean): CSSProperties =>
 export const resolveLucaSheetMaterial = (isMobile: boolean): CSSProperties =>
   isMobile ? lucaMaterialMobileSheetStyle : lucaMaterialSheetStyle;
 
+/** Picks the rail material for the current platform. */
+export const resolveLucaRailMaterial = (isMobile: boolean): CSSProperties =>
+  isMobile ? lucaMaterialMobilePanelStyle : lucaMaterialRailStyle;
+
 /** Material role registry — useful for discoverability and documentation. */
 export const lucaMaterialRoles = {
   root: lucaMaterialRootStyle,
@@ -273,6 +332,13 @@ export const lucaMaterialRoles = {
   card: lucaMaterialCardStyle,
   metric: lucaMaterialMetricStyle,
   webCard: lucaMaterialWebCardStyle,
+  rail: lucaMaterialRailStyle,
+  control: lucaMaterialControlStyle,
+  controlActive: lucaMaterialControlActiveStyle,
+  tab: lucaMaterialTabStyle,
+  tabActive: lucaMaterialTabActiveStyle,
+  divider: lucaMaterialDividerStyle,
+  workspace: lucaMaterialWorkspaceStyle,
   sidebar: lucaMaterialSidebarStyle,
   sheet: lucaMaterialSheetStyle,
   popover: lucaMaterialPopoverStyle,
