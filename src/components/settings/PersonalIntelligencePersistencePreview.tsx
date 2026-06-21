@@ -52,7 +52,7 @@ export const PersonalIntelligencePersistencePreview: React.FC<
 > = ({ compact = false }) => {
   if (compact) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+      <div className="rounded-2xl border border-[var(--luca-border-subtle)] bg-[var(--luca-surface-glass)] p-4">
         <div
           className="space-y-3"
           data-testid="memory-persistence-proposal-preview"
@@ -86,7 +86,7 @@ export const PersonalIntelligencePersistencePreview: React.FC<
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+    <div className="rounded-2xl border border-[var(--luca-border-subtle)] bg-[var(--luca-surface-glass)] p-4">
       <div className="space-y-4" data-testid="persistence-proposal-preview">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -168,7 +168,7 @@ const PreviewStatus: React.FC<{
   value: string;
   detail: string;
 }> = ({ label, value, detail }) => (
-  <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+  <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[var(--luca-surface-glass)] p-3">
     <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--app-text-muted)]">
       {label}
     </p>
@@ -193,7 +193,7 @@ const ProposalMessages: React.FC<{ label: string; messages: string[] }> = ({
   label,
   messages,
 }) => (
-  <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+  <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[var(--luca-surface-glass)] p-3">
     <p className="text-xs font-semibold text-[var(--app-text-main)]">{label}</p>
     <ul className="mt-2 space-y-1 text-xs text-[var(--app-text-muted)]">
       {messages.map((message) => (

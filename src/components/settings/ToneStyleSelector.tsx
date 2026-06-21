@@ -85,8 +85,8 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
                 hover:bg-[var(--app-bg-tint)]/20
               `}
               style={{
-                borderColor: isActive ? themeHex : "var(--app-border-main, rgba(255,255,255,0.05))",
-                color: isActive ? "var(--app-text-main, #ffffff)" : "var(--app-text-muted, #6b7280)",
+                borderColor: isActive ? themeHex : "var(--luca-border-subtle, var(--app-border-main))",
+                color: isActive ? "var(--luca-text-primary, var(--app-text-main))" : "var(--luca-text-secondary, var(--app-text-muted))",
               }}
             >
               <span className="text-[9px] font-bold uppercase tracking-tighter">
@@ -99,7 +99,7 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
 
       {/* Fine-tuning Sliders */}
       <div className={`space-y-3 p-3 rounded-lg border transition-all glass-blur`}
-           style={{ backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))", borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
+           style={{ backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))", borderColor: "var(--luca-border-subtle, var(--app-border-main))" }}>
         <div className="flex items-center gap-2 mb-1">
           <Icon name="Settings2" className="w-3 h-3 text-[var(--app-text-muted)]" />
           <span className="text-[9px] font-bold text-[var(--app-text-muted)] uppercase tracking-widest">
@@ -161,7 +161,7 @@ const ToneStyleSelector: React.FC<ToneStyleSelectorProps> = ({
               }`}
               style={{ 
                 accentColor: themeHex,
-                backgroundColor: "var(--app-border-main, rgba(255,255,255,0.2))"
+                backgroundColor: "var(--luca-border-strong, var(--app-border-main))"
               }}
             />
           </div>

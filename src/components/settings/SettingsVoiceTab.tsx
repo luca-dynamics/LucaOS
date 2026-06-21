@@ -290,8 +290,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all text-center group`}
                 style={{
                   backgroundColor: isMobile
-                    ? "rgba(255,255,255,0.02)"
-                    : "var(--app-bg-tint, rgba(0,0,0,0.1))",
+                    ? "var(--luca-surface-glass, var(--app-bg-tint))"
+                    : "var(--luca-surface-glass, var(--app-bg-tint))",
                   background: isActive ? `${theme.hex}11` : undefined,
                 }}
               >
@@ -301,7 +301,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   style={{
                     color: isActive
                       ? theme.hex
-                      : "var(--app-text-muted, rgba(255,255,255,0.3))",
+                      : "var(--luca-text-tertiary, var(--app-text-muted))",
                   }}
                 />
                 <span
@@ -327,7 +327,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           <div
             className="rounded-md border px-3 py-2 text-[10px] uppercase tracking-wider"
             style={{
-              borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              borderColor: "var(--luca-border-subtle, var(--app-border-main))",
               color: "var(--app-text-muted)",
             }}
           >
@@ -352,9 +352,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : " p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center justify-between gap-2 mb-2">
@@ -365,7 +365,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 style={{
                   color: settings.voice.wakeWordEnabled
                     ? theme.hex
-                    : "var(--app-text-muted, rgba(255,255,255,0.3))",
+                    : "var(--luca-text-tertiary, var(--app-text-muted))",
                 }}
               />
               <div
@@ -376,7 +376,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               </div>
             </div>
             <div
-              className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0 ${settings.voice.wakeWordEnabled ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-black/20 text-[var(--app-text-muted)]"}`}
+              className={`text-[9px] font-black font-mono px-2 py-0.5 rounded border border-[var(--luca-border-subtle)] opacity-80 flex-shrink-0 ${settings.voice.wakeWordEnabled ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]" : "bg-[var(--luca-surface-glass)] text-[var(--app-text-muted)]"}`}
             >
               {settings.voice.wakeWordEnabled ? "ACTIVE" : "DISABLED"}
             </div>
@@ -402,13 +402,13 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               }}
               className={`w-full py-1.5 rounded-lg border text-sm font-black outline-none transition-all`}
               style={{
-                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                 color: settings.voice.wakeWordEnabled
                   ? theme.hex
                   : "var(--app-text-muted, #94a3b8)",
                 borderColor: settings.voice.wakeWordEnabled
                   ? `${theme.hex}66`
-                  : "var(--app-border-main, rgba(255,255,255,0.1))",
+                  : "var(--luca-border-subtle, var(--app-border-main))",
               }}
             >
               {settings.voice.wakeWordEnabled ? "DEACTIVATE" : "ACTIVATE"}
@@ -422,9 +422,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : " p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center justify-between mb-2">
@@ -442,7 +442,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               </div>
             </div>
             <div
-              className="text-[9px] font-black font-mono uppercase bg-black/20 px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0"
+              className="text-[9px] font-black font-mono uppercase bg-[var(--luca-surface-glass)] px-2 py-0.5 rounded border border-[var(--luca-border-subtle)] opacity-80 flex-shrink-0"
               style={{ color: "var(--app-text-muted)" }}
             >
               STT ACTIVE
@@ -466,8 +466,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               }}
               className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border`}
               style={{
-                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                borderColor: "var(--luca-border-subtle, var(--app-border-main))",
                 color: "var(--app-text-main)",
               }}
             >
@@ -510,9 +510,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : " p-4 space-y-4 lg:col-span-1 rounded-lg glass-blur"}`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center justify-between gap-2 mb-4">
@@ -530,7 +530,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               </div>
             </div>
             <div
-              className="text-[9px] font-black font-mono uppercase bg-black/20 px-2 py-0.5 rounded border border-white/5 opacity-80 flex-shrink-0"
+              className="text-[9px] font-black font-mono uppercase bg-[var(--luca-surface-glass)] px-2 py-0.5 rounded border border-[var(--luca-border-subtle)] opacity-80 flex-shrink-0"
               style={{ color: "var(--app-text-muted)" }}
             >
               VOICE ROUTING
@@ -549,8 +549,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 }
                 className={`w-full rounded-lg p-2 text-xs outline-none transition-all font-mono border ${settings.voice.sttModel === "gemini-live-2.5-flash-preview-native-audio-09-2025" ? "opacity-50 cursor-not-allowed" : ""}`}
                 style={{
-                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                  borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                  backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                  borderColor: "var(--luca-border-subtle, var(--app-border-main))",
                   color: "var(--app-text-main)",
                 }}
               >
@@ -575,7 +575,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
 
             {/* Google Cloud Managed Mode (Enterprise Only) */}
             {settings.voice.provider === "google" && (
-              <div className="pt-2 border-t border-white/5" />
+              <div className="pt-2 border-t border-[var(--luca-border-subtle)]" />
             )}
 
             {/* Voice / Identity Selection */}
@@ -604,8 +604,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 disabled={settings.voice.provider === "gemini-genai"}
                 className={`w-full border rounded-lg p-2 text-xs outline-none transition-all`}
                 style={{
-                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                  borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                  backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                  borderColor: "var(--luca-border-subtle, var(--app-border-main))",
                   color: "var(--app-text-main)",
                   opacity: settings.voice.provider === "gemini-genai" ? 0.5 : 1,
                   cursor:
@@ -682,9 +682,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
           className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : " p-4 space-y-3 rounded-lg"} glass-blur`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div
@@ -719,7 +719,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   onUpdate("voice", "pacing", p.id as any);
                   onUpdate("voice", "rate", p.rate);
                 }}
-                className={`py-1.5 rounded border bg-[var(--app-bg-tint)] text-sm font-mono transition-all shadow-sm hover:bg-white/5`}
+                className={`py-1.5 rounded border bg-[var(--app-bg-tint)] text-sm font-mono transition-all shadow-sm hover:bg-[var(--luca-surface-glass)]`}
                 style={{
                   color:
                     settings.voice.pacing === p.id
@@ -750,9 +750,9 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : " p-4 space-y-4 rounded-lg"} glass-blur`}
         style={{
           backgroundColor: isMobile
-            ? "rgba(255,255,255,0.02)"
-            : "var(--app-bg-tint, #11111a)",
-          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            ? "var(--luca-surface-glass, var(--app-bg-tint))"
+            : "var(--luca-surface-glass, var(--app-bg-tint))",
+          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
         }}
       >
         <div className="flex items-center justify-between gap-4 mb-2">
@@ -911,8 +911,8 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
         animate="show"
         className={` p-4 space-y-4 rounded-lg glass-blur`}
         style={{
-          backgroundColor: "var(--app-bg-tint, #11111a)",
-          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
         }}
       >
         <div className="flex items-center justify-between">
@@ -929,7 +929,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
             </span>
           </div>
           <div
-            className={`text-[10px] font-mono bg-[var(--app-bg-tint, rgba(0,0,0,0.1))] px-2 py-0.5 rounded border border-[var(--app-border-main)] text-[var(--app-text-muted)]`}
+            className={`text-[10px] font-mono bg-[var(--luca-surface-glass, var(--app-bg-tint))] px-2 py-0.5 rounded border border-[var(--app-border-main)] text-[var(--app-text-muted)]`}
           >
             {clonedVoices.length} ENCRYPTED
           </div>
@@ -941,7 +941,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
               <button
                 onClick={handleRecordVoice}
                 disabled={isRecording}
-                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg glass-blur transition-all hover:bg-white/5 active:scale-95`}
+                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg glass-blur transition-all hover:bg-[var(--luca-surface-glass)] active:scale-95`}
                 style={{
                   color: isRecording ? "var(--app-text-muted)" : theme.hex,
                   borderColor: isRecording
@@ -961,7 +961,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                 </span>
               </button>
               <label
-                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg glass-blur cursor-pointer hover:bg-white/5 transition-all text-[var(--app-text-muted)]`}
+                className={`flex items-center justify-center gap-2 py-2 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] rounded-lg glass-blur cursor-pointer hover:bg-[var(--luca-surface-glass)] transition-all text-[var(--app-text-muted)]`}
               >
                 <Icon name="Upload" className="w-3.5 h-3.5" />
                 <span className="text-[9px] font-bold uppercase">UPLOAD</span>
@@ -993,7 +993,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                   style={{
                     backgroundColor: isActive
                       ? "var(--app-bg-tint)"
-                      : "var(--app-bg-tint, rgba(0,0,0,0.1))",
+                      : "var(--luca-surface-glass, var(--app-bg-tint))",
                     borderColor: isActive
                       ? `${theme.hex}66`
                       : "var(--app-border-main)",
@@ -1018,7 +1018,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                     {!isActive && (
                       <button
                         onClick={() => handleActivateVoice(v)}
-                        className="px-2 py-0.5 hover:bg-white/5 rounded transition-all text-[7px] font-bold uppercase tracking-tighter"
+                        className="px-2 py-0.5 hover:bg-[var(--luca-surface-glass)] rounded transition-all text-[7px] font-bold uppercase tracking-tighter"
                         style={{ color: theme.hex }}
                       >
                         Use
@@ -1052,7 +1052,7 @@ const SettingsVoiceTab: React.FC<SettingsVoiceTabProps> = ({
                           audio.play();
                         });
                       }}
-                      className={`p-1.5 rounded-md transition-all ${playingVoiceId === v.id ? "bg-white/10 text-[var(--app-text-main)]" : "hover:text-[var(--luca-success,#4fbf7a)] text-[var(--app-text-muted)]"}`}
+                      className={`p-1.5 rounded-md transition-all ${playingVoiceId === v.id ? "bg-[var(--luca-surface-hover)] text-[var(--app-text-main)]" : "hover:text-[var(--luca-success,#4fbf7a)] text-[var(--app-text-muted)]"}`}
                     >
                       {playingVoiceId === v.id ? (
                         <Icon name="Pause" className="w-3 h-3" />

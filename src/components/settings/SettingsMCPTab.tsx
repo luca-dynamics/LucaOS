@@ -388,8 +388,8 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       <div
         className={`text-xs p-3 border transition-all glass-blur opacity-80 ${isMobile ? "mx-4 border-x-0 border-y rounded-none" : "rounded-lg"}`}
         style={{
-          backgroundColor: isMobile ? "rgba(255,255,255,0.02)" : "var(--app-bg-tint, #11111a)",
-          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          backgroundColor: isMobile ? "var(--luca-surface-glass, var(--app-bg-tint))" : "var(--luca-surface-glass, var(--app-bg-tint))",
+          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           color: "var(--app-text-muted, #94a3b8)",
         }}
       >
@@ -414,25 +414,25 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
             placeholder="Search tool servers or capabilities..."
             className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all border rounded-lg`}
             style={{ 
-              backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-              borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-              color: "var(--app-text-main, #ffffff)"
+              backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+              borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+              color: "var(--luca-text-primary, var(--app-text-main))"
             }}
           />
         </div>
         
-        <div className={`flex p-1 rounded-xl border rounded-lg`} style={{ backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))", borderColor: "var(--app-border-main, rgba(255,255,255,0.1))" }}>
+        <div className={`flex p-1 rounded-xl border rounded-lg`} style={{ backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))", borderColor: "var(--luca-border-subtle, var(--app-border-main))" }}>
           <button
             onClick={() => setActiveView("active")}
             className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${activeView === "active" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
-            style={activeView === "active" ? { backgroundColor: setHexAlpha(theme.hex, 0.2), color: "var(--app-text-main, #ffffff)" } : {}}
+            style={activeView === "active" ? { backgroundColor: setHexAlpha(theme.hex, 0.2), color: "var(--luca-text-primary, var(--app-text-main))" } : {}}
           >
             Active
           </button>
           <button
             onClick={() => setActiveView("marketplace")}
             className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all ${activeView === "marketplace" ? "text-[var(--app-text-main)] shadow-sm" : "text-[var(--app-text-muted)]"}`}
-            style={activeView === "marketplace" ? { backgroundColor: setHexAlpha(theme.hex, 0.2), color: "var(--app-text-main, #ffffff)" } : {}}
+            style={activeView === "marketplace" ? { backgroundColor: setHexAlpha(theme.hex, 0.2), color: "var(--luca-text-primary, var(--app-text-main))" } : {}}
           >
             Discover
           </button>
@@ -443,11 +443,11 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
       <div className={`flex flex-wrap gap-2 ${isMobile ? "px-4" : ""}`}>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black border transition-all shadow-sm hover:bg-white/5 rounded-lg`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black border transition-all shadow-sm hover:bg-[var(--luca-surface-glass)] rounded-lg`}
           style={{
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.2))",
-            color: "var(--app-text-main, #ffffff)",
-            backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))"
+            borderColor: "var(--luca-border-strong, var(--app-border-main))",
+            color: "var(--luca-text-primary, var(--app-text-main))",
+            backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))"
           }}
         >
           <Icon name="Plus" className="w-4 h-4" />
@@ -458,8 +458,8 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
           disabled={loading}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all shadow-sm disabled:opacity-50 border rounded-lg`}
           style={{
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-            backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+            backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
             color: "var(--app-text-muted, #94a3b8)",
           }}
         >
@@ -474,14 +474,14 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
         <div
           className={`p-4 rounded-xl space-y-4 border transition-all rounded-lg glass-blur`}
           style={{
-            backgroundColor: "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
             boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
           }}
         >
           <h4
             className={`${isMobile ? "text-sm" : "text-base"} font-bold flex items-center gap-2`}
-            style={{ color: "var(--app-text-main, #ffffff)" }}
+            style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
           >
             <Icon name="Plug" variant="BoldDuotone" className="w-4 h-4" style={{ color: theme.hex }} />
             New Tool Server
@@ -501,9 +501,9 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
               placeholder="e.g. filesystem, github"
               className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg`}
               style={{ 
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-                color: "var(--app-text-main, #ffffff)"
+                borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                color: "var(--luca-text-primary, var(--app-text-main))"
               }}
             />
           </div>
@@ -565,9 +565,9 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                   placeholder="e.g. npx, python3, node"
                   className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg`}
                   style={{
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                    color: "var(--app-text-main, #ffffff)"
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                    borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                    color: "var(--luca-text-primary, var(--app-text-main))"
                   }}
                 />
               </div>
@@ -584,9 +584,9 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                   placeholder="e.g. -y @modelcontextprotocol/server-filesystem /tmp"
                   className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg`}
                   style={{
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-                    borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                    color: "var(--app-text-main, #ffffff)"
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                    borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                    color: "var(--luca-text-primary, var(--app-text-main))"
                   }}
                 />
               </div>
@@ -608,9 +608,9 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 placeholder="e.g. https://mcp-server.example.com"
                 className={`w-full rounded-lg px-3 py-2 text-sm placeholder-gray-600 focus:outline-none transition-all border rounded-lg`}
                 style={{
-                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-                  borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                  color: "var(--app-text-main, #ffffff)"
+                  backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                  borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                  color: "var(--luca-text-primary, var(--app-text-main))"
                 }}
               />
             </div>
@@ -679,9 +679,9 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                         placeholder="KEY"
                         className={`flex-1 rounded-lg px-2 py-1.5 text-sm placeholder-gray-600 focus:outline-none font-mono transition-all border rounded-lg`}
                         style={{
-                          backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-                          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                          color: "var(--app-text-main, #ffffff)"
+                          backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                          color: "var(--luca-text-primary, var(--app-text-main))"
                         }}
                       />
                       <input
@@ -695,9 +695,9 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                         placeholder="value"
                         className={`flex-1 rounded-lg px-2 py-1.5 text-sm placeholder-gray-600 focus:outline-none font-mono transition-all border rounded-lg`}
                         style={{
-                          backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.3))",
-                          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                          color: "var(--app-text-main, #ffffff)"
+                          backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                          color: "var(--luca-text-primary, var(--app-text-main))"
                         }}
                       />
                       <button
@@ -777,12 +777,12 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                         backgroundColor: "var(--app-bg-tint, #0a0a0a)",
                         borderColor: isConnected
                           ? setHexAlpha(theme.hex, 0.4)
-                          : "var(--app-border-main, rgba(255,255,255,0.1))",
+                          : "var(--luca-border-subtle, var(--app-border-main))",
                       }}
                     >
                       {/* Server Header */}
                       <div
-                        className={`p-4 flex items-center justify-between cursor-pointer transition-colors hover:bg-white/5`}
+                        className={`p-4 flex items-center justify-between cursor-pointer transition-colors hover:bg-[var(--luca-surface-glass)]`}
                         onClick={() => toggleExpand(server.id)}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -802,7 +802,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           <div className="min-w-0">
                             <h4
                               className={`${isMobile ? "text-base" : "text-lg"} font-bold truncate`}
-                              style={{ color: "var(--app-text-main, #ffffff)" }}
+                              style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                             >
                               {server.name}
                             </h4>
@@ -870,9 +870,9 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                                       key={tool.name}
                                       className={`px-2 py-1 rounded-md text-base transition-all border rounded-lg`}
                                       style={{
-                                        borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                                        backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
-                                        color: "var(--app-text-main, #ffffff)"
+                                        borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                                        backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                                        color: "var(--luca-text-primary, var(--app-text-main))"
                                       }}
                                     >
                                       {tool.name}
@@ -937,13 +937,13 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className={`p-4 rounded-2xl border animate-pulse bg-[var(--app-bg-tint)] border-[var(--app-border-main)]`}>
                     <div className="flex items-start justify-between mb-3">
-                      <div className="w-12 h-12 rounded-2xl bg-white/5" />
-                      <div className="w-16 h-5 rounded-full bg-white/5" />
+                      <div className="w-12 h-12 rounded-2xl bg-[var(--luca-surface-glass)]" />
+                      <div className="w-16 h-5 rounded-full bg-[var(--luca-surface-glass)]" />
                     </div>
-                    <div className="h-4 rounded bg-white/5 mb-2 w-2/3" />
-                    <div className="h-3 rounded bg-white/5 mb-1" />
-                    <div className="h-3 rounded bg-white/5 w-4/5 mb-4" />
-                    <div className="h-8 rounded-xl bg-white/5" />
+                    <div className="h-4 rounded bg-[var(--luca-surface-glass)] mb-2 w-2/3" />
+                    <div className="h-3 rounded bg-[var(--luca-surface-glass)] mb-1" />
+                    <div className="h-3 rounded bg-[var(--luca-surface-glass)] w-4/5 mb-4" />
+                    <div className="h-8 rounded-xl bg-[var(--luca-surface-glass)]" />
                   </div>
                 ))}
               </div>
@@ -983,7 +983,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                           </span>
                         </div>
 
-                        <h4 className={`text-base font-black mb-1 truncate`} style={{ color: "var(--app-text-main, #ffffff)" }}>
+                        <h4 className={`text-base font-black mb-1 truncate`} style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}>
                           {item.name}
                         </h4>
                         <p className={`text-sm leading-snug mb-4 line-clamp-2`} style={{ color: "var(--app-text-muted, #94a3b8)" }}>
@@ -993,7 +993,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
                         <button
                           onClick={() => installFromMarketplace(item)}
                           disabled={isInstalled}
-                          className={`w-full py-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border ${isInstalled ? "opacity-30 cursor-default" : "bg-white/5 border-white/10 hover:bg-white/10"}`}
+                          className={`w-full py-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border ${isInstalled ? "opacity-30 cursor-default" : "bg-[var(--luca-surface-glass)] border-[var(--luca-border-subtle)] hover:bg-[var(--luca-surface-hover)]"}`}
                           style={!isInstalled ? { borderColor: setHexAlpha(item.color, 0.3), color: item.color } : {}}
                         >
                           {isInstalled ? (
@@ -1016,7 +1016,7 @@ const SettingsMCPTab: React.FC<SettingsMCPTabProps> = ({
               <button
                 onClick={() => fetchRegistry(searchDebounce, nextCursor)}
                 disabled={registryLoading}
-                className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all border flex items-center justify-center gap-2 disabled:opacity-50 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:bg-white/5`}
+                className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all border flex items-center justify-center gap-2 disabled:opacity-50 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:bg-[var(--luca-surface-glass)]`}
               >
                 {registryLoading ? <Icon name="Refresh" className="w-3.5 h-3.5 animate-spin" /> : <Icon name="AltArrowDown" className="w-3.5 h-3.5" />}
                 {registryLoading ? "Loading..." : "Load More"}
