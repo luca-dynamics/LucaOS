@@ -103,35 +103,91 @@ The engine reuses, rather than replaces, the existing platform helpers:
   material roles consume the *resolved* tokens, those signals flow through
   automatically.
 
-## How future opacity / blur / liquid-intensity sliders feed the engine
+## How opacity / blur / liquid-intensity sliders feed the engine
 
 The engine exposes internal **override-slot** CSS variables. Each slot falls
-back to the already-resolved Luca token, so when a slot is unset (today's
-default) the rendered material is identical to the legacy shell styling — the
-engine is visually a no-op until a slider opts in.
+back to the already-resolved Luca token, so when a slot is unset the rendered
+material is identical to the legacy shell styling — a visual no-op.
 
 Slots (see `LUCA_MATERIAL_VARIABLE_SLOTS`):
 
 | Variable | Effect | Default |
 | --- | --- | --- |
-| `--luca-material-opacity` | Surface opacity (feeds tint strength) | `1` |
-| `--luca-material-blur` | Backdrop blur radius | `--luca-blur-level` → `--app-bg-blur` → `40px` |
-| `--luca-material-tint-strength` | Surface tint coverage (0..1) | `--luca-material-opacity` → `1` |
+| `--luca-material-opacity` | Raw user opacity value (0..1); written by settings resolver for future tint sliders | from settings |
+| `--luca-material-blur` | Backdrop blur radius; capped by host policy | from settings, capped |
+| `--luca-material-tint-strength` | Surface tint coverage (0..1); locked to `1` by settings resolver | `1` |
 | `--luca-material-border-strength` | Border coverage (0..1) | `1` |
-| `--luca-material-shadow-strength` | Reserved: elevation strength | n/a (shadow currently via `--luca-material-shadow` slot) |
+| `--luca-material-shadow-strength` | Reserved: elevation strength | n/a |
 | `--luca-material-saturation` | Backdrop saturation multiplier | `1` |
 
 Wiring detail: surface tint and border use
-`color-mix(in srgb, <token> calc(<strength> * 100%), transparent)`. At full
-strength this is byte-equivalent to the source token; lowering the strength
-thins the material. Blur and saturation feed the `backdrop-filter`
-(`saturate(1)` is an identity transform, so the default render is unchanged).
+`color-mix(in srgb, <token> calc(<strength> * 100%), transparent)`. At strength
+1 this is byte-equivalent to the source token; lowering the strength thins the
+material. Blur and saturation feed `backdrop-filter` (`saturate(1)` is identity).
 
-A future Settings slider therefore needs only to **set these variables on
-`:root`** (e.g. from `general.backgroundOpacity` / `general.backgroundBlur`,
-which already exist and already shape the resolved tokens in
-`lucaAppearanceTokens.ts`). No component edits are required. Building that
-Settings UI is intentionally **out of scope** for this PR — see follow-ups.
+## Settings Appearance wiring (added in follow-up)
+
+`src/styles/lucaMaterialSettings.ts` — `getLucaMaterialCssVariables` — translates
+the existing `general.backgroundOpacity` / `general.backgroundBlur` settings into
+`--luca-material-*` CSS variables, which are written to `:root` by
+`buildLucaAppearanceCssVariableState` in `lucaAppearanceTokens.ts`.
+
+### How each setting maps
+
+| Setting | Variable written | Notes |
+| --- | --- | --- |
+| `backgroundOpacity` | `--luca-material-opacity` | Raw value (0..1); for future dedicated tint slider |
+| *(opacity already baked into glass token)* | `--luca-material-tint-strength = 1` | Explicit lock prevents double-application |
+| `backgroundBlur` | `--luca-material-blur` | Capped by host policy (see table below) |
+| `reducedTransparency` | `--luca-material-blur = 0px` | Disables backdrop blur for accessibility |
+| `highContrast` | upstream in token | Thickens `--luca-border-subtle`; `--luca-material-border-strength` stays `1` |
+
+**Double-apply guard:** `backgroundOpacity` is baked into `--luca-surface-glass`
+alpha by `lucaAppearanceTokens.ts`. Setting `--luca-material-tint-strength`
+below 1 would apply the opacity a second time. The resolver therefore locks
+tint-strength to `"1"` and stores the raw opacity in `--luca-material-opacity`
+for future dedicated sliders.
+
+### Immediate slider feedback
+
+The Settings Appearance sliders in `SettingsGeneralTab.tsx` update two paths:
+
+1. **Persisted path**: `onUpdate("general", "backgroundOpacity", val)` → fires
+   `settings-changed` → `buildLucaAppearanceCssVariableState` with host policy →
+   `applyLucaAppearanceCssVariables` sets all `--luca-*` and `--luca-material-*`
+   variables.
+2. **Immediate path**: direct `document.documentElement.style.setProperty` for
+   `--app-bg-opacity` / `--luca-material-opacity` / `--luca-material-tint-strength`
+   (opacity) and `--app-bg-blur` / `--luca-material-blur` (blur). This keeps panel
+   surfaces visually responsive while the persisted path completes.
+
+## Host material policy
+
+`src/styles/lucaMaterialSettings.ts` defines a material host policy alongside but
+separate from the root background policy in `lucaPlatformBackgroundPolicy.ts`:
+
+- **Root/liquid background** is host-dependent. Only `desktop-app` can expose the
+  user's native desktop; `desktop-web` simulates glass internally; mobile hosts use
+  a stable system surface.
+- **Luca Material component glass** (panels, sheets, sidebars, overlays) is
+  cross-host with safe fallbacks. All four hosts allow component-level glass/tint;
+  blur budget and solid-fallback preference differ by context.
+
+### Policy table
+
+| Host | Liquid BG | Component glass | Blur mode | Max blur | Solid fallback |
+| --- | --- | --- | --- | --- | --- |
+| `desktop-app` | yes | yes | full | 120 px | no |
+| `mobile-app` | no | yes | reduced | 20 px | yes |
+| `desktop-web` | no | yes | reduced | 20 px | yes |
+| `mobile-web` | no | yes | reduced | 20 px | yes |
+
+The policy is derived from `LucaPlatformBackgroundSignals` (the same
+`isMobileViewport` / `isNativeMobile` / `isDesktopNative` flags used by
+`resolveLucaPlatformBackgroundPolicy`) via `resolveLucaMaterialHostPolicy`.
+
+`App.tsx` passes the resolved host policy into `buildLucaAppearanceCssVariableState`
+so the material blur cap is applied automatically on every settings change.
 
 ## Components migrated in this PR
 
@@ -172,9 +228,10 @@ no-op override slots.
    operation centers, dashboard cards) to material roles.
 2. Promote `ChatPanel` workspace and mobile-control surfaces to dedicated
    material roles once a `lucaMaterialWorkspaceStyle` / control role is defined.
-3. Add a Settings appearance pass that writes the `--luca-material-*` slots from
-   the existing `backgroundOpacity` / `backgroundBlur` settings (and future
-   liquid-intensity / reduce-transparency / high-contrast controls).
+3. ✅ Settings appearance wiring completed (follow-up PR): `backgroundOpacity` /
+   `backgroundBlur` now write `--luca-material-*` slots via `lucaMaterialSettings.ts`.
+   Follow-ups: expose `reducedTransparency` / `highContrast` toggle controls;
+   add liquid-intensity slider using `--luca-material-tint-strength`.
 4. Consider extracting `FloatingPanel`'s motion/resize shell into a primitive
    that composes `LucaFloatingPanel` once more floating surfaces exist.
 5. Revisit advanced/pro/creator/tactical surfaces only if they leak into
