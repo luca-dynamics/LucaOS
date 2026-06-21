@@ -2,11 +2,7 @@ import React from "react";
 import { Icon } from "../ui/Icon";
 import { motion, AnimatePresence } from "framer-motion";
 import { getThemeColors } from "../../config/themeColors";
-import {
-  LUCA_SHELL_BORDER_SUBTLE,
-  LUCA_SHELL_SHADOW_SOFT,
-  LUCA_SHELL_SURFACE_BACKGROUND,
-} from "../../styles/lucaShellStyles";
+import { lucaMaterialFloatingPanelStyle } from "../../styles/lucaMaterialSystem";
 
 interface FloatingPanelProps {
   onClose: () => void;
@@ -51,9 +47,7 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
           theme.themeName?.toLowerCase() === "lucagent" ? "glass-panel-light" : "glass-panel"
         }`}
         style={{
-          borderColor: LUCA_SHELL_BORDER_SUBTLE,
-          background: LUCA_SHELL_SURFACE_BACKGROUND,
-          boxShadow: LUCA_SHELL_SHADOW_SOFT,
+          ...lucaMaterialFloatingPanelStyle,
           resize: "both",
           minWidth: "300px",
           minHeight: "400px",

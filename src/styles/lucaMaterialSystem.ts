@@ -1,0 +1,248 @@
+import type { CSSProperties } from "react";
+
+import {
+  LUCA_SHELL_BORDER_STRONG,
+  LUCA_SHELL_BORDER_SUBTLE,
+  LUCA_SHELL_HOVER_BACKGROUND,
+  LUCA_SHELL_SHADOW_GLOW,
+  LUCA_SHELL_SHADOW_SOFT,
+  LUCA_SHELL_SURFACE_BACKGROUND,
+  LUCA_SHELL_TEXT_PRIMARY,
+  LUCA_SHELL_TEXT_SECONDARY,
+  LUCA_SHELL_TEXT_TERTIARY,
+  lucaShellBorderSubtleStyle,
+  lucaShellHoverSurfaceStyle,
+  lucaShellPrimaryTextStyle,
+  lucaShellSecondaryTextStyle,
+  lucaShellTertiaryTextStyle,
+} from "./lucaShellStyles";
+import {
+  lucaMobileAppBackgroundStyle,
+  lucaMobilePanelSurfaceStyle,
+  lucaMobileSheetSurfaceStyle,
+} from "./lucaMobileShellStyles";
+import { lucaDesktopWebSafeRootBackgroundStyle } from "./lucaPlatformBackgroundPolicy";
+
+/**
+ * Luca Material Engine
+ * --------------------
+ * A centralized, semantic material layer for default/basic LucaOS surfaces
+ * (panels, sheets, sidebars, overlays, floating surfaces, popovers, dialogs,
+ * HUDs, resizable handles). It composes the existing LucaOS appearance tokens
+ * (`--luca-*`, defined in `lucaAppearanceTokens.ts`) into reusable material
+ * roles so components stop hand-composing background / blur / border / shadow /
+ * hover / text styling.
+ *
+ * Design intent: premium host-native personal AI OS — clean, calm, glassy,
+ * AppleOS-like. No cyberpunk / terminal / neon defaults; no hardcoded colors.
+ *
+ * Platform policy still flows through `lucaPlatformBackgroundPolicy.ts` and the
+ * mobile helpers in `lucaMobileShellStyles.ts`; this module reuses them rather
+ * than replacing them.
+ *
+ * --- User-controlled liquid material (Part 5) ---
+ * Every material role reads through a `--luca-material-*` override "slot" that
+ * falls back to the already-resolved Luca appearance token. When a slot is
+ * unset (today's default) the resolved value is identical to the legacy shell
+ * styling, so this engine is visually a no-op until a slider opts in.
+ *
+ * Future user sliders only need to set these slots on `:root` (no component
+ * edits required):
+ *   --luca-material-opacity         surface opacity (feeds tint strength)
+ *   --luca-material-blur            backdrop blur radius
+ *   --luca-material-tint-strength   surface tint coverage (0..1)
+ *   --luca-material-border-strength border coverage (0..1)
+ *   --luca-material-shadow-strength reserved: elevation strength
+ *   --luca-material-saturation      backdrop saturation multiplier
+ *
+ * `reduce transparency` and `high contrast` already flow through
+ * `lucaAppearanceTokens.ts` (which thickens the glass alpha and strengthens
+ * borders), so the resolved tokens this engine consumes are already adjusted.
+ */
+
+/** Material override-slot variable names, exported for docs / future wiring. */
+export const LUCA_MATERIAL_VARIABLE_SLOTS = [
+  "--luca-material-opacity",
+  "--luca-material-blur",
+  "--luca-material-tint-strength",
+  "--luca-material-border-strength",
+  "--luca-material-shadow-strength",
+  "--luca-material-saturation",
+] as const;
+
+const MATERIAL_TINT_STRENGTH =
+  "var(--luca-material-tint-strength, var(--luca-material-opacity, 1))";
+const MATERIAL_BORDER_STRENGTH = "var(--luca-material-border-strength, 1)";
+
+/**
+ * Surface tint resolves to the glass token at full strength by default.
+ * `color-mix(... 100%, transparent)` is identical to the source color, so the
+ * default render matches the legacy shell surface exactly; a future opacity /
+ * tint slider lowers the percentage to thin the material.
+ */
+export const LUCA_MATERIAL_SURFACE = `var(--luca-material-surface, color-mix(in srgb, ${LUCA_SHELL_SURFACE_BACKGROUND} calc(${MATERIAL_TINT_STRENGTH} * 100%), transparent))`;
+export const LUCA_MATERIAL_SURFACE_SOLID = `var(--luca-material-surface-solid, var(--luca-surface-solid, ${LUCA_SHELL_SURFACE_BACKGROUND}))`;
+export const LUCA_MATERIAL_SURFACE_HOVER = `var(--luca-material-surface-hover, ${LUCA_SHELL_HOVER_BACKGROUND})`;
+export const LUCA_MATERIAL_BORDER = `var(--luca-material-border, color-mix(in srgb, ${LUCA_SHELL_BORDER_SUBTLE} calc(${MATERIAL_BORDER_STRENGTH} * 100%), transparent))`;
+export const LUCA_MATERIAL_BORDER_STRONG = `var(--luca-material-border-strong, ${LUCA_SHELL_BORDER_STRONG})`;
+export const LUCA_MATERIAL_SHADOW = `var(--luca-material-shadow, ${LUCA_SHELL_SHADOW_SOFT})`;
+export const LUCA_MATERIAL_SHADOW_GLOW = `var(--luca-material-shadow-glow, ${LUCA_SHELL_SHADOW_GLOW})`;
+export const LUCA_MATERIAL_TEXT_PRIMARY = LUCA_SHELL_TEXT_PRIMARY;
+export const LUCA_MATERIAL_TEXT_SECONDARY = LUCA_SHELL_TEXT_SECONDARY;
+export const LUCA_MATERIAL_TEXT_TERTIARY = LUCA_SHELL_TEXT_TERTIARY;
+export const LUCA_MATERIAL_BLUR =
+  "var(--luca-material-blur, var(--luca-blur-level, var(--app-bg-blur, 40px)))";
+export const LUCA_MATERIAL_SATURATION = "var(--luca-material-saturation, 1)";
+
+/** Self-contained glass backdrop (blur + identity-safe saturation). */
+const MATERIAL_GLASS_BACKDROP = `blur(${LUCA_MATERIAL_BLUR}) saturate(${LUCA_MATERIAL_SATURATION})`;
+
+const glassBackdrop: CSSProperties = {
+  backdropFilter: MATERIAL_GLASS_BACKDROP,
+  WebkitBackdropFilter: MATERIAL_GLASS_BACKDROP,
+};
+
+/** Root application material — base background + primary text. */
+export const lucaMaterialRootStyle: CSSProperties = {
+  background:
+    "var(--luca-material-root, var(--luca-background-base, var(--app-bg-main)))",
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+};
+
+/** Default glassy panel surface (calm, AppleOS-like). */
+export const lucaMaterialPanelStyle: CSSProperties = {
+  background: LUCA_MATERIAL_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: LUCA_MATERIAL_SHADOW,
+  ...glassBackdrop,
+};
+
+/**
+ * Detached / floating panel surface. Intentionally omits `color` and the
+ * backdrop filter because the existing `.glass-panel`/`.glass-panel-light`
+ * utility supplies blur and per-element text colors are set by the host; this
+ * keeps migrated floating panels pixel-identical while still routing
+ * background / border / shadow through the material engine.
+ */
+export const lucaMaterialFloatingPanelStyle: CSSProperties = {
+  background: LUCA_MATERIAL_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER,
+  boxShadow: LUCA_MATERIAL_SHADOW,
+};
+
+/** Sidebar / rail surface (matches the default desktop panel material). */
+export const lucaMaterialSidebarStyle: CSSProperties = {
+  ...lucaMaterialPanelStyle,
+};
+
+/** Bottom/side sheet surface (desktop). */
+export const lucaMaterialSheetStyle: CSSProperties = {
+  ...lucaMaterialPanelStyle,
+};
+
+/** Popover surface — solid-leaning elevated material. */
+export const lucaMaterialPopoverStyle: CSSProperties = {
+  background: LUCA_MATERIAL_SURFACE_SOLID,
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: LUCA_MATERIAL_SHADOW,
+  ...glassBackdrop,
+};
+
+/** Dialog / modal surface — solid material with stronger framing. */
+export const lucaMaterialDialogStyle: CSSProperties = {
+  background: LUCA_MATERIAL_SURFACE_SOLID,
+  borderColor: LUCA_MATERIAL_BORDER_STRONG,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: LUCA_MATERIAL_SHADOW,
+  ...glassBackdrop,
+};
+
+/**
+ * Full-bleed overlay chrome (e.g. reboot / transition scrims). Background +
+ * primary text only, matching the existing default overlay surface.
+ */
+export const lucaMaterialOverlayStyle: CSSProperties = {
+  background: LUCA_MATERIAL_SURFACE,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+};
+
+/** Floating HUD surface — glassy with a soft accent glow. */
+export const lucaMaterialHudStyle: CSSProperties = {
+  background: LUCA_MATERIAL_SURFACE,
+  borderColor: LUCA_MATERIAL_BORDER,
+  color: LUCA_MATERIAL_TEXT_PRIMARY,
+  boxShadow: LUCA_MATERIAL_SHADOW_GLOW,
+  ...glassBackdrop,
+};
+
+/** Resizable handle accent — subtle material border. */
+export const lucaMaterialResizableHandleStyle: CSSProperties = {
+  borderColor: LUCA_MATERIAL_BORDER,
+};
+
+/** Mobile stable panel material (reuses the mobile shell helper). */
+export const lucaMaterialMobilePanelStyle: CSSProperties = {
+  ...lucaMobilePanelSurfaceStyle,
+};
+
+/** Mobile stable sheet material (reuses the mobile shell helper). */
+export const lucaMaterialMobileSheetStyle: CSSProperties = {
+  ...lucaMobileSheetSurfaceStyle,
+};
+
+/** Mobile app base background material (reuses the mobile shell helper). */
+export const lucaMaterialMobileRootStyle: CSSProperties = {
+  ...lucaMobileAppBackgroundStyle,
+};
+
+/** Browser-safe root fallback (reuses the platform background policy helper). */
+export const lucaMaterialWebFallbackStyle: CSSProperties = {
+  ...lucaDesktopWebSafeRootBackgroundStyle,
+};
+
+/* --- Semantic text / inset helpers (single material import surface) --- */
+export const lucaMaterialPrimaryTextStyle: CSSProperties =
+  lucaShellPrimaryTextStyle;
+export const lucaMaterialSecondaryTextStyle: CSSProperties =
+  lucaShellSecondaryTextStyle;
+export const lucaMaterialTertiaryTextStyle: CSSProperties =
+  lucaShellTertiaryTextStyle;
+export const lucaMaterialBorderSubtleStyle: CSSProperties =
+  lucaShellBorderSubtleStyle;
+export const lucaMaterialHoverSurfaceStyle: CSSProperties =
+  lucaShellHoverSurfaceStyle;
+
+/* --- Platform-aware resolvers --- */
+
+/** Picks the panel material for the current platform. */
+export const resolveLucaPanelMaterial = (isMobile: boolean): CSSProperties =>
+  isMobile ? lucaMaterialMobilePanelStyle : lucaMaterialPanelStyle;
+
+/** Picks the sidebar material for the current platform. */
+export const resolveLucaSidebarMaterial = (isMobile: boolean): CSSProperties =>
+  isMobile ? lucaMaterialMobilePanelStyle : lucaMaterialSidebarStyle;
+
+/** Picks the sheet material for the current platform. */
+export const resolveLucaSheetMaterial = (isMobile: boolean): CSSProperties =>
+  isMobile ? lucaMaterialMobileSheetStyle : lucaMaterialSheetStyle;
+
+/** Material role registry — useful for discoverability and documentation. */
+export const lucaMaterialRoles = {
+  root: lucaMaterialRootStyle,
+  panel: lucaMaterialPanelStyle,
+  floatingPanel: lucaMaterialFloatingPanelStyle,
+  sidebar: lucaMaterialSidebarStyle,
+  sheet: lucaMaterialSheetStyle,
+  popover: lucaMaterialPopoverStyle,
+  dialog: lucaMaterialDialogStyle,
+  overlay: lucaMaterialOverlayStyle,
+  hud: lucaMaterialHudStyle,
+  resizableHandle: lucaMaterialResizableHandleStyle,
+  mobilePanel: lucaMaterialMobilePanelStyle,
+  mobileSheet: lucaMaterialMobileSheetStyle,
+  webFallback: lucaMaterialWebFallbackStyle,
+} as const;
+
+export type LucaMaterialRole = keyof typeof lucaMaterialRoles;

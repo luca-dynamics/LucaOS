@@ -21,10 +21,9 @@ import { useRealtimeVoiceHudState } from "../../services/voice/useRealtimeVoiceH
 import { realtimeVoiceUiBridge } from "../../services/voice/realtimeVoiceUiBridge";
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
 import {
-  LUCA_SHELL_BORDER_SUBTLE,
-  LUCA_SHELL_SURFACE_BACKGROUND,
-  LUCA_SHELL_TEXT_PRIMARY,
-} from "../../styles/lucaShellStyles";
+  LUCA_MATERIAL_BORDER,
+  lucaMaterialOverlayStyle,
+} from "../../styles/lucaMaterialSystem";
 
 import { awarenessService } from "../../services/awarenessService";
 import { settingsService } from "../../services/settingsService";
@@ -476,10 +475,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
       {isRebooting && (
         <div
           className={`absolute inset-0 z-[2000] flex flex-col items-center justify-center font-mono animate-in fade-in duration-200 pointer-events-auto transition-all duration-700 glass-blur[20px]`}
-          style={{
-            background: LUCA_SHELL_SURFACE_BACKGROUND,
-            color: LUCA_SHELL_TEXT_PRIMARY,
-          }}
+          style={{ ...lucaMaterialOverlayStyle }}
         >
           <div
             className="text-4xl font-bold animate-pulse mb-4 tracking-[0.3em] text-center"
@@ -492,7 +488,7 @@ const OverlayManager: React.FC<OverlayManagerProps> = (props) => {
           </div>
           <div
             className="w-64 h-2 bg-[var(--luca-surface-hover)] rounded overflow-hidden border"
-            style={{ borderColor: LUCA_SHELL_BORDER_SUBTLE }}
+            style={{ borderColor: LUCA_MATERIAL_BORDER }}
           >
             <div
               className="h-full animate-[loading_1.5s_ease-in-out_infinite]"

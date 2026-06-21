@@ -18,9 +18,8 @@ import {
   lucaMobileContentSurfaceStyle,
   lucaMobileDividerStyle,
   lucaMobileMutedTextStyle,
-  lucaMobilePanelSurfaceStyle,
 } from "../../styles/lucaMobileShellStyles";
-import { lucaShellPanelSurfaceStyle } from "../../styles/lucaShellStyles";
+import { resolveLucaSidebarMaterial } from "../../styles/lucaMaterialSystem";
 import { apiUrl } from "../../config/api";
 import { readCurrentWebAccessPolicy } from "../../config/webAccessPolicy";
 import {
@@ -338,9 +337,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
             : "hidden"
           : "flex"
       } flex-col h-full overflow-hidden z-10 rounded-lg ${isMobile ? "" : "glass-blur"}`}
-      style={
-        isMobile ? lucaMobilePanelSurfaceStyle : lucaShellPanelSurfaceStyle
-      }
+      style={resolveLucaSidebarMaterial(isMobile)}
     >
       {/* Mobile Header for System Panel */}
       {isMobile && (

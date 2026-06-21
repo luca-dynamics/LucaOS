@@ -17,12 +17,13 @@ import { getRouteHintText, getRouteLabel, getRouteTone, shouldAppendRouteHint } 
 import {
   lucaMobileContentSurfaceStyle,
   lucaMobileGlassControlStyle,
-  lucaMobileSheetSurfaceStyle,
 } from "../../styles/lucaMobileShellStyles";
+import { lucaShellWorkspaceSurfaceStyle } from "../../styles/lucaShellStyles";
 import {
-  lucaShellPanelSurfaceStyle,
-  lucaShellWorkspaceSurfaceStyle,
-} from "../../styles/lucaShellStyles";
+  lucaMaterialMobileSheetStyle,
+  lucaMaterialPanelStyle,
+  resolveLucaSheetMaterial,
+} from "../../styles/lucaMaterialSystem";
 
 interface ChatPanelProps {
   messages: any[];
@@ -519,7 +520,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {attachedImage && (
         <div
           className="flex items-center gap-2 mb-2 border p-2 w-fit"
-          style={isMobile ? lucaMobileGlassControlStyle : lucaShellPanelSurfaceStyle}
+          style={isMobile ? lucaMobileGlassControlStyle : lucaMaterialPanelStyle}
         >
           <Icon name="Gallery" size={14} className={theme.primary} variant="BoldDuotone" />
           <span className={`text-xs "text-[var(--app-text-muted)]"`}>
@@ -544,7 +545,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       <div
         className="rounded-2xl transition-all duration-500 glass-blur border"
         style={{
-          ...(isMobile ? lucaMobileSheetSurfaceStyle : lucaShellPanelSurfaceStyle),
+          ...resolveLucaSheetMaterial(isMobile),
           borderColor: showCentered ? "var(--luca-border-strong, var(--app-border-main))" : undefined,
           boxShadow: showCentered
             ? "var(--luca-shadow-glow, var(--luca-shadow-soft))"
@@ -938,7 +939,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Bottom-docked input */}
       <div
         className={`${isMobile ? "border-t" : "bg-transparent"} z-40 px-3 pb-3 pt-0`}
-        style={isMobile ? lucaMobileSheetSurfaceStyle : undefined}
+        style={isMobile ? lucaMaterialMobileSheetStyle : undefined}
       >
         <div className="mb-2 px-1">
           {suggestionChips}
