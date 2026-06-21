@@ -60,6 +60,9 @@ export interface LucaProviderFactoryFinalRouteDecision {
   readonly reason: string;
   readonly fallbackReasonCode?: LucaProviderHubFinalRouteFallbackReason;
   readonly fallbackReason?: string;
+  readonly runtimeRouteSelectionEnabled: boolean;
+  readonly runtimeRouteKillSwitchEnabled: boolean;
+  readonly killSwitchForcedCurrentRoute: boolean;
   readonly safeDiagnosticsText: string;
   readonly providerApiCalledDuringSelection: false;
   readonly providerAdapterInstantiatedByHandoffMapper: false;
@@ -76,7 +79,11 @@ function routeSummary(route: ModelProvisioningRoute): string {
 }
 
 export function isProviderHubRuntimeRouteSelectionActive(settings: Pick<LucaSettings, "providerHub">): boolean {
-  return Boolean(settings.providerHub?.runtimeRouteSelectionEnabled);
+  return Boolean(settings.providerHub?.runtimeRouteSelectionEnabled) && !Boolean(settings.providerHub?.runtimeRouteKillSwitchEnabled);
+}
+
+export function isProviderHubRuntimeRouteKillSwitchActive(settings: Pick<LucaSettings, "providerHub">): boolean {
+  return Boolean(settings.providerHub?.runtimeRouteKillSwitchEnabled);
 }
 
 function fallbackCodeForHandoff(handoff: LucaProviderHubRouteHandoffResult | undefined, runtimeRouteSelectionEnabled: boolean): LucaProviderHubFinalRouteFallbackReason {
@@ -95,14 +102,16 @@ export function createFinalRouteDecision(
   currentRoute: ModelProvisioningRoute,
   handoff: LucaProviderHubRouteHandoffResult | undefined,
   runtimeRouteSelectionEnabled: boolean,
+  runtimeRouteKillSwitchEnabled = false,
 ): LucaProviderFactoryFinalRouteDecision {
-  const handoffEligible = runtimeRouteSelectionEnabled
+  const killSwitchForcedCurrentRoute = Boolean(runtimeRouteKillSwitchEnabled);
+  const handoffEligible = !killSwitchForcedCurrentRoute && runtimeRouteSelectionEnabled
     && Boolean(handoff?.shouldUseProviderHubRoute)
     && handoff?.handoffStatus === "mapped";
   const finalRoute = handoffEligible ? handoff!.handoffRoute : currentRoute;
   const runtimeExecutionChanged = handoffEligible && routeKey(finalRoute) !== routeKey(currentRoute);
-  const fallbackReasonCode = handoffEligible ? undefined : fallbackCodeForHandoff(handoff, runtimeRouteSelectionEnabled);
-  const fallbackReason = handoffEligible ? undefined : handoff?.reason ?? "Provider Hub handoff did not return a route decision; using the current ProviderFactory route.";
+  const fallbackReasonCode = handoffEligible ? undefined : killSwitchForcedCurrentRoute ? "kill_switch_enabled" : fallbackCodeForHandoff(handoff, runtimeRouteSelectionEnabled);
+  const fallbackReason = handoffEligible ? undefined : killSwitchForcedCurrentRoute ? "Provider Hub runtime kill switch active; using current ProviderFactory route." : handoff?.reason ?? "Provider Hub handoff did not return a route decision; using the current ProviderFactory route.";
   const routeSource = handoffEligible ? "provider_hub_handoff" : "current_provider_factory";
 
   const diagnostics = JSON.stringify({
@@ -113,8 +122,11 @@ export function createFinalRouteDecision(
     usedProviderHubHandoff: handoffEligible,
     routeSource,
     flagDisabledRestoresCurrentRoute: true,
+    runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled: killSwitchForcedCurrentRoute,
+    killSwitchForcedCurrentRoute,
     handoffStatus: handoff?.handoffStatus ?? "fallback_current_route",
-    reason: handoffEligible ? "Provider Hub handoff route passed all final ProviderFactory execution guards." : "Current ProviderFactory route remains active because Provider Hub handoff was not eligible.",
+    reason: handoffEligible ? "Provider Hub handoff route passed all final ProviderFactory execution guards." : killSwitchForcedCurrentRoute ? "Provider Hub runtime kill switch active; using current ProviderFactory route." : "Current ProviderFactory route remains active because Provider Hub handoff was not eligible.",
     fallbackReasonCode: fallbackReasonCode ?? null,
     fallbackReason: fallbackReason ?? null,
     providerApiCalledDuringSelection: false,
@@ -130,8 +142,11 @@ export function createFinalRouteDecision(
     usedProviderHubHandoff: handoffEligible,
     routeSource,
     flagDisabledRestoresCurrentRoute: true,
+    runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled: killSwitchForcedCurrentRoute,
+    killSwitchForcedCurrentRoute,
     handoffStatus: handoff?.handoffStatus ?? "fallback_current_route",
-    reason: handoffEligible ? "Provider Hub handoff route passed all final ProviderFactory execution guards; adapter creation will still use createProviderForRoute(...)." : "Current ProviderFactory route remains active because Provider Hub handoff was not eligible for execution.",
+    reason: handoffEligible ? "Provider Hub handoff route passed all final ProviderFactory execution guards; adapter creation will still use createProviderForRoute(...)." : killSwitchForcedCurrentRoute ? "Provider Hub runtime kill switch active; using current ProviderFactory route." : "Current ProviderFactory route remains active because Provider Hub handoff was not eligible for execution.",
     fallbackReasonCode,
     fallbackReason,
     safeDiagnosticsText: diagnostics,
@@ -149,6 +164,8 @@ export interface LucaProviderHubChatRuntimeGuardSummary {
   readonly routeSource: LucaProviderFactoryFinalRouteDecision["routeSource"];
   readonly fallbackReasonCode?: LucaProviderHubFinalRouteFallbackReason;
   readonly runtimeRouteSelectionEnabled: boolean;
+  readonly runtimeRouteKillSwitchEnabled: boolean;
+  readonly killSwitchForcedCurrentRoute: boolean;
   readonly sideEffectsPerformed: false;
   readonly providerApiCalledDuringSelection: false;
   readonly automaticConnectionTestStarted: false;
@@ -160,6 +177,7 @@ export interface LucaProviderHubChatRuntimeGuardSummary {
 export function createProviderHubChatRuntimeGuardSummary(
   decision: LucaProviderFactoryFinalRouteDecision,
   runtimeRouteSelectionEnabled: boolean,
+  runtimeRouteKillSwitchEnabled = decision.runtimeRouteKillSwitchEnabled,
 ): LucaProviderHubChatRuntimeGuardSummary {
   const safeDiagnosticsText = JSON.stringify({
     currentRoute: routeSummary(decision.currentRoute),
@@ -168,6 +186,8 @@ export function createProviderHubChatRuntimeGuardSummary(
     routeSource: decision.routeSource,
     fallbackReasonCode: decision.fallbackReasonCode ?? null,
     runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled,
+    killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
     sideEffectsPerformed: false,
     providerApiCalledDuringSelection: false,
     automaticConnectionTestStarted: false,
@@ -183,6 +203,8 @@ export function createProviderHubChatRuntimeGuardSummary(
     routeSource: decision.routeSource,
     fallbackReasonCode: decision.fallbackReasonCode,
     runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled,
+    killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
     sideEffectsPerformed: false,
     providerApiCalledDuringSelection: false,
     automaticConnectionTestStarted: false,
@@ -220,6 +242,7 @@ export class ProviderFactory {
     const route = this.resolveProvisioningRoute(settings, persona, providerOverride);
     const allSettings = { ...settingsService.getSettings(), brain: settings };
     const runtimeRouteSelectionEnabled = Boolean(allSettings.providerHub?.runtimeRouteSelectionEnabled);
+    const runtimeRouteKillSwitchEnabled = Boolean(allSettings.providerHub?.runtimeRouteKillSwitchEnabled);
     const providerId = getProviderHubIdForProviderFactoryRoute(route);
     const chatPolicy = resolveProviderHubTaskRoutePolicy({
       taskType: "chat",
@@ -253,7 +276,7 @@ export class ProviderFactory {
       taskType: chatPolicy.taskType,
       requiredCapabilities: chatPolicy.requiredCapabilities,
     });
-    const finalRouteDecision = createFinalRouteDecision(route, handoff, runtimeRouteSelectionEnabled);
+    const finalRouteDecision = createFinalRouteDecision(route, handoff, runtimeRouteSelectionEnabled, runtimeRouteKillSwitchEnabled);
     this.lastProviderHubShadowSelection = shadow;
     this.lastProviderHubRouteHandoff = handoff;
     this.lastFinalRouteDecision = finalRouteDecision;

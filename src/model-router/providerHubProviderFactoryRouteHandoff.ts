@@ -6,6 +6,7 @@ import type { LucaProviderHubId } from "./providerHubRegistry";
 
 export type LucaProviderHubFinalRouteFallbackReason =
   | "flag_disabled"
+  | "kill_switch_enabled"
   | "provider_hub_not_selected"
   | "handoff_not_mapped"
   | "blocked_decision"

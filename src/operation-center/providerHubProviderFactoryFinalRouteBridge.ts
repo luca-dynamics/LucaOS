@@ -10,7 +10,7 @@ function describeRoute(route: ModelProvisioningRoute | undefined): string {
 }
 
 export function createProviderFactoryFinalRouteGuardItems(decision: LucaProviderFactoryFinalRouteDecision): OperationCenterItem[] {
-  return [{
+  const finalRouteGuard: OperationCenterItem = {
     itemId: `operation:provider-hub:provider-factory-final-route:${decision.handoffStatus}:${decision.usedProviderHubHandoff ? "handoff" : "fallback"}`,
     source: "provider_hub",
     category: "model_mesh",
@@ -46,5 +46,37 @@ export function createProviderFactoryFinalRouteGuardItems(decision: LucaProvider
     executionEnabled: false,
     canExecute: false,
     readyForExecution: false,
-  }];
+  };
+
+  const killSwitchItem: OperationCenterItem = {
+    itemId: "operation:provider-hub:emergency-runtime-kill-switch",
+    source: "provider_hub",
+    category: "model_mesh",
+    title: "Provider Hub emergency runtime kill switch",
+    summary: `Provider Hub emergency runtime kill switch is ${decision.runtimeRouteKillSwitchEnabled ? "enabled" : "disabled"}; overrides runtime route selection: ${decision.runtimeRouteKillSwitchEnabled && decision.runtimeRouteSelectionEnabled}; current route forced: ${decision.killSwitchForcedCurrentRoute}; Provider Hub handoff ignored: ${decision.killSwitchForcedCurrentRoute && !decision.usedProviderHubHandoff}; canExecute false; sideEffectsPerformed false.`,
+    status: "ready_for_review",
+    riskLevel: decision.runtimeRouteKillSwitchEnabled ? "high" : "low",
+    createdAt: PROVIDER_FACTORY_FINAL_ROUTE_TIME,
+    requiredApprovals: [],
+    blockedActions: ["direct provider API call", "automatic connection test", "Provider Hub runtime handoff", "local runtime startup", "settings write"],
+    warnings: decision.runtimeRouteKillSwitchEnabled ? ["Provider Hub runtime kill switch active; using current ProviderFactory route."] : [],
+    blockers: [],
+    auditSummary: [
+      `enabled=${decision.runtimeRouteKillSwitchEnabled}`,
+      `overridesRuntimeRouteSelection=${decision.runtimeRouteKillSwitchEnabled && decision.runtimeRouteSelectionEnabled}`,
+      `currentRouteForced=${decision.killSwitchForcedCurrentRoute}`,
+      `providerHubHandoffIgnored=${decision.killSwitchForcedCurrentRoute && !decision.usedProviderHubHandoff}`,
+      `routeSource=${decision.routeSource}`,
+      `fallbackReasonCode=${decision.fallbackReasonCode ?? "none"}`,
+      "canExecute=false",
+      "sideEffectsPerformed=false",
+    ].join("; "),
+    sideEffectsPerformed: false,
+    authorityGranted: false,
+    executionEnabled: false,
+    canExecute: false,
+    readyForExecution: false,
+  };
+
+  return [finalRouteGuard, killSwitchItem];
 }
