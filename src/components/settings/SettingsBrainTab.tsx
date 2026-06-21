@@ -263,14 +263,14 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-all ${
             status?.loading
               ? "opacity-50 cursor-wait"
-              : "hover:bg-white/5 cursor-pointer"
+              : "hover:bg-[var(--luca-surface-glass)] cursor-pointer"
           }`}
           style={{
             borderColor: status?.result
               ? "#10b981"
               : status?.error
                 ? "#ef4444"
-                : "rgba(255,255,255,0.2)",
+                : "var(--luca-border-strong, var(--app-border-main))",
             color: status?.result
               ? "#10b981"
               : status?.error
@@ -367,9 +367,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         className={`flex items-center justify-between ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : " p-3 rounded-xl border"} glass-blur`}
         style={{
           backgroundColor: isMobile
-            ? "rgba(255,255,255,0.02)"
-            : "var(--app-bg-tint, #11111a)",
-          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            ? "var(--luca-surface-glass, var(--app-bg-tint))"
+            : "var(--luca-surface-glass, var(--app-bg-tint))",
+          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
         }}
       >
         <div className="flex items-center gap-3">
@@ -413,9 +413,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         className={`space-y-4 ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : " p-4 rounded-xl border"} glass-blur`}
         style={{
           backgroundColor: isMobile
-            ? "rgba(255,255,255,0.02)"
+            ? "var(--luca-surface-glass, var(--app-bg-tint))"
             : "var(--app-bg-tint, #0a0a0a)",
-          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
         }}
       >
         <div className="flex items-center justify-between gap-2">
@@ -511,9 +511,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   }
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                     borderColor:
-                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                      "var(--luca-border-subtle, var(--app-border-main))",
                     color: "var(--app-text-main)",
                   }}
                 />
@@ -554,9 +554,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   }
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                     borderColor:
-                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                      "var(--luca-border-subtle, var(--app-border-main))",
                     color: "var(--app-text-main)",
                   }}
                 />
@@ -597,10 +597,10 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   }
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                     borderColor:
-                      "var(--app-border-main, rgba(255,255,255,0.1))",
-                    color: "var(--app-text-main, #ffffff)",
+                      "var(--luca-border-subtle, var(--app-border-main))",
+                    color: "var(--luca-text-primary, var(--app-text-main))",
                   }}
                 />
               </div>
@@ -639,9 +639,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   }
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                     borderColor:
-                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                      "var(--luca-border-subtle, var(--app-border-main))",
                     color: "var(--app-text-main)",
                   }}
                 />
@@ -682,9 +682,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                   }
                   className={`w-full rounded-lg p-2 text-sm outline-none font-mono border`}
                   style={{
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                     borderColor:
-                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                      "var(--luca-border-subtle, var(--app-border-main))",
                     color: "var(--app-text-main)",
                   }}
                 />
@@ -743,9 +743,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                       className="w-full rounded-lg border p-2 text-xs font-mono outline-none"
                       style={{
                         backgroundColor:
-                          "var(--luca-background-elevated, var(--app-bg-tint, rgba(0,0,0,0.4)))",
+                          "var(--luca-background-elevated, var(--luca-surface-glass, var(--app-bg-tint)))",
                         borderColor:
-                          "var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.1)))",
+                          "var(--luca-border-subtle, var(--luca-border-subtle, var(--app-border-main)))",
                         color: "var(--luca-text-primary, var(--app-text-main))",
                       }}
                     />
@@ -812,7 +812,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               onClick={() => applyPreset(preset.id as any)}
               className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all text-center group glass-blur`}
               style={{
-                backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
+                backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                 borderColor:
                   (preset.id === "performance" &&
                     settings.brain.model === "gemini-3.1-pro-preview") ||
@@ -824,7 +824,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     !settings.brain.model.includes("gpt") &&
                     !settings.brain.model.includes("claude"))
                     ? `${theme.hex}aa`
-                    : "var(--app-border-main, rgba(255,255,255,0.05))",
+                    : "var(--luca-border-subtle, var(--app-border-main))",
               }}
             >
               <Icon
@@ -848,7 +848,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               />
               <span
                 className={`text-sm font-black`}
-                style={{ color: "var(--app-text-main, #ffffff)" }}
+                style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
               >
                 {preset.label}
               </span>
@@ -872,12 +872,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Intelligence Card */}
         <motion.div
           variants={item}
-          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
+          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-[var(--luca-surface-glass)]" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center justify-between">
@@ -894,7 +894,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <div className="space-y-1">
             <div
               className={`text-base font-black uppercase tracking-widest`}
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+              style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
             >
               Core Intelligence
             </div>
@@ -929,9 +929,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               onChange={(e) => onUpdate("brain", "model", e.target.value)}
               className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border`}
               style={{
-                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                color: "var(--app-text-main, #ffffff)",
+                backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                color: "var(--luca-text-primary, var(--app-text-main))",
               }}
             >
               <optgroup label="Elite Intelligence (Latest / BYOK)">
@@ -1024,10 +1024,10 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                     onChange={(e) => onUpdate("brain", "model", e.target.value)}
                     className={`w-full rounded-lg p-2 text-sm outline-none transition-colors border`}
                     style={{
-                      backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
+                      backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                       borderColor:
-                        "var(--app-border-main, rgba(255,255,255,0.2))",
-                      color: "var(--app-text-main, #ffffff)",
+                        "var(--luca-border-strong, var(--app-border-main))",
+                      color: "var(--luca-text-primary, var(--app-text-main))",
                     }}
                   />
                   <div className="text-sm text-[var(--app-text-muted)] mt-1">
@@ -1042,12 +1042,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Memory Gateway */}
         <motion.div
           variants={item}
-          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
+          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-[var(--luca-surface-glass)]" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center gap-2">
@@ -1058,7 +1058,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             />
             <div
               className={`text-base font-black uppercase tracking-widest`}
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+              style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
             >
               Memory Gateway (RAG)
             </div>
@@ -1074,9 +1074,9 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             onChange={(e) => onUpdate("brain", "memoryModel", e.target.value)}
             className={`w-full rounded-lg p-2 text-sm font-mono outline-none transition-colors border`}
             style={{
-              backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.4))",
-              borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-              color: "var(--app-text-main, #ffffff)",
+              backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+              borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+              color: "var(--luca-text-primary, var(--app-text-main))",
             }}
           >
             <optgroup label="Cloud Embedding (Fast)">
@@ -1107,12 +1107,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Knowledge Maintenance (Settings) */}
         <motion.div
           variants={item}
-          className={`space-y-4 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
+          className={`space-y-4 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-[var(--luca-surface-glass)]" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center justify-between">
@@ -1124,7 +1124,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               />
               <h4
                 className={`text-xs font-bold uppercase tracking-widest`}
-                style={{ color: "var(--app-text-main, #ffffff)" }}
+                style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
               >
                 Knowledge Maintenance
               </h4>
@@ -1139,14 +1139,14 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
             <div
               className={`flex items-center justify-between p-2 rounded-lg border`}
               style={{
-                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.05))",
+                backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                borderColor: "var(--luca-border-subtle, var(--app-border-main))",
               }}
             >
               <div className="space-y-0.5">
                 <div
                   className={`text-xs font-bold`}
-                  style={{ color: "var(--app-text-main, #ffffff)" }}
+                  style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                 >
                   Background History Indexing
                 </div>
@@ -1192,7 +1192,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
 
             {/* Sync Interval Dropdown */}
             <div
-              className={`grid grid-cols-2 items-center gap-4 bg-[var(--app-bg-tint, rgba(255,255,255,0.1))] p-2 rounded-lg border border-[var(--app-border-main)]`}
+              className={`grid grid-cols-2 items-center gap-4 bg-[var(--luca-surface-glass, var(--app-bg-tint))] p-2 rounded-lg border border-[var(--app-border-main)]`}
             >
               <div className="text-[11px] text-[var(--app-text-muted)] uppercase tracking-wider font-bold">
                 Indexing Interval
@@ -1230,12 +1230,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Quota Intelligence Card */}
         <motion.div
           variants={item}
-          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
+          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-[var(--luca-surface-glass)]" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center justify-between">
@@ -1256,14 +1256,14 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
           <div className="space-y-2">
             <div
               className={`text-base font-black uppercase tracking-widest`}
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+              style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
             >
               Routing Health
             </div>
             <div
               className={`w-full h-1 rounded-full overflow-hidden`}
               style={{
-                backgroundColor: "var(--app-bg-tint, rgba(255,255,255,0.05))",
+                backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
               }}
             >
               <motion.div
@@ -1298,12 +1298,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
         {/* Local Brain / Runtime Card */}
         <motion.div
           variants={item}
-          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
+          className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-[var(--luca-surface-glass)]" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, #11111a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center justify-between">
@@ -1314,12 +1314,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                 style={{
                   color: ollamaStatus.available
                     ? "#10b981"
-                    : "var(--app-text-muted, rgba(255,255,255,0.3))",
+                    : "var(--luca-text-tertiary, var(--app-text-muted))",
                 }}
               />
               <div
                 className={`text-base font-black uppercase tracking-widest`}
-                style={{ color: "var(--app-text-main, #ffffff)" }}
+                style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
               >
                 Local Brain / Runtime
               </div>
@@ -1352,7 +1352,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                       await modelManager.startOllama();
                       setTimeout(refreshOllama, 3000);
                     }}
-                    className={`flex-1 bg-[var(--app-bg-tint)] hover:bg-white/10 border-[var(--app-border-main)] border rounded-lg py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all text-[var(--app-text-main)]`}
+                    className={`flex-1 bg-[var(--app-bg-tint)] hover:bg-[var(--luca-surface-hover)] border-[var(--app-border-main)] border rounded-lg py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all text-[var(--app-text-main)]`}
                   >
                     Start Service
                   </button>
@@ -1362,7 +1362,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
                       await modelManager.installOllama();
                       setTimeout(refreshOllama, 5000);
                     }}
-                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all"
+                    className="flex-1 bg-[var(--luca-surface-glass)] hover:bg-[var(--luca-surface-hover)] border border-[var(--luca-border-subtle)] rounded-lg py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all"
                   >
                     Install Ollama
                   </button>
@@ -1375,7 +1375,7 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
               <button
                 onClick={refreshOllama}
                 disabled={isRefreshingOllama}
-                className="p-1.5 hover:bg-white/5 rounded-lg transition-all"
+                className="p-1.5 hover:bg-[var(--luca-surface-glass)] rounded-lg transition-all"
               >
                 <Icon
                   name="Activity"
@@ -1397,12 +1397,12 @@ const SettingsBrainTab: React.FC<SettingsBrainTabProps> = ({
       {/* Creativity / Heat Pool */}
       <motion.div
         variants={item}
-        className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-white/5" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
+        className={`space-y-3 transition-all border shadow-sm ${isMobile ? "border-x-0 border-y rounded-none p-6 bg-[var(--luca-surface-glass)]" : "bg-[var(--app-bg-tint)] rounded-xl p-4 border-[var(--app-border-main)]"} glass-blur`}
         style={{
           backgroundColor: isMobile
-            ? "rgba(255,255,255,0.02)"
-            : "var(--app-bg-tint, #11111a)",
-          borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            ? "var(--luca-surface-glass, var(--app-bg-tint))"
+            : "var(--luca-surface-glass, var(--app-bg-tint))",
+          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
         }}
       >
         <div

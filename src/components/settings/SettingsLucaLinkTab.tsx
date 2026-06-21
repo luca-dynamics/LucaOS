@@ -296,7 +296,7 @@ const GuestAccessSection: React.FC<{
         <button
           onClick={generateGuestAccess}
           disabled={!connected || loading}
-          className={`w-full py-3 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 border hover:bg-white/5 opacity-80 hover:opacity-100`}
+          className={`w-full py-3 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 border hover:bg-[var(--luca-surface-glass)] opacity-80 hover:opacity-100`}
           style={settingsControlInlineStyle}
         >
           {loading ? "Generating..." : "Generate secure link"}
@@ -329,7 +329,7 @@ const GuestAccessSection: React.FC<{
               </code>
               <button
                 onClick={copyUrl}
-                className="p-1 rounded hover:bg-white/10 transition-colors"
+                className="p-1 rounded hover:bg-[var(--luca-surface-hover)] transition-colors"
                 title="Copy URL"
               >
                 <Icon
@@ -474,7 +474,7 @@ const GuestAccessSection: React.FC<{
                           e.target.value.replace(/\D/g, "").slice(0, 6),
                         )
                       }
-                      className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-[var(--app-bg-tint)] border-black/25 shadow-sm text-[var(--app-text-muted)]" : "bg-black/40 border-white/10 text-[var(--app-text-main)]"} rounded-lg p-2 outline-none font-mono text-sm border transition-all`}
+                      className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-[var(--app-bg-tint)] border-[var(--luca-border-strong)] shadow-sm text-[var(--app-text-muted)]" : "bg-[var(--luca-surface-solid)] border-[var(--luca-border-subtle)] text-[var(--app-text-main)]"} rounded-lg p-2 outline-none font-mono text-sm border transition-all`}
                     />
                   </div>
                 ) : (
@@ -489,7 +489,7 @@ const GuestAccessSection: React.FC<{
                       onChange={(e) =>
                         setNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))
                       }
-                      className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-[var(--app-bg-tint)] border-black/25 shadow-sm text-[var(--app-text-muted)]" : "bg-black/40 border-white/10 text-[var(--app-text-main)]"} rounded-lg p-2 outline-none font-mono text-base border transition-all`}
+                      className={`w-full ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-[var(--app-bg-tint)] border-[var(--luca-border-strong)] shadow-sm text-[var(--app-text-muted)]" : "bg-[var(--luca-surface-solid)] border-[var(--luca-border-subtle)] text-[var(--app-text-main)]"} rounded-lg p-2 outline-none font-mono text-base border transition-all`}
                     />
                   </div>
                 )}
@@ -512,7 +512,7 @@ const GuestAccessSection: React.FC<{
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={() => setShowSecurityModal(false)}
-                    className="flex-1 py-2 rounded-lg text-sm font-bold text-[var(--app-text-muted)] hover:bg-white/5"
+                    className="flex-1 py-2 rounded-lg text-sm font-bold text-[var(--app-text-muted)] hover:bg-[var(--luca-surface-glass)]"
                   >
                     Cancel
                   </button>
@@ -3518,7 +3518,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
           >
             {/* Connection status */}
             <div
-              className={`p-6 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-2xl shadow-sm"}`}
+              className={`p-6 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-[var(--luca-surface-glass)]" : "rounded-2xl shadow-sm"}`}
               style={{
                 backgroundColor: settingsSurfaceTokens.glass,
                 borderColor: settingsSurfaceTokens.borderSubtle,
@@ -3639,7 +3639,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                         console.log("[LucaLink] Connected via QR scan");
                       }
                     }}
-                    className={`w-full py-3 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 border hover:bg-white/5 shadow-sm`}
+                    className={`w-full py-3 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 border hover:bg-[var(--luca-surface-glass)] shadow-sm`}
                     style={settingsControlInlineStyle}
                   >
                     <Icon name="QrCode" className="w-5 h-5" /> Scan QR Code from
@@ -3701,7 +3701,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
 
                 {/* Privacy Note */}
                 <div
-                  className={`p-4 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"} text-[var(--app-text-main)] opacity-90 shadow-sm`}
+                  className={`p-4 border transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-[var(--luca-surface-glass)]" : "rounded-xl"} text-[var(--app-text-main)] opacity-90 shadow-sm`}
                 >
                   <div className="flex items-start gap-3">
                     <Icon
@@ -3835,7 +3835,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                           </code>
                           <button
                             onClick={copyRoomId}
-                            className="p-1 rounded hover:bg-white/10 transition-colors"
+                            className="p-1 rounded hover:bg-[var(--luca-surface-hover)] transition-colors"
                             title="Copy Token"
                           >
                             <Icon

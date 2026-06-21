@@ -238,7 +238,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                 <div className="absolute top-0 left-0 w-full h-[1px] opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-0 group-hover:scale-x-100 origin-center bg-gradient-to-r from-transparent via-[var(--app-text-main)] to-transparent" />
 
                 <div className="flex items-start gap-4 mb-4 relative z-10">
-                  <div className="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:rotate-1 shadow-lg relative bg-[var(--app-bg-tint)] mt-0.5 border border-black/5">
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:rotate-1 shadow-lg relative bg-[var(--app-bg-tint)] mt-0.5 border border-[var(--luca-border-subtle)]">
                     <div className="w-full h-full flex items-center justify-center relative p-2">
                       <img
                         src={app.logo}
@@ -261,7 +261,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                             ? "border-[var(--luca-accent-primary,var(--app-core-hex))] text-[var(--luca-accent-primary,var(--app-core-hex))] bg-[var(--luca-accent-soft,var(--app-bg-tint))]"
                             : isChromeSynced
                               ? "border-[var(--luca-border-subtle,var(--app-border-main))] text-[var(--luca-text-secondary,var(--app-text-muted))] bg-[var(--luca-surface-glass,var(--app-bg-tint))]"
-                              : "border-[var(--app-border-main)] text-[var(--app-text-muted)] bg-white/5 opacity-50"
+                              : "border-[var(--app-border-main)] text-[var(--app-text-muted)] bg-[var(--luca-surface-glass)] opacity-50"
                         }`}
                       >
                         {isConnected
@@ -514,7 +514,7 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
               </button>
               <button
                 onClick={() => setProTipModal(null)}
-                className={`w-full py-3 rounded-xl text-sm font-semibold hover:bg-white/10 transition-all border`}
+                className={`w-full py-3 rounded-xl text-sm font-semibold hover:bg-[var(--luca-surface-hover)] transition-all border`}
                 style={settingsControlInlineStyle}
               >
                 Import profile first

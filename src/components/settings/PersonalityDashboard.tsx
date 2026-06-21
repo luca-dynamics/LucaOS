@@ -285,7 +285,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
           <div className="flex justify-between items-center px-1">
             <h3
               className="text-base font-bold flex items-center gap-2"
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+              style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
             >
               <Icon
                 name="Sparkles"
@@ -297,8 +297,8 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             <span
               className={`text-sm px-2 py-0.5 rounded border uppercase tracking-tighter transition-all`}
               style={{
-                backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                borderColor: "var(--luca-border-subtle, var(--app-border-main))",
                 color: "var(--app-text-muted, #94a3b8)",
               }}
             >
@@ -310,9 +310,9 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             className={`relative group ${isMobile ? "border-x-0 border-y rounded-none" : "rounded-xl border shadow-2xl"} overflow-hidden focus-within:ring-1 transition-all`}
             style={{
               backgroundColor: isMobile
-                ? "rgba(255,255,255,0.02)"
+                ? "var(--luca-surface-glass, var(--app-bg-tint))"
                 : "var(--app-bg-tint, #0a0a0f)",
-              borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              borderColor: "var(--luca-border-subtle, var(--app-border-main))",
             }}
           >
             <div
@@ -323,7 +323,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
               value={globalInstructions}
               onChange={(e) => syncConsciousness(e.target.value)}
               className={`w-full h-[140px] bg-transparent p-3 text-base font-mono outline-none resize-none leading-relaxed custom-scrollbar placeholder-gray-500`}
-              style={{ color: "var(--app-text-main, #ffffff)" }}
+              style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
               spellCheck={false}
               placeholder="Describe the behavior and communication rules Luca should consistently follow. (e.g. 'Be concise', 'Ask before taking sensitive actions')..."
             />
@@ -336,7 +336,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
           </div>
         </div>
 
-        <div className="h-px bg-white/5 mx-2" />
+        <div className="h-px bg-[var(--luca-surface-glass)] mx-2" />
 
         {/* 2. SPECIALIST FOCUS (The Lenses) */}
         <div className="flex-1 flex flex-col min-h-0 space-y-3">
@@ -344,9 +344,9 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
             className={`flex flex-col md:flex-row justify-between items-start md:items-center ${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "p-2 px-3 rounded-lg border shrink-0"} transition-all`}
             style={{
               backgroundColor: isMobile
-                ? "rgba(255,255,255,0.02)"
-                : "var(--app-bg-tint, #11111a)",
-              borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                ? "var(--luca-surface-glass, var(--app-bg-tint))"
+                : "var(--luca-surface-glass, var(--app-bg-tint))",
+              borderColor: "var(--luca-border-subtle, var(--app-border-main))",
             }}
           >
             <div className="mb-2 md:mb-0">
@@ -361,9 +361,9 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                 onChange={(e) => setSelectedPersona(e.target.value)}
                 className={`w-full appearance-none rounded-lg px-4 py-1 text-base outline-none transition-colors pr-8 cursor-pointer border`}
                 style={{
-                  backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.6))",
-                  borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-                  color: "var(--app-text-main, #ffffff)",
+                  backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+                  borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+                  color: "var(--luca-text-primary, var(--app-text-main))",
                 }}
               >
                 {availablePersonas.map((p) => (
@@ -393,9 +393,9 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                   onClick={() => setShowAdvanced(!showAdvanced)}
                   className={`text-sm uppercase tracking-[0.2em] transition-all flex items-center gap-2 px-3 py-1 rounded-full border`}
                   style={{
-                    backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                    backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                     borderColor:
-                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                      "var(--luca-border-subtle, var(--app-border-main))",
                     color: "var(--app-text-muted, #94a3b8)",
                   }}
                 >
@@ -428,10 +428,10 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                       className={`relative group/blueprint ${isMobile ? "border-x-0 border-y rounded-none" : "rounded-xl border shadow-inner"} overflow-hidden transition-all`}
                       style={{
                         backgroundColor: isMobile
-                          ? "rgba(255,255,255,0.02)"
-                          : "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                          ? "var(--luca-surface-glass, var(--app-bg-tint))"
+                          : "var(--luca-surface-glass, var(--app-bg-tint))",
                         borderColor:
-                          "var(--app-border-main, rgba(255,255,255,0.1))",
+                          "var(--luca-border-subtle, var(--app-border-main))",
                       }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-tr from-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] to-transparent pointer-events-none" />
@@ -481,7 +481,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
                   </div>
 
                   {/* Protocol Status Footer */}
-                  <div className="flex items-center gap-3 pt-4 border-t border-white/5 mt-2">
+                  <div className="flex items-center gap-3 pt-4 border-t border-[var(--luca-border-subtle)] mt-2">
                     <div className="flex flex-wrap gap-2 items-center flex-1">
                       <span className="text-sm text-[var(--app-text-muted)] font-bold uppercase">
                         Protocols:

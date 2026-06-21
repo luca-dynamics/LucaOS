@@ -497,12 +497,12 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
         isMobile={isMobile}
       >
         <div
-          className={`p-4 border space-y-4 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"}`}
+          className={`p-4 border space-y-4 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-[var(--luca-surface-glass)]" : "rounded-xl"}`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
               : "var(--app-bg-tint, #0a0a0a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center gap-3">
@@ -514,7 +514,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
             <div>
               <h3
                 className={`text-sm font-semibold`}
-                style={{ color: "var(--app-text-main, #ffffff)" }}
+                style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
               >
                 Local Knowledge
               </h3>
@@ -538,10 +538,10 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                   style={{
                     backgroundColor: isSelected
                       ? "var(--app-bg-tint, #0a0a0f)"
-                      : "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                      : "var(--luca-surface-glass, var(--app-bg-tint))",
                     borderColor: isSelected
                       ? theme.hex
-                      : "var(--app-border-main, rgba(255,255,255,0.1))",
+                      : "var(--luca-border-subtle, var(--app-border-main))",
                     boxShadow: isSelected ? `0 0 30px ${theme.hex}11` : "none",
                   }}
                 >
@@ -554,9 +554,9 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                     <div
                       className={`p-2 rounded flex items-center justify-center border transition-all`}
                       style={{
-                        backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.1))",
+                        backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                         borderColor:
-                          "var(--app-border-main, rgba(255,255,255,0.1))",
+                          "var(--luca-border-subtle, var(--app-border-main))",
                         color: theme.hex,
                       }}
                     >
@@ -565,7 +565,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                     <div className="flex-1">
                       <div
                         className={`text-sm font-semibold`}
-                        style={{ color: "var(--app-text-main, #ffffff)" }}
+                        style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                       >
                         {cat.name}
                       </div>
@@ -594,7 +594,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
                       >
-                        <div className="p-4 pt-0 border-t border-white/5 space-y-4">
+                        <div className="p-4 pt-0 border-t border-[var(--luca-border-subtle)] space-y-4">
                           <p
                             className={`text-sm italic text-[var(--app-text-muted)]`}
                           >
@@ -615,12 +615,12 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                 style={{
                                   backgroundColor:
                                     platform === p.id
-                                      ? "var(--app-bg-tint, rgba(0,0,0,0.1))"
+                                      ? "var(--luca-surface-glass, var(--app-bg-tint))"
                                       : "transparent",
                                   borderColor:
                                     platform === p.id
                                       ? theme.hex
-                                      : "var(--app-border-main, rgba(255,255,255,0.05))",
+                                      : "var(--luca-border-subtle, var(--app-border-main))",
                                 }}
                               >
                                 {p.logo ? (
@@ -639,7 +639,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                   style={{
                                     color:
                                       platform === p.id
-                                        ? "var(--app-text-main, #ffffff)"
+                                        ? "var(--luca-text-primary, var(--app-text-main))"
                                         : "var(--app-text-muted, #94a3b8)",
                                   }}
                                 >
@@ -669,9 +669,9 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                   className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 group transition-colors cursor-pointer`}
                                   style={{
                                     backgroundColor:
-                                      "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                                      "var(--luca-surface-glass, var(--app-bg-tint))",
                                     borderColor:
-                                      "var(--app-border-main, rgba(255,255,255,0.1))",
+                                      "var(--luca-border-subtle, var(--app-border-main))",
                                   }}
                                   onClick={() =>
                                     document
@@ -758,7 +758,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                                         {progress}%
                                       </span>
                                     </div>
-                                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="w-full h-1 bg-[var(--luca-surface-glass)] rounded-full overflow-hidden">
                                       <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${progress}%` }}
@@ -829,12 +829,12 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
         {/* === SAAS SYNC SECTION === */}
         <div
-          className={`p-4 border space-y-4 mt-6 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-white/5" : "rounded-xl"}`}
+          className={`p-4 border space-y-4 mt-6 transition-all ${isMobile ? "border-x-0 border-y rounded-none bg-[var(--luca-surface-glass)]" : "rounded-xl"}`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
               : "var(--app-bg-tint, #0a0a0a)",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <div className="flex items-center gap-3">
@@ -848,7 +848,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
             <div>
               <h3
                 className={`text-base font-semibold`}
-                style={{ color: "var(--app-text-main, #ffffff)" }}
+                style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
               >
                 SaaS Sync
               </h3>
@@ -863,8 +863,8 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
           <div
             className={`p-3 rounded-lg border`}
             style={{
-              backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.1))",
-              borderColor: "var(--app-border-main, rgba(255,255,255,0.05))",
+              backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
+              borderColor: "var(--luca-border-subtle, var(--app-border-main))",
             }}
           >
             <div className="flex items-center justify-between">
@@ -877,7 +877,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 <div>
                   <div
                     className={`text-sm font-semibold`}
-                    style={{ color: "var(--app-text-main, #ffffff)" }}
+                    style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                   >
                     Notion
                   </div>
@@ -892,7 +892,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 <button
                   onClick={loadNotionPages}
                   disabled={notionLoading}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white/10 text-[var(--app-text-muted)] hover:bg-white/20`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-[var(--luca-surface-hover)] text-[var(--app-text-muted)] hover:bg-[var(--luca-surface-hover)]`}
                 >
                   <Icon
                     name="RefreshCw"
@@ -903,7 +903,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
               ) : (
                 <button
                   onClick={connectNotion}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border transition-all hover:bg-white/5"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border transition-all hover:bg-[var(--luca-surface-glass)]"
                   style={{ borderColor: theme.hex, color: theme.hex }}
                 >
                   <Icon name="ArrowRight" size={12} />
@@ -920,14 +920,14 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                     key={page.id}
                     className={`flex items-center justify-between p-2 rounded transition-all border`}
                     style={{
-                      backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
+                      backgroundColor: "var(--luca-surface-glass, var(--app-bg-tint))",
                       borderColor:
-                        "var(--app-border-main, rgba(255,255,255,0.05))",
+                        "var(--luca-border-subtle, var(--app-border-main))",
                     }}
                   >
                     <span
                       className={`text-sm truncate flex-1`}
-                      style={{ color: "var(--app-text-main, #ffffff)" }}
+                      style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                     >
                       {page.title}
                     </span>
@@ -964,7 +964,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                       <button
                         onClick={() => syncNotionPage(page.id)}
                         disabled={syncingPageId === page.id}
-                        className="text-[9px] px-2 py-1 rounded bg-white/10 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all"
+                        className="text-[9px] px-2 py-1 rounded bg-[var(--luca-surface-hover)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all"
                       >
                         {syncingPageId === page.id ? "Syncing..." : "Sync"}
                       </button>
@@ -1019,7 +1019,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
 
           {/* Google Drive Connector */}
           <div
-            className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-slate-100 border-black/25" : "bg-black/20 border-white/10"}`}
+            className={`p-3 rounded-lg border ${theme.themeName?.toLowerCase() === "lucagent" ? "bg-slate-100 border-[var(--luca-border-strong)]" : "bg-[var(--luca-surface-glass)] border-[var(--luca-border-subtle)]"}`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1031,7 +1031,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 <div>
                   <div
                     className={`text-base font-bold`}
-                    style={{ color: "var(--app-text-main, #ffffff)" }}
+                    style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                   >
                     Google Drive
                   </div>
@@ -1046,7 +1046,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 <button
                   onClick={loadGoogleFiles}
                   disabled={googleLoading}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white/10 text-[var(--app-text-muted)] hover:bg-white/20`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-[var(--luca-surface-hover)] text-[var(--app-text-muted)] hover:bg-[var(--luca-surface-hover)]`}
                 >
                   <Icon
                     name="Restart"
@@ -1058,7 +1058,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
               ) : (
                 <button
                   onClick={connectGoogle}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border transition-all hover:bg-white/5"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border transition-all hover:bg-[var(--luca-surface-glass)]"
                   style={{ borderColor: theme.hex, color: theme.hex }}
                 >
                   <Icon name="ArrowRight" size={12} />
@@ -1113,7 +1113,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                       <button
                         onClick={() => syncGoogleFile(file.id)}
                         disabled={syncingPageId === file.id}
-                        className="text-[9px] px-2 py-1 rounded bg-white/10 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all"
+                        className="text-[9px] px-2 py-1 rounded bg-[var(--luca-surface-hover)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all"
                       >
                         {syncingPageId === file.id ? "Syncing..." : "Sync"}
                       </button>
@@ -1138,7 +1138,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 <div>
                   <div
                     className={`text-base font-bold`}
-                    style={{ color: "var(--app-text-main, #ffffff)" }}
+                    style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
                   >
                     Obsidian
                   </div>
@@ -1153,7 +1153,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                 <button
                   onClick={loadObsidianFiles}
                   disabled={obsidianLoading}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white/10 text-[var(--app-text-muted)] hover:bg-white/20`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-[var(--luca-surface-hover)] text-[var(--app-text-muted)] hover:bg-[var(--luca-surface-hover)]`}
                 >
                   <Icon
                     name="Restart"
@@ -1165,7 +1165,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
               ) : (
                 <button
                   onClick={configureObsidianVault}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border transition-all hover:bg-white/5"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border transition-all hover:bg-[var(--luca-surface-glass)]"
                   style={{ borderColor: theme.hex, color: theme.hex }}
                 >
                   Configure
@@ -1180,7 +1180,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                   placeholder="Paste vault path (e.g. /Users/name/Documents/Vault)"
                   value={vaultPath}
                   onChange={(e) => setVaultPath(e.target.value)}
-                  className="w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] rounded px-2 py-1 text-[10px] text-[var(--app-text-muted)] focus:outline-none focus:border-white/20"
+                  className="w-full bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] rounded px-2 py-1 text-[10px] text-[var(--app-text-muted)] focus:outline-none focus:border-[var(--luca-border-strong)]"
                 />
               </div>
             )}
@@ -1219,7 +1219,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
                       <button
                         onClick={() => syncObsidianFile(file.id)}
                         disabled={syncingPageId === file.id}
-                        className="text-[9px] px-2 py-1 rounded bg-white/10 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all"
+                        className="text-[9px] px-2 py-1 rounded bg-[var(--luca-surface-hover)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] transition-all"
                       >
                         {syncingPageId === file.id ? "Syncing..." : "Sync"}
                       </button>
@@ -1235,7 +1235,7 @@ const KnowledgeBridgeTab: React.FC<KnowledgeBridgeTabProps> = ({
             {["Slack"].map((name) => (
               <div
                 key={name}
-                className={`p-2 rounded border border-dashed text-center bg-white/[0.02] border-[var(--app-border-main)]`}
+                className={`p-2 rounded border border-dashed text-center bg-[var(--luca-surface-glass)] border-[var(--app-border-main)]`}
               >
                 <div className={`text-[9px] text-[var(--app-text-muted)]`}>
                   {name}

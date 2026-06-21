@@ -163,9 +163,9 @@ const SettingsMCPBridgeTab: React.FC<SettingsMCPBridgeTabProps> = ({
           className={`flex p-1.5 border glass-blur shadow-lg self-start mb-2 ${isMobile ? "mx-4 border-x-0 border-y rounded-none" : "rounded-xl"}`}
           style={{
             backgroundColor: isMobile
-              ? "rgba(255,255,255,0.02)"
-              : "var(--app-bg-tint, rgba(0,0,0,0.4))",
-            borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+              ? "var(--luca-surface-glass, var(--app-bg-tint))"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
           }}
         >
           <button

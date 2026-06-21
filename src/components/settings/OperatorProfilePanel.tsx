@@ -332,9 +332,9 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "rounded-lg p-6 lg:p-8 rounded-lg border shadow-xl"} relative group overflow-hidden h-full transition-all bg-[var(--app-bg-tint)] glass-blur animate-in slide-in-from-top-4 duration-700`}
               style={{
                 backgroundColor: isMobile
-                  ? "rgba(255,255,255,0.02)"
+                  ? "var(--luca-surface-glass, var(--app-bg-tint))"
                   : "var(--app-bg-tint)",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                borderColor: "var(--luca-border-subtle, var(--app-border-main))",
               }}
             >
               {/* Absolute Decorative Background Elements */}
@@ -372,7 +372,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               <div className="flex flex-col lg:flex-row gap-10 items-start">
                 <div
                   onClick={() => setShowEnrollModal(true)}
-                  className="w-32 h-32 rounded-lg flex items-center justify-center relative shrink-0 shadow-2xl group/photo cursor-pointer overflow-hidden transition-all active:scale-95 bg-black/20"
+                  className="w-32 h-32 rounded-lg flex items-center justify-center relative shrink-0 shadow-2xl group/photo cursor-pointer overflow-hidden transition-all active:scale-95 bg-[var(--luca-surface-glass)]"
                 >
                   {profile.identity.avatar || referenceImage ? (
                     <img
@@ -410,7 +410,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                           type="text"
                           value={editedName}
                           onChange={(e) => setEditedName(e.target.value)}
-                          className={`w-full rounded-lg px-4 py-3 text-lg outline-none transition-all shadow-inner border font-black tracking-tight bg-black/40 border-[var(--app-border-main)] text-[var(--app-text-main)] focus:border-[var(--app-text-muted)] focus:bg-black/60`}
+                          className={`w-full rounded-lg px-4 py-3 text-lg outline-none transition-all shadow-inner border font-black tracking-tight bg-[var(--luca-surface-solid)] border-[var(--app-border-main)] text-[var(--app-text-main)] focus:border-[var(--app-text-muted)] focus:bg-[var(--luca-surface-hover)]`}
                         />
                       ) : (
                         <div
@@ -429,7 +429,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                           type="text"
                           value={editedDesignation}
                           onChange={(e) => setEditedDesignation(e.target.value)}
-                          className={`w-full rounded-lg px-4 py-3 text-lg outline-none transition-all shadow-inner border font-black tracking-tight bg-black/40 border-[var(--app-border-main)] text-[var(--app-text-main)] focus:border-[var(--app-text-muted)] focus:bg-black/60`}
+                          className={`w-full rounded-lg px-4 py-3 text-lg outline-none transition-all shadow-inner border font-black tracking-tight bg-[var(--luca-surface-solid)] border-[var(--app-border-main)] text-[var(--app-text-main)] focus:border-[var(--app-text-muted)] focus:bg-[var(--luca-surface-hover)]`}
                         />
                       ) : (
                         <div
@@ -447,7 +447,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                         Core Domain
                       </span>
                       <span
-                        className={`text-sm font-black px-5 py-2 rounded-lg inline-block transition-all text-[var(--app-text-main)] bg-black/20 border-[var(--app-border-main)] uppercase tracking-widest`}
+                        className={`text-sm font-black px-5 py-2 rounded-lg inline-block transition-all text-[var(--app-text-main)] bg-[var(--luca-surface-glass)] border-[var(--app-border-main)] uppercase tracking-widest`}
                       >
                         {profile.workContext?.profession || "UNKNOWN"}
                       </span>
@@ -457,7 +457,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                         Expertise Sync
                       </span>
                       <span
-                        className={`text-sm font-black px-5 py-2 rounded-lg inline-block transition-all text-[var(--app-text-main)] bg-black/20 border-[var(--app-border-main)] uppercase tracking-widest`}
+                        className={`text-sm font-black px-5 py-2 rounded-lg inline-block transition-all text-[var(--app-text-main)] bg-[var(--luca-surface-glass)] border-[var(--app-border-main)] uppercase tracking-widest`}
                       >
                         {profile.workContext?.skillLevel || "VETERAN"}
                       </span>
@@ -467,7 +467,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                         Luca Tone
                       </span>
                       <span
-                        className={`text-sm font-black px-5 py-2 rounded-lg inline-block transition-all text-[var(--app-text-main)] bg-black/20 border-[var(--app-border-main)] uppercase tracking-widest`}
+                        className={`text-sm font-black px-5 py-2 rounded-lg inline-block transition-all text-[var(--app-text-main)] bg-[var(--luca-surface-glass)] border-[var(--app-border-main)] uppercase tracking-widest`}
                       >
                         {profile.personality?.tone || "NATURAL"}
                       </span>
@@ -484,9 +484,9 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               className={`${isMobile ? "p-4 py-6 border-x-0 border-y rounded-none" : "border rounded-xl p-3 lg:p-4"} relative overflow-hidden transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-xl glass-blur`}
               style={{
                 backgroundColor: isMobile
-                  ? "rgba(255,255,255,0.02)"
+                  ? "var(--luca-surface-glass, var(--app-bg-tint))"
                   : "var(--app-bg-tint)",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                borderColor: "var(--luca-border-subtle, var(--app-border-main))",
               }}
             >
               <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
@@ -548,7 +548,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                     </span>
                   </div>
                   <div
-                    className={`h-2 rounded-full overflow-hidden border transition-all shadow-inner bg-black/40 border-[var(--app-border-main)]`}
+                    className={`h-2 rounded-full overflow-hidden border transition-all shadow-inner bg-[var(--luca-surface-solid)] border-[var(--app-border-main)]`}
                   >
                     <div
                       className="h-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(59,130,246,0.3)]"
@@ -592,9 +592,9 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               className={`${isMobile ? "p-4 py-8 border-x-0 border-y rounded-none" : "border rounded-2xl p-6 lg:p-8"} transition-all bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-xl glass-blur animate-in slide-in-from-bottom-4 duration-700`}
               style={{
                 backgroundColor: isMobile
-                  ? "rgba(255,255,255,0.02)"
+                  ? "var(--luca-surface-glass, var(--app-bg-tint))"
                   : "var(--app-bg-tint)",
-                borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
+                borderColor: "var(--luca-border-subtle, var(--app-border-main))",
               }}
             >
               <div className="flex items-center justify-between mb-8 gap-4">
@@ -688,7 +688,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                           </span>
                         </div>
                         <div
-                          className={`h-2 rounded-full overflow-hidden border bg-black/40 border-[var(--app-border-main)]`}
+                          className={`h-2 rounded-full overflow-hidden border bg-[var(--luca-surface-solid)] border-[var(--app-border-main)]`}
                         >
                           <div
                             className={`h-full ${barColor} transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(255,255,255,0.1)]`}
@@ -707,7 +707,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
           {/* Row 4: Recent Insights - Standalone List */}
           <div className="col-span-12">
             <div
-              className={`border rounded-lg p-4 lg:p-5 transition-all shadow-sm ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-[var(--app-bg-tint)] border-black/25" : "bg-[#11111a] border-white/10"}`}
+              className={`border rounded-lg p-4 lg:p-5 transition-all shadow-sm ${theme.isLight || theme.themeName?.toLowerCase() === "lucagent" ? "bg-[var(--app-bg-tint)] border-[var(--luca-border-strong)]" : "bg-[#11111a] border-[var(--luca-border-subtle)]"}`}
               style={{
                 borderColor:
                   theme.isLight || theme.themeName?.toLowerCase() === "lucagent"
@@ -732,7 +732,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   insights.map((insight) => (
                     <div
                       key={insight.id}
-                      className={`group flex flex-col sm:flex-row gap-4 p-4 rounded-lg transition-all bg-black/20 hover:bg-black/40`}
+                      className={`group flex flex-col sm:flex-row gap-4 p-4 rounded-lg transition-all bg-[var(--luca-surface-glass)] hover:bg-[var(--luca-surface-solid)]`}
                     >
                       <div className="min-w-[140px] shrink-0">
                         <div
@@ -780,7 +780,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                   .map((milestone) => (
                     <div
                       key={milestone.id}
-                      className={`flex items-center gap-6 p-4 rounded-lg transition-all bg-black/20 hover:bg-black/40`}
+                      className={`flex items-center gap-6 p-4 rounded-lg transition-all bg-[var(--luca-surface-glass)] hover:bg-[var(--luca-surface-solid)]`}
                     >
                       <div className="min-w-[110px] shrink-0">
                         <div className="text-xs font-black font-mono text-[var(--app-text-muted)] text-center border-r border-[var(--app-border-main)] pr-6 opacity-60">
@@ -815,32 +815,32 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div
-                  className={`p-5 rounded-lg flex flex-col items-center justify-center text-center transition-all bg-black/20 group/directive`}
+                  className={`p-5 rounded-lg flex flex-col items-center justify-center text-center transition-all bg-[var(--luca-surface-glass)] group/directive`}
                 >
                   <span className="block text-[10px] font-black text-[var(--app-text-muted)] opacity-50 uppercase tracking-[0.3em] mb-4 font-mono group-hover/directive:opacity-100 transition-opacity">
                     Target Persona
                   </span>
                   <span
-                    className={`text-xs font-black px-6 py-2 rounded-xl border shadow-xl bg-black/40 border-[var(--app-border-main)] text-[var(--app-text-main)] uppercase tracking-[0.2em] italic`}
+                    className={`text-xs font-black px-6 py-2 rounded-xl border shadow-xl bg-[var(--luca-surface-solid)] border-[var(--app-border-main)] text-[var(--app-text-main)] uppercase tracking-[0.2em] italic`}
                   >
                     {profile.assistantPreferences?.preferredPersona ||
                       "NEUTRAL"}
                   </span>
                 </div>
                 <div
-                  className={`p-5 rounded-lg flex flex-col items-center justify-center text-center transition-all bg-black/20 group/directive`}
+                  className={`p-5 rounded-lg flex flex-col items-center justify-center text-center transition-all bg-[var(--luca-surface-glass)] group/directive`}
                 >
                   <span className="block text-[10px] font-black text-[var(--app-text-muted)] opacity-50 uppercase tracking-[0.3em] mb-4 font-mono group-hover/directive:opacity-100 transition-opacity">
                     Cognitive Density
                   </span>
                   <span
-                    className={`text-xs font-black px-6 py-2 rounded-xl border shadow-xl bg-black/40 border-[var(--app-border-main)] text-[var(--app-text-main)] uppercase tracking-[0.2em] italic`}
+                    className={`text-xs font-black px-6 py-2 rounded-xl border shadow-xl bg-[var(--luca-surface-solid)] border-[var(--app-border-main)] text-[var(--app-text-main)] uppercase tracking-[0.2em] italic`}
                   >
                     {profile.assistantPreferences?.detailLevel || "CONCISE"}
                   </span>
                 </div>
                 <div
-                  className={`p-5 rounded-lg flex flex-col items-center justify-center text-center transition-all bg-black/20 group/directive`}
+                  className={`p-5 rounded-lg flex flex-col items-center justify-center text-center transition-all bg-[var(--luca-surface-glass)] group/directive`}
                 >
                   <span className="block text-[10px] font-black text-[var(--app-text-muted)] opacity-50 uppercase tracking-[0.3em] mb-4 font-mono group-hover/directive:opacity-100 transition-opacity">
                     Observed Focus
@@ -851,7 +851,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                       .map((interest: string, i: number) => (
                         <span
                           key={i}
-                          className="text-[9px] font-black font-mono rounded-lg px-3 py-1 bg-white/5 border border-[var(--app-border-main)] text-[var(--app-text-muted)] uppercase tracking-wider"
+                          className="text-[9px] font-black font-mono rounded-lg px-3 py-1 bg-[var(--luca-surface-glass)] border border-[var(--app-border-main)] text-[var(--app-text-muted)] uppercase tracking-wider"
                         >
                           {interest}
                         </span>
@@ -879,7 +879,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
               className={`border rounded-lg w-full max-w-xl overflow-hidden flex flex-col bg-[var(--app-bg-tint)] border-[var(--app-border-main)] shadow-2xl animate-in zoom-in-95 duration-500`}
             >
               <div
-                className={`p-6 border-b flex items-center justify-between bg-black/20 border-b-[var(--app-border-main)]`}
+                className={`p-6 border-b flex items-center justify-between bg-[var(--luca-surface-glass)] border-b-[var(--app-border-main)]`}
               >
                 <div className="flex items-center gap-3">
                   <Icon name="Shield" className="w-5 h-5 text-[var(--luca-success,#4fbf7a)]" />
@@ -889,7 +889,7 @@ const OperatorProfilePanel: React.FC<OperatorProfilePanelProps> = ({
                 </div>
                 <button
                   onClick={() => setShowEnrollModal(false)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-all"
+                  className="p-2 hover:bg-[var(--luca-surface-hover)] rounded-lg transition-all"
                 >
                   <Icon
                     name="CloseCircle"
