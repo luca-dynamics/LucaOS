@@ -8,6 +8,7 @@ import {
 } from "../../operation-center";
 import { evaluateSkillPermissionGrantReadiness } from "../../personal-intelligence/skillPermissions";
 import { useSkillPermissionGrants } from "../SkillPermissionGrantContext";
+import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
 
@@ -45,15 +46,14 @@ const toneStyle = (tokenVar: string): React.CSSProperties => ({
 
 const dangerBox = toneStyle("--luca-danger");
 const infoBox = toneStyle("--luca-info");
+const neutralCardStyle = lucaMaterialCardStyle;
+const neutralMetricStyle = lucaMaterialMetricStyle;
 
 function OperationCenterCard({ item }: { item: OperationCenterItem }) {
   return (
     <article
       className="rounded-xl border p-2.5"
-      style={{
-        borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.1))",
-        background: "var(--luca-surface-glass, rgba(255,255,255,0.04))",
-      }}
+      style={neutralCardStyle}
       data-operation-center-item={item.itemId}
     >
       <div className="flex items-start justify-between gap-2">
@@ -112,7 +112,7 @@ export default function OperationPermissionCenter() {
         <div className="mt-3 space-y-1.5">
           {(["pending", "granted_for_review", "denied", "expired", "blocked", "requires_primary_approval"] as const).map((status) => {
             const count = state.gates.filter((gate) => gate.status === status).length;
-            return <div key={status} className="flex items-center justify-between rounded-lg border px-2 py-1.5 text-[10px]" style={{ borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.1))", background: "var(--luca-surface-glass, rgba(255,255,255,0.04))" }}><span className="text-[var(--app-text-muted)]">{label(status)}</span><span className="font-medium text-[var(--app-text-main)]">{count}</span></div>;
+            return <div key={status} className="flex items-center justify-between rounded-lg border px-2 py-1.5 text-[10px]" style={neutralMetricStyle}><span className="text-[var(--app-text-muted)]">{label(status)}</span><span className="font-medium text-[var(--app-text-main)]">{count}</span></div>;
           })}
         </div>
       </RightPanelSection>
@@ -157,7 +157,7 @@ export default function OperationPermissionCenter() {
       <RightPanelSection title="Permission audit" subtitle="Most recent local review transitions; no persistence or runtime action.">
         {recentEvents.length === 0 ? <p className="text-[10px] italic text-[var(--app-text-muted)]">No local permission review events.</p> : (
           <div className="space-y-2">
-            {recentEvents.map((event) => <div key={event.eventId} className="rounded-lg border p-2" style={{ borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.1))", background: "var(--luca-surface-glass, rgba(255,255,255,0.04))" }}><p className="text-[10px] leading-relaxed text-[var(--app-text-main)]">{event.summary}</p><p className="mt-1 text-[9px] text-[var(--app-text-muted)]">{new Date(event.occurredAt).toLocaleString()} · in memory only</p></div>)}
+            {recentEvents.map((event) => <div key={event.eventId} className="rounded-lg border p-2" style={neutralMetricStyle}><p className="text-[10px] leading-relaxed text-[var(--app-text-main)]">{event.summary}</p><p className="mt-1 text-[9px] text-[var(--app-text-muted)]">{new Date(event.occurredAt).toLocaleString()} · in memory only</p></div>)}
           </div>
         )}
       </RightPanelSection>

@@ -82,14 +82,14 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
 
       <div className="mt-3 space-y-2">
         {workflowState.items.length === 0 ? (
-          <div className="rounded-lg border border-white/10 bg-black/10 p-2 text-[10px] italic text-[var(--app-text-muted)]">
+          <div className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] italic text-[var(--app-text-muted)]">
             No memory review items are waiting. No memory changes have been applied.
           </div>
         ) : (
           workflowState.items.slice(0, 5).map((item) => (
             <div
               key={item.memoryId}
-              className={`rounded-lg border p-2 ${selectedMemoryId === item.memoryId ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]" : "border-white/10 bg-black/10"}`}
+              className={`rounded-lg border p-2 ${selectedMemoryId === item.memoryId ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}
             >
               <button
                 type="button"
@@ -118,7 +118,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
                   <button
                     key={action}
                     type="button"
-                    className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-[var(--app-text-main)] hover:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]"
+                    className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-[var(--app-text-main)] hover:border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]"
                     onClick={() => {
                       const selected = createMemoryReviewActionPreview(
                         graph,
@@ -161,7 +161,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
             </button>
             <button
               type="button"
-              className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-main)]"
+              className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-main)]"
               onClick={() => setWorkflowState((current) => cancelMemoryReviewPreview(current))}
             >
               Cancel preview
@@ -171,7 +171,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
       )}
 
       {result && mode === "creator" && (
-        <div className="mt-3 rounded-xl border border-white/10 bg-black/10 p-2 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">
+        <div className="mt-3 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">
           <div>Workflow phase: {workflowState.phase}</div>
           <div>persistencePerformed: false</div>
           <div>sideEffectsPerformed: false</div>
@@ -185,7 +185,7 @@ const PersonalIntelligenceReviewWorkflowPanel: React.FC<PersonalIntelligenceRevi
         </div>
       )}
       {result?.phase === "cancelled" && (
-        <div className="mt-3 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+        <div className="mt-3 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
           Preview cancelled. No memory changes have been applied.
         </div>
       )}

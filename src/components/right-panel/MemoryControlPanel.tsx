@@ -123,7 +123,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                           const success = await memoryService.deleteMemory(memory.id);
                           if (success) setMemories((prev) => prev.filter((item) => item.id !== memory.id));
                         }}
-                        className="opacity-0 group-hover/mem:opacity-100 text-[var(--luca-danger,#f87171)] transition-all hover:text-white"
+                        className="opacity-0 group-hover/mem:opacity-100 text-[var(--luca-danger,#f87171)] transition-all hover:text-[var(--luca-danger,#f87171)]"
                         title="Delete memory"
                       >
                         <Icon name="Trash" size={10} />
@@ -150,7 +150,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
           ) : (
             <div className="space-y-2">
               {governanceRecords.map((record) => (
-                <div key={record.memoryId} className="rounded-xl border border-white/10 bg-black/10 p-2">
+                <div key={record.memoryId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 text-[10px] text-[var(--app-text-muted)]">
                       <div className="font-bold text-[var(--app-text-main)]">{record.category} · {record.reviewState}</div>
@@ -179,7 +179,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
               {proposals.slice(0, 24).map((proposal) => {
                 const canWrite = proposal.status === "approved_waiting_write" ? governedMemoryWriteService.canWriteProposal(proposal.proposalId) : null;
                 return (
-                  <div key={proposal.proposalId} className="rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+                  <div key={proposal.proposalId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
                     <div className="font-bold text-[var(--app-text-main)]">{proposal.title}</div>
                     <div className="mt-1">{proposal.summary}</div>
                     <div className="mt-1 uppercase tracking-widest">{proposal.kind} · {proposal.riskLevel} · {proposal.status}</div>
@@ -203,7 +203,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
 
       {viewMode === "Graph" && (
         <RightPanelSection title="Memory Cluster / Graph" subtitle="The original 3D memory graph now lives inside Memory and renders real graph/RAG data only.">
-          <div className="h-[520px] min-h-[420px] overflow-hidden rounded-xl border border-white/10 bg-black/40">
+          <div className="h-[520px] min-h-[420px] overflow-hidden rounded-xl border border-[var(--luca-border-subtle)] bg-black/40">
             <LucaCloud memories={visibleMemories} theme={theme} />
           </div>
         </RightPanelSection>

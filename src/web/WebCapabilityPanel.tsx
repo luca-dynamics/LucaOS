@@ -47,6 +47,13 @@ interface WebCapabilityPanelProps {
   grouped?: Array<{ title: string; capabilityIds: string[] }>;
 }
 
+const getNeutralStatusStyle = (status: WebCapability["status"]) => ({
+  ...lucaMaterialMetricStyle,
+  color: status === "desktop-required" || status === "mobile-app-required"
+    ? "var(--luca-text-secondary)"
+    : "var(--luca-text-tertiary)",
+});
+
 export function WebCapabilityPanel({
   title,
   eyebrow,
@@ -91,7 +98,7 @@ export function WebCapabilityPanel({
                       <h4 className="text-sm font-medium text-[var(--luca-text-primary)]">{item.label}</h4>
                       <span
                         className={`shrink-0 rounded-full border px-2.5 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.12em] ${STATUS_STYLES[item.status]}`}
-                        style={["desktop-required", "mobile-app-required", "unsupported", "unknown"].includes(item.status) ? lucaMaterialMetricStyle : undefined}
+                        style={["desktop-required", "mobile-app-required", "unsupported", "unknown"].includes(item.status) ? getNeutralStatusStyle(item.status) : undefined}
                       >
                         {STATUS_LABELS[item.status]}
                       </span>

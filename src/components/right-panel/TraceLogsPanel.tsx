@@ -165,7 +165,7 @@ const getSkillToneBorder = (tone: SkillGovernanceTone): string => {
     case "warn": return "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]";
     case "danger": return "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]";
     case "info": return "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]";
-    case "neutral": return "border-white/10";
+    case "neutral": return "border-[var(--luca-border-subtle)]";
   }
 };
 
@@ -175,7 +175,7 @@ const getSkillToneBg = (tone: SkillGovernanceTone): string => {
     case "warn": return "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]";
     case "danger": return "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]";
     case "info": return "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]";
-    case "neutral": return "bg-black/10";
+    case "neutral": return "bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]";
   }
 };
 
@@ -237,7 +237,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
         {toolLogs.length === 0 ? <EmptyState>No tool logs.</EmptyState> : (
           <div className="space-y-1">
             {toolLogs.map((log, index) => (
-              <div key={`${log.toolName}-${log.timestamp}-${index}`} className="border-l border-white/10 py-1 pl-2 font-mono text-[10px] transition-colors hover:bg-white/5">
+              <div key={`${log.toolName}-${log.timestamp}-${index}`} className="border-l border-[var(--luca-border-subtle)] py-1 pl-2 font-mono text-[10px] transition-colors hover:bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]">
                 <div className="mb-0.5 flex justify-between gap-2 text-[var(--app-text-muted)] opacity-70">
                   <span className={`font-bold ${log.toolName === "SENTINEL_LOOP" ? "text-slate-500" : theme.primary}`}>{log.toolName}</span>
                   <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
@@ -284,7 +284,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getAndroidNativeOverlayForwardingBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -341,7 +341,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getOriginOverlayCriticalControlBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -395,7 +395,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                       {getOverlayCaptureGateBoundaryLabels().map((label) => (
-                        <span key={label} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
+                        <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
@@ -419,7 +419,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               .map((record) => {
                 const blocked = isOverlayApprovalResolutionBlocked(record.status);
                 return (
-                  <div key={record.approvalResolutionId} className={`rounded-xl border p-3 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : record.status === "resolved" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={record.approvalResolutionId} className={`rounded-xl border p-3 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : record.status === "resolved" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{record.approvalResolutionId}</div>
@@ -477,7 +477,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 {safeguards.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
                     {safeguards.map((entry) => (
-                      <span key={entry.key} className="rounded-full border border-white/10 px-2 py-0.5 text-[var(--app-text-muted)]">{entry.label}</span>
+                      <span key={entry.key} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{entry.label}</span>
                     ))}
                   </div>
                 )}
@@ -528,7 +528,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
               .slice(0, 4)
               .map((session) => (
-                <div key={session.observationSessionId} className="rounded-xl border border-white/10 bg-black/10 p-3">
+                <div key={session.observationSessionId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-3">
                   <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
                     Session · {getScreenObservationStatusLabel(session.status)} · {getScreenObservationSurfaceLabel(session.surface)} / {getScreenObservationCapabilityLabel(session.capability)}
                   </div>
@@ -585,7 +585,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
               .slice(0, 4)
               .map((session) => (
-                <div key={session.browserSessionId} className="rounded-xl border border-white/10 bg-black/10 p-3">
+                <div key={session.browserSessionId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-3">
                   <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
                     Session · {getSandboxedBrowserStatusLabel(session.status)} · {getSandboxedBrowserSurfaceLabel(session.surface)} / {getSandboxedBrowserCapabilityLabel(session.capability)}
                   </div>
@@ -877,7 +877,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               .map((session) => {
                 const blocked = isOverlaySessionBlocked(session.status);
                 return (
-                  <div key={session.overlaySessionId} className={`rounded-xl border p-3 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : session.status === "open" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-white/10 bg-black/10"}`}>
+                  <div key={session.overlaySessionId} className={`rounded-xl border p-3 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : session.status === "open" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{session.overlaySurfaceId} · {session.overlaySessionId.slice(-6)}</div>
@@ -958,7 +958,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
 
       <RightPanelSection title="Approval audit" subtitle="Approval requests and state changes.">
         {trace.approvals.length === 0 ? <EmptyState>No approval activity.</EmptyState> : trace.approvals.slice(0, 8).map((approval) => (
-          <div key={approval.approvalRequestId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+          <div key={approval.approvalRequestId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{approval.status} · {approval.title}</div>
             <div>{approval.sourceType} · {new Date(approval.createdAt).toLocaleString()}</div>
           </div>
@@ -1000,7 +1000,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
 
       <RightPanelSection title="Scheduler observations" subtitle="Dry-run due-job and blocked-job observations.">
         {trace.scheduler.length === 0 ? <EmptyState>No scheduler observations.</EmptyState> : trace.scheduler.slice(0, 8).map((job) => (
-          <div key={job.jobId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+          <div key={job.jobId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{job.due ? "due" : "observed"} · {job.title}</div>
             <div>{job.userSafeReason}</div>
           </div>
@@ -1009,7 +1009,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
 
       <RightPanelSection title="Inbox trace" subtitle="Runtime inbox event audit.">
         {trace.inbox.length === 0 ? <EmptyState>No inbox events.</EmptyState> : trace.inbox.slice(0, 8).map((event) => (
-          <div key={event.inboxEventId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+          <div key={event.inboxEventId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{event.eventType} · {event.title}</div>
             <div>{new Date(event.createdAt).toLocaleString()}</div>
           </div>
@@ -1018,7 +1018,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
 
       <RightPanelSection title="Governed executions" subtitle="Safe action execution audit trail.">
         {trace.executions.length === 0 ? <EmptyState>No governed executions recorded.</EmptyState> : trace.executions.slice(0, 8).map((execution) => (
-          <div key={execution.executionId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+          <div key={execution.executionId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">
               <span className={execution.status === "succeeded" ? "text-[var(--luca-success,#4fbf7a)]" : execution.status === "blocked" ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--luca-warning,#f2b23e)]"}>{execution.status}</span>
               {" "}&middot; {execution.title}
@@ -1032,7 +1032,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
 
       <RightPanelSection title="Memory proposals" subtitle="Memory proposal lifecycle trace. No raw secrets are stored.">
         {trace.memoryProposals.length === 0 ? <EmptyState>No memory proposals.</EmptyState> : trace.memoryProposals.slice(0, 8).map((proposal) => (
-          <div key={proposal.proposalId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+          <div key={proposal.proposalId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{proposal.status} · {proposal.title}</div>
             <div>{proposal.kind} · risk: {proposal.riskLevel} · {new Date(proposal.updatedAt).toLocaleString()}</div>
             {proposal.blockedBy && proposal.blockedBy.length > 0 && <div className="text-[var(--luca-danger,#f87171)]">Blocked: {proposal.blockedBy.join(", ")}</div>}
@@ -1042,7 +1042,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
 
       <RightPanelSection title="Memory writes" subtitle="Governed memory write audit. One-time approval is consumed at write time.">
         {trace.memoryWrites.length === 0 ? <EmptyState>No memory writes recorded.</EmptyState> : trace.memoryWrites.slice(0, 8).map((write) => (
-          <div key={write.writeId} className="mb-2 rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]">
+          <div key={write.writeId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">
               <span className={write.status === "succeeded" ? "text-[var(--luca-success,#4fbf7a)]" : write.status === "blocked" ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--luca-warning,#f2b23e)]"}>{write.status}</span> · risk: {write.riskLevel}
             </div>
@@ -1147,8 +1147,8 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
       <RightPanelSection title="Governed requests / memory governance" subtitle="Requests Luca blocked, asked approval for, or held for review.">
         {trace.governed.length === 0 && trace.memory.length === 0 ? <EmptyState>No governed request or memory governance events.</EmptyState> : (
           <div className="space-y-2">
-            {trace.governed.slice(0, 5).map((request) => <div key={request.requestId} className="rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]"><span className="font-bold text-[var(--app-text-main)]">{request.status}</span> · {request.title}</div>)}
-            {trace.memory.slice(0, 5).map((record) => <div key={record.memoryId} className="rounded-xl border border-white/10 bg-black/10 p-2 text-[10px] text-[var(--app-text-muted)]"><span className="font-bold text-[var(--app-text-main)]">{record.reviewState}</span> · {record.category} · {record.retrievalPolicy}</div>)}
+            {trace.governed.slice(0, 5).map((request) => <div key={request.requestId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]"><span className="font-bold text-[var(--app-text-main)]">{request.status}</span> · {request.title}</div>)}
+            {trace.memory.slice(0, 5).map((record) => <div key={record.memoryId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]"><span className="font-bold text-[var(--app-text-main)]">{record.reviewState}</span> · {record.category} · {record.retrievalPolicy}</div>)}
           </div>
         )}
       </RightPanelSection>

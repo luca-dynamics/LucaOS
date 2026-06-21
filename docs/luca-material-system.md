@@ -336,6 +336,7 @@ than cards.
 - `src/components/right-panel/TraceLogsPanel.tsx`
 - `src/components/right-panel/PersonalIntelligenceReadOnlyPanel.tsx`
 - `src/components/right-panel/PersonalIntelligenceReviewWorkflowPanel.tsx`
+- `src/components/right-panel/OperationPermissionCenter.tsx`
 - `src/web/WebCapabilityPanel.tsx`
 
 ### Why these differ from `lucaMaterialPanelStyle`
@@ -357,4 +358,4 @@ with reduced blur policies.
 
 Semantic status cards and chips using `color-mix(... var(--luca-success | --luca-warning | --luca-danger | --luca-info) ...)`,
 modal scrims, tactical/debug visuals, `MobileScreenMirror`, `UiTreeOverlay`, and
-advanced visualization surfaces remain intentionally out of scope.
+advanced visualization surfaces remain intentionally out of scope. A narrow follow-up also tokenized neutral right-panel chips, default conditional card branches, and the Operation Permission Center neutral rows while preserving semantic status surfaces.

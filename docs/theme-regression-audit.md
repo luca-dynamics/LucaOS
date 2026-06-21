@@ -305,8 +305,11 @@ roles instead of hardcoded `text-white/*`, `border-white/*`, `bg-white/*`, and
 - Shared right-panel section wrapper and neutral metric wrapper.
 - Top-level default/basic cards in Activity, Control, Memory, Trace Logs, and
   Personal Intelligence review/read-only panels.
+- Operation Permission Center neutral/default cards and metric rows.
+- Neutral right-panel chips, default conditional branches, and tokenized borders
+  where the existing low-alpha visual weight was preserved.
 - Browser-safe Web Capability panel shell, nested capability cards, neutral
-  status badges, and text/divider chrome.
+  status badges with explicit secondary/tertiary color overrides, and text/divider chrome.
 
 ### Semantic/tactical surfaces intentionally left
 
