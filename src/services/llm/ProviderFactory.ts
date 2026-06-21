@@ -16,6 +16,7 @@ import {
 } from "../../model-router/providerHubProviderFactoryShadowHook";
 import {
   createProviderHubProviderFactoryRouteHandoff,
+  type LucaProviderHubFinalRouteFallbackReason,
   type LucaProviderHubRouteHandoffResult,
 } from "../../model-router/providerHubProviderFactoryRouteHandoff";
 
@@ -52,8 +53,11 @@ export interface LucaProviderFactoryFinalRouteDecision {
   readonly finalRoute: ModelProvisioningRoute;
   readonly fallbackRoute: ModelProvisioningRoute;
   readonly usedProviderHubHandoff: boolean;
+  readonly routeSource: "current_provider_factory" | "provider_hub_handoff";
+  readonly flagDisabledRestoresCurrentRoute: boolean;
   readonly handoffStatus: LucaProviderHubRouteHandoffResult["handoffStatus"];
   readonly reason: string;
+  readonly fallbackReasonCode?: LucaProviderHubFinalRouteFallbackReason;
   readonly fallbackReason?: string;
   readonly safeDiagnosticsText: string;
   readonly providerApiCalledDuringSelection: false;
@@ -70,26 +74,47 @@ function routeSummary(route: ModelProvisioningRoute): string {
   return `${route.kind}:${route.provider}:${route.model}`;
 }
 
-function createFinalRouteDecision(
+export function isProviderHubRuntimeRouteSelectionActive(settings: Pick<LucaSettings, "providerHub">): boolean {
+  return Boolean(settings.providerHub?.runtimeRouteSelectionEnabled);
+}
+
+function fallbackCodeForHandoff(handoff: LucaProviderHubRouteHandoffResult | undefined, runtimeRouteSelectionEnabled: boolean): LucaProviderHubFinalRouteFallbackReason {
+  if (!runtimeRouteSelectionEnabled) return "flag_disabled";
+  if (!handoff) return "no_handoff_result";
+  if (handoff.fallbackReasonCode) return handoff.fallbackReasonCode;
+  if (handoff.handoffStatus === "blocked_decision") return "blocked_decision";
+  if (handoff.handoffStatus === "missing_configuration") return "missing_configuration";
+  if (handoff.handoffStatus === "unsupported_provider") return "unsupported_provider";
+  if (handoff.handoffStatus === "disabled") return "flag_disabled";
+  if (handoff.handoffStatus !== "mapped") return "handoff_not_mapped";
+  return "safety_guard";
+}
+
+export function createFinalRouteDecision(
   currentRoute: ModelProvisioningRoute,
-  handoff: LucaProviderHubRouteHandoffResult,
+  handoff: LucaProviderHubRouteHandoffResult | undefined,
   runtimeRouteSelectionEnabled: boolean,
 ): LucaProviderFactoryFinalRouteDecision {
   const handoffEligible = runtimeRouteSelectionEnabled
-    && handoff.shouldUseProviderHubRoute
-    && handoff.handoffStatus === "mapped";
-  const finalRoute = handoffEligible ? handoff.handoffRoute : currentRoute;
+    && Boolean(handoff?.shouldUseProviderHubRoute)
+    && handoff?.handoffStatus === "mapped";
+  const finalRoute = handoffEligible ? handoff!.handoffRoute : currentRoute;
   const runtimeExecutionChanged = handoffEligible && routeKey(finalRoute) !== routeKey(currentRoute);
-  const fallbackReason = handoffEligible ? undefined : handoff.reason;
+  const fallbackReasonCode = handoffEligible ? undefined : fallbackCodeForHandoff(handoff, runtimeRouteSelectionEnabled);
+  const fallbackReason = handoffEligible ? undefined : handoff?.reason ?? "Provider Hub handoff did not return a route decision; using the current ProviderFactory route.";
+  const routeSource = handoffEligible ? "provider_hub_handoff" : "current_provider_factory";
 
   const diagnostics = JSON.stringify({
     currentRoute: routeSummary(currentRoute),
-    handoffRoute: handoff.handoffStatus === "mapped" ? routeSummary(handoff.handoffRoute) : null,
+    handoffRoute: handoff?.handoffStatus === "mapped" ? routeSummary(handoff.handoffRoute) : null,
     fallbackRoute: routeSummary(currentRoute),
     finalRoute: routeSummary(finalRoute),
     usedProviderHubHandoff: handoffEligible,
-    handoffStatus: handoff.handoffStatus,
+    routeSource,
+    flagDisabledRestoresCurrentRoute: true,
+    handoffStatus: handoff?.handoffStatus ?? "fallback_current_route",
     reason: handoffEligible ? "Provider Hub handoff route passed all final ProviderFactory execution guards." : "Current ProviderFactory route remains active because Provider Hub handoff was not eligible.",
+    fallbackReasonCode: fallbackReasonCode ?? null,
     fallbackReason: fallbackReason ?? null,
     providerApiCalledDuringSelection: false,
     providerAdapterInstantiatedByHandoffMapper: false,
@@ -98,12 +123,15 @@ function createFinalRouteDecision(
 
   return {
     currentRoute,
-    handoffRoute: handoff.handoffStatus === "mapped" ? handoff.handoffRoute : undefined,
+    handoffRoute: handoff?.handoffStatus === "mapped" ? handoff.handoffRoute : undefined,
     finalRoute,
     fallbackRoute: currentRoute,
     usedProviderHubHandoff: handoffEligible,
-    handoffStatus: handoff.handoffStatus,
+    routeSource,
+    flagDisabledRestoresCurrentRoute: true,
+    handoffStatus: handoff?.handoffStatus ?? "fallback_current_route",
     reason: handoffEligible ? "Provider Hub handoff route passed all final ProviderFactory execution guards; adapter creation will still use createProviderForRoute(...)." : "Current ProviderFactory route remains active because Provider Hub handoff was not eligible for execution.",
+    fallbackReasonCode,
     fallbackReason,
     safeDiagnosticsText: diagnostics,
     providerApiCalledDuringSelection: false,

@@ -10,6 +10,8 @@ describe("ProviderFactory final route guard Operation Center bridge", () => {
       fallbackRoute: { kind: "LUCA_PRIME", provider: "gemini", model: "gemini-1.5-pro" },
       finalRoute: { kind: "BYOK", provider: "openai", model: "gpt-4o", apiKeySource: "user_settings" },
       usedProviderHubHandoff: true,
+      routeSource: "provider_hub_handoff",
+      flagDisabledRestoresCurrentRoute: true,
       handoffStatus: "mapped",
       reason: "mapped",
       safeDiagnosticsText: "safe diagnostics without secrets",
@@ -24,6 +26,9 @@ describe("ProviderFactory final route guard Operation Center bridge", () => {
     expect(item.summary).toContain("final route: BYOK:openai:gpt-4o");
     expect(item.canExecute).toBe(false);
     expect(item.executionEnabled).toBe(false);
+    expect(item.summary).toContain("route source: provider_hub_handoff");
+    expect(item.summary).toContain("fallback reason code: none");
+    expect(item.auditSummary).toContain("fallbackReasonCode=none");
     expect(item.auditSummary).toContain("providerApiCalledDuringSelection=false");
   });
 });

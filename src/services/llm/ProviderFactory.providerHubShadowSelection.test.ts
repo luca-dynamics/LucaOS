@@ -68,6 +68,8 @@ describe("ProviderFactory final Provider Hub handoff execution guard", () => {
     expect(status.finalRouteDecision.usedProviderHubHandoff).toBe(false);
     expect(status.finalRouteDecision.finalRoute).toEqual(status.finalRouteDecision.currentRoute);
     expect(status.finalRouteDecision.runtimeExecutionChanged).toBe(false);
+    expect(status.finalRouteDecision.fallbackReasonCode).toBe("flag_disabled");
+    expect(status.finalRouteDecision.routeSource).toBe("current_provider_factory");
   });
 
   it("flag enabled with mapped Luca Prime handoff uses the handoff route", async () => {
@@ -76,6 +78,8 @@ describe("ProviderFactory final Provider Hub handoff execution guard", () => {
     const status = ProviderFactory.resolveProvisioningRouteWithDiagnostics(baseBrain({ provider: "cloud-managed", useCustomApiKey: false, model: "gpt-4o" }));
     expect(status.providerHubRouteHandoff?.handoffStatus).toBe("mapped");
     expect(status.finalRouteDecision.usedProviderHubHandoff).toBe(true);
+    expect(status.finalRouteDecision.fallbackReasonCode).toBeUndefined();
+    expect(status.finalRouteDecision.routeSource).toBe("provider_hub_handoff");
     expect(status.route).toEqual(status.providerHubRouteHandoff?.handoffRoute);
     expect(status.route.kind).toBe("LUCA_PRIME");
   });
@@ -96,6 +100,7 @@ describe("ProviderFactory final Provider Hub handoff execution guard", () => {
     expect(status.finalRouteDecision.usedProviderHubHandoff).toBe(false);
     expect(status.finalRouteDecision.finalRoute).toEqual(status.finalRouteDecision.currentRoute);
     expect(status.providerHubRouteHandoff?.handoffStatus).not.toBe("mapped");
+    expect(status.finalRouteDecision.finalRoute).toEqual(status.finalRouteDecision.currentRoute);
   });
 
   it("flag enabled with unsupported provider falls back to the current route", async () => {
@@ -112,6 +117,7 @@ describe("ProviderFactory final Provider Hub handoff execution guard", () => {
       requiredCapabilities: ["text_generation"],
     });
     expect(handoff.handoffStatus).toBe("unsupported_provider");
+    expect(handoff.fallbackReasonCode).toBe("unsupported_provider");
     expect(handoff.handoffRoute).toEqual(handoff.fallbackRoute);
   });
 
@@ -129,7 +135,25 @@ describe("ProviderFactory final Provider Hub handoff execution guard", () => {
       requiredCapabilities: ["text_generation"],
     });
     expect(handoff.handoffStatus).toBe("blocked_decision");
+    expect(handoff.fallbackReasonCode).toBe("blocked_decision");
     expect(handoff.shouldUseProviderHubRoute).toBe(false);
+  });
+
+  it("missing handoff produces no_handoff_result and keeps the current route", async () => {
+    const { createFinalRouteDecision } = await import("./ProviderFactory");
+    const currentRoute = { kind: "LUCA_PRIME", provider: "gemini", model: "gemini-1.5-pro" } as const;
+    const decision = createFinalRouteDecision(currentRoute, undefined, true);
+    expect(decision.fallbackReasonCode).toBe("no_handoff_result");
+    expect(decision.finalRoute).toEqual(currentRoute);
+  });
+
+  it("disabling flag always restores current route even when a handoff maps", async () => {
+    const { createFinalRouteDecision } = await import("./ProviderFactory");
+    const currentRoute = { kind: "LUCA_PRIME", provider: "gemini", model: "gemini-1.5-pro" } as const;
+    const handoff = { shouldUseProviderHubRoute: true, handoffRoute: { kind: "BYOK", provider: "openai", model: "gpt-4o", apiKeySource: "user_settings" }, fallbackRoute: currentRoute, handoffStatus: "mapped", reason: "mapped", safeDiagnosticsText: "{}", sideEffectsPerformed: false, providerApiCalled: false, providerAdapterInstantiated: false, runtimeExecutionChanged: false, routeSource: "provider_hub_handoff", flagDisabledRestoresCurrentRoute: true } as const;
+    const decision = createFinalRouteDecision(currentRoute, handoff, false);
+    expect(decision.fallbackReasonCode).toBe("flag_disabled");
+    expect(decision.finalRoute).toEqual(currentRoute);
   });
 
   it("final route still goes through createProviderForRoute without direct Provider Hub instantiation", async () => {

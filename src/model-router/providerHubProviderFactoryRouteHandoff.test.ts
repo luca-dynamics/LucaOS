@@ -49,6 +49,7 @@ describe("providerHubProviderFactoryRouteHandoff", () => {
   it("falls back to the current route when the runtime flag is disabled", () => {
     const result = handoff({ runtimeRouteSelectionEnabled: false });
     expect(result.handoffStatus).toBe("disabled");
+    expect(result.fallbackReasonCode).toBe("flag_disabled");
     expect(result.shouldUseProviderHubRoute).toBe(false);
     expect(result.handoffRoute).toEqual(currentRoute);
   });
@@ -56,29 +57,37 @@ describe("providerHubProviderFactoryRouteHandoff", () => {
   it("maps enabled luca_prime selection to the Luca Prime route shape", () => {
     const result = handoff();
     expect(result.handoffStatus).toBe("mapped");
+    expect(result.fallbackReasonCode).toBeUndefined();
+    expect(result.routeSource).toBe("provider_hub_handoff");
     expect(result.handoffRoute).toEqual({ kind: "LUCA_PRIME", provider: "gemini", model: "gemini-1.5-flash" });
   });
 
   it("maps OpenAI with configured key to the existing BYOK ProviderFactory route shape", () => {
     const result = handoff({ providerHubSelectedProviderId: "openai", providerHubSelectedModelId: "gpt-4o", settings: brain({ openaiApiKey: "sk-secret-value" }) });
     expect(result.handoffStatus).toBe("mapped");
+    expect(result.fallbackReasonCode).toBeUndefined();
+    expect(result.routeSource).toBe("provider_hub_handoff");
     expect(result.handoffRoute).toEqual({ kind: "BYOK", provider: "openai", model: "gpt-4o", apiKeySource: "user_settings" });
   });
 
   it("falls back for unsupported providers", () => {
     const result = handoff({ providerHubSelectedProviderId: "custom_openai_compatible" });
     expect(result.handoffStatus).toBe("unsupported_provider");
+    expect(result.fallbackReasonCode).toBe("unsupported_provider");
     expect(result.handoffRoute).toEqual(currentRoute);
   });
 
   it("falls back for blocked and configuration_required decisions", () => {
-    expect(handoff({ decisionStatus: "blocked", shouldUseProviderHubRoute: false }).handoffStatus).toBe("blocked_decision");
+    const blocked = handoff({ decisionStatus: "blocked", shouldUseProviderHubRoute: false });
+    expect(blocked.handoffStatus).toBe("blocked_decision");
+    expect(blocked.fallbackReasonCode).toBe("blocked_decision");
     expect(handoff({ decisionStatus: "configuration_required", shouldUseProviderHubRoute: false }).handoffStatus).toBe("blocked_decision");
   });
 
   it("falls back when required provider configuration is missing", () => {
     const result = handoff({ providerHubSelectedProviderId: "anthropic", providerHubSelectedModelId: "claude-3-5-sonnet" });
     expect(result.handoffStatus).toBe("missing_configuration");
+    expect(result.fallbackReasonCode).toBe("missing_configuration");
     expect(result.handoffRoute).toEqual(currentRoute);
   });
 

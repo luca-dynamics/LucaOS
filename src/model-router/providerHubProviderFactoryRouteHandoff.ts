@@ -4,6 +4,17 @@ import type { LucaModelCapability, LucaModelTaskType } from "./modelRouterContra
 import type { LucaProviderHubRouteDecisionStatus } from "./providerHubRoutePlanner";
 import type { LucaProviderHubId } from "./providerHubRegistry";
 
+export type LucaProviderHubFinalRouteFallbackReason =
+  | "flag_disabled"
+  | "provider_hub_not_selected"
+  | "handoff_not_mapped"
+  | "blocked_decision"
+  | "missing_configuration"
+  | "unsupported_provider"
+  | "no_handoff_result"
+  | "safety_guard"
+  | "unknown";
+
 export type LucaProviderHubRouteHandoffStatus =
   | "disabled"
   | "mapped"
@@ -32,6 +43,10 @@ export interface LucaProviderHubRouteHandoffResult {
   readonly selectedModelId?: string;
   readonly handoffStatus: LucaProviderHubRouteHandoffStatus;
   readonly reason: string;
+  readonly fallbackReasonCode?: LucaProviderHubFinalRouteFallbackReason;
+  readonly fallbackReason?: string;
+  readonly routeSource: "current_provider_factory" | "provider_hub_handoff";
+  readonly flagDisabledRestoresCurrentRoute: boolean;
   readonly safeDiagnosticsText: string;
   readonly sideEffectsPerformed: false;
   readonly providerApiCalled: false;
@@ -75,6 +90,10 @@ function diagnostics(result: Omit<LucaProviderHubRouteHandoffResult, "safeDiagno
     selectedProviderId: result.selectedProviderId ?? null,
     selectedModelId: result.selectedModelId ?? null,
     handoffStatus: result.handoffStatus,
+    fallbackReasonCode: result.fallbackReasonCode ?? null,
+    fallbackReason: result.fallbackReason ?? null,
+    routeSource: result.routeSource,
+    flagDisabledRestoresCurrentRoute: result.flagDisabledRestoresCurrentRoute,
     shouldUseProviderHubRoute: result.shouldUseProviderHubRoute,
     fallbackRouteKind: result.fallbackRoute.kind,
     handoffRouteKind: result.handoffRoute.kind,
@@ -92,7 +111,7 @@ function withDiagnostics(result: Omit<LucaProviderHubRouteHandoffResult, "safeDi
   return { ...result, safeDiagnosticsText: diagnostics(result, input) };
 }
 
-function fallback(input: LucaProviderHubRouteHandoffInput, handoffStatus: LucaProviderHubRouteHandoffStatus, reason: string): LucaProviderHubRouteHandoffResult {
+function fallback(input: LucaProviderHubRouteHandoffInput, handoffStatus: LucaProviderHubRouteHandoffStatus, reason: string, fallbackReasonCode: LucaProviderHubFinalRouteFallbackReason): LucaProviderHubRouteHandoffResult {
   return withDiagnostics({
     shouldUseProviderHubRoute: false,
     handoffRoute: input.currentRoute,
@@ -101,6 +120,10 @@ function fallback(input: LucaProviderHubRouteHandoffInput, handoffStatus: LucaPr
     selectedModelId: input.providerHubSelectedModelId,
     handoffStatus,
     reason,
+    fallbackReasonCode,
+    fallbackReason: reason,
+    routeSource: "current_provider_factory",
+    flagDisabledRestoresCurrentRoute: true,
     sideEffectsPerformed: false,
     providerApiCalled: false,
     providerAdapterInstantiated: false,
@@ -109,9 +132,10 @@ function fallback(input: LucaProviderHubRouteHandoffInput, handoffStatus: LucaPr
 }
 
 export function createProviderHubProviderFactoryRouteHandoff(input: LucaProviderHubRouteHandoffInput): LucaProviderHubRouteHandoffResult {
-  if (!input.runtimeRouteSelectionEnabled) return fallback(input, "disabled", "Provider Hub runtime route selection is disabled; using the current ProviderFactory route.");
-  if (!input.shouldUseProviderHubRoute || !USABLE_DECISIONS.has(input.decisionStatus)) return fallback(input, "blocked_decision", `Provider Hub decision '${input.decisionStatus}' is not eligible for runtime handoff; using the current ProviderFactory route.`);
-  if (!input.providerHubSelectedProviderId) return fallback(input, "fallback_current_route", "Provider Hub did not select a provider; using the current ProviderFactory route.");
+  if (!input.runtimeRouteSelectionEnabled) return fallback(input, "disabled", "Provider Hub runtime route selection is disabled; using the current ProviderFactory route.", "flag_disabled");
+  if (!USABLE_DECISIONS.has(input.decisionStatus)) return fallback(input, "blocked_decision", `Provider Hub decision '${input.decisionStatus}' is not eligible for runtime handoff; using the current ProviderFactory route.`, "blocked_decision");
+  if (!input.shouldUseProviderHubRoute) return fallback(input, "fallback_current_route", "Provider Hub selection is not usable for runtime handoff; using the current ProviderFactory route.", "provider_hub_not_selected");
+  if (!input.providerHubSelectedProviderId) return fallback(input, "fallback_current_route", "Provider Hub did not select a provider; using the current ProviderFactory route.", "provider_hub_not_selected");
 
   const providerId = input.providerHubSelectedProviderId;
   const model = modelFor(input);
@@ -120,13 +144,13 @@ export function createProviderHubProviderFactoryRouteHandoff(input: LucaProvider
   if (providerId === "luca_prime") {
     handoffRoute = { kind: "LUCA_PRIME", provider: input.currentRoute.kind === "LOCAL" ? "gemini" : input.currentRoute.provider, model };
   } else if (providerId === "ollama") {
-    if (!hasConfiguredString(input.settings, "ollamaBaseUrl")) return fallback(input, "missing_configuration", "Provider Hub selected Ollama, but no configured Ollama base URL is available; using the current ProviderFactory route without starting local runtimes.");
+    if (!hasConfiguredString(input.settings, "ollamaBaseUrl")) return fallback(input, "missing_configuration", "Provider Hub selected Ollama, but no configured Ollama base URL is available; using the current ProviderFactory route without starting local runtimes.", "missing_configuration");
     handoffRoute = { kind: "LOCAL", runtime: "ollama", model, modelId: model.startsWith("local/") ? model.split("/")[1] : model };
   } else {
     const provider = MAPPED_BYOK_PROVIDERS[providerId];
-    if (!provider) return fallback(input, "unsupported_provider", `Provider Hub selected '${providerId}', which is not safely mapped to ProviderFactory in this handoff layer; using the current route.`);
+    if (!provider) return fallback(input, "unsupported_provider", `Provider Hub selected '${providerId}', which is not safely mapped to ProviderFactory in this handoff layer; using the current route.`, "unsupported_provider");
     const apiKeyField = API_KEY_BY_PROVIDER[providerId];
-    if (!hasConfiguredString(input.settings, apiKeyField)) return fallback(input, "missing_configuration", `Provider Hub selected '${providerId}', but required user configuration is missing; using the current ProviderFactory route.`);
+    if (!hasConfiguredString(input.settings, apiKeyField)) return fallback(input, "missing_configuration", `Provider Hub selected '${providerId}', but required user configuration is missing; using the current ProviderFactory route.`, "missing_configuration");
     handoffRoute = { kind: "BYOK", provider, model, apiKeySource: "user_settings" };
   }
 
@@ -137,6 +161,8 @@ export function createProviderHubProviderFactoryRouteHandoff(input: LucaProvider
     selectedProviderId: providerId,
     selectedModelId: input.providerHubSelectedModelId,
     handoffStatus: "mapped",
+    routeSource: "provider_hub_handoff",
+    flagDisabledRestoresCurrentRoute: true,
     reason: `Provider Hub selected '${providerId}' and the guarded handoff mapped it to an existing ProviderFactory route shape; existing ProviderFactory adapter creation remains the execution path.`,
     sideEffectsPerformed: false,
     providerApiCalled: false,
