@@ -159,6 +159,27 @@ export function createFinalRouteDecision(
 }
 
 
+export interface LucaProviderHubLongContextRuntimeGuardSummary {
+  readonly taskType: "long_context";
+  readonly requiredCapabilities: readonly LucaModelCapability[];
+  readonly preference: LucaProviderHubRoutePreference;
+  readonly currentRoute: ModelProvisioningRoute;
+  readonly handoffRoute?: ModelProvisioningRoute;
+  readonly finalRoute: ModelProvisioningRoute;
+  readonly routeSource: LucaProviderFactoryFinalRouteDecision["routeSource"];
+  readonly fallbackReasonCode?: LucaProviderHubFinalRouteFallbackReason;
+  readonly runtimeRouteSelectionEnabled: boolean;
+  readonly runtimeRouteKillSwitchEnabled: boolean;
+  readonly killSwitchForcedCurrentRoute: boolean;
+  readonly executionFallbackStatus?: Pick<LucaProviderFactoryExecutionFallbackResult, "fallbackAttempted" | "fallbackUsed" | "trigger" | "fallbackLoopPrevented">;
+  readonly sideEffectsPerformed: false;
+  readonly providerApiCalledDuringSelection: false;
+  readonly automaticConnectionTestStarted: false;
+  readonly localRuntimeStarted: false;
+  readonly providerAdapterInstantiatedByHandoffMapper: false;
+  readonly safeDiagnosticsText: string;
+}
+
 export interface LucaProviderHubFastReplyRuntimeGuardSummary {
   readonly taskType: "fast_reply";
   readonly requiredCapabilities: readonly LucaModelCapability[];
@@ -263,6 +284,52 @@ export function createProviderHubFastReplyRuntimeGuardSummary(
   });
   return {
     taskType: "fast_reply",
+    requiredCapabilities: policy.requiredCapabilities,
+    preference: policy.preference,
+    currentRoute: decision.currentRoute,
+    handoffRoute: decision.handoffRoute,
+    finalRoute: decision.finalRoute,
+    routeSource: decision.routeSource,
+    fallbackReasonCode: decision.fallbackReasonCode,
+    runtimeRouteSelectionEnabled: decision.runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled: decision.runtimeRouteKillSwitchEnabled,
+    killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
+    executionFallbackStatus: executionFallbackStatus ? { fallbackAttempted: executionFallbackStatus.fallbackAttempted, fallbackUsed: executionFallbackStatus.fallbackUsed, trigger: executionFallbackStatus.trigger, fallbackLoopPrevented: executionFallbackStatus.fallbackLoopPrevented } : undefined,
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    automaticConnectionTestStarted: false,
+    localRuntimeStarted: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+    safeDiagnosticsText,
+  };
+}
+
+export function createProviderHubLongContextRuntimeGuardSummary(
+  decision: LucaProviderFactoryFinalRouteDecision,
+  executionFallbackStatus?: LucaProviderFactoryExecutionFallbackResult,
+): LucaProviderHubLongContextRuntimeGuardSummary {
+  const policy = resolveProviderHubTaskRoutePolicy({ taskType: "long_context" });
+  const safeDiagnosticsText = JSON.stringify({
+    taskType: policy.taskType,
+    requiredCapabilities: policy.requiredCapabilities,
+    preference: policy.preference,
+    currentRoute: routeSummary(decision.currentRoute),
+    handoffRoute: decision.handoffRoute ? routeSummary(decision.handoffRoute) : null,
+    finalRoute: routeSummary(decision.finalRoute),
+    routeSource: decision.routeSource,
+    fallbackReasonCode: decision.fallbackReasonCode ?? null,
+    runtimeRouteSelectionEnabled: decision.runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled: decision.runtimeRouteKillSwitchEnabled,
+    killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
+    executionFallbackStatus: executionFallbackStatus ? { fallbackAttempted: executionFallbackStatus.fallbackAttempted, fallbackUsed: executionFallbackStatus.fallbackUsed, trigger: executionFallbackStatus.trigger ?? null, fallbackLoopPrevented: executionFallbackStatus.fallbackLoopPrevented } : null,
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    automaticConnectionTestStarted: false,
+    localRuntimeStarted: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+  });
+  return {
+    taskType: "long_context",
     requiredCapabilities: policy.requiredCapabilities,
     preference: policy.preference,
     currentRoute: decision.currentRoute,
@@ -398,7 +465,7 @@ export class ProviderFactory {
   }
 
   static resolveProvisioningRouteForTaskWithDiagnostics(
-    taskType: Extract<LucaModelTaskType, "chat" | "fast_reply">,
+    taskType: Extract<LucaModelTaskType, "chat" | "fast_reply" | "long_context">,
     settings: LucaSettings["brain"],
     persona?: string,
     providerOverride?: string,
@@ -457,6 +524,10 @@ export class ProviderFactory {
 
   static resolveFastReplyProvisioningRouteWithDiagnostics(settings: LucaSettings["brain"]) {
     return this.resolveProvisioningRouteForTaskWithDiagnostics("fast_reply", settings);
+  }
+
+  static resolveLongContextProvisioningRouteWithDiagnostics(settings: LucaSettings["brain"]) {
+    return this.resolveProvisioningRouteForTaskWithDiagnostics("long_context", settings);
   }
   static resolveProvisioningRoute(
     settings: LucaSettings["brain"],
@@ -615,6 +686,10 @@ export class ProviderFactory {
 
   static createFastReplyProvider(settings: LucaSettings["brain"]): LLMProvider {
     return this.createProviderFromResolvedRoute(this.resolveFastReplyProvisioningRouteWithDiagnostics(settings), settings);
+  }
+
+  static createLongContextProvider(settings: LucaSettings["brain"]): LLMProvider {
+    return this.createProviderFromResolvedRoute(this.resolveLongContextProvisioningRouteWithDiagnostics(settings), settings);
   }
 
   private static createProviderFromResolvedRoute(

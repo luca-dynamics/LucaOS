@@ -43,40 +43,40 @@ const mockProvider = (name: string, chat = vi.fn().mockResolvedValue({ text: nam
   validateKey: vi.fn().mockResolvedValue({ valid: true, message: "ok" }),
 }) as unknown as LLMProvider;
 
-describe("ProviderFactory Provider Hub Fast Reply runtime guard", () => {
+describe("ProviderFactory Provider Hub Long Context runtime guard", () => {
   beforeEach(async () => {
     vi.restoreAllMocks();
     await setRuntimeFlag(false);
   });
 
-  it("uses the fast_reply policy with text_generation and lowest_latency", async () => {
-    const { ProviderFactory, createProviderHubFastReplyRuntimeGuardSummary } = await import("./ProviderFactory");
+  it("uses the long_context policy with long_context and managed_first", async () => {
+    const { ProviderFactory, createProviderHubLongContextRuntimeGuardSummary } = await import("./ProviderFactory");
     await setRuntimeFlag(true);
 
-    const status = ProviderFactory.resolveFastReplyProvisioningRouteWithDiagnostics(baseBrain());
-    const summary = createProviderHubFastReplyRuntimeGuardSummary(status.finalRouteDecision);
+    const status = ProviderFactory.resolveLongContextProvisioningRouteWithDiagnostics(baseBrain());
+    const summary = createProviderHubLongContextRuntimeGuardSummary(status.finalRouteDecision);
 
-    expect(status.providerHubShadowSelection?.taskType).toBe("fast_reply");
-    expect(status.providerHubShadowSelection?.requiredCapabilities).toEqual(["text_generation"]);
-    expect(status.providerHubShadowSelection?.safeDiagnosticsText).toContain('"routePreference":"lowest_latency"');
-    expect(summary.taskType).toBe("fast_reply");
-    expect(summary.requiredCapabilities).toEqual(["text_generation"]);
-    expect(summary.preference).toBe("lowest_latency");
+    expect(status.providerHubShadowSelection?.taskType).toBe("long_context");
+    expect(status.providerHubShadowSelection?.requiredCapabilities).toEqual(["long_context"]);
+    expect(status.providerHubShadowSelection?.safeDiagnosticsText).toContain('"routePreference":"managed_first"');
+    expect(summary.taskType).toBe("long_context");
+    expect(summary.requiredCapabilities).toEqual(["long_context"]);
+    expect(summary.preference).toBe("managed_first");
   });
 
-  it("flag disabled keeps Fast Reply on the current ProviderFactory route", async () => {
+  it("flag disabled keeps Long Context on the current ProviderFactory route", async () => {
     const { ProviderFactory } = await import("./ProviderFactory");
     await setRuntimeFlag(false);
-    const status = ProviderFactory.resolveFastReplyProvisioningRouteWithDiagnostics(baseBrain());
+    const status = ProviderFactory.resolveLongContextProvisioningRouteWithDiagnostics(baseBrain());
     expect(status.finalRouteDecision.finalRoute).toEqual(status.finalRouteDecision.currentRoute);
     expect(status.finalRouteDecision.routeSource).toBe("current_provider_factory");
     expect(status.finalRouteDecision.fallbackReasonCode).toBe("flag_disabled");
   });
 
-  it("flag enabled with a mapped provider uses the guarded Fast Reply handoff", async () => {
+  it("flag enabled with a mapped provider uses the guarded Long Context handoff", async () => {
     const { ProviderFactory } = await import("./ProviderFactory");
     await setRuntimeFlag(true, ["luca_prime"]);
-    const status = ProviderFactory.resolveFastReplyProvisioningRouteWithDiagnostics(baseBrain());
+    const status = ProviderFactory.resolveLongContextProvisioningRouteWithDiagnostics(baseBrain());
     expect(status.providerHubRouteHandoff?.handoffStatus).toBe("mapped");
     expect(status.finalRouteDecision.routeSource).toBe("provider_hub_handoff");
     expect(status.route).toEqual({ kind: "BYOK", provider: "openai", model: "gpt-4o", apiKeySource: "user_settings" });
@@ -87,20 +87,20 @@ describe("ProviderFactory Provider Hub Fast Reply runtime guard", () => {
     const { createProviderHubProviderFactoryRouteHandoff } = await import("../../model-router/providerHubProviderFactoryRouteHandoff");
 
     await setRuntimeFlag(true, [], true);
-    const killed = ProviderFactory.resolveFastReplyProvisioningRouteWithDiagnostics(baseBrain({ provider: "cloud-managed", useCustomApiKey: false }));
+    const killed = ProviderFactory.resolveLongContextProvisioningRouteWithDiagnostics(baseBrain({ provider: "cloud-managed", useCustomApiKey: false }));
     expect(killed.finalRouteDecision.fallbackReasonCode).toBe("kill_switch_enabled");
     expect(killed.finalRouteDecision.finalRoute).toEqual(killed.finalRouteDecision.currentRoute);
 
     const currentRoute = { kind: "LUCA_PRIME", provider: "gemini", model: "gemini-1.5-pro" } as const;
-    const missingHandoff = createProviderHubProviderFactoryRouteHandoff({ runtimeRouteSelectionEnabled: true, providerHubSelectedProviderId: "openai", providerHubSelectedModelId: "gpt-4o", decisionStatus: "selected", shouldUseProviderHubRoute: true, currentRoute, settings: baseBrain({ openaiApiKey: "" }), taskType: "fast_reply", requiredCapabilities: ["text_generation"] });
+    const missingHandoff = createProviderHubProviderFactoryRouteHandoff({ runtimeRouteSelectionEnabled: true, providerHubSelectedProviderId: "openai", providerHubSelectedModelId: "gpt-4o", decisionStatus: "selected", shouldUseProviderHubRoute: true, currentRoute, settings: baseBrain({ openaiApiKey: "" }), taskType: "long_context", requiredCapabilities: ["long_context"] });
     expect(createFinalRouteDecision(currentRoute, missingHandoff, true).fallbackReasonCode).toBe("missing_configuration");
 
-    const unsupported = createProviderHubProviderFactoryRouteHandoff({ runtimeRouteSelectionEnabled: true, providerHubSelectedProviderId: "mistral" as any, providerHubSelectedModelId: "mistral-large", decisionStatus: "selected", shouldUseProviderHubRoute: true, currentRoute, settings: baseBrain({ useCustomApiKey: false }), taskType: "fast_reply", requiredCapabilities: ["text_generation"] });
+    const unsupported = createProviderHubProviderFactoryRouteHandoff({ runtimeRouteSelectionEnabled: true, providerHubSelectedProviderId: "mistral" as any, providerHubSelectedModelId: "mistral-large", decisionStatus: "selected", shouldUseProviderHubRoute: true, currentRoute, settings: baseBrain({ useCustomApiKey: false }), taskType: "long_context", requiredCapabilities: ["long_context"] });
     expect(createFinalRouteDecision(currentRoute, unsupported, true).fallbackReasonCode).toBe("unsupported_provider");
   });
 
-  it("execution-time fallback applies when the Fast Reply Provider Hub route fails", async () => {
-    const { ProviderFactory, createProviderHubFastReplyRuntimeGuardSummary } = await import("./ProviderFactory");
+  it("execution-time fallback applies when the Long Context Provider Hub route fails", async () => {
+    const { ProviderFactory, createProviderHubLongContextRuntimeGuardSummary } = await import("./ProviderFactory");
     await setRuntimeFlag(true, ["luca_prime"]);
     const failingChat = vi.fn().mockRejectedValue(new Error("429 rate limit sk-secret-value"));
     const fallbackChat = vi.fn().mockResolvedValue({ text: "fallback" });
@@ -108,20 +108,20 @@ describe("ProviderFactory Provider Hub Fast Reply runtime guard", () => {
       .mockReturnValueOnce(mockProvider("primary", failingChat))
       .mockReturnValueOnce(mockProvider("fallback", fallbackChat));
 
-    const provider = ProviderFactory.createFastReplyProvider(baseBrain({ provider: "cloud-managed", useCustomApiKey: false }));
-    await expect(provider.chat([{ role: "user", content: "quick" }])).resolves.toEqual({ text: "fallback" });
-    const summary = createProviderHubFastReplyRuntimeGuardSummary(ProviderFactory.getLastFinalRouteDecision()!, ProviderFactory.getLastExecutionFallbackResult());
+    const provider = ProviderFactory.createLongContextProvider(baseBrain({ provider: "cloud-managed", useCustomApiKey: false }));
+    await expect(provider.chat([{ role: "user", content: "long context" }])).resolves.toEqual({ text: "fallback" });
+    const summary = createProviderHubLongContextRuntimeGuardSummary(ProviderFactory.getLastFinalRouteDecision()!, ProviderFactory.getLastExecutionFallbackResult());
     expect(ProviderFactory.getLastExecutionFallbackResult()?.fallbackUsed).toBe(true);
     expect(summary.executionFallbackStatus?.fallbackUsed).toBe(true);
     expect(summary.safeDiagnosticsText).not.toContain("sk-secret-value");
   });
 
   it("does not call provider APIs, auto-test connections, start local runtimes, leak secrets, or expand other surfaces during selection", async () => {
-    const { ProviderFactory, createProviderHubFastReplyRuntimeGuardSummary } = await import("./ProviderFactory");
+    const { ProviderFactory, createProviderHubLongContextRuntimeGuardSummary } = await import("./ProviderFactory");
     await setRuntimeFlag(true);
     const fetchSpy = vi.spyOn(globalThis, "fetch");
-    const status = ProviderFactory.resolveFastReplyProvisioningRouteWithDiagnostics(baseBrain());
-    const summary = createProviderHubFastReplyRuntimeGuardSummary(status.finalRouteDecision);
+    const status = ProviderFactory.resolveLongContextProvisioningRouteWithDiagnostics(baseBrain());
+    const summary = createProviderHubLongContextRuntimeGuardSummary(status.finalRouteDecision);
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(status.providerHubRouteHandoff?.providerApiCalled).toBe(false);
     expect(summary.automaticConnectionTestStarted).toBe(false);
