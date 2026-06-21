@@ -3,8 +3,9 @@ import { describe, expect, it } from "vitest";
 const { readFileSync } = process.getBuiltinModule("node:fs");
 const source = readFileSync("src/components/Onboarding/OnboardingFlow.tsx", "utf8");
 const webRuntimeSource = readFileSync("src/web/adapters/webOnboardingRuntime.tsx", "utf8");
-const webConversationSource = readFileSync("src/web/adapters/WebSafeConversationalOnboarding.tsx", "utf8");
+const onboardingConversationSurfaceSource = readFileSync("src/components/Onboarding/OnboardingConversationSurface.tsx", "utf8");
 const webVoiceSource = readFileSync("src/web/voice/WebVoiceOnboardingSurface.tsx", "utf8");
+const voiceHudSource = readFileSync("src/components/voice/VoiceHudSurface.tsx", "utf8");
 const themeSelectionSource = readFileSync("src/components/Onboarding/ThemeSelectionStep.tsx", "utf8");
 const systemPanelsSource = readFileSync("src/components/Onboarding/OnboardingSystemPanels.tsx", "utf8");
 
@@ -20,15 +21,15 @@ describe("OnboardingFlow WebBridge UX", () => {
     expect(webRuntimeSource).toContain("WebVoiceOnboardingSurface");
     expect(webRuntimeSource).toContain('props.mode === "voice"');
     expect(webRuntimeSource).not.toContain('resolvedMode = "text"');
-    expect(webVoiceSource).toContain('aria-label="Luca voice onboarding"');
-    expect(webVoiceSource).toContain("Back / Change mode");
-    expect(webVoiceSource).toContain("Enable microphone");
-    expect(webVoiceSource).toContain("Typed fallback note");
+    expect(webVoiceSource).toContain("VoiceHudSurface");
+    expect(webVoiceSource).toContain("showTypedFallback");
+    expect(voiceHudSource).toContain('aria-label="Luca VoiceHUD original surface"');
+    expect(voiceHudSource).toContain("Enable microphone");
   });
 
   it("keeps mobile web onboarding focused and navigable", () => {
     expect(source).toContain('!(runtime.platform === "web" && step === "CONVERSATION")');
-    expect(webConversationSource).toContain("Back / Change mode");
+    expect(onboardingConversationSurfaceSource).toContain("Back / Change mode");
   });
 
   it("keeps theme selection framed as premium LucaOS personalization", () => {
