@@ -10,3 +10,4 @@ export * from "./providerHubRuntimeRouteSelectionBridge";
 export * from "./providerHubProviderFactoryShadowBridge";
 export * from "./providerHubRouteHandoffBridge";
 export * from "./providerHubProviderFactoryFinalRouteBridge";
+export * from "./providerHubTaskRoutePolicyBridge";

@@ -19,6 +19,7 @@ import {
   type LucaProviderHubFinalRouteFallbackReason,
   type LucaProviderHubRouteHandoffResult,
 } from "../../model-router/providerHubProviderFactoryRouteHandoff";
+import { resolveProviderHubTaskRoutePolicy } from "../../model-router/providerHubTaskRoutePolicies";
 
 export type CloudProviderId =
   | "gemini"
@@ -169,19 +170,25 @@ export class ProviderFactory {
     const allSettings = { ...settingsService.getSettings(), brain: settings };
     const runtimeRouteSelectionEnabled = Boolean(allSettings.providerHub?.runtimeRouteSelectionEnabled);
     const providerId = getProviderHubIdForProviderFactoryRoute(route);
+    const chatPolicy = resolveProviderHubTaskRoutePolicy({
+      taskType: "chat",
+      preferenceOverride: route.kind === "LOCAL" ? "local_first" : route.kind === "BYOK" ? "cloud_first" : undefined,
+      allowPaidProvidersOverride: route.kind !== "LOCAL",
+      allowCloudProvidersOverride: route.kind !== "LOCAL",
+    });
     const shadow = createProviderFactoryShadowSelection({
       currentRuntimeProviderId: providerId,
       currentRuntimeModelId: route.model,
       currentRouteMode: route.kind,
-      taskType: "chat",
-      requiredCapabilities: ["text_generation"],
+      taskType: chatPolicy.taskType,
+      requiredCapabilities: chatPolicy.requiredCapabilities,
       currentSettingsSnapshot: allSettings,
-      routePreference: route.kind === "LOCAL" ? "local_first" : route.kind === "BYOK" ? "cloud_first" : "managed_first",
+      routePreference: chatPolicy.preference,
       runtimeRouteSelectionEnabled,
-      allowFallbacks: true,
-      allowPaidProviders: route.kind !== "LOCAL",
-      allowLocalProviders: true,
-      allowCloudProviders: route.kind !== "LOCAL",
+      allowFallbacks: chatPolicy.allowFallbacks,
+      allowPaidProviders: chatPolicy.allowPaidProviders,
+      allowLocalProviders: chatPolicy.allowLocalProviders,
+      allowCloudProviders: chatPolicy.allowCloudProviders,
       observedAt: new Date().toISOString(),
     });
     const handoff = createProviderHubProviderFactoryRouteHandoff({
@@ -192,8 +199,8 @@ export class ProviderFactory {
       shouldUseProviderHubRoute: shadow.shouldUseProviderHubRoute,
       currentRoute: route,
       settings,
-      taskType: "chat",
-      requiredCapabilities: ["text_generation"],
+      taskType: chatPolicy.taskType,
+      requiredCapabilities: chatPolicy.requiredCapabilities,
     });
     const finalRouteDecision = createFinalRouteDecision(route, handoff, runtimeRouteSelectionEnabled);
     this.lastProviderHubShadowSelection = shadow;

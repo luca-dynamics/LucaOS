@@ -24,6 +24,8 @@ import { createProviderHubRouteTraceItems } from "./providerHubRouteTraceBridge"
 import { createProviderFactoryProviderHubDryRunComparison } from "../model-router/providerHubProviderFactoryDryRun";
 import { createProviderFactoryDryRunOperationItems } from "./providerHubDryRunBridge";
 import { createProviderHubRouteDecision } from "../model-router/providerHubRoutePlanner";
+import { resolveProviderHubTaskRoutePolicy } from "../model-router/providerHubTaskRoutePolicies";
+import { createProviderHubTaskRoutePolicyItems } from "./providerHubTaskRoutePolicyBridge";
 import { createProviderHubShadowRouteTrace } from "../model-router/providerHubShadowRouteTrace";
 import { createProviderHubShadowRouteTraceItems } from "./providerHubShadowRouteTraceBridge";
 import { selectProviderHubRuntimeRoute } from "../model-router/providerHubRuntimeRouteSelection";
@@ -263,6 +265,7 @@ const providerHubShadowTraceItems = createProviderHubShadowRouteTraceItems(creat
   trigger: "operation_center_fixture",
   observedAt: createdAt,
 }));
+const providerHubTaskRoutePolicyItems = createProviderHubTaskRoutePolicyItems(resolveProviderHubTaskRoutePolicy({ taskType: "chat" }));
 const providerHubRuntimeRouteSelectionGuardItems = createProviderHubRuntimeRouteSelectionGuardItems(selectProviderHubRuntimeRoute({
   runtimeRouteSelectionEnabled: false,
   currentProviderId: "luca-prime",
@@ -321,6 +324,7 @@ export const operationCenterFixtureItems: readonly OperationCenterItem[] = Objec
   ...dryRunHandoffItems,
   ...providerHubItems,
   ...providerHubRouteTraceItems,
+  ...providerHubTaskRoutePolicyItems,
   ...providerHubShadowTraceItems,
   ...providerHubRuntimeRouteSelectionGuardItems,
   ...providerHubRouteHandoffGuardItems,
