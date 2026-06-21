@@ -25,6 +25,8 @@ export interface LucaProviderFactoryShadowSelectionInput {
 export interface LucaProviderFactoryShadowSelection {
   readonly currentProviderId?: string;
   readonly currentModelId?: string;
+  readonly taskType: LucaModelTaskType;
+  readonly requiredCapabilities: readonly LucaModelCapability[];
   readonly providerHubSelectedProviderId?: LucaProviderHubId;
   readonly providerHubSelectedModelId?: string;
   readonly providerHubEnabled: boolean;
@@ -87,6 +89,8 @@ export function createProviderFactoryShadowSelection(input: LucaProviderFactoryS
     currentProviderId: input.currentRuntimeProviderId ?? null,
     currentModelId: input.currentRuntimeModelId ?? null,
     currentRouteMode: input.currentRouteMode,
+    taskType: input.taskType,
+    requiredCapabilities: input.requiredCapabilities,
     providerHubSelectedProviderId: selection.selectedProviderId ?? null,
     providerHubSelectedModelId: selection.selectedModelId ?? null,
     providerHubEnabled: selection.enabled,
@@ -103,6 +107,8 @@ export function createProviderFactoryShadowSelection(input: LucaProviderFactoryS
   return {
     currentProviderId: input.currentRuntimeProviderId,
     currentModelId: input.currentRuntimeModelId,
+    taskType: input.taskType,
+    requiredCapabilities: input.requiredCapabilities,
     providerHubSelectedProviderId: selection.selectedProviderId,
     providerHubSelectedModelId: selection.selectedModelId,
     providerHubEnabled: selection.enabled,
