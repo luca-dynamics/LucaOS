@@ -29,12 +29,17 @@ const baseBrain = (overrides: Partial<LucaSettings["brain"]> = {}) => ({
   ...overrides,
 }) as LucaSettings["brain"];
 
-async function setRuntimeFlag(enabled: boolean, disabledProviderIds: LucaProviderHubId[] = []) {
+async function setRuntimeFlag(enabled: boolean, disabledProviderIds: LucaProviderHubId[] = [], killSwitchEnabled = false) {
   const { settingsService } = await import("../settingsService");
-  await settingsService.saveSettings({ providerHub: { runtimeRouteSelectionEnabled: enabled, disabledProviderIds } });
+  await settingsService.saveSettings({ providerHub: { runtimeRouteSelectionEnabled: enabled, runtimeRouteKillSwitchEnabled: killSwitchEnabled, disabledProviderIds } });
 }
 
 describe("ProviderFactory Provider Hub chat runtime guard QA", () => {
+  it("kill switch setting defaults false", async () => {
+    const { settingsService } = await import("../settingsService");
+    expect(settingsService.getSettings().providerHub?.runtimeRouteKillSwitchEnabled).toBe(false);
+  });
+
   it("flag disabled keeps the chat final route equal to the current ProviderFactory route", async () => {
     const { ProviderFactory, createProviderHubChatRuntimeGuardSummary } = await import("./ProviderFactory");
     await setRuntimeFlag(false);
@@ -90,6 +95,37 @@ describe("ProviderFactory Provider Hub chat runtime guard QA", () => {
 
     const blocked = createProviderHubProviderFactoryRouteHandoff({ runtimeRouteSelectionEnabled: true, providerHubSelectedProviderId: "openai", providerHubSelectedModelId: "gpt-4o", decisionStatus: "configuration_required", shouldUseProviderHubRoute: false, currentRoute, settings: baseBrain(), taskType: "chat", requiredCapabilities: ["text_generation"] });
     expect(createFinalRouteDecision(currentRoute, blocked, true).fallbackReasonCode).toBe("blocked_decision");
+  });
+
+
+  it("emergency kill switch overrides enabled runtime handoff and forces the current chat route", async () => {
+    const { ProviderFactory, createProviderHubChatRuntimeGuardSummary } = await import("./ProviderFactory");
+    await setRuntimeFlag(true, [], true);
+
+    const status = ProviderFactory.resolveProvisioningRouteWithDiagnostics(baseBrain({ provider: "cloud-managed", useCustomApiKey: false }));
+    const summary = createProviderHubChatRuntimeGuardSummary(status.finalRouteDecision, true);
+
+    expect(status.finalRouteDecision.runtimeRouteKillSwitchEnabled).toBe(true);
+    expect(status.finalRouteDecision.killSwitchForcedCurrentRoute).toBe(true);
+    expect(status.finalRouteDecision.finalRoute).toEqual(status.finalRouteDecision.currentRoute);
+    expect(status.finalRouteDecision.usedProviderHubHandoff).toBe(false);
+    expect(status.finalRouteDecision.routeSource).toBe("current_provider_factory");
+    expect(status.finalRouteDecision.fallbackReasonCode).toBe("kill_switch_enabled");
+    expect(status.finalRouteDecision.safeDiagnosticsText).toContain("Provider Hub runtime kill switch active; using current ProviderFactory route.");
+    expect(summary.runtimeRouteKillSwitchEnabled).toBe(true);
+    expect(summary.killSwitchForcedCurrentRoute).toBe(true);
+  });
+
+  it("disabling the emergency kill switch restores normal guarded handoff behavior", async () => {
+    const { ProviderFactory } = await import("./ProviderFactory");
+    await setRuntimeFlag(true, [], true);
+    const killed = ProviderFactory.resolveProvisioningRouteWithDiagnostics(baseBrain({ provider: "cloud-managed", useCustomApiKey: false }));
+    expect(killed.finalRouteDecision.routeSource).toBe("current_provider_factory");
+
+    await setRuntimeFlag(true, [], false);
+    const restored = ProviderFactory.resolveProvisioningRouteWithDiagnostics(baseBrain({ provider: "cloud-managed", useCustomApiKey: false }));
+    expect(restored.finalRouteDecision.routeSource).toBe("provider_hub_handoff");
+    expect(restored.finalRouteDecision.fallbackReasonCode).toBeUndefined();
   });
 
   it("disabling the flag after enabling restores the current chat route", async () => {

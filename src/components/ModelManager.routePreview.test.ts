@@ -18,6 +18,9 @@ describe("ModelManager Provider Hub route preview", () => {
 
   it("wires preview controls without importing runtime factories or adapters", () => {
     expect(modelManagerSource).toContain("Route Preview");
+    expect(modelManagerSource).toContain("Emergency Provider Hub runtime kill switch");
+    expect(modelManagerSource).toContain("Forces Luca to ignore Provider Hub runtime handoff and use the current ProviderFactory route.");
+    expect(modelManagerSource).toContain("runtimeRouteKillSwitchEnabled");
     expect(modelManagerSource).toContain("createProviderHubRouteDecision");
     expect(modelManagerSource).toContain("resolveProviderHubTaskRoutePolicy");
     expect(modelManagerSource).toContain("createProviderHubRouteRequestFromPolicy");

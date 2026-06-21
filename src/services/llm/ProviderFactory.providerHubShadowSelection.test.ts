@@ -58,9 +58,9 @@ describe("ProviderFactory final Provider Hub handoff execution guard", () => {
     ...overrides,
   }) as LucaSettings["brain"];
 
-  async function setRuntimeFlag(enabled: boolean, disabledProviderIds: string[] = []) {
+  async function setRuntimeFlag(enabled: boolean, disabledProviderIds: string[] = [], killSwitchEnabled = false) {
     const { settingsService } = await import("../settingsService");
-    await settingsService.saveSettings({ providerHub: { runtimeRouteSelectionEnabled: enabled, disabledProviderIds } });
+    await settingsService.saveSettings({ providerHub: { runtimeRouteSelectionEnabled: enabled, runtimeRouteKillSwitchEnabled: killSwitchEnabled, disabledProviderIds } });
   }
 
   it("flag disabled keeps the current route as final route", async () => {
