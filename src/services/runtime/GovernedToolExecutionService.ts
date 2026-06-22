@@ -15,6 +15,14 @@ import type {
   GovernedToolExecutionDiagnosticsSummary,
 } from "../../types/governedToolExecution";
 import { isSafeLocalPanelTarget, getTargetPanelTab } from "./SafeLocalPanelTargets";
+// Lazily-used singletons. Imported statically (not via require) so esbuild can
+// handle the async module graph these pull in — db.js uses top-level await, and
+// require() cannot import an async graph. The circular dependency with
+// RuntimeDiagnosticsService is safe: both sides only dereference each other's
+// singleton inside methods, never at module-evaluation time.
+import { runtimeDiagnosticsService } from "./RuntimeDiagnosticsService";
+import { memoryGovernanceService } from "../memory/MemoryGovernanceService";
+import { agentSessionContinuityService } from "./AgentSessionContinuityService";
 
 interface StorageLike {
   getItem(key: string): string | null;
@@ -108,8 +116,7 @@ export class GovernedToolExecutionService {
   private getDiagnosticsProvider(): DiagnosticsProvider {
     if (this.deps.diagnostics) return this.deps.diagnostics;
     if (!this._diagnosticsCache) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      this._diagnosticsCache = require("./RuntimeDiagnosticsService").runtimeDiagnosticsService;
+      this._diagnosticsCache = runtimeDiagnosticsService;
     }
     return this._diagnosticsCache!;
   }
@@ -117,8 +124,7 @@ export class GovernedToolExecutionService {
   private getMemoryGovernanceProvider(): MemoryGovernanceProvider {
     if (this.deps.memoryGovernance) return this.deps.memoryGovernance;
     if (!this._memoryGovernanceCache) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      this._memoryGovernanceCache = require("../memory/MemoryGovernanceService").memoryGovernanceService;
+      this._memoryGovernanceCache = memoryGovernanceService;
     }
     return this._memoryGovernanceCache!;
   }
@@ -126,8 +132,7 @@ export class GovernedToolExecutionService {
   private getSessionProvider(): SessionProvider {
     if (this.deps.sessions) return this.deps.sessions;
     if (!this._sessionsCache) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      this._sessionsCache = require("./AgentSessionContinuityService").agentSessionContinuityService;
+      this._sessionsCache = agentSessionContinuityService;
     }
     return this._sessionsCache!;
   }
