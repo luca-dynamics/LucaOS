@@ -38,14 +38,14 @@ const ChatWidgetHeader: React.FC<ChatWidgetHeaderProps> = ({
                   ? "#ffffff"
                   : primaryColor,
             }}
-            className="tracking-widest font-bold opacity-80 uppercase"
+            className="tracking-widest font-semibold opacity-70 uppercase"
           >
             L.U.C.A MINI
           </span>
         </div>
 
         {/* Intelligence Context */}
-        <div className="flex items-center gap-2 px-2 py-0.5 rounded bg-white/5 border border-white/5 opacity-60">
+        <div className="flex items-center gap-2 px-2 py-0.5 rounded bg-white/5 border border-white/5 opacity-45">
           <div className="flex items-center gap-1">
             <Icon name="Brain" size={8} color={primaryColor} />
             <span className="text-[8px] tracking-tight truncate max-w-[60px]">

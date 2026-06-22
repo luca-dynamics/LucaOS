@@ -544,9 +544,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         className="rounded-2xl transition-all duration-500 glass-blur border"
         style={{
           ...resolveLucaSheetMaterial(isMobile),
-          borderColor: showCentered ? "var(--luca-border-strong, var(--app-border-main))" : undefined,
+          borderColor: showCentered ? "var(--luca-border-subtle, var(--app-border-main))" : undefined,
           boxShadow: showCentered
-            ? "var(--luca-shadow-glow, var(--luca-shadow-soft))"
+            ? "var(--luca-shadow-soft)"
             : undefined,
         }}
       >
@@ -756,7 +756,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               style={{ animationDelay: "150ms" }}
             >
               {sharedInputArea}
-              <div className="flex justify-center mt-3 z-20">
+              <div className="flex justify-center mt-4 z-20 opacity-90">
                 {ambientSuggestions.length > 0 && showSuggestionChips && suggestionChips}
               </div>
             </div>
@@ -852,7 +852,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Faint watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
         <h1
-          className={`text-[9rem] lg:text-[8rem] font-black italic opacity-[0.04] select-none tracking-tighter transition-colors duration-500 ${isMobile ? "" : theme.primary}`}
+          className={`text-[9rem] lg:text-[8rem] font-black italic opacity-[0.025] select-none tracking-tighter transition-colors duration-500 ${isMobile ? "" : theme.primary}`}
           style={isMobile ? { color: "var(--luca-text-tertiary)" } : undefined}
         >
           LUCA
@@ -936,13 +936,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Bottom-docked input */}
       <div
-        className={`${isMobile ? "border-t" : "bg-transparent"} z-40 px-3 pb-3 pt-0`}
+        className={`${isMobile ? "border-t" : "bg-transparent"} z-40 px-3 sm:px-6 pb-3 sm:pb-4 pt-0`}
         style={isMobile ? lucaMaterialMobileSheetStyle : undefined}
       >
-        <div className="mb-2 px-1">
-          {suggestionChips}
+        <div className="mx-auto w-full max-w-3xl">
+          <div className="mb-2 px-1">
+            {suggestionChips}
+          </div>
+          {sharedInputArea}
         </div>
-        {sharedInputArea}
       </div>
     </section>
   );
