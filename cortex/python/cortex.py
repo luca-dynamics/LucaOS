@@ -544,9 +544,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 import socket
 
+from luca_security import allowed_origins as _luca_allowed_origins, require_privileged
+# Security gate (Phase 1): explicit origin allowlist instead of wildcard.
+# Wildcard origins + allow_credentials is an anti-pattern (and rejected by
+# browsers); restrict to the local Electron/Vite origins. Override with
+# LUCA_CORTEX_ALLOWED_ORIGINS.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_luca_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -571,11 +576,11 @@ state.rag_embedding_func = rag_embedding_func
 state.GOOGLE_API_KEY = GOOGLE_API_KEY
 state.LIGHTRAG_AVAILABLE = LIGHTRAG_AVAILABLE
 
-app.include_router(osint_router)
+app.include_router(osint_router, dependencies=[Depends(require_privileged)])
 app.include_router(agent_router)
-app.include_router(agent_tool_router)
+app.include_router(agent_tool_router, dependencies=[Depends(require_privileged)])
 app.include_router(quality_router)
-app.include_router(build_router)
+app.include_router(build_router, dependencies=[Depends(require_privileged)])
 app.include_router(state_router)
 app.include_router(notion_router)
 app.include_router(notion_oauth_router)
@@ -585,7 +590,7 @@ app.include_router(obsidian_router)
 
 # Import and Include Hacking/C2 Router
 from hacking_endpoints import router as hacking_router
-app.include_router(hacking_router)
+app.include_router(hacking_router, dependencies=[Depends(require_privileged)])
 
 # --- REMOTE ACCESS SERVER ---
 # Get local IP address for remote access
@@ -601,7 +606,9 @@ def get_local_ip():
     except Exception:
         return "127.0.0.1"
 
-REMOTE_ACCESS_ENABLED = os.environ.get("ENABLE_REMOTE_ACCESS", "true").lower() == "true"
+# Secure default: bind loopback only. Remote (0.0.0.0) access is opt-in and,
+# once enabled, privileged routes still require the Luca master token.
+REMOTE_ACCESS_ENABLED = os.environ.get("ENABLE_REMOTE_ACCESS", "false").lower() == "true"
 LOCAL_IP = get_local_ip()
 
 # --- REMOTE ACCESS PIN SECURITY ---

@@ -1,0 +1,4 @@
+# Cortex backend test/dev dependencies.
+# Install into the cortex venv:  python -m pip install -r requirements-dev.txt
+pytest>=8.0
+httpx>=0.27   # required by fastapi.testclient.TestClient
