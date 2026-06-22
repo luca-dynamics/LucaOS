@@ -56,9 +56,9 @@ export interface VoiceHudSurfaceProps {
     activeMissionScope?: string;
   };
   amplitude?: number;
-  telemetrySummary?: string;
-  speedLabel?: string;
-  localCoreLabel?: string;
+  telemetrySummary?: string | null;
+  speedLabel?: string | null;
+  localCoreLabel?: string | null;
   localCoreReadinessReason?: string;
   routingHealth?: string;
   routeRecommendation?: {
