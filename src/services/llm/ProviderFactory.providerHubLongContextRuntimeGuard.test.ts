@@ -127,7 +127,7 @@ describe("ProviderFactory Provider Hub Long Context runtime guard", () => {
     expect(summary.automaticConnectionTestStarted).toBe(false);
     expect(summary.localRuntimeStarted).toBe(false);
     expect(summary.safeDiagnosticsText).not.toContain("sk-secret-value");
-    expect(providerFactorySource).toContain('Extract<LucaModelTaskType, "chat" | "fast_reply" | "long_context">');
+    expect(providerFactorySource).toContain('Extract<LucaModelTaskType, "chat" | "fast_reply" | "long_context" | "code">');
     expect(providerFactorySource).not.toContain("testProviderHubConnection");
     expect(providerFactorySource).not.toMatch(/startLocal|ollama serve|child_process|spawn\(/i);
     fetchSpy.mockRestore();

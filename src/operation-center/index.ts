@@ -16,3 +16,4 @@ export * from "./taskAutonomyContractBridge";
 export * from "./providerHubFastReplyRuntimeGuardBridge";
 
 export * from "./providerHubLongContextRuntimeGuardBridge";
+export * from "./providerHubCodeRuntimeGuardBridge";

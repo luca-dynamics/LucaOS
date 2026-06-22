@@ -159,6 +159,30 @@ export function createFinalRouteDecision(
 }
 
 
+export interface LucaProviderHubCodeRuntimeGuardSummary {
+  readonly taskType: "code";
+  readonly requiredCapabilities: readonly LucaModelCapability[];
+  readonly preference: LucaProviderHubRoutePreference;
+  readonly currentRoute: ModelProvisioningRoute;
+  readonly handoffRoute?: ModelProvisioningRoute;
+  readonly finalRoute: ModelProvisioningRoute;
+  readonly routeSource: LucaProviderFactoryFinalRouteDecision["routeSource"];
+  readonly fallbackReasonCode?: LucaProviderHubFinalRouteFallbackReason;
+  readonly runtimeRouteSelectionEnabled: boolean;
+  readonly runtimeRouteKillSwitchEnabled: boolean;
+  readonly killSwitchForcedCurrentRoute: boolean;
+  readonly executionFallbackStatus?: Pick<LucaProviderFactoryExecutionFallbackResult, "fallbackAttempted" | "fallbackUsed" | "trigger" | "fallbackLoopPrevented">;
+  readonly sideEffectsPerformed: false;
+  readonly providerApiCalledDuringSelection: false;
+  readonly automaticConnectionTestStarted: false;
+  readonly localRuntimeStarted: false;
+  readonly providerAdapterInstantiatedByHandoffMapper: false;
+  readonly toolExecutionPerformed: false;
+  readonly fileMutationPerformed: false;
+  readonly terminalCommandExecuted: false;
+  readonly safeDiagnosticsText: string;
+}
+
 export interface LucaProviderHubLongContextRuntimeGuardSummary {
   readonly taskType: "long_context";
   readonly requiredCapabilities: readonly LucaModelCapability[];
@@ -350,6 +374,59 @@ export function createProviderHubLongContextRuntimeGuardSummary(
   };
 }
 
+export function createProviderHubCodeRuntimeGuardSummary(
+  decision: LucaProviderFactoryFinalRouteDecision,
+  executionFallbackStatus?: LucaProviderFactoryExecutionFallbackResult,
+): LucaProviderHubCodeRuntimeGuardSummary {
+  const policy = resolveProviderHubTaskRoutePolicy({ taskType: "code" });
+  const safeDiagnosticsText = JSON.stringify({
+    taskType: policy.taskType,
+    requiredCapabilities: policy.requiredCapabilities,
+    preference: policy.preference,
+    currentRoute: routeSummary(decision.currentRoute),
+    handoffRoute: decision.handoffRoute ? routeSummary(decision.handoffRoute) : null,
+    finalRoute: routeSummary(decision.finalRoute),
+    routeSource: decision.routeSource,
+    fallbackReasonCode: decision.fallbackReasonCode ?? null,
+    runtimeRouteSelectionEnabled: decision.runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled: decision.runtimeRouteKillSwitchEnabled,
+    killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
+    executionFallbackStatus: executionFallbackStatus ? { fallbackAttempted: executionFallbackStatus.fallbackAttempted, fallbackUsed: executionFallbackStatus.fallbackUsed, trigger: executionFallbackStatus.trigger ?? null, fallbackLoopPrevented: executionFallbackStatus.fallbackLoopPrevented } : null,
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    automaticConnectionTestStarted: false,
+    localRuntimeStarted: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+    codeGenerationOutputOnly: true,
+    toolExecutionPerformed: false,
+    fileMutationPerformed: false,
+    terminalCommandExecuted: false,
+  });
+  return {
+    taskType: "code",
+    requiredCapabilities: policy.requiredCapabilities,
+    preference: policy.preference,
+    currentRoute: decision.currentRoute,
+    handoffRoute: decision.handoffRoute,
+    finalRoute: decision.finalRoute,
+    routeSource: decision.routeSource,
+    fallbackReasonCode: decision.fallbackReasonCode,
+    runtimeRouteSelectionEnabled: decision.runtimeRouteSelectionEnabled,
+    runtimeRouteKillSwitchEnabled: decision.runtimeRouteKillSwitchEnabled,
+    killSwitchForcedCurrentRoute: decision.killSwitchForcedCurrentRoute,
+    executionFallbackStatus: executionFallbackStatus ? { fallbackAttempted: executionFallbackStatus.fallbackAttempted, fallbackUsed: executionFallbackStatus.fallbackUsed, trigger: executionFallbackStatus.trigger, fallbackLoopPrevented: executionFallbackStatus.fallbackLoopPrevented } : undefined,
+    sideEffectsPerformed: false,
+    providerApiCalledDuringSelection: false,
+    automaticConnectionTestStarted: false,
+    localRuntimeStarted: false,
+    providerAdapterInstantiatedByHandoffMapper: false,
+    toolExecutionPerformed: false,
+    fileMutationPerformed: false,
+    terminalCommandExecuted: false,
+    safeDiagnosticsText,
+  };
+}
+
 export type LucaProviderFactoryExecutionFallbackTrigger =
   | "adapter_creation_error"
   | "first_execution_error"
@@ -465,7 +542,7 @@ export class ProviderFactory {
   }
 
   static resolveProvisioningRouteForTaskWithDiagnostics(
-    taskType: Extract<LucaModelTaskType, "chat" | "fast_reply" | "long_context">,
+    taskType: Extract<LucaModelTaskType, "chat" | "fast_reply" | "long_context" | "code">,
     settings: LucaSettings["brain"],
     persona?: string,
     providerOverride?: string,
@@ -528,6 +605,10 @@ export class ProviderFactory {
 
   static resolveLongContextProvisioningRouteWithDiagnostics(settings: LucaSettings["brain"]) {
     return this.resolveProvisioningRouteForTaskWithDiagnostics("long_context", settings);
+  }
+
+  static resolveCodeProvisioningRouteWithDiagnostics(settings: LucaSettings["brain"]) {
+    return this.resolveProvisioningRouteForTaskWithDiagnostics("code", settings);
   }
   static resolveProvisioningRoute(
     settings: LucaSettings["brain"],
@@ -690,6 +771,11 @@ export class ProviderFactory {
 
   static createLongContextProvider(settings: LucaSettings["brain"]): LLMProvider {
     return this.createProviderFromResolvedRoute(this.resolveLongContextProvisioningRouteWithDiagnostics(settings), settings);
+  }
+
+  static createCodeGenerationProvider(settings: LucaSettings["brain"]): LLMProvider {
+    // Code generation is output-only text/code model routing; this does not execute tools, write files, run terminal commands, or expand MCP/action surfaces.
+    return this.createProviderFromResolvedRoute(this.resolveCodeProvisioningRouteWithDiagnostics(settings), settings);
   }
 
   private static createProviderFromResolvedRoute(
