@@ -611,106 +611,18 @@ def get_local_ip():
 REMOTE_ACCESS_ENABLED = os.environ.get("ENABLE_REMOTE_ACCESS", "false").lower() == "true"
 LOCAL_IP = get_local_ip()
 
-# --- REMOTE ACCESS PIN SECURITY ---
-# PIN is stored in a file for persistence across restarts
-def get_pin_file_path():
-    """Get the path to the PIN file"""
-    if getattr(sys, 'frozen', False):
-        base_path = Path(sys.executable).parent / "models"
-    else:
-        base_path = Path(__file__).parent.parent.parent / "models"
-    return base_path / ".remote_access_pin"
-
-def get_stored_pin():
-    """Get the stored PIN, or None if not set"""
-    pin_file = get_pin_file_path()
-    if pin_file.exists():
-        return pin_file.read_text().strip()
-    return None
-
-def set_stored_pin(pin: str):
-    """Store the PIN"""
-    pin_file = get_pin_file_path()
-    pin_file.parent.mkdir(parents=True, exist_ok=True)
-    pin_file.write_text(pin)
-
-def clear_stored_pin():
-    """Clear the stored PIN"""
-    pin_file = get_pin_file_path()
-    if pin_file.exists():
-        pin_file.unlink()
-
-# Validated session tokens (in memory, cleared on restart)
-validated_sessions = set()
-
-@app.get("/api/remote-access/info")
-async def get_remote_access_info():
-    """Get information for remote access (QR code generation)"""
-    port = int(os.environ.get("CORTEX_PORT", 8000))
-    has_pin = get_stored_pin() is not None
-    return {
-        "enabled": REMOTE_ACCESS_ENABLED,
-        "ip": LOCAL_IP,
-        "port": port,
-        "url": f"http://{LOCAL_IP}:{port}",
-        "pinRequired": has_pin,
-        "features": ["chat", "voiceHUD", "settings"]
-    }
-
-class SetPinRequest(BaseModel):
-    pin: str  # 4-6 digit PIN
-    currentPin: str = None  # Required if already set
-
-@app.post("/api/remote-access/set-pin")
-async def set_remote_access_pin(request: SetPinRequest):
-    """Set or update the remote access PIN"""
-    current_pin = get_stored_pin()
-    
-    # If PIN already set, verify current PIN
-    if current_pin and request.currentPin != current_pin:
-        return {"success": False, "error": "Current PIN is incorrect"}
-    
-    # Validate new PIN (4-6 digits)
-    if not request.pin.isdigit() or len(request.pin) < 4 or len(request.pin) > 6:
-        return {"success": False, "error": "PIN must be 4-6 digits"}
-    
-    set_stored_pin(request.pin)
-    return {"success": True, "message": "PIN set successfully"}
-
-@app.post("/api/remote-access/clear-pin")
-async def clear_remote_access_pin(request: SetPinRequest):
-    """Clear the remote access PIN"""
-    current_pin = get_stored_pin()
-    
-    if current_pin and request.currentPin != current_pin:
-        return {"success": False, "error": "Current PIN is incorrect"}
-    
-    clear_stored_pin()
-    validated_sessions.clear()
-    return {"success": True, "message": "PIN cleared"}
-
-class VerifyPinRequest(BaseModel):
-    pin: str
-    sessionId: str = None
-
-@app.post("/api/remote-access/verify-pin")
-async def verify_remote_access_pin(request: VerifyPinRequest):
-    """Verify PIN and create validated session"""
-    stored_pin = get_stored_pin()
-    
-    # No PIN set = always valid
-    if not stored_pin:
-        return {"success": True, "message": "No PIN required"}
-    
-    if request.pin != stored_pin:
-        return {"success": False, "error": "Invalid PIN"}
-    
-    # Create session token
-    import secrets
-    session_id = request.sessionId or secrets.token_hex(16)
-    validated_sessions.add(session_id)
-    
-    return {"success": True, "sessionId": session_id}
+# --- REMOTE ACCESS PIN SECURITY (extracted to routers/remote_access.py) ---
+# Expose LOCAL_IP / REMOTE_ACCESS_ENABLED to the router via shared state, then
+# mount the router. get_stored_pin / validated_sessions are re-imported for the
+# verify_session dependency below.
+state.LOCAL_IP = LOCAL_IP
+state.REMOTE_ACCESS_ENABLED = REMOTE_ACCESS_ENABLED
+from routers.remote_access import (
+    router as remote_access_router,
+    get_stored_pin,
+    validated_sessions,
+)
+app.include_router(remote_access_router)
 
 
 import subprocess
