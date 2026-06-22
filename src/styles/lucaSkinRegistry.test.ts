@@ -1,0 +1,52 @@
+import { describe, expect, it } from "vitest";
+import {
+  getDefaultLucaSkinCssVariables,
+  getLucaSkinCssVariables,
+  LUCA_SKIN_CSS_VARIABLE_NAMES,
+} from "./lucaSkinRegistry";
+
+describe("lucaSkinRegistry", () => {
+  it("resolves Pearl as the default skin", () => {
+    const variables = getDefaultLucaSkinCssVariables();
+
+    expect(variables["--luca-skin-bg-base"]).toBe("#f7f6f2");
+    expect(variables["--luca-skin-accent-primary"]).toBe("#4f7f96");
+  });
+
+  it("returns every contracted CSS variable name", () => {
+    const variables = getLucaSkinCssVariables();
+
+    for (const name of LUCA_SKIN_CSS_VARIABLE_NAMES) {
+      expect(variables[name], name).toBeDefined();
+    }
+
+    expect(Object.keys(variables).sort()).toEqual([...LUCA_SKIN_CSS_VARIABLE_NAMES].sort());
+  });
+
+  it("caps Flow blur for mobile web hosts", () => {
+    const variables = getLucaSkinCssVariables({ skinId: "flow", hostKind: "mobile-web" });
+
+    expect(variables["--luca-skin-glass-blur"]).toBe("4px");
+  });
+
+  it("returns no blur when reduced transparency is requested", () => {
+    const variables = getLucaSkinCssVariables({ skinId: "flow", reducedTransparency: true });
+
+    expect(variables["--luca-skin-glass-blur"]).toBe("0px");
+    expect(variables["--luca-skin-glass-opacity"]).toBe("1");
+  });
+
+  it("returns static/minimal motion values when reduced motion is requested", () => {
+    const variables = getLucaSkinCssVariables({ skinId: "flow", reducedMotion: true });
+
+    expect(variables["--luca-skin-motion-speed"]).toBe("static");
+    expect(variables["--luca-skin-motion-softness"]).toBe("none");
+    expect(variables["--luca-skin-motion-glow"]).toBe("none");
+  });
+
+  it("falls back to Pearl for invalid skin IDs", () => {
+    const variables = getLucaSkinCssVariables({ skinId: "not-a-skin" });
+
+    expect(variables["--luca-skin-bg-base"]).toBe("#f7f6f2");
+  });
+});

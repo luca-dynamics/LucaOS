@@ -462,6 +462,15 @@ Settings should persist a skin ID and let the registry/bridge resolve variables.
 - Keep registry inert or behind a controlled application point.
 - No broad visual migration yet.
 
+#### Registry status
+
+- `src/styles/lucaSkinRegistry.ts` now resolves selected skins into `--luca-skin-*` variables.
+- The registry is pure/inert.
+- It does not apply variables to the DOM.
+- It does not bridge into Luca Material variables yet.
+- No UI consumes the registry yet.
+- Next PR should be the material bridge.
+
 ### PR 3 — material bridge
 
 - Map skin variables into Luca Material/appearance variables.
