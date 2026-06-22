@@ -1,8 +1,12 @@
 import os
+import platform
 # WORKAROUND: Prevent OpenMP library conflict crash on macOS
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-# FOR INTEL MAC STABILITY: Disable Metal for llama-cpp and friends
-if os.uname().machine == 'x86_64':
+# FOR INTEL MAC STABILITY: Disable Metal for llama-cpp and friends.
+# platform.machine() is cross-platform (os.uname() is Unix-only and crashes on
+# Windows). Returns 'x86_64' on Intel Mac/Linux and 'AMD64' on Windows x64;
+# setting LLAMA_NO_METAL on Windows is harmless since Metal is macOS-only.
+if platform.machine() in ('x86_64', 'AMD64'):
     os.environ["LLAMA_NO_METAL"] = "1"
 import sys
 import platform
