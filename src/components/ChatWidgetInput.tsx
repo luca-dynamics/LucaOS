@@ -88,6 +88,14 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
     return primaryColor;
   }, [primaryColor]);
 
+  // Quiet, neutral treatment for secondary toolbar controls so they read as
+  // subordinate to the text input and the send action. Active/safety states
+  // keep their own accent/danger styling below and are unaffected by this.
+  const quietControlStyle = {
+    borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+    color: "var(--luca-text-secondary, var(--app-text-muted))",
+  } as const;
+
   // Auto-resize textarea
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -232,7 +240,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
         <div className="relative pt-2 pb-2 flex items-center justify-between px-4 sm:px-4 pointer-events-none z-50">
           {/* Left Icons */}
           <div
-            className="flex items-center gap-1 sm:gap-1 pointer-events-auto"
+            className="flex items-center gap-1.5 pointer-events-auto"
             style={{ WebkitAppRegion: "no-drag" } as any}
           >
             {/* Model Switcher */}
@@ -278,11 +286,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               <button
                 type="button"
                 onClick={onClearChat}
-                className="p-1 sm:p-1.5 hover:text-[var(--luca-danger,#f87171)] transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
-                style={{
-                  borderColor: `${safeColor}60`,
-                  color: `${safeColor}cc`,
-                }}
+                className="p-1.5 hover:text-[var(--luca-danger,#f87171)] transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
+                style={quietControlStyle}
                 title="Clear Chat"
               >
                 <Icon
@@ -297,11 +302,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
             {/* Attachment Button */}
             <button
               type="button"
-              className="p-1 sm:p-1.5 transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
-              style={{
-                borderColor: `${safeColor}60`,
-                color: `${safeColor}cc`,
-              }}
+              className="p-1.5 transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
+              style={quietControlStyle}
               title="Attach file"
               onClick={onAttachClick}
             >
@@ -318,18 +320,18 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               type="button"
               onClick={onToggleEye}
               className={`
-                p-1 sm:p-1.5 rounded-md border transition-all
+                p-1.5 rounded-md border transition-all
                 ${
                   isEyeActive
                     ? ""
-                    : "hover:text-[var(--luca-text-primary,var(--app-text-main))]"
+                    : "hover:text-[var(--luca-text-primary,var(--app-text-main))] hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
                 }
                 active:scale-90
                 relative
               `}
               style={{
-                color: isEyeActive ? safeColor : `${safeColor}cc`,
-                borderColor: isEyeActive ? `${safeColor}b3` : `${safeColor}60`,
+                color: isEyeActive ? safeColor : quietControlStyle.color,
+                borderColor: isEyeActive ? `${safeColor}b3` : quietControlStyle.borderColor,
                 boxShadow: isEyeActive ? LUCA_SHELL_SHADOW_GLOW : undefined,
               }}
               title={
@@ -358,11 +360,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               <button
                 type="button"
                 onClick={onScreenShare}
-                className="p-1 sm:p-1.5 transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
-                style={{
-                  borderColor: `${safeColor}60`,
-                  color: `${safeColor}cc`,
-                }}
+                className="p-1.5 transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
+                style={quietControlStyle}
                 title="Share Screen"
               >
                 <Icon
@@ -592,7 +591,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
 
           {/* Right: Voice & Send */}
           <div
-            className="flex items-center gap-1 sm:gap-1 pointer-events-auto"
+            className="flex items-center gap-1.5 pointer-events-auto"
             style={{ WebkitAppRegion: "no-drag" } as any}
           >
             {/* Voice Toggle */}
@@ -600,7 +599,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               type="button"
               onClick={onToggleVoice}
               className={`
-                 p-1 sm:p-1.5 rounded-md border transition-all
+                 p-1.5 rounded-md border transition-all
                  ${
                    isVoiceActive
                      ? isSpeaking
@@ -616,12 +615,12 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                   ? isSpeaking
                     ? `${safeColor}b3`
                     : "color-mix(in srgb, var(--luca-danger,#f87171) 50%, transparent)"
-                  : `${safeColor}60`,
+                  : quietControlStyle.borderColor,
                 color: isVoiceActive
                   ? isSpeaking
                     ? safeColor
                     : undefined
-                  : `${safeColor}cc`,
+                  : quietControlStyle.color,
                 boxShadow: isVoiceActive
                   ? isSpeaking
                     ? LUCA_SHELL_SHADOW_GLOW
@@ -654,7 +653,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                   name="Microphone"
                   size={15}
                   variant="BoldDuotone"
-                  className="sm:w-[13px] sm:h-[13px] opacity-50"
+                  className="sm:w-[13px] sm:h-[13px] opacity-70"
                 />
               )}
               {isSpeaking && (
@@ -680,7 +679,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               disabled={!input.trim() && !attachment && !isProcessing}
               className={`
               pointer-events-auto
-              p-1 sm:p-1.5
+              p-1.5
               rounded-md border
               transition-all duration-200
               ${
@@ -743,7 +742,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
         <div
           className="absolute inset-0 rounded-md opacity-0 focus-within:opacity-100 transition-opacity pointer-events-none -z-10"
           style={{
-            boxShadow: `0 0 0 1px ${safeColor}33, 0 0 20px ${safeColor}22`,
+            boxShadow: `0 0 0 1px ${safeColor}26, 0 0 16px ${safeColor}14`,
           }}
         />
       </div>

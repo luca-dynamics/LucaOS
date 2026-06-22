@@ -157,10 +157,10 @@ export function LucaChatSurface({
   return (
     <div
       data-luca-chat-surface="original-mini-chat-extraction"
-      className="flex h-full min-h-0 flex-col bg-transparent rounded-xl border shadow-2xl relative transition-all duration-300"
+      className="flex h-full min-h-0 flex-col bg-transparent rounded-xl border shadow-xl relative transition-all duration-300"
       style={
         {
-          borderColor: `${safeColor}40`,
+          borderColor: `${safeColor}26`,
           width,
           maxWidth: "100%",
           minHeight: isCompact ? "80px" : "300px",
