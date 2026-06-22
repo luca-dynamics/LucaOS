@@ -14,3 +14,5 @@ export * from "./providerHubTaskRoutePolicyBridge";
 export * from "./providerHubTaskRouteDiagnosticsMatrixBridge";
 export * from "./taskAutonomyContractBridge";
 export * from "./providerHubFastReplyRuntimeGuardBridge";
+
+export * from "./providerHubLongContextRuntimeGuardBridge";
