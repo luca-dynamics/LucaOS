@@ -1,0 +1,96 @@
+name: Release
+
+# Builds Luca OS desktop installers for every OS + architecture and publishes
+# them to a single GitHub Release. electron-updater then serves each user the
+# correct artifact for their platform automatically.
+#
+# Strategy: ONE NATIVE RUNNER PER ARCHITECTURE. Luca ships compiled pieces —
+# native node modules (better-sqlite3, robotjs, active-win) and a PyInstaller
+# `cortex` binary — that must match the target CPU. Building each arch on its
+# own native runner avoids fragile cross-compilation entirely.
+
+on:
+  push:
+    tags:
+      - 'v*' # e.g. git tag v1.0.1 && git push --tags
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+permissions:
+  contents: write # required for electron-builder to create the Release
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macOS (Intel x64)
+            os: macos-13          # Intel runner
+            eb_args: --mac --x64
+          - label: macOS (Apple Silicon arm64)
+            os: macos-14          # Apple Silicon runner
+            eb_args: --mac --arm64
+          - label: Windows (x64)
+            os: windows-latest
+            eb_args: --win --x64
+          - label: Windows (arm64)
+            os: windows-11-arm    # remove this entry if ARM runners are unavailable on your plan
+            eb_args: --win --arm64
+          - label: Linux (x64)
+            os: ubuntu-latest
+            eb_args: --linux --x64
+          - label: Linux (arm64)
+            os: ubuntu-24.04-arm  # remove this entry if ARM runners are unavailable on your plan
+            eb_args: --linux --arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # --- Build the cortex binary (PyInstaller, native to this runner's arch) ---
+      # Creates the venv that ops/scripts/build-cortex.cjs expects at
+      # cortex/python/venv, installs deps, then freezes cortex -> cortex/python/dist/cortex
+      - name: Build cortex (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          python -m venv cortex/python/venv
+          cortex/python/venv/bin/python -m pip install --upgrade pip
+          cortex/python/venv/bin/python -m pip install -r cortex/python/requirements.txt
+          npm run cortex:build
+
+      - name: Build cortex (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python -m venv cortex/python/venv
+          cortex/python/venv/Scripts/python -m pip install --upgrade pip
+          cortex/python/venv/Scripts/python -m pip install -r cortex/python/requirements.txt
+          npm run cortex:build
+
+      # --- Install node deps + rebuild native modules for this runner's arch ---
+      # `npm ci` runs the postinstall (electron-rebuild). lighter-node-client is an
+      # optionalDependency, so it installs on mac/linux and is cleanly skipped on Windows.
+      - name: Install dependencies
+        run: npm ci
+
+      # --- Build the web bundle + package + publish to the GitHub Release ---
+      - name: Build & publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Code signing (add later): set these secrets to sign builds.
+          # macOS:   CSC_LINK / CSC_KEY_PASSWORD  (+ APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID for notarization)
+          # Windows: CSC_LINK / CSC_KEY_PASSWORD
+        run: |
+          npm run build
+          npx electron-builder ${{ matrix.eb_args }} --publish always

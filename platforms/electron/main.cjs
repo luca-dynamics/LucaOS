@@ -155,6 +155,7 @@ let visualCoreWindow; // Visual Core Window Reference (Smart Screen)
 let bootWindow; // BIOS Boot Window
 let tray; // Tray Reference
 let trayMenu; // Tray Menu Reference
+let autoUpdater; // AutoUpdaterService Reference
 let serverProcess;
 let cortexProcess;
 
@@ -1267,7 +1268,16 @@ app.on('ready', () => {
     // Start Window Watcher
     const windowWatcher = require('./services/windowWatcher.cjs');
     windowWatcher.startWatching(mainWindow);
-    
+
+    // Start Auto-Updater (no-op in dev / unpackaged; lazy-requires electron-updater)
+    try {
+        const AutoUpdaterService = require('./services/autoUpdater.cjs');
+        autoUpdater = new AutoUpdaterService({ getWindow: () => mainWindow });
+        autoUpdater.start();
+    } catch (e) {
+        console.warn('[UPDATER] Failed to initialize auto-updater:', e && e.message);
+    }
+
     // FORCE DOCK ICON (Fix for Dev Mode Issues)
     if (process.platform === 'darwin') {
         const logoPath = path.join(__dirname, '../../public/logo.png');
