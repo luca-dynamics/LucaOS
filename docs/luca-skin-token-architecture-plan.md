@@ -449,6 +449,13 @@ Settings should persist a skin ID and let the registry/bridge resolve variables.
 - Add metadata only; no UI consumption yet.
 - No DOM writes and no CSS variable application.
 
+#### Scaffolding status
+
+- `src/config/lucaSkins.ts` now contains inert official skin definitions.
+- No skin variables are applied yet.
+- No UI consumes skins yet.
+- Next PR should be the skin CSS variable registry.
+
 ### PR 2 — skin CSS variable registry
 
 - Resolve selected skin into `--luca-skin-*` variables.
