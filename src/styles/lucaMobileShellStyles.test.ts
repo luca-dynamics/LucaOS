@@ -12,11 +12,41 @@ import {
   lucaMobileCardSurfaceStyle,
   lucaMobileClassNames,
   lucaMobileContentSurfaceStyle,
+  lucaMobileGlassControlStyle,
+  lucaMobileNavActiveStyle,
+  lucaMobileNavInactiveStyle,
   lucaMobileNavSurfaceStyle,
   lucaMobilePanelSurfaceStyle,
+  lucaMobileSheetSurfaceStyle,
 } from "./lucaMobileShellStyles";
 
 const serialize = (value: unknown) => JSON.stringify(value);
+
+const ALL_MOBILE_STYLES = serialize({
+  app: lucaMobileAppBackgroundStyle,
+  content: lucaMobileContentSurfaceStyle,
+  panel: lucaMobilePanelSurfaceStyle,
+  sheet: lucaMobileSheetSurfaceStyle,
+  card: lucaMobileCardSurfaceStyle,
+  nav: lucaMobileNavSurfaceStyle,
+  navActive: lucaMobileNavActiveStyle,
+  navInactive: lucaMobileNavInactiveStyle,
+  glassControl: lucaMobileGlassControlStyle,
+  activeTab: lucaMobileActiveTabStyle,
+  indicator: lucaMobileActiveIndicatorStyle,
+});
+
+const STATUS_OR_SAFETY_NAME_PARTS = [
+  "danger",
+  "warning",
+  "success",
+  "approval",
+  "permission",
+  "blocked",
+  "mission",
+  "listening",
+  "stop-generation",
+] as const;
 
 describe("lucaMobileShellStyles", () => {
   it("uses mobile-safe semantic background and solid surface tokens", () => {
@@ -78,6 +108,46 @@ describe("lucaMobileShellStyles", () => {
     });
 
     expect(helperSource).not.toMatch(/lucagent|lightcream|ruthless|assistant/i);
+  });
+
+  it("keeps inactive bottom-nav labels readable via the secondary text role", () => {
+    const navInactive = serialize(lucaMobileNavInactiveStyle);
+    const navActive = serialize(lucaMobileNavActiveStyle);
+
+    expect(navInactive).toContain("--luca-text-secondary");
+    expect(navInactive).not.toContain("--luca-text-tertiary");
+    // Active items remain at full primary contrast for clear selected state.
+    expect(navActive).toContain("--luca-text-primary");
+  });
+
+  it("opts small glass affordances into capped skin blur with a safe 0px fallback", () => {
+    const glassControl = serialize(lucaMobileGlassControlStyle);
+
+    expect(glassControl).toContain("--luca-material-blur");
+    expect(glassControl).toContain("0px");
+    expect(glassControl).toMatch(/backdropFilter/);
+
+    // Primary structural surfaces must stay solid (no full-screen blur).
+    const primarySurfaces = serialize({
+      app: lucaMobileAppBackgroundStyle,
+      content: lucaMobileContentSurfaceStyle,
+      panel: lucaMobilePanelSurfaceStyle,
+      sheet: lucaMobileSheetSurfaceStyle,
+      nav: lucaMobileNavSurfaceStyle,
+    });
+    expect(primarySurfaces).not.toMatch(/backdropFilter|--luca-material-blur/i);
+  });
+
+  it("adds no Flow-style motion to mobile shell surfaces", () => {
+    expect(ALL_MOBILE_STYLES).not.toMatch(
+      /@keyframes|animation|requestAnimationFrame|setInterval|setTimeout|parallax/i,
+    );
+  });
+
+  it("does not override status or safety variables in mobile shell surfaces", () => {
+    for (const part of STATUS_OR_SAFETY_NAME_PARTS) {
+      expect(ALL_MOBILE_STYLES.toLowerCase()).not.toContain(part);
+    }
   });
 
   it("does not expose runtime, tool, browser, file, or messaging execution surfaces", () => {

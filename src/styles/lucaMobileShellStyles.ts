@@ -23,6 +23,10 @@ export const LUCA_MOBILE_TEXT_TERTIARY =
 export const LUCA_MOBILE_ACCENT_PRIMARY = "var(--luca-accent-primary)";
 export const LUCA_MOBILE_ACCENT_SOFT = "var(--luca-accent-soft)";
 export const LUCA_MOBILE_SHADOW_SOFT = "var(--luca-shadow-soft)";
+// Mobile material blur is capped by the mobile skin resolver (host policy) and
+// defaults to 0px when no skin is active, so primary surfaces stay solid and
+// performance-safe. Only small glass affordances opt into this value.
+export const LUCA_MOBILE_BLUR = "var(--luca-material-blur, 0px)";
 
 export const lucaMobileAppBackgroundStyle: CSSProperties = {
   background: LUCA_MOBILE_BACKGROUND_BASE,
@@ -51,6 +55,10 @@ export const lucaMobileGlassControlStyle: CSSProperties = {
   background: LUCA_MOBILE_SURFACE_GLASS,
   borderColor: LUCA_MOBILE_BORDER_SUBTLE,
   color: LUCA_MOBILE_TEXT_SECONDARY,
+  // Skin-aware, capped glass blur. Canvas resolves to 0px (matte) and Flow stays
+  // capped by mobile host policy; no skin resolves to a plain 0px fallback.
+  backdropFilter: `blur(${LUCA_MOBILE_BLUR})`,
+  WebkitBackdropFilter: `blur(${LUCA_MOBILE_BLUR})`,
 };
 
 export const lucaMobileNavSurfaceStyle: CSSProperties = {
@@ -61,7 +69,9 @@ export const lucaMobileNavSurfaceStyle: CSSProperties = {
 };
 
 export const lucaMobileNavInactiveStyle: CSSProperties = {
-  color: LUCA_MOBILE_TEXT_TERTIARY,
+  // Use the secondary (not tertiary) text role so inactive bottom-nav labels stay
+  // readable across skins; active items still read at full primary contrast.
+  color: LUCA_MOBILE_TEXT_SECONDARY,
 };
 
 export const lucaMobileNavActiveStyle: CSSProperties = {
