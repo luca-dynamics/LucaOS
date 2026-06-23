@@ -37,4 +37,21 @@ describe("LucaBootVisualShell", () => {
     expect(html).not.toContain("top-[12%] h-px");
     expect(html).not.toContain("top-[49%] h-px");
   });
+  it("applies the resolved boot skin boundary to one local shell wrapper without global mutation", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const source = await readFile("src/components/boot/LucaBootVisualShell.tsx", "utf8");
+
+    expect(source).toContain("resolveLucaBootSkinBoundary");
+    expect(source).toContain("settingsService.getSettings().general.selectedSkinId");
+    expect(source).toContain('surface: "boot-window"');
+    expect(source).toContain('hostKind: "desktop-web"');
+    expect(source.match(/bootSkinBoundary\.materialVariables/g) ?? []).toHaveLength(1);
+    expect(source).not.toMatch(
+      /document\.documentElement|style\.setProperty|document\.body|body\.style|document\.querySelector\(\"html\"\)|LucaSkinProvider/,
+    );
+    expect(source).not.toMatch(
+      /@keyframes|animation:|requestAnimationFrame|setInterval|setTimeout|parallax/,
+    );
+  });
+
 });
