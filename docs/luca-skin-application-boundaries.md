@@ -485,6 +485,8 @@ No Flow motion was added. Boot, onboarding, MiniChat, and VoiceHUD remain outsid
 
 Boot/onboarding skin application planning now exists at `docs/luca-skin-boot-onboarding-plan.md`. No boot/onboarding implementation exists yet. The next boot/onboarding PR should be a pure boot skin boundary resolver only; Flow remains static, and runtime readiness/status semantics remain protected.
 
+**Boot resolver status:** The boot skin boundary resolver now exists as a pure helper. No boot/onboarding visual application exists yet, and the next PR should apply the resolver to one local boot boundary only. No root/global DOM mutation should occur, and readiness/status semantics remain protected.
+
 ## Mobile QA matrix status
 
 A focused mobile QA matrix now exists at `docs/luca-skin-mobile-qa-matrix.md`. This QA update adds no new skin application boundary, no provider, no visual style changes, and no root/global DOM mutation.

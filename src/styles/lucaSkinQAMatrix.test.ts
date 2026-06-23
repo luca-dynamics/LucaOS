@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { resolveLucaBootSkinBoundary } from "./lucaBootSkinBoundary";
 import { resolveLucaDashboardSkinBoundary } from "./lucaDashboardSkinBoundary";
 import { resolveLucaMobileSkinBoundary } from "./lucaMobileSkinBoundary";
 import { LUCA_SKIN_MATERIAL_VARIABLE_NAMES } from "./lucaSkinMaterialBridge";
@@ -13,6 +14,7 @@ function readSource(path: string): string {
 
 const boundarySourcePaths = [
   "src/App.tsx",
+  "src/styles/lucaBootSkinBoundary.ts",
   "src/styles/lucaDashboardSkinBoundary.ts",
   "src/styles/lucaMobileSkinBoundary.ts",
   "src/styles/lucaSkinRegistry.ts",
@@ -74,7 +76,10 @@ describe("Luca skin QA matrix source boundaries", () => {
 });
 
 describe("Luca skin QA matrix resolver contract", () => {
-  it("falls invalid dashboard and mobile selections back to Pearl", () => {
+  it("falls invalid boot, dashboard, and mobile selections back to Pearl", () => {
+    expect(resolveLucaBootSkinBoundary({ selectedSkinId: "invalid" }).skinId).toBe(
+      "pearl",
+    );
     expect(resolveLucaDashboardSkinBoundary({ selectedSkinId: "invalid" }).skinId).toBe(
       "pearl",
     );
@@ -83,17 +88,23 @@ describe("Luca skin QA matrix resolver contract", () => {
     );
   });
 
-  it("returns complete dashboard and mobile material variable maps", () => {
+  it("returns complete boot, dashboard, and mobile material variable maps", () => {
+    const bootVariables = resolveLucaBootSkinBoundary().materialVariables;
     const dashboardVariables = resolveLucaDashboardSkinBoundary().materialVariables;
     const mobileVariables = resolveLucaMobileSkinBoundary().materialVariables;
 
     for (const variableName of LUCA_SKIN_MATERIAL_VARIABLE_NAMES) {
+      expect(bootVariables[variableName]).toEqual(expect.any(String));
       expect(dashboardVariables[variableName]).toEqual(expect.any(String));
       expect(mobileVariables[variableName]).toEqual(expect.any(String));
     }
   });
 
-  it("uses mobile-web by default and preserves mobile-app when requested", () => {
+  it("uses desktop-web for boot by default and mobile-web for mobile by default", () => {
+    expect(resolveLucaBootSkinBoundary().hostKind).toBe("desktop-web");
+    expect(resolveLucaBootSkinBoundary({ hostKind: "mobile-web" }).hostKind).toBe(
+      "mobile-web",
+    );
     expect(resolveLucaMobileSkinBoundary().hostKind).toBe("mobile-web");
     expect(resolveLucaMobileSkinBoundary({ hostKind: "desktop-web" }).hostKind).toBe(
       "mobile-web",
@@ -103,7 +114,11 @@ describe("Luca skin QA matrix resolver contract", () => {
     );
   });
 
-  it("forces Flow reduced motion on mobile and honors reduced transparency blur fallback", () => {
+  it("forces Flow reduced motion on boot/mobile and honors reduced transparency blur fallback", () => {
+    expect(
+      resolveLucaBootSkinBoundary({ selectedSkinId: "flow", reducedMotion: false })
+        .reducedMotion,
+    ).toBe(true);
     expect(
       resolveLucaMobileSkinBoundary({ selectedSkinId: "flow", reducedMotion: false })
         .reducedMotion,
@@ -122,6 +137,7 @@ describe("Luca skin QA matrix resolver contract", () => {
     }
 
     for (const variables of [
+      resolveLucaBootSkinBoundary().materialVariables,
       resolveLucaDashboardSkinBoundary().materialVariables,
       resolveLucaMobileSkinBoundary().materialVariables,
     ]) {
