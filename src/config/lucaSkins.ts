@@ -217,7 +217,8 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       mood: "futuristic-calm",
     },
     bootProfile: {
-      background: "linear-gradient(135deg, #eaf4f6 0%, #dfe8fb 55%, #f4ece2 100%)",
+      background:
+        "linear-gradient(135deg, #eaf4f6 0%, #dfe8fb 55%, #f4ece2 100%)",
       orb: "#f7fbff",
       highlight: "#9fc7d6",
       motion: "fluid",
@@ -299,8 +300,10 @@ export function isLucaSkinId(value: unknown): value is LucaSkinId {
   return typeof value === "string" && value in LUCA_SKINS;
 }
 
+export function normalizeLucaSkinId(value: unknown): LucaSkinId {
+  return isLucaSkinId(value) ? value : DEFAULT_LUCA_SKIN_ID;
+}
+
 export function getLucaSkinDefinition(value?: unknown): LucaSkinDefinition {
-  return isLucaSkinId(value)
-    ? LUCA_SKINS[value]
-    : LUCA_SKINS[DEFAULT_LUCA_SKIN_ID];
+  return LUCA_SKINS[normalizeLucaSkinId(value)];
 }

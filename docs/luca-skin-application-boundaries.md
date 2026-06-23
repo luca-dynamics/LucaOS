@@ -251,6 +251,8 @@ metadata-to-setting integration.
 - Include reset-to-default.
 - Validate unknown skin fallback.
 
+**Selected skin persistence status:** The selected skin ID can now be persisted through General settings as `selectedSkinId`. Invalid or missing values fall back safely to Pearl. Settings can show the current skin preference with a `Current` marker, but the preference is not globally applied yet. No root, dashboard, boot, or onboarding skin application exists yet, and no DOM/root variable mutation occurs. The next PR should be controlled local preview variable application or dashboard-shell application planning.
+
 ### PR 5 — local preview variable application
 
 - Preview cards use local inline CSS variable map.
