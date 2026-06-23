@@ -81,6 +81,41 @@ describe("LucaDashboardSurface", () => {
     expect(appSource).not.toContain("document.documentElement.style.setProperty");
   });
 
+  it("applies the mobile resolver only to the local mobile dashboard container", () => {
+    expect(appSource).toContain("resolveLucaMobileSkinBoundary");
+    expect(appSource).toContain('hostKind: "mobile-web"');
+    expect(appSource).toContain("mobileSkinBoundary.materialVariables");
+    expect(appSource).toContain("settingsService.getSettings().general.selectedSkinId");
+    expect(appSource).toContain("isMobile\n            ? mobileSkinBoundary.materialVariables\n            : dashboardSkinBoundary.materialVariables");
+  });
+
+  it("keeps mobile skin application away from global providers and Flow motion", () => {
+    const mobileBoundaryStart = appSource.indexOf("const mobileSkinBoundary");
+    const mobileBoundaryEnd = appSource.indexOf("// console.log", mobileBoundaryStart);
+    const mobileBoundarySource = appSource.slice(mobileBoundaryStart, mobileBoundaryEnd);
+    const mobileStyleStart = appSource.indexOf("mobileSkinBoundary.materialVariables");
+    const mobileStyleEnd = appSource.indexOf("</SafeComponent>", mobileStyleStart);
+    const mobileStyleSource = appSource.slice(mobileStyleStart, mobileStyleEnd);
+    const mobileApplicationSource = `${mobileBoundarySource}\n${mobileStyleSource}`;
+
+    for (const forbidden of [
+      "document.documentElement",
+      "style.setProperty",
+      "document.body",
+      "body.style",
+      'document.querySelector("html")',
+      "@keyframes",
+      "requestAnimationFrame",
+      "setInterval",
+      "setTimeout",
+      "animation:",
+    ]) {
+      expect(mobileApplicationSource.includes(forbidden), forbidden).toBe(false);
+    }
+
+    expect(appSource).not.toContain("LucaSkinProvider");
+  });
+
   it("does not render WebBridge diagnostics or runtime wording", () => {
     for (const copy of [
       "WebBridge",

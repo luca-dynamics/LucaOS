@@ -225,3 +225,9 @@ Future mobile implementation PRs should validate:
 - Touch targets readable.
 - Dashboard panels readable.
 - Mobile shell does not inherit desktop-only assumptions.
+
+## Mobile shell boundary application status
+
+The mobile resolver is now applied to one local mobile shell boundary: the ready-state mobile dashboard shell container uses the selected skin's resolved material variables for the mobile host only. This application remains local and does not create a root/global provider, mutate `document.documentElement`, or mutate `body` / `html`.
+
+Boot, onboarding, MiniChat, and VoiceHUD still do not receive dedicated skin application from this mobile step. Flow remains static, and reduced transparency / reduced motion behavior remains resolver-controlled through the mobile boundary resolver and bridge policy. The next PR should be mobile visual QA/polish for readability, nav clarity, panels, touch targets, and per-skin mobile feel without broadening the boundary.

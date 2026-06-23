@@ -472,3 +472,9 @@ Validation for this documentation-only PR:
 
 - Run `git diff --check`.
 - Build is not required because this is docs-only.
+
+### Mobile shell boundary application status
+
+The mobile resolver is now locally applied to one mobile shell boundary: the ready-state mobile dashboard shell container receives `mobileSkinBoundary.materialVariables` when rendering the mobile shell. This is not a global/root application and does not add a provider or mutate root DOM styles.
+
+No Flow motion was added. Boot, onboarding, MiniChat, and VoiceHUD remain outside this mobile shell application. The next PR should be mobile visual QA/polish for the local boundary before any broader rollout.

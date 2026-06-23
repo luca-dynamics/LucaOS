@@ -36,6 +36,7 @@ import { soundService } from "./services/soundService";
 import { voiceService } from "./services/voiceService";
 import { settingsService } from "./services/settingsService";
 import { resolveLucaDashboardSkinBoundary } from "./styles/lucaDashboardSkinBoundary";
+import { resolveLucaMobileSkinBoundary } from "./styles/lucaMobileSkinBoundary";
 import { voiceSessionOrchestrator } from "./services/voiceSessionOrchestrator";
 import { eventBus } from "./services/eventBus";
 import { UIThemeId } from "./types/lucaPersonality";
@@ -2478,6 +2479,15 @@ function AppContent() {
     [selectedSkinId],
   );
 
+  const mobileSkinBoundary = useMemo(
+    () =>
+      resolveLucaMobileSkinBoundary({
+        selectedSkinId,
+        hostKind: "mobile-web",
+      }),
+    [selectedSkinId],
+  );
+
   // console.log("[RENDER] Boot Ready. Rendering Main UI...");
 
   return (
@@ -2738,7 +2748,9 @@ function AppContent() {
             : "opacity-100"
         }`}
         style={{
-          ...dashboardSkinBoundary.materialVariables,
+          ...(isMobile
+            ? mobileSkinBoundary.materialVariables
+            : dashboardSkinBoundary.materialVariables),
           ...(window.electron
             ? {
                 width: "117.65vw",
