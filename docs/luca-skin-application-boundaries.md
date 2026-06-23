@@ -350,6 +350,8 @@ The next PR should be a mobile-safe audit or mobile shell boundary planning.
 
 Mobile should receive skin application only after desktop/static behavior is proven.
 
+**Mobile safety audit status:** A documentation-only mobile safety audit now exists at `docs/luca-skin-mobile-safety-audit.md`. No mobile-specific skin boundary is implemented yet. The next PR should be a pure mobile boundary resolver before any visual mobile application. Mobile skin resolution must cap blur, respect reduced motion and reduced transparency, prefer safer solid fallbacks where needed, and keep Flow static.
+
 - Cap blur aggressively.
 - Prefer solid fallback for mobile-web.
 - Flow should be static on mobile first.
