@@ -481,6 +481,10 @@ The mobile resolver is now locally applied to one mobile shell boundary: the rea
 
 No Flow motion was added. Boot, onboarding, MiniChat, and VoiceHUD remain outside this mobile shell application. The next PR should be mobile visual QA/polish for the local boundary before any broader rollout.
 
+## Boot/onboarding planning note
+
+Boot/onboarding skin application planning now exists at `docs/luca-skin-boot-onboarding-plan.md`. No boot/onboarding implementation exists yet. The next boot/onboarding PR should be a pure boot skin boundary resolver only; Flow remains static, and runtime readiness/status semantics remain protected.
+
 ## Mobile QA matrix status
 
 A focused mobile QA matrix now exists at `docs/luca-skin-mobile-qa-matrix.md`. This QA update adds no new skin application boundary, no provider, no visual style changes, and no root/global DOM mutation.
