@@ -477,6 +477,16 @@ Settings should persist a skin ID and let the registry/bridge resolve variables.
 - Verify existing material roles still work.
 - Preserve status tokens, accessibility overrides, and host caps.
 
+#### Material bridge status
+
+- `src/styles/lucaSkinMaterialBridge.ts` now maps `--luca-skin-*` variables into Luca Material/appearance targets.
+- The bridge is pure/inert.
+- It does not write variables to the DOM.
+- It does not apply the bridge to any root provider.
+- No UI consumes the bridge yet.
+- Status/safety variables remain outside skin control.
+- Next PR should be settings preview metadata or controlled application planning, depending on implementation readiness.
+
 ### PR 4 — settings preview only
 
 - Add skin metadata and preview UI.
