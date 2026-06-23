@@ -480,3 +480,9 @@ Validation for this documentation-only PR:
 The mobile resolver is now locally applied to one mobile shell boundary: the ready-state mobile dashboard shell container receives `mobileSkinBoundary.materialVariables` when rendering the mobile shell. This is not a global/root application and does not add a provider or mutate root DOM styles.
 
 No Flow motion was added. Boot, onboarding, MiniChat, and VoiceHUD remain outside this mobile shell application. The next PR should be mobile visual QA/polish for the local boundary before any broader rollout.
+
+## Mobile QA matrix status
+
+A focused mobile QA matrix now exists at `docs/luca-skin-mobile-qa-matrix.md`. This QA update adds no new skin application boundary, no provider, no visual style changes, and no root/global DOM mutation.
+
+The matrix must pass before boot/onboarding skin planning begins. Flow remains static, and boot, onboarding, MiniChat, and VoiceHUD remain outside dedicated skin application.
