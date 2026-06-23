@@ -245,3 +245,9 @@ The mobile shell now has restrained visual polish for the selected skins, applie
 - Status/safety variables remain protected and are not overridden by the mobile shell helpers.
 
 The next PR should be a mobile QA matrix or boot/onboarding skin planning.
+
+## Mobile QA matrix status
+
+A focused QA matrix now exists at `docs/luca-skin-mobile-qa-matrix.md`. It covers the desktop dashboard boundary, local mobile shell boundary, settings preview, resolver behavior, reduced motion, reduced transparency, and status/safety token protection.
+
+The next step is to complete QA against that matrix before any boot/onboarding skin planning. Boot/onboarding implementation remains out of scope until the QA checklist is green.
