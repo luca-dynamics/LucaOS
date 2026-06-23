@@ -13,6 +13,11 @@ import {
   normalizeSelectableExperienceMode,
   resolvePersistedExperienceMode,
 } from "../experience/experienceModeSettings";
+import {
+  DEFAULT_LUCA_SKIN_ID,
+  normalizeLucaSkinId,
+  type LucaSkinId,
+} from "../config/lucaSkins";
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -47,6 +52,7 @@ export interface LucaSettings {
     autonomousDomains: string[];
     persona: PersonaMode;
     theme: UIThemeId;
+    selectedSkinId?: LucaSkinId;
     syncThemeWithPersona: boolean;
     toneStyle: ToneStyleId;
     customTone?: ToneDimensions;
@@ -253,6 +259,7 @@ const DEFAULT_SETTINGS: LucaSettings = {
     autonomousDomains: ["SYSTEM", "TASKS", "ENVIRONMENT"],
     persona: "ASSISTANT",
     theme: "PROFESSIONAL",
+    selectedSkinId: DEFAULT_LUCA_SKIN_ID,
     preferredMode: "text",
     syncThemeWithPersona: true,
     toneStyle: "CHILL",
@@ -446,6 +453,9 @@ class SettingsService extends EventEmitter {
 
         // Deep merge with defaults to ensure new keys exist
         merged = this.deepMerge(DEFAULT_SETTINGS, parsed);
+        merged.general.selectedSkinId = normalizeLucaSkinId(
+          merged.general.selectedSkinId,
+        );
 
         // --- SECURE VAULT RECOVERY (Keychain Redirection) ---
         const SENSITIVE_MAP = [
@@ -743,6 +753,9 @@ class SettingsService extends EventEmitter {
     this.settings.general.experienceMode = normalizeSelectableExperienceMode(
       this.settings.general.experienceMode,
       CREATOR_ACCESS_STATE,
+    );
+    this.settings.general.selectedSkinId = normalizeLucaSkinId(
+      this.settings.general.selectedSkinId,
     );
 
     try {

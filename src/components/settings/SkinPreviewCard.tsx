@@ -6,6 +6,7 @@ import {
   type LucaSkinPreviewMood,
 } from "../../config/lucaSkinPreviewMetadata";
 import { getLucaSkinMaterialVariables } from "../../styles/lucaSkinMaterialBridge";
+import type { LucaSkinId } from "../../config/lucaSkins";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 /**
@@ -49,10 +50,14 @@ const CAPABILITY_LABELS: Record<
 
 export interface SkinPreviewCardProps {
   metadata: LucaSkinPreviewMetadata;
+  isSelected?: boolean;
+  onSelect?: (skinId: LucaSkinId) => void;
 }
 
 export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
   metadata,
+  isSelected = false,
+  onSelect,
 }) => {
   const isRecommended = metadata.capabilities.includes("recommended-default");
 
@@ -64,21 +69,39 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
   }) as React.CSSProperties;
 
   const indicators = metadata.capabilities.filter(
-    (capability): capability is Exclude<
+    (
+      capability,
+    ): capability is Exclude<
       LucaSkinPreviewCapability,
       "recommended-default"
     > => capability !== "recommended-default",
   );
 
+  const isInteractive = typeof onSelect === "function";
+  const CardElement = isInteractive ? "button" : "div";
+
   return (
-    <div
-      className="flex flex-col gap-3 rounded-2xl border p-4"
+    <CardElement
+      type={isInteractive ? "button" : undefined}
+      aria-pressed={isInteractive ? isSelected : undefined}
+      aria-label={
+        isInteractive
+          ? `Save ${metadata.label} as current skin preference`
+          : undefined
+      }
+      onClick={isInteractive ? () => onSelect?.(metadata.id) : undefined}
+      className="flex w-full flex-col gap-3 rounded-2xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       style={{
         backgroundColor: settingsSurfaceTokens.glass,
-        borderColor: isRecommended
+        borderColor: isSelected
           ? settingsSurfaceTokens.accentPrimary
-          : settingsSurfaceTokens.borderSubtle,
+          : isRecommended
+            ? settingsSurfaceTokens.accentPrimary
+            : settingsSurfaceTokens.borderSubtle,
         color: settingsSurfaceTokens.textPrimary,
+        boxShadow: isSelected
+          ? `0 0 0 1px ${settingsSurfaceTokens.accentPrimary}`
+          : undefined,
       }}
       data-skin-preview-card={metadata.id}
     >
@@ -109,18 +132,36 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
             {metadata.tagline}
           </p>
         </div>
-        {isRecommended && (
-          <span
-            className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-            style={{
-              backgroundColor: settingsSurfaceTokens.accentSoft,
-              color: settingsSurfaceTokens.accentPrimary,
-            }}
-          >
-            <Icon name="Star" variant="BoldDuotone" className="h-3 w-3" />
-            Recommended
-          </span>
-        )}
+        <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+          {isSelected && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+              style={{
+                backgroundColor: settingsSurfaceTokens.accentSoft,
+                color: settingsSurfaceTokens.accentPrimary,
+              }}
+            >
+              <Icon
+                name="CheckCircle"
+                variant="BoldDuotone"
+                className="h-3 w-3"
+              />
+              Current
+            </span>
+          )}
+          {isRecommended && (
+            <span
+              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+              style={{
+                backgroundColor: settingsSurfaceTokens.accentSoft,
+                color: settingsSurfaceTokens.accentPrimary,
+              }}
+            >
+              <Icon name="Star" variant="BoldDuotone" className="h-3 w-3" />
+              Recommended
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Visual sample: an "operating environment sample", not a swatch. */}
@@ -128,7 +169,8 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
         className="overflow-hidden rounded-xl border"
         style={{
           ...sampleVariables,
-          background: "var(--luca-background-liquid, var(--luca-background-base))",
+          background:
+            "var(--luca-background-liquid, var(--luca-background-base))",
           borderColor:
             "color-mix(in srgb, var(--luca-text-primary) 12%, transparent)",
         }}
@@ -157,11 +199,17 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
             </div>
             <div
               className="mt-2 h-1.5 w-full rounded-full"
-              style={{ backgroundColor: "var(--luca-text-secondary)", opacity: 0.7 }}
+              style={{
+                backgroundColor: "var(--luca-text-secondary)",
+                opacity: 0.7,
+              }}
             />
             <div
               className="mt-1.5 h-1.5 w-2/3 rounded-full"
-              style={{ backgroundColor: "var(--luca-text-tertiary)", opacity: 0.7 }}
+              style={{
+                backgroundColor: "var(--luca-text-tertiary)",
+                opacity: 0.7,
+              }}
             />
           </div>
 
@@ -176,11 +224,17 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
           >
             <span
               className="h-1.5 w-20 rounded-full"
-              style={{ backgroundColor: "var(--luca-text-tertiary)", opacity: 0.6 }}
+              style={{
+                backgroundColor: "var(--luca-text-tertiary)",
+                opacity: 0.6,
+              }}
             />
             <span
               className="h-5 w-5 rounded-md"
-              style={{ backgroundColor: "var(--luca-accent-primary)", opacity: 0.85 }}
+              style={{
+                backgroundColor: "var(--luca-accent-primary)",
+                opacity: 0.85,
+              }}
             />
           </div>
 
@@ -217,7 +271,7 @@ export const SkinPreviewCard: React.FC<SkinPreviewCardProps> = ({
           ))}
         </div>
       )}
-    </div>
+    </CardElement>
   );
 };
 

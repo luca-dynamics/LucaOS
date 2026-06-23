@@ -388,7 +388,14 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         </motion.div>
 
         <motion.div variants={item}>
-          <SkinPreviewSection accentColor={theme.hex} isMobile={isMobile} />
+          <SkinPreviewSection
+            accentColor={theme.hex}
+            isMobile={isMobile}
+            selectedSkinId={settings.general.selectedSkinId}
+            onSelectedSkinChange={(skinId) =>
+              onUpdate("general", "selectedSkinId", skinId)
+            }
+          />
         </motion.div>
 
         <motion.div variants={item}>
