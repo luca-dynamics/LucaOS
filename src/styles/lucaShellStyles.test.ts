@@ -14,9 +14,32 @@ import {
   lucaShellControlStyle,
   lucaShellPanelSurfaceStyle,
   lucaShellTabStyle,
+  lucaShellWorkspaceSurfaceStyle,
 } from "./lucaShellStyles";
 
 const serialize = (value: unknown) => JSON.stringify(value);
+
+const ALL_SHELL_STYLES = serialize({
+  panel: lucaShellPanelSurfaceStyle,
+  workspace: lucaShellWorkspaceSurfaceStyle,
+  control: lucaShellControlStyle,
+  activeControl: lucaShellActiveControlStyle,
+  activeTab: lucaShellActiveTabStyle,
+  activeIndicator: lucaShellActiveIndicatorStyle,
+  tab: lucaShellTabStyle,
+});
+
+const STATUS_OR_SAFETY_NAME_PARTS = [
+  "danger",
+  "warning",
+  "success",
+  "approval",
+  "permission",
+  "blocked",
+  "listening",
+  "screen",
+  "stop-generation",
+] as const;
 
 describe("lucaShellStyles", () => {
   it("uses semantic Luca appearance variables for desktop shell surfaces", () => {
@@ -67,6 +90,35 @@ describe("lucaShellStyles", () => {
     });
 
     expect(helperSource).not.toMatch(/lucagent|lightcream|ruthless|assistant/i);
+  });
+
+  it("composes the dashboard workspace from skin background variables", () => {
+    const workspace = serialize(lucaShellWorkspaceSurfaceStyle);
+
+    expect(workspace).toContain("--luca-background-elevated");
+    expect(workspace).toContain("--luca-background-base");
+    expect(workspace).toContain("--luca-text-primary");
+  });
+
+  it("consumes the skin material blur for shell panel surfaces", () => {
+    const panel = serialize(lucaShellPanelSurfaceStyle);
+
+    // Skin-supplied blur is preferred, with legacy fallbacks preserved.
+    expect(panel).toContain("--luca-material-blur");
+    expect(panel).toContain("--luca-blur-level");
+    expect(panel).toContain("--app-bg-blur");
+  });
+
+  it("adds no Flow-style motion to shell surfaces", () => {
+    expect(ALL_SHELL_STYLES).not.toMatch(
+      /@keyframes|animation|requestAnimationFrame|setInterval|setTimeout|parallax/i,
+    );
+  });
+
+  it("does not override status or safety variables in shell surfaces", () => {
+    for (const part of STATUS_OR_SAFETY_NAME_PARTS) {
+      expect(ALL_SHELL_STYLES.toLowerCase()).not.toContain(part);
+    }
   });
 
   it("does not expose runtime, tool, browser, file, or messaging execution surfaces", () => {
