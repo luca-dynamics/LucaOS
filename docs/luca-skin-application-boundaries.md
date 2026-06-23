@@ -228,6 +228,22 @@ persistence exists yet, no root/dashboard application occurs, and no skin
 variables are applied globally. The next PR should be Claude visual preview card
 UI.
 
+**Preview card status:** A settings preview card UI now exists
+(`src/components/settings/SkinPreviewCard.tsx` and
+`src/components/settings/SkinPreviewSection.tsx`, surfaced in the General →
+Appearance area). It is preview-only and inert:
+
+- Preview cards are local-only: skin variables from the bridge are applied as
+  inline styles on each card's sample box, scoped to that subtree.
+- No selected skin persistence exists yet (no skin-picker state, no
+  apply/save controls, no settings updates dispatched).
+- No root/dashboard application exists yet; the active theme is unchanged.
+- No DOM/root variable mutation occurs (no `document.documentElement`, no
+  `style.setProperty`).
+
+The next PR should be selected skin persistence planning (PR 4B) or
+metadata-to-setting integration.
+
 ### PR 4B — selected skin setting persistence
 
 - Add selected skin ID to appearance settings.
