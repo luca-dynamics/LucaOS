@@ -148,3 +148,9 @@ After this QA matrix exists and the checklist is green, the recommended next pla
 `feat(ui): add LucaOS boot and onboarding skin planning`
 
 Boot/onboarding implementation should **not** start until this QA checklist is green. Planning should remain separate from implementation, preserve runtime readiness boundaries, and keep Flow static until static desktop/mobile/settings behavior is proven safe.
+
+## Boot boundary QA note
+
+- Boot boundary application now exists.
+- QA should include the Boot Window shell across Pearl, Carbon, Flow, and Canvas.
+- Onboarding remains unskinned.

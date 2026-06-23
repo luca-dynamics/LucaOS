@@ -293,3 +293,13 @@ Recommended next PR:
 `feat(ui): add LucaOS boot skin boundary resolver`
 
 That PR should still be pure/helper only. It should add no visual application, no provider, no DOM/root mutation, no boot/onboarding behavior changes, no Flow motion, and no status/safety token overrides.
+
+## Local boot boundary application status
+
+- The boot skin resolver is now applied to one local Boot Window shell boundary.
+- No onboarding skin application exists yet.
+- No mode-select skin application exists yet; mode select remains outside this local Boot Window application.
+- No root/global DOM mutation is used for boot skin application.
+- No runtime boot logic changes are part of the local boundary application.
+- Readiness and status semantics remain protected from skin control.
+- The next PR should be boot visual polish or local onboarding boundary planning/application, depending on QA results.

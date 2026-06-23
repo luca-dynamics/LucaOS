@@ -492,3 +492,12 @@ Boot/onboarding skin application planning now exists at `docs/luca-skin-boot-onb
 A focused mobile QA matrix now exists at `docs/luca-skin-mobile-qa-matrix.md`. This QA update adds no new skin application boundary, no provider, no visual style changes, and no root/global DOM mutation.
 
 The matrix must pass before boot/onboarding skin planning begins. Flow remains static, and boot, onboarding, MiniChat, and VoiceHUD remain outside dedicated skin application.
+
+## Local boot boundary application note
+
+- Local boot boundary application now exists.
+- The boot resolver output is locally applied to the Boot Window shell only.
+- No onboarding skin application exists yet.
+- No root/global DOM mutation is used for boot skin application.
+- Flow remains static; no Flow motion is introduced at the boot boundary.
+- Readiness and status semantics remain protected from skin control.
