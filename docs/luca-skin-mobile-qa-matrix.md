@@ -135,6 +135,10 @@ This document is QA/test/docs only. It does not add new skin application, visual
 
 ---
 
+## Boot/onboarding planning note
+
+Boot/onboarding planning is the next stage after dashboard/mobile QA. Implementation should wait until this QA checklist is green, and boot/onboarding skin work must preserve readiness/status semantics.
+
 ## 7. Recommended next stage
 
 After this QA matrix exists and the checklist is green, the recommended next planning PR is:
