@@ -231,3 +231,17 @@ Future mobile implementation PRs should validate:
 The mobile resolver is now applied to one local mobile shell boundary: the ready-state mobile dashboard shell container uses the selected skin's resolved material variables for the mobile host only. This application remains local and does not create a root/global provider, mutate `document.documentElement`, or mutate `body` / `html`.
 
 Boot, onboarding, MiniChat, and VoiceHUD still do not receive dedicated skin application from this mobile step. Flow remains static, and reduced transparency / reduced motion behavior remains resolver-controlled through the mobile boundary resolver and bridge policy. The next PR should be mobile visual QA/polish for readability, nav clarity, panels, touch targets, and per-skin mobile feel without broadening the boundary.
+
+## Mobile visual polish status
+
+The mobile shell now has restrained visual polish for the selected skins, applied through the shared mobile shell style helpers (`src/styles/lucaMobileShellStyles.ts`) only:
+
+- Inactive bottom-nav labels now use the secondary text role (instead of tertiary) so they stay readable across Pearl, Carbon, Flow, and Canvas; active items remain at full primary contrast.
+- Small glass affordances opt into a capped `--luca-material-blur` with a safe `0px` fallback. Primary structural surfaces (app/content/panel/sheet/nav) stay solid with no full-screen blur, keeping mobile performance-safe; Canvas resolves to matte and Flow stays capped by host policy.
+- Polish stays inside the existing local mobile shell boundary; no new boundary was added.
+- No root/global DOM mutation occurs (no `document.documentElement`, `body`, or `html` writes; no `style.setProperty`).
+- No boot/onboarding/MiniChat/VoiceHUD skin application was added.
+- No Flow motion was added (no keyframes, animation, timers, or parallax).
+- Status/safety variables remain protected and are not overridden by the mobile shell helpers.
+
+The next PR should be a mobile QA matrix or boot/onboarding skin planning.
