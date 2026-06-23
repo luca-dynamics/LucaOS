@@ -169,6 +169,10 @@ Mobile skin work should use host policy rather than shrinking desktop behavior.
 
 ---
 
+## Mobile resolver status
+
+A pure mobile skin boundary resolver now exists for preparing selected-skin material variables before any mobile UI application. It does not apply skins to mobile UI yet, defaults to the safest mobile host (`mobile-web`), falls invalid values back to Pearl, keeps Flow static by forcing reduced motion on mobile, and respects reduced transparency through the existing registry/bridge host policy. The next PR should apply the resolver to one local mobile shell boundary only.
+
 ## 7. Recommended next PR
 
 Recommended implementation PR:

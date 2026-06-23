@@ -352,6 +352,8 @@ Mobile should receive skin application only after desktop/static behavior is pro
 
 **Mobile safety audit status:** A documentation-only mobile safety audit now exists at `docs/luca-skin-mobile-safety-audit.md`. No mobile-specific skin boundary is implemented yet. The next PR should be a pure mobile boundary resolver before any visual mobile application. Mobile skin resolution must cap blur, respect reduced motion and reduced transparency, prefer safer solid fallbacks where needed, and keep Flow static.
 
+**Mobile resolver status:** A pure mobile skin boundary resolver now exists. No mobile visual application exists yet, and the next PR should apply the resolver to one local mobile shell boundary only. No root/global DOM mutation should occur; mobile skin variables must remain locally scoped to the eventual boundary.
+
 - Cap blur aggressively.
 - Prefer solid fallback for mobile-web.
 - Flow should be static on mobile first.
