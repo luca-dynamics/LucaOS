@@ -230,6 +230,10 @@ It should not:
 
 ---
 
+## Boot resolver status
+
+The pure boot/onboarding skin boundary resolver now exists at `src/styles/lucaBootSkinBoundary.ts`. It prepares local material variables only and does not apply skins to boot or onboarding UI yet. It supports `boot-window`, `boot-loading`, `mode-select`, and `onboarding` surface intents, with invalid skin values falling back to Pearl. Flow remains static with reduced motion forced for now, and reduced transparency is respected through the existing material bridge behavior. The next PR should apply the resolver to one local boot boundary only.
+
 ## 9. Implementation sequence
 
 1. Documentation plan.
