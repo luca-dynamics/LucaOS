@@ -21,6 +21,7 @@ import {
   settingsSelectClassName,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import SkinPreviewSection from "./SkinPreviewSection";
 import { CREATOR_ACCESS_STATE } from "../../experience/experienceModeAccess";
 import {
   getExperienceModeOptions,
@@ -384,6 +385,10 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
               </SettingsCard>
             </div>
           </SettingsSection>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <SkinPreviewSection accentColor={theme.hex} isMobile={isMobile} />
         </motion.div>
 
         <motion.div variants={item}>
