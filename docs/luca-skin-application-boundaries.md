@@ -221,6 +221,13 @@ This lets LucaOS show skin identity safely without changing the live shell. The 
 - No selected skin persistence yet unless already safe.
 - No dashboard consumption.
 
+**Preview metadata status:** `src/config/lucaSkinPreviewMetadata.ts` now provides
+metadata for future settings preview cards. The metadata is inert: no visual
+preview cards exist yet, no settings UI consumes it yet, no selected skin
+persistence exists yet, no root/dashboard application occurs, and no skin
+variables are applied globally. The next PR should be Claude visual preview card
+UI.
+
 ### PR 4B — selected skin setting persistence
 
 - Add selected skin ID to appearance settings.
