@@ -61,13 +61,12 @@ describe("LucaOS skin settings preview section", () => {
     expect(recommended.map((skin) => skin.id)).toEqual(["pearl"]);
   });
 
-  it("states clearly that selecting saves a preference only and does not change the live interface", () => {
+  it("states clearly that selecting applies only to the dashboard shell", () => {
     const markup = renderToStaticMarkup(<SkinPreviewSection />);
-    expect(markup).toContain("saves your preference only");
-    expect(markup).toContain("does not change the live interface");
-    expect(SKIN_PREVIEW_HELPER_COPY).toContain("saves your preference only");
+    expect(markup).toContain("applies to the dashboard shell only");
+    expect(markup).toContain("Boot, onboarding, mobile, and global overlays");
     expect(SKIN_PREVIEW_HELPER_COPY).toContain(
-      "does not change the live interface",
+      "applies to the dashboard shell only",
     );
   });
 

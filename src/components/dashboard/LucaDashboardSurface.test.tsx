@@ -6,6 +6,7 @@ const source = readFileSync(
   "src/components/dashboard/LucaDashboardSurface.tsx",
   "utf8",
 );
+const appSource = readFileSync("src/App.tsx", "utf8");
 
 import { LucaDashboardSurface } from "./LucaDashboardSurface";
 
@@ -72,6 +73,12 @@ describe("LucaDashboardSurface", () => {
     for (const reference of forbiddenRuntimeImports) {
       expect(source.toLowerCase()).not.toContain(reference.toLowerCase());
     }
+  });
+
+  it("applies selected skin material variables only at the dashboard boundary", () => {
+    expect(appSource).toContain("resolveLucaDashboardSkinBoundary");
+    expect(appSource).toContain("dashboardSkinBoundary.materialVariables");
+    expect(appSource).not.toContain("document.documentElement.style.setProperty");
   });
 
   it("does not render WebBridge diagnostics or runtime wording", () => {

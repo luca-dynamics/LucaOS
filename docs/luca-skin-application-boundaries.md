@@ -251,7 +251,7 @@ metadata-to-setting integration.
 - Include reset-to-default.
 - Validate unknown skin fallback.
 
-**Selected skin persistence status:** The selected skin ID can now be persisted through General settings as `selectedSkinId`. Invalid or missing values fall back safely to Pearl. Settings can show the current skin preference with a `Current` marker, but the preference is not globally applied yet. No root, dashboard, boot, or onboarding skin application exists yet, and no DOM/root variable mutation occurs. The next PR should be controlled local preview variable application or dashboard-shell application planning.
+**Selected skin persistence status:** The selected skin ID can now be persisted through General settings as `selectedSkinId`. Invalid or missing values fall back safely to Pearl. Settings can show the current skin preference with a `Current` marker. The preference is now applied only at a controlled dashboard shell boundary; no root, boot, or onboarding skin application exists, and no DOM/root variable mutation occurs for skin application. The next PR should be a mobile-safe audit or dashboard-shell visual polish.
 
 ### PR 5 — local preview variable application
 
@@ -330,6 +330,8 @@ When dashboard application begins, it should be shell-first and material-role-fi
 - Pro/Creator density must not be altered by skin rollout.
 - Advanced/tactical/debug visuals should not be normalized into skin output during early rollout.
 - Dashboard application should start with static Pearl, Carbon, and Canvas before Flow motion.
+
+**Dashboard shell boundary status:** The selected skin material variables are now applied to one local main dashboard container boundary in `App.tsx`. The application remains local to the dashboard shell: it does not mutate `document.documentElement`, `body`, `html`, or any global provider; it does not apply skins to boot or onboarding; and it does not introduce mobile-specific skin application beyond any natural inheritance from the shared dashboard markup. Flow remains a static material fallback with no motion, timers, keyframes, or animation wiring. Status and safety variables remain outside skin control. The next PR should either perform a mobile-safe audit for inherited dashboard behavior or visually polish the desktop dashboard shell skin feel without expanding the application boundary.
 
 ---
 
