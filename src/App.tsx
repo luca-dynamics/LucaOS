@@ -35,6 +35,7 @@ import { taskQueue } from "./services/taskQueueService";
 import { soundService } from "./services/soundService";
 import { voiceService } from "./services/voiceService";
 import { settingsService } from "./services/settingsService";
+import { resolveLucaDashboardSkinBoundary } from "./styles/lucaDashboardSkinBoundary";
 import { voiceSessionOrchestrator } from "./services/voiceSessionOrchestrator";
 import { eventBus } from "./services/eventBus";
 import { UIThemeId } from "./types/lucaPersonality";
@@ -464,6 +465,10 @@ function AppContent() {
     () => settingsService.getSettings().general.experienceMode,
   );
 
+  const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
+    () => settingsService.getSettings().general.selectedSkinId,
+  );
+
   const [backgroundOpacity, setBackgroundOpacity] = useState<number>(0.3);
   const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
 
@@ -474,6 +479,7 @@ function AppContent() {
       const newPersona = settings?.general?.persona;
       const newTheme = settings?.general?.theme;
       const newExperienceMode = settings?.general?.experienceMode;
+      const nextSelectedSkinId = settings?.general?.selectedSkinId;
       const effectivePersona = newPersona ?? "ASSISTANT";
       const hasStoredSettings = settingsService.hasStoredSettings?.() ?? true;
       // Preserve saved themes exactly, but let true first-run/no-storage boots
@@ -491,6 +497,7 @@ function AppContent() {
       if (newExperienceMode) {
         setExperienceMode(newExperienceMode as LucaExperienceMode);
       }
+      setSelectedSkinId(nextSelectedSkinId);
 
       // Interaction Mode (Text vs Voice)
       const preferredMode = settings?.general?.preferredMode;
@@ -2457,6 +2464,20 @@ function AppContent() {
 
   // Removed Browser block from here (Moved Up)
 
+  const dashboardSkinBoundary = useMemo(
+    () =>
+      resolveLucaDashboardSkinBoundary({
+        selectedSkinId,
+        // Main dashboard shell has no narrower host-policy object here. Use the
+        // static desktop-web policy instead of assuming native glass or mobile
+        // application semantics at this controlled boundary.
+        hostKind: "desktop-web",
+        reducedMotion: false,
+        reducedTransparency: false,
+      }),
+    [selectedSkinId],
+  );
+
   // console.log("[RENDER] Boot Ready. Rendering Main UI...");
 
   return (
@@ -2716,8 +2737,9 @@ function AppContent() {
             ? "opacity-0 pointer-events-none scale-95"
             : "opacity-100"
         }`}
-        style={
-          window.electron
+        style={{
+          ...dashboardSkinBoundary.materialVariables,
+          ...(window.electron
             ? {
                 width: "117.65vw",
                 height: "117.65vh",
@@ -2735,8 +2757,8 @@ function AppContent() {
                   "var(--luca-border-subtle, var(--app-border-main))",
                 background:
                   platformBackgroundPolicy.rootApplicationStyle.background,
-              }
-        }
+              }),
+        }}
       >
         <SafeComponent componentName="Header">
           <Header

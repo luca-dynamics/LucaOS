@@ -12,15 +12,15 @@ import { SkinPreviewCard } from "./SkinPreviewCard";
  * local-only "operating environment samples". It is intentionally inert:
  *
  * - No skin is applied globally.
- * - The selected skin ID can be persisted as a preference only.
+ * - The selected skin ID can be persisted and applied to the dashboard shell only.
  * - There are no apply/save controls.
- * - No active appearance/theme state is mutated.
+ * - No root/global appearance or theme state is mutated.
  *
- * The helper copy makes explicit that previews are not active yet.
+ * The helper copy makes explicit that application is dashboard-boundary-only.
  */
 
 export const SKIN_PREVIEW_HELPER_COPY =
-  "Choose the visual operating environment LucaOS should use when skin application is enabled. For now, this saves your preference only and does not change the live interface.";
+  "Your selected skin now applies to the dashboard shell only. Boot, onboarding, mobile, and global overlays are not skinned yet.";
 
 export interface SkinPreviewSectionProps {
   accentColor?: string;
@@ -53,8 +53,8 @@ export const SkinPreviewSection: React.FC<SkinPreviewSectionProps> = ({
         style={{ color: settingsSurfaceTokens.textTertiary }}
       >
         Skins are not decorations; they are the visual operating environments
-        for an AI-native OS. Your selection is saved as a preference only and
-        does not change the live interface yet.
+        for an AI-native OS. Your selected skin now applies to the dashboard shell only. Boot,
+        onboarding, mobile, and global overlays are not skinned yet.
       </p>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {skins.map((metadata) => (
