@@ -18,8 +18,11 @@ export const LUCA_SHELL_ACCENT_PRIMARY = "var(--luca-accent-primary)";
 export const LUCA_SHELL_ACCENT_SOFT = "var(--luca-accent-soft)";
 export const LUCA_SHELL_SHADOW_SOFT = "var(--luca-shadow-soft)";
 export const LUCA_SHELL_SHADOW_GLOW = "var(--luca-shadow-glow)";
+// Prefer the skin-supplied material blur (set by the dashboard skin boundary and
+// the appearance blur control) so skins like Canvas can read matte and Flow can
+// stay capped. Legacy fallbacks are preserved for non-skin themes.
 export const LUCA_SHELL_BLUR =
-  "var(--luca-blur-level, var(--app-bg-blur, 40px))";
+  "var(--luca-material-blur, var(--luca-blur-level, var(--app-bg-blur, 40px)))";
 
 export const lucaShellBorderSubtleStyle: CSSProperties = {
   borderColor: LUCA_SHELL_BORDER_SUBTLE,
@@ -55,8 +58,13 @@ export const lucaShellRailSurfaceStyle: CSSProperties = {
   color: LUCA_SHELL_TEXT_SECONDARY,
 };
 
+// Dashboard workspace canvas. Composes the skin's elevated and base background
+// into a gentle, static vertical depth so each skin reads intentionally (Flow's
+// soft gradient depth behind the work, Carbon's graphite depth, Pearl's soft
+// pearl, Canvas's warm matte) using only boundary-supplied variables. No motion.
 export const lucaShellWorkspaceSurfaceStyle: CSSProperties = {
-  background: "var(--luca-background-elevated, transparent)",
+  background:
+    "linear-gradient(180deg, var(--luca-background-elevated, transparent) 0%, var(--luca-background-base, var(--luca-background-elevated, transparent)) 100%)",
   color: LUCA_SHELL_TEXT_PRIMARY,
 };
 

@@ -333,6 +333,17 @@ When dashboard application begins, it should be shell-first and material-role-fi
 
 **Dashboard shell boundary status:** The selected skin material variables are now applied to one local main dashboard container boundary in `App.tsx`. The application remains local to the dashboard shell: it does not mutate `document.documentElement`, `body`, `html`, or any global provider; it does not apply skins to boot or onboarding; and it does not introduce mobile-specific skin application beyond any natural inheritance from the shared dashboard markup. Flow remains a static material fallback with no motion, timers, keyframes, or animation wiring. Status and safety variables remain outside skin control. The next PR should either perform a mobile-safe audit for inherited dashboard behavior or visually polish the desktop dashboard shell skin feel without expanding the application boundary.
 
+**Dashboard shell visual polish status:** The dashboard shell now has restrained visual polish for the selected skins. The shared shell helpers in `src/styles/lucaShellStyles.ts` were refined so the workspace canvas composes a gentle, static `elevated → base` background depth and shell panels prefer the skin-supplied `--luca-material-blur` (so Canvas reads matte and Flow stays capped), using only boundary-supplied `--luca-*` variables. Specifically:
+
+- Polish stays inside the existing dashboard boundary; no new application boundary was created.
+- No root/global DOM mutation occurs (no `document.documentElement`, `body`, or `html` writes; no `style.setProperty`).
+- No boot/onboarding skin application was added.
+- No mobile-specific skin boundary was added.
+- No Flow motion was added (composition is a static gradient only — no keyframes, animation, timers, or parallax).
+- Status/safety variables remain protected and are not overridden by the shell helpers.
+
+The next PR should be a mobile-safe audit or mobile shell boundary planning.
+
 ---
 
 ## 10. Mobile boundary notes
