@@ -501,3 +501,12 @@ The matrix must pass before boot/onboarding skin planning begins. Flow remains s
 - No root/global DOM mutation is used for boot skin application.
 - Flow remains static; no Flow motion is introduced at the boot boundary.
 - Readiness and status semantics remain protected from skin control.
+
+## Local Boot Window visual polish note
+
+- Local Boot Window visual polish now exists (skin-native decorative bloom via the skin accent, plus more readable readiness status labels).
+- Polish stays inside the existing local Boot Window boundary; no new resolver or boundary was added.
+- No onboarding or mode-select skin application was added.
+- No root/global DOM mutation occurs, and no global CSS variable application was introduced.
+- Flow remains static; no Flow motion was added.
+- Readiness/status semantics remain protected; no status/safety color is routed through skin decoration.

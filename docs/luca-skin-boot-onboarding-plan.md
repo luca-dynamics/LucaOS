@@ -303,3 +303,14 @@ That PR should still be pure/helper only. It should add no visual application, n
 - No runtime boot logic changes are part of the local boundary application.
 - Readiness and status semantics remain protected from skin control.
 - The next PR should be boot visual polish or local onboarding boundary planning/application, depending on QA results.
+
+## Boot visual polish status
+
+- Boot Window visual polish now exists inside the local Boot Window boundary: the decorative hologram bloom uses the skin accent (`--luca-accent-soft`) instead of a fixed status color, so Pearl, Carbon, Flow, and Canvas feel skin-native, and the readiness status labels use the secondary text role for stronger readability.
+- No onboarding skin application exists yet.
+- No mode-select skin application exists yet.
+- No root/global DOM mutation occurs.
+- No runtime boot logic changed (readiness, progress, error/recovery, and copy/model logic are untouched).
+- No Flow motion was added; boot visuals remain static.
+- Readiness/status semantics remain protected; no status/safety color is routed through skin decoration.
+- The next PR should be a boot QA matrix update or local onboarding boundary planning, depending on QA.

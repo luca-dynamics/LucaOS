@@ -115,7 +115,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             "radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--luca-surface-hover, var(--app-bg-tint)) 42%, transparent), transparent 30%), var(--luca-background-liquid, linear-gradient(180deg, var(--luca-background-elevated, var(--app-bg-tint)) 0%, var(--luca-background-base, var(--app-bg-main)) 100%))",
         }}
       />
-      <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] blur-3xl sm:h-[32rem] sm:w-[32rem]" />
+      <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,var(--luca-accent-soft,#4f8cff)_12%,transparent)] blur-3xl sm:h-[32rem] sm:w-[32rem]" />
 
       <section
         aria-label="LucaOS startup"
@@ -126,7 +126,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           data-boot-visual="landing-hologram-face"
           aria-hidden="true"
         >
-          <div className="absolute left-1/2 top-[57%] h-24 w-[72%] max-w-[34rem] -translate-x-1/2 rounded-[100%] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]/[0.07] blur-2xl" />
+          <div className="absolute left-1/2 top-[57%] h-24 w-[72%] max-w-[34rem] -translate-x-1/2 rounded-[100%] bg-[color-mix(in_srgb,var(--luca-accent-soft,#4f8cff)_12%,transparent)]/[0.07] blur-2xl" />
           <img
             src={launchIdentity.assetSrc}
             alt=""
@@ -179,7 +179,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
               style={{ borderColor: "var(--luca-border-subtle, var(--app-border-main))" }}
             >
               <span className="text-sm" style={lucaShellSecondaryTextStyle}>{item.detail}</span>
-              <span className="shrink-0 text-[0.68rem] font-medium uppercase tracking-[0.18em]" style={lucaShellTertiaryTextStyle}>
+              <span className="shrink-0 text-[0.68rem] font-medium uppercase tracking-[0.18em]" style={lucaShellSecondaryTextStyle}>
                 {item.statusLabel}
               </span>
             </div>

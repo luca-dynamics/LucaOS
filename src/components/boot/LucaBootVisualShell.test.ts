@@ -251,4 +251,32 @@ describe("LucaBootVisualShell readiness model", () => {
       /execute|runTool|automation|screenshot|ocr|fileAccess|messaging|wireless|HologramScene|setTimeout|setInterval/i,
     );
   });
+
+  it("keeps boot visual polish skin-native, single-applied, and status-safe", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const source = await readFile(
+      "src/components/boot/LucaBootVisualShell.tsx",
+      "utf8",
+    );
+
+    // Decorative hologram bloom is now skin-native (accent), not a fixed status color.
+    expect(source).toContain("--luca-accent-soft");
+    expect(source).not.toContain("--luca-info");
+
+    // The boot skin boundary stays single-applied and inert (no global mutation).
+    expect(
+      source.match(/bootSkinBoundary\.materialVariables/g) ?? [],
+    ).toHaveLength(1);
+    expect(source).not.toMatch(
+      /document\.documentElement|style\.setProperty|document\.body|body\.style|document\.querySelector\("html"\)|LucaSkinProvider/,
+    );
+
+    // No Flow motion is introduced by boot visual polish.
+    expect(source).not.toMatch(
+      /@keyframes|animation:|requestAnimationFrame|setInterval|setTimeout|parallax/,
+    );
+
+    // Status/safety colors are never routed through boot skin decoration.
+    expect(source).not.toMatch(/--luca-(danger|warning|success)/);
+  });
 });
