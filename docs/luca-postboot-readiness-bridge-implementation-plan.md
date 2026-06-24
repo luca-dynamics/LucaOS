@@ -6,6 +6,8 @@
 **Target PR:** `docs(ui): plan post-boot readiness bridge implementation`  
 **Recommended next PR:** `feat(web): add post-boot readiness bridge copy model`
 
+> **Status update (2026-06-24).** The first implementation slice now adds a typed post-boot readiness bridge copy model. The UI presentation has not been rewritten; the next step is a bridge presentation component that consumes the copy model.
+
 Read together with:
 
 - `docs/luca-boot-onboarding-product-experience-audit.md`
