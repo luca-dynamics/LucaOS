@@ -27,6 +27,8 @@
 
 > **Implementation status (2026-06-24).** The post-boot readiness bridge visual polish has been applied as a presentation-only pass for the loading and transition surfaces. Lifecycle routing, onboarding behavior, Web Safe Mode behavior, and skin boundaries remain unchanged; onboarding remains paused.
 
+> **Planning status (2026-06-24).** The post-boot bridge is now polished, and onboarding has moved to implementation planning in `docs/luca-premium-onboarding-implementation-plan.md`. Onboarding implementation remains paused until that plan is merged.
+
 ---
 
 ## 1. Executive summary
