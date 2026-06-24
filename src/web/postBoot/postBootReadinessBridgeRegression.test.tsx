@@ -3,7 +3,8 @@ import React from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-const { readFileSync } = process.getBuiltinModule("node:fs");
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 
 import { resolvePostBootReadinessBridgeCopy } from "./postBootReadinessBridgeCopy";
@@ -40,7 +41,39 @@ const bridgeSourceFiles = [
   "src/web/postBoot/postBootReadinessBridgeCopy.ts",
   "src/web/postBoot/WebPostBootLoading.tsx",
   "src/web/postBoot/WebPostBootTransition.tsx",
-];
+] as const;
+const rootMutationTerms = [
+  "document.documentElement",
+  "style.setProperty",
+  "document.body",
+  "body.style",
+  'document.querySelector("html")',
+] as const;
+const flowMotionTerms = [
+  "@keyframes",
+  "animation:",
+  "requestAnimationFrame",
+  "setInterval",
+  "parallax",
+] as const;
+
+type RegressionCase = {
+  state: "pending" | WebPostBootUserState;
+  render: () => string;
+  expectedCta?: string;
+};
+
+function sourcePath(repoRelativePath: string): string {
+  return fileURLToPath(new URL(`../../../${repoRelativePath}`, import.meta.url));
+}
+
+function readSource(repoRelativePath: string): string {
+  return readFileSync(sourcePath(repoRelativePath), "utf8");
+}
+
+function readBridgeSources(): string {
+  return bridgeSourceFiles.map((file) => readSource(file)).join("\n");
+}
 
 function baseSnapshot(userState: WebPostBootUserState): WebPostBootStateSnapshot {
   switch (userState) {
@@ -117,17 +150,35 @@ function clickButton(container: HTMLElement, label: string) {
 }
 
 describe("post-boot readiness bridge regression matrix", () => {
-  it.each([
+  const renderedCopyCases: RegressionCase[] = [
     {
       state: "pending" as const,
       render: () => renderToStaticMarkup(<WebPostBootLoading />),
       expectedCta: undefined,
     },
-    { state: "new_user" as const, render: () => renderTransition(baseSnapshot("new_user")), expectedCta: undefined },
-    { state: "returning_user" as const, render: () => renderTransition(baseSnapshot("returning_user")), expectedCta: undefined },
-    { state: "partial_setup" as const, render: () => renderTransition(baseSnapshot("partial_setup")), expectedCta: "Continue setup" },
-    { state: "permission_attention" as const, render: () => renderTransition(baseSnapshot("permission_attention")), expectedCta: "Review voice access" },
-  ])("covers calm rendered copy for $state", ({ state, render, expectedCta }) => {
+    {
+      state: "new_user" as const,
+      render: () => renderTransition(baseSnapshot("new_user")),
+      expectedCta: undefined,
+    },
+    {
+      state: "returning_user" as const,
+      render: () => renderTransition(baseSnapshot("returning_user")),
+      expectedCta: undefined,
+    },
+    {
+      state: "partial_setup" as const,
+      render: () => renderTransition(baseSnapshot("partial_setup")),
+      expectedCta: "Continue setup",
+    },
+    {
+      state: "permission_attention" as const,
+      render: () => renderTransition(baseSnapshot("permission_attention")),
+      expectedCta: "Review voice access",
+    },
+  ];
+
+  it.each(renderedCopyCases)("covers calm rendered copy for $state", ({ state, render, expectedCta }) => {
     const copy = resolvePostBootReadinessBridgeCopy({ state });
     const html = render();
     const lowerHtml = html.toLowerCase();
@@ -141,7 +192,7 @@ describe("post-boot readiness bridge regression matrix", () => {
   });
 
   it("preserves auto-continue source behavior and normal-state CTA copy model", () => {
-    const source = readFileSync("src/web/postBoot/WebPostBootTransition.tsx", "utf8");
+    const source = readSource("src/web/postBoot/WebPostBootTransition.tsx");
     expect(source).toContain("window.setTimeout(onContinue");
     expect(resolvePostBootReadinessBridgeCopy({ state: "new_user" }).primaryCta).toBe("Continue");
     expect(resolvePostBootReadinessBridgeCopy({ state: "returning_user" }).title).toBe("Welcome back");
@@ -153,7 +204,11 @@ describe("post-boot readiness bridge regression matrix", () => {
     const onRestartOnboarding = vi.fn();
     const onReviewVoiceAccess = vi.fn();
     const partial = renderInteractive(
-      <WebPostBootTransition snapshot={baseSnapshot("partial_setup")} onContinue={onContinue} onRestartOnboarding={onRestartOnboarding} />,
+      <WebPostBootTransition
+        snapshot={baseSnapshot("partial_setup")}
+        onContinue={onContinue}
+        onRestartOnboarding={onRestartOnboarding}
+      />,
     );
 
     try {
@@ -209,7 +264,18 @@ describe("post-boot readiness bridge regression matrix", () => {
       ]) {
         expect(text).toContain(safeField);
       }
-      for (const forbidden of ["raw log", "localStorage", "storage dump", "MASTER_KEY_HEX", "LUCA_VAULT_KEY", "fallback key", "private key", "api key", "token", "secret"]) {
+      for (const forbidden of [
+        "raw log",
+        "localStorage",
+        "storage dump",
+        "MASTER_KEY_HEX",
+        "LUCA_VAULT_KEY",
+        "fallback key",
+        "private key",
+        "api key",
+        "token",
+        "secret",
+      ]) {
         expect(text.toLowerCase(), forbidden).not.toContain(forbidden.toLowerCase());
       }
     } finally {
@@ -228,8 +294,8 @@ describe("post-boot readiness bridge regression matrix", () => {
   });
 
   it("keeps Web Safe Mode ownership and preview-mode copy boundaries intact", () => {
-    const bridgeShellSource = readFileSync("src/web/WebBridgeShell.tsx", "utf8");
-    const bridgeSources = bridgeSourceFiles.map((file) => readFileSync(file, "utf8")).join("\n");
+    const bridgeShellSource = readSource("src/web/WebBridgeShell.tsx");
+    const bridgeSources = readBridgeSources();
     const safeModeCopy = resolvePostBootReadinessBridgeCopy({ state: "returning_user", webSafeMode: true });
 
     expect(bridgeShellSource).toContain("Web Safe Mode");
@@ -241,11 +307,11 @@ describe("post-boot readiness bridge regression matrix", () => {
   });
 
   it("does not introduce root/global mutations or Flow motion, except existing auto-continue timeout", () => {
-    const source = bridgeSourceFiles.map((file) => readFileSync(file, "utf8")).join("\n");
-    for (const term of ["document.documentElement", "style.setProperty", "document.body", "body.style", 'document.querySelector("html")']) {
+    const source = readBridgeSources();
+    for (const term of rootMutationTerms) {
       expect(source, term).not.toContain(term);
     }
-    for (const term of ["@keyframes", "animation:", "requestAnimationFrame", "setInterval", "parallax"]) {
+    for (const term of flowMotionTerms) {
       expect(source, term).not.toContain(term);
     }
     expect(source.match(/setTimeout/g) ?? []).toHaveLength(1);
