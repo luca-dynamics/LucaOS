@@ -217,6 +217,13 @@ It should not:
 
 **Should not be skinned yet:** existing theme/opacity/blur live-preview behavior, setup sequence delays, onboarding motion, assets, or provider/model setup logic.
 
+## Boot QA and recovery coverage status
+
+- Boot Window QA coverage now exists in `docs/luca-skin-boot-qa-matrix.md`.
+- Boot failure/recovery expectations and Web Safe Mode expectations are included in the QA gate: semantic error/warning/status meaning stays protected, diagnostics stay readable, and invalid/missing browser master keys allow React mount while secure runtime features remain disabled.
+- Onboarding remains the next planned boundary.
+- No onboarding implementation exists yet, and no onboarding or Mode Select skin application is introduced by Boot Window QA.
+
 ---
 
 ## 8. Host/accessibility policy

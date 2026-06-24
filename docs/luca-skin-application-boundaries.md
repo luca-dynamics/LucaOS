@@ -382,6 +382,13 @@ Boot and onboarding skinning must remain visual-only and separate from readiness
 - Boot background/orb visuals should consume boot-specific skin variables only after the dashboard/static path is stable.
 - Onboarding should not persist incompatible skin/theme states without fallback validation.
 
+## Boot Window QA and Web Safe Mode status
+
+- Boot Window boundary application, visual polish, and QA coverage now exist. The local Boot Window boundary uses boot material variables without adding a root provider, global CSS variable application, or onboarding skin application.
+- Web Safe Mode now uses a compact, non-blocking banner for invalid or missing browser master keys so the browser React shell can mount while protected runtime features remain disabled.
+- Onboarding remains unskinned. Mode Select remains unskinned.
+- The next step is local onboarding boundary planning/application, kept separate from Boot Window QA and Web Safe Mode recovery behavior.
+
 ---
 
 ## 12. Hard no-touch list for first application PRs
