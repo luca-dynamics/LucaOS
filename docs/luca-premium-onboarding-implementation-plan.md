@@ -6,6 +6,8 @@
 **Target PR:** `docs(ui): plan premium onboarding screen implementation`  
 **Recommended next PR:** `feat(ui): add premium onboarding copy model`
 
+> **Status update (2026-06-24).** The premium onboarding copy model now exists as a typed, copy-only source for the future eight-screen flow. No onboarding UI replacement, routing, runtime, storage, provider, memory, governance, skin, or Web Safe Mode behavior changes are included. The next recommended PR is `feat(ui): add premium onboarding screen map`.
+
 Read together with:
 
 - `docs/luca-premium-onboarding-postboot-design.md`
