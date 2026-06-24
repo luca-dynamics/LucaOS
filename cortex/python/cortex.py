@@ -632,23 +632,9 @@ app.include_router(remote_access_router)
 
 import subprocess
 
-# Input Models
-class MouseMoveRequest(BaseModel):
-    x: int
-    y: int
-
+# Input Models (mouse/keyboard/applescript models moved to routers/input_control.py)
 class MouseClickRequest(BaseModel):
     button: str = "left"
-
-class KeyboardTypeRequest(BaseModel):
-    text: str
-    interval: float = 0.05
-
-class KeyboardPressRequest(BaseModel):
-    keys: List[str]
-
-class SystemCommandRequest(BaseModel):
-    script: str # AppleScript or Shell depending on endpoint
 
 # --- LIGHTRAG CONFIG ---
 # Relocate RAG storage to user directory (Persistent Memory)
@@ -1620,52 +1606,9 @@ from fastapi import Header, HTTPException, Request
 
 from routers.deps import verify_session
 
-@app.post("/mouse/move")
-async def mouse_move(request: MouseMoveRequest, authorized: bool = Depends(verify_session)):
-    if not PYAUTOGUI_AVAILABLE:
-        return {"status": "error", "message": "Mouse control not available on server"}
-    try:
-        pyautogui.moveTo(request.x, request.y, _pause=False)
-        return {"status": "success"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-@app.post("/keyboard/type")
-async def keyboard_type(request: KeyboardTypeRequest, authorized: bool = Depends(verify_session)):
-    if not PYAUTOGUI_AVAILABLE:
-        return {"status": "error", "message": "Keyboard control not available on server"}
-    try:
-        pyautogui.write(request.text, interval=request.interval)
-        return {"status": "success"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-@app.post("/keyboard/press")
-async def keyboard_press(request: KeyboardPressRequest, authorized: bool = Depends(verify_session)):
-    if not PYAUTOGUI_AVAILABLE:
-        return {"status": "error", "message": "Keyboard control not available on server"}
-    try:
-        # Unpack list of keys e.g. ['command', 'space']
-        pyautogui.hotkey(*request.keys)
-        return {"status": "success"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-@app.post("/system/applescript")
-async def system_applescript(request: SystemCommandRequest, authorized: bool = Depends(verify_session)):
-    try:
-        # Execute AppleScript via osascript
-        result = subprocess.run(
-            ["osascript", "-e", request.script], 
-            capture_output=True, 
-            text=True
-        )
-        if result.returncode == 0:
-             return {"status": "success", "output": result.stdout.strip()}
-        else:
-             return {"status": "error", "message": result.stderr.strip()}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+# Input control (mouse/keyboard/applescript) extracted to routers/input_control.py
+from routers.input_control import router as input_router
+app.include_router(input_router)
 
 # --- VOICE HUB INTEGRATION (Gemini Ear + Cloud Voice) ---
 from fastapi import WebSocket, WebSocketDisconnect
