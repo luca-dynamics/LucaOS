@@ -29,6 +29,8 @@
 
 > **Planning status (2026-06-24).** The post-boot bridge is now polished, and onboarding has moved to implementation planning in `docs/luca-premium-onboarding-implementation-plan.md`. Onboarding implementation remains paused until that plan is merged.
 
+> **Implementation status (2026-06-24).** Premium onboarding implementation has started with the typed copy model only. Current onboarding screens, routing, completion behavior, storage, runtime adapters, provider/model routing, memory, governance, skin boundaries, and Web Safe Mode remain unchanged.
+
 ---
 
 ## 1. Executive summary
