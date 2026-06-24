@@ -30,6 +30,8 @@ export type LucaSkinTypographyMood =
 
 export type LucaSkinBootMotion = "calm" | "minimal" | "fluid";
 
+export type LucaSkinPresenceBlend = "screen" | "normal";
+
 export interface LucaSkinDefinition {
   id: LucaSkinId;
   name: string;
@@ -74,6 +76,29 @@ export interface LucaSkinDefinition {
     softness: string;
     glow: string;
     reducedMotionFallback: boolean;
+  };
+  /**
+   * Presence visuals for the onboarding "three-state presence" system
+   * (see docs/luca-onboarding-presence-visual-language-spec.md): the ambient
+   * blurred Luca face, the sharp identity face, and the voice orb. This is
+   * inert data only — no component consumes it until the staged presence work.
+   * It intentionally carries no status/safety semantics.
+   */
+  presenceProfile: {
+    /** Opacity of the ambient (blurred) Luca face background overlay. */
+    ambientOpacity: number;
+    /** Blend mode for the ambient face: screen on dark skins, normal on light. */
+    ambientBlend: LucaSkinPresenceBlend;
+    /** Blur applied to the ambient face overlay, in px (host policy may cap it). */
+    ambientBlurPx: number;
+    /** Edge-bloom strength (0..1) for identity moments (welcome/finish/voice). */
+    bloomIntensity: number;
+    /** Whether the edge bloom is iridescent (Flow) or a soft monochrome glow. */
+    bloomIridescent: boolean;
+    /** CSS background for the presence/voice orb, tinted per skin. */
+    orbGradient: string;
+    /** CSS filter for the sharp identity face (glow on dark, soft shadow on light). */
+    faceSharpFilter: string;
   };
   hostPolicyHints?: Partial<
     Record<
@@ -136,6 +161,16 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       glow: "minimal",
       reducedMotionFallback: true,
     },
+    presenceProfile: {
+      ambientOpacity: 0.5,
+      ambientBlend: "normal",
+      ambientBlurPx: 30,
+      bloomIntensity: 0.25,
+      bloomIridescent: false,
+      orbGradient:
+        "radial-gradient(60% 50% at 35% 30%, #ffffff, transparent 60%), conic-gradient(from 200deg, #bcd9e2, #9fc0d6, #cbbfe0, #bcd9e2)",
+      faceSharpFilter: "drop-shadow(0 10px 22px rgba(70, 120, 140, 0.3))",
+    },
   },
   carbon: {
     id: "carbon",
@@ -181,6 +216,17 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       softness: "controlled",
       glow: "restrained",
       reducedMotionFallback: true,
+    },
+    presenceProfile: {
+      ambientOpacity: 0.45,
+      ambientBlend: "screen",
+      ambientBlurPx: 34,
+      bloomIntensity: 0.3,
+      bloomIridescent: false,
+      orbGradient:
+        "radial-gradient(60% 50% at 35% 30%, rgba(255, 255, 255, 0.5), transparent 60%), conic-gradient(from 200deg, #7fa6c0, #6f88a0, #9aa6c0, #7fa6c0)",
+      faceSharpFilter:
+        "drop-shadow(0 0 22px rgba(150, 180, 200, 0.45)) brightness(1.05)",
     },
   },
   flow: {
@@ -228,6 +274,17 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       softness: "liquid",
       glow: "soft",
       reducedMotionFallback: true,
+    },
+    presenceProfile: {
+      ambientOpacity: 0.55,
+      ambientBlend: "screen",
+      ambientBlurPx: 32,
+      bloomIntensity: 0.7,
+      bloomIridescent: true,
+      orbGradient:
+        "radial-gradient(60% 50% at 35% 30%, rgba(255, 255, 255, 0.6), transparent 60%), conic-gradient(from 200deg, #69d6e6, #6aa0f2, #b58cf2, #f29ec9, #7fe0d6, #69d6e6)",
+      faceSharpFilter:
+        "drop-shadow(0 0 26px rgba(120, 210, 225, 0.6)) brightness(1.1)",
     },
     hostPolicyHints: {
       "desktop-web": {
@@ -290,6 +347,16 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       softness: "matte",
       glow: "minimal",
       reducedMotionFallback: true,
+    },
+    presenceProfile: {
+      ambientOpacity: 0.42,
+      ambientBlend: "normal",
+      ambientBlurPx: 30,
+      bloomIntensity: 0.2,
+      bloomIridescent: false,
+      orbGradient:
+        "radial-gradient(60% 50% at 35% 30%, #ffffff, transparent 60%), conic-gradient(from 200deg, #e6c79a, #d6a974, #c9a98a, #e6c79a)",
+      faceSharpFilter: "drop-shadow(0 10px 22px rgba(120, 80, 40, 0.3))",
     },
   },
 } as const;
