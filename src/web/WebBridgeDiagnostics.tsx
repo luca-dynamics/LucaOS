@@ -26,6 +26,7 @@ export function WebBridgeDiagnostics({
     return null;
   }
 
+  const safeMode = window.__LUCA_WEB_SAFE_MODE__;
   const rows = [
     ["selectedEntry", window.__LUCA_SELECTED_ENTRY__ ?? "unknown"],
     ["reactEntryLoaded", String(window.__LUCA_REACT_ENTRY_LOADED__ === true)],
@@ -46,6 +47,16 @@ export function WebBridgeDiagnostics({
     ["guardedNativeCapabilityCount", String(guardedNativeCapabilityCount)],
     ["lucaLinkStatus", lucaLinkStatus],
     ["bootstrapError", window.__LUCA_REACT_BOOTSTRAP_ERROR__ ?? "none"],
+    ["webSafeMode", safeMode ? safeMode.reason : "inactive"],
+    ["masterKeyStatus", safeMode?.keyStatus ?? "not checked"],
+    ["expectedKeyFormat", safeMode?.expectedKeyFormat ?? "64 hex characters / 32 bytes"],
+    ["reactMountAllowed", safeMode ? String(safeMode.canMountWebUi) : "true"],
+    [
+      "secureRuntimeAvailable",
+      safeMode ? String(safeMode.secureRuntimeAvailable) : "unknown",
+    ],
+    ["safeModeHost", safeMode?.host ?? window.location.host],
+    ["safeModePath", safeMode?.path ?? window.location.pathname],
     [
       "capturedErrors",
       String(window.__LUCA_CAPTURED_BOOT_ERRORS__?.length ?? 0),
