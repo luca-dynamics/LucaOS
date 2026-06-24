@@ -1,13 +1,47 @@
+// @vitest-environment jsdom
 import React from "react";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 const { readFileSync } = process.getBuiltinModule("node:fs");
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { WebPostBootLoading } from "./WebPostBootLoading";
 import { WebPostBootTransition } from "./WebPostBootTransition";
 
 const noop = () => {};
 const postBootSource = readFileSync("src/web/postBoot/WebPostBootTransition.tsx", "utf8");
 const staticFaceSource = readFileSync("src/components/visual/LucaStaticFacePresence.tsx", "utf8");
+
+function renderInteractive(element: React.ReactElement) {
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  act(() => {
+    root.render(element);
+  });
+
+  return {
+    container,
+    cleanup: () => {
+      act(() => {
+        root.unmount();
+      });
+      container.remove();
+    },
+  };
+}
+
+function clickButton(container: HTMLElement, label: string) {
+  const button = Array.from(container.querySelectorAll("button")).find(
+    (item) => item.textContent === label,
+  );
+  expect(button).toBeTruthy();
+
+  act(() => {
+    button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+}
 
 describe("WebPostBootTransition", () => {
   it("renders the pending loading bridge copy", () => {
@@ -81,6 +115,27 @@ describe("WebPostBootTransition", () => {
     expect(html).toContain("Continue setup");
   });
 
+  it("continues rather than restarts onboarding from the partial setup primary CTA", () => {
+    const onContinue = vi.fn();
+    const onRestartOnboarding = vi.fn();
+    const { container, cleanup } = renderInteractive(
+      <WebPostBootTransition
+        snapshot={{ userState: "partial_setup", hasCompletedOnboarding: false, preferredInteraction: "text", canEnterShell: false }}
+        onContinue={onContinue}
+        onRestartOnboarding={onRestartOnboarding}
+      />,
+    );
+
+    try {
+      expect(container.textContent).toContain("Continue setup");
+      clickButton(container, "Continue setup");
+      expect(onContinue).toHaveBeenCalledTimes(1);
+      expect(onRestartOnboarding).not.toHaveBeenCalled();
+    } finally {
+      cleanup();
+    }
+  });
+
   it("renders permission attention action copy", () => {
     const html = renderToStaticMarkup(
       <WebPostBootTransition
@@ -92,6 +147,30 @@ describe("WebPostBootTransition", () => {
     );
     expect(html).toContain("Review voice access");
     expect(html).toContain("Continue without voice");
+  });
+
+  it("keeps permission attention primary and secondary CTA callbacks unchanged", () => {
+    const onContinue = vi.fn();
+    const onReviewVoiceAccess = vi.fn();
+    const { container, cleanup } = renderInteractive(
+      <WebPostBootTransition
+        snapshot={{ userState: "permission_attention", hasCompletedOnboarding: true, preferredInteraction: "voice", needsVoicePermission: true, canEnterShell: false }}
+        onContinue={onContinue}
+        onRestartOnboarding={noop}
+        onReviewVoiceAccess={onReviewVoiceAccess}
+      />,
+    );
+
+    try {
+      clickButton(container, "Review voice access");
+      expect(onReviewVoiceAccess).toHaveBeenCalledTimes(1);
+      expect(onContinue).not.toHaveBeenCalled();
+
+      clickButton(container, "Continue without voice");
+      expect(onContinue).toHaveBeenCalledTimes(1);
+    } finally {
+      cleanup();
+    }
   });
 
   it("preserves callback prop names and auto-continue behavior", () => {
