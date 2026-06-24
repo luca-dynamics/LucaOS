@@ -3,6 +3,16 @@ export type { PresenceProps } from "./Presence";
 export { EdgePresence, default as EdgePresenceDefault } from "./EdgePresence";
 export type { EdgePresenceProps } from "./EdgePresence";
 export {
+  LucaPresence,
+  default as LucaPresenceDefault,
+  LUCA_PRESENCE_FACE_SRC,
+} from "./LucaPresence";
+export type {
+  LucaPresenceProps,
+  LucaPresenceState,
+  LucaPresenceAmbientPosition,
+} from "./LucaPresence";
+export {
   deriveIntentFromStatus,
   isAudioReactiveIntent,
   presenceAriaLabel,
