@@ -33,6 +33,8 @@ Onboarding skin implementation is paused until the product experience audit and 
 
 **Design spec update:** The premium onboarding/post-boot design spec now exists at `docs/luca-premium-onboarding-postboot-design.md`. Onboarding skin application remains paused. The onboarding skin boundary (a future pure resolver, then a single local application) should follow the redesigned onboarding structure in that spec — the 8-screen first-run flow and post-boot readiness bridge — not the old setup-wizard stages. Status/safety semantics stay protected and Flow stays static when that work resumes.
 
+**Planning status update:** The onboarding skin boundary remains future work. Premium onboarding implementation should be planned and merged before skins are applied to onboarding, so any future boundary follows stable first-run copy, state, shell, and screen semantics rather than the current setup flow.
+
 ---
 
 ## 1. Executive summary
