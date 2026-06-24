@@ -35,10 +35,15 @@ describe("Luca skin QA matrix source boundaries", () => {
   it("keeps dashboard and mobile skin boundaries wired through local material variable maps", () => {
     const appSource = readSource("src/App.tsx");
 
+    const bootSource = readSource("src/components/boot/LucaBootVisualShell.tsx");
+
     expect(appSource).toContain("resolveLucaDashboardSkinBoundary");
     expect(appSource).toContain("resolveLucaMobileSkinBoundary");
     expect(appSource).toContain("dashboardSkinBoundary.materialVariables");
     expect(appSource).toContain("mobileSkinBoundary.materialVariables");
+    expect(bootSource).toContain("resolveLucaBootSkinBoundary");
+    expect(bootSource).toContain("bootSkinBoundary.materialVariables");
+    expect(bootSource.match(/bootSkinBoundary\.materialVariables/g) ?? []).toHaveLength(1);
   });
 
   it("does not introduce root, body, html, or provider-based skin mutation", () => {
@@ -123,6 +128,18 @@ describe("Luca skin QA matrix resolver contract", () => {
       resolveLucaMobileSkinBoundary({ selectedSkinId: "flow", reducedMotion: false })
         .reducedMotion,
     ).toBe(true);
+    expect(
+      resolveLucaBootSkinBoundary({
+        selectedSkinId: "flow",
+        reducedTransparency: true,
+      }).materialVariables["--luca-material-blur"],
+    ).toBe("0px");
+    expect(
+      resolveLucaBootSkinBoundary({
+        selectedSkinId: "flow",
+        reducedTransparency: true,
+      }).materialVariables["--luca-material-opacity"],
+    ).toBe("1");
     expect(
       resolveLucaMobileSkinBoundary({
         selectedSkinId: "flow",

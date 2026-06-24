@@ -259,6 +259,10 @@ describe("LucaBootVisualShell readiness model", () => {
       "utf8",
     );
 
+    // Boot Window remains wired through the boot resolver.
+    expect(source).toContain("resolveLucaBootSkinBoundary");
+    expect(source).toContain('surface: "boot-window"');
+
     // Decorative hologram bloom is now skin-native (accent), not a fixed status color.
     expect(source).toContain("--luca-accent-soft");
     expect(source).not.toContain("--luca-info");
@@ -278,5 +282,6 @@ describe("LucaBootVisualShell readiness model", () => {
 
     // Status/safety colors are never routed through boot skin decoration.
     expect(source).not.toMatch(/--luca-(danger|warning|success)/);
+    expect(source).not.toContain("--luca-warning");
   });
 });

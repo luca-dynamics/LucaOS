@@ -14,6 +14,7 @@ describe("secure vault web safe mode boot guard", () => {
 
   it("degrades browser hosts instead of throwing before React can mount", () => {
     expect(secureVaultSource).toContain("publishWebSafeModeDiagnostic(validation)");
+    expect(secureVaultSource).toContain("window.__LUCA_WEB_SAFE_MODE__ = {");
     expect(secureVaultSource).toContain("reason: 'invalid-master-key'");
     expect(secureVaultSource).toContain("secureRuntimeAvailable: false");
     expect(secureVaultSource).toContain("canMountWebUi: true");
@@ -56,6 +57,8 @@ describe("secure vault web safe mode boot guard", () => {
   it("does not add secrets, root DOM mutations, providers, or motion to the safe-mode banner", () => {
     expect(webBridgeShellSource).not.toContain("MASTER_KEY_HEX");
     expect(webBridgeShellSource).not.toContain("LUCA_VAULT_KEY");
+    expect(webBridgeShellSource).not.toContain("expectedKeyFormat: '64 hex characters / 32 bytes'");
+    expect(webBridgeShellSource).not.toContain("crypto.randomBytes(32)");
     expect(webBridgeShellSource).not.toContain("document.documentElement");
     expect(webBridgeShellSource).not.toContain("style.setProperty");
     expect(webBridgeShellSource).not.toContain("document.body");

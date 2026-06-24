@@ -41,7 +41,8 @@ This document is QA/test/docs only. It does not add new skin application, visual
 - **Settings preview:** uses local preview metadata and local preview variables only. Preview cards are not Apply/Save controls and do not mutate the active shell.
 - **Desktop dashboard:** uses the dashboard boundary resolver and applies the returned material variables at the dashboard shell boundary.
 - **Mobile shell:** uses the mobile boundary resolver and applies the returned material variables at the local mobile shell boundary.
-- **Boot/onboarding:** are not skinned yet and must remain outside this QA PR.
+- **Boot Window:** now uses a local boot boundary and has separate QA in `docs/luca-skin-boot-qa-matrix.md`.
+- **Onboarding:** remains unskinned and outside this QA PR.
 - **MiniChat and VoiceHUD:** are not dedicated skinned surfaces yet and must not receive skin application here.
 - **Flow:** has no motion yet. Flow is static on desktop and forced reduced-motion on mobile.
 
@@ -139,7 +140,7 @@ This document is QA/test/docs only. It does not add new skin application, visual
 
 Boot/onboarding planning is the next stage after dashboard/mobile QA. Implementation should wait until this QA checklist is green, and boot/onboarding skin work must preserve readiness/status semantics.
 
-The boot resolver now exists as a pure helper. There is still no boot/onboarding application, and boot/onboarding QA continues to gate any visual rollout.
+The boot resolver, local Boot Window application, and Boot Window visual polish now exist. Boot QA continues in `docs/luca-skin-boot-qa-matrix.md`. Onboarding remains unskinned and gated behind future local onboarding boundary planning/application.
 
 ## 7. Recommended next stage
 
