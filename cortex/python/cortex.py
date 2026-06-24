@@ -1384,12 +1384,7 @@ async def vision_status():
 
 # --- EMBEDDING ENDPOINTS ---
 
-class EmbedRequest(BaseModel):
-    texts: list[str]
-    model: Optional[str] = None  # If provided, use this model for this request
-
-class EmbedSettingsRequest(BaseModel):
-    model: str  # The embedding model ID to use
+# EmbedRequest / EmbedSettingsRequest moved to routers/embeddings.py
 
 def normalize_local_model_id(model_id: Optional[str]) -> Optional[str]:
     if model_id and model_id.startswith("local/"):
@@ -1405,66 +1400,17 @@ def is_local_model_request(model_id: Optional[str]) -> bool:
         return model_meta.get("runtime") == "internal" or model_meta.get("category") in {"embedding", "vision", "stt", "tts"}
     return any(kw in normalized_model.lower() for kw in ["gemma", "phi", "llama", "local", "model2vec", "qwen", "ollama", "embed", "bge", "jina", "mxbai", "nomic"])
 
-@app.post("/embed")
-async def embed_texts(request: EmbedRequest):
-    """Generate embeddings for texts using current or specified model."""
-    if not rag_embedding_func:
-        try:
-            await get_rag()
-        except Exception as e:
-            print(f"[CORTEX] Failed to auto-initialize RAG for embedding: {e}")
-            
-    if not rag_embedding_func:
-        raise HTTPException(status_code=503, detail="Embedding system not available")
-    
-    # Temporarily switch model if specified
-    original_model = embedding_logic.current_model
-    request_model = normalize_local_model_id(request.model)
-    if request_model:
-        embedding_logic.set_model(request_model)
-    
-    try:
-        embeddings = await embedding_logic.acall(request.texts)
-        return {
-            "embeddings": embeddings.tolist(),
-            "model": embedding_logic.current_model,
-            "dimension": embeddings.shape[1] if len(embeddings.shape) > 1 else len(embeddings)
-        }
-    finally:
-        # Restore original model if we switched
-        if request_model:
-            embedding_logic.set_model(original_model)
+# Publish RAG/embedding handles for routers/embeddings.py. The getter reads
+# cortex's live module global (get_rag mutates it via `global`), preserving the
+# exact behaviour the inline routes had.
+state.get_rag = get_rag
+state.get_rag_embedding_func = lambda: rag_embedding_func
+state.normalize_local_model_id = normalize_local_model_id
+state.is_local_model_request = is_local_model_request
 
-@app.post("/settings/embedding")
-async def set_embedding_model(request: EmbedSettingsRequest):
-    """Set the active embedding model for memory operations."""
-    # Logic is managed by HybridEmbeddingLogic, so we don't need RAG initialized yet
-    
-    # Validate model ID
-    valid_models = ["gemini", "gemini-3-pro-preview", "gemini-3-flash-preview", "gemini-2.0-flash"]
-    embedding_models = [k for k, v in MODEL_PATHS.items() if v.get("category") == "embedding"]
-    valid_models.extend(embedding_models)
-    
-    normalized_model = normalize_local_model_id(request.model)
-    if normalized_model not in valid_models:
-        raise HTTPException(status_code=400, detail=f"Invalid model: {request.model}. Valid: {valid_models}")
-    
-    embedding_logic.set_model(normalized_model)
-    return {
-        "status": "success",
-        "model": normalized_model,
-        "dimension": embedding_logic._embedding_dim
-    }
-
-@app.get("/settings/embedding")
-async def get_embedding_model():
-    """Get the current active embedding model."""
-    # Always available via logic class
-    return {
-        "model": embedding_logic.current_model,
-        "dimension": embedding_logic._embedding_dim,
-        "available": True
-    }
+# Embedding endpoints (/embed, /settings/embedding) extracted to routers/embeddings.py
+from routers.embeddings import router as embeddings_router
+app.include_router(embeddings_router)
 
 class MemoryIngestRequest(BaseModel):
     text: str

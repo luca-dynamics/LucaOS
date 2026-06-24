@@ -17,3 +17,8 @@ embedding_logic = None     # HybridEmbeddingLogic instance; set by cortex.py
 # Shared with routers/remote_access.py
 LOCAL_IP = "127.0.0.1"
 REMOTE_ACCESS_ENABLED = False
+# RAG / embedding handles shared with routers/embeddings.py (set by cortex.py)
+get_rag = None                 # async callable(mind_type=, model_id=) -> rag
+get_rag_embedding_func = None  # callable() -> current rag_embedding_func (live)
+normalize_local_model_id = None
+is_local_model_request = None
