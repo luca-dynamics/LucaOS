@@ -31,6 +31,8 @@ Read together with:
 
 Onboarding skin implementation is paused until the product experience audit and redesign concept are complete. The current Boot Window boundary is safe to keep validating, but the post-boot bridge and onboarding sequence need product-level review before additional skin application. No onboarding skin application should start yet.
 
+**Design spec update:** The premium onboarding/post-boot design spec now exists at `docs/luca-premium-onboarding-postboot-design.md`. Onboarding skin application remains paused. The onboarding skin boundary (a future pure resolver, then a single local application) should follow the redesigned onboarding structure in that spec — the 8-screen first-run flow and post-boot readiness bridge — not the old setup-wizard stages. Status/safety semantics stay protected and Flow stays static when that work resumes.
+
 ---
 
 ## 1. Executive summary

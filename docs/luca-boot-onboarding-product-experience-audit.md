@@ -283,3 +283,9 @@ docs(ui): design premium LucaOS onboarding and post-boot experience
 ```
 
 This should go to Claude Opus 4.8. Claude should not implement yet. Claude should produce a screen-by-screen visual/product concept for the post-boot readiness bridge and mode-aware onboarding. After that concept is approved, Codex can safely plan and implement the onboarding boundary/resolver work and copy cleanup in scoped PRs.
+
+---
+
+## 14. Design spec status
+
+The premium onboarding/post-boot design spec now exists at `docs/luca-premium-onboarding-postboot-design.md`. It translates this audit into a screen-by-screen product/design concept (post-boot readiness bridge, 8-screen onboarding flow, mode-aware disclosure, presence/permission/memory/tools/route designs, copy drafts, skin-aware and mobile direction, and a 10-phase Codex implementation plan). Implementation remains paused until the staged Codex tasks begin. The next step is post-boot readiness bridge implementation planning (`docs(ui): plan post-boot readiness bridge implementation`).
