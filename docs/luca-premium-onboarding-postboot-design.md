@@ -21,6 +21,8 @@
 
 > **Status update (2026-06-24).** The post-boot readiness bridge now has a dedicated implementation plan: `docs/luca-postboot-readiness-bridge-implementation-plan.md`. Implementation should follow that plan first, and onboarding remains paused until the bridge plan is implemented in staged follow-up PRs.
 
+> **Implementation status (2026-06-24).** The first staged implementation slice begins with a copy/state mapping model only. Onboarding implementation remains paused while the post-boot bridge presentation is prepared in follow-up PRs.
+
 ---
 
 ## 1. Executive summary
