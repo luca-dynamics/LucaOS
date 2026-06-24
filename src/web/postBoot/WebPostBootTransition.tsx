@@ -48,11 +48,9 @@ export function WebPostBootTransition({
   }, [isNewUser, needsAttention, onContinue]);
 
   const primaryAction =
-    snapshot.userState === "partial_setup"
-      ? onRestartOnboarding
-      : snapshot.userState === "permission_attention"
-        ? onReviewVoiceAccess
-        : onContinue;
+    snapshot.userState === "permission_attention"
+      ? onReviewVoiceAccess
+      : onContinue;
   const secondaryAction =
     snapshot.userState === "permission_attention" ? onContinue : undefined;
 

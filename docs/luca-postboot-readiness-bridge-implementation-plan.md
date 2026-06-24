@@ -10,6 +10,8 @@
 
 > **Status update (2026-06-24).** The bridge presentation now consumes the typed readiness copy model in the post-boot loading and transition surfaces. Lifecycle routing remains unchanged, onboarding remains paused, and the next implementation step is details/debug disclosure QA or constrained component polish.
 
+> **Status update (2026-06-24).** The partial setup CTA now resumes/continues setup instead of restarting onboarding. This corrects the copy/action mismatch from the first presentation PR, while lifecycle routing remains unchanged.
+
 Read together with:
 
 - `docs/luca-boot-onboarding-product-experience-audit.md`
