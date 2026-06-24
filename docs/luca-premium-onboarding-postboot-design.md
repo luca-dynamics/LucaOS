@@ -23,6 +23,8 @@
 
 > **Implementation status (2026-06-24).** The first staged implementation slice begins with a copy/state mapping model only. Onboarding implementation remains paused while the post-boot bridge presentation is prepared in follow-up PRs.
 
+> **Implementation status (2026-06-24).** The post-boot readiness bridge now has regression matrix coverage before visual polish. Onboarding remains paused while the bridge proceeds through constrained, test-backed polish.
+
 ---
 
 ## 1. Executive summary

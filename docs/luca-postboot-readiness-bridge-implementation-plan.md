@@ -12,6 +12,8 @@
 
 > **Status update (2026-06-24).** The partial setup CTA now resumes/continues setup instead of restarting onboarding. This corrects the copy/action mismatch from the first presentation PR, while lifecycle routing remains unchanged.
 
+> **Status update (2026-06-24).** The post-boot readiness bridge regression matrix now exists in tests and documentation. Bridge behavior is ready for constrained visual polish after the matrix passes in CI, while onboarding remains paused.
+
 Read together with:
 
 - `docs/luca-boot-onboarding-product-experience-audit.md`
