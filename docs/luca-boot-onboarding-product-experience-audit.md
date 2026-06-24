@@ -24,6 +24,8 @@ Read together with:
 
 > Skin framing: **"LucaOS skins are not decorations; they are the visual operating environments for an AI-native OS."**
 
+> **Status update (2026-06-24).** The post-boot bridge has moved from design concept to implementation planning in `docs/luca-postboot-readiness-bridge-implementation-plan.md`. No source, runtime, UI, service, test, or Web Safe Mode changes have been made yet.
+
 ---
 
 ## 1. Executive summary

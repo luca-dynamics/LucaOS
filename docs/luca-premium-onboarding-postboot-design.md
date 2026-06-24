@@ -19,6 +19,8 @@
 
 > **Scope guard.** This document is a specification only. It does not implement UI, edit components/services, change onboarding/boot logic, apply skins to onboarding, add a resolver or boundary, touch `App.tsx`, add assets/screenshots, or change Web Safe Mode behavior. Every screen below is a *target* for later, separately-reviewed implementation.
 
+> **Status update (2026-06-24).** The post-boot readiness bridge now has a dedicated implementation plan: `docs/luca-postboot-readiness-bridge-implementation-plan.md`. Implementation should follow that plan first, and onboarding remains paused until the bridge plan is implemented in staged follow-up PRs.
+
 ---
 
 ## 1. Executive summary
