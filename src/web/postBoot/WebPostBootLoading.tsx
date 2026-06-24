@@ -2,6 +2,7 @@ import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenc
 import { LucaPanel } from "../../components/ui/luca";
 import {
   lucaMaterialBorderSubtleStyle,
+  lucaMaterialCardStyle,
   lucaMaterialHoverSurfaceStyle,
   lucaMaterialPrimaryTextStyle,
   lucaMaterialSecondaryTextStyle,
@@ -13,35 +14,40 @@ export function WebPostBootLoading() {
 
   return (
     <section
-      className="relative z-10 flex min-h-dvh w-full items-center justify-center px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
+      className="relative z-10 flex min-h-dvh w-full items-center justify-center px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
       aria-live="polite"
       aria-busy="true"
     >
-      <LucaPanel className="w-full max-w-md rounded-3xl border px-6 py-10 text-center backdrop-blur-xl">
-        <div className="mx-auto mb-7 flex h-8 w-8 items-center justify-center" aria-hidden="true">
-          <LucaCanvasPresenceOrb size={28} state="preparing" amplitude={0.14} lowPower />
+      <LucaPanel className="w-full max-w-[30rem] rounded-[2rem] border px-5 py-8 text-center shadow-2xl backdrop-blur-2xl sm:px-8 sm:py-10">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border" style={lucaMaterialCardStyle} aria-hidden="true">
+          <LucaCanvasPresenceOrb size={34} state="preparing" amplitude={0.12} lowPower />
         </div>
-        <h1 className="text-2xl font-medium tracking-tight" style={lucaMaterialPrimaryTextStyle}>
-          {copy.title}
-        </h1>
-        <p className="mt-3 text-sm leading-6" style={lucaMaterialSecondaryTextStyle}>
-          {copy.supportingCopy}
-        </p>
-        <div className="mx-auto mt-7 w-full max-w-xs space-y-2 text-left">
+
+        <div className="mx-auto mt-7 max-w-sm">
+          <h1 className="text-[1.7rem] font-medium leading-tight tracking-[-0.035em] sm:text-3xl" style={lucaMaterialPrimaryTextStyle}>
+            {copy.title}
+          </h1>
+          <p className="mt-3 text-sm leading-6 sm:text-[0.95rem]" style={lucaMaterialSecondaryTextStyle}>
+            {copy.supportingCopy}
+          </p>
+        </div>
+
+        <div className="mx-auto mt-8 w-full max-w-sm space-y-2.5 text-left">
           {copy.readinessLines.map((line) => (
             <div
               key={line}
-              className="flex items-center gap-3 rounded-xl border px-4 py-3"
-              style={{ ...lucaMaterialBorderSubtleStyle, ...lucaMaterialHoverSurfaceStyle }}
+              className="flex items-center gap-3 rounded-2xl border px-4 py-3.5 sm:px-5"
+              style={{ ...lucaMaterialCardStyle, ...lucaMaterialBorderSubtleStyle, ...lucaMaterialHoverSurfaceStyle }}
             >
-              <LucaCanvasPresenceOrb
-                size={18}
-                state="preparing"
-                amplitude={0.08}
-                lowPower
-                className="shrink-0"
-              />
-              <span className="text-sm" style={lucaMaterialSecondaryTextStyle}>{line}</span>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border" style={lucaMaterialBorderSubtleStyle} aria-hidden="true">
+                <LucaCanvasPresenceOrb
+                  size={16}
+                  state="preparing"
+                  amplitude={0.07}
+                  lowPower
+                />
+              </span>
+              <span className="text-sm leading-5" style={lucaMaterialSecondaryTextStyle}>{line}</span>
             </div>
           ))}
         </div>

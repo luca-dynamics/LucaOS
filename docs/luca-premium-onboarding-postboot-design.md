@@ -25,6 +25,8 @@
 
 > **Implementation status (2026-06-24).** The post-boot readiness bridge now has regression matrix coverage before visual polish. Onboarding remains paused while the bridge proceeds through constrained, test-backed polish.
 
+> **Implementation status (2026-06-24).** The post-boot readiness bridge visual polish has been applied as a presentation-only pass for the loading and transition surfaces. Lifecycle routing, onboarding behavior, Web Safe Mode behavior, and skin boundaries remain unchanged; onboarding remains paused.
+
 ---
 
 ## 1. Executive summary

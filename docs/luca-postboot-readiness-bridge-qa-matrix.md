@@ -106,6 +106,12 @@ Regression work must not change:
 
 The bridge tests also guard against root/global mutations and Flow-style motion additions in the bridge files. The existing `window.setTimeout(onContinue` auto-continue behavior is the explicit timeout exception.
 
+## Visual polish status — 2026-06-24
+
+- Visual polish has been applied to the post-boot loading and transition bridge surfaces, with a calmer centered hierarchy, softer glass panels, refined readiness rows, and lower-emphasis Details presentation.
+- Behavior and lifecycle routing remain unchanged; the polish is presentation-only and continues to use the typed readiness bridge copy model.
+- Onboarding remains paused and is not changed by this polish pass.
+
 ## Future polish checklist
 
 Before visual polish ships, keep the polish PR constrained to presentation only:
