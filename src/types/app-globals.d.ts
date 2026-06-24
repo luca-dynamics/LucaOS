@@ -73,4 +73,16 @@ interface Window {
   electron: LucaElectronBridge;
   luca: LucaDesktopBridge;
   __LUCA_DEV_MODE__?: boolean;
+  __LUCA_WEB_SAFE_MODE__?: {
+    ok: false;
+    reason: "invalid-master-key";
+    message: string;
+    expectedKeyFormat: string;
+    keyStatus: "missing" | "invalid length" | "invalid hex" | "present but invalid";
+    secureRuntimeAvailable: false;
+    canMountWebUi: true;
+    host: string;
+    path: string;
+  };
+  __LUCA_CAPTURED_BOOT_ERRORS__?: string[];
 }

@@ -1,6 +1,41 @@
 import crypto from 'crypto';
 import db from './db.js';
 
+const MASTER_KEY_FORMAT_ERROR = 'Master Key must be 32 bytes (64 hex characters)';
+
+const isBrowserWebHost = () =>
+    typeof window !== 'undefined' &&
+    !((typeof process !== 'undefined' && process.type === 'renderer') || window.process?.type === 'renderer') &&
+    !window.electron &&
+    !window.luca;
+
+const classifyMasterKey = (masterKey) => {
+    if (!masterKey) return { valid: false, status: 'missing', message: MASTER_KEY_FORMAT_ERROR };
+    if (masterKey.length !== 64) return { valid: false, status: 'invalid length', message: MASTER_KEY_FORMAT_ERROR };
+    if (!/^[0-9a-fA-F]{64}$/.test(masterKey)) return { valid: false, status: 'invalid hex', message: MASTER_KEY_FORMAT_ERROR };
+    return { valid: true, status: 'valid', message: 'Master key is valid.' };
+};
+
+const publishWebSafeModeDiagnostic = (validation) => {
+    if (!isBrowserWebHost()) return;
+
+    window.__LUCA_WEB_SAFE_MODE__ = {
+        ok: false,
+        reason: 'invalid-master-key',
+        message: validation.message,
+        expectedKeyFormat: '64 hex characters / 32 bytes',
+        keyStatus: validation.status,
+        secureRuntimeAvailable: false,
+        canMountWebUi: true,
+        host: window.location?.host ?? 'browser',
+        path: window.location?.pathname ?? '/',
+    };
+    window.__LUCA_CAPTURED_BOOT_ERRORS__ ??= [];
+    window.__LUCA_CAPTURED_BOOT_ERRORS__.push(
+        `handled: invalid-master-key (${validation.status})`,
+    );
+};
+
 // --- Electron Safe Storage Check ---
 let safeStorage = null;
 try {
@@ -13,25 +48,39 @@ try {
 }
 
 // Master Key: MUST be set via LUCA_VAULT_KEY env var in production.
-// Falls back to a randomly generated ephemeral key if unset (logged as warning).
-let MASTER_KEY_HEX = process.env.LUCA_VAULT_KEY;
-if (!MASTER_KEY_HEX) {
+// Falls back to a randomly generated ephemeral key outside browser-only hosts.
+let MASTER_KEY_HEX = typeof process !== 'undefined' ? process.env?.LUCA_VAULT_KEY : undefined;
+if (!MASTER_KEY_HEX && !isBrowserWebHost()) {
     MASTER_KEY_HEX = crypto.randomBytes(32).toString('hex');
     console.warn('[VAULT] WARNING: LUCA_VAULT_KEY not set — using ephemeral random key. Encrypted data will NOT survive restarts. Set LUCA_VAULT_KEY in your environment for persistence.');
 }
 
 export class SecureVault {
     constructor(masterKey = null) {
-        this.key = Buffer.from(masterKey || MASTER_KEY_HEX, 'hex');
-        if (this.key.length !== 32) {
-            throw new Error('Master Key must be 32 bytes (64 hex characters)');
+        const validation = classifyMasterKey(masterKey || MASTER_KEY_HEX);
+        this.webSafeMode = isBrowserWebHost() && !validation.valid;
+        this.disabledReason = validation.valid ? null : validation.message;
+
+        if (!validation.valid) {
+            if (this.webSafeMode) {
+                publishWebSafeModeDiagnostic(validation);
+                this.key = null;
+                return;
+            }
+
+            throw new Error(MASTER_KEY_FORMAT_ERROR);
         }
+
+        this.key = Buffer.from(masterKey || MASTER_KEY_HEX, 'hex');
     }
 
     /**
      * ENCRYPT: Prioritizes Electron safeStorage (Keychain)
      */
     encrypt(text) {
+        if (this.webSafeMode) {
+            throw new Error('Secure vault unavailable in Web Safe Mode: invalid master key');
+        }
         if (safeStorage && safeStorage.isEncryptionAvailable()) {
             try {
                 const encryptedBuffer = safeStorage.encryptString(text);
@@ -62,6 +111,9 @@ export class SecureVault {
      * DECRYPT: Detects method used during encryption
      */
     decrypt(blob) {
+        if (this.webSafeMode) {
+            throw new Error('Secure vault unavailable in Web Safe Mode: invalid master key');
+        }
         if (blob.method === 'safeStorage' && safeStorage) {
             try {
                 return safeStorage.decryptString(Buffer.from(blob.data, 'base64'));
@@ -192,6 +244,7 @@ export class SecureVault {
     }
 
     async hasCredentials(site) {
+        if (this.webSafeMode) return false;
         const row = db.prepare('SELECT 1 FROM credentials WHERE site = ?').get(site);
         return !!row;
     }
@@ -201,6 +254,10 @@ export class SecureVault {
      * Exports a public header for neural teleportation verification.
      */
     async exportPublicHeader() {
+        if (this.webSafeMode) {
+            return JSON.stringify({ vault: 'luca-secure-vault', available: false, reason: 'invalid-master-key' });
+        }
+
         // High-entropy signature derived from the master key
         const signature = crypto.createHmac('sha256', this.key)
             .update('LUCA_NEURAL_TELEPORT_V1')
