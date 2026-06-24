@@ -27,6 +27,12 @@ Read together with:
 
 ---
 
+## Product experience audit pause
+
+Onboarding skin implementation is paused until the product experience audit and redesign concept are complete. The current Boot Window boundary is safe to keep validating, but the post-boot bridge and onboarding sequence need product-level review before additional skin application. No onboarding skin application should start yet.
+
+---
+
 ## 1. Executive summary
 
 Dashboard and mobile skin boundaries now exist. LucaOS can persist `settings.general.selectedSkinId`, normalize invalid values back to Pearl, resolve selected skins through pure registry/bridge helpers, and apply material variables at controlled desktop dashboard and local mobile shell boundaries.

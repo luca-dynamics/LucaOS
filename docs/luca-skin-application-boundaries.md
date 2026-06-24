@@ -24,6 +24,12 @@ Read together with:
 
 ---
 
+## Onboarding boundary hold
+
+Onboarding remains unskinned. Onboarding boundary application should wait for the boot/onboarding product experience audit and follow-up redesign concept, because the second boot/post-boot bridge needs product-level redesign planning before any visual boundary work resumes.
+
+---
+
 ## 1. Executive summary
 
 LucaOS now has the first pieces of a skin stack: skin configuration, a CSS variable registry, and a material bridge. These layers describe Pearl, Carbon, Flow, and Canvas, resolve their skin-level variables, and translate those variables into the existing Luca appearance/material slots.
