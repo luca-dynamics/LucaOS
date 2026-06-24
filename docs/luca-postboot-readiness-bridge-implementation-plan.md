@@ -8,6 +8,8 @@
 
 > **Status update (2026-06-24).** The first implementation slice now adds a typed post-boot readiness bridge copy model. The UI presentation has not been rewritten; the next step is a bridge presentation component that consumes the copy model.
 
+> **Status update (2026-06-24).** The bridge presentation now consumes the typed readiness copy model in the post-boot loading and transition surfaces. Lifecycle routing remains unchanged, onboarding remains paused, and the next implementation step is details/debug disclosure QA or constrained component polish.
+
 Read together with:
 
 - `docs/luca-boot-onboarding-product-experience-audit.md`

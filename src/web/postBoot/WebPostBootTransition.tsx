@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
 import { LucaStaticFacePresence } from "../../components/visual/LucaStaticFacePresence";
 import {
@@ -8,6 +8,7 @@ import {
   lucaMaterialSecondaryTextStyle,
   lucaMaterialTertiaryTextStyle,
 } from "../../styles/lucaMaterialSystem";
+import { resolvePostBootReadinessBridgeCopy } from "./postBootReadinessBridgeCopy";
 import type { WebPostBootStateSnapshot } from "./webPostBootState";
 
 interface WebPostBootTransitionProps {
@@ -18,27 +19,19 @@ interface WebPostBootTransitionProps {
   onChooseModelRoute?: () => void;
 }
 
-const NEW_USER_ROWS = [
-  "Preparing memory context",
-  "Loading interaction preferences",
-  "Starting chat and voice interface",
-  "Securing this session",
-];
-
-const RETURNING_USER_ROWS = [
-  "Restoring memory context",
-  "Syncing preferences",
-  "Checking LucaLink readiness",
-  "Preparing chat and voice",
-];
+function detailValue(value: string | boolean | undefined): string {
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  return value || "not set";
+}
 
 export function WebPostBootTransition({
   snapshot,
   onContinue,
   onRestartOnboarding,
   onReviewVoiceAccess,
-  onChooseModelRoute,
 }: WebPostBootTransitionProps) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const copy = resolvePostBootReadinessBridgeCopy({ state: snapshot.userState });
   const needsAttention = ["partial_setup", "permission_attention"].includes(
     snapshot.userState,
   );
@@ -54,15 +47,14 @@ export function WebPostBootTransition({
     return () => window.clearTimeout(timer);
   }, [isNewUser, needsAttention, onContinue]);
 
-  const heading = isNewUser
-    ? "Preparing LucaOS"
-    : `Welcome back${snapshot.displayName ? `, ${snapshot.displayName}` : ""}`;
-  const subheading = needsAttention
-    ? "Some setup needs attention before Luca continues."
-    : isNewUser
-      ? "Luca is setting up your personal AI environment."
-      : "Restoring your LucaOS workspace.";
-  const rows = isNewUser ? NEW_USER_ROWS : RETURNING_USER_ROWS;
+  const primaryAction =
+    snapshot.userState === "partial_setup"
+      ? onRestartOnboarding
+      : snapshot.userState === "permission_attention"
+        ? onReviewVoiceAccess
+        : onContinue;
+  const secondaryAction =
+    snapshot.userState === "permission_attention" ? onContinue : undefined;
 
   return (
     <section className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-black/20 px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6">
@@ -75,46 +67,74 @@ export function WebPostBootTransition({
           className="font-display text-3xl font-semibold tracking-tight sm:text-4xl"
           style={lucaMaterialPrimaryTextStyle}
         >
-          {heading}
+          {copy.title}
         </h1>
         <p className="mt-3 max-w-md text-sm leading-6 sm:text-base" style={lucaMaterialSecondaryTextStyle}>
-          {subheading}
+          {copy.supportingCopy}
         </p>
 
-        {needsAttention ? (
-          <div className="mt-8 grid w-full gap-3 text-left sm:grid-cols-2">
-            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle }} onClick={onContinue}>
-              <span className="block font-medium">Continue with limited mode</span>
-              <span className="mt-1 block text-xs" style={lucaMaterialTertiaryTextStyle}>Open LucaOS with voice features paused.</span>
-            </button>
-            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle }} onClick={onReviewVoiceAccess}>
-              <span className="block font-medium">Review voice access</span>
-              <span className="mt-1 block text-xs" style={lucaMaterialTertiaryTextStyle}>Check browser microphone permissions.</span>
-            </button>
-            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle }} onClick={onChooseModelRoute}>
-              <span className="block font-medium">Choose model route</span>
-              <span className="mt-1 block text-xs" style={lucaMaterialTertiaryTextStyle}>Continue setup with a supported route.</span>
-            </button>
-            <button className="rounded-2xl border bg-[var(--luca-surface-glass,var(--app-bg-tint))] p-4 text-left text-sm transition hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]" style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle }} onClick={onRestartOnboarding}>
-              <span className="block font-medium">Restart onboarding</span>
-              <span className="mt-1 block text-xs" style={lucaMaterialTertiaryTextStyle}>Review your LucaOS setup from the start.</span>
-            </button>
+        <div className="mt-8 w-full max-w-md space-y-2 text-left">
+          {copy.readinessLines.map((line, index) => (
+            <div key={line} className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ ...lucaMaterialBorderSubtleStyle, ...lucaMaterialHoverSurfaceStyle }}>
+              <LucaCanvasPresenceOrb
+                size={22}
+                state={needsAttention ? "preparing" : "ready"}
+                amplitude={needsAttention ? 0.08 : isNewUser ? 0.12 + index * 0.02 : 0}
+                lowPower={needsAttention || index > 1}
+                className="shrink-0"
+              />
+              <span className="text-sm" style={lucaMaterialSecondaryTextStyle}>{line}</span>
+            </div>
+          ))}
+        </div>
+
+        {needsAttention && (
+          <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
+            {copy.primaryCta && primaryAction && (
+              <button
+                className="rounded-full border px-5 py-3 text-sm font-medium"
+                style={{ ...lucaMaterialPrimaryTextStyle, ...lucaMaterialBorderSubtleStyle, ...lucaMaterialHoverSurfaceStyle }}
+                onClick={primaryAction}
+              >
+                {copy.primaryCta}
+              </button>
+            )}
+            {copy.secondaryCta && secondaryAction && (
+              <button
+                className="rounded-full px-5 py-3 text-sm"
+                style={lucaMaterialSecondaryTextStyle}
+                onClick={secondaryAction}
+              >
+                {copy.secondaryCta}
+              </button>
+            )}
           </div>
-        ) : (
-          <div className="mt-8 w-full max-w-md space-y-2 text-left">
-            {rows.map((row, index) => (
-              <div key={row} className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ ...lucaMaterialBorderSubtleStyle, ...lucaMaterialHoverSurfaceStyle }}>
-                <LucaCanvasPresenceOrb
-                  size={22}
-                  state={isNewUser ? "preparing" : "ready"}
-                  amplitude={isNewUser ? 0.12 + index * 0.02 : 0}
-                  lowPower={index > 1}
-                  className="shrink-0"
-                />
-                <span className="text-sm" style={lucaMaterialSecondaryTextStyle}>{row}</span>
-              </div>
-            ))}
-          </div>
+        )}
+
+        <button
+          className="mt-5 text-xs underline-offset-4 hover:underline"
+          style={lucaMaterialTertiaryTextStyle}
+          onClick={() => setDetailsOpen((open) => !open)}
+          aria-expanded={detailsOpen}
+        >
+          {detailsOpen ? "Hide details" : (copy.detailsLabel ?? "Details")}
+        </button>
+
+        {detailsOpen && (
+          <dl className="mt-4 grid w-full max-w-md grid-cols-[1fr_auto] gap-x-4 gap-y-2 rounded-2xl border p-4 text-left text-xs" style={{ ...lucaMaterialBorderSubtleStyle, ...lucaMaterialHoverSurfaceStyle }}>
+            <dt style={lucaMaterialTertiaryTextStyle}>state</dt>
+            <dd style={lucaMaterialSecondaryTextStyle}>{snapshot.userState}</dd>
+            <dt style={lucaMaterialTertiaryTextStyle}>display name</dt>
+            <dd style={lucaMaterialSecondaryTextStyle}>{detailValue(snapshot.displayName)}</dd>
+            <dt style={lucaMaterialTertiaryTextStyle}>onboarding complete</dt>
+            <dd style={lucaMaterialSecondaryTextStyle}>{detailValue(snapshot.hasCompletedOnboarding)}</dd>
+            <dt style={lucaMaterialTertiaryTextStyle}>preferred interaction</dt>
+            <dd style={lucaMaterialSecondaryTextStyle}>{detailValue(snapshot.preferredInteraction)}</dd>
+            <dt style={lucaMaterialTertiaryTextStyle}>voice permission attention</dt>
+            <dd style={lucaMaterialSecondaryTextStyle}>{detailValue(snapshot.needsVoicePermission)}</dd>
+            <dt style={lucaMaterialTertiaryTextStyle}>can enter shell</dt>
+            <dd style={lucaMaterialSecondaryTextStyle}>{detailValue(snapshot.canEnterShell)}</dd>
+          </dl>
         )}
       </div>
     </section>

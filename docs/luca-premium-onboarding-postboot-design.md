@@ -63,6 +63,8 @@ What that means, dimension by dimension:
 
 The screen after the Boot Window (currently `WebPostBootLoading` + `WebPostBootTransition`, routed by `WebLifecycleShell`) should become a calm **readiness bridge**, not a state resolver / debug waiting room.
 
+> **Implementation status (2026-06-24).** The post-boot loading and transition presentation now read from the typed readiness bridge copy model. This keeps lifecycle routing, onboarding behavior, Web Safe Mode behavior, and skin boundaries unchanged while replacing the default debug-like waiting room language with calm readiness copy.
+
 ### Recommended normal-path copy
 
 ```text
