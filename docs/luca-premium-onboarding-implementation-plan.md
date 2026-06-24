@@ -8,6 +8,8 @@
 
 > **Status update (2026-06-24).** The premium onboarding copy model now exists as a typed, copy-only source for the future eight-screen flow. No onboarding UI replacement, routing, runtime, storage, provider, memory, governance, skin, or Web Safe Mode behavior changes are included. The next recommended PR is `feat(ui): add premium onboarding screen map`.
 
+> **Status update (2026-06-24).** The premium onboarding screen map now exists as a typed map for future screen order, default selections, saved-data intent, and side-effect boundaries only. It does not replace current onboarding UI, routing, completion, runtime, storage, provider, memory, governance, skin, or Web Safe Mode behavior. The next recommended PR is `feat(ui): add premium onboarding shell component`.
+
 Read together with:
 
 - `docs/luca-premium-onboarding-postboot-design.md`
@@ -556,10 +558,10 @@ Future premium onboarding is successful when:
 
 ## Recommended next PR
 
-Recommended first implementation PR after this plan:
+Recommended next implementation PR after the typed copy model and screen map:
 
 ```text
-feat(ui): add premium onboarding copy model
+feat(ui): add premium onboarding shell component
 ```
 
-That PR should add only typed copy and copy tests/checks. It should not replace onboarding screens, alter route completion, apply skins, add a skin boundary, edit Web Safe Mode behavior, trigger provider/model setup, or mutate memory/governance runtime behavior.
+That PR should add only a shell around the future mapped screens. It should not replace current onboarding screens, alter route completion, apply skins, add a skin boundary, edit Web Safe Mode behavior, trigger provider/model setup, write defaults to storage, or mutate memory/governance runtime behavior.
