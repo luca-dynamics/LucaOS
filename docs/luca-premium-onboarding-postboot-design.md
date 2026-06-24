@@ -31,6 +31,8 @@
 
 > **Implementation status (2026-06-24).** Premium onboarding implementation has started with the typed copy model only. Current onboarding screens, routing, completion behavior, storage, runtime adapters, provider/model routing, memory, governance, skin boundaries, and Web Safe Mode remain unchanged.
 
+> **Implementation status (2026-06-24).** Premium onboarding implementation now has the typed copy model and typed screen map only. The screen map defines future order, defaults, saved-data intent, and side-effect boundaries without replacing UI or changing routing, completion, storage, runtime adapters, provider/model routing, memory, governance, skin boundaries, or Web Safe Mode.
+
 ---
 
 ## 1. Executive summary
