@@ -11,6 +11,7 @@ import {
   type PremiumOnboardingScreenId,
 } from "./onboardingPremiumCopy";
 import { getPremiumOnboardingScreenEntry } from "./onboardingPremiumScreenMap";
+import { getLucaOnboardingDisclosure } from "./lucaOnboardingDisclosure";
 
 /**
  * LucaOnboardingScreen — one pure, data-driven renderer for every premium
@@ -199,6 +200,8 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   const entry = getPremiumOnboardingScreenEntry(screenId);
   const presence = presenceState ?? getLucaOnboardingScreenPresence(screenId);
   const activeOptionId = selectedOptionId ?? entry.defaultOptionId;
+  const { primaryOptions, advancedOptions, advancedShownByDefault } =
+    getLucaOnboardingDisclosure(audienceMode, copy.options);
 
   const presenceProps = {
     skinId,
@@ -292,7 +295,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
             margin: "20px 0 0",
           }}
         >
-          {copy.options.map((option) => (
+          {primaryOptions.map((option) => (
             <OptionCard
               key={option.id}
               option={option}
@@ -300,6 +303,53 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
               onSelect={onSelectOption}
             />
           ))}
+
+          {/* Progressive disclosure: Basic collapses advanced options behind a
+              native, stateless disclosure; Pro / Creator show them inline. The
+              advanced radio cards stay inside the radiogroup either way. */}
+          {advancedOptions.length > 0 &&
+            (advancedShownByDefault ? (
+              advancedOptions.map((option) => (
+                <OptionCard
+                  key={option.id}
+                  option={option}
+                  checked={option.id === activeOptionId}
+                  onSelect={onSelectOption}
+                />
+              ))
+            ) : (
+              <details data-luca-onboarding-advanced>
+                <summary
+                  data-luca-onboarding-advanced-toggle
+                  style={{
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: textSecondary,
+                    padding: "4px 2px",
+                  }}
+                >
+                  Advanced options
+                </summary>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                    marginTop: 10,
+                  }}
+                >
+                  {advancedOptions.map((option) => (
+                    <OptionCard
+                      key={option.id}
+                      option={option}
+                      checked={option.id === activeOptionId}
+                      onSelect={onSelectOption}
+                    />
+                  ))}
+                </div>
+              </details>
+            ))}
         </div>
       )}
 
