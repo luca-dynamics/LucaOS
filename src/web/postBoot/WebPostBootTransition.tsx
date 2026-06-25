@@ -14,6 +14,7 @@ import {
   lucaMaterialTertiaryTextStyle,
 } from "../../styles/lucaMaterialSystem";
 import { resolvePostBootReadinessBridgeCopy } from "./postBootReadinessBridgeCopy";
+import { WebPostBootAmbientPresence } from "./WebPostBootAmbientPresence";
 import type { WebPostBootStateSnapshot } from "./webPostBootState";
 
 interface WebPostBootTransitionProps {
@@ -64,7 +65,8 @@ export function WebPostBootTransition({
       className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-y-auto px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
       style={lucaMaterialOverlayStyle}
     >
-      <div className="flex w-full max-w-[42rem] flex-col items-center text-center">
+      <WebPostBootAmbientPresence />
+      <div className="relative z-10 flex w-full max-w-[42rem] flex-col items-center text-center">
         <div className="w-full rounded-[2rem] border px-5 py-7 shadow-2xl backdrop-blur-2xl sm:px-8 sm:py-9" style={lucaMaterialPanelStyle}>
           <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full border sm:h-40 sm:w-40" style={lucaMaterialCardStyle} aria-hidden="true">
             <LucaStaticFacePresence size={needsAttention ? 154 : 172} />

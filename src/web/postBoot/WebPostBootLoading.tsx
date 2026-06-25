@@ -8,17 +8,19 @@ import {
   lucaMaterialSecondaryTextStyle,
 } from "../../styles/lucaMaterialSystem";
 import { resolvePostBootReadinessBridgeCopy } from "./postBootReadinessBridgeCopy";
+import { WebPostBootAmbientPresence } from "./WebPostBootAmbientPresence";
 
 export function WebPostBootLoading() {
   const copy = resolvePostBootReadinessBridgeCopy({ state: "pending" });
 
   return (
     <section
-      className="relative z-10 flex min-h-dvh w-full items-center justify-center px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
+      className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-hidden px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
       aria-live="polite"
       aria-busy="true"
     >
-      <LucaPanel className="w-full max-w-[30rem] rounded-[2rem] border px-5 py-8 text-center shadow-2xl backdrop-blur-2xl sm:px-8 sm:py-10">
+      <WebPostBootAmbientPresence />
+      <LucaPanel className="relative z-10 w-full max-w-[30rem] rounded-[2rem] border px-5 py-8 text-center shadow-2xl backdrop-blur-2xl sm:px-8 sm:py-10">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border" style={lucaMaterialCardStyle} aria-hidden="true">
           <LucaCanvasPresenceOrb size={34} state="preparing" amplitude={0.12} lowPower />
         </div>
