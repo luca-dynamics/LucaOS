@@ -14,6 +14,7 @@ import {
   lucaOnboardingFlowComplete,
   lucaOnboardingFlowGoBack,
   lucaOnboardingFlowGoNext,
+  lucaOnboardingFlowSetName,
   lucaOnboardingFlowSetOption,
   lucaOnboardingFlowSkip,
   type LucaOnboardingFlowState,
@@ -118,6 +119,9 @@ export const LucaPremiumOnboardingPreview: React.FC<
       lucaOnboardingFlowSetOption(current, current.currentScreenId, optionId),
     );
 
+  const handleNameChange = (name: string) =>
+    setFlow((current) => lucaOnboardingFlowSetName(current, name));
+
   return (
     <LucaOnboardingShell
       selectedSkinId={skinId}
@@ -189,6 +193,8 @@ export const LucaPremiumOnboardingPreview: React.FC<
               audienceMode={audienceMode}
               selectedOptionId={getLucaOnboardingFlowSelection(flow, screenId)}
               onSelectOption={handleSelectOption}
+              nameValue={flow.displayName}
+              onNameChange={handleNameChange}
               onPrimary={handlePrimary}
               onSecondary={handleSecondary}
               skinId={skinId}

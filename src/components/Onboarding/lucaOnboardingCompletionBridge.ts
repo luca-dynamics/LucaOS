@@ -11,7 +11,8 @@ import {
  *
  * The premium flow collects more than the legacy completion shapes accept:
  * `presence` and `intelligence_route` map cleanly onto the existing
- * `WebProfile` / desktop fields, but `environment` (skin), `permission_style`,
+ * `WebProfile` / desktop fields (and the optional display name from P2), but
+ * `environment` (skin), `permission_style`,
  * `memory_boundaries`, and `connect_tools` have no legacy target. This mapper
  * NEVER drops a selection — it maps the clean fields and returns every premium
  * selection separately as `premiumPreferences`, so a later additive persistence
@@ -96,7 +97,7 @@ export function mapLucaOnboardingFlowToWebProfile(
 
   return {
     profile: {
-      name: "",
+      name: flow.displayName.trim(),
       interaction: mapInteraction(presence),
       theme: "PROFESSIONAL",
       modelRoute: mapModelRoute(route),

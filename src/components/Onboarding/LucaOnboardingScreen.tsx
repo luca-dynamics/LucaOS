@@ -74,6 +74,10 @@ export interface LucaOnboardingScreenProps {
   onSecondary?: () => void;
   /** Override the per-screen presence expression. */
   presenceState?: LucaOnboardingScreenPresence;
+  /** Optional controlled display-name value (rendered on the welcome screen). */
+  nameValue?: string;
+  /** When provided on the welcome screen, renders an optional name field. */
+  onNameChange?: (name: string) => void;
   // Presence resolution (forwarded to LucaPresence; usually inherited from shell).
   skinId?: LucaSkinId | string;
   hostKind?: LucaSkinHostKind;
@@ -188,6 +192,8 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   onPrimary,
   onSecondary,
   presenceState,
+  nameValue,
+  onNameChange,
   skinId,
   hostKind,
   reducedMotion,
@@ -281,6 +287,41 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
         >
           {copy.reassurance}
         </p>
+      )}
+
+      {screenId === "welcome" && onNameChange && (
+        <label
+          data-luca-onboarding-name
+          style={{ display: "block", margin: "18px 0 0", textAlign: "left" }}
+        >
+          <span
+            style={{
+              display: "block",
+              fontSize: 13,
+              fontWeight: 600,
+              color: textSecondary,
+              marginBottom: 6,
+            }}
+          >
+            What should Luca call you? (optional)
+          </span>
+          <input
+            type="text"
+            value={nameValue ?? ""}
+            onChange={(event) => onNameChange(event.target.value)}
+            autoComplete="off"
+            placeholder="Your name"
+            style={{
+              width: "100%",
+              padding: "11px 14px",
+              borderRadius: 12,
+              border: "1px solid var(--luca-surface-hover)",
+              background: "var(--luca-surface-glass)",
+              color: textPrimary,
+              fontSize: 15,
+            }}
+          />
+        </label>
       )}
 
       {copy.options && copy.options.length > 0 && (
