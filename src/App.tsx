@@ -117,6 +117,9 @@ import { BootSequence } from "./hooks/app/useAppSystem";
 import { LucaBootVisualShell } from "./components/boot/LucaBootVisualShell";
 import OnboardingFlow from "./components/Onboarding/OnboardingFlow";
 import { desktopOnboardingRuntime } from "./desktop/adapters/desktopOnboardingRuntime";
+import { LucaPremiumOnboardingPreview } from "./components/Onboarding/LucaPremiumOnboardingPreview";
+import { isPremiumOnboardingEnabled } from "./components/Onboarding/lucaPremiumOnboardingFlag";
+import { mapLucaOnboardingFlowToDesktopCompletion } from "./components/Onboarding/lucaOnboardingCompletionBridge";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
 import { EdgePresence } from "./components/presence";
 import { THEME_PALETTE } from "./config/themeColors";
@@ -2430,26 +2433,49 @@ function AppContent() {
       >
         {bootSequence === "ONBOARDING" ? (
           <div className="absolute inset-0 z-10">
-            <OnboardingFlow
-              theme={theme}
-              runtime={desktopOnboardingRuntime}
-              onComplete={(profile, mode) => {
-                console.log("[App] Onboarding Complete:", { profile, mode });
-                settingsService.saveSettings({
-                  general: {
-                    ...settingsService.get("general"),
-                    setupComplete: true,
-                    preferredMode: mode || "text",
-                  },
-                });
-                if (mode) {
-                  const isVoice = mode === "voice";
+            {isPremiumOnboardingEnabled() ? (
+              <LucaPremiumOnboardingPreview
+                hostKind="desktop-app"
+                style={{ minHeight: "100dvh" }}
+                onComplete={(flow) => {
+                  const { setupComplete, preferredMode, premiumPreferences } =
+                    mapLucaOnboardingFlowToDesktopCompletion(flow);
+                  settingsService.saveSettings({
+                    general: {
+                      ...settingsService.get("general"),
+                      setupComplete,
+                      preferredMode,
+                      premiumOnboardingPreferences: premiumPreferences,
+                    },
+                  });
+                  const isVoice = preferredMode === "voice";
                   setIsVoiceMode(isVoice);
                   setShowVoiceHud(isVoice);
-                }
-                setBootSequence("READY");
-              }}
-            />
+                  setBootSequence("READY");
+                }}
+              />
+            ) : (
+              <OnboardingFlow
+                theme={theme}
+                runtime={desktopOnboardingRuntime}
+                onComplete={(profile, mode) => {
+                  console.log("[App] Onboarding Complete:", { profile, mode });
+                  settingsService.saveSettings({
+                    general: {
+                      ...settingsService.get("general"),
+                      setupComplete: true,
+                      preferredMode: mode || "text",
+                    },
+                  });
+                  if (mode) {
+                    const isVoice = mode === "voice";
+                    setIsVoiceMode(isVoice);
+                    setShowVoiceHud(isVoice);
+                  }
+                  setBootSequence("READY");
+                }}
+              />
+            )}
           </div>
         ) : (
           <LucaBootVisualShell

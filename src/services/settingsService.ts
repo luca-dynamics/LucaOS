@@ -61,6 +61,18 @@ export interface LucaSettings {
     fontFamily?: string;
     activeBrainId: string | null;
     activeEmbedId?: string | null;
+    /**
+     * Forward-looking premium onboarding selections captured at completion
+     * (P6). Optional and additive; no reader consumes it yet.
+     */
+    premiumOnboardingPreferences?: {
+      environment?: string;
+      presence?: string;
+      permissionStyle?: string;
+      memoryBoundaries?: string;
+      connectTools?: string;
+      intelligenceRoute?: string;
+    };
   };
   brain: {
     useCustomApiKey: boolean;
