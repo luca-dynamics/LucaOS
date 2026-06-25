@@ -47,6 +47,8 @@ export interface LucaOnboardingFlowState {
   readonly audienceMode: PremiumOnboardingAudienceMode;
   readonly currentScreenId: PremiumOnboardingScreenId;
   readonly selectedOptions: LucaOnboardingFlowSelections;
+  /** Optional display name the user may give during onboarding (P2). */
+  readonly displayName: string;
   readonly complete: boolean;
 }
 
@@ -57,6 +59,8 @@ export interface CreateLucaOnboardingFlowStateOptions {
   initialSelections?: Partial<Record<PremiumOnboardingScreenId, string>>;
   /** Seed the recommended map defaults (default true). */
   seedDefaults?: boolean;
+  /** Initial display name (defaults to empty). */
+  displayName?: string;
 }
 
 const FIRST_SCREEN_ID: PremiumOnboardingScreenId = premiumOnboardingScreenMapOrder[0];
@@ -79,7 +83,7 @@ export const createLucaOnboardingFlowState = (
   const seedDefaults = options.seedDefaults ?? true;
 
   const seeded: Partial<Record<PremiumOnboardingScreenId, string>> = seedDefaults
-    ? { ...(getPremiumOnboardingDefaultSelections() as Record<string, string>) }
+    ? { ...getPremiumOnboardingDefaultSelections() }
     : {};
 
   const selectedOptions: Partial<Record<PremiumOnboardingScreenId, string>> = {
@@ -102,6 +106,7 @@ export const createLucaOnboardingFlowState = (
     audienceMode,
     currentScreenId: options.startScreenId ?? FIRST_SCREEN_ID,
     selectedOptions,
+    displayName: options.displayName ?? "",
     complete: false,
   };
 };
@@ -178,6 +183,15 @@ export const lucaOnboardingFlowSkip = (
   const next = getPremiumOnboardingNextScreen(state.currentScreenId);
   if (next === undefined) return state;
   return { ...state, currentScreenId: next };
+};
+
+/** Set the optional display name. Returns the same reference when unchanged. */
+export const lucaOnboardingFlowSetName = (
+  state: LucaOnboardingFlowState,
+  displayName: string,
+): LucaOnboardingFlowState => {
+  if (state.displayName === displayName) return state;
+  return { ...state, displayName };
 };
 
 /** Record an option selection for a screen. Ignores options not in the copy. */

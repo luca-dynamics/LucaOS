@@ -8,7 +8,13 @@ import { WebReadyState } from "./WebReadyState";
 import { useWebRuntime } from "./WebRuntimeContext";
 import { webOnboardingRuntime } from "./adapters/webOnboardingRuntime";
 import type { WebCapability } from "./browserHostCapabilities";
-import { completeWebOnboarding } from "./webLifecycleStorage";
+import {
+  completeWebOnboarding,
+  writeWebPremiumPreferences,
+} from "./webLifecycleStorage";
+import { LucaPremiumOnboardingPreview } from "../components/Onboarding/LucaPremiumOnboardingPreview";
+import { isPremiumOnboardingEnabled } from "../components/Onboarding/lucaPremiumOnboardingFlag";
+import { mapLucaOnboardingFlowToWebProfile } from "../components/Onboarding/lucaOnboardingCompletionBridge";
 import { WebPostBootTransition } from "./postBoot/WebPostBootTransition";
 import { WebPostBootLoading } from "./postBoot/WebPostBootLoading";
 import {
@@ -76,7 +82,20 @@ export function WebLifecycleShell() {
           onChooseModelRoute={() => setLifecycleState("onboarding")}
         />
       )}
-      {lifecycleState === "onboarding" && (
+      {lifecycleState === "onboarding" && isPremiumOnboardingEnabled() && (
+        <LucaPremiumOnboardingPreview
+          hostKind="desktop-web"
+          style={{ minHeight: "100dvh" }}
+          onComplete={(flow) => {
+            const { profile, premiumPreferences } =
+              mapLucaOnboardingFlowToWebProfile(flow);
+            completeWebOnboarding(profile);
+            writeWebPremiumPreferences(premiumPreferences);
+            setLifecycleState(showWebReadyDebug ? "ready" : "main");
+          }}
+        />
+      )}
+      {lifecycleState === "onboarding" && !isPremiumOnboardingEnabled() && (
         <OnboardingFlow
           theme={{ primary: visualSettings.theme, hex: theme.hex }}
           runtime={webOnboardingRuntime}

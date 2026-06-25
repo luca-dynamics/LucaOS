@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { LucaOnboardingShell } from "./LucaOnboardingShell";
 import { LucaOnboardingScreen } from "./LucaOnboardingScreen";
 import { LucaOnboardingMotion } from "./LucaOnboardingMotion";
@@ -14,6 +14,7 @@ import {
   lucaOnboardingFlowComplete,
   lucaOnboardingFlowGoBack,
   lucaOnboardingFlowGoNext,
+  lucaOnboardingFlowSetName,
   lucaOnboardingFlowSetOption,
   lucaOnboardingFlowSkip,
   type LucaOnboardingFlowState,
@@ -57,6 +58,12 @@ export interface LucaPremiumOnboardingPreviewProps {
   reducedMotion?: boolean;
   reducedTransparency?: boolean;
   initialScreenId?: PremiumOnboardingScreenId;
+  /**
+   * Called once when the flow completes (finish primary CTA), with the final
+   * flow state. When omitted the component is a dormant preview that activates
+   * nothing; a live host (P4) provides this to bridge completion.
+   */
+  onComplete?: (flow: LucaOnboardingFlowState) => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -77,6 +84,7 @@ export const LucaPremiumOnboardingPreview: React.FC<
   reducedMotion,
   reducedTransparency,
   initialScreenId,
+  onComplete,
   className,
   style,
 }) => {
@@ -86,6 +94,15 @@ export const LucaPremiumOnboardingPreview: React.FC<
       startScreenId: initialScreenId,
     }),
   );
+
+  // Fire onComplete exactly once when the flow completes (StrictMode-safe).
+  const completedRef = useRef(false);
+  useEffect(() => {
+    if (flow.complete && !completedRef.current) {
+      completedRef.current = true;
+      onComplete?.(flow);
+    }
+  }, [flow, onComplete]);
 
   const screenId = flow.currentScreenId;
   // The environment selection is also the skin choice (ids align 1:1).
@@ -117,6 +134,9 @@ export const LucaPremiumOnboardingPreview: React.FC<
     setFlow((current) =>
       lucaOnboardingFlowSetOption(current, current.currentScreenId, optionId),
     );
+
+  const handleNameChange = (name: string) =>
+    setFlow((current) => lucaOnboardingFlowSetName(current, name));
 
   return (
     <LucaOnboardingShell
@@ -189,6 +209,8 @@ export const LucaPremiumOnboardingPreview: React.FC<
               audienceMode={audienceMode}
               selectedOptionId={getLucaOnboardingFlowSelection(flow, screenId)}
               onSelectOption={handleSelectOption}
+              nameValue={flow.displayName}
+              onNameChange={handleNameChange}
               onPrimary={handlePrimary}
               onSecondary={handleSecondary}
               skinId={skinId}
