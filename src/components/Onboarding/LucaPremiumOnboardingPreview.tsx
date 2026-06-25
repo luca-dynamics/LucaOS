@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { LucaOnboardingShell } from "./LucaOnboardingShell";
 import { LucaOnboardingScreen } from "./LucaOnboardingScreen";
+import { LucaOnboardingMotion } from "./LucaOnboardingMotion";
 import {
   canLucaOnboardingFlowGoBack,
   canLucaOnboardingFlowSkip,
@@ -89,6 +90,8 @@ export const LucaPremiumOnboardingPreview: React.FC<
   const screenId = flow.currentScreenId;
   // The environment selection is also the skin choice (ids align 1:1).
   const skinId = getLucaOnboardingFlowSelection(flow, "environment") ?? "pearl";
+  // Calm per-screen entrance; Flow stays static and reduced motion always wins.
+  const motionReduced = Boolean(reducedMotion) || skinId === "flow";
   const isLast = isLucaOnboardingFlowLastScreen(flow);
   const canBack = canLucaOnboardingFlowGoBack(flow);
   const canSkip = canLucaOnboardingFlowSkip(flow);
@@ -176,19 +179,25 @@ export const LucaPremiumOnboardingPreview: React.FC<
         </div>
 
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-          <LucaOnboardingScreen
-            screenId={screenId}
-            audienceMode={audienceMode}
-            selectedOptionId={getLucaOnboardingFlowSelection(flow, screenId)}
-            onSelectOption={handleSelectOption}
-            onPrimary={handlePrimary}
-            onSecondary={handleSecondary}
-            skinId={skinId}
-            hostKind={hostKind}
-            reducedMotion={reducedMotion}
-            reducedTransparency={reducedTransparency}
+          <LucaOnboardingMotion
+            key={screenId}
+            reducedMotion={motionReduced}
             style={{ width: "100%" }}
-          />
+          >
+            <LucaOnboardingScreen
+              screenId={screenId}
+              audienceMode={audienceMode}
+              selectedOptionId={getLucaOnboardingFlowSelection(flow, screenId)}
+              onSelectOption={handleSelectOption}
+              onPrimary={handlePrimary}
+              onSecondary={handleSecondary}
+              skinId={skinId}
+              hostKind={hostKind}
+              reducedMotion={reducedMotion}
+              reducedTransparency={reducedTransparency}
+              style={{ width: "100%" }}
+            />
+          </LucaOnboardingMotion>
         </div>
       </div>
     </LucaOnboardingShell>
