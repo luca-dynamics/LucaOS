@@ -83,7 +83,7 @@ export const createLucaOnboardingFlowState = (
   const seedDefaults = options.seedDefaults ?? true;
 
   const seeded: Partial<Record<PremiumOnboardingScreenId, string>> = seedDefaults
-    ? { ...(getPremiumOnboardingDefaultSelections() as Record<string, string>) }
+    ? { ...getPremiumOnboardingDefaultSelections() }
     : {};
 
   const selectedOptions: Partial<Record<PremiumOnboardingScreenId, string>> = {
