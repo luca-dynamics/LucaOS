@@ -10,6 +10,8 @@
 
 > **Status update (2026-06-24).** The premium onboarding screen map now exists as a typed map for future screen order, default selections, saved-data intent, and side-effect boundaries only. It does not replace current onboarding UI, routing, completion, runtime, storage, provider, memory, governance, skin, or Web Safe Mode behavior. The next recommended PR is `feat(ui): add premium onboarding shell component`.
 
+> **Status update (2026-06-25) — staged build complete and frozen.** The staged premium onboarding presence system is now fully built and merged as a dormant stack: skin presence tokens, the `LucaPresence` three-state component, the onboarding skin boundary resolver, `LucaOnboardingShell`, the data-driven `LucaOnboardingScreen`, the pure `lucaOnboardingFlowEngine`, the `LucaPremiumOnboardingPreview` composition, Basic/Pro/Creator progressive disclosure, gentle reduced-motion-gated entrance motion, and a cross-skin/host/accessibility QA matrix. The post-boot readiness bridge additionally received a presentation-only ambient Luca identity layer. The full freeze record (validation results, invariants, dormant status, deliberately-deferred live mount, and known pre-existing failures) is in `docs/luca-premium-onboarding-implementation-freeze.md`. Nothing renders the premium flow to real users yet — live mounting remains a separate, explicitly-approved effort.
+
 Read together with:
 
 - `docs/luca-premium-onboarding-postboot-design.md`
