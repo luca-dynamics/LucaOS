@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { WebLifecycleShell } from "./WebLifecycleShell";
 import { WebRuntimeProvider } from "./WebRuntimeContext";
+import { readWebOnboardingComplete } from "./webLifecycleStorage";
 
 function WebSafeModeBanner() {
   const safeMode =
@@ -12,6 +13,10 @@ function WebSafeModeBanner() {
   const [expanded, setExpanded] = useState(isBootDebug);
 
   if (!safeMode) return null;
+  // Keep the premium first-run experience clean: don't blanket boot/onboarding
+  // with the safe-mode card. It surfaces in the main app (once onboarding is
+  // complete), where the status is actionable. bootDebug forces it everywhere.
+  if (!isBootDebug && !readWebOnboardingComplete()) return null;
 
   return (
     <aside

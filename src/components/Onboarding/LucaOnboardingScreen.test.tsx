@@ -54,17 +54,17 @@ describe("LucaOnboardingScreen", () => {
     );
   });
 
-  it("maps presence per screen: identity hero on welcome/finish, voice on presence, none on choice screens", () => {
+  it("maps presence per screen: the hologram identity face on welcome/finish/presence, none on choice screens", () => {
     expect(getLucaOnboardingScreenPresence("welcome")).toBe("identity");
     expect(getLucaOnboardingScreenPresence("finish")).toBe("identity");
-    expect(getLucaOnboardingScreenPresence("presence")).toBe("voice");
+    expect(getLucaOnboardingScreenPresence("presence")).toBe("identity");
     expect(getLucaOnboardingScreenPresence("permission_style")).toBe("none");
 
     const welcome = renderToStaticMarkup(<LucaOnboardingScreen screenId="welcome" />);
     expect(welcome).toContain('data-luca-presence="identity"');
 
     const presence = renderToStaticMarkup(<LucaOnboardingScreen screenId="presence" />);
-    expect(presence).toContain('data-luca-presence="voice"');
+    expect(presence).toContain('data-luca-presence="identity"');
 
     const trust = renderToStaticMarkup(
       <LucaOnboardingScreen screenId="permission_style" />,
