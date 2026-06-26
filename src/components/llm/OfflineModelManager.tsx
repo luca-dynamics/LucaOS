@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Icon } from "../../components/ui/Icon";
+import { findLucaUnifiedModel } from "../../services/llm/lucaUnifiedModelRegistry";
 import { mobileOfflineBrain } from "../../services/mobile/MobileOfflineBrain";
 import { llmService } from "../../services/llmService";
 import {
@@ -302,6 +303,7 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
             const isDownloading = downloadingModelId === model.id;
             const isActive = activeModelId === model.id;
             const isReady = model.status.downloaded || model.status.initialized;
+            const unified = findLucaUnifiedModel(model.id);
 
             return (
               <div
@@ -351,9 +353,33 @@ export const OfflineModelManager: React.FC<MobileModelManagerProps> = ({
                 </div>
 
                 {/* Description */}
-                <p className="text-[11px] text-slate-400 mb-3 line-clamp-2">
+                <p className="text-[11px] text-slate-400 mb-2 line-clamp-2">
                   {model.description}
                 </p>
+                {unified?.license && (
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <span
+                      className="text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.08em] opacity-60"
+                      style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.5)" }}
+                      title={`License: ${unified.license.name} — commercial use: ${unified.license.commercialUse}`}
+                    >
+                      {unified.license.name.split(" ")[0]}
+                    </span>
+                    {unified.sourceUrl && (
+                      <a
+                        href={unified.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[8px] opacity-30 hover:opacity-70 transition-opacity"
+                        style={{ color: "rgba(255,255,255,0.6)" }}
+                        title={`Model source: ${unified.sourceUrl}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        ↗
+                      </a>
+                    )}
+                  </div>
+                )}
 
                 {/* Download Progress */}
                 {isDownloading && (
