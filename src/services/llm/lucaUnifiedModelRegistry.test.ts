@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   LOCALAI_CURATED_CATALOG,
+  OLLAMA_BRAIN_CATALOG,
+  WEBLLM_CATALOG,
   findLucaUnifiedModel,
   getLucaUnifiedModels,
   getLucaUnifiedModelsForRam,
@@ -24,10 +26,9 @@ describe("lucaUnifiedModelRegistry", () => {
   });
 
   it("filters by source", () => {
-    expect(getLucaUnifiedModels("openai-compatible").length).toBe(
-      LOCALAI_CURATED_CATALOG.length,
-    );
-    expect(getLucaUnifiedModels("ollama")).toEqual([]);
+    expect(getLucaUnifiedModels("openai-compatible").length).toBe(LOCALAI_CURATED_CATALOG.length);
+    expect(getLucaUnifiedModels("ollama").length).toBe(OLLAMA_BRAIN_CATALOG.length);
+    expect(getLucaUnifiedModels("webllm").length).toBe(WEBLLM_CATALOG.length);
   });
 
   it("finds a model by id", () => {
@@ -41,13 +42,15 @@ describe("lucaUnifiedModelRegistry", () => {
     expect(lowEnd).toContain("llama-3.2-1b-instruct");
     expect(lowEnd).not.toContain("qwen2.5-7b-instruct");
 
-    // A 16GB machine fits everything in the curated slice.
-    expect(getLucaUnifiedModelsForRam(16_000_000_000).length).toBe(
-      LOCALAI_CURATED_CATALOG.length,
-    );
+    // A 64GB machine fits all models in the full catalog.
+    const all = getLucaUnifiedModels();
+    expect(getLucaUnifiedModelsForRam(64_000_000_000).length).toBe(all.length);
   });
 
-  it("marks exactly one recommended default", () => {
-    expect(getLucaUnifiedModels().filter((m) => m.recommended)).toHaveLength(1);
+  it("marks at most one recommended model per source", () => {
+    for (const source of ["openai-compatible", "ollama", "webllm"] as const) {
+      const recommended = getLucaUnifiedModels(source).filter((m) => m.recommended);
+      expect(recommended.length, `${source} has more than one recommended`).toBeLessThanOrEqual(1);
+    }
   });
 });
