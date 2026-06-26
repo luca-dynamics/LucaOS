@@ -89,7 +89,12 @@ export const LucaPresence: React.FC<LucaPresenceProps> = ({
   const rootStyle: React.CSSProperties = { ...presenceVars, ...style };
 
   if (state === "ambient") {
-    const faceWidth = size ?? 320;
+    // Ambient is the "felt everywhere" layer: a large, soft, blurred face that
+    // reads as a background light source, not a small corner thumbnail. Default
+    // to a viewport-relative size (capped) so it spans the surface; callers can
+    // still pass an explicit px `size` to override.
+    const faceWidth =
+      size !== undefined ? `${size}px` : "min(78vw, 720px)";
     return (
       <div
         data-luca-presence="ambient"
@@ -111,7 +116,7 @@ export const LucaPresence: React.FC<LucaPresenceProps> = ({
           draggable={false}
           style={{
             position: "absolute",
-            width: `${faceWidth}px`,
+            width: faceWidth,
             height: "auto",
             opacity: "var(--luca-skin-presence-ambient-opacity)" as unknown as number,
             filter: "blur(var(--luca-skin-presence-ambient-blur))",

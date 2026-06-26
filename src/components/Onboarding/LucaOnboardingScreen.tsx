@@ -47,7 +47,9 @@ const DEFAULT_SCREEN_PRESENCE: Record<
 > = {
   welcome: "identity",
   environment: "none",
-  presence: "voice",
+  // The presence screen shows the Luca hologram being (the identity face), not
+  // the placeholder voice orb — Luca is one being across the flow.
+  presence: "identity",
   permission_style: "none",
   memory_boundaries: "none",
   connect_tools: "none",

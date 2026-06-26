@@ -175,7 +175,7 @@ describe("premium onboarding QA matrix", () => {
       const presence = renderToStaticMarkup(
         <LucaOnboardingScreen screenId="presence" skinId={skinId} />,
       );
-      expect(presence).toContain('data-luca-presence="voice"');
+      expect(presence).toContain('data-luca-presence="identity"');
 
       const trust = renderToStaticMarkup(
         <LucaOnboardingScreen screenId="permission_style" skinId={skinId} />,

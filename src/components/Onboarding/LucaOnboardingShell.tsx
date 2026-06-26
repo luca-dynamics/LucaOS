@@ -93,7 +93,18 @@ export const LucaOnboardingShell: React.FC<LucaOnboardingShellProps> = ({
           reducedTransparency={boundary.reducedTransparency}
         />
       )}
-      <div style={{ position: "relative", zIndex: 1, height: "100%" }}>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          height: "100%",
+          // The shell root clips overflow (to bound the ambient presence); the
+          // content layer must therefore scroll on its own when a screen's
+          // cards exceed the viewport, or the lower options become unreachable.
+          maxHeight: "100dvh",
+          overflowY: "auto",
+        }}
+      >
         {children}
       </div>
     </div>
