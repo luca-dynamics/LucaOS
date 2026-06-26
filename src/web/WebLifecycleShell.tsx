@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLucaLocalEndpointStatus } from "../hooks/useLucaLocalEndpointStatus";
-import OnboardingFlow from "../components/Onboarding/OnboardingFlow";
 import { generateThemeStyles, getThemeColors } from "../config/themeColors";
 import { WebBridgeDiagnostics } from "./WebBridgeDiagnostics";
 import { WebLucaBackground } from "./WebLucaBackground";
@@ -14,7 +13,6 @@ import {
   writeWebPremiumPreferences,
 } from "./webLifecycleStorage";
 import { LucaPremiumOnboardingPreview } from "../components/Onboarding/LucaPremiumOnboardingPreview";
-import { isPremiumOnboardingEnabled } from "../components/Onboarding/lucaPremiumOnboardingFlag";
 import { mapLucaOnboardingFlowToWebProfile } from "../components/Onboarding/lucaOnboardingCompletionBridge";
 import { WebPostBootTransition } from "./postBoot/WebPostBootTransition";
 import { WebPostBootLoading } from "./postBoot/WebPostBootLoading";
@@ -31,9 +29,7 @@ export function WebLifecycleShell() {
   const runtime = useWebRuntime();
   const [lifecycleState, setLifecycleState] =
     useState<WebLifecycleState>("post_boot");
-  const { status: localEndpointStatus } = useLucaLocalEndpointStatus({
-    enabled: isPremiumOnboardingEnabled(),
-  });
+  const { status: localEndpointStatus } = useLucaLocalEndpointStatus();
   const [postBootState, setPostBootState] =
     useState<WebPostBootStateSnapshot | null>(null);
   const [visualSettings, setVisualSettings] = useState(() =>
@@ -86,7 +82,7 @@ export function WebLifecycleShell() {
           onChooseModelRoute={() => setLifecycleState("onboarding")}
         />
       )}
-      {lifecycleState === "onboarding" && isPremiumOnboardingEnabled() && (
+      {lifecycleState === "onboarding" && (
         <LucaPremiumOnboardingPreview
           hostKind="desktop-web"
           supportsLocalProvisioning={false}
@@ -97,30 +93,6 @@ export function WebLifecycleShell() {
               mapLucaOnboardingFlowToWebProfile(flow);
             completeWebOnboarding(profile);
             writeWebPremiumPreferences(premiumPreferences);
-            setLifecycleState(showWebReadyDebug ? "ready" : "main");
-          }}
-        />
-      )}
-      {lifecycleState === "onboarding" && !isPremiumOnboardingEnabled() && (
-        <OnboardingFlow
-          theme={{ primary: visualSettings.theme, hex: theme.hex }}
-          runtime={webOnboardingRuntime}
-          onComplete={(profile, mode) => {
-            const currentVisualSettings =
-              webOnboardingRuntime.getVisualSettings();
-            completeWebOnboarding({
-              name: profile?.identity?.name || "",
-              interaction: mode === "voice" ? "voice" : "chat",
-              theme: currentVisualSettings.theme as
-                | "PROFESSIONAL"
-                | "MASTER_SYSTEM"
-                | "FROST"
-                | "LIGHTCREAM",
-              modelRoute: "cloud",
-              personality: "proactive",
-              backgroundOpacity: currentVisualSettings.backgroundOpacity,
-              backgroundBlur: currentVisualSettings.backgroundBlur,
-            });
             setLifecycleState(showWebReadyDebug ? "ready" : "main");
           }}
         />

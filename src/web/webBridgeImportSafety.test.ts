@@ -122,12 +122,11 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     }
   });
 
-  it("mounts the canonical LucaOS onboarding instead of a blocker or generated surface", () => {
+  it("mounts the premium onboarding as the default flow (P7 — gate removed)", () => {
     expect(lifecycleSource).toContain(
-      'import OnboardingFlow from "../components/Onboarding/OnboardingFlow"',
+      'import { LucaPremiumOnboardingPreview }',
     );
-    expect(lifecycleSource).toContain("<OnboardingFlow");
-    expect(lifecycleSource).toContain("runtime={webOnboardingRuntime}");
+    expect(lifecycleSource).toContain("<LucaPremiumOnboardingPreview");
     expect(lifecycleSource).not.toContain(
       "Original LucaOS onboarding is blocked",
     );

@@ -115,10 +115,7 @@ import { useChatController } from "./hooks/app/useChatController";
 import { useToolOrchestrator } from "./hooks/app/useToolOrchestrator";
 import { BootSequence } from "./hooks/app/useAppSystem";
 import { LucaBootVisualShell } from "./components/boot/LucaBootVisualShell";
-import OnboardingFlow from "./components/Onboarding/OnboardingFlow";
-import { desktopOnboardingRuntime } from "./desktop/adapters/desktopOnboardingRuntime";
 import { LucaPremiumOnboardingPreview } from "./components/Onboarding/LucaPremiumOnboardingPreview";
-import { isPremiumOnboardingEnabled } from "./components/Onboarding/lucaPremiumOnboardingFlag";
 import { mapLucaOnboardingFlowToDesktopCompletion } from "./components/Onboarding/lucaOnboardingCompletionBridge";
 import { useLucaLocalEndpointStatus } from "./hooks/useLucaLocalEndpointStatus";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
@@ -259,9 +256,7 @@ function AppContent() {
     [isMobile, isCapacitor, isElectron],
   );
 
-  const { status: localEndpointStatus } = useLucaLocalEndpointStatus({
-    enabled: isPremiumOnboardingEnabled(),
-  });
+  const { status: localEndpointStatus } = useLucaLocalEndpointStatus();
   const systemRamBytes = (() => {
     const gb = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
     return typeof gb === "number" ? gb * 1e9 : undefined;
@@ -2442,52 +2437,29 @@ function AppContent() {
       >
         {bootSequence === "ONBOARDING" ? (
           <div className="absolute inset-0 z-10">
-            {isPremiumOnboardingEnabled() ? (
-              <LucaPremiumOnboardingPreview
-                hostKind="desktop-app"
-                supportsLocalProvisioning={isElectron}
-                localEndpointStatus={localEndpointStatus}
-                systemRamBytes={systemRamBytes}
-                style={{ minHeight: "100dvh" }}
-                onComplete={(flow) => {
-                  const { setupComplete, preferredMode, premiumPreferences } =
-                    mapLucaOnboardingFlowToDesktopCompletion(flow);
-                  settingsService.saveSettings({
-                    general: {
-                      ...settingsService.get("general"),
-                      setupComplete,
-                      preferredMode,
-                      premiumOnboardingPreferences: premiumPreferences,
-                    },
-                  });
-                  const isVoice = preferredMode === "voice";
-                  setIsVoiceMode(isVoice);
-                  setShowVoiceHud(isVoice);
-                  setBootSequence("READY");
-                }}
-              />
-            ) : (
-              <OnboardingFlow
-                theme={theme}
-                runtime={desktopOnboardingRuntime}
-                onComplete={(profile, mode) => {
-                  console.log("[App] Onboarding Complete:", { profile, mode });
-                  settingsService.saveSettings({
-                    general: {
-                      ...settingsService.get("general"),
-                      setupComplete: true,
-                      preferredMode: mode || "text",
-                    },
-                  });
-                  if (mode) {
-                    const isVoice = mode === "voice";
-                    setIsVoiceMode(isVoice);
-                    setShowVoiceHud(isVoice);
-                  }
-                  setBootSequence("READY");
-                }}
-              />
-            )}
+            <LucaPremiumOnboardingPreview
+              hostKind="desktop-app"
+              supportsLocalProvisioning={isElectron}
+              localEndpointStatus={localEndpointStatus}
+              systemRamBytes={systemRamBytes}
+              style={{ minHeight: "100dvh" }}
+              onComplete={(flow) => {
+                const { setupComplete, preferredMode, premiumPreferences } =
+                  mapLucaOnboardingFlowToDesktopCompletion(flow);
+                settingsService.saveSettings({
+                  general: {
+                    ...settingsService.get("general"),
+                    setupComplete,
+                    preferredMode,
+                    premiumOnboardingPreferences: premiumPreferences,
+                  },
+                });
+                const isVoice = preferredMode === "voice";
+                setIsVoiceMode(isVoice);
+                setShowVoiceHud(isVoice);
+                setBootSequence("READY");
+              }}
+            />
           </div>
         ) : (
           <LucaBootVisualShell
