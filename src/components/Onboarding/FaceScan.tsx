@@ -21,7 +21,21 @@ interface FaceScanProps {
   confirmMessage?: string;
   hideHeader?: boolean;
   compact?: boolean;
+  /** Assurance bullet lines shown above the capture button. */
+  assuranceLines?: string[];
+  /** Primary capture button label. */
+  captureLabel?: string;
+  /** Skip button label. */
+  skipLabel?: string;
+  /** Calm premium presentation: drop the clinical uppercase/letter-spacing on the capture button. */
+  calm?: boolean;
 }
+
+const DEFAULT_ASSURANCE_LINES = [
+  "Photo is processed locally and stays on your device (never uploaded)",
+  "Used exclusively for high-security verification protocols",
+  "Revocable at any time through System Settings",
+];
 
 /**
  * Face scan component for operator recognition
@@ -39,6 +53,10 @@ const FaceScan: React.FC<FaceScanProps> = ({
   confirmMessage,
   hideHeader = false,
   compact = false,
+  assuranceLines = DEFAULT_ASSURANCE_LINES,
+  captureLabel = "Capture My Face",
+  skipLabel = "Skip for Now",
+  calm = false,
 }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -412,57 +430,25 @@ const FaceScan: React.FC<FaceScanProps> = ({
           backgroundColor: "var(--app-bg-tint)"
         }}
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
-          >
-            <Icon
-              name="CheckCircle"
-              size={compact ? 9 : 14}
-              variant="Linear"
-              className="text-[var(--luca-success,#4fbf7a)]"
-            />
+        {assuranceLines.map((line) => (
+          <div key={line} className="flex items-center gap-3">
+            <div
+              className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
+            >
+              <Icon
+                name="CheckCircle"
+                size={compact ? 9 : 14}
+                variant="Linear"
+                className="text-[var(--luca-success,#4fbf7a)]"
+              />
+            </div>
+            <span
+              className={`${compact ? "text-[9px]" : "text-xs"} leading-tight`}
+            >
+              {line}
+            </span>
           </div>
-          <span
-            className={`${compact ? "text-[9px]" : "text-xs"} leading-tight`}
-          >
-            Photo is processed locally and stays on your device (never uploaded)
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <div
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
-          >
-            <Icon
-              name="CheckCircle"
-              size={compact ? 9 : 14}
-              variant="Linear"
-              className="text-[var(--luca-success,#4fbf7a)]"
-            />
-          </div>
-          <span
-            className={`${compact ? "text-[9px]" : "text-xs"} leading-tight`}
-          >
-            Used exclusively for high-security verification protocols
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <div
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"
-          >
-            <Icon
-              name="CheckCircle"
-              size={compact ? 9 : 14}
-              variant="Linear"
-              className="text-[var(--luca-success,#4fbf7a)]"
-            />
-          </div>
-          <span
-            className={`${compact ? "text-[9px]" : "text-xs"} leading-tight`}
-          >
-            Revocable at any time through System Settings
-          </span>
-        </div>
+        ))}
       </div>
 
       {/* Action Buttons */}
@@ -473,9 +459,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
             w-full
             border
             rounded-xl
-            uppercase
-            tracking-[0.2em]
-            font-bold
+            ${calm ? "tracking-normal font-semibold" : "uppercase tracking-[0.2em] font-bold"}
             transition-all
             flex
             items-center
@@ -512,7 +496,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
             className="group-hover:scale-110 transition-transform"
             style={{ color: themeHex || "var(--app-text-main)" }}
           />
-          Capture My Face
+          {captureLabel}
         </button>
 
         <button
@@ -546,7 +530,7 @@ const FaceScan: React.FC<FaceScanProps> = ({
           }}
         >
           <Icon name="AltArrowRight" variant="BoldDuotone" style={{ width: "2vmin", height: "2vmin" }} />
-          Skip for Now
+          {skipLabel}
         </button>
       </div>
 

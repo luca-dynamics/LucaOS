@@ -1,10 +1,7 @@
 import { useMemo, useState } from "react";
 import LucaChatSurface, { type LucaChatMessage } from "../../components/chat/LucaChatSurface";
-import {
-  webChatRuntime,
-  type WebChatMessage,
-  type WebChatRuntime,
-} from "./webChatRuntime";
+import { webAppRuntime } from "../runtime/webAppRuntime";
+import type { WebChatMessage, WebChatRuntime } from "./webChatRuntime";
 
 const welcomeMessage = (): WebChatMessage => ({
   id: "web-luca-welcome",
@@ -24,7 +21,7 @@ const toLucaMessage = (message: WebChatMessage): LucaChatMessage => ({
   timestamp: message.timestamp,
 });
 
-export function WebChatSurface({ runtime = webChatRuntime }: WebChatSurfaceProps) {
+export function WebChatSurface({ runtime = webAppRuntime.chat }: WebChatSurfaceProps) {
   const initialMessages = useMemo(() => [welcomeMessage()], []);
   const [messages, setMessages] = useState<WebChatMessage[]>(initialMessages);
   const [input, setInput] = useState("");
