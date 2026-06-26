@@ -3,9 +3,13 @@ import React from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
+
+// Use the real built-in fs: the ESM `import { readFileSync } from "node:fs"`
+// resolves to a stubbed module under this vitest/jsdom config and returns empty
+// source, which silently passed the .not.toContain guards while breaking the
+// positive ones. The working sibling post-boot tests use this same form.
+const { readFileSync } = process.getBuiltinModule("node:fs");
 
 import { resolvePostBootReadinessBridgeCopy } from "./postBootReadinessBridgeCopy";
 import { WebPostBootLoading } from "./WebPostBootLoading";
@@ -63,12 +67,12 @@ type RegressionCase = {
   expectedCta?: string;
 };
 
-function sourcePath(repoRelativePath: string): string {
-  return fileURLToPath(new URL(`../../../${repoRelativePath}`, import.meta.url));
-}
-
+// Read repo-relative source from the working directory (the repo root under
+// vitest). Avoid `new URL(..., import.meta.url)` here: Vite rewrites that
+// pattern as a static-asset reference and mangles a dynamic path to
+// `.../undefined`, which silently returns empty source and breaks these guards.
 function readSource(repoRelativePath: string): string {
-  return readFileSync(sourcePath(repoRelativePath), "utf8");
+  return readFileSync(repoRelativePath, "utf8");
 }
 
 function readBridgeSources(): string {
@@ -187,7 +191,11 @@ describe("post-boot readiness bridge regression matrix", () => {
     expect(html).toContain(copy.supportingCopy);
     for (const line of copy.readinessLines) expect(html).toContain(line);
     if (expectedCta) expect(html).toContain(expectedCta);
-    if (state === "new_user" || state === "returning_user") expect(html).not.toContain("<button");
+    if (state === "new_user" || state === "returning_user") {
+      // Auto-continue states render no CTA button — only the always-present
+      // Details toggle (exactly one <button>).
+      expect(html.match(/<button/g) ?? []).toHaveLength(1);
+    }
     for (const term of renderedCopyForbiddenTerms) expect(lowerHtml, term).not.toContain(term);
   });
 
