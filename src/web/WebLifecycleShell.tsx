@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLucaLocalEndpointStatus } from "../hooks/useLucaLocalEndpointStatus";
 import OnboardingFlow from "../components/Onboarding/OnboardingFlow";
 import { generateThemeStyles, getThemeColors } from "../config/themeColors";
 import { WebBridgeDiagnostics } from "./WebBridgeDiagnostics";
@@ -30,6 +31,9 @@ export function WebLifecycleShell() {
   const runtime = useWebRuntime();
   const [lifecycleState, setLifecycleState] =
     useState<WebLifecycleState>("post_boot");
+  const { status: localEndpointStatus } = useLucaLocalEndpointStatus({
+    enabled: isPremiumOnboardingEnabled(),
+  });
   const [postBootState, setPostBootState] =
     useState<WebPostBootStateSnapshot | null>(null);
   const [visualSettings, setVisualSettings] = useState(() =>
@@ -85,6 +89,8 @@ export function WebLifecycleShell() {
       {lifecycleState === "onboarding" && isPremiumOnboardingEnabled() && (
         <LucaPremiumOnboardingPreview
           hostKind="desktop-web"
+          supportsLocalProvisioning={false}
+          localEndpointStatus={localEndpointStatus}
           style={{ minHeight: "100dvh" }}
           onComplete={(flow) => {
             const { profile, premiumPreferences } =
