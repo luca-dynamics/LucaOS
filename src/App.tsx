@@ -120,6 +120,7 @@ import { desktopOnboardingRuntime } from "./desktop/adapters/desktopOnboardingRu
 import { LucaPremiumOnboardingPreview } from "./components/Onboarding/LucaPremiumOnboardingPreview";
 import { isPremiumOnboardingEnabled } from "./components/Onboarding/lucaPremiumOnboardingFlag";
 import { mapLucaOnboardingFlowToDesktopCompletion } from "./components/Onboarding/lucaOnboardingCompletionBridge";
+import { useLucaLocalEndpointStatus } from "./hooks/useLucaLocalEndpointStatus";
 import { LiquidBackground } from "./components/visual/LiquidBackground.tsx";
 import { EdgePresence } from "./components/presence";
 import { THEME_PALETTE } from "./config/themeColors";
@@ -257,6 +258,14 @@ function AppContent() {
       }),
     [isMobile, isCapacitor, isElectron],
   );
+
+  const { status: localEndpointStatus } = useLucaLocalEndpointStatus({
+    enabled: isPremiumOnboardingEnabled(),
+  });
+  const systemRamBytes = (() => {
+    const gb = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+    return typeof gb === "number" ? gb * 1e9 : undefined;
+  })();
 
   const [currentCwd, setCurrentCwd] = useState<string>("");
   const [opsecStatus, setOpsecStatus] = useState<string>("ACTIVE");
@@ -2436,6 +2445,9 @@ function AppContent() {
             {isPremiumOnboardingEnabled() ? (
               <LucaPremiumOnboardingPreview
                 hostKind="desktop-app"
+                supportsLocalProvisioning={isElectron}
+                localEndpointStatus={localEndpointStatus}
+                systemRamBytes={systemRamBytes}
                 style={{ minHeight: "100dvh" }}
                 onComplete={(flow) => {
                   const { setupComplete, preferredMode, premiumPreferences } =
