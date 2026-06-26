@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Icon } from "./ui/Icon";
+import { findLucaUnifiedModel } from "../services/llm/lucaUnifiedModelRegistry";
 import {
   modelManagerService,
   LocalModel,
@@ -479,7 +480,9 @@ const RenderGrid: React.FC<RenderGridProps> = ({
       {isExpanded && (
         <div className="px-3 pb-3 pt-1 animate-in fade-in slide-in-from-top-4 duration-500 ease-out">
           <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
-            {items.map((model) => (
+            {items.map((model) => {
+              const unified = findLucaUnifiedModel(model.id);
+              return (
               <div key={model.id} className={`border rounded-lg overflow-hidden relative ${model.status === "ready" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]" : "shadow-sm"}`}
                    style={{ backgroundColor: "var(--app-bg-main)", borderColor: model.status === "ready" ? undefined : "var(--app-border-main)" }}>
                 {model.status === "downloading" && (
@@ -511,7 +514,9 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                             className="text-[9px] font-mono"
                             style={{ color: "var(--app-text-muted)" }}
                           >
-                            {model.sizeFormatted} • {model.runtime === "ollama" ? "Ollama Guided" : "Internal"}
+                            {model.sizeFormatted}
+                            {(unified?.minRamBytes ?? model.memoryRequirement) ? ` • ${Math.round(((unified?.minRamBytes ?? model.memoryRequirement)!) / 1e9)} GB RAM` : ""}
+                            {" • "}{model.runtime === "ollama" ? "Ollama" : unified?.source === "webllm" ? "WebGPU" : "Internal"}
                           </div>
                         </div>
                       </div>
@@ -535,6 +540,28 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                       <span className={`text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.12em] ${getCatalogBadgeClass(model.catalogStatus)}`}>
                         {model.catalogStatus || "verified"}
                       </span>
+                      {unified?.license && (
+                        <span
+                          className="text-[7px] px-1.5 py-0.5 rounded border uppercase tracking-[0.08em]"
+                          style={{ borderColor: "var(--app-border-main)", color: "var(--app-text-muted)", opacity: 0.7 }}
+                          title={`License: ${unified.license.name} — commercial use: ${unified.license.commercialUse}`}
+                        >
+                          {unified.license.name.split(" ")[0]}
+                        </span>
+                      )}
+                      {unified?.sourceUrl && (
+                        <a
+                          href={unified.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[8px] transition-opacity hover:opacity-80"
+                          style={{ color: "var(--app-text-muted)", opacity: 0.4 }}
+                          title={`Model source: ${unified.sourceUrl}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          ↗
+                        </a>
+                      )}
                       {model.catalogWarning && (
                         <span className="text-[8px] text-[var(--luca-warning,#f2b23e)] truncate max-w-[220px]" title={model.catalogWarning}>
                           {model.catalogWarning}
@@ -626,7 +653,8 @@ const RenderGrid: React.FC<RenderGridProps> = ({
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

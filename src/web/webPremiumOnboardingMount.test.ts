@@ -3,21 +3,12 @@ import { describe, expect, it } from "vitest";
 
 const lifecycleSource = readFileSync("src/web/WebLifecycleShell.tsx", "utf8");
 
-describe("web premium onboarding live mount (P4)", () => {
-  it("gates the premium flow behind the opt-in flag", () => {
-    expect(lifecycleSource).toContain("isPremiumOnboardingEnabled");
+describe("web premium onboarding live mount (P7 — default path)", () => {
+  it("mounts premium onboarding unconditionally for the onboarding state", () => {
     expect(lifecycleSource).toContain("<LucaPremiumOnboardingPreview");
-    expect(lifecycleSource).toContain(
-      'lifecycleState === "onboarding" && isPremiumOnboardingEnabled()',
-    );
-  });
-
-  it("keeps the legacy onboarding as the default (flag off) path", () => {
-    expect(lifecycleSource).toContain(
-      'lifecycleState === "onboarding" && !isPremiumOnboardingEnabled()',
-    );
-    expect(lifecycleSource).toContain("<OnboardingFlow");
-    expect(lifecycleSource).toContain("runtime={webOnboardingRuntime}");
+    expect(lifecycleSource).toContain('lifecycleState === "onboarding"');
+    expect(lifecycleSource).not.toContain("isPremiumOnboardingEnabled");
+    expect(lifecycleSource).not.toContain("<OnboardingFlow");
   });
 
   it("bridges premium completion into the existing storage + routing", () => {
