@@ -7,7 +7,6 @@ import {
   lucaMaterialControlActiveStyle,
   lucaMaterialControlStyle,
   lucaMaterialHoverSurfaceStyle,
-  lucaMaterialOverlayStyle,
   lucaMaterialPanelStyle,
   lucaMaterialPrimaryTextStyle,
   lucaMaterialSecondaryTextStyle,
@@ -63,7 +62,10 @@ export function WebPostBootTransition({
   return (
     <section
       className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-y-auto px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
-      style={lucaMaterialOverlayStyle}
+      style={{
+        background: "var(--luca-background-base)",
+        color: "var(--luca-text-primary)",
+      }}
     >
       <WebPostBootAmbientPresence />
       <div className="relative z-10 flex w-full max-w-[42rem] flex-col items-center text-center">

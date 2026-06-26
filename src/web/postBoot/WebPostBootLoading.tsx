@@ -1,59 +1,101 @@
 import { LucaCanvasPresenceOrb } from "../../components/visual/LucaCanvasPresenceOrb";
-import { LucaPanel } from "../../components/ui/luca";
+import { LucaStaticFacePresence } from "../../components/visual/LucaStaticFacePresence";
 import {
   lucaMaterialBorderSubtleStyle,
   lucaMaterialCardStyle,
-  lucaMaterialHoverSurfaceStyle,
   lucaMaterialPrimaryTextStyle,
   lucaMaterialSecondaryTextStyle,
 } from "../../styles/lucaMaterialSystem";
 import { resolvePostBootReadinessBridgeCopy } from "./postBootReadinessBridgeCopy";
 import { WebPostBootAmbientPresence } from "./WebPostBootAmbientPresence";
 
+/**
+ * WebPostBootLoading — the calm "Preparing your LucaOS environment" screen,
+ * redesigned to match the premium onboarding direction: the Luca hologram
+ * identity (one being) is the hero, set on the Luca default screen background
+ * (--luca-background-base), with a single quiet preparing pulse behind the face
+ * and an unobtrusive readiness list. The previous layout used a small orb hero
+ * and an animated orb on every readiness line, which read as busy/debug.
+ *
+ * Motion comes only from the LucaCanvasPresenceOrb component (which owns its own
+ * canvas animation); this module adds no inline keyframes/intervals and mutates
+ * no document/body/html.
+ */
 export function WebPostBootLoading() {
   const copy = resolvePostBootReadinessBridgeCopy({ state: "pending" });
 
   return (
     <section
-      className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-hidden px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
+      className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-y-auto px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
+      style={{
+        background: "var(--luca-background-base)",
+        color: "var(--luca-text-primary)",
+      }}
       aria-live="polite"
       aria-busy="true"
     >
       <WebPostBootAmbientPresence />
-      <LucaPanel className="relative z-10 w-full max-w-[30rem] rounded-[2rem] border px-5 py-8 text-center shadow-2xl backdrop-blur-2xl sm:px-8 sm:py-10">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border" style={lucaMaterialCardStyle} aria-hidden="true">
-          <LucaCanvasPresenceOrb size={34} state="preparing" amplitude={0.12} lowPower />
+      <div className="relative z-10 flex w-full max-w-[34rem] flex-col items-center text-center">
+        {/* Hologram identity hero with a single calm preparing pulse behind it. */}
+        <div className="relative flex h-36 w-36 items-center justify-center sm:h-40 sm:w-40">
+          <span
+            className="absolute inset-0 flex items-center justify-center"
+            aria-hidden="true"
+          >
+            <LucaCanvasPresenceOrb
+              size={150}
+              state="preparing"
+              amplitude={0.1}
+              lowPower
+            />
+          </span>
+          <LucaStaticFacePresence
+            size={112}
+            className="relative z-10 drop-shadow-xl"
+          />
         </div>
 
-        <div className="mx-auto mt-7 max-w-sm">
-          <h1 className="text-[1.7rem] font-medium leading-tight tracking-[-0.035em] sm:text-3xl" style={lucaMaterialPrimaryTextStyle}>
+        <div className="mx-auto mt-8 max-w-md">
+          <h1
+            className="font-display text-[1.85rem] font-semibold leading-tight tracking-[-0.035em] sm:text-[2.1rem]"
+            style={lucaMaterialPrimaryTextStyle}
+          >
             {copy.title}
           </h1>
-          <p className="mt-3 text-sm leading-6 sm:text-[0.95rem]" style={lucaMaterialSecondaryTextStyle}>
+          <p
+            className="mx-auto mt-3 max-w-sm text-sm leading-6 sm:text-[0.95rem]"
+            style={lucaMaterialSecondaryTextStyle}
+          >
             {copy.supportingCopy}
           </p>
         </div>
 
-        <div className="mx-auto mt-8 w-full max-w-sm space-y-2.5 text-left">
+        {/* Calm readiness list — quiet rows, no per-line orbs. */}
+        <ul className="mx-auto mt-9 w-full max-w-sm space-y-2.5 text-left">
           {copy.readinessLines.map((line) => (
-            <div
+            <li
               key={line}
-              className="flex items-center gap-3 rounded-2xl border px-4 py-3.5 sm:px-5"
-              style={{ ...lucaMaterialCardStyle, ...lucaMaterialBorderSubtleStyle, ...lucaMaterialHoverSurfaceStyle }}
+              className="flex items-center gap-3 rounded-2xl border px-4 py-3 sm:px-5"
+              style={{ ...lucaMaterialCardStyle, ...lucaMaterialBorderSubtleStyle }}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border" style={lucaMaterialBorderSubtleStyle} aria-hidden="true">
-                <LucaCanvasPresenceOrb
-                  size={16}
-                  state="preparing"
-                  amplitude={0.07}
-                  lowPower
-                />
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{
+                  background: "var(--luca-accent-primary, currentColor)",
+                  opacity: 0.6,
+                }}
+                aria-hidden="true"
+              />
+              <span
+                className="text-sm leading-5"
+                style={lucaMaterialSecondaryTextStyle}
+              >
+                {line}
               </span>
-              <span className="text-sm leading-5" style={lucaMaterialSecondaryTextStyle}>{line}</span>
-            </div>
+            </li>
           ))}
-        </div>
-      </LucaPanel>
+        </ul>
+      </div>
     </section>
   );
 }

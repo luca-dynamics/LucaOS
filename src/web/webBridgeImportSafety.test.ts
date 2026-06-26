@@ -209,7 +209,11 @@ describe("WebBridge direct LucaOS UI reuse audit", () => {
     expect(canvasOrbRendererSource).toContain("createRadialGradient");
     expect(postBootStateSource).toContain("readWebOnboardingComplete");
     expect(postBootStateSource).toContain("readWebProfile");
-    expect(postBootLoadingSource).toContain("Preparing LucaOS");
+    // Copy is sourced from the readiness bridge model (not a literal string in
+    // the component), and the hero is the Luca hologram identity, with a single
+    // canvas presence pulse for the "preparing" motion.
+    expect(postBootLoadingSource).toContain("resolvePostBootReadinessBridgeCopy");
+    expect(postBootLoadingSource).toContain("LucaStaticFacePresence");
     expect(postBootLoadingSource).toContain("LucaCanvasPresenceOrb");
     expect(postBootLoadingSource).not.toContain("rounded-full bg-cyan-100");
     expect(postBootLoadingSource).not.toContain("rgba(207,250,254,0.42)");
