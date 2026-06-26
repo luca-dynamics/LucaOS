@@ -2,6 +2,8 @@ import { LucaDashboardSurface } from "../components/dashboard/LucaDashboardSurfa
 import { Icon } from "../components/ui/Icon";
 import type { WebCapability } from "./browserHostCapabilities";
 import { WebChatSurface } from "./chat/WebChatSurface";
+import { resolveLucaDashboardSkinBoundary } from "../styles/lucaDashboardSkinBoundary";
+import { readWebPremiumPreferences } from "./webLifecycleStorage";
 
 interface WebLucaShellProps {
   hostClass: string;
@@ -11,10 +13,24 @@ interface WebLucaShellProps {
 }
 
 export function WebLucaShell({ lucaLinkStatus }: WebLucaShellProps) {
+  // Honor the skin chosen during onboarding (stored as the `environment`
+  // selection in the web premium preferences). Resolved at this local shell
+  // boundary only — never mutates document / body / html. Mirrors the desktop
+  // App.tsx wiring (resolveLucaDashboardSkinBoundary from the persisted skin).
+  const selectedSkinId = readWebPremiumPreferences()?.environment;
+  const skinBoundary = resolveLucaDashboardSkinBoundary({
+    selectedSkinId,
+    hostKind: "desktop-web",
+  });
+
   return (
     <section className="absolute inset-0 z-10 p-3 sm:p-5">
       <LucaDashboardSurface
-        rootStyle={{ width: "100%", height: "100%" }}
+        rootStyle={{
+          width: "100%",
+          height: "100%",
+          ...skinBoundary.materialVariables,
+        }}
         headerSurface={
           <header className="flex h-16 flex-none items-center justify-between border-b border-[var(--app-border-main)] px-5 text-[var(--app-text-main)]">
             <div className="flex items-center gap-3">
