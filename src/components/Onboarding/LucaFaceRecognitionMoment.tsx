@@ -60,12 +60,20 @@ export const LucaFaceRecognitionMoment: React.FC<
       <div data-luca-face-moment data-luca-face-moment-stage="capture">
         <FaceScan
           hideHeader
+          calm
           userName={userName?.trim() || ""}
           isLightTheme={isLightTheme ?? false}
           theme={theme}
           title="Learning your face"
           description={`Look at me for a second${greetingName} — I'm just learning your face so I know it's you. You can stop anytime.`}
           confirmMessage="Got it — I'll recognize you now."
+          assuranceLines={[
+            "I keep your face signature on this device — never uploaded",
+            "I use it only to know it's really you",
+            "You can ask me to forget it anytime in Settings",
+          ]}
+          captureLabel="Let me see you"
+          skipLabel="Maybe later"
           onComplete={onComplete}
           onSkip={onSkip}
         />
