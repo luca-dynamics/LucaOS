@@ -22,9 +22,9 @@ function mount(ui: React.ReactElement) {
 const props = {
   hostClass: "browser",
   lucaLinkStatus: "connector-required",
-  browserCapabilities: [],
-  guardedNativeCapabilities: [],
-} as const;
+  browserCapabilities: [] as [],
+  guardedNativeCapabilities: [] as [],
+};
 
 describe("WebLucaShell right panel (real-app Phase 3)", () => {
   it("renders Overview rows sourced from the web app runtime", () => {
@@ -47,6 +47,18 @@ describe("WebLucaShell right panel (real-app Phase 3)", () => {
     expect(timelineTab).toBeTruthy();
     act(() => timelineTab!.click());
     expect(container.textContent ?? "").toContain("No activity yet");
+    cleanup();
+  });
+
+  it("renders the left workspace sessions from the app runtime (Phase 4)", () => {
+    const { container, cleanup } = mount(<WebLucaShell {...props} />);
+    // Session card is sourced from webAppRuntime.getWorkspaceState, not hardcoded.
+    const session = container.querySelector('[data-luca-web-workspace-session="chat"]');
+    expect(session).not.toBeNull();
+    expect(session?.textContent ?? "").toContain("Chat");
+    expect(container.textContent ?? "").toContain(
+      "Luca is ready. Ask anything or open a workspace.",
+    );
     cleanup();
   });
 });
