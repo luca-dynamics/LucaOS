@@ -8,26 +8,36 @@ import {
 } from "../../styles/lucaMaterialSystem";
 import { resolvePostBootReadinessBridgeCopy } from "./postBootReadinessBridgeCopy";
 import { WebPostBootAmbientPresence } from "./WebPostBootAmbientPresence";
+import { resolveLucaDashboardSkinBoundary } from "../../styles/lucaDashboardSkinBoundary";
+import { readWebPremiumPreferences } from "../webLifecycleStorage";
 
 /**
  * WebPostBootLoading — the calm "Preparing your LucaOS environment" screen,
  * redesigned to match the premium onboarding direction: the Luca hologram
- * identity (one being) is the hero, set on the Luca default screen background
- * (--luca-background-base), with a single quiet preparing pulse behind the face
- * and an unobtrusive readiness list. The previous layout used a small orb hero
- * and an animated orb on every readiness line, which read as busy/debug.
+ * identity (one being) is the hero, set on the resolved skin's screen background
+ * (default Pearl), with a single quiet preparing pulse behind the face and an
+ * unobtrusive readiness list. The previous layout used a small orb hero and an
+ * animated orb on every readiness line, which read as busy/debug.
  *
+ * The skin boundary is resolved here (stored skin, default Pearl) and its
+ * material variables are scoped to this section so the post-boot screen shares
+ * the same warm calm palette as onboarding instead of the cold default tokens.
  * Motion comes only from the LucaCanvasPresenceOrb component (which owns its own
  * canvas animation); this module adds no inline keyframes/intervals and mutates
  * no document/body/html.
  */
 export function WebPostBootLoading() {
   const copy = resolvePostBootReadinessBridgeCopy({ state: "pending" });
+  const skinBoundary = resolveLucaDashboardSkinBoundary({
+    selectedSkinId: readWebPremiumPreferences()?.environment,
+    hostKind: "desktop-web",
+  });
 
   return (
     <section
       className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-y-auto px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
       style={{
+        ...skinBoundary.materialVariables,
         background: "var(--luca-background-base)",
         color: "var(--luca-text-primary)",
       }}
