@@ -12,6 +12,7 @@ import {
 } from "./onboardingPremiumCopy";
 import { getPremiumOnboardingScreenEntry } from "./onboardingPremiumScreenMap";
 import { getLucaOnboardingDisclosure } from "./lucaOnboardingDisclosure";
+import { LucaSurfaceMockup } from "./LucaSurfaceMockup";
 
 /**
  * LucaOnboardingScreen — one pure, data-driven renderer for every premium
@@ -186,6 +187,68 @@ function OptionCard({
   );
 }
 
+/**
+ * SurfaceMockupTile — a Claude-style option tile that leads with a small CSS
+ * mockup of the surface, used by the presence ("Choose how Luca appears")
+ * screen so all surfaces are showcased in a compact grid that fits one screen.
+ * Keeps radio semantics + the data-luca-onboarding-option hook.
+ */
+function SurfaceMockupTile({
+  option,
+  checked,
+  onSelect,
+}: {
+  option: PremiumOnboardingOptionCopy;
+  checked: boolean;
+  onSelect?: (optionId: string) => void;
+}): React.ReactElement {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={checked}
+      data-luca-onboarding-option={option.id}
+      onClick={onSelect ? () => onSelect(option.id) : undefined}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        textAlign: "left",
+        cursor: onSelect ? "pointer" : "default",
+        padding: 10,
+        borderRadius: 14,
+        border: `1px solid ${checked ? accent : "var(--luca-surface-hover)"}`,
+        background: checked ? "var(--luca-surface-hover)" : "var(--luca-surface-glass)",
+        color: textPrimary,
+        boxShadow: checked ? "var(--luca-shadow-soft)" : "none",
+      }}
+    >
+      <LucaSurfaceMockup surfaceId={option.id} />
+      <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, fontSize: 14 }}>
+        {option.title}
+        {option.recommended && (
+          <span
+            data-luca-onboarding-chip="recommended"
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              padding: "1px 7px",
+              borderRadius: 999,
+              color: accent,
+              border: `1px solid ${accent}`,
+            }}
+          >
+            Recommended
+          </span>
+        )}
+      </span>
+      <span style={{ fontSize: 12, lineHeight: 1.4, color: textSecondary }}>
+        {option.description}
+      </span>
+    </button>
+  );
+}
+
 export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   screenId,
   audienceMode = "basic",
@@ -326,7 +389,32 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
         </label>
       )}
 
-      {copy.options && copy.options.length > 0 && (
+      {copy.options && copy.options.length > 0 && screenId === "presence" ? (
+        // "Choose how Luca appears": showcase every surface as a compact
+        // mockup tile in a responsive grid that fits one screen (no scroll, no
+        // progressive disclosure). Radio semantics + option hooks are kept.
+        <div
+          role={entry.accessibilityRole === "radiogroup" ? "radiogroup" : "group"}
+          aria-label={copy.detailsLabel ?? copy.title}
+          data-luca-onboarding-options
+          data-luca-onboarding-options-layout="surface-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gap: 10,
+            margin: "18px 0 0",
+          }}
+        >
+          {[...primaryOptions, ...advancedOptions].map((option) => (
+            <SurfaceMockupTile
+              key={option.id}
+              option={option}
+              checked={option.id === activeOptionId}
+              onSelect={onSelectOption}
+            />
+          ))}
+        </div>
+      ) : copy.options && copy.options.length > 0 ? (
         <div
           role={entry.accessibilityRole === "radiogroup" ? "radiogroup" : "group"}
           aria-label={copy.detailsLabel ?? copy.title}
@@ -394,7 +482,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
               </details>
             ))}
         </div>
-      )}
+      ) : null}
 
       <div
         data-luca-onboarding-actions
