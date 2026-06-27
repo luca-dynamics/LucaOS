@@ -5,6 +5,7 @@ import type {
   LocalChatMessage,
   LocalChatRequest,
   LocalChatResponse,
+  LocalRuntimeEvent,
   LocalToolCall,
 } from "../LocalModelTypes";
 
@@ -129,6 +130,31 @@ export class CortexRuntime implements LocalRuntimeAdapter {
       model: request.model,
     };
   }
+
+  async *stream(request: LocalChatRequest): AsyncGenerator<LocalRuntimeEvent> {
+    const response = await this.fetchImpl(`${this.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: request.model,
+        messages: request.messages.map(toOpenAIMessage),
+        temperature: request.temperature ?? 0.7,
+        max_tokens: request.maxTokens,
+        tools: request.tools && request.tools.length > 0 ? request.tools : undefined,
+        stream: true,
+      }),
+      signal: request.signal ?? timeoutSignal(this.requestTimeoutMs),
+    });
+
+    if (!response.ok) {
+      const detail = await safeReadText(response);
+      throw new Error(
+        `Cortex stream failed with HTTP ${response.status}${detail ? `: ${detail}` : ""}`,
+      );
+    }
+
+    yield* parseOpenAIStream(response);
+  }
 }
 
 function normalizeBaseUrl(baseUrl: string): string {
@@ -178,6 +204,59 @@ async function safeReadText(response: Response): Promise<string> {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+async function* parseOpenAIStream(response: Response): AsyncGenerator<LocalRuntimeEvent> {
+  if (!response.body) throw new Error("ReadableStream not supported in this environment");
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split(/\r?\n/);
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      const event = parseStreamLine(line);
+      if (!event) continue;
+      yield event;
+    }
+  }
+
+  if (buffer.trim()) {
+    const event = parseStreamLine(buffer);
+    if (event) yield event;
+  }
+
+  yield { type: "done" };
+}
+
+function parseStreamLine(line: string): LocalRuntimeEvent | undefined {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed === "data: [DONE]" || trimmed === "[DONE]") return undefined;
+
+  const data = trimmed.startsWith("data:") ? trimmed.slice(5).trim() : trimmed;
+  if (!data || data === "[DONE]") return undefined;
+
+  try {
+    const parsed = JSON.parse(data);
+    const text =
+      parsed.choices?.[0]?.delta?.content ??
+      parsed.choices?.[0]?.message?.content ??
+      parsed.message?.content ??
+      parsed.response ??
+      parsed.text;
+    if (typeof text === "string" && text.length > 0) return { type: "token", text };
+  } catch {
+    return undefined;
+  }
+
+  return undefined;
 }
 
 function getDefaultCortexBaseUrl(): string {

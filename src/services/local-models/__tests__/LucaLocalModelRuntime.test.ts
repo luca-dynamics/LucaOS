@@ -21,6 +21,10 @@ const makeAdapter = (): LocalRuntimeAdapter => ({
     runtime: "ollama",
     model: request.model,
   })),
+  stream: vi.fn(async function* (request) {
+    yield { type: "token", text: `model=${request.model}` };
+    yield { type: "done" };
+  }),
 });
 
 describe("LucaLocalModelRuntime", () => {
@@ -92,5 +96,34 @@ describe("LucaLocalModelRuntime", () => {
     ).rejects.toThrow("Local runtime is busy: ollama");
     expect(adapter.chat).not.toHaveBeenCalled();
     token?.release();
+  });
+
+  it("streams catalog models through registry, admission, and leases", async () => {
+    const adapter = makeAdapter();
+    const registry = new RuntimeRegistry();
+    const admission = new LocalInferenceAdmission({ global: 1, byRuntime: { ollama: 1 } });
+    const lease = new LocalModelLease();
+    registry.register(adapter);
+
+    const runtime = new LucaLocalModelRuntime({ registry, admission, lease });
+
+    const events = [];
+    for await (const event of runtime.stream({
+      model: "ollama:llama3.2:3b",
+      messages: [{ role: "user", content: "hello" }],
+    })) {
+      events.push(event);
+    }
+
+    expect(events).toEqual([
+      { type: "token", text: "model=llama3.2:3b" },
+      { type: "done" },
+    ]);
+    expect(adapter.ensureReady).toHaveBeenCalledOnce();
+    expect(adapter.stream).toHaveBeenCalledWith(
+      expect.objectContaining({ model: "llama3.2:3b", stream: true }),
+    );
+    expect(admission.getActiveCount()).toBe(0);
+    expect(lease.count("ollama:llama3.2:3b")).toBe(0);
   });
 });

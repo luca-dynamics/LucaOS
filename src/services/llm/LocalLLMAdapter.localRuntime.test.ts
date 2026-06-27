@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   ensureOllamaRunning: vi.fn(),
   getModelSpecs: vi.fn(),
   runtimeChat: vi.fn(),
+  runtimeStream: vi.fn(),
 }));
 
 vi.mock("../settingsService", () => ({
@@ -24,6 +25,7 @@ vi.mock("../ModelManagerService", () => ({
 vi.mock("../local-models/LucaLocalModelRuntime", () => ({
   lucaLocalModelRuntime: {
     chat: mocks.runtimeChat,
+    stream: mocks.runtimeStream,
   },
 }));
 
@@ -107,5 +109,46 @@ describe("LocalLLMAdapter Luca local runtime bridge", () => {
       text: "tool response",
       toolCalls: [{ id: "call_1", name: "remember", args: { fact: "local" } }],
     });
+  });
+
+  it("streams through Luca's runtime facade", async () => {
+    mocks.getModelSpecs.mockReturnValue({ id: "gemma-2b", runtime: "internal" });
+    mocks.runtimeStream.mockImplementation(async function* () {
+      yield { type: "token", text: "hel" };
+      yield { type: "token", text: "lo" };
+      yield { type: "done" };
+    });
+    const adapter = new LocalLLMAdapter("gemma-2b");
+    const chunks: string[] = [];
+
+    const response = await adapter.chatStream(
+      [{ role: "user", content: "say hello" }],
+      (chunk) => chunks.push(chunk),
+      undefined,
+      "system",
+      [{ name: "remember", parameters: { type: "object" } }],
+    );
+
+    expect(mocks.runtimeStream).toHaveBeenCalledWith({
+      model: "gemma-2b",
+      messages: [
+        { role: "system", content: "system", toolCallId: undefined },
+        { role: "user", content: "say hello", toolCallId: undefined },
+      ],
+      temperature: 0.7,
+      signal: undefined,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "remember",
+            description: undefined,
+            parameters: { type: "object" },
+          },
+        },
+      ],
+    });
+    expect(chunks).toEqual(["hel", "lo"]);
+    expect(response).toEqual({ text: "hello" });
   });
 });

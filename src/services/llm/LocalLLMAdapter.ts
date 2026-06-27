@@ -1,5 +1,5 @@
 import { LLMProvider, ChatMessage, LLMResponse } from "./LLMProvider";
-import { CORTEX_SERVER_URL, OLLAMA_SERVER_URL } from "../../config/api";
+import { OLLAMA_SERVER_URL } from "../../config/api";
 import { settingsService } from "../settingsService";
 import { modelManager, LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
 import { lucaLocalModelRuntime } from "../local-models/LucaLocalModelRuntime";
@@ -72,31 +72,6 @@ export class LocalLLMAdapter implements LLMProvider {
       };
       return { available: false, models: [] };
     }
-  }
-
-  /**
-   * Resolve the best endpoint for this model.
-   * Priority: Ollama (if detected & has model) > Cortex > Ollama fallback
-   */
-  private async resolveEndpoint(): Promise<string> {
-    const settings = settingsService.getSettings();
-    const preferOllama = settings.brain.preferOllama;
-    
-    // 1. Identify Model Category
-    const isBrainModel = LOCAL_BRAIN_MODEL_IDS.includes(this.name) || this.name.startsWith("local-gemma");
-
-    // 2. Routing Decision
-    // BRAIN MODELS: Default to Ollama (Industry Standard for stability/VRAM management)
-    // OTHER MODELS: If preferOllama is on, use it; else use Cortex (Internal)
-    if (isBrainModel || preferOllama) {
-      await modelManager.ensureOllamaRunning();
-      console.log(`[Local Adapter] Routing ${this.name} → Ollama (Sovereign Reliability Managed)`);
-      return `${OLLAMA_SERVER_URL}/v1/chat/completions`;
-    }
-
-    // Default Fallback: Internal Cortex Brain
-    console.log(`[Local Adapter] Routing ${this.name} → Internal Cortex`);
-    return `${CORTEX_SERVER_URL}/chat/completions`;
   }
 
   /**
@@ -289,27 +264,10 @@ export class LocalLLMAdapter implements LLMProvider {
         }
       }
 
-      // 2. Smart Routing: Ollama (if detected) > Cortex > Ollama fallback
-      const endpoint = await this.resolveEndpoint();
-
-      // Resolve the actual Ollama tag from the ModelManager if possible
-      let modelTag = this.name;
-      try {
-        const specs = modelManager.getModelSpecs(this.name);
-        if (specs && specs.ollamaTag) {
-          modelTag = specs.ollamaTag;
-        } else if (this.name.includes("-")) {
-          // Fallback heuristic for ad-hoc models (including Gemma 4 translation)
-          modelTag = this.name.replace("-e2b", ":e2b").replace("-31b", ":31b").replace("-4-", "4:").replace("-2b", "2:2b").replace("-mini", ":mini").replace("-7b", ":7b");
-        }
-      } catch (e) {
-        console.warn("[Local Adapter] Tag resolution failed, using ID:", e);
-      }
-
-      // 3. Map Tools (Copy from chat)
-      const backendTools = tools
+      // 2. Map Tools (Copy from chat)
+      const backendTools: LocalToolDefinition[] | undefined = tools
         ? tools.map((t) => ({
-            type: "function",
+            type: "function" as const,
             function: {
               name: t.name,
               description: t.description,
@@ -318,70 +276,22 @@ export class LocalLLMAdapter implements LLMProvider {
           }))
         : undefined;
 
-      const requestBody: any = {
-        model: modelTag,
-        messages: messages,
-        stream: true,
+      // 3. Stream through Luca's owned runtime facade so admission, leases,
+      // registry routing, and runtime-specific parsing stay centralized.
+      const target = await this.resolveRuntimeTarget();
+      const stream = lucaLocalModelRuntime.stream({
+        model: target.model,
+        messages: messages.map(toLocalChatMessage),
         temperature: 0.7,
-      };
-
-      if (backendTools && backendTools.length > 0) {
-        requestBody.tools = backendTools;
-      }
-
-      // 4. Request with stream: true
-      let response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         signal: abortSignal,
-        body: JSON.stringify(requestBody),
+        tools: backendTools,
       });
-
-      // FALLBACK: If streaming fails (500/400), try non-streaming
-      if (!response.ok) {
-        console.warn(
-          `[Local Adapter] Streaming failed (${response.status}), falling back to blocking...`,
-        );
-        requestBody.stream = false;
-        response = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
-      }
-
-      if (!response.body)
-        throw new Error("ReadableStream not supported in this environment");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let done = false;
       let fullText = "";
 
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n");
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const dataStr = line.slice(6).trim();
-              if (dataStr === "[DONE]") continue; // End of stream
-
-              try {
-                const data = JSON.parse(dataStr);
-                const delta = data.choices?.[0]?.delta?.content;
-                if (delta) {
-                  onToken(delta);
-                  fullText += delta;
-                }
-              } catch {
-                // Ignore parse errors for partial lines
-              }
-            }
-          }
+      for await (const event of stream) {
+        if (event.type === "token") {
+          onToken(event.text);
+          fullText += event.text;
         }
       }
 

@@ -16,6 +16,7 @@ import type {
   LocalChatRequest,
   LocalChatResponse,
   LocalModelDescriptor,
+  LocalRuntimeEvent,
 } from "./LocalModelTypes";
 
 interface LucaLocalModelRuntimeOptions {
@@ -54,6 +55,43 @@ export class LucaLocalModelRuntime {
         ...request,
         model: descriptor.runtimeModelId,
       });
+    } finally {
+      this.lease.release(descriptor.id);
+      token.release();
+    }
+  }
+
+  async *stream(request: LocalChatRequest): AsyncGenerator<LocalRuntimeEvent> {
+    const descriptor = this.findDescriptor(request.model);
+    const adapter = this.registry.require(descriptor.runtime);
+    const token = this.admission.tryAcquire(descriptor.runtime);
+
+    if (!token) {
+      throw new Error(`Local runtime is busy: ${descriptor.runtime}`);
+    }
+
+    this.lease.acquire(descriptor.id);
+    try {
+      await adapter.ensureReady?.();
+      const runtimeRequest = {
+        ...request,
+        model: descriptor.runtimeModelId,
+        stream: true,
+      };
+
+      if (adapter.stream) {
+        yield* adapter.stream(runtimeRequest);
+      } else {
+        const response = await adapter.chat(runtimeRequest);
+        if (response.text) yield { type: "token", text: response.text };
+        if (response.toolCalls) {
+          for (const toolCall of response.toolCalls) {
+            yield { type: "tool_call", toolCall };
+          }
+        }
+        if (response.usage) yield { type: "stats", ...response.usage };
+        yield { type: "done" };
+      }
     } finally {
       this.lease.release(descriptor.id);
       token.release();

@@ -9,6 +9,21 @@ const jsonResponse = (status: number, body: unknown): Response =>
     text: async () => JSON.stringify(body),
   }) as unknown as Response;
 
+const streamResponse = (status: number, chunks: string[]): Response => {
+  const encoder = new TextEncoder();
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    body: new ReadableStream({
+      start(controller) {
+        for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+        controller.close();
+      },
+    }),
+    text: async () => chunks.join(""),
+  } as unknown as Response;
+};
+
 describe("CortexRuntime", () => {
   it("lists catalog-backed Cortex models without probing inference", async () => {
     const runtime = new CortexRuntime({ baseUrl: "http://127.0.0.1:8000" });
@@ -124,5 +139,35 @@ describe("CortexRuntime", () => {
     await expect(
       runtime.chat({ model: "gemma-2b", messages: [{ role: "user", content: "hi" }] }),
     ).rejects.toThrow("Cortex chat failed with HTTP 500");
+  });
+
+  it("streams Cortex chat/completions chunks", async () => {
+    const fetchImpl = vi.fn(async () =>
+      streamResponse(200, [
+        '{"choices":[{"delta":{"content":"loc"}}]}\n',
+        'data: {"choices":[{"delta":{"content":"al"}}]}\n',
+        "data: [DONE]\n",
+      ]),
+    );
+    const runtime = new CortexRuntime({
+      baseUrl: "http://127.0.0.1:8000",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    const events = [];
+    for await (const event of runtime.stream({
+      model: "gemma-2b",
+      messages: [{ role: "user", content: "hi" }],
+    })) {
+      events.push(event);
+    }
+
+    const body = JSON.parse(String(fetchImpl.mock.calls[0][1]?.body));
+    expect(body).toMatchObject({ model: "gemma-2b", stream: true });
+    expect(events).toEqual([
+      { type: "token", text: "loc" },
+      { type: "token", text: "al" },
+      { type: "done" },
+    ]);
   });
 });
