@@ -26,33 +26,31 @@ const props = {
   guardedNativeCapabilities: [] as [],
 };
 
-describe("WebLucaShell right panel (real-app Phase 3)", () => {
-  it("renders Overview rows sourced from the web app runtime", () => {
+describe("WebLucaShell right panel (real desktop components)", () => {
+  it("mounts the real desktop ControlPanel in Overview", () => {
     const { container, cleanup } = mount(<WebLucaShell {...props} />);
+    // ControlPanel renders its governed-control content (permission center,
+    // execution readiness), not the old hand-coded rows.
     const text = container.textContent ?? "";
-    // Control rows come from webAppRuntime.getControlState, including the
-    // mapped LucaLink status passed from the runtime context.
-    expect(text).toContain("Luca Prime");
-    expect(text).toContain("Local routes");
-    expect(text).toContain("LucaLink");
-    expect(text).toContain("Connector required");
+    expect(text).toContain("Permission center");
+    expect(text).toContain("Execution readiness");
     cleanup();
   });
 
-  it("switches to the Timeline (activity) empty state", () => {
+  it("switches to the Timeline tab and mounts the real ActivityPanel", () => {
     const { container, cleanup } = mount(<WebLucaShell {...props} />);
     const timelineTab = Array.from(container.querySelectorAll("button")).find(
       (b) => b.textContent?.trim() === "Timeline",
     );
     expect(timelineTab).toBeTruthy();
     act(() => timelineTab!.click());
-    expect(container.textContent ?? "").toContain("No activity yet");
+    // ActivityPanel renders runtime activity / pending approvals content.
+    expect(container.textContent ?? "").toContain("Pending approvals");
     cleanup();
   });
 
-  it("renders the left workspace sessions from the app runtime (Phase 4)", () => {
+  it("renders the left workspace sessions from the app runtime", () => {
     const { container, cleanup } = mount(<WebLucaShell {...props} />);
-    // Session card is sourced from webAppRuntime.getWorkspaceState, not hardcoded.
     const session = container.querySelector('[data-luca-web-workspace-session="chat"]');
     expect(session).not.toBeNull();
     expect(session?.textContent ?? "").toContain("Chat");
