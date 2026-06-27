@@ -117,6 +117,43 @@ describe("LucaOnboardingScreen", () => {
     container.remove();
   });
 
+  it("renders the presence screen as a surface-mockup grid with all options selectable", () => {
+    const onSelectOption = vi.fn();
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => {
+      root.render(
+        <LucaOnboardingScreen screenId="presence" onSelectOption={onSelectOption} />,
+      );
+    });
+
+    // Grid layout, not the vertical stack.
+    expect(
+      container.querySelector('[data-luca-onboarding-options-layout="surface-grid"]'),
+    ).not.toBeNull();
+
+    // Every surface renders a mockup and a selectable radio option (one screen,
+    // no progressive-disclosure toggle).
+    for (const id of ["minichat", "voice", "widget", "presence", "dashboard"]) {
+      expect(container.querySelector(`[data-luca-surface-mockup="${id}"]`)).not.toBeNull();
+      const tile = container.querySelector(
+        `[data-luca-onboarding-option="${id}"]`,
+      ) as HTMLButtonElement;
+      expect(tile).not.toBeNull();
+      expect(tile.getAttribute("role")).toBe("radio");
+    }
+    expect(container.querySelector("[data-luca-onboarding-advanced-toggle]")).toBeNull();
+
+    act(() => {
+      (container.querySelector('[data-luca-onboarding-option="dashboard"]') as HTMLButtonElement).click();
+    });
+    expect(onSelectOption).toHaveBeenCalledWith("dashboard");
+
+    act(() => root.unmount());
+    container.remove();
+  });
+
   it("does not mutate document root / body styles when mounted", () => {
     const rootStyleBefore = document.documentElement.getAttribute("style");
     const bodyStyleBefore = document.body.getAttribute("style");

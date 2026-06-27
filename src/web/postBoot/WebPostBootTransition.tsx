@@ -14,6 +14,8 @@ import {
 } from "../../styles/lucaMaterialSystem";
 import { resolvePostBootReadinessBridgeCopy } from "./postBootReadinessBridgeCopy";
 import { WebPostBootAmbientPresence } from "./WebPostBootAmbientPresence";
+import { resolveLucaDashboardSkinBoundary } from "../../styles/lucaDashboardSkinBoundary";
+import { readWebPremiumPreferences } from "../webLifecycleStorage";
 import type { WebPostBootStateSnapshot } from "./webPostBootState";
 
 interface WebPostBootTransitionProps {
@@ -37,6 +39,10 @@ export function WebPostBootTransition({
 }: WebPostBootTransitionProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const copy = resolvePostBootReadinessBridgeCopy({ state: snapshot.userState });
+  const skinBoundary = resolveLucaDashboardSkinBoundary({
+    selectedSkinId: readWebPremiumPreferences()?.environment,
+    hostKind: "desktop-web",
+  });
   const needsAttention = ["partial_setup", "permission_attention"].includes(
     snapshot.userState,
   );
@@ -63,6 +69,7 @@ export function WebPostBootTransition({
     <section
       className="relative z-10 flex min-h-dvh w-full items-center justify-center overflow-y-auto px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6"
       style={{
+        ...skinBoundary.materialVariables,
         background: "var(--luca-background-base)",
         color: "var(--luca-text-primary)",
       }}
