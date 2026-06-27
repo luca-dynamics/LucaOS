@@ -45,6 +45,7 @@ export function WebLucaShell({ lucaLinkStatus }: WebLucaShellProps) {
   const controlState = webAppRuntime.getControlState({ lucaLinkStatus });
   const activityState = webAppRuntime.getActivityState();
   const memoryState = webAppRuntime.getMemoryState();
+  const workspaceState = webAppRuntime.getWorkspaceState();
 
   const emptyNote = (message: string) => (
     <p className="text-[11px] leading-5 text-[var(--app-text-muted)]">{message}</p>
@@ -104,12 +105,24 @@ export function WebLucaShell({ lucaLinkStatus }: WebLucaShellProps) {
             <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.2em]">
               Workspace
             </p>
-            <div className="rounded-xl border border-[var(--app-primary)] bg-[var(--luca-accent-soft)] p-3 text-xs text-[var(--app-text-main)]">
-              <Icon name="ChatRound" size={16} color="currentColor" />
-              <span className="mt-2 block font-bold">Chat</span>
+            <div className="space-y-2">
+              {workspaceState.sessions.map((session) => (
+                <div
+                  key={session.id}
+                  data-luca-web-workspace-session={session.id}
+                  className={`rounded-xl border p-3 text-xs text-[var(--app-text-main)] ${
+                    session.active
+                      ? "border-[var(--app-primary)] bg-[var(--luca-accent-soft)]"
+                      : "border-[var(--app-border-main)]"
+                  }`}
+                >
+                  <Icon name="ChatRound" size={16} color="currentColor" />
+                  <span className="mt-2 block font-bold">{session.title}</span>
+                </div>
+              ))}
             </div>
             <p className="mt-6 text-[10px] leading-5 text-[var(--app-text-muted)]">
-              Luca is ready. Ask anything or open a workspace.
+              {workspaceState.emptyMessage}
             </p>
           </div>
         }
