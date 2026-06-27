@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { LucaDashboardSurface } from "../components/dashboard/LucaDashboardSurface";
 import { Icon } from "../components/ui/Icon";
 import type { WebCapability } from "./browserHostCapabilities";
 import { WebChatSurface } from "./chat/WebChatSurface";
 import { resolveLucaDashboardSkinBoundary } from "../styles/lucaDashboardSkinBoundary";
 import { readWebPremiumPreferences } from "./webLifecycleStorage";
+import { webAppRuntime, type WebSurfaceAvailability } from "./runtime/webAppRuntime";
+import {
+  RIGHT_PANEL_LABELS,
+  type RightPanelMode,
+} from "../components/right-panel/rightPanelModel";
 
 interface WebLucaShellProps {
   hostClass: string;
@@ -11,6 +17,15 @@ interface WebLucaShellProps {
   browserCapabilities: WebCapability[];
   guardedNativeCapabilities: WebCapability[];
 }
+
+const RIGHT_PANEL_WEB_MODES: RightPanelMode[] = ["CONTROL", "ACTIVITY", "MEMORY"];
+
+const availabilityDot: Record<WebSurfaceAvailability, string> = {
+  ready: "var(--luca-success, #4fbf7a)",
+  preparing: "var(--luca-info, #4f8cff)",
+  "connect-required": "var(--luca-warning, #f2b23e)",
+  unavailable: "var(--app-text-muted)",
+};
 
 export function WebLucaShell({ lucaLinkStatus }: WebLucaShellProps) {
   // Honor the skin chosen during onboarding (stored as the `environment`
@@ -22,6 +37,41 @@ export function WebLucaShell({ lucaLinkStatus }: WebLucaShellProps) {
     selectedSkinId,
     hostKind: "desktop-web",
   });
+
+  // The right panel now reads from the web app runtime (real-app Phase 3)
+  // instead of hand-coded rows: Overview shows live control rows, Timeline and
+  // Memory show their honest empty states until web-safe data sources land.
+  const [rightMode, setRightMode] = useState<RightPanelMode>("CONTROL");
+  const controlState = webAppRuntime.getControlState({ lucaLinkStatus });
+  const activityState = webAppRuntime.getActivityState();
+  const memoryState = webAppRuntime.getMemoryState();
+
+  const emptyNote = (message: string) => (
+    <p className="text-[11px] leading-5 text-[var(--app-text-muted)]">{message}</p>
+  );
+
+  const rightPanel =
+    rightMode === "CONTROL" ? (
+      <dl className="space-y-4 text-xs text-[var(--app-text-main)]">
+        {controlState.rows.map((row) => (
+          <div key={row.id}>
+            <dt className="flex items-center gap-2 text-[var(--app-text-muted)]">
+              <span
+                aria-hidden="true"
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ background: availabilityDot[row.availability] }}
+              />
+              {row.label}
+            </dt>
+            <dd className="mt-1 font-bold">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+    ) : rightMode === "ACTIVITY" ? (
+      emptyNote(activityState.emptyMessage)
+    ) : (
+      emptyNote(memoryState.emptyMessage)
+    );
 
   return (
     <section className="absolute inset-0 z-10 p-3 sm:p-5">
@@ -64,22 +114,11 @@ export function WebLucaShell({ lucaLinkStatus }: WebLucaShellProps) {
           </div>
         }
         chatSurface={<WebChatSurface />}
-        rightPanel={
-          <dl className="space-y-4 text-xs text-[var(--app-text-main)]">
-            <div>
-              <dt className="text-[var(--app-text-muted)]">Luca Prime</dt>
-              <dd className="mt-1 font-bold">Preparing</dd>
-            </div>
-            <div>
-              <dt className="text-[var(--app-text-muted)]">Local routes</dt>
-              <dd className="mt-1 font-bold">Connect in Settings</dd>
-            </div>
-            <div>
-              <dt className="text-[var(--app-text-muted)]">LucaLink</dt>
-              <dd className="mt-1 font-bold">{lucaLinkStatus}</dd>
-            </div>
-          </dl>
-        }
+        rightPanel={rightPanel}
+        rightPanelModes={RIGHT_PANEL_WEB_MODES}
+        activeRightPanelMode={rightMode}
+        onRightPanelModeChange={setRightMode}
+        getRightPanelLabel={(mode) => RIGHT_PANEL_LABELS[mode]}
         settingsSurface={null}
         voiceSurface={null}
         hologramSurface={null}
