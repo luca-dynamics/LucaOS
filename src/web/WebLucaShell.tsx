@@ -11,6 +11,7 @@ import {
   type RightPanelMode,
 } from "../components/right-panel/rightPanelModel";
 import { WebRealRightPanel } from "./shell/WebRealRightPanel";
+import { WebRealHeader } from "./shell/WebRealHeader";
 
 interface WebLucaShellProps {
   hostClass: string;
@@ -46,24 +47,7 @@ export function WebLucaShell({ lucaLinkStatus: _lucaLinkStatus }: WebLucaShellPr
           height: "100%",
           ...skinBoundary.materialVariables,
         }}
-        headerSurface={
-          <header className="flex h-16 flex-none items-center justify-between border-b border-[var(--app-border-main)] px-5 text-[var(--app-text-main)]">
-            <div className="flex items-center gap-3">
-              <img src="/icon.png" alt="" className="h-8 w-8 object-contain" />
-              <div>
-                <h1 className="font-display text-base font-semibold tracking-[0.16em]">
-                  L.U.C.A OS
-                </h1>
-                <p className="text-[9px] uppercase tracking-[0.18em] text-[var(--app-text-muted)]">
-                  Luca dashboard
-                </p>
-              </div>
-            </div>
-            <span className="rounded-full border border-[var(--app-border-main)] px-3 py-1 text-[10px] uppercase tracking-widest text-[var(--app-text-muted)]">
-              Ready
-            </span>
-          </header>
-        }
+        headerSurface={<WebRealHeader />}
         leftPanel={
           <div className="h-full p-4 text-[var(--app-text-main)]">
             <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.2em]">
