@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { LocalRuntimeAdapter } from "../LocalRuntimeAdapter";
 import { createRuntimeHealth } from "../LocalRuntimeAdapter";
-import { RuntimeRegistry } from "../RuntimeRegistry";
+import { createDefaultLocalRuntimeRegistry, RuntimeRegistry } from "../RuntimeRegistry";
 
 const adapter = (kind: LocalRuntimeAdapter["kind"]): LocalRuntimeAdapter => ({
   kind,
@@ -53,5 +53,12 @@ describe("RuntimeRegistry", () => {
     expect(() => registry.require("mediapipe")).toThrow(
       "Local runtime not registered: mediapipe",
     );
+  });
+
+  it("registers Luca-owned desktop Cortex and Ollama adapters by default", () => {
+    const registry = createDefaultLocalRuntimeRegistry();
+
+    expect(registry.require("cortex").kind).toBe("cortex");
+    expect(registry.require("ollama").kind).toBe("ollama");
   });
 });

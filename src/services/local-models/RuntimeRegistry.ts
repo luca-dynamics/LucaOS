@@ -1,5 +1,6 @@
 import type { LocalRuntimeAdapter } from "./LocalRuntimeAdapter";
 import type { LocalRuntimeKind } from "./LocalModelTypes";
+import { CortexRuntime } from "./runtimes/CortexRuntime";
 import { OllamaRuntime } from "./runtimes/OllamaRuntime";
 
 export class RuntimeRegistry {
@@ -34,6 +35,7 @@ export class RuntimeRegistry {
 export function createDefaultLocalRuntimeRegistry(): RuntimeRegistry {
   const registry = new RuntimeRegistry();
   registry.register(new OllamaRuntime());
+  registry.register(new CortexRuntime());
   return registry;
 }
 
