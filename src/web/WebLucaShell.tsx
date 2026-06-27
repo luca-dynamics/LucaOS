@@ -2,7 +2,7 @@ import { useState } from "react";
 import { LucaDashboardSurface } from "../components/dashboard/LucaDashboardSurface";
 import { Icon } from "../components/ui/Icon";
 import type { WebCapability } from "./browserHostCapabilities";
-import { WebChatSurface } from "./chat/WebChatSurface";
+import { WebRealChatPanel } from "./chat/WebRealChatPanel";
 import { resolveLucaDashboardSkinBoundary } from "../styles/lucaDashboardSkinBoundary";
 import { readWebPremiumPreferences } from "./webLifecycleStorage";
 import { webAppRuntime, type WebSurfaceAvailability } from "./runtime/webAppRuntime";
@@ -126,7 +126,7 @@ export function WebLucaShell({ lucaLinkStatus }: WebLucaShellProps) {
             </p>
           </div>
         }
-        chatSurface={<WebChatSurface />}
+        chatSurface={<WebRealChatPanel />}
         rightPanel={rightPanel}
         rightPanelModes={RIGHT_PANEL_WEB_MODES}
         activeRightPanelMode={rightMode}

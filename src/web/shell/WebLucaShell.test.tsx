@@ -3,12 +3,15 @@ import { describe, expect, it } from "vitest";
 import { webAppRuntime } from "../runtime/webAppRuntime";
 
 const shellSource = readFileSync("src/web/WebLucaShell.tsx", "utf8");
-const chatSource = readFileSync("src/web/chat/WebChatSurface.tsx", "utf8");
+const chatSource = readFileSync("src/web/chat/WebRealChatPanel.tsx", "utf8");
 
 describe("WebLucaShell dashboard presentation", () => {
   it("uses LucaOS dashboard-shell presentation copy instead of debug placeholder copy", () => {
     expect(shellSource).toContain("Luca dashboard");
-    expect(shellSource).toContain("<WebChatSurface");
+    // Web now mounts the real desktop ChatPanel (via WebRealChatPanel), not a
+    // bespoke web chat surface.
+    expect(shellSource).toContain("<WebRealChatPanel");
+    expect(chatSource).toContain('from "../../components/layout/ChatPanel"');
     // Workspace copy now comes from the web app runtime (real-app Phase 4),
     // not a literal in the shell.
     expect(shellSource).toContain("getWorkspaceState");
