@@ -16,6 +16,8 @@ describe("CortexRuntime", () => {
     await expect(runtime.listModels()).resolves.toEqual([
       "gemma-2b",
       "llama-3.2-1b",
+      "phi-3-mini",
+      "smollm2-1.7b",
     ]);
   });
 

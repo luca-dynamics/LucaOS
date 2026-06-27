@@ -2,12 +2,18 @@ import { LLMProvider, ChatMessage, LLMResponse } from "./LLMProvider";
 import { CORTEX_SERVER_URL, OLLAMA_SERVER_URL } from "../../config/api";
 import { settingsService } from "../settingsService";
 import { modelManager, LOCAL_BRAIN_MODEL_IDS } from "../ModelManagerService";
+import { lucaLocalModelRuntime } from "../local-models/LucaLocalModelRuntime";
+import type { LocalChatMessage, LocalToolDefinition } from "../local-models/LocalModelTypes";
 
 // Define locally to avoid dependency issues if not exported
 interface ToolFunction {
   name: string;
   description?: string;
   parameters?: any;
+}
+
+interface LocalRuntimeTarget {
+  model: string;
 }
 
 export class LocalLLMAdapter implements LLMProvider {
@@ -93,6 +99,36 @@ export class LocalLLMAdapter implements LLMProvider {
     return `${CORTEX_SERVER_URL}/chat/completions`;
   }
 
+  /**
+   * Resolve the model into Luca's owned local-runtime facade.
+   *
+   * This intentionally mirrors the legacy endpoint routing while moving the
+   * actual chat execution through `lucaLocalModelRuntime`, where admission
+   * control, leases, runtime registry lookup, and adapter normalization live.
+   */
+  private async resolveRuntimeTarget(): Promise<LocalRuntimeTarget> {
+    const settings = settingsService.getSettings();
+    const preferOllama = settings.brain.preferOllama;
+    const specs = modelManager.getModelSpecs(this.name);
+    const isBrainModel =
+      LOCAL_BRAIN_MODEL_IDS.includes(this.name) || this.name.startsWith("local-gemma");
+
+    if (
+      specs?.runtime === "ollama" ||
+      specs?.ollamaTag ||
+      (!specs && (isBrainModel || preferOllama))
+    ) {
+      await modelManager.ensureOllamaRunning();
+      return {
+        model: resolveRuntimeModelId(this.name),
+      };
+    }
+
+    return {
+      model: specs?.id ?? this.name,
+    };
+  }
+
   // Basic generation (non-chat)
   async generateContent(prompt: string, images?: string[]): Promise<string> {
     const response = await this.chat(
@@ -152,9 +188,9 @@ export class LocalLLMAdapter implements LLMProvider {
       }
 
       // 4. Map Tools to JSON Schema
-      const backendTools = tools
+      const backendTools: LocalToolDefinition[] | undefined = tools
         ? tools.map((t) => ({
-            type: "function",
+            type: "function" as const,
             function: {
               name: t.name,
               description: t.description,
@@ -163,77 +199,31 @@ export class LocalLLMAdapter implements LLMProvider {
           }))
         : undefined;
 
-      // 5. Smart Routing: Ollama (if detected) > Cortex > Ollama fallback
-      const endpoint = await this.resolveEndpoint();
-      
-      // Resolve the actual Ollama tag from the ModelManager if possible
-      let modelTag = this.name;
-      try {
-        const specs = modelManager.getModelSpecs(this.name);
-        if (specs && specs.ollamaTag) {
-          modelTag = specs.ollamaTag;
-        } else if (this.name.includes("-")) {
-          // Fallback heuristic for ad-hoc models
-          modelTag = this.name.replace("-2b", "2:2b").replace("-mini", ":mini").replace("-7b", ":7b");
-        }
-      } catch (e) {
-        console.warn("[Local Adapter] Tag resolution failed, using ID:", e);
-      }
+      // 5. Runtime facade routing: Cortex/Ollama selection stays here, but
+      // execution now flows through Luca's owned local-model runtime.
+      const target = await this.resolveRuntimeTarget();
 
-      const requestBody: any = {
-        model: modelTag,
-        messages: messages,
+      const localResponse = await lucaLocalModelRuntime.chat({
+        model: target.model,
+        messages: messages.map(toLocalChatMessage),
         temperature: 0.7,
-      };
-
-      // Only include tools if they are actually present to avoid Ollama 400s
-      if (backendTools && backendTools.length > 0) {
-        requestBody.tools = backendTools;
-      }
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-        signal: AbortSignal.timeout(120_000), 
+        tools: backendTools,
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Local Brain Error (${endpoint}): ${response.statusText}${errorText ? ` - ${errorText}` : ""}`,
-        );
-      }
-
-      const result = await response.json();
-
-      // 6. Parsing Response (OpenAI Format)
-      const choice = result.choices[0];
-      const content = choice.message.content || "";
-      const messageToolCalls = choice.message.tool_calls;
 
       // Check for JSON Tool Call (Simple regex heuristic for now)
       // The backend prompt specifically asks for: { "tool": "name", "arguments": {} }
-      const toolCalls: any[] = [];
+      const toolCalls: any[] = localResponse.toolCalls
+        ? localResponse.toolCalls.map((toolCall) => ({
+            id: toolCall.id,
+            name: toolCall.name,
+            args: toolCall.args,
+          }))
+        : [];
 
-      // A. Native Tool Calls (Ollama/OpenAI standard)
-      if (messageToolCalls && messageToolCalls.length > 0) {
-        toolCalls.push(
-          ...messageToolCalls.map((tc: any) => ({
-            id: tc.id || "call_" + Date.now(),
-            name: tc.function.name,
-            args:
-              typeof tc.function.arguments === "string"
-                ? JSON.parse(tc.function.arguments)
-                : tc.function.arguments,
-          })),
-        );
-      }
-
-      // B. JSON Block Fallback (for non-function-calling models)
+      // JSON Block Fallback (for non-function-calling models)
       try {
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        const potentialJson = jsonMatch ? jsonMatch[0] : content;
+        const jsonMatch = localResponse.text.match(/\{[\s\S]*\}/);
+        const potentialJson = jsonMatch ? jsonMatch[0] : localResponse.text;
 
         if (
           potentialJson.includes('"tool"') &&
@@ -253,7 +243,7 @@ export class LocalLLMAdapter implements LLMProvider {
       }
 
       return {
-        text: content, // ALWAYS return content, even if tools are present (Ollama often explains tools)
+        text: localResponse.text, // ALWAYS return content, even if tools are present (Ollama often explains tools)
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       };
     } catch (err: any) {
@@ -415,4 +405,23 @@ export class LocalLLMAdapter implements LLMProvider {
       return { valid: false, message: "Local connection failed.", details: e };
     }
   }
+}
+
+function resolveRuntimeModelId(modelName: string): string {
+  try {
+    const specs = modelManager.getModelSpecs(modelName);
+    if (specs?.ollamaTag) return specs.ollamaTag;
+  } catch (error) {
+    console.warn("[Local Adapter] Tag resolution failed, using ID:", error);
+  }
+
+  return modelName;
+}
+
+function toLocalChatMessage(message: Record<string, any>): LocalChatMessage {
+  return {
+    role: message.role as LocalChatMessage["role"],
+    content: message.content || " ",
+    toolCallId: message.tool_call_id,
+  };
 }

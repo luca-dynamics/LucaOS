@@ -6,6 +6,16 @@ import type {
 
 export const LOCAL_MODEL_CATALOG: LocalModelDescriptor[] = [
   {
+    id: "ollama:llama3.2:1b",
+    displayName: "Llama 3.2 1B",
+    runtime: "ollama",
+    runtimeModelId: "llama3.2:1b",
+    contextWindow: 8192,
+    features: ["chat", "streaming", "tools"],
+    recommended: true,
+    install: { strategy: "ollama-pull", ref: "llama3.2:1b" },
+  },
+  {
     id: "ollama:llama3.2:3b",
     displayName: "Llama 3.2 3B",
     runtime: "ollama",
@@ -23,6 +33,16 @@ export const LOCAL_MODEL_CATALOG: LocalModelDescriptor[] = [
     contextWindow: 32768,
     features: ["chat", "streaming", "tools"],
     install: { strategy: "ollama-pull", ref: "qwen2.5:7b" },
+  },
+  {
+    id: "ollama:gemma4:4b",
+    displayName: "Gemma 4B",
+    runtime: "ollama",
+    runtimeModelId: "gemma4:4b",
+    sizeBytes: 4_200_000_000,
+    contextWindow: 8192,
+    features: ["chat", "streaming", "tools"],
+    install: { strategy: "ollama-pull", ref: "gemma4:4b" },
   },
   {
     id: "ollama:gemma3:4b",
@@ -52,6 +72,26 @@ export const LOCAL_MODEL_CATALOG: LocalModelDescriptor[] = [
     contextWindow: 8192,
     features: ["chat"],
     install: { strategy: "cortex-download", ref: "llama-3.2-1b" },
+  },
+  {
+    id: "cortex:phi-3-mini",
+    displayName: "Phi-3 Mini GGUF",
+    runtime: "cortex",
+    runtimeModelId: "phi-3-mini",
+    sizeBytes: 2_300_000_000,
+    contextWindow: 8192,
+    features: ["chat"],
+    install: { strategy: "cortex-download", ref: "phi-3-mini" },
+  },
+  {
+    id: "cortex:smollm2-1.7b",
+    displayName: "SmolLM2 1.7B GGUF",
+    runtime: "cortex",
+    runtimeModelId: "smollm2-1.7b",
+    sizeBytes: 1_200_000_000,
+    contextWindow: 8192,
+    features: ["chat"],
+    install: { strategy: "cortex-download", ref: "smollm2-1.7b" },
   },
   {
     id: "mediapipe:gemma-2b-it",
