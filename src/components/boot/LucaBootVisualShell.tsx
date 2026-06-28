@@ -19,6 +19,7 @@ import {
   lucaShellSecondaryTextStyle,
   lucaShellTertiaryTextStyle,
 } from "../../styles/lucaShellStyles";
+import { lucaBrandFaceStyle } from "../../styles/lucaBrandFace";
 import { settingsService } from "../../services/settingsService";
 import type { LucaSettings } from "../../services/settingsService";
 import { resolveLucaBootSkinBoundary } from "../../styles/lucaBootSkinBoundary";
@@ -115,7 +116,31 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
             "radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--luca-surface-hover, var(--app-bg-tint)) 42%, transparent), transparent 30%), var(--luca-background-liquid, linear-gradient(180deg, var(--luca-background-elevated, var(--app-bg-tint)) 0%, var(--luca-background-base, var(--app-bg-main)) 100%))",
         }}
       />
-      <div className="pointer-events-none absolute left-1/2 top-[31%] h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,var(--luca-accent-soft,#4f8cff)_12%,transparent)] blur-3xl sm:h-[32rem] sm:w-[32rem]" />
+      {/* Neutral key light from above — calm, no cyber tint or glow ring */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-[30%] h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:h-[34rem] sm:w-[34rem]"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--luca-text-primary, #f4f6f8) 9%, transparent), transparent 70%)",
+        }}
+      />
+      {/* Filmic vignette — the face emerges from darkness */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 60% at 50% 40%, transparent 50%, rgba(0,0,0,0.5) 100%)",
+        }}
+      />
+      {/* Faint film grain for premium depth */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.045] mix-blend-soft-light"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          backgroundSize: "160px 160px",
+        }}
+      />
 
       <section
         aria-label="LucaOS startup"
@@ -126,16 +151,12 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
           data-boot-visual="landing-hologram-face"
           aria-hidden="true"
         >
-          <div className="absolute left-1/2 top-[57%] h-24 w-[72%] max-w-[34rem] -translate-x-1/2 rounded-[100%] bg-[color-mix(in_srgb,var(--luca-accent-soft,#4f8cff)_12%,transparent)]/[0.07] blur-2xl" />
           <img
             src={launchIdentity.assetSrc}
             alt=""
             aria-hidden="true"
-            className="relative h-auto w-[min(78vw,24rem)] max-w-none animate-[luca-hologram-breathe_6.4s_ease-in-out_infinite] object-contain sm:w-[min(46vw,27rem)]"
-            style={{
-              opacity: launchIdentity.markOpacity,
-              filter: "drop-shadow(var(--luca-shadow-glow))",
-            }}
+            className="relative h-auto w-[min(78vw,24rem)] max-w-none object-contain sm:w-[min(46vw,27rem)]"
+            style={lucaBrandFaceStyle(launchIdentity.markOpacity)}
           />
         </div>
 
