@@ -6,7 +6,6 @@ import AlwaysOnControls from "../AlwaysOnControls";
 import RuntimeStatusChip from "../runtime/RuntimeStatusChip";
 import RuntimeContinuityBootstrap from "../runtime/RuntimeContinuityBootstrap";
 import { awarenessService } from "../../services/awarenessService";
-import { liveService } from "../../services/liveService";
 import { soundService } from "../../services/soundService";
 import { useCredits } from "../../hooks/useCredits";
 import { lucaMaterialControlStyle, lucaMaterialMobileControlStyle, lucaMaterialMobilePanelChromeStyle, lucaMaterialPanelStyle } from "../../styles/lucaMaterialSystem";
@@ -245,7 +244,8 @@ const Header: React.FC<HeaderProps> = ({
                 awarenessService.startAmbientVisionLoop({
                   mode: showVoiceHud ? "voice" : "text",
                   persona,
-                  onScreenCapture: (base64) => {
+                  onScreenCapture: async (base64) => {
+                    const { liveService } = await import("../../services/liveService");
                     liveService.sendVideoFrame(base64);
                     liveService.sendText(
                       "[AMBIENT VISION] I just scanned the screen. Describe what you see briefly and suggest if there is anything you can help with. Keep it to 1-2 sentences.",
