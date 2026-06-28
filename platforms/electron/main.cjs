@@ -452,21 +452,25 @@ function launchInterface(isSilent = false) {
         toggleHologram(); 
     }
     
-    // Smooth transition: Show Main, Wait, Close Boot
+    // Smooth transition: reveal Main only once React has actually painted, then close Boot.
     if (mainWindow && bootWindow) {
         let shown = false;
         const show = () => {
-            if (shown) return;
+            if (shown || !mainWindow) return;
             shown = true;
-            if (mainWindow) mainWindow.show();
+            mainWindow.show();
             setTimeout(() => {
                 if (bootWindow) bootWindow.close();
             }, 500);
         };
 
-        mainWindow.once('ready-to-show', show);
-        // INDUSTRIAL GRADE: "Force Render" fallback for Intel Macs under load
-        setTimeout(show, 2000); 
+        // Reveal the main window only once the React app is PAST BOOT
+        // (READY/ONBOARDING), signaled via window.luca.notifyReady -> 'renderer-ready'.
+        // The native boot splash stays up through the entire React boot, so the
+        // redundant in-app boot screen is never seen and the window never flashes empty.
+        ipcMain.once('renderer-ready', show);
+        // Hard fallback so the window can never get stuck hidden if boot ever stalls.
+        setTimeout(show, 20000);
     } else {
         if (bootWindow) bootWindow.close();
     }
@@ -495,8 +499,9 @@ function createWindow() {
         height: savedBounds.height,
         x: savedBounds.x,
         y: savedBounds.y,
-        backgroundColor: '#00000000', // Transparent Hex for true native transparency
-        transparent: true,
+        show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
+        backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
+        transparent: false,
         titleBarStyle: 'hiddenInset', // Mac-style hidden title bar
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {
@@ -621,14 +626,15 @@ function startServer() {
     // This ensures better-sqlite3 binaries (compiled for system Node) work correctly.
     // In production, we assume 'node' is available or bundle the runtime.
     serverProcess = spawn('node', [serverPath], {
-        env: { 
-            ...process.env, 
-            PORT: SERVER_PORT, 
+        env: {
+            ...process.env,
+            PORT: SERVER_PORT,
             CORTEX_PORT: cortexPort.toString(), // Pass dynamic port
             VITE_DEV_PORT: VITE_DEV_PORT.toString(), // Sync dev port
-            ELECTRON_RUN: 'true' 
+            ELECTRON_RUN: 'true'
         },
-        stdio: 'inherit'
+        stdio: 'inherit',
+        windowsHide: true // Don't pop a separate console window on Windows
     });
 
     serverProcess.on('error', (err) => {
@@ -719,7 +725,8 @@ async function startCortex() {
     if (pythonCmd) {
         cortexProcess = spawn(pythonCmd, [cortexPath], {
             stdio: 'inherit',
-            env: env
+            env: env,
+            windowsHide: true // Don't pop a separate console window on Windows
         });
     } else {
         cortexProcess = spawn(cortexPath, [], {

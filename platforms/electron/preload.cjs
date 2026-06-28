@@ -21,6 +21,9 @@ expose('luca', {
     minimize: () => ipcRenderer.send('window-minimize'),
     maximize: () => ipcRenderer.send('window-maximize'),
     close: () => ipcRenderer.send('window-close'),
+    // Renderer tells the host it has painted its first frame, so main can reveal
+    // the transparent window without flashing an empty desktop-bleed frame.
+    notifyReady: () => ipcRenderer.send('renderer-ready'),
     onActiveWindowChange: (callback) => ipcRenderer.on('active-window-change', (event, data) => callback(data)),
     readClipboard: () => ipcRenderer.invoke('clipboard-read'),
     writeClipboard: (text) => ipcRenderer.invoke('clipboard-write', text),

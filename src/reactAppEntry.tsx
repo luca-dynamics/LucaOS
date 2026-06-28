@@ -94,6 +94,9 @@ export function mountLucaReactApp(): void {
     window.__LUCA_REACT_MOUNTED__ = true;
     console.info("[LucaOS web boot] React mounted");
     document.getElementById("root-loader")?.remove();
+    // NOTE: the Electron main window is revealed only once the app is past boot
+    // (READY/ONBOARDING) — signaled from App.tsx — so the native splash covers
+    // the whole boot and the redundant in-app boot screen is never shown.
   } catch (error) {
     const description = describeBootError(error);
     console.error("[LucaOS web boot] Fatal error before React mount", error);
