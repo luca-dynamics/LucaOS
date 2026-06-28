@@ -1,4 +1,4 @@
-import { FunctionDeclaration } from "@google/generative-ai";
+import type { FunctionDeclaration } from "@google/generative-ai";
 import {
   PersonaType,
   PERSONA_SPECIALIZED_TOOLS,

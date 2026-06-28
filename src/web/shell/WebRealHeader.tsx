@@ -23,7 +23,7 @@ const webHeaderTheme = {
   themeName: "luca",
 };
 
-function readInitialSettingsOpen(): boolean {
+export function readInitialWebSettingsOpen(): boolean {
   if (typeof window === "undefined") return false;
   try {
     return window.localStorage.getItem(WEB_HEADER_SETTINGS_OPEN_KEY) === "true";
@@ -32,27 +32,47 @@ function readInitialSettingsOpen(): boolean {
   }
 }
 
-export function WebRealHeader() {
-  const [isSettingsOpen, setIsSettingsOpenState] = useState(readInitialSettingsOpen);
+interface WebRealHeaderProps {
+  isSettingsOpen?: boolean;
+  onOpenSettings?: () => void;
+}
+
+export function WebRealHeader({
+  isSettingsOpen: controlledSettingsOpen,
+  onOpenSettings,
+}: WebRealHeaderProps = {}) {
+  const [isSettingsOpen, setIsSettingsOpenState] = useState(
+    readInitialWebSettingsOpen,
+  );
   const [ambientVisionActive, setAmbientVisionActive] = useState(false);
   const [audioMonitoringActive, setAudioMonitoringActive] = useState(false);
   const [_ambientSuggestions, setAmbientSuggestions] = useState<unknown[]>([]);
   const [_showSuggestionChips, setShowSuggestionChips] = useState(false);
+  const settingsOpen = controlledSettingsOpen ?? isSettingsOpen;
 
   useEffect(() => {
     try {
       window.localStorage.setItem(
         WEB_HEADER_SETTINGS_OPEN_KEY,
-        isSettingsOpen ? "true" : "false",
+        settingsOpen ? "true" : "false",
       );
     } catch {
       // Storage can be unavailable in hardened browser contexts; the Header
       // still renders and the local state remains authoritative for the tab.
     }
-  }, [isSettingsOpen]);
+  }, [settingsOpen]);
+
+  const setSettingsOpen = (open: boolean) => {
+    if (controlledSettingsOpen === undefined) {
+      setIsSettingsOpenState(open);
+    }
+    if (open) {
+      onOpenSettings?.();
+    }
+  };
 
   return (
-    <div data-luca-web-real-header data-luca-web-settings-open={isSettingsOpen}>
+    <div data-luca-web-real-header data-luca-web-settings-open={settingsOpen}>
       <Header
         theme={webHeaderTheme}
         persona="assistant"
@@ -60,7 +80,7 @@ export function WebRealHeader() {
         handleCyclePersona={() => undefined}
         isRebooting={false}
         handleKeyDown={() => undefined}
-        setIsSettingsOpen={setIsSettingsOpenState}
+        setIsSettingsOpen={setSettingsOpen}
         isAdminMode={false}
         ambientVisionActive={ambientVisionActive}
         setAmbientVisionActive={setAmbientVisionActive}
