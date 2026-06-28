@@ -63,7 +63,7 @@ export interface ResolvePresenceTokensInput {
   highContrast?: boolean;
 }
 
-const BASE_MOTION: PresenceMotionTokens = {
+export const BASE_MOTION: PresenceMotionTokens = {
   breatheMs: 4500,
   pulseMs: 1200,
   sparkSpinMs: 4000,
