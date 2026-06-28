@@ -145,7 +145,7 @@ export const LucaPremiumOnboardingPreview: React.FC<
 
   const screenId = flow.currentScreenId;
   // The environment selection is also the skin choice (ids align 1:1).
-  const skinId = getLucaOnboardingFlowSelection(flow, "environment") ?? "pearl";
+  const skinId = getLucaOnboardingFlowSelection(flow, "environment") ?? "carbon";
   // Calm per-screen entrance; Flow stays static and reduced motion always wins.
   const motionReduced = Boolean(reducedMotion) || skinId === "flow";
   const isLast = isLucaOnboardingFlowLastScreen(flow);

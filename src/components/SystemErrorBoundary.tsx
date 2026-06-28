@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Icon } from "./ui/Icon";
 import { apiUrl } from "../config/api";
+import { isElectron } from "../utils/env";
 
 interface Props {
   children?: ReactNode;
@@ -19,7 +20,6 @@ class SystemErrorBoundary extends Component<Props, State> {
     hasError: false,
     error: null,
     errorInfo: null,
-
     isRestoring: false,
     isRepairing: false,
   };
@@ -35,32 +35,28 @@ class SystemErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("CRITICAL SYSTEM FAILURE:", error, errorInfo);
+    console.error("[Luca] Interface error caught by boundary:", error, errorInfo);
     this.setState({ errorInfo });
   }
 
   handleRollback = async () => {
     this.setState({ isRestoring: true });
     try {
-      // Attempt to restore the last modified file via the Local Core
-      // We assume the user wants to undo the LAST file write operation
-      console.log("Initiating Rollback...");
-      const res = await fetch(apiUrl("/api/fs/restore-last"), {
-        method: "POST",
-      });
+      // Creator recovery: ask the Local Core to undo the last source-file write.
+      const res = await fetch(apiUrl("/api/fs/restore-last"), { method: "POST" });
       const data = await res.json();
 
       if (data.success) {
-        alert(`ROLLBACK SUCCESSFUL: ${data.file}\nSystem will now restart.`);
+        alert(`Restored ${data.file}. Reloading Luca…`);
         window.location.reload();
       } else {
         alert(
-          `ROLLBACK FAILED: ${data.error}\nManual intervention required in /src folder.`
+          `Couldn't restore automatically: ${data.error}\nThe change may need a manual look in /src.`,
         );
         this.setState({ isRestoring: false });
       }
     } catch {
-      alert("CONNECTION ERROR: Local Core offline. Cannot automate rollback.");
+      alert("The Local Core is offline, so Luca can't restore automatically.");
       this.setState({ isRestoring: false });
     }
   };
@@ -68,113 +64,190 @@ class SystemErrorBoundary extends Component<Props, State> {
   handleAutoRepair = async () => {
     this.setState({ isRepairing: true });
     try {
-      // send the error to the backend to generate a fix
-      // We can reuse the /evolve logic, or a new /repair endpoint.
-      // Since we don't know the exact file, let's try a "smart repair" if we can.
-      // However, for now, we will use a simpler approach:
-      // 1. Send stack trace to a new endpoint `/api/evolution/repair` (we need to make this or reuse logic)
-      // Actually, Phoenix logic is good. Let's try to invoke Phoenix via API if possible, or just use `evolve` if we can pinpoint the file.
-
-      // Strategy: Smart Repair
-      // We will send the error to a new endpoint /api/evolution/repair
-      // This endpoint will use Gemini to find the file and fix it using evolution service.
-
+      // Creator recovery: hand the error to the Evolution engine to find + fix
+      // the responsible source file.
       const res = await fetch(apiUrl("/api/evolution/repair"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           error: this.state.error?.message,
-          stack:
-            this.state.errorInfo?.componentStack || this.state.error?.stack,
+          stack: this.state.errorInfo?.componentStack || this.state.error?.stack,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        alert(`REPAIR SUCCESSFUL: ${data.message}\nSystem will now restart.`);
+        alert(`Luca repaired itself: ${data.message}. Reloading…`);
         window.location.reload();
       } else {
-        alert(`REPAIR FAILED: ${data.error || data.message}`);
+        alert(`The repair didn't complete: ${data.error || data.message}`);
         this.setState({ isRepairing: false });
       }
     } catch {
-      alert("REPAIR ERROR: Could not contact Evolution Engine.");
+      alert("Luca couldn't reach the Evolution engine to attempt a repair.");
       this.setState({ isRepairing: false });
     }
   };
 
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className="h-screen w-full bg-black text-[var(--luca-danger,#f87171)] font-mono flex flex-col items-center justify-center p-10 relative overflow-hidden">
-          {/* Background Hazard */}
-          <div className="absolute inset-0 pointer-events-none opacity-20 bg-[repeating-linear-gradient(45deg,#ef4444,#ef4444_10px,transparent_10px,transparent_20px)]"></div>
+    if (!this.state.hasError) return this.props.children;
 
-          <div className="max-w-3xl w-full border-4 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[#050000] p-8 shadow-[0_0_100px_rgba(220,38,38,0.5)] relative z-10 rounded-lg">
-            <div className="flex items-center gap-4 mb-6 border-b-2 border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] pb-4">
-              <Icon name="ShieldAlert" size={48} className="animate-pulse" />
-              <div>
-                <h1 className="text-4xl font-black tracking-[0.2em]">
-                  CRITICAL FAILURE
-                </h1>
-                <p className="text-[var(--luca-danger,#f87171)] font-bold">
-                  LUCA KERNEL PANIC // RUNTIME EXCEPTION
-                </p>
-              </div>
+    const creatorRecovery = isElectron();
+
+    return (
+      <div
+        className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden px-6 font-sans"
+        style={{
+          background: "var(--luca-background-base, #111417)",
+          color: "var(--luca-text-primary, #f4f6f8)",
+        }}
+      >
+        {/* Calm vignette — no hazard stripes, no neon glow. */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 60% at 50% 38%, transparent 55%, rgba(0,0,0,0.45) 100%)",
+          }}
+        />
+
+        <section
+          className="relative z-10 w-full max-w-xl rounded-2xl p-8"
+          style={{
+            background:
+              "var(--luca-surface-elevated, var(--luca-surface-glass, #1b2025))",
+            border: "1px solid var(--luca-border-subtle, rgba(255,255,255,0.08))",
+            boxShadow: "0 30px 80px -30px rgba(0,0,0,0.6)",
+          }}
+        >
+          <div className="flex items-start gap-4">
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style={{
+                background:
+                  "color-mix(in srgb, var(--luca-warning, #e0b15a) 16%, transparent)",
+                color: "var(--luca-warning, #e0b15a)",
+              }}
+            >
+              <Icon name="ShieldAlert" size={22} />
             </div>
-
-            <div className="bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] p-4 mb-6 rounded font-mono text-xs overflow-auto max-h-48">
-              <div className="text-white font-bold mb-2">STACK TRACE:</div>
-              {this.state.error && this.state.error.toString()}
-              <br />
-              {this.state.errorInfo && this.state.errorInfo.componentStack}
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={() => window.location.reload()}
-                className="flex-1 py-4 border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:text-black transition-all font-bold tracking-widest flex items-center justify-center gap-2"
+            <div className="min-w-0">
+              <h1 className="text-xl font-semibold tracking-[-0.01em]">
+                Luca ran into a problem
+              </h1>
+              <p
+                className="mt-1 text-sm"
+                style={{ color: "var(--luca-text-secondary, #9aa6b6)" }}
               >
-                <Icon name="Refresh" size={18} /> FORCE RESTART
-              </button>
-
-              <button
-                onClick={this.handleRollback}
-                disabled={this.state.isRestoring}
-                className="flex-1 py-4 bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] hover:bg-white hover:text-black text-black transition-all font-bold tracking-widest flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(220,38,38,0.4)] animate-pulse"
-              >
-                {this.state.isRestoring ? (
-                  <Icon name="Refresh" size={18} className="animate-spin" />
-                ) : (
-                  <Icon name="Restart" size={18} />
-                )}
-                INITIATE ROLLBACK PROTOCOL
-              </button>
-
-              <button
-                onClick={this.handleAutoRepair}
-                disabled={this.state.isRepairing}
-                className="flex-1 py-4 bg-[color-mix(in_srgb,var(--luca-accent-primary,#9b7cff)_12%,transparent)] hover:bg-white hover:text-black text-white transition-all font-bold tracking-widest flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(147,51,234,0.5)] animate-pulse"
-              >
-                {this.state.isRepairing ? (
-                  <Icon name="Refresh" size={18} className="animate-spin" />
-                ) : (
-                  <Icon name="Code" size={18} />
-                )}
-                ATTEMPT AUTO-REPAIR
-              </button>
-            </div>
-
-            <div className="mt-6 text-center text-xs text-[var(--luca-danger,#f87171)] uppercase">
-              <Icon name="Code" size={10} className="inline mr-1" />
-              Automated Self-Repair Module V1.0
+                An unexpected error interrupted the interface. Your work is safe —
+                reload to continue.
+              </p>
             </div>
           </div>
-        </div>
-      );
-    }
 
-    return this.props.children;
+          {/* Technical details — quiet, collapsed by default. */}
+          <details className="mt-5">
+            <summary
+              className="cursor-pointer select-none text-xs font-medium tracking-[0.14em] uppercase"
+              style={{ color: "var(--luca-text-tertiary, #7d8a93)" }}
+            >
+              Technical details
+            </summary>
+            <pre
+              className="mt-2 max-h-44 overflow-auto whitespace-pre-wrap rounded-lg p-3 text-[11px] leading-relaxed"
+              style={{
+                background: "var(--luca-surface-glass, rgba(255,255,255,0.03))",
+                border: "1px solid var(--luca-border-subtle, rgba(255,255,255,0.07))",
+                color: "var(--luca-text-secondary, #9aa6b6)",
+                fontFamily: "ui-monospace, 'JetBrains Mono', monospace",
+              }}
+            >
+              {this.state.error?.toString()}
+              {this.state.errorInfo?.componentStack}
+            </pre>
+          </details>
+
+          {/* Primary action — available to everyone. */}
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-colors"
+            style={{
+              background: "var(--luca-accent-primary, #6f9bff)",
+              color: "var(--luca-accent-on, #0b0d10)",
+            }}
+          >
+            <Icon name="Refresh" size={16} />
+            Reload Luca
+          </button>
+
+          {/* Creator recovery — source-level self-repair, Creator/desktop only. */}
+          {creatorRecovery && (
+            <div
+              className="mt-6 border-t pt-5"
+              style={{ borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.08))" }}
+            >
+              <div
+                className="text-xs font-medium tracking-[0.14em] uppercase"
+                style={{ color: "var(--luca-text-tertiary, #7d8a93)" }}
+              >
+                Creator recovery
+              </div>
+              <p
+                className="mt-1 text-xs"
+                style={{ color: "var(--luca-text-secondary, #9aa6b6)" }}
+              >
+                These edit Luca's own source through the Local Core.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <button
+                  onClick={this.handleRollback}
+                  disabled={this.state.isRestoring}
+                  className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+                  style={{
+                    background: "var(--luca-surface-glass, rgba(255,255,255,0.04))",
+                    border: "1px solid var(--luca-border-subtle, rgba(255,255,255,0.1))",
+                    color: "var(--luca-text-primary, #f4f6f8)",
+                  }}
+                >
+                  <Icon
+                    name={this.state.isRestoring ? "Refresh" : "Restart"}
+                    size={15}
+                    className={this.state.isRestoring ? "animate-spin" : ""}
+                  />
+                  Restore last change
+                </button>
+                <button
+                  onClick={this.handleAutoRepair}
+                  disabled={this.state.isRepairing}
+                  className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+                  style={{
+                    background:
+                      "color-mix(in srgb, var(--luca-accent-primary, #6f9bff) 14%, transparent)",
+                    border:
+                      "1px solid color-mix(in srgb, var(--luca-accent-primary, #6f9bff) 32%, transparent)",
+                    color: "var(--luca-text-primary, #f4f6f8)",
+                  }}
+                >
+                  <Icon
+                    name={this.state.isRepairing ? "Refresh" : "Code"}
+                    size={15}
+                    className={this.state.isRepairing ? "animate-spin" : ""}
+                  />
+                  Let Luca repair this
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div
+            className="mt-6 text-center text-[11px] tracking-[0.12em] uppercase"
+            style={{ color: "var(--luca-text-tertiary, #7d8a93)" }}
+          >
+            Luca Self-Repair · Creator module
+          </div>
+        </section>
+      </div>
+    );
   }
 }
 
