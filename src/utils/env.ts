@@ -6,16 +6,22 @@
 export const isElectron = (): boolean => {
   if (typeof window === "undefined") return false;
 
-  return !!(
-    (window as any).electron ||
-    (window as any).ipcRenderer ||
-    (window as any).process?.versions?.electron ||
-    navigator.userAgent.toLowerCase().includes("electron") ||
-    // Checks for specific URL param if main.js appends it
-    new URLSearchParams(window.location.search).get("platform") === "electron" ||
-    // Additional check for cases where electron object might be nested or shadowed
-    (window as any).navigator?.userAgent?.toLowerCase().includes("electron")
-  );
+  const w = window as unknown as {
+    electron?: unknown;
+    luca?: unknown;
+    ipcRenderer?: unknown;
+    process?: { versions?: { electron?: unknown } };
+  };
+
+  // A genuine Electron host exposes a preload bridge (window.luca / window.electron)
+  // and/or process.versions.electron. We REQUIRE one of those real signals — a UA
+  // string containing "electron" is NOT enough on its own, because Electron-based
+  // *web* browsers (e.g. preview/embedded tools) carry that UA but have no bridge,
+  // and trusting it makes the app run Electron-only code (ipcRenderer) that crashes.
+  const hasNativeBridge = !!(w.electron || w.luca || w.ipcRenderer);
+  if (hasNativeBridge) return true;
+
+  return !!w.process?.versions?.electron;
 };
 
 export const isCapacitor = (): boolean => {

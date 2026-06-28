@@ -151,7 +151,29 @@ settingsService.on("settings-changed", (settings) => {
   }
 });
 
-// Helper that throws if client is missing (handling the null)
+const GENAI_UNCONFIGURED_MESSAGE =
+  "Google GenAI not initialized. Please set VITE_API_KEY or configure settings.";
+
+// When no key is configured we must NOT throw here — many services build the
+// client at module-load (e.g. `this.ai = getGenClient()`), so throwing would
+// crash the entire app at boot. Instead return a lazy proxy that lets the app
+// boot and only throws if the AI client is actually *used*, so AI features
+// degrade gracefully until a real key is added (e.g. during onboarding).
+const createUnconfiguredClientProxy = (): GoogleAI.GoogleGenerativeAI =>
+  new Proxy(
+    {},
+    {
+      get() {
+        throw new Error(GENAI_UNCONFIGURED_MESSAGE);
+      },
+      apply() {
+        throw new Error(GENAI_UNCONFIGURED_MESSAGE);
+      },
+    },
+  ) as unknown as GoogleAI.GoogleGenerativeAI;
+
+// Returns the GenAI client, re-initializing if the key/url changed. If no valid
+// key is configured, returns a lazy proxy (see above) instead of throwing.
 export const getGenClient = (): GoogleAI.GoogleGenerativeAI => {
   const key = getApiKey();
   const baseUrl = getBaseUrl();
@@ -161,14 +183,12 @@ export const getGenClient = (): GoogleAI.GoogleGenerativeAI => {
     if (key) {
       currentGenAI = initClient(key);
     } else {
-      throw new Error(
-        "Google GenAI not initialized. Please set VITE_API_KEY or configure settings.",
-      );
+      return createUnconfiguredClientProxy();
     }
   }
 
   if (!currentGenAI) {
-    throw new Error("Failed to initialize Google GenAI client.");
+    return createUnconfiguredClientProxy();
   }
 
   return currentGenAI;

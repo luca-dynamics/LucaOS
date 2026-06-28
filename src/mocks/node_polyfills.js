@@ -84,6 +84,28 @@ export const randomBytes = (size) => {
   }
 
   webCrypto.getRandomValues(bytes);
+  // Node Buffers support `bytes.toString('hex' | 'base64')`; a raw Uint8Array
+  // ignores the encoding arg (returns comma-separated decimals), which silently
+  // breaks callers like SecureVault that do randomBytes(32).toString('hex').
+  // Emulate the Buffer encodings so the browser-safe build behaves like Node.
+  const nativeToString = Uint8Array.prototype.toString;
+  bytes.toString = (encoding) => {
+    if (encoding === 'hex') {
+      let hex = '';
+      for (let i = 0; i < bytes.length; i += 1) {
+        hex += bytes[i].toString(16).padStart(2, '0');
+      }
+      return hex;
+    }
+    if (encoding === 'base64') {
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 1) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return typeof globalThis.btoa === 'function' ? globalThis.btoa(binary) : binary;
+    }
+    return nativeToString.call(bytes);
+  };
   return bytes;
 };
 

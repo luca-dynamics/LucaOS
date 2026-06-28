@@ -226,7 +226,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       orbGradient:
         "radial-gradient(60% 50% at 35% 30%, rgba(255, 255, 255, 0.5), transparent 60%), conic-gradient(from 200deg, #7fa6c0, #6f88a0, #9aa6c0, #7fa6c0)",
       faceSharpFilter:
-        "drop-shadow(0 0 22px rgba(150, 180, 200, 0.45)) brightness(1.05)",
+        "drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45)) brightness(1.03)",
     },
   },
   flow: {
@@ -361,7 +361,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
   },
 } as const;
 
-export const DEFAULT_LUCA_SKIN_ID: LucaSkinId = "pearl";
+export const DEFAULT_LUCA_SKIN_ID: LucaSkinId = "carbon";
 
 export function isLucaSkinId(value: unknown): value is LucaSkinId {
   return typeof value === "string" && value in LUCA_SKINS;

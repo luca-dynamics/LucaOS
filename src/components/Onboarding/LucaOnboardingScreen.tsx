@@ -285,7 +285,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   const heroPresence =
     presence === "identity" ? (
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
-        <LucaPresence state="identity" label="Luca" {...presenceProps} />
+        <LucaPresence state="identity" size={104} label="Luca" {...presenceProps} />
       </div>
     ) : presence === "voice" ? (
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
@@ -300,7 +300,9 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
       aria-label={copy.accessibilityLabel ?? copy.title}
       className={className}
       style={{
-        maxWidth: 560,
+        // The surface-picker ("presence") needs room for 5 cards across on
+        // desktop; text-led screens stay narrow for readability.
+        maxWidth: screenId === "presence" ? 980 : 560,
         margin: "0 auto",
         color: textPrimary,
         ...style,
@@ -398,12 +400,11 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
           aria-label={copy.detailsLabel ?? copy.title}
           data-luca-onboarding-options
           data-luca-onboarding-options-layout="surface-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-            gap: 10,
-            margin: "18px 0 0",
-          }}
+          // Responsive: stacked on mobile, 2-up on small screens, all 5 across on
+          // desktop — so the whole screen fits without scrolling and the cards
+          // get comfortable width instead of being crushed.
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"
+          style={{ margin: "18px 0 0" }}
         >
           {[...primaryOptions, ...advancedOptions].map((option) => (
             <SurfaceMockupTile

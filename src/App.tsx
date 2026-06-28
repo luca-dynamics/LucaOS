@@ -114,7 +114,6 @@ import { useVoiceEngine } from "./hooks/app/useVoiceEngine";
 import { useChatController } from "./hooks/app/useChatController";
 import { useToolOrchestrator } from "./hooks/app/useToolOrchestrator";
 import { BootSequence } from "./hooks/app/useAppSystem";
-import { LucaBootVisualShell } from "./components/boot/LucaBootVisualShell";
 import { LucaPremiumOnboardingPreview } from "./components/Onboarding/LucaPremiumOnboardingPreview";
 import { mapLucaOnboardingFlowToDesktopCompletion } from "./components/Onboarding/lucaOnboardingCompletionBridge";
 import { useLucaLocalEndpointStatus } from "./hooks/useLucaLocalEndpointStatus";
@@ -335,6 +334,28 @@ function AppContent() {
       window.clearTimeout(browserSafeFallbackTimer);
     };
   }, [browserSafeBootState, isBrowserSafeWebInterface]);
+
+  // Reveal the Electron main window only once the app is past boot
+  // (READY/ONBOARDING). The native boot splash stays up through the entire React
+  // boot, so the redundant in-app boot screen is never shown — and the window
+  // never flashes empty. No-op outside Electron (window.luca is undefined).
+  const hasSignaledHostReadyRef = useRef(false);
+  useEffect(() => {
+    if (hasSignaledHostReadyRef.current) return;
+    if (bootSequence === "READY" || bootSequence === "ONBOARDING") {
+      hasSignaledHostReadyRef.current = true;
+      const reveal = () =>
+        (
+          window as unknown as { luca?: { notifyReady?: () => void } }
+        ).luca?.notifyReady?.();
+      // Wait for the destination UI (onboarding/dashboard) to actually paint in
+      // the still-hidden window before revealing it — so the boot splash hands
+      // off straight to onboarding with no black holding-screen flash in between.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => setTimeout(reveal, 80)),
+      );
+    }
+  }, [bootSequence]);
 
   useEffect(() => {
     if (!isBrowserSafeWebInterface && !bootDebugEnabled) return;
@@ -2462,12 +2483,11 @@ function AppContent() {
             />
           </div>
         ) : (
-          <LucaBootVisualShell
-            bootSequence={showBrowserSafeBootShell ? "INIT" : bootSequence}
-            biosStatus={biosStatus}
-            theme={theme}
-            browserSafeInterface={showBrowserSafeBootShell}
-          />
+          // Redundant in-app boot screen (the "KERNEL ACCESS" face + readiness
+          // cards) is eradicated: boot runs silently behind a calm dark holding
+          // screen. On Electron the native splash covers boot and the window is
+          // only revealed at READY/ONBOARDING, so this is never even seen.
+          <div className="absolute inset-0" style={{ background: "#111417" }} />
         )}
       </div>
     );
