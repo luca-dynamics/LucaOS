@@ -2,7 +2,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { WebLucaShell } from "../WebLucaShell";
 
 function mount(ui: React.ReactElement) {
@@ -27,6 +27,43 @@ const props = {
 };
 
 describe("WebLucaShell right panel (real desktop components)", () => {
+  it("opens the real SettingsModal from the real Header without mutating the document root preview", () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: false,
+        json: async () => ({}),
+      })),
+    );
+
+    const { container, cleanup } = mount(<WebLucaShell {...props} />);
+    const settingsButton = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Open settings"]',
+    );
+    expect(settingsButton).not.toBeNull();
+    expect(container.querySelector("[data-luca-web-real-settings-surface]")).toBeNull();
+
+    act(() => settingsButton!.click());
+
+    const settingsSurface = container.querySelector<HTMLElement>(
+      "[data-luca-web-real-settings-surface]",
+    );
+    expect(settingsSurface).not.toBeNull();
+    expect(container.textContent ?? "").toContain("Settings");
+    expect(settingsSurface!.style.getPropertyValue("--app-bg-blur")).toBeTruthy();
+    expect(document.documentElement.style.getPropertyValue("--app-bg-blur")).toBe("");
+
+    const cancelButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.trim() === "Cancel",
+    );
+    expect(cancelButton).toBeTruthy();
+    act(() => cancelButton!.click());
+    expect(container.querySelector("[data-luca-web-real-settings-surface]")).toBeNull();
+
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
   it("mounts the real desktop ControlPanel in Overview", () => {
     const { container, cleanup } = mount(<WebLucaShell {...props} />);
     // ControlPanel renders its governed-control content (permission center,

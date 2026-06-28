@@ -38,6 +38,7 @@ import {
 interface SettingsModalProps {
   onClose: () => void;
   initialTab?: string;
+  themePreviewTargetRef?: React.RefObject<HTMLElement>;
   theme: {
     primary: string;
     border: string;
@@ -52,6 +53,7 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   initialTab,
+  themePreviewTargetRef,
   theme,
 }) => {
   const [activeTab, setActiveTab] = useState(initialTab || "general");
@@ -106,58 +108,59 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }, []);
 
   // --- LIVE PREVIEW ENGINE ---
-  // Apply theme changes to document root in real-time for instant feedback
+  // Apply theme changes in real-time for instant feedback. Desktop defaults to
+  // the document root; embedded surfaces can provide a local target boundary.
   useEffect(() => {
     const newTheme = settings.general?.theme;
     if (newTheme) {
+      const previewTarget =
+        themePreviewTargetRef?.current ??
+        (typeof document !== "undefined" ? document.documentElement : null);
+      if (!previewTarget) return;
+
       const opacity = settings.general.backgroundOpacity ?? 0.3;
       const blur = settings.general.backgroundBlur ?? 40;
       const contrast = getDynamicContrast(newTheme as any, opacity);
 
-      document.documentElement.style.setProperty(
-        "--app-text-main",
-        contrast.text,
-      );
-      document.documentElement.style.setProperty(
+      previewTarget.style.setProperty("--app-text-main", contrast.text);
+      previewTarget.style.setProperty(
         "--app-text-muted",
         contrast.textMuted,
       );
-      document.documentElement.style.setProperty(
+      previewTarget.style.setProperty(
         "--app-border-main",
         contrast.border,
       );
-      document.documentElement.style.setProperty(
-        "--app-bg-tint",
-        contrast.bgTint,
-      );
-      document.documentElement.style.setProperty(
+      previewTarget.style.setProperty("--app-bg-tint", contrast.bgTint);
+      previewTarget.style.setProperty(
         "--app-bg-main",
         (contrast as any).bgMain,
       );
 
-      document.documentElement.style.setProperty(
+      previewTarget.style.setProperty(
         "--app-bg-opacity",
         opacity.toString(),
       );
-      document.documentElement.style.setProperty("--app-bg-blur", `${blur}px`);
+      previewTarget.style.setProperty("--app-bg-blur", `${blur}px`);
 
       const isLight = PERSONA_UI_CONFIG[newTheme as any]?.isLight || false;
       if (isLight) {
-        document.documentElement.classList.add("light-mode");
+        previewTarget.classList.add("light-mode");
       } else {
-        document.documentElement.classList.remove("light-mode");
+        previewTarget.classList.remove("light-mode");
       }
 
       // Sync hex for Voice/Particles
       const cfg = PERSONA_UI_CONFIG[newTheme as any];
       if (cfg?.hex) {
-        document.documentElement.style.setProperty("--app-core-hex", cfg.hex);
+        previewTarget.style.setProperty("--app-core-hex", cfg.hex);
       }
     }
   }, [
     settings.general?.theme,
     settings.general?.backgroundOpacity,
     settings.general?.backgroundBlur,
+    themePreviewTargetRef,
   ]);
 
   const loadMemoryStats = () => {

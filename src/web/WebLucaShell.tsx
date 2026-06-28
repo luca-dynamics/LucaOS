@@ -11,7 +11,11 @@ import {
   type RightPanelMode,
 } from "../components/right-panel/rightPanelModel";
 import { WebRealRightPanel } from "./shell/WebRealRightPanel";
-import { WebRealHeader } from "./shell/WebRealHeader";
+import {
+  readInitialWebSettingsOpen,
+  WebRealHeader,
+} from "./shell/WebRealHeader";
+import { WebRealSettingsSurface } from "./shell/WebRealSettingsSurface";
 
 interface WebLucaShellProps {
   hostClass: string;
@@ -37,6 +41,9 @@ export function WebLucaShell({ lucaLinkStatus: _lucaLinkStatus }: WebLucaShellPr
   // ActivityPanel / MemoryControlPanel) via WebRealRightPanel, switched by the
   // dashboard's tabs. The left workspace still reads the runtime's session list.
   const [rightMode, setRightMode] = useState<RightPanelMode>("CONTROL");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(
+    readInitialWebSettingsOpen,
+  );
   const workspaceState = webAppRuntime.getWorkspaceState();
 
   return (
@@ -47,7 +54,12 @@ export function WebLucaShell({ lucaLinkStatus: _lucaLinkStatus }: WebLucaShellPr
           height: "100%",
           ...skinBoundary.materialVariables,
         }}
-        headerSurface={<WebRealHeader />}
+        headerSurface={
+          <WebRealHeader
+            isSettingsOpen={isSettingsOpen}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
+        }
         leftPanel={
           <div className="h-full p-4 text-[var(--app-text-main)]">
             <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.2em]">
@@ -80,7 +92,11 @@ export function WebLucaShell({ lucaLinkStatus: _lucaLinkStatus }: WebLucaShellPr
         activeRightPanelMode={rightMode}
         onRightPanelModeChange={setRightMode}
         getRightPanelLabel={(mode) => RIGHT_PANEL_LABELS[mode]}
-        settingsSurface={null}
+        settingsSurface={
+          isSettingsOpen ? (
+            <WebRealSettingsSurface onClose={() => setIsSettingsOpen(false)} />
+          ) : null
+        }
         voiceSurface={null}
         hologramSurface={null}
         visualCoreSurface={null}
