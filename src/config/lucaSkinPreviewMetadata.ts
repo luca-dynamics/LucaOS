@@ -40,17 +40,16 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
     id: "pearl",
     label: "LucaOS Pearl",
     shortLabel: "Pearl",
-    tagline: "The quiet bright default for LucaOS.",
+    tagline: "A quiet bright environment for LucaOS.",
     description:
       "A calm light operating environment with soft pearl surfaces, restrained material depth, and readable graphite text for everyday work.",
     mood: "calm-light",
     capabilities: [
-      "recommended-default",
       "high-readability",
       "low-motion-safe",
       "mobile-safe",
     ],
-    recommendedFor: ["first-time users", "daily work", "calm default use"],
+    recommendedFor: ["daily work", "calm light-mode use", "reading"],
     previewNotes: [
       "Use soft near-white surfaces with gentle ambient warmth.",
       "Keep the preview spacious, low-noise, and text-forward.",
@@ -73,8 +72,13 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
     description:
       "A focused graphite operating environment with restrained accents, quiet depth, and comfortable dark-mode readability.",
     mood: "focused-dark",
-    capabilities: ["developer-focus", "high-readability", "low-motion-safe"],
-    recommendedFor: ["developers", "long work sessions", "dark-mode users"],
+    capabilities: [
+      "recommended-default",
+      "developer-focus",
+      "high-readability",
+      "low-motion-safe",
+    ],
+    recommendedFor: ["first-time users", "developers", "long work sessions", "dark-mode users"],
     previewNotes: [
       "Use neutral charcoal depth rather than pure black.",
       "Keep accent treatment restrained and professional.",

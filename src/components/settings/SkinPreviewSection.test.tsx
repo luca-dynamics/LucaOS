@@ -15,7 +15,7 @@ import {
 } from "../../config/lucaSkins";
 
 describe("LucaOS skin settings preview section", () => {
-  it("normalizes missing and invalid selected skin IDs to Pearl", () => {
+  it("normalizes missing and invalid selected skin IDs to the default skin", () => {
     expect(normalizeLucaSkinId(undefined)).toBe(DEFAULT_LUCA_SKIN_ID);
     expect(normalizeLucaSkinId("not-a-skin")).toBe(DEFAULT_LUCA_SKIN_ID);
     expect(normalizeLucaSkinId("carbon")).toBe("carbon");
@@ -46,28 +46,27 @@ describe("LucaOS skin settings preview section", () => {
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
-  it("marks Pearl as the recommended default and current fallback", () => {
+  it("marks Carbon as the recommended default and current fallback", () => {
     const markup = renderToStaticMarkup(
       <SkinPreviewSection selectedSkinId="not-a-skin" />,
     );
     expect(markup).toContain("Recommended");
     expect(markup).toContain("Current");
-    expect(markup).toContain('data-skin-preview-card="pearl"');
+    expect(markup).toContain('data-skin-preview-card="carbon"');
 
     const list = getLucaSkinPreviewMetadataList();
     const recommended = list.filter((skin) =>
       skin.capabilities.includes("recommended-default"),
     );
-    expect(recommended.map((skin) => skin.id)).toEqual(["pearl"]);
+    expect(recommended.map((skin) => skin.id)).toEqual(["carbon"]);
   });
 
-  it("states clearly that selecting applies only to the dashboard shell", () => {
+  it("presents skins as the primary visual environment", () => {
     const markup = renderToStaticMarkup(<SkinPreviewSection />);
-    expect(markup).toContain("applies to the dashboard shell only");
-    expect(markup).toContain("Boot, onboarding, mobile, and global overlays");
-    expect(SKIN_PREVIEW_HELPER_COPY).toContain(
-      "applies to the dashboard shell only",
-    );
+    expect(markup).toContain("visual operating environments");
+    expect(markup).not.toContain("applies to the dashboard shell only");
+    expect(markup).not.toContain("not skinned yet");
+    expect(SKIN_PREVIEW_HELPER_COPY).toContain("visual operating environment");
   });
 
   it("selecting a card calls the settings update path with that skin ID", () => {

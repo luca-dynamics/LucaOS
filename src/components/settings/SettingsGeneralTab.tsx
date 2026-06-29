@@ -6,10 +6,6 @@ import { Icon as IconEngine } from "../ui/Icon";
 import ToneStyleSelector from "./ToneStyleSelector";
 import { PersonaMode } from "../../types/lucaPersonality";
 import {
-  NORMAL_LUCA_THEME_OPTIONS,
-  getLucaThemeLabel,
-} from "../../config/lucaThemeLabels";
-import {
   SettingsAdvancedDisclosure,
   SettingsCard,
   SettingsDangerZone,
@@ -264,27 +260,12 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
         <motion.div variants={item}>
           <SettingsSection
             title="Appearance"
-            description="Choose Luca's persona and visual theme without exposing raw theme internals."
+            description="Choose Luca's persona and visual operating environment."
             icon="Palette"
             accentColor={theme.hex}
             isMobile={isMobile}
           >
-            <SettingsRow
-              label="Sync appearance with persona"
-              description="Let Luca choose the matching appearance when you switch persona."
-              icon="RefreshCircle"
-              accentColor={theme.hex}
-              control={
-                <SettingsToggle
-                  checked={!!settings.general.syncThemeWithPersona}
-                  onChange={() => toggleGeneral("syncThemeWithPersona")}
-                  accentColor={theme.hex}
-                  ariaLabel="Sync appearance with persona"
-                />
-              }
-            />
-
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4">
               <SettingsCard>
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
@@ -325,63 +306,6 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     );
                   })}
                 </div>
-              </SettingsCard>
-
-              <SettingsCard>
-                <h4
-                  className="text-sm font-semibold"
-                  style={{ color: settingsSurfaceTokens.textPrimary }}
-                >
-                  Theme
-                </h4>
-                <p
-                  className="mb-3 text-xs"
-                  style={{ color: settingsSurfaceTokens.textSecondary }}
-                >
-                  Pick the surface style Luca uses across Settings and shell UI.
-                </p>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {NORMAL_LUCA_THEME_OPTIONS.map((option) => {
-                    const isActive =
-                      getLucaThemeLabel(settings.general.theme)
-                        .canonicalThemeId === option.canonicalThemeId;
-                    return (
-                      <button
-                        key={option.id}
-                        disabled={settings.general.syncThemeWithPersona}
-                        onClick={() =>
-                          onUpdate("general", "theme", option.canonicalThemeId)
-                        }
-                        title={option.description}
-                        aria-label={`${option.label}: ${option.description}`}
-                        className="flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-all disabled:cursor-not-allowed disabled:opacity-40"
-                        style={{
-                          borderColor: isActive
-                            ? theme.hex
-                            : settingsSurfaceTokens.borderSubtle,
-                          backgroundColor: isActive
-                            ? settingsSurfaceTokens.accentSoft
-                            : settingsSurfaceTokens.elevated,
-                          color: settingsSurfaceTokens.textPrimary,
-                        }}
-                      >
-                        <span
-                          className="h-2 w-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: option.hex }}
-                        />
-                        <span className="truncate">{option.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {settings.general.syncThemeWithPersona && (
-                  <p
-                    className="mt-2 text-xs"
-                    style={{ color: settingsSurfaceTokens.textTertiary }}
-                  >
-                    Disable sync to customize theme manually.
-                  </p>
-                )}
               </SettingsCard>
             </div>
           </SettingsSection>

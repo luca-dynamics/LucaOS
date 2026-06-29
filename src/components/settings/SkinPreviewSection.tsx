@@ -6,21 +6,20 @@ import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 import { SkinPreviewCard } from "./SkinPreviewCard";
 
 /**
- * Preview-only Settings section for the LucaOS Skin System.
+ * Settings section for the LucaOS Skin System.
  *
  * This section renders the four launch skins (Pearl, Carbon, Flow, Canvas) as
- * local-only "operating environment samples". It is intentionally inert:
+ * local-only "operating environment samples".
  *
- * - No skin is applied globally.
- * - The selected skin ID can be persisted and applied to the dashboard shell only.
- * - There are no apply/save controls.
+ * - The selected skin ID is persisted through Settings.
+ * - App surfaces consume the selected skin at their local boundaries.
  * - No root/global appearance or theme state is mutated.
  *
- * The helper copy makes explicit that application is dashboard-boundary-only.
+ * The helper copy presents skins as the app's primary visual environment.
  */
 
 export const SKIN_PREVIEW_HELPER_COPY =
-  "Your selected skin now applies to the dashboard shell only. Boot, onboarding, mobile, and global overlays are not skinned yet.";
+  "Choose the visual operating environment Luca uses across the app.";
 
 export interface SkinPreviewSectionProps {
   accentColor?: string;
@@ -46,15 +45,13 @@ export const SkinPreviewSection: React.FC<SkinPreviewSectionProps> = ({
       icon="Palette"
       accentColor={accentColor}
       isMobile={isMobile}
-      eyebrow="Preview only"
     >
       <p
         className="text-xs leading-relaxed"
         style={{ color: settingsSurfaceTokens.textTertiary }}
       >
-        Skins are not decorations; they are the visual operating environments
-        for an AI-native OS. Your selected skin now applies to the dashboard shell only. Boot,
-        onboarding, mobile, and global overlays are not skinned yet.
+        Skins are LucaOS visual operating environments. Choose the one that
+        best fits how you want the app to feel while you work.
       </p>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {skins.map((metadata) => (
