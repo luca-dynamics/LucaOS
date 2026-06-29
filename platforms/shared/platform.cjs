@@ -70,6 +70,32 @@ function getNodeExecutableCandidatesFromRoot(rootDir, platform = process.platfor
     ];
 }
 
+function getSystemNodeCandidates(options = {}) {
+    const platform = options.platform || process.platform;
+    const env = options.env || process.env;
+
+    if (platform === 'win32') {
+        return [
+            env.ProgramFiles && path.win32.join(env.ProgramFiles, 'nodejs', 'node.exe'),
+            env['ProgramFiles(x86)'] && path.win32.join(env['ProgramFiles(x86)'], 'nodejs', 'node.exe'),
+        ].filter(Boolean);
+    }
+
+    if (platform === 'darwin') {
+        return [
+            '/opt/homebrew/bin/node',
+            '/usr/local/bin/node',
+            '/usr/bin/node',
+        ];
+    }
+
+    return [
+        '/usr/local/bin/node',
+        '/usr/bin/node',
+        '/bin/node',
+    ];
+}
+
 function getNodeCandidates(options = {}) {
     const platform = options.platform || process.platform;
     const pathApi = pathForPlatform(platform);
@@ -87,6 +113,7 @@ function getNodeCandidates(options = {}) {
         ...getNodeExecutableCandidatesFromRoot(resourcesPath && pathApi.join(resourcesPath, 'runtime'), platform),
         ...getNodeExecutableCandidatesFromRoot(pathApi.join(managedRuntimeDir, 'node'), platform),
         ...getNodeExecutableCandidatesFromRoot(pathApi.join(projectRuntimeDir, 'node'), platform),
+        ...getSystemNodeCandidates({ platform, env }),
         pathFallback,
     ].filter(Boolean);
 }
@@ -121,6 +148,7 @@ module.exports = {
     getDefaultLocalModelPaths,
     getNodeCandidates,
     getNodeExecutableCandidatesFromRoot,
+    getSystemNodeCandidates,
     pathForPlatform,
     getPlatformInfo,
     getPythonCandidates,
