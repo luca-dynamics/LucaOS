@@ -15,6 +15,8 @@ declare global {
     __LUCA_BOOT_ERROR_LISTENERS_REGISTERED__?: boolean;
     __LUCA_CAPTURED_BOOT_ERRORS__?: string[];
     __LUCA_SHOW_BOOT_FAILURE__?: (message?: string, error?: unknown) => void;
+    __LUCA_SET_BOOT_STATUS__?: (message: string, progress?: number) => void;
+    __LUCA_CLEAR_BOOT_STATUS_LOOP__?: () => void;
     __LUCA_SELECTED_ENTRY__?: LucaBootstrapEntry;
     __LUCA_WEB_BRIDGE_MOUNT_ATTEMPTED__?: boolean;
     __LUCA_WEB_BRIDGE_MOUNTED__?: boolean;

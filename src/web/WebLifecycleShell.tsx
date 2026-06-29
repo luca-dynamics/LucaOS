@@ -14,8 +14,6 @@ import {
 } from "./webLifecycleStorage";
 import { LucaPremiumOnboardingPreview } from "../components/Onboarding/LucaPremiumOnboardingPreview";
 import { mapLucaOnboardingFlowToWebProfile } from "../components/Onboarding/lucaOnboardingCompletionBridge";
-import { WebPostBootTransition } from "./postBoot/WebPostBootTransition";
-import { WebPostBootLoading } from "./postBoot/WebPostBootLoading";
 import {
   resolveWebPostBootState,
   type WebPostBootStateSnapshot,
@@ -24,6 +22,24 @@ import {
 export type WebLifecycleState = "post_boot" | "onboarding" | "ready" | "main";
 
 const showWebReadyDebug = import.meta.env.VITE_LUCA_SHOW_WEB_READY_DEBUG === "true";
+
+const setStaticBootStatus = (message: string, progress: number) => {
+  window.__LUCA_SET_BOOT_STATUS__?.(message, progress);
+};
+
+const resolvePostBootTarget = (
+  snapshot: WebPostBootStateSnapshot,
+): WebLifecycleState => {
+  if (
+    snapshot.userState === "new_user" ||
+    snapshot.userState === "partial_setup" ||
+    snapshot.userState === "permission_attention"
+  ) {
+    return "onboarding";
+  }
+
+  return showWebReadyDebug ? "ready" : "main";
+};
 
 export function WebLifecycleShell() {
   const runtime = useWebRuntime();
@@ -40,13 +56,54 @@ export function WebLifecycleShell() {
   }, []);
   useEffect(() => {
     let active = true;
+    const timers: number[] = [];
+    const schedule = (task: () => void, delay: number) => {
+      const timer = window.setTimeout(() => {
+        if (active) task();
+      }, delay);
+      timers.push(timer);
+    };
+
+    window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
+    setStaticBootStatus("Checking your preferences", 0.38);
+
     void resolveWebPostBootState().then((snapshot) => {
-      if (active) setPostBootState(snapshot);
+      if (!active) return;
+
+      setPostBootState(snapshot);
+      schedule(
+        () => setStaticBootStatus("Preparing memory boundaries", 0.56),
+        180,
+      );
+      schedule(
+        () => setStaticBootStatus("Preparing safe tool access", 0.74),
+        640,
+      );
+      schedule(() => {
+        setStaticBootStatus("Opening LucaOS", 0.96);
+        setLifecycleState(resolvePostBootTarget(snapshot));
+      }, 1080);
     });
+
     return () => {
       active = false;
+      timers.forEach((timer) => window.clearTimeout(timer));
     };
   }, []);
+  useEffect(() => {
+    if (lifecycleState === "post_boot") return;
+
+    window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
+    const frame = window.requestAnimationFrame(() => {
+      const loader = document.getElementById("root-loader");
+      if (!loader) return;
+
+      loader.style.opacity = "0";
+      window.setTimeout(() => loader.remove(), 520);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [lifecycleState]);
   const theme = getThemeColors(visualSettings.theme);
   const browserCapabilities = Object.values(
     runtime.browserCapabilities,
@@ -62,26 +119,6 @@ export function WebLifecycleShell() {
         visualSettings={visualSettings}
         theme={{ hex: theme.hex, themeName: visualSettings.theme }}
       />
-      {lifecycleState === "post_boot" && !postBootState && (
-        <WebPostBootLoading />
-      )}
-      {lifecycleState === "post_boot" && postBootState && (
-        <WebPostBootTransition
-          snapshot={postBootState}
-          onContinue={() =>
-            setLifecycleState(
-              postBootState.userState === "new_user"
-                ? "onboarding"
-                : showWebReadyDebug
-                  ? "ready"
-                  : "main",
-            )
-          }
-          onRestartOnboarding={() => setLifecycleState("onboarding")}
-          onReviewVoiceAccess={() => setLifecycleState("onboarding")}
-          onChooseModelRoute={() => setLifecycleState("onboarding")}
-        />
-      )}
       {lifecycleState === "onboarding" && (
         <LucaPremiumOnboardingPreview
           hostKind="desktop-web"
@@ -125,7 +162,7 @@ export function WebLifecycleShell() {
               ? "web-ready-debug"
               : lifecycleState === "onboarding"
                 ? "lucaos-onboarding"
-                : "web-post-boot"
+                : "web-static-boot-loader"
         }
         availableBrowserCapabilityCount={
           browserCapabilities.filter((item) => item.status === "available")

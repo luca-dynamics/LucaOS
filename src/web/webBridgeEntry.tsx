@@ -24,7 +24,6 @@ export function mountLucaWebBridge(): void {
     window.__LUCA_WEB_BRIDGE_MOUNTED__ = true;
     window.__LUCA_REACT_MOUNTED__ = true;
     console.info("[LucaOS web boot] WebBridge mounted");
-    document.getElementById("root-loader")?.remove();
   } catch (error) {
     const description = describeBootError(error);
     window.__LUCA_REACT_BOOTSTRAP_ERROR__ = description;

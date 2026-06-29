@@ -19,9 +19,9 @@ describe("WebLifecycleShell", () => {
   it("branches returning users directly to shell in default flow", () => {
     expect(source).toContain('useState<WebLifecycleState>("post_boot")');
     expect(source).toContain("resolveWebPostBootState()");
-    expect(source).toContain('postBootState.userState === "new_user"');
-    expect(source).toContain(': showWebReadyDebug');
-    expect(source).toContain(': "main"');
+    expect(source).toContain("resolvePostBootTarget(snapshot)");
+    expect(source).toContain('snapshot.userState === "new_user"');
+    expect(source).toContain('return showWebReadyDebug ? "ready" : "main"');
   });
 
   it("does not show the debug ready state unless explicitly enabled", () => {
@@ -30,9 +30,12 @@ describe("WebLifecycleShell", () => {
     expect(source).not.toMatch(/lifecycleState === "ready" && \(/);
   });
 
-  it("renders an immediate loading surface while post-boot state resolves", () => {
-    expect(source).toContain('import { WebPostBootLoading } from "./postBoot/WebPostBootLoading"');
-    expect(source).toContain('lifecycleState === "post_boot" && !postBootState');
-    expect(source).toContain("<WebPostBootLoading />");
+  it("drives the static boot loader while post-boot state resolves", () => {
+    expect(source).not.toContain("WebPostBootLoading");
+    expect(source).not.toContain("WebPostBootTransition");
+    expect(source).toContain("__LUCA_SET_BOOT_STATUS__");
+    expect(source).toContain("Preparing memory boundaries");
+    expect(source).toContain("Preparing safe tool access");
+    expect(source).toContain("document.getElementById(\"root-loader\")");
   });
 });
