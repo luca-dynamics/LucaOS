@@ -42,4 +42,14 @@ describe("web bootstrap entry boundary", () => {
     expect(nodePolyfillsSource).toContain("export class EventEmitter");
     expect(nodePolyfillsSource).toContain("removeAllListeners(eventName)");
   });
+
+  it("keeps the static boot loader responsive to short Electron windows", () => {
+    const htmlSource = readFileSync("index.html", "utf8");
+
+    expect(htmlSource).toContain("gap: clamp(7px, 2.4dvh, 18px)");
+    expect(htmlSource).toContain("width: min(86vw, 62dvh, 500px)");
+    expect(htmlSource).toContain("max-height: min(54dvh, 500px)");
+    expect(htmlSource).toContain("@media (max-height: 460px)");
+    expect(htmlSource).toContain("width: min(78vw, 50dvh, 420px)");
+  });
 });
