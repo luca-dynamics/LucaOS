@@ -25,6 +25,10 @@ describe("Electron first-run provisioning", () => {
     expect(electronMainSource).toContain("ready-to-show");
     expect(electronMainSource).toContain("did-finish-load");
     expect(electronMainSource).toContain("show('timeout')");
+    expect(electronMainSource).toContain("getNodeCandidates");
+    expect(electronMainSource).toContain("resourcesPath: app.isPackaged ? process.resourcesPath : undefined");
+    expect(electronMainSource).toContain("spawn(nodeCmd, [serverPath]");
+    expect(electronMainSource).not.toContain("spawn('node', [serverPath]");
     expect(electronMainSource).not.toContain(
       "['-ExecutionPolicy', 'Bypass', '-File', setupScript, '--full']",
     );

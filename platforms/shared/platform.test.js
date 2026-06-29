@@ -4,6 +4,8 @@ import platformUtils from './platform.cjs';
 const {
   findAvailableExecutable,
   getDefaultLocalModelPaths,
+  getNodeCandidates,
+  getNodeExecutableCandidatesFromRoot,
   getPlatformInfo,
   getPythonCandidates,
   getVenvExecutable,
@@ -30,6 +32,35 @@ describe('platform utilities', () => {
     expect(getPythonCandidates({ platform: 'win32', projectRoot: 'C:\\Luca', homeDir: 'C:\\Users\\luca' }).at(-1)).toBe('python');
     expect(getPythonCandidates({ platform: 'linux', projectRoot: '/opt/luca', homeDir: '/home/luca' }).at(-1)).toBe('python3');
     expect(getDefaultLocalModelPaths({ platform: 'win32', homeDir: 'C:\\Users\\luca', env: { LOCALAPPDATA: 'C:\\Users\\luca\\AppData\\Local' } }).ollamaExecutable).toContain('Ollama');
+  });
+
+  it('returns Luca-owned Node runtime candidates before PATH fallback', () => {
+    const candidates = getNodeCandidates({
+      platform: 'win32',
+      projectRoot: 'C:\\Luca',
+      homeDir: 'C:\\Users\\luca',
+      resourcesPath: 'C:\\Luca\\resources',
+      env: { LUCA_NODE_BIN: 'C:\\Pinned\\node.exe' },
+    });
+
+    expect(candidates[0]).toBe('C:\\Pinned\\node.exe');
+    expect(candidates).toContain('C:\\Luca\\resources\\bin\\node.exe');
+    expect(candidates).toContain('C:\\Users\\luca\\.luca\\runtime\\node\\node.exe');
+    expect(candidates).toContain('C:\\Luca\\.luca\\runtime\\node\\node.exe');
+    expect(candidates.at(-1)).toBe('node.exe');
+  });
+
+  it('expands portable Node roots by platform', () => {
+    expect(getNodeExecutableCandidatesFromRoot('/opt/luca/runtime', 'linux')).toEqual([
+      '/opt/luca/runtime/node',
+      '/opt/luca/runtime/node/bin/node',
+      '/opt/luca/runtime/bin/node',
+    ]);
+    expect(getNodeExecutableCandidatesFromRoot('C:\\Runtime', 'win32')).toEqual([
+      'C:\\Runtime\\node.exe',
+      'C:\\Runtime\\node\\node.exe',
+      'C:\\Runtime\\node\\bin\\node.exe',
+    ]);
   });
 
   it('selects the first existing absolute candidate or PATH fallback', () => {

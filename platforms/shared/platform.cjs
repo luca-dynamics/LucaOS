@@ -27,9 +27,14 @@ function normalizeExecutableName(name, platform = process.platform) {
     return `${name}.exe`;
 }
 
+function pathForPlatform(platform = process.platform) {
+    return platform === 'win32' ? path.win32 : path.posix;
+}
+
 function getVenvExecutable(venvDir, executable, platform = process.platform) {
+    const pathApi = pathForPlatform(platform);
     const binDir = platform === 'win32' ? 'Scripts' : 'bin';
-    return path.join(venvDir, binDir, normalizeExecutableName(executable, platform));
+    return pathApi.join(venvDir, binDir, normalizeExecutableName(executable, platform));
 }
 
 function getPythonCandidates(options = {}) {
@@ -44,6 +49,46 @@ function getPythonCandidates(options = {}) {
         getVenvExecutable(systemVenv, 'python', platform),
         platform === 'win32' ? 'python' : 'python3',
     ];
+}
+
+function getNodeExecutableCandidatesFromRoot(rootDir, platform = process.platform) {
+    if (!rootDir) return [];
+    const pathApi = pathForPlatform(platform);
+
+    if (platform === 'win32') {
+        return [
+            pathApi.join(rootDir, 'node.exe'),
+            pathApi.join(rootDir, 'node', 'node.exe'),
+            pathApi.join(rootDir, 'node', 'bin', 'node.exe'),
+        ];
+    }
+
+    return [
+        pathApi.join(rootDir, 'node'),
+        pathApi.join(rootDir, 'node', 'bin', 'node'),
+        pathApi.join(rootDir, 'bin', 'node'),
+    ];
+}
+
+function getNodeCandidates(options = {}) {
+    const platform = options.platform || process.platform;
+    const pathApi = pathForPlatform(platform);
+    const projectRoot = options.projectRoot || process.cwd();
+    const homeDir = options.homeDir || os.homedir();
+    const resourcesPath = options.resourcesPath;
+    const env = options.env || process.env;
+    const managedRuntimeDir = pathApi.join(homeDir, '.luca', 'runtime');
+    const projectRuntimeDir = pathApi.join(projectRoot, '.luca', 'runtime');
+    const pathFallback = platform === 'win32' ? 'node.exe' : 'node';
+
+    return [
+        env.LUCA_NODE_BIN,
+        ...getNodeExecutableCandidatesFromRoot(resourcesPath && pathApi.join(resourcesPath, 'bin'), platform),
+        ...getNodeExecutableCandidatesFromRoot(resourcesPath && pathApi.join(resourcesPath, 'runtime'), platform),
+        ...getNodeExecutableCandidatesFromRoot(pathApi.join(managedRuntimeDir, 'node'), platform),
+        ...getNodeExecutableCandidatesFromRoot(pathApi.join(projectRuntimeDir, 'node'), platform),
+        pathFallback,
+    ].filter(Boolean);
 }
 
 function findAvailableExecutable(candidates, existsSync = fs.existsSync) {
@@ -74,6 +119,9 @@ function getDefaultLocalModelPaths(options = {}) {
 module.exports = {
     findAvailableExecutable,
     getDefaultLocalModelPaths,
+    getNodeCandidates,
+    getNodeExecutableCandidatesFromRoot,
+    pathForPlatform,
     getPlatformInfo,
     getPythonCandidates,
     getVenvExecutable,
