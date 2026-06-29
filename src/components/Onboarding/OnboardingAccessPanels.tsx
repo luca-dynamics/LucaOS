@@ -56,7 +56,7 @@ export const IdentityVerificationPanel: React.FC<
           )}`,
         }}
       >
-        I'm Luca
+        Welcome to LucaOS
       </h1>
       <p
         className="text-sm text-center font-medium"

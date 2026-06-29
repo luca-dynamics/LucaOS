@@ -34,7 +34,7 @@ describe("premium onboarding name capture (P2)", () => {
       <LucaOnboardingScreen screenId="welcome" onNameChange={() => {}} nameValue="" />,
     );
     expect(welcome).toContain("data-luca-onboarding-name");
-    expect(welcome).toContain("What should Luca call you?");
+    expect(welcome).toContain("What should I call you?");
 
     // No handler -> no field.
     const noHandler = renderToStaticMarkup(<LucaOnboardingScreen screenId="welcome" />);

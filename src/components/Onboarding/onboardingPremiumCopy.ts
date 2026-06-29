@@ -196,13 +196,12 @@ const routeOptions: PremiumOnboardingOptionCopy[] = [
 const basicScreens: PremiumOnboardingCopySet["screens"] = {
   welcome: {
     id: "welcome",
-    eyebrow: "First run",
-    title: "I'm Luca",
+    title: "Welcome to LucaOS",
     summary:
-      "I'll help from inside LucaOS through chat, voice, workspace surfaces, memory, tools, and actions you approve.",
-    primaryCta: "Start with me",
+      "I'm here to help with chat, voice, memory, tools, and actions you approve.",
+    primaryCta: "Continue",
     secondaryCta: "Set up later",
-    accessibilityLabel: "Meet Luca",
+    accessibilityLabel: "Welcome to LucaOS",
   },
   environment: {
     id: "environment",
