@@ -7,7 +7,7 @@ const {
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
 const fs = require('fs');
-const { findAvailableExecutable, getPythonCandidates } = require('../shared/platform.cjs');
+const { findAvailableExecutable, getNodeCandidates, getPythonCandidates } = require('../shared/platform.cjs');
 const {
     createMiniChatWindow: createMiniChatWindowFactory,
     createHologramWindow: createHologramWindowFactory,
@@ -639,12 +639,16 @@ setInterval(() => logSystemResource('HEARTBEAT'), 5 * 60 * 1000); // Every 5 min
 // Start the Backend Server (Node.js)
 function startServer() {
     const serverPath = path.join(__dirname, '../../server.js');
+    const projectRoot = path.join(__dirname, '../..');
+    const nodeCmd = findAvailableExecutable(getNodeCandidates({
+        projectRoot,
+        resourcesPath: app.isPackaged ? process.resourcesPath : undefined,
+    }));
     console.log('Starting Backend Server at:', serverPath);
+    console.log('[SERVER] Using Node runtime:', nodeCmd);
 
-    // Use 'spawn' with 'node' to decouple from Electron's runtime/ABI
-    // This ensures better-sqlite3 binaries (compiled for system Node) work correctly.
-    // In production, we assume 'node' is available or bundle the runtime.
-    serverProcess = spawn('node', [serverPath], {
+    // Prefer a Luca-owned runtime, falling back to PATH only for local development.
+    serverProcess = spawn(nodeCmd, [serverPath], {
         env: {
             ...process.env,
             PORT: SERVER_PORT,
