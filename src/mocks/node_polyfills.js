@@ -8,6 +8,7 @@ export const clearImmediate = (id) => clearTimeout(id);
 export class EventEmitter {
   constructor() {
     this._events = new Map();
+    this._maxListeners = 10;
   }
 
   on(eventName, listener) {
@@ -67,6 +68,15 @@ export class EventEmitter {
 
   listenerCount(eventName) {
     return (this._events.get(eventName) || []).length;
+  }
+
+  setMaxListeners(count) {
+    this._maxListeners = Number.isFinite(Number(count)) ? Number(count) : this._maxListeners;
+    return this;
+  }
+
+  getMaxListeners() {
+    return this._maxListeners;
   }
 }
  

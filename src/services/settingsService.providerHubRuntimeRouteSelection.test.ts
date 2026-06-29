@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+
+const { readFileSync } = process.getBuiltinModule("node:fs");
 
 describe("Provider Hub runtime route selection setting", () => {
   it("defaults to false", () => {

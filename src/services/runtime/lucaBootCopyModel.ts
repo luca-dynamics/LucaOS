@@ -62,7 +62,7 @@ export const LUCA_BOOT_COPY_BY_SEQUENCE: Record<BootSequence, LucaBootSequenceCo
   READY: {
     bootSequence: "READY",
     standardLabel: "Ready",
-    tacticalLabel: "SYSTEM READY",
+    tacticalLabel: "APP READY",
     audience: ["standard", "tactical"],
     diagnosticMeaning: "Main LucaOS runtime has taken over from the boot surface.",
   },

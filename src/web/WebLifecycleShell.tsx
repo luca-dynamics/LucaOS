@@ -23,8 +23,12 @@ export type WebLifecycleState = "post_boot" | "onboarding" | "ready" | "main";
 
 const showWebReadyDebug = import.meta.env.VITE_LUCA_SHOW_WEB_READY_DEBUG === "true";
 
-const setStaticBootStatus = (message: string, progress: number) => {
-  window.__LUCA_SET_BOOT_STATUS__?.(message, progress);
+const setStaticBootStatus = (
+  message: string,
+  progress: number,
+  detail?: string,
+) => {
+  window.__LUCA_SET_BOOT_STATUS__?.(message, progress, detail);
 };
 
 const resolvePostBootTarget = (
@@ -65,23 +69,42 @@ export function WebLifecycleShell() {
     };
 
     window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
-    setStaticBootStatus("Checking your preferences", 0.38);
+    setStaticBootStatus(
+      "Checking your preferences",
+      0.38,
+      "Loading saved setup",
+    );
 
     void resolveWebPostBootState().then((snapshot) => {
       if (!active) return;
 
       setPostBootState(snapshot);
       schedule(
-        () => setStaticBootStatus("Preparing memory boundaries", 0.56),
+        () =>
+          setStaticBootStatus(
+            "Preparing memory boundaries",
+            0.56,
+            "Checking local memory",
+          ),
         180,
       );
       schedule(
-        () => setStaticBootStatus("Preparing safe tool access", 0.74),
+        () =>
+          setStaticBootStatus(
+            "Preparing safe tool access",
+            0.74,
+            "Preparing tools",
+          ),
         640,
       );
       schedule(() => {
-        setStaticBootStatus("Opening LucaOS", 0.96);
-        setLifecycleState(resolvePostBootTarget(snapshot));
+        const target = resolvePostBootTarget(snapshot);
+        setStaticBootStatus(
+          "Opening LucaOS",
+          0.96,
+          `Opening ${target === "main" ? "workspace" : target}`,
+        );
+        setLifecycleState(target);
       }, 1080);
     });
 
@@ -94,6 +117,11 @@ export function WebLifecycleShell() {
     if (lifecycleState === "post_boot") return;
 
     window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
+    setStaticBootStatus(
+      "Opening LucaOS",
+      0.98,
+      `Showing ${lifecycleState === "main" ? "workspace" : lifecycleState}`,
+    );
     const frame = window.requestAnimationFrame(() => {
       const loader = document.getElementById("root-loader");
       if (!loader) return;

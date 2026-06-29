@@ -1,6 +1,6 @@
-import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+const { existsSync, readFileSync } = process.getBuiltinModule("node:fs");
 const read = (path: string) => readFileSync(path, "utf8");
 
 const indexSource = read("src/index.tsx");
@@ -10,7 +10,7 @@ const shellSource = read("src/web/WebBridgeShell.tsx");
 const lifecycleSource = read("src/web/WebLifecycleShell.tsx");
 const onboardingRuntimeSource = read("src/web/adapters/webOnboardingRuntime.tsx");
 const webShellSource = read("src/web/WebLucaShell.tsx");
-const webChatSurfaceSource = read("src/web/chat/WebChatSurface.tsx");
+const webChatSurfaceSource = read("src/web/chat/WebRealChatPanel.tsx");
 const webVoiceSurfaceSource = read("src/web/voice/WebVoiceOnboardingSurface.tsx");
 const chatRuntimeSource = read("src/web/chat/webChatRuntime.ts");
 
@@ -30,7 +30,7 @@ const forbiddenDesktopImports = [
 
 const productUiSources = [
   ["src/web/WebLucaShell.tsx", webShellSource],
-  ["src/web/chat/WebChatSurface.tsx", webChatSurfaceSource],
+  ["src/web/chat/WebRealChatPanel.tsx", webChatSurfaceSource],
   ["src/web/voice/WebVoiceOnboardingSurface.tsx", webVoiceSurfaceSource],
   [
     "src/components/Onboarding/OnboardingConversationSurface.tsx",
@@ -77,7 +77,8 @@ describe("WebBridge full boot, onboarding, chat, and voice runtime QA", () => {
     expect(lifecycleSource).toContain("__LUCA_SET_BOOT_STATUS__");
     expect(lifecycleSource).toContain("Preparing safe tool access");
     expect(lifecycleSource).toContain('document.getElementById("root-loader")');
-    expect(lifecycleSource).toContain('setLifecycleState("onboarding")');
+    expect(lifecycleSource).toContain('return "onboarding"');
+    expect(lifecycleSource).toContain("setLifecycleState(target)");
     expect(lifecycleSource).toContain('setLifecycleState(showWebReadyDebug ? "ready" : "main")');
     expect(lifecycleSource).not.toContain("WebPostBootTransition");
     expect(lifecycleSource).not.toContain("WebPostBootLoading");
@@ -88,9 +89,9 @@ describe("WebBridge full boot, onboarding, chat, and voice runtime QA", () => {
     expect(onboardingRuntimeSource).toContain("OnboardingConversationSurface");
     expect(onboardingRuntimeSource).toContain("WebVoiceOnboardingSurface");
     expect(webShellSource).toContain("<LucaDashboardSurface");
-    expect(webShellSource).toContain("chatSurface={<WebChatSurface />}");
-    expect(webChatSurfaceSource).toContain("<LucaChatSurface");
-    expect(webChatSurfaceSource).toContain("runtime.sendMessage");
+    expect(webShellSource).toContain("chatSurface={<WebRealChatPanel />}");
+    expect(webChatSurfaceSource).toContain("<ChatPanel");
+    expect(webChatSurfaceSource).toContain("webAppRuntime.chat.sendMessage");
     expect(chatRuntimeSource).toContain("sendMessage");
     expect(webVoiceSurfaceSource).toContain("<VoiceHudSurface");
   });

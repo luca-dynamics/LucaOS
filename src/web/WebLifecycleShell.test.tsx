@@ -36,6 +36,10 @@ describe("WebLifecycleShell", () => {
     expect(source).toContain("__LUCA_SET_BOOT_STATUS__");
     expect(source).toContain("Preparing memory boundaries");
     expect(source).toContain("Preparing safe tool access");
+    expect(source).toContain("Loading saved setup");
+    expect(source).toContain("Preparing tools");
+    expect(source).toContain("Opening ${target === \"main\" ? \"workspace\" : target}");
+    expect(source).toContain("Showing ${lifecycleState === \"main\" ? \"workspace\" : lifecycleState}");
     expect(source).toContain("document.getElementById(\"root-loader\")");
   });
 });
