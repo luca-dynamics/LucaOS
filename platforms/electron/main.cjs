@@ -276,11 +276,11 @@ async function provisionEnvironment(log) {
     return new Promise((resolve, reject) => {
         let child;
         if (isWindows) {
-            child = spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', setupScript, '--full']);
+            child = spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', setupScript]);
         } else {
             // Ensure script is executable
             try { fs.chmodSync(setupScript, '755'); } catch { /** ignore permission errors on some systems */ }
-            child = spawn('/bin/bash', [setupScript, '--full']);
+            child = spawn('/bin/bash', [setupScript]);
         }
 
         child.stdout.on('data', (data) => {
@@ -347,8 +347,12 @@ async function bootSequence(isSilent = false) {
         
         // --- PROVISIONING CHECK (Dev Only) ---
         if (!app.isPackaged) {
-            const venvExists = fs.existsSync(paths.VENV_DIR) || fs.existsSync(paths.SYSTEM_VENV_DIR);
-            if (!venvExists) {
+            const bootMarkerExists =
+                fs.existsSync(path.join(paths.VENV_DIR, '.luca-boot-ready')) ||
+                fs.existsSync(path.join(paths.SYSTEM_VENV_DIR, '.luca-boot-ready')) ||
+                fs.existsSync(path.join(paths.VENV_DIR, '.luca-full-ready')) ||
+                fs.existsSync(path.join(paths.SYSTEM_VENV_DIR, '.luca-full-ready'));
+            if (!bootMarkerExists) {
                 try {
                     await provisionEnvironment(log);
                 } catch (err) {
@@ -372,7 +376,7 @@ async function bootSequence(isSilent = false) {
     let serverReady = false;
     let cortexReady = false;
     let attempts = 0;
-    const maxAttempts = 180; // Increased to 180s for Intel Mac First-Boot headroom
+    const maxAttempts = app.isPackaged ? 180 : 420; // Dev first boot can spend several minutes loading the Node core.
 
     const checkInterval = setInterval(async () => {
         attempts++;

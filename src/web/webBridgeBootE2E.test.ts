@@ -73,13 +73,15 @@ describe("WebBridge full boot, onboarding, chat, and voice runtime QA", () => {
     expect(shellSource).toContain("<WebLifecycleShell />");
     expect(lifecycleSource).toContain('useState<WebLifecycleState>("post_boot")');
     expect(lifecycleSource).toContain("resolveWebPostBootState");
-    expect(lifecycleSource).toContain('postBootState.userState === "new_user"');
+    expect(lifecycleSource).toContain('snapshot.userState === "new_user"');
+    expect(lifecycleSource).toContain("__LUCA_SET_BOOT_STATUS__");
+    expect(lifecycleSource).toContain("Preparing safe tool access");
+    expect(lifecycleSource).toContain('document.getElementById("root-loader")');
     expect(lifecycleSource).toContain('setLifecycleState("onboarding")');
     expect(lifecycleSource).toContain('setLifecycleState(showWebReadyDebug ? "ready" : "main")');
-    expect(lifecycleSource).toContain("onRestartOnboarding");
-    expect(lifecycleSource).toContain("onReviewVoiceAccess");
-    expect(lifecycleSource).toContain("onChooseModelRoute");
-    expect(lifecycleSource).toContain("<OnboardingFlow");
+    expect(lifecycleSource).not.toContain("WebPostBootTransition");
+    expect(lifecycleSource).not.toContain("WebPostBootLoading");
+    expect(lifecycleSource).toContain("<LucaPremiumOnboardingPreview");
   });
 
   it("uses the canonical onboarding, chat, and voice surfaces", () => {

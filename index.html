@@ -282,15 +282,8 @@
         );
         box-shadow: 0 0 22px rgba(205, 245, 255, 0.32);
         transform-origin: left;
-        animation: luca-loader-progress 950ms ease-out forwards;
-      }
-      @keyframes luca-loader-progress {
-        from {
-          transform: scaleX(0.2);
-        }
-        to {
-          transform: scaleX(1);
-        }
+        transform: scaleX(var(--loader-progress, 0.2));
+        transition: transform 520ms ease;
       }
     </style>
   </head>
@@ -310,10 +303,61 @@
       (() => {
         const debugEnabled =
           new URLSearchParams(window.location.search).get("bootDebug") === "1";
+        const readinessStatuses = [
+          { text: "Entering browser host", progress: 0.2 },
+          { text: "Checking your preferences", progress: 0.38 },
+          { text: "Preparing memory boundaries", progress: 0.56 },
+          { text: "Preparing safe tool access", progress: 0.74 },
+          { text: "Opening LucaOS", progress: 0.92 },
+        ];
+        let readinessStatusIndex = 0;
+        let readinessStatusTimer = 0;
+
+        window.__LUCA_SET_BOOT_STATUS__ = (text, progress) => {
+          const loader = document.getElementById("root-loader");
+          if (!loader || loader.dataset.state === "failed") return;
+
+          const status = loader.querySelector(".loader-status");
+          if (status && text) status.textContent = text;
+          if (typeof progress === "number") {
+            const nextProgress = Math.max(0.08, Math.min(progress, 1));
+            loader.style.setProperty("--loader-progress", String(nextProgress));
+          }
+        };
+
+        window.__LUCA_CLEAR_BOOT_STATUS_LOOP__ = () => {
+          if (readinessStatusTimer) {
+            window.clearInterval(readinessStatusTimer);
+            readinessStatusTimer = 0;
+          }
+        };
+
+        window.__LUCA_SET_BOOT_STATUS__(
+          readinessStatuses[0].text,
+          readinessStatuses[0].progress,
+        );
+        readinessStatusTimer = window.setInterval(() => {
+          const loader = document.getElementById("root-loader");
+          if (!loader || loader.dataset.state === "failed") {
+            window.__LUCA_CLEAR_BOOT_STATUS_LOOP__();
+            return;
+          }
+
+          readinessStatusIndex = Math.min(
+            readinessStatusIndex + 1,
+            readinessStatuses.length - 1,
+          );
+          const nextStatus = readinessStatuses[readinessStatusIndex];
+          window.__LUCA_SET_BOOT_STATUS__(
+            nextStatus.text,
+            nextStatus.progress,
+          );
+        }, 1100);
 
         window.__LUCA_SHOW_BOOT_FAILURE__ = (message, error) => {
           const loader = document.getElementById("root-loader");
           if (!loader || window.__LUCA_REACT_MOUNTED__ === true) return;
+          window.__LUCA_CLEAR_BOOT_STATUS_LOOP__?.();
 
           const mainScript = document.querySelector(
             'script[type="module"][src]',

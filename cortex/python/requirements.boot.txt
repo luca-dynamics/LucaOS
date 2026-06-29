@@ -1,0 +1,10 @@
+aiohttp
+fastapi
+google-genai>=0.1.0
+httpx
+nest_asyncio
+numpy<2.0.0
+python-dotenv
+python-multipart>=0.0.12
+requests
+uvicorn

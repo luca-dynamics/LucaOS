@@ -1,0 +1,4 @@
+kokoro
+moshi
+piper-tts
+soundfile
