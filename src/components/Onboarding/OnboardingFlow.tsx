@@ -767,7 +767,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               Preparing LucaOS
             </h1>
             <p className="mt-3 max-w-md text-sm leading-6 text-white/60 sm:text-base">
-              Luca is setting up your personal AI environment.
+              I'm getting your workspace ready.
             </p>
             <div className="mt-7 w-full max-w-md space-y-2 text-left">
               {[
