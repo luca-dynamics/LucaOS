@@ -38,9 +38,9 @@ describe("LucaOnboardingScreen", () => {
     const defaulted = renderToStaticMarkup(
       <LucaOnboardingScreen screenId="environment" />,
     );
-    // Default environment selection is pearl.
+    // Default environment selection is carbon.
     expect(defaulted).toMatch(
-      /aria-checked="true" data-luca-onboarding-option="pearl"/,
+      /aria-checked="true" data-luca-onboarding-option="carbon"/,
     );
 
     const explicit = renderToStaticMarkup(
