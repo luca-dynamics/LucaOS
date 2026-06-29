@@ -87,6 +87,8 @@ export default defineConfig(({ mode }) => {
         "node:path": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         crypto: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         "node:crypto": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        events: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
+        "node:events": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         module: path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         "node:module": path.resolve(__dirname, "src/mocks/node_polyfills.js"),
         stream: path.resolve(__dirname, "src/mocks/node_polyfills.js"),

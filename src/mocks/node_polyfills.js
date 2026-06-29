@@ -4,6 +4,71 @@ export const exec = () => {};
 export const spawn = () => {};
 export const setImmediate = (fn) => setTimeout(fn, 0);
 export const clearImmediate = (id) => clearTimeout(id);
+
+export class EventEmitter {
+  constructor() {
+    this._events = new Map();
+  }
+
+  on(eventName, listener) {
+    if (typeof listener !== 'function') return this;
+    const listeners = this._events.get(eventName) || [];
+    listeners.push(listener);
+    this._events.set(eventName, listeners);
+    return this;
+  }
+
+  addListener(eventName, listener) {
+    return this.on(eventName, listener);
+  }
+
+  once(eventName, listener) {
+    if (typeof listener !== 'function') return this;
+    const wrapped = (...args) => {
+      this.off(eventName, wrapped);
+      listener(...args);
+    };
+    wrapped.listener = listener;
+    return this.on(eventName, wrapped);
+  }
+
+  off(eventName, listener) {
+    const listeners = this._events.get(eventName);
+    if (!listeners || typeof listener !== 'function') return this;
+    const next = listeners.filter((candidate) => candidate !== listener && candidate.listener !== listener);
+    if (next.length > 0) {
+      this._events.set(eventName, next);
+    } else {
+      this._events.delete(eventName);
+    }
+    return this;
+  }
+
+  removeListener(eventName, listener) {
+    return this.off(eventName, listener);
+  }
+
+  removeAllListeners(eventName) {
+    if (eventName === undefined) {
+      this._events.clear();
+    } else {
+      this._events.delete(eventName);
+    }
+    return this;
+  }
+
+  emit(eventName, ...args) {
+    const listeners = [...(this._events.get(eventName) || [])];
+    for (const listener of listeners) {
+      listener(...args);
+    }
+    return listeners.length > 0;
+  }
+
+  listenerCount(eventName) {
+    return (this._events.get(eventName) || []).length;
+  }
+}
  
 // os mock
 export const os = {
@@ -154,6 +219,7 @@ export default {
   inspect,
   setImmediate,
   clearImmediate,
+  EventEmitter,
   Stream,
   Readable,
   Writable,
