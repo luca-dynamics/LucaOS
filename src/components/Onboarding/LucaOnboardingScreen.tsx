@@ -370,7 +370,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
               marginBottom: 6,
             }}
           >
-            What should Luca call you? (optional)
+            What should I call you? (optional)
           </span>
           <input
             type="text"

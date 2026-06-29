@@ -100,6 +100,18 @@ describe("premium onboarding copy model", () => {
     }
   });
 
+  it("keeps welcome copy polished for app users", () => {
+    const welcomeCopy = screenText(premiumOnboardingCopy.basic, "welcome");
+
+    expect(welcomeCopy).toContain("welcome to lucaos");
+    expect(welcomeCopy).toContain("i'm here to help");
+    expect(welcomeCopy).toContain("continue");
+    expect(welcomeCopy).not.toContain("first run");
+    expect(welcomeCopy).not.toContain("inside lucaos");
+    expect(welcomeCopy).not.toContain("start with me");
+    expect(welcomeCopy).not.toContain("what should luca call you");
+  });
+
   it("keeps intelligence route copy as preference-only", () => {
     const routeCopy = screenText(premiumOnboardingCopy.basic, "intelligence_route");
 
