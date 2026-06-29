@@ -22,13 +22,13 @@ const mount = (ui: React.ReactElement) => {
 };
 
 describe("LucaPremiumOnboardingPreview", () => {
-  it("starts on welcome inside the shell with the default Pearl skin", () => {
+  it("starts on welcome inside the shell with the default Carbon skin", () => {
     const { container, cleanup } = mount(<LucaPremiumOnboardingPreview />);
     expect(
       container.querySelector('[data-luca-onboarding-preview-screen="welcome"]'),
     ).not.toBeNull();
     expect(
-      container.querySelector('[data-luca-onboarding-skin="pearl"]'),
+      container.querySelector('[data-luca-onboarding-skin="carbon"]'),
     ).not.toBeNull();
     // welcome shows the identity presence hero
     expect(
@@ -53,21 +53,21 @@ describe("LucaPremiumOnboardingPreview", () => {
     const { container, cleanup } = mount(
       <LucaPremiumOnboardingPreview initialScreenId="environment" />,
     );
-    // default environment selection is pearl
-    expect(
-      container.querySelector('[data-luca-onboarding-skin="pearl"]'),
-    ).not.toBeNull();
-
-    const carbon = container.querySelector(
-      '[data-luca-onboarding-option="carbon"]',
-    ) as HTMLButtonElement;
-    act(() => carbon.click());
-
+    // default environment selection is carbon
     expect(
       container.querySelector('[data-luca-onboarding-skin="carbon"]'),
     ).not.toBeNull();
+
+    const pearl = container.querySelector(
+      '[data-luca-onboarding-option="pearl"]',
+    ) as HTMLButtonElement;
+    act(() => pearl.click());
+
     expect(
       container.querySelector('[data-luca-onboarding-skin="pearl"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-luca-onboarding-skin="carbon"]'),
     ).toBeNull();
     cleanup();
   });

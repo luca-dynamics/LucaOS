@@ -56,7 +56,7 @@ export const IdentityVerificationPanel: React.FC<
           )}`,
         }}
       >
-        Welcome to LucaOS
+        I'm Luca
       </h1>
       <p
         className="text-sm text-center font-medium"
@@ -65,7 +65,7 @@ export const IdentityVerificationPanel: React.FC<
           opacity: 0.92,
         }}
       >
-        What should Luca call you?
+        What should I call you?
       </p>
     </div>
 
@@ -251,8 +251,8 @@ export const LucaCoreSelectionPanel: React.FC<LucaCoreSelectionPanelProps> = ({
           maxWidth: isMobile ? "30ch" : undefined,
         }}
       >
-        Choose how Luca processes your thoughts. Secure local compute or
-        cloud-enhanced agency.
+        Choose how I should think with you: on this device or with an
+        approved cloud connection.
       </p>
     </div>
 

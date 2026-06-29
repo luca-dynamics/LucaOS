@@ -124,7 +124,7 @@ describe("premium onboarding copy model", () => {
     const memoryCopy = screenText(premiumOnboardingCopy.basic, "memory_boundaries");
 
     expect(memoryCopy).toContain("you can change this later");
-    expect(memoryCopy).toContain("ask luca to forget");
+    expect(memoryCopy).toContain("ask me to forget");
     expect(memoryCopy).not.toContain("memory engine changed");
     expect(memoryCopy).not.toContain("deleted");
     expect(memoryCopy).not.toContain("personal details are saved automatically");

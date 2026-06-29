@@ -98,7 +98,7 @@ describe("lucaOnboardingFlowEngine", () => {
     expect(next).not.toBe(state);
     expect(next.selectedOptions.environment).toBe("flow");
     // original untouched (immutability)
-    expect(state.selectedOptions.environment).toBe("pearl");
+    expect(state.selectedOptions.environment).toBe("carbon");
 
     // invalid option -> same reference
     expect(lucaOnboardingFlowSetOption(state, "environment", "nope")).toBe(state);

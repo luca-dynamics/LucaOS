@@ -55,7 +55,7 @@ describe("premium onboarding screen map", () => {
 
   it("returns typed default selections without storage writes", () => {
     expect(getPremiumOnboardingDefaultSelections()).toEqual({
-      environment: "pearl",
+      environment: "carbon",
       presence: "minichat",
       permission_style: "ask_when_needed",
       memory_boundaries: "ask_before_personal",
@@ -126,9 +126,11 @@ describe("premium onboarding screen map", () => {
   it("does not import runtime systems or mutate DOM/storage", () => {
     const sourcePath = fileURLToPath(new URL("./onboardingPremiumScreenMap.ts", import.meta.url));
     const source = fs.readFileSync(sourcePath, "utf8");
-    const importSources = [...source.matchAll(/from "([^"]+)"/g)].map((match) => match[1]);
+    const importSources = [...source.matchAll(/^import\s+(?:type\s+)?[\s\S]*?\sfrom\s+"([^"]+)";/gm)].map(
+      (match) => match[1],
+    );
 
-    expect(importSources).toEqual(["./onboardingPremiumCopy"]);
+    expect(importSources.every((source) => source === "./onboardingPremiumCopy")).toBe(true);
 
     const forbiddenRuntimeImportTerms = [
       "OnboardingFlow",
