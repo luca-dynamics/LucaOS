@@ -1,0 +1,8 @@
+accelerate
+bitsandbytes
+huggingface_hub
+pillow
+protobuf
+sentencepiece
+torch
+transformers

@@ -63,7 +63,9 @@ echo "[BOOT] [PROGRESS:30] Optimizing package manager (pip)..."
 "$VENV_DIR/bin/pip" install --upgrade pip &> /dev/null
 
 # 6. Install Dependencies
+SETUP_MODE="boot"
 if [ "$1" == "--full" ]; then
+    SETUP_MODE="full"
     echo "[BOOT] [PROGRESS:40] Stage 1: Core System Utilities..."
     "$VENV_DIR/bin/pip" install python-multipart fastapi uvicorn networkx "numpy<2" flask-cors google-genai google-generativeai python-dotenv pyautogui websockets requests nest_asyncio lightrag-h3
     
@@ -75,9 +77,23 @@ if [ "$1" == "--full" ]; then
     
     echo "[BOOT] [PROGRESS:85] Stage 4: Experimental Cortex (Kokoro & Moshi)..."
     "$VENV_DIR/bin/pip" install kokoro moshi
+elif [ "$1" == "--pack" ]; then
+    PACK_NAME="$2"
+    if [[ ! "$PACK_NAME" =~ ^[a-z0-9-]+$ ]]; then
+        echo "[BOOT] [ERROR] Capability pack name is required."
+        exit 1
+    fi
+    REQ_FILE="$SCRIPT_DIR/requirements.pack.$PACK_NAME.txt"
+    if [ ! -f "$REQ_FILE" ]; then
+        echo "[BOOT] [ERROR] Unknown capability pack: $PACK_NAME"
+        exit 1
+    fi
+    SETUP_MODE="pack-$PACK_NAME"
+    echo "[BOOT] [PROGRESS:40] Installing capability pack: $PACK_NAME"
+    "$VENV_DIR/bin/pip" install -r "$REQ_FILE"
 else
-    echo "[BOOT] [PROGRESS:40] Installing Lightweight Cloud Dependencies..."
-    "$VENV_DIR/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
+    echo "[BOOT] [PROGRESS:40] Installing lightweight boot dependencies..."
+    "$VENV_DIR/bin/pip" install -r "$SCRIPT_DIR/requirements.boot.txt"
 fi
 
 if [ $? -ne 0 ]; then
@@ -86,5 +102,6 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "[BOOT] [PROGRESS:90] Finalizing environment alignment..."
+date -u +"%Y-%m-%dT%H:%M:%SZ" > "$VENV_DIR/.luca-$SETUP_MODE-ready"
 echo "[BOOT] [SUCCESS] Provisioning Complete. Handing over to Luca Mainframe."
 exit 0

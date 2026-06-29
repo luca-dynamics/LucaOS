@@ -1,0 +1,4 @@
+lightrag-hku
+model2vec
+networkx
+sentence-transformers
