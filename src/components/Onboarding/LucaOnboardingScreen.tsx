@@ -13,6 +13,11 @@ import {
 import { getPremiumOnboardingScreenEntry } from "./onboardingPremiumScreenMap";
 import { getLucaOnboardingDisclosure } from "./lucaOnboardingDisclosure";
 import { LucaSurfaceMockup } from "./LucaSurfaceMockup";
+import { Icon } from "../ui/Icon";
+import {
+  ONBOARDING_CONNECTORS,
+  type OnboardingConnector,
+} from "./onboardingConnectors";
 
 /**
  * LucaOnboardingScreen — one pure, data-driven renderer for every premium
@@ -249,6 +254,210 @@ function SurfaceMockupTile({
   );
 }
 
+/**
+ * ConnectorTile — one compact, selectable tool-app card for the "Connect now"
+ * path. The whole tile is a toggle: brand badge + name + one-line description,
+ * with a check indicator when selected. Selecting is inert/honest — it only
+ * marks the tool for setup; no OAuth, token, or tool access is granted during
+ * onboarding (per the screen's reassurance copy). Tiles flow in a responsive
+ * grid that packs as many per row as the width allows.
+ */
+function ConnectorTile({
+  connector,
+  selected,
+  onToggle,
+}: {
+  connector: OnboardingConnector;
+  selected: boolean;
+  onToggle: (id: string) => void;
+}): React.ReactElement {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={selected}
+      aria-label={connector.name}
+      data-luca-onboarding-connector={connector.id}
+      data-luca-connector-selected={selected ? "true" : "false"}
+      onClick={() => onToggle(connector.id)}
+      style={{
+        position: "relative",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        width: "100%",
+        textAlign: "left",
+        cursor: "pointer",
+        padding: "14px 16px",
+        borderRadius: 14,
+        border: `1px solid ${selected ? accent : "var(--luca-surface-hover)"}`,
+        background: selected
+          ? "var(--luca-surface-hover)"
+          : "var(--luca-surface-glass)",
+        boxShadow: selected ? "var(--luca-shadow-soft)" : "none",
+        color: textPrimary,
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          flexShrink: 0,
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 16,
+          fontWeight: 700,
+          color: "#fff",
+          background: connector.brandColor,
+        }}
+      >
+        {connector.monogram}
+      </span>
+      <span style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: "block", fontSize: 14.5, fontWeight: 600 }}>
+          {connector.name}
+        </span>
+        <span
+          style={{
+            display: "block",
+            marginTop: 2,
+            fontSize: 12.5,
+            lineHeight: 1.4,
+            color: textSecondary,
+          }}
+        >
+          {connector.tagline}
+        </span>
+      </span>
+      <span
+        aria-hidden="true"
+        style={{
+          flexShrink: 0,
+          width: 20,
+          height: 20,
+          borderRadius: 999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: `1.5px solid ${selected ? accent : "var(--luca-surface-hover)"}`,
+          background: selected ? accent : "transparent",
+        }}
+      >
+        {selected && (
+          <Icon
+            name="Check"
+            size={12}
+            style={{ color: "var(--luca-background-base)" }}
+          />
+        )}
+      </span>
+    </button>
+  );
+}
+
+/** Tools shown before the grid is expanded — the desktop "first row". */
+const CONNECTOR_DEFAULT_VISIBLE = 3;
+
+/**
+ * OnboardingConnectorPanel — the connector grid shown when the "Connect now"
+ * path is chosen on the connect_tools screen. Every tool app is a compact,
+ * selectable tile in one responsive auto-fill grid that lays as many per row as
+ * the screen can fit (collapsing to a single column on mobile). To keep the
+ * screen calm, only the first row shows by default; a disclosure reveals the
+ * rest. Selecting tools here is presentational only — it marks them for setup
+ * and grants no access.
+ */
+function OnboardingConnectorPanel(): React.ReactElement {
+  const [selected, setSelected] = React.useState<Record<string, boolean>>({});
+  const [expanded, setExpanded] = React.useState(false);
+  const toggle = (id: string) =>
+    setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
+  const selectedCount = Object.values(selected).filter(Boolean).length;
+
+  // Popular tools first, then the rest — order is stable across renders.
+  const connectors = [...ONBOARDING_CONNECTORS].sort(
+    (a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)),
+  );
+  const hiddenCount = connectors.length - CONNECTOR_DEFAULT_VISIBLE;
+  const visible =
+    expanded || hiddenCount <= 0
+      ? connectors
+      : connectors.slice(0, CONNECTOR_DEFAULT_VISIBLE);
+
+  return (
+    <div data-luca-onboarding-connectors style={{ margin: "18px 0 0" }}>
+      <div
+        id="luca-onboarding-connector-grid"
+        data-luca-onboarding-connector-grid
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(248px, 1fr))",
+          gap: 12,
+        }}
+      >
+        {visible.map((connector) => (
+          <ConnectorTile
+            key={connector.id}
+            connector={connector}
+            selected={Boolean(selected[connector.id])}
+            onToggle={toggle}
+          />
+        ))}
+      </div>
+
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          data-luca-onboarding-connectors-toggle
+          aria-expanded={expanded}
+          aria-controls="luca-onboarding-connector-grid"
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            width: "100%",
+            margin: "12px 0 0",
+            padding: "10px 14px",
+            borderRadius: 12,
+            border: "1px solid var(--luca-surface-hover)",
+            background: "var(--luca-surface-glass)",
+            color: textSecondary,
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          {expanded ? "Show fewer apps" : `Show ${hiddenCount} more apps`}
+          <Icon
+            name={expanded ? "ChevronUp" : "ChevronDown"}
+            size={16}
+            style={{ color: textTertiary }}
+          />
+        </button>
+      )}
+
+      <p
+        role="note"
+        style={{
+          margin: "16px 0 0",
+          fontSize: 12.5,
+          lineHeight: 1.5,
+          color: textTertiary,
+        }}
+      >
+        {selectedCount > 0
+          ? `${selectedCount} ${selectedCount === 1 ? "tool" : "tools"} selected. Nothing connects yet — you'll approve each connection in Settings after setup.`
+          : "Pick the tools you'd like to set up. Nothing connects during onboarding — you approve each connection in Settings."}
+      </p>
+    </div>
+  );
+}
+
 export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   screenId,
   audienceMode = "basic",
@@ -301,8 +510,10 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
       className={className}
       style={{
         // The surface-picker ("presence") needs room for 5 cards across on
-        // desktop; text-led screens stay narrow for readability.
-        maxWidth: screenId === "presence" ? 980 : 560,
+        // desktop; the connect_tools screen widens for its 2-up connector grid;
+        // other text-led screens stay narrow for readability.
+        maxWidth:
+          screenId === "presence" ? 980 : screenId === "connect_tools" ? 900 : 560,
         margin: "0 auto",
         color: textPrimary,
         ...style,
@@ -484,6 +695,12 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
             ))}
         </div>
       ) : null}
+
+      {/* Connect-now path: reveal the expandable tool-app connector cards once
+          the user chooses to connect now. Inert/honest — queues for Settings. */}
+      {screenId === "connect_tools" && activeOptionId === "connect_now" && (
+        <OnboardingConnectorPanel />
+      )}
 
       <div
         data-luca-onboarding-actions
