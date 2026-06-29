@@ -2441,6 +2441,29 @@ function AppContent() {
 
   // Removed Background from here (Moved to Root)
 
+  const dashboardSkinBoundary = useMemo(
+    () =>
+      resolveLucaDashboardSkinBoundary({
+        selectedSkinId,
+        // Main dashboard shell has no narrower host-policy object here. Use the
+        // static desktop-web policy instead of assuming native glass or mobile
+        // application semantics at this controlled boundary.
+        hostKind: "desktop-web",
+        reducedMotion: false,
+        reducedTransparency: false,
+      }),
+    [selectedSkinId],
+  );
+
+  const mobileSkinBoundary = useMemo(
+    () =>
+      resolveLucaMobileSkinBoundary({
+        selectedSkinId,
+        hostKind: "mobile-web",
+      }),
+    [selectedSkinId],
+  );
+
   // --- BOOT SEQUENCE RENDER ---
   if (
     shouldShowBootShell({
@@ -2494,29 +2517,6 @@ function AppContent() {
   }
 
   // Removed Browser block from here (Moved Up)
-
-  const dashboardSkinBoundary = useMemo(
-    () =>
-      resolveLucaDashboardSkinBoundary({
-        selectedSkinId,
-        // Main dashboard shell has no narrower host-policy object here. Use the
-        // static desktop-web policy instead of assuming native glass or mobile
-        // application semantics at this controlled boundary.
-        hostKind: "desktop-web",
-        reducedMotion: false,
-        reducedTransparency: false,
-      }),
-    [selectedSkinId],
-  );
-
-  const mobileSkinBoundary = useMemo(
-    () =>
-      resolveLucaMobileSkinBoundary({
-        selectedSkinId,
-        hostKind: "mobile-web",
-      }),
-    [selectedSkinId],
-  );
 
   // console.log("[RENDER] Boot Ready. Rendering Main UI...");
 

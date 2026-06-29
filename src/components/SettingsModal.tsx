@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "./ui/Icon";
 import { settingsService, LucaSettings } from "../services/settingsService";
 import { useMobile } from "../hooks/useMobile";
@@ -9,6 +9,7 @@ import {
 } from "../services/personaService";
 import { PERSONA_UI_CONFIG, getDynamicContrast } from "../config/themeColors";
 import { PersonaConfig } from "../types";
+import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
 
 // Import Refactored Tabs
 import SettingsGeneralTab from "./settings/SettingsGeneralTab";
@@ -71,7 +72,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   // Memory Stats
   const [memoryStats, setMemoryStats] = useState({ count: 0 });
   const isMobile = useMobile();
-  const liveTheme =
+  const skinMaterialVariables = useMemo(
+    () =>
+      getLucaSkinMaterialVariables({
+        skinId: settings.general.selectedSkinId,
+        hostKind: isMobile ? "mobile-web" : "desktop-web",
+      }),
+    [settings.general.selectedSkinId, isMobile],
+  );
+  const legacyLiveTheme =
     (settings?.general?.theme
       ? PERSONA_UI_CONFIG[
           settings.general.theme as keyof typeof PERSONA_UI_CONFIG
@@ -79,6 +88,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       : theme) ||
     theme ||
     PERSONA_UI_CONFIG.ASSISTANT;
+  const liveTheme = {
+    ...legacyLiveTheme,
+    hex: skinMaterialVariables["--luca-accent-primary"] || legacyLiveTheme.hex,
+    primary:
+      skinMaterialVariables["--luca-accent-primary"] ||
+      legacyLiveTheme.primary,
+    bg: skinMaterialVariables["--luca-background-base"] || legacyLiveTheme.bg,
+  };
 
   // Desktop keeps every tab discoverable in grouped sections. Mobile keeps
   // standard settings primary and places advanced features behind one entry.
@@ -257,6 +274,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 glass-blur ${
         isMobile ? "p-0" : "p-4"
       } font-sans select-none`}
+      style={skinMaterialVariables as React.CSSProperties}
     >
       <div
         className={`w-full ${

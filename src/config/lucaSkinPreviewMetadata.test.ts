@@ -10,12 +10,12 @@ import {
 const COMPETITOR_NAMES = ["Apple", "Claude", "ChatGPT", "Gemini", "Cursor"];
 
 describe("lucaSkinPreviewMetadata", () => {
-  it("resolves Pearl as the default preview metadata", () => {
-    expect(getDefaultLucaSkinPreviewMetadata().id).toBe("pearl");
+  it("resolves Carbon as the default preview metadata", () => {
+    expect(getDefaultLucaSkinPreviewMetadata().id).toBe("carbon");
   });
 
-  it("falls back to Pearl for invalid skin IDs", () => {
-    expect(getLucaSkinPreviewMetadata("not-a-skin").id).toBe("pearl");
+  it("falls back to Carbon for invalid skin IDs", () => {
+    expect(getLucaSkinPreviewMetadata("not-a-skin").id).toBe("carbon");
   });
 
   it("provides metadata for every official skin ID", () => {
