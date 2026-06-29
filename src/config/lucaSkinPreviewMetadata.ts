@@ -56,7 +56,7 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
     ],
     accessibilityNotes: [
       "Preserve strong foreground contrast on light surfaces.",
-      "Motion should remain calm and optional for preview-only contexts.",
+      "Motion should remain calm and optional in motion-sensitive contexts.",
     ],
     designGuardrails: [
       "Avoid harsh pure white.",

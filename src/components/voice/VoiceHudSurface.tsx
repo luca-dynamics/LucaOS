@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../ui/Icon";
 import VoiceVisualizer from "./VoiceVisualizer";
 import VoiceControls from "./VoiceControls";
@@ -6,6 +6,9 @@ import VoiceStatusOrb from "./VoiceStatusOrb";
 import TacticalStream from "../visual/TacticalStream";
 import { THEME_PALETTE, MISSION_COLORS } from "../../config/themeColors";
 import { useTheme } from "../../hooks/useTheme";
+import { settingsService } from "../../services/settingsService";
+import type { LucaSettings } from "../../services/settingsService";
+import { getLucaSkinMaterialVariables } from "../../styles/lucaSkinMaterialBridge";
 
 const TypewriterText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -143,6 +146,9 @@ export function VoiceHudSurface({
   const [isVideoActive, setIsVideoActive] = useState(false);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
+    () => settingsService.getSettings().general.selectedSkinId,
+  );
   const { isTactical } = useTheme();
   const showTechnicalPanels =
     !hideDebugPanels &&
@@ -151,7 +157,31 @@ export function VoiceHudSurface({
   const palette =
     THEME_PALETTE[persona as keyof typeof THEME_PALETTE] ||
     THEME_PALETTE.RUTHLESS;
-  const themeColor = theme.hex || palette.primary;
+  const voiceSkinVariables = useMemo(
+    () =>
+      getLucaSkinMaterialVariables({
+        skinId: selectedSkinId,
+        hostKind: "desktop-app",
+        reducedMotion: false,
+        reducedTransparency: false,
+      }),
+    [selectedSkinId],
+  );
+  const themeColor =
+    theme.hex ||
+    voiceSkinVariables["--luca-accent-primary"] ||
+    palette.primary;
+
+  useEffect(() => {
+    const handleSettingsChange = (settings: LucaSettings) => {
+      setSelectedSkinId(settings.general.selectedSkinId);
+    };
+
+    settingsService.on("settings-changed", handleSettingsChange);
+    return () => {
+      settingsService.off("settings-changed", handleSettingsChange);
+    };
+  }, []);
 
   useEffect(
     () => () => videoStream?.getTracks().forEach((track) => track.stop()),
@@ -201,6 +231,7 @@ export function VoiceHudSurface({
       data-voice-hud-surface="original"
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center animate-in fade-in duration-500"
       style={{
+        ...voiceSkinVariables,
         backgroundColor: transparentBackground
           ? "transparent"
           : "var(--app-bg-main)",

@@ -10,20 +10,19 @@ import type { LucaSkinId } from "../../config/lucaSkins";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 /**
- * Local-only, preview-only skin card for Settings.
+ * Local skin card for Settings.
  *
- * This component renders a small "operating environment sample" for a single
- * LucaOS skin. It is intentionally inert:
+ * This component renders a compact operating-environment card for a single
+ * LucaOS skin. It is intentionally scoped:
  *
- * - It does NOT apply skins globally, persist selection, or change the active
- *   appearance.
+ * - It lets the parent persist selection and change the active appearance.
  * - It does NOT write to `document.documentElement` or call `style.setProperty`.
- * - Skin CSS variables from `getLucaSkinMaterialVariables` are applied ONLY as
- *   inline styles on the local sample box, scoping them to that subtree.
+ * - Skin CSS variables from `getLucaSkinMaterialVariables` are applied as
+ *   inline styles on the local card surface, scoping them to that subtree.
  *
- * The card chrome (title, chips, copy) uses the active-theme settings tokens so
- * it stays consistent with the current interface; only the sample box reflects
- * the skin's own colors.
+ * The card chrome (title, chips, copy) uses Settings surface tokens so it stays
+ * consistent with the current interface; the skin surface reflects the skin's
+ * own colors.
  */
 
 const MOOD_LABELS: Record<LucaSkinPreviewMood, string> = {

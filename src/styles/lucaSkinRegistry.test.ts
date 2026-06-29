@@ -6,11 +6,11 @@ import {
 } from "./lucaSkinRegistry";
 
 describe("lucaSkinRegistry", () => {
-  it("resolves Pearl as the default skin", () => {
+  it("resolves Carbon as the default skin", () => {
     const variables = getDefaultLucaSkinCssVariables();
 
-    expect(variables["--luca-skin-bg-base"]).toBe("#f7f6f2");
-    expect(variables["--luca-skin-accent-primary"]).toBe("#4f7f96");
+    expect(variables["--luca-skin-bg-base"]).toBe("#111417");
+    expect(variables["--luca-skin-accent-primary"]).toBe("#9fb3c2");
   });
 
   it("returns every contracted CSS variable name", () => {
@@ -44,9 +44,9 @@ describe("lucaSkinRegistry", () => {
     expect(variables["--luca-skin-motion-glow"]).toBe("none");
   });
 
-  it("falls back to Pearl for invalid skin IDs", () => {
+  it("falls back to Carbon for invalid skin IDs", () => {
     const variables = getLucaSkinCssVariables({ skinId: "not-a-skin" });
 
-    expect(variables["--luca-skin-bg-base"]).toBe("#f7f6f2");
+    expect(variables["--luca-skin-bg-base"]).toBe("#111417");
   });
 });

@@ -124,15 +124,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     };
   }, []);
 
-  // --- LIVE PREVIEW ENGINE ---
-  // Apply theme changes in real-time for instant feedback. Desktop defaults to
-  // the document root; embedded surfaces can provide a local target boundary.
+  // --- LEGACY LOCAL PREVIEW ENGINE ---
+  // Keep old theme compatibility isolated to an explicit local preview
+  // boundary. The selected skin owns the actual Settings surface.
   useEffect(() => {
     const newTheme = settings.general?.theme;
     if (newTheme) {
-      const previewTarget =
-        themePreviewTargetRef?.current ??
-        (typeof document !== "undefined" ? document.documentElement : null);
+      const previewTarget = themePreviewTargetRef?.current;
       if (!previewTarget) return;
 
       const opacity = settings.general.backgroundOpacity ?? 0.3;

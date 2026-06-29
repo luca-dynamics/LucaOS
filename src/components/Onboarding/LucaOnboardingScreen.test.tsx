@@ -30,7 +30,7 @@ describe("LucaOnboardingScreen", () => {
       expect(markup).toContain(`data-luca-onboarding-option="${option.id}"`);
       expect(markup).toContain(option.title);
     }
-    // Pearl is the recommended environment option.
+    // Carbon is the recommended environment option.
     expect(markup).toContain('data-luca-onboarding-chip="recommended"');
   });
 

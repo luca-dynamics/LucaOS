@@ -35,8 +35,10 @@ import { taskQueue } from "./services/taskQueueService";
 import { soundService } from "./services/soundService";
 import { voiceService } from "./services/voiceService";
 import { settingsService } from "./services/settingsService";
+import { getLucaSkinDefinition } from "./config/lucaSkins";
 import { resolveLucaDashboardSkinBoundary } from "./styles/lucaDashboardSkinBoundary";
 import { resolveLucaMobileSkinBoundary } from "./styles/lucaMobileSkinBoundary";
+import { getLucaSkinMaterialVariables } from "./styles/lucaSkinMaterialBridge";
 import { voiceSessionOrchestrator } from "./services/voiceSessionOrchestrator";
 import { eventBus } from "./services/eventBus";
 import { UIThemeId } from "./types/lucaPersonality";
@@ -563,14 +565,35 @@ function AppContent() {
           isDesktopNative: isElectron,
         }),
       });
+      const skinMaterialVariables = getLucaSkinMaterialVariables({
+        skinId: nextSelectedSkinId,
+        hostKind: isMobile ? "mobile-web" : "desktop-web",
+        reducedMotion: false,
+        reducedTransparency: false,
+      });
+      const skinDefinition = getLucaSkinDefinition(nextSelectedSkinId);
+      const skinIsLight =
+        skinDefinition.modeAffinity === "light" ||
+        skinDefinition.modeAffinity === "warm";
       applyLucaAppearanceCssVariables(
         document.documentElement,
-        cssVariableState.variables,
+        {
+          ...cssVariableState.variables,
+          ...skinMaterialVariables,
+          "--app-primary": skinMaterialVariables["--luca-accent-primary"],
+          "--app-core-hex": skinMaterialVariables["--luca-accent-primary"],
+          "--app-text-main": skinMaterialVariables["--luca-text-primary"],
+          "--app-text-muted": skinMaterialVariables["--luca-text-secondary"],
+          "--app-border-main": skinMaterialVariables["--luca-accent-soft"],
+          "--app-bg-main": skinMaterialVariables["--luca-background-base"],
+          "--app-bg-tint": skinMaterialVariables["--luca-surface-hover"],
+          "--app-theme-type": skinIsLight ? "light" : "dark",
+        },
       );
 
-      // Class-based theme toggle for global CSS follows semantic token mode,
-      // not legacy persona config flags.
-      if (cssVariableState.appearanceMode === "light") {
+      // Class-based light/dark compatibility follows the selected skin, not
+      // legacy persona config flags.
+      if (skinIsLight) {
         document.documentElement.classList.add("light-mode");
       } else {
         document.documentElement.classList.remove("light-mode");
@@ -1340,15 +1363,38 @@ function AppContent() {
 
   // --- HELPER: Dynamic Theme Colors ---
   const getThemeColors = useCallback(() => {
+    const skinDefinition = getLucaSkinDefinition(selectedSkinId);
+    const skinMaterialVariables = getLucaSkinMaterialVariables({
+      skinId: selectedSkinId,
+      hostKind: isMobile ? "mobile-web" : "desktop-web",
+      reducedMotion: false,
+      reducedTransparency: false,
+    });
+    const skinAccent = skinMaterialVariables["--luca-accent-primary"];
+    const skinBackground = skinMaterialVariables["--luca-background-base"];
+    const skinIsLight =
+      skinDefinition.modeAffinity === "light" ||
+      skinDefinition.modeAffinity === "warm";
+    const skinTheme = {
+      primary: skinAccent,
+      border: skinMaterialVariables["--luca-accent-soft"],
+      bg: skinBackground,
+      glow: skinMaterialVariables["--luca-shadow-glow"],
+      coreColor: skinAccent,
+      hex: skinAccent,
+      themeName: skinDefinition.id,
+      isLight: skinIsLight,
+    };
+
     if (isLockdown) {
       return {
+        ...skinTheme,
         primary: "text-rq-red",
         border: "border-rq-red",
         bg: "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]",
         glow: "shadow-[0_0_30px_#ef4444]",
         coreColor: "text-[var(--luca-danger,#f87171)]",
         hex: "#ef4444",
-        themeName: "ruthless", // Lockdown defaults to dark
       };
     }
 
@@ -1359,7 +1405,7 @@ function AppContent() {
     // Handle system status overrides (CAUTION/CRITICAL)
     if (systemStatus === SystemStatus.CRITICAL) {
       return {
-        ...themeConfig,
+        ...skinTheme,
         primary: "text-rq-red",
         border: "border-rq-red",
         bg: "bg-rq-red-dim",
@@ -1369,7 +1415,7 @@ function AppContent() {
       };
     } else if (systemStatus === SystemStatus.CAUTION) {
       return {
-        ...themeConfig,
+        ...skinTheme,
         primary: "text-rq-amber",
         border: "border-rq-amber",
         bg: "bg-rq-amber-dim",
@@ -1380,16 +1426,10 @@ function AppContent() {
     }
 
     return {
-      primary: themeConfig.primary,
-      border: themeConfig.border,
-      bg: themeConfig.bg,
-      glow: themeConfig.glow,
-      coreColor: themeConfig.coreColor,
-      hex: themeConfig.hex || "#3b82f6",
-      themeName: themeConfig.themeName || activeThemeId,
-      isLight: themeConfig.isLight || false,
+      ...themeConfig,
+      ...skinTheme,
     };
-  }, [isLockdown, activeThemeId, systemStatus]);
+  }, [isLockdown, activeThemeId, systemStatus, selectedSkinId, isMobile]);
 
   const theme = useMemo(() => getThemeColors(), [getThemeColors]);
 
@@ -2286,16 +2326,19 @@ function AppContent() {
 
   // --- WEB BACKGROUND SYNC ---
   useEffect(() => {
+    const skinMaterialVariables = getLucaSkinMaterialVariables({
+      skinId: selectedSkinId,
+      hostKind: isMobile ? "mobile-web" : "desktop-web",
+    });
     if (isWeb()) {
-      const isLightTheme = theme.isLight;
-      const bgColor = isLightTheme ? "#f0f0f5" : "#1c1c1c";
+      const bgColor = skinMaterialVariables["--luca-background-base"];
       document.documentElement.style.backgroundColor = bgColor;
       document.body.style.backgroundColor = bgColor;
     } else {
       document.documentElement.style.backgroundColor = "transparent";
       document.body.style.backgroundColor = "transparent";
     }
-  }, [theme.themeName, theme.isLight]);
+  }, [selectedSkinId, isMobile]);
 
   // --- THEME SYNC (LUCA LINK) ---
   useEffect(() => {
