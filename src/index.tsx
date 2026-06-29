@@ -15,7 +15,11 @@ declare global {
     __LUCA_BOOT_ERROR_LISTENERS_REGISTERED__?: boolean;
     __LUCA_CAPTURED_BOOT_ERRORS__?: string[];
     __LUCA_SHOW_BOOT_FAILURE__?: (message?: string, error?: unknown) => void;
-    __LUCA_SET_BOOT_STATUS__?: (message: string, progress?: number) => void;
+    __LUCA_SET_BOOT_STATUS__?: (
+      message: string,
+      progress?: number,
+      detail?: string,
+    ) => void;
     __LUCA_CLEAR_BOOT_STATUS_LOOP__?: () => void;
     __LUCA_SELECTED_ENTRY__?: LucaBootstrapEntry;
     __LUCA_WEB_BRIDGE_MOUNT_ATTEMPTED__?: boolean;
@@ -41,6 +45,11 @@ const captureBootError = (error: unknown): void => {
 };
 
 window.__LUCA_REACT_ENTRY_LOADED__ = true;
+window.__LUCA_SET_BOOT_STATUS__?.(
+  "Loading LucaOS",
+  0.84,
+  "Starting the app",
+);
 console.info("[LucaOS web boot] React bootstrap loaded");
 
 if (!window.__LUCA_BOOT_ERROR_LISTENERS_REGISTERED__) {
@@ -68,15 +77,30 @@ const selectedEntry = selectLucaBootstrapEntry({
 
 window.__LUCA_SELECTED_ENTRY__ = selectedEntry;
 window.__LUCA_DESKTOP_ENTRY_IMPORTED__ = false;
+window.__LUCA_SET_BOOT_STATUS__?.(
+  "Opening LucaOS",
+  0.88,
+  "Choosing the best app experience",
+);
 console.info(`[LucaOS web boot] selectedEntry=${selectedEntry}`);
 
 const entryMount =
   selectedEntry === "webBridgeEntry"
-    ? import("./web/webBridgeEntry").then((module) =>
-        module.mountLucaWebBridge(),
-      )
+    ? import("./web/webBridgeEntry").then((module) => {
+        window.__LUCA_SET_BOOT_STATUS__?.(
+          "Opening LucaOS",
+          0.9,
+          "Loading the workspace",
+        );
+        return module.mountLucaWebBridge();
+      })
     : import("./reactAppEntry").then((module) => {
         window.__LUCA_DESKTOP_ENTRY_IMPORTED__ = true;
+        window.__LUCA_SET_BOOT_STATUS__?.(
+          "Opening LucaOS",
+          0.9,
+          "Loading the desktop app",
+        );
         return module.mountLucaReactApp();
       });
 

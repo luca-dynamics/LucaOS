@@ -400,8 +400,8 @@ async function bootSequence(isSilent = false) {
         if (serverReady && cortexReady) {
             clearInterval(checkInterval);
             rebootAttempts = 0; // Reset on success
-            log("ALL SYSTEMS ONLINE. HANDSHAKE COMPLETE.", 'success', 100);
-            if (bootWindow) bootWindow.webContents.send('boot-status', 'SYSTEM READY');
+            log("Core services ready. Opening LucaOS.", 'success', 100);
+            if (bootWindow) bootWindow.webContents.send('boot-status', 'APP READY');
             
             setTimeout(() => {
                 launchInterface(isSilent);

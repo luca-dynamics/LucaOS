@@ -41,6 +41,8 @@ describe("web bootstrap entry boundary", () => {
     expect(viteConfigSource).toContain('"node:events": path.resolve');
     expect(nodePolyfillsSource).toContain("export class EventEmitter");
     expect(nodePolyfillsSource).toContain("removeAllListeners(eventName)");
+    expect(nodePolyfillsSource).toContain("setMaxListeners(count)");
+    expect(nodePolyfillsSource).toContain("getMaxListeners()");
   });
 
   it("keeps the static boot loader responsive to short Electron windows", () => {
@@ -51,5 +53,18 @@ describe("web bootstrap entry boundary", () => {
     expect(htmlSource).toContain("max-height: min(54dvh, 500px)");
     expect(htmlSource).toContain("@media (max-height: 460px)");
     expect(htmlSource).toContain("width: min(78vw, 50dvh, 420px)");
+  });
+
+  it("shows live boot process detail while the static loader waits", () => {
+    const htmlSource = readFileSync("index.html", "utf8");
+
+    expect(htmlSource).toContain('class="loader-phase"');
+    expect(htmlSource).toContain("Loading saved setup");
+    expect(htmlSource).toContain("Loading your workspace");
+    expect(htmlSource).toContain("Finishing app setup");
+    expect(htmlSource).toContain("loader.querySelector(\".loader-phase\")");
+    expect(bootstrapSource).toContain("Starting the app");
+    expect(bootstrapSource).toContain("Choosing the best app experience");
+    expect(bootstrapSource).toContain("Loading the workspace");
   });
 });

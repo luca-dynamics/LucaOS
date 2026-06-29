@@ -4,19 +4,9 @@ import { Sender } from "../../types";
 import { webAppRuntime } from "../runtime/webAppRuntime";
 
 /**
- * WebRealChatPanel — mounts the REAL desktop ChatPanel in the browser-safe web
- * build (real-app track). Instead of a bespoke web chat surface, the web app
- * now renders the same ChatPanel the desktop uses; this container only supplies
- * the props ChatPanel expects, with browser-safe state + handlers:
- *
- * - message state is local; sending routes through webAppRuntime.chat (the
- *   configured OpenAI-compatible cloud endpoint, with honest fallbacks)
- * - desktop-only affordances that need native/secure runtimes (camera, screen
- *   share, voice, file attach) are inert no-ops here until shimmed
- *
- * ChatPanel's own service imports (settingsService, etc.) already guard on
- * `typeof window` / localStorage and degrade in the browser, so the real
- * component mounts without the native chain.
+ * WebRealChatPanel mounts the same ChatPanel the desktop uses; this container
+ * only supplies local message state, cloud chat routing, and inert handlers for
+ * affordances that are not wired in this host yet.
  */
 
 interface WebChatMessageModel {

@@ -7,6 +7,11 @@ const describeBootError = (error: unknown): string =>
 
 export function mountLucaWebBridge(): void {
   window.__LUCA_WEB_BRIDGE_MOUNT_ATTEMPTED__ = true;
+  window.__LUCA_SET_BOOT_STATUS__?.(
+    "Opening LucaOS",
+    0.92,
+    "Opening your workspace",
+  );
   console.info("[LucaOS web boot] WebBridge mount attempted");
 
   try {
@@ -23,13 +28,18 @@ export function mountLucaWebBridge(): void {
 
     window.__LUCA_WEB_BRIDGE_MOUNTED__ = true;
     window.__LUCA_REACT_MOUNTED__ = true;
+    window.__LUCA_SET_BOOT_STATUS__?.(
+      "Opening LucaOS",
+      0.94,
+      "Workspace ready",
+    );
     console.info("[LucaOS web boot] WebBridge mounted");
   } catch (error) {
     const description = describeBootError(error);
     window.__LUCA_REACT_BOOTSTRAP_ERROR__ = description;
     window.__LUCA_BOOT_ERROR__ = description;
     window.__LUCA_SHOW_BOOT_FAILURE__?.(
-      "LucaOS WebBridge failed before mount",
+      "LucaOS failed before the workspace opened",
       error,
     );
   }

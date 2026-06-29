@@ -23,6 +23,11 @@ const describeBootError = (error: unknown): string =>
 export function mountLucaReactApp(): void {
   window.__LUCA_DESKTOP_ENTRY_IMPORTED__ = true;
   window.__LUCA_REACT_MOUNT_ATTEMPTED__ = true;
+  window.__LUCA_SET_BOOT_STATUS__?.(
+    "Opening LucaOS",
+    0.92,
+    "Opening the desktop app",
+  );
   console.info("[LucaOS web boot] React mount attempted");
 
   try {
@@ -92,6 +97,11 @@ export function mountLucaReactApp(): void {
     );
 
     window.__LUCA_REACT_MOUNTED__ = true;
+    window.__LUCA_SET_BOOT_STATUS__?.(
+      "Opening LucaOS",
+      1,
+      "Desktop app ready",
+    );
     console.info("[LucaOS web boot] React mounted");
     document.getElementById("root-loader")?.remove();
     // NOTE: the Electron main window is revealed only once the app is past boot

@@ -232,6 +232,16 @@
         font-size: 14px;
         letter-spacing: 0;
       }
+      .loader-phase {
+        position: relative;
+        z-index: 1;
+        min-height: 14px;
+        color: rgba(255, 255, 255, 0.48);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.02em;
+        text-align: center;
+      }
       .loader-failure-details {
         position: relative;
         z-index: 1;
@@ -260,6 +270,9 @@
       #root-loader[data-state="failed"] .loader-status {
         max-width: min(82vw, 560px);
         text-align: center;
+      }
+      #root-loader[data-state="failed"] .loader-phase {
+        display: none;
       }
       #root-loader[data-state="failed"] .loader-failure-details {
         display: block;
@@ -312,7 +325,8 @@
         <img class="loader-hologram-face" src="/hologram.png" alt="" />
       </div>
       <div class="loader-text">LucaOS</div>
-      <div class="loader-status">Entering browser host</div>
+      <div class="loader-status">Starting LucaOS</div>
+      <div class="loader-phase">Preparing the app</div>
       <div class="loader-failure-details" aria-live="polite"></div>
       <div class="loader-progress" aria-hidden="true"></div>
     </div>
@@ -322,21 +336,48 @@
         const debugEnabled =
           new URLSearchParams(window.location.search).get("bootDebug") === "1";
         const readinessStatuses = [
-          { text: "Entering browser host", progress: 0.2 },
-          { text: "Checking your preferences", progress: 0.38 },
-          { text: "Preparing memory boundaries", progress: 0.56 },
-          { text: "Preparing safe tool access", progress: 0.74 },
-          { text: "Opening LucaOS", progress: 0.92 },
+          {
+            text: "Starting LucaOS",
+            detail: "Preparing the app",
+            progress: 0.2,
+          },
+          {
+            text: "Checking your preferences",
+            detail: "Loading saved setup",
+            progress: 0.38,
+          },
+          {
+            text: "Preparing memory boundaries",
+            detail: "Checking local memory",
+            progress: 0.56,
+          },
+          {
+            text: "Preparing safe tool access",
+            detail: "Preparing tools",
+            progress: 0.74,
+          },
+          {
+            text: "Opening LucaOS",
+            detail: "Loading your workspace",
+            progress: 0.92,
+          },
+          {
+            text: "Opening LucaOS",
+            detail: "Finishing app setup",
+            progress: 0.96,
+          },
         ];
         let readinessStatusIndex = 0;
         let readinessStatusTimer = 0;
 
-        window.__LUCA_SET_BOOT_STATUS__ = (text, progress) => {
+        window.__LUCA_SET_BOOT_STATUS__ = (text, progress, detail) => {
           const loader = document.getElementById("root-loader");
           if (!loader || loader.dataset.state === "failed") return;
 
           const status = loader.querySelector(".loader-status");
+          const phase = loader.querySelector(".loader-phase");
           if (status && text) status.textContent = text;
+          if (phase && detail) phase.textContent = detail;
           if (typeof progress === "number") {
             const nextProgress = Math.max(0.08, Math.min(progress, 1));
             loader.style.setProperty("--loader-progress", String(nextProgress));
@@ -353,6 +394,7 @@
         window.__LUCA_SET_BOOT_STATUS__(
           readinessStatuses[0].text,
           readinessStatuses[0].progress,
+          readinessStatuses[0].detail,
         );
         readinessStatusTimer = window.setInterval(() => {
           const loader = document.getElementById("root-loader");
@@ -369,6 +411,7 @@
           window.__LUCA_SET_BOOT_STATUS__(
             nextStatus.text,
             nextStatus.progress,
+            nextStatus.detail,
           );
         }, 1100);
 

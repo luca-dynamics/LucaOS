@@ -1525,7 +1525,7 @@ function AppContent() {
         "[SMART SCREEN] IPC Listener registered for visual-core-update",
       );
 
-      // HANDSHAKE: Signal to main process that we're ready to receive data
+      // Ready signal: tell the main process the app can receive data.
       console.log("[SMART SCREEN] Sending ready signal to main process");
       window.electron.ipcRenderer.send("visual-core-ready");
     }

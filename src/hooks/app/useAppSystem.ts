@@ -190,17 +190,17 @@ export const useAppSystem = ({
             soundService.play("BOOT");
           }
 
-          // --- SECURITY HANDSHAKE (Always Required) ---
+          // --- APP SESSION TOKEN (Always Required) ---
           if (isElectron && (window as any).luca?.getSecureToken) {
             const securityRecord = await runBootPhase({
               phaseId: "electron-security-handshake",
-              label: "Electron security handshake",
+              label: "App session token",
               timeoutMs: LUCA_BOOT_TIMEOUTS.safetyInitMs,
               run: async () => {
                 const token = await (window as any).luca.getSecureToken();
                 const { setLucaAuthToken } = await import("../../config/api");
                 setLucaAuthToken(token || ""); // Unblock with empty if null
-                console.log("[BOOT] Security Handshake Complete.");
+                console.log("[BOOT] App session token ready.");
 
                 // Initialize services that require authentication
                 const { lucaService } =
@@ -210,7 +210,7 @@ export const useAppSystem = ({
               },
               degradeOnFailure: true,
               degradedReason:
-                "Electron security handshake failed or timed out; auth waiters were unblocked.",
+                "App session token setup failed or timed out; auth waiters were unblocked.",
             });
             recordPhase(securityRecord);
 
@@ -508,12 +508,12 @@ export const useAppSystem = ({
                 const destination = resolveDestination();
                 console.log("[BOOT] Setup destination:", destination);
                 if (destination === "READY") {
-                  console.log("[BOOT] System READY.");
+                  console.log("[BOOT] App ready.");
                   sessionStorage.setItem("LUCA_HAS_BOOTED", "true");
 
-                  // GENESIS HANDSHAKE: Signal Hologram and Phoenix Supervisor
+                  // Startup signal: refresh background presence services.
                   if (isElectron) {
-                    console.log("[BOOT] 🌌 Initiating Genesis Handshake...");
+                    console.log("[BOOT] Starting background presence refresh...");
 
                     runNonBlockingBootPhase({
                       phaseId: "kernel-environment-awareness",
