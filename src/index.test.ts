@@ -30,4 +30,16 @@ describe("web bootstrap entry boundary", () => {
       viteConfigSource.match(/external:\s*\[([\s\S]*?)\]/)?.[1] ?? "";
     expect(externalBlock).not.toMatch(/["'](?:node:)?buffer["']/);
   });
+
+  it("aliases Node EventEmitter imports away from Vite's browser external", () => {
+    const nodePolyfillsSource = readFileSync(
+      "src/mocks/node_polyfills.js",
+      "utf8",
+    );
+
+    expect(viteConfigSource).toContain("events: path.resolve");
+    expect(viteConfigSource).toContain('"node:events": path.resolve');
+    expect(nodePolyfillsSource).toContain("export class EventEmitter");
+    expect(nodePolyfillsSource).toContain("removeAllListeners(eventName)");
+  });
 });
