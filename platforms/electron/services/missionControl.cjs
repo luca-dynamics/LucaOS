@@ -1,7 +1,89 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
+
+let Database;
+try {
+  Database = require('better-sqlite3');
+} catch (error) {
+  console.warn(`[MISSION_CONTROL] better-sqlite3 unavailable; using memory fallback. ${error.message}`);
+}
+
+class InMemoryMissionControlStore {
+  constructor() {
+    this.nextMissionId = 1;
+    this.nextGoalId = 1;
+    this.missions = [];
+    this.goals = [];
+  }
+
+  initSchema() {
+    console.log("[MISSION_CONTROL] Memory fallback ready.");
+  }
+
+  startMission(title, metadata = {}) {
+    const now = Date.now();
+    const id = this.nextMissionId++;
+    this.missions.push({
+      id,
+      title,
+      status: 'ACTIVE',
+      created_at: now,
+      updated_at: now,
+      metadata: JSON.stringify(metadata),
+    });
+    return id;
+  }
+
+  addGoal(missionId, description, dependencyId = null) {
+    const id = this.nextGoalId++;
+    this.goals.push({
+      id,
+      mission_id: missionId,
+      description,
+      status: 'PENDING',
+      dependency_id: dependencyId,
+      metadata: null,
+    });
+    return id;
+  }
+
+  updateGoalStatus(goalId, status) {
+    const goal = this.goals.find((item) => item.id === goalId);
+    if (!goal) return;
+    goal.status = status;
+    const mission = this.missions.find((item) => item.id === goal.mission_id);
+    if (mission) mission.updated_at = Date.now();
+  }
+
+  getActiveMissionContext() {
+    const activeMission = this.missions
+      .filter((item) => item.status === 'ACTIVE')
+      .sort((a, b) => b.updated_at - a.updated_at)[0];
+
+    if (!activeMission) return "No active mission.";
+
+    const goals = this.goals.filter((item) => item.mission_id === activeMission.id);
+    let context = `[MISSION: ${activeMission.title}]\n`;
+    context += `Status: ${activeMission.status}\n`;
+    context += `Goals:\n`;
+
+    goals.forEach((goal) => {
+      const statusIcon =
+        goal.status === "COMPLETED" ? "[x]" : goal.status === "IN_PROGRESS" ? "[/]" : "[ ]";
+      context += `${statusIcon} ${goal.description}${goal.dependency_id ? ` (Depends on ${goal.dependency_id})` : ""}\n`;
+    });
+
+    return context;
+  }
+
+  archiveMission(missionId) {
+    const mission = this.missions.find((item) => item.id === missionId);
+    if (!mission) return;
+    mission.status = 'ARCHIVED';
+    mission.updated_at = Date.now();
+  }
+}
 
 class MissionControl {
   constructor(userDataPath) {
@@ -10,9 +92,18 @@ class MissionControl {
     
     const dbPath = path.join(dbDir, 'missions.db');
     console.log(`[MISSION_CONTROL] Initializing database at: ${dbPath}`);
+
+    if (!Database) {
+      return new InMemoryMissionControlStore();
+    }
     
-    this.db = new Database(dbPath);
-    this.initSchema();
+    try {
+      this.db = new Database(dbPath);
+      this.initSchema();
+    } catch (error) {
+      console.warn(`[MISSION_CONTROL] Native database unavailable; using memory fallback. ${error.message}`);
+      return new InMemoryMissionControlStore();
+    }
   }
 
   initSchema() {

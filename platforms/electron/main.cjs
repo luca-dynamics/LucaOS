@@ -158,6 +158,7 @@ let trayMenu; // Tray Menu Reference
 let autoUpdater; // AutoUpdaterService Reference
 let serverProcess;
 let cortexProcess;
+let missionControlHandlersRegistered = false;
 
 // Track comprehensive sensor and service status for Tray UI
 let sensorState = { 
@@ -446,6 +447,7 @@ async function handleBootFailure(reason, logFunc) {
 }
 
 function launchInterface(isSilent = false) {
+    console.log('[MAIN] Launching Electron interface...');
     if (!isSilent) createWindow();
     createWidgetWindow(); 
     createChatWindow();
@@ -459,10 +461,14 @@ function launchInterface(isSilent = false) {
     // Smooth transition: reveal Main only once React has actually painted, then close Boot.
     if (mainWindow && bootWindow) {
         let shown = false;
-        const show = () => {
+        let fallbackTimer;
+        const show = (reason = 'unknown') => {
             if (shown || !mainWindow) return;
             shown = true;
+            if (fallbackTimer) clearTimeout(fallbackTimer);
+            console.log(`[MAIN] Revealing main window (${reason})`);
             mainWindow.show();
+            mainWindow.focus();
             setTimeout(() => {
                 if (bootWindow) bootWindow.close();
             }, 500);
@@ -472,9 +478,11 @@ function launchInterface(isSilent = false) {
         // (READY/ONBOARDING), signaled via window.luca.notifyReady -> 'renderer-ready'.
         // The native boot splash stays up through the entire React boot, so the
         // redundant in-app boot screen is never seen and the window never flashes empty.
-        ipcMain.once('renderer-ready', show);
+        ipcMain.once('renderer-ready', () => show('renderer-ready'));
+        mainWindow.once('ready-to-show', () => show('ready-to-show'));
+        mainWindow.webContents.once('did-finish-load', () => show('did-finish-load'));
         // Hard fallback so the window can never get stuck hidden if boot ever stalls.
-        setTimeout(show, 20000);
+        fallbackTimer = setTimeout(() => show('timeout'), 12000);
     } else {
         if (bootWindow) bootWindow.close();
     }
@@ -483,17 +491,24 @@ function launchInterface(isSilent = false) {
 function createWindow() {
     // Create the browser window.
     // [MISSION_CONTROL] Handlers Registration
-    if (!missionControl) {
-        missionControl = new MissionControl(app.getPath('userData'));
-    }
+    try {
+        if (!missionControl) {
+            missionControl = new MissionControl(app.getPath('userData'));
+        }
 
-    /* eslint-disable no-unused-vars */
-    ipcMain.handle('mission-start', (_event, title, metadata) => missionControl.startMission(title, metadata));
-    ipcMain.handle('mission-add-goal', (_event, missionId, description, dependencyId) => missionControl.addGoal(missionId, description, dependencyId));
-    ipcMain.handle('mission-update-goal', (_event, goalId, status) => missionControl.updateGoalStatus(goalId, status));
-    ipcMain.handle('mission-get-context', () => missionControl.getActiveMissionContext());
-    ipcMain.handle('mission-archive', (_event, missionId) => missionControl.archiveMission(missionId));
-    /* eslint-enable no-unused-vars */
+        if (!missionControlHandlersRegistered) {
+            /* eslint-disable no-unused-vars */
+            ipcMain.handle('mission-start', (_event, title, metadata) => missionControl.startMission(title, metadata));
+            ipcMain.handle('mission-add-goal', (_event, missionId, description, dependencyId) => missionControl.addGoal(missionId, description, dependencyId));
+            ipcMain.handle('mission-update-goal', (_event, goalId, status) => missionControl.updateGoalStatus(goalId, status));
+            ipcMain.handle('mission-get-context', () => missionControl.getActiveMissionContext());
+            ipcMain.handle('mission-archive', (_event, missionId) => missionControl.archiveMission(missionId));
+            /* eslint-enable no-unused-vars */
+            missionControlHandlersRegistered = true;
+        }
+    } catch (error) {
+        console.warn(`[MISSION_CONTROL] Disabled for this session: ${error.message}`);
+    }
 
     // Load saved bounds
     const savedBounds = loadWindowState();

@@ -21,6 +21,10 @@ describe("Electron first-run provisioning", () => {
     expect(electronMainSource).toContain("'.luca-boot-ready'");
     expect(electronMainSource).toContain("'.luca-full-ready'");
     expect(electronMainSource).toContain("app.isPackaged ? 180 : 420");
+    expect(electronMainSource).toContain("renderer-ready");
+    expect(electronMainSource).toContain("ready-to-show");
+    expect(electronMainSource).toContain("did-finish-load");
+    expect(electronMainSource).toContain("show('timeout')");
     expect(electronMainSource).not.toContain(
       "['-ExecutionPolicy', 'Bypass', '-File', setupScript, '--full']",
     );
