@@ -26,7 +26,7 @@ export type LucaSurfaceProps = LucaSurfaceOwnProps &
  */
 export const LucaSurface = React.forwardRef<HTMLElement, LucaSurfaceProps>(
   ({ materialStyle, as, className, style, ...rest }, ref) => {
-    const Component = (as ?? "div") as ElementType;
+    const Component = (as ?? "div") as any;
     return (
       <Component
         ref={ref}

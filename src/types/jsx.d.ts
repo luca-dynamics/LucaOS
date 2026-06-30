@@ -13,6 +13,17 @@ declare global {
       pointLight: any;
       primitive: any;
       group: any;
+      mesh: any;
+      line: any;
+      sphereGeometry: any;
+      boxGeometry: any;
+      bufferGeometry: any;
+      lineBasicMaterial: any;
+      meshBasicMaterial: any;
+      meshStandardMaterial: any;
+      meshPhysicalMaterial: any;
+      shaderMaterial: any;
+      [elemName: string]: any;
     }
   }
 }
