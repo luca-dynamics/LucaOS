@@ -15,8 +15,8 @@ import { getLucaOnboardingDisclosure } from "./lucaOnboardingDisclosure";
 import { LucaSurfaceMockup } from "./LucaSurfaceMockup";
 import { Icon } from "../ui/Icon";
 import {
-  ONBOARDING_CONNECTORS,
-  type OnboardingConnector,
+  useOnboardingConnectors,
+  type ConnectorCatalogEntry,
 } from "./onboardingConnectors";
 
 /**
@@ -267,10 +267,11 @@ function ConnectorTile({
   selected,
   onToggle,
 }: {
-  connector: OnboardingConnector;
+  connector: ConnectorCatalogEntry;
   selected: boolean;
   onToggle: (id: string) => void;
 }): React.ReactElement {
+  const iconSrc = connector.logo ?? connector.iconUrl;
   return (
     <button
       type="button"
@@ -308,13 +309,26 @@ function ConnectorTile({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 16,
-          fontWeight: 700,
-          color: "#fff",
-          background: connector.brandColor,
+          overflow: "hidden",
+          ...(iconSrc
+            ? { background: "#ffffff", padding: 6 }
+            : {
+                background: connector.color,
+                color: "#fff",
+                fontSize: 16,
+                fontWeight: 700,
+              }),
         }}
       >
-        {connector.monogram}
+        {iconSrc ? (
+          <img
+            src={iconSrc}
+            alt=""
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          />
+        ) : (
+          connector.monogram
+        )}
       </span>
       <span style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: "block", fontSize: 14.5, fontWeight: 600 }}>
@@ -329,7 +343,7 @@ function ConnectorTile({
             color: textSecondary,
           }}
         >
-          {connector.tagline}
+          {connector.desc}
         </span>
       </span>
       <span
@@ -377,10 +391,9 @@ function OnboardingConnectorPanel(): React.ReactElement {
     setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
   const selectedCount = Object.values(selected).filter(Boolean).length;
 
-  // Popular tools first, then the rest — order is stable across renders.
-  const connectors = [...ONBOARDING_CONNECTORS].sort(
-    (a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)),
-  );
+  // First-party connectors (same source as Settings) + any live MCP-registry
+  // connectors, popular-first. Registry merge is best-effort and silent offline.
+  const { connectors } = useOnboardingConnectors();
   const hiddenCount = connectors.length - CONNECTOR_DEFAULT_VISIBLE;
   const visible =
     expanded || hiddenCount <= 0

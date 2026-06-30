@@ -1,230 +1,89 @@
 /**
- * onboardingConnectors — the catalog of tool apps Luca can connect to.
+ * onboardingConnectors — the connector source for the onboarding "Connect now"
+ * grid.
  *
- * Pure data, mirroring the connector lists modern AI assistants present
- * (Gmail, Calendar, Slack, Drive, GitHub, Notion, …). The onboarding
- * "Connect now" path renders these as expandable cards so people can see
- * exactly what each integration would let Luca do BEFORE anything connects.
+ * It does NOT define its own catalog. The connectors come from the shared
+ * `connectorCatalog` (the same first-party list Settings renders), plus a
+ * best-effort merge of live MCP-registry connectors. This keeps onboarding,
+ * Settings, and the marketplace agreeing on one source of truth.
  *
- * Boundary discipline: this file authors no behavior. Choosing a connector in
- * onboarding only records intent for later review in Settings — no OAuth, no
- * token, no tool access is granted here. The `scopes` strings describe what a
- * connection would allow once the user approves it in Settings.
+ * Boundary discipline: choosing a connector here only records intent for later
+ * review in Settings — no OAuth, token, or tool access is granted during
+ * onboarding. The registry fetch is read-only and best-effort: if the backend
+ * is unreachable (first run / offline / web), only the first-party list shows.
  */
 
-export type OnboardingConnectorCategoryId =
-  | "communication"
-  | "productivity"
-  | "files"
-  | "developer";
+import { useEffect, useState } from "react";
+import { apiUrl } from "../../config/api";
+import {
+  FIRST_PARTY_CONNECTORS,
+  mapMcpRegistryEntry,
+  type ConnectorCatalogEntry,
+} from "../../config/connectorCatalog";
 
-export interface OnboardingConnector {
-  /** Stable id (used for selection hooks + later Settings matching). */
-  id: string;
-  /** Display name of the tool app. */
-  name: string;
-  /** One-line description of what connecting unlocks. */
-  tagline: string;
-  /** Category bucket for grouping. */
-  category: OnboardingConnectorCategoryId;
-  /** Brand accent (badge background) — kept muted to suit the Quiet Machine. */
-  brandColor: string;
-  /** Short monogram shown in the badge when no brand glyph is available. */
-  monogram: string;
-  /** What Luca would be able to do once the user approves the connection. */
-  scopes: string[];
-  /** Marks the connectors most people start with (sorted first, lightly hinted). */
-  popular?: boolean;
+export type { ConnectorCatalogEntry } from "../../config/connectorCatalog";
+
+const REGISTRY_TIMEOUT_MS = 4000;
+const REGISTRY_LIMIT = 12;
+
+/** Popular-first ordering, stable across renders. */
+const byPopular = (a: ConnectorCatalogEntry, b: ConnectorCatalogEntry): number =>
+  Number(Boolean(b.popular)) - Number(Boolean(a.popular));
+
+export interface OnboardingConnectorsState {
+  /** First-party + any live registry connectors, popular-first. */
+  connectors: ConnectorCatalogEntry[];
+  /** True while the best-effort registry fetch is in flight. */
+  loadingRegistry: boolean;
 }
-
-export interface OnboardingConnectorCategory {
-  id: OnboardingConnectorCategoryId;
-  /** Section label. */
-  title: string;
-  /** Lucide icon name for the section header. */
-  icon: string;
-}
-
-export const ONBOARDING_CONNECTOR_CATEGORIES: OnboardingConnectorCategory[] = [
-  { id: "communication", title: "Communication", icon: "Mail" },
-  { id: "productivity", title: "Calendar & productivity", icon: "Calendar" },
-  { id: "files", title: "Files & storage", icon: "FolderOpen" },
-  { id: "developer", title: "Developer", icon: "Code" },
-];
 
 /**
- * The connector catalog. Brand colors are intentionally desaturated so the
- * badges sit calmly inside any skin instead of shouting.
+ * The onboarding connector list: the first-party catalog immediately, then any
+ * MCP-registry connectors merged in once a best-effort fetch resolves. Failure
+ * (offline / no backend) is silent — first-party connectors always render.
  */
-export const ONBOARDING_CONNECTORS: OnboardingConnector[] = [
-  // Communication
-  {
-    id: "gmail",
-    name: "Gmail",
-    tagline: "Read, draft, and triage email when you ask.",
-    category: "communication",
-    brandColor: "#ea4335",
-    monogram: "M",
-    popular: true,
-    scopes: [
-      "Search and read messages you reference",
-      "Draft and send replies after you confirm",
-      "Summarize threads and find attachments",
-    ],
-  },
-  {
-    id: "outlook",
-    name: "Outlook",
-    tagline: "Work with Microsoft mail and contacts.",
-    category: "communication",
-    brandColor: "#0a66c2",
-    monogram: "O",
-    scopes: [
-      "Search and read messages you reference",
-      "Draft replies and schedule sends after you confirm",
-    ],
-  },
-  {
-    id: "slack",
-    name: "Slack",
-    tagline: "Catch up on channels and post on your behalf.",
-    category: "communication",
-    brandColor: "#611f69",
-    monogram: "S",
-    popular: true,
-    scopes: [
-      "Read channels and DMs you point Luca to",
-      "Draft and post messages after you confirm",
-      "Summarize unread activity",
-    ],
-  },
+export function useOnboardingConnectors(): OnboardingConnectorsState {
+  const [registry, setRegistry] = useState<ConnectorCatalogEntry[]>([]);
+  const [loadingRegistry, setLoadingRegistry] = useState(true);
 
-  // Calendar & productivity
-  {
-    id: "google_calendar",
-    name: "Google Calendar",
-    tagline: "See your schedule and propose meetings.",
-    category: "productivity",
-    brandColor: "#1a73e8",
-    monogram: "C",
-    popular: true,
-    scopes: [
-      "Read your upcoming events",
-      "Create or update events after you confirm",
-      "Find open time across calendars",
-    ],
-  },
-  {
-    id: "notion",
-    name: "Notion",
-    tagline: "Search pages and capture notes into your workspace.",
-    category: "productivity",
-    brandColor: "#2f2f2f",
-    monogram: "N",
-    popular: true,
-    scopes: [
-      "Search pages and databases you share",
-      "Create and update pages after you confirm",
-    ],
-  },
-  {
-    id: "linear",
-    name: "Linear",
-    tagline: "Track issues and create them from chat.",
-    category: "productivity",
-    brandColor: "#5e6ad2",
-    monogram: "L",
-    scopes: [
-      "Read issues and projects you have access to",
-      "Create and update issues after you confirm",
-    ],
-  },
-  {
-    id: "asana",
-    name: "Asana",
-    tagline: "Review tasks and keep projects moving.",
-    category: "productivity",
-    brandColor: "#f06a6a",
-    monogram: "A",
-    scopes: [
-      "Read tasks and projects you share",
-      "Create and update tasks after you confirm",
-    ],
-  },
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REGISTRY_TIMEOUT_MS);
+    let active = true;
 
-  // Files & storage
-  {
-    id: "google_drive",
-    name: "Google Drive",
-    tagline: "Find files and pull context from your docs.",
-    category: "files",
-    brandColor: "#1fa463",
-    monogram: "D",
-    popular: true,
-    scopes: [
-      "Search files you point Luca to",
-      "Read documents to answer questions",
-      "Create or edit files after you confirm",
-    ],
-  },
-  {
-    id: "onedrive",
-    name: "OneDrive",
-    tagline: "Reach files across your Microsoft account.",
-    category: "files",
-    brandColor: "#0a66c2",
-    monogram: "1",
-    scopes: [
-      "Search and read files you reference",
-      "Save new files after you confirm",
-    ],
-  },
-  {
-    id: "dropbox",
-    name: "Dropbox",
-    tagline: "Search and read from your Dropbox.",
-    category: "files",
-    brandColor: "#0061ff",
-    monogram: "D",
-    scopes: [
-      "Search files you point Luca to",
-      "Read documents to answer questions",
-    ],
-  },
+    (async () => {
+      try {
+        const res = await fetch(
+          apiUrl(`/api/mcp/registry?limit=${REGISTRY_LIMIT}`),
+          { signal: controller.signal },
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const seen = new Set(FIRST_PARTY_CONNECTORS.map((c) => c.id));
+        const mapped = (data?.servers ?? [])
+          .map(mapMcpRegistryEntry)
+          .filter(
+            (c: ConnectorCatalogEntry | null): c is ConnectorCatalogEntry =>
+              Boolean(c) && !seen.has((c as ConnectorCatalogEntry).id),
+          );
+        if (active) setRegistry(mapped);
+      } catch {
+        // Offline / no backend / aborted — first-party connectors only.
+      } finally {
+        if (active) setLoadingRegistry(false);
+        clearTimeout(timer);
+      }
+    })();
 
-  // Developer
-  {
-    id: "github",
-    name: "GitHub",
-    tagline: "Read repos, issues, and open pull requests.",
-    category: "developer",
-    brandColor: "#2b3137",
-    monogram: "G",
-    popular: true,
-    scopes: [
-      "Read repositories you grant access to",
-      "Read and comment on issues and pull requests",
-      "Open branches and pull requests after you confirm",
-    ],
-  },
-  {
-    id: "jira",
-    name: "Jira",
-    tagline: "See tickets and update them from chat.",
-    category: "developer",
-    brandColor: "#0a66c2",
-    monogram: "J",
-    scopes: [
-      "Read issues and boards you have access to",
-      "Create and update issues after you confirm",
-    ],
-  },
-];
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, []);
 
-/** Connectors for a given category, popular ones first. */
-export const getOnboardingConnectorsByCategory = (
-  category: OnboardingConnectorCategoryId,
-): OnboardingConnector[] =>
-  ONBOARDING_CONNECTORS.filter((c) => c.category === category).sort(
-    (a, b) => Number(Boolean(b.popular)) - Number(Boolean(a.popular)),
-  );
+  return {
+    connectors: [...FIRST_PARTY_CONNECTORS, ...registry].sort(byPopular),
+    loadingRegistry,
+  };
+}
