@@ -1,6 +1,7 @@
 import React from "react";
 import ChatMessageBubble from "./ChatMessageBubble";
 import type { PersonaType } from "../services/lucaService";
+import { MessageScroller, StreamingMarker } from "./chat/LucaConversationPrimitives";
 
 interface ChatMessage {
   sender: "user" | "luca";
@@ -28,11 +29,27 @@ const ChatWidgetHistory: React.FC<ChatWidgetHistoryProps> = ({
   messagesEndRef,
   persona,
 }) => {
+  const anchorKey = `${history.length}:${history[history.length - 1]?.text ?? ""}:${isProcessing}`;
+  const lastUserMessage = [...history]
+    .reverse()
+    .find((message) => message.sender === "user" && message.id);
+  const lastUserMessageId = lastUserMessage?.id
+    ? `message-${lastUserMessage.id}`
+    : undefined;
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 pb-24 space-y-6">
+    <MessageScroller
+      anchorRef={messagesEndRef}
+      anchorKey={anchorKey}
+      restoreKey="mini-chat"
+      restoreAnchorId={lastUserMessageId}
+      turnAnchorId={lastUserMessageId}
+      className="p-4 pb-24 space-y-6"
+    >
       {history.map((msg, idx) => {
         return (
           <ChatMessageBubble
+            messageId={msg.id ? `message-${msg.id}` : undefined}
             key={msg.id || idx}
             text={msg.text}
             sender={msg.sender}
@@ -49,25 +66,10 @@ const ChatWidgetHistory: React.FC<ChatWidgetHistoryProps> = ({
       })}
 
       {isProcessing && history.length === 0 && (
-        <div className="flex justify-start">
-          <div className="flex gap-1 items-center bg-slate-800/50 rounded-lg px-3 py-2 border border-white/10 relative z-10">
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-bounce"
-              style={{ backgroundColor: primaryColor }}
-            />
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-bounce"
-              style={{ backgroundColor: primaryColor, animationDelay: "75ms" }}
-            />
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-bounce"
-              style={{ backgroundColor: primaryColor, animationDelay: "150ms" }}
-            />
-          </div>
-        </div>
+        <StreamingMarker color={primaryColor} />
       )}
       <div ref={messagesEndRef} />
-    </div>
+    </MessageScroller>
   );
 };
 

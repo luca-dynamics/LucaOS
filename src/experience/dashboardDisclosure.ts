@@ -47,11 +47,11 @@ const DISCLOSURE_BY_MODE: Record<LucaExperienceMode, DashboardDisclosure> = {
     collapseAdvancedLeftPanelGroups: true,
   },
   pro: {
-    visibleRightPanelModes: FULL_RIGHT_PANEL_MODES,
-    showAdvancedDiagnostics: true,
+    visibleRightPanelModes: BASIC_RIGHT_PANEL_MODES,
+    showAdvancedDiagnostics: false,
     showCreatorDiagnostics: false,
     showAdvancedTools: true,
-    showTraceByDefault: true,
+    showTraceByDefault: false,
     collapseAdvancedLeftPanelGroups: false,
   },
   creator: {
@@ -173,7 +173,7 @@ export function isAdvancedLeftPanelGroup(
 export function getVisibleLeftPanelGroups(
   mode: LucaExperienceMode,
 ): readonly DashboardLeftPanelGroup[] {
-  return mode === "basic" ? BASIC_LEFT_PANEL_GROUPS : FULL_LEFT_PANEL_GROUPS;
+  return mode === "creator" ? FULL_LEFT_PANEL_GROUPS : BASIC_LEFT_PANEL_GROUPS;
 }
 
 export function shouldShowLeftPanelGroup(
