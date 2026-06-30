@@ -1,15 +1,12 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+const { readFileSync } = process.getBuiltinModule("node:fs");
 import { describe, expect, it } from "vitest";
 import { resolveLucaBootSkinBoundary } from "./lucaBootSkinBoundary";
 import { resolveLucaDashboardSkinBoundary } from "./lucaDashboardSkinBoundary";
 import { resolveLucaMobileSkinBoundary } from "./lucaMobileSkinBoundary";
 import { LUCA_SKIN_MATERIAL_VARIABLE_NAMES } from "./lucaSkinMaterialBridge";
 
-const repoRoot = resolve(__dirname, "../..");
-
 function readSource(path: string): string {
-  return readFileSync(resolve(repoRoot, path), "utf8");
+  return readFileSync(path, "utf8");
 }
 
 const boundarySourcePaths = [
@@ -81,15 +78,15 @@ describe("Luca skin QA matrix source boundaries", () => {
 });
 
 describe("Luca skin QA matrix resolver contract", () => {
-  it("falls invalid boot, dashboard, and mobile selections back to Pearl", () => {
+  it("falls invalid boot, dashboard, and mobile selections back to Carbon", () => {
     expect(resolveLucaBootSkinBoundary({ selectedSkinId: "invalid" }).skinId).toBe(
-      "pearl",
+      "carbon",
     );
     expect(resolveLucaDashboardSkinBoundary({ selectedSkinId: "invalid" }).skinId).toBe(
-      "pearl",
+      "carbon",
     );
     expect(resolveLucaMobileSkinBoundary({ selectedSkinId: "invalid" }).skinId).toBe(
-      "pearl",
+      "carbon",
     );
   });
 

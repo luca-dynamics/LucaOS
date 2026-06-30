@@ -121,7 +121,6 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     shortName: "Pearl",
     description:
       "A bright, quiet default environment with pearl-white surfaces, gentle glass, and highly readable graphite text.",
-    recommendedDefault: true,
     modeAffinity: "light",
     backgroundProfile: {
       base: "#f7f6f2",
@@ -178,6 +177,7 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
     shortName: "Carbon",
     description:
       "A focused charcoal environment with graphite materials, restrained accents, and comfortable dark-mode readability.",
+    recommendedDefault: true,
     modeAffinity: "dark",
     backgroundProfile: {
       base: "#111417",

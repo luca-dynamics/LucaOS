@@ -39,7 +39,7 @@ describe("lucaSkinPresence", () => {
     const def = getDefaultLucaSkinPresenceVariables();
     expect(fallback).toEqual(def);
     expect(getLucaSkinPresenceVariables()).toEqual(def);
-    expect(DEFAULT_LUCA_SKIN_ID).toBe("pearl");
+    expect(DEFAULT_LUCA_SKIN_ID).toBe("carbon");
   });
 
   it("marks only Flow's edge bloom as iridescent", () => {

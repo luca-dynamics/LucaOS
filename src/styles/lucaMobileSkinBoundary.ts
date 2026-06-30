@@ -1,4 +1,5 @@
 import {
+  DEFAULT_LUCA_SKIN_ID,
   normalizeLucaSkinId,
   type LucaSkinHostKind,
   type LucaSkinId,
@@ -50,8 +51,12 @@ function getMobileSafetyNotes(options: {
 }): string[] {
   const notes: string[] = [];
 
-  if (options.skinId === "pearl" && options.selectedSkinId !== undefined && options.selectedSkinId !== "pearl") {
-    notes.push("Invalid or unsupported skin selection fell back to Pearl.");
+  if (
+    options.skinId === DEFAULT_LUCA_SKIN_ID &&
+    options.selectedSkinId !== undefined &&
+    options.selectedSkinId !== DEFAULT_LUCA_SKIN_ID
+  ) {
+    notes.push("Invalid or unsupported skin selection fell back to Carbon.");
   }
 
   if (options.hostKind === DEFAULT_MOBILE_SKIN_HOST_KIND && options.requestedHostKind !== DEFAULT_MOBILE_SKIN_HOST_KIND) {

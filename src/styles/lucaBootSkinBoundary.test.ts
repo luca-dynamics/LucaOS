@@ -55,20 +55,20 @@ const FORBIDDEN_IMPORT_PATTERNS = [
 ] as const;
 
 describe("lucaBootSkinBoundary", () => {
-  it("defaults to Pearl material variables", () => {
+  it("defaults to Carbon material variables", () => {
     const boundary = resolveLucaBootSkinBoundary();
 
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
-    expect(boundary.materialVariables["--luca-background-base"]).toBe("#f7f6f2");
-    expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#4f7f96");
+    expect(boundary.materialVariables["--luca-background-base"]).toBe("#111417");
+    expect(boundary.materialVariables["--luca-accent-primary"]).toBe("#9fb3c2");
   });
 
-  it("falls invalid selectedSkinId back to Pearl variables", () => {
+  it("falls invalid selectedSkinId back to Carbon variables", () => {
     const boundary = resolveLucaBootSkinBoundary({ selectedSkinId: "invalid-skin" });
 
     expect(boundary.skinId).toBe(DEFAULT_LUCA_SKIN_ID);
-    expect(boundary.materialVariables["--luca-background-base"]).toBe("#f7f6f2");
-    expect(boundary.safetyNotes.join(" ")).toContain("Pearl");
+    expect(boundary.materialVariables["--luca-background-base"]).toBe("#111417");
+    expect(boundary.safetyNotes.join(" ")).toContain("Carbon");
   });
 
   it("defaults surface to boot-window", () => {

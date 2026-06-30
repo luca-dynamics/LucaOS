@@ -13,6 +13,11 @@ describe("settings skin integration", () => {
     expect(settingsModalSource).toContain('skinMaterialVariables["--luca-accent-primary"]');
   });
 
+  it("keeps legacy Settings theme preview scoped to an explicit local boundary", () => {
+    expect(settingsModalSource).toContain("const previewTarget = themePreviewTargetRef?.current");
+    expect(settingsModalSource).not.toContain("document.documentElement");
+  });
+
   it("keeps legacy theme selection out of the visible General settings UI", () => {
     expect(generalTabSource).not.toContain("NORMAL_LUCA_THEME_OPTIONS");
     expect(generalTabSource).not.toContain("getLucaThemeLabel");

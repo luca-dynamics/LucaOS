@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDictation } from "../hooks/useDictation";
 import { useSatelliteState } from "../hooks/useSatelliteState";
 import WidgetVisualizer from "./WidgetVisualizer";
 import { THEME_PALETTE } from "../config/themeColors";
 import WidgetControls from "./WidgetControls";
+import { settingsService } from "../services/settingsService";
+import type { LucaSettings } from "../services/settingsService";
+import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
 import {
   createWidgetPresenceSnapshot,
   getWidgetDictationState,
@@ -18,6 +21,20 @@ const WidgetMode: React.FC = () => {
   );
   const [isHovered, setIsHovered] = useState(false);
   const [isVisualCoreActive, setIsVisualCoreActive] = useState(false);
+  const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
+    () => settingsService.getSettings().general.selectedSkinId,
+  );
+
+  useEffect(() => {
+    const handleSettingsChange = (settings: LucaSettings) => {
+      setSelectedSkinId(settings.general.selectedSkinId);
+    };
+
+    settingsService.on("settings-changed", handleSettingsChange);
+    return () => {
+      settingsService.off("settings-changed", handleSettingsChange);
+    };
+  }, []);
 
   useEffect(() => {
     // IPCS Listeners for COMMANDS (Voice Toggles)
@@ -99,16 +116,33 @@ const WidgetMode: React.FC = () => {
   const currentTheme =
     THEME_PALETTE[state.persona as keyof typeof THEME_PALETTE] ||
     THEME_PALETTE.RUTHLESS;
+  const widgetSkinVariables = useMemo(
+    () =>
+      getLucaSkinMaterialVariables({
+        skinId: selectedSkinId,
+        hostKind: "desktop-app",
+        reducedMotion: false,
+        reducedTransparency: true,
+      }),
+    [selectedSkinId],
+  );
 
   // Use synced themeHex if available, else fall back to persona theme
-  const primaryColor = state.themeHex || currentTheme.primary;
+  const primaryColor =
+    state.themeHex ||
+    widgetSkinVariables["--luca-accent-primary"] ||
+    currentTheme.primary;
 
   return (
     <div
       className={`h-screen w-screen flex flex-col items-center justify-center overflow-hidden bg-transparent transition-all duration-300 ease-in-out
         ${isExiting ? "scale-0 opacity-0 blur-md translate-y-10" : "scale-100 opacity-100 translate-y-0"}`}
       style={
-        { WebkitAppRegion: "drag", transformOrigin: "center center" } as any
+        {
+          ...widgetSkinVariables,
+          WebkitAppRegion: "drag",
+          transformOrigin: "center center",
+        } as any
       }
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

@@ -56,7 +56,7 @@ function getBootSafetyNotes(options: {
     options.selectedSkinId !== undefined &&
     options.selectedSkinId !== DEFAULT_LUCA_SKIN_ID
   ) {
-    notes.push("Invalid or unsupported skin selection fell back to Pearl.");
+    notes.push("Invalid or unsupported skin selection fell back to Carbon.");
   }
 
   if (options.hostKind === DEFAULT_BOOT_SKIN_HOST_KIND && options.requestedHostKind === undefined) {

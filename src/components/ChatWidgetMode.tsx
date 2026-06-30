@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import LucaChatSurface from "./chat/LucaChatSurface";
 import { ScreenShare, ScreenShareHandle } from "./ScreenShare";
 import { Suggestion } from "./SuggestionChips";
@@ -12,7 +12,9 @@ import { ToolRegistry } from "../services/toolRegistry";
 import conversationService from "../services/conversationService";
 import { awarenessService } from "../services/awarenessService";
 import { settingsService } from "../services/settingsService";
+import type { LucaSettings } from "../services/settingsService";
 import { PERSONA_UI_CONFIG } from "../config/themeColors";
+import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
 import SecurityGate from "./SecurityGate";
 import {
   createMiniChatPresenceSnapshot,
@@ -107,6 +109,9 @@ const ChatWidgetMode: React.FC = () => {
   const [remoteAmplitude, setRemoteAmplitude] = useState(0);
   const [isRemoteSpeaking, setIsRemoteSpeaking] = useState(false);
   const [isRemoteVadActive, setIsRemoteVadActive] = useState(false);
+  const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
+    () => settingsService.getSettings().general.selectedSkinId,
+  );
 
   // === AWARENESS ENGINE STATE ===
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -135,6 +140,17 @@ const ChatWidgetMode: React.FC = () => {
       setInput(transcript);
     }
   }, [transcript, isListening]);
+
+  useEffect(() => {
+    const handleSettingsChange = (settings: LucaSettings) => {
+      setSelectedSkinId(settings.general.selectedSkinId);
+    };
+
+    settingsService.on("settings-changed", handleSettingsChange);
+    return () => {
+      settingsService.off("settings-changed", handleSettingsChange);
+    };
+  }, []);
 
   // Handle explicit start to ensure connection
   const handleToggleVoice = async () => {
@@ -595,7 +611,22 @@ const ChatWidgetMode: React.FC = () => {
   const themeKey = state.theme || "ASSISTANT";
   const currentTheme =
     PERSONA_UI_CONFIG[themeKey as any] || PERSONA_UI_CONFIG.RUTHLESS;
-  const primaryColor = currentTheme.hex;
+  const chatSkinVariables = useMemo(
+    () =>
+      getLucaSkinMaterialVariables({
+        skinId: selectedSkinId,
+        hostKind: "desktop-app",
+        reducedMotion: false,
+        reducedTransparency: false,
+      }),
+    [selectedSkinId],
+  );
+  const primaryColor =
+    (state.theme && state.theme.startsWith("#")
+      ? state.theme
+      : undefined) ||
+    chatSkinVariables["--luca-accent-primary"] ||
+    currentTheme.hex;
 
   // Attachment Logic
   const [attachment, setAttachment] = useState<string | null>(null);
@@ -810,6 +841,7 @@ const ChatWidgetMode: React.FC = () => {
     <div
       onMouseEnter={() => setShowClose(true)}
       onMouseLeave={() => setShowClose(false)}
+      style={chatSkinVariables as React.CSSProperties}
     >
       <input
         type="file"

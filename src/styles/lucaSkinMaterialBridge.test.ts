@@ -22,12 +22,12 @@ const STATUS_OR_SAFETY_NAME_PARTS = [
 ] as const;
 
 describe("lucaSkinMaterialBridge", () => {
-  it("resolves Pearl values as the default material bridge", () => {
+  it("resolves Carbon values as the default material bridge", () => {
     const variables = getDefaultLucaSkinMaterialVariables();
 
-    expect(variables["--luca-background-base"]).toBe("#f7f6f2");
-    expect(variables["--luca-background-elevated"]).toBe("#ffffff");
-    expect(variables["--luca-accent-primary"]).toBe("#4f7f96");
+    expect(variables["--luca-background-base"]).toBe("#111417");
+    expect(variables["--luca-background-elevated"]).toBe("#1b2025");
+    expect(variables["--luca-accent-primary"]).toBe("#9fb3c2");
   });
 
   it("returns every contracted material bridge variable name", () => {
