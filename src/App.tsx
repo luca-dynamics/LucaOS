@@ -511,7 +511,7 @@ function AppContent() {
       const newTheme = settings?.general?.theme;
       const newExperienceMode = settings?.general?.experienceMode;
       const nextSelectedSkinId = settings?.general?.selectedSkinId;
-      const effectivePersona = newPersona ?? "ASSISTANT";
+      const effectivePersona = normalizePersonaValue(newPersona);
       const hasStoredSettings = settingsService.hasStoredSettings?.() ?? true;
       // Preserve saved themes exactly, but let true first-run/no-storage boots
       // resolve through the system-aware Silver/Graphite appearance policy.
@@ -519,9 +519,7 @@ function AppContent() {
         ? ((newTheme ?? "PROFESSIONAL") as UIThemeId)
         : undefined;
 
-      if (newPersona) {
-        setPersona(normalizePersonaValue(newPersona));
-      }
+      setPersona(effectivePersona);
       if (newTheme) {
         setActiveThemeId(newTheme as UIThemeId);
       }

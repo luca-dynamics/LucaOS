@@ -26,7 +26,7 @@ export interface VoiceRoutingPolicyContext {
   latencyHistoryMs: number[];
   localCoreConnected: boolean;
   settings: LucaSettings;
-  persona?: string;
+  persona?: unknown;
 }
 
 const PERSONA_BRAIN_MAP: Record<string, "GEMINI" | "OPENAI" | "GROQ"> = {
@@ -36,9 +36,30 @@ const PERSONA_BRAIN_MAP: Record<string, "GEMINI" | "OPENAI" | "GROQ"> = {
   HACKER: "GROQ",
 };
 
-const getPreferredBrain = (persona?: string): "GEMINI" | "OPENAI" | "GROQ" | undefined => {
-  if (!persona) return undefined;
-  const mapped = PERSONA_BRAIN_MAP[persona.toUpperCase()];
+const normalizePersonaKey = (persona: unknown): string | undefined => {
+  if (typeof persona === "string" && persona.trim()) {
+    return persona.trim().toUpperCase();
+  }
+
+  if (persona && typeof persona === "object") {
+    const candidate =
+      (persona as any).persona ??
+      (persona as any).name ??
+      (persona as any).id ??
+      (persona as any).value;
+
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim().toUpperCase();
+    }
+  }
+
+  return undefined;
+};
+
+const getPreferredBrain = (persona?: unknown): "GEMINI" | "OPENAI" | "GROQ" | undefined => {
+  const personaKey = normalizePersonaKey(persona);
+  if (!personaKey) return undefined;
+  const mapped = PERSONA_BRAIN_MAP[personaKey];
   if (!mapped) return undefined;
 
   // Check if the user actually has the key for this provider
