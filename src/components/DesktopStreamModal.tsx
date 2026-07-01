@@ -250,7 +250,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
           <span>CPU: {Math.floor(Math.random() * 30 + 10)}%</span>
           <span>TASKS: {processes.length} RUNNING</span>
           <span className="ml-auto" style={{ color: theme?.hex || "#06b6d4" }}>
-            REAL-TIME KERNEL ACCESS GRANTED
+            LIVE PROCESS FEED
           </span>
         </div>
       </div>

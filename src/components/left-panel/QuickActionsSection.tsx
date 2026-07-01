@@ -27,6 +27,8 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
   onCognitiveEngine,
   onLockdown,
 }) => {
+  const [lockdownHovered, setLockdownHovered] = React.useState(false);
+
   const actionTileStyle: React.CSSProperties = {
     backgroundColor: isLightCream
       ? "rgba(108, 106, 88, var(--app-bg-opacity, 0.9))"
@@ -106,34 +108,36 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
           </div>
         </button>
 
-        {/* MANUAL LOCKDOWN TRIGGER — safety action (LEVEL_3). Behaviour unchanged. */}
+        {/* MANUAL LOCKDOWN TRIGGER — safety action (LEVEL_3). Behaviour unchanged.
+            Neutral at rest; red only appears on hover/focus so the resting UI
+            doesn't read as a permanent alarm (presentational hover state only). */}
         <button
           type="button"
           onClick={onLockdown}
-          className={`col-span-2 py-3.5 flex items-center justify-center gap-3 transition-all group/btn rounded-lg border ${
-            isLightCream ? "" : "glass-blur hover:opacity-90 active:opacity-100"
-          }`}
+          onMouseEnter={() => setLockdownHovered(true)}
+          onMouseLeave={() => setLockdownHovered(false)}
+          onFocus={() => setLockdownHovered(true)}
+          onBlur={() => setLockdownHovered(false)}
+          className="col-span-2 py-3.5 flex items-center justify-center gap-3 transition-all group/btn rounded-lg border glass-blur"
           style={{
-            backgroundColor: isLightCream
-              ? "rgba(180, 80, 80, 0.15)"
-              : isLight
-                ? "rgba(239, 68, 68, calc(var(--app-bg-opacity, 0.3) * 0.5))"
-                : "rgba(239, 68, 68, calc(var(--app-bg-opacity, 0.3) * 0.3))",
-            borderColor: isLightCream ? "rgba(150, 40, 40, 0.4)" : "var(--app-border-main)",
+            backgroundColor: lockdownHovered
+              ? "rgba(239, 68, 68, 0.1)"
+              : "var(--luca-surface-glass, var(--app-bg-tint))",
+            borderColor: lockdownHovered ? "rgba(239, 68, 68, 0.35)" : "var(--app-border-main)",
           }}
         >
           <Icon
             name="Lock"
             size={14}
-            color={isLightCream ? "#991b1b" : "#ef4444"}
+            color={lockdownHovered ? "#ef4444" : "var(--app-text-muted)"}
             className="group-hover/btn:animate-bounce transition-all"
             variant="BoldDuotone"
           />
           <span
             className="text-[11px] font-medium transition-colors"
-            style={{ color: isLightCream ? "#991b1b" : "#ef4444" }}
+            style={{ color: lockdownHovered ? "#ef4444" : "var(--app-text-muted)" }}
           >
-            Initiate lockdown
+            Pause all actions
           </span>
         </button>
       </div>
