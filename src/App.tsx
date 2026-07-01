@@ -2641,20 +2641,8 @@ function AppContent() {
           {platformBackgroundPolicy.shouldRenderLiquidBackground && (
             <LiquidBackground theme={theme} className="fixed inset-0 -z-50" />
           )}
-          <EdgePresence
-            intent={
-              effectiveConnectionTier === "OFFLINE"
-                ? "attention"
-                : isProcessing
-                  ? "thinking"
-                  : isVoiceMode
-                    ? "listening"
-                    : "idle"
-            }
-            color={theme.hex}
-            radius={0}
-            style={{ position: "fixed", zIndex: 40 }}
-          />
+          {/* Presence edge glow removed — the app reads cleaner without a
+              glowing frame around the whole window. */}
         </>
       )}
       <SafeComponent componentName="OverlayManager">
@@ -2843,39 +2831,10 @@ function AppContent() {
               }),
         }}
       >
-        <SafeComponent componentName="Header">
-          <Header
-            theme={theme}
-            persona={persona}
-            isMobile={isMobile}
-            handleCyclePersona={handleCyclePersona}
-            isRebooting={isRebooting}
-            handleKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === "Enter" || e.key === " ") {
-                handleCyclePersona();
-              }
-            }}
-            setIsSettingsOpen={setShowSettingsModal}
-            isAdminMode={isAdminMode}
-            ambientVisionActive={ambientVisionActive}
-            setAmbientVisionActive={setAmbientVisionActive}
-            showVoiceHud={showVoiceHud}
-            setAmbientSuggestions={setAmbientSuggestions}
-            setShowSuggestionChips={setShowSuggestionChips}
-            hostPlatform={hostPlatform}
-            isListeningAmbient={isListeningAmbient}
-            isProcessing={isProcessing}
-            audioMonitoringActive={audioMonitoringActive}
-            setAudioMonitoringActive={setAudioMonitoringActive}
-            setVisionMonitoringActive={setVisionMonitoringActive}
-            isWakeWordActive={isWakeWordActive}
-            isLockdown={isLockdown}
-            connectionTier={effectiveConnectionTier}
-            tier={toHeaderTier(experienceMode)}
-          />
-        </SafeComponent>
-
-        <WebRuntimeCapabilityStrip policy={webAccessPolicy} />
+        {/* Header dissolved into the shell (Phase 3): the status/controls
+            cluster renders at the top of the CENTER column and the brand at the
+            top of the LEFT rail, so all three panels rise to the very top
+            (Claude/Codex-style) instead of sitting under a full-width band. */}
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden relative z-10 flex h-full gap-0 p-0">
@@ -2919,16 +2878,39 @@ function AppContent() {
                   width: `${panelWidths.sidebar}px`,
                 }}
               >
-                <button
-                  type="button"
-                  aria-label={leftToggleIcon(false).label}
-                  title={leftToggleIcon(false).label}
-                  onClick={() => setLeftPanelCollapsed(true)}
-                  className={`absolute top-2 right-2 z-30 p-1.5 rounded-lg border backdrop-blur-sm transition-colors ${lucaShellClassNames.control}`}
-                  style={lucaShellControlStyle}
+                {/* Brand bar — app identity at the top-left of the shell. */}
+                <div
+                  className="flex-none flex items-center gap-2.5 h-14 px-4 border-b"
+                  style={{
+                    borderColor:
+                      "var(--luca-border-subtle, var(--app-border-main))",
+                  }}
                 >
-                  <Icon name={leftToggleIcon(false).name} size={18} />
-                </button>
+                  <img
+                    src="/icon.png"
+                    alt="Luca"
+                    className="w-7 h-7 object-contain flex-none"
+                  />
+                  <span
+                    className="font-display text-[15px] font-semibold tracking-tight leading-none"
+                    style={{
+                      color: "var(--luca-text-primary, var(--app-text-main))",
+                    }}
+                  >
+                    LucaOS
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={leftToggleIcon(false).label}
+                    title={leftToggleIcon(false).label}
+                    onClick={() => setLeftPanelCollapsed(true)}
+                    className={`ml-auto p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                    style={lucaShellControlStyle}
+                  >
+                    <Icon name={leftToggleIcon(false).name} size={16} />
+                  </button>
+                </div>
+                <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                 <SafeComponent componentName="OperationsSidebar">
                   <OperationsSidebar
                     experienceMode={experienceMode}
@@ -2971,6 +2953,7 @@ function AppContent() {
                     setShowThoughtProcess={setShowThoughtProcess}
                   />
                 </SafeComponent>
+                </div>
               </div>
               <PanelResizer
                 themeColor={theme.hex}
@@ -3038,6 +3021,39 @@ function AppContent() {
                 className={`flex-1 h-full overflow-hidden flex flex-col ${lucaShellClassNames.workspace}`}
                 style={lucaShellWorkspaceSurfaceStyle}
               >
+                {/* Dissolved header: status/controls at the top of the chat. */}
+                <SafeComponent componentName="Header">
+                  <Header
+                    hideBrand
+                    theme={theme}
+                    persona={persona}
+                    isMobile={isMobile}
+                    handleCyclePersona={handleCyclePersona}
+                    isRebooting={isRebooting}
+                    handleKeyDown={(e: React.KeyboardEvent) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleCyclePersona();
+                      }
+                    }}
+                    setIsSettingsOpen={setShowSettingsModal}
+                    isAdminMode={isAdminMode}
+                    ambientVisionActive={ambientVisionActive}
+                    setAmbientVisionActive={setAmbientVisionActive}
+                    showVoiceHud={showVoiceHud}
+                    setAmbientSuggestions={setAmbientSuggestions}
+                    setShowSuggestionChips={setShowSuggestionChips}
+                    hostPlatform={hostPlatform}
+                    isListeningAmbient={isListeningAmbient}
+                    isProcessing={isProcessing}
+                    audioMonitoringActive={audioMonitoringActive}
+                    setAudioMonitoringActive={setAudioMonitoringActive}
+                    setVisionMonitoringActive={setVisionMonitoringActive}
+                    isWakeWordActive={isWakeWordActive}
+                    isLockdown={isLockdown}
+                    connectionTier={effectiveConnectionTier}
+                    tier={toHeaderTier(experienceMode)}
+                  />
+                </SafeComponent>
                 <SafeComponent componentName="ChatPanel">
                   <ChatPanel
                     messages={messages}
@@ -3200,7 +3216,7 @@ function AppContent() {
               >
                 <div className="flex flex-col h-full w-full overflow-hidden">
                   <div
-                    className="flex flex-none border-b"
+                    className="flex flex-none h-14 items-stretch border-b"
                     style={lucaShellDividerStyle}
                   >
                     {visibleRightPanelModes.map((mode) => (
@@ -3211,7 +3227,7 @@ function AppContent() {
                           setRightPanelMode(mode);
                           soundService.play("KEYSTROKE");
                         }}
-                        className={`flex-1 py-3 text-[13px] font-medium transition-colors relative border-b-2 ${
+                        className={`flex-1 flex items-center justify-center text-[13px] font-medium transition-colors relative border-b-2 ${
                           displayedRightPanelMode === mode
                             ? lucaShellClassNames.activeTab
                             : lucaShellClassNames.tab

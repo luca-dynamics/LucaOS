@@ -656,9 +656,16 @@ function startServer() {
             VITE_DEV_PORT: VITE_DEV_PORT.toString(), // Sync dev port
             ELECTRON_RUN: 'true'
         },
-        stdio: 'inherit',
-        windowsHide: true // Don't pop a separate console window on Windows
+        // 'pipe' (NOT 'inherit'): on Windows a GUI (Electron) parent has no
+        // console, so stdio:'inherit' forces each console child (node/python)
+        // to allocate its OWN visible console window — defeating windowsHide.
+        // Piping + forwarding keeps the logs without the popup windows.
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true
     });
+
+    serverProcess.stdout?.on('data', (d) => process.stdout.write(`[SERVER] ${d}`));
+    serverProcess.stderr?.on('data', (d) => process.stderr.write(`[SERVER] ${d}`));
 
     serverProcess.on('error', (err) => {
         console.error('Failed to start Backend Server:', err);
@@ -747,17 +754,22 @@ async function startCortex() {
 
     if (pythonCmd) {
         cortexProcess = spawn(pythonCmd, [cortexPath], {
-            stdio: 'inherit',
+            // 'pipe' not 'inherit' so windowsHide can actually hide the console
+            // window on Windows (inherit forces a child console to appear).
+            stdio: ['ignore', 'pipe', 'pipe'],
             env: env,
-            windowsHide: true // Don't pop a separate console window on Windows
+            windowsHide: true
         });
     } else {
         cortexProcess = spawn(cortexPath, [], {
-            stdio: 'inherit',
+            stdio: ['ignore', 'pipe', 'pipe'],
             env: env,
-            windowsHide: true // Cleaner for Windows binary launching
+            windowsHide: true
         });
     }
+
+    cortexProcess.stdout?.on('data', (d) => process.stdout.write(`[CORTEX] ${d}`));
+    cortexProcess.stderr?.on('data', (d) => process.stderr.write(`[CORTEX] ${d}`));
 
     cortexProcess.on('error', (err) => {
         console.error('Failed to start Cortex:', err);

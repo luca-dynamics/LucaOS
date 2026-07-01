@@ -561,9 +561,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             : undefined,
         }}
       >
-        <div className="mb-1 flex justify-end px-1">
-          <IntentRoutingModeSelector theme={theme} compact />
-        </div>
+        {/* Routing-mode selector moved into the composer's bottom control row
+            (single mode control), so it no longer sits above the composer. */}
         <ChatWidgetInput
           input={input}
           setInput={setInput}

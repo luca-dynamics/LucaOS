@@ -44,11 +44,14 @@ export const lucaShellGlowShadowStyle: CSSProperties = {
   boxShadow: LUCA_SHELL_SHADOW_GLOW,
 };
 
+// Side panels are flush columns divided by crisp 1px hairlines (the border-r /
+// border-l applied at the layout level), not floating cards — so no drop shadow
+// here. Shadows on adjacent flush columns muddy the seam and read "generic".
+// A restrained material blur is kept so glass skins still read as frosted.
 export const lucaShellPanelSurfaceStyle: CSSProperties = {
   background: LUCA_SHELL_SURFACE_BACKGROUND,
   borderColor: LUCA_SHELL_BORDER_SUBTLE,
   color: LUCA_SHELL_TEXT_PRIMARY,
-  boxShadow: LUCA_SHELL_SHADOW_SOFT,
   backdropFilter: `blur(${LUCA_SHELL_BLUR})`,
   WebkitBackdropFilter: `blur(${LUCA_SHELL_BLUR})`,
 };
