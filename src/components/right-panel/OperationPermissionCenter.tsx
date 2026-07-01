@@ -99,7 +99,7 @@ function OperationCenterCard({ item }: { item: OperationCenterItem }) {
         </p>
       )}
       <p className="mt-2 text-[8px] text-[var(--app-text-muted)]">
-        sideEffectsPerformed: false
+        Preview only — nothing has run yet.
       </p>
     </article>
   );
@@ -167,19 +167,37 @@ export default function OperationPermissionCenter({
 
         {creatorMode && (
           <>
-            <div className="mt-3 rounded-xl border p-3" style={dangerBox}>
-              <div className="flex items-center justify-between gap-2 text-[10px] font-medium">
-                <span>Execution readiness</span>
-                <span>blocked</span>
-              </div>
-              <p
-                className="mt-2 text-[10px] leading-relaxed"
-                style={{ color: "var(--luca-danger)", opacity: 0.8 }}
-              >
-                readyForExecution: false - executionEnabled: false - canExecute:
-                false - sideEffectsPerformed: false
-              </p>
-            </div>
+            {(() => {
+              const blockedCount =
+                readiness.blocked + readiness.requiresPrimaryApproval;
+              // A calm one-line summary from the real counts already computed
+              // above, instead of a permanently-red, always-false flag dump —
+              // the box only reads as an alert when something is actually
+              // blocked.
+              return blockedCount > 0 ? (
+                <div className="mt-3 rounded-xl border p-3" style={dangerBox}>
+                  <div className="flex items-center justify-between gap-2 text-[10px] font-medium">
+                    <span>Execution readiness</span>
+                    <span>Actions paused</span>
+                  </div>
+                  <p
+                    className="mt-2 text-[10px] leading-relaxed"
+                    style={{ color: "var(--luca-danger)", opacity: 0.8 }}
+                  >
+                    {blockedCount} action{blockedCount === 1 ? "" : "s"} need
+                    {blockedCount === 1 ? "s" : ""} approval before Luca can
+                    run {blockedCount === 1 ? "it" : "them"}.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-3 rounded-xl border p-3" style={neutralMetricStyle}>
+                  <div className="flex items-center justify-between gap-2 text-[10px] font-medium text-[var(--app-text-muted)]">
+                    <span>Execution readiness</span>
+                    <span>No actions pending</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="mt-3 space-y-1.5">
               {(

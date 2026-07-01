@@ -36,7 +36,7 @@ describe("WebRealHeader", () => {
     const { WebRealHeader } = await import("./WebRealHeader");
     const { container, cleanup } = mount(<WebRealHeader />);
     expect(container.querySelector("#app-header")).not.toBeNull();
-    expect(container.textContent ?? "").toContain("LUCA OS");
+    expect(container.textContent ?? "").toContain("LucaOS");
 
     const settingsButton = container.querySelector<HTMLButtonElement>(
       'button[aria-label="Open settings"]',

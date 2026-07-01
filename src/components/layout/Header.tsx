@@ -39,9 +39,9 @@ interface HeaderProps {
   tier?: "BASIC" | "PRO" | "CREATOR";
 }
 
-// Tier-aware wordmark. "LUCA" is an acronym, so it stays uppercase as the
-// brand name. Basic gets a calm "LUCA OS"; Pro/Creator get the stylized
-// dotted "L.U.C.A OS" mark (kept tasteful — no italic, no neon).
+// Tier-aware wordmark. The canonical brand form is "LucaOS" (matches the
+// window title). Pro/Creator keep the stylized dotted "L.U.C.A OS" flourish
+// (kept tasteful — no italic, no neon).
 function wordmark(tier: "BASIC" | "PRO" | "CREATOR"): {
   text: string;
   stylized: boolean;
@@ -49,7 +49,7 @@ function wordmark(tier: "BASIC" | "PRO" | "CREATOR"): {
   if (tier === "PRO" || tier === "CREATOR") {
     return { text: "L.U.C.A OS", stylized: true };
   }
-  return { text: "LUCA OS", stylized: false };
+  return { text: "LucaOS", stylized: false };
 }
 
 function connectionLabel(

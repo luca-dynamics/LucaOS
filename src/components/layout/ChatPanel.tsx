@@ -120,11 +120,13 @@ function getGreeting(
   hour: number,
   name: string,
 ): { prefix: string; suffix: string } {
-  const display = name || "Operator";
-  if (hour < 5) return { prefix: "Evening,", suffix: display };
-  if (hour < 12) return { prefix: "Good morning,", suffix: display };
-  if (hour < 17) return { prefix: "Afternoon,", suffix: display };
-  return { prefix: "Evening,", suffix: display };
+  // No invented identity when no name is set — the greeting simply omits the
+  // name slot rather than addressing the user as "Operator".
+  const display = name || "";
+  if (hour < 5) return { prefix: "Good evening", suffix: display };
+  if (hour < 12) return { prefix: "Good morning", suffix: display };
+  if (hour < 17) return { prefix: "Good afternoon", suffix: display };
+  return { prefix: "Good evening", suffix: display };
 }
 
 
@@ -697,23 +699,32 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               className="text-4xl lg:text-5xl font-semibold tracking-tight leading-tight mb-1 text-center"
               style={{ color: "var(--luca-text-primary, var(--app-text-main))" }}
             >
-              <span className="opacity-40 font-light mr-3">
+              <span
+                className={greeting.suffix ? "opacity-40 font-light mr-3" : "font-semibold"}
+                style={
+                  greeting.suffix
+                    ? undefined
+                    : { color: theme.hex || "var(--luca-accent-primary)" }
+                }
+              >
                 {greeting.prefix}
               </span>
-              <span
-                className="font-semibold"
-                style={{
-                  color: theme.hex || "var(--luca-accent-primary)",
-                }}
-              >
-                {greeting.suffix || "Operator"}
-              </span>
+              {greeting.suffix && (
+                <span
+                  className="font-semibold"
+                  style={{
+                    color: theme.hex || "var(--luca-accent-primary)",
+                  }}
+                >
+                  {greeting.suffix}
+                </span>
+              )}
             </h1>
             <p
               className="text-sm opacity-50 text-center"
               style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
             >
-              Ready when you are
+              Ask Luca anything
             </p>
 
             {/* AI Generated Welcome Message (Rolling Stream) */}
