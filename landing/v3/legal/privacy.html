@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LucaOS Privacy Policy — how we handle your information, with a local-first, you-control-it approach.">
+  <meta name="theme-color" content="#ffffff">
+  <title>Privacy Policy — LucaOS</title>
+  <link rel="icon" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="stylesheet" href="/v3/styles.css">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('lucaos-v3-theme');
+        var theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <script src="/v3/script.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="bar" id="bar">
+    <div class="wrap bar-row">
+      <a class="brand" href="/v3/">
+        <img src="/icon.png" alt="" width="24" height="24">
+        <span>LucaOS</span>
+      </a>
+      <nav class="links" aria-label="Primary">
+        <a href="/v3/#do">What it does</a>
+        <a href="/v3/#features">Features</a>
+        <a href="/v3/#compare">Approach</a>
+        <a href="/v3/docs.html">Docs</a>
+      </nav>
+      <div class="bar-actions">
+        <button class="theme-toggle" type="button" aria-label="Switch theme" title="Toggle theme">
+          <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+        </button>
+        <a class="icon-link" href="https://github.com/luca-dynamics/LucaOS" aria-label="LucaOS on GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        </a>
+        <a class="btn btn-primary btn-small" href="/v3/early-access.html">Get early access</a>
+        <button class="menu-btn" type="button" aria-label="Open menu" aria-controls="mobileMenu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+      <a href="/v3/#do">What it does</a>
+      <a href="/v3/#features">Features</a>
+      <a href="/v3/#compare">Approach</a>
+      <a href="/v3/docs.html">Docs</a>
+      <a class="btn btn-primary" href="/v3/early-access.html">Get early access</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="wrap narrow">
+        <span class="eyebrow-label">Legal</span>
+        <h1>Privacy Policy</h1>
+        <p class="page-meta">Last updated: February 14, 2026</p>
+      </div>
+    </section>
+
+    <section class="prose">
+      <div class="wrap narrow">
+        <p>At LucaOS Inc. ("LucaOS," "we," "us," or "our"), our mission is to build a host-native AI layer that keeps you in control of your data. Unlike platforms built on the commoditization of user data, LucaOS is designed from the ground up to process as much as possible on your own device.</p>
+        <p>This Privacy Policy describes how we collect, use, and handle your information when you use our websites, software, and services ("Services").</p>
+
+        <h2>1. The core principle: local-first</h2>
+        <p><strong>Your data, your device.</strong> LucaOS operates primarily as a local layer. Core processing — including language understanding, memory, and file indexing — happens on your hardware wherever possible. We do not upload your personal files, chat logs, or voice recordings to our servers for training.</p>
+
+        <h2>2. Information we collect</h2>
+        <p>We collect only the minimum amount of data necessary to provide and improve our Services.</p>
+        <h3>2.1. Account &amp; early access information</h3>
+        <p>When you join our early access list or create an account, we collect:</p>
+        <ul>
+          <li>Email address</li>
+          <li>Name (optional)</li>
+          <li>Authentication credentials (hashed)</li>
+        </ul>
+        <h3>2.2. Telemetry (opt-in)</h3>
+        <p>Telemetry should be transparent and optional. If you choose to enable diagnostic data sharing, we may collect anonymous performance metrics such as:</p>
+        <ul>
+          <li>Application crash reports</li>
+          <li>System resource usage (CPU / RAM / accelerator load)</li>
+          <li>Feature usage frequency</li>
+        </ul>
+        <p>This data is stripped of personal identifiers before leaving your device.</p>
+
+        <h2>3. How we use information</h2>
+        <ul>
+          <li><strong>Service provision:</strong> to verify access and deliver software updates.</li>
+          <li><strong>Communication:</strong> to send product updates, security alerts, and support messages.</li>
+          <li><strong>Security:</strong> to prevent fraud and abuse of our platform.</li>
+        </ul>
+
+        <h2>4. Third-party integrations</h2>
+        <p>LucaOS can act as a hub for various AI services. You may connect third-party providers (e.g. Anthropic, OpenAI, Google) via API keys.</p>
+        <ul>
+          <li><strong>Direct connection:</strong> when you use a third-party model, your device communicates directly with that provider's API. Your data does not pass through LucaOS servers.</li>
+          <li><strong>Key storage:</strong> API keys are encrypted at rest on your device using your system's secure store (Keychain / TPM). We never see your keys.</li>
+        </ul>
+
+        <h2>5. Data retention and deletion</h2>
+        <p>Because your primary data resides on your device, you have direct control over its retention.</p>
+        <ul>
+          <li><strong>Local data:</strong> you can delete your local Luca profile, database, and configuration at any time, which permanently erases that data.</li>
+          <li><strong>Account data:</strong> you may request deletion of your LucaOS account by contacting <a href="mailto:privacy@lucaos.space">privacy@lucaos.space</a>. We will delete your account information within 30 days.</li>
+        </ul>
+
+        <h2>6. Security</h2>
+        <ul>
+          <li><strong>Encryption in transit:</strong> communications between your device and our update servers are encrypted via TLS 1.3.</li>
+          <li><strong>Encryption at rest:</strong> local databases can be encrypted where supported by your platform.</li>
+        </ul>
+
+        <h2>7. Changes to this policy</h2>
+        <p>We may update this Privacy Policy from time to time. We will notify you of significant changes via email or through the LucaOS notification center.</p>
+
+        <h2>8. Contact us</h2>
+        <p>If you have questions about this Privacy Policy or your data rights, contact us at:</p>
+        <p><strong>LucaOS Inc.</strong><br>Email: <a href="mailto:privacy@lucaos.space">privacy@lucaos.space</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="/v3/"><img src="/icon.png" alt="" width="22" height="22"><span>LucaOS</span></a>
+        <p>A host-native AI operating system — one presence across every device.</p>
+      </div>
+      <nav aria-label="Product">
+        <h4>Product</h4>
+        <a href="/v3/#do">What it does</a>
+        <a href="/v3/#features">Features</a>
+        <a href="/v3/#compare">Approach</a>
+      </nav>
+      <nav aria-label="Company">
+        <h4>Company</h4>
+        <a href="/v3/docs.html">Docs</a>
+        <a href="https://github.com/luca-dynamics/LucaOS">GitHub</a>
+        <a href="mailto:hey@lucaos.space">Contact</a>
+      </nav>
+      <nav aria-label="Legal">
+        <h4>Legal</h4>
+        <a href="/v3/legal/privacy.html">Privacy</a>
+        <a href="/v3/legal/terms.html">Terms</a>
+      </nav>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>&copy; <span id="year">2026</span> LucaOS. All rights reserved.</span>
+    </div>
+  </footer>
+</body>
+</html>

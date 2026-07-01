@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LucaOS is a host-native AI operating system — the AI-native layer that runs across every device, carrying memory, presence, and governed action from device to device.">
+  <meta name="theme-color" content="#ffffff">
+  <title>LucaOS — A host-native AI operating system for every device</title>
+  <link rel="icon" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="stylesheet" href="/v3/styles.css">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('lucaos-v3-theme');
+        var theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <script src="/v3/script.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="bar" id="bar">
+    <div class="wrap bar-row">
+      <a class="brand" href="/v3/">
+        <img src="/icon.png" alt="" width="24" height="24">
+        <span>LucaOS</span>
+      </a>
+      <nav class="links" aria-label="Primary">
+        <a href="#do">What it does</a>
+        <a href="#features">Features</a>
+        <a href="#compare">Approach</a>
+        <a href="/v3/docs.html">Docs</a>
+      </nav>
+      <div class="bar-actions">
+        <button class="theme-toggle" type="button" aria-label="Switch theme" title="Toggle theme">
+          <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+        </button>
+        <a class="icon-link" href="https://github.com/luca-dynamics/LucaOS" aria-label="LucaOS on GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        </a>
+        <a class="btn btn-primary btn-small" href="/v3/early-access.html">Get early access</a>
+        <button class="menu-btn" type="button" aria-label="Open menu" aria-controls="mobileMenu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+      <a href="#do">What it does</a>
+      <a href="#features">Features</a>
+      <a href="#compare">Approach</a>
+      <a href="/v3/docs.html">Docs</a>
+      <a class="btn btn-primary" href="/v3/early-access.html">Get early access</a>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="tag">Introducing LucaOS</p>
+          <h1>A host-native AI operating system.<br><span class="accent">One presence, every device.</span></h1>
+          <p class="lede">Android runs every Android phone. macOS runs every Mac. LucaOS is the AI-native layer that runs across all your devices — carrying memory, presence, and governed action wherever you go. It starts on the desktop today.</p>
+          <div class="btn-row">
+            <a class="btn btn-primary" href="/v3/early-access.html">Get early access</a>
+            <a class="btn btn-ghost" href="https://app.lucaos.space">Try the web app</a>
+          </div>
+          <p class="platform-note">Early access begins on macOS · Windows and Linux to follow</p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <img src="/hologram.png" alt="">
+        </div>
+      </div>
+    </section>
+
+    <section class="proof">
+      <div class="wrap proof-row">
+        <span>One OS across your devices</span>
+        <span>Approval-first by design</span>
+        <span>Any model, your choice</span>
+        <span>Memory that moves with you</span>
+      </div>
+    </section>
+
+    <section class="do" id="do">
+      <div class="wrap">
+        <span class="eyebrow-label">Use cases</span>
+        <h2>What the OS lets you do.</h2>
+        <ul class="uc-grid">
+          <li class="uc">
+            <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 10h16M4 15h10M4 20h6"/></svg></span>
+            <div class="uc-body">
+              <h3>Meeting summaries</h3>
+              <p>Summarize a call while Luca keeps running quietly on your desktop.</p>
+            </div>
+          </li>
+          <li class="uc">
+            <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 3 8l4 4"/><path d="M3 8h14a4 4 0 0 1 0 8h-2"/><path d="m17 20 4-4-4-4"/></svg></span>
+            <div class="uc-body">
+              <h3>Switch models mid-task</h3>
+              <p>Move from Luca Prime to a local model without losing your context.</p>
+            </div>
+          </li>
+          <li class="uc">
+            <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
+            <div class="uc-body">
+              <h3>Review before it sends</h3>
+              <p>Luca drafts a file or a message; you approve it before anything leaves.</p>
+            </div>
+          </li>
+          <li class="uc">
+            <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></span>
+            <div class="uc-body">
+              <h3>Hands-free wake word</h3>
+              <p>Keep working while Luca listens for "Hey Luca" in the background.</p>
+            </div>
+          </li>
+          <li class="uc">
+            <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/><circle cx="12" cy="12" r="5"/></svg></span>
+            <div class="uc-body">
+              <h3>A visible presence</h3>
+              <p>Bring up the Hologram for a visual presence during a call or demo.</p>
+            </div>
+          </li>
+          <li class="uc">
+            <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="14" r="4"/><path d="m11 11 8-8 2 2-2 2 2 2-3 3-2-2-2 2"/></svg></span>
+            <div class="uc-body">
+              <h3>Bring your own key</h3>
+              <p>Route a sensitive task through your own API key instead of the default.</p>
+            </div>
+          </li>
+          <li class="uc">
+            <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+            <div class="uc-body">
+              <h3>Inspectable memory</h3>
+              <p>See exactly what Luca remembers, and clear anything you don't want kept.</p>
+            </div>
+          </li>
+          <li class="uc">
+            <span class="uc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></span>
+            <div class="uc-body">
+              <h3>A full audit trail</h3>
+              <p>Review every action Luca has taken. Nothing runs unlogged in the background.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="wrap">
+        <span class="eyebrow-label">Capabilities</span>
+        <h2>What LucaOS brings to every device.</h2>
+        <div class="feature-grid">
+
+          <article class="card">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+            <p class="card-eyebrow">Platform</p>
+            <h3>One presence, on your desktop first</h3>
+            <p>LucaOS runs natively today, taking on the look of the machine it's on. Browser and mobile come next, sharing the same identity and memory.</p>
+            <div class="mini mini-hosts" role="img" aria-label="Desktop is live; browser and mobile are next">
+              <div class="mini-head">Devices <span class="live">Synced</span></div>
+              <span class="mini-chip mini-chip-on">Desktop <b>Live</b></span>
+              <span class="mini-chip">Browser <b>Preview</b></span>
+              <span class="mini-chip">Mobile <b>Soon</b></span>
+            </div>
+          </article>
+
+          <article class="card">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 3v9l6 3"/></svg></span>
+            <p class="card-eyebrow">Memory</p>
+            <h3>Memory it shows you, not hides</h3>
+            <p>Memory &amp; Continuity tracks preferences and open threads across a session, in plain language you can review or clear.</p>
+            <div class="mini mini-memory" role="img" aria-label="Memory list with working pattern, open thread, and preference">
+              <div class="mini-head">Memory <span class="live">3 kept</span></div>
+              <span><b>Working style</b> — concise summaries first</span>
+              <span><b>Open thread</b> — Q3 roadmap doc</span>
+              <span><b>Preference</b> — local model for quick tasks</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></span>
+            <p class="card-eyebrow">Presence</p>
+            <h3>A voice and a face, when you want one</h3>
+            <p>Luca can speak through VoiceHUD, appear as a Hologram, or stay tucked into MiniChat — and it always shows when it's listening.</p>
+            <div class="mini mini-voice" role="img" aria-label="Listening indicator with a voice waveform">
+              <div class="mini-head">VoiceHUD <span class="live">Listening</span></div>
+              <span class="mini-orb" aria-hidden="true"></span>
+              <span class="mini-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <span class="mini-caption">Listening — VoiceHUD active</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+            <p class="card-eyebrow">Models</p>
+            <h3>Pick the engine, keep the identity</h3>
+            <p>Model Router sends each request to Luca Prime, a local model, or your own API key — same memory and presence underneath.</p>
+            <div class="mini mini-models" role="img" aria-label="Model list: Luca Prime active, local model available, bring your own key">
+              <div class="mini-head">Model Router</div>
+              <span class="mini-row mini-row-on"><b>Luca Prime</b><i>active</i></span>
+              <span class="mini-row"><b>Llama 3 · local</b><i>ready</i></span>
+              <span class="mini-row"><b>Your API key</b><i>connect</i></span>
+            </div>
+          </article>
+
+          <article class="card">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            <p class="card-eyebrow">Control</p>
+            <h3>It acts only after you say yes</h3>
+            <p>Before Luca sends a message, touches a file, or runs a command, it shows you exactly what's about to happen and waits.</p>
+            <div class="mini mini-approve" role="img" aria-label="Approval request with approve and deny actions">
+              <div class="mini-head">Approval required</div>
+              <p>Luca wants to <b>send an email</b> to sam@studio.co with the draft above.</p>
+              <span class="mini-actions"><em>Deny</em><b>Approve</b></span>
+            </div>
+          </article>
+
+          <article class="card">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8"/></svg></span>
+            <p class="card-eyebrow">Desktop</p>
+            <h3>Called up, not opened up</h3>
+            <p>Luca Widget, MiniChat, and the Hologram sit on top of what you're already doing, for a quick answer without switching windows.</p>
+            <div class="mini mini-widget" role="img" aria-label="A small floating widget over a document window">
+              <div class="mini-head">On your screen</div>
+              <span class="mini-window"></span>
+              <span class="mini-float">Want a summary of this?</span>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="compare" id="compare">
+      <div class="wrap">
+        <span class="eyebrow-label">The idea</span>
+        <h2>What an AI operating system should be.</h2>
+        <p class="sub">LucaOS is our take on an operating system for AI — one that lives on the device, stays under your control, and moves with you from screen to screen.</p>
+        <ol class="principles">
+          <li class="principle">
+            <span class="principle-num">01</span>
+            <div>
+              <h3>Native to the device</h3>
+              <p>A host-native layer that becomes part of the device it runs on — desktop today, more surfaces over time.</p>
+            </div>
+          </li>
+          <li class="principle">
+            <span class="principle-num">02</span>
+            <div>
+              <h3>Always under your control</h3>
+              <p>Every real action is shown to you and waits for your approval before it runs.</p>
+            </div>
+          </li>
+          <li class="principle">
+            <span class="principle-num">03</span>
+            <div>
+              <h3>Yours to route</h3>
+              <p>Send work to Luca Prime, a local model, or your own key. Your memory stays the same on every device.</p>
+            </div>
+          </li>
+          <li class="principle">
+            <span class="principle-num">04</span>
+            <div>
+              <h3>Nothing hidden</h3>
+              <p>See what Luca remembers, clear what you don't want, and review everything it has done.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap cta-box">
+        <h2>Start with LucaOS on your desktop.</h2>
+        <p>The OS begins on the desktop — with Memory &amp; Continuity, VoiceHUD, and Model Router built in — and grows across your devices from there. Prefer the browser first? The web app needs nothing to install.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="/v3/early-access.html">Get early access</a>
+          <a class="btn btn-ghost" href="https://app.lucaos.space">Try the web app</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="/v3/"><img src="/icon.png" alt="" width="22" height="22"><span>LucaOS</span></a>
+        <p>A host-native AI operating system — one presence across every device.</p>
+      </div>
+      <nav aria-label="Product">
+        <h4>Product</h4>
+        <a href="#do">What it does</a>
+        <a href="#features">Features</a>
+        <a href="#compare">Approach</a>
+      </nav>
+      <nav aria-label="Company">
+        <h4>Company</h4>
+        <a href="/v3/docs.html">Docs</a>
+        <a href="https://github.com/luca-dynamics/LucaOS">GitHub</a>
+        <a href="mailto:hey@lucaos.space">Contact</a>
+      </nav>
+      <nav aria-label="Legal">
+        <h4>Legal</h4>
+        <a href="/v3/legal/privacy.html">Privacy</a>
+        <a href="/v3/legal/terms.html">Terms</a>
+      </nav>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>&copy; <span id="year">2026</span> LucaOS. All rights reserved.</span>
+    </div>
+  </footer>
+</body>
+</html>

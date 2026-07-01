@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LucaOS Terms of Service — the terms that govern your use of our website, software, and services.">
+  <meta name="theme-color" content="#ffffff">
+  <title>Terms of Service — LucaOS</title>
+  <link rel="icon" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="stylesheet" href="/v3/styles.css">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('lucaos-v3-theme');
+        var theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <script src="/v3/script.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="bar" id="bar">
+    <div class="wrap bar-row">
+      <a class="brand" href="/v3/">
+        <img src="/icon.png" alt="" width="24" height="24">
+        <span>LucaOS</span>
+      </a>
+      <nav class="links" aria-label="Primary">
+        <a href="/v3/#do">What it does</a>
+        <a href="/v3/#features">Features</a>
+        <a href="/v3/#compare">Approach</a>
+        <a href="/v3/docs.html">Docs</a>
+      </nav>
+      <div class="bar-actions">
+        <button class="theme-toggle" type="button" aria-label="Switch theme" title="Toggle theme">
+          <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+        </button>
+        <a class="icon-link" href="https://github.com/luca-dynamics/LucaOS" aria-label="LucaOS on GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        </a>
+        <a class="btn btn-primary btn-small" href="/v3/early-access.html">Get early access</a>
+        <button class="menu-btn" type="button" aria-label="Open menu" aria-controls="mobileMenu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+      <a href="/v3/#do">What it does</a>
+      <a href="/v3/#features">Features</a>
+      <a href="/v3/#compare">Approach</a>
+      <a href="/v3/docs.html">Docs</a>
+      <a class="btn btn-primary" href="/v3/early-access.html">Get early access</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="wrap narrow">
+        <span class="eyebrow-label">Legal</span>
+        <h1>Terms of Service</h1>
+        <p class="page-meta">Last updated: February 14, 2026</p>
+      </div>
+    </section>
+
+    <section class="prose">
+      <div class="wrap narrow">
+        <p>Welcome to LucaOS. By accessing our website, downloading our software, or using our services, you agree to be bound by these Terms of Service ("Terms").</p>
+
+        <h2>1. Licensing</h2>
+        <p><strong>Personal use license:</strong> we grant you a limited, non-exclusive, non-transferable license to download, install, and use LucaOS for personal, non-commercial purposes on devices you own or control.</p>
+        <p><strong>Enterprise license:</strong> commercial use of LucaOS requires a separate Enterprise License Agreement. Contact <a href="mailto:sales@lucaos.space">sales@lucaos.space</a> for details.</p>
+
+        <h2>2. Acceptable use</h2>
+        <p>You agree not to use LucaOS to:</p>
+        <ul>
+          <li>Violate any applicable laws or regulations.</li>
+          <li>Generate or disseminate content that is illegal, harmful, or promotes violence.</li>
+          <li>Reverse engineer, decompile, or attempt to extract the source code of proprietary components.</li>
+          <li>Interfere with the integrity or performance of our servers.</li>
+        </ul>
+
+        <h2>3. AI responsibility</h2>
+        <p>LucaOS gives you access to powerful AI models. With that comes responsibility.</p>
+        <ul>
+          <li><strong>Output verification:</strong> AI models can make mistakes. You are responsible for verifying the accuracy of any code, text, or data generated by Luca before relying on it in critical systems.</li>
+          <li><strong>Liability:</strong> LucaOS Inc. is not liable for any damages arising from the use of AI-generated content.</li>
+        </ul>
+
+        <h2>4. Updates and changes</h2>
+        <p>We respect your version sovereignty.</p>
+        <ul>
+          <li><strong>Forced updates:</strong> we will never force an update onto your system.</li>
+          <li><strong>Security patches:</strong> we strongly recommend installing security patches, but the choice remains yours.</li>
+        </ul>
+
+        <h2>5. Disclaimer of warranties</h2>
+        <p>The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
+
+        <h2>6. Limitation of liability</h2>
+        <p>In no event shall LucaOS Inc. be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.</p>
+
+        <h2>7. Governing law</h2>
+        <p>These Terms shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law provisions.</p>
+
+        <h2>8. Contact us</h2>
+        <p>Questions about these Terms? Contact us at <a href="mailto:legal@lucaos.space">legal@lucaos.space</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="/v3/"><img src="/icon.png" alt="" width="22" height="22"><span>LucaOS</span></a>
+        <p>A host-native AI operating system — one presence across every device.</p>
+      </div>
+      <nav aria-label="Product">
+        <h4>Product</h4>
+        <a href="/v3/#do">What it does</a>
+        <a href="/v3/#features">Features</a>
+        <a href="/v3/#compare">Approach</a>
+      </nav>
+      <nav aria-label="Company">
+        <h4>Company</h4>
+        <a href="/v3/docs.html">Docs</a>
+        <a href="https://github.com/luca-dynamics/LucaOS">GitHub</a>
+        <a href="mailto:hey@lucaos.space">Contact</a>
+      </nav>
+      <nav aria-label="Legal">
+        <h4>Legal</h4>
+        <a href="/v3/legal/privacy.html">Privacy</a>
+        <a href="/v3/legal/terms.html">Terms</a>
+      </nav>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>&copy; <span id="year">2026</span> LucaOS. All rights reserved.</span>
+    </div>
+  </footer>
+</body>
+</html>
