@@ -17,17 +17,17 @@ Read together with:
 
 ---
 
-## Reference Comparison: What This Revision Takes From the Stronger Critique
+## Design Intent
 
-The prior spec was directionally correct but too generic. It described premium principles without enough sharp product judgment, concrete UI examples, or implementation-level acceptance criteria. The stronger design critique is better because it names the current failure modes directly: theatrical copy, equal-weight panels, card soup, false-alarm red states, raw boolean dumps, mixed icon systems, and glass used as decoration instead of depth.
+This document is the official desktop interface direction for LucaOS. It exists to keep the product from drifting into generic AI-dashboard patterns, coding-IDE habits, or decorative sci-fi chrome while the interface is polished in stages.
 
-This revision keeps the same no-code scope but updates the direction to be more decisive:
+The doctrine is intentionally concrete:
 
-- It calls out **specific current smells** such as `KERNEL ACCESS`, `Operator`, `Zero-Cloud Update`, red `Initiate lockdown`, `LOCAL · OLLAMA OFFLINE`, and raw execution flags.
-- It defines a sharper spatial model: **Left = where, Center = what, Right = state.**
-- It converts broad visual advice into concrete rules: a 4px spacing scale, one border token, one icon family, one display element per view, no resting-state red except true errors, and text contrast contracts for every skin.
-- It treats LucaOS as an **operational workspace** rather than a chat product or dashboard.
-- It makes Phase 1 a real cleanup slice that can noticeably reduce the “AI slop / sci-fi cockpit” read before deeper layout work begins.
+- Name and remove current UI smells such as `KERNEL ACCESS`, `Operator`, `Zero-Cloud Update`, red `Initiate lockdown`, `LOCAL · OLLAMA OFFLINE`, and raw execution flags.
+- Use the spatial model **Left = where, Center = what, Right = state.**
+- Convert premium design goals into enforceable rules: a 4px spacing scale, one border token, one icon family, one display element per view, no resting-state red except true errors, and text contrast contracts for every skin.
+- Treat LucaOS as an **operational workspace** rather than a chat product or dashboard.
+- Start with a low-risk Phase 1 cleanup that can noticeably reduce the “AI slop / sci-fi cockpit” read before deeper layout work begins.
 
 ---
 
