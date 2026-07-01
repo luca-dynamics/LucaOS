@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { LucaOnboardingShell } from "./LucaOnboardingShell";
 import { LucaOnboardingScreen } from "./LucaOnboardingScreen";
 import { LucaOnboardingMotion } from "./LucaOnboardingMotion";
+import { isElectron } from "../../utils/env";
+import { startConnectorAuth } from "../../services/connectorAuth";
+import type { ConnectorCatalogEntry } from "../../config/connectorCatalog";
 import {
   canLucaOnboardingFlowGoBack,
   canLucaOnboardingFlowSkip,
@@ -207,6 +210,16 @@ export const LucaPremiumOnboardingPreview: React.FC<
   const handleConnectorSelections = (connectorIds: string[]) =>
     setFlow((current) => lucaOnboardingFlowSetConnectors(current, connectorIds));
 
+  // Real connect flow is only offered where a desktop host is present (LucaLink
+  // events + local API resolve there). In browser-safe / offline onboarding the
+  // tiles fall back to marking intent for later setup in Settings.
+  const canConnectTools = isElectron();
+  const handleConnectorConnect = (connector: ConnectorCatalogEntry) => {
+    void startConnectorAuth(connector, {
+      onError: (message) => console.warn("[Onboarding connect]", message),
+    });
+  };
+
   const activeTailStep =
     tail && !isOnboardingTailComplete(tail) ? currentOnboardingTailStep(tail) : undefined;
 
@@ -315,6 +328,8 @@ export const LucaPremiumOnboardingPreview: React.FC<
               nameValue={flow.displayName}
               onNameChange={handleNameChange}
               onConnectorSelectionsChange={handleConnectorSelections}
+              canConnectTools={canConnectTools}
+              onConnectorConnect={handleConnectorConnect}
               onPrimary={handlePrimary}
               onSecondary={handleSecondary}
               skinId={skinId}

@@ -11,6 +11,7 @@ import {
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 import { FIRST_PARTY_CONNECTORS } from "../../config/connectorCatalog";
+import { startConnectorAuth } from "../../services/connectorAuth";
 
 interface SettingsConnectorsTabProps {
   theme?: any;
@@ -31,45 +32,10 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
     name: string;
   } | null>(null);
 
-  const handleStartAuth = (appId: string) => {
-    if (appId === "google") {
-      fetch(apiUrl("/api/google/auth/url"))
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.url) {
-            window.dispatchEvent(
-              new CustomEvent("luca:open-browser", {
-                detail: {
-                  url: data.url,
-                  title: "Google Workspace Auth",
-                  sessionId: `google_auth_${Date.now()}`,
-                },
-              }),
-            );
-          }
-        })
-        .catch(() => setStatusMsg("Failed to start Google Auth"));
-    }
-
-    if (appId === "twitter") {
-      fetch(apiUrl("/api/twitter/auth/url"))
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.url) {
-            window.dispatchEvent(
-              new CustomEvent("luca:open-browser", {
-                detail: {
-                  url: data.url,
-                  title: "X (Twitter) Auth",
-                  sessionId: `twitter_auth_${Date.now()}`,
-                },
-              }),
-            );
-          }
-        })
-        .catch(() => setStatusMsg("Failed to start Twitter Auth"));
-    }
-  };
+  // The real connect flow now lives in the shared connectorAuth service so
+  // onboarding can trigger the exact same OAuth / LucaLink paths.
+  const handleStartAuth = (appId: string) =>
+    startConnectorAuth({ id: appId }, { onError: setStatusMsg });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -279,15 +245,9 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                       </div>
                     )}
                     <button
-                      onClick={() => {
-                        if (app.id === "google") {
-                          handleStartAuth(app.id);
-                        } else if (app.event) {
-                          window.dispatchEvent(new CustomEvent(app.event));
-                        } else {
-                          handleStartAuth(app.id);
-                        }
-                      }}
+                      onClick={() =>
+                        startConnectorAuth(app, { onError: setStatusMsg })
+                      }
                       className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] glass-blur`}
                     >
                       {isChromeSynced ? "Connect session" : "Connect account"}
