@@ -107,7 +107,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
                 {targetName}
               </span>
               <span className="text-xs opacity-50 text-slate-400">
-                :: REMOTE_VIEWER_V2
+                :: Remote Viewer v2
               </span>
             </div>
           </div>
@@ -122,7 +122,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
               }`}
             >
               {inputMode ? <Icon name="Keyboard" size={14} /> : <Icon name="MousePointer2" size={14} />}
-              {inputMode ? "INPUT CAPTURE ACTIVE" : "ENABLE INPUT UPLINK"}
+              {inputMode ? "Input Capture Active" : "Enable Input Uplink"}
             </button>
 
             <span
@@ -132,7 +132,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
                   : "text-[var(--luca-warning,#f2b23e)] font-bold"
               }
             >
-              {connected ? "LIVE HOST DATA" : "SIMULATION MODE"}
+              {connected ? "Live Host Data" : "Simulation Mode"}
             </span>
             <button
               onClick={onClose}
@@ -153,13 +153,13 @@ export const DesktopStreamModal: React.FC<Props> = ({
             >
               <div className="bg-black/80 p-4 border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] font-mono text-xs text-center pointer-events-none">
                 <div className="font-bold text-lg mb-2">
-                  CONTROL UPLINK ENGAGED
+                  Control Uplink Engaged
                 </div>
-                <div>KEYBOARD & MOUSE INPUT REDIRECTED TO HOST</div>
+                <div>Keyboard &amp; mouse input redirected to host</div>
                 <div className="mt-2 opacity-70">
-                  CLICK TO SEND LEFT_CLICK
+                  Click to send left-click
                   <br />
-                  TYPE TO SEND KEYSTROKES
+                  Type to send keystrokes
                 </div>
               </div>
             </div>
@@ -214,8 +214,8 @@ export const DesktopStreamModal: React.FC<Props> = ({
                   <thead className="bg-slate-950 text-slate-500 sticky top-0">
                     <tr>
                       <th className="p-3">PID</th>
-                      <th className="p-3">IMAGE NAME</th>
-                      <th className="p-3 text-right">MEMORY</th>
+                      <th className="p-3">Image Name</th>
+                      <th className="p-3 text-right">Memory</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
@@ -248,7 +248,7 @@ export const DesktopStreamModal: React.FC<Props> = ({
         {/* Footer Status Bar */}
         <div className="h-8 bg-sci-base border-t border-slate-800 flex items-center px-4 gap-6 text-[10px] font-mono text-slate-500">
           <span>CPU: {Math.floor(Math.random() * 30 + 10)}%</span>
-          <span>TASKS: {processes.length} RUNNING</span>
+          <span>Tasks: {processes.length} running</span>
           <span className="ml-auto" style={{ color: theme?.hex || "#06b6d4" }}>
             Live Process Feed
           </span>
