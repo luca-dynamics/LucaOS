@@ -1,8 +1,8 @@
-# LucaOS Desktop Interface Polish Direction
+# LucaOS Desktop Interface — Senior Design Direction
 
 **Type:** Senior product / design direction specification (documentation-only)  
 **Status:** Design direction. No runtime, source, style, or asset changes are made by this document.  
-**Date:** 2026-06-30  
+**Date:** 2026-07-01  
 **Audience:** Founder / product owner, design implementers, and coding agents preparing staged UI PRs.  
 **Scope:** Full desktop interface polish for LucaOS: shell layout, panels, chat/workspace, component language, skins, copy, and implementation phases.
 
@@ -17,152 +17,172 @@ Read together with:
 
 ---
 
+## Reference Comparison: What This Revision Takes From the Stronger Critique
+
+The prior spec was directionally correct but too generic. It described premium principles without enough sharp product judgment, concrete UI examples, or implementation-level acceptance criteria. The stronger design critique is better because it names the current failure modes directly: theatrical copy, equal-weight panels, card soup, false-alarm red states, raw boolean dumps, mixed icon systems, and glass used as decoration instead of depth.
+
+This revision keeps the same no-code scope but updates the direction to be more decisive:
+
+- It calls out **specific current smells** such as `KERNEL ACCESS`, `Operator`, `Zero-Cloud Update`, red `Initiate lockdown`, `LOCAL · OLLAMA OFFLINE`, and raw execution flags.
+- It defines a sharper spatial model: **Left = where, Center = what, Right = state.**
+- It converts broad visual advice into concrete rules: a 4px spacing scale, one border token, one icon family, one display element per view, no resting-state red except true errors, and text contrast contracts for every skin.
+- It treats LucaOS as an **operational workspace** rather than a chat product or dashboard.
+- It makes Phase 1 a real cleanup slice that can noticeably reduce the “AI slop / sci-fi cockpit” read before deeper layout work begins.
+
+---
+
 ## 1. Product Interface Verdict
 
-### What is wrong with the current three-panel direction
+### What is wrong now
 
-The three-panel architecture is directionally right, but the current expression risks feeling like a generic AI control dashboard instead of a mature AI operating system. The issue is not the existence of left, center, and right regions; it is the lack of hierarchy, restraint, and component discipline inside those regions.
+The current direction has good bones: three panels, a material/skin system, permissions, memory, model/runtime awareness, tools, and local-host concepts. The problem is that the surface can read as **capable software wearing a costume**. The interface is trying to look powerful before it has earned calm hierarchy.
 
-Primary problems to correct:
+The main problems:
 
-- **Everything competes for attention.** Tools, cards, buttons, status blocks, memory, permissions, and chat affordances appear too equal. LucaOS needs a stronger foreground/background relationship.
-- **Panels feel like containers of widgets, not operating surfaces.** The side panels should feel like system rails and inspectors, not dashboards filled with unrelated cards.
-- **Cards are overused.** When every item becomes a rounded card, nothing feels important. Premium software uses cards sparingly and relies more on spatial grouping, typographic hierarchy, and quiet dividers.
-- **Buttons look too generic.** Repeated pill buttons and decorative actions make the product feel assembled from AI-app defaults instead of designed as an OS-level shell.
-- **The center is not yet sovereign.** The chat/workspace should be the primary work surface. Side panels should support it, not visually compete with it.
-- **The skin is ahead of the components.** Carbon/liquid/glass material can become premium, but only if applied to disciplined surfaces. If applied over noisy components, it amplifies noise.
-- **Copy sometimes performs a character instead of serving the user.** Terms like mission, handshake, standby, and memory boundaries can make LucaOS feel theatrical or sci-fi rather than professional.
+1. **Theatrical chrome over a serious product.** Labels like `KERNEL ACCESS`, `Operator`, `Zero-Cloud Update`, `Handshake complete`, `Luca standby`, and `Awaiting mission parameters` make the product feel like a sci-fi prop. LucaOS touches real context, tools, files, devices, accounts, and actions; theatrical language reduces trust.
+2. **False-alarm severity.** A resting red `Initiate lockdown` button or red `LOCAL · OLLAMA OFFLINE` chip trains users to ignore red. Red should mean something is unsafe, failed, destructive, or requires immediate attention.
+3. **Raw internals leaking into UI.** Strings like `readyForExecution: false · executionEnabled: false · canExecute: false` are console state, not user-facing system state. The user needs “Actions paused” with a details disclosure, not a flag dump.
+4. **No dominant center of gravity.** Left rail, center workspace, and right inspector can feel equally loud. The center should own attention; rails should behave like instruments.
+5. **Density without rhythm.** A wall of tool buttons and stacked status cards makes the interface feel busy rather than capable. Premium density uses outer breathing room, tight inner groups, and clear visual rhythm.
+6. **Cards are used as default wrappers.** Cards should indicate meaningful objects or grouped collections. If every row is a card, no object feels important.
+7. **Glass is used as decoration instead of material hierarchy.** Blur, translucency, borders, and glow cannot compensate for weak typography, spacing, and hierarchy.
+8. **Icon and control inconsistency.** Mixed icon families, repeated pill buttons, bordered boxes inside bordered panels, and unequal hover/focus behaviors are immediate “AI slop” tells.
 
-### What LucaOS should visually and structurally become
+### What LucaOS should become
 
-LucaOS should become a **host-native intelligence workspace**: calm, spatial, operational, and premium. It should feel like the user is working inside a capable local AI environment with visible control over context, tools, permissions, runtime, and memory.
+LucaOS should become a **calm operations surface for an intelligent system you trust**. It should feel like a mature host-native AI operating environment: precise, premium, spatial, and useful every day.
 
-The target experience:
+The target product feel:
 
-- **Center-first.** The main workspace owns the screen; side panels act as rails and inspectors.
-- **System-like, not page-like.** The shell should feel persistent, stable, and spatial, closer to an operating environment than a web dashboard.
-- **Quietly technical.** Runtime, model, tools, and permissions can be visible, but with restrained status language and precise indicators.
-- **Materially premium.** Skins should create environmental depth, while text/content surfaces remain highly legible.
-- **Operationally trustworthy.** Users should always understand what Luca can see, remember, call, run, or change.
-- **Distinct but familiar.** LucaOS can learn from the polish of premium products without inheriting their layout identity: not ChatGPT's single chat page, not Claude's document/chat pattern, not Cursor's IDE, not Notion's document database, and not Linear's issue workspace.
+- **Serious but not cold.** It should feel professional enough for files, accounts, memory, and actions, without becoming enterprise grayware.
+- **Operational, not theatrical.** The user should always know what Luca is doing, what it can access, and what needs review.
+- **Workspace-first.** Chat is the command and reasoning layer, but the center is a workspace where artifacts, previews, tool results, and actions can live.
+- **Materially premium.** Skins provide mood and depth; they do not replace legibility, hierarchy, or safety semantics.
+- **Quietly technical.** Runtime, model routing, voice, vision, tools, memory, and permissions can be visible, but they should be calm and glanceable.
+- **Distinct from competitors.** LucaOS should learn from the discipline of Linear, the calm of Things, the material restraint of macOS, and the conversational quality of leading AI products without becoming a clone of ChatGPT, Claude, Cursor, Notion, or Linear.
 
-### What LucaOS should avoid becoming
+### What LucaOS must avoid
 
-LucaOS should avoid these traps:
-
-- **A generic AI dashboard** with dozens of equal widgets and vague assistant metrics.
-- **A coding IDE clone** with file-tree dominance, terminal aesthetics, and developer-only density.
-- **A sci-fi cockpit** with neon, animated scanners, mission language, fake telemetry, and overdesigned status chrome.
-- **A productivity SaaS clone** with generic cards, badges, tabs, and workspace lists that could belong to any B2B app.
-- **A chatbot wrapper** where tools, memory, and permissions are hidden behind a single message stream.
-- **A theme demo** where skin effects wash over everything and degrade clarity.
+- **No coding IDE cosplay.** No file-tree-first mindset, no terminal styling as brand, no monospace everywhere, no default developer density.
+- **No generic AI dashboard.** No metric-card soup, no vague assistant stats, no rainbow gradients, no equal-weight widget grid.
+- **No sci-fi cockpit.** No kernel/mission/operator language, no ambient hazard red, no fake telemetry, no scanning effects, no “system online” theatrics.
+- **No chatbot wrapper.** LucaOS is not a single chat page with settings hidden elsewhere. Chat must blend with memory, tools, permissions, and workspace surfaces.
+- **No skin demo at the expense of usability.** Carbon, Pearl, Flow, and future skins must never wash out text, blur small controls, or recolor semantic safety states.
 
 ---
 
 ## 2. Three-Panel Experience Model
 
-### Left panel: system entry and capability rail
+The model is sound. The redesign should not wipe the shell; it should assign each area a stricter job.
 
-**Role:** The left panel is LucaOS's capability rail. It should answer: *What can Luca do from this host right now?* It is not a dashboard and not a file tree.
+> **Spatial principle:** **Left = where. Center = what. Right = state.** If a surface does not answer one of those questions, it does not belong on the always-visible rails.
 
-**Belongs here:**
+### Left panel — navigation and capability
 
-- Primary navigation between major OS surfaces: Chat, Workspace, Memory, Tools, Devices, Settings.
-- Pinned tools and user-approved quick actions.
-- Active local capabilities: voice, vision, screen context, browser bridge, file access, device/runtime connections.
-- Compact skill/app launchers with clear availability states.
-- Link bridge and device/runtime entry points only when configured or recently used.
+**Role:** Quiet index of destinations and available capabilities. It answers: **Where can I go, and what can Luca do from this host?** It is not a feature wall.
 
-**Remove or reduce:**
+**Belongs:**
 
-- Large promotional cards.
-- Repeated explanatory text for actions the user already understands.
-- Decorative tool categories that do not change current user behavior.
-- Multiple competing icon button clusters.
-- Any coding-specific surface unless the user has explicitly entered a coding/workspace mode.
+- A small set of top-level destinations: Chat, Workspace, Memory, Tools, Devices, Settings.
+- Current workspace or active context.
+- Pinned/recent capabilities.
+- A single grouped `Tools & apps` area with progressive disclosure.
+- Live capture/connectivity indicators only when they matter: microphone, camera, screen, browser bridge, device, file scope.
+
+**Remove from always-on view:**
+
+- Flat dumps of 10+ buttons such as Skills, Apps, Screen, Import, IDE, System Services, Link Bridge, and similar occasional actions.
+- Repeated explanatory cards.
+- Decorative category headers that do not drive navigation.
+- Developer-only entry points unless the user is in a developer/tool mode.
 
 **Hide until needed:**
 
-- Rarely used system services.
-- Advanced runtime details.
-- Full skill descriptions.
-- Setup prompts after setup is complete.
-- Device diagnostics unless a device is offline, blocked, or needs attention.
+- System Services, Link Bridge, IDE, Import, advanced runtime diagnostics, full app catalogs, and setup prompts after setup is complete.
+- These should live one layer down under Connections, System, Tools, or Settings.
 
 **Emphasize:**
 
-- The user's selected surface.
-- Recently used or pinned capabilities.
-- Live capture states: microphone, screen, camera, browser, file scope.
-- Safety/permission state when a capability is active or blocked.
+- New task/chat.
+- Current surface.
+- Current context.
+- Active capture/access grants.
 
-### Center workspace/chat: primary operating surface
+**Structural rule:** Default width should feel like a sidebar, not a cockpit: approximately 240px expanded, collapsible to a narrow icon rail around 64px. Collapse must preserve active state and access warnings.
 
-**Role:** The center is the main work surface where conversation, actions, documents, tool results, and workspace objects converge. It should answer: *What are we doing now, and what is the next controlled action?*
+### Center — workspace and chat
 
-**Belongs here:**
+**Role:** Product center of gravity. It answers: **What are we doing now?** It is where conversation, artifacts, tool results, previews, and approvals converge.
 
-- Main chat thread and operational transcript.
-- Composer and primary input modes.
-- Active workspace artifacts, canvases, previews, documents, or task surfaces.
-- Tool call summaries when relevant to the current thread.
-- Inline permission requests that block or materially change the current action.
-- Long-thread navigation anchors when the conversation becomes complex.
+**Belongs:**
 
-**Remove or reduce:**
+- Active conversation/task.
+- Composer/command dock.
+- Inline tool calls and results.
+- Workspace surfaces Luca opens: document, browser view, file preview, vision feed, generated artifact, or action draft.
+- Blocking permission requests tied to the current action.
+- A long-thread map when the session becomes complex.
 
-- Decorative hero panels once the user is active.
-- Repetitive welcome cards.
-- Unrelated status widgets that belong in the inspector.
-- Dense tool catalogs.
+**Remove:**
+
+- Giant theatrical empty states such as “Evening, Operator,” “Ready when you are,” “Zero-Cloud Update,” and ghost watermarks.
+- Repeated welcome/status copy once the user is active.
+- Unrelated tool catalogs or right-panel status widgets.
 
 **Hide until needed:**
 
-- Full raw tool logs.
+- Raw tool logs.
+- Verbose runtime detail.
 - Historical memory detail.
-- Non-blocking runtime diagnostics.
 - Secondary model routing explanations.
 
 **Emphasize:**
 
-- The current user intent.
-- Luca's reasoning status at a high level, not chain-of-thought.
-- Tool actions that affect the host, external services, files, browser, memory, or permissions.
-- Clear stop, approve, revise, and continue controls.
+- The thread.
+- The composer.
+- Current context scope.
+- Actions waiting for approval.
+- Tool work that affects files, browser, devices, accounts, memory, or permissions.
 
-### Right panel: inspector, timeline, and control surface
+**Empty-state rule:** One calm line and one affordance. Example: `Ask Luca anything.` The composer receives focus. No slogan stack, no watermark, no lore.
 
-**Role:** The right panel is an inspector and control surface. It should answer: *What context is active, what has changed, what needs review, and what can Luca currently access?*
+### Right panel — awareness and control
 
-**Belongs here:**
+**Role:** Inspector for live state, timeline, memory, permissions, and runtime. It answers: **What is Luca doing, what has changed, and what is allowed?**
 
-- Current context overview: selected workspace, active thread, linked files/apps/devices.
-- Timeline of important actions, not every token or minor status change.
-- Memory items relevant to the current session.
-- Permission review queue and pending approvals.
-- Runtime/model status summaries.
-- Controlled actions that can pause, revoke, disconnect, forget, or inspect.
+**Belongs:**
 
-**Remove or reduce:**
+- One system status summary at the top: `Ready`, `Actions paused`, `3 actions need review`, `Local model offline`, etc.
+- Current model/runtime route and degraded/offline state.
+- Permission/action review queue.
+- Timeline of meaningful events.
+- Relevant memory items.
+- Active access grants and revocation controls.
+- Inspector details for selected messages, artifacts, memories, permissions, or tool results.
 
-- Duplicated navigation from the left panel.
-- Large static cards with generic labels.
+**Remove:**
+
+- Raw boolean dumps.
+- Permanent red diagnostic blobs.
+- Duplicate navigation.
 - Non-actionable metrics.
 - Decorative timeline events.
 
-**Hide until needed:**
+**Hide until relevant:**
 
+- Permission Center when nothing needs review.
 - Full memory history.
 - Verbose runtime logs.
 - Advanced model routing details.
-- Permission explanations after the user has already resolved them.
 
 **Emphasize:**
 
-- Pending user decisions.
+- Pending decisions.
 - Active access grants.
-- Meaningful changes to memory, files, browser, tools, and devices.
-- The currently selected message/artifact/tool result when inspection is relevant.
+- Meaningful state changes.
+- Selected-object inspection.
+
+**Structural rule:** The right panel is reference, not primary. It should be collapsible, calm when empty, and assertive only when a user decision is required.
 
 ---
 
@@ -170,517 +190,506 @@ LucaOS should avoid these traps:
 
 ### Typography hierarchy
 
-Use typography as the primary hierarchy tool before using cards, borders, glow, or color.
+Use one type scale and use it consistently.
 
-- **Shell labels:** small, semibold, low-contrast, uppercase only when it improves scanning. Avoid shouting.
-- **Panel headers:** concise, medium weight, sentence case.
-- **Primary content:** comfortable body size with strong line-height and high contrast.
-- **Metadata:** smaller, muted, tabular when numeric or status-oriented.
-- **Chat messages:** readable prose width; avoid dashboard-style compressed text.
-- **System/status labels:** short noun phrases, not marketing lines.
+- **Display / empty-state:** 24–28px, weight 600, tracking around `-0.02em`. Used once per view.
+- **Panel title:** 14–16px, weight 600, sentence case.
+- **Section label:** 12–13px, weight 600, optional uppercase with `+0.08em` tracking, tertiary color.
+- **Body / message:** 14–15px, weight 400–450, line-height around 1.5.
+- **Meta / status:** 12–12.5px, secondary/tertiary color.
+- **Technical detail:** monospace only for code, IDs, model names, flags, token counts, and diagnostic detail blocks.
+
+**Kill:** all-caps body copy, decorative letter spacing on running text, monospace as brand styling, and multiple hero/display elements in one view.
 
 ### Spacing and density
 
-- Use **premium density**, not empty luxury. The interface should be calm but capable.
-- Side panels should be compact and scannable; the center should breathe.
-- Establish a consistent spacing ladder: tight for rows, medium for groups, generous for major regions.
-- Avoid stacking many equal-height cards with the same padding.
-- Prefer grouped rows with subtle separators for operational lists.
+Use a 4px-based scale: `4 / 8 / 12 / 16 / 24 / 32`.
 
-### Panel borders and dividers
+- Shell gutters: 16–24px.
+- Panel padding: 16–20px.
+- Row vertical padding: 10–14px.
+- Group gaps: 12–16px.
+- Major section gaps: 24–32px.
 
-- Use hairline dividers and material edges, not heavy borders.
-- Panel separation should come from depth, background shift, and vertical rhythm.
-- Borders should be quieter in Carbon and Flow, slightly clearer in Pearl and Canvas.
-- Avoid nested bordered boxes inside bordered panels.
+Premium density is **generous outer spacing + tight inner grouping**. Avoid uniform compression and avoid oversized empty luxury.
 
-### Card usage
+### Borders and dividers
 
-Cards are for meaningful objects, not every row.
+- Use one subtle border token, approximately 8% white on Carbon-equivalent dark surfaces.
+- Prefer background-step separation over drawn boxes.
+- Never stack a bordered card inside a bordered panel inside a bordered rail.
+- Use one boundary per level: panel edge, card edge, or row divider, not all three.
+
+### Cards
+
+Cards are for meaningful objects or collections.
 
 Use cards for:
 
+- Permission queues.
+- Memory collections.
 - Workspace artifacts.
-- Permission decisions.
-- Important memory summaries.
-- Tool results with content.
-- Settings previews.
+- Rich tool results.
+- Settings/skin previews.
 
 Do not use cards for:
 
-- Every navigation item.
+- Single status lines.
+- Every nav item.
 - Every tool row.
-- Every status label.
 - Every timeline event.
+- Decorative empty states.
 
-### Button style
+Rule: **one thing = row; many like things = card containing rows.**
 
-- Primary buttons should be rare and clearly tied to the next user action.
-- Secondary buttons should be text or ghost controls unless they perform a significant operation.
-- Icon buttons need labels on hover and visible focus states.
-- Destructive buttons must remain semantically colored and cannot inherit skin accent.
-- Avoid glossy generic pills everywhere; reserve pill shape for compact status and segmented choices.
+### Buttons
+
+- **Primary:** solid accent, at most one dominant primary action per view.
+- **Secondary:** subtle surface fill and subtle border.
+- **Tertiary / ghost:** text/icon only, no fill, for rail and inline actions.
+- **Destructive:** neutral at rest, red only at confirmation, hover, or actual danger state.
+- **Icon-only:** allowed only with accessible labels and visible focus.
+
+A resting red `Initiate lockdown` is a constant false alarm. Prefer `Pause all actions` as a neutral control with a red confirmation state only after intent is clear.
 
 ### Status pills
 
-- Status pills should be compact, semantic, and legible.
-- Use neutral for informational state, green/success only for confirmed healthy states, amber for attention, red for blocked/danger.
-- Do not use glowing pills as decoration.
-- A status pill must either clarify state or provide an affordance to inspect it.
+- Small, low saturation, semantic.
+- Dot + label, never raw booleans.
+- Ready/idle = neutral calm, not neon green.
+- Attention/paused = amber.
+- Error/blocked/danger = red, only for real errors or unsafe/destructive states.
+- Offline-by-design is informational, not automatically red.
 
-### Tool and action rows
+### Tool/action rows
 
-- Tool rows should feel like system capabilities: icon, label, short state, optional action.
-- One row should usually have one primary affordance.
-- Use disclosure for advanced details.
-- Group by user mental model: Capture, Connect, Create, Automate, Review, System.
+- Icon + label + optional right-side state/action.
+- Consistent icon size and alignment.
+- 40–44px target height.
+- Hover uses a single surface-hover background step.
+- No border flips, glow pulses, scale transforms, or card-per-row treatment.
 
 ### Empty states
 
-- Empty states should be quiet and useful.
-- Say what the area will show and the next reasonable action.
-- Avoid mascots, hype, and overexplaining.
-- Do not fill empty side panels with decorative cards just to avoid blank space.
+- One calm line.
+- One next action.
+- No hero slogan stack.
+- No watermark.
+- No mascot voice.
 
-### Hover and focus states
+Examples:
 
-- Hover should reveal affordance, not create visual noise.
-- Focus states must be unmistakable and keyboard-accessible.
-- Active state should be more distinct than hover.
-- Avoid animated glow unless it communicates active listening, active capture, or focused input.
+- `Ask Luca anything.`
+- `Nothing needs review.`
+- `No connected devices yet.`
+- `Drop files here or choose a source.`
 
-### Glass/liquid skin usage
+### Hover and focus
 
-- Material effects belong mostly to the shell, panels, overlays, and high-level surfaces.
-- Content surfaces should remain readable and stable.
-- Blur should be subtle and capped; deep blur plus low contrast will make LucaOS feel pretty but unusable.
-- Liquid motion must stay background-level and never compete with chat text, permissions, or actions.
+- Hover reveals affordance; it does not decorate.
+- Focus uses a 2px accent ring or equivalent accessible focus style.
+- Active is more distinct than hover.
+- Motion should be short, quiet, and never layout-shifting.
 
-### Dark and light skin behavior
+### Glass/liquid material
 
-- Dark skins should not rely on pure black, neon, or terminal styling.
-- Light skins should not use harsh pure white panels or low-contrast gray text.
-- Semantic state colors must remain stable across skins.
-- The same component should feel native in each skin without changing its information hierarchy.
+- Material is for depth and mood on large surfaces: shell, panels, overlays, composer dock.
+- Do not put blur behind small dense text rows where it harms reading.
+- Blur must be backed by enough opacity to preserve contrast.
+- Glow is reserved for active focus, voice/live capture, or limited skin mood, not ambient decoration.
 
-### Icon usage
+### Dark/light behavior
 
-- Use icons as recognition aids, not decoration.
-- Prefer thin, precise, system-style icons.
-- Avoid cute, cartoon, cyberpunk, or overly filled icons.
-- Keep icon metaphors boring and clear: memory, lock, tool, device, microphone, camera, browser, file, model.
+- Carbon/dark should be graphite and professional, not pure black or hacker neon.
+- Pearl/light should be calm and bright, not washed out.
+- Every skin must satisfy the same text contrast and semantic-status contract.
+- Skins change material, hue, accent, and depth; they do not rewrite safety semantics.
+
+### Icons
+
+- Pick one icon family as the LucaOS system set.
+- Use one weight and one optical size per context: 16 inline, 18–20 rail, 14 meta.
+- Route aliases through one `Icon` layer if multiple source packs remain in code.
+- Mixed icon families are a top “AI slop” tell.
 
 ---
 
 ## 4. Component Rules
 
-### Panels
-
-- Each panel must have one clear role.
-- Panels should have stable widths and predictable collapse behavior.
-- Panel headers must be concise and functional.
-- Panels may contain groups, not stacks of unrelated cards.
-- Nested panels should be avoided; use disclosure or inspector states instead.
-
-### Cards
-
-- A card must represent a meaningful object, decision, artifact, or result.
-- Cards need a clear title, short supporting metadata, and at most one dominant action.
-- Cards should not use strong shadows and heavy borders at the same time.
-- Dense lists should use rows, not cards.
-
-### Tool buttons
-
-- Tool buttons should state capability and availability.
-- Pinned tools may use compact icon+label rows.
-- Disabled tools need a reason on hover or disclosure.
-- Tool categories should be user-oriented, not implementation-oriented.
-
-### Chat composer
-
-- The composer is the command surface of LucaOS.
-- It should support text, voice, attachments/context, mode selection, model/runtime visibility, and action review without becoming a toolbar dump.
-- The primary submit button should be visually calm and unmistakable.
-- Stop/regenerate/continue states must replace the normal submit state clearly.
-
-### Messages
-
-- Messages should be readable, structured, and operational.
-- User messages can be compact but should not look like disposable chat bubbles.
-- Luca messages should support sections, citations, tool summaries, and actions.
-- System notices should be visually distinct from assistant content.
-
-### Memory and status items
-
-- Memory items should show source, confidence/recency when relevant, and controls to inspect or forget.
-- Status items should distinguish live state, last known state, and pending state.
-- Avoid presenting speculative memory as fact.
-- Keep memory separate from generic timeline noise.
-
-### Permission review items
-
-- Permission items must state: what Luca wants to do, why, scope, risk, and available choices.
-- Approve/deny choices must be visually balanced unless there is a strong safety reason.
-- Persistent grants need duration and revocation path.
-- Permission review should never be hidden behind decorative UI.
-
-### Tabs
-
-- Use tabs only when switching between peer views within the same surface.
-- Avoid tab sets nested inside tab sets.
-- Active tab state should be clear without relying only on color.
-- Use segmented controls for small mode choices, not full tabs.
-
-### Headers
-
-- Headers should orient the user, not market the product.
-- A header can include title, current state, and one contextual action.
-- Avoid large hero headers in the working shell after onboarding.
-
-### Side navigation
-
-- Side navigation should be stable, compact, and label-forward.
-- Current surface must be obvious.
-- Secondary surfaces can collapse under groups.
-- Do not use the side navigation as a dumping ground for every tool.
-
-### Model and runtime indicators
-
-- Indicators should be visible enough to build trust but not dominate the shell.
-- Show current model/runtime, local/cloud route, and degraded/offline state.
-- Provide details on demand.
-- Never use model routing as decorative telemetry.
+- **Panels:** one material background, one optional subtle border, 16–20px padding, clear title, collapsible where appropriate, no nested panels.
+- **Cards:** wrap collections or meaningful objects only. Radius around 14px. One border or one shadow, never both at full strength. No card-in-card.
+- **Tool buttons:** list rows, not a grid of boxes. Icon + label, 40–44px tall, grouped under collapsible section headers.
+- **Chat composer:** one elevated command surface. Text input dominant. Send/stop clear. Model/mode/context controls quiet and grouped.
+- **Messages:** role differentiated by spacing, alignment, and subtle surface treatment, not heavy bubbles or avatars everywhere.
+- **Memory items:** row in a card: dot/icon, primary text, source/recency/confidence metadata, inspect/forget actions.
+- **Status items:** row-level status with dot + label + optional detail. No raw flag display at rest.
+- **Permission review items:** one requested action per row. Plain text description, reason, scope, risk, and balanced Allow/Deny controls. Queue is a card; empty state is quiet.
+- **Tabs:** text tabs with 2px active underline. No boxed chip tabs. Keep peer tabs to four or fewer.
+- **Headers:** orient, do not market. Product title should be `LucaOS`, not `KERNEL ACCESS`.
+- **Side navigation:** grouped, collapsible, icon+label, one active indicator. Do not use side nav as a dumping ground for every tool.
+- **Model/runtime indicators:** quiet chips. `Local model offline` is neutral unless it blocks the user’s current action. Details are disclosed on demand.
 
 ---
 
 ## 5. Chat Experience
 
-LucaOS chat should feel like an operational workspace, not a generic chatbot. The user is not just chatting; they are directing an AI host that can observe, remember, run tools, and request permission to act.
+LucaOS chat should feel **operational**: the user is directing a capable local/cloud AI host, not chatting with a generic bot.
 
 ### Message layout
 
-- Use a centered readable measure inside the workspace, with optional expansion for artifacts and tool results.
-- Avoid cartoon bubbles. Use subtle message blocks, spacing, and role labels.
-- User messages should feel like commands or contributions, not chat-app balloons.
-- Luca responses should be structured with headings, bullets, result blocks, and action rows where useful.
-- System and permission messages should have distinct treatment and should not masquerade as Luca prose.
+- Roomy single-column thread.
+- Max readable width around 720–760px for prose.
+- Luca messages left-aligned and highly readable.
+- User turns can be lighter and more compact.
+- Turn separation via space, not heavy dividers.
+- Timestamps and metadata appear on hover or inspection, not always on.
+- System notices and permission prompts are visually distinct from assistant prose.
 
-### Composer layout
+### Composer
 
-- The composer should sit as a stable command dock at the bottom of the center workspace.
-- Primary text input remains dominant.
-- Secondary controls should be grouped: context, voice, attachments, tools, model/runtime, send/stop.
-- Advanced tool selection should open as a palette or sheet, not permanently crowd the composer.
-- The composer should show current context scope in a compact line: files, screen, voice, browser, memory, model.
+- Persistent bottom command dock.
+- Text input dominant.
+- Primary send button; stop replaces send while running.
+- Mode choices such as Auto/Fast/Plan/Agent should be one segmented control, not loose equal-weight buttons.
+- Attach, voice, context, and model controls should be quiet inline chips/actions.
+- Current context scope should be glanceable: memory, files, screen, browser, voice, model, route.
 
-### Streaming behavior
+### Streaming
 
-- Streaming should feel calm and readable, not frantic.
-- Show high-level activity states: thinking, using tool, waiting for approval, writing result.
-- Do not expose fake precision or excessive token-by-token theatrics.
-- When a tool is running, collapse repeated status updates into one evolving operation row.
+- Calm token stream with subtle caret/typing behavior.
+- No flashing, jitter, fake telemetry, or excessive status spam.
+- High-level states only: thinking, using tool, waiting for approval, writing result.
+- Repeated tool updates collapse into one evolving operation row.
 
-### Tool call and result presentation
+### Tool calls and results
 
-- Tool calls should appear as operational steps with clear labels, scope, and status.
-- Completed tool results can collapse into summaries with an inspect option.
-- Failed tool calls should explain what failed and what the user can do next.
-- Host-affecting actions must make scope and reversibility clear.
+- Tool call = compact collapsible inline block.
+- Show icon, plain action label, one-line result summary, and status.
+- Examples: `Searched Drive`, `Read 3 files`, `Drafted email`, `Opened browser`, `Updated memory`.
+- Success is quiet.
+- Failure uses semantic attention/error and tells the user what to do next.
+- Host-affecting actions must show scope and reversibility.
 
-### Navigation rail and long-thread navigation
+### Long-thread navigation
 
-- Long conversations need a lightweight thread map: milestones, artifacts, decisions, permissions, and generated outputs.
-- The thread map can live as a center-side mini rail or as a right-panel inspector mode.
-- Do not create a permanent IDE-like outline unless the user is working in a document/artifact mode.
+- Add a slim thread map for long sessions: milestones, tool calls, decisions, artifacts, and permission events.
+- This can live in the right inspector or as a center-edge rail.
+- Do not turn the product into an IDE outline unless the active surface is explicitly a document/artifact mode.
 
 ### Context preservation
 
-- LucaOS should show what context is active before the user sends.
-- Context changes should be visible and reversible.
+- The user should know what Luca knows before sending.
+- Context changes must be visible and reversible.
 - Memory use should be disclosed when it materially affects an answer.
-- Attachments, selected surfaces, and active capture should remain visible without cluttering every message.
+- Active capture/access should remain visible near composer or inspector without flooding every message.
 
-### Status visibility
+### Blending chat with workspace
 
-- Critical status belongs near the composer or right inspector: offline, local runtime unavailable, voice live, screen capture live, permission pending, tool running.
-- Routine healthy status can be muted.
-- Stop controls must remain visible during generation or tool execution.
-
-### Blending chat with workspace surfaces
-
-- Chat should be the conversational layer of the workspace, not the whole product.
-- Artifacts, previews, documents, and tool results should occupy workspace surfaces when they become primary.
-- The user should be able to move from chat to artifact inspection without feeling like they left LucaOS.
-- Side panels should update contextually when a message, artifact, permission, or tool result is selected.
+- Chat is the conversational layer of the workspace.
+- When Luca opens a doc, browser, vision feed, file preview, or result artifact, it should expand within the center, not as a blocking modal.
+- The user should always have a clear way back to the thread.
 
 ---
 
 ## 6. Skin System Guidance
 
-### Carbon/default skin influence
+Skins replace old theme thinking. A skin is **material + mood through tokens, bounded by a legibility and safety contract.**
 
-Carbon should be the professional baseline for desktop polish: graphite, calm, low-noise, and precise. It should define the seriousness of LucaOS without making the product feel like a terminal or IDE.
+### Carbon/default
 
-Carbon should influence:
+Carbon should be the professional baseline: graphite, restrained, focused, and comfortable for long sessions.
 
-- Shell background depth.
-- Panel translucency and hairline separation.
-- Subtle active/focus accents.
-- Runtime/status material.
-- Overlay and command-palette material.
+Carbon influences:
 
-Carbon should not influence:
+- Shell background.
+- Panel material.
+- Composer dock material.
+- Overlay/command palette surfaces.
+- Subtle active/focus accent.
+
+Carbon does not control:
 
 - Semantic safety colors.
 - Permission severity.
-- Text contrast below accessibility thresholds.
-- Content readability.
-- Destructive action styling.
+- Destructive action semantics.
+- Text contrast floor.
+- Focus accessibility.
 
-### Applying skins without washing out readability
+### Legibility contract
 
-- Skins set environment and material, not every component's personality.
-- Content containers should stay neutral enough for long reading.
-- The bridge from skin to material tokens should cap opacity, blur, saturation, and glow.
-- Status and safety tokens must remain outside skin control.
-- Flow-like motion must reduce automatically when motion reduction or low-power conditions apply.
+Every skin must preserve:
 
-### Professional skin settings
+- `--luca-text-primary`, `--luca-text-secondary`, and `--luca-text-tertiary` contrast targets against its own surfaces.
+- Semantic red/amber/success/info meanings.
+- Focus ring visibility.
+- Permission and destructive-action clarity.
+- Readability of long messages, dense rows, and settings text.
 
-Skin settings should feel like choosing an operating environment, not picking a theme color.
+Skins may drive backgrounds, material, accent hue, depth, and motion profile. They may not make text muddy or recolor danger into brand accent.
 
-Settings should show:
+### Settings presentation
 
-- Skin name.
-- Short plain-language description.
-- Preview of shell, panel, composer, and status behavior.
+Present skins as operating environments, not theme dots.
+
+Each skin choice should show:
+
+- Name.
+- One-line mood description.
+- Mini live preview with shell, panel, composer, accent, and status sample.
 - Light/dark affinity.
 - Motion/transparency notes.
 - Accessibility fallback behavior.
 
-Avoid:
+Avoid gamer-style labels, rarity language, huge decorative art, and tiny color swatches that do not preview real material.
 
-- Huge decorative preview art.
-- Gamer-like theme names or rarity labels.
-- Overpromising personality changes.
-- Letting skin previews imply that safety/status colors can be customized away.
+### Inherit skin material
 
-### What should inherit skin material
-
-- App shell background.
+- Shell background.
 - Panel surfaces.
+- Composer surface.
 - Command palette and overlays.
-- Composer dock material.
 - Non-critical cards and workspace containers.
-- Navigation hover/active backgrounds.
+- Active navigation backgrounds and primary accent.
 
-### What should stay neutral for usability
+### Stay neutral for usability
 
-- Long-form message text areas.
+- Long-form message text.
 - Permission decisions.
-- Destructive actions.
-- Warnings, errors, and blocked states.
-- Code/preformatted output if present.
-- Dense data tables or diagnostic logs.
-- Accessibility focus rings.
+- Destructive controls.
+- Warnings/errors/blocked states.
+- Data/metric numerals.
+- Code/preformatted output.
+- Dense diagnostic logs.
+- Focus rings.
 
 ---
 
-## 7. UI Copy Direction
+## 7. UI Copy / Voice
 
-### Voice and tone
+### Voice
 
-LucaOS copy should be professional, direct, calm, and operational. It should sound like mature system software that respects the user. It should not sound like a mascot, a sci-fi assistant, a military cockpit, a developer-only tool, or an overly friendly consumer chatbot.
+Professional, direct, calm, and human. LucaOS should speak to a competent adult about their system. It should not sound like a sidekick, a sci-fi AI, a military cockpit, a developer console, or a mascot.
 
-Rules:
+Principles:
 
-- Prefer plain verbs: Open, Review, Connect, Allow, Pause, Forget, Continue.
-- Name concrete objects: Memory, Device, Tool, Workspace, Permission, Model.
-- Avoid theatrical metaphors: mission, handshake, standby, inside, command center.
-- Avoid fake intimacy: best friend, partner, companion, I am here for you.
-- Avoid developer-only framing unless the surface is explicitly technical.
-- Use short sentences. Explain risk and scope clearly.
+- Say the plain thing.
+- Prefer nouns users understand: Workspace, Memory, Device, Tool, Permission, Model.
+- Prefer verbs users can act on: Open, Review, Connect, Allow, Deny, Pause, Resume, Forget, Continue.
+- Avoid `kernel`, `mission`, `operator`, `handshake`, `standby`, `neural`, `core`, `engage`, and `lockdown` unless truly technical or legally precise.
+- Avoid caps-lock drama.
+- Avoid false alarms: offline is not always an error.
 
-### Copy replacements
+### Replacement examples
 
-| Avoid | Replace with | Rationale |
-| --- | --- | --- |
-| First Run | Set up LucaOS | Plain and product-level. |
-| I'll help from inside | LucaOS can work with your local context | Explains capability without sounding eerie. |
-| What should Luca call you? | What name should Luca use? | Direct and less cute. |
-| Start with me | Start setup | Clear action. |
-| Handshake complete | Device connected | Concrete system state. |
-| Preparing memory boundaries | Setting memory preferences | User-understandable. |
-| Luca standby | Ready | Mature status language. |
-| Awaiting mission parameters | What would you like to work on? | Useful, calm, not militarized. |
-| Activate vision | Allow camera context | Names permission and scope. |
-| Engage runtime | Start local runtime | Operational and concrete. |
-| Neural workspace | Workspace | Avoids sci-fi. |
-| Agent swarm | Tools | Avoids hype and confusion. |
-| Memory core | Memory | Plain noun is stronger. |
-| System online | LucaOS is ready | Less theatrical. |
+| Current / awkward | Replace with |
+| --- | --- |
+| `KERNEL ACCESS` | `LucaOS` |
+| `Evening, Operator` | `Good evening` |
+| `Ready when you are` | `Ask Luca anything` |
+| `(Zero-Cloud Update)` | Remove, or use a normal release/status note elsewhere |
+| `First Run` | `Welcome` or `Set up LucaOS` |
+| `I'll help from inside` | `Luca runs on this device` |
+| `What should Luca call you?` | `Your name` with helper `Optional` |
+| `Start with me` | `Get started` |
+| `Handshake complete` | `Connected` |
+| `Preparing memory boundaries` | `Setting up memory` |
+| `Luca standby` | `Idle` or `Ready` |
+| `Awaiting mission parameters` | `Nothing running` or `What would you like to work on?` |
+| `Initiate lockdown` | `Pause all actions` |
+| `LOCAL · OLLAMA OFFLINE` in red | `Local model offline` as neutral chip unless blocking |
+| `readyForExecution: false · executionEnabled: false · canExecute: false` | `Actions paused` + `Details` disclosure |
+| `LUCA is adapting to new parameters...` | `Updating settings…` |
+| `Activate vision` | `Allow camera context` |
+| `Engage runtime` | `Start local runtime` |
+| `Memory core` | `Memory` |
+
+Rule of thumb: if a label would sound strange said aloud to a colleague, rewrite it.
 
 ---
 
 ## 8. Prioritized Redesign Phases
 
-### Phase 1: visual/component cleanup with low risk
+### Phase 1 — visual/component cleanup
 
 **Change:**
 
-- Normalize typography scale and panel headers.
-- Reduce excessive cards into grouped rows.
-- Tighten button hierarchy.
-- Standardize status pills.
-- Reduce decorative glow and redundant copy.
-- Improve dividers, spacing, and hover/focus states.
+- Apply copy rewrites in the shell, onboarding, status, and permission surfaces.
+- Collapse to one icon family through the icon layer.
+- Demote borders to one subtle token.
+- Neutralize false-alarm red states such as lockdown/offline at rest.
+- Replace raw execution flag dumps with human status + details disclosure.
+- Normalize type scale and spacing.
+- Calm empty states.
+- Standardize hover/focus and status pills.
 
 **Avoid touching:**
 
-- Core data flow.
+- Layout structure.
+- Panel routing.
+- Chat/message data model.
 - Tool execution logic.
-- Permission semantics.
+- Permission enforcement.
 - Skin provider architecture.
-- Major layout routing.
 
 **Acceptance criteria:**
 
-- The app still has the same features and navigation.
-- Center workspace has clearer dominance.
-- Side panels scan as system rails/inspectors instead of card dashboards.
-- Primary, secondary, disabled, active, warning, and destructive states are visually distinct.
-- No safety/status state becomes less legible.
+- No all-caps sci-fi copy remains in primary shell surfaces.
+- One icon family is visibly dominant.
+- No resting-state red appears except real errors, blocked states, or destructive confirmation.
+- Every working view has at most one display-size element.
+- Raw boolean/flag dumps are behind disclosures, not default UI.
+- Carbon and one light skin remain readable.
 
-### Phase 2: chat/composer redesign
+### Phase 2 — chat and composer redesign
 
 **Change:**
 
-- Redesign composer as a command dock.
-- Add compact context visibility near the composer.
-- Improve send/stop/continue states.
-- Structure tool calls and results as operational rows.
-- Improve message spacing, reading width, and system notice treatment.
+- Composer becomes one elevated command dock.
+- Mode controls become one segmented control.
+- Context scope becomes glanceable near composer.
+- Message layout moves to readable 720–760px measure.
+- Tool calls/results render as compact inline collapsible blocks.
+- Streaming states become calm and consolidated.
 
 **Avoid touching:**
 
-- Backend chat protocol unless required for display mapping.
-- Model routing behavior.
-- Tool permission enforcement.
-- Memory write behavior.
+- Backend chat protocol unless display mapping requires a small adapter.
+- Agent routing.
+- Tool execution.
+- Memory writes.
+- Permission logic.
 
 **Acceptance criteria:**
 
-- Users can identify active context before sending.
-- Running tools and pending permissions are visible without flooding the thread.
-- Chat feels like an operating workspace, not a generic chatbot.
-- Stop and approval controls remain obvious under streaming/tool states.
+- Composer is visually the primary control.
+- Tool calls render inline and collapsed by default.
+- Stop/approve/deny remain obvious while running.
+- Thread reads as an operational workspace, not bubble chat.
 
-### Phase 3: left/right panel redesign
+### Phase 3 — left/right panel redesign
 
 **Change:**
 
-- Recast left panel as a capability/navigation rail.
-- Recast right panel as context inspector, timeline, memory, permissions, and status control.
-- Move duplicated or misplaced items to the correct side.
-- Add progressive disclosure for advanced runtime/tool details.
+- Left rail becomes grouped collapsible navigation + capability rail.
+- Occasional actions move one layer down without being deleted.
+- Right panel becomes system summary + quiet permission queue + timeline/memory inspector.
+- Both side panels gain clear collapse behavior.
 
 **Avoid touching:**
 
-- Tool implementation.
+- Removing capabilities.
 - Device connection internals.
-- Memory storage schema.
-- Permission enforcement logic.
+- Memory schema.
+- Permission enforcement.
+- Tool behavior.
 
 **Acceptance criteria:**
 
-- Left panel answers what Luca can do now.
-- Right panel answers what Luca knows, sees, changed, or needs reviewed.
-- Rare/advanced surfaces are discoverable but not constantly visible.
-- Pending decisions and active access grants are easier to find.
+- Left rail shows six or fewer primary items at rest.
+- Right rail is calm when nothing needs review and assertive when a user decision is pending.
+- Left answers “where/capability”; right answers “state/control.”
+- Panels collapse without hiding critical access/safety state.
 
-### Phase 4: settings, skin, and onboarding polish
+### Phase 4 — settings, skin, and onboarding polish
 
 **Change:**
 
-- Present skins as operating environments with professional previews.
-- Update onboarding copy to calm system language.
-- Apply skin material boundaries according to the skin application plan.
-- Improve settings grouping and reduce generic dashboard cards.
+- Skin picker becomes live material swatches with shell/panel/composer/status previews.
+- Onboarding copy adopts the professional voice.
+- Connector/setup surfaces use calm cards/rows rather than decorative tiles.
+- Skin legibility contract is documented and tested where practical.
 
 **Avoid touching:**
 
-- Global skin application beyond approved boundaries.
-- Safety/status token ownership.
-- Onboarding logic that affects accounts, devices, or permissions without a separate plan.
+- Onboarding flow logic unless separately planned.
+- Skin token architecture beyond approved boundaries.
+- Semantic safety token ownership.
+- Account/device permission behavior.
 
 **Acceptance criteria:**
 
-- Skin selection feels premium and understandable.
-- Readability and safety states remain stable across skins.
-- Onboarding feels professional, not sci-fi or mascot-driven.
+- Skins preview actual material, not dots.
+- Onboarding reads as professional software.
+- No skin fails text/status contrast targets.
 - Settings communicate control, not decoration.
 
-### Phase 5: deeper workspace/tool surfaces
+### Phase 5 — deeper workspace/tool surfaces
 
 **Change:**
 
-- Introduce richer artifact/workspace surfaces when chat outputs become objects.
-- Add inspector states for selected messages, artifacts, permissions, memories, and tool results.
-- Improve long-thread navigation and timeline milestones.
-- Build durable patterns for local/runtime/tool work without becoming an IDE.
+- Luca-opened surfaces render as spatial center panels: docs, browser, vision, files, artifacts.
+- Add selected-object inspector states for messages, artifacts, permissions, memories, and tool results.
+- Add long-thread navigation markers.
+- Build durable patterns for tool results outside the message stream.
 
 **Avoid touching:**
 
-- Replacing the whole app shell.
-- Making file/code views the default product metaphor.
-- Adding decorative telemetry or fake OS widgets.
+- Rebuilding the shell.
+- Making code/file views the default metaphor.
+- Adding decorative telemetry.
+- Turning workspace panels into blocking modals.
 
 **Acceptance criteria:**
 
-- Users can move between conversation, artifact, inspection, and action without losing context.
-- Tool results have clear places to live outside the message stream.
-- The workspace feels spatial and system-level while remaining simple enough for daily use.
+- Opening a surface does not interrupt with a blocking modal unless safety requires it.
+- There is always a clear route back to the thread.
+- Tool results can live as workspace objects.
+- The interface feels spatial without becoming an IDE.
 
 ---
 
-## 9. Implementation Handoff Format
+## 9. Implementation Handoff
 
-Use this handoff to turn the design direction into safe PRs.
+Use this as the coding-agent handoff.
 
-### PR sequencing
+### Scope discipline
 
-1. **PR 1: Component language cleanup**
-   - Scope: typography, spacing, panel headers, row/card reductions, button/status normalization.
-   - No behavior changes.
-   - Include before/after screenshots.
+- One phase becomes one or more small PRs.
+- Do not combine phases.
+- Phase 1 should be pure presentational cleanup: copy, tokens, icons, status treatment, spacing, and empty states.
+- State “no behavior/logic changed” in presentational PRs and keep that true.
 
-2. **PR 2: Composer and message polish**
-   - Scope: composer layout, context line, send/stop states, message spacing, tool/result display components.
-   - Keep existing data contracts where possible.
-   - Include streaming/tool-call screenshots or screen recordings if practical.
+### Token-first
 
-3. **PR 3: Side panel role alignment**
-   - Scope: left capability rail and right inspector organization.
-   - Move or hide surfaces without deleting underlying features.
-   - Include screenshots for active, empty, permission-pending, and runtime-degraded states.
+- Route color, spacing, elevation, surface, border, and focus changes through existing `--luca-*` tokens or a documented token addition.
+- Do not hardcode colors in components except as token fallbacks.
+- Add tokens before using them broadly.
 
-4. **PR 4: Skin/settings/onboarding copy polish**
-   - Scope: professional skin previews, copy replacement, skin-boundary application only where already approved.
-   - Keep semantic status colors protected.
-   - Include screenshots for Carbon and one light skin.
+### Legibility and safety
 
-5. **PR 5+: Workspace/tool surface depth**
-   - Scope: artifacts, selected-object inspector states, long-thread navigation, richer tool-result surfaces.
-   - Split by surface to avoid high-risk mega-PRs.
+- Lock a contrast contract for text tokens and semantic status colors.
+- Add or extend tests where the existing skin-boundary test pattern allows it.
+- Status and safety semantics must remain outside arbitrary skin control.
 
-### General implementation rules
+### Icon system
+
+- Pick the LucaOS icon family in the central icon layer.
+- Route aliases through that layer.
+- Log or fail visibly on unmapped names during development.
+- Do not import random icon families directly into components.
+
+### Copy system
+
+- Centralize shell/status/onboarding strings where practical.
+- Treat copy rewrites as data changes, not scattered JSX edits.
+- Keep labels short and operational.
+
+### PR acceptance format
+
+Each PR should state:
+
+- Phase number.
+- Specific acceptance criteria satisfied.
+- Files/surfaces touched.
+- Screenshots for perceptible UI changes in Carbon and one light skin.
+- Confirmation that behavior, permissions, runtime, memory, and tool execution were not changed when the PR is presentational.
+
+### Guardrails
 
 - Do not wipe or rebuild the app shell.
 - Do not make LucaOS look like a coding IDE.
-- Do not add sci-fi ornament, neon telemetry, or mission language.
-- Keep existing functionality reachable while improving hierarchy.
-- Treat skins as material environments, not global theme paint.
-- Preserve permission, safety, runtime, voice, vision, memory, and destructive-action clarity.
-- Use screenshots for perceptible UI changes.
-- Prefer small component-system PRs over one large redesign PR.
-- If a component has unclear ownership, document the intended role before changing it.
+- Do not introduce sci-fi ornament, fake telemetry, or mission/operator/kernel language.
+- Do not remove capabilities; relocate or progressively disclose them.
+- Do not add new visual-effect dependencies unless there is a separate technical justification.
+- Prefer spatial panels over modals where safe.
+- Keep diffs small enough to review visually.
