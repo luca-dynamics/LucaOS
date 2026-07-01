@@ -74,6 +74,18 @@ export const LOCAL_MODEL_CATALOG: LocalModelDescriptor[] = [
     install: { strategy: "cortex-download", ref: "llama-3.2-1b" },
   },
   {
+    id: "cortex:lfm2.5-230m",
+    displayName: "Liquid LFM2.5 230M GGUF",
+    runtime: "cortex",
+    runtimeModelId: "lfm2.5-230m",
+    sizeBytes: 459_401_112,
+    minRamBytes: 1_000_000_000,
+    contextWindow: 32768,
+    features: ["chat", "streaming"],
+    recommended: true,
+    install: { strategy: "manual", ref: "LiquidAI/LFM2.5-230M-GGUF" },
+  },
+  {
     id: "cortex:phi-3-mini",
     displayName: "Phi-3 Mini GGUF",
     runtime: "cortex",

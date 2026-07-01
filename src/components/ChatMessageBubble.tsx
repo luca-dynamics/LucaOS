@@ -6,6 +6,7 @@ import { PersonaType } from "../services/lucaService";
 import { TacticalLog, MessageAction } from "../types";
 import InlineActionFlow from "./chat/InlineActionFlow";
 import ChartRenderer from "./chat/ChartRenderer";
+import { Attachment, Bubble, Marker, Message } from "./chat/LucaConversationPrimitives";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import {
@@ -16,6 +17,7 @@ import {
 } from "./runtime/intentRoutingLabels";
 
 interface ChatMessageBubbleProps {
+  messageId?: string;
   text: string;
   sender: "user" | "luca" | "system";
   timestamp: number;
@@ -42,6 +44,7 @@ interface ChatMessageBubbleProps {
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
+  messageId,
   text,
   sender,
   timestamp,
@@ -63,6 +66,21 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   const isUser = sender === "user";
   const isSystem = sender === "system";
   const [copiedCodeBlock, setCopiedCodeBlock] = useState<number | null>(null);
+  const messageLabel = `${isUser ? "You" : isSystem ? "System" : "Luca"}: ${
+    (text || "Message").replace(/\s+/g, " ").trim().slice(0, 72)
+  }`;
+  const userAttachmentSrc =
+    attachment && !wasPruned
+      ? attachment.startsWith("data:")
+        ? attachment
+        : `data:image/jpeg;base64,${attachment}`
+      : null;
+  const generatedImageSrc =
+    generatedImage && !wasPruned
+      ? generatedImage.startsWith("data:")
+        ? generatedImage
+        : `data:image/jpeg;base64,${generatedImage}`
+      : null;
 
   const handleCopyCode = (code: string, index: number) => {
     navigator.clipboard.writeText(code);
@@ -77,8 +95,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     const toneBg = getRouteToneBg(routeTone);
     const noExecLabel = routeTone === "blocked" ? "Blocked" : routeTone === "attention" ? "Waiting" : routeTone === "memory" ? "Not saved" : routeTone === "approval" ? "Needs approval" : "No execution";
     return (
-      <div className="flex justify-center my-2 animate-in fade-in zoom-in duration-300 w-full">
-        <div
+      <Message tone="system" id={messageId} label={messageLabel} className="my-2">
+        <Bubble
+          tone="system"
           className={`font-mono px-4 py-2.5 rounded-xl border flex flex-col gap-1 max-w-[90%] shadow-sm glass-blur ${toneBorder} ${toneBg}`}
           style={{
             backgroundColor: "var(--app-bg-tint, rgba(0,0,0,0.2))",
@@ -93,8 +112,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
             <span className="ml-auto text-[8px] uppercase tracking-widest opacity-60">{noExecLabel}</span>
           </div>
           <span className="text-[10px] leading-relaxed">{text}</span>
-        </div>
-      </div>
+        </Bubble>
+      </Message>
     );
   }
 
@@ -109,8 +128,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     const bgClass = isError ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)]" : isWarning ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]" : isSuccess ? "bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)]" : isTrading ? "bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)]" : "bg-slate-900/50 border-slate-800";
 
     return (
-      <div className="flex justify-center my-2 animate-in fade-in zoom-in duration-300 w-full">
-        <div
+      <Message tone="system" id={messageId} label={messageLabel} className="my-2">
+        <Bubble
+          tone="system"
           className={`text-[10px] font-mono px-4 py-2 rounded-lg border flex items-center gap-3 max-w-[90%] shadow-sm glass-blur ${bgClass}`}
           style={{ 
             borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
@@ -120,38 +140,28 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
         >
           <Icon name={isError ? "Danger" : isWarning ? "InfoCircle" : isSuccess ? "CheckCircle" : isTrading ? "Chart" : "Terminal"} size={12} className={iconColor} variant="BoldDuotone" />
           <span className="flex-1 truncate">{text.replace(/\[[^\]]*\]\s*/g, "")}</span>
-        </div>
-      </div>
+        </Bubble>
+      </Message>
     );
   }
 
   // User Messages (Right Aligned)
   if (isUser) {
     return (
-      <div className="flex justify-end mb-1 group animate-in slide-in-from-right-2 duration-300">
+      <Message tone="user" id={messageId} label={messageLabel} className="mb-1">
         <div className="max-w-[85%] sm:max-w-[75%] relative flex flex-col items-end">
           {/* User Attachment */}
           {attachment && (
-            <div className="mb-2 overflow-hidden rounded-xl border border-white/10 shadow-lg">
-              {wasPruned ? (
-                <div className="flex items-center gap-2 text-xs text-slate-500 bg-black/40 p-3 glass-blur">
-                  <Icon name="Image" size={14} variant="BoldDuotone" /> [IMAGE DATAPRUNED]
-                </div>
-              ) : (
-                <img
-                  src={
-                    attachment.startsWith("data:")
-                      ? attachment
-                      : `data:image/jpeg;base64,${attachment}`
-                  }
-                  alt="User Attachment"
-                  className="max-h-48 rounded-lg object-cover bg-black/20"
-                />
-              )}
-            </div>
+            <Attachment
+              src={userAttachmentSrc}
+              alt="User attachment"
+              prunedLabel="Image removed from active context"
+              className="mb-2 max-w-full"
+            />
           )}
 
-          <div
+          <Bubble
+            tone="user"
             className="rounded-2xl rounded-tr-sm px-4 py-3 text-[14px] leading-relaxed relative overflow-hidden glass-blur"
             style={{
               color: "var(--app-text-main, #ffffff)",
@@ -164,7 +174,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
             <div className="whitespace-pre-wrap font-sans relative z-10">
               {text}
             </div>
-          </div>
+          </Bubble>
 
           {/* Footer Actions for user message */}
           <div className="flex items-center justify-between mt-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -187,7 +197,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </Message>
     );
   }
 
@@ -196,7 +206,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     isProcessing && (!text || text === "..." || text.trim() === "");
 
   return (
-    <div className="flex justify-start mb-6 group w-full animate-in slide-in-from-left-2 duration-300">
+    <Message tone="luca" id={messageId} label={messageLabel} className="mb-6">
       <div className="flex flex-col gap-2 w-full max-w-full">
         {/* Avatar row - only shown when loading (waiting for response) */}
         {isLoadingState && (
@@ -217,32 +227,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
               />
             </div>
             {/* Loading dots next to avatar */}
-            <div className="flex items-center gap-1">
-              <span
-                className="w-1.5 h-1.5 rounded-full animate-bounce"
-                style={{ backgroundColor: primaryColor, animationDelay: "0ms" }}
-              />
-              <span
-                className="w-1.5 h-1.5 rounded-full animate-bounce"
-                style={{
-                  backgroundColor: primaryColor,
-                  animationDelay: "150ms",
-                }}
-              />
-              <span
-                className="w-1.5 h-1.5 rounded-full animate-bounce"
-                style={{
-                  backgroundColor: primaryColor,
-                  animationDelay: "300ms",
-                }}
-              />
-            </div>
+            <Marker label="Generating response" color={primaryColor} />
           </div>
         )}
 
         {/* Content area - only shown when NOT in loading state */}
         {!isLoadingState && (
-          <div className="flex-1 min-w-0 w-full px-4 py-3 rounded-2xl rounded-tl-sm transition-all relative overflow-hidden glass-blur"
+          <Bubble
+            tone="luca"
+            className="flex-1 min-w-0 w-full px-4 py-3 rounded-2xl rounded-tl-sm transition-all relative overflow-hidden glass-blur"
                style={{
                  backgroundColor: "var(--app-bg-tint, rgba(255, 255, 255, 0.02))",
                  border: "1px solid var(--app-border-main, rgba(255, 255, 255, 0.05))"
@@ -260,22 +253,17 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
             <div className="rounded-2xl rounded-tl-sm px-0 py-0 transition-all relative overflow-hidden">
               {/* Generated Image inside bubble */}
               {generatedImage && (
-                <div className="mb-4 overflow-hidden rounded-xl border border-slate-700/50 bg-black/20 shadow-lg inline-block max-w-full">
+                <div className="mb-4 inline-block max-w-full">
                   <div className="px-3 py-1.5 bg-white/5 text-[10px] text-slate-400 font-bold tracking-widest border-b border-white/5 flex items-center gap-2">
                     <Icon name="MagicStick" size={10} variant="BoldDuotone" color={primaryColor} />
                     GENERATED ASSET
                   </div>
-                  {wasPruned ? (
-                    <div className="p-8 text-center text-xs text-slate-500 font-mono bg-slate-900/50">
-                      [GENERATED IMAGE EXPIRED FROM CACHE]
-                    </div>
-                  ) : (
-                    <img
-                      src={`data:image/jpeg;base64,${generatedImage}`}
-                      alt="AI Generated"
-                      className="max-h-80 w-auto object-contain bg-black/50"
-                    />
-                  )}
+                  <Attachment
+                    src={generatedImageSrc}
+                    alt="AI generated"
+                    prunedLabel="Generated image expired from cache"
+                    className="mb-0 rounded-t-none border-slate-700/50"
+                  />
                 </div>
               )}
 
@@ -627,10 +615,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                 </div>
               )}
             </div>
-          </div>
+          </Bubble>
         )}
       </div>
-    </div>
+    </Message>
   );
 };
 

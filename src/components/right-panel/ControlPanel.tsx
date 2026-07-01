@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
+import type { LucaExperienceMode } from "../../experience/experienceMode";
 import type { CalendarEvent, Goal, Task } from "../../types";
 import type { RuntimeDiagnostics } from "../../services/runtime/RuntimeDiagnosticsService";
 import { runtimeDiagnosticsService } from "../../services/runtime/RuntimeDiagnosticsService";
@@ -51,6 +52,7 @@ interface ControlPanelProps {
   tasks?: Task[];
   events?: CalendarEvent[];
   goals?: Goal[];
+  experienceMode?: LucaExperienceMode;
 }
 
 function compactDate(value?: number | string | null): string {
@@ -58,8 +60,15 @@ function compactDate(value?: number | string | null): string {
   return new Date(value).toLocaleString();
 }
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events = [], goals = [] }) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({
+  theme,
+  tasks = [],
+  events = [],
+  goals = [],
+  experienceMode = "basic",
+}) => {
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
+  const isCreatorMode = experienceMode === "creator";
 
   useEffect(() => {
     let mounted = true;
@@ -131,7 +140,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </div>
       </div>
 
-      <OperationPermissionCenter />
+      <OperationPermissionCenter creatorMode={isCreatorMode} />
 
       <div className="grid grid-cols-2 gap-2">
         <RightPanelMetric label="Runtime" value={diagnostics?.governance.runtimeContinuity.lifecycleState ?? loopStatus.lifecycleState} tone={loopStatus.quarantinedItemCount > 0 ? "danger" : loopStatus.lifecycleState === "degraded" ? "warn" : "good"} />
@@ -153,6 +162,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </div>
       </RightPanelSection>
 
+      {isCreatorMode && (
+        <>
       <RightPanelSection title="Origin critical controls" subtitle="OriginOverlayPanels policy/stub diagnostics only. No control execution, root/admin grant, lockdown override, destructive tools, device control, custom skills, or rendering behavior changes.">
         <div className="grid grid-cols-2 gap-2">
           <RightPanelMetric label="Mapped" value={formatCount("control", originCriticalControlGate.controls.length)} tone="danger" />
@@ -403,6 +414,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           Only confirmed safe lifecycle/control actions (back/forward/refresh/pause/resume/close/revoke) can execute. Click, type, scroll, and all page-level automation stay disabled.
         </p>
       </RightPanelSection>
+        </>
+      )}
 
       <RightPanelSection title="Continuity" subtitle="Sessions, plans, checkpoints, and reminders that need attention. No execution from this panel.">
         {(() => {
@@ -432,6 +445,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         })()}
       </RightPanelSection>
 
+      {isCreatorMode && (
+        <>
       <RightPanelSection title="Overlay approvals" subtitle="VoiceHud and SecurityGate approval-resolution audit only. No tool execution or overlay behavior changes.">
         <div className="grid grid-cols-2 gap-2">
           <RightPanelMetric label="Records" value={formatCount("record", overlayApprovalResolutions.totalRecords)} tone="neutral" />
@@ -468,6 +483,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           );
         })()}
       </RightPanelSection>
+        </>
+      )}
 
       <RightPanelSection title="Session" subtitle={activeSession ? "Current active or latest resumable session." : "No persisted agent session yet."}>
         {activeSession ? (
@@ -531,6 +548,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
         </RightPanelSection>
       )}
 
+      {isCreatorMode && (
       <RightPanelSection title="Intent routing" subtitle="Current routing mode and last route decision. Routing does not execute anything.">
         {(() => {
           const routingMode = intentRoutingModeService.getMode();
@@ -574,6 +592,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ theme, tasks = [], events =
           );
         })()}
       </RightPanelSection>
+      )}
 
       <RightPanelSection title="Decisions" subtitle="Safe queues that need user attention.">
         <div className="grid grid-cols-2 gap-2">

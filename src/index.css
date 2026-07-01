@@ -383,6 +383,152 @@ a,
   animation: shimmer 3s infinite;
 }
 
+@keyframes luca-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.scroll-fade,
+.scroll-fade-y {
+  --scroll-fade-size: 32px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--scroll-fade-size),
+    #000 calc(100% - var(--scroll-fade-size)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--scroll-fade-size),
+    #000 calc(100% - var(--scroll-fade-size)),
+    transparent
+  );
+}
+
+.scroll-fade-x {
+  --scroll-fade-size: 32px;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--scroll-fade-size),
+    #000 calc(100% - var(--scroll-fade-size)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--scroll-fade-size),
+    #000 calc(100% - var(--scroll-fade-size)),
+    transparent
+  );
+}
+
+.scroll-fade-s {
+  --scroll-fade-size: 32px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-size));
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-size));
+}
+
+.scroll-fade-e {
+  --scroll-fade-size: 32px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--scroll-fade-size)), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--scroll-fade-size)), transparent);
+}
+
+.scroll-fade-4 {
+  --scroll-fade-size: 16px;
+}
+
+.scroll-fade-none {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.shimmer {
+  --shimmer-color: rgba(255, 255, 255, 0.34);
+  --shimmer-spread: 22%;
+  --shimmer-duration: 1.8s;
+  --shimmer-angle: 110deg;
+  background-image: linear-gradient(
+    var(--shimmer-angle),
+    transparent 0%,
+    transparent calc(50% - var(--shimmer-spread)),
+    var(--shimmer-color) 50%,
+    transparent calc(50% + var(--shimmer-spread)),
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  animation: luca-shimmer var(--shimmer-duration) linear infinite;
+}
+
+.shimmer-once {
+  animation-iteration-count: 1;
+}
+
+.shimmer-reverse {
+  animation-direction: reverse;
+}
+
+.shimmer-color-accent {
+  --shimmer-color: color-mix(in srgb, var(--luca-accent-primary, #9ccfff) 42%, transparent);
+}
+
+.shimmer-color-muted {
+  --shimmer-color: rgba(255, 255, 255, 0.18);
+}
+
+.shimmer-spread-tight {
+  --shimmer-spread: 12%;
+}
+
+.shimmer-spread-wide {
+  --shimmer-spread: 34%;
+}
+
+.shimmer-duration-fast {
+  --shimmer-duration: 1.1s;
+}
+
+.shimmer-duration-slow {
+  --shimmer-duration: 2.8s;
+}
+
+.shimmer-dutation-fast,
+.shimmer-dutation-slow {
+  --shimmer-duration: 1.8s;
+}
+
+.shimmer-dutation-fast {
+  --shimmer-duration: 1.1s;
+}
+
+.shimmer-dutation-slow {
+  --shimmer-duration: 2.8s;
+}
+
+.shimmer-angle-horizontal {
+  --shimmer-angle: 90deg;
+}
+
+.shimmer-angle-vertical {
+  --shimmer-angle: 180deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer,
+  .shimmer-once,
+  .shimmer-reverse {
+    animation: none;
+  }
+}
+
 /* Luca desktop shell token migration pseudo-states.
  * Base panel/control/tab values live in src/styles/lucaShellStyles.ts so App.tsx
  * has a single token source of truth for shell surfaces and fallbacks.
