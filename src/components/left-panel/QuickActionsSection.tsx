@@ -129,13 +129,13 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
           <Icon
             name="Lock"
             size={14}
-            color={lockdownHovered ? "#ef4444" : "var(--app-text-muted)"}
+            color={lockdownHovered ? "var(--luca-danger, #ef4444)" : "var(--app-text-muted)"}
             className="group-hover/btn:animate-bounce transition-all"
             variant="BoldDuotone"
           />
           <span
             className="text-[11px] font-medium transition-colors"
-            style={{ color: lockdownHovered ? "#ef4444" : "var(--app-text-muted)" }}
+            style={{ color: lockdownHovered ? "var(--luca-danger, #ef4444)" : "var(--app-text-muted)" }}
           >
             Pause all actions
           </span>
