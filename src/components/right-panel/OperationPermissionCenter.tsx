@@ -8,9 +8,16 @@ import {
 } from "../../operation-center";
 import { evaluateSkillPermissionGrantReadiness } from "../../personal-intelligence/skillPermissions";
 import { useSkillPermissionGrants } from "../SkillPermissionGrantContext";
-import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
+import {
+  lucaMaterialCardStyle,
+  lucaMaterialMetricStyle,
+} from "../../styles/lucaMaterialSystem";
 import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
+
+interface OperationPermissionCenterProps {
+  creatorMode?: boolean;
+}
 
 const label = (value: string) => value.replace(/_/g, " ");
 
@@ -22,8 +29,6 @@ const sourceGroups: readonly { source: OperationCenterSource; title: string }[] 
   { source: "system", title: "System" },
 ];
 
-// Quiet Machine: status color comes from semantic tokens, not raw neon.
-// color-mix gives the tinted surface/border while text stays the full token.
 const STATUS_TOKEN: Record<OperationCenterItem["status"], string> = {
   ready_for_review: "--luca-info",
   approval_required: "--luca-warning",
@@ -58,8 +63,12 @@ function OperationCenterCard({ item }: { item: OperationCenterItem }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h4 className="text-[10px] font-medium leading-snug text-[var(--app-text-main)]">{item.title}</h4>
-          <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">{label(item.category)} · risk {item.riskLevel}</p>
+          <h4 className="text-[10px] font-medium leading-snug text-[var(--app-text-main)]">
+            {item.title}
+          </h4>
+          <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">
+            {label(item.category)} - risk {item.riskLevel}
+          </p>
         </div>
         <span
           className="shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-medium"
@@ -68,99 +77,275 @@ function OperationCenterCard({ item }: { item: OperationCenterItem }) {
           {label(item.status)}
         </span>
       </div>
-      <p className="mt-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{item.summary}</p>
+      <p className="mt-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+        {item.summary}
+      </p>
       {item.requiredApprovals.length > 0 && (
-        <p className="mt-2 text-[9px] leading-relaxed" style={{ color: "var(--luca-warning)" }}>
-          <span className="font-medium">Required reviews:</span> {item.requiredApprovals.join(", ")}
+        <p
+          className="mt-2 text-[9px] leading-relaxed"
+          style={{ color: "var(--luca-warning)" }}
+        >
+          <span className="font-medium">Required reviews:</span>{" "}
+          {item.requiredApprovals.join(", ")}
         </p>
       )}
       {item.blockedActions.length > 0 && (
-        <p className="mt-1 text-[9px] leading-relaxed" style={{ color: "var(--luca-danger)" }}>
-          <span className="font-medium">Blocked actions:</span> {item.blockedActions.join(", ")}
+        <p
+          className="mt-1 text-[9px] leading-relaxed"
+          style={{ color: "var(--luca-danger)" }}
+        >
+          <span className="font-medium">Blocked actions:</span>{" "}
+          {item.blockedActions.join(", ")}
         </p>
       )}
-      <p className="mt-2 text-[8px] text-[var(--app-text-muted)]">sideEffectsPerformed: false</p>
+      <p className="mt-2 text-[8px] text-[var(--app-text-muted)]">
+        sideEffectsPerformed: false
+      </p>
     </article>
   );
 }
 
-export default function OperationPermissionCenter() {
+export default function OperationPermissionCenter({
+  creatorMode = false,
+}: OperationPermissionCenterProps) {
   const { state } = useSkillPermissionGrants();
-  const readiness = useMemo(() => evaluateSkillPermissionGrantReadiness(state.gates), [state.gates]);
+  const readiness = useMemo(
+    () => evaluateSkillPermissionGrantReadiness(state.gates),
+    [state.gates],
+  );
   const recentEvents = state.auditEvents.slice(0, 4);
-  const operationItems = useMemo(() => [
-    ...operationCenterFixtureItems,
-    ...createOperationItemsFromSkillPermissionGates(state.gates),
-  ], [state.gates]);
-  const operationReadiness = useMemo(() => evaluateOperationCenterReadiness(operationItems), [operationItems]);
+  const operationItems = useMemo(
+    () => [
+      ...operationCenterFixtureItems,
+      ...createOperationItemsFromSkillPermissionGates(state.gates),
+    ],
+    [state.gates],
+  );
+  const operationReadiness = useMemo(
+    () => evaluateOperationCenterReadiness(operationItems),
+    [operationItems],
+  );
 
   return (
     <div className="space-y-3" aria-label="Personal Intelligence permission center">
-      <RightPanelSection title="Permission center" subtitle="Global Personal Intelligence review gates. State is in-memory, expiring, and non-executing.">
+      <RightPanelSection
+        title="Permission center"
+        subtitle={
+          creatorMode
+            ? "Global Personal Intelligence review gates. State is local and non-executing."
+            : "Reviews and approvals that need attention."
+        }
+      >
         <div className="grid grid-cols-2 gap-2">
-          <RightPanelMetric label="Pending" value={readiness.pending} tone={readiness.pending ? "warn" : "good"} />
-          <RightPanelMetric label="Review grants" value={readiness.grantedForReview} tone="neutral" />
-          <RightPanelMetric label="Denied / expired" value={readiness.denied + readiness.expired} tone={readiness.denied + readiness.expired ? "danger" : "good"} />
-          <RightPanelMetric label="Blocked / primary" value={readiness.blocked + readiness.requiresPrimaryApproval} tone={readiness.blocked + readiness.requiresPrimaryApproval ? "danger" : "good"} />
+          <RightPanelMetric
+            label="Pending"
+            value={readiness.pending}
+            tone={readiness.pending ? "warn" : "good"}
+          />
+          <RightPanelMetric
+            label="Review grants"
+            value={readiness.grantedForReview}
+            tone="neutral"
+          />
+          {creatorMode && (
+            <RightPanelMetric
+              label="Denied / expired"
+              value={readiness.denied + readiness.expired}
+              tone={readiness.denied + readiness.expired ? "danger" : "good"}
+            />
+          )}
+          <RightPanelMetric
+            label="Blocked"
+            value={readiness.blocked + readiness.requiresPrimaryApproval}
+            tone={
+              readiness.blocked + readiness.requiresPrimaryApproval
+                ? "danger"
+                : "good"
+            }
+          />
         </div>
 
-        <div className="mt-3 rounded-xl border p-3" style={dangerBox}>
-          <div className="flex items-center justify-between gap-2 text-[10px] font-medium"><span>Execution readiness</span><span>blocked</span></div>
-          <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "var(--luca-danger)", opacity: 0.8 }}>readyForExecution: false · executionEnabled: false · canExecute: false · sideEffectsPerformed: false</p>
-        </div>
+        {creatorMode && (
+          <>
+            <div className="mt-3 rounded-xl border p-3" style={dangerBox}>
+              <div className="flex items-center justify-between gap-2 text-[10px] font-medium">
+                <span>Execution readiness</span>
+                <span>blocked</span>
+              </div>
+              <p
+                className="mt-2 text-[10px] leading-relaxed"
+                style={{ color: "var(--luca-danger)", opacity: 0.8 }}
+              >
+                readyForExecution: false - executionEnabled: false - canExecute:
+                false - sideEffectsPerformed: false
+              </p>
+            </div>
 
-        <div className="mt-3 space-y-1.5">
-          {(["pending", "granted_for_review", "denied", "expired", "blocked", "requires_primary_approval"] as const).map((status) => {
-            const count = state.gates.filter((gate) => gate.status === status).length;
-            return <div key={status} className="flex items-center justify-between rounded-lg border px-2 py-1.5 text-[10px]" style={neutralMetricStyle}><span className="text-[var(--app-text-muted)]">{label(status)}</span><span className="font-medium text-[var(--app-text-main)]">{count}</span></div>;
-          })}
-        </div>
-      </RightPanelSection>
-
-      <RightPanelSection title="Operation Center" subtitle="Unified read-only governance summary across Personal Intelligence and LucaLink.">
-        <div className="grid grid-cols-2 gap-2">
-          <RightPanelMetric label="Total items" value={operationReadiness.totalItems} />
-          <RightPanelMetric label="PI / LucaLink" value={`${operationReadiness.personalIntelligenceCount} / ${operationReadiness.lucaLinkCount}`} />
-          <RightPanelMetric label="Provider Hub" value={operationReadiness.providerHubCount} />
-          <RightPanelMetric label="Pending / review" value={operationReadiness.pending + operationReadiness.approvalRequired} tone={operationReadiness.pending + operationReadiness.approvalRequired ? "warn" : "good"} />
-          <RightPanelMetric label="Blocked" value={operationReadiness.blocked} tone={operationReadiness.blocked ? "danger" : "good"} />
-          <RightPanelMetric label="High / critical" value={`${operationReadiness.highRiskCount} / ${operationReadiness.criticalRiskCount}`} tone={operationReadiness.highRiskCount + operationReadiness.criticalRiskCount ? "danger" : "good"} />
-          <RightPanelMetric label="Execution readiness" value="blocked" tone="danger" />
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-1.5 text-[9px]">
-          <div className="rounded-lg border p-2" style={dangerBox}>Live transport: <strong>disabled</strong></div>
-          <div className="rounded-lg border p-2" style={dangerBox}>Write/install: <strong>disabled</strong></div>
-          <div className="col-span-2 rounded-lg border p-2" style={dangerBox}>Live sensor collection: <strong>disabled</strong></div>
-        </div>
-
-        <div className="mt-4 space-y-4">
-          {sourceGroups.map((group) => {
-            const items = operationItems.filter((item) => item.source === group.source);
-            if (items.length === 0) return null;
-            return (
-              <section key={group.source} aria-label={`${group.title} operation items`}>
-                <div className="mb-2 flex items-center justify-between text-[10px] font-medium text-[var(--app-text-main)]"><span>{group.title}</span><span className="text-[var(--app-text-muted)]">{items.length}</span></div>
-                <div className="space-y-2">{items.map((item) => <OperationCenterCard key={item.itemId} item={item} />)}</div>
-              </section>
-            );
-          })}
-        </div>
-
-        <div className="mt-4 rounded-xl border p-3 text-[9px] leading-relaxed" style={infoBox}>
-          <p className="font-medium">Right-panel status is informational only.</p>
-          <p className="mt-1" style={{ color: "var(--app-text-muted)" }}>No execution, transport send, memory write, sensor collection, file write, install, or model/tool call is performed.</p>
-          <p className="mt-1" style={{ color: "var(--app-text-muted)" }}>Approved/review states here do not grant runtime authority.</p>
-        </div>
-      </RightPanelSection>
-
-      <RightPanelSection title="Permission audit" subtitle="Most recent local review transitions; no persistence or runtime action.">
-        {recentEvents.length === 0 ? <p className="text-[10px] italic text-[var(--app-text-muted)]">No local permission review events.</p> : (
-          <div className="space-y-2">
-            {recentEvents.map((event) => <div key={event.eventId} className="rounded-lg border p-2" style={neutralMetricStyle}><p className="text-[10px] leading-relaxed text-[var(--app-text-main)]">{event.summary}</p><p className="mt-1 text-[9px] text-[var(--app-text-muted)]">{new Date(event.occurredAt).toLocaleString()} · in memory only</p></div>)}
-          </div>
+            <div className="mt-3 space-y-1.5">
+              {(
+                [
+                  "pending",
+                  "granted_for_review",
+                  "denied",
+                  "expired",
+                  "blocked",
+                  "requires_primary_approval",
+                ] as const
+              ).map((status) => {
+                const count = state.gates.filter(
+                  (gate) => gate.status === status,
+                ).length;
+                return (
+                  <div
+                    key={status}
+                    className="flex items-center justify-between rounded-lg border px-2 py-1.5 text-[10px]"
+                    style={neutralMetricStyle}
+                  >
+                    <span className="text-[var(--app-text-muted)]">
+                      {label(status)}
+                    </span>
+                    <span className="font-medium text-[var(--app-text-main)]">
+                      {count}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </RightPanelSection>
+
+      {creatorMode && (
+        <>
+          <RightPanelSection
+            title="Operation Center"
+            subtitle="Unified read-only governance summary across Personal Intelligence and LucaLink."
+          >
+            <div className="grid grid-cols-2 gap-2">
+              <RightPanelMetric label="Total items" value={operationReadiness.totalItems} />
+              <RightPanelMetric
+                label="PI / LucaLink"
+                value={`${operationReadiness.personalIntelligenceCount} / ${operationReadiness.lucaLinkCount}`}
+              />
+              <RightPanelMetric
+                label="Provider Hub"
+                value={operationReadiness.providerHubCount}
+              />
+              <RightPanelMetric
+                label="Pending / review"
+                value={operationReadiness.pending + operationReadiness.approvalRequired}
+                tone={
+                  operationReadiness.pending + operationReadiness.approvalRequired
+                    ? "warn"
+                    : "good"
+                }
+              />
+              <RightPanelMetric
+                label="Blocked"
+                value={operationReadiness.blocked}
+                tone={operationReadiness.blocked ? "danger" : "good"}
+              />
+              <RightPanelMetric
+                label="High / critical"
+                value={`${operationReadiness.highRiskCount} / ${operationReadiness.criticalRiskCount}`}
+                tone={
+                  operationReadiness.highRiskCount +
+                    operationReadiness.criticalRiskCount
+                    ? "danger"
+                    : "good"
+                }
+              />
+              <RightPanelMetric
+                label="Execution readiness"
+                value="blocked"
+                tone="danger"
+              />
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-1.5 text-[9px]">
+              <div className="rounded-lg border p-2" style={dangerBox}>
+                Live transport: <strong>disabled</strong>
+              </div>
+              <div className="rounded-lg border p-2" style={dangerBox}>
+                Write/install: <strong>disabled</strong>
+              </div>
+              <div className="col-span-2 rounded-lg border p-2" style={dangerBox}>
+                Live sensor collection: <strong>disabled</strong>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {sourceGroups.map((group) => {
+                const items = operationItems.filter(
+                  (item) => item.source === group.source,
+                );
+                if (items.length === 0) return null;
+                return (
+                  <section
+                    key={group.source}
+                    aria-label={`${group.title} operation items`}
+                  >
+                    <div className="mb-2 flex items-center justify-between text-[10px] font-medium text-[var(--app-text-main)]">
+                      <span>{group.title}</span>
+                      <span className="text-[var(--app-text-muted)]">
+                        {items.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {items.map((item) => (
+                        <OperationCenterCard key={item.itemId} item={item} />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+
+            <div
+              className="mt-4 rounded-xl border p-3 text-[9px] leading-relaxed"
+              style={infoBox}
+            >
+              <p className="font-medium">Right-panel status is informational only.</p>
+              <p className="mt-1" style={{ color: "var(--app-text-muted)" }}>
+                No execution, transport send, memory write, sensor collection,
+                file write, install, or model/tool call is performed.
+              </p>
+              <p className="mt-1" style={{ color: "var(--app-text-muted)" }}>
+                Approved/review states here do not grant runtime authority.
+              </p>
+            </div>
+          </RightPanelSection>
+
+          <RightPanelSection
+            title="Permission audit"
+            subtitle="Most recent local review transitions; no persistence or runtime action."
+          >
+            {recentEvents.length === 0 ? (
+              <p className="text-[10px] italic text-[var(--app-text-muted)]">
+                No local permission review events.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {recentEvents.map((event) => (
+                  <div
+                    key={event.eventId}
+                    className="rounded-lg border p-2"
+                    style={neutralMetricStyle}
+                  >
+                    <p className="text-[10px] leading-relaxed text-[var(--app-text-main)]">
+                      {event.summary}
+                    </p>
+                    <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">
+                      {new Date(event.occurredAt).toLocaleString()} - in memory
+                      only
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </RightPanelSection>
+        </>
+      )}
     </div>
   );
 }
