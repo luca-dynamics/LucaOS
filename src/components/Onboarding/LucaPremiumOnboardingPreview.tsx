@@ -16,6 +16,7 @@ import {
   lucaOnboardingFlowGoNext,
   lucaOnboardingFlowSetName,
   lucaOnboardingFlowSetOption,
+  lucaOnboardingFlowSetConnectors,
   lucaOnboardingFlowSkip,
   type LucaOnboardingFlowState,
 } from "./lucaOnboardingFlowEngine";
@@ -203,6 +204,9 @@ export const LucaPremiumOnboardingPreview: React.FC<
   const handleNameChange = (name: string) =>
     setFlow((current) => lucaOnboardingFlowSetName(current, name));
 
+  const handleConnectorSelections = (connectorIds: string[]) =>
+    setFlow((current) => lucaOnboardingFlowSetConnectors(current, connectorIds));
+
   const activeTailStep =
     tail && !isOnboardingTailComplete(tail) ? currentOnboardingTailStep(tail) : undefined;
 
@@ -310,6 +314,7 @@ export const LucaPremiumOnboardingPreview: React.FC<
               onSelectOption={handleSelectOption}
               nameValue={flow.displayName}
               onNameChange={handleNameChange}
+              onConnectorSelectionsChange={handleConnectorSelections}
               onPrimary={handlePrimary}
               onSecondary={handleSecondary}
               skinId={skinId}

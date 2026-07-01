@@ -86,6 +86,11 @@ export interface LucaOnboardingScreenProps {
   nameValue?: string;
   /** When provided on the welcome screen, renders an optional name field. */
   onNameChange?: (name: string) => void;
+  /**
+   * Notified (connect_tools screen) when the set of selected tool connectors
+   * changes. Intent only — no side effects are performed here.
+   */
+  onConnectorSelectionsChange?: (connectorIds: string[]) => void;
   // Presence resolution (forwarded to LucaPresence; usually inherited from shell).
   skinId?: LucaSkinId | string;
   hostKind?: LucaSkinHostKind;
@@ -384,12 +389,25 @@ const CONNECTOR_DEFAULT_VISIBLE = 3;
  * rest. Selecting tools here is presentational only — it marks them for setup
  * and grants no access.
  */
-function OnboardingConnectorPanel(): React.ReactElement {
+function OnboardingConnectorPanel({
+  onSelectionChange,
+}: {
+  onSelectionChange?: (connectorIds: string[]) => void;
+}): React.ReactElement {
   const [selected, setSelected] = React.useState<Record<string, boolean>>({});
   const [expanded, setExpanded] = React.useState(false);
   const toggle = (id: string) =>
     setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
-  const selectedCount = Object.values(selected).filter(Boolean).length;
+  const selectedIds = Object.keys(selected).filter((id) => selected[id]);
+  const selectedCount = selectedIds.length;
+
+  // Report the selection up (intent only) so the flow can persist it. Keyed on
+  // the stable joined id string so we don't fire on unrelated re-renders.
+  const selectionKey = selectedIds.join(",");
+  React.useEffect(() => {
+    onSelectionChange?.(selectionKey ? selectionKey.split(",") : []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionKey]);
 
   // First-party connectors (same source as Settings) + any live MCP-registry
   // connectors, popular-first. Registry merge is best-effort and silent offline.
@@ -481,6 +499,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   presenceState,
   nameValue,
   onNameChange,
+  onConnectorSelectionsChange,
   skinId,
   hostKind,
   reducedMotion,
@@ -712,7 +731,9 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
       {/* Connect-now path: reveal the expandable tool-app connector cards once
           the user chooses to connect now. Inert/honest — queues for Settings. */}
       {screenId === "connect_tools" && activeOptionId === "connect_now" && (
-        <OnboardingConnectorPanel />
+        <OnboardingConnectorPanel
+          onSelectionChange={onConnectorSelectionsChange}
+        />
       )}
 
       <div

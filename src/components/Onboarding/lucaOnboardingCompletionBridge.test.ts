@@ -59,6 +59,7 @@ describe("lucaOnboardingCompletionBridge", () => {
       memoryBoundaries: "ask_before_anything",
       connectTools: "connect_now",
       intelligenceRoute: "luca_prime",
+      connectors: [],
     });
 
     // The same preferences ride along the web completion result.
