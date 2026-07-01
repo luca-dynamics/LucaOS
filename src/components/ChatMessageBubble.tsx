@@ -162,13 +162,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
 
           <Bubble
             tone="user"
-            className="rounded-2xl rounded-tr-sm px-4 py-3 text-[14px] leading-relaxed relative overflow-hidden glass-blur"
+            className="rounded-2xl rounded-tr-sm px-4 py-2.5 text-[14px] leading-relaxed relative overflow-hidden glass-blur"
             style={{
               color: "var(--app-text-main, #ffffff)",
-              backgroundColor: "var(--app-bg-tint, rgba(255, 255, 255, 0.05))",
-              borderColor: "var(--app-border-main, rgba(255, 255, 255, 0.1))",
-              borderWidth: "1px",
-              borderStyle: "solid"
+              backgroundColor:
+                "var(--luca-surface-hover, var(--app-bg-tint, rgba(255, 255, 255, 0.07)))",
+              border: "1px solid transparent",
             }}
           >
             <div className="whitespace-pre-wrap font-sans relative z-10">
@@ -235,10 +234,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
         {!isLoadingState && (
           <Bubble
             tone="luca"
-            className="flex-1 min-w-0 w-full px-4 py-3 rounded-2xl rounded-tl-sm transition-all relative overflow-hidden glass-blur"
+            className="flex-1 min-w-0 w-full px-0 py-0 transition-all relative overflow-visible"
                style={{
-                 backgroundColor: "var(--app-bg-tint, rgba(255, 255, 255, 0.02))",
-                 border: "1px solid var(--app-border-main, rgba(255, 255, 255, 0.05))"
+                 backgroundColor: "transparent",
+                 border: "none"
                }}>
             
             {/* INLINE ACTION FLOW - Repositioned to top for immersion */}

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, KeyboardEvent } from "react";
 import { Icon } from "./ui/Icon";
 import ChatModelSwitcher from "./chat/ChatModelSwitcher";
-import ChatModeToggle from "./chat/ChatModeToggle";
+import IntentRoutingModeSelector from "./runtime/IntentRoutingModeSelector";
 import { CURATED_PLUGINS, MarketplacePlugin } from "../data/directoryData";
 import {
   LUCA_SHELL_BORDER_SUBTLE,
@@ -278,8 +278,9 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               </div>
             )}
 
-            {/* Extended Thinking (Planning mode) Toggle */}
-            <ChatModeToggle themeName={themeName} primaryColor={safeColor} />
+            {/* Routing mode: AUTO / FAST / PLAN / AGENT (moved here from the
+                composer header so there is a single mode control). */}
+            <IntentRoutingModeSelector compact theme={{ hex: safeColor }} />
 
             {/* Clear Chat Button */}
             {onClearChat && (

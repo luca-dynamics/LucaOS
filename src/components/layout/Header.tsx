@@ -37,6 +37,12 @@ interface HeaderProps {
   // Future Basic/Pro/Creator separation. Calm by default; Pro/Creator
   // surface more brand identity. Defaults to BASIC until tiers are wired.
   tier?: "BASIC" | "PRO" | "CREATOR";
+  /**
+   * Hide the brand wordmark (used when the header is dissolved into the panel
+   * shell and the brand lives at the top of the left rail instead). The header
+   * then renders only the status/controls cluster.
+   */
+  hideBrand?: boolean;
 }
 
 // Tier-aware wordmark. The canonical brand form is "LucaOS" (matches the
@@ -86,6 +92,7 @@ const Header: React.FC<HeaderProps> = ({
   isLockdown,
   connectionTier = "LOCAL",
   tier = "BASIC",
+  hideBrand = false,
 }) => {
   const credits = useCredits();
   const brand = wordmark(tier);
@@ -118,12 +125,16 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id="app-header"
-      className={`${isMobile ? "h-16 px-4" : "h-16 px-6"} glass-blur flex items-center justify-between z-50 transition-all duration-500 relative drag border-b`}
+      className={`${isMobile ? "h-16 px-4" : "h-14 px-6"} glass-blur flex items-center justify-between z-50 transition-all duration-500 relative drag border-b`}
       style={headerSurfaceStyle}
     >
       <RuntimeContinuityBootstrap />
 
-      {/* Brand */}
+      {/* Brand (hidden when the header is dissolved into the shell; the brand
+          then lives at the top of the left rail). An empty spacer keeps the
+          controls right-aligned via justify-between. */}
+      {hideBrand && <div aria-hidden="true" />}
+      {!hideBrand && (
       <div className="flex items-center gap-3 app-region-no-drag min-w-0">
         <div
           className={`relative ${
@@ -167,6 +178,7 @@ const Header: React.FC<HeaderProps> = ({
           </span>
         )}
       </div>
+      )}
 
       {/* System status + controls */}
       <div className="flex items-center gap-2 sm:gap-3 app-region-no-drag">

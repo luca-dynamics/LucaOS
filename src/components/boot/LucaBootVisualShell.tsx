@@ -107,7 +107,7 @@ export const LucaBootVisualShell: React.FC<LucaBootVisualShellProps> = ({
       }}
       data-boot-shell="luca-hologram-face"
     >
-      <EdgePresence intent={bootIntent} color={theme?.hex} radius={0} />
+      {/* Presence edge glow removed for a cleaner frameless look. */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{

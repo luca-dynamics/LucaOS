@@ -29,24 +29,43 @@ const IntentRoutingModeSelector: React.FC<IntentRoutingModeSelectorProps> = ({ t
   };
 
   if (compact) {
+    // One cohesive segmented control (a single rounded track holding the four
+    // segments), matching the other composer controls — not four loose buttons.
     return (
-      <div className="flex items-center gap-1">
-        {LUCA_ROUTING_MODES.map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => handleChange(m)}
-            title={ROUTING_MODE_DESCRIPTIONS[m]}
-            className={`rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest transition-colors ${
-              mode === m
-                ? "border border-white/20 bg-white/10 text-[var(--app-text-main)]"
-                : "border border-transparent bg-transparent text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
-            }`}
-            style={mode === m && theme?.hex ? { borderColor: `${theme.hex}40`, color: theme.hex } : undefined}
-          >
-            {ROUTING_MODE_SHORT_LABELS[m]}
-          </button>
-        ))}
+      <div
+        role="group"
+        aria-label="Routing mode"
+        className="inline-flex items-center gap-0.5 rounded-lg border p-0.5"
+        style={{
+          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+          backgroundColor: "var(--luca-surface-glass, transparent)",
+        }}
+      >
+        {LUCA_ROUTING_MODES.map((m) => {
+          const active = mode === m;
+          return (
+            <button
+              key={m}
+              type="button"
+              onClick={() => handleChange(m)}
+              title={ROUTING_MODE_DESCRIPTIONS[m]}
+              aria-pressed={active}
+              className="rounded-md px-2 py-1 text-[11px] font-semibold transition-all"
+              style={
+                active
+                  ? {
+                      backgroundColor: "var(--luca-surface-hover)",
+                      color:
+                        theme?.hex ||
+                        "var(--luca-text-primary, var(--app-text-main))",
+                    }
+                  : { color: "var(--luca-text-tertiary, var(--app-text-muted))" }
+              }
+            >
+              {ROUTING_MODE_SHORT_LABELS[m]}
+            </button>
+          );
+        })}
       </div>
     );
   }
