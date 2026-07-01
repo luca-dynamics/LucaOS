@@ -33,6 +33,12 @@ export interface LucaOnboardingPremiumPreferences {
   memoryBoundaries?: string;
   connectTools?: string;
   intelligenceRoute?: string;
+  /**
+   * Tool-app connectors the user marked to set up on the connect_tools screen.
+   * Intent only — nothing is connected. First-party ids match
+   * `settings.connectors` keys so Settings can surface them as pending setup.
+   */
+  connectors?: string[];
 }
 
 export interface LucaOnboardingWebCompletion {
@@ -81,6 +87,7 @@ export function getLucaOnboardingPremiumPreferences(
     memoryBoundaries: getLucaOnboardingFlowSelection(flow, "memory_boundaries"),
     connectTools: getLucaOnboardingFlowSelection(flow, "connect_tools"),
     intelligenceRoute: getLucaOnboardingFlowSelection(flow, "intelligence_route"),
+    connectors: [...(flow.connectorSelections ?? [])],
   };
 }
 

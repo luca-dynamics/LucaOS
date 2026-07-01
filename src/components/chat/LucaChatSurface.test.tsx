@@ -31,8 +31,8 @@ describe("LucaChatSurface", () => {
     expect(source).toContain('data-luca-chat-surface="original-mini-chat-extraction"');
     expect(source).toContain("L.U.C.A OS");
     expect(source).toContain("glass-blur");
-    expect(source).toContain("Message Luca...");
-    expect(source).toContain("Mission Pending");
+    expect(source).toContain("ChatWidgetHistory");
+    expect(source).toContain("ChatWidgetInput");
   });
 
   it("renders history, composer, suggestion chips, pending state, and errors", () => {

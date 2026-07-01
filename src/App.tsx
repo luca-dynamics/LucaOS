@@ -3255,6 +3255,7 @@ function AppContent() {
                         tasks={management.tasks}
                         events={management.events}
                         goals={management.goals}
+                        experienceMode={experienceMode}
                       />
                     )}
                     {displayedRightPanelMode === "ACTIVITY" && (
@@ -3326,6 +3327,7 @@ function AppContent() {
                       tasks={management.tasks}
                       events={management.events}
                       goals={management.goals}
+                      experienceMode={experienceMode}
                     />
                   )}
                   {displayedRightPanelMode === "ACTIVITY" && (

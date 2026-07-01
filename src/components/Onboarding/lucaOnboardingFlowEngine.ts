@@ -49,6 +49,13 @@ export interface LucaOnboardingFlowState {
   readonly selectedOptions: LucaOnboardingFlowSelections;
   /** Optional display name the user may give during onboarding (P2). */
   readonly displayName: string;
+  /**
+   * Tool-app connectors the user marked to set up on the connect_tools screen.
+   * These record intent only — nothing is connected during onboarding; the ids
+   * (first-party ones match `settings.connectors` keys) ride through to the
+   * completion bridge for later review in Settings.
+   */
+  readonly connectorSelections?: readonly string[];
   readonly complete: boolean;
 }
 
@@ -107,6 +114,7 @@ export const createLucaOnboardingFlowState = (
     currentScreenId: options.startScreenId ?? FIRST_SCREEN_ID,
     selectedOptions,
     displayName: options.displayName ?? "",
+    connectorSelections: [],
     complete: false,
   };
 };
@@ -192,6 +200,22 @@ export const lucaOnboardingFlowSetName = (
 ): LucaOnboardingFlowState => {
   if (state.displayName === displayName) return state;
   return { ...state, displayName };
+};
+
+/**
+ * Record the tool-app connectors the user marked to set up. Intent only —
+ * grants nothing. Returns the same reference when the selection is unchanged.
+ */
+export const lucaOnboardingFlowSetConnectors = (
+  state: LucaOnboardingFlowState,
+  connectorIds: readonly string[],
+): LucaOnboardingFlowState => {
+  const next = [...connectorIds];
+  const prev = state.connectorSelections ?? [];
+  if (prev.length === next.length && prev.every((id, i) => id === next[i])) {
+    return state;
+  }
+  return { ...state, connectorSelections: next };
 };
 
 /** Record an option selection for a screen. Ignores options not in the copy. */

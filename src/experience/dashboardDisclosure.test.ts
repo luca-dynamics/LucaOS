@@ -27,24 +27,47 @@ describe("dashboard disclosure", () => {
     });
   });
 
-  it.each(["pro", "creator"] as const)(
-    "keeps Trace visible in %s mode",
-    (mode) => {
+  it("keeps Trace and governance diagnostics out of public modes", () => {
+    for (const mode of ["basic", "pro"] as const) {
       expect(getVisibleRightPanelModes(mode)).toEqual([
         "CONTROL",
         "ACTIVITY",
         "MEMORY",
-        "LOGS",
       ]);
-      expect(canShowRightPanelMode(mode, "LOGS")).toBe(true);
-    },
-  );
+      expect(canShowRightPanelMode(mode, "LOGS")).toBe(false);
+      expect(getDashboardDisclosure(mode)).toMatchObject({
+        showAdvancedDiagnostics: false,
+        showCreatorDiagnostics: false,
+        showTraceByDefault: false,
+      });
+    }
+  });
+
+  it("keeps Trace and governance diagnostics available in Creator mode", () => {
+    expect(getVisibleRightPanelModes("creator")).toEqual([
+      "CONTROL",
+      "ACTIVITY",
+      "MEMORY",
+      "LOGS",
+    ]);
+    expect(canShowRightPanelMode("creator", "LOGS")).toBe(true);
+    expect(getDashboardDisclosure("creator")).toMatchObject({
+      showAdvancedDiagnostics: true,
+      showCreatorDiagnostics: true,
+      showTraceByDefault: true,
+    });
+  });
 
   it("falls back to Overview when a requested mode is unavailable", () => {
     expect(getDefaultRightPanelModeForExperience("basic", "LOGS")).toBe(
       "CONTROL",
     );
-    expect(getDefaultRightPanelModeForExperience("pro", "LOGS")).toBe("LOGS");
+    expect(getDefaultRightPanelModeForExperience("pro", "LOGS")).toBe(
+      "CONTROL",
+    );
+    expect(getDefaultRightPanelModeForExperience("creator", "LOGS")).toBe(
+      "LOGS",
+    );
   });
 
   it("uses display labels without changing internal panel enums", () => {
@@ -87,22 +110,32 @@ describe("dashboard disclosure", () => {
     );
   });
 
-  it.each(["pro", "creator"] as const)(
-    "exposes every left-panel group without mode-required collapse in %s mode",
-    (mode) => {
-      expect(getVisibleLeftPanelGroups(mode)).toEqual([
-        "system-health",
-        "runtime-diagnostics",
-        "quick-actions",
-        "devices",
-        "apps",
-        "skills",
-        "advanced-tools",
-      ]);
-      for (const group of getVisibleLeftPanelGroups(mode)) {
-        expect(shouldShowLeftPanelGroup(mode, group)).toBe(true);
-        expect(shouldCollapseLeftPanelGroup(mode, group)).toBe(false);
-      }
-    },
-  );
+  it("keeps Pro public while leaving advanced tools expanded", () => {
+    expect(getVisibleLeftPanelGroups("pro")).toEqual([
+      "quick-actions",
+      "devices",
+      "apps",
+      "skills",
+      "system-health",
+      "advanced-tools",
+    ]);
+    expect(shouldShowLeftPanelGroup("pro", "runtime-diagnostics")).toBe(false);
+    expect(shouldCollapseLeftPanelGroup("pro", "advanced-tools")).toBe(false);
+  });
+
+  it("exposes every left-panel diagnostic group in Creator mode", () => {
+    expect(getVisibleLeftPanelGroups("creator")).toEqual([
+      "system-health",
+      "runtime-diagnostics",
+      "quick-actions",
+      "devices",
+      "apps",
+      "skills",
+      "advanced-tools",
+    ]);
+    for (const group of getVisibleLeftPanelGroups("creator")) {
+      expect(shouldShowLeftPanelGroup("creator", group)).toBe(true);
+      expect(shouldCollapseLeftPanelGroup("creator", group)).toBe(false);
+    }
+  });
 });

@@ -10,6 +10,8 @@ import {
   settingsControlInlineStyle,
 } from "./SettingsLayout";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
+import { FIRST_PARTY_CONNECTORS } from "../../config/connectorCatalog";
+import { startConnectorAuth } from "../../services/connectorAuth";
 
 interface SettingsConnectorsTabProps {
   theme?: any;
@@ -30,45 +32,10 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
     name: string;
   } | null>(null);
 
-  const handleStartAuth = (appId: string) => {
-    if (appId === "google") {
-      fetch(apiUrl("/api/google/auth/url"))
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.url) {
-            window.dispatchEvent(
-              new CustomEvent("luca:open-browser", {
-                detail: {
-                  url: data.url,
-                  title: "Google Workspace Auth",
-                  sessionId: `google_auth_${Date.now()}`,
-                },
-              }),
-            );
-          }
-        })
-        .catch(() => setStatusMsg("Failed to start Google Auth"));
-    }
-
-    if (appId === "twitter") {
-      fetch(apiUrl("/api/twitter/auth/url"))
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.url) {
-            window.dispatchEvent(
-              new CustomEvent("luca:open-browser", {
-                detail: {
-                  url: data.url,
-                  title: "X (Twitter) Auth",
-                  sessionId: `twitter_auth_${Date.now()}`,
-                },
-              }),
-            );
-          }
-        })
-        .catch(() => setStatusMsg("Failed to start Twitter Auth"));
-    }
-  };
+  // The real connect flow now lives in the shared connectorAuth service so
+  // onboarding can trigger the exact same OAuth / LucaLink paths.
+  const handleStartAuth = (appId: string) =>
+    startConnectorAuth({ id: appId }, { onError: setStatusMsg });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,80 +52,9 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const SOCIAL_APPS = [
-    {
-      id: "whatsapp",
-      name: "WhatsApp",
-      logo: "/icons/social/whatsapp.png",
-      color: "#25D366",
-      desc: "Instant Messaging & Calls",
-      event: "WHATSAPP_LUCA_LINK",
-    },
-    {
-      id: "telegram",
-      name: "Telegram",
-      logo: "/icons/social/telegram.png",
-      color: "#0088CC",
-      desc: "Private messaging surface",
-      event: "TELEGRAM_LUCA_LINK",
-    },
-    {
-      id: "google",
-      name: "Google Workspace",
-      logo: "/icons/social/google.png",
-      color: "#FFFFFF",
-      desc: "Gmail, Drive & Calendar",
-      event: null,
-    },
-    {
-      id: "twitter",
-      name: "X (Twitter)",
-      logo: "/icons/social/twitter.png",
-      color: "#000000",
-      desc: "Real-time Feed & Discovery",
-      event: "TWITTER_LUCA_LINK",
-    },
-    {
-      id: "instagram",
-      name: "Instagram",
-      logo: "/icons/social/instagram.png",
-      color: "#E1306C",
-      desc: "Media & Social Presence",
-      event: "INSTAGRAM_LUCA_LINK",
-    },
-    {
-      id: "linkedin",
-      name: "LinkedIn",
-      logo: "/icons/social/linkedin.png",
-      color: "#0A66C2",
-      desc: "Professional workspace",
-      event: "LINKEDIN_LUCA_LINK",
-    },
-    {
-      id: "youtube",
-      name: "YouTube",
-      logo: "/icons/social/youtube.png",
-      color: "#FF0000",
-      desc: "Video Content & Streaming",
-      event: "YOUTUBE_LUCA_LINK",
-    },
-    {
-      id: "discord",
-      name: "Discord",
-      logo: "/icons/social/discord.png",
-      color: "#5865F2",
-      desc: "Groups & Voice Channels",
-      event: "DISCORD_LUCA_LINK",
-    },
-    {
-      id: "wechat",
-      name: "WeChat",
-      logo: "/icons/social/wechat.png",
-      color: "#07C060",
-      desc: "Global Social Network",
-      event: "WECHAT_LUCA_LINK",
-    },
-  ];
+  // Connector catalog — the shared first-party source of truth (also used by
+  // the onboarding connect grid). See src/config/connectorCatalog.ts.
+  const SOCIAL_APPS = FIRST_PARTY_CONNECTORS;
 
   return (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
@@ -349,15 +245,9 @@ const SettingsConnectorsTab: React.FC<SettingsConnectorsTabProps> = ({
                       </div>
                     )}
                     <button
-                      onClick={() => {
-                        if (app.id === "google") {
-                          handleStartAuth(app.id);
-                        } else if (app.event) {
-                          window.dispatchEvent(new CustomEvent(app.event));
-                        } else {
-                          handleStartAuth(app.id);
-                        }
-                      }}
+                      onClick={() =>
+                        startConnectorAuth(app, { onError: setStatusMsg })
+                      }
                       className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 bg-[var(--app-bg-tint)] border-[var(--app-border-main)] text-[var(--app-text-muted)] hover:text-[var(--app-text-main)] hover:border-[var(--app-text-main)] glass-blur`}
                     >
                       {isChromeSynced ? "Connect session" : "Connect account"}

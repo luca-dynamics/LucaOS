@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon";
 import ChatWidgetInput from "../ChatWidgetInput";
 import ChatMessageBubble from "../ChatMessageBubble";
 import { ProWorkforceCanvas } from "../chat/ProWorkforceCanvas";
+import { MessageScroller } from "../chat/LucaConversationPrimitives";
 import SuggestionChips from "../SuggestionChips";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sender } from "../../types";
@@ -271,6 +272,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   const [viewMode, setViewMode] = useState<ViewMode>("CHAT");
   const [, startTransition] = useTransition();
   const personaLabel = normalizePersonaLabel(persona);
+  const chatAnchorKey = `${messages.length}:${messages[messages.length - 1]?.text ?? ""}:${isProcessing}`;
+  const visibleMessages = messages.filter((m) => !m.isHidden);
+  const lastUserMessage = [...visibleMessages]
+    .reverse()
+    .find((message) => message.sender === Sender.USER && message.id);
+  const lastUserMessageId = lastUserMessage?.id
+    ? `message-${lastUserMessage.id}`
+    : undefined;
   const isLight = 
     theme.themeName?.toLowerCase() === "lucagent" || 
     theme.themeName?.toLowerCase() === "agentic-slate" ||
@@ -867,57 +876,62 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={`flex-1 ${
-              isMobile ? "overflow-y-auto min-h-0" : "overflow-y-auto"
-            } ${isMobile ? "p-2" : "px-0 py-2"} ${
-              isMobile ? "space-y-4" : "space-y-1"
-            } scroll-smooth z-10 flex flex-col`}
+            className="flex-1 min-h-0 z-10 flex flex-col"
           >
-            {messages
-              .filter((m) => !m.isHidden)
-              .map((msg, index, arr) => (
-                <ChatMessageBubble
-                  key={msg.id || index}
-                  text={msg.text}
-                  sender={msg.sender === Sender.USER ? "user" : msg.sender === Sender.SYSTEM ? "system" : "luca"}
-                  isRouteHint={msg.isRouteHint}
-                  routeLabel={msg.routeLabel}
-                  routeTone={msg.routeTone}
-                  timestamp={msg.timestamp}
-                  persona={persona as any}
-                  primaryColor={
-                    theme.hex || "var(--luca-accent-primary)"
-                  }
-                  isProcessing={index === arr.length - 1 && isProcessing}
-                  attachment={msg.attachment}
-                  generatedImage={msg.generatedImage}
-                  groundingMetadata={msg.groundingMetadata}
-                  wasPruned={(msg as any)._wasPruned}
-                  onEdit={(text) => {
-                    setInput(text);
-                    setTimeout(() => {
-                      const textarea = document.querySelector("textarea");
-                      if (textarea) textarea.focus();
-                    }, 100);
-                  }}
-                  actions={msg.actions}
-                  onActionClick={async (action) => {
-                    if (action.action === "CONFIRM_TRADE") {
-                      // Execute the trade via handleSendMessage to keep it in the chat flow
-                      await handleSendMessage(
-                        `Confirming ${action.payload.action} on ${action.payload.symbol} based on high-confidence research hits.`,
-                        null,
-                        undefined,
-                        false, // sendHidden=false so it shows as user intent
-                        false
-                      );
+            <MessageScroller
+              anchorRef={chatEndRef}
+              anchorKey={chatAnchorKey}
+              restoreKey="main-chat"
+              restoreAnchorId={lastUserMessageId}
+              turnAnchorId={lastUserMessageId}
+              className={`${isMobile ? "p-2 space-y-4" : "px-0 py-2 space-y-1"} flex flex-col`}
+            >
+              {visibleMessages
+                .map((msg, index, arr) => (
+                  <ChatMessageBubble
+                    messageId={msg.id ? `message-${msg.id}` : undefined}
+                    key={msg.id || index}
+                    text={msg.text}
+                    sender={msg.sender === Sender.USER ? "user" : msg.sender === Sender.SYSTEM ? "system" : "luca"}
+                    isRouteHint={msg.isRouteHint}
+                    routeLabel={msg.routeLabel}
+                    routeTone={msg.routeTone}
+                    timestamp={msg.timestamp}
+                    persona={persona as any}
+                    primaryColor={
+                      theme.hex || "var(--luca-accent-primary)"
                     }
-                  }}
-                  isStreaming={(msg as any).isStreaming}
-                  tacticalData={(msg as any).tacticalData}
-                />
-              ))}
-            <div ref={chatEndRef} />
+                    isProcessing={index === arr.length - 1 && isProcessing}
+                    attachment={msg.attachment}
+                    generatedImage={msg.generatedImage}
+                    groundingMetadata={msg.groundingMetadata}
+                    wasPruned={(msg as any)._wasPruned}
+                    onEdit={(text) => {
+                      setInput(text);
+                      setTimeout(() => {
+                        const textarea = document.querySelector("textarea");
+                        if (textarea) textarea.focus();
+                      }, 100);
+                    }}
+                    actions={msg.actions}
+                    onActionClick={async (action) => {
+                      if (action.action === "CONFIRM_TRADE") {
+                        // Execute the trade via handleSendMessage to keep it in the chat flow
+                        await handleSendMessage(
+                          `Confirming ${action.payload.action} on ${action.payload.symbol} based on high-confidence research hits.`,
+                          null,
+                          undefined,
+                          false, // sendHidden=false so it shows as user intent
+                          false
+                        );
+                      }
+                    }}
+                    isStreaming={(msg as any).isStreaming}
+                    tacticalData={(msg as any).tacticalData}
+                  />
+                ))}
+              <div ref={chatEndRef} />
+            </MessageScroller>
           </motion.div>
         ) : (
           <motion.div
