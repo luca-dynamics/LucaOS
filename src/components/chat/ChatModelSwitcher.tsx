@@ -125,22 +125,30 @@ const ChatModelSwitcher: React.FC<ChatModelSwitcherProps> = ({ themeName = "defa
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 h-[24px] sm:h-[27px] rounded-md border transition-all active:scale-95 ${
-          isLight ? "hover:bg-gray-100 bg-white shadow-sm" : "hover:bg-white/10 bg-black/20"
-        } group`}
-        style={{ borderColor: `${safeColor}40` }}
+        className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 h-[24px] sm:h-[27px] rounded-md border transition-all active:scale-95 hover:bg-[var(--luca-surface-hover)] group"
+        style={{
+          borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+          backgroundColor: "var(--luca-surface-glass, transparent)",
+        }}
         title="Change Intelligence Model"
       >
-        <span className={`text-[10px] sm:text-[11px] font-bold truncate max-w-[100px] sm:max-w-[130px] whitespace-nowrap ${isLight ? "text-gray-700" : "text-gray-200"}`}>
+        <span
+          className="text-[10px] sm:text-[11px] font-medium truncate max-w-[100px] sm:max-w-[130px] whitespace-nowrap"
+          style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
+        >
           {activeDisplay}
         </span>
-        
+
         {/* Reasoning Status Indicator */}
         {isReasoningActive && (
           <Icon name="Sparkles" className="w-2.5 h-2.5 text-[var(--luca-warning,#f2b23e)] animate-pulse ml-0.5" />
         )}
 
-        <Icon name="AltArrowDown" className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""} ${isLight ? "text-gray-400" : "text-gray-500"}`} />
+        <Icon
+          name="AltArrowDown"
+          className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          style={{ color: "var(--luca-text-tertiary, var(--app-text-muted))" }}
+        />
       </button>
 
       {/* Dropdown Menu */}
