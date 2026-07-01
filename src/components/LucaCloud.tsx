@@ -408,7 +408,7 @@ const LucaCloud: React.FC<Props> = ({ memories, theme }) => {
             title="Toggle Temporal History (Expired Edges)"
           >
             <Icon name="Clock" size={14} />
-            {showHistory ? "HISTORY: ON" : "HISTORY: OFF"}
+            {showHistory ? "History: on" : "History: off"}
           </button>
         )}
       </div>

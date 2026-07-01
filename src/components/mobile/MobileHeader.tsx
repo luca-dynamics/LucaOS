@@ -68,7 +68,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
                   variant="BoldDuotone" 
                   color={isAdbConnected ? "#22c55e" : "#64748b"} 
                 />
-                {isAdbConnected ? "ADB: CONNECTED" : "ADB: OFFLINE"}
+                {isAdbConnected ? "ADB: Connected" : "ADB: Offline"}
               </span>
               <span className="flex items-center gap-1">
                 <Icon 
@@ -77,7 +77,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
                   variant="BoldDuotone" 
                   color={batteryLevel < 20 ? "#ef4444" : "#22c55e"} 
                 />
-                {batteryLevel}% {isCharging ? "(CHARGING)" : ""}
+                {batteryLevel}% {isCharging ? "(Charging)" : ""}
               </span>
             </div>
           </div>
