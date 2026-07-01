@@ -895,8 +895,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               restoreKey="main-chat"
               restoreAnchorId={lastUserMessageId}
               turnAnchorId={lastUserMessageId}
-              className={`${isMobile ? "p-2 space-y-4" : "px-0 py-2 space-y-1"} flex flex-col`}
+              className={`${isMobile ? "p-2" : "px-0 py-2"} flex flex-col`}
             >
+              {/* Readable centered thread column, aligned to the composer width. */}
+              <div
+                className={`mx-auto flex w-full flex-col ${
+                  isMobile ? "max-w-full space-y-4" : "max-w-3xl space-y-1 px-2"
+                }`}
+              >
               {visibleMessages
                 .map((msg, index, arr) => (
                   <ChatMessageBubble
@@ -942,6 +948,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   />
                 ))}
               <div ref={chatEndRef} />
+              </div>
             </MessageScroller>
           </motion.div>
         ) : (

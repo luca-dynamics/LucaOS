@@ -10,9 +10,6 @@ interface ChatModeToggleProps {
 const ChatModeToggle: React.FC<ChatModeToggleProps> = ({ themeName = "default", primaryColor = "#10b981" }) => {
   const [conversationMode, setConversationMode] = useState<"fast" | "planning">("fast");
 
-  const isLight = themeName.toLowerCase() === "lucagent" || themeName.toLowerCase() === "agentic-slate" || themeName.toLowerCase() === "light";
-  const safeColor = primaryColor.startsWith("#") && primaryColor.length > 7 ? primaryColor.slice(0, 7) : primaryColor;
-
   useEffect(() => {
     // Initial load
     setConversationMode(settingsService.get("brain").conversationMode || "fast");
@@ -28,42 +25,72 @@ const ChatModeToggle: React.FC<ChatModeToggleProps> = ({ themeName = "default", 
     };
   }, []);
 
-  const isPlanningMode = conversationMode === "planning";
-
-  const toggleMode = (e: React.MouseEvent) => {
+  const setMode = (mode: "fast" | "planning", e: React.MouseEvent) => {
     e.stopPropagation();
-    const newMode = isPlanningMode ? "fast" : "planning";
-    
+    if (mode === conversationMode) return;
     // Save to global system state
     settingsService.saveSettings({
-      brain: { ...settingsService.get("brain"), conversationMode: newMode }
+      brain: { ...settingsService.get("brain"), conversationMode: mode },
     });
   };
 
+  const segments = [
+    {
+      key: "fast" as const,
+      label: "Fast",
+      icon: "Energy",
+      title: "Fast Mode (Direct Execution)",
+    },
+    {
+      key: "planning" as const,
+      label: "Planning",
+      icon: "BrainCircuit",
+      title: "Planning Mode (Luca Autonomous Control)",
+    },
+  ];
+
   return (
-    <button
-      onClick={toggleMode}
-      className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-md border transition-all active:scale-95 ${
-        isPlanningMode 
-          ? (isLight ? "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]" : "bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)]") 
-          : (isLight ? "bg-white border-gray-200 hover:bg-gray-100" : "bg-black/20 border-white/10 hover:bg-white/10")
-      }`}
-      style={!isPlanningMode ? { borderColor: `${safeColor}30` } : {}}
-      title={isPlanningMode ? "Planning Mode (LUCA Autonomous Control)" : "Fast Mode (Direct Execution)"}
+    <div
+      role="group"
+      aria-label="Conversation mode"
+      className="inline-flex items-center gap-0.5 rounded-lg border p-0.5"
+      style={{
+        borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+        backgroundColor: "var(--luca-surface-glass, transparent)",
+      }}
     >
-      {isPlanningMode ? (
-          <Icon name="BrainCircuit" size={12} variant="BoldDuotone" color="#f59e0b" />
-      ) : (
-          <Icon name="Energy" size={12} variant="BoldDuotone" className={isLight ? "text-gray-500" : "text-gray-400"} />
-      )}
-      <span className={`text-[10px] sm:text-xs font-bold ${
-          isPlanningMode 
-            ? "text-[var(--luca-warning,#f2b23e)] dark:text-[var(--luca-warning,#f2b23e)]" 
-            : (isLight ? "text-gray-600" : "text-gray-400")
-      }`}>
-        {isPlanningMode ? "Planning" : "Fast"}
-      </span>
-    </button>
+      {segments.map((seg) => {
+        const active = conversationMode === seg.key;
+        const planningActive = active && seg.key === "planning";
+        return (
+          <button
+            key={seg.key}
+            type="button"
+            onClick={(e) => setMode(seg.key, e)}
+            aria-pressed={active}
+            title={seg.title}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold transition-all active:scale-95"
+            style={
+              active
+                ? planningActive
+                  ? {
+                      backgroundColor:
+                        "color-mix(in srgb, var(--luca-warning, #f2b23e) 16%, transparent)",
+                      color: "var(--luca-warning, #f2b23e)",
+                    }
+                  : {
+                      backgroundColor: "var(--luca-surface-hover)",
+                      color: "var(--luca-text-primary, var(--app-text-main))",
+                    }
+                : { color: "var(--luca-text-tertiary, var(--app-text-muted))" }
+            }
+          >
+            <Icon name={seg.icon} size={12} variant="BoldDuotone" />
+            {seg.label}
+          </button>
+        );
+      })}
+    </div>
   );
 };
 

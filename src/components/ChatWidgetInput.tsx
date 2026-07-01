@@ -148,11 +148,17 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
     themeName?.toLowerCase() === "lucagent" ||
     themeName?.toLowerCase() === "agentic-slate" ||
     themeName?.toLowerCase() === "light";
-  const inputSurfaceStyle = lucaMaterialPanelStyle;
+  // The composer reads as one elevated surface (full border + soft shadow),
+  // not just a top-border strip — it's the primary control in the view.
+  const inputSurfaceStyle = {
+    ...lucaMaterialPanelStyle,
+    border: `1px solid ${LUCA_SHELL_BORDER_SUBTLE}`,
+    boxShadow: LUCA_SHELL_SHADOW_SOFT,
+  };
 
   return (
     <div
-      className="relative z-20 transition-colors duration-500 rounded-2xl glass-blur border-t"
+      className="relative z-20 transition-colors duration-500 rounded-2xl glass-blur"
       style={inputSurfaceStyle}
     >
       {/* Attachment Preview (Above Input) */}
@@ -208,7 +214,8 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
             py-2
             focus:outline-none
             resize-none
-            font-mono
+            font-sans
+            text-[15px]
             leading-relaxed
             block
           `}
