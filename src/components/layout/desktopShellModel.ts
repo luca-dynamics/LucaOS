@@ -65,7 +65,7 @@ export interface ActivityRailIcon {
  * expanded header tabs already use. No approve/run/execute controls.
  */
 export const ACTIVITY_RAIL_ICONS: readonly ActivityRailIcon[] = [
-  { mode: "CONTROL", icon: "LayoutDashboard", label: "Overview" },
+  { mode: "CONTROL", icon: "LayoutDashboard", label: "Now" },
   { mode: "ACTIVITY", icon: "Activity", label: "Timeline" },
   { mode: "MEMORY", icon: "Brain", label: "Memory" },
   { mode: "LOGS", icon: "Terminal", label: "Trace" },

@@ -14,7 +14,7 @@ export const RIGHT_PANEL_MODES: RightPanelMode[] = [
 // Keeps the raw mode enums (CONTROL/ACTIVITY/MEMORY/LOGS) for state/logic
 // while presenting human, sentence-case names in the UI.
 export const RIGHT_PANEL_LABELS: Record<RightPanelMode, string> = {
-  CONTROL: "Overview",
+  CONTROL: "Now",
   ACTIVITY: "Timeline",
   MEMORY: "Memory",
   LOGS: "Trace",

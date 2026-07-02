@@ -33,7 +33,7 @@ describe("right panel control plane model", () => {
 
   it("keeps product-friendly labels for the mobile Activity tab row", () => {
     expect(MOBILE_RIGHT_PANEL_LABELS).toEqual({
-      CONTROL: "Overview",
+      CONTROL: "Now",
       ACTIVITY: "Timeline",
       MEMORY: "Memory",
       LOGS: "Trace",

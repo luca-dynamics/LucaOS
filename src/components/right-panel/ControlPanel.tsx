@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
+import { lucaMaterialCardStyle } from "../../styles/lucaMaterialSystem";
 import type { LucaExperienceMode } from "../../experience/experienceMode";
 import type { CalendarEvent, Goal, Task } from "../../types";
 import type { RuntimeDiagnostics } from "../../services/runtime/RuntimeDiagnosticsService";
@@ -53,6 +53,10 @@ interface ControlPanelProps {
   events?: CalendarEvent[];
   goals?: Goal[];
   experienceMode?: LucaExperienceMode;
+  /** Linked LucaLink devices, shown in the Body card (display only). */
+  devices?: Array<{ id?: string; name?: string; type?: string; status?: string }>;
+  /** Current workspace path/label for the Context card (display only). */
+  workspaceLabel?: string;
 }
 
 function compactDate(value?: number | string | null): string {
@@ -66,6 +70,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   events = [],
   goals = [],
   experienceMode = "basic",
+  devices = [],
+  workspaceLabel,
 }) => {
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
   const isCreatorMode = experienceMode === "creator";
@@ -123,44 +129,183 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     quarantinedItems: diagnostics?.governance.runtimeContinuity.quarantinedItemCount ?? loopStatus.quarantinedItemCount,
   });
 
+  // ── The "Now" view (design target v2): the being's live state in five calm
+  // cards — Status, Right now, Needs you, Body, Context. Display-only; every
+  // value comes from the same services as before. The previous metric grids
+  // and route boxes are relocated to creator mode below, not deleted.
+  const quarantinedCount = diagnostics?.governance.runtimeContinuity.quarantinedItemCount ?? loopStatus.quarantinedItemCount;
+  const pendingApprovalRows = approvalRequestCenterService
+    .listRequests()
+    .filter((request) => request.status === "pending")
+    .slice(0, 3);
+  const runningTasks = tasks.filter((task) => task.status === "IN_PROGRESS").slice(0, 3);
+  const statusTitle = quarantinedCount > 0
+    ? "Luca is paused"
+    : approvals.pendingRequests > 0
+      ? "Luca needs you"
+      : "Luca is ready";
+  const statusToneColor = quarantinedCount > 0 || approvals.pendingRequests > 0
+    ? "var(--luca-warning, #e0b15a)"
+    : "var(--luca-success, #4fbf7a)";
+  const activeModeLabel = activeSession?.mode?.replace(/_/g, " ") ?? diagnostics?.summary.activeModeLabel ?? "chat";
+  const nowCardTitle = "flex items-center text-[13px] font-semibold text-[var(--app-text-main)]";
+  const nowKvRow = "flex h-7 items-center justify-between text-xs";
+
   return (
     <div className="space-y-3">
+      {/* Status — the one glanceable fact. */}
       <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
-            <Icon name="Activity" size={18} />
+        <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--app-text-main)]">
+          <span
+            className="h-2 w-2 flex-none rounded-full"
+            style={{ background: statusToneColor, boxShadow: `0 0 8px color-mix(in srgb, ${statusToneColor} 55%, transparent)` }}
+            aria-hidden="true"
+          />
+          {statusTitle}
+        </div>
+        <p className="mt-1.5 pl-[18px] text-xs leading-relaxed text-[var(--app-text-muted)]">
+          {headline} · {activeModeLabel}
+        </p>
+      </div>
+
+      {/* Right now — what the being is doing this moment. */}
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
+        <div className={nowCardTitle}>Right now</div>
+        {runningTasks.length === 0 && resumableCount === 0 ? (
+          <p className="mt-2 text-xs text-[var(--app-text-muted)]">Nothing running — Luca is standing by.</p>
+        ) : (
+          <div className="mt-1.5">
+            {runningTasks.map((task) => (
+              <div key={task.id} className="flex items-center gap-2.5 py-1.5 text-xs">
+                <span className="h-1.5 w-1.5 flex-none rounded-full" style={{ background: "var(--luca-success, #4fbf7a)" }} aria-hidden="true" />
+                <span className="truncate text-[var(--app-text-main)]">{task.title}</span>
+                <span className="ml-auto flex-none text-[11px] text-[var(--app-text-muted)]">working</span>
+              </div>
+            ))}
+            {resumableCount > 0 && (
+              <div className="flex items-center gap-2.5 py-1.5 text-xs">
+                <span className="h-1.5 w-1.5 flex-none rounded-full bg-[var(--luca-border-strong,rgba(255,255,255,0.25))]" aria-hidden="true" />
+                <span className="text-[var(--app-text-muted)]">
+                  {resumableCount} paused session{resumableCount === 1 ? "" : "s"} · safe to resume
+                </span>
+              </div>
+            )}
           </div>
-          <div className="min-w-0">
-            <div className="text-sm font-black uppercase tracking-[0.18em] text-[var(--app-text-main)]">CONTROL</div>
-            <p className="mt-1 text-xs leading-relaxed text-[var(--app-text-muted)]">{headline}</p>
-            <p className="mt-1 text-[10px] uppercase tracking-widest text-[var(--app-text-muted)]">
-              Active mode: {activeSession?.mode?.replace(/_/g, " ") ?? diagnostics?.summary.activeModeLabel ?? "Chat"}
-            </p>
+        )}
+      </div>
+
+      {/* Needs you — the trust boundary. Quiet at zero; rows when real. */}
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
+        <div className={nowCardTitle}>
+          Needs you
+          {approvals.pendingRequests > 0 && (
+            <span
+              className="ml-auto grid h-[18px] min-w-[20px] flex-none place-items-center rounded-full px-1.5 text-[11px] font-semibold"
+              style={{
+                background: "color-mix(in srgb, var(--luca-warning, #e0b15a) 14%, transparent)",
+                color: "var(--luca-warning, #e0b15a)",
+              }}
+            >
+              {approvals.pendingRequests}
+            </span>
+          )}
+        </div>
+        {pendingApprovalRows.length === 0 ? (
+          <p className="mt-2 text-xs text-[var(--app-text-muted)]">Nothing waiting on you.</p>
+        ) : (
+          <div className="mt-1">
+            {pendingApprovalRows.map((request) => (
+              <div key={request.approvalRequestId} className="border-t border-[var(--luca-border-subtle,rgba(255,255,255,0.05))] py-2 first:border-t-0">
+                <div className="truncate text-xs text-[var(--app-text-main)]">{request.title}</div>
+                <div className="mt-0.5 text-[11px] text-[var(--app-text-muted)]">
+                  {request.sourceType.replace(/_/g, " ")} · {compactTimestamp(request.createdAt)}
+                </div>
+              </div>
+            ))}
+            <p className="mt-1.5 text-[11px] text-[var(--app-text-muted)] opacity-80">Nothing runs until you approve it.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Body — the devices this being inhabits. */}
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
+        <div className={nowCardTitle}>Body</div>
+        <div className="mt-1.5">
+          <div className="flex items-center gap-2.5 py-1.5 text-xs">
+            <Icon name="Monitor" size={14} className="flex-none text-[var(--app-text-muted)]" />
+            <span className="min-w-0">
+              <span className="block truncate text-[var(--app-text-main)]">This PC</span>
+              <span className="block text-[11px] text-[var(--app-text-muted)]">Windows host · active session</span>
+            </span>
+            <span className="ml-auto flex-none text-[11px] font-medium" style={{ color: "var(--luca-success, #4fbf7a)" }}>active</span>
+          </div>
+          {devices.slice(0, 3).map((device, index) => (
+            <div key={device.id ?? index} className="flex items-center gap-2.5 py-1.5 text-xs">
+              <Icon name="Smartphone" size={14} className="flex-none text-[var(--app-text-muted)]" />
+              <span className="min-w-0">
+                <span className="block truncate text-[var(--app-text-main)]">{device.name ?? "Linked device"}</span>
+                <span className="block text-[11px] text-[var(--app-text-muted)]">{(device.type ?? "device").toString().toLowerCase().replace(/_/g, " ")}</span>
+              </span>
+              <span className="ml-auto flex-none text-[11px] text-[var(--app-text-muted)]">{(device.status ?? "linked").toString().toLowerCase()}</span>
+            </div>
+          ))}
+          {devices.length === 0 && (
+            <p className="py-1.5 text-[11px] text-[var(--app-text-muted)]">No other devices linked yet — pair one via LucaLink.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Context — what Luca is working with. */}
+      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
+        <div className={nowCardTitle}>Context</div>
+        <div className="mt-1">
+          <div className={nowKvRow}>
+            <span className="text-[var(--app-text-muted)]">Model</span>
+            <span className="ml-3 truncate font-medium text-[var(--app-text-main)]">{diagnostics?.routes.chat.label ?? "Loading"}</span>
+          </div>
+          <div className={`${nowKvRow} border-t border-[var(--luca-border-subtle,rgba(255,255,255,0.05))]`}>
+            <span className="text-[var(--app-text-muted)]">Memory</span>
+            <span className="ml-3 truncate font-medium text-[var(--app-text-main)]">{diagnostics?.memory.label ?? "—"} · {diagnostics?.memory.readiness ?? "unknown"}</span>
+          </div>
+          {workspaceLabel && (
+            <div className={`${nowKvRow} border-t border-[var(--luca-border-subtle,rgba(255,255,255,0.05))]`}>
+              <span className="text-[var(--app-text-muted)]">Workspace</span>
+              <span className="ml-3 truncate font-medium text-[var(--app-text-main)]">{workspaceLabel}</span>
+            </div>
+          )}
+          <div className={`${nowKvRow} border-t border-[var(--luca-border-subtle,rgba(255,255,255,0.05))]`}>
+            <span className="text-[var(--app-text-muted)]">Mode</span>
+            <span className="ml-3 truncate font-medium text-[var(--app-text-main)]">{activeModeLabel}</span>
           </div>
         </div>
       </div>
 
-      <OperationPermissionCenter creatorMode={isCreatorMode} />
+      {/* Relocated (not deleted): the previous summary surfaces, creator-only. */}
+      {isCreatorMode && (
+        <>
+          <OperationPermissionCenter creatorMode={isCreatorMode} />
 
-      <div className="grid grid-cols-2 gap-2">
-        <RightPanelMetric label="Runtime" value={diagnostics?.governance.runtimeContinuity.lifecycleState ?? loopStatus.lifecycleState} tone={loopStatus.quarantinedItemCount > 0 ? "danger" : loopStatus.lifecycleState === "degraded" ? "warn" : "good"} />
-        <RightPanelMetric label="Loop" value={loopStatus.running ? "running" : "paused"} tone={loopStatus.running ? "good" : "warn"} />
-        <RightPanelMetric label="Approvals" value={approvals.pendingRequests} tone={approvals.pendingRequests > 0 ? "warn" : "good"} />
-        <RightPanelMetric label="Resume" value={resumableCount} tone={resumableCount > 0 ? "warn" : "neutral"} />
-      </div>
+          <div className="grid grid-cols-2 gap-2">
+            <RightPanelMetric label="Runtime" value={diagnostics?.governance.runtimeContinuity.lifecycleState ?? loopStatus.lifecycleState} tone={loopStatus.quarantinedItemCount > 0 ? "danger" : loopStatus.lifecycleState === "degraded" ? "warn" : "good"} />
+            <RightPanelMetric label="Loop" value={loopStatus.running ? "running" : "paused"} tone={loopStatus.running ? "good" : "warn"} />
+            <RightPanelMetric label="Approvals" value={approvals.pendingRequests} tone={approvals.pendingRequests > 0 ? "warn" : "good"} />
+            <RightPanelMetric label="Resume" value={resumableCount} tone={resumableCount > 0 ? "warn" : "neutral"} />
+          </div>
 
-      <RightPanelSection title="Runtime routes" subtitle="Current model and memory readiness summaries.">
-        <div className="space-y-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
-          <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
-            <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Model</span>
-            <div>{diagnostics?.routes.chat.label ?? "Model route loading"} · {diagnostics?.routes.chat.readiness ?? "unknown"}</div>
-          </div>
-          <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
-            <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Memory</span>
-            <div>{diagnostics?.memory.label ?? "Memory route loading"} · {diagnostics?.memory.readiness ?? "unknown"}</div>
-          </div>
-        </div>
-      </RightPanelSection>
+          <RightPanelSection title="Runtime routes" subtitle="Current model and memory readiness summaries.">
+            <div className="space-y-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
+              <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
+                <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Model</span>
+                <div>{diagnostics?.routes.chat.label ?? "Model route loading"} · {diagnostics?.routes.chat.readiness ?? "unknown"}</div>
+              </div>
+              <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
+                <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Memory</span>
+                <div>{diagnostics?.memory.label ?? "Memory route loading"} · {diagnostics?.memory.readiness ?? "unknown"}</div>
+              </div>
+            </div>
+          </RightPanelSection>
+        </>
+      )}
 
       {isCreatorMode && (
         <>
@@ -417,6 +562,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </>
       )}
 
+      {isCreatorMode && (
       <RightPanelSection title="Continuity" subtitle="Sessions, plans, checkpoints, and reminders that need attention. No execution from this panel.">
         {(() => {
           const pendingCheckpoints = checkpoints.filter((c) => c.status === "proposed").length;
@@ -444,6 +590,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           );
         })()}
       </RightPanelSection>
+      )}
 
       {isCreatorMode && (
         <>
@@ -486,6 +633,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </>
       )}
 
+      {isCreatorMode && (
       <RightPanelSection title="Session" subtitle={activeSession ? "Current active or latest resumable session." : "No persisted agent session yet."}>
         {activeSession ? (
           <div className="space-y-2 text-[10px] text-[var(--app-text-muted)]">
@@ -504,8 +652,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No session continuity record available.</div>
         )}
       </RightPanelSection>
+      )}
 
-      {activePlan && (
+      {isCreatorMode && activePlan && (
         <RightPanelSection title="Current plan" subtitle="Runtime plan record. Approving or activating a plan does not execute anything.">
           <div className="space-y-1 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{activePlan.title}</div>
@@ -531,7 +680,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </RightPanelSection>
       )}
 
-      {activeCheckpoint && (
+      {isCreatorMode && activeCheckpoint && (
         <RightPanelSection title="Planning checkpoint" subtitle="State-only plan record. Approving a checkpoint never runs tools or skills.">
           <div className="space-y-1 text-[10px] text-[var(--app-text-muted)]">
             <div className="font-bold text-[var(--app-text-main)]">{activeCheckpoint.title}</div>
@@ -594,14 +743,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       </RightPanelSection>
       )}
 
+      {isCreatorMode && (
       <RightPanelSection title="Decisions" subtitle="Safe queues that need user attention.">
         <div className="grid grid-cols-2 gap-2">
           <RightPanelMetric label="Needed" value={formatCount("approval", approvals.pendingRequests)} tone={approvals.pendingRequests > 0 ? "warn" : "good"} />
           <RightPanelMetric label="Reminders" value={reminders.deliveredCount} tone="neutral" />
         </div>
       </RightPanelSection>
+      )}
 
-      {(pendingTasks.length > 0 || activeGoals.length > 0 || upcomingEvents.length > 0) && (
+      {isCreatorMode && (pendingTasks.length > 0 || activeGoals.length > 0 || upcomingEvents.length > 0) && (
         <RightPanelSection title="Work" subtitle="Current tasks, schedule, and goals from existing Luca management state.">
           <div className="space-y-3 text-[10px] text-[var(--app-text-muted)]">
             {pendingTasks.length > 0 && <div><div className="mb-1 font-bold uppercase tracking-widest text-[var(--app-text-main)]">Tasks</div>{pendingTasks.map((task) => <div key={task.id}>• {task.title} · {task.status}</div>)}</div>}
