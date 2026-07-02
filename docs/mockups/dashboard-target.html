@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Dashboard Target</title>
+<style>
+  /* ————— LucaOS dashboard design target (Carbon) —————
+     Single source of visual truth for the 3-panel shell.
+     Rules: one accent, hairline dividers, no resting-state red,
+     type scale 11/12/13/15/20 only, radius 8-16, generous space. */
+
+  :root{
+    --bg:        #101317;
+    --card:      rgba(255,255,255,.025);
+    --card-2:    #15181d;            /* elevated (composer) */
+    --hover:     rgba(255,255,255,.06);
+    --hair:      rgba(255,255,255,.07);
+    --hair-soft: rgba(255,255,255,.045);
+    --t1:        #e9edf2;
+    --t2:        #9aa4b2;
+    --t3:        #69737f;
+    --accent:    #7aa2ff;
+    --accent-ink:#0c0e12;
+    --ok:        #4fbf7a;
+    --warn:      #e0b15a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--t1);
+    font:400 14px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  svg{display:block;flex:none}
+
+  .app{display:grid;grid-template-columns:260px 1fr 320px;height:100vh}
+
+  /* ————— shared top band: one aligned 52px strip per column ————— */
+  .top{height:52px;flex:none;display:flex;align-items:center;border-bottom:1px solid var(--hair)}
+
+  /* ══════════ LEFT RAIL ══════════ */
+  .rail-l{display:flex;flex-direction:column;border-right:1px solid var(--hair);min-width:0}
+  .brand{gap:10px;padding:0 14px}
+  .brand .mark{
+    width:24px;height:24px;border-radius:7px;flex:none;
+    background:linear-gradient(145deg,#2a3140,#171b22);
+    border:1px solid var(--hair);
+    display:grid;place-items:center;
+    font-size:12px;font-weight:600;color:var(--t1);
+  }
+  .brand .name{font-size:14px;font-weight:600;letter-spacing:-.01em}
+  .brand .collapse{margin-left:auto;color:var(--t3)}
+
+  .rail-body{flex:1;overflow:hidden;padding:12px 10px;display:flex;flex-direction:column;min-height:0}
+
+  .new-session{
+    display:flex;align-items:center;gap:9px;
+    height:36px;padding:0 12px;border-radius:10px;
+    border:1px solid var(--hair);background:var(--card);
+    color:var(--t1);font-size:13px;font-weight:500;cursor:pointer;
+  }
+  .new-session:hover{background:var(--hover)}
+
+  .nav{margin-top:14px;display:flex;flex-direction:column;gap:1px}
+  .nav a{
+    display:flex;align-items:center;gap:10px;
+    height:34px;padding:0 10px;border-radius:8px;
+    color:var(--t2);font-size:13px;font-weight:500;text-decoration:none;
+  }
+  .nav a svg{color:var(--t3)}
+  .nav a:hover{background:var(--hover);color:var(--t1)}
+  .nav a.active{background:var(--hover);color:var(--t1)}
+  .nav a.active svg{color:var(--t1)}
+
+  .eyebrow{
+    margin:20px 10px 6px;
+    font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--t3);
+  }
+  .recents{display:flex;flex-direction:column;gap:1px}
+  .recents a{
+    display:block;height:32px;line-height:32px;padding:0 10px;border-radius:8px;
+    color:var(--t2);font-size:13px;text-decoration:none;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .recents a:hover{background:var(--hover);color:var(--t1)}
+  .recents a.current{color:var(--t1);background:var(--hover)}
+
+  .rail-foot{flex:none;border-top:1px solid var(--hair);padding:10px}
+  .sys{
+    display:flex;align-items:center;gap:8px;
+    padding:0 10px 10px;font-size:12px;color:var(--t2);
+  }
+  .profile{
+    display:flex;align-items:center;gap:10px;
+    height:40px;padding:0 10px;border-radius:10px;cursor:pointer;
+  }
+  .profile:hover{background:var(--hover)}
+  .avatar{
+    width:24px;height:24px;border-radius:50%;
+    background:var(--hover);border:1px solid var(--hair);
+    display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--t2);
+  }
+  .profile .who{font-size:13px;font-weight:500;color:var(--t1);flex:1}
+  .profile svg{color:var(--t3)}
+
+  .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dot.ok{background:var(--ok);box-shadow:0 0 8px rgba(79,191,122,.45)}
+  .dot.idle{background:var(--t3)}
+  .dot.warn{background:var(--warn)}
+
+  /* ══════════ CENTER ══════════ */
+  .center{display:flex;flex-direction:column;min-width:0}
+  .ctx{justify-content:space-between;padding:0 18px}
+  .session-title{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--t1);cursor:pointer}
+  .session-title svg{color:var(--t3)}
+  .cluster{display:flex;align-items:center;gap:8px}
+  .chip{
+    display:flex;align-items:center;gap:7px;height:28px;padding:0 11px;
+    border-radius:999px;border:1px solid var(--hair);background:var(--card);
+    font-size:12px;color:var(--t2);
+  }
+  .chip b{font-weight:600;color:var(--t1);font-size:12.5px}
+  .chip .plan{font-size:10.5px;font-weight:600;color:var(--t3)}
+  .icon-btn{
+    width:28px;height:28px;border-radius:8px;display:grid;place-items:center;
+    color:var(--t3);border:1px solid transparent;cursor:pointer;background:none;
+  }
+  .icon-btn:hover{background:var(--hover);color:var(--t1)}
+
+  .thread{
+    flex:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+    padding:26px 24px 0;
+  }
+  .col{width:100%;max-width:700px;display:flex;flex-direction:column}
+
+  .msg-user{align-self:flex-end;max-width:78%;margin-bottom:22px}
+  .msg-user .pill{
+    background:var(--hover);border-radius:16px 16px 4px 16px;
+    padding:10px 14px;font-size:14px;line-height:1.55;color:var(--t1);
+  }
+  .msg-luca{align-self:stretch;margin-bottom:26px;font-size:14.5px;line-height:1.62;color:rgba(233,237,242,.92)}
+  .msg-luca p{margin-bottom:12px}
+  .msg-luca p:last-child{margin-bottom:0}
+
+  .tool-chip{
+    display:inline-flex;align-items:center;gap:8px;
+    height:30px;padding:0 11px;margin-bottom:14px;
+    border:1px solid var(--hair);border-radius:9px;background:var(--card);
+    font-size:12.5px;color:var(--t2);cursor:pointer;
+  }
+  .tool-chip svg.ok{color:var(--ok)}
+  .tool-chip svg.chev{color:var(--t3)}
+
+  .quote{
+    border-left:2px solid rgba(255,255,255,.13);
+    padding:2px 0 2px 14px;margin:2px 0 12px;
+    font-size:13.5px;color:var(--t2);
+  }
+  .quote p{margin-bottom:6px}
+
+  .action-card{
+    border:1px solid var(--hair);border-radius:14px;background:var(--card);
+    padding:13px 14px;margin-top:4px;max-width:560px;
+  }
+  .action-card .head{display:flex;align-items:center;gap:9px;margin-bottom:3px}
+  .action-card .head svg{color:var(--t2)}
+  .action-card .head b{font-size:13px;font-weight:600;color:var(--t1)}
+  .action-card .sub{font-size:12.5px;color:var(--t2);margin-left:25px}
+  .action-card .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+  .btn-ghost{
+    height:30px;padding:0 13px;border-radius:8px;cursor:pointer;
+    border:1px solid var(--hair);background:none;color:var(--t2);
+    font-size:12.5px;font-weight:500;
+  }
+  .btn-ghost:hover{background:var(--hover);color:var(--t1)}
+  .btn-accent{
+    height:30px;padding:0 13px;border-radius:8px;cursor:pointer;border:none;
+    background:var(--accent);color:var(--accent-ink);
+    font-size:12.5px;font-weight:600;
+  }
+
+  /* composer */
+  .composer-wrap{flex:none;display:flex;flex-direction:column;align-items:center;padding:10px 24px 14px}
+  .composer{
+    width:100%;max-width:700px;
+    background:var(--card-2);border:1px solid var(--hair);border-radius:16px;
+    box-shadow:0 12px 32px rgba(0,0,0,.35);
+    padding:12px 12px 10px;
+  }
+  .composer .input{padding:2px 4px 14px;font-size:15px;color:var(--t3)}
+  .composer .row{display:flex;align-items:center;gap:8px}
+  .model-chip{
+    display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
+    border:1px solid var(--hair);border-radius:8px;background:none;
+    font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;
+  }
+  .model-chip svg{color:var(--t3)}
+  .seg{
+    display:flex;align-items:center;gap:2px;height:28px;padding:2px;
+    border:1px solid var(--hair);border-radius:9px;
+  }
+  .seg button{
+    height:22px;padding:0 9px;border-radius:6px;border:none;background:none;
+    font-size:11.5px;font-weight:600;color:var(--t3);cursor:pointer;
+  }
+  .seg button.on{background:var(--hover);color:var(--t1)}
+  .composer .spacer{flex:1}
+  .send{
+    width:30px;height:30px;border-radius:9px;border:none;cursor:pointer;
+    background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;
+  }
+  .trust{margin-top:9px;font-size:11.5px;color:var(--t3)}
+
+  /* ══════════ RIGHT RAIL ══════════ */
+  .rail-r{display:flex;flex-direction:column;border-left:1px solid var(--hair);min-width:0}
+  .tabs{padding:0 6px;gap:2px}
+  .tabs button{
+    height:100%;padding:0 12px;border:none;background:none;cursor:pointer;
+    font-size:13px;font-weight:500;color:var(--t3);position:relative;
+  }
+  .tabs button:hover{color:var(--t2)}
+  .tabs button.on{color:var(--t1)}
+  .tabs button.on::after{
+    content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;
+    background:var(--accent);border-radius:2px;
+  }
+  .tabs .collapse{margin-left:auto;margin-right:8px;color:var(--t3)}
+
+  .cards{flex:1;overflow:hidden;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .card{
+    border:1px solid var(--hair-soft);border-radius:14px;background:var(--card);
+    padding:14px;
+  }
+  .card .title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--t1)}
+  .count{
+    margin-left:auto;min-width:20px;height:18px;padding:0 6px;border-radius:999px;
+    background:rgba(224,177,90,.14);color:var(--warn);
+    font-size:11px;font-weight:600;display:grid;place-items:center;
+  }
+  .status-line{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600}
+  .status-sub{margin-top:5px;margin-left:16px;font-size:12px;color:var(--t2)}
+
+  .review-row{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 0;border-top:1px solid var(--hair-soft);
+  }
+  .review-row:first-of-type{border-top:none;margin-top:6px}
+  .review-row .what{flex:1;min-width:0}
+  .review-row .what .t{font-size:12.5px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .review-row .what .s{font-size:11px;color:var(--t3);margin-top:1px}
+  .review-btn{
+    height:24px;padding:0 10px;border-radius:7px;cursor:pointer;
+    border:1px solid var(--hair);background:none;
+    font-size:11.5px;font-weight:500;color:var(--t2);
+  }
+  .review-btn:hover{background:var(--hover);color:var(--t1)}
+
+  .kv{display:flex;align-items:center;justify-content:space-between;height:28px;font-size:12.5px}
+  .kv+.kv{border-top:1px solid var(--hair-soft)}
+  .kv .k{color:var(--t3)}
+  .kv .v{color:var(--t2);font-weight:500}
+  .card .title + .kv{margin-top:6px}
+
+  .act{display:flex;align-items:center;gap:9px;height:30px;font-size:12.5px;color:var(--t2)}
+  .act .when{margin-left:auto;font-size:11px;color:var(--t3)}
+  .card .title + .act{margin-top:6px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ════ LEFT RAIL ════ -->
+  <aside class="rail-l">
+    <div class="top brand">
+      <div class="mark">L</div>
+      <div class="name">LucaOS</div>
+      <svg class="collapse" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9.5 4v16"/></svg>
+    </div>
+
+    <div class="rail-body">
+      <button class="new-session">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+        New session
+      </button>
+
+      <nav class="nav">
+        <a class="active" href="#">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-2.9-.36-4.1-1L4 21l1.55-4.1A8.5 8.5 0 1 1 21 12z"/></svg>
+          Chat
+        </a>
+        <a href="#">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>
+          Tools
+        </a>
+        <a href="#">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/></svg>
+          Devices
+        </a>
+        <a href="#">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3V6"/><path d="M4.5 12v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/></svg>
+          Memory
+        </a>
+        <a href="#">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><rect x="5" y="7" width="14" height="7" rx="2"/><path d="M12 14v3m0 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" transform="scale(.9) translate(1.3 1)"/></svg>
+          Connections
+        </a>
+      </nav>
+
+      <div class="eyebrow">Recents</div>
+      <div class="recents">
+        <a class="current" href="#">Supplier follow-up</a>
+        <a href="#">HEIS admin panel plan</a>
+        <a href="#">Q3 forecast draft</a>
+        <a href="#">Apartment lease review</a>
+      </div>
+    </div>
+
+    <div class="rail-foot">
+      <div class="sys"><span class="dot ok"></span>All systems ready</div>
+      <div class="profile">
+        <div class="avatar">E</div>
+        <div class="who">Enang</div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.58 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.08A1.7 1.7 0 0 0 10.12 3V3a2 2 0 1 1 4 0v.09c0 .68.4 1.3 1.03 1.56.6.27 1.3.14 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08c.26.63.88 1.03 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.03z"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════ CENTER ════ -->
+  <main class="center">
+    <div class="top ctx">
+      <div class="session-title">
+        Supplier follow-up
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="cluster">
+        <div class="chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18"/></svg>
+          <b>1,000</b><span class="plan">PRIME</span>
+        </div>
+        <div class="chip"><span class="dot idle"></span>Local · offline</div>
+        <button class="icon-btn" title="Vision">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="icon-btn" title="Wake word">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+        <button class="icon-btn" title="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.58 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.08A1.7 1.7 0 0 0 10.12 3V3a2 2 0 1 1 4 0v.09c0 .68.4 1.3 1.03 1.56.6.27 1.3.14 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08c.26.63.88 1.03 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.03z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="thread">
+      <div class="col">
+
+        <div class="msg-user">
+          <div class="pill">Draft a follow-up to Meridian Alloys about the revised quote — and check if their last reply mentioned lead times.</div>
+        </div>
+
+        <div class="msg-luca">
+          <div class="tool-chip">
+            <svg class="ok" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></svg>
+            Searched Mail — 2 threads from Meridian Alloys
+            <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <p>Their last reply (Tuesday) confirms the revised unit price of <b>$2.84</b> and mentions a <b>4-week lead time</b> on anodized frames. Here's a draft that locks both in:</p>
+          <div class="quote">
+            <p>Thanks for the revised quote — $2.84/unit works on our side.</p>
+            <p>Before we confirm: can you hold the 4-week lead time through August?</p>
+            <p>If so, we're ready to issue the PO this week.</p>
+          </div>
+          <p>Want me to adjust the tone, or is this good to send?</p>
+        </div>
+
+        <div class="msg-user">
+          <div class="pill">Perfect — send it.</div>
+        </div>
+
+        <div class="msg-luca">
+          <p>Ready to go — this sends the moment you approve:</p>
+          <div class="action-card">
+            <div class="head">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 7.5l9 6 9-6"/></svg>
+              <b>Send email</b>
+            </div>
+            <div class="sub">To procurement@meridianalloys.com — Re: Revised quote &amp; lead times</div>
+            <div class="foot">
+              <button class="btn-ghost">Edit draft</button>
+              <button class="btn-accent">Approve &amp; send</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="composer-wrap">
+      <div class="composer">
+        <div class="input">Message Luca…</div>
+        <div class="row">
+          <button class="model-chip">
+            Gemini 3 Flash
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="seg">
+            <button class="on">Auto</button><button>Fast</button><button>Plan</button><button>Agent</button>
+          </div>
+          <div class="spacer"></div>
+          <button class="icon-btn" title="Attach">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.5l-8.2 8.2a5.5 5.5 0 0 1-7.8-7.8L13.6 4.3a3.7 3.7 0 0 1 5.2 5.2l-8.4 8.4a1.85 1.85 0 0 1-2.6-2.6l7.8-7.8"/></svg>
+          </button>
+          <button class="icon-btn" title="Share screen">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M8 21h8M12 17v4"/></svg>
+          </button>
+          <button class="icon-btn" title="Voice">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+          <button class="send" title="Send">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="trust">Luca acts only with your approval — sends, writes, and purchases always ask first.</div>
+    </div>
+  </main>
+
+  <!-- ════ RIGHT RAIL ════ -->
+  <aside class="rail-r">
+    <div class="top tabs">
+      <button class="on">Overview</button>
+      <button>Timeline</button>
+      <button>Memory</button>
+      <svg class="collapse" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M14.5 4v16"/></svg>
+    </div>
+
+    <div class="cards">
+
+      <div class="card">
+        <div class="status-line"><span class="dot ok"></span>Luca is ready</div>
+        <div class="status-sub">Local core · memory synced · 2 tools connected</div>
+      </div>
+
+      <div class="card">
+        <div class="title">Needs review <span class="count">2</span></div>
+        <div class="review-row">
+          <div class="what">
+            <div class="t">Send email to Meridian Alloys</div>
+            <div class="s">Mail · just now</div>
+          </div>
+          <button class="review-btn">Review</button>
+        </div>
+        <div class="review-row">
+          <div class="what">
+            <div class="t">Write file: q3-forecast.xlsx</div>
+            <div class="s">Workspace · 5m ago</div>
+          </div>
+          <button class="review-btn">Review</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="title">Working context</div>
+        <div class="kv"><span class="k">Model</span><span class="v">Gemini 3 Flash</span></div>
+        <div class="kv"><span class="k">Memory</span><span class="v">RAG · ready</span></div>
+        <div class="kv"><span class="k">Workspace</span><span class="v">~/projects/heis-kits</span></div>
+        <div class="kv"><span class="k">Session</span><span class="v">24 min</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">Recent activity</div>
+        <div class="act"><span class="dot idle"></span>Drafted supplier email<span class="when">2m</span></div>
+        <div class="act"><span class="dot idle"></span>Searched Mail<span class="when">3m</span></div>
+        <div class="act"><span class="dot idle"></span>Memory updated<span class="when">12m</span></div>
+      </div>
+
+    </div>
+  </aside>
+
+</div>
+</body>
+</html>
