@@ -21,6 +21,7 @@ export interface SatelliteState {
   brainModel?: string;
   embeddingModel?: string;
   intent?: string | null;
+  approvalPending?: boolean;
   elevationState?: {
     lastScanTimestamp: number;
     authorizedMissionIds: Set<string>;
@@ -65,6 +66,10 @@ export function applySatellitePresenceUpdate(
         ? (data.embeddingModel as string)
         : prev.embeddingModel,
     intent: data.intent != null ? snapshot.intent : prev.intent,
+    approvalPending:
+      data.approvalRequest !== undefined
+        ? snapshot.approval.status === "pending"
+        : prev.approvalPending,
     elevationState:
       data.elevationState != null
         ? (data.elevationState as SatelliteState["elevationState"])

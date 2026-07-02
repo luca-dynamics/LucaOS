@@ -25,7 +25,7 @@ const WidgetControls: React.FC<WidgetControlsProps> = ({
         }}
         className={`p-2 rounded-full glass-blur border transition-all duration-300 ${
           isHUDActive
-            ? "bg-white/20 border-white/40 text-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+            ? "bg-white/15 border-white/30 text-white"
             : "bg-black/40 border-white/10 text-white/40 hover:bg-black/60 hover:border-white/20 hover:text-white"
         }`}
         title={isHUDActive ? "Dismiss Smart Screen" : "Summon Smart Screen"}

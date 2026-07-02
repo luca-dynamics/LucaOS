@@ -1,12 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDictation } from "../hooks/useDictation";
 import { useSatelliteState } from "../hooks/useSatelliteState";
-import WidgetVisualizer from "./WidgetVisualizer";
 import { THEME_PALETTE } from "../config/themeColors";
 import WidgetControls from "./WidgetControls";
+import LiquidPresenceMark from "./presence/LiquidPresenceMark";
 import { settingsService } from "../services/settingsService";
 import type { LucaSettings } from "../services/settingsService";
 import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
+import { LUCA_MOTION_CSS_VARIABLES } from "../styles/lucaPresenceMotion";
+import {
+  derivePresenceMarkState,
+  getPresenceMarkCaption,
+} from "../presence/presenceMark";
 import {
   createWidgetPresenceSnapshot,
   getWidgetDictationState,
@@ -16,9 +21,20 @@ import {
 const WidgetMode: React.FC = () => {
   const { isDictating, toggleDictation, setDictationState } = useDictation();
   const state = useSatelliteState();
-  const dictationState = getWidgetDictationState(
-    createWidgetPresenceSnapshot(state as unknown as WidgetLegacyPayload),
-  );
+  const snapshot = useMemo(() => {
+    const base = createWidgetPresenceSnapshot(
+      state as unknown as WidgetLegacyPayload,
+    );
+    if (!state.approvalPending) return base;
+    return {
+      ...base,
+      approval: {
+        status: "pending" as const,
+        prompt: base.approval.prompt ?? {},
+      },
+    };
+  }, [state]);
+  const dictationState = getWidgetDictationState(snapshot);
   const [isHovered, setIsHovered] = useState(false);
   const [isVisualCoreActive, setIsVisualCoreActive] = useState(false);
   const [selectedSkinId, setSelectedSkinId] = useState<unknown>(
@@ -37,9 +53,8 @@ const WidgetMode: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // IPCS Listeners for COMMANDS (Voice Toggles)
+    // IPC listeners for commands (voice toggles, visual core status)
     if (window.electron?.ipcRenderer) {
-      // Dictation Trigger Listener (Ctrl+D)
       const removeDictationListener = window.electron.ipcRenderer.on(
         "trigger-voice-toggle",
         (payload: any) => {
@@ -54,7 +69,6 @@ const WidgetMode: React.FC = () => {
         },
       );
 
-      // Visual Core Status Listener
       const removeVisualStatusListener = window.electron.ipcRenderer.on(
         "hologram-visual-status",
         (payload: { isVisible: boolean }) => {
@@ -80,31 +94,19 @@ const WidgetMode: React.FC = () => {
     }
   };
 
-  // --- GOD MODE LOGIC ---
-  /* Removed Unused God Mode Logic */
-
-  useEffect(() => {
-    // checkGodMode();
-    // const interval = setInterval(checkGodMode, 2000);
-    // return () => clearInterval(interval);
-  }, []);
-
   const handleExpand = () => {
     if (window.electron)
       window.electron.ipcRenderer.send("restore-main-window");
   };
 
-  // --- ANIMATION LOGIC ---
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // Listen for Exit Signal
     const removeExitListener = window.electron?.ipcRenderer?.on(
       "widget-animate-exit",
       () => {
-        console.log("[Widget] Animating Exit...");
         setIsExiting(true);
-        // Reset state after a delay (failsafe to ensure next open is clean)
+        // Reset after a delay so the next open starts clean
         setTimeout(() => setIsExiting(false), 1000);
       },
     );
@@ -127,52 +129,64 @@ const WidgetMode: React.FC = () => {
     [selectedSkinId],
   );
 
-  // Use synced themeHex if available, else fall back to persona theme
-  const primaryColor =
+  const identityColor =
     state.themeHex ||
     widgetSkinVariables["--luca-accent-primary"] ||
     currentTheme.primary;
 
+  const markState = derivePresenceMarkState(
+    isDictating && dictationState.status === "idle"
+      ? { ...snapshot, voice: { ...snapshot.voice, status: "listening" } }
+      : snapshot,
+    { acting: isVisualCoreActive },
+  );
+  const caption = getPresenceMarkCaption(markState, snapshot);
+  const hintVisible = !caption && isHovered && markState === "idle";
+  const captionText = caption || (hintVisible ? "Talk to Luca" : "");
+
   return (
     <div
-      className={`h-screen w-screen flex flex-col items-center justify-center overflow-hidden bg-transparent transition-all duration-300 ease-in-out
-        ${isExiting ? "scale-0 opacity-0 blur-md translate-y-10" : "scale-100 opacity-100 translate-y-0"}`}
+      className={`h-screen w-screen flex flex-col items-center justify-center overflow-hidden bg-transparent
+        ${isExiting ? "scale-90 opacity-0" : "scale-100 opacity-100"}`}
       style={
         {
           ...widgetSkinVariables,
+          ...LUCA_MOTION_CSS_VARIABLES,
           WebkitAppRegion: "drag",
           transformOrigin: "center center",
+          transitionProperty: "transform, opacity",
+          transitionDuration: "var(--luca-duration-exit)",
+          transitionTimingFunction: "var(--luca-ease)",
         } as any
       }
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* CANVAS ORB VISUALIZER */}
-      <WidgetVisualizer
+      <LiquidPresenceMark
+        state={markState}
         amplitude={dictationState.amplitude}
-        isVadActive={isDictating ? true : dictationState.isListening}
-        isSpeaking={false}
-        persona={state.persona} // Keep original persona (Blue)
-        themeHex={primaryColor} // Pass dynamic color
-        isVisualCoreActive={isVisualCoreActive}
+        identityColor={identityColor}
         onClick={toggleDictation}
+        title="Talk to Luca"
       />
 
-      {/* Transcript / Status Text */}
+      {/* Ephemeral caption — silent at rest, words only when light can't say it */}
       <div
-        className={`mt-4 px-6 py-2 bg-black/80 glass-blur rounded-full border border-white/10 text-center transition-all duration-300 shadow-2xl relative
-        ${dictationState.transcript ? "min-w-[300px] w-auto animate-pulse-once" : "w-[180px]"}`}
+        className="mt-2 px-4 py-1.5 rounded-full bg-black/60 border border-white/10 max-w-[180px]"
+        style={{
+          opacity: captionText ? 1 : 0,
+          transform: captionText ? "translateY(0)" : "translateY(4px)",
+          transitionProperty: "opacity, transform",
+          transitionDuration: "var(--luca-duration-fast)",
+          transitionTimingFunction: "var(--luca-ease)",
+          pointerEvents: "none",
+        }}
       >
-        <span
-          className="text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis block tracking-wider font-bold transition-colors duration-500"
-          style={{ color: primaryColor }}
-        >
-          {dictationState.transcript ||
-            (isDictating ? "LISTENING..." : "START DICTATION")}
+        <span className="block text-xs text-white/75 whitespace-nowrap overflow-hidden text-ellipsis text-center">
+          {captionText || " "}
         </span>
       </div>
 
-      {/* CONTROLS (EXPAND, ETC) */}
       <WidgetControls
         isHovered={isHovered}
         onExpand={handleExpand}
