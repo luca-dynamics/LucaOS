@@ -53,6 +53,19 @@ export const LUCA_SMOOTHING = {
 } as const;
 
 /**
+ * The needs-you rhythm: two soft pulses per attention interval — a knock,
+ * not a siren. Returns the 0..1 envelope for a given wall-clock time.
+ */
+export function attentionPulse(timeMs: number): number {
+  const phase = (timeMs % LUCA_CADENCE.attention) / LUCA_CADENCE.attention;
+  const bump = (center: number, width: number) => {
+    const d = (phase - center) / width;
+    return Math.exp(-d * d);
+  };
+  return bump(0.08, 0.045) + bump(0.26, 0.045);
+}
+
+/**
  * Frame-rate-independent exponential approach toward a target.
  * Returns the new current value after `dtMs` milliseconds.
  */

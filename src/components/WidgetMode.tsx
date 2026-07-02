@@ -3,7 +3,7 @@ import { useDictation } from "../hooks/useDictation";
 import { useSatelliteState } from "../hooks/useSatelliteState";
 import { THEME_PALETTE } from "../config/themeColors";
 import WidgetControls from "./WidgetControls";
-import PresenceMark from "./presence/PresenceMark";
+import LiquidPresenceMark from "./presence/LiquidPresenceMark";
 import { settingsService } from "../services/settingsService";
 import type { LucaSettings } from "../services/settingsService";
 import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
@@ -162,7 +162,7 @@ const WidgetMode: React.FC = () => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <PresenceMark
+      <LiquidPresenceMark
         state={markState}
         amplitude={dictationState.amplitude}
         identityColor={identityColor}

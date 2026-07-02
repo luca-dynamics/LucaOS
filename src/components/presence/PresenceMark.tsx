@@ -4,7 +4,9 @@ import {
   LUCA_CADENCE,
   LUCA_SMOOTHING,
   approach,
+  attentionPulse,
 } from "../../styles/lucaPresenceMotion";
+import { hexToRgb, mixRgb, rgba } from "./presenceColor";
 
 /**
  * Luca's body at rest: a single point of light. State is expressed through
@@ -94,46 +96,6 @@ const STATE_TARGETS: Record<PresenceMarkState, Omit<MarkParams, "energy">> = {
 
 const FALLBACK_IDENTITY = "#8a8f98";
 const FALLBACK_ATTENTION = "#d9a441";
-
-function hexToRgb(hex: string): [number, number, number] | null {
-  const value = hex.trim().replace("#", "");
-  const full =
-    value.length === 3
-      ? value
-          .split("")
-          .map((c) => c + c)
-          .join("")
-      : value;
-  if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
-  const n = parseInt(full, 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-function mixRgb(
-  a: [number, number, number],
-  b: [number, number, number],
-  t: number,
-): [number, number, number] {
-  return [
-    Math.round(a[0] + (b[0] - a[0]) * t),
-    Math.round(a[1] + (b[1] - a[1]) * t),
-    Math.round(a[2] + (b[2] - a[2]) * t),
-  ];
-}
-
-function rgba(rgb: [number, number, number], alpha: number): string {
-  return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${Math.max(0, Math.min(1, alpha))})`;
-}
-
-/** Two soft pulses per attention interval — a knock, not a siren. */
-function attentionEnvelope(timeMs: number): number {
-  const phase = (timeMs % LUCA_CADENCE.attention) / LUCA_CADENCE.attention;
-  const bump = (center: number, width: number) => {
-    const d = (phase - center) / width;
-    return Math.exp(-d * d);
-  };
-  return bump(0.08, 0.045) + bump(0.26, 0.045);
-}
 
 const PresenceMark: React.FC<PresenceMarkProps> = ({
   state,
@@ -227,7 +189,7 @@ const PresenceMark: React.FC<PresenceMarkProps> = ({
         : Math.sin((now / LUCA_CADENCE.breath) * Math.PI * 2);
       const pulse =
         params.attention > 0.01 && !reducedMotion
-          ? attentionEnvelope(now) * params.attention
+          ? attentionPulse(now) * params.attention
           : 0;
 
       const coreRadius =

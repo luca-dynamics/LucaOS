@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Luca presence lab</title>
+  <!--
+    Dev-only tuning surface for Luca's two bodies: the plasma orb and the face.
+    Served by the Vite dev server: http://localhost:PORT/labs/presence-lab.html
+    Drives the real product modules (liquidPresenceRenderer.ts and
+    lucaFacePlasmaMaterial.ts), so what you tune here is exactly what ships.
+  -->
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      font-family: Inter, system-ui, sans-serif;
+      background: #101318;
+      color: rgba(255, 255, 255, 0.75);
+      transition: background 400ms;
+    }
+    body.light { background: #e9e9e6; color: rgba(0, 0, 0, 0.7); }
+    body.photo {
+      background: linear-gradient(160deg, #2a3d54 0%, #5d7a8c 45%, #c8a882 100%);
+    }
+    h1 { font-size: 14px; font-weight: 500; margin: 0; opacity: 0.6; }
+    .stages { display: flex; gap: 40px; align-items: center; }
+    .stage { position: relative; text-align: center; }
+    .stage p { font-size: 11px; opacity: 0.45; margin: 6px 0 0; }
+    canvas { display: block; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    button, label {
+      font: 12px Inter, system-ui, sans-serif;
+      border: 1px solid rgba(128, 128, 128, 0.35);
+      background: transparent;
+      color: inherit;
+      border-radius: 999px;
+      padding: 6px 14px;
+      cursor: pointer;
+    }
+    button.active { background: rgba(128, 128, 128, 0.25); }
+    label { display: inline-flex; align-items: center; gap: 8px; cursor: default; }
+    input[type="range"] { width: 120px; }
+  </style>
+</head>
+<body>
+  <h1>Luca presence lab</h1>
+  <div class="stages">
+    <div class="stage">
+      <canvas id="orb" style="width:220px;height:220px;"></canvas>
+      <p>orb — ambient body</p>
+    </div>
+    <div class="stage">
+      <div id="face" style="width:260px;height:260px;"></div>
+      <p>face — summonable identity</p>
+    </div>
+    <div class="stage">
+      <div id="lensStage" style="width:300px;height:300px;position:relative;border-radius:16px;overflow:hidden;">
+        <canvas id="lens" style="width:260px;height:260px;position:absolute;left:20px;top:20px;"></canvas>
+      </div>
+      <p>lens — liquid glass study (move your mouse over it)</p>
+    </div>
+  </div>
+  <div class="row" id="states"></div>
+  <div class="row">
+    <label>voice <input id="amp" type="range" min="0" max="100" value="0" /></label>
+    <label><input id="talk" type="checkbox" /> simulate speech</label>
+    <label>accent <input id="accent" type="color" value="#8a8f98" /></label>
+  </div>
+  <div class="row">
+    <label>mouth height <input id="mouthY" type="range" min="15" max="50" value="30" /></label>
+    <label>mouth size <input id="mouthR" type="range" min="4" max="20" value="9" /></label>
+    <label>mouth open (manual) <input id="mouthOpen" type="range" min="0" max="100" value="0" /></label>
+  </div>
+  <div class="row" id="bgs"></div>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+    import { createLiquidPresenceRenderer } from "/src/components/presence/liquidPresenceRenderer.ts";
+    import { createLucaFacePlasmaMaterial } from "/src/components/presence/lucaFacePlasmaMaterial.ts";
+    import { createLiquidGlassLensRenderer } from "/src/components/presence/liquidGlassLensRenderer.ts";
+
+    const input = { state: "idle", amplitude: 0, identityColor: "#8a8f98" };
+
+    const orbCanvas = document.getElementById("orb");
+    const orb = createLiquidPresenceRenderer(orbCanvas, 220);
+    if (!orb) {
+      document.body.insertAdjacentHTML("beforeend", "<p>WebGL2 unavailable — the widget would fall back to the 2D mark.</p>");
+    }
+
+    const face = createLucaFacePlasmaMaterial();
+    const faceHost = document.getElementById("face");
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(260, 260);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    faceHost.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 4);
+
+    const group = new THREE.Group();
+    scene.add(group);
+
+    let headBox = null;
+    const applyMouthAnchor = () => {
+      if (!headBox) return;
+      const size = headBox.getSize(new THREE.Vector3());
+      const center = headBox.getCenter(new THREE.Vector3());
+      const yFrac = document.getElementById("mouthY").value / 100;
+      const rFrac = document.getElementById("mouthR").value / 100;
+      face.setMouthAnchor(
+        [center.x, headBox.min.y + size.y * yFrac, headBox.max.z - size.z * 0.12],
+        size.y * rFrac,
+      );
+    };
+
+    new GLTFLoader().load("/models/avatar.glb", (gltf) => {
+      const model = gltf.scene;
+      model.traverse((child) => {
+        if (child.isMesh) child.material = face.material;
+      });
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const sizeV = box.getSize(new THREE.Vector3());
+      const scale = 2.4 / Math.max(sizeV.x, sizeV.y, sizeV.z);
+      headBox = box.clone();
+      model.position.sub(center);
+      group.scale.setScalar(scale);
+      group.add(model);
+      applyMouthAnchor();
+    });
+
+    // Lens study: wallpaper with text so the glass visibly bends content
+    const wp = document.createElement("canvas");
+    wp.width = wp.height = 512;
+    {
+      const c = wp.getContext("2d");
+      const grad = c.createLinearGradient(0, 0, 380, 512);
+      grad.addColorStop(0, "#2a3d54");
+      grad.addColorStop(0.45, "#5d7a8c");
+      grad.addColorStop(1, "#c8a882");
+      c.fillStyle = grad;
+      c.fillRect(0, 0, 512, 512);
+      c.fillStyle = "rgba(255,255,255,0.9)";
+      c.font = "600 54px Inter, system-ui, sans-serif";
+      c.fillText("Wed Jul 2", 60, 190);
+      c.font = "400 30px Inter, system-ui, sans-serif";
+      c.fillStyle = "rgba(255,255,255,0.75)";
+      c.fillText("Good evening", 60, 240);
+      c.fillText("3 quiet notifications", 60, 285);
+      c.beginPath();
+      c.arc(400, 380, 46, 0, Math.PI * 2);
+      c.fillStyle = "rgba(255,255,255,0.35)";
+      c.fill();
+    }
+    const lensStage = document.getElementById("lensStage");
+    lensStage.style.backgroundImage = "url(" + wp.toDataURL() + ")";
+    lensStage.style.backgroundSize = "100% 100%";
+
+    const lensCanvas = document.getElementById("lens");
+    const lens = createLiquidGlassLensRenderer(
+      lensCanvas,
+      260,
+      [20 / 300, 20 / 300, 260 / 300, 260 / 300],
+    );
+    if (lens) {
+      lens.setBackground(wp);
+      lensStage.addEventListener("pointermove", (e) => {
+        const rect = lensStage.getBoundingClientRect();
+        lens.setPointer(
+          (e.clientX - rect.left - 20) / 260,
+          (e.clientY - rect.top - 20) / 260,
+        );
+      });
+      lensStage.addEventListener("pointerleave", () => lens.setPointer(null));
+    }
+
+    const push = () => {
+      if (orb) orb.setInput(input);
+      face.setInput(input);
+      if (lens) lens.setAccent(input.identityColor);
+    };
+
+    const states = ["idle", "listening", "thinking", "speaking", "acting", "needs-you"];
+    const stateRow = document.getElementById("states");
+    for (const s of states) {
+      const b = document.createElement("button");
+      b.textContent = s;
+      if (s === "idle") b.classList.add("active");
+      b.onclick = () => {
+        input.state = s;
+        push();
+        stateRow.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+      };
+      stateRow.appendChild(b);
+    }
+
+    const bgRow = document.getElementById("bgs");
+    for (const [name, cls] of [["dark", ""], ["light", "light"], ["wallpaper", "photo"]]) {
+      const b = document.createElement("button");
+      b.textContent = name;
+      b.onclick = () => { document.body.className = cls; };
+      bgRow.appendChild(b);
+    }
+
+    const amp = document.getElementById("amp");
+    const talk = document.getElementById("talk");
+    amp.oninput = () => { input.amplitude = amp.value / 100; push(); };
+    document.getElementById("accent").oninput = (e) => {
+      input.identityColor = e.target.value;
+      push();
+    };
+    document.getElementById("mouthY").oninput = applyMouthAnchor;
+    document.getElementById("mouthR").oninput = applyMouthAnchor;
+    document.getElementById("mouthOpen").oninput = (e) => {
+      const v = e.target.value / 100;
+      input.mouthOpen = v > 0 ? v : null;
+      push();
+    };
+
+    let last = performance.now();
+    const tick = (t) => {
+      if (talk.checked) {
+        const s = t / 1000;
+        input.amplitude =
+          Math.max(0, (0.45 + 0.35 * Math.sin(s * 2.3) + 0.2 * Math.sin(s * 7.1)) *
+          (0.5 + 0.5 * Math.sin(s * 0.9)));
+        amp.value = String(Math.round(input.amplitude * 100));
+        push();
+      }
+      const dt = t - last;
+      last = t;
+      face.tick(t, dt);
+      const drift = t / 1000;
+      group.position.y = Math.sin(drift * 0.6) * 0.06;
+      group.rotation.y = Math.sin(drift * 0.3) * 0.12;
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

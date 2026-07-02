@@ -101,6 +101,7 @@ declare namespace THREE {
   class Color {
     constructor(color?: string | number);
     set(color: string | number): this;
+    setRGB(r: number, g: number, b: number): this;
     copy(color: Color): this;
     multiplyScalar(value: number): this;
   }
@@ -122,6 +123,8 @@ declare namespace THREE {
 
   class ShaderMaterial {
     constructor(options?: any);
+    uniforms: { [name: string]: { value: any } };
+    dispose(): void;
   }
 
   class CanvasTexture {
