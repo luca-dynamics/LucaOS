@@ -20,6 +20,7 @@
       } catch (e) {
         document.documentElement.setAttribute('data-theme', 'light');
       }
+      document.documentElement.classList.add('js');
     })();
   </script>
   <script src="/v3/script.js" defer></script>
@@ -65,34 +66,44 @@
   <main id="main">
 
     <section class="hero">
-      <div class="wrap hero-grid">
-        <div class="hero-copy">
-          <p class="tag">Introducing LucaOS</p>
-          <h1>A host-native AI operating system.<br><span class="accent">One presence, every device.</span></h1>
-          <p class="lede">Android runs every Android phone. macOS runs every Mac. LucaOS is the AI-native layer that runs across all your devices — carrying memory, presence, and governed action wherever you go. It starts on the desktop today.</p>
-          <div class="btn-row">
-            <a class="btn btn-primary" href="/v3/early-access.html">Get early access</a>
-            <a class="btn btn-ghost" href="https://app.lucaos.space">Try the web app</a>
+      <div class="wrap hero-center">
+        <p class="tag reveal"><span class="tag-dot" aria-hidden="true"></span>Introducing LucaOS</p>
+        <h1 class="reveal">A host-native AI operating system.<br><span class="accent">One presence, every device.</span></h1>
+        <p class="lede reveal">Android runs every Android phone. macOS runs every Mac. LucaOS is the AI-native layer that runs across all your devices — carrying memory, presence, and governed action wherever you go.</p>
+        <div class="btn-row reveal">
+          <a class="btn btn-primary" href="/v3/early-access.html">Get early access<span class="btn-arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn-ghost" href="https://app.lucaos.space">Try the web app</a>
+        </div>
+        <p class="platform-note reveal">Early access begins on macOS · Windows and Linux to follow</p>
+      </div>
+
+      <div class="wrap os-wrap reveal">
+        <figure class="os">
+          <div class="os-bar">
+            <span class="os-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="os-title">LucaOS — Desktop</span>
+            <span class="os-status"><span class="os-dot" aria-hidden="true"></span>Luca Prime</span>
           </div>
-          <p class="platform-note">Early access begins on macOS · Windows and Linux to follow</p>
-        </div>
-        <div class="hero-art" aria-hidden="true">
-          <img src="/hologram.png" alt="">
-        </div>
+          <!-- Real product capture goes here: replace .os-shot's content with
+               <img src="/v3/shots/desktop.png" alt="The LucaOS desktop"> (keep the .os frame). -->
+          <div class="os-shot">
+            <span class="os-shot-label">Live product capture — coming here</span>
+          </div>
+        </figure>
       </div>
     </section>
 
-    <section class="proof">
-      <div class="wrap proof-row">
-        <span>One OS across your devices</span>
-        <span>Approval-first by design</span>
-        <span>Any model, your choice</span>
-        <span>Memory that moves with you</span>
+    <section class="proof" aria-label="LucaOS capabilities">
+      <div class="marquee">
+        <div class="marquee-track" aria-hidden="true">
+          <span>VoiceHUD</span><span>Model Router</span><span>Memory &amp; Continuity</span><span>Approval-first</span><span>Hologram</span><span>LucaLink</span><span>MiniChat</span><span>Local models</span>
+          <span>VoiceHUD</span><span>Model Router</span><span>Memory &amp; Continuity</span><span>Approval-first</span><span>Hologram</span><span>LucaLink</span><span>MiniChat</span><span>Local models</span>
+        </div>
       </div>
     </section>
 
     <section class="do" id="do">
-      <div class="wrap">
+      <div class="wrap reveal">
         <span class="eyebrow-label">Use cases</span>
         <h2>What the OS lets you do.</h2>
         <ul class="uc-grid">
@@ -157,7 +168,7 @@
     </section>
 
     <section class="features" id="features">
-      <div class="wrap">
+      <div class="wrap reveal">
         <span class="eyebrow-label">Capabilities</span>
         <h2>What LucaOS brings to every device.</h2>
         <div class="feature-grid">
@@ -243,7 +254,7 @@
     </section>
 
     <section class="compare" id="compare">
-      <div class="wrap">
+      <div class="wrap reveal">
         <span class="eyebrow-label">The idea</span>
         <h2>What an AI operating system should be.</h2>
         <p class="sub">LucaOS is our take on an operating system for AI — one that lives on the device, stays under your control, and moves with you from screen to screen.</p>
@@ -281,7 +292,7 @@
     </section>
 
     <section class="cta">
-      <div class="wrap cta-box">
+      <div class="wrap cta-box reveal">
         <h2>Start with LucaOS on your desktop.</h2>
         <p>The OS begins on the desktop — with Memory &amp; Continuity, VoiceHUD, and Model Router built in — and grows across your devices from there. Prefer the browser first? The web app needs nothing to install.</p>
         <div class="btn-row">

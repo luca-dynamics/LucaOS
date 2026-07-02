@@ -49,6 +49,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const revealEls = document.querySelectorAll('.reveal');
+  if (revealEls.length) {
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+      revealEls.forEach((el) => io.observe(el));
+      // Degenerate viewport (0-height embeds, some prerenderers): show everything.
+      if (!window.innerHeight) revealEls.forEach((el) => el.classList.add('in'));
+    } else {
+      revealEls.forEach((el) => el.classList.add('in'));
+    }
+  }
+
   const year = document.getElementById('year');
   if (year) year.textContent = String(new Date().getFullYear());
 });
