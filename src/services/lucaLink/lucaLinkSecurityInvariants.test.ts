@@ -16,7 +16,7 @@ function readLucaLinkModule(fileName: string): string {
 }
 
 function readServiceRange(startNeedle: string, endNeedle: string): string {
-  const source = readFileSync("src/services/lucaLinkService.ts", "utf8");
+  const source = readFileSync("src/services/lucaLink/relayClientAdapter.ts", "utf8");
   const start = source.indexOf(startNeedle);
   const endStart = source.indexOf(endNeedle, start);
   expect(start).toBeGreaterThanOrEqual(0);

@@ -37,7 +37,7 @@ import {
 } from "./lucaHostManifest";
 // Type-only import: erased at compile time, so this never loads the
 // lucaLinkService runtime singleton (no side effects at import).
-import type { LucaLinkDevice } from "../lucaLinkService";
+import type { LucaLinkDevice } from "./relayClientAdapter";
 
 // ===========================================================================
 // Frozen lookup sets (derived once from the PR #182 architecture vocabulary)

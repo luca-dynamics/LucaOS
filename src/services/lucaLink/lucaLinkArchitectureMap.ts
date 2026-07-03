@@ -512,7 +512,7 @@ export const lucaLinkTargetComponents: readonly LucaLinkTargetComponent[] =
       summary:
         "Pluggable transport manager over local LAN, relay, VPN, and WebRTC with consistent semantics.",
       buildsOn: [
-        "src/services/lucaLinkService.ts",
+        "src/services/lucaLink/relayClientAdapter.ts",
         "src/services/lucaLink/secureSocket.ts",
         "relay-server/index.js",
       ],
@@ -524,7 +524,7 @@ export const lucaLinkTargetComponents: readonly LucaLinkTargetComponent[] =
         "Stable per-host identity: device ID, Ed25519 identity keys, and signed host manifests.",
       buildsOn: [
         "src/services/lucaLink/crypto.ts",
-        "src/services/lucaLinkService.ts",
+        "src/services/lucaLink/relayClientAdapter.ts",
       ],
     },
     {
@@ -546,7 +546,7 @@ export const lucaLinkTargetComponents: readonly LucaLinkTargetComponent[] =
       label: "LucaLink Sync Lanes",
       summary:
         "Typed, permissioned channels (identity/presence/conversation/memory/etc.) over the transport.",
-      buildsOn: ["src/services/lucaLinkService.ts"],
+      buildsOn: ["src/services/lucaLink/relayClientAdapter.ts"],
     },
     {
       id: "host-router",
@@ -622,7 +622,7 @@ export const lucaLinkTargetComponents: readonly LucaLinkTargetComponent[] =
       label: "LucaLink Guest Gateway",
       summary:
         "Hardened, expiring, least-privilege gateway for temporary web/device guests.",
-      buildsOn: ["src/services/lucaLinkService.ts", "relay-server/index.js"],
+      buildsOn: ["src/services/lucaLink/relayClientAdapter.ts", "relay-server/index.js"],
     },
     {
       id: "embodied-host-adapter",

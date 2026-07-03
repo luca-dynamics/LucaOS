@@ -4,12 +4,12 @@ vi.mock("socket.io-client", () => ({
   io: vi.fn(),
 }));
 
-import { lucaLink } from "./lucaLinkService";
-import { createLucaLinkDeviceTrustRegistry } from "./lucaLink/lucaLinkDeviceTrustRegistry";
+import { lucaLink } from "./relayClientAdapter";
+import { createLucaLinkDeviceTrustRegistry } from "./lucaLinkDeviceTrustRegistry";
 import {
   createLucaLinkContinuationToken,
   registerLucaLinkContinuation,
-} from "./lucaLink/lucaLinkContinuation";
+} from "./lucaLinkContinuation";
 
 describe("LucaLinkService soft enforcement controls", () => {
   afterEach(() => {
