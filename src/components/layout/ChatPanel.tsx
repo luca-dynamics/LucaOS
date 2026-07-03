@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon";
 import ChatWidgetInput from "../ChatWidgetInput";
 import ChatMessageBubble from "../ChatMessageBubble";
 import { ProWorkforceCanvas } from "../chat/ProWorkforceCanvas";
+import ChatApprovalStrip from "../chat/ChatApprovalStrip";
 import { MessageScroller } from "../chat/LucaConversationPrimitives";
 import SuggestionChips from "../SuggestionChips";
 import { motion, AnimatePresence } from "framer-motion";
@@ -561,6 +562,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             : undefined,
         }}
       >
+        {/* Pending approvals live where the user is already looking. */}
+        <ChatApprovalStrip />
         {/* Routing-mode selector moved into the composer's bottom control row
             (single mode control), so it no longer sits above the composer. */}
         <ChatWidgetInput
