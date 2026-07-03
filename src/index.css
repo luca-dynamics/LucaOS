@@ -531,6 +531,24 @@ a,
   }
 }
 
+/* Presence breath — the being's living tempo (identity face + its bloom).
+ * The only looping motion permitted outside the presence mark itself. */
+@keyframes luca-presence-face-breath {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+@keyframes luca-presence-bloom-breath {
+  0%, 100% { opacity: calc(var(--luca-skin-presence-bloom, 0.3) * 0.75); }
+  50% { opacity: var(--luca-skin-presence-bloom, 0.3); }
+}
+
+/* The settle: the onboarding identity face travels to the shell's rail
+ * anchor and comes to rest — completion is continuation, not a scene change. */
+@keyframes luca-presence-settle {
+  from { left: 50%; top: 34%; width: 210px; }
+  to { left: 34px; top: 28px; width: 28px; }
+}
+
 /* User-chosen Reduce motion (Settings → Appearance → Feel): the in-app
  * equivalent of prefers-reduced-motion for DOM surfaces. */
 .luca-reduce-motion .shimmer,

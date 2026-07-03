@@ -51,16 +51,29 @@ const DEFAULT_SCREEN_PRESENCE: Record<
   PremiumOnboardingScreenId,
   LucaOnboardingScreenPresence
 > = {
+  // Incarnation rhythm (docs/mockups/onboarding-target.html): the being is
+  // present on EVERY screen — hero at first light, a small mark while you
+  // choose, large and warm when it's glad. Never absent, never static.
   welcome: "identity",
-  environment: "none",
-  // The presence screen shows the Luca hologram being (the identity face), not
-  // the placeholder voice orb — Luca is one being across the flow.
+  environment: "identity",
   presence: "identity",
-  permission_style: "none",
-  memory_boundaries: "none",
-  connect_tools: "none",
-  intelligence_route: "none",
+  permission_style: "identity",
+  memory_boundaries: "identity",
+  connect_tools: "identity",
+  intelligence_route: "identity",
   finish: "identity",
+};
+
+/** Face size per screen — the presence rhythm. Hero, mark, glad. */
+const SCREEN_FACE_SIZE: Record<PremiumOnboardingScreenId, number> = {
+  welcome: 190,
+  environment: 72,
+  presence: 104,
+  permission_style: 72,
+  memory_boundaries: 72,
+  connect_tools: 64,
+  intelligence_route: 72,
+  finish: 210,
 };
 
 /** The presence expression a given onboarding screen shows by default. */
@@ -76,6 +89,11 @@ export interface LucaOnboardingScreenProps {
   selectedOptionId?: string;
   /** Notified when the user picks an option. No side effects are performed. */
   onSelectOption?: (optionId: string) => void;
+  /**
+   * Hover preview (environment screen): report the option under the pointer
+   * (null on leave) so the host can re-skin the whole surface live.
+   */
+  onPreviewOption?: (optionId: string | null) => void;
   /** Primary CTA handler (e.g. Start / Continue / Enter LucaOS). */
   onPrimary?: () => void;
   /** Secondary CTA handler (e.g. Skip / Use recommended / Review choices). */
@@ -120,10 +138,12 @@ function OptionCard({
   option,
   checked,
   onSelect,
+  onPreview,
 }: {
   option: PremiumOnboardingOptionCopy;
   checked: boolean;
   onSelect?: (optionId: string) => void;
+  onPreview?: (optionId: string | null) => void;
 }): React.ReactElement {
   return (
     <button
@@ -132,6 +152,8 @@ function OptionCard({
       aria-checked={checked}
       data-luca-onboarding-option={option.id}
       onClick={onSelect ? () => onSelect(option.id) : undefined}
+      onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
+      onMouseLeave={onPreview ? () => onPreview(null) : undefined}
       style={{
         display: "block",
         width: "100%",
@@ -217,10 +239,12 @@ function SurfaceMockupTile({
   option,
   checked,
   onSelect,
+  onPreview,
 }: {
   option: PremiumOnboardingOptionCopy;
   checked: boolean;
   onSelect?: (optionId: string) => void;
+  onPreview?: (optionId: string | null) => void;
 }): React.ReactElement {
   return (
     <button
@@ -229,6 +253,8 @@ function SurfaceMockupTile({
       aria-checked={checked}
       data-luca-onboarding-option={option.id}
       onClick={onSelect ? () => onSelect(option.id) : undefined}
+      onMouseEnter={onPreview ? () => onPreview(option.id) : undefined}
+      onMouseLeave={onPreview ? () => onPreview(null) : undefined}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -553,6 +579,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   audienceMode = "basic",
   selectedOptionId,
   onSelectOption,
+  onPreviewOption,
   onPrimary,
   onSecondary,
   presenceState,
@@ -589,7 +616,15 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   const heroPresence =
     presence === "identity" ? (
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
-        <LucaPresence state="identity" size={104} label="Luca" {...presenceProps} />
+        <LucaPresence
+          state="identity"
+          size={SCREEN_FACE_SIZE[screenId] ?? 104}
+          label="Luca"
+          wake={screenId === "welcome"}
+          warm={screenId === "finish"}
+          breathing
+          {...presenceProps}
+        />
       </div>
     ) : presence === "voice" ? (
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
@@ -768,6 +803,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
               option={option}
               checked={option.id === activeOptionId}
               onSelect={onSelectOption}
+              onPreview={onPreviewOption}
             />
           ))}
         </div>
@@ -789,6 +825,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
               option={option}
               checked={option.id === activeOptionId}
               onSelect={onSelectOption}
+                  onPreview={onPreviewOption}
             />
           ))}
 
@@ -803,6 +840,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
                   option={option}
                   checked={option.id === activeOptionId}
                   onSelect={onSelectOption}
+                  onPreview={onPreviewOption}
                 />
               ))
             ) : (
@@ -833,6 +871,7 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
                       option={option}
                       checked={option.id === activeOptionId}
                       onSelect={onSelectOption}
+                  onPreview={onPreviewOption}
                     />
                   ))}
                 </div>

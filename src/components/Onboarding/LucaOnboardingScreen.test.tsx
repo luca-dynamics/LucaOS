@@ -54,22 +54,24 @@ describe("LucaOnboardingScreen", () => {
     );
   });
 
-  it("maps presence per screen: the hologram identity face on welcome/finish/presence, none on choice screens", () => {
+  it("keeps the hologram identity face present on every screen (incarnation rhythm)", () => {
     expect(getLucaOnboardingScreenPresence("welcome")).toBe("identity");
     expect(getLucaOnboardingScreenPresence("finish")).toBe("identity");
     expect(getLucaOnboardingScreenPresence("presence")).toBe("identity");
-    expect(getLucaOnboardingScreenPresence("permission_style")).toBe("none");
+    expect(getLucaOnboardingScreenPresence("permission_style")).toBe("identity");
 
     const welcome = renderToStaticMarkup(<LucaOnboardingScreen screenId="welcome" />);
     expect(welcome).toContain('data-luca-presence="identity"');
 
-    const presence = renderToStaticMarkup(<LucaOnboardingScreen screenId="presence" />);
-    expect(presence).toContain('data-luca-presence="identity"');
-
     const trust = renderToStaticMarkup(
       <LucaOnboardingScreen screenId="permission_style" />,
     );
-    expect(trust).not.toContain("data-luca-presence");
+    expect(trust).toContain('data-luca-presence="identity"');
+
+    // The being warms only at finish — golden bloom, glad to be here.
+    const finish = renderToStaticMarkup(<LucaOnboardingScreen screenId="finish" />);
+    expect(finish).toContain('data-luca-presence-warm="true"');
+    expect(welcome).not.toContain("data-luca-presence-warm");
   });
 
   it("invokes CTA and option callbacks without performing side effects", () => {

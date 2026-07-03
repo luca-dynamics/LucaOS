@@ -177,10 +177,12 @@ describe("premium onboarding QA matrix", () => {
       );
       expect(presence).toContain('data-luca-presence="identity"');
 
+      // Incarnation rhythm: the being is present on every screen, small
+      // while the user is choosing.
       const trust = renderToStaticMarkup(
         <LucaOnboardingScreen screenId="permission_style" skinId={skinId} />,
       );
-      expect(trust).not.toContain("data-luca-presence");
+      expect(trust).toContain('data-luca-presence="identity"');
     }
   });
 });

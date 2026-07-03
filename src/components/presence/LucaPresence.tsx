@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   getLucaSkinPresenceVariables,
   type LucaSkinPresenceOptions,
@@ -50,6 +50,12 @@ export interface LucaPresenceProps extends LucaSkinPresenceOptions {
   faceSrc?: string;
   /** Accessible label for the `voice` orb (e.g. "Listening"). Ambient stays hidden. */
   label?: string;
+  /** Identity-only: the face resolves out of the dark on mount (first light). */
+  wake?: boolean;
+  /** Identity-only: slow living breath (scale + bloom). Suppressed by reducedMotion. */
+  breathing?: boolean;
+  /** Identity-only: golden undertone + amber bloom — the being is glad. */
+  warm?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -71,6 +77,9 @@ export const LucaPresence: React.FC<LucaPresenceProps> = ({
   size,
   faceSrc = LUCA_PRESENCE_FACE_SRC,
   label,
+  wake = false,
+  breathing = false,
+  warm = false,
   className,
   style,
   skinId,
@@ -152,9 +161,22 @@ export const LucaPresence: React.FC<LucaPresenceProps> = ({
 
   // identity
   const faceWidth = size ?? 150;
+  const animate = !reducedMotion;
+  // Wake = the face resolving out of the dark (first light). A mount-tick
+  // flips the class so the CSS filter transition narrates the focus.
+  const [awake, setAwake] = useState(!wake || !animate);
+  useEffect(() => {
+    if (awake) return;
+    const t = window.setTimeout(() => setAwake(true), 80);
+    return () => window.clearTimeout(t);
+  }, [awake]);
+  const bloomColor = warm
+    ? "var(--luca-warning, #d9a441)"
+    : "var(--luca-accent-primary, #8fd3df)";
   return (
     <div
       data-luca-presence="identity"
+      data-luca-presence-warm={warm ? "true" : undefined}
       className={className}
       style={{
         position: "relative",
@@ -171,11 +193,15 @@ export const LucaPresence: React.FC<LucaPresenceProps> = ({
           width: "150%",
           height: "150%",
           borderRadius: "50%",
-          background:
-            "radial-gradient(closest-side, color-mix(in srgb, var(--luca-accent-primary, #8fd3df) 26%, transparent), transparent 70%)",
+          background: `radial-gradient(closest-side, color-mix(in srgb, ${bloomColor} 26%, transparent), transparent 70%)`,
           opacity: "var(--luca-skin-presence-bloom)" as unknown as number,
           pointerEvents: "none",
           zIndex: 0,
+          animation:
+            breathing && animate
+              ? "luca-presence-bloom-breath 5.2s ease-in-out infinite"
+              : undefined,
+          transition: "background 700ms ease",
         }}
       />
       <img
@@ -187,7 +213,16 @@ export const LucaPresence: React.FC<LucaPresenceProps> = ({
           zIndex: 1,
           width: `${faceWidth}px`,
           height: "auto",
-          filter: "var(--luca-skin-presence-face-filter)",
+          filter: awake
+            ? warm
+              ? "var(--luca-skin-presence-face-filter) sepia(0.22) brightness(1.06)"
+              : "var(--luca-skin-presence-face-filter)"
+            : "blur(22px) brightness(0.35) saturate(0.7)",
+          transition: "filter 1600ms cubic-bezier(0.22, 0.88, 0.24, 1)",
+          animation:
+            breathing && animate
+              ? "luca-presence-face-breath 5.2s ease-in-out infinite"
+              : undefined,
         }}
       />
     </div>
