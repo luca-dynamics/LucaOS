@@ -149,6 +149,23 @@ class SocketService {
                 });
             });
 
+            socket.on('session:handoff', (data) => {
+                // Desktop hands a session summary to one companion. Fields
+                // whitelisted; nothing executes on either side.
+                if (clientType !== 'desktop' || !data?.target) return;
+                this.io.to(`device:${data.target}`).emit('session:handoff', {
+                    title: typeof data.title === 'string' ? data.title.slice(0, 200) : 'Session',
+                    summary: typeof data.summary === 'string' ? data.summary.slice(0, 2000) : '',
+                    from: 'Luca Desktop',
+                    timestamp: Date.now()
+                });
+            });
+
+            socket.on('session:handoff:ack', () => {
+                if (clientType === 'desktop') return;
+                this.io.to('desktop').emit('session:handoff:ack', { deviceId });
+            });
+
             socket.on('command:result', (data) => {
                 // Relay result back to LucaLinkManager to resolve promise
                 if (data.error) {

@@ -5,6 +5,7 @@ import type { CalendarEvent, Goal, Task } from "../../types";
 import type { RuntimeDiagnostics } from "../../services/runtime/RuntimeDiagnosticsService";
 import { runtimeDiagnosticsService } from "../../services/runtime/RuntimeDiagnosticsService";
 import { agentSessionContinuityService } from "../../services/runtime/AgentSessionContinuityService";
+import { lucaLinkManager } from "../../services/lucaLink/manager";
 import { reminderDeliveryService } from "../../services/scheduler/ReminderDeliveryService";
 import { approvalRequestCenterService } from "../../services/provenance/ApprovalRequestCenterService";
 import { runtimeContinuityLoopService } from "../../services/runtime/RuntimeContinuityLoopService";
@@ -93,6 +94,57 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   }, []);
 
   const sessions = useMemo(() => agentSessionContinuityService.listSessions(), []);
+
+  // "Hand this session to another device" (Body card). User-initiated,
+  // summary-only: the companion displays it; nothing executes anywhere.
+  const [handoffState, setHandoffState] = useState<Record<string, "sent" | "delivered">>({});
+  useEffect(() => {
+    const onAck = (event: unknown) => {
+      const deviceId = (event as { deviceId?: string } | undefined)?.deviceId;
+      if (!deviceId) return;
+      const key = `lucalink-${deviceId}`;
+      setHandoffState((prev) => ({ ...prev, [key]: "delivered" }));
+      window.setTimeout(
+        () =>
+          setHandoffState((prev) => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          }),
+        4000,
+      );
+    };
+    try {
+      lucaLinkManager.on("session:handoff:ack", onAck);
+    } catch {
+      return;
+    }
+    return () => {
+      try {
+        lucaLinkManager.off("session:handoff:ack", onAck);
+      } catch {
+        /* torn down */
+      }
+    };
+  }, []);
+  const handleSessionHandoff = (bodyDeviceId: string) => {
+    const deviceId = bodyDeviceId.replace(/^lucalink-/, "");
+    const active =
+      sessions.find((session) => session.lifecycleState === "active") ??
+      sessions[0];
+    try {
+      lucaLinkManager.sendSessionHandoff(deviceId, {
+        title: active?.title ?? "Current session",
+        summary:
+          active?.lastUserIntentSummary ||
+          active?.lastAgentStateSummary ||
+          "Luca is standing by on the desktop — pick up from there.",
+      });
+      setHandoffState((prev) => ({ ...prev, [bodyDeviceId]: "sent" }));
+    } catch {
+      /* not connected — the button simply stays idle */
+    }
+  };
   const activeSession = sessions.find((session) => session.lifecycleState === "active") ?? sessions[0];
   const resumableCount = agentSessionContinuityService.listResumableSessions().length;
   const approvals = approvalRequestCenterService.getDiagnosticsSummary();
@@ -239,16 +291,43 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             </span>
             <span className="ml-auto flex-none text-[11px] font-medium" style={{ color: "var(--luca-success, #4fbf7a)" }}>active</span>
           </div>
-          {devices.slice(0, 3).map((device, index) => (
-            <div key={device.id ?? index} className="flex items-center gap-2.5 py-1.5 text-xs">
-              <Icon name="Smartphone" size={14} className="flex-none text-[var(--app-text-muted)]" />
-              <span className="min-w-0">
-                <span className="block truncate text-[var(--app-text-main)]">{device.name ?? "Linked device"}</span>
-                <span className="block text-[11px] text-[var(--app-text-muted)]">{(device.type ?? "device").toString().toLowerCase().replace(/_/g, " ")}</span>
-              </span>
-              <span className="ml-auto flex-none text-[11px] text-[var(--app-text-muted)]">{(device.status ?? "linked").toString().toLowerCase()}</span>
-            </div>
-          ))}
+          {devices.slice(0, 3).map((device, index) => {
+            const deviceKey = String(device.id ?? index);
+            const isLinkedBody =
+              deviceKey.startsWith("lucalink-") &&
+              (device.status ?? "").toString() === "active";
+            const handoff = handoffState[deviceKey];
+            return (
+              <div key={deviceKey} className="flex items-center gap-2.5 py-1.5 text-xs">
+                <Icon name="Smartphone" size={14} className="flex-none text-[var(--app-text-muted)]" />
+                <span className="min-w-0">
+                  <span className="block truncate text-[var(--app-text-main)]">{device.name ?? "Linked device"}</span>
+                  <span className="block text-[11px] text-[var(--app-text-muted)]">{(device.type ?? "device").toString().toLowerCase().replace(/_/g, " ")}</span>
+                </span>
+                {isLinkedBody ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSessionHandoff(deviceKey)}
+                    disabled={Boolean(handoff)}
+                    className="ml-auto flex-none rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))] disabled:hover:bg-transparent"
+                    style={{
+                      color: handoff
+                        ? "var(--luca-success, #4fbf7a)"
+                        : "var(--app-text-muted)",
+                    }}
+                  >
+                    {handoff === "delivered"
+                      ? "delivered"
+                      : handoff === "sent"
+                        ? "sent"
+                        : "send session"}
+                  </button>
+                ) : (
+                  <span className="ml-auto flex-none text-[11px] text-[var(--app-text-muted)]">{(device.status ?? "linked").toString().toLowerCase()}</span>
+                )}
+              </div>
+            );
+          })}
           {devices.length === 0 && (
             <p className="py-1.5 text-[11px] text-[var(--app-text-muted)]">No other devices linked yet — pair one via LucaLink.</p>
           )}

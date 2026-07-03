@@ -255,6 +255,9 @@ export class SecureSocket {
     this.socket.on("sensor:pulse", (data: any) => {
       this.emit("sensor:pulse", data);
     });
+    this.socket.on("session:handoff:ack", (data: any) => {
+      this.emit("session:handoff:ack", data);
+    });
 
     this.socket.on("command:result", (result: any) => {
       console.log(

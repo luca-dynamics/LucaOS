@@ -393,6 +393,14 @@
             });
 
             // Message Handling
+            socket.on('session:handoff', (handoff) => {
+                addSystemMessage('Session handed to this device' + (handoff && handoff.title ? ': ' + handoff.title : ''));
+                if (handoff && handoff.summary) {
+                    addMessage(handoff.summary, 'luca');
+                }
+                socket.emit('session:handoff:ack', {});
+            });
+
             socket.on('server:message', async (msg) => {
                 console.log('[LUCA LINK] Received:', msg);
 
