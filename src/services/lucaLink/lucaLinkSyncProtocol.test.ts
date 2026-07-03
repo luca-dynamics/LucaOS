@@ -118,7 +118,7 @@ describe("LucaLink sync protocol envelopes", () => {
       role: "user",
     });
 
-    expect(validateLucaLinkEnvelope(created)).toEqual({
+    expect(validateLucaLinkEnvelope(created, { now: NOW })).toEqual({
       valid: true,
       errors: [],
       warnings: [],
@@ -280,7 +280,7 @@ describe("LucaLink sync protocol envelopes", () => {
       payload: { kind: "tool-request", permission: "shell.execute" },
     });
 
-    expect(validateLucaLinkEnvelope(created)).toEqual({
+    expect(validateLucaLinkEnvelope(created, { now: NOW })).toEqual({
       valid: true,
       errors: [],
       warnings: [],

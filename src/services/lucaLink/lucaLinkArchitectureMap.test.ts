@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+// Real fs — vitest's node:fs polyfill returns empty reads (see
+// lucaLinkSecurityInvariants.test.ts).
+const { readFileSync } = process.getBuiltinModule("node:fs");
 import { describe, expect, it, vi } from "vitest";
 import {
   lucaLinkArchitectureAuditNote,

@@ -1,4 +1,7 @@
-import { readFileSync } from "node:fs";
+// vitest aliases node:fs to a browser polyfill that returns empty reads,
+// which made every invariant here vacuous. getBuiltinModule reaches the
+// real fs (same pattern as SettingsSkinIntegration.test.ts).
+const { readFileSync } = process.getBuiltinModule("node:fs");
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -30,7 +33,11 @@ function escapeRegExp(value: string): string {
 const runtimePatternRegex = new Map(
   LUCA_LINK_FORBIDDEN_MODEL_RUNTIME_PATTERNS.map((pattern) => [
     pattern,
-    new RegExp(escapeRegExp(pattern).replace(/\\\($/, "\\s*\\(")),
+    // Anchor word-initial patterns so "io(" can't match "...Scenario(".
+    new RegExp(
+      (/^\w/.test(pattern) ? "\\b" : "") +
+        escapeRegExp(pattern).replace(/\\\($/, "\\s*\\("),
+    ),
   ]),
 );
 
