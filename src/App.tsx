@@ -2848,6 +2848,16 @@ function AppContent() {
             top of the LEFT rail, so all three panels rise to the very top
             (Claude/Codex-style) instead of sitting under a full-width band. */}
 
+        {/* System strip (Electron window-controls overlay only): a slim
+            full-width chrome band ABOVE the panels that owns the window
+            controls and dragging — the Claude Desktop pattern. No panel
+            layout (expanded tabs, collapsed rail, edge-to-edge header) can
+            ever collide with min/max/close. Hidden everywhere else via CSS
+            (html.luca-wco gate). */}
+        <div className="luca-system-strip luca-window-drag" aria-hidden="true">
+          <span className="luca-system-strip-title">LucaOS</span>
+        </div>
+
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden relative z-10 flex h-full gap-0 p-0">
           {!isMobile && leftPanelCollapsed && (
@@ -3241,7 +3251,7 @@ function AppContent() {
               >
                 <div className="flex flex-col h-full w-full overflow-hidden">
                   <div
-                    className="luca-window-drag luca-wco-pad-right flex flex-none h-14 items-stretch border-b"
+                    className="luca-window-drag flex flex-none h-14 items-stretch border-b"
                     style={lucaShellDividerStyle}
                   >
                     {visibleRightPanelModes.map((mode) => (
