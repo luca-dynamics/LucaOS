@@ -65,17 +65,10 @@
   /* glad: the face warms — golden undertone, amber bloom */
   #being.warm #face{filter:blur(0) brightness(1.06) saturate(1.05) sepia(.22)}
   #being.warm{--orb:#d9b06a}
-  /* condensing: identity rests into the runtime mark */
-  #being.condense{opacity:0;left:34px;top:28px;width:26px;height:26px}
-  #orb{
-    position:fixed;z-index:51;width:24px;height:24px;border-radius:50%;
-    left:34px;top:28px;transform:translate(-50%,-50%);opacity:0;
-    background:radial-gradient(circle at 38% 34%, rgba(255,255,255,.85), var(--orb) 42%, transparent 72%);
-    box-shadow:0 0 12px color-mix(in srgb, var(--orb) 40%, transparent);
-    transition:opacity 700ms ease 500ms;
-    animation:faceBreath 4.2s ease-in-out infinite;
-  }
-  #orb.on{opacity:1}
+  /* settling: the face itself becomes the rail anchor — still breathing,
+     bloom lowered to a whisper. The identity never leaves. */
+  #being.settle{left:34px;top:28px;width:28px;height:28px}
+  #being.settle #bloom{opacity:.35;animation:none}
 
   /* ── scenes ── */
   .scene{
@@ -179,7 +172,6 @@
   <div id="bloom"></div>
   <img id="face" src="hologram.png" alt="" />
 </div>
-<div id="orb"></div>
 
 <div class="steps" id="steps">
   <i data-s="1"></i><i data-s="2"></i><i data-s="3"></i><i data-s="4"></i>
@@ -303,7 +295,6 @@
 
   // ── scene switching + face choreography (presence rhythm) ──
   const being = document.getElementById("being");
-  const orb = document.getElementById("orb");
   const steps = document.getElementById("steps");
   // The face never sits still across screens: hero at first light, smaller
   // and higher while you choose, large and warm when it's glad.
@@ -312,7 +303,7 @@
     document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
     document.getElementById("s"+n).classList.add("on");
     const p = FACE_POS[n];
-    being.classList.remove("condense");
+    being.classList.remove("settle");
     being.style.left=p.l; being.style.top=p.t; being.style.width=p.w+"px"; being.style.height=p.w+"px";
     being.classList.toggle("warm", n===4);
     steps.classList.toggle("on", n>1);
@@ -324,15 +315,14 @@
     el.parentElement.querySelectorAll(".tcard").forEach(c=>c.classList.remove("on"));
     el.classList.add("on");
   }
-  // ── the handoff: identity condenses into its resting mark. The face
-  // shrinks toward the rail anchor while fading; the runtime orb takes over
-  // at the same point as the shell fades in around it. ──
+  // ── the handoff: the face itself settles into the rail anchor and STAYS —
+  // the identity never leaves; it just comes to rest as the shell fades in
+  // around it. ──
   function finale(){
     document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
     steps.classList.remove("on");
     being.classList.remove("warm");
-    being.classList.add("condense");
-    orb.classList.add("on");
+    being.classList.add("settle");
     document.getElementById("shell").classList.add("on");
   }
   // wake: the face resolves out of the dark — eyes adjusting.
