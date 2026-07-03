@@ -148,6 +148,120 @@ export const LUCA_SKIN_PREVIEW_METADATA = {
       "No paper texture assets yet.",
     ],
   },
+  graphite: {
+    id: "graphite",
+    label: "LucaOS Graphite",
+    shortLabel: "Graphite",
+    tagline: "Neutral grey dark for long sessions.",
+    description:
+      "A neutral grey dark environment with no color cast — steady contrast and calm materials that stay easy on the eyes across long working sessions.",
+    mood: "focused-dark",
+    capabilities: [
+      "high-readability",
+      "low-motion-safe",
+      "mobile-safe",
+      "developer-focus",
+    ],
+    recommendedFor: ["long sessions", "neutral dark-mode use", "focus work"],
+    previewNotes: [
+      "Keep surfaces strictly neutral — no blue or warm cast anywhere.",
+      "Structure comes from subtle elevation steps, not color.",
+    ],
+    accessibilityNotes: [
+      "Preserve strong text contrast on grey surfaces.",
+      "Status colors stay semantic and are never tinted by the skin.",
+    ],
+    designGuardrails: [
+      "No color cast on backgrounds.",
+      "Accent stays desaturated steel.",
+      "Avoid glow.",
+    ],
+  },
+  onyx: {
+    id: "onyx",
+    label: "LucaOS Onyx",
+    shortLabel: "Onyx",
+    tagline: "True black, OLED-grade contrast.",
+    description:
+      "A true-black environment where structure is carried by hairlines and a single cool accent — maximum contrast, zero noise, OLED-friendly.",
+    mood: "focused-dark",
+    capabilities: [
+      "high-readability",
+      "low-motion-safe",
+      "mobile-safe",
+    ],
+    recommendedFor: ["OLED displays", "night use", "maximum contrast"],
+    previewNotes: [
+      "Backgrounds are near-absolute black; hairlines carry the layout.",
+      "The single cool accent is the only saturated color.",
+    ],
+    accessibilityNotes: [
+      "Text stays high-contrast against true black.",
+      "Avoid large pure-white fields that cause halation on OLED.",
+    ],
+    designGuardrails: [
+      "No grey wash over black.",
+      "One accent only.",
+      "Hairlines, not fills, define structure.",
+    ],
+  },
+  dusk: {
+    id: "dusk",
+    label: "LucaOS Dusk",
+    shortLabel: "Dusk",
+    tagline: "Warm charcoal with an amber undertone.",
+    description:
+      "A warm charcoal environment with a soft amber undertone — dark mode that reads like evening light rather than machinery.",
+    mood: "focused-dark",
+    capabilities: [
+      "high-readability",
+      "low-motion-safe",
+      "writing-focus",
+    ],
+    recommendedFor: ["evening use", "reading", "writing"],
+    previewNotes: [
+      "Warmth lives in the background undertone and accent only.",
+      "Keep the amber accent restrained — undertone, not glow.",
+    ],
+    accessibilityNotes: [
+      "Warm cast must never reduce text contrast.",
+      "Semantic status colors remain unchanged by the warm palette.",
+    ],
+    designGuardrails: [
+      "Warmth is an undertone, not a tint on text.",
+      "No orange glow.",
+      "Preserve contrast.",
+    ],
+  },
+  mist: {
+    id: "mist",
+    label: "LucaOS Mist",
+    shortLabel: "Mist",
+    tagline: "Clean neutral light — the working daylight.",
+    description:
+      "A clean neutral light environment with quiet grey-white surfaces and no warmth cast — the everyday daylight counterpart to Graphite.",
+    mood: "calm-light",
+    capabilities: [
+      "high-readability",
+      "low-motion-safe",
+      "reduced-transparency-safe",
+      "mobile-safe",
+    ],
+    recommendedFor: ["daylight work", "neutral light-mode use", "shared screens"],
+    previewNotes: [
+      "Strictly neutral light surfaces — no cream or warm tint.",
+      "Depth comes from soft shadow steps, not borders.",
+    ],
+    accessibilityNotes: [
+      "Foreground text keeps strong contrast on light grey.",
+      "Works with reduced transparency without losing structure.",
+    ],
+    designGuardrails: [
+      "No warm cast.",
+      "Avoid harsh pure white fields.",
+      "Keep shadows soft and low.",
+    ],
+  },
 } satisfies Readonly<Record<LucaSkinId, LucaSkinPreviewMetadata>>;
 
 export function getLucaSkinPreviewMetadata(skinId?: unknown): LucaSkinPreviewMetadata {

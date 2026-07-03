@@ -71,7 +71,7 @@ describe("dashboard disclosure", () => {
   });
 
   it("uses display labels without changing internal panel enums", () => {
-    expect(getRightPanelLabelForMode("basic", "CONTROL")).toBe("Overview");
+    expect(getRightPanelLabelForMode("basic", "CONTROL")).toBe("Now");
     expect(getRightPanelLabelForMode("creator", "LOGS")).toBe("Trace");
   });
 

@@ -65,7 +65,7 @@ const DISCLOSURE_BY_MODE: Record<LucaExperienceMode, DashboardDisclosure> = {
 };
 
 const RIGHT_PANEL_LABELS: Record<DashboardRightPanelMode, string> = {
-  CONTROL: "Overview",
+  CONTROL: "Now",
   ACTIVITY: "Timeline",
   MEMORY: "Memory",
   LOGS: "Trace",

@@ -1,4 +1,12 @@
-export type LucaSkinId = "pearl" | "carbon" | "flow" | "canvas";
+export type LucaSkinId =
+  | "pearl"
+  | "carbon"
+  | "flow"
+  | "canvas"
+  | "graphite"
+  | "onyx"
+  | "dusk"
+  | "mist";
 
 export type LucaSkinModeAffinity = "light" | "dark" | "adaptive" | "warm";
 
@@ -112,7 +120,16 @@ export interface LucaSkinDefinition {
   >;
 }
 
-export const LUCA_SKIN_IDS = ["pearl", "carbon", "flow", "canvas"] as const;
+export const LUCA_SKIN_IDS = [
+  "pearl",
+  "carbon",
+  "flow",
+  "canvas",
+  "graphite",
+  "onyx",
+  "dusk",
+  "mist",
+] as const;
 
 export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
   pearl: {
@@ -357,6 +374,233 @@ export const LUCA_SKINS: Readonly<Record<LucaSkinId, LucaSkinDefinition>> = {
       orbGradient:
         "radial-gradient(60% 50% at 35% 30%, #ffffff, transparent 60%), conic-gradient(from 200deg, #e6c79a, #d6a974, #c9a98a, #e6c79a)",
       faceSharpFilter: "drop-shadow(0 10px 22px rgba(120, 80, 40, 0.3))",
+    },
+  },
+  graphite: {
+    id: "graphite",
+    name: "LucaOS Graphite",
+    shortName: "Graphite",
+    description:
+      "A neutral grey dark environment — no color cast, steady contrast, easy on the eyes for long sessions.",
+    modeAffinity: "dark",
+    backgroundProfile: {
+      base: "#1a1c1f",
+      elevated: "#232629",
+      ambient: "rgba(60, 63, 68, 0.6)",
+      hero: "linear-gradient(135deg, #191b1e 0%, #232629 56%, #2a2d31 100%)",
+      pattern: "solid",
+    },
+    materialProfile: {
+      glassOpacity: 0.84,
+      glassBlurPx: 10,
+      borderStrength: 0.44,
+      shadowSoft: "0 18px 48px rgba(0, 0, 0, 0.32)",
+      shadowFloat: "0 30px 80px rgba(0, 0, 0, 0.4)",
+      profile: "graphite",
+    },
+    accentProfile: {
+      primary: "#9aa4b2",
+      secondary: "#6b7684",
+      glow: "rgba(154, 164, 178, 0.16)",
+    },
+    typographyProfile: {
+      primary: "#ececec",
+      secondary: "#b6bcc4",
+      tertiary: "#878e97",
+      mood: "system-clean",
+    },
+    bootProfile: {
+      background: "#1a1c1f",
+      orb: "#2c3034",
+      highlight: "#c2c8cf",
+      motion: "minimal",
+    },
+    motionProfile: {
+      speed: "precise",
+      softness: "controlled",
+      glow: "restrained",
+      reducedMotionFallback: true,
+    },
+    presenceProfile: {
+      ambientOpacity: 0.42,
+      ambientBlend: "screen",
+      ambientBlurPx: 34,
+      bloomIntensity: 0.26,
+      bloomIridescent: false,
+      orbGradient:
+        "radial-gradient(60% 50% at 35% 30%, rgba(255, 255, 255, 0.5), transparent 60%), conic-gradient(from 200deg, #aeb6c0, #8d949d, #b9bfc7, #aeb6c0)",
+      faceSharpFilter:
+        "drop-shadow(0 4px 14px rgba(0, 0, 0, 0.42)) brightness(1.02)",
+    },
+  },
+  onyx: {
+    id: "onyx",
+    name: "LucaOS Onyx",
+    shortName: "Onyx",
+    description:
+      "True black with OLED-grade contrast — structure carried by hairlines and one cool accent, nothing else.",
+    modeAffinity: "dark",
+    backgroundProfile: {
+      base: "#0a0a0b",
+      elevated: "#141416",
+      ambient: "rgba(30, 30, 34, 0.6)",
+      hero: "linear-gradient(135deg, #050506 0%, #101012 56%, #161618 100%)",
+      pattern: "solid",
+    },
+    materialProfile: {
+      glassOpacity: 0.88,
+      glassBlurPx: 8,
+      borderStrength: 0.5,
+      shadowSoft: "0 18px 48px rgba(0, 0, 0, 0.5)",
+      shadowFloat: "0 30px 80px rgba(0, 0, 0, 0.6)",
+      profile: "graphite",
+    },
+    accentProfile: {
+      primary: "#7aa2ff",
+      secondary: "#5670a8",
+      glow: "rgba(122, 162, 255, 0.18)",
+    },
+    typographyProfile: {
+      primary: "#f2f2f2",
+      secondary: "#b8bcc2",
+      tertiary: "#82868d",
+      mood: "system-clean",
+    },
+    bootProfile: {
+      background: "#0a0a0b",
+      orb: "#1b1d22",
+      highlight: "#9fb4e8",
+      motion: "minimal",
+    },
+    motionProfile: {
+      speed: "precise",
+      softness: "controlled",
+      glow: "restrained",
+      reducedMotionFallback: true,
+    },
+    presenceProfile: {
+      ambientOpacity: 0.4,
+      ambientBlend: "screen",
+      ambientBlurPx: 32,
+      bloomIntensity: 0.32,
+      bloomIridescent: false,
+      orbGradient:
+        "radial-gradient(60% 50% at 35% 30%, rgba(255, 255, 255, 0.5), transparent 60%), conic-gradient(from 200deg, #7aa2ff, #5670a8, #8fb0e8, #7aa2ff)",
+      faceSharpFilter:
+        "drop-shadow(0 4px 14px rgba(0, 0, 0, 0.55)) brightness(1.04)",
+    },
+  },
+  dusk: {
+    id: "dusk",
+    name: "LucaOS Dusk",
+    shortName: "Dusk",
+    description:
+      "A warm charcoal environment with a soft amber undertone — dark mode that feels like evening, not machinery.",
+    modeAffinity: "dark",
+    backgroundProfile: {
+      base: "#191512",
+      elevated: "#241e19",
+      ambient: "rgba(64, 52, 42, 0.6)",
+      hero: "linear-gradient(135deg, #181411 0%, #241d17 56%, #2b221a 100%)",
+      pattern: "ambient",
+    },
+    materialProfile: {
+      glassOpacity: 0.82,
+      glassBlurPx: 10,
+      borderStrength: 0.44,
+      shadowSoft: "0 18px 48px rgba(20, 12, 6, 0.4)",
+      shadowFloat: "0 30px 80px rgba(20, 12, 6, 0.5)",
+      profile: "graphite",
+    },
+    accentProfile: {
+      primary: "#d8a25e",
+      secondary: "#a5713f",
+      glow: "rgba(216, 162, 94, 0.16)",
+    },
+    typographyProfile: {
+      primary: "#efe6da",
+      secondary: "#c4b7a8",
+      tertiary: "#94897c",
+      mood: "editorial",
+    },
+    bootProfile: {
+      background: "#191512",
+      orb: "#2e251d",
+      highlight: "#e2c49a",
+      motion: "calm",
+    },
+    motionProfile: {
+      speed: "calm",
+      softness: "soft",
+      glow: "minimal",
+      reducedMotionFallback: true,
+    },
+    presenceProfile: {
+      ambientOpacity: 0.45,
+      ambientBlend: "screen",
+      ambientBlurPx: 34,
+      bloomIntensity: 0.28,
+      bloomIridescent: false,
+      orbGradient:
+        "radial-gradient(60% 50% at 35% 30%, rgba(255, 250, 240, 0.5), transparent 60%), conic-gradient(from 200deg, #d8a25e, #a5713f, #c9b08a, #d8a25e)",
+      faceSharpFilter:
+        "drop-shadow(0 4px 14px rgba(20, 12, 6, 0.5)) brightness(1.02) sepia(0.06)",
+    },
+  },
+  mist: {
+    id: "mist",
+    name: "LucaOS Mist",
+    shortName: "Mist",
+    description:
+      "Clean neutral light — quiet grey-white surfaces with no warmth cast, the working daylight environment.",
+    modeAffinity: "light",
+    backgroundProfile: {
+      base: "#eef0f2",
+      elevated: "#ffffff",
+      ambient: "rgba(210, 214, 220, 0.7)",
+      hero: "linear-gradient(135deg, #f2f3f5 0%, #e9ebee 52%, #f4f5f7 100%)",
+      pattern: "solid",
+    },
+    materialProfile: {
+      glassOpacity: 0.76,
+      glassBlurPx: 12,
+      borderStrength: 0.4,
+      shadowSoft: "0 18px 50px rgba(40, 48, 60, 0.1)",
+      shadowFloat: "0 28px 70px rgba(40, 48, 60, 0.14)",
+      profile: "glass",
+    },
+    accentProfile: {
+      primary: "#5f6b7a",
+      secondary: "#8b95a1",
+      glow: "rgba(95, 107, 122, 0.14)",
+    },
+    typographyProfile: {
+      primary: "#1c2126",
+      secondary: "#4c555f",
+      tertiary: "#7b838c",
+      mood: "system-clean",
+    },
+    bootProfile: {
+      background: "#eef0f2",
+      orb: "#ffffff",
+      highlight: "#d4dae1",
+      motion: "calm",
+    },
+    motionProfile: {
+      speed: "calm",
+      softness: "soft",
+      glow: "minimal",
+      reducedMotionFallback: true,
+    },
+    presenceProfile: {
+      ambientOpacity: 0.5,
+      ambientBlend: "normal",
+      ambientBlurPx: 30,
+      bloomIntensity: 0.22,
+      bloomIridescent: false,
+      orbGradient:
+        "radial-gradient(60% 50% at 35% 30%, #ffffff, transparent 60%), conic-gradient(from 200deg, #c3ccd6, #a8b2bd, #d2d8df, #c3ccd6)",
+      faceSharpFilter: "drop-shadow(0 10px 22px rgba(60, 72, 86, 0.26))",
     },
   },
 } as const;

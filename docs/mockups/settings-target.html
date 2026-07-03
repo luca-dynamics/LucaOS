@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Settings Target (Appearance · 8 skins)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#101317; --card:rgba(255,255,255,.025); --hover:rgba(255,255,255,.06);
+    --hair:rgba(255,255,255,.07); --hair-soft:rgba(255,255,255,.045);
+    --t1:#e9edf2; --t2:#9aa4b2; --t3:#69737f;
+    --accent:#7aa2ff; --accent-ink:#0c0e12; --ok:#4fbf7a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--t1);
+    font:400 14px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+    letter-spacing:-.008em;font-variant-numeric:tabular-nums}
+  svg{display:block;flex:none}
+
+  .settings{display:grid;grid-template-columns:248px 1fr;height:100vh}
+
+  /* ── settings nav ── */
+  .snav{border-right:1px solid var(--hair);display:flex;flex-direction:column;min-width:0}
+  .snav .head{height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--hair)}
+  .snav .head .back{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:var(--t3);cursor:pointer}
+  .snav .head .back:hover{background:var(--hover);color:var(--t1)}
+  .snav .head .title{font-size:14px;font-weight:600}
+  .snav .body{flex:1;overflow:hidden;padding:12px 10px}
+  .search{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:9px;
+    border:1px solid var(--hair);background:var(--card);color:var(--t3);font-size:12.5px}
+  .snav nav{margin-top:12px;display:flex;flex-direction:column;gap:1px}
+  .snav nav a{display:flex;align-items:center;gap:10px;height:33px;padding:0 10px;border-radius:8px;
+    color:var(--t2);font-size:13px;font-weight:500;text-decoration:none}
+  .snav nav a svg{color:var(--t3)}
+  .snav nav a:hover{background:var(--hover);color:var(--t1)}
+  .snav nav a.on{background:var(--hover);color:var(--t1)}
+  .snav nav a.on svg{color:var(--accent)}
+  .snav .foot{flex:none;border-top:1px solid var(--hair);padding:10px}
+  .me{display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:10px}
+  .me:hover{background:var(--hover)}
+  .avatar{width:24px;height:24px;border-radius:50%;background:var(--hover);border:1px solid var(--hair);
+    display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--t2)}
+  .me .who{min-width:0}
+  .me .n{font-size:13px;font-weight:500;color:var(--t1);line-height:1.2}
+  .me .p{font-size:11px;color:var(--t3)}
+
+  /* ── content pane ── */
+  .pane{overflow:hidden;display:flex;flex-direction:column}
+  .pane .inner{width:100%;max-width:760px;margin:0 auto;padding:30px 32px;overflow:hidden}
+  h1{font-size:20px;font-weight:600;letter-spacing:-.015em}
+  .sub{margin-top:4px;font-size:13px;color:var(--t2)}
+  .sect{margin-top:26px}
+  .sect > .label{font-size:12px;font-weight:600;color:var(--t3);letter-spacing:.05em;text-transform:uppercase}
+
+  /* skin grid */
+  .skins{margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .skin{border:1px solid var(--hair);border-radius:13px;background:var(--card);padding:8px;cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+  .skin:hover{background:var(--hover)}
+  .skin.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent), inset 0 1px 0 rgba(255,255,255,.03)}
+  .thumb{position:relative;height:62px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+  .thumb .rail{position:absolute;left:0;top:0;bottom:0;width:26%}
+  .thumb .line1{position:absolute;left:34%;top:16px;width:44%;height:5px;border-radius:3px;opacity:.55}
+  .thumb .line2{position:absolute;left:34%;top:28px;width:30%;height:5px;border-radius:3px;opacity:.35}
+  .thumb .dotA{position:absolute;right:9px;bottom:9px;width:7px;height:7px;border-radius:50%}
+  .skin .nm{margin-top:8px;display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--t1)}
+  .skin .nm .chk{margin-left:auto;color:var(--accent)}
+  .skin .mood{margin-top:2px;font-size:11px;line-height:1.45;color:var(--t3)}
+
+  /* settings rows */
+  .rows{margin-top:12px;border:1px solid var(--hair);border-radius:13px;background:var(--card);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+  .row{display:flex;align-items:center;gap:14px;padding:13px 16px}
+  .row + .row{border-top:1px solid var(--hair-soft)}
+  .row .txt{flex:1;min-width:0}
+  .row .t{font-size:13.5px;font-weight:500;color:var(--t1)}
+  .row .s{margin-top:1px;font-size:12px;color:var(--t3)}
+
+  .toggle{width:36px;height:21px;border-radius:999px;background:var(--hover);position:relative;flex:none;cursor:pointer;border:1px solid var(--hair)}
+  .toggle i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--t3)}
+  .toggle.on{background:var(--accent);border-color:transparent}
+  .toggle.on i{left:auto;right:2px;background:#fff}
+
+  .seg{display:flex;gap:2px;padding:2px;border:1px solid var(--hair);border-radius:9px;flex:none}
+  .seg span{padding:4px 11px;border-radius:6px;font-size:12px;font-weight:600;color:var(--t3);cursor:pointer}
+  .seg span.on{background:var(--hover);color:var(--t1)}
+
+  .accents{display:flex;gap:8px;flex:none}
+  .acc{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+  .acc.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+
+  .hint{margin-top:10px;font-size:11.5px;color:var(--t3)}
+</style>
+</head>
+<body>
+<div class="settings">
+
+  <!-- ── nav ── -->
+  <aside class="snav">
+    <div class="head">
+      <div class="back"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 5l-7 7 7 7"/></svg></div>
+      <div class="title">Settings</div>
+    </div>
+    <div class="body">
+      <div class="search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        Search settings
+      </div>
+      <nav>
+        <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7"/></svg>General</a>
+        <a class="on" href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18c-2 0-2.5-1.6-1.5-2.8.8-1 .3-2.7-1.2-2.7H7.5C5 15.5 3 14 3 12"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="14" cy="6.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="17.5" cy="10.5" r="1.1" fill="currentColor" stroke="none"/></svg>Appearance</a>
+        <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="8.5" stroke-dasharray="2.5 3.5"/></svg>Presence &amp; Voice</a>
+        <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3c3.5 0 6 2.4 6 5.6 0 1.8-.8 3.1-1.9 4.1-.8.8-1.1 1.5-1.1 2.3v1H9v-1c0-.8-.3-1.5-1.1-2.3C6.8 11.7 6 10.4 6 8.6 6 5.4 8.5 3 12 3z"/><path d="M9.5 19h5M10.5 21.5h3"/></svg>Intelligence</a>
+        <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3V6"/><path d="M4.5 12v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/></svg>Memory &amp; Privacy</a>
+        <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5S13.9 16 14.5 19"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.7c2.4.1 4.4 1.5 5 4.3"/></svg>Agents &amp; Skills</a>
+        <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><rect x="5" y="7" width="14" height="7" rx="2"/><path d="M12 14v4"/><circle cx="12" cy="19.5" r="1.6"/></svg>Connections</a>
+        <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Devices</a>
+        <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.4"/></svg>About</a>
+      </nav>
+    </div>
+    <div class="foot">
+      <div class="me">
+        <div class="avatar">E</div>
+        <div class="who"><div class="n">Enang</div><div class="p">Prime · 1,000 credits</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── content: Appearance ── -->
+  <main class="pane">
+    <div class="inner">
+      <h1>Appearance</h1>
+      <div class="sub">Choose the skin Luca wears and how the interface feels. Skins change material and mood — never legibility.</div>
+
+      <div class="sect">
+        <div class="label">Skin</div>
+        <div class="skins">
+
+          <!-- darks -->
+          <div class="skin on">
+            <div class="thumb" style="background:#111417">
+              <div class="rail" style="background:rgba(255,255,255,.05)"></div>
+              <div class="line1" style="background:#e9edf2"></div><div class="line2" style="background:#e9edf2"></div>
+              <div class="dotA" style="background:#7aa2ff"></div>
+            </div>
+            <div class="nm">Carbon
+              <span class="chk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+            </div>
+            <div class="mood">Focused blue-black — the LucaOS signature.</div>
+          </div>
+
+          <div class="skin">
+            <div class="thumb" style="background:#1a1c1f">
+              <div class="rail" style="background:rgba(255,255,255,.05)"></div>
+              <div class="line1" style="background:#ececec"></div><div class="line2" style="background:#ececec"></div>
+              <div class="dotA" style="background:#9aa4b2"></div>
+            </div>
+            <div class="nm">Graphite</div>
+            <div class="mood">Neutral grey dark — easy for long sessions.</div>
+          </div>
+
+          <div class="skin">
+            <div class="thumb" style="background:#0a0a0b">
+              <div class="rail" style="background:rgba(255,255,255,.045)"></div>
+              <div class="line1" style="background:#f2f2f2"></div><div class="line2" style="background:#f2f2f2"></div>
+              <div class="dotA" style="background:#7aa2ff"></div>
+            </div>
+            <div class="nm">Onyx</div>
+            <div class="mood">True black, OLED-grade contrast.</div>
+          </div>
+
+          <div class="skin">
+            <div class="thumb" style="background:#191512">
+              <div class="rail" style="background:rgba(255,236,210,.05)"></div>
+              <div class="line1" style="background:#efe6da"></div><div class="line2" style="background:#efe6da"></div>
+              <div class="dotA" style="background:#d8a25e"></div>
+            </div>
+            <div class="nm">Dusk</div>
+            <div class="mood">Warm charcoal with a soft amber undertone.</div>
+          </div>
+
+          <!-- lights -->
+          <div class="skin">
+            <div class="thumb" style="background:#f4f5f7">
+              <div class="rail" style="background:rgba(0,0,0,.045)"></div>
+              <div class="line1" style="background:#23262b"></div><div class="line2" style="background:#23262b"></div>
+              <div class="dotA" style="background:#5b7fd4"></div>
+            </div>
+            <div class="nm">Pearl</div>
+            <div class="mood">Soft light with quiet depth.</div>
+          </div>
+
+          <div class="skin">
+            <div class="thumb" style="background:#ececee">
+              <div class="rail" style="background:rgba(0,0,0,.05)"></div>
+              <div class="line1" style="background:#26282c"></div><div class="line2" style="background:#26282c"></div>
+              <div class="dotA" style="background:#6b7684"></div>
+            </div>
+            <div class="nm">Mist</div>
+            <div class="mood">Clean neutral light — the working daylight.</div>
+          </div>
+
+          <div class="skin">
+            <div class="thumb" style="background:#f3ecdf">
+              <div class="rail" style="background:rgba(80,60,30,.07)"></div>
+              <div class="line1" style="background:#39322a"></div><div class="line2" style="background:#39322a"></div>
+              <div class="dotA" style="background:#b3814e"></div>
+            </div>
+            <div class="nm">Canvas</div>
+            <div class="mood">Warm paper matte for writing and planning.</div>
+          </div>
+
+          <!-- living -->
+          <div class="skin">
+            <div class="thumb" style="background:linear-gradient(135deg,#101828 0%,#1b1430 55%,#0e2224 100%)">
+              <div class="rail" style="background:rgba(255,255,255,.05)"></div>
+              <div class="line1" style="background:#e9edf2"></div><div class="line2" style="background:#e9edf2"></div>
+              <div class="dotA" style="background:#8fd8c6"></div>
+            </div>
+            <div class="nm">Flow</div>
+            <div class="mood">A living gradient that stays behind your work.</div>
+          </div>
+
+        </div>
+        <div class="hint">Every skin passes the same legibility contract — text contrast and status colors never wash out.</div>
+      </div>
+
+      <div class="sect">
+        <div class="label">Feel</div>
+        <div class="rows">
+          <div class="row">
+            <div class="txt"><div class="t">Accent</div><div class="s">Used exactly three places: send, active tab, approve.</div></div>
+            <div class="accents">
+              <span class="acc on" style="background:#7aa2ff"></span>
+              <span class="acc" style="background:#8fd8c6"></span>
+              <span class="acc" style="background:#d8a25e"></span>
+              <span class="acc" style="background:#c58ee8"></span>
+              <span class="acc" style="background:#9aa4b2"></span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="txt"><div class="t">Density</div><div class="s">How much breathing room the interface keeps.</div></div>
+            <div class="seg"><span class="on">Comfortable</span><span>Compact</span></div>
+          </div>
+          <div class="row">
+            <div class="txt"><div class="t">Reduce motion</div><div class="s">Calms the orb and disables entrance animation.</div></div>
+            <div class="toggle"><i></i></div>
+          </div>
+          <div class="row">
+            <div class="txt"><div class="t">Reduce transparency</div><div class="s">Solid panels instead of frosted material.</div></div>
+            <div class="toggle"><i></i></div>
+          </div>
+          <div class="row">
+            <div class="txt"><div class="t">Text size</div><div class="s">Scales the whole interface.</div></div>
+            <div class="seg"><span>S</span><span class="on">M</span><span>L</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

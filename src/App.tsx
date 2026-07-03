@@ -3272,6 +3272,8 @@ function AppContent() {
                         events={management.events}
                         goals={management.goals}
                         experienceMode={experienceMode}
+                        devices={devices}
+                        workspaceLabel={currentCwd}
                       />
                     )}
                     {displayedRightPanelMode === "ACTIVITY" && (
