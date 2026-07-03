@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Icon } from "./ui/Icon";
 import QRCode from "qrcode";
 import { lucaLinkManager } from "../services/lucaLink/manager";
-import { ConnectionStatus } from "./lucaLink/ConnectionStatus";
 import { DeviceList } from "./lucaLink/DeviceList";
 import { ErrorToast } from "./lucaLink/ErrorToast";
 import type { Device, LucaLinkError } from "../services/lucaLink/types";
@@ -18,8 +17,6 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
   onClose,
   localIp,
 }) => {
-  const themeHex = getComputedStyle(document.documentElement).getPropertyValue('--app-primary').trim() || "#06b6d4";
-  
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [devices, setDevices] = useState<Device[]>([]);
   const [connectionState, setConnectionState] = useState<ConnectionState>(
@@ -66,17 +63,13 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           isCloudRelay ? "cloud" : "local"
         }`;
 
-        // Get computed style to detect dark/light for QR code color
-        const isLightMode = document.body.classList.contains("theme-light") || 
-                            getComputedStyle(document.documentElement).getPropertyValue('--app-theme-type').trim() === 'light';
-
-        // Generate QR code
+        // Scannability beats theming: dark ink on white, every skin.
         const url = await QRCode.toDataURL(mobileUrl, {
           width: 256,
           margin: 2,
           color: {
-            dark: themeHex,
-            light: isLightMode ? "#FFFFFFFF" : "#00000000",
+            dark: "#0c0e12",
+            light: "#FFFFFFFF",
           },
         });
 
@@ -170,148 +163,144 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
     setErrors(errors.filter((e) => e !== error));
   };
 
+  const stateLabel =
+    connectionState === ConnectionState.CONNECTED
+      ? "ready"
+      : connectionState === ConnectionState.RECONNECTING
+        ? "reconnecting"
+        : connectionState === ConnectionState.CONNECTING
+          ? "connecting"
+          : "offline";
+  const stateTone =
+    connectionState === ConnectionState.CONNECTED
+      ? "var(--luca-success, #4fbf7a)"
+      : connectionState === ConnectionState.DISCONNECTED
+        ? "var(--luca-border-strong, rgba(255,255,255,0.25))"
+        : "var(--luca-warning, #e0b15a)";
+
   return (
-    <div className="fixed inset-0 bg-black/80 glass-blur z-50 flex items-center justify-center p-0 sm:p-4 font-normal">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div
-        className="glass-blur border rounded-none sm:rounded-lg w-full h-full sm:h-auto sm:max-w-2xl p-4 sm:p-6 relative overflow-hidden flex flex-col max-h-screen bg-[var(--app-bg-tint)]/10"
+        className="relative flex max-h-[86vh] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl border"
         style={{
-          boxShadow: `0 0 80px -20px rgba(var(--app-primary-rgb), 0.25)`,
-          borderColor: "rgba(var(--app-primary-rgb), 0.3)"
+          background: "var(--luca-background-elevated, var(--app-bg-main, #14181d))",
+          borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.08))",
+          boxShadow:
+            "0 30px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
         }}
       >
-        {/* Liquid background effect 1 (Center) */}
+        {/* Header — calm row, state as a quiet word */}
         <div
-          className="absolute inset-0 opacity-40 pointer-events-none transition-all duration-700 -z-10"
-          style={{
-            background: `radial-gradient(circle at 50% 50%, rgba(var(--app-primary-rgb), 0.15), transparent 60%)`,
-            filter: "blur(40px)",
-          }}
-        />
-        {/* Liquid background effect 2 (Top Right Offset) */}
-        <div
-          className="absolute inset-0 opacity-30 pointer-events-none transition-all duration-700 -z-10"
-          style={{
-            background: `radial-gradient(circle at 80% 20%, rgba(var(--app-primary-rgb), 0.1), transparent 50%)`,
-            filter: "blur(40px)",
-          }}
-        />
-        
-        {/* Header */}
-        <div
-          className="flex justify-between items-center px-4 py-3 sm:px-6 sm:py-4 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 mb-4 sm:mb-6 border-b relative z-30 flex-shrink-0 bg-[rgba(var(--app-primary-rgb),0.12)] border-[rgba(var(--app-primary-rgb),0.3)]"
+          className="flex h-[52px] flex-none items-center gap-2.5 border-b px-5"
+          style={{ borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.08))" }}
         >
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="text-[var(--app-primary)]">
-              <Icon name="Smartphone" size={20} className="sm:w-6 sm:h-6" variant="BoldDuotone" />
-            </div>
-            <h2 className="text-lg sm:text-xl font-bold tracking-wider uppercase font-mono text-[var(--app-text-main)]">
-              LUCA LINK
-            </h2>
-            <ConnectionStatus
-              state={connectionState}
-              themePrimary="text-[var(--app-primary)]"
-              themeBorder="border-[rgba(var(--app-primary-rgb),0.3)]"
-              themeBg="bg-[rgba(var(--app-primary-rgb),0.1)]"
+          <Icon
+            name="Smartphone"
+            size={16}
+            className="flex-none text-[var(--app-text-muted)]"
+          />
+          <h2 className="text-[15px] font-semibold tracking-tight text-[var(--app-text-main)]">
+            Link a device
+          </h2>
+          <span className="ml-1 flex items-center gap-1.5 text-[11px] text-[var(--app-text-muted)]">
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ background: stateTone }}
+              aria-hidden="true"
             />
-          </div>
+            {stateLabel}
+          </span>
           <button
             onClick={onClose}
-            className="relative z-50 transition-all p-2 rounded-lg hover:bg-white/5 cursor-pointer active:scale-95 flex-shrink-0 text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
+            aria-label="Close"
+            className="ml-auto rounded-lg p-1.5 text-[var(--app-text-muted)] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))] hover:text-[var(--app-text-main)]"
           >
-            <Icon name="Close" size={20} className="sm:w-6 sm:h-6" variant="BoldDuotone" />
+            <Icon name="Close" size={18} />
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6">
-          {/* QR Code Section */}
-          <div className="flex flex-col items-center">
-            <h3
-              className="text-xs sm:text-sm font-mono font-bold text-[var(--app-primary)] uppercase tracking-wider mb-3 sm:mb-4 flex items-center gap-2"
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-5">
+          <p className="text-sm leading-relaxed text-[var(--app-text-muted)]">
+            Scan this from your phone — it becomes part of my body. I can only
+            use what you allow, and you can unlink it any time.
+          </p>
+
+          <div className="mt-5 flex flex-col items-center">
+            <div
+              className="rounded-2xl border bg-white p-3"
+              style={{
+                borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.08))",
+              }}
             >
-              <Icon name="Smartphone" size={14} variant="BoldDuotone" /> PAIR NEW DEVICE
-            </h3>
-
-            <div className="relative group">
-              <div
-                className="absolute -inset-1 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 bg-[var(--app-primary)]"
-              />
-              <div
-                className="relative p-2 sm:p-4 rounded-lg border bg-[var(--app-bg-tint)]/20 border-white/10"
-              >
-                {qrDataUrl ? (
-                  <img
-                    src={qrDataUrl}
-                    alt="Pairing QR Code"
-                    className="w-32 h-32 xs:w-40 xs:h-40 sm:w-48 sm:h-48 object-contain"
-                  />
-                ) : (
-                  <div className="w-32 h-32 xs:w-40 xs:h-40 sm:w-48 sm:h-48 flex flex-col items-center justify-center text-gray-600 gap-2">
-                    <Icon name="Settings" className="animate-spin" size={32} variant="BoldDuotone" />
-                    <span className="text-[10px] font-mono text-center">
-                      {!localIp ? "DETECTING NET..." : "GENERATING..."}
-                    </span>
-                  </div>
-                )}
-              </div>
+              {qrDataUrl ? (
+                <img
+                  src={qrDataUrl}
+                  alt="Pairing QR code"
+                  className="h-44 w-44 object-contain"
+                />
+              ) : (
+                <div className="flex h-44 w-44 flex-col items-center justify-center gap-2 text-[#69737f]">
+                  <Icon name="Restart" className="animate-spin" size={20} />
+                  <span className="text-[11px]">
+                    {!localIp ? "Finding this machine on your network…" : "Preparing…"}
+                  </span>
+                </div>
+              )}
             </div>
-
-            <p className="text-[var(--app-text-muted)] text-xs sm:text-sm mt-3 sm:mt-4 text-center px-4">
-              Scan with your mobile device to establish secure connection
-            </p>
-            <p className="text-[10px] sm:text-xs text-[var(--app-text-muted)] font-mono mt-1 opacity-50">
-              {localIp}
-            </p>
+            {localIp && (
+              <p
+                className="mt-3 text-[11px] text-[var(--app-text-muted)] opacity-70"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                {localIp}
+              </p>
+            )}
           </div>
 
-          {/* Device List */}
           {devices.length > 0 && (
-            <div className="border-t border-white/5 pt-4 sm:pt-6">
+            <div
+              className="mt-5 border-t pt-4"
+              style={{
+                borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.06))",
+              }}
+            >
+              <p className="pb-2 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[var(--app-text-muted)]">
+                Linked
+              </p>
               <DeviceList
                 devices={devices}
                 onDeviceAction={handleDeviceAction}
-                themePrimary="text-[var(--app-primary)]"
-                themeBorder="border-[rgba(var(--app-primary-rgb),0.3)]"
-                themeBg="bg-[rgba(var(--app-primary-rgb),0.1)]"
+                themePrimary="text-[var(--app-text-main)]"
+                themeBorder="border-[var(--luca-border-subtle,rgba(255,255,255,0.08))]"
+                themeBg="bg-[var(--luca-surface-glass,rgba(255,255,255,0.03))]"
               />
             </div>
           )}
         </div>
 
-        {/* Footer Decoration */}
+        {/* Trust line */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--app-primary)]/20 to-transparent"
-        />
-
-        {/* Scanning Line Animation - when waiting */}
-        {connectionState === ConnectionState.CONNECTING && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div
-              className="w-full h-1 bg-[var(--app-primary)]/50 shadow-[0_0_10px_var(--app-primary)] absolute top-0 animate-[scan_2s_linear_infinite]"
-            />
-          </div>
-        )}
+          className="flex h-[44px] flex-none items-center border-t px-5"
+          style={{ borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.06))" }}
+        >
+          <span className="text-[11px] text-[var(--app-text-muted)] opacity-80">
+            Nothing connects without pairing. Unlink any time.
+          </span>
+        </div>
       </div>
 
-      {/* Error Toasts */}
+      {/* Error toasts */}
       {errors.map((error, index) => (
         <ErrorToast
           key={`${error.code}-${error.timestamp.getTime()}-${index}`}
           error={error}
           onDismiss={() => handleErrorDismiss(error)}
-          themePrimary="text-[var(--app-primary)]"
-          themeBorder="border-[rgba(var(--app-primary-rgb),0.3)]"
-          themeBg="bg-[rgba(var(--app-primary-rgb),0.1)]"
+          themePrimary="text-[var(--app-text-main)]"
+          themeBorder="border-[var(--luca-border-subtle,rgba(255,255,255,0.08))]"
+          themeBg="bg-[var(--luca-surface-glass,rgba(255,255,255,0.03))]"
         />
       ))}
-
-      {/* Keyframe animations */}
-      <style>{`
-        @keyframes scan {
-          0% { top: 0; }
-          100% { top: 100%; }
-        }
-      `}</style>
     </div>
   );
 };
