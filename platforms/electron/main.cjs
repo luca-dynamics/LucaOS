@@ -530,15 +530,14 @@ function createWindow() {
         backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
         transparent: false,
         // Premium window chrome: no native titlebar. The OS window controls
-        // are drawn as a dark overlay inside the renderer's slim SYSTEM
-        // STRIP (.luca-system-strip, 40px, Claude Desktop pattern) — a
-        // dedicated full-width chrome band above the panels, so no panel
-        // layout can collide with min/max/close.
+        // live at the far right of the renderer's UNIFIED TOP BAND (the
+        // Claude structure: sidebar segment · header segment · right-tabs
+        // segment · controls) — html.luca-wco reserves their zone.
         titleBarStyle: 'hidden',
         titleBarOverlay: {
-            color: '#111417',       // Carbon base — matches the strip's chrome tier
+            color: '#111417',       // Carbon base — the band's chrome tier
             symbolColor: '#9aa4b2', // muted glyphs, hover handled by the OS
-            height: 39              // strip is 40px incl. its 1px bottom hairline
+            height: 55              // the h-14 band (56px) minus its 1px hairline
         },
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {

@@ -542,26 +542,17 @@ a,
 .luca-window-drag :is(button, a, input, select, textarea, [role="button"]) {
   -webkit-app-region: no-drag;
 }
-/* The system strip: hidden unless the window-controls overlay is live.
- * Sits on the chrome tier (base), hairline below, quiet centered-left title.
- * Height must match main.cjs titleBarOverlay.height + 1px hairline. */
-.luca-system-strip {
-  display: none;
+/* Unified top band (Claude structure): the header embeds as the band's
+ * center segment — its own bottom border would double the band's hairline,
+ * so it is stripped and the segment fills the band height. */
+.luca-band-embed > * {
+  border-bottom-width: 0 !important;
+  height: 100%;
 }
-html.luca-wco .luca-system-strip {
-  display: flex;
-  align-items: center;
-  flex: none;
-  height: 40px;
-  padding: 0 14px;
-  background: var(--luca-background-base, var(--app-bg-main, #101317));
-  border-bottom: 1px solid var(--luca-border-subtle, rgba(255, 255, 255, 0.07));
-}
-.luca-system-strip-title {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: -0.008em;
-  color: var(--luca-text-tertiary, var(--app-text-muted));
+/* When the Electron window-controls overlay is live, the band's far right
+ * is the control cluster's home — one reservation, every layout. */
+html.luca-wco .luca-wco-pad-right {
+  padding-right: 144px;
 }
 
 /* Apple-style corner smoothing (continuous curvature). Native CSS
