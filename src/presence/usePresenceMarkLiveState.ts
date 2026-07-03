@@ -37,10 +37,11 @@ export function usePresenceMarkLiveState(): PresenceMarkState {
     const onBroadcast = (event: Event) => {
       const detail = (event as CustomEvent<{ state?: PresenceMarkState }>)
         .detail;
-      if (!detail?.state) return;
+      const next = detail?.state;
+      if (!next) return;
       // needs-you from approvals still outranks a broadcast idle.
       setState((prev) =>
-        prev === "needs-you" && detail.state === "idle" ? prev : detail.state,
+        prev === "needs-you" && next === "idle" ? prev : next,
       );
     };
     window.addEventListener(PRESENCE_MARK_EVENT, onBroadcast);
