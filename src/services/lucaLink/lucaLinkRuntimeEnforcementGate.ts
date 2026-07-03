@@ -206,7 +206,11 @@ function payloadPermission(payload: unknown): string | undefined {
 function hasFreshConfirmationSignal(input: LucaLinkRuntimeEnforcementInput, soft?: LucaLinkSoftEnforcementResult): boolean {
   const permission = soft?.permission ?? payloadPermission(input.payload);
   if (permission && FRESH_CONFIRMATION_PERMISSIONS.has(permission)) return true;
-  if (soft?.risk === "critical" && (soft.lane === "safety" || soft.reason === "critical-risk-permission")) return true;
+  // Only the safety lane escalates to fresh confirmation on critical risk.
+  // Critical developer permissions (shell.execute, code.modify, git.create_pr)
+  // route to Primary Host approval instead — per this gate's own explain copy,
+  // fresh confirmation is for payment, physical-world, and safety actions.
+  if (soft?.risk === "critical" && soft.lane === "safety") return true;
   const haystack = [input.eventName, permission, soft?.lane, soft?.reason, ...collectStrings(input.payload)]
     .filter((value): value is string => !!value);
   return haystack.some((value) => FRESH_CONFIRMATION_HINTS.some((hint) => hint.test(value)));
