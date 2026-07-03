@@ -252,6 +252,9 @@ export class SecureSocket {
     this.socket.on("device:disconnected", (data: any) => {
       this.emit("device:disconnected", data);
     });
+    this.socket.on("sensor:pulse", (data: any) => {
+      this.emit("sensor:pulse", data);
+    });
 
     this.socket.on("command:result", (result: any) => {
       console.log(

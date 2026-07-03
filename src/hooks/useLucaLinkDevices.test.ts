@@ -28,6 +28,13 @@ describe("mapLucaLinkDevicesToBody", () => {
     ]);
   });
 
+  it("shows battery from sensor pulses in the type line", () => {
+    const rows = mapLucaLinkDevicesToBody([
+      device({ metadata: { battery: 82.4 } as Device["metadata"] }),
+    ]);
+    expect(rows[0].type).toBe("mobile · android · 82%");
+  });
+
   it("passes offline/away through honestly and namespaces ids", () => {
     const rows = mapLucaLinkDevicesToBody([
       device({ id: "a", status: "offline" }),

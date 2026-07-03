@@ -568,6 +568,16 @@ export class LucaLinkManager {
       this.emit("device:updated", { deviceId });
     });
 
+    this.socket.on("sensor:pulse", (event: any) => {
+      const deviceId = event?.deviceId ?? event?.data?.deviceId;
+      if (!deviceId) return;
+      const metadata: Record<string, unknown> = {};
+      if (typeof event.battery === "number") metadata.battery = event.battery;
+      if (typeof event.network === "string") metadata.network = event.network;
+      this.deviceRegistry.heartbeat(deviceId, metadata);
+      this.emit("device:updated", { deviceId });
+    });
+
     this.socket.on("message:received", async (event) => {
       await this.handleIncomingMessage(event.data.message);
     });
