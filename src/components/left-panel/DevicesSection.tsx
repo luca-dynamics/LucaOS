@@ -23,7 +23,7 @@ const DevicesSection: React.FC<DevicesSectionProps> = ({
   if (!devices || devices.length === 0) return null;
 
   return (
-    <div className="animate-in slide-in-from-left duration-700 delay-100">
+    <div className="animate-in fade-in duration-300">
       <CollapsibleSection
         title={`Connected Devices (${devices.length})`}
         icon="Cpu"

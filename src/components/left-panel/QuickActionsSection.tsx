@@ -38,7 +38,7 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
   };
 
   return (
-    <div className="p-5 rounded-lg relative overflow-hidden group glass-blur bg-black/20 shadow-xl animate-in slide-in-from-left duration-700">
+    <div className="p-5 rounded-lg relative overflow-hidden group glass-blur bg-black/20 shadow-xl animate-in fade-in duration-300">
       <div className="absolute top-0 right-0 p-3 opacity-30 text-[var(--app-text-main)]">
         <Icon name="Pulse" size={14} variant="BoldDuotone" />
       </div>
@@ -79,7 +79,7 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
             Mode
           </span>
           <div className="h-0.5 w-full bg-[var(--app-border-main)] mt-2 overflow-hidden rounded-full">
-            <div className="h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 bg-[var(--app-text-main)] opacity-30" />
+            <div className="h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-300 bg-[var(--app-text-main)] opacity-30" />
           </div>
         </button>
 
@@ -104,7 +104,7 @@ const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
             Engine
           </span>
           <div className="h-0.5 w-full bg-[var(--app-border-main)] mt-2 overflow-hidden rounded-full">
-            <div className="h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 bg-[var(--app-text-main)] opacity-30" />
+            <div className="h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-300 bg-[var(--app-text-main)] opacity-30" />
           </div>
         </button>
 

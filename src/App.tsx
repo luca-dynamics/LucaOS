@@ -98,6 +98,7 @@ import VisionHUD from "./components/VisionHUD";
 import Header from "./components/layout/Header";
 import OperationsSidebar from "./components/layout/OperationsSidebar";
 import ShellPresenceMark from "./components/presence/ShellPresenceMark";
+import { LUCA_MOTION_CSS_VARIABLES } from "./styles/lucaPresenceMotion";
 import SessionsRail from "./components/left-panel/SessionsRail";
 import ChatPanel from "./components/layout/ChatPanel";
 import OverlayManager from "./components/layout/OverlayManager";
@@ -2518,7 +2519,7 @@ function AppContent() {
   ) {
     return (
       <div
-        className="h-screen w-full bg-transparent cursor-default select-none draggable transition-all duration-700 relative overflow-hidden"
+        className="h-screen w-full bg-transparent cursor-default select-none draggable transition-all duration-300 relative overflow-hidden"
         style={{ color: "var(--app-text-main)" }}
         onContextMenu={(e) => e.preventDefault()}
       >
@@ -2803,12 +2804,13 @@ function AppContent() {
 
       {/* Main Dashboard Container */}
       <div
-        className={`flex flex-col gap-0 p-0 font-mono overflow-hidden relative transition-all duration-700 ${
+        className={`flex flex-col gap-0 p-0 font-mono overflow-hidden relative transition-all duration-300 ${
           showVoiceHud
             ? "opacity-0 pointer-events-none scale-95"
             : "opacity-100"
         }`}
         style={{
+          ...LUCA_MOTION_CSS_VARIABLES,
           ...(isMobile
             ? mobileSkinBoundary.materialVariables
             : dashboardSkinBoundary.materialVariables),

@@ -65,7 +65,7 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="space-y-4 animate-in slide-in-from-left duration-700 delay-200">
+    <div className="space-y-4 animate-in fade-in duration-300">
       <div
         className={`flex items-center gap-3 mb-2 text-[var(--app-text-main)] ${
           isLight ? "opacity-90" : "opacity-70"
