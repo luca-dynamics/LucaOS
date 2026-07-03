@@ -84,6 +84,9 @@ export interface LucaOnboardingScreenProps {
   presenceState?: LucaOnboardingScreenPresence;
   /** Optional controlled display-name value (rendered on the welcome screen). */
   nameValue?: string;
+  /** Material feel on the environment screen: opacity 0..1, blur px. */
+  materialValue?: { opacity: number; blur: number };
+  onMaterialChange?: (material: { opacity?: number; blur?: number }) => void;
   /** When provided on the welcome screen, renders an optional name field. */
   onNameChange?: (name: string) => void;
   /**
@@ -555,6 +558,8 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
   presenceState,
   nameValue,
   onNameChange,
+  materialValue,
+  onMaterialChange,
   onConnectorSelectionsChange,
   canConnectTools,
   onConnectorConnect,
@@ -690,6 +695,56 @@ export const LucaOnboardingScreen: React.FC<LucaOnboardingScreenProps> = ({
             }}
           />
         </label>
+      )}
+
+      {screenId === "environment" && onMaterialChange && materialValue && (
+        <div
+          data-luca-onboarding-material
+          style={{ margin: "18px 0 0", textAlign: "left", display: "grid", gap: 12 }}
+        >
+          {[
+            {
+              key: "opacity" as const,
+              label: "Background opacity",
+              display: `${Math.round(materialValue.opacity * 100)}%`,
+              min: 0, max: 100, value: Math.round(materialValue.opacity * 100),
+              toChange: (v: number) => ({ opacity: v / 100 }),
+            },
+            {
+              key: "blur" as const,
+              label: "Background blur",
+              display: `${materialValue.blur}px`,
+              min: 0, max: 40, value: materialValue.blur,
+              toChange: (v: number) => ({ blur: v }),
+            },
+          ].map((slider) => (
+            <label key={slider.key} style={{ display: "block" }}>
+              <span
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: textSecondary,
+                  marginBottom: 6,
+                }}
+              >
+                <span>{slider.label}</span>
+                <span>{slider.display}</span>
+              </span>
+              <input
+                type="range"
+                min={slider.min}
+                max={slider.max}
+                value={slider.value}
+                onChange={(event) =>
+                  onMaterialChange(slider.toChange(Number(event.target.value)))
+                }
+                style={{ width: "100%", accentColor: "var(--luca-accent-primary)" }}
+              />
+            </label>
+          ))}
+        </div>
       )}
 
       {copy.options && copy.options.length > 0 && screenId === "presence" ? (
