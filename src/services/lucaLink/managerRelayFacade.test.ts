@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("socket.io-client", () => ({ io: vi.fn() }));
 
 import { lucaLinkManager } from "./manager";
-import { lucaLink } from "../lucaLinkService";
+import { lucaLink } from "./relayClientAdapter";
 
 describe("lucaLinkManager.relay (consolidation facade)", () => {
   it("exposes the legacy relay client through the manager", () => {

@@ -1,20 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("socket.io-client", () => ({ io: vi.fn() }));
-vi.mock("./settingsService", () => ({
+vi.mock("../settingsService", () => ({
   settingsService: {
     getSettings: () => ({ lucaLink: {} }),
   },
 }));
-vi.mock("./lucaLink/sessionManager", () => ({
+vi.mock("./sessionManager", () => ({
   sessionManager: {
     recoverSessionByDevice: vi.fn(),
   },
 }));
 
-import { lucaLink } from "./lucaLinkService";
-import { createLucaLinkBridgeReviewRegistry } from "./lucaLink/lucaLinkBridgeReview";
-import { createLucaLinkAdapterDraftRegistry } from "./lucaLink/lucaLinkAdapterDrafts";
+import { lucaLink } from "./relayClientAdapter";
+import { createLucaLinkBridgeReviewRegistry } from "./lucaLinkBridgeReview";
+import { createLucaLinkAdapterDraftRegistry } from "./lucaLinkAdapterDrafts";
 
 describe("LucaLinkService runtime QA model-only regressions", () => {
   beforeEach(() => {

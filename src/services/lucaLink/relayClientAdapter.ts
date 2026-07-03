@@ -7,18 +7,18 @@
  */
 
 import { io, Socket } from "socket.io-client";
-import { settingsService } from "./settingsService";
-import { cortexUrl, RELAY_SERVER_URL } from "../config/api";
-import { sessionManager } from "./lucaLink/sessionManager";
-import { CryptoService } from "./lucaLink/crypto";
-import type { EncryptedMessage } from "./lucaLink/types";
-import { legacyDevicesToManifests } from "./lucaLink/lucaLinkLegacyAdapter";
+import { settingsService } from "../settingsService";
+import { cortexUrl, RELAY_SERVER_URL } from "../../config/api";
+import { sessionManager } from "./sessionManager";
+import { CryptoService } from "./crypto";
+import type { EncryptedMessage } from "./types";
+import { legacyDevicesToManifests } from "./lucaLinkLegacyAdapter";
 import {
   evaluateSoftEnforcementForLegacyEvent,
   type LucaLinkSoftEnforcementMode,
   type LucaLinkSoftEnforcementOptions,
   type LucaLinkSoftEnforcementResult,
-} from "./lucaLink/lucaLinkSoftEnforcement";
+} from "./lucaLinkSoftEnforcement";
 import {
   approveLucaLinkApprovalRequest,
   cancelLucaLinkApprovalRequest,
@@ -36,14 +36,14 @@ import {
   type LucaLinkApprovalQueueState,
   type LucaLinkApprovalQueueSummary,
   type LucaLinkApprovalRequest,
-} from "./lucaLink/lucaLinkApprovalQueue";
+} from "./lucaLinkApprovalQueue";
 import {
   consumePreparedLucaLinkContinuation,
   evaluateLucaLinkContinuationBridge,
   prepareLucaLinkSafeContinuation,
   type LucaLinkContinuationBridgeInput,
   type LucaLinkContinuationBridgeResult,
-} from "./lucaLink/lucaLinkContinuationBridge";
+} from "./lucaLinkContinuationBridge";
 import {
   cancelLucaLinkContinuationToken,
   clearLucaLinkContinuationRegistry,
@@ -61,7 +61,7 @@ import {
   type LucaLinkContinuationToken,
   type LucaLinkContinuationValidationContext,
   type LucaLinkContinuationValidationResult,
-} from "./lucaLink/lucaLinkContinuation";
+} from "./lucaLinkContinuation";
 import {
   clearLucaLinkShadowObservations,
   createLucaLinkRuntimeShadow,
@@ -71,12 +71,12 @@ import {
   type LucaLinkRuntimeShadowEventInput,
   type LucaLinkRuntimeShadowOptions,
   type LucaLinkRuntimeShadowState,
-} from "./lucaLink/lucaLinkRuntimeShadow";
-import type { LucaHostManifest } from "./lucaLink/lucaHostManifest";
+} from "./lucaLinkRuntimeShadow";
+import type { LucaHostManifest } from "./lucaHostManifest";
 import type {
   LucaLinkRuntimeObservation,
   LucaLinkRuntimeObservationSummary,
-} from "./lucaLink/lucaLinkRuntimeObserver";
+} from "./lucaLinkRuntimeObserver";
 import {
   createLucaLinkGuestSession,
   evaluateLucaLinkGuestInbound,
@@ -90,7 +90,7 @@ import {
   type LucaLinkGuestInboundResult,
   type LucaLinkGuestSessionRecord,
   type LucaLinkGuestSessionSummary,
-} from "./lucaLink/lucaLinkGuestSessionPolicy";
+} from "./lucaLinkGuestSessionPolicy";
 
 import {
   blockTrustedDevice,
@@ -111,7 +111,7 @@ import {
   type LucaLinkDeviceTrustMutationOptions,
   type LucaLinkDeviceTrustMutationResult,
   type LucaLinkDeviceTrustRegistryState,
-} from "./lucaLink/lucaLinkDeviceTrustRegistry";
+} from "./lucaLinkDeviceTrustRegistry";
 
 import {
   approveLucaLinkHandoff,
@@ -140,7 +140,7 @@ import {
   type LucaLinkHandoffRegistrySummary,
   type LucaLinkHandoffRequest,
   type LucaLinkHandoffRequestInput,
-} from "./lucaLink/lucaLinkHandoff";
+} from "./lucaLinkHandoff";
 
 import {
   clearLucaLinkHostConnectionRegistry,
@@ -153,7 +153,7 @@ import {
   type LucaLinkHostConnectionRecord,
   type LucaLinkHostConnectionRegistryState,
   type LucaLinkHostConnectionRegistrySummary,
-} from "./lucaLink/lucaLinkHostConnectionModel";
+} from "./lucaLinkHostConnectionModel";
 import {
   createLucaLinkHostBridgeBlueprint,
   createLucaLinkHostConnectionDiagnosis,
@@ -163,7 +163,7 @@ import {
   type LucaLinkHostBridgeStrategyPlan,
   type LucaLinkHostConnectionDiagnosis,
   type LucaLinkHostDiagnosisInput,
-} from "./lucaLink/lucaLinkHostAdaptation";
+} from "./lucaLinkHostAdaptation";
 
 import {
   deriveLucaLinkApprovalSurface,
@@ -173,7 +173,7 @@ import {
   type LucaLinkApprovalSurfaceEvaluation,
   type LucaLinkApprovalSurfaceRecord,
   type LucaLinkApprovalSurfaceSummary,
-} from "./lucaLink/lucaLinkMultiHostApproval";
+} from "./lucaLinkMultiHostApproval";
 import {
   approveBridgeReviewForSandbox as approveLucaLinkBridgeReviewForSandboxModel,
   cancelBridgeReview as cancelLucaLinkBridgeReviewModel,
@@ -188,7 +188,7 @@ import {
   type LucaLinkBridgeReviewRecord,
   type LucaLinkBridgeReviewRegistry,
   type LucaLinkBridgeReviewSummary,
-} from "./lucaLink/lucaLinkBridgeReview";
+} from "./lucaLinkBridgeReview";
 import {
   createAdapterDraftFromBlueprint as createLucaLinkAdapterDraftFromBlueprintModel,
   createAdapterDraftFromBridgeReview as createLucaLinkAdapterDraftFromBridgeReviewModel,
@@ -200,11 +200,11 @@ import {
   type LucaLinkAdapterDraft,
   type LucaLinkAdapterDraftRegistry,
   type LucaLinkAdapterDraftSummary,
-} from "./lucaLink/lucaLinkAdapterDrafts";
+} from "./lucaLinkAdapterDrafts";
 import {
   deriveEmbodiedHostCapabilityEnvelope,
   type LucaLinkEmbodiedCapabilityEnvelope,
-} from "./lucaLink/lucaLinkEmbodiedHostPolicy";
+} from "./lucaLinkEmbodiedHostPolicy";
 
 import {
   createLucaLinkRuntimeEnforcementAuditRecord,
@@ -215,7 +215,7 @@ import {
   type LucaLinkRuntimeEnforcementInput,
   type LucaLinkRuntimeEnforcementMode,
   type LucaLinkRuntimeEnforcementResult,
-} from "./lucaLink/lucaLinkRuntimeEnforcementGate";
+} from "./lucaLinkRuntimeEnforcementGate";
 
 // Types
 export interface LucaLinkMessage {
@@ -689,7 +689,7 @@ class LucaLinkService {
                 );
 
                 // --- VISUAL FEEDBACK: Express Thinking on thought arrival ---
-                import("./iot/CognitiveExpressor").then(
+                import("../iot/CognitiveExpressor").then(
                   ({ cognitiveExpressor }) => {
                     cognitiveExpressor.expressThinking();
                   },
@@ -724,7 +724,7 @@ class LucaLinkService {
             // --- MESH BOOT: Activate Consciousness Layer when mesh has 2+ devices ---
             // We boot lazily — only when there's actually a mesh to manage.
             if (devices.length >= 2) {
-              import("./consciousnessLayer").then(({ consciousnessLayer }) => {
+              import("../consciousnessLayer").then(({ consciousnessLayer }) => {
                 if (consciousnessLayer.getStatus() === "DORMANT") {
                   console.log(
                     "[LucaLink] 🌌 Mesh detected. Booting Consciousness Layer...",
@@ -752,7 +752,7 @@ class LucaLinkService {
             );
 
             // We use dynamic import to avoid circular dependency with lucaService
-            import("./lucaService").then(({ lucaService }) => {
+            import("../lucaService").then(({ lucaService }) => {
               lucaService.importSovereignMission(goldEgg).catch((e) => {
                 console.error("[TELEPORT] Auto-hydration failed:", e);
               });
@@ -761,7 +761,7 @@ class LucaLinkService {
 
           // --- MESH OBSERVATION: Handle Sensor Pulses (2050 Alien Tech) ---
           if (message.type === "SENSOR_PULSE" && message.payload) {
-            import("./meshObservationService").then(
+            import("../meshObservationService").then(
               ({ meshObservationService }) => {
                 meshObservationService.registerNodePulse(
                   message.payload as any,
@@ -770,7 +770,7 @@ class LucaLinkService {
             );
 
             // --- COGNITIVE SHARDING: Feed health signals to the Living Brain ---
-            import("./cognitiveShardingEngine").then(
+            import("../cognitiveShardingEngine").then(
               ({ cognitiveShardingEngine }) => {
                 const pulse = message.payload as any;
                 cognitiveShardingEngine.ingestHealthSignal({
