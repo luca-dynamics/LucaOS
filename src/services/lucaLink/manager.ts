@@ -298,6 +298,23 @@ export class LucaLinkManager {
   }
 
   /**
+   * Hand the current session's summary to a linked companion (Body card:
+   * "Hand this session to another device"). Display-only on the far side —
+   * the companion shows the summary; nothing executes. Plain channel:
+   * companions register without a key pair, so this never carries secrets.
+   */
+  sendSessionHandoff(
+    deviceId: string,
+    payload: { title: string; summary: string },
+  ): void {
+    this.sendSystemEvent("session:handoff", {
+      target: deviceId,
+      title: payload.title,
+      summary: payload.summary,
+    });
+  }
+
+  /**
    * Send a response to a command (encrypted)
    */
   async sendResponse(
@@ -566,6 +583,12 @@ export class LucaLinkManager {
       if (!deviceId) return;
       this.deviceRegistry.markOffline(deviceId);
       this.emit("device:updated", { deviceId });
+    });
+
+    this.socket.on("session:handoff:ack", (event: any) => {
+      this.emit("session:handoff:ack", {
+        deviceId: event?.deviceId ?? event?.data?.deviceId,
+      });
     });
 
     this.socket.on("sensor:pulse", (event: any) => {
