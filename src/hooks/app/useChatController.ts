@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { setPresenceMarkChannel } from "../../presence/presenceMarkBus";
 import { Message, Sender, ToolExecutionLog, TacticalLog } from "../../types";
 import { PersonaType } from "../../services/lucaService";
 import { lucaService } from "../../services/lucaService";
@@ -82,6 +83,11 @@ export function useChatController({
   }, [messages]);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  // Presence bus: the mark thinks while a response is in flight.
+  useEffect(() => {
+    setPresenceMarkChannel("chat", isProcessing);
+    return () => setPresenceMarkChannel("chat", false);
+  }, [isProcessing]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastMessageSourceRef = useRef<"desktop" | "mobile" | null>(null);
 

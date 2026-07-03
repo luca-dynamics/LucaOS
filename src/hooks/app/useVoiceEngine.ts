@@ -13,6 +13,7 @@ import {
 } from "../../utils/voiceDisplay";
 import { eventBus } from "../../services/eventBus";
 import { overlayApprovalResolutionService } from "../../services/runtime/OverlayApprovalResolutionService";
+import { setPresenceMarkChannel } from "../../presence/presenceMarkBus";
 
 interface UseVoiceEngineProps {
   executeTool: (toolName: string, args: any) => Promise<any>;
@@ -49,6 +50,17 @@ export function useVoiceEngine({
   useEffect(() => {
     voiceSessionOrchestrator.setPersona(persona);
   }, [persona]);
+
+  // Presence bus: the mark listens when the mic is live and speaks while
+  // TTS plays. Reported per-channel; the bus merges by priority.
+  useEffect(() => {
+    setPresenceMarkChannel("mic", Boolean(isVadActive));
+    return () => setPresenceMarkChannel("mic", false);
+  }, [isVadActive]);
+  useEffect(() => {
+    setPresenceMarkChannel("tts", Boolean(isSpeaking));
+    return () => setPresenceMarkChannel("tts", false);
+  }, [isSpeaking]);
 
   const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
   const [voiceBackend, setVoiceBackend] = useState<

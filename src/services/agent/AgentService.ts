@@ -19,6 +19,7 @@ import type {
   AgentEvent,
 } from "./types";
 import { agentMemory } from "./AgentMemory";
+import { setPresenceMarkChannel } from "../../presence/presenceMarkBus";
 import { agentPlanner } from "./AgentPlanner";
 import { agentQuality } from "./AgentQuality";
 import { lucaWorkforce } from "./LucaWorkforce";
@@ -593,6 +594,17 @@ export class AgentService {
    * Emit event to all listeners
    */
   private emit(event: AgentEvent): void {
+    // Presence bus: the mark acts while a task runs on the host.
+    if (event.type === "started" || event.type === "resumed") {
+      setPresenceMarkChannel("agent", true);
+    } else if (
+      event.type === "completed" ||
+      event.type === "stopped" ||
+      event.type === "paused" ||
+      event.type === "failed"
+    ) {
+      setPresenceMarkChannel("agent", false);
+    }
     this.listeners.forEach((listener) => {
       try {
         listener(event);
