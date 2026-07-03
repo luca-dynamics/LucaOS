@@ -12,6 +12,28 @@ describe("lucaLinkManager.relay (consolidation facade)", () => {
     expect(lucaLinkManager.relay).toBe(lucaLink);
   });
 
+  it("exposes the governance surface through the manager (same state)", () => {
+    expect(lucaLinkManager.governance).toBe(lucaLink);
+    const surface = [
+      "getTrustedDevices",
+      "renameTrustedDevice",
+      "revokeTrustedDevice",
+      "getPendingApprovalRequests",
+      "approveApprovalRequest",
+      "denyApprovalRequest",
+      "getContinuationTokens",
+      "prepareSafeContinuation",
+      "consumePreparedContinuation",
+      "enableSoftEnforcement",
+      "getSoftEnforcementMode",
+    ] as const;
+    for (const method of surface) {
+      expect(typeof (lucaLinkManager.governance as any)[method]).toBe(
+        "function",
+      );
+    }
+  });
+
   it("carries the full allowed surface and nothing is undefined", () => {
     const surface = [
       "createRoom",

@@ -11,6 +11,49 @@ export type {
  * window onto the legacy client. Anything not listed here is considered
  * internal and will not survive the consolidation.
  */
+/**
+ * The state-only governance surface — device trust, approval queue,
+ * continuation tokens, soft enforcement. Same single source of truth as
+ * the relay facade (the legacy singleton's registries); consumers migrate
+ * to lucaLinkManager.governance.* so the registries can later move into
+ * the manager without another consumer sweep. Nothing here transports.
+ */
+export type LucaLinkGovernanceFacade = Pick<
+  typeof legacyRelayClient,
+  // Device trust
+  | "getTrustedDevices"
+  | "getDeviceTrustSummary"
+  | "getDeviceTrustAudit"
+  | "clearDeviceTrustAudit"
+  | "renameTrustedDevice"
+  | "setTrustedDeviceTrustLevel"
+  | "revokeTrustedDevice"
+  | "blockTrustedDevice"
+  | "unblockTrustedDevice"
+  // Approval queue
+  | "getPendingApprovalRequests"
+  | "getApprovalRequests"
+  | "getApprovalQueueSummary"
+  | "approveApprovalRequest"
+  | "denyApprovalRequest"
+  | "cancelApprovalRequest"
+  | "queueApprovalForSoftEnforcementResult"
+  // Continuation tokens
+  | "getContinuationTokens"
+  | "getValidContinuationTokens"
+  | "createContinuationFromApprovalRequest"
+  | "validateContinuationToken"
+  | "consumeContinuationToken"
+  | "prepareSafeContinuation"
+  | "consumePreparedContinuation"
+  | "evaluateContinuationBridge"
+  // Soft enforcement
+  | "enableSoftEnforcement"
+  | "disableSoftEnforcement"
+  | "getSoftEnforcementMode"
+  | "evaluateRuntimeEventForSoftEnforcement"
+>;
+
 export type LucaLinkRelayFacade = Pick<
   typeof legacyRelayClient,
   | "createRoom"
@@ -342,6 +385,11 @@ export class LucaLinkManager {
    * ./relayClientAdapter without touching another file.
    */
   get relay(): LucaLinkRelayFacade {
+    return legacyRelayClient;
+  }
+
+  /** Consolidation slice 3: the state-only governance surface (see type). */
+  get governance(): LucaLinkGovernanceFacade {
     return legacyRelayClient;
   }
 
