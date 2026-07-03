@@ -76,8 +76,9 @@ class LucaLinkServerManager extends EventEmitter {
             // this.pairingTokens.delete(token); // Keep for reconnection stability in dev
             return true;
         }
-        // Allow hardcoded dev token if needed or check DB
-        return true; // Auto-allow for debugging startup if strictness blocks
+        // No backdoor: unknown tokens are rejected. Pairing tokens come from
+        // POST /api/luca-link/pairing-token and expire after 5 minutes.
+        return false;
     }
 
     registerDevice(socket, metadata) {

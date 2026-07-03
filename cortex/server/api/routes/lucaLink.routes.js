@@ -1,5 +1,6 @@
 import express from 'express';
 import { socketService } from '../../services/socketService.js';
+import { lucaLinkManager } from '../../../../src/services/lucaLinkManager.server.js';
 import { WS_PORT } from '../../config/constants.js';
 
 const router = express.Router();
@@ -36,6 +37,24 @@ router.post('/stop', (req, res) => {
         res.json({ success: true, message: 'Luca Link server stopped', status: 'stopped' });
     } catch (error) {
         console.error('[LUCA_LINK] Failed to stop:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/luca-link/pairing-token
+ * Mint a short-lived pairing token (5 min) the mobile companion must present.
+ * Requires X-LUCA-TOKEN like every non-public API route.
+ */
+router.post('/pairing-token', (req, res) => {
+    try {
+        if (!socketService.isRunning()) {
+            socketService.initialize();
+        }
+        const token = lucaLinkManager.generateToken();
+        res.json({ success: true, token, wsPort: WS_PORT });
+    } catch (error) {
+        console.error('[LUCA_LINK] Failed to mint pairing token:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

@@ -48,6 +48,7 @@ export function useLucaLinkDevices(): LucaLinkBodyDevice[] {
     try {
       lucaLinkManager.on("device:added", refresh);
       lucaLinkManager.on("device:removed", refresh);
+      lucaLinkManager.on("device:updated", refresh);
       lucaLinkManager.on("connected", refresh);
       lucaLinkManager.on("disconnected", refresh);
     } catch {
@@ -57,6 +58,7 @@ export function useLucaLinkDevices(): LucaLinkBodyDevice[] {
       try {
         lucaLinkManager.off("device:added", refresh);
         lucaLinkManager.off("device:removed", refresh);
+        lucaLinkManager.off("device:updated", refresh);
         lucaLinkManager.off("connected", refresh);
         lucaLinkManager.off("disconnected", refresh);
       } catch {

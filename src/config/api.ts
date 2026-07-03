@@ -31,6 +31,8 @@ export const API_BASE_URL =
       ? PUBLIC_LUCA_API_URL
       : PUBLIC_LUCA_API_URL || "http://127.0.0.1:3002";
 export const WS_PORT = getEnvVar("VITE_WS_PORT", "3003");
+/** Express port that serves /mobile (the companion page). Distinct from WS_PORT. */
+export const SERVER_HTTP_PORT = getEnvVar("VITE_SERVER_HTTP_PORT", "3002");
 // Use Node.js backend as a gateway to Cortex to handle dynamic ports.
 // In public web mode this remains empty unless a public cloud Cortex URL is set.
 export const CORTEX_URL = IS_PUBLIC_WEB_TARGET

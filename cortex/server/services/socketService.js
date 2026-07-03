@@ -95,6 +95,22 @@ class SocketService {
                 });
             }
 
+            // Desktop clients need to hear about companion devices — the
+            // server-side registry alone never reaches the renderer.
+            const notifyDesktop = (name, capabilities) => {
+                if (clientType === 'desktop') return;
+                this.io.to('desktop').emit('device:connected', {
+                    device: {
+                        id: deviceId,
+                        name,
+                        type: clientType === 'android' || clientType === 'ios' ? 'mobile' : clientType,
+                        platform: clientType === 'android' ? 'android' : clientType === 'ios' ? 'ios' : 'web',
+                        capabilities: capabilities || []
+                    }
+                });
+            };
+            notifyDesktop(`${clientType}_${deviceId.substr(0, 4)}`, []);
+
             socket.on('register', (data) => {
                 lucaLinkManager.registerDevice(socket, {
                     deviceId,
@@ -102,6 +118,7 @@ class SocketService {
                     name: data.name,
                     capabilities: data.capabilities
                 });
+                notifyDesktop(data.name, data.capabilities);
             });
             
             socket.on('secure:message', (data) => {
@@ -132,6 +149,9 @@ class SocketService {
 
             socket.on('disconnect', () => {
                 lucaLinkManager.unregisterDevice(deviceId);
+                if (clientType !== 'desktop') {
+                    this.io.to('desktop').emit('device:disconnected', { deviceId });
+                }
             });
         });
     }
