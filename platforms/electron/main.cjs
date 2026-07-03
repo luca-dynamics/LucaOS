@@ -1,8 +1,16 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { 
   app, BrowserWindow, ipcMain, shell, desktopCapturer, 
-  Tray, Menu, nativeImage, screen, systemPreferences, dialog 
+  Tray, Menu, nativeImage, screen, systemPreferences, dialog, nativeTheme 
 } = require('electron');
+
+// The shell is Carbon-dark; the native window chrome must be too. On Windows
+// this flips DWM immersive dark mode for the frame (titleBarStyle
+// 'hiddenInset' below is macOS-only and is ignored on Windows, which is why
+// the titlebar rendered white). The default File/Edit/View menu bar is
+// developer chrome, not product — removed for every window.
+nativeTheme.themeSource = 'dark';
+Menu.setApplicationMenu(null);
 
 require('dotenv').config(); // Load environment variables for Main process (and Medic)
 const path = require('path');
@@ -521,7 +529,7 @@ function createWindow() {
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
         backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
         transparent: false,
-        titleBarStyle: 'hiddenInset', // Mac-style hidden title bar
+        titleBarStyle: 'hiddenInset', // macOS: hidden inset titlebar. Windows ignores this; the dark frame comes from nativeTheme above.
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
