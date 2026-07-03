@@ -1,5 +1,10 @@
 import { SecureSocket } from "./secureSocket";
 import { lucaLink as legacyRelayClient } from "../lucaLinkService";
+export type {
+  LucaLinkMessage,
+  LucaLinkState,
+  LucaLinkDevice,
+} from "../lucaLinkService";
 
 /**
  * The relay/guest surface consumers are allowed to use — a narrow, typed

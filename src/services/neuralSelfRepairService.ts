@@ -1,5 +1,5 @@
 import { deviceRegistry } from "./lucaLink/deviceRegistry";
-import { lucaLink } from "./lucaLinkService";
+import { lucaLinkManager } from "./lucaLink/manager";
 import { kernelOrchestrationService } from "./kernelOrchestrationService";
 import type { Device } from "./lucaLink/types";
 
@@ -217,7 +217,7 @@ class NeuralSelfRepairService {
 
     for (const device of onlineDevices) {
       try {
-        const result = await lucaLink.beamPacket(device.id, {
+        const result = await lucaLinkManager.relay.beamPacket(device.id, {
           type: "INTEGRITY_CHECK",
           payload: { expectedVersion: "2.0.50-ORIGIN" },
         });

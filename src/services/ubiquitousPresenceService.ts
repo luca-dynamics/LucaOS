@@ -1,5 +1,5 @@
 import { deviceRegistry } from "./lucaLink/deviceRegistry";
-import { lucaLink } from "./lucaLinkService";
+import { lucaLinkManager } from "./lucaLink/manager";
 import { meshObservationService } from "./meshObservationService";
 import type { Device } from "./lucaLink/types";
 
@@ -197,14 +197,14 @@ class UbiquitousPresenceService {
 
       // Notify previous device to release display
       if (previousDisplay) {
-        await lucaLink.beamPacket(previousDisplay, {
+        await lucaLinkManager.relay.beamPacket(previousDisplay, {
           type: "PRESENCE_RELEASE",
           payload: { component: "display" },
         });
       }
 
       // Notify new device to activate display
-      await lucaLink.beamPacket(displayDevice.deviceId, {
+      await lucaLinkManager.relay.beamPacket(displayDevice.deviceId, {
         type: "PRESENCE_ACTIVATE",
         payload: {
           component: "display",
@@ -260,13 +260,13 @@ class UbiquitousPresenceService {
 
     const previous = this.presenceState.activeDisplayDevice;
     if (previous) {
-      await lucaLink.beamPacket(previous, {
+      await lucaLinkManager.relay.beamPacket(previous, {
         type: "PRESENCE_RELEASE",
         payload: { component: "display" },
       });
     }
 
-    await lucaLink.beamPacket(deviceId, {
+    await lucaLinkManager.relay.beamPacket(deviceId, {
       type: "PRESENCE_ACTIVATE",
       payload: {
         component: "display",

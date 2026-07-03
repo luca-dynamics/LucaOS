@@ -1,7 +1,7 @@
 import { mentalStateService } from "./mentalStateService";
 import { universalReflexEngine } from "./universalReflexEngine";
 import { secureVault } from "./secureVault";
-import { lucaLink } from "./lucaLinkService";
+import { lucaLinkManager } from "./lucaLink/manager";
 
 /**
  * TELEPORTATION SERVICE (2050 Alien Tech)
@@ -71,7 +71,7 @@ class TeleportationService {
       const packet = await this.captureConsciousness();
       console.log(`[TELEPORT] 🚀 Beaming Consciousness to Node: ${targetDeviceId}...`);
 
-      const result = await lucaLink.beamPacket(targetDeviceId, {
+      const result = await lucaLinkManager.relay.beamPacket(targetDeviceId, {
         type: "NEURAL_TRANSUBSTANTIATION",
         payload: packet,
       });

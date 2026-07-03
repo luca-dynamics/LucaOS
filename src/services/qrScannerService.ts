@@ -5,7 +5,7 @@
  * Falls back gracefully on web/desktop.
  */
 
-import { lucaLink } from "./lucaLinkService";
+import { lucaLinkManager } from "./lucaLink/manager";
 
 // Types for the barcode scanner
 interface ScanResult {
@@ -149,8 +149,8 @@ export const scanAndConnect = async (): Promise<boolean> => {
 
   // Parse the pairing URL
   // Use static parser from service if available, otherwise local fallback
-  const parsed = (lucaLink.constructor as any).parsePairingUrl
-    ? (lucaLink.constructor as any).parsePairingUrl(content)
+  const parsed = (lucaLinkManager.relay.constructor as any).parsePairingUrl
+    ? (lucaLinkManager.relay.constructor as any).parsePairingUrl(content)
     : parsePairingUrl(content);
 
   if (!parsed || !parsed.token) {
@@ -160,7 +160,7 @@ export const scanAndConnect = async (): Promise<boolean> => {
 
   // Connect to the room
   try {
-    await lucaLink.joinWithToken(parsed.token, parsed.local);
+    await lucaLinkManager.relay.joinWithToken(parsed.token, parsed.local);
     return true;
   } catch (e) {
     console.error("[QRScanner] Failed to connect after scan:", e);
