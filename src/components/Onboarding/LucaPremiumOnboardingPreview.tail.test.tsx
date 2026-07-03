@@ -21,6 +21,7 @@ describe("LucaPremiumOnboardingPreview functional tail", () => {
     const onComplete = vi.fn();
     const { container, cleanup } = mount(
       <LucaPremiumOnboardingPreview
+        settleDurationMs={0}
         initialScreenId="finish"
         cameraAvailable={false}
         supportsLocalProvisioning={false}
@@ -36,6 +37,7 @@ describe("LucaPremiumOnboardingPreview functional tail", () => {
     const onComplete = vi.fn();
     const { container, cleanup } = mount(
       <LucaPremiumOnboardingPreview
+        settleDurationMs={0}
         initialScreenId="finish"
         cameraAvailable={true}
         supportsLocalProvisioning={false}
@@ -58,6 +60,7 @@ describe("LucaPremiumOnboardingPreview functional tail", () => {
     const onComplete = vi.fn();
     const { container, cleanup } = mount(
       <LucaPremiumOnboardingPreview
+        settleDurationMs={0}
         initialScreenId="finish"
         cameraAvailable={true}
         supportsLocalProvisioning={true}
@@ -70,6 +73,7 @@ describe("LucaPremiumOnboardingPreview functional tail", () => {
     // Re-mount starting at intelligence_route to choose local, then advance to finish.
     const m = mount(
       <LucaPremiumOnboardingPreview
+        settleDurationMs={0}
         initialScreenId="intelligence_route"
         cameraAvailable={true}
         supportsLocalProvisioning={true}

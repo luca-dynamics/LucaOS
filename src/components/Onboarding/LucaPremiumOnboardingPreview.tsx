@@ -81,6 +81,12 @@ function detectCameraAvailable(): boolean {
  */
 
 export interface LucaPremiumOnboardingPreviewProps {
+  /**
+   * Settle handoff duration in ms (the face travelling to the rail anchor
+   * before completion fires). 0 completes synchronously; reduced motion
+   * always does.
+   */
+  settleDurationMs?: number;
   audienceMode?: PremiumOnboardingAudienceMode;
   hostKind?: LucaSkinHostKind;
   reducedMotion?: boolean;
@@ -117,6 +123,7 @@ const surfaceForScreen = (
 export const LucaPremiumOnboardingPreview: React.FC<
   LucaPremiumOnboardingPreviewProps
 > = ({
+  settleDurationMs = 900,
   audienceMode = "basic",
   hostKind,
   reducedMotion,
@@ -170,14 +177,14 @@ export const LucaPremiumOnboardingPreview: React.FC<
   const complete = isLucaOnboardingFlowComplete(flow);
 
   const completeFlow = () => {
-    if (reducedMotion || settling) {
+    if (reducedMotion || settling || settleDurationMs <= 0) {
       setFlow((current) => lucaOnboardingFlowComplete(current));
       return;
     }
     setSettling(true);
     window.setTimeout(() => {
       setFlow((current) => lucaOnboardingFlowComplete(current));
-    }, 950);
+    }, settleDurationMs + 50);
   };
 
   const handlePrimary = () => {
@@ -269,8 +276,7 @@ export const LucaPremiumOnboardingPreview: React.FC<
             position: "fixed",
             zIndex: 60,
             transform: "translate(-50%, -50%)",
-            animation:
-              "luca-presence-settle 900ms cubic-bezier(0.22, 0.88, 0.24, 1) forwards",
+            animation: `luca-presence-settle ${settleDurationMs}ms cubic-bezier(0.22, 0.88, 0.24, 1) forwards`,
             pointerEvents: "none",
           }}
         >

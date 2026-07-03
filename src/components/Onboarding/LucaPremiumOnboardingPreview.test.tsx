@@ -23,7 +23,7 @@ const mount = (ui: React.ReactElement) => {
 
 describe("LucaPremiumOnboardingPreview", () => {
   it("starts on welcome inside the shell with the default Carbon skin", () => {
-    const { container, cleanup } = mount(<LucaPremiumOnboardingPreview />);
+    const { container, cleanup } = mount(<LucaPremiumOnboardingPreview settleDurationMs={0} />);
     expect(
       container.querySelector('[data-luca-onboarding-preview-screen="welcome"]'),
     ).not.toBeNull();
@@ -38,7 +38,7 @@ describe("LucaPremiumOnboardingPreview", () => {
   });
 
   it("advances welcome -> environment via the primary CTA", () => {
-    const { container, cleanup } = mount(<LucaPremiumOnboardingPreview />);
+    const { container, cleanup } = mount(<LucaPremiumOnboardingPreview settleDurationMs={0} />);
     const primary = container.querySelector(
       '[data-luca-onboarding-cta="primary"]',
     ) as HTMLButtonElement;
@@ -51,7 +51,7 @@ describe("LucaPremiumOnboardingPreview", () => {
 
   it("lets the environment choice drive the shell skin", () => {
     const { container, cleanup } = mount(
-      <LucaPremiumOnboardingPreview initialScreenId="environment" />,
+      <LucaPremiumOnboardingPreview settleDurationMs={0} initialScreenId="environment" />,
     );
     // default environment selection is carbon
     expect(
@@ -73,7 +73,7 @@ describe("LucaPremiumOnboardingPreview", () => {
   });
 
   it("hides Back on welcome and shows it after advancing", () => {
-    const { container, cleanup } = mount(<LucaPremiumOnboardingPreview />);
+    const { container, cleanup } = mount(<LucaPremiumOnboardingPreview settleDurationMs={0} />);
     expect(
       container.querySelector("[data-luca-onboarding-preview-back]"),
     ).toBeNull();
@@ -96,7 +96,7 @@ describe("LucaPremiumOnboardingPreview", () => {
 
   it("completes only via the finish primary CTA (inert flag, no side effects)", () => {
     const { container, cleanup } = mount(
-      <LucaPremiumOnboardingPreview initialScreenId="finish" />,
+      <LucaPremiumOnboardingPreview settleDurationMs={0} initialScreenId="finish" />,
     );
     const preview = container.querySelector(
       "[data-luca-onboarding-preview]",
@@ -120,7 +120,7 @@ describe("LucaPremiumOnboardingPreview", () => {
     const rootStyleBefore = document.documentElement.getAttribute("style");
     const bodyStyleBefore = document.body.getAttribute("style");
 
-    const { cleanup } = mount(<LucaPremiumOnboardingPreview />);
+    const { cleanup } = mount(<LucaPremiumOnboardingPreview settleDurationMs={0} />);
 
     expect(document.documentElement.getAttribute("style")).toBe(rootStyleBefore);
     expect(document.body.getAttribute("style")).toBe(bodyStyleBefore);
