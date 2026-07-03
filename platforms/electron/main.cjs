@@ -529,15 +529,16 @@ function createWindow() {
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
         backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
         transparent: false,
-        // Premium window chrome: no native titlebar strip at all — the OS
-        // window controls are drawn as a dark overlay INSIDE the shell's
-        // 56px top band (matches the h-14 header row). Drag regions are
-        // provided by the renderer (.luca-window-drag on the top bands).
+        // Premium window chrome: no native titlebar. The OS window controls
+        // are drawn as a dark overlay inside the renderer's slim SYSTEM
+        // STRIP (.luca-system-strip, 40px, Claude Desktop pattern) — a
+        // dedicated full-width chrome band above the panels, so no panel
+        // layout can collide with min/max/close.
         titleBarStyle: 'hidden',
         titleBarOverlay: {
-            color: '#111417',       // Carbon base — controls sit on shell chrome
+            color: '#111417',       // Carbon base — matches the strip's chrome tier
             symbolColor: '#9aa4b2', // muted glyphs, hover handled by the OS
-            height: 55              // aligns with the h-14 (56px) band minus its 1px border
+            height: 39              // strip is 40px incl. its 1px bottom hairline
         },
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {

@@ -542,8 +542,26 @@ a,
 .luca-window-drag :is(button, a, input, select, textarea, [role="button"]) {
   -webkit-app-region: no-drag;
 }
-html.luca-wco .luca-wco-pad-right {
-  padding-right: 144px;
+/* The system strip: hidden unless the window-controls overlay is live.
+ * Sits on the chrome tier (base), hairline below, quiet centered-left title.
+ * Height must match main.cjs titleBarOverlay.height + 1px hairline. */
+.luca-system-strip {
+  display: none;
+}
+html.luca-wco .luca-system-strip {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 40px;
+  padding: 0 14px;
+  background: var(--luca-background-base, var(--app-bg-main, #101317));
+  border-bottom: 1px solid var(--luca-border-subtle, rgba(255, 255, 255, 0.07));
+}
+.luca-system-strip-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--luca-text-tertiary, var(--app-text-muted));
 }
 
 /* Apple-style corner smoothing (continuous curvature). Native CSS
