@@ -21,17 +21,6 @@
             align-items: center;
             justify-content: center;
         }
-        /* Edge-light: Luca incarnating into this host body. */
-        .edge {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            border: 1.5px solid var(--accent);
-            box-shadow: 0 0 22px var(--accent), inset 0 0 30px var(--accent);
-            opacity: 0;
-            animation: edge-in 1.4s ease-out 0.2s forwards,
-                       edge-breathe 5s ease-in-out 1.6s infinite;
-        }
         .stage {
             position: relative;
             display: flex;
@@ -73,22 +62,17 @@
             box-shadow: 0 0 10px var(--accent);
             transition: width 0.6s ease;
         }
-        @keyframes edge-in { to { opacity: 0.32; } }
-        @keyframes edge-breathe { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.4; } }
         @keyframes face-in { to { opacity: 0.95; transform: scale(1); } }
         @keyframes face-breathe {
             0%, 100% { transform: scale(0.99); opacity: 0.9; }
             50% { transform: scale(1.02); opacity: 1; }
         }
         @media (prefers-reduced-motion: reduce) {
-            .edge, .face { animation: none; opacity: 1; transform: none; }
-            .edge { opacity: 0.3; }
-            .face { opacity: 0.95; }
+            .face { animation: none; opacity: 0.95; transform: none; }
         }
     </style>
 </head>
 <body>
-    <div class="edge"></div>
     <div class="stage">
         <img class="face" src="luca-hologram.png" alt="Luca" />
         <div class="wordmark">LucaOS</div>
