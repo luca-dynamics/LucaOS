@@ -24,30 +24,58 @@
     letter-spacing:-.008em;font-variant-numeric:tabular-nums;
     transition:background 600ms cubic-bezier(.22,.88,.24,1)}
 
-  /* ── the being: one orb, from first light to the shell ── */
-  #orb{
-    position:fixed;z-index:50;width:56px;height:56px;border-radius:50%;
-    left:50%;top:38%;transform:translate(-50%,-50%);
-    background:radial-gradient(circle at 38% 34%, rgba(255,255,255,.85), var(--orb) 42%, transparent 72%);
-    box-shadow:0 0 34px color-mix(in srgb, var(--orb) 45%, transparent),
-               0 0 90px color-mix(in srgb, var(--orb) 18%, transparent);
+  /* ── the being: the FACE — brand identity, from first light to the shell.
+     Presence strategy for a still image: it FOCUSES (wake = blur resolving),
+     BREATHES (slow scale+brightness), carries the one BLOOM (accent-tinted
+     light behind it, alive), WARMS when glad, and finally CONDENSES into the
+     runtime orb — identity settling into its resting mark. ── */
+  #being{
+    position:fixed;z-index:50;left:50%;top:30%;transform:translate(-50%,-50%);
+    width:190px;height:190px;pointer-events:none;
     transition:left 900ms cubic-bezier(.22,.88,.24,1),
                top 900ms cubic-bezier(.22,.88,.24,1),
                width 900ms cubic-bezier(.22,.88,.24,1),
                height 900ms cubic-bezier(.22,.88,.24,1),
-               box-shadow 900ms ease, background 600ms ease;
-    animation:breathe 4.2s ease-in-out infinite;
+               opacity 700ms ease;
   }
-  @keyframes breathe{
-    0%,100%{filter:brightness(.92) saturate(.95)}
-    50%{filter:brightness(1.08) saturate(1.05)}
+  /* the one glow: accent light the face lives in */
+  #bloom{
+    position:absolute;inset:-38%;border-radius:50%;
+    background:radial-gradient(circle,
+      color-mix(in srgb, var(--orb) 26%, transparent) 0%,
+      color-mix(in srgb, var(--orb) 10%, transparent) 42%, transparent 70%);
+    animation:bloomBreath 5.2s ease-in-out infinite;
+    transition:opacity 700ms ease;
   }
-  #orb.waking{animation:breathe 2.2s ease-in-out infinite}
-  #orb.home{
-    left:34px;top:28px;width:24px;height:24px;transform:translate(-50%,-50%);
+  #face{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+    filter:blur(22px) brightness(.35) saturate(.7);
+    animation:faceBreath 5.2s ease-in-out infinite;
+    transition:filter 1600ms cubic-bezier(.22,.88,.24,1);
+  }
+  #being.awake #face{filter:blur(0) brightness(1) saturate(1)}
+  @keyframes faceBreath{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.015)}
+  }
+  @keyframes bloomBreath{
+    0%,100%{opacity:.75}
+    50%{opacity:1}
+  }
+  /* glad: the face warms — golden undertone, amber bloom */
+  #being.warm #face{filter:blur(0) brightness(1.06) saturate(1.05) sepia(.22)}
+  #being.warm{--orb:#d9b06a}
+  /* condensing: identity rests into the runtime mark */
+  #being.condense{opacity:0;left:34px;top:28px;width:26px;height:26px}
+  #orb{
+    position:fixed;z-index:51;width:24px;height:24px;border-radius:50%;
+    left:34px;top:28px;transform:translate(-50%,-50%);opacity:0;
+    background:radial-gradient(circle at 38% 34%, rgba(255,255,255,.85), var(--orb) 42%, transparent 72%);
     box-shadow:0 0 12px color-mix(in srgb, var(--orb) 40%, transparent);
+    transition:opacity 700ms ease 500ms;
+    animation:faceBreath 4.2s ease-in-out infinite;
   }
-  #orb.warm{--orb:#d9b06a}
+  #orb.on{opacity:1}
 
   /* ── scenes ── */
   .scene{
@@ -72,6 +100,10 @@
   .scene.on .speak.d1{transition-delay:600ms}
   .scene.on .speak.d2{transition-delay:1400ms}
   .scene.on .speak.d3{transition-delay:2300ms}
+  /* first light: the being speaks only after its face has come into focus */
+  #s1.on .speak.d1{transition-delay:2000ms}
+  #s1.on .speak.d2{transition-delay:2900ms}
+  #s1.on .speak.d3{transition-delay:3900ms}
 
   /* buttons */
   .cta{margin-top:30px;display:flex;gap:12px;justify-content:center}
@@ -143,6 +175,10 @@
 </head>
 <body>
 
+<div id="being">
+  <div id="bloom"></div>
+  <img id="face" src="hologram.png" alt="" />
+</div>
 <div id="orb"></div>
 
 <div class="steps" id="steps">
@@ -265,17 +301,20 @@
     grid.appendChild(el);
   });
 
-  // ── scene switching + orb choreography ──
+  // ── scene switching + face choreography (presence rhythm) ──
+  const being = document.getElementById("being");
   const orb = document.getElementById("orb");
   const steps = document.getElementById("steps");
-  const ORB_POS = {1:{l:"50%",t:"38%",w:56}, 2:{l:"50%",t:"16%",w:34}, 3:{l:"50%",t:"15%",w:30}, 4:{l:"50%",t:"36%",w:64}};
+  // The face never sits still across screens: hero at first light, smaller
+  // and higher while you choose, large and warm when it's glad.
+  const FACE_POS = {1:{l:"50%",t:"30%",w:190}, 2:{l:"50%",t:"12%",w:88}, 3:{l:"50%",t:"12%",w:82}, 4:{l:"50%",t:"30%",w:210}};
   function go(n){
     document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
     document.getElementById("s"+n).classList.add("on");
-    const p = ORB_POS[n];
-    orb.classList.remove("home");
-    orb.style.left=p.l; orb.style.top=p.t; orb.style.width=p.w+"px"; orb.style.height=p.w+"px";
-    orb.classList.toggle("warm", n===4);
+    const p = FACE_POS[n];
+    being.classList.remove("condense");
+    being.style.left=p.l; being.style.top=p.t; being.style.width=p.w+"px"; being.style.height=p.w+"px";
+    being.classList.toggle("warm", n===4);
     steps.classList.toggle("on", n>1);
     steps.querySelectorAll("i").forEach(i=>{
       const s=+i.dataset.s; i.className = s<n ? "done" : s===n ? "now" : "";
@@ -285,17 +324,19 @@
     el.parentElement.querySelectorAll(".tcard").forEach(c=>c.classList.remove("on"));
     el.classList.add("on");
   }
-  // ── the handoff: the orb travels home, the shell fades in around it ──
+  // ── the handoff: identity condenses into its resting mark. The face
+  // shrinks toward the rail anchor while fading; the runtime orb takes over
+  // at the same point as the shell fades in around it. ──
   function finale(){
     document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
     steps.classList.remove("on");
-    orb.classList.remove("warm");
-    orb.classList.add("home");
+    being.classList.remove("warm");
+    being.classList.add("condense");
+    orb.classList.add("on");
     document.getElementById("shell").classList.add("on");
   }
-  // wake sequence on load
-  orb.classList.add("waking");
-  setTimeout(()=>orb.classList.remove("waking"), 2600);
+  // wake: the face resolves out of the dark — eyes adjusting.
+  setTimeout(()=>being.classList.add("awake"), 500);
 </script>
 </body>
 </html>
