@@ -20,6 +20,7 @@ import {
 
 const expectedStandardTabIds = [
   "general",
+  "appearance",
   "brain",
   "voice",
   "vision",
@@ -46,9 +47,9 @@ const expectedAllTabIds = [
 const ids = (tabs: readonly { id: string }[]) => tabs.map((tab) => tab.id);
 
 describe("settingsNavigationModel", () => {
-  it("keeps all 15 Settings tabs represented exactly once", () => {
+  it("keeps all 16 Settings tabs represented exactly once", () => {
     expect(ids(settingsDesktopTabs)).toEqual(expectedAllTabIds);
-    expect(new Set(ids(settingsDesktopTabs)).size).toBe(15);
+    expect(new Set(ids(settingsDesktopTabs)).size).toBe(16);
   });
 
   it("groups desktop Settings into Standard Settings and Advanced Features", () => {

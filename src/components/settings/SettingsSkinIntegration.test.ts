@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 const settingsModalSource = readFileSync("src/components/SettingsModal.tsx", "utf8");
 const generalTabSource = readFileSync("src/components/settings/SettingsGeneralTab.tsx", "utf8");
+const appearanceTabSource = readFileSync("src/components/settings/SettingsAppearanceTab.tsx", "utf8");
 const skinSectionSource = readFileSync("src/components/settings/SkinPreviewSection.tsx", "utf8");
 
 describe("settings skin integration", () => {
@@ -22,7 +23,11 @@ describe("settings skin integration", () => {
     expect(generalTabSource).not.toContain("NORMAL_LUCA_THEME_OPTIONS");
     expect(generalTabSource).not.toContain("getLucaThemeLabel");
     expect(generalTabSource).not.toContain(">Theme<");
-    expect(generalTabSource).toContain("<SkinPreviewSection");
+  });
+
+  it("hosts the skin system in the first-class Appearance tab", () => {
+    expect(appearanceTabSource).toContain("<SkinPreviewSection");
+    expect(generalTabSource).not.toContain("<SkinPreviewSection");
   });
 
   it("presents skins as the active visual environment, not a dashboard-only preview", () => {

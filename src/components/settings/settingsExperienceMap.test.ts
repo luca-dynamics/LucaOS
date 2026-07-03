@@ -10,6 +10,7 @@ import {
 
 const expectedSettingsTabIds = [
   "general",
+  "appearance",
   "brain",
   "voice",
   "vision",
