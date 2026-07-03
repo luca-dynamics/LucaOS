@@ -48,8 +48,12 @@ export const lucaShellGlowShadowStyle: CSSProperties = {
 // border-l applied at the layout level), not floating cards — so no drop shadow
 // here. Shadows on adjacent flush columns muddy the seam and read "generic".
 // A restrained material blur is kept so glass skins still read as frosted.
+// Two-tier shell depth (the Claude/Codex pattern the flat Phase-3 shell
+// lost): CHROME recedes, CONTENT lifts. Rails ground their glass tint on the
+// skin's base so they read one step darker (dark skins) / duller (light
+// skins) than the center canvas, which holds the elevated tone (below).
 export const lucaShellPanelSurfaceStyle: CSSProperties = {
-  background: LUCA_SHELL_SURFACE_BACKGROUND,
+  background: `linear-gradient(${LUCA_SHELL_SURFACE_BACKGROUND}, ${LUCA_SHELL_SURFACE_BACKGROUND}), var(--luca-background-base, var(--app-bg-main, #101317))`,
   borderColor: LUCA_SHELL_BORDER_SUBTLE,
   color: LUCA_SHELL_TEXT_PRIMARY,
   backdropFilter: `blur(${LUCA_SHELL_BLUR})`,
@@ -66,8 +70,12 @@ export const lucaShellRailSurfaceStyle: CSSProperties = {
 // soft gradient depth behind the work, Carbon's graphite depth, Pearl's soft
 // pearl, Canvas's warm matte) using only boundary-supplied variables. No motion.
 export const lucaShellWorkspaceSurfaceStyle: CSSProperties = {
+  // The canvas keeps a gentle top-light but NEVER decays to rail level —
+  // the gradient floors at an elevated/base mix so the center stays one
+  // visible step lifted from the rails all the way down (content is paper,
+  // chrome recedes; holds in both dark and light skins).
   background:
-    "linear-gradient(180deg, var(--luca-background-elevated, transparent) 0%, var(--luca-background-base, var(--luca-background-elevated, transparent)) 100%)",
+    "linear-gradient(180deg, var(--luca-background-elevated, #1b2025) 0%, color-mix(in srgb, var(--luca-background-elevated, #1b2025) 45%, var(--luca-background-base, #101317)) 100%)",
   color: LUCA_SHELL_TEXT_PRIMARY,
 };
 
