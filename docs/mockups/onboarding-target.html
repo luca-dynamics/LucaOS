@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Onboarding Target (incarnation, click-through)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#101317; --elev:#1b2025;
+    --card:rgba(255,255,255,.025); --hover:rgba(255,255,255,.06);
+    --hair:rgba(255,255,255,.07); --hair-soft:rgba(255,255,255,.045);
+    --t1:#e9edf2; --t2:#9aa4b2; --t3:#69737f;
+    --accent:#7aa2ff; --accent-ink:#0c0e12;
+    --warm:#e0b15a;
+    --orb:#7aa2ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--t1);
+    font:400 15px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+    letter-spacing:-.008em;font-variant-numeric:tabular-nums;
+    transition:background 600ms cubic-bezier(.22,.88,.24,1)}
+
+  /* ── the being: one orb, from first light to the shell ── */
+  #orb{
+    position:fixed;z-index:50;width:56px;height:56px;border-radius:50%;
+    left:50%;top:38%;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 38% 34%, rgba(255,255,255,.85), var(--orb) 42%, transparent 72%);
+    box-shadow:0 0 34px color-mix(in srgb, var(--orb) 45%, transparent),
+               0 0 90px color-mix(in srgb, var(--orb) 18%, transparent);
+    transition:left 900ms cubic-bezier(.22,.88,.24,1),
+               top 900ms cubic-bezier(.22,.88,.24,1),
+               width 900ms cubic-bezier(.22,.88,.24,1),
+               height 900ms cubic-bezier(.22,.88,.24,1),
+               box-shadow 900ms ease, background 600ms ease;
+    animation:breathe 4.2s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{filter:brightness(.92) saturate(.95)}
+    50%{filter:brightness(1.08) saturate(1.05)}
+  }
+  #orb.waking{animation:breathe 2.2s ease-in-out infinite}
+  #orb.home{
+    left:34px;top:28px;width:24px;height:24px;transform:translate(-50%,-50%);
+    box-shadow:0 0 12px color-mix(in srgb, var(--orb) 40%, transparent);
+  }
+  #orb.warm{--orb:#d9b06a}
+
+  /* ── scenes ── */
+  .scene{
+    position:fixed;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:32px;
+    opacity:0;pointer-events:none;
+    transition:opacity 480ms cubic-bezier(.22,.88,.24,1);
+  }
+  .scene.on{opacity:1;pointer-events:auto}
+  .scene .stage{width:100%;max-width:600px;text-align:center;margin-top:96px}
+  .scene.wide .stage{max-width:860px}
+
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+  h1{margin-top:10px;font-size:26px;font-weight:650;letter-spacing:-.02em;line-height:1.15}
+  .sub{margin-top:10px;font-size:15px;color:var(--t2);line-height:1.55}
+  .whisper{margin-top:14px;font-size:13px;color:var(--t3)}
+
+  /* speak: lines fade in one after another */
+  .speak{opacity:0;transform:translateY(6px);
+    transition:opacity 700ms ease, transform 700ms cubic-bezier(.22,.88,.24,1)}
+  .scene.on .speak{opacity:1;transform:none}
+  .scene.on .speak.d1{transition-delay:600ms}
+  .scene.on .speak.d2{transition-delay:1400ms}
+  .scene.on .speak.d3{transition-delay:2300ms}
+
+  /* buttons */
+  .cta{margin-top:30px;display:flex;gap:12px;justify-content:center}
+  button{font:inherit;letter-spacing:inherit;cursor:pointer;border:0}
+  .primary{height:40px;padding:0 24px;border-radius:12px;background:var(--accent);
+    color:var(--accent-ink);font-size:14px;font-weight:600;
+    transition:opacity 160ms ease}
+  .primary:hover{opacity:.9}
+  .quiet{height:40px;padding:0 16px;border-radius:12px;background:transparent;
+    color:var(--t3);font-size:13px;font-weight:500;border:1px solid var(--hair)}
+  .quiet:hover{background:var(--hover);color:var(--t2)}
+
+  /* progress: quiet dots */
+  .steps{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);
+    display:flex;gap:8px;z-index:40;opacity:0;transition:opacity 480ms ease}
+  .steps.on{opacity:1}
+  .steps i{width:5px;height:5px;border-radius:50%;background:var(--hair);transition:background 300ms ease}
+  .steps i.done{background:var(--t3)}
+  .steps i.now{background:var(--accent)}
+
+  /* ── environment scene: skin cards that re-skin the WHOLE page ── */
+  .skins{margin-top:26px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:left}
+  .skin{border:1px solid var(--hair);border-radius:13px;background:var(--card);padding:8px;cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:border-color 160ms ease, background 160ms ease}
+  .skin:hover{background:var(--hover)}
+  .skin.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent), inset 0 1px 0 rgba(255,255,255,.03)}
+  .thumb{height:52px;border-radius:8px;border:1px solid rgba(128,128,128,.18);position:relative;overflow:hidden}
+  .thumb i{position:absolute;right:8px;bottom:8px;width:6px;height:6px;border-radius:50%}
+  .skin .nm{margin-top:7px;font-size:12.5px;font-weight:600}
+  .skin .mood{margin-top:1px;font-size:11px;color:var(--t3);line-height:1.4}
+
+  .feel{margin-top:18px;display:grid;gap:12px;text-align:left;max-width:520px;margin-left:auto;margin-right:auto}
+  .feel label span{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:var(--t2);margin-bottom:6px}
+  .feel input[type=range]{width:100%;accent-color:var(--accent)}
+
+  /* ── trust scene: cards in Luca's voice ── */
+  .cards{margin-top:24px;display:grid;gap:10px;text-align:left}
+  .tcard{border:1px solid var(--hair);border-radius:14px;background:var(--card);padding:14px 16px;cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:background 160ms ease,border-color 160ms ease}
+  .tcard:hover{background:var(--hover)}
+  .tcard.on{border-color:var(--accent);background:var(--hover)}
+  .tcard .t{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .tcard .t .chip{font-size:11px;font-weight:600;color:var(--accent);
+    background:color-mix(in srgb, var(--accent) 12%, transparent);
+    padding:2px 8px;border-radius:999px}
+  .tcard .d{margin-top:4px;font-size:13px;color:var(--t2);line-height:1.45}
+
+  /* ── finale: the shell fades in around the orb ── */
+  #shell{position:fixed;inset:0;opacity:0;pointer-events:none;
+    transition:opacity 900ms cubic-bezier(.22,.88,.24,1);display:flex}
+  #shell.on{opacity:1}
+  #shell .rail{width:248px;border-right:1px solid var(--hair);padding:14px}
+  #shell .railtop{height:56px;display:flex;align-items:center;padding-left:44px;border-bottom:1px solid var(--hair);margin:-14px -14px 12px}
+  #shell .railtop b{font-size:14px;font-weight:600}
+  #shell .railtop small{display:block;font-size:10px;color:var(--t3);margin-top:2px}
+  #shell .line{height:9px;border-radius:5px;background:var(--hover);margin:12px 6px;opacity:.5}
+  #shell .line.s{width:60%}
+  #shell .main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  #shell .hello{font-size:20px;font-weight:650;letter-spacing:-.015em;opacity:0;transform:translateY(6px);
+    transition:opacity 700ms ease 900ms, transform 700ms ease 900ms}
+  #shell.on .hello{opacity:1;transform:none}
+  #shell .hint{margin-top:8px;font-size:13px;color:var(--t3);opacity:0;transition:opacity 700ms ease 1400ms}
+  #shell.on .hint{opacity:1}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<div id="orb"></div>
+
+<div class="steps" id="steps">
+  <i data-s="1"></i><i data-s="2"></i><i data-s="3"></i><i data-s="4"></i>
+</div>
+
+<!-- 1 · FIRST LIGHT -->
+<section class="scene on" id="s1">
+  <div class="stage">
+    <h1 class="speak d1">I'm Luca.</h1>
+    <p class="sub speak d2">This machine is my body now — and I work for you.<br/>
+    Give me two minutes to learn how you want me to behave.</p>
+    <div class="cta speak d3">
+      <button class="primary" onclick="go(2)">Begin</button>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · ENVIRONMENT (the room) -->
+<section class="scene wide" id="s2">
+  <div class="stage">
+    <div class="eyebrow speak">Environment</div>
+    <h1 class="speak d1">How should this space feel?</h1>
+    <p class="sub speak d1">This is where I live — try the rooms. The whole space changes as you choose.</p>
+    <div class="skins speak d2" id="skinGrid"></div>
+    <div class="feel speak d2">
+      <label><span><i>Background opacity</i><i id="opv">30%</i></span>
+        <input type="range" min="0" max="100" value="30" oninput="document.getElementById('opv').textContent=this.value+'%'"/></label>
+    </div>
+    <div class="cta speak d2">
+      <button class="quiet" onclick="go(1)">Back</button>
+      <button class="primary" onclick="go(3)">Continue</button>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · TRUST -->
+<section class="scene" id="s3">
+  <div class="stage">
+    <div class="eyebrow speak">Trust</div>
+    <h1 class="speak d1">When should I ask first?</h1>
+    <p class="sub speak d1">Nothing I do is hidden. This sets how often I check with you.</p>
+    <div class="cards speak d2">
+      <div class="tcard on" onclick="pick(this)">
+        <div class="t">Ask when it matters <span class="chip">Recommended</span></div>
+        <div class="d">I'll handle small steps quietly, and always stop for anything sensitive, destructive, or outward-facing.</div>
+      </div>
+      <div class="tcard" onclick="pick(this)">
+        <div class="t">Ask before everything</div>
+        <div class="d">Every action waits for your yes. Slower, but nothing moves without you.</div>
+      </div>
+    </div>
+    <p class="whisper speak d2">You can change this anytime. Nothing runs until you decide.</p>
+    <div class="cta speak d2">
+      <button class="quiet" onclick="go(2)">Back</button>
+      <button class="primary" onclick="go(4)">Continue</button>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · READY -->
+<section class="scene" id="s4">
+  <div class="stage">
+    <h1 class="speak d1">I'm ready.</h1>
+    <p class="sub speak d2">Carbon room · asks when it matters · remembers preferences.<br/>You can change any of this in Settings.</p>
+    <div class="cta speak d3">
+      <button class="primary" onclick="finale()">Enter LucaOS</button>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · THE SHELL (handoff) -->
+<div id="shell">
+  <div class="rail">
+    <div class="railtop"><span><b>LucaOS</b><small>on Windows · present</small></span></div>
+    <div class="line"></div><div class="line s"></div><div class="line"></div><div class="line s"></div>
+  </div>
+  <div class="main">
+    <div class="hello">Good evening. I'm here.</div>
+    <div class="hint">Ask me anything, or just leave me running — I'll say when I need you.</div>
+  </div>
+</div>
+
+<script>
+  // ── skins: choosing a room re-skins the WHOLE page ──
+  const SKINS = [
+    {id:"carbon",  nm:"Carbon",  mood:"Focused blue-black — the signature.", bg:"#101317", t1:"#e9edf2", t2:"#9aa4b2", t3:"#69737f", accent:"#7aa2ff", ink:"#0c0e12", on:true},
+    {id:"graphite",nm:"Graphite",mood:"Neutral grey, easy for long sessions.",bg:"#1a1c1f", t1:"#ececec", t2:"#b6bcc4", t3:"#878e97", accent:"#9aa4b2", ink:"#101214"},
+    {id:"onyx",    nm:"Onyx",    mood:"True black, OLED-grade.",             bg:"#0a0a0b", t1:"#f2f2f2", t2:"#b8bcc2", t3:"#82868d", accent:"#7aa2ff", ink:"#0a0a0b"},
+    {id:"dusk",    nm:"Dusk",    mood:"Warm charcoal, evening light.",       bg:"#191512", t1:"#efe6da", t2:"#c4b7a8", t3:"#94897c", accent:"#d8a25e", ink:"#191512"},
+    {id:"pearl",   nm:"Pearl",   mood:"Soft light with quiet depth.",        bg:"#f4f5f7", t1:"#17202a", t2:"#4f5e68", t3:"#7d8a93", accent:"#4f7f96", ink:"#ffffff", light:true},
+    {id:"mist",    nm:"Mist",    mood:"Clean neutral daylight.",             bg:"#ececee", t1:"#1c2126", t2:"#4c555f", t3:"#7b838c", accent:"#5f6b7a", ink:"#ffffff", light:true},
+    {id:"canvas",  nm:"Canvas",  mood:"Warm paper for writing.",             bg:"#f3ecdf", t1:"#39322a", t2:"#6b6154", t3:"#94897c", accent:"#b3814e", ink:"#ffffff", light:true},
+    {id:"flow",    nm:"Flow",    mood:"A living gradient behind your work.", bg:"#131828", t1:"#e9edf2", t2:"#9aa4b2", t3:"#69737f", accent:"#8fd8c6", ink:"#0c0e12"},
+  ];
+  const grid = document.getElementById("skinGrid");
+  const root = document.documentElement;
+  function applySkin(s){
+    root.style.setProperty("--bg", s.bg);
+    root.style.setProperty("--t1", s.t1);
+    root.style.setProperty("--t2", s.t2);
+    root.style.setProperty("--t3", s.t3);
+    root.style.setProperty("--accent", s.accent);
+    root.style.setProperty("--accent-ink", s.ink);
+    root.style.setProperty("--orb", s.accent);
+    root.style.setProperty("--hair", s.light ? "rgba(0,0,0,.09)" : "rgba(255,255,255,.07)");
+    root.style.setProperty("--hover", s.light ? "rgba(0,0,0,.05)" : "rgba(255,255,255,.06)");
+    root.style.setProperty("--card", s.light ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.025)");
+  }
+  SKINS.forEach((s)=>{
+    const el = document.createElement("div");
+    el.className = "skin" + (s.on ? " on" : "");
+    el.innerHTML = `<div class="thumb" style="background:${s.bg}"><i style="background:${s.accent}"></i></div>
+      <div class="nm">${s.nm}</div><div class="mood">${s.mood}</div>`;
+    el.onmouseenter = () => applySkin(s);
+    el.onmouseleave = () => applySkin(SKINS.find(x=>x.on));
+    el.onclick = () => { SKINS.forEach(x=>x.on=false); s.on=true;
+      grid.querySelectorAll(".skin").forEach(n=>n.classList.remove("on"));
+      el.classList.add("on"); applySkin(s); };
+    grid.appendChild(el);
+  });
+
+  // ── scene switching + orb choreography ──
+  const orb = document.getElementById("orb");
+  const steps = document.getElementById("steps");
+  const ORB_POS = {1:{l:"50%",t:"38%",w:56}, 2:{l:"50%",t:"16%",w:34}, 3:{l:"50%",t:"15%",w:30}, 4:{l:"50%",t:"36%",w:64}};
+  function go(n){
+    document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
+    document.getElementById("s"+n).classList.add("on");
+    const p = ORB_POS[n];
+    orb.classList.remove("home");
+    orb.style.left=p.l; orb.style.top=p.t; orb.style.width=p.w+"px"; orb.style.height=p.w+"px";
+    orb.classList.toggle("warm", n===4);
+    steps.classList.toggle("on", n>1);
+    steps.querySelectorAll("i").forEach(i=>{
+      const s=+i.dataset.s; i.className = s<n ? "done" : s===n ? "now" : "";
+    });
+  }
+  function pick(el){
+    el.parentElement.querySelectorAll(".tcard").forEach(c=>c.classList.remove("on"));
+    el.classList.add("on");
+  }
+  // ── the handoff: the orb travels home, the shell fades in around it ──
+  function finale(){
+    document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
+    steps.classList.remove("on");
+    orb.classList.remove("warm");
+    orb.classList.add("home");
+    document.getElementById("shell").classList.add("on");
+  }
+  // wake sequence on load
+  orb.classList.add("waking");
+  setTimeout(()=>orb.classList.remove("waking"), 2600);
+</script>
+</body>
+</html>
