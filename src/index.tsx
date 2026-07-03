@@ -1,4 +1,7 @@
 import "./web/webBootPolyfills";
+import { setupWindowControlsOverlay } from "./windowControlsOverlay";
+
+setupWindowControlsOverlay();
 import {
   isElectronRuntimeSignal,
   selectLucaBootstrapEntry,

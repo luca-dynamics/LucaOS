@@ -529,7 +529,16 @@ function createWindow() {
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
         backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
         transparent: false,
-        titleBarStyle: 'hiddenInset', // macOS: hidden inset titlebar. Windows ignores this; the dark frame comes from nativeTheme above.
+        // Premium window chrome: no native titlebar strip at all — the OS
+        // window controls are drawn as a dark overlay INSIDE the shell's
+        // 56px top band (matches the h-14 header row). Drag regions are
+        // provided by the renderer (.luca-window-drag on the top bands).
+        titleBarStyle: 'hidden',
+        titleBarOverlay: {
+            color: '#111417',       // Carbon base — controls sit on shell chrome
+            symbolColor: '#9aa4b2', // muted glyphs, hover handled by the OS
+            height: 55              // aligns with the h-14 (56px) band minus its 1px border
+        },
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),

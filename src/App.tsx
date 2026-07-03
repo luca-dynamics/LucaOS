@@ -2893,7 +2893,7 @@ function AppContent() {
                 {/* Brand bar — the being's anchor at the top-left of the shell:
                     presence mark + identity + substrate line. */}
                 <div
-                  className="flex-none flex items-center gap-2.5 h-14 px-4 border-b"
+                  className="luca-window-drag flex-none flex items-center gap-2.5 h-14 px-4 border-b"
                   style={{
                     borderColor:
                       "var(--luca-border-subtle, var(--app-border-main))",
@@ -3241,7 +3241,7 @@ function AppContent() {
               >
                 <div className="flex flex-col h-full w-full overflow-hidden">
                   <div
-                    className="flex flex-none h-14 items-stretch border-b"
+                    className="luca-window-drag luca-wco-pad-right flex flex-none h-14 items-stretch border-b"
                     style={lucaShellDividerStyle}
                   >
                     {visibleRightPanelModes.map((mode) => (
