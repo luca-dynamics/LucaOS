@@ -2859,23 +2859,7 @@ function AppContent() {
               className="luca-window-drag luca-wco-pad-right flex flex-none h-14 items-stretch border-b"
               style={{ ...lucaShellPanelSurfaceStyle, ...lucaShellDividerStyle }}
             >
-              {leftPanelCollapsed ? (
-                <div
-                  className="flex-none flex items-center justify-center border-r"
-                  style={{ ...lucaShellDividerStyle, width: `${DESKTOP_RAIL_WIDTH_PX}px` }}
-                >
-                  <button
-                    type="button"
-                    aria-label={leftToggleIcon(true).label}
-                    title={leftToggleIcon(true).label}
-                    onClick={() => setLeftPanelCollapsed(false)}
-                    className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                    style={lucaShellControlStyle}
-                  >
-                    <Icon name={leftToggleIcon(true).name} size={20} />
-                  </button>
-                </div>
-              ) : (
+              {!leftPanelCollapsed && (
                 <div
                   className="flex-none flex items-center gap-2.5 px-4 border-r"
                   style={{ ...lucaShellDividerStyle, width: `${panelWidths.sidebar}px` }}
@@ -2902,19 +2886,22 @@ function AppContent() {
                       on Windows · present
                     </span>
                   </span>
-                  <button
-                    type="button"
-                    aria-label={leftToggleIcon(false).label}
-                    title={leftToggleIcon(false).label}
-                    onClick={() => setLeftPanelCollapsed(true)}
-                    className={`ml-auto p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                    style={lucaShellControlStyle}
-                  >
-                    <Icon name={leftToggleIcon(false).name} size={16} />
-                  </button>
                 </div>
               )}
-              <div className="luca-band-embed flex-1 min-w-0 flex flex-col">
+              <div className="flex-1 min-w-0 flex items-stretch">
+                <div className="flex items-center pl-2">
+                  <button
+                    type="button"
+                    aria-label={leftToggleIcon(leftPanelCollapsed).label}
+                    title={leftToggleIcon(leftPanelCollapsed).label}
+                    onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+                    className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                    style={lucaShellControlStyle}
+                  >
+                    <Icon name={leftToggleIcon(leftPanelCollapsed).name} size={16} />
+                  </button>
+                </div>
+                <div className="luca-band-embed flex-1 min-w-0 flex flex-col">
                 <SafeComponent componentName="Header">
                   <Header
                     hideBrand
@@ -2947,46 +2934,21 @@ function AppContent() {
                     tier={toHeaderTier(experienceMode)}
                   />
                 </SafeComponent>
-              </div>
-              {rightPanelCollapsed ? (
-                <div
-                  className="flex-none flex items-center gap-1 px-2 border-l"
-                  style={lucaShellDividerStyle}
-                >
-              <button
-                type="button"
-                aria-label={rightToggleIcon(true).label}
-                title={rightToggleIcon(true).label}
-                onClick={() => setRightPanelCollapsed(false)}
-                className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                style={lucaShellControlStyle}
-              >
-                <Icon name={rightToggleIcon(true).name} size={20} />
-              </button>
-                {ACTIVITY_RAIL_ICONS.filter((item) =>
-                  visibleRightPanelModes.includes(item.mode),
-                ).map((item) => (
-                  <button
-                    key={item.mode}
-                    type="button"
-                    aria-label={item.label}
-                    title={item.label}
-                    onClick={() => {
-                      setRightPanelMode(item.mode);
-                      soundService.play("KEYSTROKE");
-                    }}
-                    className={`p-2 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                    style={
-                      displayedRightPanelMode === item.mode
-                        ? lucaShellActiveControlStyle
-                        : lucaShellControlStyle
-                    }
-                  >
-                    <Icon name={item.icon} size={18} />
-                  </button>
-                ))}
                 </div>
-              ) : (
+                <div className="flex items-center pr-2">
+                  <button
+                    type="button"
+                    aria-label={rightToggleIcon(rightPanelCollapsed).label}
+                    title={rightToggleIcon(rightPanelCollapsed).label}
+                    onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+                    className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                    style={lucaShellControlStyle}
+                  >
+                    <Icon name={rightToggleIcon(rightPanelCollapsed).name} size={16} />
+                  </button>
+                </div>
+              </div>
+              {!rightPanelCollapsed && (
                 <div
                   className="flex-none flex items-stretch border-l"
                   style={{ ...lucaShellDividerStyle, width: `${panelWidths.right}px` }}
@@ -3021,46 +2983,17 @@ function AppContent() {
                           )}
                       </button>
                     ))}
-                    <button
-                      type="button"
-                      aria-label={rightToggleIcon(false).label}
-                      title={rightToggleIcon(false).label}
-                      onClick={() => setRightPanelCollapsed(true)}
-                      className={`flex-none px-3 flex items-center justify-center border-l transition-colors ${lucaShellClassNames.control}`}
-                      style={{
-                        ...lucaShellControlStyle,
-                        ...lucaShellDividerStyle,
-                      }}
-                    >
-                      <Icon name={rightToggleIcon(false).name} size={18} />
-                    </button>
                 </div>
               )}
             </div>
           )}
 
-          <div className="flex-1 min-h-0 flex">
-          {!isMobile && leftPanelCollapsed && (
-            <div
-              className={`flex-none h-full overflow-hidden flex flex-col items-center gap-4 py-3 border-r ${lucaShellClassNames.rail}`}
-              style={{
-                ...lucaShellRailSurfaceStyle,
-                width: `${DESKTOP_RAIL_WIDTH_PX}px`,
-              }}
-            >
-              <div
-                className="flex flex-col items-center gap-1"
-                style={lucaShellMutedTextStyle}
-                aria-hidden="true"
-              >
-                <Icon name="LayoutGrid" size={18} />
-                <span className="text-[8px] font-bold tracking-widest [writing-mode:vertical-rl] rotate-180 opacity-70">
-                  APPS
-                </span>
-              </div>
-            </div>
-          )}
-
+          {/* The environment: the canvas surface spans the whole row; the
+              side panels are chrome surfaces sitting ON TOP of it. */}
+          <div
+            className={`flex-1 min-h-0 flex ${lucaShellClassNames.workspace}`}
+            style={lucaShellWorkspaceSurfaceStyle}
+          >
           {!isMobile && !leftPanelCollapsed && (
             <>
               <div
@@ -3180,10 +3113,7 @@ function AppContent() {
 
           {!isMobile && (
             <>
-              <div
-                className={`flex-1 h-full overflow-hidden flex flex-col ${lucaShellClassNames.workspace}`}
-                style={lucaShellWorkspaceSurfaceStyle}
-              >
+              <div className="flex-1 h-full overflow-hidden flex flex-col">
                 <SafeComponent componentName="ChatPanel">
                   <ChatPanel
                     messages={messages}
