@@ -100,6 +100,7 @@ import OperationsSidebar from "./components/layout/OperationsSidebar";
 import ShellPresenceMark from "./components/presence/ShellPresenceMark";
 import { LUCA_MOTION_CSS_VARIABLES } from "./styles/lucaPresenceMotion";
 import SessionsRail from "./components/left-panel/SessionsRail";
+import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
 import OverlayManager from "./components/layout/OverlayManager";
 import PanelResizer from "./components/layout/PanelResizer";
@@ -503,6 +504,8 @@ function AppContent() {
     () => settingsService.getSettings().general.selectedSkinId,
   );
 
+  // The being's other bodies: LucaLink-paired devices, live. Display-only.
+  const lucaLinkBodyDevices = useLucaLinkDevices();
   const [backgroundOpacity, setBackgroundOpacity] = useState<number>(0.3);
   const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
 
@@ -3295,7 +3298,7 @@ function AppContent() {
                         events={management.events}
                         goals={management.goals}
                         experienceMode={experienceMode}
-                        devices={devices}
+                        devices={[...lucaLinkBodyDevices, ...devices]}
                         workspaceLabel={currentCwd}
                       />
                     )}
