@@ -354,6 +354,29 @@
                     type: deviceType,
                     capabilities: ['vibrate', 'getLocation', 'takePhoto', 'notifications', 'sms', 'calls']
                 });
+
+                // Sensor pulse: battery + network, read-only, every 30s.
+                // Battery API is Chrome/Android; iOS Safari degrades to
+                // network-only pulses. Nothing here has side effects.
+                const sendSensorPulse = async () => {
+                    if (!socket || !socket.connected) return;
+                    const pulse = {};
+                    try {
+                        if (navigator.getBattery) {
+                            const b = await navigator.getBattery();
+                            pulse.battery = Math.round(b.level * 100);
+                            pulse.charging = b.charging;
+                        }
+                    } catch (e) { /* battery unavailable */ }
+                    try {
+                        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                        if (conn && conn.effectiveType) pulse.network = conn.effectiveType;
+                    } catch (e) { /* network info unavailable */ }
+                    socket.emit('sensor:pulse', pulse);
+                };
+                sendSensorPulse();
+                if (window.__lucaSensorPulseTimer) clearInterval(window.__lucaSensorPulseTimer);
+                window.__lucaSensorPulseTimer = setInterval(sendSensorPulse, 30000);
             });
 
             socket.on('disconnect', () => {

@@ -22,12 +22,18 @@ export interface LucaLinkBodyDevice {
 export function mapLucaLinkDevicesToBody(
   devices: Device[],
 ): LucaLinkBodyDevice[] {
-  return devices.map((device) => ({
-    id: `lucalink-${device.id}`,
-    name: device.name,
-    type: `${device.type} · ${device.platform}`,
-    status: device.status === "online" ? "active" : device.status,
-  }));
+  return devices.map((device) => {
+    const battery =
+      typeof device.metadata?.battery === "number"
+        ? ` · ${Math.round(device.metadata.battery)}%`
+        : "";
+    return {
+      id: `lucalink-${device.id}`,
+      name: device.name,
+      type: `${device.type} · ${device.platform}${battery}`,
+      status: device.status === "online" ? "active" : device.status,
+    };
+  });
 }
 
 function readDevices(): LucaLinkBodyDevice[] {

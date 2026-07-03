@@ -138,6 +138,17 @@ class SocketService {
                 }
             });
 
+            socket.on('sensor:pulse', (data) => {
+                // Read-only telemetry from companions; desktop renders it.
+                if (clientType === 'desktop') return;
+                this.io.to('desktop').emit('sensor:pulse', {
+                    deviceId,
+                    battery: typeof data?.battery === 'number' ? data.battery : undefined,
+                    charging: typeof data?.charging === 'boolean' ? data.charging : undefined,
+                    network: typeof data?.network === 'string' ? data.network : undefined
+                });
+            });
+
             socket.on('command:result', (data) => {
                 // Relay result back to LucaLinkManager to resolve promise
                 if (data.error) {
