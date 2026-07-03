@@ -13,6 +13,7 @@ import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
 
 // Import Refactored Tabs
 import SettingsGeneralTab from "./settings/SettingsGeneralTab";
+import SettingsAppearanceTab from "./settings/SettingsAppearanceTab";
 import SettingsBrainTab from "./settings/SettingsBrainTab";
 import SettingsVoiceTab from "./settings/SettingsVoiceTab";
 import SettingsVisionTab from "./settings/SettingsVisionTab";
@@ -529,6 +530,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             )}
             {activeTab === "general" && (
               <SettingsGeneralTab
+                settings={settings}
+                onUpdate={updateSetting}
+                theme={liveTheme}
+                isMobile={isMobile}
+              />
+            )}
+            {activeTab === "appearance" && (
+              <SettingsAppearanceTab
                 settings={settings}
                 onUpdate={updateSetting}
                 theme={liveTheme}

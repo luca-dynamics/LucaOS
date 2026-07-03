@@ -84,6 +84,22 @@ export const settingsExperienceMap = [
       "General should stay top-level, but debug, tactical, global forge, sensor, and browser-import language should be separated or framed with clearer consumer-safe explanations.",
   },
   {
+    id: "appearance",
+    currentLabel: "Appearance",
+    icon: "Palette",
+    availability: ["desktop", "mobile"],
+    currentComponent: "SettingsAppearanceTab",
+    controls:
+      "LucaOS skin selection (the eight visual operating environments) and how the interface feels.",
+    primaryExperience: "standard-user",
+    classificationLabels: ["standard-user", "safe-display-only"],
+    sensitiveCapabilityImplications: [],
+    languageFit: "user-friendly",
+    futurePlacement: "top-level-everyone",
+    auditNotes:
+      "Appearance is a first-class destination per the settings-target design: skins are the product's visual identity and deserve their own pane rather than living inside General.",
+  },
+  {
     id: "brain",
     currentLabel: "Brain",
     icon: "Cpu",

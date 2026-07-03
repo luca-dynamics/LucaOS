@@ -29,6 +29,7 @@ export interface SettingsAdvancedGroupDefinition {
 
 export const standardSettingsTabIds = [
   "general",
+  "appearance",
   "brain",
   "voice",
   "vision",

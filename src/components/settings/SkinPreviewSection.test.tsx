@@ -21,18 +21,22 @@ describe("LucaOS skin settings preview section", () => {
     expect(normalizeLucaSkinId("carbon")).toBe("carbon");
   });
 
-  it("renders all four launch skins in order", () => {
+  it("renders all eight skins in order", () => {
     const markup = renderToStaticMarkup(<SkinPreviewSection />);
 
     const list = getLucaSkinPreviewMetadataList();
-    expect(list).toHaveLength(4);
+    expect(list).toHaveLength(8);
 
-    // Launch order: Pearl, Carbon, Flow, Canvas.
+    // Launch order: the four originals, then Graphite, Onyx, Dusk, Mist.
     expect(list.map((skin) => skin.id)).toEqual([
       "pearl",
       "carbon",
       "flow",
       "canvas",
+      "graphite",
+      "onyx",
+      "dusk",
+      "mist",
     ]);
 
     for (const skin of list) {
