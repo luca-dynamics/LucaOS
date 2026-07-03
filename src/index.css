@@ -531,6 +531,23 @@ a,
   }
 }
 
+/* Apple-style corner smoothing (continuous curvature). Native CSS
+ * corner-shape ships in Electron's Chromium; `squircle` = superellipse(2),
+ * matching Apple/Figma's ~60% smoothing. Hooked onto the radius utilities so
+ * the whole shell upgrades at once — cards, modals, controls. Deliberately
+ * NOT clip-path (it would clip our hairline borders and inset highlights);
+ * browsers without corner-shape simply keep circular corners. rounded-full
+ * stays a true capsule/circle by design.
+ */
+@supports (corner-shape: squircle) {
+  .rounded-lg,
+  .rounded-xl,
+  .rounded-2xl,
+  .rounded-3xl {
+    corner-shape: squircle;
+  }
+}
+
 /* Presence breath — the being's living tempo (identity face + its bloom).
  * The only looping motion permitted outside the presence mark itself. */
 @keyframes luca-presence-face-breath {
