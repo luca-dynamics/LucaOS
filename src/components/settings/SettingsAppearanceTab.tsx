@@ -1,6 +1,15 @@
 import React from "react";
 import type { LucaSettings } from "../../services/settingsService";
 import SkinPreviewSection from "./SkinPreviewSection";
+import {
+  SettingsCard,
+  SettingsRow,
+  SettingsSection,
+  SettingsToggle,
+  settingsControlInlineStyle,
+  settingsSelectClassName,
+} from "./SettingsLayout";
+import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 /**
  * Appearance — a first-class Settings destination (see
@@ -10,9 +19,9 @@ import SkinPreviewSection from "./SkinPreviewSection";
  * (darks Carbon/Graphite/Onyx/Dusk · lights Pearl/Mist/Canvas · living Flow).
  * Skins change material and mood — never legibility.
  *
- * Future "Feel" rows (accent, density, reduce motion/transparency, text size)
- * land here as their settings keys are introduced; nothing is invented ahead
- * of a real backing setting.
+ * Also hosts Material & Display (font, scale, glass) and the Feel rows —
+ * every control here is backed by a real settings key; nothing is invented
+ * ahead of one.
  */
 
 export interface SettingsAppearanceTabProps {
@@ -38,6 +47,191 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
           onUpdate("general", "selectedSkinId", skinId)
         }
       />
+
+        <SettingsSection
+          title="Material & Display"
+          description="Tune readability, glass material, and global text scale."
+          icon="TextField"
+          accentColor={theme.hex}
+          isMobile={isMobile}
+        >
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <SettingsCard>
+              <label
+                className="text-sm font-medium"
+                style={{ color: settingsSurfaceTokens.textPrimary }}
+              >
+                Interface font
+              </label>
+              <select
+                value={
+                  settings.general.fontFamily ||
+                  '"Inter", system-ui, sans-serif'
+                }
+                onChange={(e) =>
+                  onUpdate("general", "fontFamily", e.target.value)
+                }
+                className={`${settingsSelectClassName} mt-2`}
+                style={settingsControlInlineStyle}
+              >
+                <option value='"Inter", system-ui, sans-serif'>
+                  Inter — Standard
+                </option>
+                <option value='"JetBrains Mono", monospace'>
+                  JetBrains Mono — Technical
+                </option>
+                <option value='"Outfit", sans-serif'>Outfit — Premium</option>
+                <option value='"Fraunces", serif'>
+                  Fraunces — Editorial
+                </option>
+                <option value='"Space Mono", monospace'>
+                  Space Mono — Tactical
+                </option>
+                <option value="system-ui, sans-serif">System Native</option>
+              </select>
+            </SettingsCard>
+
+            <SettingsCard>
+              <div
+                className="flex justify-between text-sm font-medium"
+                style={{ color: settingsSurfaceTokens.textPrimary }}
+              >
+                <span>UI scale</span>
+                <span>
+                  {Math.round((settings.general.fontScale || 1.0) * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="80"
+                max="150"
+                value={Math.round((settings.general.fontScale || 1.0) * 100)}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) / 100;
+                  onUpdate("general", "fontScale", val);
+                  document.documentElement.style.setProperty(
+                    "--app-font-scale",
+                    val.toString(),
+                  );
+                }}
+                className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                style={{
+                  accentColor: theme.hex,
+                  backgroundColor: settingsSurfaceTokens.borderSubtle,
+                }}
+              />
+            </SettingsCard>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <SettingsCard>
+              <div
+                className="flex justify-between text-sm font-medium"
+                style={{ color: settingsSurfaceTokens.textPrimary }}
+              >
+                <span>Background opacity</span>
+                <span>
+                  {Math.round(
+                    (settings.general.backgroundOpacity ?? 0.75) * 100,
+                  )}
+                  %
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={Math.round(
+                  (settings.general.backgroundOpacity ?? 0.75) * 100,
+                )}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) / 100;
+                  onUpdate("general", "backgroundOpacity", val);
+                  document.documentElement.style.setProperty(
+                    "--app-bg-opacity",
+                    val.toString(),
+                  );
+                  document.documentElement.style.setProperty(
+                    "--luca-material-opacity",
+                    val.toString(),
+                  );
+                  // Keep tint-strength at 1: opacity is already in the glass
+                  // token so setting this lower would double-apply it.
+                  document.documentElement.style.setProperty(
+                    "--luca-material-tint-strength",
+                    "1",
+                  );
+                }}
+                className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                style={{
+                  accentColor: theme.hex,
+                  backgroundColor: settingsSurfaceTokens.borderSubtle,
+                }}
+              />
+            </SettingsCard>
+            <SettingsCard>
+              <div
+                className="flex justify-between text-sm font-medium"
+                style={{ color: settingsSurfaceTokens.textPrimary }}
+              >
+                <span>Background blur</span>
+                <span>{settings.general.backgroundBlur ?? 12}px</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="40"
+                value={settings.general.backgroundBlur ?? 12}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  onUpdate("general", "backgroundBlur", val);
+                  document.documentElement.style.setProperty(
+                    "--app-bg-blur",
+                    `${val}px`,
+                  );
+                  document.documentElement.style.setProperty(
+                    "--luca-material-blur",
+                    `${val}px`,
+                  );
+                }}
+                className="mt-3 h-1 w-full cursor-pointer appearance-none rounded-lg"
+                style={{
+                  accentColor: theme.hex,
+                  backgroundColor: settingsSurfaceTokens.borderSubtle,
+                }}
+              />
+            </SettingsCard>
+          </div>
+        </SettingsSection>
+
+      <SettingsSection
+        title="Feel"
+        description="How the interface moves. Skins change material — never motion honesty."
+        icon="Pulse"
+        accentColor={theme.hex}
+        isMobile={isMobile}
+      >
+        <SettingsCard>
+          <SettingsRow
+            label="Reduce motion"
+            description="Softens interface animation — entrances and transitions settle instantly."
+            control={
+              <SettingsToggle
+                checked={Boolean(settings.general.reduceMotion)}
+                onChange={() =>
+                  onUpdate(
+                    "general",
+                    "reduceMotion",
+                    !settings.general.reduceMotion,
+                  )
+                }
+                accentColor={theme.hex}
+                ariaLabel="Reduce motion"
+              />
+            }
+          />
+        </SettingsCard>
+      </SettingsSection>
     </div>
   );
 };

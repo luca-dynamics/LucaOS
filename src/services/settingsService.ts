@@ -40,6 +40,8 @@ export interface SovereignFact {
 export interface LucaSettings {
   general: {
     backgroundBlur?: number;
+    /** Softens interface animation (entrances/transitions settle instantly). */
+    reduceMotion?: boolean;
     experienceMode: LucaExperienceMode;
     backgroundOpacity?: number;
     startOnBoot: boolean;
@@ -254,6 +256,7 @@ const getEnvVar = (key: string) => {
 const DEFAULT_SETTINGS: LucaSettings = {
   general: {
     backgroundBlur: 40, // Default 40px blur
+    reduceMotion: false,
     experienceMode: "basic",
     backgroundOpacity: 0.3, // Default 30% opacity
     startOnBoot: false,

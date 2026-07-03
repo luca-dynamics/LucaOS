@@ -509,6 +509,12 @@ function AppContent() {
   // Watch Settings changes outside of voice subsystem to guarantee UI renders
   useEffect(() => {
     const applyAppSettings = (settings: any) => {
+      // Honor the user's motion preference alongside the OS-level media query:
+      // the class silences DOM animations the same way prefers-reduced-motion does.
+      document.documentElement.classList.toggle(
+        "luca-reduce-motion",
+        Boolean(settings?.general?.reduceMotion),
+      );
       // Persona & Theme Selection — always apply latest from settings (React deduplicates no-ops)
       const newPersona = settings?.general?.persona;
       const newTheme = settings?.general?.theme;
