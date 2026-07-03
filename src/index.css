@@ -524,7 +524,9 @@ a,
 @media (prefers-reduced-motion: reduce) {
   .shimmer,
   .shimmer-once,
-  .shimmer-reverse {
+  .shimmer-reverse,
+  .animate-in,
+  .animate-out {
     animation: none;
   }
 }
