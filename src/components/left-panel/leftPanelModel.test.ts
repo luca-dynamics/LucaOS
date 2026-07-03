@@ -11,20 +11,20 @@ import {
 } from "./leftPanelModel";
 
 describe("leftPanelModel", () => {
-  it("exposes the expected, stable tool group labels in order", () => {
+  it("exposes the SPACES in design-target order", () => {
     expect(LEFT_PANEL_TOOL_GROUPS.map((g) => g.id)).toEqual([
-      "core",
-      "vision",
-      "finance",
-      "visual",
+      "agents",
+      "tools",
+      "memory",
+      "connections",
       "installed",
     ]);
     expect(LEFT_PANEL_TOOL_GROUPS.map((g) => g.label)).toEqual([
-      "Core",
-      "Intelligence",
-      "Finance",
-      "Visual Modules",
-      "Installed Modules",
+      "Agents",
+      "Tools",
+      "Memory",
+      "Connections",
+      "Installed",
     ]);
   });
 
@@ -46,35 +46,47 @@ describe("leftPanelModel", () => {
     const byGroup = (group: ToolGroupId) =>
       LEFT_PANEL_TOOLS.filter((t) => t.group === group).map((t) => t.label);
 
-    expect(byGroup("core")).toEqual(
-      expect.arrayContaining(["Skills", "Apps", "Screen", "Import", "IDE"]),
+    expect(byGroup("agents")).toEqual(
+      expect.arrayContaining(["Skills", "Train"]),
     );
-    expect(byGroup("vision")).toEqual(
-      expect.arrayContaining(["Reports", "OSINT", "Dark Web", "Train"]),
+    expect(byGroup("tools")).toEqual(
+      expect.arrayContaining([
+        "Apps",
+        "Screen",
+        "IDE",
+        "Reports",
+        "OSINT",
+        "Dark Web",
+        "DeFi",
+        "FX",
+        "Stock Feed",
+        "AI Trading",
+        "Prediction",
+      ]),
     );
-    expect(byGroup("finance")).toEqual(
-      expect.arrayContaining(["DeFi", "FX", "Stock Feed", "AI Trading", "Prediction"]),
-    );
+    expect(byGroup("memory")).toEqual(["Import"]);
+    expect(byGroup("connections")).toEqual(["Link Bridge"]);
   });
 
   it("classifies preview/visual modules separately from real launchers", () => {
     const previews = getPreviewTools();
     expect(previews.map((t) => t.label).sort()).toEqual(["Security", "Sovereignty"]);
     for (const tool of previews) {
-      expect(tool.group).toBe("visual");
+      expect(tool.group).toBe("tools");
       expect(tool.preview).toBe(true);
     }
     // Real launchers must never be flagged as preview.
-    const realTools = LEFT_PANEL_TOOLS.filter((t) => t.group !== "visual");
+    const previewIds = new Set(previews.map((t) => t.id));
+    const realTools = LEFT_PANEL_TOOLS.filter((t) => !previewIds.has(t.id));
     expect(realTools.every((t) => !t.preview)).toBe(true);
   });
 
-  it("uses sane default expand state (only Core open)", () => {
+  it("uses sane default expand state (only Agents open)", () => {
     const expanded = getDefaultExpandedGroups();
-    expect(expanded.core).toBe(true);
-    expect(expanded.vision).toBe(false);
-    expect(expanded.finance).toBe(false);
-    expect(expanded.visual).toBe(false);
+    expect(expanded.agents).toBe(true);
+    expect(expanded.tools).toBe(false);
+    expect(expanded.memory).toBe(false);
+    expect(expanded.connections).toBe(false);
     expect(expanded.installed).toBe(false);
   });
 

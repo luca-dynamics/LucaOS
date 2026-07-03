@@ -54,9 +54,9 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
 
     setExpanded((current) => ({
       ...current,
-      vision: false,
-      finance: false,
-      visual: false,
+      tools: false,
+      memory: false,
+      connections: false,
       installed: false,
     }));
   }, [collapseAdvancedGroups]);
@@ -72,7 +72,7 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
         }`}
       >
         <Icon name="Widget" size={18} variant="BoldDuotone" />
-        <h2 className="font-semibold text-xs tracking-tight">Tools</h2>
+        <h2 className="font-semibold text-xs tracking-tight">Spaces</h2>
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
