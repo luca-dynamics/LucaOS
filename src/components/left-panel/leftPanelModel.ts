@@ -10,10 +10,10 @@
 // real button click.
 
 export type ToolGroupId =
-  | "core"
-  | "vision"
-  | "finance"
-  | "visual"
+  | "agents"
+  | "tools"
+  | "memory"
+  | "connections"
   | "installed";
 
 export type ToolRiskLevel = "safe" | "elevated";
@@ -84,21 +84,22 @@ interface ToolGroupMeta {
 }
 
 /**
- * Ordered group metadata. Order here is the render order in the TOOLS section.
- * Defaults follow the matured rail: Core open, everything else collapsed so
- * mobile stays compact.
+ * Ordered group metadata — the SPACES of the being (design target
+ * dashboard-being.html): Agents, Tools, Memory, Devices (its own rail
+ * section), Connections. Order here is the render order. Agents stays open;
+ * every other space rests as a single quiet row until opened.
  */
 export const LEFT_PANEL_TOOL_GROUPS: readonly ToolGroupMeta[] = [
-  { id: "core", label: "Core", defaultExpanded: true },
-  { id: "vision", label: "Intelligence", defaultExpanded: false },
-  { id: "finance", label: "Finance", defaultExpanded: false },
   {
-    id: "visual",
-    label: "Visual Modules",
-    description: "Preview only — sample data, not live telemetry.",
-    defaultExpanded: false,
+    id: "agents",
+    label: "Agents",
+    description: "What Luca can do — skills and training.",
+    defaultExpanded: true,
   },
-  { id: "installed", label: "Installed Modules", defaultExpanded: false },
+  { id: "tools", label: "Tools", defaultExpanded: false },
+  { id: "memory", label: "Memory", defaultExpanded: false },
+  { id: "connections", label: "Connections", defaultExpanded: false },
+  { id: "installed", label: "Installed", defaultExpanded: false },
 ] as const;
 
 /**
@@ -106,32 +107,30 @@ export const LEFT_PANEL_TOOL_GROUPS: readonly ToolGroupMeta[] = [
  * lived inline in OperationsSidebar — no entry points are added or removed.
  */
 export const LEFT_PANEL_TOOLS: readonly LeftPanelToolItem[] = [
-  // Core
-  { id: "skills", label: "Skills", group: "core", icon: "MagicStick", actionKey: "openSkills" },
-  { id: "apps", label: "Apps", group: "core", icon: "Widget", actionKey: "openApps" },
-  { id: "screen", label: "Screen", group: "core", icon: "Monitor", actionKey: "openScreen", description: "Visual core capture (Electron only)." },
-  { id: "import", label: "Import", group: "core", icon: "Import", actionKey: "openImport" },
-  { id: "ide", label: "IDE", group: "core", icon: "Programming", actionKey: "openIde" },
-  { id: "system-services", label: "System Services", group: "core", icon: "Pulse", actionKey: "openSystemServices" },
-  { id: "link-bridge", label: "Link Bridge", group: "core", icon: "Smartphone", actionKey: "openLinkBridge" },
+  // Agents — what Luca can do
+  { id: "skills", label: "Skills", group: "agents", icon: "MagicStick", actionKey: "openSkills" },
+  { id: "apps", label: "Apps", group: "tools", icon: "Widget", actionKey: "openApps" },
+  { id: "screen", label: "Screen", group: "tools", icon: "Monitor", actionKey: "openScreen", description: "Visual core capture (Electron only)." },
+  { id: "import", label: "Import", group: "memory", icon: "Import", actionKey: "openImport" },
+  { id: "ide", label: "IDE", group: "tools", icon: "Programming", actionKey: "openIde" },
+  { id: "system-services", label: "System Services", group: "tools", icon: "Pulse", actionKey: "openSystemServices" },
+  { id: "link-bridge", label: "Link Bridge", group: "connections", icon: "Smartphone", actionKey: "openLinkBridge" },
 
-  // Vision & Knowledge
-  { id: "security", label: "Ethical Hacking", group: "vision", icon: "Shield", actionKey: "openSecurity", risk: "elevated", accentColor: "#ef4444", description: "Opens the ethical hacking terminal." },
-  { id: "reports", label: "Reports", group: "vision", icon: "Notes", actionKey: "openReports" },
-  { id: "osint", label: "OSINT", group: "vision", icon: "Search", actionKey: "openOsint" },
-  { id: "dark-web", label: "Dark Web", group: "vision", icon: "Shield", actionKey: "openDarkWeb" },
-  { id: "train", label: "Train", group: "vision", icon: "EyeScan", actionKey: "openTrain" },
+  // Tools — everyday surfaces, intelligence, finance, previews
+  { id: "security", label: "Ethical Hacking", group: "tools", icon: "Shield", actionKey: "openSecurity", risk: "elevated", accentColor: "#ef4444", description: "Opens the ethical hacking terminal." },
+  { id: "reports", label: "Reports", group: "tools", icon: "Notes", actionKey: "openReports" },
+  { id: "osint", label: "OSINT", group: "tools", icon: "Search", actionKey: "openOsint" },
+  { id: "dark-web", label: "Dark Web", group: "tools", icon: "Shield", actionKey: "openDarkWeb" },
+  { id: "train", label: "Train", group: "agents", icon: "EyeScan", actionKey: "openTrain" },
 
-  // Finance
-  { id: "defi", label: "DeFi", group: "finance", icon: "Wallet", actionKey: "openDeFi" },
-  { id: "fx", label: "FX", group: "finance", icon: "Bank", actionKey: "openForex" },
-  { id: "stock-feed", label: "Stock Feed", group: "finance", icon: "Chart", actionKey: "openStockFeed" },
-  { id: "ai-trading", label: "AI Trading", group: "finance", icon: "MagicStick", actionKey: "openAiTrading" },
-  { id: "prediction", label: "Prediction", group: "finance", icon: "Chart", actionKey: "openPrediction" },
+  { id: "defi", label: "DeFi", group: "tools", icon: "Wallet", actionKey: "openDeFi" },
+  { id: "fx", label: "FX", group: "tools", icon: "Bank", actionKey: "openForex" },
+  { id: "stock-feed", label: "Stock Feed", group: "tools", icon: "Chart", actionKey: "openStockFeed" },
+  { id: "ai-trading", label: "AI Trading", group: "tools", icon: "MagicStick", actionKey: "openAiTrading" },
+  { id: "prediction", label: "Prediction", group: "tools", icon: "Chart", actionKey: "openPrediction" },
 
-  // Visual Modules (preview / sample data only)
-  { id: "sovereignty", label: "Sovereignty", group: "visual", icon: "Earth", actionKey: "previewSovereignty", preview: true, description: "Visual preview — sample data only." },
-  { id: "security-preview", label: "Security", group: "visual", icon: "Shield", actionKey: "previewSecurity", preview: true, description: "Visual preview — sample data only." },
+  { id: "sovereignty", label: "Sovereignty", group: "tools", icon: "Earth", actionKey: "previewSovereignty", preview: true, description: "Visual preview — sample data only." },
+  { id: "security-preview", label: "Security", group: "tools", icon: "Shield", actionKey: "previewSecurity", preview: true, description: "Visual preview — sample data only." },
 ] as const;
 
 /** Default expand/collapse state keyed by group id. */
