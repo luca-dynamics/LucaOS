@@ -531,6 +531,22 @@ a,
   }
 }
 
+/* User-chosen Reduce motion (Settings → Appearance → Feel): the in-app
+ * equivalent of prefers-reduced-motion for DOM surfaces. */
+.luca-reduce-motion .shimmer,
+.luca-reduce-motion .shimmer-once,
+.luca-reduce-motion .shimmer-reverse,
+.luca-reduce-motion .animate-in,
+.luca-reduce-motion .animate-out {
+  animation: none !important;
+}
+.luca-reduce-motion .transition-all,
+.luca-reduce-motion .transition-transform,
+.luca-reduce-motion .transition-colors,
+.luca-reduce-motion .transition-opacity {
+  transition-duration: 0.01ms !important;
+}
+
 /* Luca desktop shell token migration pseudo-states.
  * Base panel/control/tab values live in src/styles/lucaShellStyles.ts so App.tsx
  * has a single token source of truth for shell surfaces and fallbacks.
