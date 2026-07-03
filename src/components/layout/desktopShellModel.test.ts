@@ -62,7 +62,7 @@ describe("desktopShellModel", () => {
       "LOGS",
     ]);
     expect(ACTIVITY_RAIL_ICONS.map((i) => i.label)).toEqual([
-      "Overview",
+      "Now",
       "Timeline",
       "Memory",
       "Trace",

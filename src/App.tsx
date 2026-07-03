@@ -97,6 +97,8 @@ import VisionHUD from "./components/VisionHUD";
 // Layout Modularization Phase 2
 import Header from "./components/layout/Header";
 import OperationsSidebar from "./components/layout/OperationsSidebar";
+import PresenceMark from "./components/presence/PresenceMark";
+import SessionsRail from "./components/left-panel/SessionsRail";
 import ChatPanel from "./components/layout/ChatPanel";
 import OverlayManager from "./components/layout/OverlayManager";
 import PanelResizer from "./components/layout/PanelResizer";
@@ -2878,7 +2880,8 @@ function AppContent() {
                   width: `${panelWidths.sidebar}px`,
                 }}
               >
-                {/* Brand bar — app identity at the top-left of the shell. */}
+                {/* Brand bar — the being's anchor at the top-left of the shell:
+                    presence mark + identity + substrate line. */}
                 <div
                   className="flex-none flex items-center gap-2.5 h-14 px-4 border-b"
                   style={{
@@ -2886,18 +2889,27 @@ function AppContent() {
                       "var(--luca-border-subtle, var(--app-border-main))",
                   }}
                 >
-                  <img
-                    src="/icon.png"
-                    alt="Luca"
-                    className="w-7 h-7 object-contain flex-none"
-                  />
-                  <span
-                    className="font-display text-[15px] font-semibold tracking-tight leading-none"
-                    style={{
-                      color: "var(--luca-text-primary, var(--app-text-main))",
-                    }}
-                  >
-                    LucaOS
+                  <SafeComponent componentName="PresenceMark">
+                    <PresenceMark state="idle" size={24} title="Luca is present" />
+                  </SafeComponent>
+                  <span className="min-w-0 flex flex-col justify-center leading-none">
+                    <span
+                      className="font-display text-[14px] font-semibold tracking-tight"
+                      style={{
+                        color: "var(--luca-text-primary, var(--app-text-main))",
+                      }}
+                    >
+                      LucaOS
+                    </span>
+                    <span
+                      className="mt-1 truncate text-[10px]"
+                      style={{
+                        color:
+                          "var(--luca-text-tertiary, var(--app-text-muted))",
+                      }}
+                    >
+                      on Windows · present
+                    </span>
                   </span>
                   <button
                     type="button"
@@ -2910,6 +2922,9 @@ function AppContent() {
                     <Icon name={leftToggleIcon(false).name} size={16} />
                   </button>
                 </div>
+                <SafeComponent componentName="SessionsRail">
+                  <SessionsRail />
+                </SafeComponent>
                 <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                 <SafeComponent componentName="OperationsSidebar">
                   <OperationsSidebar
