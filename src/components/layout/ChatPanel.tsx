@@ -4,6 +4,7 @@ import ChatWidgetInput from "../ChatWidgetInput";
 import ChatMessageBubble from "../ChatMessageBubble";
 import { ProWorkforceCanvas } from "../chat/ProWorkforceCanvas";
 import ChatApprovalStrip from "../chat/ChatApprovalStrip";
+import WhileYouWereAwayStrip from "../chat/WhileYouWereAwayStrip";
 import { MessageScroller } from "../chat/LucaConversationPrimitives";
 import SuggestionChips from "../SuggestionChips";
 import { motion, AnimatePresence } from "framer-motion";
@@ -562,6 +563,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             : undefined,
         }}
       >
+        {/* The being accounts for itself, then asks. */}
+        <WhileYouWereAwayStrip />
         {/* Pending approvals live where the user is already looking. */}
         <ChatApprovalStrip />
         {/* Routing-mode selector moved into the composer's bottom control row
