@@ -6,7 +6,7 @@ import { DeviceList } from "./lucaLink/DeviceList";
 import { ErrorToast } from "./lucaLink/ErrorToast";
 import type { Device, LucaLinkError } from "../services/lucaLink/types";
 import { ConnectionState } from "../services/lucaLink/types";
-import { API_BASE_URL, SERVER_HTTP_PORT, WS_PORT, RELAY_SERVER_URL } from "../config/api";
+import { API_BASE_URL, SERVER_HTTP_PORT, WS_PORT, RELAY_SERVER_URL, getAuthHeaders, waitForAuth } from "../config/api";
 
 interface LucaLinkModalProps {
   onClose: () => void;
@@ -24,6 +24,8 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
   );
   const [errors, setErrors] = useState<LucaLinkError[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   // Initialize Luca Link Manager
   useEffect(() => {
@@ -33,6 +35,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
     const initManager = async () => {
       try {
         setIsInitialized(false);
+        setInitError(null);
         setQrDataUrl(""); // Clear QR while regenerating
 
         const connectionUrl =
@@ -45,14 +48,30 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
           pairingToken = (await lucaLinkManager.generatePairingData()).token;
         } else {
           // Local flow: the socket server must be running and the token must
-          // come from IT — the server rejects tokens it didn't mint.
-          await fetch(`${API_BASE_URL}/api/luca-link/start`, { method: "POST" });
+          // come from IT — the server rejects tokens it didn't mint. Auth
+          // headers are sent explicitly (belt and braces over the global
+          // interceptor) after the boot token handshake settles.
+          await waitForAuth();
+          const started = await fetch(`${API_BASE_URL}/api/luca-link/start`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+          });
+          if (!started.ok) {
+            throw new Error(
+              `Local pairing service refused start (${started.status})`,
+            );
+          }
           const minted = await fetch(
             `${API_BASE_URL}/api/luca-link/pairing-token`,
-            { method: "POST" },
+            { method: "POST", headers: getAuthHeaders() },
           );
+          if (!minted.ok) {
+            throw new Error(
+              `Pairing token mint failed (${minted.status})`,
+            );
+          }
           const body = await minted.json();
-          if (!body?.token) throw new Error("Pairing token mint failed");
+          if (!body?.token) throw new Error("Pairing token mint returned no token");
           pairingToken = body.token;
         }
 
@@ -88,13 +107,16 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
 
         // Load existing devices
         updateDevices();
-      } catch {
-        console.error("[LucaLinkModal] Initialization failed");
+      } catch (error) {
+        console.error("[LucaLinkModal] Initialization failed:", error);
+        setInitError(
+          error instanceof Error ? error.message : "Pairing setup failed",
+        );
       }
     };
 
     initManager();
-  }, [localIp]);
+  }, [localIp, retryNonce]);
 
   // Subscribe to events
   useEffect(() => {
@@ -249,6 +271,19 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
                   alt="Pairing QR code"
                   className="h-44 w-44 object-contain"
                 />
+              ) : initError ? (
+                <div className="flex h-44 w-44 flex-col items-center justify-center gap-2 px-3 text-center text-[#69737f]">
+                  <span className="text-[11px] leading-relaxed">
+                    Couldn't prepare pairing: {initError}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setRetryNonce((n) => n + 1)}
+                    className="rounded-lg bg-[#0c0e12] px-3 py-1.5 text-[11px] font-semibold text-white transition-opacity hover:opacity-85"
+                  >
+                    Try again
+                  </button>
+                </div>
               ) : (
                 <div className="flex h-44 w-44 flex-col items-center justify-center gap-2 text-[#69737f]">
                   <Icon name="Restart" className="animate-spin" size={20} />
