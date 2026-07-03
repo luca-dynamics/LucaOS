@@ -30,6 +30,10 @@ describe("lucaSkinPreviewMetadata", () => {
       "carbon",
       "flow",
       "canvas",
+      "graphite",
+      "onyx",
+      "dusk",
+      "mist",
     ]);
   });
 
