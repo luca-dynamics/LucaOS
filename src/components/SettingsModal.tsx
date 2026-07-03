@@ -277,14 +277,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     >
       <div
         className={`w-full ${
-          isMobile ? "h-full rounded-none" : "max-w-[90%] h-[90%] rounded-xl"
+          isMobile
+            ? "h-full rounded-none"
+            : "max-w-[1080px] h-[86%] rounded-2xl border"
         } flex flex-row overflow-hidden transition-all duration-300 glass-blur`}
         style={{
-          boxShadow: isMobile ? "none" : `0 0 50px -20px rgba(0,0,0,0.5)`,
+          boxShadow: isMobile
+            ? "none"
+            : "0 30px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
           backgroundColor: "var(--app-bg-main, #0a0a0f)",
           borderColor: isMobile
             ? "transparent"
-            : "var(--app-border-main, rgba(0,0,0,0.2))",
+            : "var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.08)))",
         }}
       >
         {/* Unified Sidebar Navigation */}
@@ -299,22 +303,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         >
           {/* Header Area */}
           <div
-            className={`flex items-center gap-2 ${isMobile ? "p-4 justify-center" : "p-5"}`}
+            className={`flex items-center gap-2.5 shrink-0 ${
+              isMobile ? "p-4 justify-center" : "h-[52px] px-4"
+            }`}
             style={{
-              borderBottom: "1px solid var(--app-border-main, rgba(0,0,0,0.1))",
+              borderBottom:
+                "1px solid var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.07)))",
             }}
           >
             <Icon
               name="Settings"
-              variant="BoldDuotone"
+              variant={isMobile ? "BoldDuotone" : "Linear"}
               className={`${isMobile ? "w-5 h-5" : "w-4 h-4"}`}
               style={{
-                color: "var(--luca-accent-primary, var(--app-core-hex))",
+                color: isMobile
+                  ? "var(--luca-accent-primary, var(--app-core-hex))"
+                  : "var(--luca-text-tertiary, var(--app-text-muted))",
               }}
             />
             {!isMobile && (
               <h2
-                className="text-md font-semibold tracking-tight"
+                className="text-sm font-semibold tracking-tight"
                 style={{
                   color: "var(--luca-text-primary, var(--app-text-main))",
                 }}
@@ -326,7 +335,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Navigation Tabs */}
           <div
-            className={`flex-1 overflow-y-auto no-scrollbar ${isMobile ? "p-2" : "p-3"} space-y-4`}
+            className={`flex-1 overflow-y-auto no-scrollbar ${isMobile ? "p-2" : "px-2.5 py-3"} space-y-4`}
           >
             {(isMobile
               ? [{ id: "mobile", label: "", tabs: visibleTabs }]
@@ -334,9 +343,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             ).map((group) => (
               <div key={group.id} className="space-y-2">
                 {!isMobile && (
-                  <div className="px-2 pt-2">
+                  <div className="px-2.5 pt-2 pb-1">
                     <p
-                      className="text-[11px] font-semibold tracking-wide"
+                      className="text-[10.5px] font-semibold uppercase tracking-[0.08em]"
                       style={{
                         color:
                           "var(--luca-text-tertiary, var(--app-text-muted))",
@@ -361,23 +370,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           ? "var(--luca-text-primary, var(--app-text-main, #ffffff))"
                           : "var(--luca-text-secondary, var(--app-text-muted, #9ca3af))",
                         backgroundColor: isActive
-                          ? "var(--luca-accent-soft, var(--app-bg-tint, rgba(255,255,255,0.05)))"
+                          ? "var(--luca-surface-hover, var(--app-bg-tint, rgba(255,255,255,0.06)))"
                           : "transparent",
-                        borderColor: isActive
-                          ? "var(--luca-border-strong, var(--app-border-main, rgba(0,0,0,0.2)))"
-                          : "transparent",
+                        borderColor: "transparent",
                       }}
                       title={tab.label}
-                      className={`w-full flex items-center rounded-xl border border-transparent transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] ${
+                      className={`w-full flex items-center border border-transparent transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] ${
                         isMobile
-                          ? "flex-col justify-center py-3 px-1 gap-1 min-h-[54px]"
-                          : "flex-row gap-3 p-2.5"
+                          ? "flex-col justify-center rounded-xl py-3 px-1 gap-1 min-h-[54px]"
+                          : "flex-row rounded-lg gap-2.5 h-[34px] px-2.5"
                       }`}
                     >
                       <Icon
                         name={tab.icon}
                         variant={isActive ? "BoldDuotone" : "Linear"}
-                        className={`${isMobile ? "w-5 h-5" : "w-5 h-5"}`}
+                        className={`${isMobile ? "w-5 h-5" : "w-4 h-4"}`}
                         style={{
                           color: isActive
                             ? "var(--luca-accent-primary, var(--app-core-hex))"
@@ -385,7 +392,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         }}
                       />
                       {!isMobile ? (
-                        <span className="text-sm font-medium">{tab.label}</span>
+                        <span className="text-[13px] font-medium">{tab.label}</span>
                       ) : (
                         <span className="text-[9px] font-semibold tracking-tight opacity-80 text-center leading-[1.1]">
                           {tab.label}
@@ -418,15 +425,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Content Header (Desktop Only) */}
           {!isMobile && (
             <div
-              className="p-5 flex justify-between items-center"
+              className="h-[52px] px-6 flex justify-between items-center shrink-0"
               style={{
-                borderBottom: `1px solid var(--app-border-main)`,
-                backgroundColor: "var(--app-bg-tint)",
+                borderBottom:
+                  "1px solid var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.07)))",
               }}
             >
               <h3
-                className="text-lg font-bold"
-                style={{ color: "var(--app-text-muted)" }}
+                className="text-[15px] font-semibold tracking-tight"
+                style={{
+                  color: "var(--luca-text-primary, var(--app-text-main))",
+                }}
               >
                 {settingsDesktopTabs.find((t) => t.id === activeTab)?.label ||
                   (activeTab === settingsAdvancedGroup.id
@@ -435,10 +444,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </h3>
               <button
                 onClick={onClose}
-                className="transition-colors"
+                className="rounded-lg p-1.5 transition-colors hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
                 style={{ color: "var(--app-text-muted)" }}
               >
-                <Icon name="CloseCircle" className="w-5 h-5" />
+                <Icon name="CloseCircle" className="w-[18px] h-[18px]" />
               </button>
             </div>
           )}
@@ -446,7 +455,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Scrollable Body */}
           <div
             className={`flex-1 basis-0 grow overflow-y-auto ${
-              isMobile ? "p-4 pb-32" : "p-6"
+              isMobile ? "p-4 pb-32" : "px-6 py-6 [&>*]:mx-auto [&>*]:w-full [&>*]:max-w-[860px]"
             }`}
             style={{
               WebkitOverflowScrolling: "touch",
@@ -646,12 +655,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Footer Actions */}
           <div
-            className={`p-4 flex justify-between items-center ${
-              isMobile ? "pb-8" : ""
+            className={`flex justify-between items-center ${
+              isMobile ? "p-4 pb-8" : "h-[56px] px-6"
             }`}
             style={{
-              backgroundColor: "var(--app-bg-main, #0a0a0f)",
-              borderTop: "1px solid var(--app-border-main, rgba(0,0,0,0.1))",
+              borderTop:
+                "1px solid var(--luca-border-subtle, var(--app-border-main, rgba(255,255,255,0.07)))",
             }}
           >
             <div className="flex items-center gap-4">
@@ -668,7 +677,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="flex gap-2 md:gap-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded text-xs hover:bg-white/10 transition-colors"
+                className="h-8 px-3.5 rounded-lg text-xs font-medium transition-colors hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
                 style={{ color: "var(--app-text-muted)" }}
               >
                 {/* On Personality tab, 'Cancel' is just 'Close' since it saves internally */}
@@ -679,20 +688,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={handleSave}
                 disabled={loading}
                 style={{
-                  borderColor: liveTheme.isLight
-                    ? "rgba(0,0,0,0.1)"
-                    : liveTheme.hex,
-                  backgroundColor: liveTheme.isLight
-                    ? liveTheme.hex
-                    : `${liveTheme.hex}20`,
-                  color: "#ffffff",
+                  backgroundColor: liveTheme.hex,
+                  color: liveTheme.isLight ? "#ffffff" : "#0c0e12",
                 }}
-                className="px-6 py-2 border hover:opacity-90 rounded text-xs font-bold shadow-lg flex items-center gap-2 transition-all disabled:opacity-50"
+                className="h-8 px-4 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-50"
               >
-                {loading ? (
+                {loading && (
                   <Icon name="Restart" className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Icon name="Disk" className="w-3 h-3" />
                 )}
                 {isMobile ? "Save" : "Save Changes"}
               </button>
