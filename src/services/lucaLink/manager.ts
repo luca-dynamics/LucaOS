@@ -1,4 +1,29 @@
 import { SecureSocket } from "./secureSocket";
+import { lucaLink as legacyRelayClient } from "../lucaLinkService";
+
+/**
+ * The relay/guest surface consumers are allowed to use — a narrow, typed
+ * window onto the legacy client. Anything not listed here is considered
+ * internal and will not survive the consolidation.
+ */
+export type LucaLinkRelayFacade = Pick<
+  typeof legacyRelayClient,
+  | "createRoom"
+  | "joinWithToken"
+  | "autoConnect"
+  | "disconnect"
+  | "generateGuestSession"
+  | "initGuestHandler"
+  | "onGuestMessage"
+  | "sendToGuest"
+  | "getState"
+  | "onStateChange"
+  | "onMessage"
+  | "send"
+  | "beamPacket"
+  | "syncMission"
+  | "getPairingUrl"
+>;
 import { CryptoService } from "./crypto";
 import { deviceRegistry, DeviceRegistryService } from "./deviceRegistry";
 import { sessionManager, SessionManager } from "./sessionManager";
@@ -303,6 +328,18 @@ export class LucaLinkManager {
    * the companion shows the summary; nothing executes. Plain channel:
    * companions register without a key pair, so this never carries secrets.
    */
+  /**
+   * Consolidation slice 2 (facade-first): the desktop relay + guest-WebRTC
+   * surface, exposed from the manager so consumers migrate HERE instead of
+   * importing the deprecated lucaLinkService. The implementation still lives
+   * in lucaLinkService for now; once every consumer reads
+   * lucaLinkManager.relay.*, the code behind this getter moves into
+   * ./relayClientAdapter without touching another file.
+   */
+  get relay(): LucaLinkRelayFacade {
+    return legacyRelayClient;
+  }
+
   sendSessionHandoff(
     deviceId: string,
     payload: { title: string; summary: string },
