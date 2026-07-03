@@ -542,6 +542,32 @@ export class LucaLinkManager {
       this.emit("reconnecting", event.data);
     });
 
+    this.socket.on("device:connected", async (event: any) => {
+      const device = event?.device ?? event?.data?.device;
+      if (!device?.id) return;
+      try {
+        await this.registerDevice({
+          id: device.id,
+          name: device.name || device.id,
+          type: device.type || "mobile",
+          platform: device.platform || "web",
+          capabilities: device.capabilities || [],
+          // Companion browsers register without a key pair; secure channels
+          // stay unavailable until a key exchange happens. Presence is honest.
+          publicKey: device.publicKey || "",
+        });
+      } catch (error) {
+        console.error("[LucaLinkManager] Companion register failed:", error);
+      }
+    });
+
+    this.socket.on("device:disconnected", (event: any) => {
+      const deviceId = event?.deviceId ?? event?.data?.deviceId;
+      if (!deviceId) return;
+      this.deviceRegistry.markOffline(deviceId);
+      this.emit("device:updated", { deviceId });
+    });
+
     this.socket.on("message:received", async (event) => {
       await this.handleIncomingMessage(event.data.message);
     });

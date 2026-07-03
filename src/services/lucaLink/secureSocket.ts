@@ -245,6 +245,14 @@ export class SecureSocket {
     });
 
     // Handle command results (unencrypted)
+    // Companion lifecycle relayed by the local socket server.
+    this.socket.on("device:connected", (data: any) => {
+      this.emit("device:connected", data);
+    });
+    this.socket.on("device:disconnected", (data: any) => {
+      this.emit("device:disconnected", data);
+    });
+
     this.socket.on("command:result", (result: any) => {
       console.log(
         "[SecureSocket] Received command result from server:",

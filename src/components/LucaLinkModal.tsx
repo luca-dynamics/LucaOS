@@ -6,7 +6,7 @@ import { DeviceList } from "./lucaLink/DeviceList";
 import { ErrorToast } from "./lucaLink/ErrorToast";
 import type { Device, LucaLinkError } from "../services/lucaLink/types";
 import { ConnectionState } from "../services/lucaLink/types";
-import { WS_PORT, RELAY_SERVER_URL } from "../config/api";
+import { API_BASE_URL, SERVER_HTTP_PORT, WS_PORT, RELAY_SERVER_URL } from "../config/api";
 
 interface LucaLinkModalProps {
   onClose: () => void;
@@ -35,11 +35,28 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
         setIsInitialized(false);
         setQrDataUrl(""); // Clear QR while regenerating
 
-        // Initialize manager
         const connectionUrl =
           RELAY_SERVER_URL || `http://${localIp}:${WS_PORT}`;
         const isCloudRelay = !!RELAY_SERVER_URL;
 
+        let pairingToken: string;
+        if (isCloudRelay) {
+          // Relay flow keeps the client-minted token (relay does its own auth).
+          pairingToken = (await lucaLinkManager.generatePairingData()).token;
+        } else {
+          // Local flow: the socket server must be running and the token must
+          // come from IT — the server rejects tokens it didn't mint.
+          await fetch(`${API_BASE_URL}/api/luca-link/start`, { method: "POST" });
+          const minted = await fetch(
+            `${API_BASE_URL}/api/luca-link/pairing-token`,
+            { method: "POST" },
+          );
+          const body = await minted.json();
+          if (!body?.token) throw new Error("Pairing token mint failed");
+          pairingToken = body.token;
+        }
+
+        // Initialize manager (desktop side of the same socket server)
         await lucaLinkManager.initialize(connectionUrl, {
           path: isCloudRelay ? "" : "/mobile/socket.io", // Cloud relays typically perform root routing
           deviceId: "desktop_main",
@@ -49,19 +66,12 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
         // Connect
         await lucaLinkManager.connect();
 
-        // Generate pairing QR code
-        const pairingData = await lucaLinkManager.generatePairingData();
-
-        const mobileClientHost = isCloudRelay
-          ? `${connectionUrl}/mobile`
-          : `http://${localIp}:${WS_PORT}/mobile`;
-
-        // The token params tell the mobile client where to connect
-        const mobileUrl = `${mobileClientHost}/index.html?token=${
-          pairingData.token
-        }&host=${isCloudRelay ? connectionUrl : localIp}&mode=${
-          isCloudRelay ? "cloud" : "local"
-        }`;
+        // The companion PAGE is served by Express (SERVER_HTTP_PORT); its
+        // SOCKET lives on WS_PORT. The old URL inverted both ports, which is
+        // why local pairing never worked.
+        const mobileUrl = isCloudRelay
+          ? `${connectionUrl}/mobile/index.html?token=${pairingToken}&host=${connectionUrl}&mode=cloud`
+          : `http://${localIp}:${SERVER_HTTP_PORT}/mobile/index.html?token=${pairingToken}&host=${localIp}:${WS_PORT}&mode=local`;
 
         // Scannability beats theming: dark ink on white, every skin.
         const url = await QRCode.toDataURL(mobileUrl, {

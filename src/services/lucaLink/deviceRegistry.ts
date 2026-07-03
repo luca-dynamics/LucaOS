@@ -340,6 +340,15 @@ export class DeviceRegistryService {
     }
   }
 
+  /** Mark a device offline (transport disconnect — not an unpair). */
+  markOffline(deviceId: string): void {
+    const device = this.devices[deviceId];
+    if (!device) return;
+    device.status = "offline";
+    device.lastSeen = new Date();
+    this.emit("device:updated", device);
+  }
+
   private handleHeartbeatTimeout(deviceId: string): void {
     const device = this.devices[deviceId];
     if (!device) return;
