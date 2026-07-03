@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import LucaPresence from "../presence/LucaPresence";
 import { LucaOnboardingShell } from "./LucaOnboardingShell";
 import { LucaOnboardingScreen } from "./LucaOnboardingScreen";
 import { LucaOnboardingMotion } from "./LucaOnboardingMotion";
@@ -150,7 +151,17 @@ export const LucaPremiumOnboardingPreview: React.FC<
 
   const screenId = flow.currentScreenId;
   // The environment selection is also the skin choice (ids align 1:1).
-  const skinId = getLucaOnboardingFlowSelection(flow, "environment") ?? "carbon";
+  const chosenSkinId =
+    getLucaOnboardingFlowSelection(flow, "environment") ?? "carbon";
+  // Hover preview: the being tries the room on while the pointer hovers a
+  // skin card — the WHOLE surface re-skins live, then falls back to the
+  // chosen room on leave. Display-only; nothing persists until selection.
+  const [previewSkinId, setPreviewSkinId] = useState<string | null>(null);
+  const skinId = previewSkinId ?? chosenSkinId;
+  // Settle handoff: after "Enter LucaOS" the face travels to the rail anchor
+  // before completion fires — the identity comes to rest, then the shell
+  // takes over. Reduced motion skips straight through.
+  const [settling, setSettling] = useState(false);
   // Calm per-screen entrance; Flow stays static and reduced motion always wins.
   const motionReduced = Boolean(reducedMotion) || skinId === "flow";
   const isLast = isLucaOnboardingFlowLastScreen(flow);
@@ -158,7 +169,16 @@ export const LucaPremiumOnboardingPreview: React.FC<
   const canSkip = canLucaOnboardingFlowSkip(flow);
   const complete = isLucaOnboardingFlowComplete(flow);
 
-  const completeFlow = () => setFlow((current) => lucaOnboardingFlowComplete(current));
+  const completeFlow = () => {
+    if (reducedMotion || settling) {
+      setFlow((current) => lucaOnboardingFlowComplete(current));
+      return;
+    }
+    setSettling(true);
+    window.setTimeout(() => {
+      setFlow((current) => lucaOnboardingFlowComplete(current));
+    }, 950);
+  };
 
   const handlePrimary = () => {
     if (!isLucaOnboardingFlowLastScreen(flow)) {
@@ -241,6 +261,32 @@ export const LucaPremiumOnboardingPreview: React.FC<
       className={className}
       style={style}
     >
+      {settling && (
+        <div
+          data-luca-onboarding-settle
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            zIndex: 60,
+            transform: "translate(-50%, -50%)",
+            animation:
+              "luca-presence-settle 900ms cubic-bezier(0.22, 0.88, 0.24, 1) forwards",
+            pointerEvents: "none",
+          }}
+        >
+          <LucaPresence
+            state="identity"
+            size={210}
+            label="Luca"
+            breathing
+            skinId={skinId}
+            hostKind={hostKind}
+            reducedMotion={reducedMotion}
+            reducedTransparency={reducedTransparency}
+            style={{ width: "100%" }}
+          />
+        </div>
+      )}
       <div
         data-luca-onboarding-preview
         data-luca-onboarding-preview-screen={screenId}
@@ -328,6 +374,9 @@ export const LucaPremiumOnboardingPreview: React.FC<
               onSelectOption={handleSelectOption}
               nameValue={flow.displayName}
               onNameChange={handleNameChange}
+              onPreviewOption={
+                screenId === "environment" ? setPreviewSkinId : undefined
+              }
               materialValue={{
                 opacity: flow.materialOpacity ?? 0.3,
                 blur: flow.materialBlur ?? 40,
