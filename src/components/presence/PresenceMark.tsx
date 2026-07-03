@@ -133,9 +133,23 @@ const PresenceMark: React.FC<PresenceMarkProps> = ({
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
 
-    const resolveColor = (variable: string, fallback: string) => {
-      const value = getComputedStyle(container).getPropertyValue(variable).trim();
-      return hexToRgb(value) ?? hexToRgb(fallback)!;
+    // Theme colors are cached and refreshed on a slow cadence — resolving
+    // computed style twice per frame is work the eye can't see.
+    const COLOR_REFRESH_MS = 1000;
+    let colorsResolvedAt = -Infinity;
+    let cachedIdentityVar: ReturnType<typeof hexToRgb> = null;
+    let cachedAttention = hexToRgb(FALLBACK_ATTENTION)!;
+
+    const refreshColors = (now: number) => {
+      if (now - colorsResolvedAt < COLOR_REFRESH_MS) return;
+      colorsResolvedAt = now;
+      const styles = getComputedStyle(container);
+      cachedIdentityVar =
+        hexToRgb(styles.getPropertyValue("--luca-accent-primary").trim()) ??
+        hexToRgb(FALLBACK_IDENTITY)!;
+      cachedAttention =
+        hexToRgb(styles.getPropertyValue("--luca-warning").trim()) ??
+        hexToRgb(FALLBACK_ATTENTION)!;
     };
 
     const params: MarkParams = {
@@ -152,10 +166,12 @@ const PresenceMark: React.FC<PresenceMarkProps> = ({
 
       const input = inputRef.current;
       const target = STATE_TARGETS[input.state];
+      refreshColors(now);
       const identity =
         (input.identityColor && hexToRgb(input.identityColor)) ||
-        resolveColor("--luca-accent-primary", FALLBACK_IDENTITY);
-      const attention = resolveColor("--luca-warning", FALLBACK_ATTENTION);
+        cachedIdentityVar ||
+        hexToRgb(FALLBACK_IDENTITY)!;
+      const attention = cachedAttention;
 
       params.brightness = approach(params.brightness, target.brightness, dt, LUCA_SMOOTHING.state);
       params.haloAlpha = approach(params.haloAlpha, target.haloAlpha, dt, LUCA_SMOOTHING.state);
@@ -260,7 +276,9 @@ const PresenceMark: React.FC<PresenceMarkProps> = ({
       aria-label={title ?? `Luca — ${state}`}
       onClick={onClick}
       title={title}
-      className="relative flex items-center justify-center cursor-pointer group"
+      className={`relative flex items-center justify-center group ${
+        onClick ? "cursor-pointer" : "cursor-default"
+      }`}
       style={
         {
           width: size,

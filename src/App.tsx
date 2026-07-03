@@ -97,7 +97,7 @@ import VisionHUD from "./components/VisionHUD";
 // Layout Modularization Phase 2
 import Header from "./components/layout/Header";
 import OperationsSidebar from "./components/layout/OperationsSidebar";
-import PresenceMark from "./components/presence/PresenceMark";
+import ShellPresenceMark from "./components/presence/ShellPresenceMark";
 import SessionsRail from "./components/left-panel/SessionsRail";
 import ChatPanel from "./components/layout/ChatPanel";
 import OverlayManager from "./components/layout/OverlayManager";
@@ -2890,7 +2890,7 @@ function AppContent() {
                   }}
                 >
                   <SafeComponent componentName="PresenceMark">
-                    <PresenceMark state="idle" size={24} title="Luca is present" />
+                    <ShellPresenceMark size={24} />
                   </SafeComponent>
                   <span className="min-w-0 flex flex-col justify-center leading-none">
                     <span
