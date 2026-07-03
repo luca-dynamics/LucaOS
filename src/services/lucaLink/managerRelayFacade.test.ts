@@ -34,6 +34,13 @@ describe("lucaLinkManager.relay (consolidation facade)", () => {
     }
   });
 
+  it("exposes the settings-console surface through the manager (same state)", () => {
+    expect(lucaLinkManager.console).toBe(lucaLink);
+    for (const method of ["getHandoffs", "getBridgeReviews", "getApprovalSurfaces", "getFreshHostConnections", "getRuntimeShadowSummary"]) {
+      expect(typeof (lucaLinkManager.console as any)[method]).toBe("function");
+    }
+  });
+
   it("carries the full allowed surface and nothing is undefined", () => {
     const surface = [
       "createRoom",

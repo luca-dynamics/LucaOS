@@ -54,6 +54,77 @@ export type LucaLinkGovernanceFacade = Pick<
   | "evaluateRuntimeEventForSoftEnforcement"
 >;
 
+/**
+ * The settings-console surface — exactly what SettingsLucaLinkTab (the one
+ * full governance console) touches: relay ops, every registry, handoffs,
+ * bridge reviews, adapter drafts, approval surfaces, host connections,
+ * guest security, runtime shadow. Other consumers must use the narrower
+ * relay/governance facades; this window exists so the console migrates off
+ * the legacy import without forking state.
+ */
+export type LucaLinkConsoleFacade = Pick<
+  typeof legacyRelayClient,
+  | "approveApprovalRequest"
+  | "approveBridgeReviewForSandbox"
+  | "approveHandoff"
+  | "blockTrustedDevice"
+  | "cancelAdapterDraft"
+  | "cancelApprovalRequest"
+  | "cancelBridgeReview"
+  | "cancelContinuationToken"
+  | "cancelHandoff"
+  | "clearAdapterDrafts"
+  | "consumeContinuationToken"
+  | "createAdapterDraftFromBlueprint"
+  | "createAdapterDraftFromBridgeReview"
+  | "createBridgeReviewFromBlueprint"
+  | "createContinuationFromApprovalRequest"
+  | "createConversationHandoff"
+  | "createRoom"
+  | "declineHandoff"
+  | "denyApprovalRequest"
+  | "disconnect"
+  | "generateGuestSession"
+  | "getActiveTrustedDevices"
+  | "getAdapterDraftSummary"
+  | "getAdapterDrafts"
+  | "getApprovalQueueSummary"
+  | "getApprovalRequests"
+  | "getApprovalSurfaceSummary"
+  | "getApprovalSurfaces"
+  | "getBridgeReviewSummary"
+  | "getBridgeReviews"
+  | "getContinuationRegistrySummary"
+  | "getContinuationTokens"
+  | "getDeviceTrustAudit"
+  | "getDeviceTrustSummary"
+  | "getEmbodiedHostCapabilityEnvelopes"
+  | "getFreshHostConnectionSummary"
+  | "getFreshHostConnections"
+  | "getGuestSecuritySessions"
+  | "getGuestSecuritySummary"
+  | "getHandoffSummary"
+  | "getHandoffs"
+  | "getPairingUrl"
+  | "getPendingApprovalRequests"
+  | "getPendingHandoffs"
+  | "getRuntimeShadowObservations"
+  | "getRuntimeShadowSummary"
+  | "getSoftEnforcementMode"
+  | "getState"
+  | "getTrustedDevices"
+  | "getValidContinuationTokens"
+  | "joinWithToken"
+  | "markHandoffAccepted"
+  | "onStateChange"
+  | "rejectBridgeReview"
+  | "renameTrustedDevice"
+  | "revokeTrustedDevice"
+  | "setTrustedDeviceTrustLevel"
+  | "unblockTrustedDevice"
+  | "validateContinuationToken"
+>;
+
 export type LucaLinkRelayFacade = Pick<
   typeof legacyRelayClient,
   | "createRoom"
@@ -390,6 +461,11 @@ export class LucaLinkManager {
 
   /** Consolidation slice 3: the state-only governance surface (see type). */
   get governance(): LucaLinkGovernanceFacade {
+    return legacyRelayClient;
+  }
+
+  /** Consolidation slice 4b: the settings-console surface (see type). */
+  get console(): LucaLinkConsoleFacade {
     return legacyRelayClient;
   }
 

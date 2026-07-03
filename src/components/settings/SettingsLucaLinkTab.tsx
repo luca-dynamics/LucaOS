@@ -3,11 +3,11 @@ import { Icon } from "../ui/Icon";
 import { LucaSettings } from "../../services/settingsService";
 import { apiUrl, WS_PORT, cortexUrl } from "../../config/api";
 import { useMobile } from "../../hooks/useMobile";
-import { lucaLink } from "../../services/lucaLinkService";
+import { lucaLinkManager } from "../../services/lucaLink/manager";
 import type {
   LucaLinkDevice,
   LucaLinkState,
-} from "../../services/lucaLinkService";
+} from "../../services/lucaLink/manager";
 import type {
   LucaLinkDeviceTrustAuditRecord,
   LucaLinkDeviceTrustRegistrySummary,
@@ -243,7 +243,7 @@ const GuestAccessSection: React.FC<{
   const finalizeGeneration = async () => {
     setLoading(true);
     try {
-      const session = await lucaLink.generateGuestSession();
+      const session = await lucaLinkManager.console.generateGuestSession();
       if (session) {
         setGuestUrl(session.guestUrl);
 
@@ -602,7 +602,7 @@ interface LucaLinkDeviceCenterSnapshot {
   handoffSummary: LucaLinkHandoffRegistrySummary;
   runtimeShadowSummary: LucaLinkRuntimeObservationSummary;
   runtimeShadowObservations: LucaLinkRuntimeObservation[];
-  softEnforcementMode: ReturnType<typeof lucaLink.getSoftEnforcementMode>;
+  softEnforcementMode: ReturnType<typeof lucaLinkManager.console.getSoftEnforcementMode>;
   trustedDevices: LucaLinkTrustedDeviceRecord[];
   activeTrustedDevices: LucaLinkTrustedDeviceRecord[];
   deviceTrustSummary: LucaLinkDeviceTrustRegistrySummary;
@@ -635,34 +635,34 @@ const lucaLinkDeviceCenterTabs: Array<{
 
 function readLucaLinkDeviceCenterSnapshot(): LucaLinkDeviceCenterSnapshot {
   return {
-    state: lucaLink.getState(),
-    pendingApprovals: lucaLink.getPendingApprovalRequests(),
-    approvalRequests: lucaLink.getApprovalRequests(),
-    approvalSummary: lucaLink.getApprovalQueueSummary(),
-    continuationTokens: lucaLink.getContinuationTokens(),
-    validContinuationTokens: lucaLink.getValidContinuationTokens(),
-    continuationSummary: lucaLink.getContinuationRegistrySummary(),
-    handoffs: lucaLink.getHandoffs(),
-    pendingHandoffs: lucaLink.getPendingHandoffs(),
-    handoffSummary: lucaLink.getHandoffSummary(),
-    runtimeShadowSummary: lucaLink.getRuntimeShadowSummary(),
-    runtimeShadowObservations: lucaLink.getRuntimeShadowObservations(),
-    softEnforcementMode: lucaLink.getSoftEnforcementMode(),
-    trustedDevices: lucaLink.getTrustedDevices(),
-    activeTrustedDevices: lucaLink.getActiveTrustedDevices(),
-    deviceTrustSummary: lucaLink.getDeviceTrustSummary(),
-    deviceTrustAudit: lucaLink.getDeviceTrustAudit(),
-    guestSecuritySessions: lucaLink.getGuestSecuritySessions(),
-    guestSecuritySummary: lucaLink.getGuestSecuritySummary(),
-    hostConnections: lucaLink.getFreshHostConnections(),
-    hostConnectionSummary: lucaLink.getFreshHostConnectionSummary(),
-    approvalSurfaces: lucaLink.getApprovalSurfaces(),
-    approvalSurfaceSummary: lucaLink.getApprovalSurfaceSummary(),
-    bridgeReviews: lucaLink.getBridgeReviews(),
-    bridgeReviewSummary: lucaLink.getBridgeReviewSummary(),
-    embodiedCapabilityEnvelopes: lucaLink.getEmbodiedHostCapabilityEnvelopes(),
-    adapterDrafts: lucaLink.getAdapterDrafts(),
-    adapterDraftSummary: lucaLink.getAdapterDraftSummary(),
+    state: lucaLinkManager.console.getState(),
+    pendingApprovals: lucaLinkManager.console.getPendingApprovalRequests(),
+    approvalRequests: lucaLinkManager.console.getApprovalRequests(),
+    approvalSummary: lucaLinkManager.console.getApprovalQueueSummary(),
+    continuationTokens: lucaLinkManager.console.getContinuationTokens(),
+    validContinuationTokens: lucaLinkManager.console.getValidContinuationTokens(),
+    continuationSummary: lucaLinkManager.console.getContinuationRegistrySummary(),
+    handoffs: lucaLinkManager.console.getHandoffs(),
+    pendingHandoffs: lucaLinkManager.console.getPendingHandoffs(),
+    handoffSummary: lucaLinkManager.console.getHandoffSummary(),
+    runtimeShadowSummary: lucaLinkManager.console.getRuntimeShadowSummary(),
+    runtimeShadowObservations: lucaLinkManager.console.getRuntimeShadowObservations(),
+    softEnforcementMode: lucaLinkManager.console.getSoftEnforcementMode(),
+    trustedDevices: lucaLinkManager.console.getTrustedDevices(),
+    activeTrustedDevices: lucaLinkManager.console.getActiveTrustedDevices(),
+    deviceTrustSummary: lucaLinkManager.console.getDeviceTrustSummary(),
+    deviceTrustAudit: lucaLinkManager.console.getDeviceTrustAudit(),
+    guestSecuritySessions: lucaLinkManager.console.getGuestSecuritySessions(),
+    guestSecuritySummary: lucaLinkManager.console.getGuestSecuritySummary(),
+    hostConnections: lucaLinkManager.console.getFreshHostConnections(),
+    hostConnectionSummary: lucaLinkManager.console.getFreshHostConnectionSummary(),
+    approvalSurfaces: lucaLinkManager.console.getApprovalSurfaces(),
+    approvalSurfaceSummary: lucaLinkManager.console.getApprovalSurfaceSummary(),
+    bridgeReviews: lucaLinkManager.console.getBridgeReviews(),
+    bridgeReviewSummary: lucaLinkManager.console.getBridgeReviewSummary(),
+    embodiedCapabilityEnvelopes: lucaLinkManager.console.getEmbodiedHostCapabilityEnvelopes(),
+    adapterDrafts: lucaLinkManager.console.getAdapterDrafts(),
+    adapterDraftSummary: lucaLinkManager.console.getAdapterDraftSummary(),
   };
 }
 
@@ -672,7 +672,7 @@ export function formatLucaLinkTimestamp(value?: number): string {
 }
 
 export function getLucaLinkSecurityModeLabel(
-  mode: ReturnType<typeof lucaLink.getSoftEnforcementMode>,
+  mode: ReturnType<typeof lucaLinkManager.console.getSoftEnforcementMode>,
 ): string {
   if (mode === "high-risk-only") return "High-risk gates active";
   if (mode === "observe-only") return "Observe-only";
@@ -803,7 +803,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   const isMobile = isMobileProp ?? useMobile();
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [linkState, setLinkState] = useState<LucaLinkState>(
-    lucaLink.getState(),
+    lucaLinkManager.console.getState(),
   );
   const [deviceCenterTab, setDeviceCenterTab] =
     useState<LucaLinkDeviceCenterTab>("devices");
@@ -843,7 +843,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   // Subscribe to Luca Link state changes
   useEffect(() => {
     refreshDeviceCenter();
-    const unsubscribe = lucaLink.onStateChange((state) => {
+    const unsubscribe = lucaLinkManager.console.onStateChange((state) => {
       setLinkState(state);
       setDeviceCenterSnapshot((snapshot) => ({ ...snapshot, state }));
     });
@@ -859,7 +859,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
       !linkState.connected
     ) {
       console.log("[Settings] Remote enabled but no token - Creating room...");
-      lucaLink
+      lucaLinkManager.console
         .createRoom()
         .catch((e) => console.error("[Settings] Auto-create room failed:", e));
     }
@@ -868,7 +868,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   // Generate QR code when room is created
   useEffect(() => {
     const generateQR = async () => {
-      const pairingUrl = await lucaLink.getPairingUrl();
+      const pairingUrl = await lucaLinkManager.console.getPairingUrl();
       if (pairingUrl) {
         try {
           const qr = await QRCode.toDataURL(pairingUrl, {
@@ -1103,13 +1103,13 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   ) => {
     const reason = `${action} recorded from LucaLink Device Center; model record only, no runtime execution.`;
     if (action === "approve") {
-      const approvalResult = lucaLink.approveApprovalRequest(request.id, {
+      const approvalResult = lucaLinkManager.console.approveApprovalRequest(request.id, {
         decidedByDeviceId: currentDeviceId,
         reason,
       });
       if (approvalResult.request?.status === "approved") {
         const continuationResult =
-          lucaLink.createContinuationFromApprovalRequest(request.id);
+          lucaLinkManager.console.createContinuationFromApprovalRequest(request.id);
         if (continuationResult.token && continuationResult.valid) {
           setApprovalActionMessage(
             "Approved. Continuation token created for manual validation. No action was executed.",
@@ -1133,7 +1133,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         );
       }
     } else if (action === "deny") {
-      lucaLink.denyApprovalRequest(request.id, {
+      lucaLinkManager.console.denyApprovalRequest(request.id, {
         decidedByDeviceId: currentDeviceId,
         reason,
       });
@@ -1141,7 +1141,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         `${request.title} marked denied. Queue status updated only; no continuation token was created.`,
       );
     } else {
-      lucaLink.cancelApprovalRequest(request.id, {
+      lucaLinkManager.console.cancelApprovalRequest(request.id, {
         decidedByDeviceId: currentDeviceId,
         reason,
       });
@@ -1158,14 +1158,14 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     action: "validate" | "cancel" | "mark-consumed",
   ) => {
     if (action === "validate") {
-      const validation = lucaLink.validateContinuationToken(token.id);
+      const validation = lucaLinkManager.console.validateContinuationToken(token.id);
       setContinuationActionMessage(
         validation.valid
           ? `${token.title} validated as a model record only. No runtime execution and no action replay occurred.`
           : `${token.title} is not valid for model continuation: ${validation.errors.concat(validation.warnings).join("; ") || "No additional details."}`,
       );
     } else if (action === "cancel") {
-      lucaLink.cancelContinuationToken(
+      lucaLinkManager.console.cancelContinuationToken(
         token.id,
         "Cancelled from LucaLink Device Center; state-only model record action.",
       );
@@ -1173,7 +1173,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
         `${token.title} cancelled as a continuation record only. No action replay occurred.`,
       );
     } else {
-      lucaLink.consumeContinuationToken(token.id, {
+      lucaLinkManager.console.consumeContinuationToken(token.id, {
         consumedByDeviceId: currentDeviceId,
         reason:
           "Marked consumed from LucaLink Device Center; records state only and does not execute the action.",
@@ -1186,7 +1186,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   };
 
   const handleCreateSampleConversationHandoff = () => {
-    const result = lucaLink.createConversationHandoff({
+    const result = lucaLinkManager.console.createConversationHandoff({
       conversationTitle: "Sample conversation handoff",
       messageSummary:
         "A safe local sample handoff preview for Device Center visibility.",
@@ -1218,15 +1218,15 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     const reason = `${action} recorded from LucaLink Device Center; state-only handoff action with no transport send.`;
     const result =
       action === "approve"
-        ? lucaLink.approveHandoff(handoff.id, {
+        ? lucaLinkManager.console.approveHandoff(handoff.id, {
             approvedByDeviceId: currentDeviceId,
             reason,
           })
         : action === "decline"
-          ? lucaLink.declineHandoff(handoff.id, { reason })
+          ? lucaLinkManager.console.declineHandoff(handoff.id, { reason })
           : action === "cancel"
-            ? lucaLink.cancelHandoff(handoff.id, { reason })
-            : lucaLink.markHandoffAccepted(handoff.id, { reason });
+            ? lucaLinkManager.console.cancelHandoff(handoff.id, { reason })
+            : lucaLinkManager.console.markHandoffAccepted(handoff.id, { reason });
     setHandoffActionMessage(
       result.valid
         ? `${handoff.title} marked ${action}. No handoff payload was sent.`
@@ -1249,23 +1249,23 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     };
     const result =
       action === "rename"
-        ? lucaLink.renameTrustedDevice(
+        ? lucaLinkManager.console.renameTrustedDevice(
             device.deviceId,
             window.prompt("Rename LucaLink device", device.displayName) ??
               device.displayName,
             options,
           )
         : action === "trust"
-          ? lucaLink.setTrustedDeviceTrustLevel(
+          ? lucaLinkManager.console.setTrustedDeviceTrustLevel(
               device.deviceId,
               nextTrustLevel ?? device.trustLevel,
               options,
             )
           : action === "revoke"
-            ? lucaLink.revokeTrustedDevice(device.deviceId, options)
+            ? lucaLinkManager.console.revokeTrustedDevice(device.deviceId, options)
             : action === "block"
-              ? lucaLink.blockTrustedDevice(device.deviceId, options)
-              : lucaLink.unblockTrustedDevice(device.deviceId, options);
+              ? lucaLinkManager.console.blockTrustedDevice(device.deviceId, options)
+              : lucaLinkManager.console.unblockTrustedDevice(device.deviceId, options);
     setDeviceTrustActionMessage(
       result.valid
         ? `${device.displayName} updated locally. ${result.warnings.join(" ")}`.trim()
@@ -1275,7 +1275,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   };
 
   const handleCreateSampleBridgeReview = () => {
-    lucaLink.createBridgeReviewFromBlueprint({
+    lucaLinkManager.console.createBridgeReviewFromBlueprint({
       id: "device-center-web-display-sample",
       strategyKind: "web-display-bridge",
       title: "Sample Web Display Bridge",
@@ -1299,7 +1299,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
   };
 
   const handleCreateSamplePythonDraft = () => {
-    lucaLink.createAdapterDraftFromBlueprint({
+    lucaLinkManager.console.createAdapterDraftFromBlueprint({
       id: "device-center-python-agent-sample",
       strategyKind: "python-host-agent",
       title: "Sample Python Host Agent Draft",
@@ -1334,30 +1334,30 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
     action: "approve" | "reject" | "cancel",
   ) => {
     if (action === "approve")
-      lucaLink.approveBridgeReviewForSandbox(review.id, {
+      lucaLinkManager.console.approveBridgeReviewForSandbox(review.id, {
         approvedByDeviceId: currentDeviceId ?? undefined,
       });
     else if (action === "reject")
-      lucaLink.rejectBridgeReview(review.id, {
+      lucaLinkManager.console.rejectBridgeReview(review.id, {
         reason: "Rejected from Device Center; model-only state action.",
       });
     else
-      lucaLink.cancelBridgeReview(review.id, {
+      lucaLinkManager.console.cancelBridgeReview(review.id, {
         reason: "Cancelled from Device Center; model-only state action.",
       });
     refreshDeviceCenter();
   };
 
   const handleCreateDraftFromReview = (review: LucaLinkBridgeReviewRecord) => {
-    lucaLink.createAdapterDraftFromBridgeReview(review.id);
+    lucaLinkManager.console.createAdapterDraftFromBridgeReview(review.id);
     refreshDeviceCenter();
   };
   const handleCancelAdapterDraft = (draft: LucaLinkAdapterDraft) => {
-    lucaLink.cancelAdapterDraft(draft.id);
+    lucaLinkManager.console.cancelAdapterDraft(draft.id);
     refreshDeviceCenter();
   };
   const handleClearAdapterDrafts = () => {
-    lucaLink.clearAdapterDrafts();
+    lucaLinkManager.console.clearAdapterDrafts();
     refreshDeviceCenter();
   };
 
@@ -3657,7 +3657,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                         return;
                       }
                       try {
-                        await lucaLink.joinWithToken(token);
+                        await lucaLinkManager.console.joinWithToken(token);
                       } catch (e) {
                         console.error("[LucaLink] Failed to connect:", e);
                         alert(
@@ -3690,7 +3690,7 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   {/* Disconnect button if connected */}
                   {linkState.connected && (
                     <button
-                      onClick={() => lucaLink.disconnect()}
+                      onClick={() => lucaLinkManager.console.disconnect()}
                       className="w-full py-2 rounded-lg text-lg font-medium transition-all border shadow-sm"
                       style={settingsControlInlineStyle}
                     >
@@ -3750,12 +3750,12 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                           await fetch(apiUrl("/api/luca-link/start"), {
                             method: "POST",
                           });
-                          await lucaLink.createRoom();
+                          await lucaLinkManager.console.createRoom();
                         } else {
                           await fetch(apiUrl("/api/luca-link/stop"), {
                             method: "POST",
                           });
-                          lucaLink.disconnect();
+                          lucaLinkManager.console.disconnect();
                         }
                         console.log(
                           `[LucaLink] Server ${newValue ? "started" : "stopped"}`,
