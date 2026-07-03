@@ -125,7 +125,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id="app-header"
-      className={`${isMobile ? "h-16 px-4" : "h-14 px-6"} glass-blur flex items-center justify-between z-50 transition-all duration-500 relative drag border-b`}
+      className={`${isMobile ? "h-16 px-4" : "h-14 px-6"} luca-window-drag glass-blur flex items-center justify-between z-50 transition-all duration-500 relative drag border-b`}
       style={headerSurfaceStyle}
     >
       <RuntimeContinuityBootstrap />

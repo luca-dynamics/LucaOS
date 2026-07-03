@@ -531,6 +531,21 @@ a,
   }
 }
 
+/* Window-controls overlay (Electron titleBarOverlay): the shell's top
+ * bands double as the window titlebar. Interactive children stay clickable;
+ * everything else in the band drags the window. The right band reserves
+ * space for the OS min/max/close cluster only when the overlay is live
+ * (html.luca-wco set from src/windowControlsOverlay.ts). */
+.luca-window-drag {
+  -webkit-app-region: drag;
+}
+.luca-window-drag :is(button, a, input, select, textarea, [role="button"]) {
+  -webkit-app-region: no-drag;
+}
+html.luca-wco .luca-wco-pad-right {
+  padding-right: 144px;
+}
+
 /* Apple-style corner smoothing (continuous curvature). Native CSS
  * corner-shape ships in Electron's Chromium; `squircle` = superellipse(2),
  * matching Apple/Figma's ~60% smoothing. Hooked onto the radius utilities so
