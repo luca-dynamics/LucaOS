@@ -109,8 +109,11 @@ export function mapLucaOnboardingFlowToWebProfile(
       theme: "PROFESSIONAL",
       modelRoute: mapModelRoute(route),
       personality: "proactive",
-      backgroundOpacity: DEFAULT_BACKGROUND_OPACITY,
-      backgroundBlur: DEFAULT_BACKGROUND_BLUR,
+      backgroundOpacity:
+        flow.materialOpacity == null
+          ? DEFAULT_BACKGROUND_OPACITY
+          : Math.round(flow.materialOpacity * 100),
+      backgroundBlur: flow.materialBlur ?? DEFAULT_BACKGROUND_BLUR,
     },
     premiumPreferences: getLucaOnboardingPremiumPreferences(flow),
   };

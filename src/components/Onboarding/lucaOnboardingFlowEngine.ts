@@ -56,6 +56,13 @@ export interface LucaOnboardingFlowState {
    * completion bridge for later review in Settings.
    */
   readonly connectorSelections?: readonly string[];
+  /**
+   * Material feel chosen alongside the environment (skin): background
+   * opacity (0..1) and blur (px). Optional — the completion bridge falls
+   * back to its defaults when the user never touches the sliders.
+   */
+  readonly materialOpacity?: number;
+  readonly materialBlur?: number;
   readonly complete: boolean;
 }
 
@@ -216,6 +223,31 @@ export const lucaOnboardingFlowSetConnectors = (
     return state;
   }
   return { ...state, connectorSelections: next };
+};
+
+/**
+ * Record the material feel (background opacity 0..1, blur 0..40px) chosen on
+ * the environment screen. Values are clamped; returns the same reference when
+ * nothing changes.
+ */
+export const lucaOnboardingFlowSetMaterial = (
+  state: LucaOnboardingFlowState,
+  material: { opacity?: number; blur?: number },
+): LucaOnboardingFlowState => {
+  const clamp = (v: number, lo: number, hi: number) =>
+    Math.min(hi, Math.max(lo, v));
+  const nextOpacity =
+    material.opacity == null || Number.isNaN(material.opacity)
+      ? state.materialOpacity
+      : clamp(material.opacity, 0, 1);
+  const nextBlur =
+    material.blur == null || Number.isNaN(material.blur)
+      ? state.materialBlur
+      : clamp(Math.round(material.blur), 0, 40);
+  if (nextOpacity === state.materialOpacity && nextBlur === state.materialBlur) {
+    return state;
+  }
+  return { ...state, materialOpacity: nextOpacity, materialBlur: nextBlur };
 };
 
 /** Record an option selection for a screen. Ignores options not in the copy. */

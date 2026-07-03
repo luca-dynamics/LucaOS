@@ -18,6 +18,7 @@ import {
   lucaOnboardingFlowGoBack,
   lucaOnboardingFlowGoNext,
   lucaOnboardingFlowSetName,
+  lucaOnboardingFlowSetMaterial,
   lucaOnboardingFlowSetOption,
   lucaOnboardingFlowSetConnectors,
   lucaOnboardingFlowSkip,
@@ -327,6 +328,15 @@ export const LucaPremiumOnboardingPreview: React.FC<
               onSelectOption={handleSelectOption}
               nameValue={flow.displayName}
               onNameChange={handleNameChange}
+              materialValue={{
+                opacity: flow.materialOpacity ?? 0.3,
+                blur: flow.materialBlur ?? 40,
+              }}
+              onMaterialChange={(material) =>
+                setFlow((current) =>
+                  lucaOnboardingFlowSetMaterial(current, material),
+                )
+              }
               onConnectorSelectionsChange={handleConnectorSelections}
               canConnectTools={canConnectTools}
               onConnectorConnect={handleConnectorConnect}
