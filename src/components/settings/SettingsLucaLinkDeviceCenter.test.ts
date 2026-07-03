@@ -65,9 +65,9 @@ describe("Settings LucaLink Device Center", () => {
   });
 
   it("creates continuation tokens only after approved queue decisions", () => {
-    expect(approvalActionSource).toContain("lucaLink.approveApprovalRequest");
+    expect(approvalActionSource).toContain("lucaLinkManager.console.approveApprovalRequest");
     expect(approvalActionSource).toContain(
-      "lucaLink.createContinuationFromApprovalRequest(request.id)",
+      "lucaLinkManager.console.createContinuationFromApprovalRequest(request.id)",
     );
     expect(approvalActionSource).toContain(
       'approvalResult.request?.status === "approved"',
@@ -91,13 +91,13 @@ describe("Settings LucaLink Device Center", () => {
       ),
     );
 
-    expect(approveBranch).toContain("lucaLink.approveApprovalRequest");
+    expect(approveBranch).toContain("lucaLinkManager.console.approveApprovalRequest");
     expect(approveBranch).toContain(
-      "lucaLink.createContinuationFromApprovalRequest",
+      "lucaLinkManager.console.createContinuationFromApprovalRequest",
     );
-    expect(denyBranch).toContain("lucaLink.denyApprovalRequest");
+    expect(denyBranch).toContain("lucaLinkManager.console.denyApprovalRequest");
     expect(denyBranch).not.toContain("createContinuationFromApprovalRequest");
-    expect(cancelBranch).toContain("lucaLink.cancelApprovalRequest");
+    expect(cancelBranch).toContain("lucaLinkManager.console.cancelApprovalRequest");
     expect(cancelBranch).not.toContain("createContinuationFromApprovalRequest");
   });
 
@@ -121,10 +121,10 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain(
       "continuationSummary: LucaLinkContinuationRegistrySummary",
     );
-    expect(snapshotSource).toContain("lucaLink.getContinuationTokens()");
-    expect(snapshotSource).toContain("lucaLink.getValidContinuationTokens()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getContinuationTokens()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getValidContinuationTokens()");
     expect(snapshotSource).toContain(
-      "lucaLink.getContinuationRegistrySummary()",
+      "lucaLinkManager.console.getContinuationRegistrySummary()",
     );
   });
 
@@ -191,10 +191,10 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain(
       "deviceTrustAudit: LucaLinkDeviceTrustAuditRecord[]",
     );
-    expect(snapshotSource).toContain("lucaLink.getTrustedDevices()");
-    expect(snapshotSource).toContain("lucaLink.getActiveTrustedDevices()");
-    expect(snapshotSource).toContain("lucaLink.getDeviceTrustSummary()");
-    expect(snapshotSource).toContain("lucaLink.getDeviceTrustAudit()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getTrustedDevices()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getActiveTrustedDevices()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getDeviceTrustSummary()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getDeviceTrustAudit()");
   });
 
   it("renders local device trust controls and conservative safety copy", () => {
@@ -230,11 +230,11 @@ describe("Settings LucaLink Device Center", () => {
         lucaLinkSource.indexOf("const handleDeviceTrustAction"),
       ),
     );
-    expect(trustActionSource).toContain("lucaLink.renameTrustedDevice");
-    expect(trustActionSource).toContain("lucaLink.setTrustedDeviceTrustLevel");
-    expect(trustActionSource).toContain("lucaLink.revokeTrustedDevice");
-    expect(trustActionSource).toContain("lucaLink.blockTrustedDevice");
-    expect(trustActionSource).toContain("lucaLink.unblockTrustedDevice");
+    expect(trustActionSource).toContain("lucaLinkManager.console.renameTrustedDevice");
+    expect(trustActionSource).toContain("lucaLinkManager.console.setTrustedDeviceTrustLevel");
+    expect(trustActionSource).toContain("lucaLinkManager.console.revokeTrustedDevice");
+    expect(trustActionSource).toContain("lucaLinkManager.console.blockTrustedDevice");
+    expect(trustActionSource).toContain("lucaLinkManager.console.unblockTrustedDevice");
     expect(trustActionSource).not.toMatch(/\bemit\s*\(/);
     expect(trustActionSource).not.toMatch(/\bdisconnect\s*\(/);
     expect(trustActionSource).not.toMatch(/\bsocket\b/);
@@ -248,9 +248,9 @@ describe("Settings LucaLink Device Center", () => {
     expect(lucaLinkSource).toContain(
       "handoffSummary: LucaLinkHandoffRegistrySummary",
     );
-    expect(snapshotSource).toContain("lucaLink.getHandoffs()");
-    expect(snapshotSource).toContain("lucaLink.getPendingHandoffs()");
-    expect(snapshotSource).toContain("lucaLink.getHandoffSummary()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getHandoffs()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getPendingHandoffs()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getHandoffSummary()");
   });
 
   it("renders Device Center Sync handoff summary and safe copy", () => {
@@ -290,11 +290,11 @@ describe("Settings LucaLink Device Center", () => {
       lucaLinkSource.indexOf("const handleCreateSampleConversationHandoff"),
       lucaLinkSource.indexOf("const handleDeviceTrustAction"),
     );
-    expect(handoffActionSource).toContain("lucaLink.createConversationHandoff");
-    expect(handoffActionSource).toContain("lucaLink.approveHandoff");
-    expect(handoffActionSource).toContain("lucaLink.declineHandoff");
-    expect(handoffActionSource).toContain("lucaLink.cancelHandoff");
-    expect(handoffActionSource).toContain("lucaLink.markHandoffAccepted");
+    expect(handoffActionSource).toContain("lucaLinkManager.console.createConversationHandoff");
+    expect(handoffActionSource).toContain("lucaLinkManager.console.approveHandoff");
+    expect(handoffActionSource).toContain("lucaLinkManager.console.declineHandoff");
+    expect(handoffActionSource).toContain("lucaLinkManager.console.cancelHandoff");
+    expect(handoffActionSource).toContain("lucaLinkManager.console.markHandoffAccepted");
     expect(handoffActionSource).not.toMatch(/\bemit\s*\(/);
     expect(handoffActionSource).not.toMatch(/\bsocket\b/);
     expect(handoffActionSource).not.toMatch(/\bsend\s*\(/);
@@ -369,11 +369,11 @@ describe("Settings LucaLink Device Center host connections", () => {
       "hostConnectionSummary: LucaLinkHostConnectionRegistrySummary",
     );
     expect(snapshotSource).not.toContain(
-      ["lucaLink.refresh", "HostConnectionsFromCurrentState()"].join(""),
+      ["lucaLinkManager.console.refresh", "HostConnectionsFromCurrentState()"].join(""),
     );
-    expect(snapshotSource).toContain("lucaLink.getFreshHostConnections()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getFreshHostConnections()");
     expect(snapshotSource).toContain(
-      "lucaLink.getFreshHostConnectionSummary()",
+      "lucaLinkManager.console.getFreshHostConnectionSummary()",
     );
   });
 
@@ -426,8 +426,8 @@ describe("Settings LucaLink Device Center guest and service cleanup", () => {
     expect(lucaLinkSource).toContain(
       "guestSecuritySummary: LucaLinkGuestSessionSummary",
     );
-    expect(snapshotSource).toContain("lucaLink.getGuestSecuritySessions()");
-    expect(snapshotSource).toContain("lucaLink.getGuestSecuritySummary()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getGuestSecuritySessions()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getGuestSecuritySummary()");
     expect(lucaLinkSource).toContain(
       "deviceCenterSnapshot.guestSecuritySummary.deniedGuestInbound",
     );
@@ -498,15 +498,15 @@ describe("Settings LucaLink Device Center PR 202 surfaces", () => {
       "embodiedCapabilityEnvelopes: LucaLinkEmbodiedCapabilityEnvelope[]",
     );
     expect(lucaLinkSource).toContain("adapterDrafts: LucaLinkAdapterDraft[]");
-    expect(snapshotSource).toContain("lucaLink.getApprovalSurfaces()");
-    expect(snapshotSource).toContain("lucaLink.getApprovalSurfaceSummary()");
-    expect(snapshotSource).toContain("lucaLink.getBridgeReviews()");
-    expect(snapshotSource).toContain("lucaLink.getBridgeReviewSummary()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getApprovalSurfaces()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getApprovalSurfaceSummary()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getBridgeReviews()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getBridgeReviewSummary()");
     expect(snapshotSource).toContain(
-      "lucaLink.getEmbodiedHostCapabilityEnvelopes()",
+      "lucaLinkManager.console.getEmbodiedHostCapabilityEnvelopes()",
     );
-    expect(snapshotSource).toContain("lucaLink.getAdapterDrafts()");
-    expect(snapshotSource).toContain("lucaLink.getAdapterDraftSummary()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getAdapterDrafts()");
+    expect(snapshotSource).toContain("lucaLinkManager.console.getAdapterDraftSummary()");
   });
 
   it("renders multi-host approval surface, bridge review, embodied policy, and adapter draft sections", () => {
