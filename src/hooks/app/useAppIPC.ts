@@ -6,7 +6,7 @@ import { eventBus } from "../../services/eventBus";
 import { soundService } from "../../services/soundService";
 import { DeviceType, SmartDevice } from "../../types";
 import { watchGateway } from "../../services/watchGateway";
-import { lucaLink as lucaLinkService } from "../../services/lucaLinkService";
+import { lucaLinkManager } from "../../services/lucaLink/manager";
 
 interface UseAppIPCProps {
   isElectron: boolean;
@@ -499,8 +499,8 @@ export const useAppIPC = ({
         window.electron.ipcRenderer.send("widget-voice-data", {
           amplitude: data.amplitude,
         });
-        if (lucaLinkService.getState().connected) {
-          lucaLinkService.send("all", "UI_STATE_SYNC", {
+        if (lucaLinkManager.relay.getState().connected) {
+          lucaLinkManager.relay.send("all", "UI_STATE_SYNC", {
             amplitude: data.amplitude,
           });
         }

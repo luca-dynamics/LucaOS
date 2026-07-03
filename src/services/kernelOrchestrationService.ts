@@ -1,5 +1,5 @@
 import { teleportationService, NeuralConsciousnessPacket } from "./teleportationService";
-import { lucaLink } from "./lucaLinkService";
+import { lucaLinkManager } from "./lucaLink/manager";
 import { substrateManager, BodyAction, SubstrateType } from "./substrateHandlers/SubstrateManager";
 
 /**
@@ -29,7 +29,7 @@ class KernelOrchestrationService {
     const packet = await teleportationService.captureConsciousness();
     const partitionedPacket = this.partitionForSubstrate(packet, tier);
 
-    await lucaLink.beamPacket(kernel.id, {
+    await lucaLinkManager.relay.beamPacket(kernel.id, {
       type: "NEURAL_INHABITATION",
       payload: {
         tier,

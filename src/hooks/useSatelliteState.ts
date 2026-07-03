@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { PersonaType } from "../services/lucaService";
-import { lucaLink, LucaLinkMessage } from "../services/lucaLinkService";
+import {
+  lucaLinkManager,
+  type LucaLinkMessage,
+} from "../services/lucaLink/manager";
 import { settingsService } from "../services/settingsService";
 import { MissionScope } from "../services/toolRegistry";
 import {
@@ -180,7 +183,7 @@ export const useSatelliteState = (
       }
     };
 
-    const unsubscribe = lucaLink.onMessage(handleLinkMessage);
+    const unsubscribe = lucaLinkManager.relay.onMessage(handleLinkMessage);
     return () => unsubscribe();
   }, []);
 

@@ -3,7 +3,7 @@ import * as Definitions from "../definitions/configuration.tools";
 import { settingsService } from "../../services/settingsService";
 import { voiceCloneService } from "../../services/VoiceCloneService";
 import { modelManager } from "../../services/ModelManagerService";
-import { lucaLink } from "../../services/lucaLinkService";
+import { lucaLinkManager } from "../../services/lucaLink/manager";
 import { initializeToolRegistry } from "../../services/toolInitialization";
 import { memoryService } from "../../services/memoryService";
 import { cortexUrl, apiUrl } from "../../config/api";
@@ -360,14 +360,14 @@ export const ConfigurationProvider = {
               await fetch(cortexUrl("/api/remote-access/clear-pin"), { method: "POST" });
               return "✓ Remote Access PIN removed. Guest access is now open.";
             case "link-guest-generate": {
-              const result = await lucaLink.generateGuestSession();
+              const result = await lucaLinkManager.relay.generateGuestSession();
               return result ? `✓ Guest link generated: ${result.guestUrl}` : "ERROR: Failed to generate guest link. Ensure Luca Link is connected to relay.";
             }
             case "link-room-create":
-              await lucaLink.createRoom();
+              await lucaLinkManager.relay.createRoom();
               return "✓ Luca Link room created. Standing by for mobile client connection...";
             case "link-join-token":
-              await lucaLink.joinWithToken(payload.token);
+              await lucaLinkManager.relay.joinWithToken(payload.token);
               return `✓ Joining Luca Link room with token ${payload.token}...`;
 
             // --- MCP & SKILLS ---

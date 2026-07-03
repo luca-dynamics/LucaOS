@@ -67,7 +67,6 @@ import LucaBrowser from "./components/LucaBrowser";
 import { watchGateway } from "./services/watchGateway";
 
 import { lucaLinkManager } from "./services/lucaLink/manager";
-import { lucaLink as lucaLinkService } from "./services/lucaLinkService"; // Guest handler service
 
 import type { ScreenShareHandle } from "./components/ScreenShare";
 import conversationService from "./services/conversationService";
@@ -1366,8 +1365,8 @@ function AppContent() {
   // --- SATELLITE BROADCAST HELPER ---
   const broadcastToSatellites = useCallback((data: any) => {
     // Only broadcast if we are connected as a Desktop Core
-    if (lucaLinkService.getState().connected) {
-      lucaLinkService.send("all", "UI_STATE_SYNC", data);
+    if (lucaLinkManager.relay.getState().connected) {
+      lucaLinkManager.relay.send("all", "UI_STATE_SYNC", data);
     }
   }, []);
 
@@ -2239,7 +2238,7 @@ function AppContent() {
       }
     };
 
-    lucaLinkService.initGuestHandler(processGuestMessage, generateAudio);
+    lucaLinkManager.relay.initGuestHandler(processGuestMessage, generateAudio);
     console.log("[App] Luca Link guest handler initialized (Stable)");
   }, []); // Run ONCE on mount
 

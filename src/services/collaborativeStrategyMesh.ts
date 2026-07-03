@@ -1,5 +1,5 @@
 import { deviceRegistry } from "./lucaLink/deviceRegistry";
-import { lucaLink } from "./lucaLinkService";
+import { lucaLinkManager } from "./lucaLink/manager";
 import type { Device } from "./lucaLink/types";
 
 /**
@@ -184,7 +184,7 @@ class CollaborativeStrategyMesh {
     const votePromises = assignments.map(async (lobe) => {
       try {
         // Beam the proposal to each lobe and await their vote
-        const result = await lucaLink.beamPacket(lobe.deviceId, {
+        const result = await lucaLinkManager.relay.beamPacket(lobe.deviceId, {
           type: "STRATEGY_VOTE_REQUEST",
           payload: {
             proposalId: proposal.id,

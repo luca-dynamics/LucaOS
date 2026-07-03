@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { deviceRegistry } from "./lucaLink/deviceRegistry";
-import { lucaLink } from "./lucaLinkService";
+import { lucaLinkManager } from "./lucaLink/manager";
 
 /**
  * MESH OBSERVATION SERVICE (2050 Alien Tech)
@@ -108,7 +108,7 @@ class MeshObservationService extends EventEmitter {
     const devices = deviceRegistry.getAllDevices().filter(d => d.status === "online");
     
     for (const device of devices) {
-      await lucaLink.beamPacket(device.id, {
+      await lucaLinkManager.relay.beamPacket(device.id, {
         type: "SENSOR_ALERT_LEVEL",
         payload: { level }
       });
