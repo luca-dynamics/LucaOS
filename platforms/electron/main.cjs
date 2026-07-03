@@ -378,7 +378,7 @@ async function bootSequence(isSilent = false) {
     log(`Spawning Luca Cortex...`, 'warn', 30);
     await startCortex();
     
-    log(`Igniting Node.js Logic Core (Port ${SERVER_PORT})...`, 'warn', 40);
+    log(`Igniting Node.js Logic Core (Port ${SERVER_PORT})...`, 'info', 40);
     startServer();
 
     // 3. Wait Loop

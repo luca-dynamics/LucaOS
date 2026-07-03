@@ -91,7 +91,7 @@
     <div class="edge"></div>
     <div class="stage">
         <img class="face" src="luca-hologram.png" alt="Luca" />
-        <div class="wordmark">luca<span>os</span></div>
+        <div class="wordmark">LucaOS</div>
         <div class="headline" id="status">Waking Luca</div>
         <div class="detail" id="detail"></div>
         <div class="track"><div class="bar" id="progress"></div></div>
@@ -103,13 +103,30 @@
         const statusText = document.getElementById('status');
         const detailText = document.getElementById('detail');
 
-        // Same IPC contract as before, expressed calmly: the latest boot-log
-        // message becomes a quiet status detail (no scrolling terminal), and
-        // progress drives the hairline bar.
+        // Same IPC contract as before, expressed calmly. Raw boot-log lines
+        // are developer telemetry (they still reach the console and Medic);
+        // the being speaks in its own words here. Technical detail surfaces
+        // only when something actually goes wrong.
+        const speak = (message) => {
+            const m = message.toLowerCase();
+            if (/(app ready|interface ready|launch)/.test(m)) return "Here.";
+            if (/(vite|frontend|interface|window)/.test(m)) return "Opening my eyes";
+            if (/(cortex|graph db|memory)/.test(m)) return "Connecting memory";
+            if (/(igniting|logic core|node|server|port)/.test(m)) return "Starting my core";
+            if (/(wait|ready\.)/.test(m)) return "Almost there";
+            if (/(python|model|ollama|brain)/.test(m)) return "Warming up intelligence";
+            return "Waking Luca";
+        };
         ipcRenderer.on('boot-log', (event, { message, type, progress }) => {
             if (message) {
-                detailText.textContent = message;
-                detailText.classList.toggle('alert', type === 'error' || type === 'warn');
+                if (type === 'error') {
+                    // Honesty over calm when it breaks: show the real reason.
+                    detailText.textContent = message;
+                    detailText.classList.add('alert');
+                } else {
+                    detailText.textContent = speak(message);
+                    detailText.classList.remove('alert');
+                }
             }
             if (progress !== undefined) {
                 progressBar.style.width = `${progress}%`;
