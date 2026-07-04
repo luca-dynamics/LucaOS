@@ -2,13 +2,23 @@ import React from "react";
 import type { IdentityCore } from "../../../personal-intelligence";
 import { PreviewCardFrame, PreviewField } from "./PreviewCardFrame";
 
-export const IdentityCorePreviewCard: React.FC<{ identity: IdentityCore }> = ({
-  identity,
-}) => (
+export const IdentityCorePreviewCard: React.FC<{
+  identity: IdentityCore;
+  /** True when the identity is read from the real operator profile. */
+  live?: boolean;
+}> = ({ identity, live = false }) => (
   <PreviewCardFrame
     title="Identity Core + Luca personality"
-    description="Preview only — not saved or applied."
-    badges={["Preview only", "Not saved", "Not applied"]}
+    description={
+      live
+        ? "From your saved profile — read-only in Personal Intelligence."
+        : "Preview only — not saved or applied."
+    }
+    badges={
+      live
+        ? ["From your profile", "Read-only"]
+        : ["Preview only", "Not saved", "Not applied"]
+    }
   >
     <PreviewField
       label="Communication style"
