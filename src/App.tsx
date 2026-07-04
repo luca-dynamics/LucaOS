@@ -1350,8 +1350,14 @@ function AppContent() {
       setShowSettingsModal(true);
     };
     window.addEventListener("luca:open-settings", handleOpenSettings);
-    return () =>
+    // Pairing is unified on the Link a device modal; the settings tab (and
+    // anything else) opens it through this event instead of owning its own QR.
+    const handleOpenLucaLink = () => setShowLucaLinkModal(true);
+    window.addEventListener("luca:open-lucalink", handleOpenLucaLink);
+    return () => {
       window.removeEventListener("luca:open-settings", handleOpenSettings);
+      window.removeEventListener("luca:open-lucalink", handleOpenLucaLink);
+    };
   }, []);
 
   // Listen for governed panel-open events dispatched by GovernedToolExecutionService

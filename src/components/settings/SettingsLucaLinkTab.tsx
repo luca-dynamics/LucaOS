@@ -852,17 +852,9 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
 
   // Auto-start room if enabled but missing token (e.g. on page refresh)
   useEffect(() => {
-    if (
-      settings.lucaLink.enabled &&
-      !isMobile &&
-      !linkState.pairingToken &&
-      !linkState.connected
-    ) {
-      console.log("[Settings] Remote enabled but no token - Creating room...");
-      lucaLinkManager.console
-        .createRoom()
-        .catch((e) => console.error("[Settings] Auto-create room failed:", e));
-    }
+    // Legacy relay auto-bootstrap removed: pairing is owned by the
+    // Link a device flow (server-minted tokens); the toggle above only
+    // starts/stops the local socket server.
   }, [settings.lucaLink.enabled, linkState.pairingToken, linkState.connected]);
 
   // Generate QR code when room is created
@@ -3750,7 +3742,6 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                           await fetch(apiUrl("/api/luca-link/start"), {
                             method: "POST",
                           });
-                          await lucaLinkManager.console.createRoom();
                         } else {
                           await fetch(apiUrl("/api/luca-link/stop"), {
                             method: "POST",
@@ -3782,80 +3773,42 @@ const SettingsLucaLinkTab: React.FC<SettingsLucaLinkTabProps> = ({
                   </button>
                 </div>
 
-                {/* QR Code Pairing Section - Show when enabled */}
+                {/* Pairing lives in ONE place: the Link a device flow
+                    (server-minted tokens + the served companion page). The
+                    legacy relay QR here minted client-side tokens no server
+                    honored - a confident-looking dead path, removed. */}
                 {settings.lucaLink.enabled && (
                   <div
-                    className={`rounded-xl p-4 text-center space-y-3 border shadow-sm`}
+                    className="rounded-xl p-4 border"
                     style={{
                       backgroundColor: settingsSurfaceTokens.glass,
                       borderColor: settingsSurfaceTokens.borderSubtle,
                     }}
                   >
-                    <div
-                      className={`text-lg font-semibold text-[var(--app-text-main)]`}
-                    >
-                      Device pairing
+                    <div className="text-[15px] font-semibold text-[var(--app-text-main)]">
+                      Link a device
                     </div>
-
-                    <p
-                      className={`text-lg text-[var(--app-text-muted)] mb-2 opacity-80`}
-                    >
-                      Pair trusted Luca-capable hosts in the adaptive host mesh
-                      using this QR code or token.
+                    <p className="mt-1 text-sm leading-relaxed text-[var(--app-text-muted)]">
+                      Scan a QR from your phone and it becomes part of Luca's
+                      body. Pairing tokens are minted by this machine and
+                      expire after five minutes; nothing connects without
+                      pairing.
                     </p>
-
-                    {/* QR Code */}
-                    {qrCodeUrl ? (
-                      <div className="flex justify-center">
-                        <div
-                          className={`p-3 rounded-lg bg-[var(--app-bg-tint)] border border-[var(--app-border-main)]`}
-                        >
-                          <img
-                            src={qrCodeUrl}
-                            alt="Pairing QR Code"
-                            className="w-40 h-40"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="py-6 text-[var(--app-text-muted)] text-base opacity-60">
-                        Starting Luca Link...
-                      </div>
-                    )}
-
-                    {/* Pairing Token */}
-                    {linkState.pairingToken && (
-                      <div className="space-y-1">
-                        <p className={`text-lg text-[var(--app-text-muted)]`}>
-                          Or enter this one-time pairing token:
-                        </p>
-                        <div className="flex items-center justify-center gap-2">
-                          <code className="px-3 py-1 rounded text-base font-mono bg-[var(--app-bg-tint)] border border-[var(--app-border-main)] text-[var(--app-text-main)]">
-                            {linkState.pairingToken}
-                          </code>
-                          <button
-                            onClick={copyRoomId}
-                            className="p-1 rounded hover:bg-[var(--luca-surface-hover)] transition-colors"
-                            title="Copy Token"
-                          >
-                            <Icon
-                              name="Copy"
-                              className="w-4 h-4"
-                              style={{
-                                color: copied
-                                  ? settingsSurfaceTokens.accentPrimary
-                                  : "var(--app-text-main)",
-                              }}
-                            />
-                          </button>
-                        </div>
-                        {copied && (
-                          <p className="text-sm text-[var(--luca-accent-primary,var(--app-core-hex))]">
-                            Copied!
-                          </p>
-                        )}
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.dispatchEvent(
+                          new CustomEvent("luca:open-lucalink"),
+                        )
+                      }
+                      className="mt-3 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
+                      style={{
+                        borderColor: settingsSurfaceTokens.borderSubtle,
+                        color: "var(--luca-accent-primary, var(--app-text-main))",
+                      }}
+                    >
+                      Open pairing…
+                    </button>
                   </div>
                 )}
 

@@ -211,7 +211,7 @@ const LucaLinkModal: React.FC<LucaLinkModalProps> = ({
         : "var(--luca-warning, #e0b15a)";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4">
       <div
         className="relative flex max-h-[86vh] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl border"
         style={{
