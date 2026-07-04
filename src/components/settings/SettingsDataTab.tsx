@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon";
 import { memoryService } from "../../services/memoryService";
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
 import { buildBundleFromPendingProposals } from "../../services/personalIntelligence/memoryProposalBridge";
+import { summarizeStoredMemoryApprovalAudit } from "../../services/personalIntelligence/memoryApprovalAuditStore";
 import { MemoryNode } from "../../types";
 import { cortexUrl } from "../../config/api";
 import {
@@ -62,6 +63,16 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
       bundle = null;
     }
     return bundle ? () => bundle : undefined;
+  }, []);
+
+  // The durable governed-write audit trail (persisted across sessions), read
+  // once at mount so the pilot can show prior history.
+  const initialAuditSummary = useMemo(() => {
+    try {
+      return summarizeStoredMemoryApprovalAudit();
+    } catch {
+      return undefined;
+    }
   }, []);
 
   useEffect(() => {
@@ -186,6 +197,7 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         <PersonalIntelligencePersistencePreview />
         <PersonalIntelligenceMemoryApprovalPilot
           buildProposalBundle={buildLiveProposalBundle}
+          initialAuditSummary={initialAuditSummary}
         />
         <PersonalIntelligenceRuntimeTracePanel />
         <PersonalIntelligenceMissionRuntimePanel />
