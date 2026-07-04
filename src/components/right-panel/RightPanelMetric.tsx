@@ -8,20 +8,38 @@ interface RightPanelMetricProps {
   tone?: "neutral" | "good" | "warn" | "danger";
 }
 
-const toneClass = {
-  neutral: "text-[var(--app-text-main)]",
-  good: "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)]",
-  warn: "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] text-[var(--luca-warning,#f2b23e)]",
-  danger: "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)]",
+// One quiet, uniform stat tile. No tinted / coloured card backgrounds — every
+// tile shares the same neutral surface. Colour lands ONLY on the value, and
+// ONLY for a genuine alert: "good" and "neutral" stay monochrome, so a zero or
+// all-clear reads calm instead of as a green box (the vibecoded tell).
+const valueColor: Record<
+  NonNullable<RightPanelMetricProps["tone"]>,
+  string
+> = {
+  neutral: "var(--luca-text-primary, var(--app-text-main))",
+  good: "var(--luca-text-primary, var(--app-text-main))",
+  warn: "var(--luca-warning, #e0b15a)",
+  danger: "var(--luca-danger, #f87171)",
 };
 
-// A single stat tile. Calm label + value (panel-interiors-target): no
-// uppercase-tracked micro-shout, no black weight; tone colours are kept so a
-// warning still reads at a glance.
-const RightPanelMetric: React.FC<RightPanelMetricProps> = ({ label, value, tone = "neutral" }) => (
-  <div className={`rounded-xl border p-2 ${toneClass[tone]}`} style={tone === "neutral" ? lucaMaterialMetricStyle : undefined}>
-    <div className="text-[10px] tracking-tight opacity-70">{label}</div>
-    <div className="mt-1 text-sm font-semibold leading-none">{value}</div>
+const RightPanelMetric: React.FC<RightPanelMetricProps> = ({
+  label,
+  value,
+  tone = "neutral",
+}) => (
+  <div className="rounded-lg border p-2.5" style={lucaMaterialMetricStyle}>
+    <div
+      className="text-[10.5px] tracking-tight"
+      style={{ color: "var(--luca-text-tertiary, var(--app-text-muted))" }}
+    >
+      {label}
+    </div>
+    <div
+      className="mt-1 text-[15px] font-semibold leading-none"
+      style={{ color: valueColor[tone] }}
+    >
+      {value}
+    </div>
   </div>
 );
 

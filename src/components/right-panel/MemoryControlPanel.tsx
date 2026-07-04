@@ -45,15 +45,15 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
+      <div className="pb-1">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
+          <div className="flex min-w-0 items-start gap-2.5">
+            <div className="mt-0.5" style={{ color: theme.hex }}>
               <Icon name="Database" size={18} />
             </div>
             <div>
-              <div className="text-[13px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Memory</div>
-              <p className="mt-1 text-[11px] leading-relaxed text-[var(--luca-text-tertiary,var(--app-text-muted))]">What Luca remembers, and the governance around it. Only you can change what's kept.</p>
+              <div className="text-[15px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Memory</div>
+              <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--luca-text-secondary,var(--app-text-muted))]">What Luca remembers, and the governance around it. Only you can change what's kept.</p>
             </div>
           </div>
           <button

@@ -324,6 +324,7 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
       isLight={isLight}
       isLightCream={isLightCream}
       collapseAdvancedGroups={collapseAdvancedTools}
+      includeProTools={experienceMode !== "basic"}
       onToolSelect={handleToolSelect}
     />
   );

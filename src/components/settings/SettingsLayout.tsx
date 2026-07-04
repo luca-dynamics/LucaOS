@@ -32,20 +32,17 @@ export const SettingsSection: React.FC<
   eyebrow,
 }) => (
   <section
-    className={`${isMobile ? "rounded-none border-x-0 px-4 py-5" : "rounded-2xl px-5 py-5"} border space-y-4 ${className}`}
-    style={settingsCardStyle}
+    className={`${isMobile ? "px-4" : "px-1"} border-t pt-6 pb-2 ${className}`}
+    style={{ borderColor: settingsSurfaceTokens.borderSubtle }}
   >
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-2.5">
       {icon && (
-        <div
-          className="luca-settings-section-icon mt-0.5 rounded-xl p-2"
-          style={{
-            backgroundColor: settingsSurfaceTokens.accentSoft,
-            color: accentColor ?? settingsSurfaceTokens.accentPrimary,
-          }}
-        >
-          <Icon name={icon as any} variant="BoldDuotone" className="h-4 w-4" />
-        </div>
+        <Icon
+          name={icon as any}
+          variant="BoldDuotone"
+          className="mt-0.5 h-4 w-4 shrink-0"
+          style={{ color: accentColor ?? settingsSurfaceTokens.textTertiary }}
+        />
       )}
       <div className="min-w-0 flex-1">
         {eyebrow && (
@@ -57,14 +54,14 @@ export const SettingsSection: React.FC<
           </p>
         )}
         <h3
-          className="text-base font-semibold tracking-tight"
+          className="text-[15px] font-semibold tracking-tight"
           style={{ color: settingsSurfaceTokens.textPrimary }}
         >
           {title}
         </h3>
         {description && (
           <p
-            className="mt-1 text-sm leading-relaxed"
+            className="mt-1 text-[13px] leading-relaxed"
             style={{ color: settingsSurfaceTokens.textSecondary }}
           >
             {description}
@@ -72,7 +69,7 @@ export const SettingsSection: React.FC<
         )}
       </div>
     </div>
-    <div className="space-y-3">{children}</div>
+    <div className="mt-3">{children}</div>
   </section>
 );
 
@@ -148,28 +145,28 @@ export const SettingsRow: React.FC<
   className = "",
 }) => (
   <div
-    className={`flex items-center justify-between gap-4 rounded-xl border px-3 py-3 ${className}`}
+    className={`flex items-start justify-between gap-4 border-b py-3.5 last:border-b-0 ${className}`}
     style={settingsRowStyle}
   >
-    <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 items-start gap-3">
       {icon && (
         <Icon
           name={icon as any}
           variant="BoldDuotone"
-          className="h-4 w-4 shrink-0"
-          style={{ color: accentColor ?? settingsSurfaceTokens.accentPrimary }}
+          className="mt-0.5 h-4 w-4 shrink-0"
+          style={{ color: accentColor ?? settingsSurfaceTokens.textTertiary }}
         />
       )}
       <div className="min-w-0">
         <p
-          className="text-sm font-medium"
+          className="text-[13.5px] font-medium"
           style={{ color: settingsSurfaceTokens.textPrimary }}
         >
           {label}
         </p>
         {description && (
           <p
-            className="mt-0.5 text-xs leading-relaxed"
+            className="mt-0.5 text-[12.5px] leading-relaxed"
             style={{ color: settingsSurfaceTokens.textSecondary }}
           >
             {description}
@@ -177,7 +174,7 @@ export const SettingsRow: React.FC<
         )}
       </div>
     </div>
-    <div className="shrink-0">{control ?? children}</div>
+    <div className="shrink-0 pt-0.5">{control ?? children}</div>
   </div>
 );
 

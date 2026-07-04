@@ -3300,7 +3300,7 @@ function AppContent() {
                       />
                     )}
                     {displayedRightPanelMode === "ACTIVITY" && (
-                      <ActivityPanel theme={theme} />
+                      <ActivityPanel theme={theme} experienceMode={experienceMode} />
                     )}
                     {displayedRightPanelMode === "MEMORY" && (
                       <MemoryControlPanel
@@ -3372,7 +3372,7 @@ function AppContent() {
                     />
                   )}
                   {displayedRightPanelMode === "ACTIVITY" && (
-                    <ActivityPanel theme={theme} />
+                    <ActivityPanel theme={theme} experienceMode={experienceMode} />
                   )}
                   {displayedRightPanelMode === "MEMORY" && (
                     <MemoryControlPanel

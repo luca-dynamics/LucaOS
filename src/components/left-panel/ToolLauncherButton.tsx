@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "../ui/Icon";
 import type { LeftPanelToolItem } from "./leftPanelModel";
 
 interface ToolLauncherButtonProps {
@@ -9,10 +10,10 @@ interface ToolLauncherButtonProps {
 }
 
 /**
- * Single launcher row for the TOOLS rail (panel-interiors-target): a quiet
- * row — dim tone dot, plain label — never a chip cloud. No resting-state
- * accent colours (risk shows in the tool's own surface, not as a red badge
- * in the rail). Rendering never triggers an action — only the onClick does.
+ * A single tool chip. Compact icon + label that tiles into a wrapped grid
+ * per group (the original grouped layout), kept in the calm skin — hairline
+ * border, secondary text, quiet hover — rather than the old loud glass or a
+ * flat one-per-row list. Rendering never triggers an action; only onClick.
  */
 const ToolLauncherButton: React.FC<ToolLauncherButtonProps> = ({
   tool,
@@ -23,22 +24,22 @@ const ToolLauncherButton: React.FC<ToolLauncherButtonProps> = ({
       type="button"
       onClick={() => onSelect(tool)}
       title={tool.description || tool.label}
-      className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[rgba(127,127,127,0.09)]"
+      className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors hover:bg-[rgba(127,127,127,0.09)]"
+      style={{
+        borderColor: "var(--luca-border-subtle, rgba(255,255,255,0.07))",
+        color: "var(--luca-text-secondary, var(--app-text-muted))",
+      }}
     >
-      <span
-        className="h-1.5 w-1.5 flex-none rounded-full"
-        style={{ background: "var(--luca-border-strong, rgba(255,255,255,0.18))" }}
-        aria-hidden="true"
+      <Icon
+        name={tool.icon}
+        size={13}
+        variant="BoldDuotone"
+        className="flex-none opacity-70"
       />
-      <span
-        className="min-w-0 truncate text-[12.5px]"
-        style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
-      >
-        {tool.label}
-      </span>
+      <span className="truncate">{tool.label}</span>
       {tool.preview && (
         <span
-          className="ml-auto flex-none text-[10.5px]"
+          className="flex-none text-[9.5px] opacity-60"
           style={{ color: "var(--luca-text-tertiary, var(--app-text-muted))" }}
         >
           preview

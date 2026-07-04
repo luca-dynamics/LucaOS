@@ -44,6 +44,9 @@ export type LeftPanelToolActionKey =
   | "previewSovereignty"
   | "previewSecurity";
 
+/** Which experience tier a tool belongs to. Basic hides pro-only tools. */
+export type ToolTier = "basic" | "pro";
+
 /** A launcher tool rendered as a clickable button. */
 export interface LeftPanelToolItem {
   id: string;
@@ -52,6 +55,8 @@ export interface LeftPanelToolItem {
   icon: string;
   actionKey: LeftPanelToolActionKey;
   risk?: ToolRiskLevel;
+  /** Experience tier this tool requires. Omitted means "basic". */
+  tier?: ToolTier;
   description?: string;
   /** Visual/preview modules only inject sample UI data, never live data. */
   preview?: boolean;
@@ -113,24 +118,24 @@ export const LEFT_PANEL_TOOLS: readonly LeftPanelToolItem[] = [
   { id: "screen", label: "Screen", group: "tools", icon: "Monitor", actionKey: "openScreen", description: "Visual core capture (Electron only)." },
   { id: "import", label: "Import", group: "memory", icon: "Import", actionKey: "openImport" },
   { id: "ide", label: "IDE", group: "tools", icon: "Programming", actionKey: "openIde" },
-  { id: "system-services", label: "System Services", group: "tools", icon: "Pulse", actionKey: "openSystemServices" },
+  { id: "system-services", label: "System Services", group: "tools", icon: "Pulse", actionKey: "openSystemServices", tier: "pro" },
   { id: "link-bridge", label: "Link Bridge", group: "connections", icon: "Smartphone", actionKey: "openLinkBridge" },
 
-  // Tools — everyday surfaces, intelligence, finance, previews
-  { id: "security", label: "Ethical Hacking", group: "tools", icon: "Shield", actionKey: "openSecurity", risk: "elevated", accentColor: "#ef4444", description: "Opens the ethical hacking terminal." },
-  { id: "reports", label: "Reports", group: "tools", icon: "Notes", actionKey: "openReports" },
-  { id: "osint", label: "OSINT", group: "tools", icon: "Search", actionKey: "openOsint" },
-  { id: "dark-web", label: "Dark Web", group: "tools", icon: "Shield", actionKey: "openDarkWeb" },
+  // Tools — operational suite (Pro): intelligence, security, finance, previews
+  { id: "security", label: "Ethical Hacking", group: "tools", icon: "Shield", actionKey: "openSecurity", risk: "elevated", tier: "pro", accentColor: "#ef4444", description: "Opens the ethical hacking terminal." },
+  { id: "reports", label: "Reports", group: "tools", icon: "Notes", actionKey: "openReports", tier: "pro" },
+  { id: "osint", label: "OSINT", group: "tools", icon: "Search", actionKey: "openOsint", tier: "pro" },
+  { id: "dark-web", label: "Dark Web", group: "tools", icon: "Shield", actionKey: "openDarkWeb", tier: "pro" },
   { id: "train", label: "Train", group: "agents", icon: "EyeScan", actionKey: "openTrain" },
 
-  { id: "defi", label: "DeFi", group: "tools", icon: "Wallet", actionKey: "openDeFi" },
-  { id: "fx", label: "FX", group: "tools", icon: "Bank", actionKey: "openForex" },
-  { id: "stock-feed", label: "Stock Feed", group: "tools", icon: "Chart", actionKey: "openStockFeed" },
-  { id: "ai-trading", label: "AI Trading", group: "tools", icon: "MagicStick", actionKey: "openAiTrading" },
-  { id: "prediction", label: "Prediction", group: "tools", icon: "Chart", actionKey: "openPrediction" },
+  { id: "defi", label: "DeFi", group: "tools", icon: "Wallet", actionKey: "openDeFi", tier: "pro" },
+  { id: "fx", label: "FX", group: "tools", icon: "Bank", actionKey: "openForex", tier: "pro" },
+  { id: "stock-feed", label: "Stock Feed", group: "tools", icon: "Chart", actionKey: "openStockFeed", tier: "pro" },
+  { id: "ai-trading", label: "AI Trading", group: "tools", icon: "MagicStick", actionKey: "openAiTrading", tier: "pro" },
+  { id: "prediction", label: "Prediction", group: "tools", icon: "Chart", actionKey: "openPrediction", tier: "pro" },
 
-  { id: "sovereignty", label: "Sovereignty", group: "tools", icon: "Earth", actionKey: "previewSovereignty", preview: true, description: "Visual preview — sample data only." },
-  { id: "security-preview", label: "Security", group: "tools", icon: "Shield", actionKey: "previewSecurity", preview: true, description: "Visual preview — sample data only." },
+  { id: "sovereignty", label: "Sovereignty", group: "tools", icon: "Earth", actionKey: "previewSovereignty", preview: true, tier: "pro", description: "Visual preview — sample data only." },
+  { id: "security-preview", label: "Security", group: "tools", icon: "Shield", actionKey: "previewSecurity", preview: true, tier: "pro", description: "Visual preview — sample data only." },
 ] as const;
 
 /** Default expand/collapse state keyed by group id. */
@@ -158,15 +163,26 @@ function toModuleItem(label: string, index: number): LeftPanelModuleItem {
  * appended into the "installed" group. Groups with no content are dropped so
  * the rail never shows an empty header.
  */
+export interface BuildToolLauncherGroupsOptions {
+  /** When false, pro-tier tools are hidden (Basic experience). Defaults to true. */
+  includeProTools?: boolean;
+}
+
 export function buildToolLauncherGroups(
   installedModules: ReadonlyArray<string> = [],
+  options: BuildToolLauncherGroupsOptions = {},
 ): LeftPanelToolGroup[] {
+  const includeProTools = options.includeProTools ?? true;
   const moduleItems = installedModules
     .filter((mod) => typeof mod === "string" && mod.trim().length > 0)
     .map((mod, index) => toModuleItem(mod, index));
 
   return LEFT_PANEL_TOOL_GROUPS.map((meta) => {
-    const tools = LEFT_PANEL_TOOLS.filter((tool) => tool.group === meta.id);
+    const tools = LEFT_PANEL_TOOLS.filter(
+      (tool) =>
+        tool.group === meta.id &&
+        (includeProTools || (tool.tier ?? "basic") !== "pro"),
+    );
     const modules = meta.id === "installed" ? moduleItems : [];
     return {
       id: meta.id,
