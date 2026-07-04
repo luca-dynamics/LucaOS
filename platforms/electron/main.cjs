@@ -77,22 +77,53 @@ function loadWindowState() {
                 handleY <= display.bounds.y + display.bounds.height
             );
 
-            if (!isHandleVisible) {
-                console.log('[MAIN] Window handle is off-screen. Resetting to primary display.');
-                return { 
-                    width: 1152, 
-                    height: 710, 
-                    x: Math.floor((primaryDisplay.workArea.width - 1152) / 2),
-                    y: Math.floor((primaryDisplay.workArea.height - 710) / 2)
-                };
+            // INDUSTRIAL GRADE: "Fit Check"
+            // The handle check alone lets a window taller/wider than the work
+            // area through — it reveals as a bottom-cut slab. The window must
+            // ALSO fit entirely inside its display's work area.
+            const wa = display.workArea;
+            const fits = (
+                width > 0 && height > 0 &&
+                width <= wa.width && height <= wa.height &&
+                x >= wa.x && y >= wa.y &&
+                x + width <= wa.x + wa.width &&
+                y + height <= wa.y + wa.height
+            );
+
+            if (isHandleVisible && fits) {
+                return state;
             }
 
-            return state;
+            // Invalid restore: open as a medium window, centered in the work
+            // area of the display the user last used (not necessarily primary).
+            console.log('[MAIN] Saved window bounds are off-screen or oversized. Recentering at medium size.');
+            const mw = Math.min(1152, wa.width - 40);
+            const mh = Math.min(760, wa.height - 40);
+            return {
+                width: mw,
+                height: mh,
+                x: wa.x + Math.floor((wa.width - mw) / 2),
+                y: wa.y + Math.floor((wa.height - mh) / 2)
+            };
         }
     } catch (e) {
         console.error('[MAIN] Failed to load window state:', e);
     }
-    return { width: 1152, height: 710 }; // Default
+    // Default: medium and centered (Electron centers when x/y are omitted,
+    // but be explicit so the first reveal is deterministic).
+    try {
+        const wa = screen.getPrimaryDisplay().workArea;
+        const mw = Math.min(1152, wa.width - 40);
+        const mh = Math.min(760, wa.height - 40);
+        return {
+            width: mw,
+            height: mh,
+            x: wa.x + Math.floor((wa.width - mw) / 2),
+            y: wa.y + Math.floor((wa.height - mh) / 2)
+        };
+    } catch {
+        return { width: 1152, height: 710 };
+    }
 }
 
 function saveWindowState(bounds, isMaximized = false) {
