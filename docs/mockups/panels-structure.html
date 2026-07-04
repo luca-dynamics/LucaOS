@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Panel Structure (unified band · environment canvas)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --base:#111417;               /* chrome tier: band + panels */
+    --canvas-top:#1b2025;         /* environment: elevated */
+    --canvas-bot:#15191d;         /* environment floor (45% mix) */
+    --hair:rgba(255,255,255,.07); --hair-soft:rgba(255,255,255,.045);
+    --hover:rgba(255,255,255,.06); --card:rgba(255,255,255,.025);
+    --t1:#e9edf2; --t2:#9aa4b2; --t3:#69737f;
+    --accent:#7aa2ff; --ok:#4fbf7a; --warn:#e0b15a;
+    --sidebar:264px; --right:300px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#0a0c0e;color:var(--t1);
+    font:400 13px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+    letter-spacing:-.008em;font-variant-numeric:tabular-nums;
+    display:flex;align-items:center;justify-content:center;padding:20px}
+  svg{display:block;flex:none}
+  button{font:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+  /* ── the app window ── */
+  .window{
+    width:min(1280px,100%);height:min(780px,100%);
+    border:1px solid var(--hair);border-radius:12px;overflow:hidden;
+    display:flex;flex-direction:column;
+    background:var(--base);
+    box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  /* ── THE UNIFIED BAND: one structural row, chrome tier ── */
+  .band{
+    flex:none;height:56px;display:flex;align-items:stretch;
+    background:var(--base);border-bottom:1px solid var(--hair);
+  }
+  .seg-left{
+    flex:none;width:var(--sidebar);display:flex;align-items:center;gap:10px;
+    padding:0 16px;border-right:1px solid var(--hair);
+    transition:width 260ms cubic-bezier(.22,.88,.24,1), padding 260ms ease, opacity 200ms ease;
+    overflow:hidden;white-space:nowrap;
+  }
+  .window.no-left .seg-left{width:0;padding:0;border-right-width:0;opacity:0}
+  .face{width:24px;height:24px;border-radius:50%;flex:none;
+    background:radial-gradient(circle at 36% 32%, #cfe6ee, #7fa6c0 55%, #3f5668);
+    box-shadow:0 0 10px rgba(122,162,255,.35)}
+  .brand b{display:block;font-size:14px;font-weight:600}
+  .brand small{display:block;font-size:10px;color:var(--t3);margin-top:2px}
+
+  .seg-header{flex:1;min-width:0;display:flex;align-items:stretch}
+  .edge-toggle{
+    flex:none;align-self:center;margin:0 6px;width:28px;height:28px;border-radius:8px;
+    border:1px solid var(--hair);display:grid;place-items:center;color:var(--t3);
+    transition:background 160ms ease,color 160ms ease;
+  }
+  .edge-toggle:hover{background:var(--hover);color:var(--t1)}
+  .header-content{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:0 8px;overflow:hidden}
+  .pill{flex:none;display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;
+    border:1px solid var(--hair);border-radius:999px;font-size:12px;color:var(--t2)}
+  .pill .dot{width:6px;height:6px;border-radius:50%}
+  .spacer{flex:1}
+
+  .seg-right{
+    flex:none;width:var(--right);display:flex;align-items:stretch;
+    border-left:1px solid var(--hair);
+    transition:width 260ms cubic-bezier(.22,.88,.24,1), opacity 200ms ease;
+    overflow:hidden;
+  }
+  .window.no-right .seg-right{width:0;border-left-width:0;opacity:0}
+  .tab{flex:1;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:500;color:var(--t3);border-bottom:2px solid transparent;white-space:nowrap}
+  .tab:hover{color:var(--t2)}
+  .tab.on{color:var(--t1);border-bottom-color:var(--accent)}
+
+  .seg-wco{flex:none;width:138px;display:flex;align-items:center;justify-content:flex-end;
+    border-left:1px dashed var(--hair-soft)}
+  .wco-btn{width:46px;height:100%;display:grid;place-items:center;color:var(--t3);font-size:13px}
+  .wco-btn:hover{background:var(--hover);color:var(--t1)}
+  .wco-btn.close:hover{background:#c42b1c;color:#fff}
+
+  /* ── THE ENVIRONMENT ROW: the canvas owns it; panels sit on top ── */
+  .row{flex:1;min-height:0;display:flex;
+    background:linear-gradient(180deg,var(--canvas-top) 0%,var(--canvas-bot) 100%)}
+  .panel{
+    flex:none;background:var(--base);overflow:hidden;
+    transition:width 260ms cubic-bezier(.22,.88,.24,1), opacity 200ms ease;
+  }
+  .panel.left{width:var(--sidebar);border-right:1px solid var(--hair)}
+  .panel.right{width:var(--right);border-left:1px solid var(--hair)}
+  .window.no-left .panel.left{width:0;border-right-width:0;opacity:0}
+  .window.no-right .panel.right{width:0;border-left-width:0;opacity:0}
+  .panel-inner{width:var(--sidebar);padding:14px}
+  .panel.right .panel-inner{width:var(--right)}
+
+  .whisper{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);
+    padding:6px 6px 4px}
+  .rowitem{display:flex;align-items:center;gap:9px;height:30px;padding:0 8px;border-radius:8px;font-size:12.5px;color:var(--t2)}
+  .rowitem:hover{background:var(--hover);color:var(--t1)}
+  .rowitem .dot{width:6px;height:6px;border-radius:50%;flex:none}
+  .rowitem em{margin-left:auto;font-style:normal;font-size:11px;color:var(--t3)}
+
+  .card{border:1px solid var(--hair);border-radius:14px;background:var(--card);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03);padding:12px 14px;margin-bottom:10px}
+  .card h4{font-size:13px;font-weight:600;margin-bottom:6px}
+  .card p{font-size:12px;color:var(--t2);line-height:1.5}
+
+  /* center chat sits directly on the environment */
+  .chat{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:26px}
+  .greet{margin:auto;text-align:center}
+  .greet h1{font-size:26px;font-weight:600;letter-spacing:-.02em}
+  .greet h1 span{color:var(--t3);font-weight:400}
+  .greet p{margin-top:6px;font-size:13px;color:var(--t3)}
+  .composer{width:min(680px,100%);border:1px solid var(--hair);border-radius:16px;
+    background:var(--card);box-shadow:inset 0 1px 0 rgba(255,255,255,.03);padding:14px 16px}
+  .composer .ph{font-size:14px;color:var(--t3)}
+  .composer .ctr{display:flex;align-items:center;gap:8px;margin-top:12px}
+  .chip{height:26px;padding:0 10px;border:1px solid var(--hair);border-radius:8px;
+    font-size:11.5px;color:var(--t3);display:flex;align-items:center}
+  .send{margin-left:auto;width:30px;height:30px;border-radius:9px;background:var(--accent);
+    display:grid;place-items:center;color:#0c0e12;font-weight:600}
+
+  /* explainer footnote */
+  .note{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);
+    font-size:11px;color:var(--t3);white-space:nowrap}
+  .note b{color:var(--t2);font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="window" id="win">
+
+  <!-- ═══ THE UNIFIED BAND — one row, chrome tier, single hairline below ═══ -->
+  <div class="band">
+    <!-- segment: sidebar (identity only — no buttons in panels) -->
+    <div class="seg-left">
+      <div class="face"></div>
+      <div class="brand"><b>LucaOS</b><small>on Windows · present</small></div>
+    </div>
+
+    <!-- segment: header — panel toggles live at ITS edges -->
+    <div class="seg-header">
+      <button class="edge-toggle" id="tgl" title="Toggle sidebar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9.5 4v16"/></svg>
+      </button>
+      <div class="header-content">
+        <span class="pill"><span class="dot" style="background:var(--ok)"></span>1,000 · Prime</span>
+        <span class="pill"><span class="dot" style="background:var(--warn)"></span>Local · quiet</span>
+        <span class="spacer"></span>
+        <span class="pill">Vision</span>
+        <span class="pill">Wake word</span>
+      </div>
+      <button class="edge-toggle" id="tgr" title="Toggle panel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M14.5 4v16"/></svg>
+      </button>
+    </div>
+
+    <!-- segment: right-panel tabs -->
+    <div class="seg-right">
+      <button class="tab on">Now</button>
+      <button class="tab">Timeline</button>
+      <button class="tab">Memory</button>
+      <button class="tab">Logs</button>
+    </div>
+
+    <!-- window controls: the band's far right is theirs, every layout -->
+    <div class="seg-wco" title="OS window controls (reserved zone)">
+      <span class="wco-btn">─</span><span class="wco-btn">□</span><span class="wco-btn close">✕</span>
+    </div>
+  </div>
+
+  <!-- ═══ THE ENVIRONMENT ROW — the canvas owns it; panels sit ON it ═══ -->
+  <div class="row">
+
+    <div class="panel left">
+      <div class="panel-inner">
+        <div class="whisper">Sessions</div>
+        <div class="rowitem"><span class="dot" style="background:var(--ok)"></span>Inbox triage<em>auto</em></div>
+        <div class="rowitem"><span class="dot" style="background:var(--warn)"></span>Q3 forecast<em>needs you</em></div>
+        <div class="rowitem"><span class="dot" style="background:rgba(255,255,255,.22)"></span>Landing copy<em>paused</em></div>
+        <div class="whisper" style="margin-top:12px">Spaces</div>
+        <div class="rowitem">Agents</div>
+        <div class="rowitem">Tools</div>
+        <div class="rowitem">Memory</div>
+        <div class="rowitem">Devices</div>
+        <div class="rowitem">Connections</div>
+      </div>
+    </div>
+
+    <div class="chat">
+      <div class="greet">
+        <h1>Good evening<span> · I'm here</span></h1>
+        <p>The canvas is the environment — collapse both panels and it runs edge to edge.</p>
+      </div>
+      <div class="composer">
+        <div class="ph">Message Luca…</div>
+        <div class="ctr">
+          <span class="chip">Auto</span><span class="chip">Plan</span><span class="chip">Agent</span>
+          <span class="send">↑</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel right">
+      <div class="panel-inner">
+        <div class="card"><h4><span style="color:var(--ok)">●</span> Luca is ready</h4>
+          <p>Runtime healthy · chat mode</p></div>
+        <div class="card"><h4>Right now</h4>
+          <p><span style="color:var(--ok)">●</span> Inbox triage — working</p></div>
+        <div class="card"><h4>Needs you <span style="color:var(--warn);float:right">1</span></h4>
+          <p>Send the Q3 summary to Dana<br/><span style="opacity:.7">Nothing runs until you decide.</span></p></div>
+        <div class="card"><h4>Body</h4>
+          <p>This PC — Windows · active<br/>Pixel 7 — mobile · 82% · active</p></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note">
+  Click the <b>⧉ toggles at the header edges</b> — panels vanish to pure canvas.
+  The dashed line marks the <b>reserved window-controls zone</b>. One band, one hairline, two surface tiers.
+</div>
+
+<script>
+  const win = document.getElementById("win");
+  document.getElementById("tgl").onclick = () => win.classList.toggle("no-left");
+  document.getElementById("tgr").onclick = () => win.classList.toggle("no-right");
+</script>
+</body>
+</html>
