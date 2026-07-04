@@ -177,6 +177,17 @@ class MissionControl {
     return context;
   }
 
+  // Structured read of the active mission + its goals (for the renderer's
+  // Personal Intelligence mission surface). getActiveMissionContext() returns a
+  // formatted string for the LLM; this returns the raw rows so the UI can shape
+  // them itself. Read-only.
+  getActiveMissionStructured() {
+    const mission = this.db.prepare("SELECT * FROM missions WHERE status = 'ACTIVE' ORDER BY updated_at DESC LIMIT 1").get();
+    if (!mission) return null;
+    const goals = this.db.prepare("SELECT * FROM goals WHERE mission_id = ? ORDER BY id ASC").all(mission.id);
+    return { mission, goals };
+  }
+
   archiveMission(missionId) {
     this.db.prepare("UPDATE missions SET status = 'ARCHIVED', updated_at = ? WHERE id = ?").run(Date.now(), missionId);
   }

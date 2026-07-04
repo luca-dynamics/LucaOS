@@ -57,6 +57,7 @@ expose('luca', {
         addGoal: (missionId, description, dependencyId) => ipcRenderer.invoke('mission-add-goal', missionId, description, dependencyId),
         updateGoal: (goalId, status) => ipcRenderer.invoke('mission-update-goal', goalId, status),
         getContext: () => ipcRenderer.invoke('mission-get-context'),
+        getActive: () => ipcRenderer.invoke('mission-get-active'),
         archive: (missionId) => ipcRenderer.invoke('mission-archive', missionId)
     }
 });

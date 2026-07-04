@@ -56,6 +56,7 @@ interface LucaDesktopBridge {
     ): Promise<number>;
     updateGoal(goalId: number, status: string): Promise<void>;
     getContext(): Promise<string>;
+    getActive(): Promise<unknown>;
     archive(missionId: number): Promise<void>;
   };
   applySystemSettings(settings: any): void;
