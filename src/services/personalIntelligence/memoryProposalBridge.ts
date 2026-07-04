@@ -36,13 +36,51 @@ const KIND_MAP: Record<MemoryProposalKind, MemoryItemInput["kind"]> = {
   other: "learning",
 };
 
+/** Every reviewable proposal, most recent first. */
+export function listReviewableMemoryProposalRecords(
+  records: readonly MemoryProposalRecord[],
+): MemoryProposalRecord[] {
+  return records
+    .filter((record) => REVIEWABLE_STATUSES.has(record.status))
+    .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+}
+
 /** The most recent proposal the user could actually review, if any. */
 export function selectReviewableMemoryProposal(
   records: readonly MemoryProposalRecord[],
 ): MemoryProposalRecord | undefined {
-  return records
-    .filter((record) => REVIEWABLE_STATUSES.has(record.status))
-    .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0];
+  return listReviewableMemoryProposalRecords(records)[0];
+}
+
+/** A light queue item for the pilot's selector (no governed bundle built yet). */
+export interface MemoryApprovalQueueItem {
+  proposalId: string;
+  title: string;
+  kind: MemoryProposalKind;
+  updatedAt: string;
+}
+
+export function listReviewableMemoryProposals(
+  records: readonly MemoryProposalRecord[],
+): MemoryApprovalQueueItem[] {
+  return listReviewableMemoryProposalRecords(records).map((record) => ({
+    proposalId: record.proposalId,
+    title: record.title,
+    kind: record.kind,
+    updatedAt: record.updatedAt,
+  }));
+}
+
+/** Build the governed bundle for a specific reviewable proposal id, or null. */
+export function buildBundleFromProposalId(
+  records: readonly MemoryProposalRecord[],
+  proposalId: string,
+  now: () => Date = () => new Date(),
+): MemoryApprovalProposalBundle | null {
+  const record = listReviewableMemoryProposalRecords(records).find(
+    (candidate) => candidate.proposalId === proposalId,
+  );
+  return record ? buildBundleFromMemoryProposal(record, now) : null;
 }
 
 function clampConfidence(value: number): number {

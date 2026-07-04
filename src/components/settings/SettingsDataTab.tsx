@@ -2,7 +2,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "../ui/Icon";
 import { memoryService } from "../../services/memoryService";
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
-import { buildBundleFromPendingProposals } from "../../services/personalIntelligence/memoryProposalBridge";
+import {
+  buildBundleFromPendingProposals,
+  buildBundleFromProposalId,
+  listReviewableMemoryProposals,
+} from "../../services/personalIntelligence/memoryProposalBridge";
 import { summarizeStoredMemoryApprovalAudit } from "../../services/personalIntelligence/memoryApprovalAuditStore";
 import { MemoryNode } from "../../types";
 import { cortexUrl } from "../../config/api";
@@ -50,19 +54,28 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
 
-  // Feed the governed write pilot a REAL pending memory from the live proposal
-  // queue when one is reviewable; otherwise the pilot falls back to its sample
-  // so the surface still explains itself. Read once when the tab opens.
-  const buildLiveProposalBundle = useMemo(() => {
-    let bundle = null;
+  // Feed the governed write pilot the REAL reviewable queue from the live
+  // proposal service (read once when the tab opens). The pilot shows a selector
+  // when more than one is waiting, and falls back to its sample when the queue
+  // is empty so the surface still explains itself.
+  const pilotQueue = useMemo(() => {
     try {
-      bundle = buildBundleFromPendingProposals(
-        memoryProposalService.listProposals(),
-      );
+      const records = memoryProposalService.listProposals();
+      const pending = listReviewableMemoryProposals(records);
+      const fallback = buildBundleFromPendingProposals(records);
+      return {
+        pendingProposals: pending,
+        buildBundleForProposal: (id: string) =>
+          buildBundleFromProposalId(records, id),
+        buildProposalBundle: fallback ? () => fallback : undefined,
+      };
     } catch {
-      bundle = null;
+      return {
+        pendingProposals: [],
+        buildBundleForProposal: undefined,
+        buildProposalBundle: undefined,
+      };
     }
-    return bundle ? () => bundle : undefined;
   }, []);
 
   // The durable governed-write audit trail (persisted across sessions), read
@@ -196,7 +209,9 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
       >
         <PersonalIntelligencePersistencePreview />
         <PersonalIntelligenceMemoryApprovalPilot
-          buildProposalBundle={buildLiveProposalBundle}
+          pendingProposals={pilotQueue.pendingProposals}
+          buildBundleForProposal={pilotQueue.buildBundleForProposal}
+          buildProposalBundle={pilotQueue.buildProposalBundle}
           initialAuditSummary={initialAuditSummary}
         />
         <PersonalIntelligenceRuntimeTracePanel />
