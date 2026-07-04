@@ -27,6 +27,10 @@ export type LucaSkinMaterialVariableName =
 export type LucaSkinMaterialVariableMap = Record<LucaSkinMaterialVariableName, string>;
 
 export interface LucaSkinMaterialBridgeOptions {
+  /** User-chosen glass opacity (0..1) — overrides the skin default. */
+  userMaterialOpacity?: number;
+  /** User-chosen material blur in px — overrides the skin default. */
+  userMaterialBlurPx?: number;
   skinId?: unknown;
   hostKind?: LucaSkinHostKind;
   reducedMotion?: boolean;
@@ -63,8 +67,18 @@ export function getLucaSkinMaterialVariables(
     "--luca-text-tertiary": skinVariables["--luca-skin-text-tertiary"],
     "--luca-accent-primary": skinVariables["--luca-skin-accent-primary"],
     "--luca-accent-soft": skinVariables["--luca-skin-accent-secondary"],
-    "--luca-material-opacity": skinVariables["--luca-skin-glass-opacity"],
-    "--luca-material-blur": skinVariables["--luca-skin-glass-blur"],
+    // User-chosen material values (Settings -> Appearance) override the
+    // skin defaults — this is what lets the sliders act on the WHOLE app:
+    // boundaries apply these inline, which would otherwise shadow any
+    // :root-level live writes.
+    "--luca-material-opacity":
+      options.userMaterialOpacity !== undefined
+        ? String(options.userMaterialOpacity)
+        : skinVariables["--luca-skin-glass-opacity"],
+    "--luca-material-blur":
+      options.userMaterialBlurPx !== undefined
+        ? `${options.userMaterialBlurPx}px`
+        : skinVariables["--luca-skin-glass-blur"],
     "--luca-material-border-strength": skinVariables["--luca-skin-border-strength"],
     "--luca-material-shadow": skinVariables["--luca-skin-shadow-float"],
     "--luca-shadow-soft": skinVariables["--luca-skin-shadow-soft"],

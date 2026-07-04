@@ -147,6 +147,11 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                 onChange={(e) => {
                   const val = parseInt(e.target.value) / 100;
                   onUpdate("general", "backgroundOpacity", val);
+                  window.dispatchEvent(
+                    new CustomEvent("luca:material-preview", {
+                      detail: { opacity: val },
+                    }),
+                  );
                   document.documentElement.style.setProperty(
                     "--app-bg-opacity",
                     val.toString(),
@@ -185,6 +190,11 @@ export const SettingsAppearanceTab: React.FC<SettingsAppearanceTabProps> = ({
                 onChange={(e) => {
                   const val = parseInt(e.target.value);
                   onUpdate("general", "backgroundBlur", val);
+                  window.dispatchEvent(
+                    new CustomEvent("luca:material-preview", {
+                      detail: { blur: val },
+                    }),
+                  );
                   document.documentElement.style.setProperty(
                     "--app-bg-blur",
                     `${val}px`,

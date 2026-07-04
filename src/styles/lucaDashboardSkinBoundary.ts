@@ -6,6 +6,9 @@ export interface LucaDashboardSkinBoundaryOptions {
   hostKind?: LucaSkinHostKind;
   reducedMotion?: boolean;
   reducedTransparency?: boolean;
+  /** User material settings (Settings -> Appearance); override skin defaults. */
+  userMaterialOpacity?: number;
+  userMaterialBlurPx?: number;
 }
 
 export interface LucaDashboardSkinBoundaryState {
@@ -31,6 +34,8 @@ export function resolveLucaDashboardSkinBoundary(
     skinId,
     materialVariables: getLucaSkinMaterialVariables({
       skinId,
+      userMaterialOpacity: options.userMaterialOpacity,
+      userMaterialBlurPx: options.userMaterialBlurPx,
       hostKind: options.hostKind ?? "desktop-web",
       reducedMotion: options.reducedMotion,
       reducedTransparency: options.reducedTransparency,

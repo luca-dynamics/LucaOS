@@ -509,6 +509,19 @@ function AppContent() {
   const lucaLinkBodyDevices = useLucaLinkDevices();
   const [backgroundOpacity, setBackgroundOpacity] = useState<number>(0.3);
   const [backgroundBlur, setBackgroundBlur] = useState<number>(40);
+  // Live material preview: the Appearance sliders broadcast while dragging;
+  // the boundary recomputes and the WHOLE app follows. Cancel/close restores
+  // persisted values via the same event.
+  useEffect(() => {
+    const onPreview = (event: Event) => {
+      const detail = (event as CustomEvent<{ opacity?: number; blur?: number }>)
+        .detail;
+      if (typeof detail?.opacity === "number") setBackgroundOpacity(detail.opacity);
+      if (typeof detail?.blur === "number") setBackgroundBlur(detail.blur);
+    };
+    window.addEventListener("luca:material-preview", onPreview);
+    return () => window.removeEventListener("luca:material-preview", onPreview);
+  }, []);
 
   // Watch Settings changes outside of voice subsystem to guarantee UI renders
   useEffect(() => {
@@ -2505,8 +2518,12 @@ function AppContent() {
         hostKind: "desktop-web",
         reducedMotion: false,
         reducedTransparency: false,
+        // User material (Settings -> Appearance) — live, so the sliders act
+        // on the whole app, not just behind the Settings modal.
+        userMaterialOpacity: backgroundOpacity,
+        userMaterialBlurPx: backgroundBlur,
       }),
-    [selectedSkinId],
+    [selectedSkinId, backgroundOpacity, backgroundBlur],
   );
 
   const mobileSkinBoundary = useMemo(
