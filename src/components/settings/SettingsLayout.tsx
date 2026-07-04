@@ -38,7 +38,7 @@ export const SettingsSection: React.FC<
     <div className="flex items-start gap-3">
       {icon && (
         <div
-          className="mt-0.5 rounded-xl p-2"
+          className="luca-settings-section-icon mt-0.5 rounded-xl p-2"
           style={{
             backgroundColor: settingsSurfaceTokens.accentSoft,
             color: accentColor ?? settingsSurfaceTokens.accentPrimary,
@@ -196,7 +196,7 @@ export const SettingsToggle: React.FC<{
     style={{
       backgroundColor: checked
         ? (accentColor ?? settingsSurfaceTokens.accentPrimary)
-        : settingsSurfaceTokens.borderSubtle,
+        : settingsSurfaceTokens.borderStrong,
     }}
   >
     <span

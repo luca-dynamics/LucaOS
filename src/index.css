@@ -542,6 +542,25 @@ a,
 .luca-window-drag :is(button, a, input, select, textarea, [role="button"]) {
   -webkit-app-region: no-drag;
 }
+/* Light-skin contrast pass (Settings surface). Dark skins are untouched —
+ * these rules only apply under .luca-skin-light (set by SettingsModal from
+ * the skin's modeAffinity). Light skins carry DARK accents, so filled
+ * surfaces take white ink; the nav rail gets one honest step of depth. */
+.luca-skin-light .luca-settings-section-icon {
+  background-color: var(--luca-accent-primary) !important;
+  color: #ffffff !important;
+}
+.luca-skin-light .luca-settings-save {
+  color: #ffffff !important;
+}
+.luca-skin-light .luca-settings-nav {
+  background-color: color-mix(
+    in srgb,
+    var(--luca-text-primary, #17202a) 5%,
+    var(--luca-background-base, #f4f5f7)
+  ) !important;
+}
+
 /* Unified top band (Claude structure): the header embeds as the band's
  * center segment — its own bottom border would double the band's hairline,
  * so it is stripped and the segment fills the band height. */
