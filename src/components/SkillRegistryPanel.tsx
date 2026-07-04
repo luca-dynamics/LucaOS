@@ -11,6 +11,8 @@ import {
 import { createPersonalIntelligenceSkillSandboxPlan } from "../personal-intelligence/skillSandbox";
 import { createPersonalIntelligenceSkillDryRunSimulation } from "../personal-intelligence/skillDryRun";
 import { createPersonalIntelligenceRuntimeCapabilityRegistry } from "../personal-intelligence/runtimeAuthority";
+import { skillRegistryService } from "../services/skills/SkillRegistryService";
+import { buildSkillRegistryEntriesFromLive } from "../services/personalIntelligence/skillRegistryBridge";
 import { SkillSandboxPlanPanel } from "./SkillSandboxPlanPanel";
 import { SkillPermissionGrantPanel } from "./SkillPermissionGrantPanel";
 import { SkillDryRunPanel } from "./SkillDryRunPanel";
@@ -141,7 +143,21 @@ function SkillManifestDetail({ entry }: { entry: PersonalIntelligenceSkillRegist
 }
 
 export const SkillRegistryPanel: React.FC<SkillRegistryPanelProps> = ({ accent }) => {
-  const registry = useMemo(() => createSkillRegistry(personalIntelligenceSkillRegistryFixtures), []);
+  // Reflect the REAL registered skills (the same live registry the ControlPanel
+  // uses); fall back to the illustrative fixtures only when nothing is
+  // registered, so the surface still explains itself. Inspection-only either
+  // way — the bridge never grants execution.
+  const registry = useMemo(() => {
+    try {
+      const live = buildSkillRegistryEntriesFromLive(
+        skillRegistryService.listSkills(),
+      );
+      if (live.length > 0) return live;
+    } catch {
+      /* fall back to fixtures below */
+    }
+    return createSkillRegistry(personalIntelligenceSkillRegistryFixtures);
+  }, []);
   const summary = useMemo(() => summarizeSkillRegistry(registry), [registry]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
@@ -162,7 +178,7 @@ export const SkillRegistryPanel: React.FC<SkillRegistryPanelProps> = ({ accent }
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: accent }}>Personal Intelligence</p>
             <h2 className="mt-1 text-xl font-bold text-white">Skill Registry</h2>
-            <p className="mt-1 text-xs text-slate-400">Manifest loading only — execution disabled.</p>
+            <p className="mt-1 text-xs text-slate-400">Live registry — inspection only, execution disabled.</p>
           </div>
           <div className="grid grid-cols-5 gap-2 text-center text-[10px]">
             {[
@@ -176,7 +192,7 @@ export const SkillRegistryPanel: React.FC<SkillRegistryPanelProps> = ({ accent }
           </div>
         </div>
         <div className="mt-4 rounded-lg border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]/[0.06] px-3 py-2 text-xs leading-5 text-[var(--luca-warning,#f2b23e)]">
-          Skills cannot run, call tools, call models, write memory, access files, use network, or trigger LucaLink in this PR.
+          These are your real registered skills, shown for inspection only. From here they cannot run, call tools, call models, write memory, access files, use network, or trigger LucaLink.
         </div>
       </header>
 
