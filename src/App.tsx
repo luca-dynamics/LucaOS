@@ -143,6 +143,7 @@ import {
   lucaShellActiveTabStyle,
   lucaShellClassNames,
   lucaShellControlStyle,
+  lucaShellHeaderGhostControlStyle,
   lucaShellDividerStyle,
   lucaShellMutedTextStyle,
   lucaShellPanelSurfaceStyle,
@@ -2858,8 +2859,11 @@ function AppContent() {
               sheets docked BELOW it and never touch it. ── */}
           {!isMobile && (
             <div
-              className="luca-window-drag luca-wco-pad-right flex flex-none h-14 items-stretch border-b"
-              style={{ ...lucaShellWorkspaceSurfaceStyle, ...lucaShellDividerStyle }}
+              className="luca-window-drag luca-wco-pad-right flex flex-none h-14 items-stretch"
+              style={{
+                background: "var(--luca-background-elevated, var(--app-bg-main, #1b2025))",
+                color: "var(--luca-text-primary, var(--app-text-main))",
+              }}
             >
               <div className="flex-1 min-w-0 flex items-stretch">
                 <div className="flex items-center gap-1 pl-2">
@@ -2879,7 +2883,7 @@ function AppContent() {
                     title={leftToggleIcon(leftPanelCollapsed).label}
                     onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
                     className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                    style={lucaShellControlStyle}
+                    style={lucaShellHeaderGhostControlStyle}
                   >
                     <Icon name={leftToggleIcon(leftPanelCollapsed).name} size={16} />
                   </button>
@@ -2925,7 +2929,7 @@ function AppContent() {
                     title={rightToggleIcon(rightPanelCollapsed).label}
                     onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
                     className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                    style={lucaShellControlStyle}
+                    style={lucaShellHeaderGhostControlStyle}
                   >
                     <Icon name={rightToggleIcon(rightPanelCollapsed).name} size={16} />
                   </button>

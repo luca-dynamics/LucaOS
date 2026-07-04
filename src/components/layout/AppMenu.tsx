@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Icon } from "../ui/Icon";
 import {
   lucaShellClassNames,
-  lucaShellControlStyle,
+  lucaShellHeaderGhostControlStyle,
 } from "../../styles/lucaShellStyles";
 
 /**
@@ -139,7 +139,7 @@ export const AppMenu: React.FC<AppMenuProps> = ({
           setSection(null);
         }}
         className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-        style={lucaShellControlStyle}
+        style={lucaShellHeaderGhostControlStyle}
       >
         <Icon name="HamburgerMenu" size={16} />
       </button>

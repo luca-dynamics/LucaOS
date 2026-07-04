@@ -566,9 +566,9 @@ function createWindow() {
         // segment · controls) — html.luca-wco reserves their zone.
         titleBarStyle: 'hidden',
         titleBarOverlay: {
-            color: '#111417',       // Carbon base — the band's chrome tier
-            symbolColor: '#9aa4b2', // muted glyphs, hover handled by the OS
-            height: 55              // the h-14 band (56px) minus its 1px hairline
+            color: '#1b2025',       // Carbon ELEVATED — the header's environment surface, so the control cluster is invisible at rest
+            symbolColor: '#9aa4b2', // muted glyphs, sized/hover by the OS (close hover stays OS red)
+            height: 56              // full header height — no seam line under the controls
         },
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {
