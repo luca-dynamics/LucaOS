@@ -8,6 +8,20 @@ export interface SessionsRailRow {
   /** Short lowercase status word, e.g. "auto", "needs you", "paused". */
   sub: string;
   tone: SessionsRailTone;
+  /** ISO timestamp of the last update — the rail buckets Today / Earlier. */
+  updatedAt: string;
+}
+
+/** Bucket a row by recency for the rail's "Today / Earlier" whispers. */
+export function bucketSessionRow(
+  updatedAt: string,
+  now: number = Date.now(),
+): "today" | "earlier" {
+  const then = new Date(updatedAt).getTime();
+  if (!Number.isFinite(then)) return "earlier";
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  return then >= startOfToday.getTime() ? "today" : "earlier";
 }
 
 const HIDDEN_LIFECYCLE_STATES = new Set([
@@ -40,6 +54,7 @@ export function buildSessionsRailRows(
           title: record.title,
           sub: "needs you",
           tone: "warn" as const,
+          updatedAt: record.updatedAt,
         };
       }
       if (record.lifecycleState === "active") {
@@ -48,6 +63,7 @@ export function buildSessionsRailRows(
           title: record.title,
           sub: record.pendingActions.length > 0 ? "auto" : "active",
           tone: "ok" as const,
+          updatedAt: record.updatedAt,
         };
       }
       return {
@@ -55,6 +71,7 @@ export function buildSessionsRailRows(
         title: record.title,
         sub: record.lifecycleState === "resumable" ? "resumable" : "paused",
         tone: "idle" as const,
+        updatedAt: record.updatedAt,
       };
     });
 }

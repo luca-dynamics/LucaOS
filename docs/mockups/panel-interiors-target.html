@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Panel Interiors Target (the panels' furniture, calm)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#1b2025; --chrome:#111417; --base:#101317;
+    --hair:rgba(255,255,255,.07); --hair-soft:rgba(255,255,255,.045);
+    --hover:rgba(255,255,255,.06);
+    --t1:#e9edf2; --t2:#9aa4b2; --t3:#69737f;
+    --accent:#7aa2ff; --ink:#0c0e12; --ok:#4fbf7a; --warn:#e0b15a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:#0a0c0e;color:var(--t1);
+    font:400 13px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;letter-spacing:-.008em;font-variant-numeric:tabular-nums;
+    display:flex;flex-direction:column;align-items:center;gap:30px;padding:34px 20px 50px}
+  button{font:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+  .caption{width:min(1100px,100%);font-size:11px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--t3);margin-bottom:-18px}
+  .row3{width:min(1100px,100%);display:grid;grid-template-columns:320px 1fr 1fr;gap:16px;align-items:start}
+  .panel{border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:
+    linear-gradient(rgba(255,255,255,.02),rgba(255,255,255,.02)),var(--base);
+    box-shadow:0 20px 55px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.03)}
+  .panel .tag{padding:10px 14px 0;font-size:10px;font-weight:600;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--t3);opacity:.7}
+
+  /* the ONLY section voice: a lowercase whisper, not a shout */
+  .whisper{padding:16px 14px 6px;font-size:11px;color:var(--t3)}
+  .rowi{display:flex;align-items:center;gap:9px;width:calc(100% - 12px);margin:0 6px;
+    padding:7px 8px;border-radius:9px;color:var(--t2);font-size:12.5px}
+  .rowi:hover{background:var(--hover);color:var(--t1)}
+  .rowi .dot{width:6px;height:6px;border-radius:50%;flex:none;background:rgba(255,255,255,.18)}
+  .rowi .dot.on{background:var(--ok);animation:breath 3.2s ease-in-out infinite}
+  .rowi .dot.warn{background:var(--warn);animation:breath 2.4s ease-in-out infinite}
+  .rowi .when{margin-left:auto;font-size:10.5px;color:var(--t3);flex:none}
+  .rowi.active{background:var(--hover);color:var(--t1)}
+  .rowi b{font-weight:500}
+  @keyframes breath{0%,100%{opacity:.55}50%{opacity:1}}
+  .ghostbtn{display:flex;align-items:center;gap:8px;width:calc(100% - 12px);margin:8px 6px 0;
+    padding:8px;border:1px solid var(--hair);border-radius:10px;color:var(--t2);font-size:12.5px}
+  .ghostbtn:hover{background:var(--hover);color:var(--t1)}
+  .foot{padding:12px 14px;font-size:10.5px;color:var(--t3);opacity:.8;border-top:1px solid var(--hair-soft);margin-top:10px}
+  .more{padding:4px 14px 12px;font-size:11.5px;color:var(--t3)}
+  .more:hover{color:var(--t1)}
+
+  /* right panel tabs */
+  .tabs{display:flex;border-bottom:1px solid var(--hair-soft)}
+  .tabs button{flex:1;padding:11px 0;text-align:center;font-size:12.5px;color:var(--t3);position:relative}
+  .tabs button.on{color:var(--t1)}
+  .tabs button.on::after{content:"";position:absolute;left:22%;right:22%;bottom:-1px;height:2px;
+    border-radius:2px;background:var(--accent)}
+
+  /* cards inside the right panel */
+  .card{margin:10px 12px 0;border:1px solid var(--hair);border-radius:12px;padding:11px 12px;
+    background:var(--chrome);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+  .card .head{display:flex;align-items:center;gap:8px}
+  .card .head .sdot{width:7px;height:7px;border-radius:50%;flex:none}
+  .card .head b{font-size:12.5px;font-weight:600}
+  .card .head .role{margin-left:auto;font-size:10.5px;color:var(--t3)}
+  .card p{margin-top:5px;font-size:12px;color:var(--t2);line-height:1.5}
+  .card .acts{margin-top:9px;display:flex;gap:8px;align-items:center}
+  .card .primary{height:26px;padding:0 12px;border-radius:8px;background:var(--accent);
+    color:var(--ink);font-size:11.5px;font-weight:600}
+  .card .quietact{height:26px;padding:0 10px;border-radius:8px;border:1px solid var(--hair);
+    color:var(--t2);font-size:11.5px}
+  .card .quietact:hover{background:var(--hover);color:var(--t1)}
+  .card .trust{margin-top:7px;font-size:10.5px;color:var(--t3);opacity:.85}
+  .card.needs{border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+  .card.dim{opacity:.62}
+
+  /* timeline */
+  .tl{margin:6px 12px 0;padding:6px 2px;display:flex;gap:10px;align-items:flex-start}
+  .tl .tdot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.18);flex:none;margin-top:6px}
+  .tl .tdot.ok{background:var(--ok)}
+  .tl .tdot.warn{background:var(--warn)}
+  .tl p{font-size:12px;color:var(--t2);line-height:1.45}
+  .tl .when{font-size:10.5px;color:var(--t3)}
+
+  .note{width:min(1100px,100%);font-size:12px;color:var(--t3);line-height:1.65}
+  .note b{color:var(--t2);font-weight:500}
+  .empty{padding:26px 14px;text-align:center;font-size:12.5px;color:var(--t3)}
+</style>
+</head>
+<body>
+
+  <div class="caption">Panel interiors — sessions &amp; tools (left) · Now / Timeline / Memory (right), one quiet language</div>
+  <div class="row3">
+
+    <!-- ═══ LEFT PANEL ═══ -->
+    <div class="panel">
+      <div class="tag">Left panel</div>
+
+      <button class="ghostbtn">＋ &nbsp;New session</button>
+
+      <div class="whisper">Today</div>
+      <button class="rowi active"><span class="dot on"></span><b>Q3 investor update</b><span class="when">now</span></button>
+      <button class="rowi"><span class="dot"></span>Fixing the deploy script<span class="when">2h</span></button>
+
+      <div class="whisper">Earlier</div>
+      <button class="rowi"><span class="dot"></span>Trip planning — Abuja<span class="when">Mon</span></button>
+      <button class="rowi"><span class="dot"></span>Portfolio site copy<span class="when">Jun 28</span></button>
+
+      <div class="whisper">Tools</div>
+      <button class="rowi"><span class="dot on"></span>Code editor<span class="when">running</span></button>
+      <button class="rowi"><span class="dot"></span>Screen recorder</button>
+      <button class="rowi"><span class="dot"></span>Markets</button>
+      <button class="more">All tools…</button>
+
+      <div class="foot">On device · everything asks before it runs</div>
+    </div>
+
+    <!-- ═══ RIGHT PANEL · NOW ═══ -->
+    <div class="panel">
+      <div class="tag">Right panel · Now</div>
+      <div class="tabs">
+        <button class="on">Now</button><button>Timeline</button><button>Memory</button>
+      </div>
+
+      <div class="card">
+        <div class="head"><span class="sdot" style="background:var(--ok);animation:breath 3.2s ease-in-out infinite"></span><b>Writing agent</b><span class="role">drafting</span></div>
+        <p>Drafting the investor summary — section 2 of 4</p>
+      </div>
+
+      <div class="card needs">
+        <div class="head"><span class="sdot" style="background:var(--warn);animation:breath 2.4s ease-in-out infinite"></span><b>Mail agent</b><span class="role">waiting</span></div>
+        <p>Ready to send the draft to Dana for review</p>
+        <div class="acts"><button class="primary">Review</button><button class="quietact">Not now</button></div>
+        <div class="trust">Nothing runs until you decide.</div>
+      </div>
+
+      <div class="card dim">
+        <div class="head"><span class="sdot" style="background:rgba(255,255,255,.22)"></span><b>Files agent</b><span class="role">done</span></div>
+        <p>Collected last quarter's deck and templates</p>
+      </div>
+
+      <div class="empty" style="border-top:1px solid var(--hair-soft);margin-top:14px">
+        When nothing runs: “Nothing running — Luca is standing by.”
+      </div>
+    </div>
+
+    <!-- ═══ RIGHT PANEL · MEMORY ═══ -->
+    <div class="panel">
+      <div class="tag">Right panel · Memory</div>
+      <div class="tabs">
+        <button>Now</button><button>Timeline</button><button class="on">Memory</button>
+      </div>
+
+      <div class="whisper" style="padding-top:14px">What I remember about this work</div>
+
+      <div class="card">
+        <div class="head"><b>You prefer full review notes</b></div>
+        <p>Saved June 30, from the project review session.</p>
+        <div class="acts"><button class="quietact">Correct</button><button class="quietact">Forget</button></div>
+      </div>
+
+      <div class="card">
+        <div class="head"><b>Dana reviews investor drafts</b></div>
+        <p>Learned from three sessions this quarter.</p>
+        <div class="acts"><button class="quietact">Correct</button><button class="quietact">Forget</button></div>
+      </div>
+
+      <div class="whisper">Timeline (the Timeline tab, same voice)</div>
+      <div class="tl"><span class="tdot ok"></span><p>Finished collecting the deck files <span class="when">· 2:14 pm</span></p></div>
+      <div class="tl"><span class="tdot warn"></span><p>Asked you before emailing Dana <span class="when">· 2:02 pm</span></p></div>
+      <div class="tl"><span class="tdot"></span><p>You opened the Q3 session <span class="when">· 1:48 pm</span></p></div>
+
+      <div class="foot">Only you can change what I remember.</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>The rules this encodes:</b> panel section labels are lowercase <b>whispers</b> (11px tertiary), never
+    tracked-out uppercase shouts — the old “PERSONAL INTELLIGENCE / PREVIEW ONLY / LOCAL ONLY” scaffold and all
+    fictional placeholder content is gone · the left panel is <b>sessions first</b> (today / earlier, quiet rows,
+    dim timestamps), then a short <b>Tools</b> list where a tone dot only appears when something is actually
+    running — the terminal zoo collapses behind “All tools…” · the right panel keeps its three tabs but speaks
+    one language: <b>Now</b> = the same living session cards as Workforce (green working, amber needs-you with
+    Review + trust line, done dims), <b>Timeline</b> = plain sentences with tone dots and times, <b>Memory</b> =
+    real remembered facts as cards with quiet Correct / Forget actions and one trust line — “Only you can change
+    what I remember.” · every empty state is one calm sentence, never a themed room.
+  </div>
+
+</body>
+</html>

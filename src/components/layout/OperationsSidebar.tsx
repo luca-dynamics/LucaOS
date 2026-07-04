@@ -372,8 +372,10 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
         </div>
       )}
 
-      {/* Basic prioritizes common actions; Pro/Creator retain the operator order. */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-6 no-scrollbar">
+      {/* Basic prioritizes common actions; Pro/Creator retain the operator
+          order. Quiet rows carry their own tight padding, so the rail itself
+          only needs light gutters (panel-interiors-target). */}
+      <div className="flex-1 overflow-y-auto px-1.5 py-2 space-y-3 no-scrollbar">
         {experienceMode === "basic" ? (
           <>
             {quickActionsSection}
@@ -390,6 +392,19 @@ const OperationsSidebar: React.FC<OperationsSidebarProps> = ({
           </>
         )}
       </div>
+
+      {/* The rail's one trust whisper — the same voice as the composer. */}
+      {!isMobile && (
+        <div
+          className="flex-none border-t px-3 py-2.5 text-[10.5px]"
+          style={{
+            borderColor: "var(--luca-border-subtle, var(--app-border-main))",
+            color: "var(--luca-text-tertiary, var(--app-text-muted))",
+          }}
+        >
+          On device · everything asks before it runs
+        </div>
+      )}
     </section>
   );
 };
