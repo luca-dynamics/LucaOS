@@ -566,9 +566,13 @@ function createWindow() {
         // segment · controls) — html.luca-wco reserves their zone.
         titleBarStyle: 'hidden',
         titleBarOverlay: {
-            color: '#1b2025',       // Carbon ELEVATED — the header's environment surface, so the control cluster is invisible at rest
-            symbolColor: '#9aa4b2', // muted glyphs, sized/hover by the OS (close hover stays OS red)
-            height: 56              // full header height — no seam line under the controls
+            // Boot-matching at first paint (the window loads on Carbon base),
+            // then the RENDERER retints the cluster live per surface and skin
+            // via the luca:set-titlebar-overlay IPC below — a static color can
+            // only ever match one surface.
+            color: '#111417',
+            symbolColor: '#69737f',
+            height: 56
         },
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {
@@ -1246,7 +1250,24 @@ app.on('ready', () => {
     // --- IPC HANDLERS ---
     console.log("[MAIN] Registering IPC Handlers...");
 
-    ipcMain.handle('get-local-ip', async () => {
+    // Renderer-driven window-controls tint: the shell knows what surface the
+// cluster sits on (boot base -> header elevated -> per-skin); Windows-only
+// API, guarded.
+ipcMain.on('luca:set-titlebar-overlay', (_event, payload) => {
+    try {
+        if (mainWindow && !mainWindow.isDestroyed() && typeof mainWindow.setTitleBarOverlay === 'function') {
+            mainWindow.setTitleBarOverlay({
+                color: (payload && payload.color) || '#111417',
+                symbolColor: (payload && payload.symbolColor) || '#69737f',
+                height: 56
+            });
+        }
+    } catch (e) {
+        console.warn('[MAIN] setTitleBarOverlay failed:', e.message);
+    }
+});
+
+ipcMain.handle('get-local-ip', async () => {
         console.log("[IPC] Handler 'get-local-ip' called");
         const os = require('os');
         const interfaces = os.networkInterfaces();
