@@ -88,6 +88,26 @@ describe("PersonalIntelligenceMemoryApprovalPilot", () => {
     expect(componentSource).toContain("readyForLiveWrite");
   });
 
+  it("shows the prior durable audit count and records nothing at render", () => {
+    const recordAudit = vi.fn();
+    const markup = renderToStaticMarkup(
+      <PersonalIntelligenceMemoryApprovalPilot
+        recordAudit={recordAudit}
+        initialAuditSummary={{
+          totalRecords: 3,
+          recordsByEventType: { live_write_completed: 3 },
+          proposalIds: ["p1"],
+          sideEffectsPerformedCount: 3,
+          blockedCount: 0,
+          warningCount: 0,
+        }}
+      />,
+    );
+    expect(markup).toContain("3 governed events recorded (durable)");
+    // The audit trail is only written on a real action, never on render.
+    expect(recordAudit).not.toHaveBeenCalled();
+  });
+
   it("keeps the governed adapter call inside the approval helper / adapter", () => {
     expect(helperSource).toContain(
       "persistApprovedMemoryProposalWithGovernance",

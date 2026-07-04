@@ -4,6 +4,7 @@ import {
   buildMemoryApprovalProposal,
   createDefaultMemoryApprovalPilotState,
   createDryRunOnlyMemoryServiceDependency,
+  createMemoryApprovalAuditRecord,
   evaluateMemoryApprovalPilotReadiness,
   runGovernedMemoryApprovalDryRun,
   runGovernedMemoryApprovalLiveWrite,
@@ -12,8 +13,11 @@ import {
 import type {
   GovernedMemoryAdapterConfig,
   GovernedMemoryAdapterResult,
+  MemoryApprovalAuditSummary,
   MemoryServiceAdapterDependency,
+  PersonalIntelligenceMemoryApprovalAuditRecord,
   PersonalIntelligenceMemoryApprovalPilotState,
+  PersonalIntelligenceMemoryApprovalAuditEventType,
 } from "../../personal-intelligence";
 import {
   settingsCardStyle,
@@ -84,16 +88,38 @@ async function resolveLiveDependency(): Promise<MemoryServiceAdapterDependency> 
   return module.createLiveMemoryServiceDependency();
 }
 
+// Durable audit persistence resolved lazily, so rendering the panel never
+// touches storage (the store lives at the services edge).
+async function persistAuditRecords(
+  records: PersonalIntelligenceMemoryApprovalAuditRecord[],
+): Promise<void> {
+  const module = await import(
+    "../../services/personalIntelligence/memoryApprovalAuditStore"
+  );
+  module.appendMemoryApprovalAuditRecords(records);
+}
+
 interface PersonalIntelligenceMemoryApprovalPilotProps {
   /** Override the reviewed proposal (real-queue wiring / tests). */
   buildProposalBundle?: () => MemoryApprovalProposalBundle;
   /** Override the live writer (tests inject a stub; production resolves lazily). */
   createWriteDependency?: () => MemoryServiceAdapterDependency;
+  /** Persist governed-write audit records (default: durable store, resolved lazily). */
+  recordAudit?: (
+    records: PersonalIntelligenceMemoryApprovalAuditRecord[],
+  ) => void;
+  /** Prior durable audit trail, read by the parent at mount. */
+  initialAuditSummary?: MemoryApprovalAuditSummary;
 }
 
 export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
   PersonalIntelligenceMemoryApprovalPilotProps
-> = ({ buildProposalBundle, createWriteDependency }) => {
+> = ({
+  buildProposalBundle,
+  createWriteDependency,
+  recordAudit,
+  initialAuditSummary,
+}) => {
   const bundle = useMemo(
     () => (buildProposalBundle ?? buildDefaultProposalBundle)(),
     [buildProposalBundle],
@@ -108,6 +134,27 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
     );
   const [dryRunPending, setDryRunPending] = useState(false);
   const [liveWritePending, setLiveWritePending] = useState(false);
+  const [auditTotal, setAuditTotal] = useState(
+    initialAuditSummary?.totalRecords ?? 0,
+  );
+
+  const logAudit = (
+    result: GovernedMemoryAdapterResult,
+    eventType: PersonalIntelligenceMemoryApprovalAuditEventType,
+  ) => {
+    const record = createMemoryApprovalAuditRecord({
+      auditId: `${proposal.proposalId}:${eventType}:${result.auditRecord.timestamp}`,
+      proposalId: proposal.proposalId,
+      eventType,
+      summary: result.auditRecord.summary,
+      sideEffectsPerformed: result.sideEffectsPerformed,
+      adapterResultStatus: result.status,
+      blockers: result.blockers,
+      warnings: result.warnings,
+    });
+    (recordAudit ?? ((records) => void persistAuditRecords(records)))([record]);
+    setAuditTotal((current) => current + 1);
+  };
 
   const readiness = useMemo(
     () =>
@@ -161,6 +208,7 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
         blockers: result.blockers,
         warnings: result.warnings,
       });
+      logAudit(result, "dry_run_completed");
     } finally {
       setDryRunPending(false);
     }
@@ -187,6 +235,14 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
         blockers: result.blockers,
         warnings: result.warnings,
       });
+      logAudit(
+        result,
+        result.status === "persisted"
+          ? "live_write_completed"
+          : result.status === "failed"
+            ? "live_write_failed"
+            : "live_write_blocked",
+      );
     } finally {
       setLiveWritePending(false);
     }
@@ -441,6 +497,10 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
         <p className="mt-1">
           Sensitive zones (credential, financial, health, enterprise) stay
           blocked here regardless of approval. LucaLink sync stays disabled.
+        </p>
+        <p className="mt-1">
+          Audit trail: {auditTotal} governed event
+          {auditTotal === 1 ? "" : "s"} recorded (durable).
         </p>
       </div>
     </div>
