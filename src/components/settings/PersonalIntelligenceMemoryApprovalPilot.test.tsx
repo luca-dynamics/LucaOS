@@ -3,6 +3,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { PersonalIntelligenceMemoryApprovalPilot } from "./PersonalIntelligenceMemoryApprovalPilot";
+import { buildMemoryApprovalProposal } from "../../personal-intelligence/approval";
 import type { MemoryServiceAdapterDependency } from "../../personal-intelligence";
 
 const sources = import.meta.glob(
@@ -106,6 +107,45 @@ describe("PersonalIntelligenceMemoryApprovalPilot", () => {
     expect(markup).toContain("3 governed events recorded (durable)");
     // The audit trail is only written on a real action, never on render.
     expect(recordAudit).not.toHaveBeenCalled();
+  });
+
+  it("shows a queue selector when more than one memory is waiting", () => {
+    const bundleFor = (id: string) =>
+      buildMemoryApprovalProposal({
+        proposalId: id,
+        memory: {
+          id: `memory:${id}`,
+          kind: "preference",
+          title: id,
+          content: `content for ${id}`,
+          source: "chat",
+          confidence: 0.8,
+          privacyZone: "project",
+          tags: ["preference"],
+        },
+        proposedPath: `memory/preferences/${id}.json`,
+        approval: {
+          approvedBy: "user",
+          approvedAt: "2026-07-04T12:00:00.000Z",
+          explicitUserApproval: true,
+        },
+      });
+
+    const markup = renderToStaticMarkup(
+      <PersonalIntelligenceMemoryApprovalPilot
+        pendingProposals={[
+          { proposalId: "p1", title: "First memory", kind: "preference", updatedAt: "2026-07-04T00:00:00.000Z" },
+          { proposalId: "p2", title: "Second memory", kind: "user_fact", updatedAt: "2026-07-03T00:00:00.000Z" },
+        ]}
+        buildBundleForProposal={bundleFor}
+      />,
+    );
+
+    expect(markup).toContain("2 memories waiting for review");
+    expect(markup).toContain("First memory");
+    expect(markup).toContain("Second memory");
+    // The first queue item is selected and its content is under review.
+    expect(markup).toContain("content for p1");
   });
 
   it("keeps the governed adapter call inside the approval helper / adapter", () => {

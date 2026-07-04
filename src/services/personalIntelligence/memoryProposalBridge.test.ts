@@ -7,6 +7,8 @@ import type {
 import {
   buildBundleFromMemoryProposal,
   buildBundleFromPendingProposals,
+  buildBundleFromProposalId,
+  listReviewableMemoryProposals,
   selectReviewableMemoryProposal,
 } from "./memoryProposalBridge";
 import {
@@ -114,5 +116,29 @@ describe("buildBundleFromPendingProposals", () => {
     expect(
       buildBundleFromPendingProposals([record({ status: "written" })], fixedNow),
     ).toBeNull();
+  });
+});
+
+describe("the reviewable queue", () => {
+  const records = [
+    record({ proposalId: "a", title: "A", status: "proposed", updatedAt: "2026-07-01T00:00:00.000Z" }),
+    record({ proposalId: "b", title: "B", status: "approval_required", updatedAt: "2026-07-04T00:00:00.000Z" }),
+    record({ proposalId: "c", title: "C", status: "written", updatedAt: "2026-07-05T00:00:00.000Z" }),
+  ];
+
+  it("lists only reviewable items, most recent first, as light rows", () => {
+    const list = listReviewableMemoryProposals(records);
+    expect(list.map((i) => i.proposalId)).toEqual(["b", "a"]);
+    expect(list[0]).toMatchObject({ title: "B", kind: "preference" });
+  });
+
+  it("builds the bundle for a chosen reviewable id", () => {
+    const bundle = buildBundleFromProposalId(records, "a", fixedNow);
+    expect(bundle?.proposal.title).toContain("A");
+  });
+
+  it("refuses to build for a non-reviewable or missing id", () => {
+    expect(buildBundleFromProposalId(records, "c", fixedNow)).toBeNull();
+    expect(buildBundleFromProposalId(records, "missing", fixedNow)).toBeNull();
   });
 });

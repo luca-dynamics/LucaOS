@@ -23,6 +23,7 @@ import {
   settingsCardStyle,
   settingsSurfaceTokens,
 } from "./settingsLayoutStyles";
+import type { MemoryApprovalQueueItem } from "../../services/personalIntelligence/memoryProposalBridge";
 
 /**
  * Controlled Live Memory Write Pilot — the ONLY surface in LucaOS that can
@@ -100,8 +101,14 @@ async function persistAuditRecords(
 }
 
 interface PersonalIntelligenceMemoryApprovalPilotProps {
-  /** Override the reviewed proposal (real-queue wiring / tests). */
+  /** Override the reviewed proposal (single / sample fallback). */
   buildProposalBundle?: () => MemoryApprovalProposalBundle;
+  /** The reviewable queue for the selector (real pending memories). */
+  pendingProposals?: MemoryApprovalQueueItem[];
+  /** Build the governed bundle for a chosen queue item. */
+  buildBundleForProposal?: (
+    proposalId: string,
+  ) => MemoryApprovalProposalBundle | null;
   /** Override the live writer (tests inject a stub; production resolves lazily). */
   createWriteDependency?: () => MemoryServiceAdapterDependency;
   /** Persist governed-write audit records (default: durable store, resolved lazily). */
@@ -116,14 +123,24 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
   PersonalIntelligenceMemoryApprovalPilotProps
 > = ({
   buildProposalBundle,
+  pendingProposals,
+  buildBundleForProposal,
   createWriteDependency,
   recordAudit,
   initialAuditSummary,
 }) => {
-  const bundle = useMemo(
-    () => (buildProposalBundle ?? buildDefaultProposalBundle)(),
-    [buildProposalBundle],
-  );
+  const queue = pendingProposals ?? [];
+  const [selectedProposalId, setSelectedProposalId] = useState<
+    string | undefined
+  >(() => queue[0]?.proposalId);
+
+  const bundle = useMemo(() => {
+    if (selectedProposalId && buildBundleForProposal) {
+      const selected = buildBundleForProposal(selectedProposalId);
+      if (selected) return selected;
+    }
+    return (buildProposalBundle ?? buildDefaultProposalBundle)();
+  }, [selectedProposalId, buildBundleForProposal, buildProposalBundle]);
   const { proposal, policy, auditRecords, rollbackPlans } = bundle;
 
   const [pilotState, setPilotState] =
@@ -132,6 +149,16 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
         selectedProposalId: proposal.proposalId,
       }),
     );
+
+  // Choosing a different memory is a fresh decision: reset every gate so a
+  // dry-run / approval from the previous proposal can never carry over.
+  const selectProposal = (proposalId: string) => {
+    setSelectedProposalId(proposalId);
+    setPilotState(
+      createDefaultMemoryApprovalPilotState({ selectedProposalId: proposalId }),
+    );
+  };
+
   const [dryRunPending, setDryRunPending] = useState(false);
   const [liveWritePending, setLiveWritePending] = useState(false);
   const [auditTotal, setAuditTotal] = useState(
@@ -287,6 +314,35 @@ export const PersonalIntelligenceMemoryApprovalPilot: React.FC<
           {badge.label}
         </span>
       </div>
+
+      {/* The reviewable queue — pick which memory to govern. Only shown when
+          there is a real choice to make. */}
+      {queue.length > 1 && (
+        <div>
+          <label
+            className="mb-1 block text-[11px]"
+            style={{ color: settingsSurfaceTokens.textTertiary }}
+          >
+            {queue.length} memories waiting for review
+          </label>
+          <select
+            aria-label="Select a pending memory to review"
+            value={selectedProposalId ?? ""}
+            onChange={(e) => selectProposal(e.target.value)}
+            className="w-full rounded-lg border bg-transparent px-3 py-2 text-[12.5px]"
+            style={{
+              borderColor: settingsSurfaceTokens.borderSubtle,
+              color: settingsSurfaceTokens.textPrimary,
+            }}
+          >
+            {queue.map((item) => (
+              <option key={item.proposalId} value={item.proposalId}>
+                {item.title} · {item.kind}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* The real proposal under review */}
       <div
