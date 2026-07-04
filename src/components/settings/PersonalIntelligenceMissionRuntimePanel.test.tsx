@@ -39,10 +39,16 @@ describe("PersonalIntelligenceMissionRuntimePanel", () => {
     expect(markup).toContain("Autonomous execution enabled: false");
   });
 
-  it("contains no render-time writes", () => {
+  it("loads the mission read-only: no mutation, no click actions, no writes", () => {
     const component = sources["./PersonalIntelligenceMissionRuntimePanel.tsx"];
-    expect(component).not.toMatch(/useEffect\s*\(/);
+    // A read-only load effect is allowed (it reads the active mission); the
+    // panel must never mutate the mission, act on a click, or write anything.
+    expect(component).toContain("getActiveMission");
+    expect(component).not.toMatch(
+      /startMission|addGoal|updateGoalStatus|archiveMission/,
+    );
     expect(component).not.toMatch(/onClick\s*=/);
+    expect(component).not.toMatch(/saveMemory|liveWrite/i);
   });
 
   it("keeps production mission runtime and UI sources free of forbidden APIs", () => {
