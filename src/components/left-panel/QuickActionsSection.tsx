@@ -1,5 +1,4 @@
 import React from "react";
-import { Icon } from "../ui/Icon";
 
 interface QuickActionsSectionProps {
   isLight: boolean;
@@ -10,137 +9,81 @@ interface QuickActionsSectionProps {
 }
 
 /**
- * QUICK ACTIONS section (formerly "Core Actions").
- *
- * Lockdown remains a high-authority safety action that calls the existing
- * `initiateLockdown` tool (toolRegistry: SecurityLevel.LEVEL_3). Its behaviour
- * is intentionally unchanged here.
+ * QUICK ACTIONS (panel-interiors-target): three quiet rows in the rail's one
+ * language — no tile grid, no glass card. "Pause all actions" is the safety
+ * action (LEVEL_3, behaviour unchanged): neutral at rest, danger only on
+ * hover/focus so the resting rail never reads as an alarm.
  *
  * TODO: direct high-risk actions like Lockdown should eventually route through
  * the governed action request / provenance gate services rather than calling
  * executeTool directly. Not wired in this UI refactor.
  */
 const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
-  isLight,
-  isLightCream,
   onAgentMode,
   onCognitiveEngine,
   onLockdown,
 }) => {
   const [lockdownHovered, setLockdownHovered] = React.useState(false);
 
-  const actionTileStyle: React.CSSProperties = {
-    backgroundColor: isLightCream
-      ? "rgba(108, 106, 88, var(--app-bg-opacity, 0.9))"
-      : isLight
-        ? "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.3) * 0.3))"
-        : "rgba(0, 0, 0, calc(var(--app-bg-opacity, 0.3) * 0.4))",
+  const row =
+    "flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[rgba(127,127,127,0.09)]";
+  const dot: React.CSSProperties = {
+    background: "var(--luca-border-strong, rgba(255,255,255,0.18))",
+  };
+  const label: React.CSSProperties = {
+    color: "var(--luca-text-secondary, var(--app-text-muted))",
   };
 
   return (
-    <div className="p-5 rounded-lg relative overflow-hidden group glass-blur bg-black/20 shadow-xl animate-in fade-in duration-300">
-      <div className="absolute top-0 right-0 p-3 opacity-30 text-[var(--app-text-main)]">
-        <Icon name="Pulse" size={14} variant="BoldDuotone" />
-      </div>
-      <div
-        className={`flex items-center gap-3 mb-5 text-[var(--app-text-main)] ${
-          isLight ? "opacity-90" : ""
-        }`}
+    <div>
+      <p
+        className="px-2 pb-1 text-[11px]"
+        style={{ color: "var(--luca-text-tertiary, var(--app-text-muted))" }}
       >
-        <Icon
-          name="EyeScan"
-          size={18}
-          variant="BoldDuotone"
-          className={isLight ? "opacity-100" : "opacity-70"}
+        Quick actions
+      </p>
+      <button type="button" onClick={onAgentMode} className={row}>
+        <span className="h-1.5 w-1.5 flex-none rounded-full" style={dot} aria-hidden="true" />
+        <span className="text-[12.5px]" style={label}>
+          Agent mode
+        </span>
+      </button>
+      <button type="button" onClick={onCognitiveEngine} className={row}>
+        <span className="h-1.5 w-1.5 flex-none rounded-full" style={dot} aria-hidden="true" />
+        <span className="text-[12.5px]" style={label}>
+          Cognitive engine
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={onLockdown}
+        onMouseEnter={() => setLockdownHovered(true)}
+        onMouseLeave={() => setLockdownHovered(false)}
+        onFocus={() => setLockdownHovered(true)}
+        onBlur={() => setLockdownHovered(false)}
+        className={row}
+        style={
+          lockdownHovered
+            ? { background: "color-mix(in srgb, var(--luca-danger, #f87171) 10%, transparent)" }
+            : undefined
+        }
+      >
+        <span
+          className="h-1.5 w-1.5 flex-none rounded-full"
+          style={
+            lockdownHovered ? { background: "var(--luca-danger, #f87171)" } : dot
+          }
+          aria-hidden="true"
         />
-        <h2 className="font-semibold text-xs tracking-tight">
-          Quick actions
-        </h2>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={onAgentMode}
-          className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation rounded-lg border glass-blur hover:opacity-90 active:opacity-100"
-          style={actionTileStyle}
+        <span
+          className="text-[12.5px] transition-colors"
+          style={
+            lockdownHovered ? { color: "var(--luca-danger, #f87171)" } : label
+          }
         >
-          <span
-            className={`text-[10px] font-medium ${
-              isLightCream ? "text-[#E5E1CD]/80" : "text-[var(--app-text-muted)]"
-            } ${isLight && !isLightCream ? "opacity-70" : ""}`}
-          >
-            Agent
-          </span>
-          <span
-            className={`text-xs font-semibold ${
-              isLightCream ? "text-[#E5E1CD]" : "text-[var(--app-text-main)]"
-            } tracking-tight`}
-          >
-            Mode
-          </span>
-          <div className="h-0.5 w-full bg-[var(--app-border-main)] mt-2 overflow-hidden rounded-full">
-            <div className="h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-300 bg-[var(--app-text-main)] opacity-30" />
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={onCognitiveEngine}
-          className="p-3 min-h-[60px] flex flex-col gap-1 transition-all text-left group/btn touch-manipulation rounded-lg border glass-blur hover:opacity-90 active:opacity-100"
-          style={actionTileStyle}
-        >
-          <span
-            className={`text-[10px] font-medium ${
-              isLightCream ? "text-[#E5E1CD]/80" : "text-[var(--app-text-muted)]"
-            } ${isLight && !isLightCream ? "opacity-70" : ""}`}
-          >
-            Cognitive
-          </span>
-          <span
-            className={`text-xs font-semibold ${
-              isLightCream ? "text-[#E5E1CD]" : "text-[var(--app-text-main)]"
-            } tracking-tight`}
-          >
-            Engine
-          </span>
-          <div className="h-0.5 w-full bg-[var(--app-border-main)] mt-2 overflow-hidden rounded-full">
-            <div className="h-full w-full -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-300 bg-[var(--app-text-main)] opacity-30" />
-          </div>
-        </button>
-
-        {/* MANUAL LOCKDOWN TRIGGER — safety action (LEVEL_3). Behaviour unchanged.
-            Neutral at rest; red only appears on hover/focus so the resting UI
-            doesn't read as a permanent alarm (presentational hover state only). */}
-        <button
-          type="button"
-          onClick={onLockdown}
-          onMouseEnter={() => setLockdownHovered(true)}
-          onMouseLeave={() => setLockdownHovered(false)}
-          onFocus={() => setLockdownHovered(true)}
-          onBlur={() => setLockdownHovered(false)}
-          className="col-span-2 py-3.5 flex items-center justify-center gap-3 transition-all group/btn rounded-lg border glass-blur"
-          style={{
-            backgroundColor: lockdownHovered
-              ? "rgba(239, 68, 68, 0.1)"
-              : "var(--luca-surface-glass, var(--app-bg-tint))",
-            borderColor: lockdownHovered ? "rgba(239, 68, 68, 0.35)" : "var(--app-border-main)",
-          }}
-        >
-          <Icon
-            name="Lock"
-            size={14}
-            color={lockdownHovered ? "var(--luca-danger, #ef4444)" : "var(--app-text-muted)"}
-            className="group-hover/btn:animate-bounce transition-all"
-            variant="BoldDuotone"
-          />
-          <span
-            className="text-[11px] font-medium transition-colors"
-            style={{ color: lockdownHovered ? "var(--luca-danger, #ef4444)" : "var(--app-text-muted)" }}
-          >
-            Pause all actions
-          </span>
-        </button>
-      </div>
+          Pause all actions
+        </span>
+      </button>
     </div>
   );
 };

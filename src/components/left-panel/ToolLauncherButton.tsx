@@ -1,5 +1,4 @@
 import React from "react";
-import { Icon } from "../ui/Icon";
 import type { LeftPanelToolItem } from "./leftPanelModel";
 
 interface ToolLauncherButtonProps {
@@ -10,49 +9,39 @@ interface ToolLauncherButtonProps {
 }
 
 /**
- * Single launcher button for the TOOLS rail. Rendering never triggers an
- * action — only the onClick does, and it just forwards to the existing
- * callback the sidebar wires up.
+ * Single launcher row for the TOOLS rail (panel-interiors-target): a quiet
+ * row — dim tone dot, plain label — never a chip cloud. No resting-state
+ * accent colours (risk shows in the tool's own surface, not as a red badge
+ * in the rail). Rendering never triggers an action — only the onClick does.
  */
 const ToolLauncherButton: React.FC<ToolLauncherButtonProps> = ({
   tool,
-  isLight,
-  isLightCream,
   onSelect,
 }) => {
-  const textColor = tool.accentColor
-    ? tool.accentColor
-    : isLightCream
-      ? "#4a483f"
-      : "var(--app-text-main)";
-
   return (
     <button
       type="button"
       onClick={() => onSelect(tool)}
       title={tool.description || tool.label}
-      className="px-4 py-2.5 rounded-lg text-[11px] font-medium flex items-center justify-center gap-2.5 transition-all border glass-blur hover:opacity-90 active:opacity-100 touch-manipulation"
-      style={{
-        backgroundColor: isLight
-          ? "rgba(255, 255, 255, calc(var(--app-bg-opacity, 0.3) * 0.5))"
-          : "rgba(0, 0, 0, var(--app-bg-opacity, 0.3))",
-        borderColor: "var(--app-border-main, rgba(255,255,255,0.1))",
-        color: textColor,
-      }}
+      className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-[rgba(127,127,127,0.09)]"
     >
-      <Icon
-        name={tool.icon}
-        size={14}
-        variant="BoldDuotone"
-        color={tool.accentColor}
+      <span
+        className="h-1.5 w-1.5 flex-none rounded-full"
+        style={{ background: "var(--luca-border-strong, rgba(255,255,255,0.18))" }}
+        aria-hidden="true"
       />
-      {tool.label}
+      <span
+        className="min-w-0 truncate text-[12.5px]"
+        style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
+      >
+        {tool.label}
+      </span>
       {tool.preview && (
         <span
-          className="text-[9px] font-medium opacity-60"
-          style={{ color: textColor }}
+          className="ml-auto flex-none text-[10.5px]"
+          style={{ color: "var(--luca-text-tertiary, var(--app-text-muted))" }}
         >
-          Preview
+          preview
         </span>
       )}
     </button>

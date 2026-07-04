@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Icon } from "../ui/Icon";
 import { skillGovernanceService } from "../../services/skills/SkillGovernanceService";
 import { skillRegistryService } from "../../services/skills/SkillRegistryService";
-import { getSkillSummaryLine } from "../runtime/skillGovernanceLabels";
 import ToolLauncherButton from "./ToolLauncherButton";
 import {
   buildToolLauncherGroups,
@@ -20,9 +19,11 @@ interface ToolLauncherSectionProps {
 }
 
 /**
- * TOOLS section of the rail. Replaces the old flat "Tools & Apps" button cloud
- * with grouped, collapsible sections (Core, Vision & Knowledge, Finance,
- * Visual Modules, Installed). All callbacks are preserved via onToolSelect.
+ * TOOLS section of the rail (panel-interiors-target): each space is a
+ * lowercase whisper label with quiet rows beneath. Skills collapses to a
+ * single quiet row (count + a tone dot only when something needs you) — the
+ * old three-stat "registered / pending / blocked" card is gone. Every group
+ * rests closed except Agents; the terminal zoo lives behind its whisper.
  */
 const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
   installedModules,
@@ -37,21 +38,14 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
   );
   const skillRegistry = skillRegistryService.getDiagnosticsSummary();
   const skillGovernance = skillGovernanceService.getDiagnosticsSummary();
-  const pendingSkillRequests = skillGovernance.proposedRequests + skillGovernance.approvalRequiredRequests;
-  const skillSummaryLine = getSkillSummaryLine({
-    registeredSkills: skillRegistry.totalSkills,
-    pendingRequests: pendingSkillRequests,
-    approvedWaitingRequests: skillGovernance.approvedWaitingRequests,
-    blockedRequests: skillGovernance.blockedRequests,
-    rejectedRevokedRequests: skillGovernance.rejectedRequests + skillGovernance.revokedRequests,
-  });
+  const pendingSkillRequests =
+    skillGovernance.proposedRequests + skillGovernance.approvalRequiredRequests;
   const [expanded, setExpanded] = useState<Record<ToolGroupId, boolean>>(
     getDefaultExpandedGroups,
   );
 
   useEffect(() => {
     if (!collapseAdvancedGroups) return;
-
     setExpanded((current) => ({
       ...current,
       tools: false,
@@ -64,112 +58,102 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
   const toggle = (id: ToolGroupId) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
+  const whisper: React.CSSProperties = {
+    color: "var(--luca-text-tertiary, var(--app-text-muted))",
+  };
+
   return (
-    <div className="space-y-4 animate-in fade-in duration-300">
-      <div
-        className={`flex items-center gap-3 mb-2 text-[var(--app-text-main)] ${
-          isLight ? "opacity-90" : "opacity-70"
-        }`}
-      >
-        <Icon name="Widget" size={18} variant="BoldDuotone" />
-        <h2 className="font-semibold text-xs tracking-tight">Spaces</h2>
+    <div>
+      {/* Skills — one quiet row. The dot breathes amber only when requests
+          are waiting on you; otherwise it rests. Opens the skills matrix via
+          the existing Agents group launcher, so no new entry point. */}
+      <p className="px-2 pb-1 text-[11px]" style={whisper}>
+        Skills
+      </p>
+      <div className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5">
+        <span
+          className={`h-1.5 w-1.5 flex-none rounded-full ${pendingSkillRequests > 0 ? "animate-pulse" : ""}`}
+          style={{
+            background:
+              pendingSkillRequests > 0
+                ? "var(--luca-warning, #e0b15a)"
+                : "var(--luca-border-strong, rgba(255,255,255,0.18))",
+          }}
+          aria-hidden="true"
+        />
+        <span
+          className="text-[12.5px]"
+          style={{ color: "var(--luca-text-secondary, var(--app-text-muted))" }}
+        >
+          {skillRegistry.totalSkills} skills ready
+        </span>
+        {pendingSkillRequests > 0 && (
+          <span className="ml-auto flex-none text-[11px]" style={whisper}>
+            {pendingSkillRequests} waiting
+          </span>
+        )}
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <div className="text-[11px] font-semibold tracking-tight text-[var(--app-text-main)]">Skills</div>
-          <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-0.5 text-[9px] font-medium text-[var(--luca-info,#4f8cff)]">State only</span>
-        </div>
-        <p className="text-[9px] leading-relaxed" style={{ color: "var(--app-text-muted)" }}>{skillSummaryLine}</p>
-        <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[11px] font-semibold">
-          <div className="rounded-lg border border-white/10 bg-black/10 px-2 py-1 text-[var(--app-text-main)]">{skillRegistry.totalSkills}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">registered</span></div>
-          <div className="rounded-lg border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-2 py-1 text-[var(--luca-warning,#f2b23e)]">{pendingSkillRequests}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">pending</span></div>
-          <div className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-2 py-1 text-[var(--luca-danger,#f87171)]">{skillGovernance.blockedRequests}<span className="block text-[9px] font-normal text-[var(--app-text-muted)]">blocked</span></div>
-        </div>
-      </div>
+      {groups.map((group) => {
+        const isOpen = expanded[group.id];
+        return (
+          <div key={group.id} className="mt-2">
+            <button
+              type="button"
+              onClick={() => toggle(group.id)}
+              aria-expanded={isOpen}
+              className="group/group flex w-full items-center gap-1.5 px-2 py-1"
+            >
+              <span className="text-[11px]" style={whisper}>
+                {group.label}
+              </span>
+              <Icon
+                name={isOpen ? "AltArrowUp" : "AltArrowDown"}
+                size={11}
+                variant="BoldDuotone"
+                className="opacity-40 transition-opacity group-hover/group:opacity-80"
+              />
+            </button>
 
-      <div className="space-y-3">
-        {groups.map((group) => {
-          const isOpen = expanded[group.id];
-          return (
-            <div key={group.id} className="space-y-2.5">
-              <button
-                type="button"
-                onClick={() => toggle(group.id)}
-                aria-expanded={isOpen}
-                className="w-full flex items-center justify-between gap-2 px-1 py-1 group/group"
-              >
-                <span
-                  className="text-[11px] font-medium"
-                  style={{ color: "var(--app-text-muted)" }}
-                >
-                  {group.label}
-                </span>
-                <Icon
-                  name={isOpen ? "AltArrowUp" : "AltArrowDown"}
-                  size={12}
-                  variant="BoldDuotone"
-                  className="opacity-60 group-hover/group:opacity-100 transition-opacity"
-                />
-              </button>
-
-              {isOpen && (
-                <div className="space-y-2">
-                  {group.description && (
-                    <p
-                      className="text-[9px] leading-relaxed italic"
-                      style={{ color: "var(--app-text-muted)" }}
+            {isOpen && (
+              <div className="mt-0.5">
+                {group.tools.map((tool) => (
+                  <ToolLauncherButton
+                    key={tool.id}
+                    tool={tool}
+                    isLight={isLight}
+                    isLightCream={isLightCream}
+                    onSelect={onToolSelect}
+                  />
+                ))}
+                {group.modules.map((mod) => (
+                  <div
+                    key={mod.id}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5"
+                  >
+                    <span
+                      className="h-1.5 w-1.5 flex-none rounded-full"
+                      style={{
+                        background:
+                          "var(--luca-border-strong, rgba(255,255,255,0.18))",
+                      }}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="min-w-0 truncate text-[12.5px]"
+                      style={{
+                        color: "var(--luca-text-tertiary, var(--app-text-muted))",
+                      }}
                     >
-                      {group.description}
-                    </p>
-                  )}
-
-                  {group.tools.length > 0 && (
-                    <div className="flex flex-wrap gap-2.5">
-                      {group.tools.map((tool) => (
-                        <ToolLauncherButton
-                          key={tool.id}
-                          tool={tool}
-                          isLight={isLight}
-                          isLightCream={isLightCream}
-                          onSelect={onToolSelect}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {group.modules.length > 0 && (
-                    <div className="flex flex-wrap gap-2.5">
-                      {group.modules.map((mod) => (
-                        <div
-                          key={mod.id}
-                          className="px-4 py-2.5 rounded-lg text-[11px] font-medium flex items-center justify-center gap-2.5 border glass-blur hover:opacity-90 active:opacity-100"
-                          style={{
-                            backgroundColor: isLight
-                              ? isLightCream
-                                ? "rgba(255,255,255,0.4)"
-                                : "rgba(0, 0, 0, 0.05)"
-                              : "rgba(0, 0, 0, 0.2)",
-                            color: isLightCream ? "#4a483f" : "var(--app-text-main)",
-                          }}
-                        >
-                          <Icon
-                            name={mod.icon}
-                            size={14}
-                            className="opacity-50"
-                            variant="BoldDuotone"
-                          />
-                          {mod.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                      {mod.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
