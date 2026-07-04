@@ -99,11 +99,8 @@ import OperationsSidebar from "./components/layout/OperationsSidebar";
 import ShellPresenceMark from "./components/presence/ShellPresenceMark";
 import AppMenu from "./components/layout/AppMenu";
 import { LUCA_MOTION_CSS_VARIABLES } from "./styles/lucaPresenceMotion";
-import {
-  hasMacTrafficLights,
-  rendersOwnWindowControls,
-  sendWindowControl,
-} from "./windowControlsOverlay";
+import { hasMacTrafficLights } from "./windowControlsOverlay";
+import WindowControls from "./components/layout/WindowControls";
 import SessionsRail from "./components/left-panel/SessionsRail";
 import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
@@ -2561,6 +2558,12 @@ function AppContent() {
         style={{ color: "var(--app-text-main)" }}
         onContextMenu={(e) => e.preventDefault()}
       >
+        {/* The window is never uncontrollable: the frameless shell keeps its
+            own min/max/close through boot and onboarding, in the same zone
+            they occupy once the header exists. */}
+        <div className="luca-window-drag absolute top-0 left-0 right-0 z-50 flex h-14 items-center justify-end gap-1 pr-2">
+          <WindowControls />
+        </div>
         {bootSequence === "ONBOARDING" ? (
           <div className="absolute inset-0 z-10">
             <LucaPremiumOnboardingPreview
@@ -2898,9 +2901,36 @@ function AppContent() {
                     top-left (centered via trafficLightPosition) — the band
                     insets so the menu never sits under them. */}
                 <div
-                  className="flex items-center gap-1 pl-2"
+                  className="flex items-center gap-1 pl-3"
                   style={hasMacTrafficLights() ? { paddingLeft: 76 } : undefined}
                 >
+                  {/* Identity anchors the band's left edge (unplugged from
+                      the sidebar sheet) — the menu and toggle sit beside it,
+                      and the brand stays present even with panels collapsed. */}
+                  <span className="mr-2 flex items-center gap-2.5">
+                    <SafeComponent componentName="PresenceMark">
+                      <ShellPresenceMark size={24} />
+                    </SafeComponent>
+                    <span className="min-w-0 flex flex-col justify-center leading-none">
+                      <span
+                        className="font-display text-[14px] font-semibold tracking-tight"
+                        style={{
+                          color: "var(--luca-text-primary, var(--app-text-main))",
+                        }}
+                      >
+                        LucaOS
+                      </span>
+                      <span
+                        className="mt-1 truncate text-[10px]"
+                        style={{
+                          color:
+                            "var(--luca-text-tertiary, var(--app-text-muted))",
+                        }}
+                      >
+                        on Windows · present
+                      </span>
+                    </span>
+                  </span>
                   <AppMenu
                     onNewSession={handleClearChat}
                     onOpenSettings={() => setShowSettingsModal(true)}
@@ -2969,49 +2999,10 @@ function AppContent() {
                   </button>
                   {/* Window controls: the shell's OWN buttons (no native
                       overlay) — same ghost skin and size as every other
-                      header control. Windows-Electron only: macOS keeps its
-                      native traffic lights (left edge), Linux its frame,
-                      and the web shell has the browser's chrome. */}
-                  {rendersOwnWindowControls() && (
-                    <>
-                      <button
-                        type="button"
-                        aria-label="Minimize window"
-                        title="Minimize"
-                        onClick={() => sendWindowControl("minimize")}
-                        className={`ml-2 p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                        style={lucaShellHeaderGhostControlStyle}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                          <path d="M3.5 8.5h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Maximize or restore window"
-                        title="Maximize"
-                        onClick={() => sendWindowControl("maximize")}
-                        className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                        style={lucaShellHeaderGhostControlStyle}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                          <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Close window"
-                        title="Close"
-                        onClick={() => sendWindowControl("close")}
-                        className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
-                        style={lucaShellHeaderGhostControlStyle}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                          <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
+                      header control. WindowControls self-gates per platform. */}
+                  <span className="ml-2 flex items-center gap-1">
+                    <WindowControls />
+                  </span>
                 </div>
               </div>
             </div>
@@ -3033,35 +3024,6 @@ function AppContent() {
                   width: `${panelWidths.sidebar}px`,
                 }}
               >
-                {/* Identity lives in the sidebar sheet — the panels carry
-                    their own furniture; the header stays pure environment. */}
-                <div
-                  className="flex-none flex items-center gap-2.5 h-14 px-4 border-b"
-                  style={lucaShellDividerStyle}
-                >
-                  <SafeComponent componentName="PresenceMark">
-                    <ShellPresenceMark size={24} />
-                  </SafeComponent>
-                  <span className="min-w-0 flex flex-col justify-center leading-none">
-                    <span
-                      className="font-display text-[14px] font-semibold tracking-tight"
-                      style={{
-                        color: "var(--luca-text-primary, var(--app-text-main))",
-                      }}
-                    >
-                      LucaOS
-                    </span>
-                    <span
-                      className="mt-1 truncate text-[10px]"
-                      style={{
-                        color:
-                          "var(--luca-text-tertiary, var(--app-text-muted))",
-                      }}
-                    >
-                      on Windows · present
-                    </span>
-                  </span>
-                </div>
                 <SafeComponent componentName="SessionsRail">
                   <SessionsRail />
                 </SafeComponent>
