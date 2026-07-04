@@ -109,7 +109,44 @@
     </div>
   </div>
 
-  <!-- ═══ 2 · BEFORE / AFTER ═══ -->
+  <!-- ═══ 2 · MACOS — the traffic lights ARE the platform language ═══ -->
+  <div class="caption">macOS — native traffic lights, centered in the band; NO custom buttons (they'd double up)</div>
+  <div class="frame">
+    <div class="band">
+      <!-- the traffic-light zone: native macOS controls, vertically centered
+           in the 56px band (trafficLightPosition), band insets around them -->
+      <span style="display:inline-flex;align-items:center;gap:8px;padding:0 14px 0 8px;flex:none">
+        <span style="width:12px;height:12px;border-radius:50%;background:#ff5f57;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.2)"></span>
+        <span style="width:12px;height:12px;border-radius:50%;background:#febc2e;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.2)"></span>
+        <span style="width:12px;height:12px;border-radius:50%;background:#28c840;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.2)"></span>
+      </span>
+
+      <!-- then the same band as Windows: menu, toggle, cluster -->
+      <button class="ghost" title="Menu"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg></button>
+      <button class="ghost" title="Toggle sidebar"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M6.5 3v10"/></svg></button>
+
+      <div class="grow">
+        <span class="quiet"><span class="dot"></span>On device</span>
+        <span class="sep"></span>
+        <span class="pill"><b>1,240</b><span class="tag">Prime</span></span>
+        <span class="pill">Ollama · llama3</span>
+        <button class="ghost" title="Voice"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="6" y="2.5" width="4" height="7" rx="2"/><path d="M3.5 8a4.5 4.5 0 0 0 9 0M8 12.5V14"/></svg></button>
+        <button class="ghost" title="Wake word"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><path d="M2.5 8c1.5-3 3-3 4.5 0s3 3 4.5 0 2-1.5 2 0"/></svg></button>
+        <button class="ghost" title="Settings"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><circle cx="8" cy="8" r="2.2"/><path d="M8 2v1.6M8 12.4V14M2 8h1.6M12.4 8H14M3.8 3.8l1.1 1.1M11.1 11.1l1.1 1.1M12.2 3.8l-1.1 1.1M4.9 11.1l-1.1 1.1"/></svg></button>
+      </div>
+
+      <!-- right edge: ONLY the panel toggle — min/max/close live in the
+           traffic lights, where every Mac user's hand expects them -->
+      <button class="ghost" title="Toggle panel"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M9.5 3v10"/></svg></button>
+    </div>
+    <div class="body3" style="height:120px">
+      <div class="panelL"><div class="label-in">Chrome · base</div></div>
+      <div class="mid"><div class="label-in" style="color:#7d8794">Same environment, same band — only the control cluster is platform-native</div></div>
+      <div class="panelR" style="width:26%"><div class="label-in">Chrome · base</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ 3 · BEFORE / AFTER (Windows) ═══ -->
   <div class="caption">Why — the native cluster could never blend; ours is just another header control</div>
   <div class="duo">
     <div class="cell">
@@ -142,7 +179,10 @@
     close warms to danger only on hover · the dead 144px reservation for the native cluster is gone, so the
     band's right edge is real controls, not blind space · <b>the depth split stays</b>: side panels ground on
     base (chrome recedes), the middle owns the elevated tone — they never share the same material ·
-    right panel default widens 340 → 380px so its tabs display well.
+    right panel default widens 340 → 380px so its tabs display well ·
+    <b>macOS keeps its traffic lights</b> — native, vertically centered in the band
+    (trafficLightPosition), the band insets its left edge for them, and NO custom min/max/close render
+    (controls live where the platform's hand expects them; drawing our own on a Mac reads as counterfeit).
   </div>
 
 </body>
