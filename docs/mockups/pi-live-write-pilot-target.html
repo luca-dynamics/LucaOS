@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Governed Memory Write Pilot (the gate sequence, made real)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --card:#1b2025; --chrome:#111417; --base:#101317;
+    --hair:rgba(255,255,255,.07); --hair-soft:rgba(255,255,255,.045);
+    --hover:rgba(255,255,255,.06);
+    --t1:#e9edf2; --t2:#9aa4b2; --t3:#69737f;
+    --accent:#7aa2ff; --ink:#0c0e12; --ok:#4fbf7a; --warn:#e0b15a; --bad:#f87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:#0a0c0e;color:var(--t1);
+    font:400 13px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;letter-spacing:-.008em;
+    display:flex;flex-direction:column;align-items:center;gap:28px;padding:34px 20px 60px}
+  button{font:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  .caption{width:min(760px,100%);font-size:11px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--t3);margin-bottom:-16px}
+  .panel{width:min(760px,100%);border:1px solid var(--hair);border-radius:16px;padding:18px;
+    background:linear-gradient(rgba(255,255,255,.02),rgba(255,255,255,.02)),var(--card);
+    box-shadow:0 24px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04)}
+  .head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .head h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .head p{margin-top:3px;font-size:12px;color:var(--t3);max-width:52ch;line-height:1.5}
+  .badge{flex:none;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;
+    border:1px solid var(--hair);border-radius:999px;font-size:11.5px;color:var(--t2)}
+  .badge .d{width:6px;height:6px;border-radius:50%}
+  .badge.off .d{background:var(--t3)} .badge.arm .d{background:var(--warn);animation:b 2.4s infinite}
+  .badge.live .d{background:var(--ok);animation:b 3s infinite}
+  @keyframes b{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* the proposal under review — real content */
+  .proposal{border:1px solid var(--hair);border-radius:12px;padding:13px;margin-bottom:14px;background:var(--chrome)}
+  .proposal .k{font-size:10.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+  .proposal .v{margin-top:3px;font-size:13.5px;color:var(--t1);font-weight:500}
+  .proposal .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:10.5px;color:var(--t2);border:1px solid var(--hair);border-radius:6px;padding:2px 7px}
+  .chip.zone{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 30%,transparent)}
+
+  /* the gate ladder */
+  .ladder{border:1px solid var(--hair);border-radius:12px;overflow:hidden;margin-bottom:14px}
+  .gate{display:flex;align-items:center;gap:11px;padding:9px 13px;border-bottom:1px solid var(--hair-soft);font-size:12.5px}
+  .gate:last-child{border-bottom:0}
+  .gate .m{width:15px;height:15px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:9px}
+  .gate.pass .m{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+  .gate.pend .m{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+  .gate.block .m{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+  .gate .lbl{color:var(--t1)} .gate.pend .lbl,.gate.block .lbl{color:var(--t2)}
+  .gate .st{margin-left:auto;font-size:10.5px;color:var(--t3)}
+
+  /* the step controls */
+  .steps{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+  .step{border:1px solid var(--hair);border-radius:12px;padding:12px 13px;display:flex;align-items:center;gap:12px}
+  .step.done{border-color:color-mix(in srgb,var(--ok) 26%,transparent)}
+  .step .n{width:22px;height:22px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;border:1px solid var(--hair);color:var(--t2)}
+  .step.done .n{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok);border-color:transparent}
+  .step .body{min-width:0;flex:1}
+  .step .body b{font-size:12.5px;font-weight:600;display:block}
+  .step .body span{font-size:11.5px;color:var(--t3)}
+  .toggle{flex:none;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.1);position:relative;transition:.2s}
+  .toggle.on{background:var(--accent)}
+  .toggle i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+  .toggle.on i{left:18px}
+  .btn{flex:none;height:32px;padding:0 14px;border-radius:9px;border:1px solid var(--hair);font-size:12px;font-weight:600;color:var(--t2)}
+  .btn:hover{background:var(--hover);color:var(--t1)}
+  .btn.accent{background:var(--accent);color:var(--ink);border-color:transparent}
+  .phrase{flex:1;min-width:0;height:32px;border-radius:9px;border:1px solid var(--hair);background:var(--chrome);
+    padding:0 11px;font-size:12px;color:var(--t1);font-family:ui-monospace,monospace}
+  .phrase::placeholder{color:var(--t3);font-family:inherit}
+
+  /* the write action — the one place a real disk write happens */
+  .commit{border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:12px;padding:14px;
+    display:flex;align-items:center;gap:13px;background:color-mix(in srgb,var(--accent) 6%,transparent)}
+  .commit.locked{border-color:var(--hair);background:transparent;opacity:.6}
+  .commit .body{flex:1} .commit .body b{font-size:13px} .commit .body span{font-size:11.5px;color:var(--t3);display:block;margin-top:2px}
+  .commit .go{height:36px;padding:0 18px;border-radius:10px;background:var(--accent);color:var(--ink);font-weight:600;font-size:12.5px}
+  .commit.locked .go{background:rgba(255,255,255,.08);color:var(--t3);cursor:not-allowed}
+
+  .trust{margin-top:14px;padding-top:13px;border-top:1px solid var(--hair-soft);font-size:11.5px;color:var(--t3);line-height:1.7}
+  .trust b{color:var(--t2);font-weight:500}
+  .result{margin-top:12px;border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);border-radius:12px;
+    padding:12px 13px;background:color-mix(in srgb,var(--ok) 7%,transparent);font-size:12.5px}
+  .result b{color:var(--ok)}
+  .result .path{margin-top:4px;font-family:ui-monospace,monospace;font-size:11px;color:var(--t2)}
+  .note{width:min(760px,100%);font-size:12px;color:var(--t3);line-height:1.65}
+  .note b{color:var(--t2);font-weight:500}
+</style>
+</head>
+<body>
+
+  <!-- STATE A: armed, gates partway -->
+  <div class="caption">State 1 — real proposal under review, gates opening one at a time</div>
+  <div class="panel">
+    <div class="head">
+      <div>
+        <h2>Governed memory write</h2>
+        <p>When Luca learns something worth keeping, it asks here first. Nothing is written until every gate below is green and you confirm.</p>
+      </div>
+      <span class="badge arm"><span class="d"></span>Armed · dry-run passed</span>
+    </div>
+
+    <div class="proposal">
+      <div class="k">Luca wants to remember</div>
+      <div class="v">You prefer dark mode across your tools.</div>
+      <div class="meta">
+        <span class="chip">preference</span>
+        <span class="chip zone">project zone · non-sensitive</span>
+        <span class="chip">from this chat</span>
+        <span class="chip">confidence 90%</span>
+      </div>
+    </div>
+
+    <div class="ladder">
+      <div class="gate pass"><span class="m">✓</span><span class="lbl">Proposal validated, no side effects</span><span class="st">passed</span></div>
+      <div class="gate pass"><span class="m">✓</span><span class="lbl">Rollback plan ready</span><span class="st">ready</span></div>
+      <div class="gate pass"><span class="m">✓</span><span class="lbl">Content safety — no secrets, keys, or raw files</span><span class="st">clean</span></div>
+      <div class="gate pass"><span class="m">✓</span><span class="lbl">Privacy zone allowed (sensitive zones stay blocked)</span><span class="st">allowed</span></div>
+      <div class="gate pass"><span class="m">✓</span><span class="lbl">Side-effect-free dry-run completed</span><span class="st">done</span></div>
+      <div class="gate pend"><span class="m">•</span><span class="lbl">Your explicit approval</span><span class="st">waiting</span></div>
+      <div class="gate pend"><span class="m">•</span><span class="lbl">Confirmation phrase</span><span class="st">waiting</span></div>
+      <div class="gate block"><span class="m">·</span><span class="lbl">LucaLink sync</span><span class="st">disabled by design</span></div>
+    </div>
+
+    <div class="steps">
+      <div class="step done">
+        <span class="n">1</span>
+        <div class="body"><b>Enable the pilot</b><span>Turns on the governed write path. Still nothing written.</span></div>
+        <div class="toggle on"><i></i></div>
+      </div>
+      <div class="step done">
+        <span class="n">2</span>
+        <div class="body"><b>Run governed dry-run</b><span>Converts &amp; checks the proposal without touching disk.</span></div>
+        <button class="btn">Re-run</button>
+      </div>
+      <div class="step">
+        <span class="n">3</span>
+        <div class="body"><b>Confirm you approve this memory</b><span>Your explicit yes — required, per gate.</span></div>
+        <div class="toggle"><i></i></div>
+      </div>
+      <div class="step">
+        <span class="n">4</span>
+        <div class="body"><b>Type the confirmation phrase</b><span>Exactly, to unlock the write.</span></div>
+        <input class="phrase" placeholder="I approve this memory write" />
+      </div>
+    </div>
+
+    <div class="commit locked">
+      <div class="body"><b>Write to memory</b><span>Locked until steps 3 and 4 are complete.</span></div>
+      <button class="go">Write</button>
+    </div>
+
+    <div class="trust">
+      <b>Nothing runs until you decide.</b> This is the only surface in LucaOS that can write a Personal Intelligence memory to disk, and it does so through the same governed adapter every time — gate by gate. Sensitive zones (credential, financial, health, enterprise) stay blocked here regardless.
+    </div>
+  </div>
+
+  <!-- STATE B: all gates green, ready -->
+  <div class="caption">State 2 — every gate green, the write is unlocked</div>
+  <div class="panel">
+    <div class="head">
+      <div><h2>Governed memory write</h2><p>All gates green. This is the last click before it's written.</p></div>
+      <span class="badge live"><span class="d"></span>Ready to write</span>
+    </div>
+    <div class="proposal">
+      <div class="k">Luca wants to remember</div>
+      <div class="v">You prefer dark mode across your tools.</div>
+      <div class="meta"><span class="chip">preference</span><span class="chip zone">project zone</span><span class="chip">confidence 90%</span></div>
+    </div>
+    <div class="commit">
+      <div class="body"><b>Write to memory</b><span>All 13 gates green · rollback ready · you confirmed “I approve this memory write”.</span></div>
+      <button class="go">Write now</button>
+    </div>
+    <div class="trust"><b>Everything asked before it ran.</b> After the write, you'll see exactly where it landed and can roll it back.</div>
+  </div>
+
+  <!-- STATE C: written -->
+  <div class="caption">State 3 — written, with the honest receipt</div>
+  <div class="panel">
+    <div class="head">
+      <div><h2>Governed memory write</h2><p>Done. This memory is now part of what Luca knows about you.</p></div>
+      <span class="badge live"><span class="d"></span>Persisted</span>
+    </div>
+    <div class="result">
+      <b>✓ Written through the governed adapter.</b>
+      <div class="path">memory/preferences/prefers-dark-mode.json · category SEMANTIC · node mem_8f3a</div>
+    </div>
+    <div class="trust"><b>Only you can change what Luca remembers.</b> Manage or roll back this memory anytime from the Memory tab.</div>
+  </div>
+
+  <div class="note">
+    <b>The rules this encodes:</b> the pilot reviews a <b>real</b> proposal (from slice 2's builder), not the fixture ·
+    the gate ladder makes all 13 governance checks visible and honest — passed / waiting / blocked-by-design ·
+    the write is a <b>staged sequence</b> (enable → dry-run → approve → type the exact phrase → write), each step a real
+    pilot-state gate, so a stray click can never persist · the single “Write” action is the only path to a real
+    <b>memoryService.saveMemory</b>, through the governed adapter, with the live dependency from slice 1 ·
+    sensitive privacy zones remain blocked here regardless of approval · after the write, an honest receipt shows the
+    exact path and node id, and points to rollback. The being's language throughout: “Nothing runs until you decide.”
+  </div>
+
+</body>
+</html>
