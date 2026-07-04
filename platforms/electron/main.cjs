@@ -560,13 +560,20 @@ function createWindow() {
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
         backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
         transparent: false,
-        // Premium window chrome: no native titlebar and NO native overlay —
-        // the window controls are the renderer's own ghost buttons at the far
-        // right of the header (window-minimize/maximize/close IPC), so they
-        // share the exact skin, size, and hover of every other header control.
-        // A native overlay paints its own box and can never sit on a
-        // translucent, skinnable surface invisibly.
+        // Premium window chrome: no native titlebar. Per platform:
+        // - Windows: NO native overlay — the window controls are the
+        //   renderer's own ghost buttons at the far right of the header
+        //   (window-minimize/maximize/close IPC), so they share the exact
+        //   skin, size, and hover of every other header control. A native
+        //   overlay paints its own box and can never sit on a translucent,
+        //   skinnable surface invisibly.
+        // - macOS: the traffic lights ARE the platform language — keep them
+        //   native, vertically centered in the 56px band; the renderer
+        //   insets the band's left edge to give them their zone.
         titleBarStyle: 'hidden',
+        ...(process.platform === 'darwin'
+            ? { trafficLightPosition: { x: 16, y: 21 } }
+            : {}),
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),

@@ -16,6 +16,31 @@ export function isElectronShell(): boolean {
   return typeof window !== "undefined" && !!(window as any).electron;
 }
 
+function electronPlatform(): string | null {
+  if (!isElectronShell()) return null;
+  const p = (window as any)?.luca?.platform;
+  if (typeof p === "string") return p;
+  // Older preloads without the platform bridge: infer from the UA.
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  if (ua.includes("Mac")) return "darwin";
+  if (ua.includes("Windows")) return "win32";
+  return "linux";
+}
+
+/**
+ * Windows-only: the frameless window has NO controls of its own, so the
+ * shell renders its ghost buttons. macOS keeps native traffic lights and
+ * Linux keeps its native frame — custom buttons there would double up.
+ */
+export function rendersOwnWindowControls(): boolean {
+  return electronPlatform() === "win32";
+}
+
+/** macOS: native traffic lights overlay the band's top-left — inset for them. */
+export function hasMacTrafficLights(): boolean {
+  return electronPlatform() === "darwin";
+}
+
 export function setupWindowControlsOverlay(): void {
   if (typeof document === "undefined") return;
   const overlay = (navigator as any)?.windowControlsOverlay;

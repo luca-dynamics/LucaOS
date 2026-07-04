@@ -99,7 +99,11 @@ import OperationsSidebar from "./components/layout/OperationsSidebar";
 import ShellPresenceMark from "./components/presence/ShellPresenceMark";
 import AppMenu from "./components/layout/AppMenu";
 import { LUCA_MOTION_CSS_VARIABLES } from "./styles/lucaPresenceMotion";
-import { isElectronShell, sendWindowControl } from "./windowControlsOverlay";
+import {
+  hasMacTrafficLights,
+  rendersOwnWindowControls,
+  sendWindowControl,
+} from "./windowControlsOverlay";
 import SessionsRail from "./components/left-panel/SessionsRail";
 import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
@@ -2890,7 +2894,13 @@ function AppContent() {
               }}
             >
               <div className="flex-1 min-w-0 flex items-stretch">
-                <div className="flex items-center gap-1 pl-2">
+                {/* macOS: the native traffic lights overlay the band's
+                    top-left (centered via trafficLightPosition) — the band
+                    insets so the menu never sits under them. */}
+                <div
+                  className="flex items-center gap-1 pl-2"
+                  style={hasMacTrafficLights() ? { paddingLeft: 76 } : undefined}
+                >
                   <AppMenu
                     onNewSession={handleClearChat}
                     onOpenSettings={() => setShowSettingsModal(true)}
@@ -2959,9 +2969,10 @@ function AppContent() {
                   </button>
                   {/* Window controls: the shell's OWN buttons (no native
                       overlay) — same ghost skin and size as every other
-                      header control. Electron-only; the web shell has the
-                      browser's chrome. */}
-                  {isElectronShell() && (
+                      header control. Windows-Electron only: macOS keeps its
+                      native traffic lights (left edge), Linux its frame,
+                      and the web shell has the browser's chrome. */}
+                  {rendersOwnWindowControls() && (
                     <>
                       <button
                         type="button"
