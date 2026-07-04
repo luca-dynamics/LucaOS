@@ -32,6 +32,15 @@ export const lucaShellBorderStrongStyle: CSSProperties = {
   borderColor: LUCA_SHELL_BORDER_STRONG,
 };
 
+/* Header controls sit ON the environment: hairline outline, no fill —
+ * the same language as the header's status pills. Hover fill still comes
+ * from the .luca-shell-control CSS. */
+export const lucaShellHeaderGhostControlStyle: CSSProperties = {
+  background: "transparent",
+  borderColor: LUCA_SHELL_BORDER_SUBTLE,
+  color: LUCA_SHELL_TEXT_SECONDARY,
+};
+
 export const lucaShellHoverSurfaceStyle: CSSProperties = {
   background: LUCA_SHELL_HOVER_BACKGROUND,
 };
