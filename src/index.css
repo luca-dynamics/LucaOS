@@ -568,8 +568,9 @@ a,
   border-bottom-width: 0 !important;
   height: 100%;
 }
-/* When the Electron window-controls overlay is live, the band's far right
- * is the control cluster's home — one reservation, every layout. */
+/* PWA-only: when a REAL windowControlsOverlay is live (installed web app),
+ * the band's far right is the OS control cluster's home. Electron renders
+ * its own in-band control buttons instead and never sets luca-wco. */
 html.luca-wco .luca-wco-pad-right {
   padding-right: 144px;
 }

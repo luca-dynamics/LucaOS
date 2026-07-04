@@ -560,20 +560,13 @@ function createWindow() {
         show: false, // Start hidden; revealed only once the app is past boot (see launchInterface)
         backgroundColor: '#111417', // Carbon theme base (matches boot.html splash) — never flashes a see-through/empty frame
         transparent: false,
-        // Premium window chrome: no native titlebar. The OS window controls
-        // live at the far right of the renderer's UNIFIED TOP BAND (the
-        // Claude structure: sidebar segment · header segment · right-tabs
-        // segment · controls) — html.luca-wco reserves their zone.
+        // Premium window chrome: no native titlebar and NO native overlay —
+        // the window controls are the renderer's own ghost buttons at the far
+        // right of the header (window-minimize/maximize/close IPC), so they
+        // share the exact skin, size, and hover of every other header control.
+        // A native overlay paints its own box and can never sit on a
+        // translucent, skinnable surface invisibly.
         titleBarStyle: 'hidden',
-        titleBarOverlay: {
-            // Boot-matching at first paint (the window loads on Carbon base),
-            // then the RENDERER retints the cluster live per surface and skin
-            // via the luca:set-titlebar-overlay IPC below — a static color can
-            // only ever match one surface.
-            color: '#111417',
-            symbolColor: '#69737f',
-            height: 56
-        },
         icon: path.join(__dirname, '../../public/logo.png'), // Desktop Icon (Background)
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
@@ -1249,23 +1242,6 @@ app.on('ready', () => {
 
     // --- IPC HANDLERS ---
     console.log("[MAIN] Registering IPC Handlers...");
-
-    // Renderer-driven window-controls tint: the shell knows what surface the
-// cluster sits on (boot base -> header elevated -> per-skin); Windows-only
-// API, guarded.
-ipcMain.on('luca:set-titlebar-overlay', (_event, payload) => {
-    try {
-        if (mainWindow && !mainWindow.isDestroyed() && typeof mainWindow.setTitleBarOverlay === 'function') {
-            mainWindow.setTitleBarOverlay({
-                color: (payload && payload.color) || '#111417',
-                symbolColor: (payload && payload.symbolColor) || '#69737f',
-                height: 56
-            });
-        }
-    } catch (e) {
-        console.warn('[MAIN] setTitleBarOverlay failed:', e.message);
-    }
-});
 
 ipcMain.handle('get-local-ip', async () => {
         console.log("[IPC] Handler 'get-local-ip' called");

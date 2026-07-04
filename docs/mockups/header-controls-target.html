@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Header Controls Target (one band, own window controls)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#1b2025; --canvas-bot:#15191d; --chrome:#111417; --base:#101317;
+    --hair:rgba(255,255,255,.07); --hair-soft:rgba(255,255,255,.045);
+    --hover:rgba(255,255,255,.06);
+    --t1:#e9edf2; --t2:#9aa4b2; --t3:#69737f;
+    --accent:#7aa2ff; --ink:#0c0e12; --ok:#4fbf7a; --warn:#e0b15a; --bad:#f87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:#0a0c0e;color:var(--t1);
+    font:400 13px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;letter-spacing:-.008em;font-variant-numeric:tabular-nums;
+    display:flex;flex-direction:column;align-items:center;gap:30px;padding:34px 20px 50px}
+  svg{display:block}
+  button{font:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  .caption{width:min(1100px,100%);font-size:11px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--t3);margin-bottom:-18px}
+  .frame{width:min(1100px,100%);border:1px solid var(--hair);border-radius:14px;overflow:hidden;
+    box-shadow:0 26px 70px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
+
+  /* ── the top band: ONE surface, owned by the middle ── */
+  .band{display:flex;align-items:center;height:56px;background:var(--canvas);gap:4px;padding:0 8px}
+  .ghost{display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;
+    border:1px solid var(--hair);border-radius:9px;color:var(--t2);flex:none}
+  .ghost:hover{background:var(--hover);color:var(--t1)}
+  .ghost.close:hover{color:var(--bad)}
+  .band .grow{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;padding:0 8px}
+  .pill{display:inline-flex;align-items:center;gap:7px;height:31px;padding:0 12px;
+    border:1px solid var(--hair);border-radius:999px;font-size:12px;color:var(--t2);flex:none}
+  .pill b{color:var(--t1);font-weight:600}
+  .pill .tag{font-size:10px;font-weight:600;color:var(--ok);background:rgba(79,191,122,.1);
+    border-radius:5px;padding:1px 6px}
+  .quiet{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ok)}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+  .sep{width:1px;height:20px;background:var(--hair-soft);margin:0 4px;flex:none}
+
+  /* ── the environment below: panels base, middle elevated ── */
+  .body3{display:flex;height:300px}
+  .panelL,.panelR{width:23%;background:
+    linear-gradient(rgba(255,255,255,.02),rgba(255,255,255,.02)),var(--base)}
+  .panelL{border-right:1px solid var(--hair-soft);box-shadow:6px 0 18px -10px rgba(0,0,0,.5)}
+  .panelR{border-left:1px solid var(--hair-soft);box-shadow:-6px 0 18px -10px rgba(0,0,0,.5)}
+  .mid{flex:1;background:linear-gradient(180deg,var(--canvas) 0%,color-mix(in srgb,var(--canvas) 45%,var(--base)) 100%)}
+  .ph{margin:14px;height:12px;border-radius:6px;background:rgba(255,255,255,.05)}
+  .ph.s{width:55%}
+  .label-in{margin:14px 14px 0;font-size:10.5px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase}
+
+  /* ── before / after strip ── */
+  .duo{width:min(1100px,100%);display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .duo .cell{border:1px solid var(--hair);border-radius:12px;overflow:hidden}
+  .duo .head{padding:8px 12px;font-size:10.5px;font-weight:600;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--hair-soft)}
+  .duo .head.badx{color:var(--bad)}
+  .duo .row{display:flex;align-items:center;justify-content:flex-end;height:56px;gap:4px;
+    background:var(--canvas);padding:0 8px}
+  /* old: the native overlay box + second header strip */
+  .oldstrip{display:flex;align-items:center;gap:8px;height:44px;padding:0 10px;margin-right:6px;
+    background:#0d1013;border:1px solid var(--hair-soft);border-radius:8px}
+  .oldbox{display:flex;align-items:stretch;height:56px;margin-right:-8px;background:#0d1013}
+  .oldbox span{display:flex;align-items:center;justify-content:center;width:46px;color:#8a939e;font-size:13px}
+
+  .note{width:min(1100px,100%);font-size:12px;color:var(--t3);line-height:1.65}
+  .note b{color:var(--t2);font-weight:500}
+  .icon{stroke:currentColor;fill:none;stroke-width:1.2;stroke-linecap:round}
+</style>
+</head>
+<body>
+
+  <!-- ═══ 1 · THE BAND — one surface, end to end ═══ -->
+  <div class="caption">The band — one surface end to end; the window controls are OUR buttons, same skin &amp; size</div>
+  <div class="frame">
+    <div class="band">
+      <!-- left segment -->
+      <button class="ghost" title="Menu"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg></button>
+      <button class="ghost" title="Toggle sidebar"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M6.5 3v10"/></svg></button>
+
+      <!-- middle: status cluster sits TRANSPARENT on the band (no second strip) -->
+      <div class="grow">
+        <span class="quiet"><span class="dot"></span>On device</span>
+        <span class="sep"></span>
+        <span class="pill"><b>1,240</b><span class="tag">Prime</span></span>
+        <span class="pill">Ollama · llama3</span>
+        <button class="ghost" title="Voice"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="6" y="2.5" width="4" height="7" rx="2"/><path d="M3.5 8a4.5 4.5 0 0 0 9 0M8 12.5V14"/></svg></button>
+        <button class="ghost" title="Wake word"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><path d="M2.5 8c1.5-3 3-3 4.5 0s3 3 4.5 0 2-1.5 2 0"/></svg></button>
+        <button class="ghost" title="Settings"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><circle cx="8" cy="8" r="2.2"/><path d="M8 2v1.6M8 12.4V14M2 8h1.6M12.4 8H14M3.8 3.8l1.1 1.1M11.1 11.1l1.1 1.1M12.2 3.8l-1.1 1.1M4.9 11.1l-1.1 1.1"/></svg></button>
+      </div>
+
+      <!-- right segment: panel toggle, then OUR window controls — identical ghosts -->
+      <button class="ghost" title="Toggle panel"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M9.5 3v10"/></svg></button>
+      <span style="width:8px"></span>
+      <button class="ghost" title="Minimize"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><path d="M3.5 8.5h9"/></svg></button>
+      <button class="ghost" title="Maximize"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="4" y="4" width="8" height="8" rx="1.5"/></svg></button>
+      <button class="ghost close" title="Close"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></button>
+    </div>
+
+    <!-- the environment below: panels stay CHROME (base), middle stays ELEVATED -->
+    <div class="body3">
+      <div class="panelL"><div class="label-in">Chrome · base</div><div class="ph s"></div><div class="ph"></div><div class="ph s"></div></div>
+      <div class="mid"><div class="label-in" style="color:#7d8794">Environment · elevated (owns the band above)</div><div class="ph" style="width:40%"></div></div>
+      <div class="panelR" style="width:26%"><div class="label-in">Chrome · base — wider (380px) so tabs breathe</div><div class="ph"></div><div class="ph s"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══ 2 · BEFORE / AFTER ═══ -->
+  <div class="caption">Why — the native cluster could never blend; ours is just another header control</div>
+  <div class="duo">
+    <div class="cell">
+      <div class="head badx">Before — native overlay box + the header's second strip</div>
+      <div class="row">
+        <div class="oldstrip"><span style="font-size:11px;color:var(--t2)">voice · wake · ollama · ⚙</span></div>
+        <button class="ghost" title="Toggle panel"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M9.5 3v10"/></svg></button>
+        <div class="oldbox"><span>–</span><span>▢</span><span>✕</span></div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="head" style="color:var(--ok)">After — one background, one control language</div>
+      <div class="row">
+        <span class="pill" style="margin-right:2px">Ollama · llama3</span>
+        <button class="ghost" title="Settings"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><circle cx="8" cy="8" r="2.2"/><path d="M8 2v1.6M8 12.4V14M2 8h1.6M12.4 8H14M3.8 3.8l1.1 1.1M11.1 11.1l1.1 1.1M12.2 3.8l-1.1 1.1M4.9 11.1l-1.1 1.1"/></svg></button>
+        <button class="ghost" title="Toggle panel"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M9.5 3v10"/></svg></button>
+        <span style="width:8px"></span>
+        <button class="ghost" title="Minimize"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><path d="M3.5 8.5h9"/></svg></button>
+        <button class="ghost" title="Maximize"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><rect x="4" y="4" width="8" height="8" rx="1.5"/></svg></button>
+        <button class="ghost close" title="Close"><svg width="16" height="16" viewBox="0 0 16 16" class="icon"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>The rules this encodes:</b> the top band is <b>one surface</b> (the middle's elevated environment) — the
+    status cluster (voice, wake word, Ollama tag, settings) sits transparent on it, no second strip ·
+    min/max/close are <b>the shell's own ghost buttons</b>, the exact size and skin of the panel toggles
+    (a native overlay paints its own box and can never blend with a translucent, skinnable surface) —
+    close warms to danger only on hover · the dead 144px reservation for the native cluster is gone, so the
+    band's right edge is real controls, not blind space · <b>the depth split stays</b>: side panels ground on
+    base (chrome recedes), the middle owns the elevated tone — they never share the same material ·
+    right panel default widens 340 → 380px so its tabs display well.
+  </div>
+
+</body>
+</html>

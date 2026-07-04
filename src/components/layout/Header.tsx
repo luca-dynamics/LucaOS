@@ -117,15 +117,22 @@ const Header: React.FC<HeaderProps> = ({
         ? "var(--luca-info)"
         : "var(--luca-success)";
 
-  const headerSurfaceStyle = isMobile
-    ? lucaMaterialMobilePanelChromeStyle
-    : lucaMaterialPanelStyle;
+  // Embedded in the shell's top band (desktop): the band already paints the
+  // environment surface — the header must be TRANSPARENT furniture on it, or
+  // it reads as a second, mismatched strip. Standalone/mobile keeps its own
+  // panel chrome.
+  const embedded = hideBrand && !isMobile;
+  const headerSurfaceStyle = embedded
+    ? undefined
+    : isMobile
+      ? lucaMaterialMobilePanelChromeStyle
+      : lucaMaterialPanelStyle;
   const surfaceStyle = isMobile ? lucaMaterialMobileControlStyle : lucaMaterialControlStyle;
 
   return (
     <header
       id="app-header"
-      className={`${isMobile ? "h-16 px-4" : "h-14 px-6"} luca-window-drag glass-blur flex items-center justify-between z-50 transition-all duration-500 relative drag border-b`}
+      className={`${isMobile ? "h-16 px-4" : embedded ? "h-full px-4" : "h-14 px-6"} luca-window-drag ${embedded ? "" : "glass-blur border-b"} flex items-center justify-between z-50 transition-all duration-500 relative drag`}
       style={headerSurfaceStyle}
     >
       <RuntimeContinuityBootstrap />
