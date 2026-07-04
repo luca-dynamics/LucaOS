@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   alignedMissionEvaluationFixture,
   missionAdvisoryRecommendationFixture,
@@ -6,11 +6,41 @@ import {
   safeMissionContextSnapshotFixture,
   summarizeMissionAdvisoryContext,
   summarizeMissionRuntimeReadiness,
+  type PersonalIntelligenceMissionContextSnapshot,
 } from "../../personal-intelligence/missionRuntime";
+import { missionControlService } from "../../services/agent/MissionControlService";
+import { buildMissionContextSnapshotFromLive } from "../../services/personalIntelligence/missionSnapshotBridge";
 import { settingsSurfaceTokens } from "./settingsLayoutStyles";
 
 export const PersonalIntelligenceMissionRuntimePanel: React.FC = () => {
-  const snapshot = safeMissionContextSnapshotFixture;
+  // Show the REAL active mission (SQLite via MissionControlService) when one
+  // exists; fall back to the illustrative fixture on web / when nothing is
+  // active, so the surface still explains itself. The advisory evaluation /
+  // recommendation / guidance below stay illustrative — there is no live
+  // proposal to evaluate against — so they remain honestly labelled "sample".
+  const [snapshot, setSnapshot] =
+    useState<PersonalIntelligenceMissionContextSnapshot>(
+      safeMissionContextSnapshotFixture,
+    );
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    missionControlService
+      .getActiveMission()
+      .then((live) => {
+        if (!active || !live) return;
+        setSnapshot(buildMissionContextSnapshotFromLive(live));
+        setIsLive(true);
+      })
+      .catch(() => {
+        /* keep the fixture fallback */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const evaluation = alignedMissionEvaluationFixture;
   const recommendation = missionAdvisoryRecommendationFixture;
   const guidance = missionCollaborativeGuidanceFixture;
@@ -26,9 +56,21 @@ export const PersonalIntelligenceMissionRuntimePanel: React.FC = () => {
               A bounded planning-context preview for working with the user. Advisory only — no autonomous execution.
             </p>
           </div>
-          <span className="rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide" style={{ borderColor: settingsSurfaceTokens.borderSubtle, color: settingsSurfaceTokens.textSecondary }}>
-            Mode: {snapshot.mode}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium"
+              style={{ borderColor: settingsSurfaceTokens.borderSubtle, color: settingsSurfaceTokens.textSecondary }}
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ background: isLive ? "var(--luca-success, #4fbf7a)" : settingsSurfaceTokens.textTertiary }}
+              />
+              {isLive ? "Live mission" : "Sample mission"}
+            </span>
+            <span className="rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide" style={{ borderColor: settingsSurfaceTokens.borderSubtle, color: settingsSurfaceTokens.textSecondary }}>
+              Mode: {snapshot.mode}
+            </span>
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-medium" style={{ color: settingsSurfaceTokens.textSecondary }}>
           <span className="rounded-full border px-2 py-1" style={{ borderColor: settingsSurfaceTokens.borderSubtle }}>Mission alignment is not approval</span>
