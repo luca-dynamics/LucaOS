@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "../ui/Icon";
 import { memoryService } from "../../services/memoryService";
+import { memoryProposalService } from "../../services/memory/MemoryProposalService";
+import { buildBundleFromPendingProposals } from "../../services/personalIntelligence/memoryProposalBridge";
 import { MemoryNode } from "../../types";
 import { cortexUrl } from "../../config/api";
 import {
@@ -46,6 +48,21 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
+
+  // Feed the governed write pilot a REAL pending memory from the live proposal
+  // queue when one is reviewable; otherwise the pilot falls back to its sample
+  // so the surface still explains itself. Read once when the tab opens.
+  const buildLiveProposalBundle = useMemo(() => {
+    let bundle = null;
+    try {
+      bundle = buildBundleFromPendingProposals(
+        memoryProposalService.listProposals(),
+      );
+    } catch {
+      bundle = null;
+    }
+    return bundle ? () => bundle : undefined;
+  }, []);
 
   useEffect(() => {
     loadAllMemories();
@@ -167,7 +184,9 @@ const SettingsDataTab: React.FC<SettingsDataTabProps> = ({
         isMobile={isMobile}
       >
         <PersonalIntelligencePersistencePreview />
-        <PersonalIntelligenceMemoryApprovalPilot />
+        <PersonalIntelligenceMemoryApprovalPilot
+          buildProposalBundle={buildLiveProposalBundle}
+        />
         <PersonalIntelligenceRuntimeTracePanel />
         <PersonalIntelligenceMissionRuntimePanel />
       </SettingsSection>
