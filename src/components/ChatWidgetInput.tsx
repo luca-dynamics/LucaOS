@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, KeyboardEvent } from "react";
+import React, { useRef, useEffect, useState, KeyboardEvent } from "react";
 import { Icon } from "./ui/Icon";
 import ChatModelSwitcher from "./chat/ChatModelSwitcher";
 import IntentRoutingModeSelector from "./runtime/IntentRoutingModeSelector";
@@ -78,6 +78,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
   activePluginId,
   onClearActivePlugin,
 }) => {
+  const [plusOpen, setPlusOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // THREE.Color/CSS doesn't always handle 8-digit hex properly when appending, sanitize to 6-digit
@@ -289,97 +290,95 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 composer header so there is a single mode control). */}
             <IntentRoutingModeSelector compact theme={{ hex: safeColor }} />
 
-            {/* Clear Chat Button */}
-            {onClearChat && (
+            {/* The + menu (composer-target): attach, screen, vision, clear
+                as one honest labeled list. Four unlabeled icon buttons said
+                nothing; a list can. */}
+            <div className="relative">
               <button
                 type="button"
-                onClick={onClearChat}
-                className="p-1.5 hover:text-[var(--luca-danger,#f87171)] transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
+                aria-haspopup="menu"
+                aria-expanded={plusOpen}
+                title="Add - files, screen, vision"
+                onClick={() => setPlusOpen((v) => !v)}
+                className="p-1.5 transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-95 relative"
                 style={quietControlStyle}
-                title="Clear Chat"
               >
-                <Icon
-                  name="Chat"
-                  size={15}
-                  variant="BoldDuotone"
-                  className="sm:w-[13px] sm:h-[13px]"
-                />
+                <Icon name="AddCircle" size={15} className="sm:w-[13px] sm:h-[13px]" />
+                {isEyeActive && (
+                  <span
+                    className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: safeColor }}
+                    aria-hidden="true"
+                  />
+                )}
               </button>
-            )}
-
-            {/* Attachment Button */}
-            <button
-              type="button"
-              className="p-1.5 transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
-              style={quietControlStyle}
-              title="Attach file"
-              onClick={onAttachClick}
-            >
-              <Icon
-                name="Import"
-                size={15}
-                variant="BoldDuotone"
-                className="sm:w-[13px] sm:h-[13px]"
-              />
-            </button>
-
-            {/* Camera/Vision Toggle */}
-            <button
-              type="button"
-              onClick={onToggleEye}
-              className={`
-                p-1.5 rounded-md border transition-all
-                ${
-                  isEyeActive
-                    ? ""
-                    : "hover:text-[var(--luca-text-primary,var(--app-text-main))] hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
-                }
-                active:scale-90
-                relative
-              `}
-              style={{
-                color: isEyeActive ? safeColor : quietControlStyle.color,
-                borderColor: isEyeActive ? `${safeColor}b3` : quietControlStyle.borderColor,
-                boxShadow: isEyeActive ? LUCA_SHELL_SHADOW_GLOW : undefined,
-              }}
-              title={
-                isEyeActive ? "Disable Vision" : "Enable Vision (Luca Eye)"
-              }
-            >
-              <Icon
-                name="Monitor"
-                size={15}
-                variant="BoldDuotone"
-                className={`sm:w-[13px] sm:h-[13px] ${
-                  isEyeActive ? "animate-pulse" : ""
-                }`}
-              />
-              {/* Active indicator */}
-              {isEyeActive && (
-                <span
-                  className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full animate-ping"
-                  style={{ backgroundColor: safeColor }}
-                />
+              {plusOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-[60]"
+                    onClick={() => setPlusOpen(false)}
+                  />
+                  <div
+                    role="menu"
+                    className="absolute bottom-full left-0 z-[70] mb-1.5 w-[216px]"
+                    style={{
+                      background:
+                        "var(--luca-background-elevated, var(--app-bg-main, #14181d))",
+                      border:
+                        "1px solid var(--luca-border-subtle, rgba(255,255,255,0.08))",
+                      borderRadius: 12,
+                      boxShadow:
+                        "0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
+                      padding: 4,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setPlusOpen(false); onAttachClick?.(); }}
+                      className="flex h-8 w-full items-center gap-2.5 rounded-lg px-3 text-[12.5px] text-[var(--app-text-main)] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))]"
+                    >
+                      <Icon name="Import" size={13} className="text-[var(--app-text-muted)]" />
+                      Attach file
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setPlusOpen(false); onToggleEye?.(); }}
+                      className="flex h-8 w-full items-center gap-2.5 rounded-lg px-3 text-[12.5px] text-[var(--app-text-main)] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))]"
+                    >
+                      <Icon name="Monitor" size={13} className="text-[var(--app-text-muted)]" />
+                      {isEyeActive ? "Stop showing my screen" : "Show Luca my screen"}
+                    </button>
+                    {onScreenShare && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setPlusOpen(false); onScreenShare(); }}
+                        className="flex h-8 w-full items-center gap-2.5 rounded-lg px-3 text-[12.5px] text-[var(--app-text-main)] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))]"
+                      >
+                        <Icon name="Monitor" size={13} className="text-[var(--app-text-muted)]" />
+                        Share screen
+                      </button>
+                    )}
+                    {onClearChat && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setPlusOpen(false); onClearChat(); }}
+                        className="flex h-8 w-full items-center gap-2.5 rounded-lg px-3 text-[12.5px] text-[var(--app-text-main)] transition-colors hover:bg-[var(--luca-surface-hover,rgba(255,255,255,0.06))]"
+                      >
+                        <Icon name="Chat" size={13} className="text-[var(--app-text-muted)]" />
+                        Clear conversation
+                      </button>
+                    )}
+                    <div className="px-3 pb-1 pt-1.5 text-[10.5px] text-[var(--app-text-muted)] opacity-80">
+                      Everything asks before it runs.
+                    </div>
+                  </div>
+                </>
               )}
-            </button>
-
-            {/* Screen Share (Monitor) */}
-            {onScreenShare && (
-              <button
-                type="button"
-                onClick={onScreenShare}
-                className="p-1.5 transition-all rounded-md border hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
-                style={quietControlStyle}
-                title="Share Screen"
-              >
-                <Icon
-                  name="Monitor"
-                  size={15}
-                  variant="BoldDuotone"
-                  className="sm:w-[13px] sm:h-[13px]"
-                />
-              </button>
-            )}
+            </div>
 
             {/* Status Indicators (RELOCATED LEFT) */}
             <div className="hidden sm:flex items-center gap-1 ml-1">
@@ -446,10 +445,10 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                 const isAnyConnected = connected.length > 0;
 
                 const label = !isAnyConnected
-                  ? "OFFLINE"
+                  ? "offline"
                   : connected.length === 1
-                    ? connected[0].name.toUpperCase()
-                    : `${connected.length} MCP`;
+                    ? connected[0].name
+                    : `${connected.length} connected`;
 
                 return (
                   <div className="hidden sm:flex items-center relative group/mcp ml-1">
@@ -462,7 +461,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                           }),
                         )
                       }
-                      className="flex items-center gap-1 text-[10px] sm:text-[11px] font-mono px-1.5 rounded-md border h-[24px] sm:h-[27px] transition-all hover:opacity-80 active:scale-95"
+                      className="flex items-center gap-1.5 text-[11px] px-2 rounded-md border h-[24px] sm:h-[27px] transition-all hover:opacity-80 active:scale-95"
                       style={{
                         borderColor: isAnyConnected
                           ? `${safeColor}40`
@@ -485,7 +484,7 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
                         className={`opacity-70 flex-shrink-0 ${!isAnyConnected ? "grayscale" : ""}`}
                       />
                       <span
-                        className={`font-bold truncate max-w-[72px] ${!isAnyConnected ? "opacity-60" : ""}`}
+                        className={`font-medium truncate max-w-[88px] ${!isAnyConnected ? "opacity-70" : ""}`}
                       >
                         {label}
                       </span>
@@ -692,30 +691,30 @@ const ChatWidgetInput: React.FC<ChatWidgetInputProps> = ({
               transition-all duration-200
               ${
                 isProcessing
-                  ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] animate-pulse hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] active:scale-95"
+                  ? "bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)] active:scale-95"
                   : input.trim() || attachment
-                    ? "text-[var(--luca-accent-primary)] hover:text-[var(--luca-accent-primary)] hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))] active:scale-90"
-                    : "text-[var(--luca-text-tertiary,var(--app-text-muted))] cursor-not-allowed"
-              }
+                    ? "active:scale-90 hover:opacity-90"
+                    : "cursor-not-allowed"
               }
             `}
               style={
-                (!isProcessing
-                  ? {
-                      WebkitAppRegion: "no-drag",
-                      borderColor: `${safeColor}${
-                        input.trim() || attachment ? "b3" : "60"
-                      }`,
-                      color:
-                        input.trim() || attachment
-                          ? safeColor
-                          : `${safeColor}cc`,
-                    }
-                  : {
-                      WebkitAppRegion: "no-drag",
-                      boxShadow:
-                        "0 0 20px color-mix(in srgb, var(--luca-danger,#f87171) 45%, transparent)",
-                    }) as any
+                (isProcessing
+                  ? { WebkitAppRegion: "no-drag" }
+                  : input.trim() || attachment
+                    ? {
+                        // The composer's only accent: the send wakes with content.
+                        WebkitAppRegion: "no-drag",
+                        backgroundColor: safeColor,
+                        borderColor: "transparent",
+                        color: "var(--luca-accent-ink, #0c0e12)",
+                      }
+                    : {
+                        WebkitAppRegion: "no-drag",
+                        borderColor:
+                          "var(--luca-border-subtle, var(--app-border-main))",
+                        color:
+                          "var(--luca-text-tertiary, var(--app-text-muted))",
+                      }) as any
               }
               title={
                 isProcessing

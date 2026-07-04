@@ -77,7 +77,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
         <button
           key={suggestion.id}
           onClick={() => onChipClick(suggestion.prompt)}
-          className={`group flex-shrink flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium transition-all duration-300 glass-blur ${
+          className={`group flex-shrink flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-medium transition-all duration-300 ${
             isLight
               ? "shadow-sm hover:shadow-md"
               : "hover:bg-white/10"
@@ -110,7 +110,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
           <span className="opacity-70 group-hover:opacity-100 transition-opacity duration-300" style={{ color: themeHex }}>
             {ICON_MAP[suggestion.icon] || <Icon name="Flash" size={10} />}
           </span>
-          <span className="whitespace-nowrap tracking-tight font-bold uppercase text-[8px]">{suggestion.label}</span>
+          <span className="whitespace-nowrap tracking-tight normal-case">{suggestion.label}</span>
         </button>
       ))}
 
@@ -118,7 +118,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({
       {suggestions.length > 2 && (
         <button
           onClick={onDismissAll}
-          className={`text-[10px] font-bold uppercase tracking-widest opacity-20 hover:opacity-50 transition-opacity px-2 ${
+          className={`text-[12px] font-medium normal-case opacity-40 hover:opacity-70 transition-opacity px-2 ${
             isLight ? "text-gray-900" : "text-white"
           }`}
         >
