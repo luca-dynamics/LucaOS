@@ -3,6 +3,8 @@ import { Icon } from "../ui/Icon";
 import { PersonaConfig, PersonaDefinition } from "../../types";
 import { createIdentityProfilePreview } from "../../personal-intelligence";
 import { IdentityCorePreviewCard } from "./personalIntelligencePreview";
+import { settingsService } from "../../services/settingsService";
+import { buildIdentityCoreInputFromOperatorProfile } from "../../services/personalIntelligence/identityCoreBridge";
 import {
   SettingsAdvancedDisclosure,
   SettingsCard,
@@ -33,21 +35,30 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
 
   const availablePersonas = config ? Object.keys(config.personas) : [];
   const currentPersona = config ? config.personas[selectedPersona] : null;
-  const identityPreview = createIdentityProfilePreview({
-    userId: "settings-preview-user",
-    displayName: "LucaOS operator",
-    preferredName: "Operator",
-    communicationStyle: "technical",
-    lucaPersonality: {
-      tone: currentPersona?.description || "Calm, direct, and collaborative",
-      traits: [selectedPersona.toLowerCase(), "user-aligned"],
-      boundaries: ["approval-before-action", "privacy-by-default"],
+  // Prefer the REAL operator profile (learned during onboarding / conversation)
+  // when one exists; otherwise fall back to the illustrative preview so the
+  // surface still explains itself. Read-only in Personal Intelligence.
+  const liveIdentityInput = buildIdentityCoreInputFromOperatorProfile(
+    settingsService.getOperatorProfile(),
+  );
+  const identityIsLive = liveIdentityInput !== null;
+  const identityPreview = createIdentityProfilePreview(
+    liveIdentityInput ?? {
+      userId: "settings-preview-user",
+      displayName: "LucaOS operator",
+      preferredName: "Operator",
+      communicationStyle: "technical",
+      lucaPersonality: {
+        tone: currentPersona?.description || "Calm, direct, and collaborative",
+        traits: [selectedPersona.toLowerCase(), "user-aligned"],
+        boundaries: ["approval-before-action", "privacy-by-default"],
+      },
+      activeProjects: ["Personal Intelligence settings integration"],
+      preferredModels: ["local-first", "user-selected fallback"],
+      devicePreferences: [],
+      privacyDefaults: { private: "deny", credential: "deny", project: "allow" },
     },
-    activeProjects: ["Personal Intelligence settings integration"],
-    preferredModels: ["local-first", "user-selected fallback"],
-    devicePreferences: [],
-    privacyDefaults: { private: "deny", credential: "deny", project: "allow" },
-  });
+  );
 
   // Sync local Clean Instruction state when persona changes
   // (State removal cleanup)
@@ -185,7 +196,7 @@ const PersonalityDashboard: React.FC<PersonalityDashboardProps> = ({
         accentColor={theme.hex}
         isMobile={isMobile}
       >
-        <IdentityCorePreviewCard identity={identityPreview} />
+        <IdentityCorePreviewCard identity={identityPreview} live={identityIsLive} />
       </SettingsSection>
 
       <SettingsSection

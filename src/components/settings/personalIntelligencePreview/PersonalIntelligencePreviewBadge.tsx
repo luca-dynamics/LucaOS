@@ -5,7 +5,9 @@ export type PreviewBadgeLabel =
   | "Preview only"
   | "Not saved"
   | "Not applied"
-  | "No execution";
+  | "No execution"
+  | "From your profile"
+  | "Read-only";
 
 interface PersonalIntelligencePreviewBadgeProps {
   label?: PreviewBadgeLabel;
