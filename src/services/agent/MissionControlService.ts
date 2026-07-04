@@ -26,6 +26,22 @@ export interface Mission {
   metadata?: any;
 }
 
+export interface MissionSnapshot {
+  mission: Mission;
+  goals: MissionGoal[];
+}
+
+function isMissionSnapshot(value: unknown): value is MissionSnapshot {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as { mission?: unknown; goals?: unknown };
+  return (
+    !!candidate.mission &&
+    typeof candidate.mission === "object" &&
+    typeof (candidate.mission as { id?: unknown }).id === "number" &&
+    Array.isArray(candidate.goals)
+  );
+}
+
 export class MissionControlService {
   private static instance: MissionControlService;
 
@@ -73,6 +89,32 @@ export class MissionControlService {
    */
   public async getActiveMissionContext(): Promise<string> {
     return window.luca.missionControl.getContext();
+  }
+
+  /**
+   * Read the active mission + its goals as structured data (read-only), or null
+   * when there is no active mission or the mission bridge is unavailable (e.g.
+   * the browser-safe web build, where window.luca is absent). The IPC result is
+   * untyped, so validate the shape defensively before trusting it.
+   */
+  public async getActiveMission(): Promise<MissionSnapshot | null> {
+    if (
+      typeof window === "undefined" ||
+      !window.luca?.missionControl?.getActive
+    ) {
+      return null;
+    }
+    try {
+      const raw = await window.luca.missionControl.getActive();
+      return isMissionSnapshot(raw) ? raw : null;
+    } catch (error) {
+      loggerService.error(
+        "MISSION_CONTROL",
+        "Failed to read active mission",
+        error,
+      );
+      return null;
+    }
   }
 
   /**

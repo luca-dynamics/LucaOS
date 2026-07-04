@@ -541,6 +541,7 @@ function createWindow() {
             ipcMain.handle('mission-add-goal', (_event, missionId, description, dependencyId) => missionControl.addGoal(missionId, description, dependencyId));
             ipcMain.handle('mission-update-goal', (_event, goalId, status) => missionControl.updateGoalStatus(goalId, status));
             ipcMain.handle('mission-get-context', () => missionControl.getActiveMissionContext());
+            ipcMain.handle('mission-get-active', () => missionControl.getActiveMissionStructured());
             ipcMain.handle('mission-archive', (_event, missionId) => missionControl.archiveMission(missionId));
             /* eslint-enable no-unused-vars */
             missionControlHandlersRegistered = true;
