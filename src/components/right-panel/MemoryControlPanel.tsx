@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
 import type { MemoryNode } from "../../types";
 import type { LucaExperienceMode } from "../../experience/experienceMode";
-import { personalIntelligenceDashboardGraphFixture } from "../../personal-intelligence/dashboard";
 import { memoryService } from "../../services/memoryService";
 import { memoryGovernanceService } from "../../services/memory/MemoryGovernanceService";
 import { memoryProposalService } from "../../services/memory/MemoryProposalService";
@@ -14,18 +13,19 @@ import RightPanelMetric from "./RightPanelMetric";
 import RightPanelSection from "./RightPanelSection";
 import { formatMemoryValue, isRenderableMemory } from "./rightPanelModel";
 import { setHexAlpha } from "../../config/themeColors";
-import PersonalIntelligenceReadOnlyPanel from "./PersonalIntelligenceReadOnlyPanel";
 
 interface MemoryControlPanelProps {
   theme: { hex: string; primary: string; border: string };
   memories: MemoryNode[];
   setMemories: React.Dispatch<React.SetStateAction<MemoryNode[]>>;
-  experienceMode: LucaExperienceMode;
+  // Retained for API compatibility with the desktop/web callers; disclosure
+  // now lives in the real memory views below, not a fictional preview panel.
+  experienceMode?: LucaExperienceMode;
 }
 
 type MemoryViewMode = "Archive" | "Governance" | "Proposals" | "Graph";
 
-const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories, setMemories, experienceMode }) => {
+const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories, setMemories }) => {
   const [viewMode, setViewMode] = useState<MemoryViewMode>("Archive");
   const [revision, setRevision] = useState(0);
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
@@ -45,12 +45,6 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
 
   return (
     <div className="space-y-3">
-      <PersonalIntelligenceReadOnlyPanel
-        graph={personalIntelligenceDashboardGraphFixture}
-        mode={experienceMode}
-        fixture
-      />
-
       <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
@@ -58,8 +52,8 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
               <Icon name="Database" size={18} />
             </div>
             <div>
-              <div className="text-sm font-black uppercase tracking-[0.18em] text-[var(--app-text-main)]">MEMORY</div>
-              <p className="mt-1 text-xs leading-relaxed text-[var(--app-text-muted)]">Memory readiness, archive, governance review, and the preserved cluster graph concept.</p>
+              <div className="text-[13px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Memory</div>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--luca-text-tertiary,var(--app-text-muted))]">What Luca remembers, and the governance around it. Only you can change what's kept.</p>
             </div>
           </div>
           <button
@@ -93,7 +87,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
             key={mode}
             type="button"
             onClick={() => setViewMode(mode)}
-            className={`flex-1 rounded-lg px-2 py-2 text-[10px] font-black uppercase tracking-widest transition-colors ${viewMode === mode ? "bg-white/10 text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"}`}
+            className={`flex-1 rounded-lg px-2 py-2 text-[11.5px] font-medium tracking-tight transition-colors ${viewMode === mode ? "bg-white/10 text-[var(--app-text-main)]" : "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"}`}
             style={viewMode === mode ? { color: theme.hex } : undefined}
           >
             {mode}
@@ -113,7 +107,7 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                   <div key={memory.id} className="group/mem relative rounded-xl border p-3 transition-all" style={{ borderColor: setHexAlpha(theme.hex, 0.2), backgroundColor: setHexAlpha(theme.hex, 0.05) }}>
                     <div className="mb-2 flex justify-between gap-2 text-[9px] opacity-70">
                       <div className="min-w-0">
-                        <span className="font-bold uppercase tracking-widest text-slate-300">{memory.category}</span>
+                        <span className="tracking-tight text-[var(--luca-text-secondary,var(--app-text-muted))]">{memory.category}</span>
                         <span className="mx-2">·</span>
                         <span>{new Date(memory.timestamp).toLocaleString()}</span>
                       </div>
@@ -129,9 +123,9 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                         <Icon name="Trash" size={10} />
                       </button>
                     </div>
-                    {formatted.label && <div className="mb-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: theme.hex }}>{formatted.label}</div>}
+                    {formatted.label && <div className="mb-1 text-[9px] font-bold tracking-tight" style={{ color: theme.hex }}>{formatted.label}</div>}
                     <div className="max-h-32 overflow-hidden whitespace-pre-wrap text-[10px] leading-snug text-[var(--app-text-muted)]">{formatted.summary}</div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[9px] tracking-tight text-[var(--app-text-muted)]">
                       <span>Confidence {Math.round((memory.confidence ?? 0) * 100)}%</span>
                       {memory.metadata?.source && <span>Source {memory.metadata.source}</span>}
                     </div>
@@ -159,9 +153,9 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                     </div>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]" onClick={() => { memoryGovernanceService.markUserApproved(record.memoryId); refresh(); }}>approve</button>
-                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]" onClick={() => { memoryGovernanceService.markQuarantined(record.memoryId); refresh(); }}>quarantine</button>
-                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]" onClick={() => { memoryGovernanceService.markRejected(record.memoryId); refresh(); }}>reject</button>
+                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 py-1 text-[9px] font-medium tracking-tight text-[var(--luca-success,#4fbf7a)]" onClick={() => { memoryGovernanceService.markUserApproved(record.memoryId); refresh(); }}>approve</button>
+                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] px-2 py-1 text-[9px] font-medium tracking-tight text-[var(--luca-warning,#f2b23e)]" onClick={() => { memoryGovernanceService.markQuarantined(record.memoryId); refresh(); }}>quarantine</button>
+                    <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] px-2 py-1 text-[9px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]" onClick={() => { memoryGovernanceService.markRejected(record.memoryId); refresh(); }}>reject</button>
                   </div>
                 </div>
               ))}
@@ -182,13 +176,13 @@ const MemoryControlPanel: React.FC<MemoryControlPanelProps> = ({ theme, memories
                   <div key={proposal.proposalId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2 text-[10px] text-[var(--app-text-muted)]">
                     <div className="font-bold text-[var(--app-text-main)]">{proposal.title}</div>
                     <div className="mt-1">{proposal.summary}</div>
-                    <div className="mt-1 uppercase tracking-widest">{proposal.kind} · {proposal.riskLevel} · {proposal.status}</div>
+                    <div className="mt-1 tracking-tight">{proposal.kind} · {proposal.riskLevel} · {proposal.status}</div>
                     {proposal.status === "approved_waiting_write" && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {canWrite?.allowed ? (
-                          <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]" onClick={() => { void governedMemoryWriteService.writeApprovedProposal(proposal.proposalId).then(refresh); }}>Save memory once</button>
+                          <button type="button" className="rounded-lg border border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] px-2 py-1 text-[9px] font-medium tracking-tight text-[var(--luca-success,#4fbf7a)]" onClick={() => { void governedMemoryWriteService.writeApprovedProposal(proposal.proposalId).then(refresh); }}>Save memory once</button>
                         ) : (
-                          <span className="text-[9px] uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Blocked for safety: {canWrite?.reason}</span>
+                          <span className="text-[9px] tracking-tight text-[var(--luca-danger,#f87171)]">Blocked for safety: {canWrite?.reason}</span>
                         )}
                       </div>
                     )}
