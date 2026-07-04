@@ -99,7 +99,7 @@ import OperationsSidebar from "./components/layout/OperationsSidebar";
 import ShellPresenceMark from "./components/presence/ShellPresenceMark";
 import AppMenu from "./components/layout/AppMenu";
 import { LUCA_MOTION_CSS_VARIABLES } from "./styles/lucaPresenceMotion";
-import { syncTitleBarOverlay } from "./windowControlsOverlay";
+import { isElectronShell, sendWindowControl } from "./windowControlsOverlay";
 import SessionsRail from "./components/left-panel/SessionsRail";
 import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
@@ -427,7 +427,7 @@ function AppContent() {
   const [panelWidths, setPanelWidths] = useState({
     sidebar: 320,
     chat: 430,
-    right: 340,
+    right: 380,
   });
 
   // Desktop-only collapsible side panels (UI shell layout only). Persisted via
@@ -2533,17 +2533,6 @@ function AppContent() {
     [selectedSkinId, backgroundOpacity, backgroundBlur],
   );
 
-  // The OS window controls sit on the header (elevated surface) — retint
-  // them whenever the skin/material boundary changes so the cluster stays
-  // invisible at rest on every skin.
-  useEffect(() => {
-    const vars = dashboardSkinBoundary.materialVariables as Record<string, string>;
-    syncTitleBarOverlay(
-      vars["--luca-background-elevated"],
-      vars["--luca-text-tertiary"],
-    );
-  }, [dashboardSkinBoundary]);
-
   const mobileSkinBoundary = useMemo(
     () =>
       resolveLucaMobileSkinBoundary({
@@ -2894,7 +2883,7 @@ function AppContent() {
               sheets docked BELOW it and never touch it. ── */}
           {!isMobile && (
             <div
-              className="luca-window-drag luca-wco-pad-right flex flex-none h-14 items-stretch"
+              className="luca-window-drag flex flex-none h-14 items-stretch"
               style={{
                 background: "var(--luca-background-elevated, var(--app-bg-main, #1b2025))",
                 color: "var(--luca-text-primary, var(--app-text-main))",
@@ -2957,7 +2946,7 @@ function AppContent() {
                   />
                 </SafeComponent>
                 </div>
-                <div className="flex items-center pr-2">
+                <div className="flex items-center gap-1 pr-2">
                   <button
                     type="button"
                     aria-label={rightToggleIcon(rightPanelCollapsed).label}
@@ -2968,6 +2957,50 @@ function AppContent() {
                   >
                     <Icon name={rightToggleIcon(rightPanelCollapsed).name} size={16} />
                   </button>
+                  {/* Window controls: the shell's OWN buttons (no native
+                      overlay) — same ghost skin and size as every other
+                      header control. Electron-only; the web shell has the
+                      browser's chrome. */}
+                  {isElectronShell() && (
+                    <>
+                      <button
+                        type="button"
+                        aria-label="Minimize window"
+                        title="Minimize"
+                        onClick={() => sendWindowControl("minimize")}
+                        className={`ml-2 p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                        style={lucaShellHeaderGhostControlStyle}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M3.5 8.5h9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Maximize or restore window"
+                        title="Maximize"
+                        onClick={() => sendWindowControl("maximize")}
+                        className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                        style={lucaShellHeaderGhostControlStyle}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                          <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Close window"
+                        title="Close"
+                        onClick={() => sendWindowControl("close")}
+                        className={`p-1.5 rounded-lg border transition-colors ${lucaShellClassNames.control}`}
+                        style={lucaShellHeaderGhostControlStyle}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

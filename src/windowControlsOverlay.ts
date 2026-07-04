@@ -1,22 +1,19 @@
 /**
- * Window-controls overlay glue (Electron on Windows).
+ * Window-controls glue (Electron).
  *
- * - Flags html.luca-wco so CSS reserves the control cluster's zone. The
- *   navigator API can lag or be absent at boot, so Electron-on-Windows is
- *   treated as overlay-present by construction (the window is created with
- *   titleBarOverlay there).
- * - syncTitleBarOverlay(): the renderer retints the OS control cluster to
- *   match whatever surface it sits on (boot base, header elevated, any
- *   skin) — a static color can only ever match one surface.
+ * The window is frameless (titleBarStyle 'hidden', no native overlay): the
+ * controls are the shell's OWN ghost buttons in the header, driven over IPC
+ * (window-minimize / window-maximize / window-close in main.cjs). That is the
+ * only way the cluster can share the exact skin, size, and hover of the other
+ * header controls on a translucent, skinnable surface.
+ *
+ * html.luca-wco is kept for the genuine PWA overlay case (installed web app
+ * with a real windowControlsOverlay), where the OS paints controls we must
+ * reserve room for.
  */
 
-function isElectronWindows(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    !!(window as any).electron &&
-    typeof navigator !== "undefined" &&
-    navigator.userAgent.includes("Windows")
-  );
+export function isElectronShell(): boolean {
+  return typeof window !== "undefined" && !!(window as any).electron;
 }
 
 export function setupWindowControlsOverlay(): void {
@@ -25,7 +22,7 @@ export function setupWindowControlsOverlay(): void {
   const apply = () =>
     document.documentElement.classList.toggle(
       "luca-wco",
-      overlay?.visible === true || isElectronWindows(),
+      overlay?.visible === true && !isElectronShell(),
     );
   apply();
   try {
@@ -35,15 +32,13 @@ export function setupWindowControlsOverlay(): void {
   }
 }
 
-/** Retint the OS window controls to sit invisibly on the given surface. */
-export function syncTitleBarOverlay(color?: string, symbolColor?: string): void {
-  if (!isElectronWindows() || !color) return;
+/** Drive the frameless window from the shell's own control buttons. */
+export function sendWindowControl(
+  action: "minimize" | "maximize" | "close",
+): void {
   try {
-    (window as any).electron?.ipcRenderer?.send("luca:set-titlebar-overlay", {
-      color,
-      symbolColor,
-    });
+    (window as any).electron?.ipcRenderer?.send(`window-${action}`);
   } catch {
-    /* IPC unavailable — the boot color stands */
+    /* IPC unavailable (plain web) — the buttons are not rendered there */
   }
 }
