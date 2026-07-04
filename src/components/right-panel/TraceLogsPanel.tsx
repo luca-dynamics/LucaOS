@@ -221,15 +221,11 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
-            <Icon name="ScrollText" size={18} />
-          </div>
-          <div>
-            <div className="text-[13px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Trace</div>
-            <p className="mt-1 text-[11px] leading-relaxed text-[var(--luca-text-tertiary,var(--app-text-muted))]">The honest record — what Luca did, observed, blocked, asked approval for, and delivered safely.</p>
-          </div>
+      <div className="flex items-start gap-2.5 pb-1">
+        <Icon name="ScrollText" size={18} className="mt-0.5 shrink-0" style={{ color: theme.hex }} />
+        <div>
+          <div className="text-[15px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Trace</div>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--luca-text-secondary,var(--app-text-muted))]">The honest record — what Luca did, observed, blocked, asked approval for, and delivered safely.</p>
         </div>
       </div>
 

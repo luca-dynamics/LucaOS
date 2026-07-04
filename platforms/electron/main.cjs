@@ -222,6 +222,10 @@ const SERVER_PORT = process.env.SERVER_PORT || 3002;      // Node.js backend API
 const CORTEX_PORT = process.env.CORTEX_PORT || 8000;      // Python Cortex (dynamically overridden if port unavailable)
 // Note: WS_PORT (3003) is only used by backend server.js, not in this Electron main process
 
+// Default UI zoom (native webContents zoom, reflows the viewport). The shell's
+// fixed-px sizing renders small at 1.0; ~1.1 gives Claude-comfortable scale.
+const UI_ZOOM_FACTOR = Number(process.env.LUCA_UI_ZOOM) || 1.1;
+
 
 // --- BIOS BOOT SEQUENCE ---
 let rebootAttempts = 0;
@@ -625,6 +629,11 @@ function createWindow() {
 
     mainWindow.webContents.on('dom-ready', () => {
         console.log('DOM Ready');
+        // Comfortable default UI scale. The shell uses fixed-px sizing that
+        // renders small at 100%, so the app reads "zoomed out". Native zoom
+        // reflows the viewport (unlike CSS zoom, which clips the fixed-width
+        // side panels), scaling everything without breaking layout.
+        try { mainWindow.webContents.setZoomFactor(UI_ZOOM_FACTOR); } catch (e) { /* ignore */ }
     });
 
     // Emitted when the window is closed.

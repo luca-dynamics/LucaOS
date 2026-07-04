@@ -15,6 +15,8 @@ interface ToolLauncherSectionProps {
   isLight: boolean;
   isLightCream: boolean;
   collapseAdvancedGroups?: boolean;
+  /** When false (Basic), the pro operational suite is hidden entirely. */
+  includeProTools?: boolean;
   onToolSelect: (tool: LeftPanelToolItem) => void;
 }
 
@@ -30,11 +32,12 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
   isLight,
   isLightCream,
   collapseAdvancedGroups = false,
+  includeProTools = true,
   onToolSelect,
 }) => {
   const groups = useMemo(
-    () => buildToolLauncherGroups(installedModules),
-    [installedModules],
+    () => buildToolLauncherGroups(installedModules, { includeProTools }),
+    [installedModules, includeProTools],
   );
   const skillRegistry = skillRegistryService.getDiagnosticsSummary();
   const skillGovernance = skillGovernanceService.getDiagnosticsSummary();
@@ -116,7 +119,7 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
             </button>
 
             {isOpen && (
-              <div className="mt-0.5">
+              <div className="mt-1 flex flex-wrap gap-2 px-2">
                 {group.tools.map((tool) => (
                   <ToolLauncherButton
                     key={tool.id}
@@ -127,27 +130,23 @@ const ToolLauncherSection: React.FC<ToolLauncherSectionProps> = ({
                   />
                 ))}
                 {group.modules.map((mod) => (
-                  <div
+                  <span
                     key={mod.id}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5"
+                    className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px]"
+                    style={{
+                      borderColor:
+                        "var(--luca-border-subtle, rgba(255,255,255,0.07))",
+                      color: "var(--luca-text-tertiary, var(--app-text-muted))",
+                    }}
                   >
-                    <span
-                      className="h-1.5 w-1.5 flex-none rounded-full"
-                      style={{
-                        background:
-                          "var(--luca-border-strong, rgba(255,255,255,0.18))",
-                      }}
-                      aria-hidden="true"
+                    <Icon
+                      name={mod.icon}
+                      size={13}
+                      variant="BoldDuotone"
+                      className="flex-none opacity-60"
                     />
-                    <span
-                      className="min-w-0 truncate text-[12.5px]"
-                      style={{
-                        color: "var(--luca-text-tertiary, var(--app-text-muted))",
-                      }}
-                    >
-                      {mod.label}
-                    </span>
-                  </div>
+                    {mod.label}
+                  </span>
                 ))}
               </div>
             )}

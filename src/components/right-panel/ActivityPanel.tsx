@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { lucaMaterialCardStyle, lucaMaterialMetricStyle } from "../../styles/lucaMaterialSystem";
+import type { LucaExperienceMode } from "../../experience/experienceMode";
+import { shouldShowCreatorDiagnostics } from "../../experience/dashboardDisclosure";
 import { approvalRequestCenterService } from "../../services/provenance/ApprovalRequestCenterService";
 import { runtimeInboxService } from "../../services/runtime/RuntimeInboxService";
 import { agentSessionContinuityService } from "../../services/runtime/AgentSessionContinuityService";
@@ -167,6 +169,8 @@ import {
 
 interface ActivityPanelProps {
   theme: { hex: string; primary: string; border: string };
+  /** Technical governance/gate-record sections are Creator-only. */
+  experienceMode?: LucaExperienceMode;
 }
 
 const Button: React.FC<{ children: React.ReactNode; onClick: () => void; tone?: "neutral" | "danger" | "good" }> = ({ children, onClick, tone = "neutral" }) => (
@@ -214,7 +218,10 @@ const getSkillToneBg = (tone: SkillGovernanceTone): string => {
   }
 };
 
-const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
+const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme, experienceMode = "basic" }) => {
+  // The PR-referenced overlay / browser / VisualCore gate-record sections are
+  // developer-facing diagnostics — only surface them in Creator.
+  const showCreatorSections = shouldShowCreatorDiagnostics(experienceMode);
   const [revision, setRevision] = useState(0);
   const refresh = () => setRevision((value) => value + 1);
 
@@ -289,15 +296,11 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border p-4" style={lucaMaterialCardStyle}>
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl border p-2" style={{ ...lucaMaterialMetricStyle, color: theme.hex }}>
-            <Icon name="BellRing" size={18} />
-          </div>
-          <div>
-            <div className="text-[13px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Timeline</div>
-            <p className="mt-1 text-[11px] leading-relaxed text-[var(--luca-text-tertiary,var(--app-text-muted))]">What Luca has done and what's waiting on you — decisions, reminders, resumable sessions, and governed requests.</p>
-          </div>
+      <div className="flex items-start gap-2.5 pb-1">
+        <Icon name="BellRing" size={18} className="mt-0.5 shrink-0" style={{ color: theme.hex }} />
+        <div>
+          <div className="text-[15px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Timeline</div>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--luca-text-secondary,var(--app-text-muted))]">What Luca has done and what's waiting on you — decisions, reminders, resumable sessions, and governed requests.</p>
         </div>
       </div>
 
@@ -333,6 +336,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         )}
       </RightPanelSection>
 
+      {showCreatorSections && (<>
       <RightPanelSection title="Android native overlay forwarding" subtitle="Read-only native forwarding-gate records from PR #155. Visibility only — no approve/forward/start-voice/stop-voice/request-permission controls and no native overlay behavior changes.">
         {data.androidNativeOverlayForwardingRecords.length === 0 ? (
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No Android native overlay forwarding records.</div>
@@ -1168,6 +1172,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
           </div>
         )}
       </RightPanelSection>
+      </>)}
 
       <RightPanelSection title="Memory proposals" subtitle="Approving a memory does not write it. Saving requires a second explicit click and a one-time approval.">
         {(() => {
@@ -1272,6 +1277,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         })()}
       </RightPanelSection>
 
+      {showCreatorSections && (<>
       <RightPanelSection title="Intent routing" subtitle="Recent non-fast routing decisions. Routing does not execute anything.">
         {(() => {
           const nonFast = data.routingDecisions.filter((d) => d.route !== "fast_response").slice(0, 5);
@@ -1386,6 +1392,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
           });
         })()}
       </RightPanelSection>
+      </>)}
 
       <RightPanelSection title="Reminders" subtitle="Safe reminders delivered by the dry-run continuity loop. No execution.">
         {data.reminders.length === 0 ? (
@@ -1534,6 +1541,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
         ))}
       </RightPanelSection>
 
+      {showCreatorSections && (
       <RightPanelSection title="Scheduler observations" subtitle="Due-job observations are dry-run only.">
         {data.dueJobs.length === 0 ? (
           <div className="text-[10px] italic text-[var(--app-text-muted)]">No due scheduler observations.</div>
@@ -1545,6 +1553,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
           </div>
         ))}
       </RightPanelSection>
+      )}
     </div>
   );
 };

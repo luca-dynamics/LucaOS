@@ -172,7 +172,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             accentColor={theme.hex}
             isMobile={isMobile}
           >
-            <SettingsCard className="p-3 sm:p-4">
+            <div>
               <div
                 role="radiogroup"
                 aria-label="Experience Mode"
@@ -252,7 +252,7 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                   You can customize appearance later.
                 </p>
               </div>
-            </SettingsCard>
+            </div>
           </SettingsSection>
         </motion.div>
 
@@ -264,48 +264,46 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
             accentColor={theme.hex}
             isMobile={isMobile}
           >
-            <div className="grid grid-cols-1 gap-4">
-              <SettingsCard>
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div>
-                    <h4
-                      className="text-sm font-semibold"
-                      style={{ color: settingsSurfaceTokens.textPrimary }}
+            <div>
+              <div className="mb-2">
+                <p
+                  className="text-[13.5px] font-medium"
+                  style={{ color: settingsSurfaceTokens.textPrimary }}
+                >
+                  Luca Persona
+                </p>
+                <p
+                  className="text-[12.5px]"
+                  style={{ color: settingsSurfaceTokens.textSecondary }}
+                >
+                  Current mode: {personaLabel}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {personaOptions.map((p) => {
+                  const isActive = personaLabel === p;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => onUpdate("general", "persona", p)}
+                      className="rounded-lg border px-3 py-1.5 text-[12.5px] font-medium transition-colors"
+                      style={{
+                        borderColor: isActive
+                          ? theme.hex
+                          : settingsSurfaceTokens.borderSubtle,
+                        backgroundColor: isActive
+                          ? `${theme.hex}14`
+                          : "transparent",
+                        color: isActive
+                          ? settingsSurfaceTokens.textPrimary
+                          : settingsSurfaceTokens.textSecondary,
+                      }}
                     >
-                      Luca Persona
-                    </h4>
-                    <p
-                      className="text-xs"
-                      style={{ color: settingsSurfaceTokens.textSecondary }}
-                    >
-                      Current mode: {personaLabel}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {personaOptions.map((p) => {
-                    const isActive = personaLabel === p;
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => onUpdate("general", "persona", p)}
-                        className="rounded-xl border px-3 py-2 text-sm font-medium transition-all"
-                        style={{
-                          borderColor: isActive
-                            ? theme.hex
-                            : settingsSurfaceTokens.borderSubtle,
-                          backgroundColor: isActive
-                            ? settingsSurfaceTokens.accentSoft
-                            : settingsSurfaceTokens.elevated,
-                          color: settingsSurfaceTokens.textPrimary,
-                        }}
-                      >
-                        {p.charAt(0) + p.slice(1).toLowerCase()}
-                      </button>
-                    );
-                  })}
-                </div>
-              </SettingsCard>
+                      {p.charAt(0) + p.slice(1).toLowerCase()}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </SettingsSection>
         </motion.div>
