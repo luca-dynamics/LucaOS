@@ -584,10 +584,29 @@ html.luca-wco .luca-wco-pad-right {
  * stays a true capsule/circle by design.
  */
 @supports (corner-shape: squircle) {
+  .rounded,
+  .rounded-md,
   .rounded-lg,
   .rounded-xl,
   .rounded-2xl,
   .rounded-3xl {
+    corner-shape: squircle;
+  }
+
+  /* Inline border-radius (style={{ borderRadius: N }}) bypasses the utility
+   * classes above. Target the SMALL px values only — these are never pills, so
+   * capsules/circles (border-radius: 999px / 9999px / 50%) are left untouched
+   * and never deformed. Covers the inline-styled surfaces without editing them.
+   */
+  [style*="border-radius: 6px"],
+  [style*="border-radius: 8px"],
+  [style*="border-radius: 10px"],
+  [style*="border-radius: 12px"],
+  [style*="border-radius: 14px"],
+  [style*="border-radius: 16px"],
+  [style*="border-radius: 18px"],
+  [style*="border-radius: 20px"],
+  [style*="border-radius: 24px"] {
     corner-shape: squircle;
   }
 }
