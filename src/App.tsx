@@ -99,6 +99,7 @@ import OperationsSidebar from "./components/layout/OperationsSidebar";
 import ShellPresenceMark from "./components/presence/ShellPresenceMark";
 import AppMenu from "./components/layout/AppMenu";
 import { LUCA_MOTION_CSS_VARIABLES } from "./styles/lucaPresenceMotion";
+import { syncTitleBarOverlay } from "./windowControlsOverlay";
 import SessionsRail from "./components/left-panel/SessionsRail";
 import { useLucaLinkDevices } from "./hooks/useLucaLinkDevices";
 import ChatPanel from "./components/layout/ChatPanel";
@@ -2531,6 +2532,17 @@ function AppContent() {
       }),
     [selectedSkinId, backgroundOpacity, backgroundBlur],
   );
+
+  // The OS window controls sit on the header (elevated surface) — retint
+  // them whenever the skin/material boundary changes so the cluster stays
+  // invisible at rest on every skin.
+  useEffect(() => {
+    const vars = dashboardSkinBoundary.materialVariables as Record<string, string>;
+    syncTitleBarOverlay(
+      vars["--luca-background-elevated"],
+      vars["--luca-text-tertiary"],
+    );
+  }, [dashboardSkinBoundary]);
 
   const mobileSkinBoundary = useMemo(
     () =>
