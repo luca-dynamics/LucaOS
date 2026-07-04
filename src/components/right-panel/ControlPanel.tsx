@@ -374,11 +374,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <RightPanelSection title="Runtime routes" subtitle="Current model and memory readiness summaries.">
             <div className="space-y-2 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
               <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
-                <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Model</span>
+                <span className="font-bold tracking-tight" style={{ color: theme.hex }}>Model</span>
                 <div>{diagnostics?.routes.chat.label ?? "Model route loading"} · {diagnostics?.routes.chat.readiness ?? "unknown"}</div>
               </div>
               <div className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
-                <span className="font-bold uppercase tracking-widest" style={{ color: theme.hex }}>Memory</span>
+                <span className="font-bold tracking-tight" style={{ color: theme.hex }}>Memory</span>
                 <div>{diagnostics?.memory.label ?? "Memory route loading"} · {diagnostics?.memory.readiness ?? "unknown"}</div>
               </div>
             </div>
@@ -432,16 +432,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
         <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Gateway research mode</span>
-            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Control disabled</span>
+            <span className="text-[10px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">Gateway research mode</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">Control disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
             Gateway control is disabled. Luca can only record blocked/dry-run requests while the permission model is being designed.
           </p>
-          <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+          <p className="mt-1 text-[9px] tracking-tight text-[var(--app-text-muted)] opacity-80">
             Future permissions not yet enabled
           </p>
-          <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+          <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
             <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">Approval</span>
             <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">Sandbox</span>
             <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">Human confirmation</span>
@@ -539,14 +539,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
         <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Screen observation permission mode</span>
-            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Capture disabled</span>
+            <span className="text-[10px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">Screen observation permission mode</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">Capture disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
             Screen observation is permission-mode only. Luca cannot capture, view, OCR, store, or analyze your screen.
           </p>
-          <div className="mt-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Future-readiness checklist — required before any observation</div>
-          <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+          <div className="mt-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-70">Future-readiness checklist — required before any observation</div>
+          <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
             {["Explicit consent required", "Visible indicator required", "Region boundary required", "Sensitive-content filter required", "Credential boundary required", "Human confirmation required", "Audit log required", "Revocable"].map((item) => (
               <span key={item} className="rounded-full border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] px-2 py-0.5 text-[var(--luca-warning,#f2b23e)]">✓ {item}</span>
             ))}
@@ -570,14 +570,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
         <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Sandboxed browser research mode</span>
-            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Launch disabled</span>
+            <span className="text-[10px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">Sandboxed browser research mode</span>
+            <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">Launch disabled</span>
           </div>
           <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">
             Sandboxed browser is research-mode only. Luca cannot launch, read, click, type, submit, scrape, download, upload, or automate a browser.
           </p>
-          <div className="mt-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Future-readiness checklist — required before any browser control</div>
-          <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+          <div className="mt-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-70">Future-readiness checklist — required before any browser control</div>
+          <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
             {["Explicit approval", "Visible browser boundary", "Sandbox", "Human confirmation", "Credential boundary", "Audit log", "Downloads/uploads blocked", "Wallet/payment blocked", "Revocable"].map((item) => (
               <span key={item} className="rounded-full border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] px-2 py-0.5 text-[var(--luca-warning,#f2b23e)]">✓ {item}</span>
             ))}
@@ -664,7 +664,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <RightPanelMetric label="Checkpoints" value={pendingCheckpoints} tone={pendingCheckpoints > 0 ? "warn" : "neutral"} />
                 <RightPanelMetric label="Reminders" value={reminders.deliveredCount} tone={reminders.deliveredCount > 0 ? "good" : "neutral"} />
               </div>
-              <div className="text-[9px] uppercase tracking-widest opacity-70">No execution happens from this panel</div>
+              <div className="text-[9px] tracking-tight opacity-70">No execution happens from this panel</div>
             </div>
           );
         })()}
@@ -704,7 +704,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <RightPanelMetric label="Waiting" value={skillGovernance.approvedWaitingRequests} tone={skillGovernance.approvedWaitingRequests > 0 ? "warn" : "neutral"} />
                 <RightPanelMetric label="Blocked" value={skillGovernance.blockedRequests} tone={skillGovernance.blockedRequests > 0 ? "danger" : "good"} />
               </div>
-              <div className="text-[9px] uppercase tracking-widest opacity-70">Skill approvals are state-only · No skill installs or runs from this panel</div>
+              <div className="text-[9px] tracking-tight opacity-70">Skill approvals are state-only · No skill installs or runs from this panel</div>
             </div>
           );
         })()}
@@ -744,7 +744,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               </span>
               <span>· risk: {activePlan.riskLevel}</span>
             </div>
-            <div className="text-[9px] uppercase tracking-widest opacity-70">{getPlanNextAction(activePlan.status)}</div>
+            <div className="text-[9px] tracking-tight opacity-70">{getPlanNextAction(activePlan.status)}</div>
             {activePlan.currentStepId && (() => {
               const currentStep = activePlan.steps.find((s) => s.stepId === activePlan.currentStepId);
               return currentStep ? <div>Next safe step: {currentStep.title} · {currentStep.status}</div> : null;
@@ -770,7 +770,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               </span>
               <span>· risk: {activeCheckpoint.riskLevel}</span>
             </div>
-            <div className="text-[9px] uppercase tracking-widest opacity-70">{getCheckpointNextAction(activeCheckpoint.status)}</div>
+            <div className="text-[9px] tracking-tight opacity-70">{getCheckpointNextAction(activeCheckpoint.status)}</div>
             {activeCheckpoint.proposedNextSteps.length > 0 && <div>Next: {activeCheckpoint.proposedNextSteps.slice(0, 3).join(" · ")}</div>}
           </div>
         </RightPanelSection>
@@ -798,7 +798,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                   </div>
                   <div className="truncate">{lastDecision.reason.slice(0, 200)}</div>
                   {lastRoute !== "fast_response" && (
-                    <div className="text-[9px] uppercase tracking-widest opacity-70">
+                    <div className="text-[9px] tracking-tight opacity-70">
                       {getRouteNoExecutionText(lastRoute)} · {getRouteNextAction(lastRoute)}
                     </div>
                   )}
@@ -834,9 +834,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       {isCreatorMode && (pendingTasks.length > 0 || activeGoals.length > 0 || upcomingEvents.length > 0) && (
         <RightPanelSection title="Work" subtitle="Current tasks, schedule, and goals from existing Luca management state.">
           <div className="space-y-3 text-[10px] text-[var(--app-text-muted)]">
-            {pendingTasks.length > 0 && <div><div className="mb-1 font-bold uppercase tracking-widest text-[var(--app-text-main)]">Tasks</div>{pendingTasks.map((task) => <div key={task.id}>• {task.title} · {task.status}</div>)}</div>}
-            {activeGoals.length > 0 && <div><div className="mb-1 font-bold uppercase tracking-widest text-[var(--app-text-main)]">Goals</div>{activeGoals.map((goal) => <div key={goal.id}>• {goal.description} · {goal.status}</div>)}</div>}
-            {upcomingEvents.length > 0 && <div><div className="mb-1 font-bold uppercase tracking-widest text-[var(--app-text-main)]">Schedule</div>{upcomingEvents.map((event) => <div key={event.id}>• {event.title} · {compactDate(event.startTime)}</div>)}</div>}
+            {pendingTasks.length > 0 && <div><div className="mb-1 font-bold tracking-tight text-[var(--app-text-main)]">Tasks</div>{pendingTasks.map((task) => <div key={task.id}>• {task.title} · {task.status}</div>)}</div>}
+            {activeGoals.length > 0 && <div><div className="mb-1 font-bold tracking-tight text-[var(--app-text-main)]">Goals</div>{activeGoals.map((goal) => <div key={goal.id}>• {goal.description} · {goal.status}</div>)}</div>}
+            {upcomingEvents.length > 0 && <div><div className="mb-1 font-bold tracking-tight text-[var(--app-text-main)]">Schedule</div>{upcomingEvents.map((event) => <div key={event.id}>• {event.title} · {compactDate(event.startTime)}</div>)}</div>}
           </div>
         </RightPanelSection>
       )}

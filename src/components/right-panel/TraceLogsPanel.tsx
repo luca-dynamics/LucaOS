@@ -227,8 +227,8 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
             <Icon name="ScrollText" size={18} />
           </div>
           <div>
-            <div className="text-sm font-black uppercase tracking-[0.18em] text-[var(--app-text-main)]">LOGS</div>
-            <p className="mt-1 text-xs leading-relaxed text-[var(--app-text-muted)]">Trace and audit view for what Luca did, observed, blocked, asked approval for, and delivered safely.</p>
+            <div className="text-[13px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Trace</div>
+            <p className="mt-1 text-[11px] leading-relaxed text-[var(--luca-text-tertiary,var(--app-text-muted))]">The honest record — what Luca did, observed, blocked, asked approval for, and delivered safely.</p>
           </div>
         </div>
       </div>
@@ -264,13 +264,13 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   <div key={record.nativeOverlayForwardingId} className={`rounded-xl border p-2 ${getSkillToneBorder(tone)} ${getSkillToneBg(tone)}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className={`text-[10px] font-black uppercase tracking-[0.14em] ${getSkillToneColor(tone)}`}>
+                        <div className={`text-[10px] font-medium tracking-tight ${getSkillToneColor(tone)}`}>
                           {getAndroidNativeOverlayForwardingSourceLabel(record.source)} · {getAndroidNativeOverlayForwardingStatusLabel(record.status)}
                         </div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
                         <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">Future approval copy: {record.recommendedFutureApprovalCopy}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">{blocked ? "blocked" : "audit"}</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">{blocked ? "blocked" : "audit"}</span>
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-1 text-[9px] text-[var(--app-text-muted)]">
                       <span>id: {record.nativeOverlayForwardingId}</span>
@@ -282,12 +282,12 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                       <span>blockedBy: {record.blockedBy.join(", ")}</span>
                       <span>time: {compactTimestamp(record.timestamp)}</span>
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getAndroidNativeOverlayForwardingBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getAndroidNativeOverlayForwardingSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -314,13 +314,13 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   <div key={record.originOverlayControlGateRecordId} className={`rounded-xl border p-2 ${getSkillToneBorder(tone)} ${getSkillToneBg(tone)}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className={`text-[10px] font-black uppercase tracking-[0.14em] ${getSkillToneColor(tone)}`}>
+                        <div className={`text-[10px] font-medium tracking-tight ${getSkillToneColor(tone)}`}>
                           {getOriginOverlayCriticalControlIdLabel(record.controlId)} · {getOriginOverlayCriticalControlStatusLabel(record.status)}
                         </div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
                         <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">Future approval copy: {record.recommendedFutureApprovalCopy}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">{blocked ? "blocked" : "audit"}</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">{blocked ? "blocked" : "audit"}</span>
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-1 text-[9px] text-[var(--app-text-muted)]">
                       <span>id: {record.originOverlayControlGateRecordId}</span>
@@ -334,17 +334,17 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                       <span>blockedBy: {record.blockedBy.join(", ")}</span>
                       <span>time: {compactTimestamp(record.timestamp)}</span>
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                       {getOriginOverlayCriticalControlCapabilitySummary(record.controlId).map((chip) => (
                         <span key={chip}>{chip}</span>
                       ))}
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getOriginOverlayCriticalControlBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getOriginOverlayCriticalControlSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -371,13 +371,13 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   <div key={record.captureGateRecordId} className={`rounded-xl border p-2 ${getSkillToneBorder(tone)} ${getSkillToneBg(tone)}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className={`text-[10px] font-black uppercase tracking-[0.14em] ${getSkillToneColor(tone)}`}>
+                        <div className={`text-[10px] font-medium tracking-tight ${getSkillToneColor(tone)}`}>
                           {getOverlayCaptureSurfaceLabel(record.surfaceId)} · {getOverlayCaptureGateStatusLabel(record.status)}
                         </div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
                         <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">Future approval copy: {record.recommendedFutureApprovalCopy}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">{blocked ? "blocked" : "audit"}</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">{blocked ? "blocked" : "audit"}</span>
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-1 text-[9px] text-[var(--app-text-muted)]">
                       <span>id: {record.captureGateRecordId}</span>
@@ -393,12 +393,12 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                       <span>explicit gate: {String(record.needsExplicitActivationGate)}</span>
                       <span>time: {compactTimestamp(record.timestamp)}</span>
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getOverlayCaptureGateBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getOverlayCaptureGateSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -422,26 +422,26 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   <div key={record.approvalResolutionId} className={`rounded-xl border p-3 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : record.status === "resolved" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{record.approvalResolutionId}</div>
+                        <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{record.approvalResolutionId}</div>
                         <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{record.userSafeReason}</p>
                       </div>
-                      <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getOverlayApprovalResolutionStatusLabel(record.status)}</span>
+                      <span className={`shrink-0 text-[9px] font-medium tracking-tight ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getOverlayApprovalResolutionStatusLabel(record.status)}</span>
                     </div>
                     {record.blockedBy && record.blockedBy.length > 0 && (
                       <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {record.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                       <span>source: {getOverlayApprovalResolutionSourceLabel(record.source)}</span>
                       <span>decision: {getOverlayApprovalResolutionDecisionLabel(record.decision)}</span>
                       <span>status: {record.status}</span>
                       <span>timestamp: {compactTimestamp(record.timestamp)}</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getOverlayApprovalResolutionSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-50">
+                    <div className="mt-1 flex flex-wrap gap-1 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-50">
                       {getOverlayApprovalResolutionBoundaryLabels().map((label) => (
                         <span key={label}>{label}</span>
                       ))}
@@ -463,25 +463,25 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               <div key={request.gatewayRequestId} className={`mb-2 rounded-xl border p-3 ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                    <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">
                       {getGatewayStatusLabel(request.status)} · {getGatewaySurfaceLabel(request.surface)} / {getGatewayCapabilityLabel(request.capability)}
                     </div>
                     <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{getGatewayPermissionSummary(request)}</p>
                     <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
                   </div>
-                  <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getGatewayRiskLabel(request.riskLevel)}</span>
+                  <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{getGatewayRiskLabel(request.riskLevel)}</span>
                 </div>
                 {request.blockedBy && request.blockedBy.length > 0 && (
                   <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {request.blockedBy.join(", ")}</p>
                 )}
                 {safeguards.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                  <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                     {safeguards.map((entry) => (
                       <span key={entry.key} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{entry.label}</span>
                     ))}
                   </div>
                 )}
-                <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                   <span>created {compactTimestamp(request.createdAt)}</span>
                   <span>updated {compactTimestamp(request.updatedAt)}</span>
                   <span>dry-run only: {String(request.policyDecision.allowedForDryRun)}</span>
@@ -503,24 +503,24 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={request.observationRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">
                         {getScreenObservationStatusLabel(request.status)} · {getScreenObservationSurfaceLabel(request.surface)} / {getScreenObservationCapabilityLabel(request.capability)}
                       </div>
                       <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getScreenObservationRiskLabel(request.riskLevel)}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{getScreenObservationRiskLabel(request.riskLevel)}</span>
                   </div>
                   {request.blockedBy && request.blockedBy.length > 0 && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {request.blockedBy.join(", ")}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>{getScreenObservationConsentLabel(request.consentState)}</span>
                     <span>created {compactTimestamp(request.createdAt)}</span>
                     <span>updated {compactTimestamp(request.updatedAt)}</span>
                     <span>capture enabled: false</span>
                     <span>vision model enabled: false</span>
                   </div>
-                  <p className="mt-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Lifecycle: {getObservationRequestTimeline(request).map((step) => step.label).join(" → ")}</p>
+                  <p className="mt-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">Lifecycle: {getObservationRequestTimeline(request).map((step) => step.label).join(" → ")}</p>
                   <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
                 </div>
               ))}
@@ -529,10 +529,10 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               .slice(0, 4)
               .map((session) => (
                 <div key={session.observationSessionId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-3">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                  <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">
                     Session · {getScreenObservationStatusLabel(session.status)} · {getScreenObservationSurfaceLabel(session.surface)} / {getScreenObservationCapabilityLabel(session.capability)}
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>{getScreenObservationConsentLabel(session.consentState)}</span>
                     <span>{getScreenObservationRiskLabel(session.riskLevel)}</span>
                     <span>created {compactTimestamp(session.createdAt)}</span>
@@ -540,7 +540,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>capture enabled: false</span>
                     <span>vision model enabled: false</span>
                   </div>
-                  <p className="mt-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">{getObservationSessionLifecycleLabel(session)} · {getObservationSessionTimeline(session).map((step) => step.label).join(" → ")}</p>
+                  <p className="mt-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">{getObservationSessionLifecycleLabel(session)} · {getObservationSessionTimeline(session).map((step) => step.label).join(" → ")}</p>
                   <p className="mt-2 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">Dry-run permission session only. {getScreenObservationNoCaptureText()}</p>
                 </div>
               ))}
@@ -558,17 +558,17 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={request.browserRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">
                         {getSandboxedBrowserStatusLabel(request.status)} · {getSandboxedBrowserSurfaceLabel(request.surface)} / {getSandboxedBrowserCapabilityLabel(request.capability)}
                       </div>
                       <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getSandboxedBrowserRiskLabel(request.riskLevel)}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{getSandboxedBrowserRiskLabel(request.riskLevel)}</span>
                   </div>
                   {request.blockedBy && request.blockedBy.length > 0 && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {request.blockedBy.join(", ")}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>nav: {getSandboxedBrowserNavigationRiskLabel(request.navigationRisk)}</span>
                     <span>{getSandboxedBrowserCredentialBoundaryLabel(request.credentialBoundary)}</span>
                     <span>created {compactTimestamp(request.createdAt)}</span>
@@ -586,10 +586,10 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               .slice(0, 4)
               .map((session) => (
                 <div key={session.browserSessionId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-3">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">
+                  <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">
                     Session · {getSandboxedBrowserStatusLabel(session.status)} · {getSandboxedBrowserSurfaceLabel(session.surface)} / {getSandboxedBrowserCapabilityLabel(session.capability)}
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>nav: {getSandboxedBrowserNavigationRiskLabel(session.navigationRisk)}</span>
                     <span>{getSandboxedBrowserRiskLabel(session.riskLevel)}</span>
                     <span>created {compactTimestamp(session.createdAt)}</span>
@@ -616,15 +616,15 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={session.shellSessionId} className={`rounded-xl border p-3 ${session.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">Shell · {session.status}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">Shell · {session.status}</div>
                       <p className="mt-1 truncate font-mono text-[10px] text-[var(--app-text-muted)]">{session.auditUrl || "(no audit URL)"}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{session.riskLevel}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{session.riskLevel}</span>
                   </div>
                   {session.blockedBy && session.blockedBy.length > 0 && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {session.blockedBy.join(", ")}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>requested {compactTimestamp(session.createdAt)}</span>
                     {session.closedAt && <span>closed {compactTimestamp(session.closedAt)}</span>}
                     {session.revokedAt && <span>revoked {compactTimestamp(session.revokedAt)}</span>}
@@ -649,16 +649,16 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={nav.navigationId} className={`rounded-xl border p-3 ${nav.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">Nav · {nav.status}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">Nav · {nav.status}</div>
                       {nav.fromAuditUrl && <p className="mt-1 truncate font-mono text-[9px] text-[var(--app-text-muted)] opacity-70">from {nav.fromAuditUrl}</p>}
                       <p className="mt-1 truncate font-mono text-[10px] text-[var(--app-text-muted)]">to {nav.toAuditUrl || "(no audit URL)"}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{nav.riskLevel}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{nav.riskLevel}</span>
                   </div>
                   {nav.blockedBy && nav.blockedBy.length > 0 && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {nav.blockedBy.join(", ")}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>{nav.source}</span>
                     <span>{compactTimestamp(nav.createdAt)}</span>
                     <span>automation: false</span>
@@ -680,15 +680,15 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={obs.observationId} className={`rounded-xl border p-3 ${obs.status === "blocked" || obs.status === "revoked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">Obs · {obs.status} · {obs.shellSessionId.slice(-6)}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">Obs · {obs.status} · {obs.shellSessionId.slice(-6)}</div>
                       <p className="mt-1 truncate font-mono text-[10px] text-[var(--app-text-muted)]">{obs.currentAuditUrl || "(no audit URL)"}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{obs.adapter ?? "unknown"}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{obs.adapter ?? "unknown"}</span>
                   </div>
                   {obs.lastBlockedReason && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Last blocked: {obs.lastBlockedReason}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>nav {obs.navigationCount}</span>
                     <span>blocked {obs.blockedNavigationCount}</span>
                     <span>{obs.isLoading ? "loading" : "idle"}</span>
@@ -696,7 +696,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                     <span>fwd {obs.canGoForward ? "yes" : "no"}</span>
                     <span>{compactTimestamp(obs.updatedAt)}</span>
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                     <span>automation: false</span>
                     <span>DOM: false</span>
                     <span>page content: false</span>
@@ -720,20 +720,20 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={action.actionRequestId} className={`rounded-xl border p-3 ${action.status === "blocked" || action.status === "revoked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : action.status === "confirmed_for_future_execution" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{action.kind} · {action.status} · {action.shellSessionId.slice(-6)}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{action.kind} · {action.status} · {action.shellSessionId.slice(-6)}</div>
                       <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{action.summary}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{action.riskLevel}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{action.riskLevel}</span>
                   </div>
                   {action.blockedBy && action.blockedBy.length > 0 && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {action.blockedBy.join(", ")}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     {action.targetDescriptor && <span>target: {action.targetDescriptor}</span>}
                     {action.typedTextPreview && <span>text: “{action.typedTextPreview}”</span>}
                     <span>{compactTimestamp(action.updatedAt)}</span>
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                     <span>execution: false</span>
                     <span>automation: false</span>
                     <span>DOM: false</span>
@@ -757,21 +757,21 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={session.visualSessionId} className={`rounded-xl border p-3 ${session.status === "blocked" || session.status === "revoked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : session.status === "open" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{session.mode} · {session.status} · {session.visualSessionId.slice(-6)}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{session.mode} · {session.status} · {session.visualSessionId.slice(-6)}</div>
                       <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{session.userSafeReason}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{session.riskLevel}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{session.riskLevel}</span>
                   </div>
                   {session.blockedBy && session.blockedBy.length > 0 && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {session.blockedBy.join(", ")}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>source: {session.source}</span>
                     <span>readiness: {session.readiness}</span>
                     <span>{compactTimestamp(session.updatedAt)}</span>
                     {session.correlationId && <span>{formatVisualCoreTraceLabel(session.correlationId)}</span>}
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                     <span>capture: false</span>
                     <span>automation: false</span>
                     <span>external action: false</span>
@@ -795,10 +795,10 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={command.commandRecordId} className={`rounded-xl border p-3 ${command.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : command.status === "needs_approval" ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]" : command.status === "allowed_record_only" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{command.kind} · {command.status} · {command.commandRecordId.slice(-6)}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{command.kind} · {command.status} · {command.commandRecordId.slice(-6)}</div>
                       <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{command.userSafeReason}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{command.riskLevel}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{command.riskLevel}</span>
                   </div>
                   {command.targetAuditUrl && (
                     <p className="mt-2 truncate text-[9px] text-[var(--app-text-muted)]">audit url: {command.targetAuditUrl}</p>
@@ -806,13 +806,13 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   {command.blockedBy && command.blockedBy.length > 0 && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {command.blockedBy.join(", ")}</p>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                     <span>source: {command.source}</span>
                     {command.targetMode && <span>target: {command.targetMode}</span>}
                     <span>{compactTimestamp(command.updatedAt)}</span>
                     {command.correlationId && <span>{formatVisualCoreTraceLabel(command.correlationId)}</span>}
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                     <span>execution changed: false</span>
                     <span>browser governed: {command.browserGoverned ? "true" : "false"}</span>
                     <span>capture: false</span>
@@ -842,21 +842,21 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   <div key={transition.transitionId} className={`rounded-xl border p-3 ${warn ? "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]" : blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : browserGoverned ? "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{transition.fromMode} → {transition.toMode} · {transition.transitionId.slice(-6)}</div>
+                        <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{transition.fromMode} → {transition.toMode} · {transition.transitionId.slice(-6)}</div>
                         <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{transition.userSafeReason}</p>
                       </div>
-                      <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getVisualCoreModeTransitionStatusLabel(transition.status)}</span>
+                      <span className={`shrink-0 text-[9px] font-medium tracking-tight ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getVisualCoreModeTransitionStatusLabel(transition.status)}</span>
                     </div>
                     {transition.blockedBy && transition.blockedBy.length > 0 && (
                       <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {transition.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                       <span>source: {getVisualCoreModeTransitionSourceLabel(transition.source)}</span>
                       <span>{compactTimestamp(transition.timestamp)}</span>
                       {transition.correlationId && <span>{formatVisualCoreTraceLabel(transition.correlationId)}</span>}
                       {transition.browserShellSessionId && <span>shell: {transition.browserShellSessionId.slice(-6)}</span>}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getVisualCoreModeTransitionSafetyFlagSummary(transition).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -880,15 +880,15 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   <div key={session.overlaySessionId} className={`rounded-xl border p-3 ${blocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : session.status === "open" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{session.overlaySurfaceId} · {session.overlaySessionId.slice(-6)}</div>
+                        <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{session.overlaySurfaceId} · {session.overlaySessionId.slice(-6)}</div>
                         <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{session.userSafeReason}</p>
                       </div>
-                      <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getOverlaySessionStatusLabel(session.status)}</span>
+                      <span className={`shrink-0 text-[9px] font-medium tracking-tight ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getOverlaySessionStatusLabel(session.status)}</span>
                     </div>
                     {session.blockedBy && session.blockedBy.length > 0 && (
                       <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {session.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">
                       <span>label: {session.label}</span>
                       <span>risk: {session.riskLevel}</span>
                       <span>source: {getOverlaySessionSourceLabel(session.source)}</span>
@@ -897,12 +897,12 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                       <span>updated: {compactTimestamp(session.updatedAt)}</span>
                       {session.closedAt && <span>closed: {compactTimestamp(session.closedAt)}</span>}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getOverlaySessionSafetyFlagSummary(session).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-50">
+                    <div className="mt-1 flex flex-wrap gap-1 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-50">
                       {getOverlaySessionBoundaryLabels().map((label) => (
                         <span key={label}>{label}</span>
                       ))}
@@ -924,15 +924,15 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div key={result.executionResultId} className={`rounded-xl border p-3 ${result.status === "blocked" || result.status === "failed" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : result.status === "executed" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{result.kind} · {result.status} · {result.shellSessionId.slice(-6)}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{result.kind} · {result.status} · {result.shellSessionId.slice(-6)}</div>
                       <p className="mt-1 truncate text-[10px] text-[var(--app-text-muted)]">{result.message}</p>
                     </div>
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{compactTimestamp(result.executedAt)}</span>
+                    <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{compactTimestamp(result.executedAt)}</span>
                   </div>
                   {result.blockedBy && result.blockedBy.length > 0 && (
                     <p className="mt-2 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {result.blockedBy.join(", ")}</p>
                   )}
-                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                  <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                     <span>safe lifecycle exec: true</span>
                     <span>click/type/scroll exec: false</span>
                     <span>automation: false</span>
@@ -975,7 +975,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <span className="font-bold text-[var(--app-text-main)]">&middot; {session.title}</span>
               </div>
               <div>{session.mode} &middot; {compactTimestamp(session.updatedAt)}</div>
-              <div className="text-[9px] uppercase tracking-widest opacity-70">{getContinuityNoExecutionText("session")}</div>
+              <div className="text-[9px] tracking-tight opacity-70">{getContinuityNoExecutionText("session")}</div>
             </div>
           );
         })}
@@ -992,7 +992,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               </div>
               <div>{reminder.reason}</div>
               {reminder.dueAt && <div className="text-[9px] opacity-70">Due: {compactTimestamp(reminder.dueAt)}</div>}
-              <div className="text-[9px] uppercase tracking-widest opacity-70">{getContinuityNoExecutionText("reminder")}</div>
+              <div className="text-[9px] tracking-tight opacity-70">{getContinuityNoExecutionText("reminder")}</div>
             </div>
           );
         })}
@@ -1065,7 +1065,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                   <span className={`font-bold ${getSkillToneColor(statusTone)}`}>{getSkillRequestLabel(request.status)}</span>
                   <span className="font-bold text-[var(--app-text-main)]">&middot; {request.skillName}</span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-1.5 text-[9px] font-bold uppercase tracking-widest">
+                <div className="mt-1 flex flex-wrap gap-1.5 text-[9px] font-bold tracking-tight">
                   <span>{getSkillRequestTypeLabel(request.requestType)}</span>
                   <span className={getSkillToneColor(riskTone)}>&middot; {getSkillRiskLabel(request.riskLevel)}</span>
                   <span>&middot; {compactTimestamp(request.updatedAt)}</span>
@@ -1073,7 +1073,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
                 <div className="mt-1">Capabilities: {request.requestedCapabilities.length === 0 ? "none requested" : request.requestedCapabilities.map(getSkillCapabilityLabel).join(", ")}</div>
                 {request.blockedBy && request.blockedBy.length > 0 && <div className="text-[var(--luca-danger,#f87171)]">Blocked reason: {request.blockedBy.map(getSkillCapabilityLabel).join(", ")}</div>}
                 <div>{getSkillRequestNextAction(request.status, request.requestType)}</div>
-                <div className="text-[9px] uppercase tracking-widest opacity-70">{getSkillRequestNoExecutionText()}</div>
+                <div className="text-[9px] tracking-tight opacity-70">{getSkillRequestNoExecutionText()}</div>
               </div>
             );
           })}
@@ -1097,7 +1097,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               {plan.steps.filter((s) => s.kind === "blocked_risky_action" || s.status === "blocked").length > 0 && (
                 <div className="text-[var(--luca-danger,#f87171)]">Blocked risky steps: {plan.steps.filter((s) => s.kind === "blocked_risky_action" || s.status === "blocked").length}</div>
               )}
-              <div className="text-[9px] uppercase tracking-widest opacity-70">{getContinuityNoExecutionText("plan")}</div>
+              <div className="text-[9px] tracking-tight opacity-70">{getContinuityNoExecutionText("plan")}</div>
             </div>
           );
         })}
@@ -1114,7 +1114,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               </div>
               <div>risk: {checkpoint.riskLevel} &middot; {compactTimestamp(checkpoint.updatedAt)}</div>
               {checkpoint.blockedBy && checkpoint.blockedBy.length > 0 && <div className="text-[var(--luca-danger,#f87171)]">Blocked: {checkpoint.blockedBy.join(", ")}</div>}
-              <div className="text-[9px] uppercase tracking-widest opacity-70">{getContinuityNoExecutionText("checkpoint")}</div>
+              <div className="text-[9px] tracking-tight opacity-70">{getContinuityNoExecutionText("checkpoint")}</div>
             </div>
           );
         })}
@@ -1138,7 +1138,7 @@ const TraceLogsPanel: React.FC<TraceLogsPanelProps> = ({ theme, toolLogs }) => {
               {(decision.createdMemoryProposalIds?.length ?? 0) > 0 && <div className="mt-0.5">Route → Memory proposals: {decision.createdMemoryProposalIds?.length}</div>}
               {(decision.createdGovernedRequestIds?.length ?? 0) > 0 && <div className="mt-0.5">Route → Governed requests: {decision.createdGovernedRequestIds?.length}</div>}
               {(decision.createdSkillRequestIds?.length ?? 0) > 0 && <div className="mt-0.5">Route → Skill requests: {decision.createdSkillRequestIds?.length}</div>}
-              <div className="mt-0.5 text-[9px] uppercase tracking-widest opacity-70">{getRouteNoExecutionText(route)} &middot; {new Date(decision.createdAt).toLocaleString()}</div>
+              <div className="mt-0.5 text-[9px] tracking-tight opacity-70">{getRouteNoExecutionText(route)} &middot; {new Date(decision.createdAt).toLocaleString()}</div>
             </div>
           );
         })}

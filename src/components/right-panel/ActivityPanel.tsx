@@ -173,7 +173,7 @@ const Button: React.FC<{ children: React.ReactNode; onClick: () => void; tone?: 
   <button
     type="button"
     onClick={onClick}
-    className={`rounded-lg border px-2 py-1 text-[9px] font-black uppercase tracking-widest transition-colors ${
+    className={`rounded-lg border px-2 py-1 text-[9px] font-medium tracking-tight transition-colors ${
       tone === "danger" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] text-[var(--luca-danger,#f87171)] hover:bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" :
       tone === "good" ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)] text-[var(--luca-success,#4fbf7a)] hover:bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" :
       "text-[var(--app-text-muted)] hover:text-[var(--app-text-main)]"
@@ -295,8 +295,8 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
             <Icon name="BellRing" size={18} />
           </div>
           <div>
-            <div className="text-sm font-black uppercase tracking-[0.18em] text-[var(--app-text-main)]">ACTIVITY</div>
-            <p className="mt-1 text-xs leading-relaxed text-[var(--app-text-muted)]">Runtime activity, decisions, reminders, inbox items, resumable sessions, and governed action requests.</p>
+            <div className="text-[13px] font-semibold tracking-tight text-[var(--luca-text-primary,var(--app-text-main))]">Timeline</div>
+            <p className="mt-1 text-[11px] leading-relaxed text-[var(--luca-text-tertiary,var(--app-text-muted))]">What Luca has done and what's waiting on you — decisions, reminders, resumable sessions, and governed requests.</p>
           </div>
         </div>
       </div>
@@ -319,7 +319,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold text-[var(--app-text-main)]">Needs approval · {request.title}</div>
                     <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.description}</p>
-                    <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]">{request.riskLevel} · state-only approval</p>
+                    <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-warning,#f2b23e)]">{request.riskLevel} · state-only approval</p>
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -351,9 +351,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
                         <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">{record.recommendedFutureApprovalCopy}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">blocked</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">blocked</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-80">
                       <span>id: {record.nativeOverlayForwardingId}</span>
                       <span>surface: {record.surfaceId}</span>
                       <span>source: {record.source}</span>
@@ -363,12 +363,12 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span>time: {compactTimestamp(record.timestamp)}</span>
                     </div>
                     <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {record.blockedBy.join(", ")}</p>
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getAndroidNativeOverlayForwardingBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getAndroidNativeOverlayForwardingSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -398,9 +398,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
                         <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">{record.recommendedFutureApprovalCopy}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">blocked</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">blocked</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-80">
                       <span>id: {record.originOverlayControlGateRecordId}</span>
                       <span>control: {record.controlId}</span>
                       <span>kind: {getOriginOverlayCriticalControlKindLabel(record.controlKind)}</span>
@@ -412,17 +412,17 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span>time: {compactTimestamp(record.timestamp)}</span>
                     </div>
                     <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {record.blockedBy.join(", ")}</p>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                       {getOriginOverlayCriticalControlCapabilitySummary(record.controlId).map((chip) => (
                         <span key={chip}>{chip}</span>
                       ))}
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getOriginOverlayCriticalControlBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getOriginOverlayCriticalControlSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -452,9 +452,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
                         <p className="mt-1 text-[9px] text-[var(--app-text-muted)] opacity-80">{record.recommendedFutureApprovalCopy}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--luca-danger,#f87171)]">{record.riskLevel}</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--luca-danger,#f87171)]">{record.riskLevel}</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-80">
                       <span>id: {record.captureGateRecordId}</span>
                       <span>surface: {record.surfaceId}</span>
                       <span>component: {record.sourceComponent}</span>
@@ -467,12 +467,12 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span>time: {compactTimestamp(record.timestamp)}</span>
                     </div>
                     <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {record.blockedBy.join(", ")}</p>
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getOverlayCaptureGateBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getOverlayCaptureGateSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -501,9 +501,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{getOverlayApprovalResolutionStatusLabel(record.status)}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{record.userSafeReason}</p>
                       </div>
-                      <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getOverlayApprovalResolutionSourceLabel(record.source)}</span>
+                      <span className={`shrink-0 text-[9px] font-medium tracking-tight ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getOverlayApprovalResolutionSourceLabel(record.source)}</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-80">
                       <span>id: {record.approvalResolutionId}</span>
                       <span>source: {getOverlayApprovalResolutionSourceLabel(record.source)}</span>
                       <span>decision: {getOverlayApprovalResolutionDecisionLabel(record.decision)}</span>
@@ -513,12 +513,12 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     {record.blockedBy && record.blockedBy.length > 0 && (
                       <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {record.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getOverlayApprovalResolutionBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getOverlayApprovalResolutionSafetyFlagSummary(record).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -550,11 +550,11 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <div key={request.gatewayRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{request.title}</div>
+                        <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{request.title}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{permissionSummary}</p>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-medium tracking-tight ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
                         {statusLabel}
                       </span>
                     </div>
@@ -564,8 +564,8 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
                     </div>
                     <div className="mt-2 rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
-                      <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Safeguards checklist</div>
-                      <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      <div className="text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">Safeguards checklist</div>
+                      <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                         {safeguards.map((safeguard) => (
                           <span
                             key={safeguard.key}
@@ -581,7 +581,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     )}
                     <p className="mt-2 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{futureReadiness}</p>
                     <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{credentialBoundary}</p>
-                    <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Next action: {nextAction}</p>
+                    <p className="mt-1 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">Next action: {nextAction}</p>
                     <p className="mt-1 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getGatewayNoExecutionText()}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {request.status !== "blocked" && <Button tone="danger" onClick={() => { browserDesktopGatewayService.blockGatewayRequest(request.gatewayRequestId, "Blocked from Activity panel."); refresh(); }}>block</Button>}
@@ -615,11 +615,11 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <div key={request.observationRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{request.title}</div>
+                        <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{request.title}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{summary}</p>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-medium tracking-tight ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
                         {statusLabel}
                       </span>
                     </div>
@@ -628,10 +628,10 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Capability: {capabilityLabel}</span>
                       <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">{riskLabel}</span>
                     </div>
-                    <p className="mt-2 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">{consentLabel}</p>
+                    <p className="mt-2 text-[9px] tracking-tight text-[var(--app-text-muted)]">{consentLabel}</p>
                     <div className="mt-2 rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
-                      <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Safeguards checklist</div>
-                      <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      <div className="text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">Safeguards checklist</div>
+                      <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                         {safeguards.map((safeguard) => (
                           <span
                             key={safeguard.key}
@@ -646,8 +646,8 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <p className="mt-2 text-[9px] leading-relaxed text-[var(--luca-danger,#f87171)]">Blocked by: {request.blockedBy.join(", ")}</p>
                     )}
                     <div className="mt-2 rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
-                      <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Lifecycle</div>
-                      <div className="mt-1 flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
+                      <div className="text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">Lifecycle</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1 text-[8px] font-medium tracking-tight">
                         {getObservationRequestTimeline(request).map((step, index) => (
                           <React.Fragment key={step.key}>
                             {index > 0 && <span className="text-[var(--app-text-muted)] opacity-40">→</span>}
@@ -659,7 +659,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       </div>
                     </div>
                     <p className="mt-2 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{futureReadiness}</p>
-                    <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Next action: {nextAction}</p>
+                    <p className="mt-1 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">Next action: {nextAction}</p>
                     <p className="mt-1 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getScreenObservationNoCaptureText()}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {(request.status === "dry_run_only" || request.status === "consent_required") && (
@@ -676,13 +676,13 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 <div key={session.observationSessionId} className="rounded-xl border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{getObservationSessionLifecycleLabel(session)}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{getObservationSessionLifecycleLabel(session)}</div>
                       <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{getScreenObservationSummary(session)}</p>
-                      {session.requestId && <p className="mt-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Linked request: {session.requestId}</p>}
+                      {session.requestId && <p className="mt-1 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">Linked request: {session.requestId}</p>}
                     </div>
-                    <span className="shrink-0 rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{getObservationSessionNoCaptureBadge()}</span>
+                    <span className="shrink-0 rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">{getObservationSessionNoCaptureBadge()}</span>
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
+                  <div className="mt-2 flex flex-wrap items-center gap-1 text-[8px] font-medium tracking-tight">
                     {getObservationSessionTimeline(session).map((step, index) => (
                       <React.Fragment key={step.key}>
                         {index > 0 && <span className="text-[var(--app-text-muted)] opacity-40">→</span>}
@@ -734,11 +734,11 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <div key={request.browserRequestId} className={`rounded-xl border p-3 ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{request.title}</div>
+                        <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{request.title}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{summary}</p>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{request.policyDecision.userSafeReason}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-medium tracking-tight ${request.status === "blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
                         {statusLabel}
                       </span>
                     </div>
@@ -752,8 +752,8 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">{credentialBoundaryLabel}</span>
                     </div>
                     <div className="mt-2 rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
-                      <div className="text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Safeguards checklist</div>
-                      <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                      <div className="text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">Safeguards checklist</div>
+                      <div className="mt-1 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                         {safeguards.map((safeguard) => (
                           <span
                             key={safeguard.key}
@@ -768,7 +768,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <p className="mt-2 text-[9px] leading-relaxed text-[var(--luca-danger,#f87171)]">Blocked by: {request.blockedBy.join(", ")}</p>
                     )}
                     <p className="mt-2 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{futureReadiness}</p>
-                    <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">Next action: {nextAction}</p>
+                    <p className="mt-1 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">Next action: {nextAction}</p>
                     <p className="mt-1 text-[9px] italic leading-relaxed text-[var(--app-text-muted)] opacity-80">{getSandboxedBrowserNoLaunchText()}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {(request.status === "dry_run_only" || request.status === "waiting_user") && (
@@ -785,11 +785,11 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 <div key={session.browserSessionId} className="rounded-xl border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{getSandboxedBrowserStatusLabel(session.status)}</div>
+                      <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{getSandboxedBrowserStatusLabel(session.status)}</div>
                       <p className="mt-1 text-[9px] leading-relaxed text-[var(--app-text-muted)]">{getSandboxedBrowserSummary(session)}</p>
-                      {session.requestId && <p className="mt-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">Linked request: {session.requestId}</p>}
+                      {session.requestId && <p className="mt-1 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">Linked request: {session.requestId}</p>}
                     </div>
-                    <span className="shrink-0 rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">No launch · no automation</span>
+                    <span className="shrink-0 rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)]">No launch · no automation</span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1 text-[9px]">
                     <span className="rounded-lg border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-1 text-[var(--app-text-muted)]">Surface: {getSandboxedBrowserSurfaceLabel(session.surface)}</span>
@@ -828,17 +828,17 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <div key={session.shellSessionId} className={`rounded-xl border p-3 ${session.status === "blocked" || session.status === "navigation_blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{session.title}</div>
+                        <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{session.title}</div>
                         <p className="mt-1 truncate font-mono text-[10px] text-[var(--app-text-muted)]">{session.auditUrl || "(no audit URL)"}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${session.status === "blocked" || session.status === "navigation_blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-medium tracking-tight ${session.status === "blocked" || session.status === "navigation_blocked" ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] text-[var(--luca-danger,#f87171)]" : "border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] text-[var(--luca-warning,#f2b23e)]"}`}>
                         {session.status}
                       </span>
                     </div>
                     {session.blockedBy && session.blockedBy.length > 0 && (
                       <p className="mt-2 text-[9px] leading-relaxed text-[var(--luca-danger,#f87171)]">Blocked by: {session.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {typeof session.metadata?.adapter === "string" && (
                         <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-0.5 text-[var(--luca-info,#4f8cff)]">
                           {session.metadata.adapter === "luca_browser_webview" ? "Luca Browser" : "Iframe fallback"}
@@ -857,7 +857,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     )}
                     {observation && (
                       <div className="mt-2 rounded-lg border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] p-2">
-                        <div className="flex flex-wrap items-center gap-1 text-[8px] font-black uppercase tracking-widest">
+                        <div className="flex flex-wrap items-center gap-1 text-[8px] font-medium tracking-tight">
                           <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] px-2 py-0.5 text-[var(--luca-info,#4f8cff)]">obs: {observation.status}</span>
                           <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{observation.isLoading ? "loading" : "idle"}</span>
                           <span className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">back {observation.canGoBack ? "yes" : "no"}</span>
@@ -869,7 +869,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         {observation.lastBlockedAuditUrl && (
                           <p className="mt-1 truncate font-mono text-[9px] text-[var(--luca-danger,#f87171)]">last blocked: {observation.lastBlockedAuditUrl}{observation.lastBlockedReason ? ` — ${observation.lastBlockedReason}` : ""}</p>
                         )}
-                        <div className="mt-1 flex flex-wrap gap-1 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                        <div className="mt-1 flex flex-wrap gap-1 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                           <span>no page content</span>
                           <span>no screenshot</span>
                           <span>no OCR</span>
@@ -877,7 +877,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         </div>
                       </div>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                       <span>requested {session.createdAt.slice(0, 16).replace("T", " ")}</span>
                       {session.closedAt && <span>closed {session.closedAt.slice(0, 16).replace("T", " ")}</span>}
                       {session.revokedAt && <span>revoked {session.revokedAt.slice(0, 16).replace("T", " ")}</span>}
@@ -921,15 +921,15 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <div key={action.actionRequestId} className={`rounded-xl border p-3 ${isBlocked ? "border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)]" : isConfirmed ? "border-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-success,#4fbf7a)_12%,transparent)]" : "border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--app-text-main)]">{getLucaBrowserActionKindLabel(action.kind)}</div>
+                        <div className="text-[10px] font-medium tracking-tight text-[var(--app-text-main)]">{getLucaBrowserActionKindLabel(action.kind)}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{action.summary}</p>
                       </div>
-                      <div className="flex shrink-0 flex-col items-end gap-1 text-[8px] font-black uppercase tracking-widest">
+                      <div className="flex shrink-0 flex-col items-end gap-1 text-[8px] font-medium tracking-tight">
                         <span className={isBlocked ? "text-[var(--luca-danger,#f87171)]" : isConfirmed ? "text-[var(--luca-success,#4fbf7a)]" : "text-[var(--luca-warning,#f2b23e)]"}>{getLucaBrowserActionStatusLabel(action.status)}</span>
                         <span className="text-[var(--app-text-muted)]">{getLucaBrowserActionRiskLabel(action.riskLevel)}</span>
                       </div>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                       <span>session {action.shellSessionId.slice(-6)}</span>
                       {action.targetDescriptor && <span>target: {action.targetDescriptor}</span>}
                       {action.typedTextPreview && <span>text: “{action.typedTextPreview}”</span>}
@@ -938,7 +938,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {action.blockedBy.join(", ")}</p>
                     )}
                     <p className="mt-1 text-[9px] italic text-[var(--app-text-muted)] opacity-80">{getLucaBrowserActionNextAction(action)}</p>
-                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-70">
                       <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5">No execution</span>
                       <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5">No DOM read</span>
                       <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_45%,transparent)] px-2 py-0.5">No screenshot/OCR</span>
@@ -989,9 +989,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{session.mode} · {session.status}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{session.userSafeReason}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{session.riskLevel}</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{session.riskLevel}</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-80">
                       <span>readiness: {session.readiness}</span>
                       <span>source: {session.source}</span>
                       <span>opened: {compactTimestamp(session.openedAt)}</span>
@@ -1001,7 +1001,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     {session.blockedBy && session.blockedBy.length > 0 && (
                       <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {session.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getVisualCoreDisplayGovernanceBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
@@ -1038,9 +1038,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{session.label} · {getOverlaySessionStatusLabel(session.status)}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{session.userSafeReason}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{session.riskLevel}</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{session.riskLevel}</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-80">
                       <span>surface: {session.overlaySurfaceId}</span>
                       <span>source: {getOverlaySessionSourceLabel(session.source)}</span>
                       <span>postures: {getOverlaySessionPostureSummary(session)}</span>
@@ -1051,12 +1051,12 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     {session.blockedBy && session.blockedBy.length > 0 && (
                       <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {session.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getOverlaySessionBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getOverlaySessionSafetyFlagSummary(session).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -1086,9 +1086,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{command.kind} · {command.status}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{command.userSafeReason}</p>
                       </div>
-                      <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--app-text-muted)]">{command.riskLevel}</span>
+                      <span className="shrink-0 text-[9px] font-medium tracking-tight text-[var(--app-text-muted)]">{command.riskLevel}</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-80">
                       <span>source: {command.source}</span>
                       {command.targetMode && <span>target: {command.targetMode}</span>}
                       <span>updated: {compactTimestamp(command.updatedAt)}</span>
@@ -1100,12 +1100,12 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     {command.blockedBy && command.blockedBy.length > 0 && (
                       <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {command.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getVisualCoreRemoteCommandBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       <span>execution changed: false</span>
                       <span>browser governed: {command.browserGoverned ? "true" : "false"}</span>
                       <span>capture: false</span>
@@ -1141,9 +1141,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                         <div className="text-[10px] font-bold text-[var(--app-text-main)]">{transition.fromMode} → {transition.toMode}</div>
                         <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{transition.userSafeReason}</p>
                       </div>
-                      <span className={`shrink-0 text-[9px] font-black uppercase tracking-widest ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getVisualCoreModeTransitionStatusLabel(transition.status)}</span>
+                      <span className={`shrink-0 text-[9px] font-medium tracking-tight ${blocked ? "text-[var(--luca-danger,#f87171)]" : "text-[var(--app-text-muted)]"}`}>{getVisualCoreModeTransitionStatusLabel(transition.status)}</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest text-[var(--app-text-muted)] opacity-80">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] font-medium tracking-tight text-[var(--app-text-muted)] opacity-80">
                       <span>source: {getVisualCoreModeTransitionSourceLabel(transition.source)}</span>
                       <span>updated: {compactTimestamp(transition.timestamp)}</span>
                       {transition.correlationId && <span>{formatVisualCoreTraceLabel(transition.correlationId)}</span>}
@@ -1152,12 +1152,12 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     {transition.blockedBy && transition.blockedBy.length > 0 && (
                       <p className="mt-1 text-[9px] text-[var(--luca-danger,#f87171)]">Blocked by: {transition.blockedBy.join(", ")}</p>
                     )}
-                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-black uppercase tracking-widest">
+                    <div className="mt-2 flex flex-wrap gap-1 text-[8px] font-medium tracking-tight">
                       {getVisualCoreModeTransitionBoundaryLabels().map((label) => (
                         <span key={label} className="rounded-full border border-[var(--luca-border-subtle)] px-2 py-0.5 text-[var(--app-text-muted)]">{label}</span>
                       ))}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-60">
+                    <div className="mt-1 flex flex-wrap gap-2 text-[8px] tracking-tight text-[var(--app-text-muted)] opacity-60">
                       {getVisualCoreModeTransitionSafetyFlagSummary(transition).map((flag) => (
                         <span key={flag}>{flag}</span>
                       ))}
@@ -1184,7 +1184,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 <div key={proposal.proposalId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">Memory proposed · {proposal.title}</div>
                   <p className="mt-1 text-[10px] leading-relaxed text-[var(--app-text-muted)]">{proposal.summary}</p>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]">{proposal.kind} · {proposal.riskLevel} · approving does not write</p>
+                  <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-warning,#f2b23e)]">{proposal.kind} · {proposal.riskLevel} · approving does not write</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button tone="good" onClick={() => { memoryProposalService.approveProposal(proposal.proposalId); refresh(); }}>Approve memory</Button>
                     <Button tone="danger" onClick={() => { memoryProposalService.rejectProposal(proposal.proposalId); refresh(); }}>reject</Button>
@@ -1202,7 +1202,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       {canWrite.allowed ? (
                         <Button tone="good" onClick={() => { void governedMemoryWriteService.writeApprovedProposal(proposal.proposalId).then(refresh); }}>Save memory once</Button>
                       ) : (
-                        <span className="text-[9px] uppercase tracking-widest text-[var(--luca-danger,#f87171)]">{canWrite.blockedBy.join(", ") || "cannot write"}</span>
+                        <span className="text-[9px] tracking-tight text-[var(--luca-danger,#f87171)]">{canWrite.blockedBy.join(", ") || "cannot write"}</span>
                       )}
                       <Button tone="danger" onClick={() => { memoryProposalService.revokeProposal(proposal.proposalId); refresh(); }}>revoke</Button>
                     </div>
@@ -1212,13 +1212,13 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
               {written.map((proposal) => (
                 <div key={proposal.proposalId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">Memory saved · {proposal.title}</div>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]">written with provenance</p>
+                  <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-success,#4fbf7a)]">written with provenance</p>
                 </div>
               ))}
               {rejectedOrBlocked.map((proposal) => (
                 <div key={proposal.proposalId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">{proposal.status === "blocked" ? "Blocked for safety" : "Rejected"} · {proposal.title}</div>
-                  {proposal.blockedBy && proposal.blockedBy.length > 0 && <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-danger,#f87171)]">{proposal.blockedBy.join(", ")}</p>}
+                  {proposal.blockedBy && proposal.blockedBy.length > 0 && <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-danger,#f87171)]">{proposal.blockedBy.join(", ")}</p>}
                 </div>
               ))}
             </div>
@@ -1242,7 +1242,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <span className={`font-bold ${getSkillToneColor(statusTone)}`}>{getSkillRequestLabel(request.status)}</span>
                   <span className="font-bold text-[var(--app-text-main)]">· {request.skillName}</span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-1.5 text-[9px] font-bold uppercase tracking-widest">
+                <div className="mt-1 flex flex-wrap gap-1.5 text-[9px] font-bold tracking-tight">
                   <span className="rounded-full border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] px-2 py-0.5 text-[var(--app-text-muted)]">{getSkillRequestTypeLabel(request.requestType)}</span>
                   <span className={`rounded-full border px-2 py-0.5 ${getSkillToneBorder(riskTone)} ${getSkillToneColor(riskTone)}`}>{getSkillRiskLabel(request.riskLevel)}</span>
                   <span className="rounded-full border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] px-2 py-0.5 text-[var(--luca-info,#4f8cff)]">State-only</span>
@@ -1257,9 +1257,9 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     </span>
                   ))}
                 </div>
-                {hasSafetyFlags && <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-danger,#f87171)]">Blocked reason: {request.blockedBy?.map(getSkillCapabilityLabel).join(", ")}</p>}
+                {hasSafetyFlags && <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-danger,#f87171)]">Blocked reason: {request.blockedBy?.map(getSkillCapabilityLabel).join(", ")}</p>}
                 <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">{getSkillRequestNextAction(request.status, request.requestType)}</p>
-                <p className="mt-0.5 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">{getSkillRequestNoExecutionText()}</p>
+                <p className="mt-0.5 text-[9px] tracking-tight text-[var(--app-text-muted)] opacity-70">{getSkillRequestNoExecutionText()}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {pending && !hasSafetyFlags && <Button tone="good" onClick={() => { skillGovernanceService.approveSkillRequest(request.skillRequestId); refresh(); }}>approve request</Button>}
                   {pending && <Button tone="danger" onClick={() => { skillGovernanceService.rejectSkillRequest(request.skillRequestId); refresh(); }}>reject</Button>}
@@ -1291,7 +1291,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span className="text-[var(--app-text-muted)]">· {d.mode} mode</span>
                     </div>
                     <p className="mt-1 text-[10px] text-[var(--app-text-muted)] truncate">{d.reason.slice(0, 200)}</p>
-                    <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                    <p className="mt-1 text-[9px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                       {getRouteNoExecutionText(route)} · risk: {d.riskLevel}
                     </p>
                     <p className="mt-0.5 text-[9px] text-[var(--app-text-muted)]">{getRouteNextAction(route)}</p>
@@ -1325,7 +1325,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                       <span className="font-bold text-[var(--app-text-main)]">· {plan.title}</span>
                     </div>
                     <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{plan.summary}</p>
-                    <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                    <p className="mt-1 text-[9px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                       {plan.riskLevel} · {plan.steps.length} steps · {getContinuityNoExecutionText("plan")}
                     </p>
                     <p className="mt-0.5 text-[9px] text-[var(--app-text-muted)]">{getPlanNextAction(plan.status)}</p>
@@ -1369,7 +1369,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <span className="font-bold text-[var(--app-text-main)]">· {checkpoint.title}</span>
                 </div>
                 <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{checkpoint.summary}</p>
-                <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                <p className="mt-1 text-[9px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                   {getCheckpointNextAction(checkpoint.status)} · {getContinuityNoExecutionText("checkpoint")}
                 </p>
                 {checkpoint.proposedNextSteps.length > 0 && <p className="mt-1 text-[9px] text-[var(--app-text-muted)]">Next: {checkpoint.proposedNextSteps.slice(0, 3).join(" · ")}</p>}
@@ -1399,7 +1399,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 <span className="font-bold text-[var(--app-text-main)]">· {reminder.title}</span>
               </div>
               <div className="mt-1">{reminder.message}</div>
-              <div className="mt-1 text-[9px] uppercase tracking-widest opacity-70">
+              <div className="mt-1 text-[9px] tracking-tight opacity-70">
                 {getReminderNextAction(reminder.status)} · {getContinuityNoExecutionText("reminder")}
               </div>
               {reminder.dueAt && <div className="text-[9px] opacity-70">Due: {compactTimestamp(reminder.dueAt)}</div>}
@@ -1436,7 +1436,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                   <span className="font-bold text-[var(--app-text-main)]">· {session.title}</span>
                 </div>
                 <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{session.lastUserIntentSummary}</p>
-                <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)] opacity-70">
+                <p className="mt-1 text-[9px] tracking-tight text-[var(--app-text-muted)] opacity-70">
                   {getSessionNextAction(session.lifecycleState, session.safeToResume)} · {getContinuityNoExecutionText("session")}
                 </p>
                 {session.updatedAt && <div className="text-[9px] text-[var(--app-text-muted)] opacity-70">{compactTimestamp(session.updatedAt)}</div>}
@@ -1477,7 +1477,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                     <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">
                       {isPanelAction ? "This only changes local LucaOS UI." : request.description}
                     </p>
-                    <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]">{canExec.capability ?? "safe"} · {request.riskLevel ?? "low"}</p>
+                    <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-success,#4fbf7a)]">{canExec.capability ?? "safe"} · {request.riskLevel ?? "low"}</p>
                     <div className="mt-2 flex gap-2">
                       <Button tone="good" onClick={() => { governedToolExecutionService.executeApprovedRequest(request.requestId); refresh(); }}>
                         {isPanelAction ? `Run once to open ${panelLabel}` : "Run once"}
@@ -1491,26 +1491,26 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
                 <div key={request.requestId} className="rounded-xl border border-[color-mix(in_srgb,var(--luca-danger,#f87171)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-danger,#f87171)_12%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--luca-danger,#f87171)]">Blocked for safety · {request.title}</div>
                   <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{canExec.reason}</p>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-danger,#f87171)]">approved but cannot execute</p>
+                  <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-danger,#f87171)]">approved but cannot execute</p>
                 </div>
               ))}
               {ineligible.slice(0, 4).map(({ request, canExec }) => (
                 <div key={request.requestId} className="rounded-xl border border-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_32%,transparent)] bg-[color-mix(in_srgb,var(--luca-warning,#f2b23e)_12%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--luca-warning,#f2b23e)]">Approval only — execution bridge unavailable · {request.title}</div>
                   <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{canExec.reason}</p>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]">This action needs a future secure bridge</p>
+                  <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-warning,#f2b23e)]">This action needs a future secure bridge</p>
                 </div>
               ))}
               {alreadyDone.map(({ request }) => (
                 <div key={request.requestId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">Already executed · {request.title}</div>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--app-text-muted)]">completed</p>
+                  <p className="mt-1 text-[9px] tracking-tight text-[var(--app-text-muted)]">completed</p>
                 </div>
               ))}
               {executed.filter((ex) => !canExecResults.some((c) => c.request.requestId === ex.requestId)).map((execution) => (
                 <div key={execution.executionId} className="rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
                   <div className="text-[10px] font-bold text-[var(--app-text-main)]">Executed · {execution.title}</div>
-                  <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-success,#4fbf7a)]">succeeded · {execution.capability}</p>
+                  <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-success,#4fbf7a)]">succeeded · {execution.capability}</p>
                 </div>
               ))}
             </div>
@@ -1525,7 +1525,7 @@ const ActivityPanel: React.FC<ActivityPanelProps> = ({ theme }) => {
           <div key={request.requestId} className="mb-2 rounded-xl border border-[var(--luca-border-subtle)] bg-[color-mix(in_srgb,var(--luca-surface-glass)_34%,transparent)] p-2">
             <div className="text-[10px] font-bold text-[var(--app-text-main)]">Action request is waiting · {request.title}</div>
             <p className="mt-1 text-[10px] text-[var(--app-text-muted)]">{request.description}</p>
-            <p className="mt-1 text-[9px] uppercase tracking-widest text-[var(--luca-warning,#f2b23e)]">{request.kind} · {request.status} · dry-run request</p>
+            <p className="mt-1 text-[9px] tracking-tight text-[var(--luca-warning,#f2b23e)]">{request.kind} · {request.status} · dry-run request</p>
             <div className="mt-2 flex gap-2">
               <Button tone="danger" onClick={() => { governedActionRequestService.markRejected(request.requestId); refresh(); }}>reject</Button>
               <Button tone="danger" onClick={() => { governedActionRequestService.blockRequest(request.requestId); refresh(); }}>block</Button>
