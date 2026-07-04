@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon";
 import ChatWidgetInput from "../ChatWidgetInput";
 import ChatMessageBubble from "../ChatMessageBubble";
 import { ProWorkforceCanvas } from "../chat/ProWorkforceCanvas";
+import { lucaWorkforce } from "../../services/agent/LucaWorkforce";
 import ChatApprovalStrip from "../chat/ChatApprovalStrip";
 import WhileYouWereAwayStrip from "../chat/WhileYouWereAwayStrip";
 import { MessageScroller } from "../chat/LucaConversationPrimitives";
@@ -274,6 +275,26 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   setMessages,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>("CHAT");
+  // Entry rule (workforce-target): the Workforce pill exists only while
+  // agents run. When the last workflow ends, the canvas hands back to chat.
+  const [workforceCount, setWorkforceCount] = useState(0);
+  useEffect(() => {
+    const read = () => {
+      try {
+        setWorkforceCount(lucaWorkforce.getActiveWorkflows().length);
+      } catch {
+        setWorkforceCount(0);
+      }
+    };
+    read();
+    const timer = window.setInterval(read, 3000);
+    return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    if (workforceCount === 0 && viewMode === "CORTEX") {
+      setViewMode("CHAT");
+    }
+  }, [workforceCount, viewMode]);
   const [, startTransition] = useTransition();
   const personaLabel = normalizePersonaLabel(persona);
   const chatAnchorKey = `${messages.length}:${messages[messages.length - 1]?.text ?? ""}:${isProcessing}`;
@@ -653,7 +674,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         }
       >
         {/* Header Toggle */}
-        <div className="absolute top-4 left-6 z-50 flex items-center gap-2">
+        <div className="absolute top-4 left-6 z-50 flex items-center gap-2">{(workforceCount > 0 || viewMode === "CORTEX") && (<>
           <button
             onClick={() => {
               setViewMode(viewMode === "CHAT" ? "CORTEX" : "CHAT");
@@ -682,11 +703,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             {viewMode === "CORTEX" ? (
               <Icon name="ArrowLeft" size={10} variant="BoldDuotone" />
             ) : (
-              <Icon name="Zap" size={10} variant="BoldDuotone" />
+              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--luca-success, #4fbf7a)" }} aria-hidden="true" />
             )}
-            {viewMode === "CORTEX" ? "Back to chat" : "Workforce"}
+            {viewMode === "CORTEX" ? "Chat" : `Workforce · ${workforceCount} working`}
           </button>
-        </div>
+        </>)}</div>
 
         {/* Background handled by global container style to ensure consistency */}
 
@@ -837,7 +858,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       }
     >
       {/* Header Toggle */}
-      <div className="absolute top-3 left-6 z-50 flex items-center gap-2">
+      <div className="absolute top-3 left-6 z-50 flex items-center gap-2">{(workforceCount > 0 || viewMode === "CORTEX") && (<>
         <button
           onClick={() => {
             setViewMode(viewMode === "CHAT" ? "CORTEX" : "CHAT");
@@ -866,11 +887,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           {viewMode === "CORTEX" ? (
             <Icon name="ArrowLeft" size={10} variant="BoldDuotone" />
           ) : (
-            <Icon name="Zap" size={10} variant="BoldDuotone" />
+            <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--luca-success, #4fbf7a)" }} aria-hidden="true" />
           )}
-          {viewMode === "CORTEX" ? "Back to chat" : "Workforce"}
+          {viewMode === "CORTEX" ? "Chat" : `Workforce · ${workforceCount} working`}
         </button>
-      </div>
+      </>)}</div>
 
       {/* Background/Scanlines removed for consistency */}
 

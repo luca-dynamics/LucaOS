@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LucaOS — Workforce Target (the being's work, visible)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#1b2025; --canvas-bot:#15191d; --chrome:#111417;
+    --hair:rgba(255,255,255,.07); --hair-soft:rgba(255,255,255,.045);
+    --hover:rgba(255,255,255,.06); --card:rgba(255,255,255,.03);
+    --t1:#e9edf2; --t2:#9aa4b2; --t3:#69737f;
+    --accent:#7aa2ff; --ink:#0c0e12; --ok:#4fbf7a; --warn:#e0b15a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:#0a0c0e;color:var(--t1);
+    font:400 13px/1.5 "Inter","Segoe UI",ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;letter-spacing:-.008em;font-variant-numeric:tabular-nums;
+    display:flex;flex-direction:column;align-items:center;gap:30px;padding:34px 20px 50px}
+  svg{display:block}
+  button{font:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  .caption{width:min(1060px,100%);font-size:11px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--t3);margin-bottom:-18px}
+
+  .frame{width:min(1060px,100%);border:1px solid var(--hair);border-radius:14px;overflow:hidden;
+    background:linear-gradient(180deg,var(--canvas),var(--canvas-bot));
+    box-shadow:0 26px 70px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
+
+  /* ── entry rule: the pill only exists when work exists ── */
+  .chatbar{display:flex;align-items:center;gap:10px;padding:14px 18px}
+  .pill{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;
+    border:1px solid var(--hair);border-radius:999px;font-size:12px;font-weight:500;color:var(--t2)}
+  .pill:hover{background:var(--hover);color:var(--t1)}
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);
+    animation:breath 3.2s ease-in-out infinite}
+  @keyframes breath{0%,100%{opacity:.55}50%{opacity:1}}
+  .ghosttext{font-size:12px;color:var(--t3)}
+
+  /* ── the workforce canvas ── */
+  .stage{position:relative;height:560px}
+  .stage svg.edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .edge{stroke:var(--hair);stroke-width:1.5;fill:none}
+  .edge.flow{stroke:color-mix(in srgb,var(--accent) 45%,transparent);stroke-dasharray:3 7;
+    animation:flow 2.6s linear infinite}
+  .edge.warn{stroke:color-mix(in srgb,var(--warn) 45%,transparent)}
+  @keyframes flow{to{stroke-dashoffset:-40}}
+
+  .node{position:absolute;width:224px;border:1px solid var(--hair);border-radius:13px;
+    background:var(--chrome);box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 10px 30px -14px rgba(0,0,0,.6);
+    padding:11px 13px;transition:border-color 160ms ease}
+  .node:hover{border-color:var(--hair);background:#14181d}
+  .node .who{display:flex;align-items:center;gap:8px}
+  .node .sdot{width:7px;height:7px;border-radius:50%;flex:none}
+  .node .sdot.on{background:var(--ok);animation:breath 3.2s ease-in-out infinite}
+  .node .sdot.warn{background:var(--warn);animation:breath 2.2s ease-in-out infinite}
+  .node .sdot.done{background:rgba(255,255,255,.22);animation:none}
+  .node .name{font-size:13px;font-weight:600}
+  .node .role{margin-left:auto;font-size:10.5px;color:var(--t3)}
+  .node .task{margin-top:6px;font-size:12px;color:var(--t2);line-height:1.45}
+  .node .meta{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t3)}
+  .node .bar{flex:1;height:2px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}
+  .node .bar i{display:block;height:100%;border-radius:2px;background:var(--accent)}
+  .node.done{opacity:.62}
+  .node.done .task{text-decoration:none}
+  .node.needs{border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+  .node .review{margin-top:9px;display:inline-flex;height:26px;align-items:center;padding:0 12px;
+    border-radius:8px;background:var(--accent);color:var(--ink);font-size:11.5px;font-weight:600}
+  .node .quiet-note{margin-top:6px;font-size:10.5px;color:var(--t3);opacity:.85}
+
+  /* the orchestrator — the being itself, anchoring the graph */
+  .luca-node{position:absolute;display:flex;align-items:center;gap:10px;
+    border:1px solid var(--hair);border-radius:999px;background:var(--chrome);
+    padding:8px 16px 8px 10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+  .face{width:26px;height:26px;border-radius:50%;flex:none;
+    background:radial-gradient(circle at 36% 32%, #cfe6ee, #7fa6c0 55%, #3f5668);
+    box-shadow:0 0 12px color-mix(in srgb,var(--accent) 40%,transparent);
+    animation:breath 4.2s ease-in-out infinite}
+  .luca-node b{font-size:13px;font-weight:600;display:block}
+  .luca-node small{font-size:10.5px;color:var(--t3);display:block;margin-top:1px}
+
+  /* mission line: what all of this is FOR, in one sentence */
+  .mission{position:absolute;left:20px;top:16px;right:20px;display:flex;align-items:center;gap:10px}
+  .mission .back{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;
+    border:1px solid var(--hair);border-radius:999px;font-size:12px;color:var(--t3)}
+  .mission .back:hover{background:var(--hover);color:var(--t1)}
+  .mission .what{font-size:12.5px;color:var(--t2)}
+  .mission .count{margin-left:auto;font-size:11.5px;color:var(--t3)}
+
+  .foot{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:12px}
+  .foot span{font-size:11px;color:var(--t3);opacity:.85}
+
+  .note{width:min(1060px,100%);font-size:12px;color:var(--t3);line-height:1.65}
+  .note b{color:var(--t2);font-weight:500}
+</style>
+</head>
+<body>
+
+  <!-- ═══ 1 · THE ENTRY RULE ═══ -->
+  <div class="caption">Entry rule — the pill exists only while work exists (no standby destination)</div>
+  <div class="frame">
+    <div class="chatbar">
+      <button class="pill"><span class="dot"></span>Workforce · 3 working</button>
+      <span class="ghosttext">…appears beside the chat when agents are running. No agents → no pill, no empty room.</span>
+    </div>
+  </div>
+
+  <!-- ═══ 2 · THE WORKFORCE CANVAS ═══ -->
+  <div class="caption">The canvas — agents as living session cards, work flowing along hairlines</div>
+  <div class="frame">
+    <div class="stage">
+
+      <svg class="edges" viewBox="0 0 1060 560" preserveAspectRatio="none">
+        <path class="edge flow" d="M 530 118 C 420 160, 300 190, 248 226"/>
+        <path class="edge flow" d="M 530 118 C 530 170, 530 200, 530 236"/>
+        <path class="edge warn" d="M 530 118 C 660 160, 780 190, 826 226"/>
+        <path class="edge" d="M 248 330 C 300 380, 420 410, 512 434"/>
+        <path class="edge flow" d="M 530 340 C 530 375, 530 400, 530 430"/>
+      </svg>
+
+      <div class="mission">
+        <button class="back">← Chat</button>
+        <span class="what">Preparing the Q3 investor update — 3 agents · started 12 min ago</span>
+        <span class="count">Pause all</span>
+      </div>
+
+      <!-- Luca, orchestrating -->
+      <div class="luca-node" style="left:calc(50% - 92px);top:88px">
+        <div class="face"></div>
+        <span><b>Luca</b><small>orchestrating · 3 agents</small></span>
+      </div>
+
+      <!-- working -->
+      <div class="node" style="left:130px;top:226px">
+        <div class="who"><span class="sdot on"></span><span class="name">Research agent</span><span class="role">reading</span></div>
+        <div class="task">Pulling revenue figures from the finance workspace</div>
+        <div class="meta"><span>4 of 6 sources</span><span class="bar"><i style="width:66%"></i></span></div>
+      </div>
+
+      <!-- working -->
+      <div class="node" style="left:calc(50% - 112px);top:236px">
+        <div class="who"><span class="sdot on"></span><span class="name">Writing agent</span><span class="role">drafting</span></div>
+        <div class="task">Drafting the summary — section 2 of 4</div>
+        <div class="meta"><span>~6 min left</span><span class="bar"><i style="width:45%"></i></span></div>
+      </div>
+
+      <!-- needs you: amber, with the trust language -->
+      <div class="node needs" style="left:calc(100% - 356px);top:226px">
+        <div class="who"><span class="sdot warn"></span><span class="name">Mail agent</span><span class="role">waiting</span></div>
+        <div class="task">Ready to send the draft to Dana for review</div>
+        <button class="review">Review</button>
+        <div class="quiet-note">Nothing runs until you decide.</div>
+      </div>
+
+      <!-- done: dims, stays for the story -->
+      <div class="node done" style="left:calc(50% - 112px);top:430px">
+        <div class="who"><span class="sdot done"></span><span class="name">Files agent</span><span class="role">done</span></div>
+        <div class="task">Collected last quarter's deck and templates</div>
+        <div class="meta"><span>finished 4 min ago</span></div>
+      </div>
+
+      <div class="foot"><span>Every agent asks before anything leaves this machine.</span></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>The rules this encodes:</b> the Workforce view is a place you go to <b>watch work</b>, never an empty room —
+    no "LUCA STANDBY", no mission-speak; the pill carries a live count and only exists while agents run ·
+    agents are <b>session cards</b> in the shell's exact vocabulary (tone dots: green working, amber needs-you, dim done) ·
+    the only motion is honest: breathing dots and work flowing along hairline edges · Luca itself anchors the graph
+    (the same face/presence as the rail) · the amber node carries the same <b>Review + trust line</b> as the approval
+    cards · one plain-language mission sentence explains what it's all for.
+  </div>
+
+</body>
+</html>
