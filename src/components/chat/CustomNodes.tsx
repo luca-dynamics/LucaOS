@@ -1,27 +1,42 @@
 import React, { memo } from "react";
-import { Handle,
-  Position } from "@xyflow/react";
+import { Handle, Position } from "@xyflow/react";
 import { motion } from "framer-motion";
-import { Icon } from "../ui/Icon";
-import { setHexAlpha, getThemeColors } from "../../config/themeColors";
 
-// --- GOAL NODE ---
+/**
+ * Workforce graph nodes (workforce-target): agents and tasks as living
+ * session cards in the shell's exact vocabulary — hairline cards, tone dots
+ * (accent working · dim done · danger only for real failure), plain
+ * language. The contextual viewport (live terminal / browser snapshot
+ * inside an executing task) is kept — it is the most honest pixel in the
+ * app — just dressed calmly.
+ */
+
+const CARD: React.CSSProperties = {
+  background: "var(--luca-background-base, #111417)",
+  border: "1px solid var(--luca-border-subtle, rgba(255,255,255,0.07))",
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.03), 0 10px 30px -14px rgba(0,0,0,0.6)",
+};
+
+const HANDLE = "!w-1.5 !h-1.5 !border-0 !bg-[rgba(255,255,255,0.18)]";
+
+const AGENT_LABELS: Record<string, string> = {
+  HACKER: "Security agent",
+  ENGINEER: "Engineer agent",
+  BROWSER: "Browser agent",
+};
+
+// --- MISSION (GOAL) NODE ---
 export const GoalNode = memo(({ data }: any) => {
   return (
-    <div className="px-6 py-4 shadow-xl rounded-2xl bg-black/60 glass-blur border border-white/20 flex flex-col items-center gap-2 min-w-[200px]">
-      <div 
-        className="w-12 h-12 rounded-full flex items-center justify-center bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)] border border-[color-mix(in_srgb,var(--luca-info,#4f8cff)_32%,transparent)] text-[var(--luca-info,#4f8cff)]"
-        style={{ boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)" }}
-      >
-        <Icon name="Target" size={24} variant="BoldDuotone" />
+    <div className="rounded-2xl px-5 py-4 min-w-[220px] max-w-[280px]" style={CARD}>
+      <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[var(--luca-text-tertiary,var(--app-text-muted))]">
+        Mission
       </div>
-      <div className="text-center">
-        <div className="text-[10px] text-[var(--luca-info,#4f8cff)] font-bold tracking-widest uppercase mb-1">STRATEGIC GOAL</div>
-        <div className="text-sm font-medium text-white max-w-[180px] break-words">
-          {data.label}
-        </div>
+      <div className="mt-1 text-[13px] font-medium leading-snug text-[var(--luca-text-primary,var(--app-text-main))] break-words">
+        {data.label}
       </div>
-      <Handle type="source" position={Position.Bottom} className="!bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]" />
+      <Handle type="source" position={Position.Bottom} className={HANDLE} />
     </div>
   );
 });
@@ -29,58 +44,40 @@ export const GoalNode = memo(({ data }: any) => {
 // --- AGENT NODE ---
 export const AgentNode = memo(({ data }: any) => {
   const { persona, status } = data;
-  const theme = getThemeColors(persona);
-  const isAnyActive = status === "in-progress";
-  
-  const getIcon = () => {
-    switch (persona) {
-      case "HACKER": return <Icon name="Shield" size={20} variant="BoldDuotone" />;
-      case "ENGINEER": return <Icon name="Cpu" size={20} variant="BoldDuotone" />;
-      case "BROWSER": return <Icon name="Globe" size={20} variant="BoldDuotone" />;
-      default: return <Icon name="Brain" size={20} variant="BoldDuotone" />;
-    }
-  };
+  const working = status === "in-progress";
+  const label = AGENT_LABELS[persona] ?? "Agent";
 
   return (
-    <div className="relative group">
-      <Handle type="target" position={Position.Top} className="!bg-slate-500" />
-      <motion.div 
-        animate={isAnyActive ? { scale: [1, 1.05, 1] } : {}}
-        transition={{ repeat: Infinity, duration: 2 }}
-        className="px-4 py-3 rounded-xl bg-black/80 glass-blur border flex flex-col items-center gap-2 min-w-[140px]"
-        style={{ 
-          borderColor: isAnyActive ? theme.hex : "rgba(255,255,255,0.1)",
-          boxShadow: isAnyActive ? `0 0 20px ${setHexAlpha(theme.hex, 0.3)}` : "none"
+    <div className="relative">
+      <Handle type="target" position={Position.Top} className={HANDLE} />
+      <div
+        className="rounded-xl px-4 py-3 min-w-[160px]"
+        style={{
+          ...CARD,
+          border: working
+            ? "1px solid color-mix(in srgb, var(--luca-accent-primary, #7aa2ff) 30%, transparent)"
+            : (CARD.border as string),
         }}
       >
-        <div 
-          className="w-10 h-10 rounded-lg flex items-center justify-center border"
-          style={{ 
-            backgroundColor: setHexAlpha(theme.hex, 0.1),
-            borderColor: setHexAlpha(theme.hex, 0.3),
-            color: theme.hex
-          }}
-        >
-          {getIcon()}
-          {isAnyActive && (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-              className="absolute inset-0 rounded-lg border border-dashed"
-              style={{ borderColor: setHexAlpha(theme.hex, 0.5) }}
-            />
-          )}
+        <div className="flex items-center gap-2">
+          <span
+            className={`h-1.5 w-1.5 flex-none rounded-full ${working ? "animate-pulse" : ""}`}
+            style={{
+              background: working
+                ? "var(--luca-success, #4fbf7a)"
+                : "rgba(255,255,255,0.22)",
+            }}
+            aria-hidden="true"
+          />
+          <span className="text-[12.5px] font-semibold text-[var(--luca-text-primary,var(--app-text-main))]">
+            {label}
+          </span>
         </div>
-        <div className="text-center">
-          <div className="text-[9px] font-black tracking-tighter uppercase" style={{ color: theme.hex }}>
-            {persona} LUCA
-          </div>
-          <div className="text-[8px] text-slate-500 font-mono mt-1">
-            {status.toUpperCase()}
-          </div>
+        <div className="mt-0.5 pl-3.5 text-[11px] text-[var(--luca-text-tertiary,var(--app-text-muted))]">
+          {String(status || "idle").replace(/-/g, " ")}
         </div>
-      </motion.div>
-      <Handle type="source" position={Position.Bottom} className="!bg-slate-500" />
+      </div>
+      <Handle type="source" position={Position.Bottom} className={HANDLE} />
     </div>
   );
 });
@@ -88,73 +85,91 @@ export const AgentNode = memo(({ data }: any) => {
 // --- TASK NODE ---
 export const TaskNode = memo(({ data }: any) => {
   const { task, status, persona } = data;
-  const theme = getThemeColors(persona);
   const isExecuting = status === "in-progress";
   const isComplete = status === "complete";
   const isFailed = status === "failed";
-  
+
   const snapshot = task.snapshot;
+  const dot = isExecuting
+    ? "var(--luca-accent-primary, #7aa2ff)"
+    : isComplete
+      ? "var(--luca-success, #4fbf7a)"
+      : isFailed
+        ? "var(--luca-danger, #f87171)"
+        : "rgba(255,255,255,0.22)";
 
   return (
-    <div className="relative group">
-      <Handle type="target" position={Position.Top} className="!bg-slate-500" />
-      <div 
-        className="p-3 rounded-lg bg-[#050505] border border-white/5 flex flex-col gap-2 min-w-[180px] max-w-[240px] shadow-2xl transition-all"
-        style={{ 
-          borderColor: isExecuting ? theme.hex : isComplete ? "#22c55e40" : isFailed ? "#ef444440" : "rgba(255,255,255,0.05)",
-          boxShadow: isExecuting ? `0 0 15px ${setHexAlpha(theme.hex, 0.2)}` : "none"
+    <div className="relative">
+      <Handle type="target" position={Position.Top} className={HANDLE} />
+      <div
+        className={`rounded-xl p-3 min-w-[190px] max-w-[250px] flex flex-col gap-2 transition-colors ${isComplete ? "opacity-70" : ""}`}
+        style={{
+          ...CARD,
+          border: isExecuting
+            ? "1px solid color-mix(in srgb, var(--luca-accent-primary, #7aa2ff) 30%, transparent)"
+            : isFailed
+              ? "1px solid color-mix(in srgb, var(--luca-danger, #f87171) 35%, transparent)"
+              : (CARD.border as string),
         }}
       >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div 
-              className="w-1.5 h-1.5 rounded-full shrink-0" 
-              style={{ 
-                backgroundColor: isExecuting ? theme.hex : isComplete ? "#22c55e" : isFailed ? "#ef4444" : "#475569",
-                boxShadow: isExecuting ? `0 0 8px ${theme.hex}` : "none"
-              }} 
-            />
-            <span className="text-[11px] text-slate-300 font-medium truncate">{task.description}</span>
-          </div>
-          {isExecuting && <Icon name="Activity" size={10} className="animate-pulse text-slate-500" variant="BoldDuotone" />}
+        <div className="flex items-center gap-2 overflow-hidden">
+          <span
+            className={`h-1.5 w-1.5 rounded-full shrink-0 ${isExecuting ? "animate-pulse" : ""}`}
+            style={{ background: dot }}
+            aria-hidden="true"
+          />
+          <span className="truncate text-[12px] text-[var(--luca-text-secondary,var(--app-text-muted))]">
+            {task.description}
+          </span>
         </div>
 
-        {/* --- CONTEXTUAL VIEWPORT --- */}
+        {/* Contextual viewport — the agent's actual work, live. */}
         {isExecuting && (
-          <motion.div 
+          <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            className="overflow-hidden rounded bg-black/50 border border-white/5"
+            className="overflow-hidden rounded-lg"
+            style={{
+              background: "rgba(0,0,0,0.35)",
+              border: "1px solid var(--luca-border-subtle, rgba(255,255,255,0.05))",
+            }}
           >
             {persona === "ENGINEER" && snapshot?.terminal && (
-              <div className="p-1.5 font-mono text-[8px] text-[var(--luca-success,#4fbf7a)] leading-tight">
+              <div className="p-2 font-mono text-[9px] leading-relaxed text-[var(--luca-text-secondary,#9aa4b2)]">
                 {snapshot.terminal.slice(-4).map((line: string, i: number) => (
-                  <div key={i} className="truncate">{`> ${line}`}</div>
+                  <div key={i} className="truncate opacity-90">{line}</div>
                 ))}
-                <div className="animate-pulse">_</div>
               </div>
             )}
             {persona === "BROWSER" && snapshot?.browserScreenshot && (
-              <div className="relative aspect-video bg-slate-900 overflow-hidden">
-                <img src={snapshot.browserScreenshot} className="w-full h-full object-cover opacity-60" alt="Browser" />
-                <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--luca-info,#4f8cff)_12%,transparent)]" />
+              <div className="relative aspect-video overflow-hidden">
+                <img
+                  src={snapshot.browserScreenshot}
+                  className="h-full w-full object-cover opacity-70"
+                  alt="What the browser agent sees"
+                />
               </div>
             )}
             {!snapshot && (
-              <div className="p-2 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white/20" />
+              <div className="p-2 text-center text-[10px] text-[var(--luca-text-tertiary,var(--app-text-muted))]">
+                working…
               </div>
             )}
           </motion.div>
         )}
 
         {isComplete && task.result && (
-          <div className="text-[9px] text-[var(--luca-success,#4fbf7a)] italic truncate opacity-60">
-            {typeof task.result === 'string' ? task.result : 'Task completed successfully'}
+          <div className="truncate pl-3.5 text-[10.5px] text-[var(--luca-text-tertiary,var(--app-text-muted))]">
+            {typeof task.result === "string" ? task.result : "Done."}
+          </div>
+        )}
+        {isFailed && (
+          <div className="pl-3.5 text-[10.5px] text-[var(--luca-danger,#f87171)]">
+            Failed — Luca will report why in chat.
           </div>
         )}
       </div>
-      <Handle type="source" position={Position.Bottom} className="!bg-slate-500 opacity-0" />
+      <Handle type="source" position={Position.Bottom} className={`${HANDLE} opacity-0`} />
     </div>
   );
 });
@@ -162,3 +177,4 @@ export const TaskNode = memo(({ data }: any) => {
 GoalNode.displayName = "GoalNode";
 AgentNode.displayName = "AgentNode";
 TaskNode.displayName = "TaskNode";
+
