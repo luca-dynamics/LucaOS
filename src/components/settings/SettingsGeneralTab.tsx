@@ -556,7 +556,10 @@ const SettingsGeneralTab: React.FC<SettingsGeneralTabProps> = ({
                     await requestPermissions();
                   }}
                   className="rounded-xl border px-3 py-2 text-sm font-semibold transition-all hover:bg-[var(--luca-surface-hover,var(--app-bg-tint))]"
-                  style={{ ...settingsControlInlineStyle, color: theme.hex }}
+                  style={{
+                    ...settingsControlInlineStyle,
+                    color: "var(--luca-accent-primary, var(--app-text-main))",
+                  }}
                 >
                   Grant access
                 </button>

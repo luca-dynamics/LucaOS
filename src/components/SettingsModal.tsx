@@ -10,6 +10,7 @@ import {
 import { PERSONA_UI_CONFIG, getDynamicContrast } from "../config/themeColors";
 import { PersonaConfig } from "../types";
 import { getLucaSkinMaterialVariables } from "../styles/lucaSkinMaterialBridge";
+import { LUCA_SKINS, normalizeLucaSkinId } from "../config/lucaSkins";
 
 // Import Refactored Tabs
 import SettingsGeneralTab from "./settings/SettingsGeneralTab";
@@ -81,6 +82,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       }),
     [settings.general.selectedSkinId, isMobile],
   );
+  // Light-skin contrast pass: several settings surfaces hardcoded inks that
+  // assume dark skins. The class scopes CSS fixes to light skins only.
+  const isLightSkin =
+    LUCA_SKINS[normalizeLucaSkinId(settings.general.selectedSkinId)]
+      .modeAffinity === "light";
+
   const legacyLiveTheme =
     (settings?.general?.theme
       ? PERSONA_UI_CONFIG[
@@ -122,6 +129,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
     return () => {
       settingsService.off("settings-changed", handleSettingsChanged);
+      // Live material preview honesty: whatever the sliders broadcast while
+      // dragging, closing the modal resets the app to the PERSISTED values
+      // (a no-op after Save, a revert after Cancel).
+      try {
+        const persisted = settingsService.getSettings().general;
+        window.dispatchEvent(
+          new CustomEvent("luca:material-preview", {
+            detail: {
+              opacity: persisted.backgroundOpacity ?? 0.3,
+              blur: persisted.backgroundBlur ?? 40,
+            },
+          }),
+        );
+      } catch {
+        /* settings unavailable — nothing to restore */
+      }
     };
   }, []);
 
@@ -272,7 +295,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     <div
       className={`fixed inset-0 z-[70] flex items-center justify-center bg-black/60 glass-blur ${
         isMobile ? "p-0" : "p-4"
-      } font-sans select-none`}
+      } ${isLightSkin ? "luca-skin-light" : ""} font-sans select-none`}
       style={skinMaterialVariables as React.CSSProperties}
     >
       <div
@@ -293,7 +316,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       >
         {/* Unified Sidebar Navigation */}
         <div
-          className={`flex flex-col shrink-0 ${isMobile ? "w-16" : "w-64"}`}
+          className={`luca-settings-nav flex flex-col shrink-0 ${isMobile ? "w-16" : "w-64"}`}
           style={{
             backgroundColor: isMobile
               ? "rgba(0,0,0,0.2)"
@@ -691,7 +714,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   backgroundColor: liveTheme.hex,
                   color: liveTheme.isLight ? "#ffffff" : "#0c0e12",
                 }}
-                className="h-8 px-4 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-50"
+                className="luca-settings-save h-8 px-4 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-50"
               >
                 {loading && (
                   <Icon name="Restart" className="w-3 h-3 animate-spin" />
